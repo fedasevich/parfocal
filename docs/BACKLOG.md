@@ -2852,7 +2852,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Done when the linking model (pan, zoom, rotation, manual offset) is written as an ADR.
   Size: S.
 
-- [ ] CMP-001 · Split viewer layouts
+- [x] CMP-001 · Split viewer layouts
   1, 2 side by side, 2 stacked, 4.
   Done when golden tests cover each layout and the memory test passes with four viewers.
   Size: M.
@@ -2863,12 +2863,12 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Note that Shift+L is also the arrow tool in Annotate, so CMD-004 resolves the conflict.
   Size: S.
 
-- [ ] CMP-003 · Shared cursor
+- [x] CMP-003 · Shared cursor
   The same point is shown on every pane.
   Done when tests cover cursor mapping with offsets.
   Size: S.
 
-- [ ] CMP-004 · Pane slide picker
+- [x] CMP-004 · Pane slide picker
   Each pane is labelled Left or Right with a chip naming its slide. The chip opens a list of the case's slides. Picking the slide shown on the other side swaps the two. The inspector repeats the two slots with Change buttons and Swap sides.
   Done when E2E puts A2 next to A1 from a pane chip and from the inspector, and a test confirms the swap rule.
   Refs kit W14, [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md).
@@ -3716,7 +3716,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when touch tests cover each gesture.
   Size: S.
 
-- [ ] DEV-011 · Touch targets audit
+- [x] DEV-011 · Touch targets audit
   Done when an automated check confirms targets of at least 24 px on desktop and 44 px on tablet layouts.
   Size: S.
 
@@ -4677,7 +4677,7 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Depends on JOBS-003, AIP-011, DS-021. Refs mock: job, doc 41.
   Size: M.
 
-- [ ] JOBS-005 · Connect a lab model
+- [x] JOBS-005 · Connect a lab model
   A researcher with admin rights points Parfocal at the lab's HTTP endpoint (MONAI Label, Triton or any service following the Parfocal contract) with its authentication, tile size and magnification, tests it with a sample tile, maps its classes and chooses who can run it. The endpoint follows the address rules of INGEST-025 when saved and on every call, follows no redirects, keeps its credentials sealed with the tenant data key, and lists the projects that may use it ([threat model](security/threat-model.md) J1 to J3).
   Done when API tests cover a passing and a failing test call and the class map, and E2E connects a stub endpoint.
   Depends on JOBS-001, PROJ-004. Refs mock: admin/addmodel, doc 39.
@@ -4760,6 +4760,12 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Done when component tests cover each choice and its effect, E2E finishes setup into each of the three first-project choices, and an API test shows the creator of a workspace holds admin rights.
   Depends on ONB-002, ONB-005, IAM-024. Refs mock: setup, doc 41.
   Size: L.
+
+- [ ] ONB-010 · Join or ask for a workspace and keep the setup profile
+  ONB-004 sends join and ask through a draft `answerWorkspace` that only the fake API answers, and does not save specialties or the workspace logo. Add the real join and access request endpoints with the workspace admins notified, save specialties on the person and the logo on the workspace with an additive migration, and delete the draft.
+  Done when API tests cover join, ask, an admin approving the ask and the saved specialties and logo, and the setup browser spec runs on the real client with no draft left.
+  Depends on ONB-004.
+  Size: M.
 
 - [x] ONB-005 · Sample project
   A new workspace gets a sample project with 4 CAMELYON16 slides, two result sets and a review task for the person, deletable and left out of every evaluation.

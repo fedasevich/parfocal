@@ -1,3 +1,4 @@
+import json
 import threading
 from collections.abc import Generator
 from contextlib import contextmanager
@@ -18,6 +19,7 @@ class Site:
     def __init__(self) -> None:
         self.routes: dict[str, Served] = {}
         self.requests: list[tuple[str, str, dict[str, str]]] = []
+        self.bodies: list[bytes] = []
         site = self
 
         class Handler(BaseHTTPRequestHandler):
@@ -33,7 +35,7 @@ class Site:
                 length = served.head_length if method == "HEAD" else None
                 self.send_header("content-length", str(length or len(served.body)))
                 self.end_headers()
-                if method == "GET":
+                if method != "HEAD":
                     self.wfile.write(served.body)
 
             def do_GET(self) -> None:
@@ -41,6 +43,11 @@ class Site:
 
             def do_HEAD(self) -> None:
                 self.answer("HEAD")
+
+            def do_POST(self) -> None:
+                length = int(self.headers.get("content-length") or 0)
+                site.bodies.append(self.rfile.read(length))
+                self.answer("POST")
 
         self.server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
         self.port = self.server.server_address[1]
@@ -57,6 +64,13 @@ class Site:
         self.routes[path] = Served(
             body=f"<html><body>{links}</body></html>".encode(),
             headers={"content-type": "text/html; charset=utf-8"},
+        )
+
+    def json(self, path: str, value: Any, status: int = 200, **headers: str) -> None:
+        self.routes[path] = Served(
+            status=status,
+            body=json.dumps(value).encode(),
+            headers={"content-type": "application/json", **headers},
         )
 
     def file(self, path: str, body: bytes, **extra: Any) -> None:

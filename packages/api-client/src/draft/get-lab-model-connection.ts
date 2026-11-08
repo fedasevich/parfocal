@@ -3,13 +3,7 @@ import { z } from "zod";
 import type { Problem } from "../generated/api.ts";
 import { type DraftQueryOptions, type DraftRequest, defineDraftQuery } from "./define.ts";
 
-export const LabModelSignIn = { none: "none", token: "token", header: "header" } as const;
-
-export const LabModelTestOutcome = {
-  untested: "untested",
-  "follows-contract": "follows-contract",
-  "not-contract": "not-contract",
-} as const;
+const connectionOutcomes = ["untested", "follows-contract", "not-contract"] as const;
 
 export const tileOutlineSchema = z.object({
   regions: z.array(z.array(z.tuple([z.number(), z.number()]))),
@@ -24,8 +18,6 @@ export const tileOutlineSchema = z.object({
   ),
 });
 
-export type TileOutline = z.infer<typeof tileOutlineSchema>;
-
 export const sampleTileSchema = z.object({
   label: z.string(),
   slide: z.string(),
@@ -36,18 +28,14 @@ export const sampleTileSchema = z.object({
   outline: tileOutlineSchema,
 });
 
-export type SampleTile = z.infer<typeof sampleTileSchema>;
-
 export const sentClassSchema = z.object({
   name: z.string(),
   cells: z.number().int().nonnegative(),
   suggested: z.string().nullable(),
 });
 
-export type SentClass = z.infer<typeof sentClassSchema>;
-
 export const labModelTestSchema = z.object({
-  outcome: z.enum(LabModelTestOutcome),
+  outcome: z.enum(connectionOutcomes),
   sample_slide: z.string(),
   returns: z.array(z.string()),
   answered_ms: z.number().int().nonnegative().nullable(),
@@ -58,12 +46,12 @@ export const labModelTestSchema = z.object({
   classes: z.array(sentClassSchema),
 });
 
-export type LabModelTest = z.infer<typeof labModelTestSchema>;
+export type LabModelConnectionTest = z.infer<typeof labModelTestSchema>;
 
 export const labModelConnectionSchema = z.object({
   address: z.url(),
   host: z.string(),
-  sign_in: z.enum(LabModelSignIn),
+  sign_in: z.enum(["none", "token", "header"]),
   last_four: z.string(),
   tile_size: z.number().int().positive(),
   magnification: z.number().int().positive(),

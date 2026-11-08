@@ -77,6 +77,16 @@ def test_a_link_to_a_private_address_is_refused(api: ApiAs, lab: Lab, address: s
     refused(listing(api, lab, address), LinkRefusal.ADDRESS)
 
 
+def test_a_link_with_credentials_is_refused_before_any_request(
+    linked: ApiAs, lab: Lab, site: Site
+) -> None:
+    site.file("/scan.svs", b"slide-bytes")
+    address = site.url("/scan.svs").replace("http://", "http://user:secret-pass@")
+    refused(listing(linked, lab, address), LinkRefusal.CREDENTIALS)
+    refused(start(linked, lab, address, ["scan.svs"]), LinkRefusal.CREDENTIALS)
+    assert site.requests == []
+
+
 def test_only_https_is_fetched_from_an_untrusted_origin(api: ApiAs, lab: Lab, site: Site) -> None:
     site.file("/scan.svs", b"slide")
     refused(listing(api, lab, site.url("/scan.svs")), LinkRefusal.SCHEME)

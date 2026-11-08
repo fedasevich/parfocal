@@ -13,9 +13,9 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | Class | Columns |
 |---|---|
 | `phi` | 46 |
-| `personal` | 85 |
-| `secret` | 10 |
-| `operational` | 685 |
+| `personal` | 86 |
+| `secret` | 11 |
+| `operational` | 703 |
 | `public` | 0 |
 
 ## adjudication_objects
@@ -417,6 +417,36 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `pause_reason` | operational |
 | `created_at` | operational |
 | `finished_at` | operational |
+
+## lab_model_projects
+
+| Column | Class |
+|---|---|
+| `lab_model_id` | operational |
+| `project_id` | operational |
+| `tenant_id` | operational |
+
+## lab_models
+
+| Column | Class |
+|---|---|
+| `id` | operational |
+| `tenant_id` | operational |
+| `name` | operational |
+| `version` | operational |
+| `address` | operational |
+| `sign_in` | operational |
+| `header_name` | operational |
+| `secret_ciphertext` | secret |
+| `secret_last_four` | operational |
+| `tile_size` | operational |
+| `magnification` | operational |
+| `taxonomy` | operational |
+| `class_map` | operational |
+| `who_can_run` | operational |
+| `created_by_user_id` | personal |
+| `created_at` | operational |
+| `updated_at` | operational |
 
 ## legal_holds
 

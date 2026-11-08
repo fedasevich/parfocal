@@ -48,7 +48,7 @@ function Brand({
         ? renderLink({
             href: homeHref,
             title: "Parfocal home",
-            className: "flex items-center gap-2.5 no-underline",
+            className: "flex min-h-6 items-center gap-2.5 no-underline",
             children: mark,
           })
         : mark}

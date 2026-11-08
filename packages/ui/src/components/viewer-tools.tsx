@@ -487,9 +487,21 @@ function SimulatedTag() {
   );
 }
 
-type PaneSide = "left" | "right";
+type PaneSide = "left" | "right" | "bottomLeft" | "bottomRight";
+type LayerSide = "left" | "right";
 
-const sideWord: Record<PaneSide, string> = { left: "Left", right: "Right" };
+const sideWord: Record<PaneSide, string> = {
+  left: "Left",
+  right: "Right",
+  bottomLeft: "Bottom left",
+  bottomRight: "Bottom right",
+};
+const sideName: Record<PaneSide, string> = {
+  left: "left",
+  right: "right",
+  bottomLeft: "bottom left",
+  bottomRight: "bottom right",
+};
 
 function PaneHeader({
   side,
@@ -546,7 +558,7 @@ function PanePicker({
     <div
       data-slot="pane-picker"
       role="listbox"
-      aria-label={`Slide for the ${side} side`}
+      aria-label={`Slide for the ${sideName[side]} side`}
       className={cn(
         "absolute top-13.5 left-3 z-20 grid w-82.5 gap-0.5 p-2",
         floatSurface,
@@ -554,7 +566,7 @@ function PanePicker({
       )}
     >
       <div className="px-2 pt-1 pb-2 text-caption font-semibold text-fg-dim">
-        Show on the {side}
+        Show on the {sideName[side]}
       </div>
       {slides.map((slide) => (
         <div
@@ -611,7 +623,7 @@ function SlideSlot({
       <button
         type="button"
         onClick={onChange}
-        aria-label={`Change the ${side} slide`}
+        aria-label={`Change the ${sideName[side]} slide`}
         className="h-8 cursor-pointer rounded-ctl border border-line-strong bg-btn-bg px-2.5 text-body-sm font-medium text-fg hover:bg-chrome-3"
       >
         Change
@@ -621,39 +633,32 @@ function SlideSlot({
 }
 
 function SlidesOnScreenPanel({
-  left,
-  right,
+  slots,
   onChange,
   onSwap,
 }: {
-  left?: { slide: PaneSlide; note: string } | undefined;
-  right?: { slide: PaneSlide; note: string } | undefined;
+  slots: { side: PaneSide; slide: PaneSlide; note: string }[];
   onChange: (side: PaneSide) => void;
-  onSwap: () => void;
+  onSwap?: (() => void) | undefined;
 }) {
   return (
     <Zone title="Slides on screen">
       <div className="grid gap-2">
-        {left ? (
+        {slots.map((slot) => (
           <SlideSlot
-            side="left"
-            slide={left.slide}
-            note={left.note}
-            onChange={() => onChange("left")}
+            key={slot.side}
+            side={slot.side}
+            slide={slot.slide}
+            note={slot.note}
+            onChange={() => onChange(slot.side)}
           />
+        ))}
+        {onSwap ? (
+          <Button className="w-full" onClick={onSwap}>
+            <Icon name="slides" />
+            Swap sides
+          </Button>
         ) : null}
-        {right ? (
-          <SlideSlot
-            side="right"
-            slide={right.slide}
-            note={right.note}
-            onChange={() => onChange("right")}
-          />
-        ) : null}
-        <Button className="w-full" onClick={onSwap}>
-          <Icon name="slides" />
-          Swap sides
-        </Button>
       </div>
     </Zone>
   );
@@ -666,7 +671,7 @@ function SideToggles({
   onToggle,
 }: {
   rows: SideToggleRow[];
-  onToggle: (key: string, side: PaneSide) => void;
+  onToggle: (key: string, side: LayerSide) => void;
 }) {
   return (
     <div data-slot="side-toggles" className="grid gap-0.5">
@@ -676,7 +681,7 @@ function SideToggles({
           className="grid grid-cols-[1fr_44px_44px] items-center py-1.5 text-body-sm"
         >
           <span>{row.name}</span>
-          {(["left", "right"] as const).map((side) => (
+          {(["left", "right"] as const satisfies readonly LayerSide[]).map((side) => (
             <button
               key={side}
               type="button"
@@ -812,6 +817,7 @@ export {
   KeyOptions,
   LayerList,
   type LayerRow,
+  type LayerSide,
   PaneHeader,
   PanePicker,
   type PaneSide,

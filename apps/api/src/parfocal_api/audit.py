@@ -134,6 +134,8 @@ class AuditAction(StrEnum):
     MODEL_TIER_RESET = "model-tier.reset"
     MODEL_HIDDEN = "model.hidden"
     MODEL_SHOWN = "model.shown"
+    LAB_MODEL_TESTED = "lab-model.tested"
+    LAB_MODEL_CONNECTED = "lab-model.connected"
     RETENTION_POLICY_SET = "retention.policy-set"
     RETENTION_PURGED = "retention.purged"
     LEGAL_HOLD_PLACED = "legal-hold.placed"
@@ -185,6 +187,7 @@ class AuditTarget(StrEnum):
     DISPLAY_PRESET = "display-preset"
     REPORT_LINK = "report-link"
     CLINICAL_REPORT = "clinical-report"
+    LAB_MODEL = "lab-model"
 
 
 @dataclass(frozen=True)
