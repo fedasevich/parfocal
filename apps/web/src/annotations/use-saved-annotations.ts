@@ -1,4 +1,4 @@
-import { type AnnotationDraft, listAnnotations } from "@parfocal/api-client";
+import { type AnnotationDraft, getSharedLayer, listAnnotations } from "@parfocal/api-client";
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { adoptTheirs } from "./conflicts.ts";
 import { deleteMarker, dropMarker } from "./count-markers.ts";
@@ -24,7 +24,7 @@ import {
   type Remote,
 } from "./save-queue.ts";
 import { annotationTransport, sharedLayerTransport } from "./save-transport.ts";
-import { draftOf, sameBody, shapeOf } from "./saved-shapes.ts";
+import { draftOf, type SavedRecord, sameBody, shapeOf } from "./saved-shapes.ts";
 import type { GroupId, Shape, ShapeId } from "./shapes.ts";
 
 export type SaveState = QueuePhase;
@@ -53,6 +53,21 @@ export type SavedAnnotations = {
   readonly conflicts: readonly SaveConflict[];
   readonly resolveConflict: (conflict: SaveConflict, choice: Choice) => void;
 };
+
+type LoadedRecord = SavedRecord & { readonly id: string; readonly version: number };
+
+async function savedRecords(
+  slideId: string,
+  sharedTaskId: string | null,
+): Promise<readonly LoadedRecord[] | null> {
+  if (sharedTaskId === null) {
+    const saved = await listAnnotations(slideId);
+    return saved.status === 200 ? saved.data : null;
+  }
+  const layer = await getSharedLayer(sharedTaskId, slideId);
+  if (layer.status !== 200) return null;
+  return layer.data.objects.filter((item) => item.deleted_at === null && item.source === null);
+}
 
 export function useSavedAnnotations(
   slideId: string,
@@ -158,11 +173,11 @@ export function useSavedAnnotations(
   useEffect(() => {
     if (!enabled) return;
     let cancelled = false;
-    void listAnnotations(slideId).then(
-      (saved) => {
-        if (cancelled || saved.status !== 200) return;
+    void savedRecords(slideId, sharedTaskId).then(
+      (records) => {
+        if (cancelled || records === null) return;
         let next = current.current;
-        for (const annotation of saved.data) {
+        for (const annotation of records) {
           const input = shapeOf(annotation);
           if (input === null) continue;
           const added = addShape(next, input);
@@ -177,7 +192,7 @@ export function useSavedAnnotations(
     return () => {
       cancelled = true;
     };
-  }, [slideId, enabled, setDocument]);
+  }, [slideId, sharedTaskId, enabled, setDocument]);
 
   const recordEdit = useCallback(
     (before: AnnotationDocument, after: AnnotationDocument, label: string) => {

@@ -62,6 +62,11 @@ import {
   taskDisplay,
   visibleComments,
 } from "./scenario-review.ts";
+import {
+  annotateTaskClasses,
+  annotateTaskSlides,
+  toSharedAiObjects,
+} from "./shared-layer-handlers.ts";
 import { fakeView } from "./view.ts";
 import { toReviewTaskDetail, toTaskStates } from "./work-handlers.ts";
 
@@ -351,7 +356,14 @@ export function reviewHandlers(): RequestHandler[] {
           ...toReviewTaskDetail(rt13),
           id: annotateStubTaskId,
           kind: "annotate",
-          classes: [],
+          classes: annotateTaskClasses,
+          slide_count: 2,
+          reviewer_count: 1,
+          slides: [annotateTaskSlides.withResults, annotateTaskSlides.byHand].map((slideId) => ({
+            slide_id: slideId,
+            result_set_id: toSharedAiObjects(annotateStubTaskId, slideId).result_set_id,
+            reviewer_ids: [people[fakeView().viewer].id],
+          })),
         });
       const extra = [rt13, rt16].find((task) => task.id === params.taskId);
       return extra ? HttpResponse.json(toReviewTaskDetail(extra)) : undefined;

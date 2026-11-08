@@ -11,6 +11,7 @@ import { projectDraftOperations } from "./project-handlers.ts";
 import { reviewDraftOperations } from "./review-handlers.ts";
 import { checklist, reviewTasks, sampleProject, slideByIndex, threads } from "./scenario.ts";
 import { settingsDraftOperations } from "./settings-handlers.ts";
+import { sharedLayerDraftOperations } from "./shared-layer-handlers.ts";
 import { signUpDraftOperations } from "./sign-up-handlers.ts";
 import { taskDraftOperations } from "./task-handlers.ts";
 import { teamDraftOperations } from "./team-handlers.ts";
@@ -74,6 +75,7 @@ export {
   getGetMySettingsMockHandler,
   getSetMyShortcutsMockHandler,
 } from "./settings-handlers.ts";
+export { getListSharedAiObjectsMockHandler } from "./shared-layer-handlers.ts";
 export {
   getConfirmEmailMockHandler,
   getCreateAccountMockHandler,
@@ -171,6 +173,7 @@ export const draftOperations: DraftOperation[] = [
   ...viewerDraftOperations,
   ...adjudicationDraftOperations,
   ...viewerToolsDraftOperations,
+  ...sharedLayerDraftOperations,
 ];
 
 export const draftHandlers = (): RequestHandler[] =>

@@ -17,6 +17,7 @@ import { resumeHandlers } from "./resume-handlers.ts";
 import { reviewHandlers } from "./review-handlers.ts";
 import { scenarioHandlers } from "./scenario-handlers.ts";
 import { settingsHandlers } from "./settings-handlers.ts";
+import { sharedLayerHandlers } from "./shared-layer-handlers.ts";
 import { taskHandlers } from "./task-handlers.ts";
 import { teamActionHandlers } from "./team-handlers.ts";
 import { tileAccessHandlers } from "./tile-access-handlers.ts";
@@ -53,6 +54,7 @@ export function fakeApiHandlers(scope: FakeApiScope): RequestHandler[] {
     ...coverageHandlers(),
     ...tissueHandlers(),
     ...annotationHandlers(),
+    ...sharedLayerHandlers(),
     ...resumeHandlers(),
     ...reportLinkHandlers(),
     ...viewerToolsHandlers(),
@@ -142,6 +144,13 @@ export {
   toPreferences,
   toSessions,
 } from "./settings-handlers.ts";
+export {
+  annotateTaskClasses,
+  annotateTaskSlides,
+  resetFakeSharedLayer,
+  toAnnotateSlideStatus,
+  toSharedAiObjects,
+} from "./shared-layer-handlers.ts";
 export { teamReviewerStatus, toTeamWorkload } from "./team-handlers.ts";
 export {
   defaultFakeTeamScene,

@@ -27,7 +27,11 @@ const spot = (shape: Shape) => pointToGeoJson({ x: at(shape.points, 0), y: at(sh
 export function draftOf(shape: Shape): AnnotationDraft | null {
   switch (shape.kind) {
     case "polygon":
-      return { kind: savedPolygonKind, geometry: polygonToGeoJson(shape.points) };
+      return {
+        kind: savedPolygonKind,
+        geometry: polygonToGeoJson(shape.points),
+        ...(shape.classKey === null ? {} : { class_id: shape.classKey }),
+      };
     case "point":
       return { kind: savedMarkerKind, geometry: spot(shape), class_id: shape.classKey };
     case "ruler":
@@ -55,7 +59,9 @@ export function shapeOf(record: SavedRecord): NewShape | null {
   switch (record.kind) {
     case savedPolygonKind: {
       const points = polygonPointsOf(record);
-      return points === null ? null : { kind: "polygon", points };
+      return points === null
+        ? null
+        : { kind: "polygon", points, classKey: record.class_id ?? null };
     }
     case savedMarkerKind: {
       const points = pointOf(record);

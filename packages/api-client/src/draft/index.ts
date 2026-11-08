@@ -187,6 +187,20 @@ export {
   useListReviewerWorkload,
 } from "./list-reviewer-workload.ts";
 export {
+  getListSharedAiObjectsQueryKey,
+  getListSharedAiObjectsQueryOptions,
+  getListSharedAiObjectsUrl,
+  type ListSharedAiObjectsQueryError,
+  type ListSharedAiObjectsQueryResult,
+  listSharedAiObjects,
+  type listSharedAiObjectsResponse,
+  type SharedAiObject,
+  type SharedAiObjects,
+  sharedAiObjectSchema,
+  sharedAiObjectsSchema,
+  useListSharedAiObjects,
+} from "./list-shared-ai-objects.ts";
+export {
   getListSlideThreadsQueryKey,
   getListSlideThreadsQueryOptions,
   getListSlideThreadsUrl,
