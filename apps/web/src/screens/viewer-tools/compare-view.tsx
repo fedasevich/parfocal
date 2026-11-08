@@ -14,8 +14,14 @@ import {
   SlidesOnScreenPanel,
 } from "@parfocal/ui/components/viewer-tools";
 import { Zone } from "@parfocal/ui/components/zone";
-import { createLinkedViews, relinkViews, toggleLinked, unlinkViews } from "@parfocal/viewer-engine";
-import { type CSSProperties, useEffect, useState } from "react";
+import {
+  createLinkedViews,
+  type LinkedView,
+  relinkViews,
+  toggleLinked,
+  unlinkViews,
+} from "@parfocal/viewer-engine";
+import { type CSSProperties, type PointerEvent, useEffect, useRef, useState } from "react";
 import { useBindings } from "../../keys/personal-keys.ts";
 import { useHotkeys } from "../../keys/use-hotkeys.ts";
 import { okData } from "../placeholder.tsx";
@@ -23,6 +29,7 @@ import { type Camera, midSize, SlideStill } from "../review/slide-still.tsx";
 import { ViewerFrame } from "../review/viewer-frame.tsx";
 import type { SceneOf } from "../scenes.ts";
 import { lookUrl } from "../thumbnails.ts";
+import { carryPoint, pointOfScreen, type SlidePoint, screenOfPoint } from "./cursor-map.ts";
 import {
   cameraOfView,
   moveCameraKeepingRotation,
@@ -92,6 +99,10 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
   const [link, setLink] = useState(() => createLinkedViews(sides));
   const linked = link.linked;
   const [cursor, setCursor] = useState(true);
+  const [cursorAt, setCursorAt] = useState<{ side: PaneSide; point: SlidePoint } | null>(null);
+  const shown = useRef<
+    Partial<Record<PaneSide, { camera: Camera; width: number; height: number }>>
+  >({});
   const [layout, setLayout] = useState("side");
   const [layers, setLayers] = useState([
     { key: "outline", name: "Tumor map outline", left: true, right: false },
@@ -137,6 +148,43 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
     return () => window.removeEventListener("keydown", onKey);
   });
 
+  const viewOn = (side: PaneSide, camera: Camera): LinkedView => ({
+    x: camera.x,
+    y: camera.y,
+    zoom: Math.log2(camera.scale),
+    rotation: rotationOf(side),
+  });
+  const onPaneMove = (side: PaneSide, flip: boolean, event: PointerEvent<HTMLElement>) => {
+    const last = shown.current[side];
+    if (!cursor || last === undefined) return;
+    const rect = event.currentTarget.getBoundingClientRect();
+    const point = pointOfScreen(
+      viewOn(side, last.camera),
+      last,
+      { x: event.clientX - rect.left, y: event.clientY - rect.top },
+      flip,
+    );
+    setCursorAt({ side, point });
+  };
+  const cursorOn = (side: PaneSide, camera: Camera, box: { width: number; height: number }) => {
+    shown.current[side] = { camera, ...box };
+    if (!cursor) return null;
+    const own = viewOn(side, camera);
+    const source = cursorAt ?? {
+      side: linkReference,
+      point: pointOfScreen(link.views[linkReference] ?? own, box, {
+        x: box.width * 0.55,
+        y: box.height * 0.45,
+      }),
+    };
+    const point =
+      source.side === side
+        ? source.point
+        : carryPoint(source.point, link.offsets[source.side], link.offsets[side]);
+    const at = screenOfPoint(own, box, point);
+    return <Crosshair x={at.x} y={at.y} />;
+  };
+
   const pane = (side: PaneSide) => {
     const slide = slideOn(side);
     if (slide === undefined) return null;
@@ -150,6 +198,7 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
         data-pane={side}
         className="relative flex min-w-0 flex-1 overflow-hidden"
         aria-label={`${side === "left" ? "Left" : "Right"}: ${slide.name}`}
+        onPointerMove={(event) => onPaneMove(side, slide.flip, event)}
       >
         <div className="absolute inset-0 flex" style={wrapper}>
           <SlideStill
@@ -157,40 +206,43 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
             look="mid"
             homeOf={coverHome(midSize, [760, 520])}
             rotation={rotationOf(side)}
-            overlay={({ camera }) => (
-              <fieldset
-                aria-label={`Rotate ${side} pane`}
-                className="absolute right-3 bottom-16 m-0 flex min-w-0 border-0 items-center gap-1 rounded-full bg-black/60 px-1.5 py-1 text-body-sm text-white"
-                onPointerDown={(event) => event.stopPropagation()}
-              >
-                <button
-                  type="button"
-                  aria-label={`Rotate ${side} pane left`}
-                  className="rounded-full px-2 py-0.5 hover:bg-white/15"
-                  onClick={() => rotateOn(side, camera, { by: -rotationStep })}
+            overlay={({ camera, size }) => (
+              <>
+                {cursorOn(side, camera, size)}
+                <fieldset
+                  aria-label={`Rotate ${side} pane`}
+                  className="absolute right-3 bottom-16 m-0 flex min-w-0 border-0 items-center gap-1 rounded-full bg-black/60 px-1.5 py-1 text-body-sm text-white"
+                  onPointerDown={(event) => event.stopPropagation()}
                 >
-                  ↺
-                </button>
-                <span data-testid={`rotation-${side}`} className="min-w-9 text-center font-mono">
-                  {rotationOf(side)}°
-                </span>
-                <button
-                  type="button"
-                  aria-label={`Rotate ${side} pane right`}
-                  className="rounded-full px-2 py-0.5 hover:bg-white/15"
-                  onClick={() => rotateOn(side, camera, { by: rotationStep })}
-                >
-                  ↻
-                </button>
-                <button
-                  type="button"
-                  aria-label={`Reset ${side} pane rotation`}
-                  className="rounded-full px-2 py-0.5 hover:bg-white/15"
-                  onClick={() => rotateOn(side, camera, { to: 0 })}
-                >
-                  0°
-                </button>
-              </fieldset>
+                  <button
+                    type="button"
+                    aria-label={`Rotate ${side} pane left`}
+                    className="rounded-full px-2 py-0.5 hover:bg-white/15"
+                    onClick={() => rotateOn(side, camera, { by: -rotationStep })}
+                  >
+                    ↺
+                  </button>
+                  <span data-testid={`rotation-${side}`} className="min-w-9 text-center font-mono">
+                    {rotationOf(side)}°
+                  </span>
+                  <button
+                    type="button"
+                    aria-label={`Rotate ${side} pane right`}
+                    className="rounded-full px-2 py-0.5 hover:bg-white/15"
+                    onClick={() => rotateOn(side, camera, { by: rotationStep })}
+                  >
+                    ↻
+                  </button>
+                  <button
+                    type="button"
+                    aria-label={`Reset ${side} pane rotation`}
+                    className="rounded-full px-2 py-0.5 hover:bg-white/15"
+                    onClick={() => rotateOn(side, camera, { to: 0 })}
+                  >
+                    0°
+                  </button>
+                </fieldset>
+              </>
             )}
             camera={cameraOn(side)}
             onCameraChange={(camera) => moveCamera(side, camera)}
@@ -227,7 +279,6 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
             }))}
           />
         ) : null}
-        {cursor ? <Crosshair x="55%" y="45%" /> : null}
       </section>
     );
   };
