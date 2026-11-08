@@ -2231,7 +2231,7 @@ The case view becomes the slide view ([ADR 0053](adr/0053-ai-results-review-dire
   Refs kit Interaction spec, mock 7. Built on STACK-005 state machine choice. [ADR 0185](adr/0185-smart-minimap-state-machine-and-placement.md) has the states, edges, weights and the gaps to close.
   Size: M.
 
-- [ ] NAV-007 · Minimap placement scoring
+- [x] NAV-007 · Minimap placement scoring
   Score each corner by preference plus weighted hot points under it (tumor edge, measurement, current cell, doubtful cells, proposals, pins) plus blocks for chrome. The lowest score wins, ties go to bottom right. Move with a 300 ms ease, never while panning. The kit gives no weights for an open thread, the floating cells panel, proposals and pins, so this task picks them and records them in [ADR 0185](adr/0185-smart-minimap-state-machine-and-placement.md), as the owner agreed on 2026-11-04.
   Done when unit tests reproduce the mock's placement decisions for each scene.
   Refs mock 7 placement algorithm. [ADR 0185](adr/0185-smart-minimap-state-machine-and-placement.md) has the states, edges, weights and the gaps to close.
