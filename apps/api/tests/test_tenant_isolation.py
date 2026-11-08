@@ -3,6 +3,7 @@ import hashlib
 import io
 import threading
 import uuid
+import zipfile
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from enum import Enum, auto
@@ -133,6 +134,9 @@ def text_of(response: httpx2.Response) -> str:
     if response.headers.get("content-type") == "application/pdf":
         pages = PdfReader(io.BytesIO(response.content)).pages
         return " ".join(page.extract_text() for page in pages)
+    if response.headers.get("content-type") == "application/zip":
+        with zipfile.ZipFile(io.BytesIO(response.content)) as archive:
+            return " ".join(archive.read(name).decode() for name in archive.namelist())
     return response.text
 
 
@@ -812,6 +816,7 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
             position=0,
             kind="annotate",
             result_set_id=None,
+            signed_off_at=func.now(),
         )
     )
     seeded.ids["annotate_task"] = annotate_id
@@ -1405,6 +1410,10 @@ GET_ROUTES = {
     "exportTaskEvaluation": Route(
         Exposure.TENANT,
         lambda a: f"/api/review-tasks/{a.ids['task']}/evaluation/exports/objects.csv",
+    ),
+    "exportTrainingDataset": Route(
+        Exposure.TENANT,
+        lambda a: f"/api/review-tasks/{a.ids['annotate_task']}/training-dataset",
     ),
     "listReportLinks": Route(
         Exposure.TENANT, lambda a: f"/api/review-tasks/{a.ids['task']}/evaluation/links"
