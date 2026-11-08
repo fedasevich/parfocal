@@ -242,6 +242,19 @@ jobs:
             echo "ZITADEL_TEST_PASSWORD=${ZITADEL_TEST_PASSWORD}"
           } > .env
       - run: pnpm test:e2e
+      - if: always()
+        run: |
+          test -f apps/e2e/test-results/report.json || exit 0
+          mkdir -p flaky
+          node scripts/flaky.ts extract apps/e2e/test-results/report.json e2e apps/e2e > flaky/flaky.json
+          node scripts/flaky.ts summary flaky/flaky.json >> "$GITHUB_STEP_SUMMARY"
+      - if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: flaky-e2e
+          path: flaky/flaky.json
+          retention-days: 14
+          if-no-files-found: ignore
       - if: failure()
         run: docker compose logs
 
@@ -273,6 +286,22 @@ jobs:
         run: pnpm turbo run test:browser --filter=@parfocal/${{ matrix.package }}
         env:
           PARFOCAL_REQUIRE_FIXTURES: small,viewer
+      - if: ${{ always() && github.event_name != 'workflow_dispatch' }}
+        env:
+          PACKAGE: ${{ matrix.package }}
+        run: |
+          dir=$(ls -d "packages/$PACKAGE" "apps/$PACKAGE" 2>/dev/null | head -n 1)
+          test -f "$dir/test-results/report.json" || exit 0
+          mkdir -p flaky
+          node scripts/flaky.ts extract "$dir/test-results/report.json" "browser ($PACKAGE)" "$dir" > flaky/flaky.json
+          node scripts/flaky.ts summary flaky/flaky.json >> "$GITHUB_STEP_SUMMARY"
+      - if: ${{ always() && github.event_name != 'workflow_dispatch' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: flaky-browser-${{ matrix.package }}
+          path: flaky/flaky.json
+          retention-days: 14
+          if-no-files-found: ignore
       - if: ${{ github.event_name == 'workflow_dispatch' && inputs.update_goldens && matrix.package == 'golden-images' }}
         run: pnpm turbo run test:browser --filter=@parfocal/golden-images
         env:

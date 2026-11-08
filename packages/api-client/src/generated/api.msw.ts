@@ -7199,6 +7199,11 @@ export const getSearchResponseMock = (
       faker.string.alpha({ length: { min: 10, max: 20 } }),
       null,
     ]),
+    resolved_from: faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    task_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   })),
   ...overrideResponse,
 });

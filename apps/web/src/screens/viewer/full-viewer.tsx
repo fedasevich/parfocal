@@ -48,6 +48,7 @@ import { useFormat } from "../../format.ts";
 import { escLayer } from "../../keys/esc-ladder.ts";
 import { destinations } from "../../shell/destinations.ts";
 import { useResolvedSettings } from "../../shell/resolved-settings.ts";
+import { useCellTiming, useChromeSampling, useTaskRun } from "../../telemetry/use-task-timing.ts";
 import { formatDayMonth } from "../format.ts";
 import { useRememberResume } from "../home/remember-resume.ts";
 import { usePeople } from "../people.ts";
@@ -78,6 +79,7 @@ import { finishingAnswers } from "../review/guided-scenes.ts";
 import { useNoteKey } from "../review/note-key.ts";
 import { ObjectComments } from "../review/object-comments.tsx";
 import { useObjectKeys } from "../review/object-keys.ts";
+import { PagedProbeMarker } from "../review/paged-probe.tsx";
 import { PinMark, PinnedThread } from "../review/pinned-thread.tsx";
 import { type ReviewSession, useReviewSession } from "../review/review-data.ts";
 import {
@@ -115,6 +117,7 @@ import {
 import { cellCentre, TypeBar, useCellArrows } from "../review/type-bar.tsx";
 import { useDecisionSaves } from "../review/use-decision-saves.ts";
 import { useOpinionDraft } from "../review/use-opinion-draft.ts";
+import { usePagedReview } from "../review/use-paged-review.ts";
 import {
   AiSays,
   type ListFilter,
@@ -270,8 +273,13 @@ function ViewerBody({
   );
   const running = progress?.state === "running";
   const style = session.style;
-  const decisions = useDecisionSaves(session, style);
-  const objects = setup.issue === "noresults" || setup.issue === "withdrawn" ? [] : session.objects;
+  const paged = usePagedReview(session.classes.map((item) => item.name));
+  const fixtureObjects =
+    setup.issue === "noresults" || setup.issue === "withdrawn" ? [] : session.objects;
+  const objects = paged
+    ? [...fixtureObjects.filter((item) => item.kind !== "cell"), ...paged.cells]
+    : fixtureObjects;
+  const decisions = useDecisionSaves({ ...session, objects }, style);
   const regions = objects.filter((item) => item.kind === "region");
   const cells = objects.filter((item) => item.kind === "cell");
   const added = setup.issue ? [] : session.added;
@@ -389,6 +397,9 @@ function ViewerBody({
   const pathOfObject = (object: string) =>
     objectIdPath({ project: projectCode, caseLabel: session.caseLabel, slide: slideLabel, object });
   const current = objects.find((item) => item.object === selected);
+  const timing = useTaskRun("review", session.slideId, "viewer");
+  useCellTiming(current?.object, current?.kind === "cell");
+  useChromeSampling("viewer", search.focus === true ? "focus" : "chrome");
   const addedCurrent = added.find((item) => item.object === selected);
   const people = (session.task?.slides[0]?.reviewer_ids ?? []).flatMap((id) => {
     const found = person(id);
@@ -598,7 +609,7 @@ function ViewerBody({
     cells.map((cell) => [cell.object, answer(cell.object)?.value]),
   );
   const openCells = cells.filter((cell) => !answer(cell.object));
-  const zones = zonesOfCells(cells);
+  const zones = zonesOfCells(cells, paged ?? undefined);
   const openZone = zones.find((zone) => zone.id === openZoneId);
   const openZoneCells = openZone?.cells.filter((cell) => !answer(cell.object)) ?? [];
   const nextInZone = () => {
@@ -644,6 +655,25 @@ function ViewerBody({
       : { kind: "whole" };
   const cameraImage = imageOf(stillView);
   const shownCamera = camera ?? cameraFromSearch(cameraImage, search);
+  const pagedFollow = paged?.follow;
+  const pagedHere = stillView.kind === "cell" ? paged?.positionOf(stillView.object) : undefined;
+  const pagedAt = (axis: "x" | "y") => {
+    const at = shownCamera ?? pagedHere;
+    return stillView.kind === "cell" && at ? Math.round(at[axis] / 150) * 150 : null;
+  };
+  const pagedX = pagedAt("x");
+  const pagedY = pagedAt("y");
+  useEffect(() => {
+    pagedFollow?.(pagedX === null || pagedY === null ? null : { x: pagedX, y: pagedY });
+  }, [pagedFollow, pagedX, pagedY]);
+  const pagedPin = paged?.pin;
+  const decidedKey = cells
+    .filter((cell) => answer(cell.object))
+    .map((cell) => cell.object)
+    .join(",");
+  useEffect(() => {
+    if (decidedKey !== "") pagedPin?.(decidedKey.split(","));
+  }, [pagedPin, decidedKey]);
   const ranked = areaRows(areas, (object) => answer(object)?.value);
   const areaNav = useAreaNav({
     order: areaOrder(ranked),
@@ -848,6 +878,7 @@ function ViewerBody({
       return;
     }
     submitReview.mutate({ taskId: session.taskId, slideId: session.slideId });
+    timing.finish();
     void navigate({
       to: "/tasks/$taskId/submitted",
       params: { taskId: session.taskId },
@@ -1409,7 +1440,9 @@ function ViewerBody({
             tiles={setup.tiles}
             slideName={session.slideName}
             regionStyle={(object) => drawing.regionStyle(object) ?? styleOfObject(object)}
-            cellStyle={styleOfObject}
+            cellStyle={
+              paged ? (object) => paged.styleOf(object, styleOfObject(object)) : styleOfObject
+            }
             currentTint={
               confidence === "color" && current ? confidenceTintOf(current.score) : undefined
             }
@@ -1428,6 +1461,7 @@ function ViewerBody({
               stillCamera.current = still.camera;
               return (
                 <>
+                  {paged ? <PagedProbeMarker probe={paged.probe} /> : null}
                   {canvasNotice}
                   {onCell && tab === "objects" && current && !running ? (
                     <TypeBar

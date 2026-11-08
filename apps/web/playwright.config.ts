@@ -9,7 +9,10 @@ export default defineConfig({
   retries: process.env.CI ? 1 : 0,
   timeout: 30_000,
   expect: { timeout: 15_000 },
-  reporter: [["list"]],
+  grepInvert: /@quarantine/,
+  reporter: process.env.CI
+    ? [["list"], ["json", { outputFile: "test-results/report.json" }]]
+    : [["list"]],
   use: {
     baseURL: `http://localhost:${port}`,
     channel: "chrome",

@@ -21,6 +21,7 @@ export const tools = [
   "compare",
   "overlay",
 ];
+export const surveys = ["sus", "seq"];
 export const taskKinds = ["review", "annotate", "upload", "report"];
 
 export const eventSchema = {
@@ -38,6 +39,30 @@ export const eventSchema = {
   task_started: { task_kind: choice(...taskKinds), case_id: id },
   task_finished: { task_kind: choice(...taskKinds), case_id: id, duration_ms: count },
   task_abandoned: { task_kind: choice(...taskKinds), case_id: id, duration_ms: count },
+  area_time_recorded: { area: choice(...areas), duration_ms: count },
+  cell_review_timed: { slide_id: id, duration_ms: count },
+  chrome_coverage_measured: { area: choice(...areas), coverage_permille: count },
+  seq_answered: { task_kind: choice(...taskKinds), case_id: id, ease_score: count },
+  sus_answered: {
+    item_one: count,
+    item_two: count,
+    item_three: count,
+    item_four: count,
+    item_five: count,
+    item_six: count,
+    item_seven: count,
+    item_eight: count,
+    item_nine: count,
+    item_ten: count,
+    sus_score_tenths: count,
+  },
+  survey_dismissed: { survey: choice(...surveys) },
+  reading_time_compared: {
+    task_kind: choice(...taskKinds),
+    case_id: id,
+    estimated_ms: count,
+    duration_ms: count,
+  },
 } as const satisfies Record<string, Record<string, Field>>;
 
 export type EventName = keyof typeof eventSchema;

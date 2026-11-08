@@ -161,6 +161,44 @@ test("the formats drawer opens from the upload and from an import error and list
   expect(errors).toEqual([]);
 });
 
+test("the search, result set and chips narrow the slide rows", async ({ page }) => {
+  await page.goto(`/projects/${p07}`);
+  const rows = page.getByTestId("slide-row");
+  await expect(rows.first()).toBeVisible();
+  const all = await rows.count();
+  await page.getByLabel("Filter by slide, file or case").fill("zzz-no-such-slide");
+  await expect(rows).toHaveCount(0);
+  await expect(page.getByText("No slides match these filters.")).toBeVisible();
+  await page.getByLabel("Filter by slide, file or case").fill("");
+  await expect(rows).toHaveCount(all);
+  await page.getByRole("button", { name: /^No results/ }).click();
+  await expect(rows.first()).toContainText("No results yet");
+  for (const text of await rows.allInnerTexts()) expect(text).toContain("No results yet");
+  await page.getByRole("button", { name: /^No results/ }).click();
+  await expect(rows).toHaveCount(all);
+  await page.getByRole("button", { name: /^Needs review/ }).click();
+  await expect(rows.first()).toBeVisible();
+  for (const text of await rows.allInnerTexts()) expect(text).not.toContain("Nobody yet");
+});
+
+test("a row opens its slide", async ({ page }) => {
+  await page.goto(`/projects/${p07}`);
+  await page.getByTestId("slide-row").first().getByRole("button", { name: "Open" }).click();
+  await expect(page).toHaveURL(/\/slides\/.+\/live/);
+});
+
+test("dropping files on the project page opens the upload", async ({ page }) => {
+  await page.goto(`/projects/${p07}`);
+  const transfer = await page.evaluateHandle(() => {
+    const data = new DataTransfer();
+    data.items.add(new File([new Uint8Array(8)], "tumor_001.svs"));
+    return data;
+  });
+  await page.getByTestId("project-page").dispatchEvent("dragover", { dataTransfer: transfer });
+  await page.getByTestId("project-page").dispatchEvent("drop", { dataTransfer: transfer });
+  await expect(page).toHaveURL(/\/upload/);
+});
+
 test("an upload goes from the drop through Check to the end", async ({ page }) => {
   await page.goto(`/projects/${p07}/upload?scene=drop`);
   await page.getByTestId("drop-overlay").click();

@@ -178,12 +178,37 @@ export const toMyTask = (task: ScenarioReviewTask, viewer = fakeView().viewer): 
   };
 };
 
+let arrivedTaskCount = 0;
+
+export const arriveFakeWorklistTask = () => {
+  arrivedTaskCount += 1;
+};
+
+export const resetFakeWorklistArrivals = () => {
+  arrivedTaskCount = 0;
+};
+
+const arrivedTasks = (viewer: PersonKey): MyTask[] => {
+  const template = reviewTasks.find((task) => task.reviewers.includes(viewer));
+  if (template === undefined) return [];
+  return Array.from({ length: arrivedTaskCount }, (_, index) => ({
+    ...toMyTask(template, viewer),
+    id: `00000000-0000-4000-8007-0000000009${String(index).padStart(2, "0")}`,
+    code: `RT-${90 + index}`,
+    name: "Task that arrived live",
+    status: "not-started" as const,
+  }));
+};
+
 export const myTasks = () => {
   if (!inScenarioWorkspace()) return [];
   const viewer = fakeView().viewer;
-  return reviewTasks
-    .filter((task) => task.reviewers.includes(viewer))
-    .map((task) => toMyTask(task, viewer));
+  return [
+    ...reviewTasks
+      .filter((task) => task.reviewers.includes(viewer))
+      .map((task) => toMyTask(task, viewer)),
+    ...arrivedTasks(viewer),
+  ];
 };
 
 const stripLength = 4;

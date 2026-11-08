@@ -7,6 +7,8 @@ import { ObjectIdTag } from "@parfocal/ui/components/tag";
 import { useState } from "react";
 import { flushSync } from "react-dom";
 import { viewTransitions } from "../../shell/view-transitions.ts";
+import { taskTimer } from "../../telemetry/app-events.ts";
+import { useCellTiming } from "../../telemetry/use-task-timing.ts";
 import { okData } from "../placeholder.tsx";
 import type { SceneOf } from "../scenes.ts";
 import { CellsGrid } from "./cells-grid.tsx";
@@ -71,11 +73,13 @@ function CellsBody({
   const setName = useSetName(session);
   const counts = countAnswers(objects, answer);
   const object = cells.find((cell) => cell.object === current);
+  useCellTiming(current, object !== undefined);
   const openCells = cells.filter((cell) => !answer(cell.object));
   const keys = answersOf(style, session.classes, object).map((item) => item.key);
   const text = object ? cardText(style, object, "number") : null;
   const decide = (raw: string) => {
     if (object === undefined) return;
+    taskTimer.cellDecided(session.slideId);
     const next = new Map(overrides);
     next.set(object.object, {
       value: countsAs(style, raw, object),

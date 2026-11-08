@@ -34,6 +34,21 @@ ALLOWED_FIELDS = frozenset(
         "tool",
         "task_kind",
         "area",
+        "estimated_ms",
+        "coverage_permille",
+        "ease_score",
+        "sus_score_tenths",
+        "survey",
+        "item_one",
+        "item_two",
+        "item_three",
+        "item_four",
+        "item_five",
+        "item_six",
+        "item_seven",
+        "item_eight",
+        "item_nine",
+        "item_ten",
     }
 )
 

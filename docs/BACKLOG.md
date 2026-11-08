@@ -2062,7 +2062,7 @@ My work replaces the worklist ([ADR 0053](adr/0053-ai-results-review-direction.m
   Done when API and E2E tests cover each action with audit entries.
   Size: M.
 
-- [ ] WL-016 · Realtime worklist updates
+- [x] WL-016 · Realtime worklist updates
   New tasks, reviewer progress, finished jobs and status changes update without reload.
   Done when E2E with two sessions shows an update within 2 s.
   Depends on COLLAB-001.
@@ -2084,6 +2084,12 @@ My work replaces the worklist ([ADR 0053](adr/0053-ai-results-review-direction.m
   Done when component tests cover the filters and the search, and the table virtualises 10,000 rows.
   Depends on WL-001, WL-017. Refs mock: worklist/all.
   Size: M.
+
+- [x] WL-020 · The API announces worklist changes
+  WL-016 refreshes My work and Home when the `user:<id>` realtime room announces `worklist.changed`, but the API never publishes it, so only fake mode updates live. Publish it after a new task, reviewer progress, a finished job and a status change, to every user the change touches, with ids only and no names.
+  Done when API tests show each of the four changes publishes to the right user rooms with an ids-only payload, and a failed publish does not fail the request.
+  Depends on WL-016.
+  Size: S.
 
 ---
 
@@ -2478,10 +2484,16 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Depends on REVIEW-010, REVIEW-013.
   Size: S.
 
-- [ ] REVIEW-030 · The review screen reads paged results
+- [x] REVIEW-030 · The review screen reads paged results
   REVIEW-015 made every page of a paged result keep its cell probabilities, and the engine's paged cell reader handles one million cells, but the web review screen still reads a flat object list. Read cells through the paged reader in the full viewer, the zone gallery and focus mode, so the fade, unsure zones and decisions work on whole-slide results.
   Done when a browser test reviews cells on a paged result of at least 100,000 synthetic cells in the full viewer, with the fade, a zone and a saved decision.
   Depends on REVIEW-015.
+  Size: M.
+
+- [x] REVIEW-031 · Unsure zones follow the camera on paged results
+  REVIEW-030 reads paged cells in the review screens, but the zone and jump set is the 1,200 least-sure cells of one field at the slide centre, so zones and arrow jumps miss the rest of a whole slide. Load the unsure working set for the field in view as the camera moves, keep decided cells across fields, and let the zone list cover the whole slide from a server-side or chunked unsure index.
+  Done when a browser test on a paged result of at least 250,000 cells pans to a far field, sees its zone and jumps between cells there, and finds a decision made in the first field still shown.
+  Depends on REVIEW-030.
   Size: M.
 
 ---
@@ -3842,12 +3854,12 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when the experiments are configured and the analysis query exists.
   Size: M.
 
-- [ ] EXP-005 · In-app SUS and SEQ surveys
+- [x] EXP-005 · In-app SUS and SEQ surveys
   SEQ after defined tasks, SUS after a number of sessions, rate-limited and dismissible.
   Done when tests cover triggering and storage without PHI.
   Size: M.
 
-- [ ] EXP-006 · Task timing for KPIs
+- [x] EXP-006 · Task timing for KPIs
   Measure time per sign-out, per area and per cell reviewed, chrome coverage at runtime, and reading-time estimate accuracy.
   Done when a KPI dashboard shows seeded data against the kit targets.
   Size: M.
@@ -3880,6 +3892,12 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   EXP-007 lets each device opt out of usage analytics. Add a workspace policy in Admin (on, off, or each person chooses) in the lab settings layer, keep the person's choice in their own layer so it follows them across devices, and let the workspace policy win over the person.
   Done when tests show no events are sent when the workspace turns analytics off whatever the person chose, and a person's opt-out holds on a second device.
   Depends on EXP-007.
+  Size: S.
+
+- [x] EXP-012 · Task timer in the review flows
+  EXP-006 added a task timer and four ids-only timing events behind the analytics opt-out, and a KPI dashboard on seeded data, but nothing starts or stops the timer. Start and stop it in the guided review, the full viewer, the zone gallery, focus mode and sign-out, sample chrome coverage in the viewer, and feed the dashboard from the real events.
+  Done when a browser test reviews a slide and signs it out and the timer's events carry the slide, area and cell times, and no event is sent after opt-out.
+  Depends on EXP-006.
   Size: S.
 
 ---
@@ -4164,7 +4182,7 @@ A project holds slides, AI results and review tasks. Cases inside it are optiona
   Depends on PROJ-001. Refs doc 37 "Viewer", mock: case.
   Size: M.
 
-- [ ] PROJ-006 · Project page
+- [x] PROJ-006 · Project page
   A header with the name, privacy tag, members and Upload and New review task, then tabs. Slides lists the slides grouped by case with result sets and reviewers, filters (result set, needs review, no results) and a search, and a row opens the slide with Open shown on hover. Review tasks lists the project's tasks. Settings is PROJ-008. Files dropped anywhere on the page open the upload (INGEST-021).
   Done when component tests cover each tab and filter, and E2E opens a slide from a row and starts an upload by dropping files.
   Depends on PROJ-001, WL-001. Refs mock: project, doc 38 "Project", doc 40 R5.
@@ -4296,7 +4314,7 @@ IDs short enough to say out loud, scoped to the slide ([ADR 0053](adr/0053-ai-re
   Done when unit tests cover each rule and an alias that still resolves.
   Depends on OBJ-001, RSET-007.
 
-- [ ] OBJ-004 · ID resolution and search
+- [x] OBJ-004 · ID resolution and search
   Any part of a full path resolves to the object, including aliases, for links, search (CASES-009) and the palette (CMD-002).
   Done when API tests resolve every form and an alias after a merge.
   Depends on OBJ-003.

@@ -27,6 +27,7 @@ import { now } from "../../clock.ts";
 import { destinations } from "../../shell/destinations.ts";
 import { useOverlay } from "../../shell/overlays.ts";
 import { useGoTo } from "../../shell/router-link.tsx";
+import { useWorklistLive } from "../../worklist-live/use-worklist-live.ts";
 import { formatDue, formatLongDay, formatWeekday, greeting, percent, plural } from "../format.ts";
 import { projectColour } from "../palette.ts";
 import { usePeople } from "../people.ts";
@@ -462,6 +463,7 @@ function HomeWithoutData({
 
 export function HomeScreen() {
   const me = okData(useGetMe().data);
+  useWorklistLive(me?.user_id);
   const homeQuery = useGetMyHome();
   const home = okData(homeQuery.data);
   const checklist = useGetMyChecklist().data?.data;

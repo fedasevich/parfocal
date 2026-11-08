@@ -15,6 +15,7 @@ from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import MemberPrincipal, Principal
 from parfocal_api.problems import BadRequestError, ConflictError, NotFoundError
 from parfocal_api.projects import ProjectArchivedError, owned
+from parfocal_api.realtime import RealtimeClient
 from parfocal_api.review_tasks import (
     ReviewTaskDetail,
     audit,
@@ -39,6 +40,7 @@ from parfocal_api.tables import (
     verdicts,
 )
 from parfocal_api.task_notices import iso, told
+from parfocal_api.worklist_events import announce_worklist, task_people
 
 type NudgeMessage = Annotated[
     str, StringConstraints(strip_whitespace=True, min_length=1, max_length=500)
@@ -365,6 +367,7 @@ async def reassign_slides(
     connection: TenantConnection,
     http: Request,
     background: BackgroundTasks,
+    live: RealtimeClient,
 ) -> Reassignment:
     row = await changeable_task(connection, principal, task_id)
     if request.from_user_id == request.to_user_id:
@@ -437,6 +440,13 @@ async def reassign_slides(
         },
     )
     background.add_task(deliver_after_commit, http.app, row.tenant_id)
+    announce_worklist(
+        background,
+        live,
+        row.tenant_id,
+        {request.from_user_id} | await task_people(connection, task_id),
+        task=task_id,
+    )
     return Reassignment(
         id=reassignment_id,
         task_id=task_id,
@@ -460,6 +470,8 @@ async def undo_reassignment(
     reassignment_id: uuid.UUID,
     principal: CurrentPrincipal,
     connection: TenantConnection,
+    live: RealtimeClient,
+    background: BackgroundTasks,
 ) -> None:
     row = await changeable_task(connection, principal, task_id)
     move = (
@@ -493,6 +505,13 @@ async def undo_reassignment(
         task_id,
         {"moved_back": len(moved)},
     )
+    announce_worklist(
+        background,
+        live,
+        row.tenant_id,
+        {move.to_user_id} | await task_people(connection, task_id),
+        task=task_id,
+    )
 
 
 @router.post(
@@ -508,6 +527,7 @@ async def add_task_reviewer(
     connection: TenantConnection,
     http: Request,
     background: BackgroundTasks,
+    live: RealtimeClient,
 ) -> ReviewTaskDetail:
     row = await changeable_task(connection, principal, task_id)
     await check_reviewers(connection, row.project_id, [request.user_id])
@@ -538,4 +558,7 @@ async def add_task_reviewer(
         {"reviewer": await person_of(connection, request.user_id), "slides": len(wanted)},
     )
     background.add_task(deliver_after_commit, http.app, row.tenant_id)
+    announce_worklist(
+        background, live, row.tenant_id, await task_people(connection, task_id), task=task_id
+    )
     return await detail_of(connection, principal, await task_row(connection, task_id), True)

@@ -11,7 +11,8 @@ from typing import Annotated, Protocol, cast
 
 import httpx2
 from fastapi import Depends, Request
-from pydantic import BaseModel, Field
+from pydantic import AnyHttpUrl, BaseModel, Field, SecretStr
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from parfocal_api.settings import ApiSettings
 
@@ -114,7 +115,14 @@ class NoRealtime:
         return
 
 
-def realtime_for(settings: ApiSettings, http: httpx2.AsyncClient) -> Realtime:
+class RealtimeSettings(BaseSettings):
+    model_config = SettingsConfigDict(frozen=True, extra="ignore")
+
+    room_token_key: SecretStr | None = None
+    realtime_internal_url: AnyHttpUrl | None = None
+
+
+def realtime_for(settings: ApiSettings | RealtimeSettings, http: httpx2.AsyncClient) -> Realtime:
     key = settings.room_token_key
     if key is None or not key.get_secret_value() or settings.realtime_internal_url is None:
         return NoRealtime()

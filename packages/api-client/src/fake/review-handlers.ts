@@ -493,7 +493,10 @@ export function reviewHandlers(): RequestHandler[] {
       const aiClass = sentinelClasses.find((item) => item.name === reviewObjects[index]?.className);
       const saved = {
         object: objectId,
-        kind: reviewObjects[index]?.kind === "cell" ? ("cell" as const) : ("region" as const),
+        kind:
+          reviewObjects[index]?.kind === "cell" || body.ai_class_id != null
+            ? ("cell" as const)
+            : ("region" as const),
         number: index + 1,
         style: settings.style,
         answer,

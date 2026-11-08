@@ -623,12 +623,26 @@ async def run_step(
     return True
 
 
+JobFinished = Callable[[Claimed], Awaitable[None]]
+
+
+async def tell_finished(on_finished: JobFinished, job: Claimed) -> None:
+    try:
+        await on_finished(job)
+    except Exception as error:
+        logger.warning(
+            "job finished hook failed",
+            extra={"job_id": str(job.job_id), "event": type(error).__name__},
+        )
+
+
 async def run_job(
     engine: AsyncEngine,
     job: Claimed,
     workflow: Workflow,
     worker: str,
     labels: RunLabels | None = None,
+    on_finished: JobFinished | None = None,
 ) -> None:
     heartbeat = asyncio.create_task(renew(engine, job, worker, workflow.lease_seconds))
     try:
@@ -638,11 +652,13 @@ async def run_job(
                 return
             if not await run_step(engine, job, step, ordinal, worker, labels):
                 return
-        await finish(engine, job, worker, JobStatus.DONE)
+        final = await finish(engine, job, worker, JobStatus.DONE)
     finally:
         heartbeat.cancel()
         with suppress(asyncio.CancelledError):
             await heartbeat
+    if final is JobStatus.DONE and on_finished is not None:
+        await tell_finished(on_finished, job)
 
 
 async def work(
@@ -652,6 +668,7 @@ async def work(
     idle_exit_seconds: float | None = None,
     poll_seconds: float = 1.0,
     tenant_id: uuid.UUID | None = None,
+    on_finished: JobFinished | None = None,
 ) -> int:
     kinds = {workflow.kind: workflow for workflow in workflows}
     finished = 0
@@ -664,7 +681,7 @@ async def work(
             continue
         idle = 0.0
         job, workflow = claimed
-        await run_job(engine, job, workflow, worker)
+        await run_job(engine, job, workflow, worker, on_finished=on_finished)
         finished += 1
     return finished
 

@@ -9,6 +9,7 @@ import {
   type VerdictDraft,
 } from "@parfocal/api-client";
 import { useQueryClient } from "@tanstack/react-query";
+import { taskTimer } from "../../telemetry/app-events.ts";
 import { type Count, decisionBody, type ReviewStyle, shownCall } from "./decision-style.ts";
 import type { ReviewSession } from "./review-data.ts";
 import type { Answer } from "./review-state.ts";
@@ -25,7 +26,10 @@ export function useDecisionSaves(session: ReviewSession, style: ReviewStyle) {
     raw: string,
     value: Count,
     reasons?: Pick<VerdictDraft, "reasons" | "reason_class_id">,
-  ) =>
+  ) => {
+    if (objects.find((item) => item.object === objectId)?.kind === "cell") {
+      taskTimer.cellDecided(slideId);
+    }
     saver.mutate({
       taskId,
       slideId,
@@ -39,6 +43,7 @@ export function useDecisionSaves(session: ReviewSession, style: ReviewStyle) {
         ...reasons,
       },
     });
+  };
   const refreshLayer = () =>
     void queryClient.invalidateQueries({ queryKey: getGetReviewedLayerQueryKey(taskId, slideId) });
   const edits = useSaveReviewEdit({ mutation: { onSuccess: refreshLayer } });

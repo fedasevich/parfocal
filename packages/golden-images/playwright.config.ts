@@ -6,7 +6,10 @@ export default defineConfig({
   fullyParallel: false,
   forbidOnly: Boolean(process.env.CI),
   timeout: 30_000,
-  reporter: [["list"]],
+  grepInvert: /@quarantine/,
+  reporter: process.env.CI
+    ? [["list"], ["json", { outputFile: "test-results/report.json" }]]
+    : [["list"]],
   use: {
     channel: "chrome",
     headless: true,

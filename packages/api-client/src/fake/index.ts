@@ -138,7 +138,15 @@ export * as scenarioAdjudication from "./scenario-adjudication.ts";
 export * as scenarioAdmin from "./scenario-admin.ts";
 export * as scenarioClinical from "./scenario-clinical.ts";
 export * as scenarioConnectModel from "./scenario-connect-model.ts";
-export { scenarioHandlers, toHome, toMe, toMembers, toProject } from "./scenario-handlers.ts";
+export {
+  arriveFakeWorklistTask,
+  resetFakeWorklistArrivals,
+  scenarioHandlers,
+  toHome,
+  toMe,
+  toMembers,
+  toProject,
+} from "./scenario-handlers.ts";
 export * as scenarioJobs from "./scenario-jobs.ts";
 export * as scenarioProject from "./scenario-project.ts";
 export * as scenarioReview from "./scenario-review.ts";

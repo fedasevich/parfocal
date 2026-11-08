@@ -22,6 +22,7 @@ All are set by the web app for features the user uses, hold no name or contact d
 | `parfocal-developer-mode` | localStorage | On or absent | Keeps developer mode on for people who turned it on |
 | `parfocal-lab-settings` | localStorage | JSON of the developer drawer controls | Keeps a researcher's renderer, culling, interpolation, prefetch, detail level, nuclei, HUD and pause choices in the developer drawer |
 | `parfocal.slide-cameras` | localStorage | The opaque id of the signed-in user, the slide id and the last camera (x, y, zoom) with the time it was written, for 30 days and at most 200 slides per user | Reopens a slide where the person left it, and keeps people on a shared workstation apart. No name, file name or patient data. [ADR 0229](../adr/0229-slide-camera-remembered-per-device.md) |
+| `parfocal.event-log` | localStorage | The last 300 ids-only timing events (task, area and cell times, chrome coverage) of people who allow analytics. Never written after an opt-out | Feeds the task timing dashboard on this device. No name, free text or patient data |
 | `parfocal.pinned-slide-strip` | localStorage | On or off | Keeps the slide strip pinned in the viewer |
 | `parfocal.slide-brightness` | localStorage | A number | Keeps the viewer's brightness setting |
 | `parfocal.outline-mode` | localStorage | One of fade, mark-unsure or bands | Keeps how the review viewer shows AI confidence on outlines |
