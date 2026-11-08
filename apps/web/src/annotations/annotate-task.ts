@@ -3,8 +3,8 @@ import type {
   LayerObject,
   ProjectClass,
   ReviewTaskDetail,
-  SharedAiObject,
 } from "@parfocal/api-client";
+import type { SharedAiObject } from "./annotate-task-api.ts";
 import type { CheckState } from "./check-state.ts";
 
 export type LayerOrigin = "ai" | "ai-edited" | "ai-confirmed" | "human";

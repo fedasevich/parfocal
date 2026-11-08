@@ -1,17 +1,4 @@
-import {
-  ApiError,
-  changeAiObject,
-  checkAnnotateSlide,
-  confirmAiObject,
-  getGetAnnotateSlideStatusQueryOptions,
-  getGetSharedLayerQueryKey,
-  type ProjectClass,
-  signOffAnnotateSlide,
-  uncheckAnnotateSlide,
-  useGetMe,
-  useGetSharedLayer,
-  useListSharedAiObjects,
-} from "@parfocal/api-client";
+import { ApiError, type ProjectClass, useGetMe } from "@parfocal/api-client";
 import {
   AiResultToggle,
   CheckedCard,
@@ -37,7 +24,20 @@ import {
   slideStepOf,
   taskProgressOf,
 } from "../annotations/annotate-task.ts";
+import {
+  changeAi,
+  checkSlide,
+  confirmAi,
+  sharedLayerKey,
+  signOffSlide,
+  slideStatusKey,
+  slideStatusQuery,
+  uncheckSlide,
+  useSharedAiObjects,
+  useSharedLayer,
+} from "../annotations/annotate-task-api.ts";
 import { confirmAction, confirmActions, confirms } from "../annotations/check-state.ts";
+
 import type { SaveState } from "../annotations/use-saved-annotations.ts";
 import { useBindings } from "../keys/personal-keys.ts";
 import type { Fired } from "../keys/registry.ts";
@@ -79,15 +79,15 @@ export function AnnotateTaskPanel({
   const queryClient = useQueryClient();
   const me = okData(useGetMe().data)?.user_id ?? null;
   const personOf = usePeople();
-  const layerQuery = useGetSharedLayer(taskId, slideId);
+  const layerQuery = useSharedLayer(taskId, slideId);
   const layer = okData(layerQuery.data)?.objects ?? [];
-  const aiQuery = useListSharedAiObjects(taskId, slideId, {
+  const aiQuery = useSharedAiObjects(taskId, slideId, {
     query: { enabled: task.resultSetId !== null },
   });
   const aiList = okData(aiQuery.data);
   const loaded = layerQuery.isSuccess && (task.resultSetId === null || aiQuery.isSuccess);
   const statusQueries = useQueries({
-    queries: task.slideIds.map((id) => getGetAnnotateSlideStatusQueryOptions(taskId, id)),
+    queries: task.slideIds.map((id) => slideStatusQuery(taskId, id)),
   });
   const statuses = statusQueries.map((query) => okData(query.data));
   const status = statuses[task.slideIds.indexOf(slideId)];
@@ -104,10 +104,10 @@ export function AnnotateTaskPanel({
 
   const refresh = useCallback(async () => {
     await Promise.all([
-      queryClient.invalidateQueries({ queryKey: getGetSharedLayerQueryKey(taskId, slideId) }),
+      queryClient.invalidateQueries({ queryKey: sharedLayerKey(taskId, slideId) }),
       ...task.slideIds.map((id) =>
         queryClient.invalidateQueries({
-          queryKey: getGetAnnotateSlideStatusQueryOptions(taskId, id).queryKey,
+          queryKey: slideStatusKey(taskId, id),
         }),
       ),
     ]);
@@ -147,7 +147,7 @@ export function AnnotateTaskPanel({
   const confirmSelected = useCallback(() => {
     if (selectedAi === undefined || selectedAi.check !== "unchecked" || locked) return;
     void run(() =>
-      confirmAiObject(taskId, slideId, selectedAi.object, { geometry: selectedAi.geometry }),
+      confirmAi(taskId, slideId, selectedAi.object, { geometry: selectedAi.geometry }),
     );
   }, [selectedAi, locked, run, taskId, slideId]);
   const latestConfirm = useRef(confirmSelected);
@@ -161,7 +161,7 @@ export function AnnotateTaskPanel({
   const deleteSelected = () => {
     if (selectedAi === undefined || locked) return;
     void run(() =>
-      changeAiObject(taskId, slideId, selectedAi.object, {
+      changeAi(taskId, slideId, selectedAi.object, {
         deleted: true,
         geometry: selectedAi.geometry,
       }),
@@ -189,7 +189,7 @@ export function AnnotateTaskPanel({
         data-testid="annotate-task-panel"
         data-step={step}
         data-ai={view.shown ? "shown" : view.available ? "hidden" : "none"}
-        className="absolute top-4 left-16 grid max-h-[calc(100%-2rem)] w-80 gap-2 overflow-auto rounded-ctl border border-line bg-chrome p-3"
+        className="absolute top-4 left-16 grid max-h-[calc(100%-48px)] w-80 gap-2 overflow-auto rounded-ctl border border-line bg-chrome p-3"
       >
         <p className="m-0 text-body-sm text-fg-dim" data-testid="task-progress">
           {progress.line}
@@ -222,7 +222,7 @@ export function AnnotateTaskPanel({
             </li>
           ))}
         </ul>
-        <ul aria-label="Objects" className="m-0 grid max-h-56 list-none gap-0.5 overflow-auto p-0">
+        <ul aria-label="Objects" className="m-0 grid max-h-64 list-none gap-0.5 overflow-auto p-0">
           {shownAi.map((object) => (
             <li key={object.object}>
               <button
@@ -289,7 +289,7 @@ export function AnnotateTaskPanel({
             disabled={!loaded}
             onClick={() =>
               void run(() =>
-                checkAnnotateSlide(taskId, slideId, nothingToMark ? { nothing_to_mark: true } : {}),
+                checkSlide(taskId, slideId, nothingToMark ? { nothing_to_mark: true } : {}),
               )
             }
           >
@@ -302,9 +302,7 @@ export function AnnotateTaskPanel({
               status?.experts.find((expert) => expert.user_id === me)?.nothing_to_mark ?? false
             }
             summary={summary}
-            {...(locked
-              ? {}
-              : { onUndo: () => void run(() => uncheckAnnotateSlide(taskId, slideId)) })}
+            {...(locked ? {} : { onUndo: () => void run(() => uncheckSlide(taskId, slideId)) })}
             {...(next === null || onOpenSlide === undefined
               ? {}
               : { onNext: () => onOpenSlide(next) })}
@@ -324,7 +322,7 @@ export function AnnotateTaskPanel({
               checked: expert.checked_at !== null,
               sub: expert.nothing_to_mark ? "Nothing to mark" : "Checked",
             }))}
-            onSignOff={() => void run(() => signOffAnnotateSlide(taskId, slideId))}
+            onSignOff={() => void run(() => signOffSlide(taskId, slideId))}
           />
         ) : null}
       </section>

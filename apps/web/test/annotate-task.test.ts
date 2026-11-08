@@ -5,7 +5,6 @@ import type {
   LayerObject,
   ProjectClass,
   ReviewTaskDetail,
-  SharedAiObject,
 } from "@parfocal/api-client";
 import {
   aiCheckCounts,
@@ -21,6 +20,7 @@ import {
   taskClassesOf,
   taskProgressOf,
 } from "../src/annotations/annotate-task.ts";
+import type { SharedAiObject } from "../src/annotations/annotate-task-api.ts";
 
 const cls = (key: number, name: string): ProjectClass => ({
   id: `class-${key}`,

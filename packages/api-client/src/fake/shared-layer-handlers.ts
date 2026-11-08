@@ -1,9 +1,4 @@
 import { HttpResponse, http, type RequestHandler } from "msw";
-import {
-  type SharedAiObject,
-  type SharedAiObjects,
-  sharedAiObjectsSchema,
-} from "../draft/list-shared-ai-objects.ts";
 import type {
   AiObjectEdit,
   AnnotateSlideStatus,
@@ -15,7 +10,6 @@ import type {
   ProjectClass,
   SharedLayer,
 } from "../generated/api.ts";
-import type { DraftOperation } from "./draft-handlers.ts";
 import { people, resultSets } from "./scenario.ts";
 import { annotateStubTaskId } from "./scenario-review.ts";
 import { fakeView } from "./view.ts";
@@ -41,6 +35,23 @@ const resultSet = resultSets.find((set) => set.key === "sam") ?? resultSets[0];
 const resultSetOf = (slideId: string) =>
   slideId === annotateTaskSlides.withResults ? (resultSet?.id ?? null) : null;
 
+type SharedAiObject = {
+  object: string;
+  kind: "region" | "cell";
+  number: number;
+  class_id: string | null;
+  score: number;
+  geometry: { type: "Polygon"; coordinates: [number, number][][] };
+};
+
+type SharedAiObjects = {
+  task_id: string;
+  slide_id: string;
+  result_set_id: string | null;
+  result_name: string | null;
+  objects: SharedAiObject[];
+};
+
 const square = (x: number, y: number, size: number): SharedAiObject["geometry"] => ({
   type: "Polygon",
   coordinates: [
@@ -63,14 +74,13 @@ const aiCells: SharedAiObject[] = [0.42, 0.61, 0.73, 0.88, 0.55, 0.94].map((scor
   geometry: square(2200 + index * 140, 2400 + (index % 3) * 120, 60),
 }));
 
-export const toSharedAiObjects = (taskId: string, slideId: string): SharedAiObjects =>
-  sharedAiObjectsSchema.parse({
-    task_id: taskId,
-    slide_id: slideId,
-    result_set_id: resultSetOf(slideId),
-    result_name: resultSetOf(slideId) === null ? null : (resultSet?.name ?? null),
-    objects: resultSetOf(slideId) === null ? [] : aiCells,
-  });
+export const toSharedAiObjects = (taskId: string, slideId: string): SharedAiObjects => ({
+  task_id: taskId,
+  slide_id: slideId,
+  result_set_id: resultSetOf(slideId),
+  result_name: resultSetOf(slideId) === null ? null : (resultSet?.name ?? null),
+  objects: resultSetOf(slideId) === null ? [] : aiCells,
+});
 
 type Check = { checked_at: string | null; nothing_to_mark: boolean };
 
@@ -234,21 +244,10 @@ function aiCopy(
   return made;
 }
 
-export const sharedLayerDraftOperations: DraftOperation[] = [
-  {
-    operationId: "listSharedAiObjects",
-    method: "get",
-    path: "/api/review-tasks/{task_id}/slides/{slide_id}/shared-layer/ai",
-    handler: () => getListSharedAiObjectsMockHandler(),
-  },
-];
-
-export const getListSharedAiObjectsMockHandler = (overrideResponse?: SharedAiObjects) =>
-  http.get<Params>(`${base}/shared-layer/ai`, ({ params }) =>
-    HttpResponse.json(overrideResponse ?? toSharedAiObjects(params.taskId, params.slideId)),
-  );
-
 export const sharedLayerHandlers = (): RequestHandler[] => [
+  http.get<Params>(`${base}/shared-layer/ai`, ({ params }) =>
+    HttpResponse.json(toSharedAiObjects(params.taskId, params.slideId)),
+  ),
   http.get<Params>(`${base}/shared-layer`, ({ params }) => {
     if (params.taskId !== annotateStubTaskId) return undefined;
     const store = readStore();

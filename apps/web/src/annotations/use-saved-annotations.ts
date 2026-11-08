@@ -1,5 +1,6 @@
-import { type AnnotationDraft, getSharedLayer, listAnnotations } from "@parfocal/api-client";
+import { type AnnotationDraft, listAnnotations } from "@parfocal/api-client";
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { readSharedLayer } from "./annotate-task-api.ts";
 import { adoptTheirs } from "./conflicts.ts";
 import { deleteMarker, dropMarker } from "./count-markers.ts";
 import { type AnnotationDocument, addShape, createDocument } from "./document.ts";
@@ -64,7 +65,7 @@ async function savedRecords(
     const saved = await listAnnotations(slideId);
     return saved.status === 200 ? saved.data : null;
   }
-  const layer = await getSharedLayer(sharedTaskId, slideId);
+  const layer = await readSharedLayer(sharedTaskId, slideId);
   if (layer.status !== 200) return null;
   return layer.data.objects.filter((item) => item.deleted_at === null && item.source === null);
 }
