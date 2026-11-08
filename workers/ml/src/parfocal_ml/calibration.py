@@ -7,7 +7,7 @@ from pathlib import Path
 import numpy as np
 from numpy.typing import NDArray
 
-from parfocal_ml.type_evaluation import Labels, Probabilities, evaluate, scaled
+from parfocal_ml.type_evaluation import Band, Labels, Probabilities, evaluate, scaled
 
 CONFIDENT = 0.8
 DOUBTFUL_BELOW = 0.4
@@ -53,6 +53,7 @@ class TyperCalibration:
     test_set_confident_share: float
     test_set_unsure_share: float
     validated_sites: tuple[str, ...]
+    bands: tuple[Band, ...]
 
 
 def unsure_share(probabilities: Probabilities) -> float:
@@ -102,6 +103,7 @@ def calibrate(
         validated_sites=(
             validated_sites(calibrated, labels, sites, site_names) if sites is not None else ()
         ),
+        bands=tuple(result.bands),
     )
 
 

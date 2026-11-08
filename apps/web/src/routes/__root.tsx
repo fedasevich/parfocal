@@ -1,5 +1,6 @@
 import { createRootRoute, Link, Outlet, useMatches } from "@tanstack/react-router";
 import { KeyBindingsProvider } from "../keys/keycap-bindings.tsx";
+import { LabKey } from "../lab/lab-key.tsx";
 import { SessionLock } from "../session/session-lock.tsx";
 import { CommandPalette } from "../shell/command-palette.tsx";
 import { useAppliedDensity } from "../shell/density.ts";
@@ -33,6 +34,7 @@ function Root() {
         <CommandPalette />
         <ShortcutsKey />
         <SettingsKey />
+        <LabKey />
       </KeyBindingsProvider>
     </SessionLock>
   );

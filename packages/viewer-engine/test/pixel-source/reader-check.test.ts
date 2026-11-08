@@ -2,7 +2,12 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { after, describe, it } from "node:test";
-import { referenceTilesDir } from "@parfocal/test-fixtures";
+import {
+  fixturesDir,
+  referenceTilesDir,
+  skipUnlessCached,
+  syntheticDir,
+} from "@parfocal/test-fixtures";
 import { PNG } from "pngjs";
 import {
   checkAgainstReference,
@@ -18,10 +23,9 @@ import {
   type SlideFormatId,
   type SlideIndex,
 } from "../../src/index.ts";
-import { cachedFixture, cachedFixtureDir, syntheticDir } from "./fixtures.ts";
 import { serve } from "./serve.ts";
 
-const served = await serve({ "/synthetic": syntheticDir, "/cache": cachedFixtureDir() });
+const served = await serve({ "/synthetic": syntheticDir, "/cache": fixturesDir() });
 after(() => served.close());
 
 interface Slide {
@@ -47,12 +51,8 @@ function slide(name: string): Slide {
   return found;
 }
 
-function available(entry: Slide): boolean {
-  return !entry.cached || cachedFixture(entry.name) !== null;
-}
-
-function skipUnless(entry: Slide): { skip?: string } {
-  return available(entry) ? {} : { skip: `${entry.name} is not downloaded` };
+function skipUnless(entry: Slide): { skip: string | false } {
+  return { skip: entry.cached && skipUnlessCached(entry.name) };
 }
 
 function sidecar(name: string): SlideIndex {

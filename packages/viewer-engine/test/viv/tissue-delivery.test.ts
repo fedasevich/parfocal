@@ -3,6 +3,7 @@ import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, describe, it } from "node:test";
+import { syntheticDir } from "@parfocal/test-fixtures";
 import {
   type Camera,
   createViewerEngine,
@@ -18,7 +19,6 @@ import {
   readTissueBox,
 } from "../../src/viv/index.ts";
 import { FakeContainer, FakeFrames, FakeRenderer, FakeResize } from "../engine-fakes.ts";
-import { syntheticDir } from "../pixel-source/fixtures.ts";
 import { serve } from "../pixel-source/serve.ts";
 
 const sidecars = await mkdtemp(join(tmpdir(), "tissue-sidecar-"));

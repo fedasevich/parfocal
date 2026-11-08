@@ -72,6 +72,29 @@ CATALOGUE: tuple[CatalogueModel, ...] = (
 BY_NAME: Mapping[str, CatalogueModel] = {model.name: model for model in CATALOGUE}
 
 
+class ConfidenceBand(StrEnum):
+    CONFIDENT = "confident"
+    LIKELY = "likely"
+    UNSURE = "unsure"
+    DOUBTFUL = "doubtful"
+
+
+BAND_CUTOFFS: tuple[tuple[ConfidenceBand, float], ...] = (
+    (ConfidenceBand.CONFIDENT, 0.8),
+    (ConfidenceBand.LIKELY, 0.55),
+    (ConfidenceBand.UNSURE, 0.4),
+    (ConfidenceBand.DOUBTFUL, 0.0),
+)
+
+
+@dataclass(frozen=True)
+class TyperBand:
+    band: ConfidenceBand
+    lowest: float
+    share: float
+    accuracy: float | None
+
+
 @dataclass(frozen=True)
 class TyperCalibration:
     temperature: float
@@ -80,6 +103,23 @@ class TyperCalibration:
     test_set_confident_share: float
     test_set_unsure_share: float
     validated_sites: tuple[str, ...]
+    bands: tuple[TyperBand, ...]
+
+    def band_of(self, probability: float) -> ConfidenceBand:
+        for row in self.bands:
+            if probability >= row.lowest:
+                return row.band
+        return self.bands[-1].band
+
+    def band_accuracy(self) -> dict[ConfidenceBand, float]:
+        return {row.band: row.accuracy for row in self.bands if row.accuracy is not None}
+
+
+def typer_bands(*rows: tuple[float, float | None]) -> tuple[TyperBand, ...]:
+    return tuple(
+        TyperBand(band, lowest, share, accuracy)
+        for (band, lowest), (share, accuracy) in zip(BAND_CUTOFFS, rows, strict=True)
+    )
 
 
 PANNUKE_SITES_BUT_LUNG = (
@@ -111,6 +151,7 @@ CALIBRATIONS: Mapping[tuple[str, str, int], TyperCalibration] = {
         test_set_confident_share=0.5941,
         test_set_unsure_share=0.0755,
         validated_sites=PANNUKE_SITES_BUT_LUNG,
+        bands=typer_bands((0.594, 0.950), (0.278, 0.722), (0.117, 0.512), (0.011, 0.438)),
     ),
     ("pathosam-hovernext", "v1.2", 8): TyperCalibration(
         temperature=1.29,
@@ -119,6 +160,7 @@ CALIBRATIONS: Mapping[tuple[str, str, int], TyperCalibration] = {
         test_set_confident_share=0.6076,
         test_set_unsure_share=0.0694,
         validated_sites=PANNUKE_SITES_BUT_LUNG,
+        bands=typer_bands((0.608, 0.955), (0.275, 0.706), (0.105, 0.523), (0.012, 0.442)),
     ),
 }
 

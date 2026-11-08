@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { after, describe, it } from "node:test";
+import { fixturesDir, skipUnlessCached, syntheticDir } from "@parfocal/test-fixtures";
 import { openTiffSource, type PixelArray, type PixelResult, type Raster } from "../../src/index.ts";
 import Jpeg2000Decoder, {
   damagedTileGrey,
@@ -10,10 +11,9 @@ import Jpeg2000Decoder, {
   MainThreadCodecError,
 } from "../../src/pixel-source/tiff/jpeg2000/jpeg2000-decoder.ts";
 import { openJpegLoadCount } from "../../src/pixel-source/tiff/jpeg2000/openjpeg-runtime.ts";
-import { cachedFixture, cachedFixtureDir, syntheticDir } from "./fixtures.ts";
 import { serve } from "./serve.ts";
 
-const served = await serve({ "/synthetic": syntheticDir, "/cache": cachedFixtureDir() });
+const served = await serve({ "/synthetic": syntheticDir, "/cache": fixturesDir() });
 
 after(async () => {
   await served.close();
@@ -248,9 +248,9 @@ function assertMeans(raster: Raster, openSlide: readonly number[], limit: number
 }
 
 describe("Aperio JPEG 2000 colour is applied exactly once", () => {
-  it("matches OpenSlide on a stained tile of JP2K-33003-1.svs (YCbCr, compression 33003)", async (t) => {
-    if (cachedFixture("JP2K-33003-1.svs") === null)
-      return t.skip("JP2K-33003-1.svs is not cached, run: pnpm fixtures formats");
+  it("matches OpenSlide on a stained tile of JP2K-33003-1.svs (YCbCr, compression 33003)", {
+    skip: skipUnlessCached("JP2K-33003-1.svs"),
+  }, async () => {
     const tile = await stainedTile("JP2K-33003-1.svs", { level: 0, x: 40, y: 12 });
     assertMeans(tile, [203.8, 110.3, 148.9], 1);
     const openSlideFirstRow = [235, 231, 196, 197, 194, 192, 180, 193];
@@ -259,9 +259,9 @@ describe("Aperio JPEG 2000 colour is applied exactly once", () => {
     }
   });
 
-  it("matches OpenSlide on a stained tile of CMU-1-JP2K-33005.svs (RGB, compression 33005)", async (t) => {
-    if (cachedFixture("CMU-1-JP2K-33005.svs") === null)
-      return t.skip("CMU-1-JP2K-33005.svs is not cached, run: pnpm fixtures formats");
+  it("matches OpenSlide on a stained tile of CMU-1-JP2K-33005.svs (RGB, compression 33005)", {
+    skip: skipUnlessCached("CMU-1-JP2K-33005.svs"),
+  }, async () => {
     const tile = await stainedTile("CMU-1-JP2K-33005.svs", { level: 0, x: 119, y: 44 });
     assertMeans(tile, [178.9, 140.1, 173.4], 0.5);
   });

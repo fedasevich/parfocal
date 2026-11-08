@@ -1084,7 +1084,7 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
   Done when API and component tests cover editing and reordering.
   Size: M.
 
-- [ ] INGEST-020 · Bulk import tool for pilot onboarding
+- [x] INGEST-020 · Bulk import tool for pilot onboarding
   A CLI that uploads a folder of slides with a CSV manifest mapping files to cases.
   Done when a test imports 20 fixture slides into 5 cases.
   Depends on CASES-006.
@@ -1519,10 +1519,16 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Done when the drawer's control list is confirmed against doc 34 lab-tagged leaves and kit W25.
   Size: S.
 
-- [ ] LAB-001 · Developer drawer
+- [x] LAB-001 · Developer drawer
   Opens with Ctrl+Shift+D or `?lab`, only for users with the developer permission. The ten sections of the mock in four groups, as [ADR 0189](adr/0189-developer-drawer-control-list.md) lists them. Renderer, culling, detail level, interpolation, synthetic nuclei, prefetch, motion vector, HUD and pause models drive the viewer. The heatmap, model, typing and job zones drive their features once those tasks land.
   Done when component tests cover each control and a permission test hides it from doctors.
   Refs mock `developer` screen, kit gallery "Developer mode, Viv by default", [ADR 0189](adr/0189-developer-drawer-control-list.md).
+  Size: M.
+
+- [ ] LAB-018 · Drawer controls drive the viewer
+  LAB-001 saves all nine developer drawer controls, but only interpolation and prefetch change the Viv route. Make the renderer choice switch the route behind the renderer interface, and make culling, detail level, synthetic nuclei, the HUD, the motion vector and pause models change what the viewer does.
+  Done when a test per control shows the viewer reading the saved choice, and a browser test changes one control and sees the viewer change.
+  Depends on LAB-001.
   Size: M.
 
 - [ ] LAB-002 · Performance HUD
@@ -2606,7 +2612,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Done when tests cover undo of clear and comment cleanup.
   Size: S.
 
-- [ ] ANN-027 · Run piece promotion and pruning
+- [x] ANN-027 · Run piece promotion and pruning
   Promote run pieces to shapes on edit or in bulk (confirm above 5,000), drop least confident pieces.
   Done when tests cover promotion and pruning with undo.
   Size: S.
@@ -2671,6 +2677,18 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Done when a browser test clicks the checkbox and finds it toggled, and the annotate task spec uses a click instead of Space.
   Depends on ANN-032.
   Size: S.
+
+- [ ] ANN-039 · Arrows and notes in threads, reports, imports and exports
+  ANN-036 saves arrows and text notes under the letters A and N, but comment threads cannot attach to them by code, report blocks accept only the older letters, imported files cannot create notes, and exports leave the note text out. Accept A and N in threads and report blocks, import notes with their words, and export the note text only where the export already carries patient data.
+  Done when API tests attach a thread to an arrow and a note, place both in a report block, import a note, and show the note text in an export that allows it and absent from one that does not.
+  Depends on ANN-036.
+  Size: M.
+
+- [ ] ANN-040 · Serve a slide's AI objects for an annotate task
+  ANN-031 reads the AI objects of an annotate task slide, with their outlines, origin and check state, through a drafted `listSharedAiObjects` that only the fake API serves. Add the API read under the shared layer routes, paged for large result sets, with tenant and task guards, regenerate the client and delete the draft.
+  Done when API tests cover the read, paging, a slide with no result set and the cross-tenant refusal, and the annotate task browser spec runs on the real client with no draft left.
+  Depends on ANN-031.
+  Size: M.
 ## 16 MEAS · Measurements
 
 - [ ] MEAS-000 · Research check
@@ -3299,7 +3317,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   The least sure first order applies the temperature before it rates objects, when a task is made ([ADR 0117](adr/0117-review-order-is-stored-per-task-slide.md), review order stored per task slide).
   Size: M.
 
-- [ ] AINUC-007 · Confidence bands
+- [x] AINUC-007 · Confidence bands
   Confident, likely, unsure, doubtful thresholds per typer from calibration data.
   Done when unit tests reproduce the band accuracies reported by MLEVAL.
   Size: S.

@@ -1,4 +1,5 @@
-import { after } from "node:test";
+import { after, describe, it } from "node:test";
+import { fixturesDir, skipUnlessCached, syntheticDir } from "@parfocal/test-fixtures";
 import {
   createDefaultPixelSourceRegistry,
   type OpenRequest,
@@ -7,7 +8,6 @@ import {
   type SlideFormatId,
 } from "../../src/index.ts";
 import { type Expected, pixelSourceConformance } from "./conformance.ts";
-import { cachedFixture, cachedFixtureDir, syntheticDir } from "./fixtures.ts";
 import { serve } from "./serve.ts";
 import { writeZarrFixture, type ZarrFixtureOptions } from "./zarr-fixture.ts";
 
@@ -69,7 +69,7 @@ const written = await Promise.all(
 
 const served = await serve({
   "/synthetic": syntheticDir,
-  "/cache": cachedFixtureDir(),
+  "/cache": fixturesDir(),
   ...Object.fromEntries(written.map(([, fixture], index) => [`/zarr${index}`, fixture.root])),
 });
 
@@ -318,8 +318,12 @@ const cachedSlides: readonly (readonly [string, SlideFormatId, Expected])[] = [
 ];
 
 for (const [file, formatId, expected] of cachedSlides) {
-  if (cachedFixture(file) === null) continue;
-  pixelSourceConformance(`geotiff, ${file}`, viaRegistry(formatId, `/cache/${file}`), expected);
+  const skip = skipUnlessCached(file);
+  if (skip === false) {
+    pixelSourceConformance(`geotiff, ${file}`, viaRegistry(formatId, `/cache/${file}`), expected);
+  } else {
+    describe(`PixelSource conformance: geotiff, ${file}`, () => it("reads the slide", { skip }));
+  }
 }
 
 const zarrExpected: Record<string, Expected> = {
