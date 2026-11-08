@@ -43,9 +43,10 @@ type VizKeyProps = React.ComponentProps<"div"> & {
   color: string;
   label: React.ReactNode;
   count?: number | undefined;
+  cue?: "solid" | "dashed" | "double" | undefined;
 };
 
-function VizKey({ color, label, count, className, ...props }: VizKeyProps) {
+function VizKey({ color, label, count, cue = "solid", className, ...props }: VizKeyProps) {
   return (
     <div
       data-slot="viz-key"
@@ -54,8 +55,18 @@ function VizKey({ color, label, count, className, ...props }: VizKeyProps) {
     >
       <i
         aria-hidden="true"
+        data-cue={cue}
         className="size-3 shrink-0 rounded-[3px]"
-        style={{ background: color }}
+        style={
+          cue === "solid"
+            ? { background: color }
+            : cue === "dashed"
+              ? { border: `2px dashed ${color}` }
+              : {
+                  background: color,
+                  boxShadow: `inset 0 0 0 3px #0b0b0b, inset 0 0 0 4px ${color}`,
+                }
+        }
       />
       <span className="flex-1">{label}</span>
       {count === undefined ? null : <b className="font-mono font-semibold text-fg">{count}</b>}

@@ -352,6 +352,21 @@ export {
 export type { PfcFile, PfcHeader } from "./nuclei/pfc.ts";
 export { decodePfc, PfcError, readPfc, UnknownPfcVersionError } from "./nuclei/pfc.ts";
 export {
+  type AgreementCue,
+  type AgreementKind,
+  type AgreementObject,
+  type AgreementOptions,
+  type AgreementOverlays,
+  agreementColours,
+  agreementCueOf,
+  agreementCues,
+  agreementKinds,
+  agreementOverlays,
+  type ComparisonKind,
+  comparisonKinds,
+  comparisonLabels,
+} from "./overlay/agreement.ts";
+export {
   createPathBatch,
   createPointBatch,
   createPolygonBatch,

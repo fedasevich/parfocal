@@ -201,11 +201,16 @@ export function layerDrawing(input: LayerInput): LayerDrawing {
     const count = (kind: keyof typeof agreementColours) =>
       [...agreement.values()].filter((value) => value === kind).length;
     return {
-      regionStyle: (object) => ({
-        stroke: colour(object),
-        fill: `${colour(object)}22`,
-        width: 2.4,
-      }),
+      regionStyle: (object) => {
+        const kind = agreement.get(object) ?? "both";
+        return {
+          stroke: colour(object),
+          fill: `${colour(object)}22`,
+          width: 2.4,
+          ...(kind === "ai_only" ? { dash: "8 5" } : {}),
+          ...(kind === "reviewer_only" ? { double: true } : {}),
+        };
+      },
       tags: tagsIn(colour),
       underlay: undefined,
       legend: (
@@ -226,11 +231,13 @@ export function layerDrawing(input: LayerInput): LayerDrawing {
           <VizKey
             color={agreementColours.ai_only}
             label="AI only, reviewer disagreed"
+            cue="dashed"
             count={count("ai_only")}
           />
           <VizKey
             color={agreementColours.reviewer_only}
             label={`Reviewer only, added ${added.join(", ")}`}
+            cue="double"
             count={count("reviewer_only")}
           />
         </VizLegend>
