@@ -3671,7 +3671,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when an ADR lists support and fallbacks.
   Size: S.
 
-- [ ] DEV-001 · Input abstraction
+- [x] DEV-001 · Input abstraction
   Devices produce semantic intents (pan vector, zoom delta, next cell, keep, set type, not a cell, next area, peek, preset step) consumed by the viewer and review loop.
   Done when unit tests cover the intent mapping for every device in the kit device matrix.
   Size: M.
