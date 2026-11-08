@@ -104,6 +104,23 @@ test("the account menu opens Settings and Shortcuts, and close goes back", async
   await expect(page).toHaveURL(/\/$/);
 });
 
+test("silencing replies in Settings hides them from the bell", async ({ page }) => {
+  await page.goto("/settings/notifications");
+  const replies = dialog(page).getByRole("radiogroup", { name: "Someone replies to me" });
+  await replies.getByRole("radio", { name: "Quiet" }).click();
+  await page.keyboard.press("Escape");
+  await page.getByRole("button", { name: /^Notifications, / }).click();
+  const bell = page.getByRole("dialog", { name: "Notifications" });
+  await expect(bell.getByText("Simona Marková replied")).toHaveCount(0);
+  await expect(bell.getByText("PathoSAM + HoVer-NeXt finished")).toBeVisible();
+});
+
+test("the STAT rows and sound are offered", async ({ page }) => {
+  await page.goto("/settings/notifications");
+  await expect(dialog(page).getByText("A STAT task is given to me")).toBeVisible();
+  await expect(dialog(page).getByRole("switch", { name: "Sound for STAT tasks" })).toBeChecked();
+});
+
 test("recording a key walks through the mock's cases", async ({ page }) => {
   await page.goto("/settings/shortcuts");
   await dialog(page).getByRole("button", { name: "Comment: C" }).click();

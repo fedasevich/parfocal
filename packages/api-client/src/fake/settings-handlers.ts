@@ -16,6 +16,7 @@ import type {
   MemberAvailability,
   NotificationKind,
   Preference,
+  PreferenceChange,
   SessionSummary,
 } from "../generated/api.ts";
 import type { DraftOperation } from "./draft-handlers.ts";
@@ -125,6 +126,16 @@ export function settingsHandlers(): RequestHandler[] {
   return [
     getListSessionsMockHandler(() => toSessions()),
     getListNotificationPreferencesMockHandler(() => toPreferences()),
+    http.put("*/api/me/notification-preferences", async ({ request }) => {
+      const { preferences } = (await request.json()) as { preferences: PreferenceChange[] };
+      for (const change of preferences) {
+        const channel = !change.in_app ? "quiet" : change.email ? "email" : "bell";
+        const existing = noticeChannels.find((item) => item.kind === change.kind);
+        if (existing) existing.channel = channel;
+        else noticeChannels.push({ kind: change.kind, channel });
+      }
+      return HttpResponse.json(toPreferences());
+    }),
     getGetMyAvailabilityMockHandler(() => toMyAvailability()),
     http.put("*/api/me/availability", async ({ request }) => {
       const change = (await request.json()) as AvailabilityChange;

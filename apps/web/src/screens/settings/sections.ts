@@ -59,6 +59,9 @@ export type RowKey =
   | "spaceMouseRotation"
   | "noticeTask"
   | "noticeMention"
+  | "noticeReply"
+  | "noticeStat"
+  | "statSound"
   | "noticeSubmit"
   | "noticeRun"
   | "noticeDue"
@@ -196,7 +199,20 @@ export const sectionRows: Record<Exclude<SettingsSection, "shortcuts">, SettingR
       "noticeMention",
       "Someone mentions me",
       "personal",
-      "An @mention or a reply in a thread you wrote in.",
+      "An @mention in a thread or a comment.",
+    ),
+    row("noticeReply", "Someone replies to me", "personal", "A reply in a thread you wrote in."),
+    row(
+      "noticeStat",
+      "A STAT task is given to me",
+      "device",
+      "Urgent work that cannot wait for the next review round.",
+    ),
+    row(
+      "statSound",
+      "Sound for STAT tasks",
+      "device",
+      "Plays a short chime on this device when a STAT task arrives.",
     ),
     row(
       "noticeSubmit",
@@ -208,7 +224,7 @@ export const sectionRows: Record<Exclude<SettingsSection, "shortcuts">, SettingR
       "noticeRun",
       "A model run finishes",
       "personal",
-      "Runs you started, and the ones that failed.",
+      "AI finished: runs you started, and the ones that failed.",
     ),
     row("noticeDue", "A reminder before a due date", "personal", "Two days before, then each day."),
   ],

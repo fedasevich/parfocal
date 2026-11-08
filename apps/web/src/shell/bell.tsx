@@ -1,6 +1,7 @@
 import {
   type InboxItem,
   useGetNotificationCounts,
+  useListNotificationPreferences,
   useListNotifications,
   useMarkNotificationsRead,
 } from "@parfocal/api-client";
@@ -12,10 +13,12 @@ import {
 } from "@parfocal/ui/components/notifications-panel";
 import { Popover, PopoverContent, PopoverTrigger } from "@parfocal/ui/components/popover";
 import { useQueryClient } from "@tanstack/react-query";
+import { useEffect, useRef } from "react";
 import { now } from "../clock.ts";
 import { relativeTime } from "../screens/format.ts";
 import { okData } from "../screens/placeholder.tsx";
 import { destinations } from "./destinations.ts";
+import { playChime, readStatNotice, shownInBell, statToChime } from "./notification-gate.ts";
 import { useOverlay } from "./overlays.ts";
 import { useGoTo } from "./router-link.tsx";
 
@@ -76,8 +79,33 @@ const toNotification = (item: InboxItem): NotificationItem => {
   };
 };
 
+function useGatedInbox() {
+  const page = okData(useListNotifications().data);
+  const all = page?.notifications ?? [];
+  const preferences = okData(useListNotificationPreferences().data) ?? [];
+  const stat = readStatNotice();
+  const shown = all.filter((item) => shownInBell(item, preferences, stat));
+  const hiddenUnread = all.filter((item) => !item.read && !shown.includes(item)).length;
+  return { shown, hiddenUnread, stat, loaded: page !== undefined };
+}
+
+function useStatSound() {
+  const { shown, stat, loaded } = useGatedInbox();
+  const heard = useRef<Set<string> | null>(null);
+  useEffect(() => {
+    if (!loaded) return;
+    if (heard.current === null) {
+      heard.current = new Set(shown.map((item) => item.id));
+      return;
+    }
+    const fresh = statToChime(shown, heard.current, stat);
+    for (const item of shown) heard.current.add(item.id);
+    if (fresh.length > 0) playChime();
+  }, [shown, stat, loaded]);
+}
+
 function InboxPanel({ onClose }: { onClose: () => void }) {
-  const inbox = okData(useListNotifications().data)?.notifications ?? [];
+  const inbox = useGatedInbox().shown;
   const markRead = useMarkNotificationsRead();
   const refresh = useInboxRefresh();
   const goTo = useGoTo();
@@ -109,7 +137,9 @@ function InboxPanel({ onClose }: { onClose: () => void }) {
 
 export function Bell() {
   const overlay = useOverlay();
-  const unread = okData(useGetNotificationCounts().data)?.unread ?? 0;
+  useStatSound();
+  const { hiddenUnread } = useGatedInbox();
+  const unread = Math.max(0, (okData(useGetNotificationCounts().data)?.unread ?? 0) - hiddenUnread);
   const isOpen = overlay.open === "notifications";
   return (
     <Popover
