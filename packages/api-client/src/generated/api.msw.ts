@@ -12304,6 +12304,20 @@ export const getSwitchWorkspaceResponseMock = (
   ...overrideResponse,
 });
 
+export const getCreateMyWorkspaceResponseMock = (
+  overrideResponse: Partial<Extract<Workspace, object>> = {},
+): Workspace => ({
+  tenant_id: faker.string.uuid(),
+  role: faker.helpers.arrayElement(Object.values(Role)),
+  admin_rights: faker.datatype.boolean(),
+  slug: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  kind: faker.helpers.arrayElement(Object.values(TenantKind)),
+  status: faker.helpers.arrayElement(Object.values(TenantStatus)),
+  organisation_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  ...overrideResponse,
+});
+
 export const getListTenantMembersResponseMock = (): Member[] =>
   Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
     user_id: faker.string.uuid(),
@@ -18305,6 +18319,28 @@ export const getSwitchWorkspaceMockHandler = (
   );
 };
 
+export const getCreateMyWorkspaceMockHandler = (
+  overrideResponse?:
+    | Workspace
+    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<Workspace> | Workspace),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/me/workspaces",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getCreateMyWorkspaceResponseMock(),
+        { status: 201 },
+      );
+    },
+    options,
+  );
+};
+
 export const getListTenantMembersMockHandler = (
   overrideResponse?:
     | Member[]
@@ -19233,6 +19269,7 @@ export const getParfocalAPIMock = () => [
   getGetMeMockHandler(),
   getUpdateMeMockHandler(),
   getSwitchWorkspaceMockHandler(),
+  getCreateMyWorkspaceMockHandler(),
   getListTenantMembersMockHandler(),
   getListMemberActivityMockHandler(),
   getChangeMemberRoleMockHandler(),

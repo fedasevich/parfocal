@@ -1,4 +1,5 @@
 import { HttpResponse, http, type RequestHandler } from "msw";
+import { workspaceAnsweredSchema, workspaceAnswerSchema } from "../draft/answer-workspace.ts";
 import { type AdminOverview, adminOverviewSchema } from "../draft/get-admin-overview.ts";
 import { type InvitePreview, invitePreviewSchema } from "../draft/get-invite-preview.ts";
 import { type SecuritySettings, securitySettingsSchema } from "../draft/get-security-settings.ts";
@@ -587,7 +588,24 @@ export const getRequestProjectAccessMockHandler = (overrideResponse?: AccessRequ
     );
   });
 
+export const getAnswerWorkspaceMockHandler = () =>
+  http.post("*/api/me/workspace-answers", async ({ request }) => {
+    const answer = workspaceAnswerSchema.parse(await request.json());
+    return HttpResponse.json(
+      workspaceAnsweredSchema.parse({
+        workspace_id: answer.workspace_id,
+        state: answer.how === "join" ? "joined" : "requested",
+      }),
+    );
+  });
+
 export const adminDraftOperations: DraftOperation[] = [
+  {
+    operationId: "answerWorkspace",
+    method: "post",
+    path: "/api/me/workspace-answers",
+    handler: () => getAnswerWorkspaceMockHandler(),
+  },
   {
     operationId: "getAdminOverview",
     method: "get",

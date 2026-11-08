@@ -10,7 +10,10 @@ import {
   setFakeView,
 } from "../src/fake/index.ts";
 import {
+  answerWorkspace,
   createInvitation,
+  createMyWorkspace,
+  createSampleProject,
   getAdminOverview,
   getInvitePreview,
   getMe,
@@ -155,4 +158,24 @@ test("asking for access names the project's owner", async () => {
   const asked = (await requestProjectAccess(project.id)).data;
   assert.equal(asked.project_id, project.id);
   assert.equal(asked.owner_id, scenario.people.LM.id);
+});
+
+test("a person who creates a workspace is a researcher with admin rights", async () => {
+  const created = await createMyWorkspace({ name: "Brno AI group" });
+  assert.equal(created.status, 201);
+  assert.deepEqual(
+    [created.data.name, created.data.role, created.data.admin_rights],
+    ["Brno AI group", "researcher", true],
+  );
+});
+
+test("setup joins the matching workspace at once and asks for the other one", async () => {
+  assert.equal((await answerWorkspace({ workspace_id: "w", how: "join" })).data.state, "joined");
+  assert.equal((await answerWorkspace({ workspace_id: "w", how: "ask" })).data.state, "requested");
+});
+
+test("setup creates the sample project", async () => {
+  const sample = await createSampleProject();
+  assert.equal(sample.status, 201);
+  assert.equal(sample.data.sample, true);
 });

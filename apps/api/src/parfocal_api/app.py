@@ -44,6 +44,7 @@ from parfocal_api import (
     notifications,
     opinion_forms,
     opinions,
+    own_workspaces,
     personal_data,
     project_jobs,
     projects,
@@ -263,6 +264,7 @@ def create_app(
     app.include_router(tenants.platform)
     app.include_router(tenants.tenant)
     app.include_router(users.me_router)
+    app.include_router(own_workspaces.router)
     app.include_router(users.tenant_router)
     app.include_router(users.platform_router)
     app.include_router(audit_trail.router)

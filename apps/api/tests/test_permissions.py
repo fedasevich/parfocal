@@ -91,6 +91,7 @@ OPEN_OPERATIONS = {
     "getMe": "signed-in",
     "updateMe": "signed-in",
     "switchWorkspace": "signed-in",
+    "createMyWorkspace": "signed-in",
     "getCurrentTenant": "member",
     "listTaxonomyTemplates": "member",
     "getOpinionFormTemplate": "member",
