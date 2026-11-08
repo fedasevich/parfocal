@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-08
 
+- CMD-005 (key presets) gave the QuPath-like and Figma-like presets their tool keys in the settings keymap. Presets change tool keys only, and a test asserts that review and global keys stay the same in every preset.
 - PROTO-020 (annotate task screens over fake data) ticked on the owner's quick check of /prototype on 2026-11-08. The owner will review the screens again in full once they run in the real app.
 - CMD-000 (command research check) and OPS-000 (operations research check) ticked: their Done when lines only confirm STACK-014 (command palette and hotkeys), STACK-029 (cloud provider), STACK-030 (infrastructure as code) and STACK-032 (observability), which are all done.
 - Decisions of 2026-11-08 processed: 64a, 65a, 67a, 69a and 70a kept as built, 66b kept with the industry check raised as decision 72 (search text in the URL), 68b added ANN-037 (comment pins in the select tool), 71a added INGEST-031 (skipped status for a duplicate in a link import).

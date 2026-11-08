@@ -3580,7 +3580,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when the check runs in CI and the known conflicts are resolved.
   Size: S.
 
-- [ ] CMD-005 · Presets
+- [x] CMD-005 · Presets
   Viewer default, QuPath-like, Figma-like. Presets change tool keys only, and review keys stay.
   Done when tests switch presets and assert bindings.
   Size: S.
