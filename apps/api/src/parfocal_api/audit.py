@@ -77,6 +77,7 @@ class AuditAction(StrEnum):
     SLIDE_OPENED = "slide.opened"
     SLIDE_DETAILS_CHANGED = "slide.details-changed"
     CASE_SLIDES_REORDERED = "case.slides-reordered"
+    CASE_SLIDE_MOVED = "case.slide-moved"
     TASK_CREATED = "task.created"
     TASK_CHANGED = "task.changed"
     TASK_NUDGED = "task.nudged"

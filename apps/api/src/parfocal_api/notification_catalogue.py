@@ -133,6 +133,13 @@ CATALOGUE: Mapping[NotificationKind, Entry] = {
         QUIET,
         breaks_mute=False,
     ),
+    NotificationKind.SLIDE_MOVED: Entry(
+        TargetKind.SLIDE,
+        "Slide moved",
+        "A slide in one of your tasks moved to another case.",
+        QUIET,
+        breaks_mute=False,
+    ),
     NotificationKind.ADJUDICATION_REQUESTED: Entry(
         TargetKind.TASK,
         "Objects to adjudicate",

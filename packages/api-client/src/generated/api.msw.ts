@@ -135,6 +135,7 @@ import type {
   SlideCoverage,
   SlideDetail,
   SlideFigure,
+  SlideMoved,
   SlidePage,
   SlideScope,
   SlideTable,
@@ -4300,6 +4301,23 @@ export const getReorderCaseSlidesResponseMock = (
       restricted_images: faker.helpers.arrayElements(Object.values(RestrictedImage)),
     }),
   ),
+  ...overrideResponse,
+});
+
+export const getMoveSlideResponseMock = (
+  overrideResponse: Partial<Extract<SlideMoved, object>> = {},
+): SlideMoved => ({
+  slide_id: faker.string.uuid(),
+  from_case_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  to_case_id: faker.string.uuid(),
+  result_set_ids: Array.from(
+    { length: faker.number.int({ min: 1, max: 10 }) },
+    (_, i) => i + 1,
+  ).map(() => faker.string.uuid()),
+  task_ids: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
+    faker.string.uuid(),
+  ),
+  block_cleared: faker.datatype.boolean(),
   ...overrideResponse,
 });
 
@@ -13880,6 +13898,28 @@ export const getReorderCaseSlidesMockHandler = (
   );
 };
 
+export const getMoveSlideMockHandler = (
+  overrideResponse?:
+    | SlideMoved
+    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<SlideMoved> | SlideMoved),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/slides/:slideId/move",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getMoveSlideResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getListAnnotationsMockHandler = (
   overrideResponse?:
     | Annotation[]
@@ -18576,6 +18616,7 @@ export const getParfocalAPIMock = () => [
   getCreateCaseMockHandler(),
   getChangeSlideDetailsMockHandler(),
   getReorderCaseSlidesMockHandler(),
+  getMoveSlideMockHandler(),
   getListAnnotationsMockHandler(),
   getCreateAnnotationMockHandler(),
   getCreateAnnotationsMockHandler(),

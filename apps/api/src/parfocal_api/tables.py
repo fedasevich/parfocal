@@ -994,6 +994,7 @@ class NotificationKind(StrEnum):
     RESULT_SET_ADDED = "result-set-added"
     INTEGRATION_DOWN = "integration-down"
     ADJUDICATION_REQUESTED = "adjudication-requested"
+    SLIDE_MOVED = "slide-moved"
 
 
 class EmailStatus(StrEnum):
