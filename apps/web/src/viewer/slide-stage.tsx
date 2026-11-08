@@ -37,6 +37,7 @@ import { useProposals } from "../annotations/use-proposals.ts";
 import { useSavedAnnotations } from "../annotations/use-saved-annotations.ts";
 import { legendDeviceOf } from "../devices/device-legend.ts";
 import { DeviceLegend } from "../devices/device-legend.tsx";
+import { applyMainCalibration } from "../devices/stage-calibration.ts";
 import { EscProvider, useEscOwner, useNewEscRegistry } from "../keys/esc-owner.tsx";
 import { useBindings } from "../keys/personal-keys.ts";
 import { useHotkeys } from "../keys/use-hotkeys.ts";
@@ -448,6 +449,7 @@ function OpenedSlide({
         route: { onError: fail, ...labRouteOptions() },
         resolve: open,
       });
+      applyMainCalibration(viewport.engine);
       let unfollow = () => {};
       dispose = () => {
         unfollow();
