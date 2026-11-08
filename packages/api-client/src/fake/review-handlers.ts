@@ -7,6 +7,7 @@ import {
   getClearReviewEditMockHandler,
   getClearVerdictMockHandler,
   getCreateThreadMockHandler,
+  getDeleteThreadMockHandler,
   getGetOpinionMockHandler,
   getGetReviewedLayerMockHandler,
   getGetSlideNeighboursMockHandler,
@@ -14,6 +15,7 @@ import {
   getListMentionableMembersMockHandler,
   getListProjectClassesMockHandler,
   getListThreadsMockHandler,
+  getMoveThreadMockHandler,
   getReopenThreadMockHandler,
   getReplyToThreadMockHandler,
   getResolveThreadMockHandler,
@@ -30,6 +32,7 @@ import type {
   Neighbours,
   Opinion,
   OpinionChange,
+  PinMove,
   ProjectClass,
   TaskStates,
   Thread,
@@ -113,11 +116,13 @@ export const toTaskDisplay = (taskId: string): TaskDisplay => {
 const postedThreads: Thread[] = [];
 const postedComments: ThreadComment[] = [];
 const resolution = new Map<string, { at: string; by: string } | null>();
+const removedThreads = new Set<string>();
 
 export const resetFakeThreads = () => {
   postedThreads.length = 0;
   postedComments.length = 0;
   resolution.clear();
+  removedThreads.clear();
 };
 
 export const toThreadComments = (threadId: string): ThreadComment[] => {
@@ -204,6 +209,7 @@ export const toThreads = (taskId: string, slideId: string, resolved: boolean | n
       last_message_at: item.last,
     }));
   return [...seeded, ...posted]
+    .filter((item) => !removedThreads.has(item.id))
     .map(withResolution)
     .filter((item) => resolved === null || (item.resolved_at === null) === !resolved);
 };
@@ -461,6 +467,16 @@ export function reviewHandlers(): RequestHandler[] {
       const threadId = String(params["threadId"]);
       resolution.set(threadId, null);
       return detailOf(String(params["taskId"]), String(params["slideId"]), threadId);
+    }),
+    getMoveThreadMockHandler(async ({ params, request }) => {
+      const body = (await request.json()) as PinMove;
+      const threadId = String(params["threadId"]);
+      const posted = postedThreads.find((item) => item.id === threadId);
+      if (posted !== undefined) posted.anchor = { ...posted.anchor, geometry: body.geometry };
+      return detailOf(String(params["taskId"]), String(params["slideId"]), threadId);
+    }),
+    getDeleteThreadMockHandler(({ params }) => {
+      removedThreads.add(String(params["threadId"]));
     }),
     getListMentionableMembersMockHandler(({ params }) => toMentionable(String(params["taskId"]))),
     getGetThreadMockHandler(({ params }) =>

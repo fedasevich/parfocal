@@ -100,6 +100,48 @@ def test_replies_resolve_reopen_and_delete_with_confirmation(api: ApiAs, databas
     assert api(first).delete(f"{s.base}/threads/{lone['id']}").status_code == 204
 
 
+def test_a_pin_moves_and_keeps_its_replies_and_only_its_author_or_owner_moves_it(
+    api: ApiAs, database: str
+) -> None:
+    s = study(api, database, blinded=False, hidden=False)
+    thread = ok(start(api, s, "first", {"kind": "point", "geometry": POINT})).json()
+    path = f"{s.base}/threads/{thread['id']}"
+    ok(api(s.people["owner"]).post(f"{path}/messages", json={"body": "Looks benign."}))
+    target = {"type": "Point", "coordinates": [55.5, 66.5]}
+    moved = ok(api(s.people["first"]).patch(f"{path}/anchor", json={"geometry": target})).json()
+    assert moved["anchor"]["kind"] == "point"
+    assert moved["anchor"]["geometry"] == target
+    assert len(moved["messages"]) == 2
+    listed = ok(api(s.people["first"]).get(f"{s.base}/threads")).json()
+    assert listed[0]["anchor"]["geometry"] == target
+    refused = api(s.people["second"]).patch(f"{path}/anchor", json={"geometry": POINT})
+    assert refused.status_code == 403
+    assert code_of(refused) == "not-thread-author"
+    assert (
+        api(s.people["owner"]).patch(f"{path}/anchor", json={"geometry": POINT}).status_code == 200
+    )
+    assert (
+        api(s.people["third"]).patch(f"{path}/anchor", json={"geometry": POINT}).status_code == 404
+    )
+    assert (
+        api(s.people["first"])
+        .patch(f"{path}/anchor", json={"geometry": {"type": "LineString", "coordinates": []}})
+        .status_code
+        == 422
+    )
+    assert [action for action, _ in audit_rows(database, thread["id"])].count("thread.moved") == 2
+
+
+def test_only_a_pinned_thread_moves(api: ApiAs, database: str) -> None:
+    s = study(api, database, blinded=False, hidden=False)
+    thread = ok(start(api, s, "first", {"kind": "object", "object_id": "T2"})).json()
+    refused = api(s.people["first"]).patch(
+        f"{s.base}/threads/{thread['id']}/anchor", json={"geometry": POINT}
+    )
+    assert refused.status_code == 400
+    assert code_of(refused) == "not-a-pin"
+
+
 def test_who_may_comment_resolve_and_delete(api: ApiAs, database: str) -> None:
     s = study(api, database, blinded=False, hidden=False)
     point = {"kind": "point", "geometry": POINT}

@@ -116,6 +116,7 @@ class AuditAction(StrEnum):
     THREAD_RESOLVED = "thread.resolved"
     THREAD_REOPENED = "thread.reopened"
     THREAD_DELETED = "thread.deleted"
+    THREAD_MOVED = "thread.moved"
     AUDIT_EXPORTED = "audit.exported"
     SERVICE_ACCOUNT_CREATED = "service-account.created"
     SERVICE_ACCOUNT_DISABLED = "service-account.disabled"

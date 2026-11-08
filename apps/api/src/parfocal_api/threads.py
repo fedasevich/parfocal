@@ -93,6 +93,10 @@ class ThreadCreate(BaseModel):
     anchor: Anchor
 
 
+class PinMove(BaseModel):
+    geometry: PointGeometry
+
+
 class MessageCreate(BaseModel):
     body: Body
 
@@ -134,6 +138,11 @@ class ThreadDetail(Thread):
 class ThreadNotFoundError(NotFoundError):
     code = "thread-not-found"
     title = "There is no such thread for you"
+
+
+class NotAPinError(BadRequestError):
+    code = "not-a-pin"
+    title = "Only a thread pinned to a point moves"
 
 
 class BadAnchorError(BadRequestError):
@@ -710,6 +719,44 @@ async def reopen_thread(
     connection: TenantConnection,
 ) -> ThreadDetail:
     return await set_resolved(task_id, slide_id, thread_id, principal, connection, resolved=False)
+
+
+@router.patch(
+    "/{thread_id}/anchor",
+    operation_id="moveThread",
+    **require(Permission.REVIEW, write=True),
+)
+async def move_thread(
+    task_id: uuid.UUID,
+    slide_id: uuid.UUID,
+    thread_id: uuid.UUID,
+    move: PinMove,
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
+) -> ThreadDetail:
+    place = await writable_place(connection, principal, task_id, slide_id)
+    if place.signed_off_at is not None:
+        raise TaskSignedOffError
+    sight = Sight(connection, principal, place)
+    row = await thread_row(connection, place, thread_id, sight)
+    if AnchorKind(row.anchor_kind) is not AnchorKind.POINT:
+        raise NotAPinError
+    me = member_of(principal).user_id
+    if (
+        row.created_by_user_id != me
+        and await role_in(connection, principal, place.project_id) is not ProjectRole.OWNER
+    ):
+        raise NotThreadAuthorError
+    row = (
+        await connection.execute(
+            update(threads)
+            .where(threads.c.id == thread_id)
+            .values(geometry=move.geometry.model_dump())
+            .returning(*threads.c)
+        )
+    ).one()
+    await audit(connection, principal, AuditAction.THREAD_MOVED, row, {})
+    return await detail(sight, row)
 
 
 @router.delete(

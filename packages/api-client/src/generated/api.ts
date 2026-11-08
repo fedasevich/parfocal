@@ -3247,6 +3247,10 @@ export interface PersonalSettingsChange {
   values: Values;
 }
 
+export interface PinMove {
+  geometry: PointGeometry;
+}
+
 export type Plan = (typeof Plan)[keyof typeof Plan];
 
 export const Plan = {
@@ -38784,6 +38788,178 @@ export const useReopenThread = <TError = Problem, TContext = unknown>(
   TContext
 > => {
   return useMutation(getReopenThreadMutationOptions(options), queryClient);
+};
+
+export type moveThreadResponse200 = {
+  data: ThreadDetail;
+  status: 200;
+};
+
+export type moveThreadResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type moveThreadResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type moveThreadResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type moveThreadResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type moveThreadResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type moveThreadResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type moveThreadResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type moveThreadResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type moveThreadResponseSuccess = moveThreadResponse200 & {
+  headers: Headers;
+};
+export type moveThreadResponseError = (
+  | moveThreadResponse400
+  | moveThreadResponse401
+  | moveThreadResponse403
+  | moveThreadResponse404
+  | moveThreadResponse409
+  | moveThreadResponse422
+  | moveThreadResponse429
+  | moveThreadResponse500
+) & {
+  headers: Headers;
+};
+
+export type moveThreadResponse = moveThreadResponseSuccess | moveThreadResponseError;
+
+export const getMoveThreadUrl = (taskId: string, slideId: string, threadId: string) => {
+  return `/api/review-tasks/${taskId}/slides/${slideId}/threads/${threadId}/anchor`;
+};
+
+/**
+ * @summary Move Thread
+ */
+export const moveThread = async (
+  taskId: string,
+  slideId: string,
+  threadId: string,
+  pinMove: PinMove,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<moveThreadResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<moveThreadResponse>(getMoveThreadUrl(taskId, slideId, threadId), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(pinMove),
+  });
+};
+
+export const getMoveThreadMutationKey = () => ["moveThread"] as const;
+
+export const getMoveThreadMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof moveThread>>,
+    TError,
+    MoveThreadMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof moveThread>>,
+  TError,
+  MoveThreadMutationVariables,
+  TContext
+> => {
+  const mutationKey = getMoveThreadMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof moveThread>>,
+    MoveThreadMutationVariables
+  > = (props) => {
+    const { taskId, slideId, threadId, data } = props ?? {};
+
+    return moveThread(taskId, slideId, threadId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type MoveThreadMutationResult = NonNullable<Awaited<ReturnType<typeof moveThread>>>;
+export type MoveThreadMutationBody = PinMove;
+export type MoveThreadMutationError = Problem;
+export type MoveThreadMutationVariables = {
+  taskId: string;
+  slideId: string;
+  threadId: string;
+  data: PinMove;
+};
+
+/**
+ * @summary Move Thread
+ */
+export const useMoveThread = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof moveThread>>,
+      TError,
+      MoveThreadMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof moveThread>>,
+  TError,
+  MoveThreadMutationVariables,
+  TContext
+> => {
+  return useMutation(getMoveThreadMutationOptions(options), queryClient);
 };
 
 export type saveOpinionResponse200 = {
