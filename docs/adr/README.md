@@ -223,4 +223,6 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0257](0257-changes-after-sign-off-keep-the-signed-checksum.md) | Changes after sign-off keep the signed checksum and are flagged in the report | Accepted | 2026-11-06 |
 | [0258](0258-confirmed-ai-objects-as-shared-layer-copies.md) | Confirmed AI objects as shared layer copies | Accepted | 2026-11-08 |
 | [0259](0259-saved-arrows-text-and-rulers.md) | Saved arrows, text notes and rulers | Accepted | 2026-11-08 |
+| [0260](0260-annotate-task-on-the-live-slide.md) | Annotate task on the live slide with a drafted AI object read | Accepted | 2026-11-08 |
 | [0261](0261-auto-region-pass.md) | The auto region pass runs the AIS decoder per 512 px tile with a 64 px halo, keeps nuclei by centroid and is gated on TNBC through the TypeScript post-processing | Accepted | 2026-11-08 |
+| [0262](0262-training-dataset-export-as-a-zip-of-qupath-geojson.md) | Training dataset export as a zip of QuPath GeoJSON | Accepted | 2026-11-08 |
