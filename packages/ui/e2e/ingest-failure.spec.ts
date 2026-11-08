@@ -52,3 +52,12 @@ test("a permanent failure without a support address shows no dead link", async (
   await expect(alert.getByRole("link")).toHaveCount(0);
   await expect(alert.getByRole("button")).toHaveCount(0);
 });
+
+test("a skipped duplicate shows a neutral status, not a failure", async ({ page }) => {
+  await page.goto(story("skipped-duplicate"));
+  const status = page.locator("[data-slot=ingest-skipped]");
+  await expect(status).toHaveAttribute("role", "status");
+  await expect(status).toContainText("renamed-copy.svs Skipped, already in this project.");
+  await expect(page.getByRole("alert")).toHaveCount(0);
+  await expect(status.getByRole("button")).toHaveCount(0);
+});

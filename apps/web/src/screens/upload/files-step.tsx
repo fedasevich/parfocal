@@ -637,7 +637,7 @@ function FromStore({ state, set, scene, projectId, projectCode, go }: StepProps)
                 nested={
                   file.in_project ? (
                     <div className="flex min-h-8.5 items-center rounded-ctl border border-dashed border-line px-3 text-body-sm text-fg-dim">
-                      Left out. This slide is already in {projectCode}.
+                      Skipped, already in this project.
                     </div>
                   ) : file.result ? (
                     <ResultRow

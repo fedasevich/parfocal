@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { IngestFailure } from "../src/components/ingest-failure.tsx";
+import { IngestSkipped } from "../src/components/ingest-skipped.tsx";
 
 function Retryable({ fileName, message }: { fileName: string; message: string }) {
   const [tried, setTried] = useState(false);
@@ -100,4 +101,8 @@ export const PermanentWithoutSupportAddress: Story = {
       failureClass="permanent"
     />
   ),
+};
+
+export const SkippedDuplicate: Story = {
+  render: () => <IngestSkipped fileName="renamed-copy.svs" />,
 };

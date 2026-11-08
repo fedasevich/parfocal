@@ -36,6 +36,7 @@ from parfocal_common.ingest import (
 )
 from parfocal_common.jobs import JobStatus, StepStatus
 from parfocal_common.link_imports import KIND as LINK_FETCH
+from parfocal_common.link_imports import SKIPPED_MESSAGE, SKIPPED_REASONS
 from parfocal_common.object_store import NoSuchUploadError, StorageError, StoredPart
 from parfocal_common.pairing import Certainty, Rule
 from parfocal_common.part_plan import MAX_PARTS, part_size_for, parts_problem, plan_parts
@@ -156,6 +157,7 @@ class IngestStatus(StrEnum):
     PROCESSING = "processing"
     READY = "ready"
     FAILED = "failed"
+    SKIPPED = "skipped"
 
 
 class IngestNotice(BaseModel):
@@ -749,13 +751,29 @@ def failed_state(state: UploadState, reason: str) -> UploadState:
     )
 
 
+def skipped_state(state: UploadState, reason: str) -> UploadState:
+    return state.model_copy(
+        update={
+            "status": IngestStatus.SKIPPED,
+            "step": None,
+            "reason": reason,
+            "failure_class": None,
+            "message": SKIPPED_MESSAGE,
+        }
+    )
+
+
 async def state_of(connection: AsyncConnection, row: Any) -> UploadState:
     if row.kind == UploadKind.RESULT:
         state = await result_state(connection, row)
     else:
         state = await slide_state(connection, row)
     reason = await link_failure(connection, row)
-    return failed_state(state, reason) if reason is not None else state
+    if reason is None:
+        return state
+    if reason in SKIPPED_REASONS:
+        return skipped_state(state, reason)
+    return failed_state(state, reason)
 
 
 @router.get(

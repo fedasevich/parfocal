@@ -189,7 +189,12 @@ def test_a_slide_from_a_link_is_published_and_a_second_copy_is_left_out_by_check
     [second] = copy.json()["started"]
     run_worker(database, lab.tenant_id, tmp_path / "work", (site.origin,))
     left_out = status_of(linked, lab.lead, {"uploadId": second["upload_id"]})
-    assert (left_out["status"], left_out["reason"]) == ("failed", "duplicate")
+    assert (left_out["status"], left_out["reason"], left_out["failure_class"]) == (
+        "skipped",
+        "duplicate",
+        None,
+    )
+    assert left_out["message"] == "Skipped, already in this project."
     assert single(database, f"SELECT count(*) FROM slides WHERE project_id = '{lab.project}'") == (
         1,
     )

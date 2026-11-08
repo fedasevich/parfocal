@@ -59,3 +59,16 @@ test("the support subject is URL encoded", () => {
     /subject=Refused%20upload%20result-outside-slide$/,
   );
 });
+
+test("a skipped duplicate has no failure view", () => {
+  const view = ingestFailureView(
+    {
+      status: "skipped",
+      reason: "duplicate",
+      message: "Skipped, already in this project.",
+      failure_class: null,
+    },
+    "renamed-copy.svs",
+  );
+  assert.equal(view, null);
+});

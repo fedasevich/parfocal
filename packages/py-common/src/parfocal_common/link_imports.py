@@ -19,8 +19,12 @@ class LinkFailure(StrEnum):
 
 LINK_IMPORT_FAILURES: Mapping[str, str] = {
     **{refusal.value: text for refusal, text in LINK_FAILURES.items()},
-    LinkFailure.DUPLICATE: "Left out. This slide is already in the project.",
+    LinkFailure.DUPLICATE: "Skipped, already in this project.",
 }
+
+
+SKIPPED_REASONS = frozenset({LinkFailure.DUPLICATE})
+SKIPPED_MESSAGE = LINK_IMPORT_FAILURES[LinkFailure.DUPLICATE]
 
 
 class RunsInTheIngestWorkerError(RuntimeError):
