@@ -1,6 +1,7 @@
 import { getGetOpinionQueryKey, useSaveOpinion } from "@parfocal/api-client";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { markTried } from "../home/getting-started.ts";
 import type { ReviewSession } from "./review-data.ts";
 
 const asText = (value: unknown) => {
@@ -22,8 +23,10 @@ export function useOpinionDraft(session: ReviewSession, hidden: string[] = []) {
   const [edits, setEdits] = useState<Record<string, string>>({});
   const saver = useSaveOpinion({
     mutation: {
-      onSuccess: () =>
-        void queryClient.invalidateQueries({ queryKey: getGetOpinionQueryKey(taskId, slideId) }),
+      onSuccess: () => {
+        markTried("opinion");
+        void queryClient.invalidateQueries({ queryKey: getGetOpinionQueryKey(taskId, slideId) });
+      },
     },
   });
   const saved = Object.fromEntries(

@@ -11,6 +11,7 @@ import { SmallModal } from "@parfocal/ui/components/small-modal";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useEscRegistry } from "../keys/esc-owner.tsx";
+import { markTried } from "../screens/home/getting-started.ts";
 import { usePeople } from "../screens/people.ts";
 import { okData } from "../screens/placeholder.tsx";
 import { pinThread } from "../screens/review/comment-pin.ts";
@@ -181,6 +182,7 @@ export function PinLayer({
       {
         onSuccess: (response) => {
           if (response.status !== 201) return;
+          markTried("comment");
           const { doc: before } = latest.current;
           latest.current.onDocumentChange(
             placePin(before, response.data.id, point, toleranceNow()),
