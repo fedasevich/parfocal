@@ -24,6 +24,7 @@ export const ReportBlockKind = {
   figure: "slide-figure",
   text: "text",
   comparison: "comparison",
+  aiChanges: "ai-changes",
 } as const;
 
 export const reportBlockSchema = z.object({

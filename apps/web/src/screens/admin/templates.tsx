@@ -88,6 +88,10 @@ export const blockCopy: Record<BlockKind, { name: string; shows: string }> = {
   },
   text: { name: "Text", shows: "Methods, notes or a caption you write" },
   comparison: { name: "Compare two result sets", shows: "This task next to a second one" },
+  "ai-changes": {
+    name: "How the experts changed the AI",
+    shows: "Confirmed, edited, deleted, unchecked and added objects per class",
+  },
 };
 
 const kinds: { value: StudyTemplateSummary["study_kind"]; label: string }[] = [

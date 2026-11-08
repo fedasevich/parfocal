@@ -22,6 +22,7 @@ BLOCK_UNITS: Mapping[str, int] = {
     "slide-figure": 7,
     "text": 3,
     "comparison": 4,
+    "ai-changes": 5,
 }
 FIRST_PAGE_UNITS = 5
 CLOSING_UNITS = 5

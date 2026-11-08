@@ -27698,6 +27698,129 @@
         "x-permission-emergency": true
       }
     },
+    "/api/review-tasks/{task_id}/evaluation/ai-changes": {
+      "get": {
+        "tags": [
+          "review-tasks"
+        ],
+        "summary": "Get Task Ai Changes",
+        "operationId": "getTaskAiChanges",
+        "parameters": [
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Task Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiChanges"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Sign in to continue"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "You do not have access to this"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "This changed since you loaded it"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Too many requests, try again shortly"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Something went wrong"
+          }
+        },
+        "x-permission": "see-slides",
+        "x-permission-emergency": true
+      }
+    },
     "/api/review-tasks/{task_id}/evaluation-versions": {
       "post": {
         "tags": [
@@ -36475,6 +36598,48 @@
           "form"
         ]
       },
+      "AiChanges": {
+        "properties": {
+          "task_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Task Id"
+          },
+          "experts": {
+            "items": {
+              "$ref": "#/components/schemas/ManifestAnnotator"
+            },
+            "type": "array",
+            "title": "Experts"
+          },
+          "slides": {
+            "items": {
+              "$ref": "#/components/schemas/SlideChanges"
+            },
+            "type": "array",
+            "title": "Slides"
+          },
+          "classes": {
+            "items": {
+              "$ref": "#/components/schemas/ClassChanges"
+            },
+            "type": "array",
+            "title": "Classes"
+          },
+          "total": {
+            "$ref": "#/components/schemas/Changes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "task_id",
+          "experts",
+          "slides",
+          "classes",
+          "total"
+        ],
+        "title": "AiChanges"
+      },
       "AiObjectConfirm": {
         "properties": {
           "geometry": {
@@ -38801,10 +38966,63 @@
         ],
         "title": "ChainHead"
       },
+      "ChangeGroup": {
+        "type": "string",
+        "enum": [
+          "class",
+          "slide"
+        ]
+      },
       "ChangeReason": {
         "type": "string",
         "maxLength": 500,
         "minLength": 1
+      },
+      "Changes": {
+        "properties": {
+          "ai_objects": {
+            "type": "integer",
+            "title": "Ai Objects"
+          },
+          "confirmed": {
+            "type": "integer",
+            "title": "Confirmed"
+          },
+          "edited": {
+            "type": "integer",
+            "title": "Edited"
+          },
+          "deleted": {
+            "type": "integer",
+            "title": "Deleted"
+          },
+          "unchecked": {
+            "type": "integer",
+            "title": "Unchecked"
+          },
+          "added": {
+            "type": "integer",
+            "title": "Added"
+          },
+          "by": {
+            "items": {
+              "$ref": "#/components/schemas/PersonChanges"
+            },
+            "type": "array",
+            "title": "By"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ai_objects",
+          "confirmed",
+          "edited",
+          "deleted",
+          "unchecked",
+          "added",
+          "by"
+        ],
+        "title": "Changes"
       },
       "ChartStyle": {
         "type": "string",
@@ -39099,6 +39317,70 @@
           "ETag"
         ],
         "title": "ClaimedPart"
+      },
+      "ClassChanges": {
+        "properties": {
+          "ai_objects": {
+            "type": "integer",
+            "title": "Ai Objects"
+          },
+          "confirmed": {
+            "type": "integer",
+            "title": "Confirmed"
+          },
+          "edited": {
+            "type": "integer",
+            "title": "Edited"
+          },
+          "deleted": {
+            "type": "integer",
+            "title": "Deleted"
+          },
+          "unchecked": {
+            "type": "integer",
+            "title": "Unchecked"
+          },
+          "added": {
+            "type": "integer",
+            "title": "Added"
+          },
+          "by": {
+            "items": {
+              "$ref": "#/components/schemas/PersonChanges"
+            },
+            "type": "array",
+            "title": "By"
+          },
+          "class_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Class Id"
+          },
+          "class_name": {
+            "type": "string",
+            "title": "Class Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ai_objects",
+          "confirmed",
+          "edited",
+          "deleted",
+          "unchecked",
+          "added",
+          "by",
+          "class_id",
+          "class_name"
+        ],
+        "title": "ClassChanges"
       },
       "ClassDraft": {
         "properties": {
@@ -40619,6 +40901,53 @@
           "started_at"
         ],
         "title": "EvaluationVersionStarted"
+      },
+      "ExpertChanges": {
+        "properties": {
+          "title": {
+            "$ref": "#/components/schemas/BlockTitle"
+          },
+          "show_title": {
+            "type": "boolean",
+            "title": "Show Title",
+            "default": true
+          },
+          "width": {
+            "type": "string",
+            "enum": [
+              "full",
+              "half"
+            ],
+            "title": "Width",
+            "default": "full"
+          },
+          "page_break": {
+            "type": "boolean",
+            "title": "Page Break",
+            "default": false
+          },
+          "kind": {
+            "type": "string",
+            "const": "ai-changes",
+            "title": "Kind"
+          },
+          "group_by": {
+            "$ref": "#/components/schemas/ChangeGroup",
+            "default": "class"
+          },
+          "people": {
+            "type": "boolean",
+            "title": "People",
+            "default": true
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "title",
+          "kind"
+        ],
+        "title": "ExpertChanges"
       },
       "ExpertCheck": {
         "properties": {
@@ -42460,6 +42789,25 @@
           "order"
         ],
         "title": "Lockable"
+      },
+      "ManifestAnnotator": {
+        "properties": {
+          "letter": {
+            "type": "string",
+            "title": "Letter"
+          },
+          "assigned": {
+            "type": "boolean",
+            "title": "Assigned"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "letter",
+          "assigned"
+        ],
+        "title": "ManifestAnnotator"
       },
       "MappingChange": {
         "properties": {
@@ -44679,6 +45027,39 @@
         ],
         "title": "PatientSlide"
       },
+      "PersonChanges": {
+        "properties": {
+          "letter": {
+            "type": "string",
+            "title": "Letter"
+          },
+          "confirmed": {
+            "type": "integer",
+            "title": "Confirmed"
+          },
+          "edited": {
+            "type": "integer",
+            "title": "Edited"
+          },
+          "deleted": {
+            "type": "integer",
+            "title": "Deleted"
+          },
+          "added": {
+            "type": "integer",
+            "title": "Added"
+          }
+        },
+        "type": "object",
+        "required": [
+          "letter",
+          "confirmed",
+          "edited",
+          "deleted",
+          "added"
+        ],
+        "title": "PersonChanges"
+      },
       "PersonCount": {
         "properties": {
           "user_id": {
@@ -46188,11 +46569,15 @@
           },
           {
             "$ref": "#/components/schemas/Comparison"
+          },
+          {
+            "$ref": "#/components/schemas/ExpertChanges"
           }
         ],
         "discriminator": {
           "propertyName": "kind",
           "mapping": {
+            "ai-changes": "#/components/schemas/ExpertChanges",
             "comparison": "#/components/schemas/Comparison",
             "confusion-matrix": "#/components/schemas/ConfusionMatrix",
             "disagreement-reasons": "#/components/schemas/DisagreementReasons",
@@ -49931,6 +50316,50 @@
           "size_mm"
         ],
         "title": "SlideArea"
+      },
+      "SlideChanges": {
+        "properties": {
+          "slide_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Slide Id"
+          },
+          "slide": {
+            "type": "string",
+            "title": "Slide"
+          },
+          "result_set_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result Set Id"
+          },
+          "classes": {
+            "items": {
+              "$ref": "#/components/schemas/ClassChanges"
+            },
+            "type": "array",
+            "title": "Classes"
+          },
+          "total": {
+            "$ref": "#/components/schemas/Changes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "slide_id",
+          "slide",
+          "result_set_id",
+          "classes",
+          "total"
+        ],
+        "title": "SlideChanges"
       },
       "SlideChoice": {
         "properties": {

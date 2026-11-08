@@ -14,6 +14,7 @@ from parfocal_api.adjudications import reviewers_of
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.evaluation import EvaluationHiddenError
 from parfocal_api.permissions import Permission, require
+from parfocal_api.report_template import ReportAiChange, ReportAiChanges
 from parfocal_api.review_order import CheckState, Results, state_of
 from parfocal_api.review_tasks import readable_task
 from parfocal_api.reviewed_export import path_parts
@@ -174,6 +175,34 @@ def tallied(
         ],
         classes=per_class(events, keys),
         total=changes_of(events),
+    )
+
+
+def people_text(changes: Changes) -> str:
+    return ", ".join(
+        f"{person.letter} {person.confirmed + person.edited + person.deleted + person.added}"
+        for person in changes.by
+    )
+
+
+def report_row(name: str, changes: Changes) -> ReportAiChange:
+    return ReportAiChange(
+        name=name,
+        ai_objects=changes.ai_objects,
+        confirmed=changes.confirmed,
+        edited=changes.edited,
+        deleted=changes.deleted,
+        unchecked=changes.unchecked,
+        added=changes.added,
+        by=people_text(changes),
+    )
+
+
+def report_changes(changes: AiChanges) -> ReportAiChanges:
+    return ReportAiChanges(
+        classes=tuple(report_row(item.class_name, item) for item in changes.classes),
+        slides=tuple(report_row(item.slide, item.total) for item in changes.slides),
+        total=report_row("", changes.total),
     )
 
 

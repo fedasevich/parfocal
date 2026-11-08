@@ -292,6 +292,57 @@ export const AgreementPart = {
   form: "form",
 } as const;
 
+export interface ManifestAnnotator {
+  letter: string;
+  assigned: boolean;
+}
+
+export interface PersonChanges {
+  letter: string;
+  confirmed: number;
+  edited: number;
+  deleted: number;
+  added: number;
+}
+
+export interface ClassChanges {
+  ai_objects: number;
+  confirmed: number;
+  edited: number;
+  deleted: number;
+  unchecked: number;
+  added: number;
+  by: PersonChanges[];
+  class_id: string | null;
+  class_name: string;
+}
+
+export interface Changes {
+  ai_objects: number;
+  confirmed: number;
+  edited: number;
+  deleted: number;
+  unchecked: number;
+  added: number;
+  by: PersonChanges[];
+}
+
+export interface SlideChanges {
+  slide_id: string;
+  slide: string;
+  result_set_id: string | null;
+  classes: ClassChanges[];
+  total: Changes;
+}
+
+export interface AiChanges {
+  task_id: string;
+  experts: ManifestAnnotator[];
+  slides: SlideChanges[];
+  classes: ClassChanges[];
+  total: Changes;
+}
+
 export interface AiObjectConfirm {
   geometry?: Geometry | null;
 }
@@ -1093,6 +1144,13 @@ export const Certainty = {
   likely: "likely",
 } as const;
 
+export type ChangeGroup = (typeof ChangeGroup)[keyof typeof ChangeGroup];
+
+export const ChangeGroup = {
+  class: "class",
+  slide: "slide",
+} as const;
+
 /**
  * @minLength 1
  * @maxLength 500
@@ -1844,6 +1902,29 @@ export interface EvaluationVersionStarted {
   reason: string;
   by_user_id: string | null;
   started_at: string;
+}
+
+export type ExpertChangesWidth = (typeof ExpertChangesWidth)[keyof typeof ExpertChangesWidth];
+
+export const ExpertChangesWidth = {
+  full: "full",
+  half: "half",
+} as const;
+
+export type ExpertChangesKind = (typeof ExpertChangesKind)[keyof typeof ExpertChangesKind];
+
+export const ExpertChangesKind = {
+  "ai-changes": "ai-changes",
+} as const;
+
+export interface ExpertChanges {
+  title: BlockTitle;
+  show_title?: boolean;
+  width?: ExpertChangesWidth;
+  page_break?: boolean;
+  kind: ExpertChangesKind;
+  group_by?: ChangeGroup;
+  people?: boolean;
 }
 
 export type ExportKind = (typeof ExportKind)[keyof typeof ExportKind];
@@ -3666,7 +3747,8 @@ export type ReportBlock =
   | SlideTable
   | SlideFigure
   | TextBlock
-  | Comparison;
+  | Comparison
+  | ExpertChanges;
 
 /**
  * @maxItems 40
@@ -42239,6 +42321,195 @@ export function useExportTrainingDataset<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getExportTrainingDatasetQueryOptions(taskId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type getTaskAiChangesResponse200 = {
+  data: AiChanges;
+  status: 200;
+};
+
+export type getTaskAiChangesResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getTaskAiChangesResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getTaskAiChangesResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getTaskAiChangesResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getTaskAiChangesResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getTaskAiChangesResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getTaskAiChangesResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getTaskAiChangesResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getTaskAiChangesResponseSuccess = getTaskAiChangesResponse200 & {
+  headers: Headers;
+};
+export type getTaskAiChangesResponseError = (
+  | getTaskAiChangesResponse400
+  | getTaskAiChangesResponse401
+  | getTaskAiChangesResponse403
+  | getTaskAiChangesResponse404
+  | getTaskAiChangesResponse409
+  | getTaskAiChangesResponse422
+  | getTaskAiChangesResponse429
+  | getTaskAiChangesResponse500
+) & {
+  headers: Headers;
+};
+
+export type getTaskAiChangesResponse =
+  | getTaskAiChangesResponseSuccess
+  | getTaskAiChangesResponseError;
+
+export const getGetTaskAiChangesUrl = (taskId: string) => {
+  return `/api/review-tasks/${taskId}/evaluation/ai-changes`;
+};
+
+/**
+ * @summary Get Task Ai Changes
+ */
+export const getTaskAiChanges = async (
+  taskId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getTaskAiChangesResponse> => {
+  return apiFetch<getTaskAiChangesResponse>(getGetTaskAiChangesUrl(taskId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetTaskAiChangesQueryKey = (taskId: string) => {
+  return [`/api/review-tasks/${taskId}/evaluation/ai-changes`] as const;
+};
+
+export const getGetTaskAiChangesQueryOptions = <
+  TData = Awaited<ReturnType<typeof getTaskAiChanges>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTaskAiChanges>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetTaskAiChangesQueryKey(taskId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getTaskAiChanges>>> = ({ signal }) =>
+    getTaskAiChanges(taskId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: taskId !== null && taskId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getTaskAiChanges>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetTaskAiChangesQueryResult = NonNullable<Awaited<ReturnType<typeof getTaskAiChanges>>>;
+export type GetTaskAiChangesQueryError = Problem;
+
+export function useGetTaskAiChanges<
+  TData = Awaited<ReturnType<typeof getTaskAiChanges>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTaskAiChanges>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getTaskAiChanges>>,
+          TError,
+          Awaited<ReturnType<typeof getTaskAiChanges>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetTaskAiChanges<
+  TData = Awaited<ReturnType<typeof getTaskAiChanges>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTaskAiChanges>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getTaskAiChanges>>,
+          TError,
+          Awaited<ReturnType<typeof getTaskAiChanges>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetTaskAiChanges<
+  TData = Awaited<ReturnType<typeof getTaskAiChanges>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTaskAiChanges>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Task Ai Changes
+ */
+
+export function useGetTaskAiChanges<
+  TData = Awaited<ReturnType<typeof getTaskAiChanges>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTaskAiChanges>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetTaskAiChangesQueryOptions(taskId, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;

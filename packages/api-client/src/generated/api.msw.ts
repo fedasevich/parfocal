@@ -11,6 +11,7 @@ import type {
   AbortedUpload,
   AcceptedInvitation,
   AdjudicatedObject,
+  AiChanges,
   AnnotateSlideStatus,
   Annotation,
   AnnotationRef,
@@ -43,6 +44,7 @@ import type {
   Evaluation,
   EvaluationChanges,
   EvaluationVersionStarted,
+  ExpertChanges,
   ExportReviewedLayer200,
   FirstRead,
   FormVersion,
@@ -187,6 +189,7 @@ import {
   CaseRule,
   CaseSource,
   Certainty,
+  ChangeGroup,
   ChartStyle,
   CheckKind,
   CheckOrder,
@@ -8947,6 +8950,100 @@ export const getGetTaskEvaluationResponseMock = (
 export const getExportTrainingDatasetResponseMock = (): Blob =>
   new Blob([new Uint8Array(faker.number.int({ min: 1, max: 64 }))]);
 
+export const getGetTaskAiChangesResponseMock = (
+  overrideResponse: Partial<Extract<AiChanges, object>> = {},
+): AiChanges => ({
+  task_id: faker.string.uuid(),
+  experts: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      letter: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      assigned: faker.datatype.boolean(),
+    }),
+  ),
+  slides: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      slide_id: faker.string.uuid(),
+      slide: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      result_set_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      classes: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () => ({
+          ai_objects: faker.number.int(),
+          confirmed: faker.number.int(),
+          edited: faker.number.int(),
+          deleted: faker.number.int(),
+          unchecked: faker.number.int(),
+          added: faker.number.int(),
+          by: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+            () => ({
+              letter: faker.string.alpha({ length: { min: 10, max: 20 } }),
+              confirmed: faker.number.int(),
+              edited: faker.number.int(),
+              deleted: faker.number.int(),
+              added: faker.number.int(),
+            }),
+          ),
+          class_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+          class_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        }),
+      ),
+      total: {
+        ai_objects: faker.number.int(),
+        confirmed: faker.number.int(),
+        edited: faker.number.int(),
+        deleted: faker.number.int(),
+        unchecked: faker.number.int(),
+        added: faker.number.int(),
+        by: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+          () => ({
+            letter: faker.string.alpha({ length: { min: 10, max: 20 } }),
+            confirmed: faker.number.int(),
+            edited: faker.number.int(),
+            deleted: faker.number.int(),
+            added: faker.number.int(),
+          }),
+        ),
+      },
+    }),
+  ),
+  classes: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      ai_objects: faker.number.int(),
+      confirmed: faker.number.int(),
+      edited: faker.number.int(),
+      deleted: faker.number.int(),
+      unchecked: faker.number.int(),
+      added: faker.number.int(),
+      by: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () => ({
+          letter: faker.string.alpha({ length: { min: 10, max: 20 } }),
+          confirmed: faker.number.int(),
+          edited: faker.number.int(),
+          deleted: faker.number.int(),
+          added: faker.number.int(),
+        }),
+      ),
+      class_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      class_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    }),
+  ),
+  total: {
+    ai_objects: faker.number.int(),
+    confirmed: faker.number.int(),
+    edited: faker.number.int(),
+    deleted: faker.number.int(),
+    unchecked: faker.number.int(),
+    added: faker.number.int(),
+    by: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+      letter: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      confirmed: faker.number.int(),
+      edited: faker.number.int(),
+      deleted: faker.number.int(),
+      added: faker.number.int(),
+    })),
+  },
+  ...overrideResponse,
+});
+
 export const getStartEvaluationVersionResponseMock = (
   overrideResponse: Partial<Extract<EvaluationVersionStarted, object>> = {},
 ): EvaluationVersionStarted => ({
@@ -9387,6 +9484,21 @@ export const getListStudyTemplatesResponseComparisonMock = (
   ...overrideResponse,
 });
 
+export const getListStudyTemplatesResponseExpertChangesMock = (
+  overrideResponse: Partial<ExpertChanges> = {},
+): ExpertChanges => ({
+  ...{
+    title: faker.string.alpha({ length: { min: 1, max: 120 } }),
+    show_title: faker.datatype.boolean(),
+    width: faker.helpers.arrayElement(["full", "half"] as const),
+    page_break: faker.datatype.boolean(),
+    kind: faker.helpers.arrayElement(["ai-changes"] as const),
+    group_by: faker.helpers.arrayElement(Object.values(ChangeGroup)),
+    people: faker.datatype.boolean(),
+  },
+  ...overrideResponse,
+});
+
 export const getListStudyTemplatesResponseScaleQuestionMock = (
   overrideResponse: Partial<ScaleQuestion> = {},
 ): ScaleQuestion => ({
@@ -9474,6 +9586,7 @@ export const getListStudyTemplatesResponseMock = (): StudyTemplateSummary[] =>
         { ...getListStudyTemplatesResponseSlideFigureMock() },
         { ...getListStudyTemplatesResponseTextBlockMock() },
         { ...getListStudyTemplatesResponseComparisonMock() },
+        { ...getListStudyTemplatesResponseExpertChangesMock() },
       ]),
     ),
     format: {
@@ -9745,6 +9858,21 @@ export const getCreateStudyTemplateResponseComparisonMock = (
   ...overrideResponse,
 });
 
+export const getCreateStudyTemplateResponseExpertChangesMock = (
+  overrideResponse: Partial<ExpertChanges> = {},
+): ExpertChanges => ({
+  ...{
+    title: faker.string.alpha({ length: { min: 1, max: 120 } }),
+    show_title: faker.datatype.boolean(),
+    width: faker.helpers.arrayElement(["full", "half"] as const),
+    page_break: faker.datatype.boolean(),
+    kind: faker.helpers.arrayElement(["ai-changes"] as const),
+    group_by: faker.helpers.arrayElement(Object.values(ChangeGroup)),
+    people: faker.datatype.boolean(),
+  },
+  ...overrideResponse,
+});
+
 export const getCreateStudyTemplateResponseScaleQuestionMock = (
   overrideResponse: Partial<ScaleQuestion> = {},
 ): ScaleQuestion => ({
@@ -9833,6 +9961,7 @@ export const getCreateStudyTemplateResponseMock = (
       { ...getCreateStudyTemplateResponseSlideFigureMock() },
       { ...getCreateStudyTemplateResponseTextBlockMock() },
       { ...getCreateStudyTemplateResponseComparisonMock() },
+      { ...getCreateStudyTemplateResponseExpertChangesMock() },
     ]),
   ),
   format: {
@@ -10104,6 +10233,21 @@ export const getGetStudyTemplateResponseComparisonMock = (
   ...overrideResponse,
 });
 
+export const getGetStudyTemplateResponseExpertChangesMock = (
+  overrideResponse: Partial<ExpertChanges> = {},
+): ExpertChanges => ({
+  ...{
+    title: faker.string.alpha({ length: { min: 1, max: 120 } }),
+    show_title: faker.datatype.boolean(),
+    width: faker.helpers.arrayElement(["full", "half"] as const),
+    page_break: faker.datatype.boolean(),
+    kind: faker.helpers.arrayElement(["ai-changes"] as const),
+    group_by: faker.helpers.arrayElement(Object.values(ChangeGroup)),
+    people: faker.datatype.boolean(),
+  },
+  ...overrideResponse,
+});
+
 export const getGetStudyTemplateResponseScaleQuestionMock = (
   overrideResponse: Partial<ScaleQuestion> = {},
 ): ScaleQuestion => ({
@@ -10192,6 +10336,7 @@ export const getGetStudyTemplateResponseMock = (
       { ...getGetStudyTemplateResponseSlideFigureMock() },
       { ...getGetStudyTemplateResponseTextBlockMock() },
       { ...getGetStudyTemplateResponseComparisonMock() },
+      { ...getGetStudyTemplateResponseExpertChangesMock() },
     ]),
   ),
   format: {
@@ -10463,6 +10608,21 @@ export const getEditStudyTemplateResponseComparisonMock = (
   ...overrideResponse,
 });
 
+export const getEditStudyTemplateResponseExpertChangesMock = (
+  overrideResponse: Partial<ExpertChanges> = {},
+): ExpertChanges => ({
+  ...{
+    title: faker.string.alpha({ length: { min: 1, max: 120 } }),
+    show_title: faker.datatype.boolean(),
+    width: faker.helpers.arrayElement(["full", "half"] as const),
+    page_break: faker.datatype.boolean(),
+    kind: faker.helpers.arrayElement(["ai-changes"] as const),
+    group_by: faker.helpers.arrayElement(Object.values(ChangeGroup)),
+    people: faker.datatype.boolean(),
+  },
+  ...overrideResponse,
+});
+
 export const getEditStudyTemplateResponseScaleQuestionMock = (
   overrideResponse: Partial<ScaleQuestion> = {},
 ): ScaleQuestion => ({
@@ -10551,6 +10711,7 @@ export const getEditStudyTemplateResponseMock = (
       { ...getEditStudyTemplateResponseSlideFigureMock() },
       { ...getEditStudyTemplateResponseTextBlockMock() },
       { ...getEditStudyTemplateResponseComparisonMock() },
+      { ...getEditStudyTemplateResponseExpertChangesMock() },
     ]),
   ),
   format: {
@@ -10830,6 +10991,21 @@ export const getGetStudyTemplateVersionResponseComparisonMock = (
   ...overrideResponse,
 });
 
+export const getGetStudyTemplateVersionResponseExpertChangesMock = (
+  overrideResponse: Partial<ExpertChanges> = {},
+): ExpertChanges => ({
+  ...{
+    title: faker.string.alpha({ length: { min: 1, max: 120 } }),
+    show_title: faker.datatype.boolean(),
+    width: faker.helpers.arrayElement(["full", "half"] as const),
+    page_break: faker.datatype.boolean(),
+    kind: faker.helpers.arrayElement(["ai-changes"] as const),
+    group_by: faker.helpers.arrayElement(Object.values(ChangeGroup)),
+    people: faker.datatype.boolean(),
+  },
+  ...overrideResponse,
+});
+
 export const getGetStudyTemplateVersionResponseScaleQuestionMock = (
   overrideResponse: Partial<ScaleQuestion> = {},
 ): ScaleQuestion => ({
@@ -10918,6 +11094,7 @@ export const getGetStudyTemplateVersionResponseMock = (
       { ...getGetStudyTemplateVersionResponseSlideFigureMock() },
       { ...getGetStudyTemplateVersionResponseTextBlockMock() },
       { ...getGetStudyTemplateVersionResponseComparisonMock() },
+      { ...getGetStudyTemplateVersionResponseExpertChangesMock() },
     ]),
   ),
   format: {
@@ -11189,6 +11366,21 @@ export const getRetireStudyTemplateResponseComparisonMock = (
   ...overrideResponse,
 });
 
+export const getRetireStudyTemplateResponseExpertChangesMock = (
+  overrideResponse: Partial<ExpertChanges> = {},
+): ExpertChanges => ({
+  ...{
+    title: faker.string.alpha({ length: { min: 1, max: 120 } }),
+    show_title: faker.datatype.boolean(),
+    width: faker.helpers.arrayElement(["full", "half"] as const),
+    page_break: faker.datatype.boolean(),
+    kind: faker.helpers.arrayElement(["ai-changes"] as const),
+    group_by: faker.helpers.arrayElement(Object.values(ChangeGroup)),
+    people: faker.datatype.boolean(),
+  },
+  ...overrideResponse,
+});
+
 export const getRetireStudyTemplateResponseScaleQuestionMock = (
   overrideResponse: Partial<ScaleQuestion> = {},
 ): ScaleQuestion => ({
@@ -11277,6 +11469,7 @@ export const getRetireStudyTemplateResponseMock = (
       { ...getRetireStudyTemplateResponseSlideFigureMock() },
       { ...getRetireStudyTemplateResponseTextBlockMock() },
       { ...getRetireStudyTemplateResponseComparisonMock() },
+      { ...getRetireStudyTemplateResponseExpertChangesMock() },
     ]),
   ),
   format: {
@@ -11548,6 +11741,21 @@ export const getRestoreStudyTemplateResponseComparisonMock = (
   ...overrideResponse,
 });
 
+export const getRestoreStudyTemplateResponseExpertChangesMock = (
+  overrideResponse: Partial<ExpertChanges> = {},
+): ExpertChanges => ({
+  ...{
+    title: faker.string.alpha({ length: { min: 1, max: 120 } }),
+    show_title: faker.datatype.boolean(),
+    width: faker.helpers.arrayElement(["full", "half"] as const),
+    page_break: faker.datatype.boolean(),
+    kind: faker.helpers.arrayElement(["ai-changes"] as const),
+    group_by: faker.helpers.arrayElement(Object.values(ChangeGroup)),
+    people: faker.datatype.boolean(),
+  },
+  ...overrideResponse,
+});
+
 export const getRestoreStudyTemplateResponseScaleQuestionMock = (
   overrideResponse: Partial<ScaleQuestion> = {},
 ): ScaleQuestion => ({
@@ -11636,6 +11844,7 @@ export const getRestoreStudyTemplateResponseMock = (
       { ...getRestoreStudyTemplateResponseSlideFigureMock() },
       { ...getRestoreStudyTemplateResponseTextBlockMock() },
       { ...getRestoreStudyTemplateResponseComparisonMock() },
+      { ...getRestoreStudyTemplateResponseExpertChangesMock() },
     ]),
   ),
   format: {
@@ -17237,6 +17446,28 @@ export const getExportTrainingDatasetMockHandler = (
   );
 };
 
+export const getGetTaskAiChangesMockHandler = (
+  overrideResponse?:
+    | AiChanges
+    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<AiChanges> | AiChanges),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/review-tasks/:taskId/evaluation/ai-changes",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetTaskAiChangesResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getStartEvaluationVersionMockHandler = (
   overrideResponse?:
     | EvaluationVersionStarted
@@ -18965,6 +19196,7 @@ export const getParfocalAPIMock = () => [
   getGetTaskEvaluationMockHandler(),
   getExportTaskEvaluationMockHandler(),
   getExportTrainingDatasetMockHandler(),
+  getGetTaskAiChangesMockHandler(),
   getStartEvaluationVersionMockHandler(),
   getListEvaluationChangesMockHandler(),
   getGetSignOffSummaryMockHandler(),
