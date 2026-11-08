@@ -1181,7 +1181,7 @@ MEMBER_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "getMyAvailability": lambda _: Call("GET", "/api/me/availability"),
     "setMyAvailability": lambda _: Call("PUT", "/api/me/availability", {"status": "available"}),
     "sendFeedback": lambda _: Call(
-        "POST", "/api/feedback", {"text": "Matrix feedback", "path": "/my-work"}
+        "POST", "/api/feedback", {"text": "Matrix feedback", "route": "/my-work"}
     ),
 }
 

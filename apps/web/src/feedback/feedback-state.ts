@@ -3,7 +3,7 @@ import { useSyncExternalStore } from "react";
 export type FeedbackState =
   | { step: "closed" }
   | { step: "capturing" }
-  | { step: "writing"; screenshot: string | null; path: string; viewport: [number, number] };
+  | { step: "writing"; screenshot: string | null; viewport: [number, number] };
 
 let state: FeedbackState = { step: "closed" };
 const listeners = new Set<() => void>();
@@ -41,9 +41,9 @@ async function redactedScreenshot(): Promise<string | null> {
   }
 }
 
-export function routePath(pathname: string): string {
-  const safe = pathname.replace(/[^A-Za-z0-9/_.-]/g, "");
-  return (safe.startsWith("/") ? safe : `/${safe}`).slice(0, 300);
+export function feedbackRoute(matches: readonly { routeId: string }[]): string {
+  const routeId = matches.at(-1)?.routeId ?? "__root__";
+  return routeId.replace(/[^A-Za-z0-9/_.$-]/g, "").slice(0, 300) || "__root__";
 }
 
 export async function openFeedback(): Promise<void> {
@@ -53,7 +53,6 @@ export async function openFeedback(): Promise<void> {
   feedbackStore.setState({
     step: "writing",
     screenshot,
-    path: routePath(window.location.pathname),
     viewport: [window.innerWidth, window.innerHeight],
   });
 }

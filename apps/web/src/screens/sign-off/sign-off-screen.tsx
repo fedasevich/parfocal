@@ -240,7 +240,7 @@ function SignOffModal({
                   at={shortDate(change.at)}
                   text={
                     <>
-                      <b>
+                      <b data-phi="">
                         {change.object} on {change.slide_label}
                       </b>
                       : {change.text} · "{change.reason}"
@@ -318,6 +318,7 @@ function SignOffModal({
             {blockers.length ? (
               blockers.map((blocker) => (
                 <ReadinessRow
+                  data-phi=""
                   key={blocker.key}
                   tone="warn"
                   title={blocker.title}
@@ -343,17 +344,20 @@ function SignOffModal({
             ) : (
               <>
                 <ReadinessRow
+                  data-phi=""
                   tone="ok"
                   title={`All ${summary.reviews.slides} slides reviewed by both reviewers`}
                   sub={`${summary.reviews.submitted} of ${summary.reviews.total} reviews submitted, ${summary.reviews.opinion_forms} opinion forms`}
                 />
                 <ReadinessRow
+                  data-phi=""
                   tone="ok"
                   title={`${summary.queue.total} disagreements resolved`}
                   sub={resolvedText(summary, nameOf)}
                 />
                 {summary.queue.left_open.length ? (
                   <ReadinessRow
+                    data-phi=""
                     tone="warn"
                     title={`${summary.queue.left_open.length} objects left open on purpose`}
                     sub={`${summary.queue.left_open.map((row) => `${row.object} on ${row.slide_label}`).join(", ")} · allowed, in the report`}
@@ -363,12 +367,14 @@ function SignOffModal({
             )}
             {summary.open_threads.total ? (
               <ReadinessRow
+                data-phi=""
                 tone="warn"
                 title={`${plural(summary.open_threads.total, "thread")} still open`}
                 sub={`${summary.open_threads.slides.map((row) => `${row.count} on ${row.slide_label}`).join(", ")} · they do not block signing, the report lists them`}
               />
             ) : null}
             <ReadinessRow
+              data-phi=""
               tone="ok"
               title="Result set and IDs fixed"
               sub={`${summary.result_set.name}, ${summary.result_set.objects} objects, plus ${summary.result_set.added} added by a reviewer`}

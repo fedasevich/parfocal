@@ -2014,9 +2014,9 @@ export interface FeedbackDraft {
   text: string;
   /**
    * @maxLength 300
-   * @pattern ^/[A-Za-z0-9/_.\-]*$
+   * @pattern ^(__root__|/[A-Za-z0-9/_.$\-]*)$
    */
-  path: string;
+  route: string;
   app_version?: string | null;
   viewport?: number[] | null;
   screenshot_png?: string | null;

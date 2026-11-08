@@ -861,7 +861,7 @@ function ViewerBody({
     running && progress ? (
       <RunningObjects progress={progress} objects={objects} />
     ) : nothing ? (
-      <Zone title={`Objects on ${slideLabel}`}>
+      <Zone title={`Objects on ${slideLabel}`} data-phi="">
         <p className="m-0 text-body-sm leading-[1.5] text-fg-dim">
           {noTask
             ? `No review task asks about ${slideLabel}. Look at it here, and write what you find in the clinical report.`

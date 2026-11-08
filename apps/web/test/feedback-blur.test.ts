@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { routePath } from "../src/feedback/feedback-state.ts";
+import { feedbackRoute } from "../src/feedback/feedback-state.ts";
 import {
   blurAreas,
   mosaic,
@@ -78,13 +78,23 @@ test("slides, images, patient details and typed text are all areas to blur", () 
     "nav[aria-label='breadcrumb']",
     "tbody",
     "input",
+    "[role='status']",
+    "[role='alert']",
   ]) {
     assert.ok(phiSelector.split(", ").includes(part), part);
   }
 });
 
-test("the route sent with feedback keeps ids and drops the query and odd characters", () => {
-  assert.equal(routePath("/projects/7c/slides/9a"), "/projects/7c/slides/9a");
-  assert.equal(routePath("/search Smith, J"), "/searchSmithJ");
-  assert.equal(routePath("x".repeat(400)).length, 300);
+test("feedback names the matched route, never the URL with its ids or tokens", () => {
+  const root = { routeId: "__root__" };
+  assert.equal(
+    feedbackRoute([root, { routeId: "/shared-reports/$token" }]),
+    "/shared-reports/$token",
+  );
+  assert.equal(feedbackRoute([root, { routeId: "/invitations/$token" }]), "/invitations/$token");
+  assert.equal(
+    feedbackRoute([root, { routeId: "/projects/$projectId/slides/$slideId_/live" }]),
+    "/projects/$projectId/slides/$slideId_/live",
+  );
+  assert.equal(feedbackRoute([]), "__root__");
 });

@@ -343,7 +343,7 @@ function Closing({ report, queue, changes, format, nameOf }: PagesProps) {
         )}
       </ReportBlock>
       <ReportBlock title="Left open on purpose">
-        <span>
+        <span data-phi="">
           {leftOpen.length
             ? leftOpen.map((row) => `${row.object} on ${row.slide_label}`).join(", ")
             : "Every queued object was decided."}

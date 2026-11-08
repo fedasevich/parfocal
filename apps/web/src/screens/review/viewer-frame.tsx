@@ -288,6 +288,7 @@ export function ObjectsSummary({
 }) {
   return (
     <Zone
+      data-phi=""
       title={`Objects on ${slideLabel}`}
       end={
         <span className="font-mono text-caption text-fg-dim">

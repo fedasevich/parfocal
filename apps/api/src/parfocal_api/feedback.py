@@ -2,25 +2,30 @@ import base64
 import binascii
 import json
 import uuid
+from collections.abc import Callable, Coroutine
 from datetime import UTC, datetime
-from typing import Annotated
+from typing import Annotated, Any
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Request, Response
+from fastapi.routing import APIRoute
 from pydantic import BaseModel, Field, StringConstraints
 
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
 from parfocal_api.availability import member_of
 from parfocal_api.context import CurrentPrincipal, Store, TenantConnection
-from parfocal_api.problems import BadRequestError
+from parfocal_api.problems import BadRequestError, ProblemError
 
 PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
 SCREENSHOT_LIMIT = 4 * 1024 * 1024
+BODY_LIMIT = 6 * 1024 * 1024
 FEEDBACK_PREFIX = "feedback"
 
 FeedbackText = Annotated[
     str, StringConstraints(strip_whitespace=True, min_length=1, max_length=4000)
 ]
-FeedbackPath = Annotated[str, StringConstraints(max_length=300, pattern=r"^/[A-Za-z0-9/_.\-]*$")]
+FeedbackRoute = Annotated[
+    str, StringConstraints(max_length=300, pattern=r"^(__root__|/[A-Za-z0-9/_.$\-]*)$")
+]
 
 AppVersion = Annotated[str, StringConstraints(max_length=80)]
 Viewport = Annotated[list[Annotated[int, Field(ge=0, le=20000)]], Field(max_length=2)]
@@ -29,7 +34,7 @@ ScreenshotData = Annotated[str, StringConstraints(max_length=SCREENSHOT_LIMIT * 
 
 class FeedbackDraft(BaseModel):
     text: FeedbackText
-    path: FeedbackPath
+    route: FeedbackRoute
     app_version: AppVersion | None = None
     viewport: Viewport | None = None
     screenshot_png: ScreenshotData | None = None
@@ -45,7 +50,38 @@ class ScreenshotNotPngError(BadRequestError):
     title = "The screenshot must be a PNG image"
 
 
-router = APIRouter(prefix="/api/feedback", tags=["feedback"])
+class FeedbackTooLargeError(ProblemError):
+    status = 413
+    code = "feedback-too-large"
+    title = "The feedback and its screenshot are too large"
+
+
+class LengthRequiredError(ProblemError):
+    status = 411
+    code = "length-required"
+    title = "Send the size of the feedback with it"
+
+
+def declared_length(request: Request) -> int:
+    try:
+        return int(request.headers["content-length"])
+    except (KeyError, ValueError) as error:
+        raise LengthRequiredError from error
+
+
+class SizeCappedRoute(APIRoute):
+    def get_route_handler(self) -> Callable[[Request], Coroutine[Any, Any, Response]]:
+        handler = super().get_route_handler()
+
+        async def capped(request: Request) -> Response:
+            if declared_length(request) > BODY_LIMIT:
+                raise FeedbackTooLargeError
+            return await handler(request)
+
+        return capped
+
+
+router = APIRouter(prefix="/api/feedback", tags=["feedback"], route_class=SizeCappedRoute)
 
 
 def feedback_key(tenant_id: uuid.UUID, feedback_id: uuid.UUID, name: str) -> str:
@@ -74,7 +110,7 @@ async def send_feedback(
         "tenant_id": str(member.tenant_id),
         "user_id": str(member.user_id),
         "sent_at": datetime.now(UTC).isoformat(),
-        "path": draft.path,
+        "route": draft.route,
         "app_version": draft.app_version,
         "viewport": draft.viewport,
         "text": draft.text,

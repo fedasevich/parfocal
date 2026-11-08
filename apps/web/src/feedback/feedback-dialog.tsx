@@ -9,7 +9,7 @@ const pngPrefix = "data:image/png;base64,";
 
 type Writing = Extract<FeedbackState, { step: "writing" }>;
 
-export default function FeedbackDialog({ feedback }: { feedback: Writing }) {
+export default function FeedbackDialog({ feedback, route }: { feedback: Writing; route: string }) {
   const send = useSendFeedback();
   const [text, setText] = useState("");
   const [attach, setAttach] = useState(feedback.screenshot !== null);
@@ -60,7 +60,7 @@ export default function FeedbackDialog({ feedback }: { feedback: Writing }) {
           {
             data: {
               text: trimmed,
-              path: feedback.path,
+              route,
               viewport: feedback.viewport,
               screenshot_png: screenshot ? screenshot.slice(pngPrefix.length) : null,
             },

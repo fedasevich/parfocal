@@ -126,7 +126,7 @@ function CommentsTab({
       {...props}
     >
       <div className="flex items-center justify-between gap-2">
-        <span className="text-body-sm font-semibold">
+        <span className="text-body-sm font-semibold" data-phi="">
           {slideLabel ? `Threads on ${slideLabel}` : "Threads"}
         </span>
         <SegmentedControl

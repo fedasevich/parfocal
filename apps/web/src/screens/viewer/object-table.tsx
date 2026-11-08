@@ -113,7 +113,9 @@ export function ObjectTablePanel({
       className="flex h-75 shrink-0 flex-col border-t border-line bg-chrome"
     >
       <div className="flex items-center gap-3 px-4 py-3">
-        <b className="text-body font-semibold">Objects on {slideLabel}</b>
+        <b className="text-body font-semibold" data-phi="">
+          Objects on {slideLabel}
+        </b>
         <span className="min-w-0 flex-1 truncate text-body-sm text-fg-dim">
           {stats ? `${stats.object_count.toLocaleString("en-US")} in all · ` : ""}showing the
           regions, your added region and the cells with a note or a disagreement

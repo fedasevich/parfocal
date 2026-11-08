@@ -11,6 +11,35 @@ async function boxOf(page: Page, selector: string): Promise<Box> {
   return box;
 }
 
+async function openFeedbackFromPalette(page: Page) {
+  const palette = page.getByRole("dialog", { name: "Command palette" });
+  await expect(async () => {
+    if (!(await palette.isVisible())) await page.keyboard.press("ControlOrMeta+k");
+    await expect(palette).toBeVisible({ timeout: 500 });
+  }).toPass();
+  await palette.getByRole("combobox").fill("send feedback");
+  await expect(palette.getByRole("option").first()).toContainText("Send feedback");
+  await page.keyboard.press("Enter");
+}
+
+async function pixelsAt(page: Page, source: string, points: [number, number][]) {
+  return page.evaluate(
+    async ({ source, points }) => {
+      const image = new Image();
+      image.src = source;
+      await image.decode();
+      const canvas = document.createElement("canvas");
+      canvas.width = image.naturalWidth;
+      canvas.height = image.naturalHeight;
+      const context = canvas.getContext("2d");
+      if (!context) throw new Error("no 2d context");
+      context.drawImage(image, 0, 0);
+      return points.map(([x, y]) => Array.from(context.getImageData(x, y, 1, 1).data.slice(0, 3)));
+    },
+    { source, points },
+  );
+}
+
 async function blockReport(page: Page, source: string, areas: Box[]) {
   return page.evaluate(
     async ({ source, areas, block }) => {
@@ -82,14 +111,7 @@ test("the feedback screenshot is blurred over the slide and the patient banner b
     await boxOf(page, "canvas"),
   ];
 
-  const palette = page.getByRole("dialog", { name: "Command palette" });
-  await expect(async () => {
-    if (!(await palette.isVisible())) await page.keyboard.press("ControlOrMeta+k");
-    await expect(palette).toBeVisible({ timeout: 500 });
-  }).toPass();
-  await palette.getByRole("combobox").fill("send feedback");
-  await expect(palette.getByRole("option").first()).toContainText("Send feedback");
-  await page.keyboard.press("Enter");
+  await openFeedbackFromPalette(page);
   const dialog = page.getByRole("dialog", { name: "Send feedback" });
   const preview = dialog.getByTestId("feedback-screenshot");
   await expect(preview).toBeVisible({ timeout: 15_000 });
@@ -110,8 +132,8 @@ test("the feedback screenshot is blurred over the slide and the patient banner b
   expect(sent).toHaveLength(1);
   const body = JSON.parse(sent[0] ?? "{}") as Record<string, unknown>;
   expect(body["screenshot_png"]).toBe(source.slice("data:image/png;base64,".length));
-  expect(body["path"]).toMatch(/^\/projects\/[0-9a-f-]{36}\/slides\/[\w-]+/u);
-  expect(String(body["path"])).not.toContain("?");
+  expect(body["route"]).toBe("/projects/$projectId/slides/$slideId_/live");
+  expect(body).not.toHaveProperty("path");
 });
 
 test("the account menu opens the feedback dialog", async ({ page }) => {
@@ -121,4 +143,51 @@ test("the account menu opens the feedback dialog", async ({ page }) => {
   await expect(page.getByRole("dialog", { name: "Send feedback" })).toBeVisible({
     timeout: 15_000,
   });
+});
+
+test("a scrolled list is captured at its scroll position so the blur lands on the right rows", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/");
+  await page.evaluate(() => {
+    const box = document.createElement("div");
+    box.id = "scrolled-fixture";
+    box.style.cssText =
+      "position:fixed;left:40px;top:120px;width:320px;height:300px;overflow:auto;z-index:2147483646";
+    const band = (height: number, colour: string, phi = false) => {
+      const part = document.createElement("div");
+      part.style.cssText = `height:${height}px;background:${colour}`;
+      if (phi) {
+        part.setAttribute("data-phi", "");
+        part.textContent = "Fake Patient 9 FAKE-0009";
+      }
+      return part;
+    };
+    box.append(
+      band(500, "rgb(255, 0, 0)"),
+      band(100, "rgb(0, 255, 0)"),
+      band(100, "rgb(255, 255, 255)", true),
+      band(500, "rgb(0, 0, 255)"),
+    );
+    document.body.append(box);
+    box.scrollTop = 500;
+  });
+  const phi = await boxOf(page, "#scrolled-fixture [data-phi]");
+  expect(Math.round(phi.y)).toBe(220);
+
+  await openFeedbackFromPalette(page);
+  const preview = page
+    .getByRole("dialog", { name: "Send feedback" })
+    .getByTestId("feedback-screenshot");
+  await expect(preview).toBeVisible({ timeout: 15_000 });
+  const source = (await preview.getAttribute("src")) ?? "";
+  const [green, blue] = await pixelsAt(page, source, [
+    [200, 140],
+    [200, 380],
+  ]);
+  expect(green).toEqual([0, 255, 0]);
+  expect(blue).toEqual([0, 0, 255]);
+  const report = await blockReport(page, source, [phi]);
+  expect(report.sharpInside[0]?.sharp).toBe(0);
 });

@@ -361,8 +361,10 @@ function CosignFlow({
           title="Clinical report"
           subtitle={
             <>
-              <span className="font-mono">{data.case.label}</span> · {data.template.name}{" "}
-              {data.template.version}
+              <span className="font-mono" data-phi="">
+                {data.case.label}
+              </span>{" "}
+              · {data.template.name} {data.template.version}
             </>
           }
           steps={[]}
@@ -456,8 +458,10 @@ function CosignFlow({
         title="Co-sign the report"
         subtitle={
           <>
-            <span className="font-mono">{data.case.label}</span> · {data.template.name}{" "}
-            {data.template.version} · drafted by {sender?.name}
+            <span className="font-mono" data-phi="">
+              {data.case.label}
+            </span>{" "}
+            · {data.template.name} {data.template.version} · drafted by {sender?.name}
           </>
         }
         steps={[]}

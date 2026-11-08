@@ -651,8 +651,10 @@ function ReportFlow({
         title="Clinical report"
         subtitle={
           <>
-            <span className="font-mono">{data.case.label}</span> · {data.template.name}{" "}
-            {data.template.version}
+            <span className="font-mono" data-phi="">
+              {data.case.label}
+            </span>{" "}
+            · {data.template.name} {data.template.version}
             {assigned ? ` · assigned to ${assigned}` : ""}
           </>
         }

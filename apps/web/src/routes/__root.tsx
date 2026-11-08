@@ -1,4 +1,5 @@
 import { createRootRoute, Link, Outlet, useMatches } from "@tanstack/react-router";
+import { FeedbackHost } from "../feedback/feedback-host.tsx";
 import { KeyBindingsProvider } from "../keys/keycap-bindings.tsx";
 import { LabKey } from "../lab/lab-key.tsx";
 import { SessionLock } from "../session/session-lock.tsx";
@@ -41,6 +42,7 @@ function Root() {
         <ShortcutsKey />
         <SettingsKey />
         <LabKey />
+        <FeedbackHost />
       </KeyBindingsProvider>
     </SessionLock>
   );

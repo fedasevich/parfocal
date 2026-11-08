@@ -9,6 +9,7 @@ import {
 
 const redactMark = "data-feedback-redact";
 const mediaMark = "data-feedback-media";
+const scrollMark = "data-feedback-scroll";
 const redactedFill = "#8b9099";
 
 const redactionCss = `
@@ -52,15 +53,40 @@ function markLive(doc: Document): { areas: Area[]; unmark: () => void } {
     }
     marked.push(element);
   }
+  for (const element of Array.from(doc.body.querySelectorAll("*"))) {
+    if (element.scrollTop === 0 && element.scrollLeft === 0) continue;
+    element.setAttribute(scrollMark, `${element.scrollLeft},${element.scrollTop}`);
+    marked.push(element);
+  }
+  const page = doc.scrollingElement;
+  if (page && (page.scrollTop !== 0 || page.scrollLeft !== 0)) {
+    doc.body.setAttribute(scrollMark, `${page.scrollLeft},${page.scrollTop}`);
+    marked.push(doc.body);
+  }
   return {
     areas,
     unmark: () => {
       for (const element of marked) {
         element.removeAttribute(redactMark);
         element.removeAttribute(mediaMark);
+        element.removeAttribute(scrollMark);
       }
     },
   };
+}
+
+function applyScroll(container: Element): void {
+  const [left = 0, top = 0] = (container.getAttribute(scrollMark) ?? "").split(",").map(Number);
+  container.removeAttribute(scrollMark);
+  if (container instanceof HTMLElement) container.style.overflow = "hidden";
+  for (const child of Array.from(container.children)) {
+    if (!(child instanceof HTMLElement) && !(child instanceof SVGElement)) continue;
+    if (child.style.translate === "") {
+      child.style.translate = `${-left}px ${-top}px`;
+    } else {
+      child.style.transform = `translate(${-left}px, ${-top}px) ${child.style.transform}`;
+    }
+  }
 }
 
 function stripClone(body: HTMLElement, doc: Document): void {
@@ -79,6 +105,10 @@ function stripClone(body: HTMLElement, doc: Document): void {
     stand.style.height = `${height}px`;
     media.replaceWith(stand);
   }
+  for (const container of Array.from(body.querySelectorAll(`[${scrollMark}]`))) {
+    applyScroll(container);
+  }
+  if (body.hasAttribute(scrollMark)) applyScroll(body);
   for (const element of Array.from(body.querySelectorAll("[style*='url(']"))) {
     if (element instanceof HTMLElement) element.style.backgroundImage = "none";
   }

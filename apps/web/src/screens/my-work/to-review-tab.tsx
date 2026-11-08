@@ -151,8 +151,8 @@ function MentionRow({ item }: { item: InboxItem }) {
         <b className="text-fg">{actor?.name}</b>{" "}
         {item.kind === "mention" ? (
           <>
-            asked about <ObjectIdTag>{objectId}</ObjectIdTag> on {payloadText(item, "slide_label")}:{" "}
-            {said}
+            asked about <ObjectIdTag>{objectId}</ObjectIdTag> on{" "}
+            <span data-phi="">{payloadText(item, "slide_label")}</span>: {said}
           </>
         ) : (
           <>
@@ -187,7 +187,9 @@ function AsksForYou() {
             <PersonAvatar person={from} size={26} />
             <div>
               <b className="text-fg">{from?.name}</b> asks you to co-sign{" "}
-              <span className="font-mono text-fg">{ask.case_label}</span>
+              <span className="font-mono text-fg" data-phi="">
+                {ask.case_label}
+              </span>
               <small className="mt-0.75 block text-caption text-fg-faint">
                 {ask.project.name} · {formatDayMonth(sent)} {formatClock(sent)}
               </small>

@@ -42291,11 +42291,11 @@
             "minLength": 1,
             "title": "Text"
           },
-          "path": {
+          "route": {
             "type": "string",
             "maxLength": 300,
-            "pattern": "^/[A-Za-z0-9/_.\\-]*$",
-            "title": "Path"
+            "pattern": "^(__root__|/[A-Za-z0-9/_.$\\-]*)$",
+            "title": "Route"
           },
           "app_version": {
             "anyOf": [
@@ -42342,7 +42342,7 @@
         "type": "object",
         "required": [
           "text",
-          "path"
+          "route"
         ],
         "title": "FeedbackDraft"
       },

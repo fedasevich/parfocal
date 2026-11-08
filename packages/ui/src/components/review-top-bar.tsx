@@ -116,7 +116,9 @@ function ReviewTopBar({
       <span aria-hidden="true" className="h-6 w-px shrink-0 bg-line" />
       <div className="grid min-w-0 leading-tight">
         <b className="truncate text-body-sm font-semibold">{taskName}</b>
-        <small className="truncate text-caption text-fg-dim">{taskSub}</small>
+        <small className="truncate text-caption text-fg-dim" data-phi="">
+          {taskSub}
+        </small>
       </div>
       {mode === "guided" || !slidesPopover ? (
         <span
@@ -140,7 +142,9 @@ function ReviewTopBar({
               {slideName}
             </b>
             {slideSummary ? (
-              <small className="hidden text-caption text-fg-dim xl:inline">{slideSummary}</small>
+              <small className="hidden text-caption text-fg-dim xl:inline" data-phi="">
+                {slideSummary}
+              </small>
             ) : null}
             <Icon name="down" className="text-fg-faint" />
           </PopoverTrigger>
