@@ -4833,6 +4833,12 @@ Admin is its own page with its own sidebar and the app's top bar, never a page i
   Depends on VIZ-001, VIEW-027, TASK-011. Refs mock: layers/display, mock: guided/display, doc 44.
   Size: M.
 
+- [ ] VIZ-008 · How objects draw on the live slide
+  VIZ-002 added the drawing styles, the score cutoff and the confidence tint to the engine's `drawObjectOverlays` and drives the still preview with them, but the live slide renderer does not use them. Wire the Display panel's How objects draw group, the cutoff and the confidence choice into the live Viv overlays.
+  Done when the live renderer's golden tests match the still preview's for each style, width, opacity and the cutoff.
+  Depends on VIZ-002.
+  Size: M.
+
 - [ ] VIZ-003 · Heatmap, density and confidence maps
   Each with its ramp and a threshold. The heatmap's strength is a slider in the Display panel, off or 20 to 100%, which starts at the task's display default and can be locked by the task. In the full viewer the maps sit in the Display panel's View group ([ADR 0132](adr/0132-display-settings-presets-and-task-locks.md), display settings, presets and task locks).
   Done when golden tests cover each map, the slider's steps and the off state.
