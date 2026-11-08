@@ -8,6 +8,7 @@ import { Person, type PersonInfo } from "@parfocal/ui/components/person";
 import { FilterChip, ObjectIdTag } from "@parfocal/ui/components/tag";
 import { cn } from "@parfocal/ui/lib/utils";
 import type { ReactNode } from "react";
+import { ConfidenceByColour } from "./confidence-chip.tsx";
 import {
   type CardText,
   type Count,
@@ -341,6 +342,7 @@ export function ObjectCard({
             <p className="m-0 text-lead text-fg">{text.above}</p>
           </>
         ) : null}
+        <ConfidenceByColour chip={text.chip} />
         <h2 className="m-0 text-title font-semibold leading-snug text-fg">{text.question}</h2>
         {text.context ? <p className="m-0 text-body text-fg-dim">{text.context}</p> : null}
       </div>

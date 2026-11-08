@@ -62,6 +62,34 @@ const bandSure: Record<ConfidenceBand, string> = {
   doubtful: "unsure",
 };
 
+export const bandTints: Record<ConfidenceBand, readonly [number, number, number]> = {
+  confident: [74, 222, 128],
+  likely: [163, 230, 53],
+  unsure: [251, 191, 36],
+  doubtful: [248, 113, 113],
+};
+
+export const bandColour = (band: ConfidenceBand) => `rgb(${bandTints[band].join(" ")})`;
+
+export type ConfidenceChip = {
+  form: "number" | "word" | "color";
+  text: string;
+  band: ConfidenceBand;
+};
+
+export function confidenceChip(
+  object: ReviewObject,
+  confidence: ReviewConfidence,
+  typer: TyperEvidence = reviewTyper,
+): ConfidenceChip | null {
+  if (confidence === "hidden") return null;
+  const calls = [{ label: object.class_name, probability: object.score }];
+  const band = aiWording(calls, wordingOfDisplay[confidence], typer).band;
+  if (confidence === "color") return { form: "color", text: bandSure[band], band };
+  const shown = sureText(object, confidence, typer).replace(/^, (only )?/, "");
+  return { form: shown.endsWith("% sure") ? "number" : "word", text: shown, band };
+}
+
 export function sureText(
   object: ReviewObject,
   confidence: ReviewConfidence,

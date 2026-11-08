@@ -16,6 +16,7 @@ import { Banner } from "@parfocal/ui/components/banner";
 import type { Blocker } from "@parfocal/ui/components/before-you-list";
 import { Button } from "@parfocal/ui/components/button";
 import { CellCluster, CellsLauncher } from "@parfocal/ui/components/cells-panel";
+import type { DisplaySettings } from "@parfocal/ui/components/display-panel";
 import { Icon } from "@parfocal/ui/components/icon";
 import { InspectorPanel } from "@parfocal/ui/components/inspector-panel";
 import { MagnificationBar } from "@parfocal/ui/components/magnification-bar";
@@ -23,7 +24,12 @@ import { ModelWarningsBlock } from "@parfocal/ui/components/model-warnings";
 import { type OpinionQuestion, SlideDoneCard } from "@parfocal/ui/components/slide-done-card";
 import { ObjectIdTag } from "@parfocal/ui/components/tag";
 import { UndoToast } from "@parfocal/ui/components/undo-toast";
-import { ResultSetRows, TileHint, ViewPicker } from "@parfocal/ui/components/visualize";
+import {
+  ClassVisibility,
+  ResultSetRows,
+  TileHint,
+  ViewPicker,
+} from "@parfocal/ui/components/visualize";
 import { Zone } from "@parfocal/ui/components/zone";
 import { inspectorCounts, inspectorTabLabels } from "@parfocal/ui/lib/inspector-tabs";
 import { objectIdPath } from "@parfocal/ui/lib/object-id";
@@ -60,7 +66,12 @@ import {
   showsClaim,
 } from "../review/decision-style.ts";
 import { disagreeOptions, reasonDraft } from "../review/disagree-reasons.ts";
-import { type DisplayLock, DisplayTab, displaySettings } from "../review/display-tab.tsx";
+import {
+  type DisplayLock,
+  DisplayTab,
+  displaySettings,
+  withOverrides,
+} from "../review/display-tab.tsx";
 import { CanvasNotice } from "../review/guided-review.tsx";
 import { finishingAnswers } from "../review/guided-scenes.ts";
 import { useNoteKey } from "../review/note-key.ts";
@@ -108,6 +119,7 @@ import { SlidePeek, usePeekKey } from "../viewer-tools/slide-peek.tsx";
 import { ViewerMinimap } from "../viewer-tools/viewer-minimap.tsx";
 import { areaOrder, areaRoleText, areaRows } from "./area-nav.ts";
 import { layerDrawing, setColours } from "./layer-views.tsx";
+import { confidenceTintOf, objectStyle } from "./object-draw.ts";
 import { ObjectTablePanel, tableRows } from "./object-table.tsx";
 import {
   AddedFoot,
@@ -301,6 +313,8 @@ function ViewerBody({
   const [note, setNote] = useState({ open: false, reasons: [] as string[], text: "" });
   const [preset, setPreset] = useState<string | null>(setup.preset);
   const [idLabels, setIdLabels] = useState<boolean | null>(null);
+  const [drawOverrides, setDrawOverrides] = useState<Partial<DisplaySettings>>({});
+  const [hiddenClasses, setHiddenClasses] = useState<ReadonlySet<string>>(new Set());
   const [shownSets, setShownSets] = useState<Record<string, boolean>>({ reviewed: true });
   const [saved, setSaved] = useState<{ name: string; key: string }[]>([]);
   const [failed, setFailed] = useState(setup.submitFail);
@@ -338,7 +352,12 @@ function ViewerBody({
         presets: [...session.display.presets, ...saved.map((item) => ({ ...item, settings: {} }))],
       }
     : undefined;
-  const pickedSettings = displaySettings(display, preset, extraLocks);
+  const pickedSettings = withOverrides(
+    displaySettings(display, preset, extraLocks),
+    drawOverrides,
+    display,
+    extraLocks,
+  );
   const settings = idLabels === null ? pickedSettings : { ...pickedSettings, ids: idLabels };
   const confidence = settings.confidence as Confidence;
   const readOnly = setup.readOnly;
@@ -635,6 +654,43 @@ function ViewerBody({
     reviewedOn,
   });
   const showScore = confidence !== "hidden";
+  const classColour = (name: string) =>
+    session.classes.find((item) => item.name === name)?.color ?? "var(--fg-faint)";
+  const styleOfObject = (id: string) => {
+    const object = objects.find((item) => item.object === id);
+    if (!object) return undefined;
+    return objectStyle(object, {
+      settings: {
+        draw: settings.draw,
+        width: settings.width,
+        opacity: settings.opacity,
+        colorBy: settings.colorBy,
+        cutoff: settings.cutoff,
+      },
+      hiddenClasses,
+      classColour,
+      decisionOf: (name) => answer(name)?.value,
+    });
+  };
+  const classVisibility = (
+    <ClassVisibility
+      rows={session.classes.map((item, index) => ({
+        name: item.name,
+        color: item.color,
+        count: objects.filter((object) => object.class_name === item.name).length,
+        visible: !hiddenClasses.has(item.name),
+        key: String(index + 1),
+      }))}
+      onVisibleChange={(name, visible) =>
+        setHiddenClasses((now) => {
+          const next = new Set(now);
+          if (visible) next.delete(name);
+          else next.add(name);
+          return next;
+        })
+      }
+    />
+  );
 
   const openRegions = regions.filter((region) => !answer(region.object));
   const blockers: Blocker[] = counts.open
@@ -883,7 +939,13 @@ function ViewerBody({
         extraLocks={extraLocks}
         viewer
         presetOpen={setup.presetOpen}
-        onPresetPick={setPreset}
+        onPresetPick={(name) => {
+          setDrawOverrides({});
+          setPreset(name);
+        }}
+        overrides={drawOverrides}
+        onSettingChange={(key, value) => setDrawOverrides((now) => ({ ...now, [key]: value }))}
+        classVisibility={classVisibility}
         onSaveAs={() => onSearch({ modal: "preset" })}
         resultSets={resultSetRows}
         after={viewZone}
@@ -1226,7 +1288,11 @@ function ViewerBody({
             hint={false}
             tiles={setup.tiles}
             slideName={session.slideName}
-            regionStyle={drawing.regionStyle}
+            regionStyle={(object) => drawing.regionStyle(object) ?? styleOfObject(object)}
+            cellStyle={styleOfObject}
+            currentTint={
+              confidence === "color" && current ? confidenceTintOf(current.score) : undefined
+            }
             tags={running || nothing ? [] : drawing.tags}
             underlay={
               running ? () => <RunningHeat reached={readReach(progress)} /> : drawing.underlay

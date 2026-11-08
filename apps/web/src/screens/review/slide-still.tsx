@@ -39,7 +39,13 @@ export const shapeKey = (object: string) => object.replace("⁺", "");
 
 export const objectOfShape = (key: string) => (key === "T6" ? "T6⁺" : key);
 
-export type RegionStyle = { stroke: string; fill?: string; dash?: string; width?: number };
+export type RegionStyle = {
+  stroke: string;
+  fill?: string;
+  dash?: string;
+  width?: number;
+  opacity?: number;
+};
 
 export type SlideTag = { object: string; text: string; color: string };
 
@@ -115,6 +121,8 @@ type SlideStillProps = {
   className?: string;
   tiles?: Tiles;
   regionStyle?: ((object: string) => RegionStyle | undefined) | undefined;
+  cellStyle?: ((object: string) => RegionStyle | undefined) | undefined;
+  currentTint?: string | undefined;
   tags?: SlideTag[];
   look?: StillLook | undefined;
   homeOf?: ((size: Size) => Camera) | undefined;
@@ -142,6 +150,8 @@ export function SlideStill({
   className,
   tiles = "sharp",
   regionStyle,
+  cellStyle,
+  currentTint = "#ffffff",
   tags = [],
   look,
   homeOf,
@@ -259,7 +269,7 @@ export function SlideStill({
               const current = shapeKey(target ?? "") === id;
               const custom = current ? undefined : regionStyle?.(objectOfShape(id));
               const stroke = current
-                ? "#ffffff"
+                ? currentTint
                 : (custom?.stroke ?? (claimHidden ? "rgb(255 255 255 / 0.75)" : "var(--c-tumor)"));
               if (custom?.stroke === "none") return null;
               return (
@@ -269,9 +279,9 @@ export function SlideStill({
                   fill={current ? "rgb(255 255 255 / 0.08)" : (custom?.fill ?? "none")}
                   stroke={stroke}
                   strokeWidth={current ? 3 : (custom?.width ?? 1.5)}
-                  strokeDasharray={
-                    custom?.dash ?? (drawAs === "dots" && !current ? "1 6" : undefined)
-                  }
+                  strokeOpacity={custom?.opacity}
+                  fillOpacity={custom?.opacity}
+                  strokeDasharray={custom?.dash}
                   strokeLinecap="round"
                   vectorEffect="non-scaling-stroke"
                 />
@@ -282,6 +292,17 @@ export function SlideStill({
               const current = id === target;
               const ringed = ringedCells.includes(id);
               const decision = cellDecisions[id];
+              const custom = current ? undefined : cellStyle?.(id);
+              if (custom?.stroke === "none") return null;
+              const stroke = current
+                ? currentTint
+                : (custom?.stroke ??
+                  (decision
+                    ? regionColours[decision]
+                    : claimHidden
+                      ? "rgb(255 255 255 / 0.7)"
+                      : "var(--c-tumor)"));
+              const dotted = drawAs === "dots" && !current;
               return (
                 <g key={id}>
                   {ringed ? (
@@ -295,22 +316,26 @@ export function SlideStill({
                       vectorEffect="non-scaling-stroke"
                     />
                   ) : null}
-                  <path
-                    d={cell.path}
-                    fill="none"
-                    stroke={
-                      current
-                        ? "#ffffff"
-                        : decision
-                          ? regionColours[decision]
-                          : claimHidden
-                            ? "rgb(255 255 255 / 0.7)"
-                            : "var(--c-tumor)"
-                    }
-                    strokeOpacity={current ? 1 : 0.55}
-                    strokeWidth={current ? 3 : 1.2}
-                    vectorEffect="non-scaling-stroke"
-                  />
+                  {dotted ? (
+                    <circle
+                      cx={cell.x}
+                      cy={cell.y}
+                      r={4 + (custom?.width ?? 1)}
+                      fill={stroke}
+                      fillOpacity={custom?.opacity ?? 0.8}
+                    />
+                  ) : (
+                    <path
+                      d={cell.path}
+                      fill={custom?.fill ?? "none"}
+                      fillOpacity={custom?.opacity}
+                      stroke={stroke}
+                      strokeOpacity={current ? 1 : (custom?.opacity ?? 0.55)}
+                      strokeWidth={current ? 3 : (custom?.width ?? 1.2)}
+                      strokeDasharray={custom?.dash}
+                      vectorEffect="non-scaling-stroke"
+                    />
+                  )}
                   {current ? (
                     <circle
                       cx={cell.x}

@@ -11,6 +11,7 @@ import { AiRunningSteps, type AiStep } from "@parfocal/ui/components/visualize";
 import { Zone } from "@parfocal/ui/components/zone";
 import type { ReactNode } from "react";
 import { useFormat } from "../../format.ts";
+import { ConfidenceByColour } from "../review/confidence-chip.tsx";
 import type { CardText, ReviewStyle } from "../review/decision-style.ts";
 import { noteAction } from "../review/note-key.ts";
 import { answerLabel, NoteEditor, noteReasonsFor, SavedNote } from "../review/object-card.tsx";
@@ -225,6 +226,7 @@ export function ObjectFoot({
       {text.above ? (
         <small className="text-caption text-fg-dim">AI says: {text.above}</small>
       ) : null}
+      <ConfidenceByColour chip={text.chip} />
       <b className="text-body font-semibold">{text.question}</b>
       <DecisionButtons
         decisionStyle={style.kind}
