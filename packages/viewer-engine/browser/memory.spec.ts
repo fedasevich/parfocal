@@ -17,7 +17,7 @@ const cycle: readonly Omit<HarnessSlide, "url">[] = [
 ];
 
 const warmUpVisits = cycle.length;
-const switches = 20;
+const defaultSwitches = 20;
 const heapBudget = 0.1;
 const releaseWaitMs = 5_000;
 
@@ -34,6 +34,7 @@ interface Sample {
 
 interface RunReport {
   readonly release: MemoryHarness["release"];
+  readonly viewers: number;
   readonly renderer: string;
   readonly emptyHeapBytes: number;
   readonly warmUpVisits: number;
@@ -97,11 +98,16 @@ async function writeHeapSnapshot(cdp: CDPSession, name: string): Promise<void> {
   writeFileSync(join(reportDir, `${name}.heapsnapshot`), chunks.join(""));
 }
 
-async function runSwitches(page: Page, release: MemoryHarness["release"]): Promise<RunReport> {
+async function runSwitches(
+  page: Page,
+  release: MemoryHarness["release"],
+  viewers = 1,
+  switches = defaultSwitches,
+): Promise<RunReport> {
   const started = Date.now();
   await page.setContent("<!doctype html><html><body></body></html>");
   const renderer = await assertSwiftShader(page);
-  await page.goto(harnessUrl(`/app/memory.html?release=${release}`));
+  await page.goto(harnessUrl(`/app/memory.html?release=${release}&viewers=${viewers}`));
   await page.waitForFunction(() => window.memoryHarness !== undefined);
   const cdp = await page.context().newCDPSession(page);
   await cdp.send("HeapProfiler.enable");
@@ -109,8 +115,9 @@ async function runSwitches(page: Page, release: MemoryHarness["release"]): Promi
   const emptyHeapBytes = await heapBytes(cdp);
   const samples: Sample[] = [];
   for (let visit = 0; visit <= warmUpVisits + switches; visit += 1) {
-    const slide = slideAt(visit);
-    const report = await page.evaluate((next) => window.memoryHarness.visit(next), slide);
+    const shown = Array.from({ length: viewers }, (_, index) => slideAt(visit + index));
+    const slide = { id: shown.map((item) => item.id).join("+") };
+    const report = await page.evaluate((next) => window.memoryHarness.visit(next), shown);
     const live = await counts(cdp);
     if (snapshotVisits.has(visit)) await writeHeapSnapshot(cdp, `${release}-visit-${visit}`);
     samples.push({
@@ -143,6 +150,7 @@ async function runSwitches(page: Page, release: MemoryHarness["release"]): Promi
   await cdp.detach();
   const run: RunReport = {
     release,
+    viewers,
     renderer,
     emptyHeapBytes,
     warmUpVisits,
@@ -152,7 +160,7 @@ async function runSwitches(page: Page, release: MemoryHarness["release"]): Promi
     elapsedMs: Date.now() - started,
   };
   mkdirSync(reportDir, { recursive: true });
-  writeFileSync(join(reportDir, `${release}.json`), `${JSON.stringify(run, null, 2)}\n`);
+  writeFileSync(join(reportDir, `${release}-${viewers}.json`), `${JSON.stringify(run, null, 2)}\n`);
   return run;
 }
 
@@ -171,7 +179,7 @@ function summary(run: RunReport): string {
       `${sample.visit}\t${sample.slide}\t${megabytes(sample.heapBytes)}\t${megabytes(sample.uasmBytes)}\t${sample.decks}\t${sample.report.openMs.toFixed(0)}\t${sample.report.loadTimeouts}`,
   );
   return [
-    `release=${run.release} renderer=${run.renderer}`,
+    `release=${run.release} viewers=${run.viewers} renderer=${run.renderer}`,
     "visit\tslide\theap MB\tUASM MB\tdecks\topen ms\ttimeouts",
     ...rows,
     `closed heap ${megabytes(run.closed.heapBytes)} MB, decks ${run.closed.decksAtDispose} at dispose and ${run.closed.decks} after ${run.closed.releaseMs} ms, canvases ${run.closed.canvases}, growth ${(growth(run) * 100).toFixed(1)}% after warm-up, ${(growth(run, 0) * 100).toFixed(1)}% from the first open`,
@@ -203,6 +211,26 @@ test("without canvasContext.destroy every old Deck stays alive, so the wrapper i
   expect(
     last?.decks,
     "deck.gl or luma.gl now releases finalized decks without canvasContext.destroy(). Rerun the STACK-015 test and drop the wrapper as ADR 0098 says",
-  ).toBe(warmUpVisits + switches + 1);
+  ).toBe(warmUpVisits + defaultSwitches + 1);
   expect(growth(run)).toBeGreaterThan(heapBudget);
+});
+
+test("four viewers open at once keep four Decks and the heap within 10% of baseline", async ({
+  page,
+}) => {
+  test.setTimeout(600_000);
+  const viewers = 4;
+  const run = await runSwitches(page, "wrapper", viewers, 8);
+  console.log(summary(run));
+  expect(run.samples.map((sample) => sample.report.loadTimeouts)).toEqual(run.samples.map(() => 0));
+  expect(run.samples.map((sample) => sample.decks)).toEqual(run.samples.map(() => viewers));
+  expect(run.samples.map((sample) => sample.canvasContexts)).toEqual(
+    run.samples.map(() => viewers),
+  );
+  expect(run.samples.map((sample) => sample.report.canvases)).toEqual(
+    run.samples.map(() => viewers),
+  );
+  expect(growth(run)).toBeLessThanOrEqual(heapBudget);
+  expect(run.closed).toMatchObject({ decks: 0, devices: 0, canvasContexts: 0, canvases: 0 });
+  expect(run.contexts.lost).toBe(run.contexts.created);
 });

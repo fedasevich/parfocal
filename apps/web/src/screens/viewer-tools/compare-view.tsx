@@ -15,7 +15,7 @@ import {
 } from "@parfocal/ui/components/viewer-tools";
 import { Zone } from "@parfocal/ui/components/zone";
 import { createLinkedViews, relinkViews, toggleLinked, unlinkViews } from "@parfocal/viewer-engine";
-import { type CSSProperties, useEffect, useState } from "react";
+import { type CSSProperties, Fragment, useEffect, useState } from "react";
 import { useBindings } from "../../keys/personal-keys.ts";
 import { useHotkeys } from "../../keys/use-hotkeys.ts";
 import { okData } from "../placeholder.tsx";
@@ -23,6 +23,18 @@ import { type Camera, midSize, SlideStill } from "../review/slide-still.tsx";
 import { ViewerFrame } from "../review/viewer-frame.tsx";
 import type { SceneOf } from "../scenes.ts";
 import { lookUrl } from "../thumbnails.ts";
+import {
+  assignSlides,
+  type CompareLayout,
+  gridOf,
+  isCompareLayout,
+  layerSideOf,
+  layoutOptions,
+  paneName,
+  paneSides,
+  panesOf,
+  pickSlide,
+} from "./compare-layout.ts";
 import {
   cameraOfView,
   moveCameraKeepingRotation,
@@ -63,10 +75,7 @@ function toCompareSlide(slide: ProjectSlide, index: number, currentId: string): 
   };
 }
 
-const sides: readonly PaneSide[] = ["left", "right"];
 const linkReference: PaneSide = "left";
-
-const other = (side: PaneSide): PaneSide => (side === "left" ? "right" : "left");
 
 type CompareViewProps = {
   tools: ToolSession;
@@ -84,34 +93,34 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
   const caseSlides = all
     .filter((slide) => slide.case?.label === session.caseLabel)
     .map((slide, index) => toCompareSlide(slide, index, session.slideId));
-  const [chosen, setChosen] = useState<Record<PaneSide, string | null>>({
+  const [chosen, setChosen] = useState<Partial<Record<PaneSide, string | null | undefined>>>({
     left: null,
     right: rightSlideId ?? null,
   });
   const [picking, setPicking] = useState<PaneSide | null>(scene === "picking" ? "right" : null);
-  const [link, setLink] = useState(() => createLinkedViews(sides));
+  const [link, setLink] = useState(() => createLinkedViews(paneSides));
   const linked = link.linked;
   const [cursor, setCursor] = useState(true);
-  const [layout, setLayout] = useState("side");
+  const [layout, setLayout] = useState<CompareLayout>("side");
   const [layers, setLayers] = useState([
     { key: "outline", name: "Tumor map outline", left: true, right: false },
     { key: "measurements", name: "Measurements", left: true, right: false },
     { key: "comments", name: "Comments", left: true, right: true },
   ]);
   const fallbackRight = caseSlides.find((slide) => slide.ihc) ?? caseSlides[1];
-  const ids: Record<PaneSide, string | undefined> = {
-    left: chosen.left ?? session.slideId,
-    right: chosen.right ?? fallbackRight?.id,
-  };
+  const visible = panesOf(layout);
+  const ids = assignSlides(
+    caseSlides.map((slide) => slide.id),
+    chosen,
+    { left: session.slideId, right: fallbackRight?.id },
+  );
   const slideOn = (side: PaneSide) => caseSlides.find((slide) => slide.id === ids[side]);
   const pick = (side: PaneSide, id: string) => {
-    const there = other(side);
-    if (ids[there] === id) setChosen({ [side]: id, [there]: ids[side] ?? null } as typeof chosen);
-    else setChosen({ ...chosen, left: ids.left ?? null, right: ids.right ?? null, [side]: id });
+    setChosen(pickSlide(ids, visible, side, id));
     setPicking(null);
   };
   const swap = () => {
-    setChosen({ left: ids.right ?? null, right: ids.left ?? null });
+    setChosen({ ...ids, left: ids.right ?? null, right: ids.left ?? null });
     setLayers(layers.map((row) => ({ ...row, left: row.right, right: row.left })));
     setPicking(null);
   };
@@ -137,10 +146,18 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
     return () => window.removeEventListener("keydown", onKey);
   });
 
+  const pickerNote = (id: string, side: PaneSide) => {
+    if (id === ids[side]) return "Showing here";
+    const there = visible.find((other) => other !== side && ids[other] === id);
+    return there === undefined
+      ? "Click to show here"
+      : `On the ${paneName[there]} now, picking it swaps the panes`;
+  };
+
   const pane = (side: PaneSide) => {
     const slide = slideOn(side);
     if (slide === undefined) return null;
-    const outline = layers.find((row) => row.key === "outline")?.[side] ?? false;
+    const outline = layers.find((row) => row.key === "outline")?.[layerSideOf(side)] ?? false;
     const wrapper: CSSProperties = {
       ...(slide.ihc ? { filter: stainFilter } : {}),
       ...(slide.flip ? { transform: "scaleX(-1)" } : {}),
@@ -148,8 +165,8 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
     return (
       <section
         data-pane={side}
-        className="relative flex min-w-0 flex-1 overflow-hidden"
-        aria-label={`${side === "left" ? "Left" : "Right"}: ${slide.name}`}
+        className="relative flex min-h-0 min-w-0 overflow-hidden"
+        aria-label={`${paneName[side][0]?.toUpperCase()}${paneName[side].slice(1)}: ${slide.name}`}
       >
         <div className="absolute inset-0 flex" style={wrapper}>
           <SlideStill
@@ -159,13 +176,13 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
             rotation={rotationOf(side)}
             overlay={({ camera }) => (
               <fieldset
-                aria-label={`Rotate ${side} pane`}
+                aria-label={`Rotate ${paneName[side]} pane`}
                 className="absolute right-3 bottom-16 m-0 flex min-w-0 border-0 items-center gap-1 rounded-full bg-black/60 px-1.5 py-1 text-body-sm text-white"
                 onPointerDown={(event) => event.stopPropagation()}
               >
                 <button
                   type="button"
-                  aria-label={`Rotate ${side} pane left`}
+                  aria-label={`Rotate ${paneName[side]} pane left`}
                   className="rounded-full px-2 py-0.5 hover:bg-white/15"
                   onClick={() => rotateOn(side, camera, { by: -rotationStep })}
                 >
@@ -176,7 +193,7 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
                 </span>
                 <button
                   type="button"
-                  aria-label={`Rotate ${side} pane right`}
+                  aria-label={`Rotate ${paneName[side]} pane right`}
                   className="rounded-full px-2 py-0.5 hover:bg-white/15"
                   onClick={() => rotateOn(side, camera, { by: rotationStep })}
                 >
@@ -184,7 +201,7 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
                 </button>
                 <button
                   type="button"
-                  aria-label={`Reset ${side} pane rotation`}
+                  aria-label={`Reset ${paneName[side]} pane rotation`}
                   className="rounded-full px-2 py-0.5 hover:bg-white/15"
                   onClick={() => rotateOn(side, camera, { to: 0 })}
                 >
@@ -218,12 +235,7 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
             slides={caseSlides.map((item) => ({
               ...item,
               here: item.id === ids[side],
-              note:
-                item.id === ids[side]
-                  ? "Showing here"
-                  : item.id === ids[other(side)]
-                    ? `On the ${other(side)} now, picking it swaps the sides`
-                    : "Click to show here",
+              note: pickerNote(item.id, side),
             }))}
           />
         ) : null}
@@ -232,15 +244,16 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
     );
   };
 
-  const left = slideOn("left");
-  const right = slideOn("right");
+  const slots = visible.flatMap((side) => {
+    const slide = slideOn(side);
+    return slide ? [{ side, slide, note: slide.note }] : [];
+  });
   const body = (
     <>
       <SlidesOnScreenPanel
-        left={left ? { slide: left, note: left.note } : undefined}
-        right={right ? { slide: right, note: right.note } : undefined}
+        slots={slots}
         onChange={setPicking}
-        onSwap={swap}
+        onSwap={visible.length > 1 ? swap : undefined}
       />
       <Zone
         title="Layers"
@@ -267,13 +280,13 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
             aria-label="Layout"
             fill
             value={layout}
-            onValueChange={(value) => setLayout(String(value))}
-            options={[
-              { value: "one", label: "1" },
-              { value: "side", label: "Side by side" },
-              { value: "stacked", label: "Stacked" },
-              { value: "four", label: "4" },
-            ]}
+            onValueChange={(value) => {
+              const next = String(value);
+              if (!isCompareLayout(next)) return;
+              setLayout(next);
+              setPicking(null);
+            }}
+            options={[...layoutOptions]}
           />
         </div>
         <p className="m-0 text-caption text-fg-dim">
@@ -305,10 +318,12 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
       ]}
     >
       <div
-        className={`relative flex min-w-0 flex-1 ${layout === "stacked" ? "flex-col" : ""} gap-0.5 bg-line-strong`}
+        data-layout={layout}
+        className={`relative grid min-h-0 min-w-0 flex-1 gap-0.5 bg-line-strong ${gridOf(layout)}`}
       >
-        {pane("left")}
-        {layout === "one" ? null : pane("right")}
+        {visible.map((side) => (
+          <Fragment key={side}>{pane(side)}</Fragment>
+        ))}
         <FloatingPill className="top-auto bottom-4">
           <Icon name="slides" />
           <span>Linked: pan, zoom and rotation move both</span>

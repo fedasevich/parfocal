@@ -31,9 +31,10 @@ export interface VisitReport {
 
 export interface MemoryHarness {
   readonly release: "wrapper" | "stock" | "no-canvas-context";
+  readonly viewers: number;
   readonly prototypes: { deck: object; device: object | null; canvasContext: object | null };
   readonly contexts: { created: number; lost: number };
-  visit(slide: HarnessSlide): Promise<VisitReport>;
+  visit(slides: readonly HarnessSlide[]): Promise<VisitReport>;
   dispose(): number;
 }
 
@@ -96,80 +97,126 @@ const prototypes: MemoryHarness["prototypes"] = {
   canvasContext: null,
 };
 
-const container = document.createElement("div");
-container.id = "viewer";
-container.style.position = "fixed";
-container.style.inset = "0";
-document.body.append(container);
+const viewers = Math.max(1, Math.min(4, Number(params.get("viewers") ?? 1) || 1));
+
+const grid = document.createElement("div");
+grid.id = "viewer";
+grid.style.position = "fixed";
+grid.style.inset = "0";
+grid.style.display = "grid";
+grid.style.gridTemplateColumns = viewers > 1 ? "1fr 1fr" : "1fr";
+grid.style.gridAutoRows = "1fr";
+document.body.append(grid);
 
 const registry = createDefaultPixelSourceRegistry();
 const refs = new Map<string, HarnessSlide>();
-let route: MemoryRoute | null = null;
 
-const engine: ViewerEngine = createViewerEngine<MemorySlide>({
-  createRenderer: (host) => {
-    route = createMemoryRoute(host, {
-      release: releases[release],
-      onDevice: (device) => {
-        const canvasContext = (device as { canvasContext?: object | null }).canvasContext;
-        prototypes.device ??= Object.getPrototypeOf(device) as object;
-        if (canvasContext)
-          prototypes.canvasContext ??= Object.getPrototypeOf(canvasContext) as object;
+interface Viewer {
+  readonly container: HTMLElement;
+  readonly engine: ViewerEngine;
+  route: MemoryRoute | null;
+}
+
+function createViewer(): Viewer {
+  const container = document.createElement("div");
+  container.style.position = "relative";
+  container.style.minWidth = "0";
+  container.style.minHeight = "0";
+  grid.append(container);
+  const viewer: Viewer = {
+    container,
+    route: null,
+    engine: createViewerEngine<MemorySlide>({
+      createRenderer: (host) => {
+        viewer.route = createMemoryRoute(host, {
+          release: releases[release],
+          onDevice: (device) => {
+            const canvasContext = (device as { canvasContext?: object | null }).canvasContext;
+            prototypes.device ??= Object.getPrototypeOf(device) as object;
+            if (canvasContext)
+              prototypes.canvasContext ??= Object.getPrototypeOf(canvasContext) as object;
+          },
+        });
+        return viewer.route;
       },
-    });
-    return route;
-  },
-  openSlide: async (ref, signal) => {
-    const slide = refs.get(ref.id);
-    if (!slide) throw new Error(`Unknown slide ${ref.id}`);
-    const source = await registry.open({ formatId: slide.formatId, url: slide.url, signal });
-    const base = source.levels[0];
-    if (!base) throw new Error(`${ref.id} has no levels`);
-    return {
-      id: ref.id,
-      width: base.width,
-      height: base.height,
-      micronsPerPixel: source.micronsPerPixel?.x ?? null,
-      levels: vivLevels(source),
-      close: () => source.close(),
-    };
-  },
-});
-engine.mount(container);
+      openSlide: async (ref, signal) => {
+        const slide = refs.get(ref.id);
+        if (!slide) throw new Error(`Unknown slide ${ref.id}`);
+        const source = await registry.open({ formatId: slide.formatId, url: slide.url, signal });
+        const base = source.levels[0];
+        if (!base) throw new Error(`${ref.id} has no levels`);
+        return {
+          id: ref.id,
+          width: base.width,
+          height: base.height,
+          micronsPerPixel: source.micronsPerPixel?.x ?? null,
+          levels: vivLevels(source),
+          close: () => source.close(),
+        };
+      },
+    }),
+  };
+  viewer.engine.mount(container);
+  return viewer;
+}
 
-async function settle(): Promise<number> {
-  const shown = route;
+const panes = Array.from({ length: viewers }, createViewer);
+
+async function settle(viewer: Viewer): Promise<number> {
+  const shown = viewer.route;
   if (!shown) throw new Error("The engine is not mounted");
   return (await shown.whenLoaded(loadTimeoutMs)) ? 0 : 1;
 }
 
+async function settleAll(): Promise<number> {
+  const timeouts = await Promise.all(panes.map(settle));
+  return timeouts.reduce((sum, count) => sum + count, 0);
+}
+
+function eachViewer(change: (engine: ViewerEngine) => void): void {
+  for (const viewer of panes) change(viewer.engine);
+}
+
 window.memoryHarness = {
   release,
+  viewers,
   prototypes,
   contexts,
-  async visit(slide) {
-    refs.set(slide.id, slide);
+  async visit(slides) {
     const started = performance.now();
-    await engine.openSlide({ id: slide.id });
-    let loadTimeouts = await settle();
+    await Promise.all(
+      panes.map((viewer, index) => {
+        const slide = slides[index];
+        if (!slide) throw new Error(`No slide for viewer ${index}`);
+        refs.set(slide.id, slide);
+        return viewer.engine.openSlide({ id: slide.id });
+      }),
+    );
+    let loadTimeouts = await settleAll();
     const openMs = performance.now() - started;
-    const fitted = engine.getCamera();
-    engine.setCamera({ ...fitted, zoom: Math.min(0, fitted.zoom + 2) });
-    loadTimeouts += await settle();
-    engine.setCamera({ ...fitted, zoom: 0 });
-    loadTimeouts += await settle();
-    engine.fitToSlide();
-    loadTimeouts += await settle();
+    const fitted = panes.map((viewer) => viewer.engine.getCamera());
+    const zoomAll = (change: (zoom: number) => number) => {
+      panes.forEach((viewer, index) => {
+        const base = fitted[index];
+        if (base) viewer.engine.setCamera({ ...base, zoom: change(base.zoom) });
+      });
+    };
+    zoomAll((zoom) => Math.min(0, zoom + 2));
+    loadTimeouts += await settleAll();
+    zoomAll(() => 0);
+    loadTimeouts += await settleAll();
+    eachViewer((engine) => engine.fitToSlide());
+    loadTimeouts += await settleAll();
     return {
-      id: slide.id,
+      id: slides.map((slide) => slide.id).join("+"),
       openMs,
       loadTimeouts,
-      canvases: container.querySelectorAll("canvas").length,
+      canvases: grid.querySelectorAll("canvas").length,
     };
   },
   dispose() {
-    engine.dispose();
-    route = null;
-    return container.querySelectorAll("canvas").length;
+    eachViewer((engine) => engine.dispose());
+    for (const viewer of panes) viewer.route = null;
+    return grid.querySelectorAll("canvas").length;
   },
 };
