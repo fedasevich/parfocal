@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { after, describe, it } from "node:test";
+import { fixturesDir, skipUnlessCached, syntheticDir } from "@parfocal/test-fixtures";
 import { fromUrl } from "geotiff";
 import * as zarr from "zarrita";
 import {
@@ -11,7 +12,6 @@ import {
   readTileIndex,
   recoverLadder,
 } from "../../src/index.ts";
-import { cachedFixture, cachedFixtureDir, syntheticDir } from "./fixtures.ts";
 import { serve } from "./serve.ts";
 import { writeZarrFixture } from "./zarr-fixture.ts";
 
@@ -39,7 +39,7 @@ const zarrV3 = await writeZarrFixture({ ...zarrOptions, version: 3 });
 
 const served = await serve({
   "/synthetic": syntheticDir,
-  "/cache": cachedFixtureDir(),
+  "/cache": fixturesDir(),
   "/sparse.zarr": sparseZarr.root,
   "/v3.zarr": zarrV3.root,
 });
@@ -97,9 +97,9 @@ describe("geotiff workaround: YCbCr tiles get the photometric transform", () => 
     );
   });
 
-  it("reads glass as white on the CAMELYON16 slide (tumor_009.tif, cached)", async (t) => {
-    if (cachedFixture("tumor_009.tif") === null)
-      return t.skip("tumor_009.tif is not cached, run: pnpm fixtures camelyon");
+  it("reads glass as white on the CAMELYON16 slide (tumor_009.tif, cached)", {
+    skip: skipUnlessCached("tumor_009.tif"),
+  }, async () => {
     const source = await openTiffSource({
       formatId: "philips-tiff",
       url: served.url("/cache/tumor_009.tif"),
@@ -184,9 +184,9 @@ describe("geotiff workaround: absent tiles are found from byte counts read at op
     assert.equal(present(await source.getTile({ level: 1, x: 0, y: 0 })).absent, false);
   });
 
-  it("finds the unscanned tiles of a Philips slide (Philips-4.tiff, cached)", async (t) => {
-    if (cachedFixture("Philips-4.tiff") === null)
-      return t.skip("Philips-4.tiff is not cached, run: pnpm fixtures formats");
+  it("finds the unscanned tiles of a Philips slide (Philips-4.tiff, cached)", {
+    skip: skipUnlessCached("Philips-4.tiff"),
+  }, async () => {
     const source = await openTiffSource({
       formatId: "philips-tiff",
       url: served.url("/cache/Philips-4.tiff"),
@@ -263,9 +263,9 @@ describe("reader workaround: level scale comes from the padding rule, not the st
 });
 
 describe("geotiff gap closed: JPEG 2000 tiles are decoded by the registered OpenJPEG decoder", () => {
-  it("opens an Aperio JPEG 2000 slide and reads a tile of RGB samples (JP2K-33003-1.svs, cached)", async (t) => {
-    if (cachedFixture("JP2K-33003-1.svs") === null)
-      return t.skip("JP2K-33003-1.svs is not cached, run: pnpm fixtures formats");
+  it("opens an Aperio JPEG 2000 slide and reads a tile of RGB samples (JP2K-33003-1.svs, cached)", {
+    skip: skipUnlessCached("JP2K-33003-1.svs"),
+  }, async () => {
     const source = await openTiffSource({
       formatId: "aperio-svs",
       url: served.url("/cache/JP2K-33003-1.svs"),

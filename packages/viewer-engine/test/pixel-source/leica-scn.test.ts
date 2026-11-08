@@ -1,12 +1,12 @@
 import assert from "node:assert/strict";
 import { after, describe, it } from "node:test";
+import { fixturesDir, skipUnlessCached, syntheticDir } from "@parfocal/test-fixtures";
 import { MultiRegionScnError, openTiffSource } from "../../src/index.ts";
 import { largestPyramid, listPages, openTiff } from "../../src/pixel-source/tiff/directory.ts";
 import { scnMainPyramid } from "../../src/pixel-source/tiff/leica-scn.ts";
-import { cachedFixture, cachedFixtureDir, syntheticDir } from "./fixtures.ts";
 import { serve } from "./serve.ts";
 
-const served = await serve({ "/synthetic": syntheticDir, "/cache": cachedFixtureDir() });
+const served = await serve({ "/synthetic": syntheticDir, "/cache": fixturesDir() });
 
 after(async () => {
   await served.close();
@@ -83,7 +83,7 @@ describe("Leica SCN main pyramid", () => {
   });
 
   it("refuses the multi-region Leica-3.scn as the ingest worker does", {
-    skip: cachedFixture("Leica-3.scn") === null && "Leica-3.scn is not fetched (pnpm fixtures big)",
+    skip: skipUnlessCached("Leica-3.scn"),
   }, async () => {
     await assert.rejects(
       openTiffSource({ formatId: "leica-scn", url: served.url("/cache/Leica-3.scn") }),

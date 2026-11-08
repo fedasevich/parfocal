@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import { after, describe, it } from "node:test";
+import { syntheticDir } from "@parfocal/test-fixtures";
 import { openTiffSource, type PixelResult, type Raster } from "../../src/index.ts";
 import { parseOmeChannels } from "../../src/pixel-source/tiff/ome-channels.ts";
-import { syntheticDir } from "./fixtures.ts";
 import { serve } from "./serve.ts";
 
 const served = await serve({ "/synthetic": syntheticDir });

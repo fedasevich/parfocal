@@ -112,12 +112,16 @@ jobs:
       - uses: ./.github/actions/setup-workspace
         with:
           cache-key: test
+      - id: fixtures
+        run: echo "key=$(node packages/test-fixtures/src/cli.ts --key small)" >> "$GITHUB_OUTPUT"
       - uses: actions/cache@v6
         with:
           path: ~/.cache/parfocal/fixtures
-          key: fixtures-${{ hashFiles('packages/test-fixtures/fixtures.json') }}
-      - run: pnpm fixtures
+          key: fixtures-small-${{ steps.fixtures.outputs.key }}
+      - run: pnpm fixtures small
       - run: pnpm turbo run test --cache-dir=.turbo/cache
+        env:
+          PARFOCAL_REQUIRE_FIXTURES: small
       - name: Check the generated API client is current
         run: |
           pnpm api:generate
@@ -133,10 +137,12 @@ jobs:
       - uses: ./.github/actions/setup-workspace
         with:
           cache-key: db
+      - id: fixtures
+        run: echo "key=$(node packages/test-fixtures/src/cli.ts --key small)" >> "$GITHUB_OUTPUT"
       - uses: actions/cache@v6
         with:
           path: ~/.cache/parfocal/fixtures
-          key: fixtures-small-${{ hashFiles('packages/test-fixtures/fixtures.json') }}
+          key: fixtures-small-${{ steps.fixtures.outputs.key }}
       - run: pnpm fixtures small
       - run: docker compose up -d --wait
       - run: uv run pytest -m db --durations=25
@@ -154,14 +160,47 @@ jobs:
       - uses: ./.github/actions/setup-workspace
         with:
           cache-key: formats
+      - id: fixtures
+        run: echo "key=$(node packages/test-fixtures/src/cli.ts --key small formats)" >> "$GITHUB_OUTPUT"
       - uses: actions/cache@v6
         with:
           path: ~/.cache/parfocal/fixtures
-          key: fixtures-formats-${{ hashFiles('packages/test-fixtures/fixtures.json') }}
+          key: fixtures-formats-${{ steps.fixtures.outputs.key }}
       - run: pnpm fixtures small formats
       - run: uv run pytest workers/ingest/tests
         env:
           PARFOCAL_REQUIRE_FIXTURES: small,formats
+      - run: pnpm --filter @parfocal/viewer-engine test
+        env:
+          PARFOCAL_REQUIRE_FIXTURES: small,formats
+      - run: pnpm --filter @parfocal/web exec node --test test/aiseg-patch-reader.test.ts
+        env:
+          PARFOCAL_REQUIRE_FIXTURES: small,formats
+
+  camelyon:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-workspace
+        with:
+          cache-key: camelyon
+      - id: fixtures
+        run: echo "key=$(node packages/test-fixtures/src/cli.ts --key small camelyon)" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cache/parfocal/fixtures
+          key: fixtures-camelyon-${{ steps.fixtures.outputs.key }}
+      - run: df -h "$HOME"
+      - run: pnpm fixtures small camelyon
+      - run: df -h "$HOME"
+      - run: uv run pytest workers/ingest/tests
+        env:
+          PARFOCAL_REQUIRE_FIXTURES: small,camelyon
+      - run: pnpm --filter @parfocal/viewer-engine exec node --test test/pixel-source/workarounds.test.ts
+        env:
+          PARFOCAL_REQUIRE_FIXTURES: small,camelyon
 
   e2e:
     needs: changes
@@ -172,10 +211,12 @@ jobs:
       - uses: ./.github/actions/setup-workspace
         with:
           cache-key: e2e
+      - id: fixtures
+        run: echo "key=$(node packages/test-fixtures/src/cli.ts --key small)" >> "$GITHUB_OUTPUT"
       - uses: actions/cache@v6
         with:
           path: ~/.cache/parfocal/fixtures
-          key: fixtures-small-${{ hashFiles('packages/test-fixtures/fixtures.json') }}
+          key: fixtures-small-${{ steps.fixtures.outputs.key }}
       - run: pnpm fixtures small
       - run: docker compose up -d --wait
       - run: pnpm db:migrate
@@ -218,10 +259,12 @@ jobs:
       - uses: ./.github/actions/setup-workspace
         with:
           cache-key: browser-${{ matrix.package }}
+      - id: fixtures
+        run: echo "key=$(node packages/test-fixtures/src/cli.ts --key small viewer)" >> "$GITHUB_OUTPUT"
       - uses: actions/cache@v6
         with:
           path: ~/.cache/parfocal/fixtures
-          key: fixtures-browser-${{ hashFiles('packages/test-fixtures/fixtures.json') }}
+          key: fixtures-browser-${{ steps.fixtures.outputs.key }}
       - run: pnpm fixtures small viewer
       - run: google-chrome --version
       - if: ${{ github.event_name != 'workflow_dispatch' }}
@@ -266,7 +309,7 @@ jobs:
 
   ci-ok:
     if: always()
-    needs: [changes, lint, typecheck, test, db, formats, e2e, browser]
+    needs: [changes, lint, typecheck, test, db, formats, camelyon, e2e, browser]
     runs-on: ubuntu-latest
     steps:
       - run: test "${{ needs.changes.result == 'success' && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}" = "true"

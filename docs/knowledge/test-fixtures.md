@@ -36,11 +36,17 @@ Chrome requests `/favicon.ico` after loading a page, and through the latency pro
 
 ## The viewer group feeds the browser CI job
 
-`viewer` holds only the slides the browser golden images open, today `CMU-1.svs` (170 MB), which also stays in `formats`. The `browser` job caches it under `fixtures-viewer-<hash of fixtures.json>` and runs `pnpm test:browser` with `PARFOCAL_REQUIRE_FIXTURES=viewer`, so a missing slide fails instead of skipping. A manifest test keeps the group under 256 MB. Add a slide to the group only when CI must run its goldens. Source: VIEW-002.
+`viewer` holds only the slides the browser golden images open, today `CMU-1.svs` (170 MB), which also stays in `formats`. The `browser` job caches it under `fixtures-browser-<cache key of small and viewer>` and runs `pnpm test:browser` with `PARFOCAL_REQUIRE_FIXTURES=viewer`, so a missing slide fails instead of skipping. A manifest test keeps the group under 256 MB. Add a slide to the group only when CI must run its goldens. Source: VIEW-002.
 
 ## The small group feeds the db CI job
 
-The `db` job caches `small` under `fixtures-small-<hash of fixtures.json>` and runs `uv run pytest -m db` with `PARFOCAL_REQUIRE_FIXTURES=small`, because `test_slide_ingest.py` uploads `CMU-1-Small-Region.svs` (1.9 MB, a real Aperio slide with a label and a macro) through the upload API and ingests it end to end. The other ingest database tests use the committed `synthetic-jpeg.tiff`, so they run on any machine. Source: INGEST-017 (publish step and slide status).
+The `db` job caches `small` under `fixtures-small-<cache key of small>` and runs `uv run pytest -m db` with `PARFOCAL_REQUIRE_FIXTURES=small`, because `test_slide_ingest.py` uploads `CMU-1-Small-Region.svs` (1.9 MB, a real Aperio slide with a label and a macro) through the upload API and ingests it end to end. The other ingest database tests use the committed `synthetic-jpeg.tiff`, so they run on any machine. Source: INGEST-017 (publish step and slide status).
+
+## Reader tests load slides through the package and CI caches them by checksum
+
+Every format reader test finds a remote slide through `@parfocal/test-fixtures` (`cachedFixture`, `skipUnlessCached` or `fixturePath` in TypeScript) or `fixture_support.fixture_path` in Python, never a path of its own. A missing slide skips the test with the `pnpm fixtures` command to run, unless one of its groups is listed in `PARFOCAL_REQUIRE_FIXTURES`, and then the test fails. Turborepo hashes that variable into the `test` task, so a run that requires slides never replays a cached run that skipped them.
+
+`pnpm fixtures --key GROUPS` prints the SHA-256 of the sorted file names and checksums of those groups, and every CI fixture cache uses it, so a cache is rebuilt only when one of its own slides changes and synthetic regenerations touch none. The jobs are `test`, `db` and `e2e` on `small`, `formats` on `small formats` (ingest pytest, the viewer-engine suite and the web patch reader test), `camelyon` on `small camelyon` (ingest pytest and the CAMELYON16 workaround test) and `browser` on `small viewer`. CAMELYON16 has a job of its own because its 3.6 GB does not compress and the cache save writes a second copy, which would crowd the runner disk next to the 2.3 GB of `formats`. The fixture caches come to about 6 GB of the 10 GB repository cache limit next to about 3 GB of uv and pnpm caches. The `big` (13 GB) and `huge` (6.9 GB) groups are never fetched in CI, so their tests, such as `Leica-3.scn` and `OS-1.bif`, run only on a machine that has them. Source: TEST-012.
 
 ## Every remote fixture also sits in R2
 

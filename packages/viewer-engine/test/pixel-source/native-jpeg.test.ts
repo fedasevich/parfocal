@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { after, describe, it } from "node:test";
+import { syntheticDir } from "@parfocal/test-fixtures";
 import { getDecoder } from "geotiff";
 import {
   type NativeTileDecoder,
@@ -14,7 +15,6 @@ import {
   chooseProbeTile,
   meanAbsoluteError,
 } from "../../src/pixel-source/tiff/native-jpeg.ts";
-import { syntheticDir } from "./fixtures.ts";
 import { serve } from "./serve.ts";
 
 const served = await serve({ "/synthetic": syntheticDir });

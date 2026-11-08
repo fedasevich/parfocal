@@ -1,5 +1,6 @@
 import { downloadFixture } from "./download.ts";
 import {
+  cacheKey,
   fixturesDir,
   loadManifest,
   localFixtureDirs,
@@ -10,9 +11,13 @@ import {
 const concurrency = 3;
 const megabytes = (bytes: number) => `${(bytes / 1048576).toFixed(1)} MB`;
 
+const keyFlag = "--key";
+const args = process.argv.slice(2);
+const requested = args.filter((arg) => arg !== keyFlag);
+
 function selection(): RemoteFixture[] {
   try {
-    return selectFixtures(loadManifest(), process.argv.slice(2));
+    return selectFixtures(loadManifest(), requested);
   } catch (error) {
     console.error(error instanceof Error ? error.message : String(error));
     process.exit(2);
@@ -20,6 +25,10 @@ function selection(): RemoteFixture[] {
 }
 
 const selected = selection();
+if (args.includes(keyFlag)) {
+  console.log(cacheKey(loadManifest(), requested));
+  process.exit(0);
+}
 const dir = fixturesDir();
 const localDirs = localFixtureDirs();
 const queue = [...selected];

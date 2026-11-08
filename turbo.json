@@ -20,7 +20,9 @@
     },
     "test": {
       "dependsOn": ["topo"],
-      "outputs": []
+      "outputs": [],
+      "env": ["PARFOCAL_REQUIRE_FIXTURES"],
+      "passThroughEnv": ["PARFOCAL_FIXTURES_DIR", "XDG_CACHE_HOME"]
     },
     "test:browser": {
       "dependsOn": ["topo"],

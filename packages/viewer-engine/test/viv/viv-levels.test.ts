@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { after, describe, it } from "node:test";
+import { syntheticDir } from "@parfocal/test-fixtures";
 import {
   magnificationAtZoom,
   openOmeZarrSource,
@@ -19,7 +20,6 @@ import {
   vivTileSize,
 } from "../../src/viv/index.ts";
 import { vivSignalAborted } from "../../src/viv/viv-levels.ts";
-import { syntheticDir } from "../pixel-source/fixtures.ts";
 import { serve } from "../pixel-source/serve.ts";
 import { writeZarrFixture } from "../pixel-source/zarr-fixture.ts";
 

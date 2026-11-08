@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { after, describe, it } from "node:test";
 import { setTimeout as sleep } from "node:timers/promises";
+import { syntheticDir } from "@parfocal/test-fixtures";
 import { type LatencyProxy, startLatencyProxy } from "../../../latency-proxy/src/index.ts";
 import { startDecodeWorker } from "../../src/decode/worker-runtime.ts";
 import { openTiffSource } from "../../src/index.ts";
@@ -10,7 +11,6 @@ import {
   type DecodeWorker,
   type VivLevel,
 } from "../../src/viv/index.ts";
-import { syntheticDir } from "../pixel-source/fixtures.ts";
 import { serve } from "../pixel-source/serve.ts";
 
 const file = "synthetic-jpeg.tiff";

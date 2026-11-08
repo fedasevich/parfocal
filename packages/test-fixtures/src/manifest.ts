@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { delimiter, join } from "node:path";
@@ -100,6 +101,23 @@ export function selectFixtures(manifest: Manifest, requested: readonly string[])
     throw new Error(`unknown fixture group ${unknown.join(", ")}, use ${groups.join(", ")} or all`);
   }
   return manifest.remote.filter((fixture) => fixture.groups.some((group) => names.includes(group)));
+}
+
+export function cacheKey(manifest: Manifest, requested: readonly string[]): string {
+  const checksums = selectFixtures(manifest, requested)
+    .map((fixture) => `${fixture.file} ${fixture.sha256}`)
+    .sort()
+    .join("\n");
+  return createHash("sha256").update(checksums).digest("hex");
+}
+
+export function requiredGroups(env: NodeJS.ProcessEnv = process.env): Set<string> {
+  return new Set(
+    (env.PARFOCAL_REQUIRE_FIXTURES ?? "")
+      .split(",")
+      .map((group) => group.trim())
+      .filter((group) => group.length > 0),
+  );
 }
 
 export function fixturesDir(env: NodeJS.ProcessEnv = process.env): string {
