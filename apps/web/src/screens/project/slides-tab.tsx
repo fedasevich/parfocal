@@ -220,7 +220,7 @@ export function SlidesTab({
                         <button
                           type="button"
                           aria-expanded={expanded}
-                          className="inline-flex cursor-pointer items-center gap-2.5 border-0 bg-transparent p-0 text-left text-fg-dim"
+                          className="inline-flex min-h-6 cursor-pointer items-center gap-2.5 border-0 bg-transparent p-0 text-left text-fg-dim"
                         >
                           <Icon name={expanded ? "down" : "next"} />
                           <b className="font-semibold text-fg">{group.label}</b>
@@ -385,7 +385,7 @@ function SlideRow({
                 to="/projects/$projectId/run-model"
                 params={{ projectId: project.id }}
                 onClick={(event) => event.stopPropagation()}
-                className="font-medium text-accent hover:underline"
+                className="inline-flex min-h-6 items-center font-medium text-accent hover:underline"
               >
                 Run a model
               </Link>
