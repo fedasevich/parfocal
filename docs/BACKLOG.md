@@ -3540,7 +3540,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when tests confirm the preferences gate notifications.
   Size: S.
 
-- [ ] SET-009 · Privacy and session section
+- [x] SET-009 · Privacy and session section
   Initials while sharing, lock after (lab), patient banner (lab), sign out other devices.
   Done when tests cover each setting.
   Size: S.
