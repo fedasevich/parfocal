@@ -3237,7 +3237,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Refs doc 20 §2.10.
   Size: S.
 
-- [ ] AISEG-010 · Auto region tool
+- [x] AISEG-010 · Auto region tool
   Drag a region, the AIS decoder segments every nucleus per tile with watershed and sub-pixel contours. A click does the patch under the cursor. Detect-in-selection runs on one closed shape.
   Done when a test on the TNBC fixture meets the MLEVAL PQ baseline and the region pass finishes under the budget in TEST-006.
   Depends on AISEG-001, AISEG-011, AISEG-015. Refs doc 26.
