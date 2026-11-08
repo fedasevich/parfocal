@@ -2196,6 +2196,7 @@ export const NotificationKind = {
   "result-set-added": "result-set-added",
   "integration-down": "integration-down",
   "adjudication-requested": "adjudication-requested",
+  "slide-moved": "slide-moved",
 } as const;
 
 export interface KindCount {
@@ -4329,6 +4330,24 @@ export interface SlideDetailsChange {
   block_id?: string | null;
   level?: number | null;
   label?: string | null;
+}
+
+export interface SlideMove {
+  case_id: string;
+  /**
+   * @minLength 10
+   * @maxLength 500
+   */
+  reason: string;
+}
+
+export interface SlideMoved {
+  slide_id: string;
+  from_case_id: string | null;
+  to_case_id: string;
+  result_set_ids: string[];
+  task_ids: string[];
+  block_cleared: boolean;
 }
 
 export interface SlideOrder {
@@ -16246,6 +16265,171 @@ export const useReorderCaseSlides = <TError = Problem, TContext = unknown>(
   TContext
 > => {
   return useMutation(getReorderCaseSlidesMutationOptions(options), queryClient);
+};
+
+export type moveSlideResponse200 = {
+  data: SlideMoved;
+  status: 200;
+};
+
+export type moveSlideResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type moveSlideResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type moveSlideResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type moveSlideResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type moveSlideResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type moveSlideResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type moveSlideResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type moveSlideResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type moveSlideResponseSuccess = moveSlideResponse200 & {
+  headers: Headers;
+};
+export type moveSlideResponseError = (
+  | moveSlideResponse400
+  | moveSlideResponse401
+  | moveSlideResponse403
+  | moveSlideResponse404
+  | moveSlideResponse409
+  | moveSlideResponse422
+  | moveSlideResponse429
+  | moveSlideResponse500
+) & {
+  headers: Headers;
+};
+
+export type moveSlideResponse = moveSlideResponseSuccess | moveSlideResponseError;
+
+export const getMoveSlideUrl = (slideId: string) => {
+  return `/api/slides/${slideId}/move`;
+};
+
+/**
+ * @summary Move Slide
+ */
+export const moveSlide = async (
+  slideId: string,
+  slideMove: SlideMove,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<moveSlideResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<moveSlideResponse>(getMoveSlideUrl(slideId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(slideMove),
+  });
+};
+
+export const getMoveSlideMutationKey = () => ["moveSlide"] as const;
+
+export const getMoveSlideMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof moveSlide>>,
+    TError,
+    MoveSlideMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof moveSlide>>,
+  TError,
+  MoveSlideMutationVariables,
+  TContext
+> => {
+  const mutationKey = getMoveSlideMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof moveSlide>>,
+    MoveSlideMutationVariables
+  > = (props) => {
+    const { slideId, data } = props ?? {};
+
+    return moveSlide(slideId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type MoveSlideMutationResult = NonNullable<Awaited<ReturnType<typeof moveSlide>>>;
+export type MoveSlideMutationBody = SlideMove;
+export type MoveSlideMutationError = Problem;
+export type MoveSlideMutationVariables = { slideId: string; data: SlideMove };
+
+/**
+ * @summary Move Slide
+ */
+export const useMoveSlide = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof moveSlide>>,
+      TError,
+      MoveSlideMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof moveSlide>>,
+  TError,
+  MoveSlideMutationVariables,
+  TContext
+> => {
+  return useMutation(getMoveSlideMutationOptions(options), queryClient);
 };
 
 export type listAnnotationsResponse200 = {

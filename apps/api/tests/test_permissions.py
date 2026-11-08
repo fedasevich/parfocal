@@ -428,6 +428,15 @@ async def seed_case_reports(
         )
     )
     await connection.execute(
+        insert(slides).values(
+            id=named("move-slide"),
+            tenant_id=tenant_id,
+            project_id=project_id,
+            case_id=case_id,
+            label="Matrix move slide",
+        )
+    )
+    await connection.execute(
         insert(clinical_deposits).values(
             id=named("report-deposit"),
             tenant_id=tenant_id,
@@ -973,6 +982,14 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     ),
     "changeSlideDetails": lambda w: Call(
         "PATCH", f"/api/slides/{w.slide}", {"stain": "PAS", "level": 2}
+    ),
+    "moveSlide": lambda w: Call(
+        "POST",
+        f"/api/slides/{seeded(w, 'move-slide')}/move",
+        {
+            "case_id": str(seeded(w, "report-fresh")),
+            "reason": "Barcode read against the wrong case",
+        },
     ),
     "reorderCaseSlides": lambda w: Call(
         "PUT", f"/api/cases/{w.case}/slide-order", {"slide_ids": []}
