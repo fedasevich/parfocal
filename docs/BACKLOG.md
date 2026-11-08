@@ -3859,7 +3859,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when tests cover triggering and storage without PHI.
   Size: M.
 
-- [ ] EXP-006 · Task timing for KPIs
+- [x] EXP-006 · Task timing for KPIs
   Measure time per sign-out, per area and per cell reviewed, chrome coverage at runtime, and reading-time estimate accuracy.
   Done when a KPI dashboard shows seeded data against the kit targets.
   Size: M.
