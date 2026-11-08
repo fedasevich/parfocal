@@ -59,15 +59,3 @@ export function assignSlides(
   const bottomRight = chosen.bottomRight ?? spare(3);
   return { left, right, bottomLeft, bottomRight };
 }
-
-export function pickSlide(
-  current: PaneSlides,
-  visible: readonly PaneSide[],
-  side: PaneSide,
-  id: string,
-): PaneSlides {
-  const there = visible.find((other) => other !== side && current[other] === id);
-  return there === undefined
-    ? { ...current, [side]: id }
-    : { ...current, [side]: id, [there]: current[side] };
-}

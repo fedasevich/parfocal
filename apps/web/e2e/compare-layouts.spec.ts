@@ -71,6 +71,7 @@ test("four panes move together while linked and each pane picks its own slide", 
   for (const pane of ["left", "right", "bottomLeft", "bottomRight"]) {
     await expect(page.getByTestId(`rotation-${pane}`)).toHaveText("0°");
   }
+  await expect(page.locator('[data-slot="crosshair"]')).toHaveCount(4);
   await page.getByRole("button", { name: "Rotate bottom right pane right" }).click();
   await expect(page.getByTestId("rotation-left")).toHaveText("15°");
   await expect(page.getByTestId("rotation-bottomLeft")).toHaveText("15°");

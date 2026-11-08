@@ -2863,12 +2863,12 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Note that Shift+L is also the arrow tool in Annotate, so CMD-004 resolves the conflict.
   Size: S.
 
-- [ ] CMP-003 · Shared cursor
+- [x] CMP-003 · Shared cursor
   The same point is shown on every pane.
   Done when tests cover cursor mapping with offsets.
   Size: S.
 
-- [ ] CMP-004 · Pane slide picker
+- [x] CMP-004 · Pane slide picker
   Each pane is labelled Left or Right with a chip naming its slide. The chip opens a list of the case's slides. Picking the slide shown on the other side swaps the two. The inspector repeats the two slots with Change buttons and Swap sides.
   Done when E2E puts A2 next to A1 from a pane chip and from the inspector, and a test confirms the swap rule.
   Refs kit W14, [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md).
@@ -4760,6 +4760,12 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Done when component tests cover each choice and its effect, E2E finishes setup into each of the three first-project choices, and an API test shows the creator of a workspace holds admin rights.
   Depends on ONB-002, ONB-005, IAM-024. Refs mock: setup, doc 41.
   Size: L.
+
+- [ ] ONB-010 · Join or ask for a workspace and keep the setup profile
+  ONB-004 sends join and ask through a draft `answerWorkspace` that only the fake API answers, and does not save specialties or the workspace logo. Add the real join and access request endpoints with the workspace admins notified, save specialties on the person and the logo on the workspace with an additive migration, and delete the draft.
+  Done when API tests cover join, ask, an admin approving the ask and the saved specialties and logo, and the setup browser spec runs on the real client with no draft left.
+  Depends on ONB-004.
+  Size: M.
 
 - [x] ONB-005 · Sample project
   A new workspace gets a sample project with 4 CAMELYON16 slides, two result sets and a review task for the person, deletable and left out of every evaluation.

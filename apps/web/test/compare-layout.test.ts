@@ -5,8 +5,8 @@ import {
   gridOf,
   layoutOptions,
   panesOf,
-  pickSlide,
 } from "../src/screens/viewer-tools/compare-layout.ts";
+import { pickSlide } from "../src/screens/viewer-tools/pane-slides.ts";
 
 test("the layouts show one, two, two and four panes", () => {
   assert.deepEqual(
@@ -36,7 +36,7 @@ test("a case with fewer than four slides repeats some", () => {
 
 test("picking a slide that another visible pane shows swaps the two", () => {
   const current = { left: "a", right: "b", bottomLeft: "c", bottomRight: "d" };
-  assert.deepEqual(pickSlide(current, panesOf("four"), "left", "d"), {
+  assert.deepEqual(pickSlide(current, "left", "d", panesOf("four")), {
     left: "d",
     right: "b",
     bottomLeft: "c",
@@ -46,5 +46,5 @@ test("picking a slide that another visible pane shows swaps the two", () => {
 
 test("picking a slide shown only on a hidden pane does not swap", () => {
   const current = { left: "a", right: "b", bottomLeft: "c", bottomRight: "d" };
-  assert.deepEqual(pickSlide(current, panesOf("side"), "left", "d"), { ...current, left: "d" });
+  assert.deepEqual(pickSlide(current, "left", "d", panesOf("side")), { ...current, left: "d" });
 });

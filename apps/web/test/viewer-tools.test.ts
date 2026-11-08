@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { minimapBox } from "@parfocal/ui/lib/minimap-box";
 import { pathPoints, placeMinimap } from "../src/screens/viewer-tools/minimap-placement.ts";
+import { pickSlide, swapSlides } from "../src/screens/viewer-tools/pane-slides.ts";
 import { tissueShareOnScreen } from "../src/screens/viewer-tools/tissue-share.ts";
 import { cropCentre } from "../src/screens/viewer-tools/tool-geometry.ts";
 import {
@@ -77,4 +78,17 @@ test("the tissue on screen is the share of the tissue bounds the viewport covers
   assert.equal(tissueShareOnScreen([0, 0, 700, 1924]), 0.5);
   assert.equal(tissueShareOnScreen([2000, 0, 100, 100]), 0);
   assert.ok(tissueShareOnScreen([800, 800, 294, 253]) < 0.05);
+});
+
+test("picking the slide shown on the other side swaps the two", () => {
+  const shown = { left: "a1", right: "a2" };
+  assert.deepEqual(pickSlide(shown, "left", "a2"), { left: "a2", right: "a1" });
+  assert.deepEqual(pickSlide(shown, "right", "a1"), { left: "a2", right: "a1" });
+});
+
+test("picking a slide not on screen replaces only that side", () => {
+  const shown = { left: "a1", right: "a2" };
+  assert.deepEqual(pickSlide(shown, "right", "a3"), { left: "a1", right: "a3" });
+  assert.deepEqual(pickSlide(shown, "left", "a1"), shown);
+  assert.deepEqual(swapSlides(shown), { left: "a2", right: "a1" });
 });

@@ -1429,6 +1429,10 @@ GET_ROUTES = {
         Exposure.TENANT,
         lambda a: f"/api/review-tasks/{a.ids['annotate_task']}/training-dataset",
     ),
+    "getTaskAiChanges": Route(
+        Exposure.TENANT,
+        lambda a: f"/api/review-tasks/{a.ids['annotate_task']}/evaluation/ai-changes",
+    ),
     "listReportLinks": Route(
         Exposure.TENANT, lambda a: f"/api/review-tasks/{a.ids['task']}/evaluation/links"
     ),
