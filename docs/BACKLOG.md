@@ -2874,7 +2874,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Refs kit W14, [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md).
   Size: M.
 
-- [ ] CMP-005 · Rotation support
+- [x] CMP-005 · Rotation support
   Rotate a pane for alignment, off by default for input devices.
   Done when tests cover rotation in linked mode.
   Size: S.
