@@ -2879,7 +2879,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Done when tests cover rotation in linked mode.
   Size: S.
 
-- [ ] CMP-006 · Semi-automatic alignment
+- [x] CMP-006 · Semi-automatic alignment
   Optional coarse registration from thumbnails to propose an initial offset.
   Done when a test aligns two serial-section fixtures within a tolerance, or an ADR defers it.
   Size: M.
