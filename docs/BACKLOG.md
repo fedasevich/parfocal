@@ -2484,6 +2484,12 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Depends on REVIEW-015.
   Size: M.
 
+- [ ] REVIEW-031 · Unsure zones follow the camera on paged results
+  REVIEW-030 reads paged cells in the review screens, but the zone and jump set is the 1,200 least-sure cells of one field at the slide centre, so zones and arrow jumps miss the rest of a whole slide. Load the unsure working set for the field in view as the camera moves, keep decided cells across fields, and let the zone list cover the whole slide from a server-side or chunked unsure index.
+  Done when a browser test on a paged result of at least 250,000 cells pans to a far field, sees its zone and jumps between cells there, and finds a decision made in the first field still shown.
+  Depends on REVIEW-030.
+  Size: M.
+
 ---
 
 ## 15 ANN · Annotate workspace
