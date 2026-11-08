@@ -243,6 +243,8 @@ function LoadedSettings({
     sceneShortcuts(shortcutSceneOf(scene), base),
   );
   const [message, setMessage] = useState<{ id: number; text: string } | null>(null);
+  const [savedName, setSavedName] = useState<string | null>(null);
+  const [nameDraft, setNameDraft] = useState<string | null>(null);
   const [lastScene, setLastScene] = useState(scene);
   if (scene !== lastScene) {
     setLastScene(scene);
@@ -565,13 +567,46 @@ function LoadedSettings({
     name: () => (
       <span className="inline-flex items-center gap-2">
         <PersonAvatar person={personOf(me)} size={20} />
-        {me?.display_name}
+        <input
+          aria-label="Name"
+          className="h-7 w-64 rounded-sm border border-line bg-surface px-2 text-body text-fg"
+          value={nameDraft ?? shownName}
+          onChange={(event) => setNameDraft(event.target.value)}
+          onBlur={commitName}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") event.currentTarget.blur();
+            if (event.key === "Escape") {
+              event.stopPropagation();
+              setNameDraft(null);
+            }
+          }}
+        />
       </span>
     ),
-    email: () => <span className="font-mono">{me?.email}</span>,
-    role: () => me?.title ?? "",
-    workspace: () => workspace?.name ?? "",
+    email: () => lockedValue(me?.email ?? "", "Comes from your sign-in", "font-mono"),
+    role: () => lockedValue(me?.title ?? "", "Set by your lab admin"),
+    workspace: () => lockedValue(workspace?.name ?? "", "Set by your lab admin"),
   };
+
+  const shownName = savedName ?? me?.display_name ?? "";
+
+  function commitName() {
+    const next = (nameDraft ?? shownName).trim();
+    setNameDraft(null);
+    if (next === "" || next === shownName) return;
+    setSavedName(next);
+    notify("Name saved");
+  }
+
+  function lockedValue(value: string, reason: string, className?: string) {
+    return (
+      <span className="inline-flex items-center gap-2" data-locked>
+        <Icon name="lock" size="xs" label="Locked" className="text-fg-faint" />
+        <span className={className}>{value}</span>
+        <small className="text-caption text-fg-faint">{reason}</small>
+      </span>
+    );
+  }
 
   function notice(key: RowKey, label: string) {
     return (
@@ -622,6 +657,15 @@ function LoadedSettings({
               {controls[item.key]()}
             </SettingsFact>
           ))}
+          <SettingsRows>
+            <SettingsRow
+              label="Signature block"
+              help={`Signs reports as ${shownName}${me?.title ? `, ${me.title}` : ""}.`}
+              scope="personal"
+            >
+              {controls.signature()}
+            </SettingsRow>
+          </SettingsRows>
         </div>
       );
     }
