@@ -1,8 +1,10 @@
 import {
   getGetMySettingLayersQueryKey,
   getGetMySettingsQueryKey,
+  getListNotificationPreferencesQueryKey,
   getListSessionsQueryKey,
   type MySettings,
+  type NotificationKind,
   type Preference,
   useEndOtherSessions,
   useGetMe,
@@ -13,6 +15,7 @@ import {
   useListSessions,
   useSetMySettingLayers,
   useSetMyShortcuts,
+  useSetNotificationPreferences,
 } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
 import { Icon } from "@parfocal/ui/components/icon";
@@ -40,6 +43,7 @@ import { setLengthUnits } from "../../measure/length-units.ts";
 import { applyDensity } from "../../shell/density.ts";
 import { writeDeviceSetting } from "../../shell/device-settings.ts";
 import { personOf } from "../../shell/global-shell.tsx";
+import { readStatNotice, writeStatChannel, writeStatSound } from "../../shell/notification-gate.ts";
 import { usePinnedStrip } from "../../shell/pinned-strip.ts";
 import { chooseTheme, readTheme, type ThemeChoice } from "../../shell/theme.ts";
 import {
@@ -102,6 +106,7 @@ const channelOf = (preference: Preference | undefined): Channel =>
 const noticeKinds: Partial<Record<RowKey, string>> = {
   noticeTask: "task-assigned",
   noticeMention: "mention",
+  noticeReply: "reply",
   noticeRun: "model-run-finished",
   noticeDue: "task-due-soon",
 };
@@ -225,6 +230,13 @@ function LoadedSettings({
   const [outlineMode, setOutlineMode] = useOutlineMode();
   const [wordingPicked, setWordingPicked] = useState<WordingSetting | null>(null);
   const [theme, setTheme] = useState<ThemeChoice>(() => readTheme());
+  const [stat, setStat] = useState(readStatNotice);
+  const savePreferences = useSetNotificationPreferences({
+    mutation: {
+      onSuccess: () =>
+        void queryClient.invalidateQueries({ queryKey: getListNotificationPreferencesQueryKey() }),
+    },
+  });
   const [channels, setChannels] = useState<Partial<Record<RowKey, Channel>>>({});
   const [signedOutAt, setSignedOutAt] = useState<{ count: number; at: Date } | null>(null);
   const { mutate: saveShortcuts } = useSetMyShortcuts({
@@ -281,7 +293,31 @@ function LoadedSettings({
     channels[key] ??
     (key === "noticeSubmit"
       ? personal.slide_submitted_notice
-      : channelOf(preferences.find((item) => item.kind === noticeKinds[key])));
+      : key === "noticeStat"
+        ? stat.channel
+        : channelOf(preferences.find((item) => item.kind === noticeKinds[key])));
+  const chooseChannel = (key: RowKey, choice: Channel) => {
+    setChannels((previous) => ({ ...previous, [key]: choice }));
+    if (key === "noticeStat") {
+      writeStatChannel(choice);
+      setStat((previous) => ({ ...previous, channel: choice }));
+      return;
+    }
+    const kind = noticeKinds[key];
+    if (kind === undefined) return;
+    savePreferences.mutate({
+      data: {
+        preferences: [
+          {
+            kind: kind as NotificationKind,
+            in_app: choice !== "quiet",
+            email: choice === "email",
+            realtime: false,
+          },
+        ],
+      },
+    });
+  };
   const workspace = me?.workspaces.find((item) => item.tenant_id === me.active_tenant_id);
 
   const controls: Record<RowKey, () => ReactNode> = {
@@ -534,6 +570,13 @@ function LoadedSettings({
       ),
     noticeTask: () => notice("noticeTask", "A task is given to me"),
     noticeMention: () => notice("noticeMention", "Someone mentions me"),
+    noticeReply: () => notice("noticeReply", "Someone replies to me"),
+    noticeStat: () => notice("noticeStat", "A STAT task is given to me"),
+    statSound: () =>
+      toggle("Sound for STAT tasks", stat.sound, (value) => {
+        writeStatSound(value);
+        setStat((previous) => ({ ...previous, sound: value }));
+      }),
     noticeSubmit: () => notice("noticeSubmit", "A reviewer submits a slide of my task"),
     noticeRun: () => notice("noticeRun", "A model run finishes"),
     noticeDue: () => notice("noticeDue", "A reminder before a due date"),
@@ -583,7 +626,7 @@ function LoadedSettings({
           ["bell", "Bell"],
           ["quiet", "Quiet"],
         ]}
-        onChange={(value) => setChannels((previous) => ({ ...previous, [key]: value as Channel }))}
+        onChange={(value) => chooseChannel(key, value as Channel)}
       />
     );
   }

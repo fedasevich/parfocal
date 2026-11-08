@@ -67,6 +67,7 @@ export const sessions: ScenarioSession[] = [
 export const noticeChannels: { kind: string; channel: "email" | "bell" | "quiet" }[] = [
   { kind: "task-assigned", channel: "email" },
   { kind: "mention", channel: "bell" },
+  { kind: "reply", channel: "bell" },
   { kind: "model-run-finished", channel: "bell" },
   { kind: "task-due-soon", channel: "email" },
 ];
