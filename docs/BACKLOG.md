@@ -2863,7 +2863,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Note that Shift+L is also the arrow tool in Annotate, so CMD-004 resolves the conflict.
   Size: S.
 
-- [ ] CMP-003 · Shared cursor
+- [x] CMP-003 · Shared cursor
   The same point is shown on every pane.
   Done when tests cover cursor mapping with offsets.
   Size: S.
