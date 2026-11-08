@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { keyAction, keyActions } from "../src/screens/settings/keymap.ts";
+import { lockAfterText, patientBannerText } from "../src/screens/settings/privacy.ts";
 import {
   matchCount,
   matchingRows,
@@ -171,4 +172,30 @@ test("searching for zoom keeps the zoom rows and the shortcuts", () => {
   assert.equal(shownSection("display", "nothing like this"), undefined);
   assert.equal(sectionOfScene("search"), "navigation");
   assert.equal(sectionOfScene("conflict"), "shortcuts");
+});
+
+test("the Privacy section lists initials, lock after, patient banner and other devices", () => {
+  assert.deepEqual(
+    matchingRows("privacy", "").map((item) => [item.key, item.scope]),
+    [
+      ["initials", "personal"],
+      ["lockAfter", "lab"],
+      ["patientBanner", "lab"],
+      ["otherDevices", "personal"],
+    ],
+  );
+});
+
+test("lock after reads the lab idle minutes", () => {
+  assert.equal(lockAfterText(15), "15 min");
+  assert.equal(lockAfterText(undefined), "");
+});
+
+test("the patient banner row reads the lab setting", () => {
+  assert.equal(patientBannerText(undefined), "Shown with full name");
+  assert.equal(
+    patientBannerText({ values: { patient_banner: true, patient_names: "initials" }, locked: [] }),
+    "Shown with initials only",
+  );
+  assert.equal(patientBannerText({ values: { patient_banner: false }, locked: [] }), "Hidden");
 });

@@ -51,6 +51,7 @@ import {
 import { andJoin } from "../format.ts";
 import { type HomeLayoutChoice, homeLayoutOptions } from "../home/home-layout.ts";
 import { okData } from "../placeholder.tsx";
+import { lockAfterText, patientBannerText } from "./privacy.ts";
 import {
   matchCount,
   matchingRows,
@@ -541,7 +542,8 @@ function LoadedSettings({
       toggle("Initials while sharing", personal.initials_while_sharing, (value) =>
         setP("initials_while_sharing", value),
       ),
-    lockAfter: () => (policy ? `${policy.idle_lock_minutes} min` : ""),
+    lockAfter: () => lockAfterText(policy?.idle_lock_minutes),
+    patientBanner: () => patientBannerText(layers?.lab),
     otherDevices: () =>
       others.length === 0 ? (
         <span className="text-body text-fg">Only this device</span>
@@ -599,7 +601,7 @@ function LoadedSettings({
     )}.`;
   };
 
-  const facts: RowKey[] = ["presetKeys", "lockAfter"];
+  const facts: RowKey[] = ["presetKeys", "lockAfter", "patientBanner"];
   const factIcons = { name: "user", email: "mail", role: "flag", workspace: "folder" } as const;
 
   const body = (() => {
