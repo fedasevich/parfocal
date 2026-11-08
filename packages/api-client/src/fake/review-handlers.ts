@@ -502,6 +502,8 @@ export function reviewHandlers(): RequestHandler[] {
         reasons: body.reasons ?? [],
         reason_class_id: body.reason_class_id ?? null,
         note: body.note ?? null,
+        ai_class_id: body.ai_class_id ?? null,
+        ai_score: body.ai_score ?? null,
         updated_at: "2026-10-15T10:52:00+02:00",
       };
       rememberDecision(String(params["taskId"]), String(params["slideId"]), objectId, saved);

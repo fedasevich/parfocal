@@ -9,13 +9,13 @@ import {
   type VerdictDraft,
 } from "@parfocal/api-client";
 import { useQueryClient } from "@tanstack/react-query";
-import { type Count, decisionBody, type ReviewStyle } from "./decision-style.ts";
+import { type Count, decisionBody, type ReviewStyle, shownCall } from "./decision-style.ts";
 import type { ReviewSession } from "./review-data.ts";
 import type { Answer } from "./review-state.ts";
 
 export function useDecisionSaves(session: ReviewSession, style: ReviewStyle) {
   const queryClient = useQueryClient();
-  const { taskId, slideId, classes } = session;
+  const { taskId, slideId, classes, objects } = session;
   const refresh = () =>
     void queryClient.invalidateQueries({ queryKey: getListVerdictsQueryKey(taskId, slideId) });
   const saver = useSaveVerdict({ mutation: { onSuccess: refresh } });
@@ -30,7 +30,14 @@ export function useDecisionSaves(session: ReviewSession, style: ReviewStyle) {
       taskId,
       slideId,
       objectId,
-      data: { ...decisionBody(style, raw, classes, value), ...reasons },
+      data: {
+        ...decisionBody(style, raw, classes, value),
+        ...shownCall(
+          objects.find((item) => item.object === objectId),
+          classes,
+        ),
+        ...reasons,
+      },
     });
   const refreshLayer = () =>
     void queryClient.invalidateQueries({ queryKey: getGetReviewedLayerQueryKey(taskId, slideId) });

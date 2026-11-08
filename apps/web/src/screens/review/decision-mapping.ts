@@ -93,6 +93,18 @@ export function decisionBody(
   return picked === undefined ? { answer: raw } : { answer: "class", answer_class_id: picked };
 }
 
+const scoreByte = 255;
+
+export function shownCall(
+  object: Pick<ReviewObject, "kind" | "class_name" | "score"> | undefined,
+  classes: ProjectClass[],
+): Pick<VerdictDraft, "ai_class_id" | "ai_score"> {
+  if (object === undefined || object.kind !== "cell") return {};
+  const classId = classes.find((item) => item.name === object.class_name)?.id;
+  if (classId === undefined) return {};
+  return { ai_class_id: classId, ai_score: Math.round(object.score * scoreByte) };
+}
+
 export function rawOfDecision(
   style: ReviewStyle,
   verdict: Verdict,
