@@ -4623,7 +4623,7 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
 
 ---
 
-- [ ] EVAL-013 · How the experts changed the AI
+- [x] EVAL-013 · How the experts changed the AI
   For an annotate task with result sets, per slide and class: AI objects confirmed, edited, deleted and left unchecked, objects added, and by whom, with totals, in the evaluation API and as report blocks.
   Done when unit tests reproduce hand-counted values on a fixture task with two experts and three classes, including a slide with no result set.
   Depends on ANN-030, ANN-032, EVAL-006. Refs [ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md).
