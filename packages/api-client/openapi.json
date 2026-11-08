@@ -44184,7 +44184,7 @@
       },
       "ObjectId": {
         "type": "string",
-        "pattern": "^(?:T[1-9][0-9]{0,8}\\.)?[TCRZM][1-9][0-9]{0,8}[a-z]{0,3}\\+?$"
+        "pattern": "^(?:T[1-9][0-9]{0,8}\\.)?[TCRZMAN][1-9][0-9]{0,8}[a-z]{0,3}\\+?$"
       },
       "ObjectOrder": {
         "type": "string",

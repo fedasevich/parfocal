@@ -59,6 +59,8 @@ PERSON_KINDS = {
     Letter.CELL: AnnotationKind.CELL,
     Letter.ROI: AnnotationKind.ROI,
     Letter.MEASUREMENT: AnnotationKind.MEASUREMENT,
+    Letter.ARROW: AnnotationKind.ARROW,
+    Letter.TEXT: AnnotationKind.TEXT,
 }
 OBJECT_ANCHORS = frozenset({AnchorKind.OBJECT, AnchorKind.ROI})
 SHAPES = (PolygonGeometry, MultiPolygonGeometry, LineStringGeometry)

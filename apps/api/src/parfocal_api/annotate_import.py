@@ -77,6 +77,7 @@ class Candidate:
     object_type: str | None
     geometry: Any
     class_name: str | None
+    words: str | None = None
 
 
 router = APIRouter(
@@ -94,6 +95,10 @@ def items(value: Any) -> list[Any] | None:
 
 def text_of(value: Any) -> str | None:
     return value.strip() or None if isinstance(value, str) else None
+
+
+def words_of(value: Any) -> str | None:
+    return value if isinstance(value, str) else None
 
 
 def classification_of(properties: dict[str, Any]) -> str | None:
@@ -116,6 +121,7 @@ def from_feature(index: int, value: Any) -> Candidate:
         text_of(properties.get("objectType")),
         feature.get("geometry"),
         classification_of(properties),
+        words_of(own.get("text")),
     )
 
 
@@ -124,7 +130,12 @@ def from_object(index: int, value: Any) -> Candidate:
     if item is None:
         return Candidate(index, None, None, None, None)
     return Candidate(
-        index, text_of(item.get("kind")), None, item.get("geometry"), text_of(item.get("class"))
+        index,
+        text_of(item.get("kind")),
+        None,
+        item.get("geometry"),
+        text_of(item.get("class")),
+        words_of(item.get("text")),
     )
 
 
@@ -143,7 +154,7 @@ def candidates(content: dict[str, Any] | list[Any]) -> list[Candidate]:
 
 
 def kind_of(candidate: Candidate, geometry_type: str) -> AnnotationKind | None:
-    if candidate.kind in AnnotationKind and candidate.kind != AnnotationKind.TEXT:
+    if candidate.kind in AnnotationKind:
         chosen = AnnotationKind(candidate.kind)
         return chosen if geometry_type in SHAPES[chosen] else None
     if candidate.object_type in CELL_TYPES and geometry_type in SHAPES[AnnotationKind.CELL]:
@@ -183,7 +194,9 @@ def drafts_of(
                 skipped.append(SkippedFeature(index=candidate.index, reason=reason))
                 continue
             try:
-                draft = {"kind": kind, "geometry": geometry, "class_id": class_id}
+                draft: dict[str, Any] = {"kind": kind, "geometry": geometry, "class_id": class_id}
+                if kind is AnnotationKind.TEXT:
+                    draft["text"] = candidate.words
                 drafts.append(AnnotationDraft.model_validate(draft))
             except ValidationError as error:
                 reason = error.errors()[0]["msg"]
