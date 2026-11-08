@@ -3996,7 +3996,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when the generated client is tested against recorded API responses and schema drift fails CI.
   Size: M.
 
-- [ ] TEST-012 · Fixture slide library in CI
+- [x] TEST-012 · Fixture slide library in CI
   The OpenSlide corpus subset, CAMELYON16 tumor_009 and test slides, synthetic tiny slides, cached on runners.
   Done when every format reader test uses a cached fixture.
   Depends on FOUND-016.
