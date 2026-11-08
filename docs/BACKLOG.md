@@ -4856,7 +4856,7 @@ Admin is its own page with its own sidebar and the app's top bar, never a page i
   Depends on VIZ-002.
   Size: M.
 
-- [ ] VIZ-003 · Heatmap, density and confidence maps
+- [x] VIZ-003 · Heatmap, density and confidence maps
   Each with its ramp and a threshold. The heatmap's strength is a slider in the Display panel, off or 20 to 100%, which starts at the task's display default and can be locked by the task. In the full viewer the maps sit in the Display panel's View group ([ADR 0132](adr/0132-display-settings-presets-and-task-locks.md), display settings, presets and task locks).
   Done when golden tests cover each map, the slider's steps and the off state.
   Depends on VIZ-001, AITUM-002. Refs mock: layers/heat, doc 40 G4.
