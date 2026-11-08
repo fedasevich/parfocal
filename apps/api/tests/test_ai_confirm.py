@@ -150,3 +150,12 @@ def test_a_slide_without_a_check_scope_has_no_progress(api: ApiAs, database: str
     assert response.json()["check_progress"] is None
     confirmed = confirm(api, o, slide, 1)
     assert confirmed.status_code == 201, confirmed.text
+
+
+def test_a_region_confirm_ignores_a_geometry_from_the_client(api: ApiAs, database: str) -> None:
+    o, slide = checking(api, database)
+    response = api(o.people["first"]).post(
+        f"{slide}/shared-layer/ai/T1/confirm", json={"geometry": SQUARE}
+    )
+    assert response.status_code == 201, response.text
+    assert response.json()["geometry"]["coordinates"] != SQUARE["coordinates"]

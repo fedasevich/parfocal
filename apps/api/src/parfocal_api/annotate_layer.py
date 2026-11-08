@@ -496,7 +496,13 @@ async def confirm_ai_object(
     found, kind = await source_of(connection, row, object_id)
     existing = await open_copy(connection, row, kind, found)
     values = {
-        "geometry": await ai_shape(connection, row, kind, found, draft.geometry),
+        "geometry": await ai_shape(
+            connection,
+            row,
+            kind,
+            found,
+            draft.geometry if kind is AnnotationKind.CELL else None,
+        ),
         "class_id": None,
         "origin": AnnotationOrigin.AI_CONFIRMED,
         "deleted_at": None,
