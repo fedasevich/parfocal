@@ -29,6 +29,7 @@ import type { ReviewSession } from "./review-data.ts";
 import type { SlideCounts } from "./review-top.tsx";
 import { timeLeft } from "./review-top.tsx";
 import { recallSlideCamera, stepSlideId } from "./slide-switch.ts";
+import { slidePickerSummary, topBarMoreItems } from "./top-bar-model.ts";
 
 const slideStepKeys = ["prevslide", "nextslide"];
 const processingStates = new Set(["uploaded", "ai-running"]);
@@ -38,6 +39,7 @@ const seenPercentInPrototype = 38;
 
 export type ReviewTopPopovers = {
   slidesPopover: ReactNode;
+  slideSummary: string;
   pinnedStrip: ReactNode;
   progressPopover: ReactNode;
   moreItems: MoreItem[] | undefined;
@@ -279,41 +281,22 @@ export function useReviewTopPopovers({
     ) : undefined;
 
   const moreItems: MoreItem[] | undefined =
-    mode === "annotate"
-      ? [
-          { icon: "share", label: "Share this view", title: "Sharing a view is not built yet" },
-          {
-            icon: "comment",
-            label: "Ask for a second opinion",
-            onSelect: () => task && void goTo(`/tasks/${task.id}/comments`),
-          },
-          {
-            icon: "upload",
-            label: "Add slides to this case",
-            onSelect: () => projectId && void goTo(destinations.upload(projectId)),
-          },
-          {
-            icon: "expand",
-            label: "Focus mode",
-            keys: "⌘\\",
-            onSelect: () =>
-              projectId && void goTo(destinations.focus(projectId, session.slideId, task?.id)),
-            separatorBefore: true,
-          },
-          {
-            icon: "help",
-            label: "Keyboard shortcuts",
-            keys: "?",
-            onSelect: () => void goTo(destinations.settings("shortcuts")),
-          },
-          {
-            icon: "gear",
-            label: "Settings",
-            keys: "⌘,",
-            onSelect: () => void goTo(destinations.settings("display")),
-          },
-        ]
-      : undefined;
+    mode === "adjudicate"
+      ? undefined
+      : topBarMoreItems({
+          mode,
+          projectId,
+          slideId: session.slideId,
+          taskId: task?.id,
+          go: (href) => void goTo(href),
+        });
 
-  return { slidesPopover, pinnedStrip, progressPopover, moreItems };
+  const slideSummary = slidePickerSummary({
+    caseLabel: session.caseLabel,
+    position: session.neighbours?.position,
+    total: session.neighbours?.total,
+    resultSets: setsOf(session.slideId),
+  });
+
+  return { slidesPopover, slideSummary, pinnedStrip, progressPopover, moreItems };
 }

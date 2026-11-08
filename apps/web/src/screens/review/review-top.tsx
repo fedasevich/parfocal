@@ -9,6 +9,7 @@ import { personOf } from "../../shell/global-shell.tsx";
 import { useRouterLink } from "../../shell/router-link.tsx";
 import { okData } from "../placeholder.tsx";
 import { lookUrl } from "../thumbnails.ts";
+import { useInspectorLayout } from "./inspector-layout.ts";
 import type { ReviewSession } from "./review-data.ts";
 import { useReviewTopPopovers } from "./review-top-popovers.tsx";
 
@@ -59,6 +60,7 @@ export function ReviewTop({
   const me = okData(useGetMe().data);
   const renderLink = useRouterLink();
   const navigate = useNavigate();
+  const [layout, setLayout] = useInspectorLayout(session.meId);
   const position = session.neighbours
     ? `Slide ${session.neighbours.position} of ${session.neighbours.total}`
     : "";
@@ -85,11 +87,21 @@ export function ReviewTop({
         slidesPopover={popovers.slidesPopover}
         progressPopover={popovers.progressPopover}
         moreItems={
-          popovers.moreItems ??
-          (onHowItWorks
-            ? [{ icon: "help", label: "How guided review works", onSelect: onHowItWorks }]
-            : undefined)
+          onHowItWorks
+            ? [
+                { icon: "help", label: "How guided review works", onSelect: onHowItWorks },
+                ...(popovers.moreItems ?? []),
+              ]
+            : popovers.moreItems
         }
+        slideSummary={popovers.slideSummary}
+        showAnnotate={mode !== "adjudicate" && Boolean(session.task?.project_id)}
+        {...(mode === "full" || mode === "annotate"
+          ? {
+              panelHidden: layout.hidden,
+              onTogglePanel: () => setLayout({ hidden: !layout.hidden }),
+            }
+          : {})}
         backHref={destinations.myWork()}
         renderLink={renderLink}
         onModeChange={(next) => {
@@ -99,6 +111,13 @@ export function ReviewTop({
               to: "/projects/$projectId/slides/$slideId",
               params: { projectId, slideId: session.slideId },
               search: { task: session.taskId, ...(object ? { object } : {}) },
+            });
+          }
+          if (next === "annotate" && projectId) {
+            void navigate({
+              to: "/projects/$projectId/slides/$slideId/annotate",
+              params: { projectId, slideId: session.slideId },
+              search: { task: session.taskId },
             });
           }
           if (next === "guided") {
