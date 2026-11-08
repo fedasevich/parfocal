@@ -26,3 +26,7 @@ The web app maps shapes to saved records in one place, `saved-shapes.ts`, loads 
 - The object ID grammar gains the letters `A` and `N`. Report blocks still accept only the older letters, because reports do not cite arrows or notes.
 - Threads cannot anchor to an arrow or note by code yet, since their kind table maps only the older letters.
 - Undoing this means a migration that deletes every arrow and text note, which the downgrade does.
+
+## Update 2026-11-08
+
+ANN-039 (arrows and notes in threads, reports, imports and exports) lifted the first two limits. Threads and report blocks now take `A` and `N`, imports bring a note in with its words, and the slide export carries note words, while the training dataset export still leaves them out.
