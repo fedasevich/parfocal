@@ -76,6 +76,7 @@ import { CanvasNotice } from "../review/guided-review.tsx";
 import { finishingAnswers } from "../review/guided-scenes.ts";
 import { useNoteKey } from "../review/note-key.ts";
 import { ObjectComments } from "../review/object-comments.tsx";
+import { useObjectKeys } from "../review/object-keys.ts";
 import { PinMark, PinnedThread } from "../review/pinned-thread.tsx";
 import { type ReviewSession, useReviewSession } from "../review/review-data.ts";
 import {
@@ -141,6 +142,8 @@ import {
   type ViewerTab,
   viewerSetup,
 } from "./viewer-scenes.ts";
+import { nextUnsureCell, zonesOfCells } from "./zone-cells.ts";
+import { useRestKey, ZoneGallery } from "./zone-gallery.tsx";
 
 export type ViewerSearch = CameraSearch & {
   task?: string | undefined;
@@ -295,6 +298,7 @@ function ViewerBody({
   const [cellsRect, setCellsRect] = useState<ScreenRect | null>(null);
   const [cellsFolded, setCellsFolded] = useState(false);
   const [confirmRest, setConfirmRest] = useState(false);
+  const [openZoneId, setOpenZoneId] = useState<string | null>(null);
   const [camera, setCamera] = useState<Camera | null>(null);
   const [scan, setScan] = useState<Scan | null>(null);
   const noTumor = regions.length === 0 && !running;
@@ -429,9 +433,15 @@ function ViewerBody({
     });
     if (value !== "agree") setNote({ open: true, reasons: [], text: "" });
     if (current.kind === "cell") {
-      const after = cells.find(
-        (cell, index) => index > cells.indexOf(current) && !answerOf(base, next, cell.object),
-      );
+      const inZone = openZone?.cells.some((cell) => cell.object === current.object)
+        ? nextUnsureCell(openZone, current.object, (object) => !answerOf(base, next, object))
+        : undefined;
+      const after =
+        inZone !== undefined
+          ? { object: inZone }
+          : cells.find(
+              (cell, index) => index > cells.indexOf(current) && !answerOf(base, next, cell.object),
+            );
       if (after) pick(after.object);
     }
   };
@@ -535,6 +545,37 @@ function ViewerBody({
     cells.map((cell) => [cell.object, answer(cell.object)?.value]),
   );
   const openCells = cells.filter((cell) => !answer(cell.object));
+  const zones = zonesOfCells(cells);
+  const openZone = zones.find((zone) => zone.id === openZoneId);
+  const openZoneCells = openZone?.cells.filter((cell) => !answer(cell.object)) ?? [];
+  const nextInZone = () => {
+    if (openZone === undefined) return;
+    const next = nextUnsureCell(openZone, selected ?? undefined, (object) => !answer(object));
+    if (next !== undefined) pick(next);
+  };
+  const restLookRight = () => {
+    if (openZone === undefined || buttonsOff || openZoneCells.length === 0) return;
+    const before = overrides;
+    const next = new Map(overrides);
+    for (const cell of openZoneCells) {
+      const raw = rawFor(style, "agree", cell);
+      decisions.save(cell.object, raw, "agree");
+      next.set(cell.object, { value: "agree", raw, reasons: [], note: null });
+    }
+    setOverrides(next);
+    setToast({
+      id: Date.now(),
+      text: `${openZoneCells.length} cells in ${openZone.name} marked agree`,
+      undo: () => {
+        setOverrides(before);
+        for (const cell of openZoneCells) decisions.restore(cell.object, undefined);
+      },
+    });
+  };
+
+  const zoneKeys = openZone !== undefined && tab === "objects";
+  useObjectKeys(nextInZone, () => undefined, zoneKeys);
+  useRestKey(restLookRight, zoneKeys);
   const stillView: StillView = current
     ? current.kind === "cell"
       ? { kind: "cell", object: current.object }
@@ -777,6 +818,19 @@ function ViewerBody({
           counts={counts}
           added={added.map((item) => item.object)}
         />
+        {zones.length > 0 ? (
+          <ZoneGallery
+            zones={zones}
+            openId={openZoneId}
+            current={selected ?? undefined}
+            answer={answer}
+            disabledReason={buttonsOff}
+            onOpen={setOpenZoneId}
+            onPick={pick}
+            onNext={nextInZone}
+            onRest={restLookRight}
+          />
+        ) : null}
         <AiSays setName={`${setName}, imported 12 Oct`} objects={objects} />
         <ModelWarningsBlock
           warnings={viewerModelWarnings(typer, objects, personalSettings?.model_warnings ?? true)}
@@ -1281,7 +1335,11 @@ function ViewerBody({
             onCameraChange={setCamera}
             regionDecisions={regionDecisions}
             cellDecisions={cellDecisions}
-            ringedCells={confirmRest ? openCells.map((cell) => cell.object) : []}
+            ringedCells={
+              confirmRest
+                ? openCells.map((cell) => cell.object)
+                : openZoneCells.map((cell) => cell.object)
+            }
             claimHidden={!showsClaim(style)}
             drawAs={settings.draw}
             showIds={settings.ids}
