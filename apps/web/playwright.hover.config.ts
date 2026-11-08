@@ -8,7 +8,10 @@ export default defineConfig({
   workers: 1,
   forbidOnly: Boolean(process.env["CI"]),
   timeout: 600_000,
-  reporter: [["list"]],
+  grepInvert: /@quarantine/,
+  reporter: process.env.CI
+    ? [["list"], ["json", { outputFile: "test-results/report.json" }]]
+    : [["list"]],
   use: {
     channel: "chrome",
     headless: true,
