@@ -3351,7 +3351,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Refs doc 29.
   Size: S.
 
-- [ ] AINUC-009 · Area extraction from cells
+- [x] AINUC-009 · Area extraction from cells
   Group typed cells into areas for decisions where no tumor map exists.
   Done when tests produce stable areas on a fixture.
   Size: M.
