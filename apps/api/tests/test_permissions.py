@@ -821,6 +821,9 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "exportTaskEvaluation": lambda w: Call(
         "GET", f"/api/review-tasks/{w.task}/evaluation/exports/objects.csv"
     ),
+    "getTaskAiChanges": lambda w: Call(
+        "GET", f"/api/review-tasks/{w.annotate_task}/evaluation/ai-changes"
+    ),
     "exportTrainingDataset": lambda w: Call(
         "GET", f"/api/review-tasks/{w.signed_annotate_task}/training-dataset"
     ),

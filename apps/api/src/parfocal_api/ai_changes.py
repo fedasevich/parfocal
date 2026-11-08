@@ -277,7 +277,8 @@ async def slide_events(
 
 
 async def ai_changes(connection: AsyncConnection, task: Any, store: ResultStore) -> AiChanges:
-    snapshot = [ProjectClass.model_validate(item) for item in task.class_snapshot or []]
+    stored: list[Any] = list(task.class_snapshot or [])
+    snapshot = [ProjectClass.model_validate(item) for item in stored]
     classes = {item.id: item for item in snapshot}
     letters = Letters(await reviewers_of(connection, task.id))
     rows = (
