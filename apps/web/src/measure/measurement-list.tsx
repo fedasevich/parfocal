@@ -2,6 +2,7 @@ import { CategoryTag, ObjectIdTag } from "@parfocal/ui/components/tag";
 import { useMemo, useRef } from "react";
 import type { AnnotationDocument } from "../annotations/document.ts";
 import type { ShapeId } from "../annotations/shapes.ts";
+import { useLengthUnits } from "./length-units.ts";
 import {
   buildMeasurementRows,
   formatDrawnTime,
@@ -23,9 +24,10 @@ export function MeasurementList({
   const times = useRef<ReadonlyMap<ShapeId, number>>(new Map());
   times.current = noteDrawnTimes(times.current, doc, Date.now());
   const drawn = times.current;
+  const units = useLengthUnits();
   const rows = useMemo(
-    () => buildMeasurementRows(doc, micronsPerPixel, drawn, classNames),
-    [doc, micronsPerPixel, drawn, classNames],
+    () => buildMeasurementRows(doc, micronsPerPixel, drawn, classNames, units),
+    [doc, micronsPerPixel, drawn, classNames, units],
   );
 
   return (

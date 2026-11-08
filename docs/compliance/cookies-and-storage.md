@@ -24,6 +24,7 @@ All are set by the web app for features the user uses, hold no name or contact d
 | `parfocal.pinned-slide-strip` | localStorage | On or off | Keeps the slide strip pinned in the viewer |
 | `parfocal.slide-brightness` | localStorage | A number | Keeps the viewer's brightness setting |
 | `parfocal.outline-mode` | localStorage | One of fade, mark-unsure or bands | Keeps how the review viewer shows AI confidence on outlines |
+| `parfocal.length-units` | localStorage | `auto` or `um` | Keeps whether lengths switch to mm automatically or always show in µm |
 | `parfocal.smart-hover-preview` | localStorage | `on` or `off` | Keeps whether smart select previews the outline under the pointer |
 | `parfocal.inspector-panel` | localStorage | The opaque id of the signed-in user, the side panel width, whether it is hidden and the hide while panning option | Keeps the viewer's side panel as the person left it, and keeps people on a shared workstation apart. No name or patient data |
 | `parfocal.guided-coach` | localStorage | The opaque id of the signed-in user and whether that user has dismissed the four first-time tips in guided review | Shows the tips once per user on a shared workstation, and keeps people apart. No name or patient data |

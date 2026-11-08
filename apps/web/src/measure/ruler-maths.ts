@@ -8,6 +8,7 @@ import {
   ringOf,
   type Shape,
 } from "../annotations/shapes.ts";
+import { formatMicrons, type LengthUnits } from "./length-units.ts";
 
 export type Point = { readonly x: number; readonly y: number };
 
@@ -33,13 +34,14 @@ export function rulerMicrons(segment: Segment, micronsPerPixel: number | null): 
   return slideLengthToMicrons(distance(segment.from, segment.to), micronsPerPixel);
 }
 
-export function formatRulerLength(segment: Segment, micronsPerPixel: number | null): string {
+export function formatRulerLength(
+  segment: Segment,
+  micronsPerPixel: number | null,
+  units?: LengthUnits,
+): string {
   const microns = rulerMicrons(segment, micronsPerPixel);
   if (microns === null) return `${Math.round(distance(segment.from, segment.to))} px`;
-  const tenths = Math.round(microns * 10) / 10;
-  if (tenths < 100) return `${tenths.toFixed(1)} µm`;
-  if (microns < 999.5) return `${Math.round(microns)} µm`;
-  return `${(microns / 1000).toFixed(2)} mm`;
+  return formatMicrons(microns, units);
 }
 
 export function segmentOfRuler(shape: Shape): Segment {
