@@ -1839,7 +1839,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Refs kit W10, mock §2.3.
   Size: M.
 
-- [ ] SHELL-006 · Left rail and bottom dock layouts
+- [x] SHELL-006 · Left rail and bottom dock layouts
   The rail by default. A bottom dock in the Figma UI3 style as a setting, moving the magnification bar and context bar accordingly.
   Done when visual tests cover both layouts for Review and Annotate.
   Refs kit W9, decision D6.
