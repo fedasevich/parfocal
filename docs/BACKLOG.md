@@ -3285,7 +3285,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Depends on AISEG-010.
   Size: M.
 
-- [ ] AISEG-018 · Smart select outlines without the half pixel shift
+- [x] AISEG-018 · Smart select outlines without the half pixel shift
   `smart-select.ts` adds half a pixel to points that `traceContours` already returns in continuous coordinates, so smart select outlines sit half a fitted pixel off and disagree with the AIS region pass. A 1.5 px test tolerance hides it. Drop the extra offset and tighten the test.
   Done when the smart select test checks outlines within 0.1 px of the expected ring and smart select and the region pass give the same outline for one nucleus.
   Depends on AISEG-010.
