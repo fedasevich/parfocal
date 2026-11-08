@@ -2693,7 +2693,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Depends on REPORT-004.
   Size: M.
 
-- [ ] MEAS-005 · Units setting
+- [x] MEAS-005 · Units setting
   µm and mm automatically or always µm.
   Done when tests cover both settings.
   Size: S.
