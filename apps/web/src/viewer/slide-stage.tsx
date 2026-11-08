@@ -4,7 +4,7 @@ import { InlineState } from "@parfocal/ui/components/banner";
 import { Button } from "@parfocal/ui/components/button";
 import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
 import { ToolRailButton } from "@parfocal/ui/components/tool-rail-button";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { loadSmartServices, type SmartServicesContext } from "../aiseg/smart-services.ts";
 import { type AnnotateTask, taskClassesOf } from "../annotations/annotate-task.ts";
 import { ArrowLayer } from "../annotations/arrow-layer.tsx";
@@ -45,6 +45,7 @@ import { MeasurementList } from "../measure/measurement-list.tsx";
 import { RulerLayer } from "../measure/ruler-layer.tsx";
 import { areaRoleText, areaRows } from "../screens/viewer/area-nav.ts";
 import { annotateRail } from "../screens/viewer-tools/rails.ts";
+import { useDeveloperMode } from "../shell/developer-mode.ts";
 import { readDeviceSettings } from "../shell/device-settings.ts";
 import { AnnotateTaskPanel } from "./annotate-task-panel.tsx";
 import { followLabPrefetch, labRouteOptions } from "./lab-route.ts";
@@ -67,7 +68,7 @@ import { useEngineAreaNav } from "./use-engine-area-nav.ts";
 import { useTissueScan } from "./use-tissue-scan.ts";
 import { useViewerKeys } from "./use-viewer-keys.ts";
 import { ViewedPeek } from "./viewed-peek.tsx";
-import type { ViewerEngine } from "./viewer-engine.ts";
+import type { ViewerEngine, VivRoute } from "./viewer-engine.ts";
 import { railHasTool, type SlideWorkspace, showsCountPanel, workspaceSetups } from "./workspace.ts";
 
 type Phase =
@@ -87,10 +88,13 @@ const railActions = annotateRail.flatMap((group) =>
   group.flatMap((item) => (item.action === undefined ? [] : [item.action])),
 );
 
+const LabLayer = lazy(() => import("./lab-layer.tsx"));
+
 type Session = {
   readonly engine: ViewerEngine;
   readonly module: ViewerModule;
   readonly open: SmartServicesContext["open"];
+  readonly route: VivRoute | null;
 };
 
 type Grant = {
@@ -295,6 +299,7 @@ function OpenedSlide({
   const textControl = useRef<TextControl | null>(null);
   const [phase, setPhase] = useState<Phase>({ state: "loading" });
   const [session, setSession] = useState<Session | null>(null);
+  const developerMode = useDeveloperMode();
   const [brightness, setBrightness] = useSlideBrightness();
   const chosenDevice = useMemo(() => readDeviceSettings().device, []);
   const [outlineMode, setOutlineMode] = useOutlineMode();
@@ -462,7 +467,7 @@ function OpenedSlide({
         })
         .then(() => {
           if (disposed) return;
-          setSession({ engine: viewport.engine, module: engine, open });
+          setSession({ engine: viewport.engine, module: engine, open, route: viewport.route() });
           setPhase({ state: "ready", fittedMs: performance.now() - startedAt });
         })
         .catch(fail);
@@ -508,6 +513,11 @@ function OpenedSlide({
         className="relative size-full min-h-0 bg-chrome data-[tool=polygon]:**:cursor-crosshair! data-[tool=freehand]:**:cursor-crosshair! data-[tool=rectangle]:**:cursor-crosshair! data-[tool=ellipse]:**:cursor-crosshair! data-[tool=marker]:**:cursor-crosshair! data-[tool=arrow]:**:cursor-crosshair! data-[tool=text]:**:cursor-text! data-[tool=ruler]:**:cursor-crosshair! data-[tool=comment]:**:cursor-crosshair! data-[tool=smart]:**:cursor-crosshair!"
       >
         <div ref={hostRef} data-testid="slide-host" className="absolute inset-0" />
+        {session && developerMode ? (
+          <Suspense fallback={null}>
+            <LabLayer engine={session.engine} route={session.route} />
+          </Suspense>
+        ) : null}
         {session && hostNode ? (
           <>
             <RulerLayer
