@@ -2399,7 +2399,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Refs doc 33, [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md), [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
   Size: M.
 
-- [ ] REVIEW-018 · Zones where the AI is unsure
+- [x] REVIEW-018 · Zones where the AI is unsure
   From the whole-slide cells: a grid of 128 px squares at level 0 (about 31 µm), the share of unsure nuclei per square as in POC `uncertaintyField`, squares with at least 3 nuclei and at least 30% unsure joined edge to edge, zones with fewer than 4 unsure cells dropped. Each zone keeps its cells, its unsure cells and a soft outline, and is named by the most common pair of top-two types among its unsure cells, such as "Tumor or immune", or "Models disagree" or "Possibly not cells" when those flags dominate (wording reviewed in [ADR 0194](adr/0194-confidence-display-rules-and-evidence.md)). No other description is generated. Recomputed after corrections and after the learner re-checks the slide. Thresholds are settings until AINUC results on whole slides confirm them.
   Done when unit tests on a seeded grid cover joining, dropping, naming and ranking, and a test on the mock's 929 nuclei gives two zones of 26 and 24 unsure cells and 31 scattered ones.
   Depends on AINUC-003. Refs POC [`src/segment/confidence.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/segment/confidence.ts), mock 6, [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
