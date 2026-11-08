@@ -3854,7 +3854,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when the experiments are configured and the analysis query exists.
   Size: M.
 
-- [ ] EXP-005 · In-app SUS and SEQ surveys
+- [x] EXP-005 · In-app SUS and SEQ surveys
   SEQ after defined tasks, SUS after a number of sessions, rate-limited and dismissible.
   Done when tests cover triggering and storage without PHI.
   Size: M.
