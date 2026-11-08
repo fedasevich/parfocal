@@ -4,11 +4,10 @@ import { z } from "zod";
 import { canUseDeveloperMode } from "../lab/developer-access.ts";
 import { setLabSetting, useLabSettings } from "../lab/lab-settings.ts";
 import {
-  developerSectionKeys,
-  rendererKeys,
   rendererOfDeveloperScene,
   sectionOfDeveloperScene,
 } from "../screens/developer/developer-data.ts";
+import { developerSectionKeys, rendererKeys } from "../screens/developer/developer-keys.ts";
 import { DeveloperScreen } from "../screens/developer/developer-screen.tsx";
 import { okData } from "../screens/placeholder.tsx";
 import { mockScenes } from "../screens/scenes.ts";

@@ -8,8 +8,9 @@ import { WalkBar } from "../flow-map/walk-bar.tsx";
 import { chapters, stepRole, stepWho } from "../flow-map/walkthrough.ts";
 
 export const Route = createFileRoute("/flow-map/walkthrough/$chapter")({
-  beforeLoad: ({ params }) => {
+  beforeLoad: async ({ params }) => {
     if (!import.meta.env.DEV) throw notFound();
+    const { chapters } = await import("../flow-map/walkthrough.ts");
     const index = Number(params.chapter) - 1;
     if (!Number.isInteger(index) || chapters[index] === undefined) throw notFound();
   },
