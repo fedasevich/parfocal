@@ -4,10 +4,12 @@ import { bestMask, samFrame, samImageSize, samPixels, slideToModel } from "@parf
 import {
   createFakeReader,
   createFakeSam,
+  fakeAisMaps,
   fakeBestCandidate,
   fakeDiscRadius,
   fakeOutputs,
 } from "../src/aiseg/fake-sam.ts";
+import { runRegionPass } from "../src/aiseg/region-pass.ts";
 import { nextRunId, smartRunFinished, withSmartRun } from "../src/aiseg/smart-run.ts";
 import {
   classifyPress,
@@ -159,11 +161,42 @@ describe("smart select session", () => {
     assert.equal(first?.previousLogits ?? null, null);
     const box = bounds(live?.ring ?? new Float32Array());
     const radius = fakeDiscRadius / 2;
-    assert.ok(Math.abs(box.x0 - (1000 - radius)) < 1.5, `x0 ${box.x0}`);
-    assert.ok(Math.abs(box.x1 - (1000 + radius)) < 1.5, `x1 ${box.x1}`);
-    assert.ok(Math.abs(box.y0 - (1000 - radius)) < 1.5, `y0 ${box.y0}`);
+    assert.ok(Math.abs(box.x0 - (1000 - radius)) < 0.1, `x0 ${box.x0}`);
+    assert.ok(Math.abs(box.x1 - (1000 + radius)) < 0.1, `x1 ${box.x1}`);
+    assert.ok(Math.abs(box.y0 - (1000 - radius)) < 0.1, `y0 ${box.y0}`);
     assert.equal(session.snapshot().phase, "ready");
     assert.ok((live?.confidence ?? 0) > 0.9);
+  });
+
+  it("gives the same outline as the region pass for one nucleus", async () => {
+    const { session } = open();
+    await session.press(click(1000, 1000));
+    const smart = bounds(session.snapshot().live?.ring ?? new Float32Array());
+    const reader = createFakeReader(slide);
+    const nuclei = await runRegionPass({
+      tiles: [{ centre: { x: 1000, y: 1000 }, core: "patch" }],
+      preset: "nuclei",
+      reader,
+      sam: {
+        encode: () => Promise.resolve({ ms: 1 } as never),
+        segmentAll: () =>
+          Promise.resolve({
+            maps: {
+              dims: [1, 3, 512, 512],
+              data: fakeAisMaps(512, 512, [{ x: 255.5, y: 255.5, r: fakeDiscRadius / 2 }]),
+            },
+          }),
+        drop: () => undefined,
+      },
+    });
+    assert.equal(nuclei.length, 1);
+    const region = bounds(nuclei[0]?.ring ?? new Float32Array());
+    for (const side of ["x0", "x1", "y0", "y1"] as const) {
+      assert.ok(
+        Math.abs(smart[side] - region[side]) < 0.1,
+        `${side} ${smart[side]} ${region[side]}`,
+      );
+    }
   });
 
   it("encodes a patch once and reuses it for refinement", async () => {
@@ -238,7 +271,7 @@ describe("smart select session", () => {
     assert.equal(rerun?.points.length, 1);
     assert.equal(rerun?.previousLogits ?? null, null);
     const box = bounds(session.snapshot().live?.ring ?? new Float32Array());
-    assert.ok(box.x1 < 1000 + fakeDiscRadius / 2 + 2);
+    assert.ok(box.x1 < 1000 + fakeDiscRadius / 2 + 0.1);
     await session.removeLast();
     assert.equal(session.snapshot().live, null);
     assert.equal(session.snapshot().phase, "idle");
