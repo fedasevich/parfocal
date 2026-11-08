@@ -162,6 +162,7 @@ import type {
   ThreadDetail,
   TierMapping,
   TileAccess,
+  TrackRecord,
   UploadedPart,
   UploadState,
   Validation,
@@ -200,6 +201,7 @@ import {
   ClinicalTemplate,
   Code,
   ColourBy,
+  ConfidenceBand,
   ConfidenceShown,
   Decision,
   DecisionStyle,
@@ -270,6 +272,7 @@ import {
   VerdictValue,
   ViewerPart,
   Why,
+  Withheld,
   ZoomAround,
 } from "./api.ts";
 
@@ -12340,6 +12343,50 @@ export const getListMySlidesResponseMock = (
   ...overrideResponse,
 });
 
+export const getGetMyTrackRecordResponseMock = (
+  overrideResponse: Partial<Extract<TrackRecord, object>> = {},
+): TrackRecord => ({
+  typers: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      typer: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      typer_version: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      test_time_views: faker.number.int(),
+      calibrated: faker.datatype.boolean(),
+      checked: faker.number.int(),
+      kept: faker.number.int(),
+      bands: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () => ({
+          band: faker.helpers.arrayElement(Object.values(ConfidenceBand)),
+          checked: faker.number.int(),
+          kept: faker.number.int(),
+          kept_share: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+          recorded_share: faker.helpers.arrayElement([
+            faker.number.float({ fractionDigits: 2 }),
+            null,
+          ]),
+          recorded_accuracy: faker.helpers.arrayElement([
+            faker.number.float({ fractionDigits: 2 }),
+            null,
+          ]),
+        }),
+      ),
+      unchecked_bands: faker.helpers.arrayElements(Object.values(ConfidenceBand)),
+      overall_kept_share: faker.helpers.arrayElement([
+        faker.number.float({ fractionDigits: 2 }),
+        null,
+      ]),
+      overall_withheld: faker.helpers.arrayElement([
+        faker.helpers.arrayElement(Object.values(Withheld)),
+        null,
+      ]),
+    }),
+  ),
+  ...overrideResponse,
+});
+
 export const getImportCasesResponseMock = (
   overrideResponse: Partial<Extract<ImportReport, object>> = {},
 ): ImportReport => ({
@@ -18335,6 +18382,28 @@ export const getListMySlidesMockHandler = (
   );
 };
 
+export const getGetMyTrackRecordMockHandler = (
+  overrideResponse?:
+    | TrackRecord
+    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<TrackRecord> | TrackRecord),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/me/track-record",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetMyTrackRecordResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getImportCasesMockHandler = (
   overrideResponse?:
     | ImportReport
@@ -19686,6 +19755,7 @@ export const getParfocalAPIMock = () => [
   getListMyReviewTasksMockHandler(),
   getListTasksAssignedByMeMockHandler(),
   getListMySlidesMockHandler(),
+  getGetMyTrackRecordMockHandler(),
   getImportCasesMockHandler(),
   getRequestEmergencyAccessMockHandler(),
   getGetMyAvailabilityMockHandler(),

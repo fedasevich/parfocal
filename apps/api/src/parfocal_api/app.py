@@ -82,6 +82,7 @@ from parfocal_api import (
     tenants,
     threads,
     tile_access,
+    track_record,
     training_exports,
     uploads,
     users,
@@ -258,6 +259,7 @@ def create_app(
     app.include_router(report_links.public_router)
     app.include_router(study_templates.router)
     app.include_router(my_work.router)
+    app.include_router(track_record.router)
     app.include_router(case_creation.router)
     app.include_router(case_imports.router)
     app.include_router(emergency.router)

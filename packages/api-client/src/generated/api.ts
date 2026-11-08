@@ -709,6 +709,27 @@ export interface AvailabilityChange {
   note?: ParfocalApiAvailabilityNote | null;
 }
 
+export type ConfidenceBand = (typeof ConfidenceBand)[keyof typeof ConfidenceBand];
+
+export const ConfidenceBand = {
+  confident: "confident",
+  likely: "likely",
+  unsure: "unsure",
+  doubtful: "doubtful",
+} as const;
+
+export interface BandRecord {
+  band: ConfidenceBand;
+  checked: number;
+  kept: number;
+  /** Null until the band has at least 5 checks */
+  kept_share: number | null;
+  /** Share of the typer's test set in this band, null when not measured */
+  recorded_share: number | null;
+  /** How often the typer was right in this band on its test set, null when not measured */
+  recorded_accuracy: number | null;
+}
+
 /**
  * @minLength 1
  * @maxLength 80
@@ -5065,6 +5086,34 @@ export interface TokenRequest {
   expires_in_days?: TokenDays;
 }
 
+export type Withheld = (typeof Withheld)[keyof typeof Withheld];
+
+export const Withheld = {
+  "too-few-checks": "too-few-checks",
+  "bands-unchecked": "bands-unchecked",
+  uncalibrated: "uncalibrated",
+} as const;
+
+export interface TyperRecord {
+  typer: string;
+  typer_version: string | null;
+  test_time_views: number;
+  calibrated: boolean;
+  checked: number;
+  kept: number;
+  /** Bands split the calibrated confidence the reviewer was shown, saved with each cell decision. Agree keeps the call, disagree overturns it, not sure counts as neither. */
+  bands: BandRecord[];
+  /** Bands that hold at least 5% of the typer's test set and have under 5 checks */
+  unchecked_bands: ConfidenceBand[];
+  /** The share of calls kept, weighted by the typer's recorded band shares rather than by the calls the queue happened to show. Withheld until at least 20 calls are checked and every band holding at least 5% of the typer's test set has at least 5 checks. Always withheld for a typer with no recorded calibration. */
+  overall_kept_share: number | null;
+  overall_withheld: Withheld | null;
+}
+
+export interface TrackRecord {
+  typers: TyperRecord[];
+}
+
 export interface UploadMetadata {
   project_id: string;
   case_id?: string | null;
@@ -5518,6 +5567,10 @@ export type ListMySlidesParams = {
    * @maximum 200
    */
   limit?: number;
+};
+
+export type GetMyTrackRecordParams = {
+  project_id?: string | null;
 };
 
 export type ListAuditEventsParams = {
@@ -46739,6 +46792,204 @@ export function useListMySlides<TData = Awaited<ReturnType<typeof listMySlides>>
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getListMySlidesQueryOptions(params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type getMyTrackRecordResponse200 = {
+  data: TrackRecord;
+  status: 200;
+};
+
+export type getMyTrackRecordResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getMyTrackRecordResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getMyTrackRecordResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getMyTrackRecordResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getMyTrackRecordResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getMyTrackRecordResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getMyTrackRecordResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getMyTrackRecordResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getMyTrackRecordResponseSuccess = getMyTrackRecordResponse200 & {
+  headers: Headers;
+};
+export type getMyTrackRecordResponseError = (
+  | getMyTrackRecordResponse400
+  | getMyTrackRecordResponse401
+  | getMyTrackRecordResponse403
+  | getMyTrackRecordResponse404
+  | getMyTrackRecordResponse409
+  | getMyTrackRecordResponse422
+  | getMyTrackRecordResponse429
+  | getMyTrackRecordResponse500
+) & {
+  headers: Headers;
+};
+
+export type getMyTrackRecordResponse =
+  | getMyTrackRecordResponseSuccess
+  | getMyTrackRecordResponseError;
+
+export const getGetMyTrackRecordUrl = (params?: GetMyTrackRecordParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/me/track-record?${stringifiedParams}`
+    : `/api/me/track-record`;
+};
+
+/**
+ * @summary Get My Track Record
+ */
+export const getMyTrackRecord = async (
+  params?: GetMyTrackRecordParams,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getMyTrackRecordResponse> => {
+  return apiFetch<getMyTrackRecordResponse>(getGetMyTrackRecordUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetMyTrackRecordQueryKey = (params?: GetMyTrackRecordParams) => {
+  return [`/api/me/track-record`, ...(params ? [params] : [])] as const;
+};
+
+export const getGetMyTrackRecordQueryOptions = <
+  TData = Awaited<ReturnType<typeof getMyTrackRecord>>,
+  TError = Problem,
+>(
+  params?: GetMyTrackRecordParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyTrackRecord>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetMyTrackRecordQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getMyTrackRecord>>> = ({ signal }) =>
+    getMyTrackRecord(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getMyTrackRecord>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetMyTrackRecordQueryResult = NonNullable<Awaited<ReturnType<typeof getMyTrackRecord>>>;
+export type GetMyTrackRecordQueryError = Problem;
+
+export function useGetMyTrackRecord<
+  TData = Awaited<ReturnType<typeof getMyTrackRecord>>,
+  TError = Problem,
+>(
+  params: undefined | GetMyTrackRecordParams,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyTrackRecord>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMyTrackRecord>>,
+          TError,
+          Awaited<ReturnType<typeof getMyTrackRecord>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetMyTrackRecord<
+  TData = Awaited<ReturnType<typeof getMyTrackRecord>>,
+  TError = Problem,
+>(
+  params?: GetMyTrackRecordParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyTrackRecord>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMyTrackRecord>>,
+          TError,
+          Awaited<ReturnType<typeof getMyTrackRecord>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetMyTrackRecord<
+  TData = Awaited<ReturnType<typeof getMyTrackRecord>>,
+  TError = Problem,
+>(
+  params?: GetMyTrackRecordParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyTrackRecord>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get My Track Record
+ */
+
+export function useGetMyTrackRecord<
+  TData = Awaited<ReturnType<typeof getMyTrackRecord>>,
+  TError = Problem,
+>(
+  params?: GetMyTrackRecordParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyTrackRecord>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetMyTrackRecordQueryOptions(params, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;

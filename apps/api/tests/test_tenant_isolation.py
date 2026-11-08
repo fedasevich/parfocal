@@ -695,6 +695,22 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
     )
     seeded.markers.add(verdict_note)
     await connection.execute(
+        insert(verdicts).values(
+            tenant_id=seeded.tenant_id,
+            project_id=case.project_id,
+            task_id=task_id,
+            slide_id=case.loose_slide_id,
+            user_id=seeded.ids["user"],
+            kind="cell",
+            number=1,
+            value="agree",
+            style="agree",
+            answer="agree",
+            ai_class_id=class_id,
+            ai_score=230,
+        )
+    )
+    await connection.execute(
         insert(review_skips).values(
             tenant_id=seeded.tenant_id,
             project_id=case.project_id,
@@ -1446,6 +1462,7 @@ GET_ROUTES = {
         Exposure.TENANT, lambda a: f"/api/projects/{a.ids['project']}/review-tasks"
     ),
     "listMyReviewTasks": Route(Exposure.TENANT, lambda _: "/api/me/review-tasks"),
+    "getMyTrackRecord": Route(Exposure.TENANT, lambda _: "/api/me/track-record"),
     "listTasksAssignedByMe": Route(Exposure.TENANT, lambda _: "/api/me/assigned-tasks"),
     "listMySlides": Route(Exposure.TENANT, lambda _: "/api/me/slides"),
     "getTaskEvaluation": Route(

@@ -87,6 +87,13 @@ BAND_CUTOFFS: tuple[tuple[ConfidenceBand, float], ...] = (
 )
 
 
+def band_at(probability: float) -> ConfidenceBand:
+    for band, lowest in BAND_CUTOFFS:
+        if probability >= lowest:
+            return band
+    return BAND_CUTOFFS[-1][0]
+
+
 @dataclass(frozen=True)
 class TyperBand:
     band: ConfidenceBand

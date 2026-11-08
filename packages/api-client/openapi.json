@@ -30774,6 +30774,135 @@
         "x-permission": "see-slides"
       }
     },
+    "/api/me/track-record": {
+      "get": {
+        "tags": [
+          "me"
+        ],
+        "summary": "Get My Track Record",
+        "operationId": "getMyTrackRecord",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrackRecord"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Sign in to continue"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "You do not have access to this"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "This changed since you loaded it"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Too many requests, try again shortly"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Something went wrong"
+          }
+        },
+        "x-permission": "review"
+      }
+    },
     "/api/projects/{project_id}/case-imports": {
       "post": {
         "tags": [
@@ -38439,6 +38568,67 @@
         ],
         "title": "AvailabilityChange"
       },
+      "BandRecord": {
+        "properties": {
+          "band": {
+            "$ref": "#/components/schemas/ConfidenceBand"
+          },
+          "checked": {
+            "type": "integer",
+            "title": "Checked"
+          },
+          "kept": {
+            "type": "integer",
+            "title": "Kept"
+          },
+          "kept_share": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kept Share",
+            "description": "Null until the band has at least 5 checks"
+          },
+          "recorded_share": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recorded Share",
+            "description": "Share of the typer's test set in this band, null when not measured"
+          },
+          "recorded_accuracy": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recorded Accuracy",
+            "description": "How often the typer was right in this band on its test set, null when not measured"
+          }
+        },
+        "type": "object",
+        "required": [
+          "band",
+          "checked",
+          "kept",
+          "kept_share",
+          "recorded_share",
+          "recorded_accuracy"
+        ],
+        "title": "BandRecord"
+      },
       "BlockClassName": {
         "type": "string",
         "maxLength": 80,
@@ -40433,6 +40623,16 @@
           "parts"
         ],
         "title": "Completion"
+      },
+      "ConfidenceBand": {
+        "type": "string",
+        "enum": [
+          "confident",
+          "likely",
+          "unsure",
+          "doubtful"
+        ],
+        "title": "ConfidenceBand"
       },
       "ConfidenceShown": {
         "type": "string",
@@ -54750,6 +54950,109 @@
         "type": "object",
         "title": "TokenRequest"
       },
+      "TrackRecord": {
+        "properties": {
+          "typers": {
+            "items": {
+              "$ref": "#/components/schemas/TyperRecord"
+            },
+            "type": "array",
+            "title": "Typers"
+          }
+        },
+        "type": "object",
+        "required": [
+          "typers"
+        ],
+        "title": "TrackRecord"
+      },
+      "TyperRecord": {
+        "properties": {
+          "typer": {
+            "type": "string",
+            "title": "Typer"
+          },
+          "typer_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Typer Version"
+          },
+          "test_time_views": {
+            "type": "integer",
+            "title": "Test Time Views"
+          },
+          "calibrated": {
+            "type": "boolean",
+            "title": "Calibrated"
+          },
+          "checked": {
+            "type": "integer",
+            "title": "Checked"
+          },
+          "kept": {
+            "type": "integer",
+            "title": "Kept"
+          },
+          "bands": {
+            "items": {
+              "$ref": "#/components/schemas/BandRecord"
+            },
+            "type": "array",
+            "title": "Bands",
+            "description": "Bands split the calibrated confidence the reviewer was shown, saved with each cell decision. Agree keeps the call, disagree overturns it, not sure counts as neither."
+          },
+          "unchecked_bands": {
+            "items": {
+              "$ref": "#/components/schemas/ConfidenceBand"
+            },
+            "type": "array",
+            "title": "Unchecked Bands",
+            "description": "Bands that hold at least 5% of the typer's test set and have under 5 checks"
+          },
+          "overall_kept_share": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Overall Kept Share",
+            "description": "The share of calls kept, weighted by the typer's recorded band shares rather than by the calls the queue happened to show. Withheld until at least 20 calls are checked and every band holding at least 5% of the typer's test set has at least 5 checks. Always withheld for a typer with no recorded calibration."
+          },
+          "overall_withheld": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Withheld"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "typer",
+          "typer_version",
+          "test_time_views",
+          "calibrated",
+          "checked",
+          "kept",
+          "bands",
+          "unchecked_bands",
+          "overall_kept_share",
+          "overall_withheld"
+        ],
+        "title": "TyperRecord"
+      },
       "UncheckedExport": {
         "type": "string",
         "enum": [
@@ -55597,6 +55900,15 @@
           "second-look"
         ],
         "title": "Why"
+      },
+      "Withheld": {
+        "type": "string",
+        "enum": [
+          "too-few-checks",
+          "bands-unchecked",
+          "uncalibrated"
+        ],
+        "title": "Withheld"
       },
       "Words": {
         "type": "string",
