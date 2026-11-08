@@ -3764,7 +3764,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when API tests cover filters, bulk read, muting and tenant isolation.
   Depends on NOTIF-006. Refs kit W53, [ADR 0119](adr/0119-inbox-mutes-for-projects-tasks-and-cases.md) (inbox mutes), which widened the case mute to projects and tasks since [ADR 0053](adr/0053-ai-results-review-direction.md) made cases optional.
 
-- [ ] NOTIF-008 · Hold notifications while reading
+- [x] NOTIF-008 · Hold notifications while reading
   While a person has a slide open, notifications are stored but nothing interrupts them: no toast, banner or sound, mentions included. When they leave the slide, what arrived is released in order. The client reports when a slide is opened and closed, and a stale report expires after the lab idle time.
   Done when tests deliver events while a slide is open and prove nothing is pushed until the slide closes, then everything arrives in order, and an expired open state releases them.
   Depends on NOTIF-001, COLLAB-007. Refs ADR 0023.
