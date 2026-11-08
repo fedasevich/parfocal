@@ -37,6 +37,8 @@ import { SlideViewers, useProjectViewers } from "../../presence/viewing-now.tsx"
 import { okData } from "../placeholder.tsx";
 import { CaseSlidesEditor } from "./case-slides-editor.tsx";
 import { usePeople } from "./people.ts";
+import { SlideMoveDialog } from "./slide-move-dialog.tsx";
+import { moveTitle } from "./slide-move-model.ts";
 
 type ProjectSlide = SlideRowData & {
   file: string;
@@ -140,6 +142,7 @@ export function SlidesTab({
   const sets = okData(useListProjectResultSets(project.id).data) ?? [];
   const [shut, setShut] = useState<Record<string, boolean>>({});
   const [editing, setEditing] = useState<{ id: string; label: string } | undefined>();
+  const [moving, setMoving] = useState<ProjectSlide | undefined>();
   const caseList = okData(useListCases({ project_id: project.id }).data) ?? [];
   const caseIdOf = (label: string) => caseList.find((item) => item.label === label)?.id;
   const owner = project.my_role === "owner";
@@ -253,6 +256,7 @@ export function SlidesTab({
                           viewers={viewersOf(slide.id)}
                           expanded={open === slide.id}
                           toast={toast}
+                          onMove={owner ? () => setMoving(slide) : undefined}
                         />
                       ))
                     : null}
@@ -279,6 +283,17 @@ export function SlidesTab({
           </TableBody>
         </Table>
       </div>
+      {moving ? (
+        <SlideMoveDialog
+          key={moving.id}
+          projectId={project.id}
+          slideId={moving.id}
+          slideTitle={slideTitle(moving)}
+          caseLabel={moving.case_label}
+          toast={toast}
+          onClose={() => setMoving(undefined)}
+        />
+      ) : null}
       {editing ? (
         <CaseSlidesEditor
           caseId={editing.id}
@@ -297,6 +312,7 @@ function SlideRow({
   viewers,
   expanded,
   toast,
+  onMove,
 }: {
   project: Project;
   slide: ProjectSlide;
@@ -304,6 +320,7 @@ function SlideRow({
   viewers: string[];
   expanded: boolean;
   toast: (message: ReactNode) => void;
+  onMove: (() => void) | undefined;
 }) {
   const navigate = useNavigate();
   const people = usePeople();
@@ -414,6 +431,19 @@ function SlideRow({
           )}
         </TableCell>
         <TableCell className="w-px text-right whitespace-nowrap">
+          {onMove ? (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="mr-1"
+              onClick={(event) => {
+                event.stopPropagation();
+                onMove();
+              }}
+            >
+              {moveTitle(slide.case_label !== null)}
+            </Button>
+          ) : null}
           <Button size="sm" onClick={open}>
             Open
           </Button>
