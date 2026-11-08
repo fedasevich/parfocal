@@ -24,6 +24,7 @@ import { usePeople } from "../people.ts";
 import { okData } from "../placeholder.tsx";
 import { type ReviewConfidence, reviewConfidence } from "./ai-wording.ts";
 import { useAnswerKeys } from "./answer-keys.ts";
+import { CellCountChip, useCellCount } from "./cell-count-chip.tsx";
 import { CellsGrid } from "./cells-grid.tsx";
 import { useSetName } from "./cells-on-slide.tsx";
 import {
@@ -454,6 +455,7 @@ function GuidedBody({
     cells.map((cell) => [cell.object, answer(cell.object)?.value]),
   );
   const openCells = cells.filter((cell) => !answer(cell.object));
+  const cellCount = useCellCount(cells, answer);
   const view: StillView =
     whole || showDone || noResults
       ? { kind: "whole" }
@@ -840,6 +842,12 @@ function GuidedBody({
                     setShowDone(false);
                     jump("cells");
                   }}
+                />
+              ) : null}
+              {cellCount && current?.kind === "cell" && !showDone && !noResults ? (
+                <CellCountChip
+                  result={cellCount}
+                  className="absolute top-4 left-1/2 -translate-x-1/2"
                 />
               ) : null}
               {current?.kind === "cell" && !showDone && !noResults ? (
