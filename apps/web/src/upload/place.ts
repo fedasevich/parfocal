@@ -111,7 +111,7 @@ export function compareSorting(input: PlaceInput, server: Sorting): SortDifferen
       differences.push({
         path: slide.path,
         browser: caseText(browser),
-        server: "Left out, it is already in the project",
+        server: "Skipped, already in this project",
       });
       return;
     }

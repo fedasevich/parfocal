@@ -40252,7 +40252,8 @@
           "waiting",
           "processing",
           "ready",
-          "failed"
+          "failed",
+          "skipped"
         ],
         "title": "IngestStatus"
       },

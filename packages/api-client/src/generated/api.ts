@@ -2233,6 +2233,7 @@ export const IngestStatus = {
   processing: "processing",
   ready: "ready",
   failed: "failed",
+  skipped: "skipped",
 } as const;
 
 /**
