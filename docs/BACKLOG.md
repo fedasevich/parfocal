@@ -2868,7 +2868,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Done when tests cover cursor mapping with offsets.
   Size: S.
 
-- [ ] CMP-004 · Pane slide picker
+- [x] CMP-004 · Pane slide picker
   Each pane is labelled Left or Right with a chip naming its slide. The chip opens a list of the case's slides. Picking the slide shown on the other side swaps the two. The inspector repeats the two slots with Change buttons and Swap sides.
   Done when E2E puts A2 next to A1 from a pane chip and from the inspector, and a test confirms the swap rule.
   Refs kit W14, [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md).
