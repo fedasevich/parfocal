@@ -37,6 +37,7 @@ class AuditAction(StrEnum):
     USER_SIGNED_IN = "user.signed-in"
     USER_SIGNED_OUT = "user.signed-out"
     SESSIONS_ENDED = "user.sessions-ended"
+    PROFILE_CHANGED = "user.profile-changed"
     SESSION_POLICY_CHANGED = "tenant.session-policy-changed"
     SECURITY_CONTACT_CHANGED = "tenant.security-contact-changed"
     CASE_OPENED = "case.opened"
@@ -115,6 +116,7 @@ class AuditAction(StrEnum):
     THREAD_RESOLVED = "thread.resolved"
     THREAD_REOPENED = "thread.reopened"
     THREAD_DELETED = "thread.deleted"
+    THREAD_MOVED = "thread.moved"
     AUDIT_EXPORTED = "audit.exported"
     SERVICE_ACCOUNT_CREATED = "service-account.created"
     SERVICE_ACCOUNT_DISABLED = "service-account.disabled"
@@ -132,6 +134,8 @@ class AuditAction(StrEnum):
     MODEL_TIER_RESET = "model-tier.reset"
     MODEL_HIDDEN = "model.hidden"
     MODEL_SHOWN = "model.shown"
+    LAB_MODEL_TESTED = "lab-model.tested"
+    LAB_MODEL_CONNECTED = "lab-model.connected"
     RETENTION_POLICY_SET = "retention.policy-set"
     RETENTION_PURGED = "retention.purged"
     LEGAL_HOLD_PLACED = "legal-hold.placed"
@@ -183,6 +187,7 @@ class AuditTarget(StrEnum):
     DISPLAY_PRESET = "display-preset"
     REPORT_LINK = "report-link"
     CLINICAL_REPORT = "clinical-report"
+    LAB_MODEL = "lab-model"
 
 
 @dataclass(frozen=True)

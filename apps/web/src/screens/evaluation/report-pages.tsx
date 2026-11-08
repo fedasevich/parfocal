@@ -271,6 +271,8 @@ function BlockBody({
           decimals={decimals}
         />
       );
+    case "ai-changes":
+      return <Empty>Only an annotate task counts how the experts changed the AI.</Empty>;
   }
 }
 

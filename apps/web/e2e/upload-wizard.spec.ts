@@ -324,3 +324,26 @@ test("a folder dropped on a project is sorted, an unmatched result is placed, an
   expect(linkedTo("tumor_031_prob.png")).toBe(idOf("tumor_031.tif")?.uploadId);
   expect(linkedTo("mystery_heatmap.png")).toBe(idOf("tumor_031.tif")?.uploadId);
 });
+
+test("a slide opens from the upload while its results are still being placed", async ({ page }) => {
+  await fakeStorage(page, false);
+  await page.goto(`/projects/${p07}`);
+  await expect(page.getByTestId("project-page")).toBeVisible();
+  await dropTree(page, '[data-testid="project-page"]', batch);
+  await expect(page.getByTestId("not-matched")).toBeVisible();
+  await page.getByTestId("not-matched").getByRole("combobox", { name: "Choose a slide" }).click();
+  await page.getByRole("option", { name: "P07-upload/tumor_031.tif" }).click();
+  await page.getByTestId("upload-next").click();
+  await page.getByTestId("start-upload").click();
+  await expect(page.getByTestId("upload-page")).toHaveAttribute("data-scene", "progress");
+
+  const row = page.getByTestId("upload-file-row").filter({ hasText: "A1_HE.svs" });
+  await row.getByRole("button", { name: /processing steps/ }).click();
+  await expect(row.getByText("Tiles built")).toBeVisible();
+  await expect(row.getByText("Results read")).toBeVisible();
+  const open = row.getByRole("button", { name: "Open now with what is ready" });
+  await expect(open).toBeVisible({ timeout: 20_000 });
+  await expect(row).toHaveAttribute("data-ingest", "processing");
+  await open.click();
+  await expect(page).toHaveURL(/\/slides\//);
+});

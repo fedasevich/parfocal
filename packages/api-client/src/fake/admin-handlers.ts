@@ -1,4 +1,5 @@
 import { HttpResponse, http, type RequestHandler } from "msw";
+import { workspaceAnsweredSchema, workspaceAnswerSchema } from "../draft/answer-workspace.ts";
 import { type AdminOverview, adminOverviewSchema } from "../draft/get-admin-overview.ts";
 import { type InvitePreview, invitePreviewSchema } from "../draft/get-invite-preview.ts";
 import { type SecuritySettings, securitySettingsSchema } from "../draft/get-security-settings.ts";
@@ -16,6 +17,7 @@ import {
   getChangeMemberRoleMockHandler,
   getCreateInvitationMockHandler,
   getCreateStudyTemplateMockHandler,
+  getExportAuditEventsMockHandler,
   getGetCurrentTenantMockHandler,
   getGetSessionPolicyMockHandler,
   getInviteTaskReviewerMockHandler,
@@ -30,6 +32,7 @@ import {
 import type {
   AcceptedInvitation,
   AuditEvent,
+  AuditExport,
   Invitation,
   InvitationDraft,
   Member,
@@ -364,7 +367,7 @@ const toAuditEvents = (): AuditEvent[] =>
       id: auditEventId(index),
       tenant_id: tenant.id,
       seq: 1000 - index,
-      occurred_at: auditAt(row.time),
+      occurred_at: auditAt(row.time, row.day),
       actor_kind: person ? "member" : "service",
       actor_id: person?.id ?? null,
       actor_subject: person?.name ?? "Webhook",
@@ -377,6 +380,55 @@ const toAuditEvents = (): AuditEvent[] =>
       hash: `h${index}`,
     };
   });
+
+const auditMatches = (event: AuditEvent, query: URLSearchParams) => {
+  const person = query.get("person");
+  const project = query.get("project_id");
+  const actions = query.getAll("action");
+  const prefix = query.get("action_prefix");
+  const since = query.get("since");
+  const until = query.get("until");
+  const at = Date.parse(event.occurred_at);
+  return (
+    (person === null || event.actor_id === person) &&
+    (project === null || (event.target_type === "project" && event.target_id === project)) &&
+    (actions.length === 0 || actions.includes(event.action)) &&
+    (prefix === null || event.action.startsWith(prefix)) &&
+    (since === null || at >= Date.parse(since)) &&
+    (until === null || at < Date.parse(until))
+  );
+};
+
+const filteredAuditEvents = (url: string) => {
+  const query = new URL(url).searchParams;
+  return toAuditEvents().filter((event) => auditMatches(event, query));
+};
+
+const toAuditExport = (url: string): AuditExport => {
+  const query = new URL(url).searchParams;
+  const events = filteredAuditEvents(url);
+  const filters = Object.fromEntries(
+    [...new Set(query.keys())].map((key) => [
+      key,
+      key === "action" ? query.getAll(key) : query.get(key),
+    ]),
+  );
+  const head = toAuditEvents()[0];
+  return {
+    format: "parfocal-audit-export",
+    version: 1,
+    tenant_id: tenant.id,
+    generated_at: scenarioNow,
+    filters,
+    chain_head: head ? { seq: head.seq, hash: head.hash } : null,
+    events: events.map((event) => ({ ...event, emergency: false, reason: null })),
+    signature: {
+      algorithm: "Ed25519",
+      key_id: "fake-master:audit-v1",
+      value: "ZmFrZS1zaWduYXR1cmU",
+    },
+  };
+};
 
 const toServiceAccounts = (): ServiceAccount[] =>
   serviceAccounts.map((account) => ({
@@ -503,7 +555,8 @@ export function adminHandlers(): RequestHandler[] {
       withdrawn.add(new URL(request.url).pathname.split("/").at(-1) ?? "");
     }),
     getListMemberActivityMockHandler(() => toMemberActivity()),
-    getListAuditEventsMockHandler(() => toAuditEvents()),
+    getListAuditEventsMockHandler(({ request }) => filteredAuditEvents(request.url)),
+    getExportAuditEventsMockHandler(({ request }) => toAuditExport(request.url)),
     getListServiceAccountsMockHandler(() => toServiceAccounts()),
     getGetSessionPolicyMockHandler(() => toSessionPolicy()),
     getGetCurrentTenantMockHandler(() => toTenant()),
@@ -587,7 +640,24 @@ export const getRequestProjectAccessMockHandler = (overrideResponse?: AccessRequ
     );
   });
 
+export const getAnswerWorkspaceMockHandler = () =>
+  http.post("*/api/me/workspace-answers", async ({ request }) => {
+    const answer = workspaceAnswerSchema.parse(await request.json());
+    return HttpResponse.json(
+      workspaceAnsweredSchema.parse({
+        workspace_id: answer.workspace_id,
+        state: answer.how === "join" ? "joined" : "requested",
+      }),
+    );
+  });
+
 export const adminDraftOperations: DraftOperation[] = [
+  {
+    operationId: "answerWorkspace",
+    method: "post",
+    path: "/api/me/workspace-answers",
+    handler: () => getAnswerWorkspaceMockHandler(),
+  },
   {
     operationId: "getAdminOverview",
     method: "get",

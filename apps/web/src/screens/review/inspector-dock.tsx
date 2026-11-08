@@ -1,4 +1,6 @@
+import { BottomSheet } from "@parfocal/ui/components/bottom-sheet";
 import { TabCount } from "@parfocal/ui/components/tabs";
+import type { SheetHeight, SheetPixels } from "@parfocal/ui/lib/sheet-gesture";
 import { cn } from "@parfocal/ui/lib/utils";
 import { type KeyboardEvent, type PointerEvent, type ReactNode, useRef, useState } from "react";
 import {
@@ -7,6 +9,7 @@ import {
   inspectorMaxWidth,
   inspectorMinWidth,
 } from "./inspector-layout.ts";
+import { useCoarsePointer } from "./use-coarse-pointer.ts";
 
 type InspectorDockProps = {
   layout: InspectorLayout;
@@ -18,6 +21,17 @@ type InspectorDockProps = {
 };
 
 const keyStep = 20;
+
+const peekPixels = 88;
+
+function sheetPixels(): SheetPixels {
+  const available = window.innerHeight;
+  return {
+    peek: peekPixels,
+    half: Math.round(available * 0.4),
+    full: Math.round(available * 0.85),
+  };
+}
 
 export function InspectorDock({
   layout,
@@ -31,6 +45,8 @@ export function InspectorDock({
   const edge = useRef<number>(0);
   const width = dragWidth ?? layout.width;
   const collapsed = dragWidth !== null && dragWidth < 220;
+  const coarse = useCoarsePointer();
+  const [sheetHeight, setSheetHeight] = useState<SheetHeight>("peek");
 
   if (layout.hidden) {
     return (
@@ -44,6 +60,28 @@ export function InspectorDock({
         <span>{tabLabel}</span>
         {tabCount ? <TabCount>{tabCount}</TabCount> : null}
       </button>
+    );
+  }
+
+  if (coarse) {
+    return (
+      <BottomSheet
+        label="Side panel"
+        height={sheetHeight}
+        onHeightChange={setSheetHeight}
+        pixels={sheetPixels()}
+      >
+        <div
+          data-testid="inspector-dock"
+          className="flex min-h-full min-w-0 flex-col [&>aside]:w-full! [&>aside]:flex-1"
+        >
+          <div className="flex items-center gap-1.5 px-4 pb-2 text-body-sm font-semibold">
+            <span>{tabLabel}</span>
+            {tabCount ? <TabCount>{tabCount}</TabCount> : null}
+          </div>
+          {children}
+        </div>
+      </BottomSheet>
     );
   }
 

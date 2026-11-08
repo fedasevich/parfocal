@@ -3,6 +3,8 @@ import { test } from "node:test";
 import type { LabSettings } from "@parfocal/api-client";
 import { toModelTiers } from "@parfocal/api-client/fake";
 import {
+  analyticsPolicyChange,
+  analyticsPolicyOf,
   defaultChange,
   defaultsOf,
   durationText,
@@ -154,4 +156,13 @@ test("a security contact is one trimmed lowercase email address", () => {
   for (const text of ["", "breach", "a@b", "two words@hospital.example", tooLong]) {
     assert.equal(isSecurityContact(text), false, text);
   }
+});
+
+test("the analytics policy is each person until the lab picks, and keeps the lab locks", () => {
+  assert.equal(analyticsPolicyOf({ values: {}, locked: [] }), "person");
+  assert.equal(analyticsPolicyOf({ values: { analytics_policy: "off" }, locked: [] }), "off");
+  assert.deepEqual(analyticsPolicyChange(lab, "on"), {
+    values: { analytics_policy: "on" },
+    locked: ["lock_after_minutes"],
+  });
 });

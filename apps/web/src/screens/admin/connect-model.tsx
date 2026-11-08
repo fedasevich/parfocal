@@ -1,9 +1,12 @@
 import {
   type LabModelConnection,
+  type LabModelTest,
+  type Problem,
   useConnectLabModel,
   useGetLabModelConnection,
   useListProjects,
   useListTaxonomyTemplates,
+  useTestLabModel,
 } from "@parfocal/api-client";
 import { InlineError } from "@parfocal/ui/components/banner";
 import { Button } from "@parfocal/ui/components/button";
@@ -77,6 +80,57 @@ function startForm(data: LabModelConnection): Form {
     whoCanRun: data.who_can_run,
     projectIds: data.project_ids,
   };
+}
+
+const blankConnection: LabModelConnection = {
+  address: "",
+  host: "",
+  sign_in: "token",
+  last_four: "",
+  tile_size: 512,
+  magnification: 40,
+  tiles_at_once: 4,
+  health_check_minutes: 5,
+  taxonomy: "sentinel-node",
+  who_can_run: "admins",
+  project_ids: [],
+  test: {
+    outcome: "untested",
+    sample_slide: "the Parfocal sample tile",
+    returns: [],
+    answered_ms: null,
+    server_software: null,
+    tiles: [],
+    missing_geometry: 0,
+    model: null,
+    classes: [],
+  },
+};
+
+const typedSecrets = new Map<string, string>();
+
+const headerPattern = /^\s*([A-Za-z0-9][A-Za-z0-9-]*)\s*:\s*(.+)$/;
+
+function signInOf(form: Form) {
+  const secret = form.secret.trim();
+  if (form.signIn === "none") return { sign_in: form.signIn, secret: null, header_name: null };
+  if (form.signIn === "token") return { sign_in: form.signIn, secret: secret || null };
+  const named = headerPattern.exec(secret);
+  return {
+    sign_in: form.signIn,
+    header_name: named?.[1] ?? null,
+    secret: (named?.[2] ?? secret) || null,
+  };
+}
+
+const runnerLabels: Record<WhoCanRun, string> = {
+  admins: "People with admin rights",
+  researchers: "Researchers",
+};
+
+function problemText(data: unknown, fallback: string) {
+  const problem = data as Problem | undefined;
+  return problem?.detail ?? problem?.title ?? fallback;
 }
 
 const plural = (count: number, word: string) => `${count} ${word}${count === 1 ? "" : "s"}`;
@@ -207,7 +261,17 @@ function ConnectModelBody({
   notify,
 }: Props & { owner: string | undefined }) {
   const query = useGetLabModelConnection();
-  const data = query.data?.data;
+  const [tested, setTested] = useState<LabModelTest | null>(null);
+  const secretKey = owner ?? "anonymous";
+  const [secret, setSecretState] = useState(() => typedSecrets.get(secretKey) ?? "");
+  const setSecret = (next: string) => {
+    typedSecrets.set(secretKey, next);
+    setSecretState(next);
+  };
+  const testCall = useTestLabModel();
+  const loaded = query.data?.status === 200 ? query.data.data : undefined;
+  const base = loaded ?? (query.isError || query.data !== undefined ? blankConnection : undefined);
+  const data = base && tested ? { ...base, test: tested } : base;
   const page = scene === "addmap" ? 1 : 0;
   const flow = useKeptFlow<Form | null>({
     owner,
@@ -249,11 +313,15 @@ function ConnectModelBody({
     );
   }
   const done = () => {
+    typedSecrets.delete(secretKey);
     flow.forget();
     onDone();
   };
-  const current = form ?? startForm(data);
-  const update = (change: Partial<Form>) => setForm({ ...current, ...change });
+  const current = { ...(form ?? startForm(data)), secret };
+  const update = (change: Partial<Form>) => {
+    if (change.secret !== undefined) setSecret(change.secret);
+    setForm({ ...current, ...change });
+  };
   const steps = [
     { label: "Connect and test" },
     {
@@ -330,9 +398,35 @@ function ConnectModelBody({
             update={update}
             tile={tile}
             setTile={setTile}
+            testing={testCall.isPending}
             onTest={() => {
-              setTile(0);
-              onScene("addtested");
+              testCall.mutate(
+                {
+                  data: {
+                    address: current.address.trim(),
+                    ...signInOf(current),
+                    tile_size: current.tileSize as 256 | 512 | 1024,
+                    magnification: current.magnification as 10 | 20 | 40,
+                    taxonomy: current.taxonomy as "sentinel-node" | "pannuke",
+                  },
+                },
+                {
+                  onSuccess: (answer) => {
+                    if (answer.status !== 200) {
+                      notify(problemText(answer.data, "The server could not be tested."));
+                      return;
+                    }
+                    setTested(answer.data);
+                    const named = answer.data.model;
+                    if (named && current.name.trim() === "" && current.version.trim() === "") {
+                      update({ name: named.name, version: named.version });
+                    }
+                    setTile(0);
+                    onScene(answer.data.outcome === "follows-contract" ? "addtested" : "addfail");
+                  },
+                  onError: () => notify("The server could not be tested. Try again."),
+                },
+              );
             }}
             onContract={() => onContract(true)}
           />
@@ -359,6 +453,7 @@ function ConnectStep({
   update,
   tile,
   setTile,
+  testing,
   onTest,
   onContract,
 }: {
@@ -367,6 +462,7 @@ function ConnectStep({
   update: (change: Partial<Form>) => void;
   tile: number;
   setTile: (index: number) => void;
+  testing: boolean;
   onTest: () => void;
   onContract: () => void;
 }) {
@@ -504,7 +600,11 @@ function ConnectStep({
             </>
           ) : null}
           <div className="flex items-center gap-3">
-            <Button variant={passed || failed ? "default" : "primary"} onClick={onTest}>
+            <Button
+              variant={passed || failed ? "default" : "primary"}
+              disabled={testing || form.address.trim() === ""}
+              onClick={onTest}
+            >
               {passed || failed ? "Test again" : "Test connection"}
             </Button>
             {passed && test.tiles.length > 1 ? (
@@ -770,11 +870,11 @@ function MapBar({
                 data: {
                   name: form.name.trim(),
                   version: form.version.trim(),
-                  address: form.address,
-                  sign_in: form.signIn,
-                  tile_size: form.tileSize,
-                  magnification: form.magnification,
-                  taxonomy: form.taxonomy,
+                  address: form.address.trim(),
+                  ...signInOf(form),
+                  tile_size: form.tileSize as 256 | 512 | 1024,
+                  magnification: form.magnification as 10 | 20 | 40,
+                  taxonomy: form.taxonomy as "sentinel-node" | "pannuke",
                   class_map: Object.entries(map).map(([sent, becomes]) => ({
                     sent,
                     becomes: becomes === leaveOut ? null : becomes,
@@ -784,9 +884,16 @@ function MapBar({
                 },
               },
               {
-                onSuccess: ({ data: model }) => {
+                onSuccess: (answer) => {
+                  if (answer.status !== 201) {
+                    notify(problemText(answer.data, "The model could not be added. Try again."));
+                    return;
+                  }
+                  const model = answer.data;
                   onDone();
-                  notify(`${model.name} ${model.version} added. ${model.who_can_run} can run it.`);
+                  notify(
+                    `${model.name} ${model.version} added. ${runnerLabels[model.who_can_run]} can run it.`,
+                  );
                 },
                 onError: () => notify("The model could not be added. Try again."),
               },

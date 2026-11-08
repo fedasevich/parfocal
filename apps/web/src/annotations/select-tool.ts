@@ -10,6 +10,7 @@ import {
   shapesInExtent,
 } from "./hit-test.ts";
 import { groupShapes, ungroupShapes } from "./layers.ts";
+import { pinAt, pinsInExtent, shiftPins } from "./pins.ts";
 import {
   canInsertVertex,
   canRemoveVertex,
@@ -49,6 +50,7 @@ export type Hover =
 
 export interface SelectState {
   readonly ids: readonly ShapeId[];
+  readonly pinIds: readonly string[];
   readonly gesture: SelectGesture;
   readonly marquee: Extent | null;
   readonly editing: ShapeId | null;
@@ -56,7 +58,14 @@ export interface SelectState {
   readonly hover: Hover | null;
 }
 
+export interface PinHost {
+  readonly points: () => ReadonlyMap<string, Point>;
+  readonly open: (threadId: string) => void;
+  readonly remove: (threadIds: readonly string[], proceed: () => void) => void;
+}
+
 export interface SelectHost {
+  readonly pins?: PinHost;
   readonly document: () => AnnotationDocument;
   readonly setDocument: (next: AnnotationDocument) => void;
   readonly toSlide: (at: InputPoint) => Point;
@@ -72,7 +81,7 @@ export interface SelectTool {
   readonly cancel: () => boolean;
   readonly state: () => SelectState;
   readonly subscribe: (listener: () => void) => () => void;
-  readonly select: (ids: readonly ShapeId[]) => void;
+  readonly select: (ids: readonly ShapeId[], pinIds?: readonly string[]) => void;
   readonly prune: (doc?: AnnotationDocument) => void;
   readonly edit: (id: ShapeId | null) => boolean;
   readonly selectAll: () => void;
@@ -88,6 +97,8 @@ type Press = {
   readonly slide: Point;
   readonly base: AnnotationDocument;
   readonly baseIds: readonly ShapeId[];
+  readonly basePinIds: readonly string[];
+  readonly pinPoints: ReadonlyMap<string, Point>;
   readonly baseVertices: readonly number[];
   readonly shift: boolean;
   readonly alt: boolean;
@@ -97,6 +108,7 @@ type Press = {
 
 type Gesture =
   | (Press & { readonly kind: "shape"; readonly shapeId: ShapeId; readonly wasSelected: boolean })
+  | (Press & { readonly kind: "pin"; readonly pinId: string; readonly wasSelected: boolean })
   | (Press & { readonly kind: "empty" })
   | (Press & {
       readonly kind: "vertex";
@@ -108,6 +120,7 @@ type Gesture =
 
 const idle: SelectState = {
   ids: [],
+  pinIds: [],
   gesture: "idle",
   marquee: null,
   editing: null,
@@ -115,7 +128,7 @@ const idle: SelectState = {
   hover: null,
 };
 
-function sameList(a: readonly number[], b: readonly number[]): boolean {
+function sameList<T>(a: readonly T[], b: readonly T[]): boolean {
   return a.length === b.length && a.every((id, index) => id === b[index]);
 }
 
@@ -151,6 +164,7 @@ export function createSelectTool(host: SelectHost): SelectTool {
     const next = { ...state, ...patch };
     const changed =
       !sameList(next.ids, state.ids) ||
+      !sameList(next.pinIds, state.pinIds) ||
       !sameList(next.vertices, state.vertices) ||
       next.gesture !== state.gesture ||
       next.marquee !== state.marquee ||
@@ -160,6 +174,7 @@ export function createSelectTool(host: SelectHost): SelectTool {
     state = {
       ...next,
       ids: sameList(next.ids, state.ids) ? state.ids : next.ids,
+      pinIds: sameList(next.pinIds, state.pinIds) ? state.pinIds : next.pinIds,
       vertices: sameList(next.vertices, state.vertices) ? state.vertices : next.vertices,
     };
     for (const listener of listeners) listener();
@@ -279,6 +294,8 @@ export function createSelectTool(host: SelectHost): SelectTool {
       base,
       work: base,
       baseIds: state.ids,
+      basePinIds: state.pinIds,
+      pinPoints: host.pins?.points() ?? new Map(),
       baseVertices: state.vertices,
       shift: input.shiftKey,
       alt: input.altKey,
@@ -357,6 +374,19 @@ export function createSelectTool(host: SelectHost): SelectTool {
         return true;
       }
     }
+    const pinHit = host.pins ? pinAt(press.pinPoints, press.slide, host.pixelSize()) : null;
+    if (pinHit !== null) {
+      const wasSelected = state.pinIds.includes(pinHit);
+      gesture = { ...press, kind: "pin", pinId: pinHit, wasSelected };
+      set({
+        gesture: "press",
+        editing: null,
+        vertices: [],
+        ids: wasSelected || press.shift ? state.ids : [],
+        pinIds: wasSelected || press.shift ? state.pinIds : [pinHit],
+      });
+      return true;
+    }
     const hit = pick(press.base, press.slide);
     if (hit) {
       const leaving = state.editing !== null && hit.id !== state.editing;
@@ -367,6 +397,7 @@ export function createSelectTool(host: SelectHost): SelectTool {
         editing: leaving ? null : state.editing,
         vertices: leaving ? [] : state.vertices,
         ids: wasSelected || (press.shift && !leaving) ? state.ids : [hit.id],
+        pinIds: wasSelected || press.shift ? state.pinIds : [],
       });
       return true;
     }
@@ -401,12 +432,21 @@ export function createSelectTool(host: SelectHost): SelectTool {
     set({ ids: copies });
   };
 
-  const applyMove = (current: Extract<Gesture, { kind: "shape" }>, at: Point, shift: boolean) => {
+  const applyMove = (
+    current: Extract<Gesture, { kind: "shape" | "pin" }>,
+    at: Point,
+    shift: boolean,
+  ) => {
     const delta = slideDelta(current, at, shift);
     let next = current.work;
+    const carried = new Set<ShapeId>();
     for (const id of state.ids) {
-      if (current.work.shapes.has(id)) next = moveShape(next, id, delta.x, delta.y).document;
+      if (current.work.shapes.has(id)) {
+        next = moveShape(next, id, delta.x, delta.y).document;
+        carried.add(id);
+      }
     }
+    next = shiftPins(next, state.pinIds, current.pinPoints, delta.x, delta.y, carried);
     host.setDocument(next);
   };
 
@@ -464,10 +504,14 @@ export function createSelectTool(host: SelectHost): SelectTool {
       return;
     }
     const inside = shapesInExtent(current.base, area).map((candidate) => candidate.id);
+    const pinsInside = host.pins ? pinsInExtent(current.pinPoints, area, host.pixelSize()) : [];
     set({
       gesture: "marquee",
       marquee: area,
       ids: sorted(current.shift ? [...current.baseIds, ...inside] : inside),
+      pinIds: current.shift
+        ? [...new Set([...current.basePinIds, ...pinsInside])].sort()
+        : pinsInside.sort(),
     });
   };
 
@@ -489,9 +533,13 @@ export function createSelectTool(host: SelectHost): SelectTool {
         if (!state.ids.includes(current.shapeId)) set({ ids: [current.shapeId] });
         if (current.alt) duplicateSelection(current);
       }
+      if (current.kind === "pin" && !state.pinIds.includes(current.pinId)) {
+        set({ pinIds: [current.pinId] });
+      }
     }
     switch (current.kind) {
       case "shape":
+      case "pin":
         set({ gesture: "move", hover: null });
         applyMove(current, at, input.shiftKey);
         break;
@@ -521,15 +569,27 @@ export function createSelectTool(host: SelectHost): SelectTool {
         set({ ids: [current.shapeId] });
       }
     }
+    if (current.kind === "pin") {
+      if (current.shift) {
+        const pinIds = current.wasSelected
+          ? state.pinIds.filter((id) => id !== current.pinId)
+          : [...state.pinIds, current.pinId];
+        set({ pinIds: pinIds.sort() });
+      } else {
+        set({ ids: [], pinIds: [current.pinId] });
+        host.pins?.open(current.pinId);
+      }
+    }
     if (current.kind === "empty") {
       if (state.editing !== null) set({ vertices: [] });
-      else if (!current.shift) set({ ids: [] });
+      else if (!current.shift) set({ ids: [], pinIds: [] });
     }
   };
 
   const labelOf = (current: Gesture): string => {
     if (current.kind === "vertex") return current.label;
     if (current.kind === "edge") return "Reshape";
+    if (current.kind === "pin") return "Move comment pin";
     if (current.kind === "shape") return current.alt ? "Duplicate" : "Move";
     return "Select";
   };
@@ -556,6 +616,7 @@ export function createSelectTool(host: SelectHost): SelectTool {
       gesture: "idle",
       marquee: null,
       ids: current.baseIds,
+      pinIds: current.basePinIds,
       vertices:
         current.kind === "vertex" && current.label === "Add point" ? [] : current.baseVertices,
     });
@@ -631,17 +692,23 @@ export function createSelectTool(host: SelectHost): SelectTool {
       applyGeometry(shape, moveVertices(shape, state.vertices, dx, dy), "Nudge");
       return true;
     }
-    if (state.ids.length === 0) return false;
+    if (state.ids.length === 0 && state.pinIds.length === 0) return false;
     let next = before;
+    const carried = new Set<ShapeId>();
     for (const id of state.ids) {
-      if (next.shapes.has(id)) next = moveShape(next, id, dx, dy).document;
+      if (next.shapes.has(id)) {
+        next = moveShape(next, id, dx, dy).document;
+        carried.add(id);
+      }
+    }
+    if (host.pins) {
+      next = shiftPins(next, state.pinIds, host.pins.points(), dx, dy, carried);
     }
     apply(before, next, "Nudge");
     return true;
   };
 
   const removeSelected = (): boolean => {
-    const before = host.document();
     const shape = editShape();
     if (shape) {
       const geometry = removeVertices(shape, state.vertices);
@@ -650,9 +717,17 @@ export function createSelectTool(host: SelectHost): SelectTool {
       set({ vertices: [] });
       return true;
     }
-    if (state.ids.length === 0) return false;
-    apply(before, deleteShapes(before, state.ids).document, "Delete");
-    set({ ids: [], hover: null });
+    if (state.ids.length === 0 && state.pinIds.length === 0) return false;
+    const removeShapes = () => {
+      const current = host.document();
+      apply(current, deleteShapes(current, state.ids).document, "Delete");
+      set({ ids: [], pinIds: [], hover: null });
+    };
+    if (state.pinIds.length > 0 && host.pins) {
+      host.pins.remove(state.pinIds, removeShapes);
+      return true;
+    }
+    removeShapes();
     return true;
   };
 
@@ -687,6 +762,7 @@ export function createSelectTool(host: SelectHost): SelectTool {
           .filter((candidate) => isSelectable(doc, candidate))
           .map((s) => s.id),
       ),
+      pinIds: host.pins ? [...host.pins.points().keys()].sort() : [],
     });
   };
 
@@ -713,11 +789,12 @@ export function createSelectTool(host: SelectHost): SelectTool {
       listeners.add(listener);
       return () => listeners.delete(listener);
     },
-    select(ids) {
+    select(ids, pinIds = []) {
       const next = sorted(ids);
       const keepEditing = state.editing !== null && sameList(next, [state.editing]);
       set({
         ids: next,
+        pinIds: [...pinIds].sort(),
         editing: keepEditing ? state.editing : null,
         vertices: keepEditing ? state.vertices : [],
       });
@@ -729,6 +806,9 @@ export function createSelectTool(host: SelectHost): SelectTool {
       const shape = editing === null ? null : doc.shapes.get(editing);
       const count = shape ? handlesOf(shape).length : 0;
       const vertices = state.vertices.filter((id) => id < count);
+      const livePins = host.pins?.points();
+      const keptPins = livePins ? state.pinIds.filter((id) => livePins.has(id)) : state.pinIds;
+      if (livePins && keptPins.length !== state.pinIds.length) set({ pinIds: keptPins });
       if (
         kept.length !== state.ids.length ||
         editing !== state.editing ||

@@ -44,6 +44,25 @@ You kept the typed text in `/search?q=...` and asked for the industry standard. 
 
 Your choice:
 
+## 73. Who may create a workspace, from ONB-004 (first-run setup)
+
+ADR 0024 (workspaces are tenants) says only platform operators create workspaces. First-run setup lets a new person create one with a name and a privacy default, and becomes its researcher with admin rights. As built, anyone signed in may create one workspace, a person who already holds admin rights on a workspace is refused, and a new workspace defaults to the EU region.
+
+- a. Keep self-service creation, one workspace per person, as built. (recommended)
+- b. Only platform operators create workspaces, and setup offers join or ask only.
+- c. Self-service with no limit.
+
+Your choice:
+
+## 74. Wheel zoom measured as main-thread time, from VIEW-031 (wheel zoom regression check)
+
+The task asks for no frame over 50 ms during wheel zoom on the Huron fixture. CI and headless runs draw with software WebGL, where frames are 66 to 233 ms apart from drawing alone, so the check now measures the longest main-thread task instead, about 26 ms against a 50 ms limit. Real GPU frame time stays a manual budget measured by hand.
+
+- a. Accept main-thread task time in CI and keep frame time as the manual check. (recommended)
+- b. Also add a frame time check on your Mac with a real GPU before ticking.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 Nothing else in review needs you. Nine tasks that only waited for green CI were ticked on 2026-11-02.

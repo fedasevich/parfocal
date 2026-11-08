@@ -43,6 +43,7 @@ export type RegionStyle = {
   stroke: string;
   fill?: string;
   dash?: string;
+  double?: boolean;
   width?: number;
   opacity?: number;
 };
@@ -126,6 +127,7 @@ type SlideStillProps = {
   tags?: SlideTag[];
   look?: StillLook | undefined;
   homeOf?: ((size: Size) => Camera) | undefined;
+  rotation?: number;
   underlay?: ((state: { camera: Camera; size: Size }) => ReactNode) | undefined;
   overlay?: (state: { camera: Camera; size: Size; home: Camera; moved: boolean }) => ReactNode;
   onPointPick?: ((point: Pin) => void) | undefined;
@@ -155,6 +157,7 @@ export function SlideStill({
   tags = [],
   look,
   homeOf,
+  rotation = 0,
   underlay,
   overlay,
   onPointPick,
@@ -186,10 +189,13 @@ export function SlideStill({
   const onPointerMove = (event: PointerEvent<HTMLDivElement>) => {
     const start = drag.current;
     if (start === null) return;
+    const turn = (-rotation * Math.PI) / 180;
+    const dx = event.clientX - start.x;
+    const dy = event.clientY - start.y;
     onCameraChange({
       ...start.from,
-      x: start.from.x - (event.clientX - start.x) / start.from.scale,
-      y: start.from.y - (event.clientY - start.y) / start.from.scale,
+      x: start.from.x - (dx * Math.cos(turn) - dy * Math.sin(turn)) / start.from.scale,
+      y: start.from.y - (dx * Math.sin(turn) + dy * Math.cos(turn)) / start.from.scale,
     });
   };
   const endDrag = () => {
@@ -253,6 +259,8 @@ export function SlideStill({
         className={cn("absolute inset-0 size-full", failed && "opacity-30")}
         viewBox={viewBox}
         preserveAspectRatio="xMidYMid meet"
+        data-rotation={rotation}
+        style={rotation === 0 ? undefined : { transform: `rotate(${rotation}deg)` }}
       >
         {tiles === "unloaded" ? null : (
           <image
@@ -272,19 +280,31 @@ export function SlideStill({
                 ? currentTint
                 : (custom?.stroke ?? (claimHidden ? "rgb(255 255 255 / 0.75)" : "var(--c-tumor)"));
               if (custom?.stroke === "none") return null;
+              const doubled = !current && custom?.double === true;
               return (
-                <path
-                  key={id}
-                  d={shape.path}
-                  fill={current ? "rgb(255 255 255 / 0.08)" : (custom?.fill ?? "none")}
-                  stroke={stroke}
-                  strokeWidth={current ? 3 : (custom?.width ?? 1.5)}
-                  strokeOpacity={custom?.opacity}
-                  fillOpacity={custom?.opacity}
-                  strokeDasharray={custom?.dash}
-                  strokeLinecap="round"
-                  vectorEffect="non-scaling-stroke"
-                />
+                <g key={id}>
+                  <path
+                    d={shape.path}
+                    fill={current ? "rgb(255 255 255 / 0.08)" : (custom?.fill ?? "none")}
+                    stroke={stroke}
+                    strokeWidth={current ? 3 : doubled ? 6 : (custom?.width ?? 1.5)}
+                    strokeOpacity={custom?.opacity}
+                    fillOpacity={custom?.opacity}
+                    strokeDasharray={custom?.dash}
+                    strokeLinecap="round"
+                    vectorEffect="non-scaling-stroke"
+                  />
+                  {doubled ? (
+                    <path
+                      d={shape.path}
+                      fill="none"
+                      stroke="#0b0b0b"
+                      strokeWidth={2}
+                      data-double-line=""
+                      vectorEffect="non-scaling-stroke"
+                    />
+                  ) : null}
+                </g>
               );
             })}
         {image === "hpf"

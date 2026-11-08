@@ -7,6 +7,7 @@ from pydantic import BaseModel
 
 from parfocal_api import (
     adjudications,
+    ai_changes,
     annotate_import,
     annotate_layer,
     annotate_sign_off,
@@ -33,6 +34,7 @@ from parfocal_api import (
     import_checks,
     inbox,
     invitations,
+    lab_models,
     link_imports,
     model_run_progress,
     model_runs,
@@ -43,6 +45,7 @@ from parfocal_api import (
     notifications,
     opinion_forms,
     opinions,
+    own_workspaces,
     personal_data,
     project_jobs,
     projects,
@@ -191,6 +194,7 @@ def create_app(
     app.include_router(model_runs.router)
     app.include_router(model_tiers.router)
     app.include_router(hidden_models.router)
+    app.include_router(lab_models.router)
     app.include_router(model_run_progress.router)
     app.include_router(notifications.router)
     app.include_router(opinion_forms.template_router)
@@ -248,6 +252,7 @@ def create_app(
     app.include_router(evaluation.router)
     app.include_router(evaluation_exports.router)
     app.include_router(training_exports.router)
+    app.include_router(ai_changes.router)
     app.include_router(evaluation_versions.router)
     app.include_router(report_links.router)
     app.include_router(report_links.public_router)
@@ -261,6 +266,7 @@ def create_app(
     app.include_router(tenants.platform)
     app.include_router(tenants.tenant)
     app.include_router(users.me_router)
+    app.include_router(own_workspaces.router)
     app.include_router(users.tenant_router)
     app.include_router(users.platform_router)
     app.include_router(audit_trail.router)

@@ -72,6 +72,7 @@ export {
 export type { LinkedView, LinkedViews, PaneViews, ViewOffset } from "./camera/linked-views.ts";
 export {
   alignViews,
+  alignWithOffset,
   createLinkedViews,
   isNoOffset,
   moveView,
@@ -128,6 +129,8 @@ export {
   wheelZoomOctaves,
   withoutMotion,
 } from "./camera/profile.ts";
+export type { GrayImage, Registration } from "./camera/registration.ts";
+export { registerThumbnails } from "./camera/registration.ts";
 export type {
   MagnificationReadout,
   MicronsPerPixel,
@@ -351,6 +354,21 @@ export {
 } from "./nuclei/paged-cells.ts";
 export type { PfcFile, PfcHeader } from "./nuclei/pfc.ts";
 export { decodePfc, PfcError, readPfc, UnknownPfcVersionError } from "./nuclei/pfc.ts";
+export {
+  type AgreementCue,
+  type AgreementKind,
+  type AgreementObject,
+  type AgreementOptions,
+  type AgreementOverlays,
+  agreementColours,
+  agreementCueOf,
+  agreementCues,
+  agreementKinds,
+  agreementOverlays,
+  type ComparisonKind,
+  comparisonKinds,
+  comparisonLabels,
+} from "./overlay/agreement.ts";
 export {
   createPathBatch,
   createPointBatch,

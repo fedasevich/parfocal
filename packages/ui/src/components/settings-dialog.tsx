@@ -114,7 +114,7 @@ function SettingsNav({
       )}
       {...props}
     >
-      <label className="mb-4 flex h-8 items-center gap-2 rounded-lg border border-line-strong bg-chrome px-2.5 text-fg-faint focus-within:border-accent">
+      <label className="mb-4 flex h-8 pointer-coarse:min-h-11 items-center gap-2 rounded-lg border border-line-strong bg-chrome px-2.5 text-fg-faint focus-within:border-accent">
         <Icon name="search" />
         <input
           type="search"

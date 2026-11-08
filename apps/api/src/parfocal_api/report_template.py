@@ -10,6 +10,7 @@ from parfocal_common.report_blocks import (
     Comparison,
     ConfusionMatrix,
     DisagreementReasons,
+    ExpertChanges,
     HeadlineNumbers,
     OpinionAnswers,
     RegionMetrics,
@@ -90,8 +91,18 @@ REPORT_MESSAGES: Mapping[str, str] = {
     "report.empty.slide-figure": "Pick a slide for this figure.",
     "report.empty.text": "This text block is empty.",
     "report.empty.comparison": "Pick a review task to compare with.",
+    "report.empty.ai-changes": "Only an annotate task counts how the experts changed the AI.",
     "report.empty.compared-missing": "The review task to compare with is not available.",
     "report.sample": "This report covers a sample of the slides.",
+    "report.ai-changes.slide": "Slide",
+    "report.ai-changes.ai_objects": "AI objects",
+    "report.ai-changes.confirmed": "Confirmed",
+    "report.ai-changes.edited": "Edited",
+    "report.ai-changes.deleted": "Deleted",
+    "report.ai-changes.unchecked": "Unchecked",
+    "report.ai-changes.added": "Added",
+    "report.ai-changes.by": "By",
+    "report.ai-changes.all": "All",
     "report.changes": "Changes after sign-off",
     "report.changes.flag": (
         "Changed after sign-off. The checksum is of the evaluation as signed, "
@@ -227,6 +238,25 @@ class ReportChange:
 
 
 @dataclass(frozen=True)
+class ReportAiChange:
+    name: str
+    ai_objects: int
+    confirmed: int
+    edited: int
+    deleted: int
+    unchecked: int
+    added: int
+    by: str = ""
+
+
+@dataclass(frozen=True)
+class ReportAiChanges:
+    classes: tuple[ReportAiChange, ...]
+    slides: tuple[ReportAiChange, ...]
+    total: ReportAiChange
+
+
+@dataclass(frozen=True)
 class ReportCompared:
     task_name: str
     headline: Mapping[str, float | None]
@@ -271,6 +301,8 @@ class ReportData:
     counts_as: tuple[str, ...] = ()
     signed_by: str = ""
     changes: tuple[ReportChange, ...] = ()
+    ai_changes: ReportAiChanges | None = None
+    review: bool = True
 
 
 @dataclass(frozen=True)
@@ -582,6 +614,34 @@ def render_report(data: ReportData, locale: Locale = DEFAULT_LOCALE) -> Rendered
             "report.missing",
         )
 
+    def ai_changes(block: ExpertChanges) -> list[str]:
+        found = data.ai_changes
+        if found is None:
+            return said("report.empty.ai-changes")
+        columns = ("ai_objects", "confirmed", "edited", "deleted", "unchecked", "added")
+        named = "report.ai-changes.slide" if block.group_by == "slide" else "report.class"
+        header = (
+            messages[named],
+            *(messages[f"report.ai-changes.{column}"] for column in columns),
+            *([messages["report.ai-changes.by"]] if block.people else []),
+        )
+
+        def cells(item: ReportAiChange, name: str) -> tuple[str, ...]:
+            counted = tuple(str(getattr(item, column)) for column in columns)
+            return (name, *counted, *([item.by] if block.people else []))
+
+        rows = found.slides if block.group_by == "slide" else found.classes
+        if not rows:
+            return said("report.empty.ai-changes")
+        return table(
+            header,
+            [
+                *(cells(item, item.name) for item in rows),
+                cells(found.total, messages["report.ai-changes.all"]),
+            ],
+            "report.empty.ai-changes",
+        )
+
     def body_of(block: ReportBlock) -> list[str]:
         match block:
             case HeadlineNumbers():
@@ -611,6 +671,8 @@ def render_report(data: ReportData, locale: Locale = DEFAULT_LOCALE) -> Rendered
                 return text(block)
             case Comparison():
                 return comparison(block)
+            case ExpertChanges():
+                return ai_changes(block)
 
     def block_lines(block: ReportBlock) -> list[str]:
         title = [f"== {typst_text(block.title)}"] if block.show_title else []
@@ -623,18 +685,22 @@ def render_report(data: ReportData, locale: Locale = DEFAULT_LOCALE) -> Rendered
         return [f"#grid(columns: (1fr, 1fr), column-gutter: 14pt, {', '.join(cells)})", ""]
 
     def closing() -> list[str]:
-        lines = [
-            f"== {typst_text(messages['report.decisions'])}",
-            *table(
-                (messages["report.decisions"], messages["report.count"]),
-                [
-                    (messages[f"report.decision.{key}"], str(data.decisions.get(key, 0)))
-                    for key in DECISIONS
-                ],
-                "report.missing",
-            ),
-            "",
-        ]
+        lines = (
+            [
+                f"== {typst_text(messages['report.decisions'])}",
+                *table(
+                    (messages["report.decisions"], messages["report.count"]),
+                    [
+                        (messages[f"report.decision.{key}"], str(data.decisions.get(key, 0)))
+                        for key in DECISIONS
+                    ],
+                    "report.missing",
+                ),
+                "",
+            ]
+            if data.review
+            else []
+        )
         if data.changes:
             lines += [
                 f"== {typst_text(messages['report.changes'])}",

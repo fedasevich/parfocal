@@ -1,7 +1,9 @@
+import json
 import math
 import time
 import uuid
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -13,7 +15,10 @@ from parfocal_api.tables import Role
 
 pytestmark = pytest.mark.db
 
-BULK_BUDGET_SECONDS = 5.0
+BUDGETS = json.loads(
+    (Path(__file__).resolve().parents[3] / "perf-budgets.json").read_text(encoding="utf-8")
+)["budgets"]
+BULK_BUDGET_MS = next(b["limit"] for b in BUDGETS if b["id"] == "api.bulk-10k-annotations-ms")
 
 
 @dataclass(frozen=True)
@@ -375,7 +380,7 @@ def test_ten_thousand_shapes_are_accepted_in_one_request_within_budget(
     elapsed = time.perf_counter() - started
     assert response.status_code == 201, response.text[:500]
     assert [ref["number"] for ref in response.json()] == list(range(1, 10_001))
-    assert elapsed < BULK_BUDGET_SECONDS, elapsed
+    assert elapsed * 1000 < BULK_BUDGET_MS, elapsed
     assert len(client.get(s.path).json()) == 10_000
 
 

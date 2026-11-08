@@ -1,10 +1,11 @@
 import {
   type AiModel,
+  type SecuritySetting,
   useGetSecuritySettings,
+  useGetSessionPolicy,
   useGetStorageUsage,
   useHideModel,
   useListAiModels,
-  useListAuditEvents,
   useListProjects,
   useListServiceAccounts,
   useListTaxonomyTemplates,
@@ -33,7 +34,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { destinations } from "../../shell/destinations.ts";
 import { useGoTo } from "../../shell/router-link.tsx";
-import { formatClock, percent } from "../format.ts";
+import { percent } from "../format.ts";
 import { projectColour } from "../palette.ts";
 import { usePeople } from "../people.ts";
 import { okData } from "../placeholder.tsx";
@@ -46,7 +47,7 @@ import {
   TextLink,
   tableClass,
 } from "./common.tsx";
-import { SystemActor } from "./overview.tsx";
+import { durationText } from "./workspace-settings-model.ts";
 
 const right = "text-right";
 
@@ -496,89 +497,54 @@ export function ApiSection({ notify }: { notify: Notify }) {
   );
 }
 
-const auditFlags: Record<string, { text: string; tone: "warn" | "bad" }> = {
-  "decision.changed-after-sign-off": { text: "After sign-off", tone: "warn" },
-  "webhook.rejected": { text: "Rejected", tone: "bad" },
-};
+const idleRow = (minutes: number): SecuritySetting => ({
+  key: "idle-lock",
+  label: "Lock after inactivity",
+  detail: `${durationText(minutes)}. Slides and names hide until you sign in again`,
+  on: true,
+  locked: false,
+});
 
-export function AuditSection() {
-  const events = okData(useListAuditEvents().data) ?? [];
-  const personOf = usePeople();
-  return (
-    <Zone
-      title="Today"
-      end={<span className="text-body-sm text-fg-dim">{events.length} events</span>}
-    >
-      <div className="flex flex-wrap gap-2.5">
-        {["Everyone", "All projects", "Today", "All actions"].map((label) => (
-          <Button key={label} size="sm">
-            {label}
-            <Icon name="down" />
-          </Button>
-        ))}
-      </div>
-      <Table className={tableClass}>
-        <TableHeader>
-          <TableRow>
-            <TableHead>When</TableHead>
-            <TableHead>Who</TableHead>
-            <TableHead>What</TableHead>
-            <TableHead>Project</TableHead>
-            <TableHead />
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {events.map((event) => {
-            const person = personOf(event.actor_id);
-            const flag = auditFlags[event.action];
-            return (
-              <TableRow key={event.id}>
-                <TableCell className="font-mono">
-                  {formatClock(new Date(event.occurred_at))}
-                </TableCell>
-                <TableCell>
-                  {person ? <Person person={person} size={20} /> : <SystemActor />}
-                </TableCell>
-                <TableCell>{event.details}</TableCell>
-                <TableCell className="font-mono">{event.target_subject}</TableCell>
-                <TableCell>
-                  {flag ? <StatusTag tone={flag.tone}>{flag.text}</StatusTag> : null}
-                </TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
-    </Zone>
-  );
-}
-
-export function SecuritySection() {
+export function SecuritySection({ notify }: { notify: Notify }) {
   const settings = useGetSecuritySettings().data?.data;
+  const policy = okData(useGetSessionPolicy().data);
   const [values, setValues] = useState<Record<string, boolean>>({});
-  if (settings === undefined) return null;
-  const row = (item: (typeof settings.sign_in)[number]) => (
+  if (settings === undefined && policy === undefined) return null;
+  const sessionRows = [
+    ...(policy ? [idleRow(policy.idle_lock_minutes)] : []),
+    ...(settings?.data ?? []).filter((item) => item.key !== "idle-lock" || policy === undefined),
+  ];
+  const row = (item: SecuritySetting) => (
     <SettingRow
       key={item.key}
       label={item.label}
       detail={item.detail}
       on={values[item.key] ?? item.on}
       locked={item.locked}
-      onChange={(on) => setValues({ ...values, [item.key]: on })}
+      onChange={(on) => {
+        setValues({ ...values, [item.key]: on });
+        notify(
+          item.key === "idle-lock"
+            ? "Change the lock time in Workspace settings, under Lock times."
+            : `${item.label} ${on ? "turned on" : "turned off"} (mock)`,
+        );
+      }}
     />
   );
   return (
     <div className="grid grid-cols-2 gap-(--space-zone)">
-      <Zone title="Sign-in">
-        <div>{settings.sign_in.map(row)}</div>
-        <ProgressBar
-          value={percent(settings.two_factor.people, settings.two_factor.of)}
-          label="People with two factors"
-          valueText={`${settings.two_factor.people} of ${settings.two_factor.of}`}
-        />
-      </Zone>
+      {settings ? (
+        <Zone title="Sign-in">
+          <div>{settings.sign_in.map(row)}</div>
+          <ProgressBar
+            value={percent(settings.two_factor.people, settings.two_factor.of)}
+            label="People with two factors"
+            valueText={`${settings.two_factor.people} of ${settings.two_factor.of}`}
+          />
+        </Zone>
+      ) : null}
       <Zone title="Sessions and data">
-        <div>{settings.data.map(row)}</div>
+        <div>{sessionRows.map(row)}</div>
       </Zone>
     </div>
   );

@@ -11,6 +11,7 @@ import type {
   AbortedUpload,
   AcceptedInvitation,
   AdjudicatedObject,
+  AiChanges,
   AnnotateSlideStatus,
   Annotation,
   AnnotationRef,
@@ -43,6 +44,7 @@ import type {
   Evaluation,
   EvaluationChanges,
   EvaluationVersionStarted,
+  ExpertChanges,
   ExportReviewedLayer200,
   FirstRead,
   FormVersion,
@@ -58,6 +60,8 @@ import type {
   Invitation,
   IssuedToken,
   Job,
+  LabModel,
+  LabModelTest,
   LabSettings,
   LayerImportResult,
   LayerObject,
@@ -187,6 +191,7 @@ import {
   CaseRule,
   CaseSource,
   Certainty,
+  ChangeGroup,
   ChartStyle,
   CheckKind,
   CheckOrder,
@@ -207,6 +212,8 @@ import {
   IngestStatus,
   JobControl,
   JobStatus,
+  LabModelRunners,
+  LabModelSignIn,
   Laterality,
   Layer,
   LinkRefusal,
@@ -3921,6 +3928,200 @@ export const getShowModelResponseMock = (
   title: faker.string.alpha({ length: { min: 10, max: 20 } }),
   shown: faker.datatype.boolean(),
   hidden_by: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  ...overrideResponse,
+});
+
+export const getTestLabModelResponseMock = (
+  overrideResponse: Partial<Extract<LabModelTest, object>> = {},
+): LabModelTest => ({
+  outcome: faker.helpers.arrayElement(["follows-contract", "not-contract"] as const),
+  sample_slide: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  returns: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+  ),
+  answered_ms: faker.number.int(),
+  server_software: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  tiles: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    label: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    slide: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    answered_ms: faker.number.int(),
+    regions: faker.number.int(),
+    cells: faker.number.int(),
+    classes: faker.number.int(),
+    outline: {
+      regions: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () =>
+          Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => [
+            faker.number.float({ fractionDigits: 2 }),
+            faker.number.float({ fractionDigits: 2 }),
+          ]),
+      ),
+      cells: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () => ({
+          x: faker.number.float({ fractionDigits: 2 }),
+          y: faker.number.float({ fractionDigits: 2 }),
+          rx: faker.number.float({ fractionDigits: 2 }),
+          ry: faker.number.float({ fractionDigits: 2 }),
+          class: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        }),
+      ),
+    },
+  })),
+  missing_geometry: faker.number.int(),
+  model: faker.helpers.arrayElement([
+    {
+      name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      version: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    },
+    null,
+  ]),
+  classes: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      cells: faker.number.int(),
+      suggested: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+    }),
+  ),
+  ...overrideResponse,
+});
+
+export const getConnectLabModelResponseMock = (
+  overrideResponse: Partial<Extract<LabModel, object>> = {},
+): LabModel => ({
+  id: faker.string.uuid(),
+  name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  version: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  address: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  host: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  sign_in: faker.helpers.arrayElement(Object.values(LabModelSignIn)),
+  header_name: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  last_four: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  tile_size: faker.number.int(),
+  magnification: faker.number.int(),
+  taxonomy: faker.helpers.arrayElement(Object.values(TaxonomyTemplate)),
+  class_map: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      sent: faker.string.alpha({ length: { min: 1, max: 80 } }),
+      becomes: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+    }),
+  ),
+  who_can_run: faker.helpers.arrayElement(Object.values(LabModelRunners)),
+  project_ids: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => faker.string.uuid(),
+  ),
+  created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  ...overrideResponse,
+});
+
+export const getGetLabModelResponseMock = (
+  overrideResponse: Partial<Extract<LabModel, object>> = {},
+): LabModel => ({
+  id: faker.string.uuid(),
+  name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  version: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  address: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  host: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  sign_in: faker.helpers.arrayElement(Object.values(LabModelSignIn)),
+  header_name: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  last_four: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  tile_size: faker.number.int(),
+  magnification: faker.number.int(),
+  taxonomy: faker.helpers.arrayElement(Object.values(TaxonomyTemplate)),
+  class_map: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      sent: faker.string.alpha({ length: { min: 1, max: 80 } }),
+      becomes: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+    }),
+  ),
+  who_can_run: faker.helpers.arrayElement(Object.values(LabModelRunners)),
+  project_ids: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => faker.string.uuid(),
+  ),
+  created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  ...overrideResponse,
+});
+
+export const getTestConnectedLabModelResponseMock = (
+  overrideResponse: Partial<Extract<LabModelTest, object>> = {},
+): LabModelTest => ({
+  outcome: faker.helpers.arrayElement(["follows-contract", "not-contract"] as const),
+  sample_slide: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  returns: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+  ),
+  answered_ms: faker.number.int(),
+  server_software: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  tiles: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    label: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    slide: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    answered_ms: faker.number.int(),
+    regions: faker.number.int(),
+    cells: faker.number.int(),
+    classes: faker.number.int(),
+    outline: {
+      regions: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () =>
+          Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => [
+            faker.number.float({ fractionDigits: 2 }),
+            faker.number.float({ fractionDigits: 2 }),
+          ]),
+      ),
+      cells: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () => ({
+          x: faker.number.float({ fractionDigits: 2 }),
+          y: faker.number.float({ fractionDigits: 2 }),
+          rx: faker.number.float({ fractionDigits: 2 }),
+          ry: faker.number.float({ fractionDigits: 2 }),
+          class: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        }),
+      ),
+    },
+  })),
+  missing_geometry: faker.number.int(),
+  model: faker.helpers.arrayElement([
+    {
+      name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      version: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    },
+    null,
+  ]),
+  classes: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      cells: faker.number.int(),
+      suggested: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+    }),
+  ),
   ...overrideResponse,
 });
 
@@ -8048,6 +8249,122 @@ export const getReopenThreadResponseMock = (
   ...overrideResponse,
 });
 
+export const getMoveThreadResponsePointGeometryMock = (
+  overrideResponse: Partial<PointGeometry> = {},
+): PointGeometry => ({
+  ...{
+    type: faker.helpers.arrayElement(["Point"] as const),
+    coordinates: [
+      faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+      faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+    ],
+  },
+  ...overrideResponse,
+});
+
+export const getMoveThreadResponseLineStringGeometryMock = (
+  overrideResponse: Partial<LineStringGeometry> = {},
+): LineStringGeometry => ({
+  ...{
+    type: faker.helpers.arrayElement(["LineString"] as const),
+    coordinates: Array.from({ length: faker.number.int({ min: 2, max: 10 }) }, (_, i) => i + 1).map(
+      () => [
+        faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+        faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+      ],
+    ),
+  },
+  ...overrideResponse,
+});
+
+export const getMoveThreadResponsePolygonGeometryMock = (
+  overrideResponse: Partial<PolygonGeometry> = {},
+): PolygonGeometry => ({
+  ...{
+    type: faker.helpers.arrayElement(["Polygon"] as const),
+    coordinates: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () =>
+        Array.from({ length: faker.number.int({ min: 4, max: 10 }) }, (_, i) => i + 1).map(() => [
+          faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+          faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+        ]),
+    ),
+  },
+  ...overrideResponse,
+});
+
+export const getMoveThreadResponseMultiPolygonGeometryMock = (
+  overrideResponse: Partial<MultiPolygonGeometry> = {},
+): MultiPolygonGeometry => ({
+  ...{
+    type: faker.helpers.arrayElement(["MultiPolygon"] as const),
+    coordinates: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () =>
+        Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
+          Array.from({ length: faker.number.int({ min: 4, max: 10 }) }, (_, i) => i + 1).map(() => [
+            faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+            faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+          ]),
+        ),
+    ),
+  },
+  ...overrideResponse,
+});
+
+export const getMoveThreadResponseMock = (
+  overrideResponse: Partial<Extract<ThreadDetail, object>> = {},
+): ThreadDetail => ({
+  id: faker.string.uuid(),
+  project_id: faker.string.uuid(),
+  task_id: faker.string.uuid(),
+  slide_id: faker.string.uuid(),
+  title: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  anchor: {
+    kind: faker.helpers.arrayElement(Object.values(AnchorKind)),
+    object_id: faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    geometry: faker.helpers.arrayElement([
+      faker.helpers.arrayElement([
+        { ...getMoveThreadResponsePointGeometryMock() },
+        { ...getMoveThreadResponseLineStringGeometryMock() },
+        { ...getMoveThreadResponsePolygonGeometryMock() },
+        { ...getMoveThreadResponseMultiPolygonGeometryMock() },
+      ]),
+      null,
+    ]),
+    offset: faker.helpers.arrayElement([
+      [
+        faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+        faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+      ],
+      null,
+    ]),
+  },
+  created_by: faker.string.uuid(),
+  created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  resolved_at: faker.helpers.arrayElement([
+    faker.date.past().toISOString().slice(0, 19) + "Z",
+    null,
+  ]),
+  resolved_by: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  message_count: faker.number.int(),
+  last_message_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  messages: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      id: faker.string.uuid(),
+      author_id: faker.string.uuid(),
+      body: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      mentions: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () => faker.string.uuid(),
+      ),
+      created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+    }),
+  ),
+  ...overrideResponse,
+});
+
 export const getSaveOpinionResponseScaleQuestionMock = (
   overrideResponse: Partial<ScaleQuestion> = {},
 ): ScaleQuestion => ({
@@ -8947,6 +9264,100 @@ export const getGetTaskEvaluationResponseMock = (
 export const getExportTrainingDatasetResponseMock = (): Blob =>
   new Blob([new Uint8Array(faker.number.int({ min: 1, max: 64 }))]);
 
+export const getGetTaskAiChangesResponseMock = (
+  overrideResponse: Partial<Extract<AiChanges, object>> = {},
+): AiChanges => ({
+  task_id: faker.string.uuid(),
+  experts: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      letter: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      assigned: faker.datatype.boolean(),
+    }),
+  ),
+  slides: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      slide_id: faker.string.uuid(),
+      slide: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      result_set_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      classes: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () => ({
+          ai_objects: faker.number.int(),
+          confirmed: faker.number.int(),
+          edited: faker.number.int(),
+          deleted: faker.number.int(),
+          unchecked: faker.number.int(),
+          added: faker.number.int(),
+          by: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+            () => ({
+              letter: faker.string.alpha({ length: { min: 10, max: 20 } }),
+              confirmed: faker.number.int(),
+              edited: faker.number.int(),
+              deleted: faker.number.int(),
+              added: faker.number.int(),
+            }),
+          ),
+          class_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+          class_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        }),
+      ),
+      total: {
+        ai_objects: faker.number.int(),
+        confirmed: faker.number.int(),
+        edited: faker.number.int(),
+        deleted: faker.number.int(),
+        unchecked: faker.number.int(),
+        added: faker.number.int(),
+        by: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+          () => ({
+            letter: faker.string.alpha({ length: { min: 10, max: 20 } }),
+            confirmed: faker.number.int(),
+            edited: faker.number.int(),
+            deleted: faker.number.int(),
+            added: faker.number.int(),
+          }),
+        ),
+      },
+    }),
+  ),
+  classes: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      ai_objects: faker.number.int(),
+      confirmed: faker.number.int(),
+      edited: faker.number.int(),
+      deleted: faker.number.int(),
+      unchecked: faker.number.int(),
+      added: faker.number.int(),
+      by: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () => ({
+          letter: faker.string.alpha({ length: { min: 10, max: 20 } }),
+          confirmed: faker.number.int(),
+          edited: faker.number.int(),
+          deleted: faker.number.int(),
+          added: faker.number.int(),
+        }),
+      ),
+      class_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      class_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    }),
+  ),
+  total: {
+    ai_objects: faker.number.int(),
+    confirmed: faker.number.int(),
+    edited: faker.number.int(),
+    deleted: faker.number.int(),
+    unchecked: faker.number.int(),
+    added: faker.number.int(),
+    by: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+      letter: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      confirmed: faker.number.int(),
+      edited: faker.number.int(),
+      deleted: faker.number.int(),
+      added: faker.number.int(),
+    })),
+  },
+  ...overrideResponse,
+});
+
 export const getStartEvaluationVersionResponseMock = (
   overrideResponse: Partial<Extract<EvaluationVersionStarted, object>> = {},
 ): EvaluationVersionStarted => ({
@@ -9349,7 +9760,7 @@ export const getListStudyTemplatesResponseSlideFigureMock = (
     kind: faker.helpers.arrayElement(["slide-figure"] as const),
     slide_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
     object_id: faker.helpers.arrayElement([
-      faker.helpers.fromRegExp("^(?:T[1-9][0-9]{0,8}\\.)?[TCRZM][1-9][0-9]{0,8}[a-z]{0,3}\\+?$"),
+      faker.helpers.fromRegExp("^(?:T[1-9][0-9]{0,8}\\.)?[TCRZMAN][1-9][0-9]{0,8}[a-z]{0,3}\\+?$"),
       null,
     ]),
     layers: faker.helpers.arrayElements(Object.values(Layer)),
@@ -9383,6 +9794,21 @@ export const getListStudyTemplatesResponseComparisonMock = (
     kind: faker.helpers.arrayElement(["comparison"] as const),
     task_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
     metrics: faker.helpers.arrayElements(Object.values(Metric)),
+  },
+  ...overrideResponse,
+});
+
+export const getListStudyTemplatesResponseExpertChangesMock = (
+  overrideResponse: Partial<ExpertChanges> = {},
+): ExpertChanges => ({
+  ...{
+    title: faker.string.alpha({ length: { min: 1, max: 120 } }),
+    show_title: faker.datatype.boolean(),
+    width: faker.helpers.arrayElement(["full", "half"] as const),
+    page_break: faker.datatype.boolean(),
+    kind: faker.helpers.arrayElement(["ai-changes"] as const),
+    group_by: faker.helpers.arrayElement(Object.values(ChangeGroup)),
+    people: faker.datatype.boolean(),
   },
   ...overrideResponse,
 });
@@ -9474,6 +9900,7 @@ export const getListStudyTemplatesResponseMock = (): StudyTemplateSummary[] =>
         { ...getListStudyTemplatesResponseSlideFigureMock() },
         { ...getListStudyTemplatesResponseTextBlockMock() },
         { ...getListStudyTemplatesResponseComparisonMock() },
+        { ...getListStudyTemplatesResponseExpertChangesMock() },
       ]),
     ),
     format: {
@@ -9707,7 +10134,7 @@ export const getCreateStudyTemplateResponseSlideFigureMock = (
     kind: faker.helpers.arrayElement(["slide-figure"] as const),
     slide_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
     object_id: faker.helpers.arrayElement([
-      faker.helpers.fromRegExp("^(?:T[1-9][0-9]{0,8}\\.)?[TCRZM][1-9][0-9]{0,8}[a-z]{0,3}\\+?$"),
+      faker.helpers.fromRegExp("^(?:T[1-9][0-9]{0,8}\\.)?[TCRZMAN][1-9][0-9]{0,8}[a-z]{0,3}\\+?$"),
       null,
     ]),
     layers: faker.helpers.arrayElements(Object.values(Layer)),
@@ -9741,6 +10168,21 @@ export const getCreateStudyTemplateResponseComparisonMock = (
     kind: faker.helpers.arrayElement(["comparison"] as const),
     task_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
     metrics: faker.helpers.arrayElements(Object.values(Metric)),
+  },
+  ...overrideResponse,
+});
+
+export const getCreateStudyTemplateResponseExpertChangesMock = (
+  overrideResponse: Partial<ExpertChanges> = {},
+): ExpertChanges => ({
+  ...{
+    title: faker.string.alpha({ length: { min: 1, max: 120 } }),
+    show_title: faker.datatype.boolean(),
+    width: faker.helpers.arrayElement(["full", "half"] as const),
+    page_break: faker.datatype.boolean(),
+    kind: faker.helpers.arrayElement(["ai-changes"] as const),
+    group_by: faker.helpers.arrayElement(Object.values(ChangeGroup)),
+    people: faker.datatype.boolean(),
   },
   ...overrideResponse,
 });
@@ -9833,6 +10275,7 @@ export const getCreateStudyTemplateResponseMock = (
       { ...getCreateStudyTemplateResponseSlideFigureMock() },
       { ...getCreateStudyTemplateResponseTextBlockMock() },
       { ...getCreateStudyTemplateResponseComparisonMock() },
+      { ...getCreateStudyTemplateResponseExpertChangesMock() },
     ]),
   ),
   format: {
@@ -10066,7 +10509,7 @@ export const getGetStudyTemplateResponseSlideFigureMock = (
     kind: faker.helpers.arrayElement(["slide-figure"] as const),
     slide_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
     object_id: faker.helpers.arrayElement([
-      faker.helpers.fromRegExp("^(?:T[1-9][0-9]{0,8}\\.)?[TCRZM][1-9][0-9]{0,8}[a-z]{0,3}\\+?$"),
+      faker.helpers.fromRegExp("^(?:T[1-9][0-9]{0,8}\\.)?[TCRZMAN][1-9][0-9]{0,8}[a-z]{0,3}\\+?$"),
       null,
     ]),
     layers: faker.helpers.arrayElements(Object.values(Layer)),
@@ -10100,6 +10543,21 @@ export const getGetStudyTemplateResponseComparisonMock = (
     kind: faker.helpers.arrayElement(["comparison"] as const),
     task_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
     metrics: faker.helpers.arrayElements(Object.values(Metric)),
+  },
+  ...overrideResponse,
+});
+
+export const getGetStudyTemplateResponseExpertChangesMock = (
+  overrideResponse: Partial<ExpertChanges> = {},
+): ExpertChanges => ({
+  ...{
+    title: faker.string.alpha({ length: { min: 1, max: 120 } }),
+    show_title: faker.datatype.boolean(),
+    width: faker.helpers.arrayElement(["full", "half"] as const),
+    page_break: faker.datatype.boolean(),
+    kind: faker.helpers.arrayElement(["ai-changes"] as const),
+    group_by: faker.helpers.arrayElement(Object.values(ChangeGroup)),
+    people: faker.datatype.boolean(),
   },
   ...overrideResponse,
 });
@@ -10192,6 +10650,7 @@ export const getGetStudyTemplateResponseMock = (
       { ...getGetStudyTemplateResponseSlideFigureMock() },
       { ...getGetStudyTemplateResponseTextBlockMock() },
       { ...getGetStudyTemplateResponseComparisonMock() },
+      { ...getGetStudyTemplateResponseExpertChangesMock() },
     ]),
   ),
   format: {
@@ -10425,7 +10884,7 @@ export const getEditStudyTemplateResponseSlideFigureMock = (
     kind: faker.helpers.arrayElement(["slide-figure"] as const),
     slide_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
     object_id: faker.helpers.arrayElement([
-      faker.helpers.fromRegExp("^(?:T[1-9][0-9]{0,8}\\.)?[TCRZM][1-9][0-9]{0,8}[a-z]{0,3}\\+?$"),
+      faker.helpers.fromRegExp("^(?:T[1-9][0-9]{0,8}\\.)?[TCRZMAN][1-9][0-9]{0,8}[a-z]{0,3}\\+?$"),
       null,
     ]),
     layers: faker.helpers.arrayElements(Object.values(Layer)),
@@ -10459,6 +10918,21 @@ export const getEditStudyTemplateResponseComparisonMock = (
     kind: faker.helpers.arrayElement(["comparison"] as const),
     task_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
     metrics: faker.helpers.arrayElements(Object.values(Metric)),
+  },
+  ...overrideResponse,
+});
+
+export const getEditStudyTemplateResponseExpertChangesMock = (
+  overrideResponse: Partial<ExpertChanges> = {},
+): ExpertChanges => ({
+  ...{
+    title: faker.string.alpha({ length: { min: 1, max: 120 } }),
+    show_title: faker.datatype.boolean(),
+    width: faker.helpers.arrayElement(["full", "half"] as const),
+    page_break: faker.datatype.boolean(),
+    kind: faker.helpers.arrayElement(["ai-changes"] as const),
+    group_by: faker.helpers.arrayElement(Object.values(ChangeGroup)),
+    people: faker.datatype.boolean(),
   },
   ...overrideResponse,
 });
@@ -10551,6 +11025,7 @@ export const getEditStudyTemplateResponseMock = (
       { ...getEditStudyTemplateResponseSlideFigureMock() },
       { ...getEditStudyTemplateResponseTextBlockMock() },
       { ...getEditStudyTemplateResponseComparisonMock() },
+      { ...getEditStudyTemplateResponseExpertChangesMock() },
     ]),
   ),
   format: {
@@ -10792,7 +11267,7 @@ export const getGetStudyTemplateVersionResponseSlideFigureMock = (
     kind: faker.helpers.arrayElement(["slide-figure"] as const),
     slide_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
     object_id: faker.helpers.arrayElement([
-      faker.helpers.fromRegExp("^(?:T[1-9][0-9]{0,8}\\.)?[TCRZM][1-9][0-9]{0,8}[a-z]{0,3}\\+?$"),
+      faker.helpers.fromRegExp("^(?:T[1-9][0-9]{0,8}\\.)?[TCRZMAN][1-9][0-9]{0,8}[a-z]{0,3}\\+?$"),
       null,
     ]),
     layers: faker.helpers.arrayElements(Object.values(Layer)),
@@ -10826,6 +11301,21 @@ export const getGetStudyTemplateVersionResponseComparisonMock = (
     kind: faker.helpers.arrayElement(["comparison"] as const),
     task_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
     metrics: faker.helpers.arrayElements(Object.values(Metric)),
+  },
+  ...overrideResponse,
+});
+
+export const getGetStudyTemplateVersionResponseExpertChangesMock = (
+  overrideResponse: Partial<ExpertChanges> = {},
+): ExpertChanges => ({
+  ...{
+    title: faker.string.alpha({ length: { min: 1, max: 120 } }),
+    show_title: faker.datatype.boolean(),
+    width: faker.helpers.arrayElement(["full", "half"] as const),
+    page_break: faker.datatype.boolean(),
+    kind: faker.helpers.arrayElement(["ai-changes"] as const),
+    group_by: faker.helpers.arrayElement(Object.values(ChangeGroup)),
+    people: faker.datatype.boolean(),
   },
   ...overrideResponse,
 });
@@ -10918,6 +11408,7 @@ export const getGetStudyTemplateVersionResponseMock = (
       { ...getGetStudyTemplateVersionResponseSlideFigureMock() },
       { ...getGetStudyTemplateVersionResponseTextBlockMock() },
       { ...getGetStudyTemplateVersionResponseComparisonMock() },
+      { ...getGetStudyTemplateVersionResponseExpertChangesMock() },
     ]),
   ),
   format: {
@@ -11151,7 +11642,7 @@ export const getRetireStudyTemplateResponseSlideFigureMock = (
     kind: faker.helpers.arrayElement(["slide-figure"] as const),
     slide_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
     object_id: faker.helpers.arrayElement([
-      faker.helpers.fromRegExp("^(?:T[1-9][0-9]{0,8}\\.)?[TCRZM][1-9][0-9]{0,8}[a-z]{0,3}\\+?$"),
+      faker.helpers.fromRegExp("^(?:T[1-9][0-9]{0,8}\\.)?[TCRZMAN][1-9][0-9]{0,8}[a-z]{0,3}\\+?$"),
       null,
     ]),
     layers: faker.helpers.arrayElements(Object.values(Layer)),
@@ -11185,6 +11676,21 @@ export const getRetireStudyTemplateResponseComparisonMock = (
     kind: faker.helpers.arrayElement(["comparison"] as const),
     task_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
     metrics: faker.helpers.arrayElements(Object.values(Metric)),
+  },
+  ...overrideResponse,
+});
+
+export const getRetireStudyTemplateResponseExpertChangesMock = (
+  overrideResponse: Partial<ExpertChanges> = {},
+): ExpertChanges => ({
+  ...{
+    title: faker.string.alpha({ length: { min: 1, max: 120 } }),
+    show_title: faker.datatype.boolean(),
+    width: faker.helpers.arrayElement(["full", "half"] as const),
+    page_break: faker.datatype.boolean(),
+    kind: faker.helpers.arrayElement(["ai-changes"] as const),
+    group_by: faker.helpers.arrayElement(Object.values(ChangeGroup)),
+    people: faker.datatype.boolean(),
   },
   ...overrideResponse,
 });
@@ -11277,6 +11783,7 @@ export const getRetireStudyTemplateResponseMock = (
       { ...getRetireStudyTemplateResponseSlideFigureMock() },
       { ...getRetireStudyTemplateResponseTextBlockMock() },
       { ...getRetireStudyTemplateResponseComparisonMock() },
+      { ...getRetireStudyTemplateResponseExpertChangesMock() },
     ]),
   ),
   format: {
@@ -11510,7 +12017,7 @@ export const getRestoreStudyTemplateResponseSlideFigureMock = (
     kind: faker.helpers.arrayElement(["slide-figure"] as const),
     slide_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
     object_id: faker.helpers.arrayElement([
-      faker.helpers.fromRegExp("^(?:T[1-9][0-9]{0,8}\\.)?[TCRZM][1-9][0-9]{0,8}[a-z]{0,3}\\+?$"),
+      faker.helpers.fromRegExp("^(?:T[1-9][0-9]{0,8}\\.)?[TCRZMAN][1-9][0-9]{0,8}[a-z]{0,3}\\+?$"),
       null,
     ]),
     layers: faker.helpers.arrayElements(Object.values(Layer)),
@@ -11544,6 +12051,21 @@ export const getRestoreStudyTemplateResponseComparisonMock = (
     kind: faker.helpers.arrayElement(["comparison"] as const),
     task_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
     metrics: faker.helpers.arrayElements(Object.values(Metric)),
+  },
+  ...overrideResponse,
+});
+
+export const getRestoreStudyTemplateResponseExpertChangesMock = (
+  overrideResponse: Partial<ExpertChanges> = {},
+): ExpertChanges => ({
+  ...{
+    title: faker.string.alpha({ length: { min: 1, max: 120 } }),
+    show_title: faker.datatype.boolean(),
+    width: faker.helpers.arrayElement(["full", "half"] as const),
+    page_break: faker.datatype.boolean(),
+    kind: faker.helpers.arrayElement(["ai-changes"] as const),
+    group_by: faker.helpers.arrayElement(Object.values(ChangeGroup)),
+    people: faker.datatype.boolean(),
   },
   ...overrideResponse,
 });
@@ -11636,6 +12158,7 @@ export const getRestoreStudyTemplateResponseMock = (
       { ...getRestoreStudyTemplateResponseSlideFigureMock() },
       { ...getRestoreStudyTemplateResponseTextBlockMock() },
       { ...getRestoreStudyTemplateResponseComparisonMock() },
+      { ...getRestoreStudyTemplateResponseExpertChangesMock() },
     ]),
   ),
   format: {
@@ -12082,6 +12605,20 @@ export const getUpdateMeResponseMock = (
 });
 
 export const getSwitchWorkspaceResponseMock = (
+  overrideResponse: Partial<Extract<Workspace, object>> = {},
+): Workspace => ({
+  tenant_id: faker.string.uuid(),
+  role: faker.helpers.arrayElement(Object.values(Role)),
+  admin_rights: faker.datatype.boolean(),
+  slug: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  kind: faker.helpers.arrayElement(Object.values(TenantKind)),
+  status: faker.helpers.arrayElement(Object.values(TenantStatus)),
+  organisation_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  ...overrideResponse,
+});
+
+export const getCreateMyWorkspaceResponseMock = (
   overrideResponse: Partial<Extract<Workspace, object>> = {},
 ): Workspace => ({
   tenant_id: faker.string.uuid(),
@@ -13758,6 +14295,98 @@ export const getShowModelMockHandler = (
             ? await overrideResponse(info)
             : overrideResponse
           : getShowModelResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getTestLabModelMockHandler = (
+  overrideResponse?:
+    | LabModelTest
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<LabModelTest> | LabModelTest),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/tenant/models/test",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getTestLabModelResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getConnectLabModelMockHandler = (
+  overrideResponse?:
+    | LabModel
+    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<LabModel> | LabModel),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/tenant/models",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getConnectLabModelResponseMock(),
+        { status: 201 },
+      );
+    },
+    options,
+  );
+};
+
+export const getGetLabModelMockHandler = (
+  overrideResponse?:
+    | LabModel
+    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<LabModel> | LabModel),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/tenant/models/:modelId",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetLabModelResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getTestConnectedLabModelMockHandler = (
+  overrideResponse?:
+    | LabModelTest
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<LabModelTest> | LabModelTest),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/tenant/models/:modelId/test",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getTestConnectedLabModelResponseMock(),
         { status: 200 },
       );
     },
@@ -16808,6 +17437,30 @@ export const getReopenThreadMockHandler = (
   );
 };
 
+export const getMoveThreadMockHandler = (
+  overrideResponse?:
+    | ThreadDetail
+    | ((
+        info: Parameters<Parameters<typeof http.patch>[1]>[0],
+      ) => Promise<ThreadDetail> | ThreadDetail),
+  options?: RequestHandlerOptions,
+) => {
+  return http.patch(
+    "*/api/review-tasks/:taskId/slides/:slideId/threads/:threadId/anchor",
+    async (info: Parameters<Parameters<typeof http.patch>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getMoveThreadResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getSaveOpinionMockHandler = (
   overrideResponse?:
     | Opinion
@@ -17232,6 +17885,28 @@ export const getExportTrainingDatasetMockHandler = (
         status: 200,
         headers: { "Content-Type": "application/octet-stream" },
       });
+    },
+    options,
+  );
+};
+
+export const getGetTaskAiChangesMockHandler = (
+  overrideResponse?:
+    | AiChanges
+    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<AiChanges> | AiChanges),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/review-tasks/:taskId/evaluation/ai-changes",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetTaskAiChangesResponseMock(),
+        { status: 200 },
+      );
     },
     options,
   );
@@ -18074,6 +18749,28 @@ export const getSwitchWorkspaceMockHandler = (
   );
 };
 
+export const getCreateMyWorkspaceMockHandler = (
+  overrideResponse?:
+    | Workspace
+    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<Workspace> | Workspace),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/me/workspaces",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getCreateMyWorkspaceResponseMock(),
+        { status: 201 },
+      );
+    },
+    options,
+  );
+};
+
 export const getListTenantMembersMockHandler = (
   overrideResponse?:
     | Member[]
@@ -18812,6 +19509,10 @@ export const getParfocalAPIMock = () => [
   getListModelVisibilityMockHandler(),
   getHideModelMockHandler(),
   getShowModelMockHandler(),
+  getTestLabModelMockHandler(),
+  getConnectLabModelMockHandler(),
+  getGetLabModelMockHandler(),
+  getTestConnectedLabModelMockHandler(),
   getListModelRunAreasMockHandler(),
   getListNotificationPreferencesMockHandler(),
   getSetNotificationPreferencesMockHandler(),
@@ -18946,6 +19647,7 @@ export const getParfocalAPIMock = () => [
   getReplyToThreadMockHandler(),
   getResolveThreadMockHandler(),
   getReopenThreadMockHandler(),
+  getMoveThreadMockHandler(),
   getSaveOpinionMockHandler(),
   getGetOpinionMockHandler(),
   getSubmitFirstReadMockHandler(),
@@ -18965,6 +19667,7 @@ export const getParfocalAPIMock = () => [
   getGetTaskEvaluationMockHandler(),
   getExportTaskEvaluationMockHandler(),
   getExportTrainingDatasetMockHandler(),
+  getGetTaskAiChangesMockHandler(),
   getStartEvaluationVersionMockHandler(),
   getListEvaluationChangesMockHandler(),
   getGetSignOffSummaryMockHandler(),
@@ -19001,6 +19704,7 @@ export const getParfocalAPIMock = () => [
   getGetMeMockHandler(),
   getUpdateMeMockHandler(),
   getSwitchWorkspaceMockHandler(),
+  getCreateMyWorkspaceMockHandler(),
   getListTenantMembersMockHandler(),
   getListMemberActivityMockHandler(),
   getChangeMemberRoleMockHandler(),

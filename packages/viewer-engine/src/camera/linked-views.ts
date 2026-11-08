@@ -120,6 +120,20 @@ export function alignViews<Pane extends string>(
   return moveView(aligned, reference, state.views[reference]);
 }
 
+export function alignWithOffset<Pane extends string>(
+  state: LinkedViews<Pane>,
+  reference: NoInfer<Pane>,
+  pane: NoInfer<Pane>,
+  offset: ViewOffset,
+): LinkedViews<Pane> {
+  const anchor = state.views[reference];
+  const offsets = mapPanes(panesOf(state.views), (name) => (name === pane ? offset : noOffset));
+  const views = mapPanes(panesOf(state.views), (name) =>
+    name === pane && anchor !== null ? shiftView(anchor, offset) : state.views[name],
+  );
+  return { linked: true, views, offsets };
+}
+
 export function toggleLinked<Pane extends string>(
   state: LinkedViews<Pane>,
   reference: NoInfer<Pane>,

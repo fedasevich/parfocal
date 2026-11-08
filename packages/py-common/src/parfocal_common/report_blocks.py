@@ -28,12 +28,14 @@ class BlockKind(StrEnum):
     SLIDE_FIGURE = "slide-figure"
     TEXT = "text"
     COMPARISON = "comparison"
+    AI_CHANGES = "ai-changes"
 
 
 type Metric = Literal["sensitivity", "precision", "dice", "kappa", "cell-agreement"]
 type RegionColumn = Literal["sensitivity", "precision", "dice"]
 type AgreementPart = Literal["regions", "cells", "form"]
 type SlideColumn = Literal["objects", "disagreements", "time"]
+type ChangeGroup = Literal["class", "slide"]
 type ChartStyle = Literal["bars", "table"]
 type Layer = Literal["ai", "reviewed"]
 type Download = Literal["pdf", "docx", "html", "decisions", "objects", "geojson", "json"]
@@ -46,9 +48,8 @@ type BlockClassName = Annotated[
     str, StringConstraints(strip_whitespace=True, min_length=1, max_length=80)
 ]
 type QuestionKey = Annotated[str, StringConstraints(pattern=r"^[a-z][a-z0-9_]{0,39}$")]
-type ObjectId = Annotated[
-    str, StringConstraints(pattern=r"^(?:T[1-9][0-9]{0,8}\.)?[TCRZM][1-9][0-9]{0,8}[a-z]{0,3}\+?$")
-]
+OBJECT_ID = r"^(?:T[1-9][0-9]{0,8}\.)?[TCRZMAN][1-9][0-9]{0,8}[a-z]{0,3}\+?$"
+type ObjectId = Annotated[str, StringConstraints(pattern=OBJECT_ID)]
 type Rows = Annotated[StrictInt, Field(ge=1, le=500)]
 
 
@@ -174,6 +175,12 @@ class Comparison(Block):
         return self
 
 
+class ExpertChanges(Block):
+    kind: Literal["ai-changes"]
+    group_by: ChangeGroup = "class"
+    people: StrictBool = True
+
+
 type ReportBlock = Annotated[
     HeadlineNumbers
     | RegionMetrics
@@ -185,7 +192,8 @@ type ReportBlock = Annotated[
     | SlideTable
     | SlideFigure
     | TextBlock
-    | Comparison,
+    | Comparison
+    | ExpertChanges,
     Field(discriminator="kind"),
 ]
 type ReportBlocks = Annotated[list[ReportBlock], Field(max_length=MAX_BLOCKS)]

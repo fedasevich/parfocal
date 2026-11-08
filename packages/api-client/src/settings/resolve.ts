@@ -22,7 +22,16 @@ export type Resolved<K extends SettingKey> = {
   locked: boolean;
 };
 
-const fits = (entry: SettingEntry, value: unknown): boolean => {
+const nameLength = 60;
+const mostBindings = 200;
+const mostKeysPerAction = 4;
+
+const namesFit = (value: unknown, most: number): boolean =>
+  Array.isArray(value) &&
+  value.length <= most &&
+  value.every((name) => typeof name === "string" && name.length > 0 && name.length <= nameLength);
+
+export const fitsSetting = (entry: SettingEntry, value: unknown): boolean => {
   switch (entry.kind) {
     case "choice":
       return typeof value === "string" && (entry.options ?? []).includes(value);
@@ -36,11 +45,24 @@ const fits = (entry: SettingEntry, value: unknown): boolean => {
         (entry.minimum === undefined || (value as number) >= entry.minimum) &&
         (entry.maximum === undefined || (value as number) <= entry.maximum)
       );
+    case "names":
+      return namesFit(value, entry.maximum ?? 0);
+    case "keys":
+      return (
+        typeof value === "object" &&
+        value !== null &&
+        !Array.isArray(value) &&
+        Object.keys(value).length <= mostBindings &&
+        Object.entries(value).every(
+          ([action, keys]) =>
+            action.length > 0 && action.length <= nameLength && namesFit(keys, mostKeysPerAction),
+        )
+      );
   }
 };
 
 const usable = (entry: SettingEntry, layer: Layer, values: StoredValues, key: string): boolean =>
-  entry.layers.includes(layer) && key in values && fits(entry, values[key]);
+  entry.layers.includes(layer) && key in values && fitsSetting(entry, values[key]);
 
 export const resolveSetting = <K extends SettingKey>(
   key: K,

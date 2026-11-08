@@ -50,7 +50,11 @@ import { now } from "../../clock.ts";
 import { okData } from "../placeholder.tsx";
 import { type Notify, tableClass } from "./common.tsx";
 import {
+  type AnalyticsPolicy,
   type AnnouncementEnd,
+  analyticsPolicyChange,
+  analyticsPolicyOf,
+  analyticsPolicyOptions,
   announcementEnds,
   announcementKinds,
   classOptions,
@@ -481,6 +485,49 @@ function TumorShare({ lab, notify }: { lab: LabSettings; notify: Notify }) {
   );
 }
 
+function AnalyticsZone({ lab, notify }: { lab: LabSettings; notify: Notify }) {
+  const queryClient = useQueryClient();
+  const save = useSetWorkspaceSettings();
+  const current = analyticsPolicyOf(lab);
+  const apply = (policy: AnalyticsPolicy, said: string, undo?: () => void) =>
+    save.mutate(
+      { data: analyticsPolicyChange(lab, policy) },
+      {
+        onSuccess: () => {
+          void queryClient.invalidateQueries({ queryKey: getGetMySettingLayersQueryKey() });
+          notify(said, undo);
+        },
+        onError: (error) => notify(failure(error)),
+      },
+    );
+  return (
+    <Zone
+      title="Usage statistics"
+      sub="Counts of what is used, never names, patient data or slide content. The lab's choice wins over what a person chose."
+    >
+      <div className={rows}>
+        <Labelled
+          label="Usage statistics"
+          help="Each person lets people turn them off in their own Settings."
+        >
+          <SegmentedControl
+            aria-label="Usage statistics"
+            value={current}
+            onValueChange={(value) => {
+              const next = analyticsPolicyOptions.find((option) => option.value === value);
+              if (next === undefined || next.value === current) return;
+              apply(next.value, `Usage statistics: ${next.label.toLowerCase()}.`, () =>
+                apply(current, "Setting restored."),
+              );
+            }}
+            options={analyticsPolicyOptions.map((option) => ({ ...option }))}
+          />
+        </Labelled>
+      </div>
+    </Zone>
+  );
+}
+
 function PatientBannerZone({ lab, notify }: { lab: LabSettings; notify: Notify }) {
   const queryClient = useQueryClient();
   const save = useSetWorkspaceSettings();
@@ -786,6 +833,7 @@ export function WorkspaceSettingsSection({ notify }: { notify: Notify }) {
       <Defaults lab={lab} notify={notify} />
       <TumorShare lab={lab} notify={notify} />
       <PatientBannerZone lab={lab} notify={notify} />
+      <AnalyticsZone lab={lab} notify={notify} />
       <Tiers notify={notify} />
       <Announcements notify={notify} />
     </>

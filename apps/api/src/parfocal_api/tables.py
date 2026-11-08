@@ -2310,6 +2310,74 @@ hidden_models = Table(
     UniqueConstraint("tenant_id", "model_name"),
 )
 
+
+class LabModelSignIn(StrEnum):
+    NONE = "none"
+    TOKEN = "token"
+    HEADER = "header"
+
+
+class LabModelRunners(StrEnum):
+    ADMINS = "admins"
+    RESEARCHERS = "researchers"
+
+
+lab_models = Table(
+    "lab_models",
+    metadata,
+    *owned_ids(),
+    Column("name", String(80), nullable=False, info=OPERATIONAL),
+    Column("version", String(40), nullable=False, info=OPERATIONAL),
+    Column("address", String(2048), nullable=False, info=OPERATIONAL),
+    Column("sign_in", String(10), nullable=False, info=OPERATIONAL),
+    Column("header_name", String(80), nullable=True, info=OPERATIONAL),
+    Column("secret_ciphertext", LargeBinary, nullable=True, info=SECRET),
+    Column("secret_last_four", String(4), nullable=True, info=OPERATIONAL),
+    Column("tile_size", Integer, nullable=False, info=OPERATIONAL),
+    Column("magnification", Integer, nullable=False, info=OPERATIONAL),
+    Column("taxonomy", String(40), nullable=False, info=OPERATIONAL),
+    Column("class_map", JSONB, nullable=False, info=OPERATIONAL),
+    Column("who_can_run", String(20), nullable=False, info=OPERATIONAL),
+    Column(
+        "created_by_user_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("users.id"),
+        nullable=True,
+        info=PERSONAL,
+    ),
+    *timestamps(),
+    UniqueConstraint("tenant_id", "name", "version"),
+    one_of("sign_in", LabModelSignIn),
+    one_of("who_can_run", LabModelRunners),
+)
+
+lab_model_projects = Table(
+    "lab_model_projects",
+    metadata,
+    Column(
+        "lab_model_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("lab_models.id", ondelete="CASCADE"),
+        primary_key=True,
+        info=OPERATIONAL,
+    ),
+    Column(
+        "project_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("projects.id", ondelete="CASCADE"),
+        primary_key=True,
+        info=OPERATIONAL,
+    ),
+    Column(
+        "tenant_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("tenants.id"),
+        nullable=False,
+        index=True,
+        info=OPERATIONAL,
+    ),
+)
+
 rate_counters = Table(
     "rate_counters",
     metadata,

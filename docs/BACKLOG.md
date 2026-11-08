@@ -1114,7 +1114,7 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
   Depends on INGEST-021, AIP-005, AIP-010, SET-011. Refs mock 4 "Choosing what the AI runs", [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
   Size: L.
 
-- [ ] INGEST-024 · Upload progress with steps per slide
+- [x] INGEST-024 · Upload progress with steps per slide
   One bar for the whole upload with the time left and one per file. Each file row opens its processing steps: uploaded, tiles built, tissue found, results read, placed on the slide and IDs given, or "no results" for a slide that came without them, with a check per finished step and a bar on the running one. "Open now with what is ready" appears once tissue is found. The last step lists slides without results with Run a model (JOBS-002) or leave them.
   Done when component tests cover running, waiting and finished slides, and E2E opens a slide while its results are still being placed.
   Depends on INGEST-021, RSET-001, OBJ-001. Refs mock: upload/progress, mock: upload/done, doc 39.
@@ -2671,7 +2671,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Depends on ANN-035.
   Size: M.
 
-- [ ] ANN-037 · Comment pins in the select tool
+- [x] ANN-037 · Comment pins in the select tool
   Decision 68b (comment pins in the select tool). The select tool picks comment pins together with shapes, drags and nudges them, and saves the new place through the pin API. Backspace or Delete with pins in the selection opens a confirmation that names how many comment threads it removes, and only a confirmed delete removes the pins and their threads. Undo restores a moved pin, and a deleted thread is not undone silently.
   Done when interaction tests cover picking, moving and the confirmed and cancelled delete, an API test covers the pin move, and a browser test deletes a pin with its thread after confirming.
   Depends on ANN-035.
@@ -2683,7 +2683,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Depends on ANN-032.
   Size: S.
 
-- [ ] ANN-039 · Arrows and notes in threads, reports, imports and exports
+- [x] ANN-039 · Arrows and notes in threads, reports, imports and exports
   ANN-036 saves arrows and text notes under the letters A and N, but comment threads cannot attach to them by code, report blocks accept only the older letters, imported files cannot create notes, and exports leave the note text out. Accept A and N in threads and report blocks, import notes with their words, and export the note text only where the export already carries patient data.
   Done when API tests attach a thread to an arrow and a note, place both in a report block, import a note, and show the note text in an export that allows it and absent from one that does not.
   Depends on ANN-036.
@@ -2852,7 +2852,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Done when the linking model (pan, zoom, rotation, manual offset) is written as an ADR.
   Size: S.
 
-- [ ] CMP-001 · Split viewer layouts
+- [x] CMP-001 · Split viewer layouts
   1, 2 side by side, 2 stacked, 4.
   Done when golden tests cover each layout and the memory test passes with four viewers.
   Size: M.
@@ -2863,23 +2863,23 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Note that Shift+L is also the arrow tool in Annotate, so CMD-004 resolves the conflict.
   Size: S.
 
-- [ ] CMP-003 · Shared cursor
+- [x] CMP-003 · Shared cursor
   The same point is shown on every pane.
   Done when tests cover cursor mapping with offsets.
   Size: S.
 
-- [ ] CMP-004 · Pane slide picker
+- [x] CMP-004 · Pane slide picker
   Each pane is labelled Left or Right with a chip naming its slide. The chip opens a list of the case's slides. Picking the slide shown on the other side swaps the two. The inspector repeats the two slots with Change buttons and Swap sides.
   Done when E2E puts A2 next to A1 from a pane chip and from the inspector, and a test confirms the swap rule.
   Refs kit W14, [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md).
   Size: M.
 
-- [ ] CMP-005 · Rotation support
+- [x] CMP-005 · Rotation support
   Rotate a pane for alignment, off by default for input devices.
   Done when tests cover rotation in linked mode.
   Size: S.
 
-- [ ] CMP-006 · Semi-automatic alignment
+- [x] CMP-006 · Semi-automatic alignment
   Optional coarse registration from thumbnails to propose an initial offset.
   Done when a test aligns two serial-section fixtures within a tolerance, or an ADR defers it.
   Size: M.
@@ -2983,7 +2983,7 @@ Cases are optional groups of slides inside a project (PROJ-001). Patient fields 
   Depends on CASES-001. Refs kit W42.
   Size: M.
 
-- [ ] CASES-016 · Slides that match no case
+- [x] CASES-016 · Slides that match no case
   A slide whose file name names no case stays loose in the project, and a result file that matches no slide waits in the upload's Not matched yet list until the user picks one. A loose slide can be filed into a case later.
   Done when API tests cover loose slides, filing one later and an upload whose other files are unaffected.
   Depends on CASES-013, INGEST-021, RSET-004. Refs mock: upload/files.
@@ -3044,6 +3044,12 @@ Cases are optional groups of slides inside a project (PROJ-001). Patient fields 
   Done when API tests cover writing, reading, clearing, tenant isolation, the refusal in de-identified projects and an audit entry without the text, a log capture test proves the text never reaches a log, and the case details show the note.
   Depends on SEC-004, CASE-011.
   Size: M.
+
+- [x] CASES-027 · File or move a slide from the project page
+  CASES-017 added the move call and CASES-016 showed loose slides need it, but no screen calls it. On the project page, a loose slide gets "File into a case" and a filed slide gets "Move to another case", both asking for a reason and showing the refusal when a signed-off task holds the slide.
+  Done when a browser test files a loose slide, moves a filed one with a reason, and sees the refusal on a slide held by a signed-off task.
+  Depends on CASES-016, CASES-017.
+  Size: S.
 
 - [ ] CASES-023 · Idea: Due time rules
   Idea since [ADR 0053](adr/0053-ai-results-review-direction.md). Not planned.
@@ -3285,7 +3291,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Depends on AISEG-010.
   Size: M.
 
-- [ ] AISEG-018 · Smart select outlines without the half pixel shift
+- [x] AISEG-018 · Smart select outlines without the half pixel shift
   `smart-select.ts` adds half a pixel to points that `traceContours` already returns in continuous coordinates, so smart select outlines sit half a fitted pixel off and disagree with the AIS region pass. A 1.5 px test tolerance hides it. Drop the extra offset and tighten the test.
   Done when the smart select test checks outlines within 0.1 px of the expected ring and smart select and the region pass give the same outline for one nucleus.
   Depends on AISEG-010.
@@ -3345,7 +3351,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Refs doc 29.
   Size: S.
 
-- [ ] AINUC-009 · Area extraction from cells
+- [x] AINUC-009 · Area extraction from cells
   Group typed cells into areas for decisions where no tumor map exists.
   Done when tests produce stable areas on a fixture.
   Size: M.
@@ -3430,7 +3436,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   On hold since 2026-11-04. The owner parked compliance, legal, email and pilot paperwork as not worth the time yet. Resume when the owner asks or before the first tenant with real patient data.
   Size: M.
 
-- [ ] AILEARN-001 · Correction capture
+- [x] AILEARN-001 · Correction capture
   Only reviewed decisions with reviewer identity are training data. Plain recolours outside review do not teach.
   Done when tests confirm which events become training examples.
   Refs doc 25.
@@ -3544,13 +3550,13 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Refs [ADR 0021](adr/0021-chosen-home-worklist-status-board-and-account-menu.md).
   Size: M.
 
-- [ ] SET-013 · Settings screen on the layered settings
+- [x] SET-013 · Settings screen on the layered settings
   SET-002 built the modal shell but left the screen on the draft `getMySettings`. Add the missing rows to the settings catalogue and the generated TypeScript (language, presets, signature, panel width, double-click, model warnings, hide panel, notice channel, shortcuts), move the screen onto `getMySettingLayers`, `setMySettingLayers` and `resolveSettings` of SET-001 (settings storage and resolution), and delete the draft and its handler.
   Done when API tests cover the new catalogue rows, a browser test changes a setting and reloads to find it, and no code calls `getMySettings`.
   Depends on SET-002.
   Size: M.
 
-- [ ] SET-014 · Save the display name
+- [x] SET-014 · Save the display name
   SET-010 lets the user edit their name in Settings, Account, but no endpoint stores it, so the edit is lost when Settings reopens. Add a profile update endpoint for the display name with an audit event, call it from the Account section, and show the new name in the account menu and on report signatures.
   Done when API tests cover the update, its audit event and a refused empty name, and a browser test edits the name and finds it after a reload.
   Depends on SET-010.
@@ -3665,7 +3671,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when an ADR lists support and fallbacks.
   Size: S.
 
-- [ ] DEV-001 · Input abstraction
+- [x] DEV-001 · Input abstraction
   Devices produce semantic intents (pan vector, zoom delta, next cell, keep, set type, not a cell, next area, peek, preset step) consumed by the viewer and review loop.
   Done when unit tests cover the intent mapping for every device in the kit device matrix.
   Size: M.
@@ -3685,7 +3691,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when tests with recorded HID reports cover each mapping.
   Size: M.
 
-- [ ] DEV-005 · Device calibration
+- [x] DEV-005 · Device calibration
   Calibrate dead zones and speed.
   Done when tests confirm calibration values are stored per device.
   Size: S.
@@ -3711,14 +3717,20 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when Playwright pointer-type tests confirm a finger never draws in Annotate.
   Size: M.
 
-- [ ] DEV-010 · Bottom sheet interactions
+- [x] DEV-010 · Bottom sheet interactions
   Drag between heights, swipe left for the next cell.
   Done when touch tests cover each gesture.
   Size: S.
 
-- [ ] DEV-011 · Touch targets audit
+- [x] DEV-011 · Touch targets audit
   Done when an automated check confirms targets of at least 24 px on desktop and 44 px on tablet layouts.
   Size: S.
+
+- [x] DEV-012 · Devices drive the viewer through intents
+  DEV-001 maps every device's input to intents in `apps/web/src/devices/intents.ts` with the DEV-005 calibration, but the viewer still reads wheel and keys directly. Route the slide stage and review loop through the intents, so a saved speed or dead zone changes the viewer, without changing today's feel at default calibration.
+  Done when a browser test changes the wheel speed in Settings and sees a smaller zoom step, and the wheel, pinch and review key specs pass unchanged.
+  Depends on DEV-001, DEV-005.
+  Size: M.
 
 ---
 
@@ -3764,7 +3776,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when API tests cover filters, bulk read, muting and tenant isolation.
   Depends on NOTIF-006. Refs kit W53, [ADR 0119](adr/0119-inbox-mutes-for-projects-tasks-and-cases.md) (inbox mutes), which widened the case mute to projects and tasks since [ADR 0053](adr/0053-ai-results-review-direction.md) made cases optional.
 
-- [ ] NOTIF-008 · Hold notifications while reading
+- [x] NOTIF-008 · Hold notifications while reading
   While a person has a slide open, notifications are stored but nothing interrupts them: no toast, banner or sound, mentions included. When they leave the slide, what arrived is released in order. The client reports when a slide is opened and closed, and a stale report expires after the lab idle time.
   Done when tests deliver events while a slide is open and prove nothing is pushed until the slide closes, then everything arrives in order, and an expired open state releases them.
   Depends on NOTIF-001, COLLAB-007. Refs ADR 0023.
@@ -3810,7 +3822,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when a KPI dashboard shows seeded data against the kit targets.
   Size: M.
 
-- [ ] EXP-007 · Consent and opt-out
+- [x] EXP-007 · Consent and opt-out
   Analytics opt-in or opt-out per tenant policy and per user.
   Done when tests confirm no events are sent after opt-out.
   Size: S.
@@ -3833,6 +3845,12 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when E2E covers a blocked attempt with its message and log entry, a completing navigation that passes, and a task with no guard.
   Depends on EXP-008. Refs [`poc/study/public/study.js`](https://github.com/fedasevich/pathlogy-poc/blob/master/study/public/study.js), [ADR 0021](adr/0021-chosen-home-worklist-status-board-and-account-menu.md).
   Size: M.
+
+- [x] EXP-011 · Analytics policy per workspace and per person
+  EXP-007 lets each device opt out of usage analytics. Add a workspace policy in Admin (on, off, or each person chooses) in the lab settings layer, keep the person's choice in their own layer so it follows them across devices, and let the workspace policy win over the person.
+  Done when tests show no events are sent when the workspace turns analytics off whatever the person chose, and a person's opt-out holds on a second device.
+  Depends on EXP-007.
+  Size: S.
 
 ---
 
@@ -3978,7 +3996,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when the generated client is tested against recorded API responses and schema drift fails CI.
   Size: M.
 
-- [ ] TEST-012 · Fixture slide library in CI
+- [x] TEST-012 · Fixture slide library in CI
   The OpenSlide corpus subset, CAMELYON16 tumor_009 and test slides, synthetic tiny slides, cached on runners.
   Done when every format reader test uses a cached fixture.
   Depends on FOUND-016.
@@ -4623,7 +4641,7 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
 
 ---
 
-- [ ] EVAL-013 · How the experts changed the AI
+- [x] EVAL-013 · How the experts changed the AI
   For an annotate task with result sets, per slide and class: AI objects confirmed, edited, deleted and left unchecked, objects added, and by whom, with totals, in the evaluation API and as report blocks.
   Done when unit tests reproduce hand-counted values on a fixture task with two experts and three classes, including a slide with no result set.
   Depends on ANN-030, ANN-032, EVAL-006. Refs [ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md).
@@ -4640,6 +4658,12 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Done when a test exports a small slide and every mask matches the GeoJSON it came from.
   Depends on EVAL-014, AIP-008. Refs [ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md).
   Size: L.
+
+- [x] EVAL-016 · Annotate task reports in the evaluation export
+  EVAL-013 added the ai-changes report block, but the evaluation PDF export accepts only review tasks, so no annotate task report shows it. Let the export take an annotate task with the blocks that apply to it, ai-changes among them, and leave out the blocks that need review decisions.
+  Done when an API test exports an annotate task report with the ai-changes block and its hand-counted values, and a review task export is unchanged.
+  Depends on EVAL-013.
+  Size: S.
 
 ## 47 JOBS · Model runs, the jobs tray and lab models
 
@@ -4671,7 +4695,7 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Depends on JOBS-003, AIP-011, DS-021. Refs mock: job, doc 41.
   Size: M.
 
-- [ ] JOBS-005 · Connect a lab model
+- [x] JOBS-005 · Connect a lab model
   A researcher with admin rights points Parfocal at the lab's HTTP endpoint (MONAI Label, Triton or any service following the Parfocal contract) with its authentication, tile size and magnification, tests it with a sample tile, maps its classes and chooses who can run it. The endpoint follows the address rules of INGEST-025 when saved and on every call, follows no redirects, keeps its credentials sealed with the tenant data key, and lists the projects that may use it ([threat model](security/threat-model.md) J1 to J3).
   Done when API tests cover a passing and a failing test call and the class map, and E2E connects a stub endpoint.
   Depends on JOBS-001, PROJ-004. Refs mock: admin/addmodel, doc 39.
@@ -4748,12 +4772,18 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Depends on TASK-006. Refs mock: invite.
   Size: M.
 
-- [ ] ONB-004 · First-run setup
+- [x] ONB-004 · First-run setup
   Five skippable steps whose choices carry through: role and specialties (the role sets the recommended first project and the checklist), the workspace (join, ask or create with a name, logo and default privacy), the first project (sample, create or wait), the input device and the theme (applied at once), and a checklist that ends in the chosen place.
   The person who creates a workspace becomes a researcher with admin rights, whatever they picked as their role, and setup says so ([ADR 0096](adr/0096-researcher-and-reviewer-with-admin-rights.md), researcher and reviewer with admin rights).
   Done when component tests cover each choice and its effect, E2E finishes setup into each of the three first-project choices, and an API test shows the creator of a workspace holds admin rights.
   Depends on ONB-002, ONB-005, IAM-024. Refs mock: setup, doc 41.
   Size: L.
+
+- [ ] ONB-010 · Join or ask for a workspace and keep the setup profile
+  ONB-004 sends join and ask through a draft `answerWorkspace` that only the fake API answers, and does not save specialties or the workspace logo. Add the real join and access request endpoints with the workspace admins notified, save specialties on the person and the logo on the workspace with an additive migration, and delete the draft.
+  Done when API tests cover join, ask, an admin approving the ask and the saved specialties and logo, and the setup browser spec runs on the real client with no draft left.
+  Depends on ONB-004.
+  Size: M.
 
 - [x] ONB-005 · Sample project
   A new workspace gets a sample project with 4 CAMELYON16 slides, two result sets and a review task for the person, deletable and left out of every evaluation.
@@ -4818,7 +4848,7 @@ Admin is its own page with its own sidebar and the app's top bar, never a page i
   Depends on ADMIN-001, REMOTE-002, IAM-011.
   Size: L.
 
-- [ ] ADMIN-007 · Audit log and security
+- [x] ADMIN-007 · Audit log and security
   The audit log with filters and a signed export (SEC-024), and the security settings (single sign-on, session policy, MFA).
   Done when E2E filters and exports the log.
   Depends on ADMIN-001, SEC-024.
@@ -4829,6 +4859,12 @@ Admin is its own page with its own sidebar and the app's top bar, never a page i
   Done when component tests cover adding a block by drag and by click, moving, duplicating, removing and setting each kind of block, and every format setting, with the mouse and the keyboard, E2E creates a template, previews its PDF, uses it in a review task and retires it, and an axe check passes on the editor.
   Depends on ADMIN-001, EVAL-007. Refs mock: admin/templates, mock: admin/tpledit, doc 43.
   Size: L.
+
+- [ ] ADMIN-009 · Named actors and real sign-in settings in Admin
+  ADMIN-007 shows "A member" in the audit log's Who column against the real API, because audit events name actors by pseudonym, and the Security page's single sign-on and two factor switches save nothing. Let admins with the audit permission resolve a pseudonym to the member's name in the log view only, never in the export or logs, and wire single sign-on and two factors to the IdP settings that IAM-012 and the session policy already hold.
+  Done when an API test resolves actor names for an admin and refuses others, the export still carries pseudonyms only, and a browser test changes the two factor setting and reads it back.
+  Depends on ADMIN-007.
+  Size: M.
 
 ---
 
@@ -4868,7 +4904,7 @@ Admin is its own page with its own sidebar and the app's top bar, never a page i
   Depends on VIZ-001, AITUM-002. Refs mock: layers/heat, doc 40 G4.
   Size: M.
 
-- [ ] VIZ-004 · Diff and agreement
+- [x] VIZ-004 · Diff and agreement
   AI against reviewed, model A against B and reviewer against reviewer, coloured by agreement and also drawn differently (dashed for AI only, double for reviewer only), so colour is never the only cue.
   Done when golden tests cover each comparison and a test proves each kind has a non-colour cue.
   Depends on VIZ-001, OBJ-002. Refs mock: layers/diff, doc 40 G1.

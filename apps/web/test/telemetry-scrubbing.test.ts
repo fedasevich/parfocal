@@ -116,7 +116,17 @@ test("the console error reporter prints scrubbed errors", (context) => {
   assert.equal(printed[0].message, `Could not open ${redacted}`);
 });
 
-test("production clients receive scrubbed errors and analytics", () => {
+test("production clients receive scrubbed errors and analytics", (context) => {
+  const stored = new Map([
+    [
+      "parfocal.device-settings",
+      JSON.stringify({ analytics_policy: "person", analytics_opt_out: false }),
+    ],
+  ]);
+  Object.assign(globalThis, {
+    window: { localStorage: { getItem: (key: string) => stored.get(key) ?? null } },
+  });
+  context.after(() => Reflect.deleteProperty(globalThis, "window"));
   const errors: unknown[] = [];
   const events: unknown[] = [];
   const clients = selectWebClients(

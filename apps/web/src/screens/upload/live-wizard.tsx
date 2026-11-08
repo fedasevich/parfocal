@@ -2,6 +2,7 @@ import type { Project } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
 import { FlowBar, FlowPage, type FlowStep } from "@parfocal/ui/components/flow-page";
 import { Icon } from "@parfocal/ui/components/icon";
+import { IngestSkipped } from "@parfocal/ui/components/ingest-skipped";
 import { FactList } from "@parfocal/ui/components/inspector";
 import { ProgressBar } from "@parfocal/ui/components/progress-meter";
 import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
@@ -14,7 +15,7 @@ import {
 } from "@parfocal/ui/components/select";
 import { Hint, Zone } from "@parfocal/ui/components/zone";
 import { cn } from "@parfocal/ui/lib/utils";
-import { useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { type DragEvent, lazy, type ReactNode, Suspense, useRef, useState } from "react";
 import {
   type DroppedItem,
@@ -26,12 +27,15 @@ import {
 } from "../../upload/drop.ts";
 import { dropStore, useDropStore } from "../../upload/drop-store.ts";
 import { formatBytes, sameFile } from "../../upload/entries.ts";
+import { minutesLeft, slideSteps, timeLeftText } from "../../upload/slide-steps.ts";
+import { useSlideStates } from "../../upload/use-slide-states.ts";
 import { useUploads } from "../../upload/use-uploads.ts";
 import { DoneRow, ProblemZone } from "./check-step.tsx";
 import { FolderShape, GroupHead, RemoveButton, ResultRow, SlideBlock } from "./files-step.tsx";
 import { LinkImport } from "./link-import.tsx";
 import { createLiveModel, freshLiveState, type LiveModel, type LiveState } from "./live-model.ts";
 import { FileIcon, FileList, FileRow, TextLink, Thumb, useCrumbLink } from "./parts.tsx";
+import { StepList } from "./progress-step.tsx";
 import { plural } from "./state.ts";
 
 export type LiveScene = "empty" | "files" | "check" | "progress" | "done";
@@ -276,7 +280,7 @@ export function LiveWizard({ project, scene }: { project: Project; scene: LiveSc
             startError={phase === "error"}
           />
         ) : (
-          <UploadStep model={model} entries={mine} />
+          <UploadStep model={model} entries={mine} projectId={project.id} />
         )}
       </FlowPage>
     </main>
@@ -441,7 +445,7 @@ function FilesStep({
           search: { scene: "files", formats: "help" },
         })
       }
-      className="inline-flex cursor-pointer items-center gap-1.5 border-0 bg-transparent p-0 text-body-sm font-medium text-fg-dim hover:text-fg"
+      className="inline-flex min-h-6 cursor-pointer items-center gap-1.5 border-0 bg-transparent p-0 text-body-sm font-medium text-fg-dim hover:text-fg"
     >
       <Icon name="help" />
       What files work?
@@ -862,13 +866,30 @@ function CheckStep({
   );
 }
 
+const baseName = (path: string) => path.slice(path.lastIndexOf("/") + 1);
+
 function UploadStep({
   model,
   entries,
+  projectId,
 }: {
   model: LiveModel<DroppedItem>;
   entries: ReturnType<typeof useUploads>["entries"];
+  projectId: string;
 }) {
+  const [startedAt] = useState(() => Date.now());
+  const [openRows, setOpenRows] = useState<Record<string, boolean>>({});
+  const [leaveBare, setLeaveBare] = useState(false);
+  const slideOf = (entry: (typeof entries)[number]) =>
+    model.slides.findIndex(
+      (slide) => baseName(slide.path) === entry.name && slide.size === entry.size,
+    );
+  const slideEntries = entries.filter((entry) => slideOf(entry) >= 0);
+  const states = useSlideStates(
+    slideEntries.flatMap((entry) =>
+      entry.status === "done" && entry.uploadId !== undefined ? [entry.uploadId] : [],
+    ),
+  );
   const total = entries.reduce((sum, entry) => sum + entry.size, 0);
   const sent = entries.reduce(
     (sum, entry) => sum + (entry.status === "done" ? entry.size : entry.bytesUploaded),
@@ -876,6 +897,12 @@ function UploadStep({
   );
   const percent = total === 0 ? 0 : Math.min(100, Math.floor((sent / total) * 100));
   const done = entries.filter((entry) => entry.status === "done").length;
+  const left = timeLeftText(minutesLeft(sent, total, Date.now() - startedAt));
+  const bare = slideEntries.filter(
+    (entry) =>
+      (entry.uploadId === undefined ? undefined : states[entry.uploadId])?.status === "ready" &&
+      model.resultsOf(slideOf(entry)).every((result) => result.item.size === 0 || result.left),
+  );
   return (
     <>
       <Zone title="Everything" data-testid="upload-overall">
@@ -883,7 +910,7 @@ function UploadStep({
           value={percent}
           tone={done === entries.length && entries.length > 0 ? "ok" : "accent"}
           label={`${done} of ${plural(entries.length, "file")} uploaded`}
-          valueText={`${percent}% · ${formatBytes(sent)} of ${formatBytes(total)}`}
+          valueText={`${percent}% · ${formatBytes(sent)} of ${formatBytes(total)}${left}`}
         />
       </Zone>
       <Zone
@@ -898,36 +925,119 @@ function UploadStep({
                 : entry.status === "done"
                   ? 100
                   : Math.min(100, Math.floor((entry.bytesUploaded / entry.size) * 100));
+            const slideIndex = slideOf(entry);
+            const state = entry.uploadId === undefined ? undefined : states[entry.uploadId];
+            const steps =
+              slideIndex >= 0
+                ? slideSteps({
+                    uploaded: entry.status === "done",
+                    state,
+                    hasResults: model
+                      .resultsOf(slideIndex)
+                      .some((result) => result.item.size > 0 && !result.left),
+                  })
+                : null;
+            const open = Boolean(openRows[entry.id]);
             return (
               <div
                 key={entry.id}
                 data-testid="upload-file-row"
                 data-status={entry.status}
-                className="grid min-h-12 gap-1.5 border-line px-3 py-2 [&+&]:border-t"
+                data-ingest={state?.status ?? ""}
+                className="border-line [&+&]:border-t"
               >
-                <ProgressBar
-                  value={filePercent}
-                  tone={
-                    entry.status === "done" ? "ok" : entry.status === "failed" ? "bad" : "accent"
-                  }
-                  label={<span className="font-mono">{entry.name}</span>}
-                  valueText={
-                    entry.status === "done"
-                      ? "Uploaded"
-                      : entry.status === "failed"
-                        ? "Stopped. What was stored is kept"
-                        : entry.status === "retrying"
-                          ? "Connection lost. Trying again"
-                          : entry.status === "paused"
-                            ? `Paused at ${filePercent}%`
-                            : `${filePercent}%`
-                  }
-                />
+                <div className="grid min-h-12 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-3 py-2">
+                  <ProgressBar
+                    value={filePercent}
+                    tone={
+                      entry.status === "done" ? "ok" : entry.status === "failed" ? "bad" : "accent"
+                    }
+                    label={<span className="font-mono">{entry.name}</span>}
+                    valueText={
+                      state?.status === "skipped"
+                        ? "Skipped"
+                        : entry.status === "done"
+                          ? "Uploaded"
+                          : entry.status === "failed"
+                            ? "Stopped. What was stored is kept"
+                            : entry.status === "retrying"
+                              ? "Connection lost. Trying again"
+                              : entry.status === "paused"
+                                ? `Paused at ${filePercent}%`
+                                : `${filePercent}%`
+                    }
+                  />
+                  {steps !== null && !steps.skipped ? (
+                    <button
+                      type="button"
+                      aria-expanded={open}
+                      aria-label={`${open ? "Hide" : "Show"} the processing steps of ${entry.name}`}
+                      title={`${open ? "Hide" : "Show"} the processing steps`}
+                      onClick={() => setOpenRows({ ...openRows, [entry.id]: !open })}
+                      className="inline-flex h-6.5 cursor-pointer items-center gap-1.5 rounded-md border border-line bg-transparent px-2 text-caption text-fg-dim hover:border-line-strong hover:text-fg"
+                    >
+                      <span className="font-mono">
+                        {steps.done} of {steps.rows.length}
+                      </span>
+                      <Icon name="down" className={cn(open && "rotate-180")} />
+                    </button>
+                  ) : null}
+                </div>
+                {steps?.skipped ? (
+                  <IngestSkipped className="mr-3 mb-3 ml-3" fileName={entry.name} />
+                ) : null}
+                {steps !== null && open && !steps.skipped ? (
+                  <StepList
+                    slide={{
+                      steps: steps.rows,
+                      steps_done: steps.done,
+                      running: steps.running
+                        ? {
+                            percent: steps.done === 0 ? filePercent : null,
+                            text: steps.done === 0 ? `${filePercent}%` : "Working",
+                          }
+                        : null,
+                    }}
+                    projectId={projectId}
+                    firstSlideId={state?.slide_id ?? undefined}
+                  />
+                ) : null}
               </div>
             );
           })}
         </FileList>
       </Zone>
+      {bare.length === 0 ? null : leaveBare ? (
+        <Zone
+          title={`${plural(bare.length, "slide stays", "slides stay")} without results`}
+          sub="Add a result file or run a model on them any time, from the project or from the slide."
+          end={
+            <Button size="sm" variant="ghost" onClick={() => setLeaveBare(false)}>
+              Undo
+            </Button>
+          }
+        />
+      ) : (
+        <Zone
+          highlight
+          title={`${plural(bare.length, "slide has", "slides have")} no results`}
+          sub="Run a model on them now, or leave them and add results later."
+          data-testid="no-results-zone"
+        >
+          <div className="mt-1 flex flex-wrap items-center gap-2">
+            <Button
+              nativeButton={false}
+              render={<Link to="/projects/$projectId/run-model" params={{ projectId }} />}
+            >
+              <Icon name="smart" />
+              Run a model
+            </Button>
+            <Button variant="ghost" onClick={() => setLeaveBare(true)}>
+              Leave them
+            </Button>
+          </div>
+        </Zone>
+      )}
     </>
   );
 }

@@ -104,6 +104,29 @@ test("the account menu opens Settings and Shortcuts, and close goes back", async
   await expect(page).toHaveURL(/\/$/);
 });
 
+test("an edited name is saved and still shown after a reload", async ({ page }) => {
+  await page.goto("/settings/account");
+  const name = dialog(page).getByRole("textbox", { name: "Name" });
+  await name.fill("Lenka Malá-Nová");
+  await name.press("Enter");
+  await expect(page.getByText("Name saved")).toBeVisible();
+  await page.reload();
+  await expect(dialog(page).getByRole("textbox", { name: "Name" })).toHaveValue("Lenka Malá-Nová");
+  await expect(dialog(page).getByText(/Signs reports as Lenka Malá-Nová/)).toBeVisible();
+  await page.keyboard.press("Escape");
+  await page.getByRole("button", { name: "Account menu" }).click();
+  await expect(page.getByTestId("account-name")).toHaveText("Lenka Malá-Nová");
+});
+
+test("an empty name is refused and the old one stays", async ({ page }) => {
+  await page.goto("/settings/account");
+  const name = dialog(page).getByRole("textbox", { name: "Name" });
+  await name.fill("  ");
+  await name.press("Enter");
+  await expect(page.getByText("Your name can't be empty")).toBeVisible();
+  await expect(name).toHaveValue("Lenka Malá");
+});
+
 test("silencing replies in Settings hides them from the bell", async ({ page }) => {
   await page.goto("/settings/notifications");
   const replies = dialog(page).getByRole("radiogroup", { name: "Someone replies to me" });
@@ -156,6 +179,18 @@ test("the Privacy section shows initials, lock after and the patient banner", as
   await expect(initials).not.toHaveAttribute("aria-checked", before ?? "");
   await expect(dialog(page).getByText(/^\d+ min$/)).toBeVisible();
   await expect(dialog(page).getByText(/^(Shown with|Hidden)/)).toBeVisible();
+});
+
+test("the Privacy section turns usage statistics off and keeps the choice", async ({ page }) => {
+  await page.goto("/settings/privacy");
+  const sharing = dialog(page).getByRole("switch", { name: "Share usage statistics" });
+  await expect(sharing).toHaveAttribute("aria-checked", "true");
+  await sharing.click();
+  await expect(sharing).toHaveAttribute("aria-checked", "false");
+  await page.reload();
+  await expect(
+    dialog(page).getByRole("switch", { name: "Share usage statistics" }),
+  ).toHaveAttribute("aria-checked", "false");
 });
 
 test("signing out other devices leaves only this one", async ({ page }) => {
@@ -229,4 +264,22 @@ test("the question mark key opens Shortcuts with the source badges", async ({ pa
   for (const source of ["Figma", "QuPath", "ours"]) {
     await expect(shortcuts.getByText(source, { exact: true }).first()).toBeAttached();
   }
+});
+
+test("a changed layout and a recorded key are still there after a reload", async ({ page }) => {
+  await page.goto("/settings/layout");
+  const width = dialog(page).getByRole("radiogroup", { name: "Side panel width" });
+  await width.getByRole("radio", { name: "Wide" }).click();
+  const tools = dialog(page).getByRole("radiogroup", { name: "Tools" });
+  await tools.getByRole("radio", { name: "Bottom dock" }).click();
+  await expect(tools.getByRole("radio", { name: "Bottom dock" })).toBeChecked();
+  await page.goto("/settings/shortcuts");
+  await dialog(page).getByRole("button", { name: "Ruler: L" }).click();
+  await page.keyboard.press("j");
+  await expect(dialog(page).getByRole("button", { name: "Ruler: J" })).toBeVisible();
+  await page.reload();
+  await expect(dialog(page).getByRole("button", { name: "Ruler: J" })).toBeVisible();
+  await page.goto("/settings/layout");
+  await expect(width.getByRole("radio", { name: "Wide" })).toBeChecked();
+  await expect(tools.getByRole("radio", { name: "Bottom dock" })).toBeChecked();
 });

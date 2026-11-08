@@ -1,4 +1,5 @@
 import type { WebConfig } from "./config.ts";
+import { consentedAnalytics } from "./telemetry/consent.ts";
 import { SensitiveValues, scrubError, scrubFields } from "./telemetry/scrubbing.ts";
 
 export type ErrorReporter = { capture(error: unknown): void };
@@ -62,7 +63,7 @@ export function selectWebClients(
   const analytics = local ? noAnalytics : production("analytics", factories, config);
   return {
     errors: scrubbedErrors(errors, sensitive),
-    analytics: scrubbedAnalytics(analytics, sensitive),
+    analytics: consentedAnalytics(scrubbedAnalytics(analytics, sensitive)),
     flags: local ? fileFlags(flagDefaults) : production("flags", factories, config),
     sensitive,
   };

@@ -292,6 +292,57 @@ export const AgreementPart = {
   form: "form",
 } as const;
 
+export interface ManifestAnnotator {
+  letter: string;
+  assigned: boolean;
+}
+
+export interface PersonChanges {
+  letter: string;
+  confirmed: number;
+  edited: number;
+  deleted: number;
+  added: number;
+}
+
+export interface ClassChanges {
+  ai_objects: number;
+  confirmed: number;
+  edited: number;
+  deleted: number;
+  unchecked: number;
+  added: number;
+  by: PersonChanges[];
+  class_id: string | null;
+  class_name: string;
+}
+
+export interface Changes {
+  ai_objects: number;
+  confirmed: number;
+  edited: number;
+  deleted: number;
+  unchecked: number;
+  added: number;
+  by: PersonChanges[];
+}
+
+export interface SlideChanges {
+  slide_id: string;
+  slide: string;
+  result_set_id: string | null;
+  classes: ClassChanges[];
+  total: Changes;
+}
+
+export interface AiChanges {
+  task_id: string;
+  experts: ManifestAnnotator[];
+  slides: SlideChanges[];
+  classes: ClassChanges[];
+  total: Changes;
+}
+
 export interface AiObjectConfirm {
   geometry?: Geometry | null;
 }
@@ -636,6 +687,7 @@ export const AuditTarget = {
   "display-preset": "display-preset",
   "report-link": "report-link",
   "clinical-report": "clinical-report",
+  "lab-model": "lab-model",
 } as const;
 
 export type Availability = (typeof Availability)[keyof typeof Availability];
@@ -1093,6 +1145,13 @@ export const Certainty = {
   likely: "likely",
 } as const;
 
+export type ChangeGroup = (typeof ChangeGroup)[keyof typeof ChangeGroup];
+
+export const ChangeGroup = {
+  class: "class",
+  slide: "slide",
+} as const;
+
 /**
  * @minLength 1
  * @maxLength 500
@@ -1267,6 +1326,17 @@ export type SourceName = string;
 export interface ClassMapping {
   source_name: SourceName;
   class_id: string;
+}
+
+/**
+ * @minLength 1
+ * @maxLength 80
+ */
+export type SentName = string;
+
+export interface ClassMatch {
+  sent: SentName;
+  becomes: string | null;
 }
 
 export interface RateOut {
@@ -1846,6 +1916,29 @@ export interface EvaluationVersionStarted {
   started_at: string;
 }
 
+export type ExpertChangesWidth = (typeof ExpertChangesWidth)[keyof typeof ExpertChangesWidth];
+
+export const ExpertChangesWidth = {
+  full: "full",
+  half: "half",
+} as const;
+
+export type ExpertChangesKind = (typeof ExpertChangesKind)[keyof typeof ExpertChangesKind];
+
+export const ExpertChangesKind = {
+  "ai-changes": "ai-changes",
+} as const;
+
+export interface ExpertChanges {
+  title: BlockTitle;
+  show_title?: boolean;
+  width?: ExpertChangesWidth;
+  page_break?: boolean;
+  kind: ExpertChangesKind;
+  group_by?: ChangeGroup;
+  people?: boolean;
+}
+
 export type ExportKind = (typeof ExportKind)[keyof typeof ExportKind];
 
 export const ExportKind = {
@@ -1984,6 +2077,13 @@ export interface FormVersion {
   version: number;
   created_at: string;
 }
+
+/**
+ * @minLength 1
+ * @maxLength 80
+ * @pattern ^[A-Za-z0-9][A-Za-z0-9-]*$
+ */
+export type HeaderName = string;
 
 export type HeadlineNumbersWidth = (typeof HeadlineNumbersWidth)[keyof typeof HeadlineNumbersWidth];
 
@@ -2356,6 +2456,165 @@ export const JobControl = {
   retry: "retry",
 } as const;
 
+export type LabModelSignIn = (typeof LabModelSignIn)[keyof typeof LabModelSignIn];
+
+export const LabModelSignIn = {
+  none: "none",
+  token: "token",
+  header: "header",
+} as const;
+
+export type TaxonomyTemplate = (typeof TaxonomyTemplate)[keyof typeof TaxonomyTemplate];
+
+export const TaxonomyTemplate = {
+  "sentinel-node": "sentinel-node",
+  pannuke: "pannuke",
+} as const;
+
+export type LabModelRunners = (typeof LabModelRunners)[keyof typeof LabModelRunners];
+
+export const LabModelRunners = {
+  admins: "admins",
+  researchers: "researchers",
+} as const;
+
+export interface LabModel {
+  id: string;
+  name: string;
+  version: string;
+  address: string;
+  host: string;
+  sign_in: LabModelSignIn;
+  header_name: string | null;
+  last_four: string | null;
+  tile_size: number;
+  magnification: number;
+  taxonomy: TaxonomyTemplate;
+  class_map: ClassMatch[];
+  who_can_run: LabModelRunners;
+  project_ids: string[];
+  created_at: string;
+}
+
+/**
+ * @minLength 8
+ * @maxLength 4096
+ */
+export type Secret = string;
+
+export type TileSize = (typeof TileSize)[keyof typeof TileSize];
+
+export const TileSize = {
+  NUMBER_256: 256,
+  NUMBER_512: 512,
+  NUMBER_1024: 1024,
+} as const;
+
+export type Magnification = (typeof Magnification)[keyof typeof Magnification];
+
+export const Magnification = {
+  NUMBER_10: 10,
+  NUMBER_20: 20,
+  NUMBER_40: 40,
+} as const;
+
+/**
+ * @minLength 1
+ * @maxLength 80
+ */
+export type LabModelName = string;
+
+/**
+ * @minLength 1
+ * @maxLength 40
+ * @pattern ^[A-Za-z0-9][A-Za-z0-9._+-]*$
+ */
+export type ModelVersion = string;
+
+export interface LabModelDraft {
+  address: Address;
+  sign_in: LabModelSignIn;
+  header_name?: HeaderName | null;
+  secret?: Secret | null;
+  tile_size?: TileSize;
+  magnification?: Magnification;
+  name: LabModelName;
+  version: ModelVersion;
+  taxonomy: TaxonomyTemplate;
+  /** @maxItems 64 */
+  class_map: ClassMatch[];
+  who_can_run: LabModelRunners;
+  /** @maxItems 200 */
+  project_ids: string[];
+}
+
+export type LabModelTestOutcome = (typeof LabModelTestOutcome)[keyof typeof LabModelTestOutcome];
+
+export const LabModelTestOutcome = {
+  "follows-contract": "follows-contract",
+  "not-contract": "not-contract",
+} as const;
+
+export interface OutlineCell {
+  x: number;
+  y: number;
+  rx: number;
+  ry: number;
+  class: string;
+}
+
+export interface TileOutline {
+  /**
+   * @items.items.minItems 2
+   * @items.items.maxItems 2
+   */
+  regions: [number, number][][];
+  cells: OutlineCell[];
+}
+
+export interface SampleTile {
+  label: string;
+  slide: string;
+  answered_ms: number;
+  regions: number;
+  cells: number;
+  classes: number;
+  outline: TileOutline;
+}
+
+export interface ModelOfTest {
+  name: string;
+  version: string;
+}
+
+export interface SentClass {
+  name: string;
+  cells: number;
+  suggested: string | null;
+}
+
+export interface LabModelTest {
+  outcome: LabModelTestOutcome;
+  sample_slide: string;
+  returns: string[];
+  answered_ms: number;
+  server_software: string | null;
+  tiles: SampleTile[];
+  missing_geometry: number;
+  model: ModelOfTest | null;
+  classes: SentClass[];
+}
+
+export interface LabModelTestRequest {
+  address: Address;
+  sign_in: LabModelSignIn;
+  header_name?: HeaderName | null;
+  secret?: Secret | null;
+  tile_size?: TileSize;
+  magnification?: Magnification;
+  taxonomy?: TaxonomyTemplate;
+}
+
 export type LabSettingsValues = { [key: string]: unknown };
 
 export interface LabSettings {
@@ -2480,6 +2739,7 @@ export type LinkRefusal = (typeof LinkRefusal)[keyof typeof LinkRefusal];
 
 export const LinkRefusal = {
   "link-scheme": "link-scheme",
+  "link-credentials": "link-credentials",
   "link-address": "link-address",
   "link-redirects": "link-redirects",
   "link-too-large": "link-too-large",
@@ -2637,13 +2897,6 @@ export interface MessageCreate {
  * @pattern ^[A-Za-z0-9][A-Za-z0-9._/-]*$
  */
 export type ModelName = string;
-
-/**
- * @minLength 1
- * @maxLength 40
- * @pattern ^[A-Za-z0-9][A-Za-z0-9._+-]*$
- */
-export type ModelVersion = string;
 
 export interface ModelChoice {
   name: ModelName;
@@ -2917,7 +3170,7 @@ export interface NudgeCreate {
 }
 
 /**
- * @pattern ^(?:T[1-9][0-9]{0,8}\.)?[TCRZM][1-9][0-9]{0,8}[a-z]{0,3}\+?$
+ * @pattern ^(?:T[1-9][0-9]{0,8}\.)?[TCRZMAN][1-9][0-9]{0,8}[a-z]{0,3}\+?$
  */
 export type ObjectId = string;
 
@@ -3166,6 +3419,10 @@ export interface PersonalSettingsChange {
   values: Values;
 }
 
+export interface PinMove {
+  geometry: PointGeometry;
+}
+
 export type Plan = (typeof Plan)[keyof typeof Plan];
 
 export const Plan = {
@@ -3344,13 +3601,6 @@ export interface ProjectClass {
   name: string;
   colour: string;
 }
-
-export type TaxonomyTemplate = (typeof TaxonomyTemplate)[keyof typeof TaxonomyTemplate];
-
-export const TaxonomyTemplate = {
-  "sentinel-node": "sentinel-node",
-  pannuke: "pannuke",
-} as const;
 
 export interface ProjectDraft {
   name: ProjectName;
@@ -3666,7 +3916,8 @@ export type ReportBlock =
   | SlideTable
   | SlideFigure
   | TextBlock
-  | Comparison;
+  | Comparison
+  | ExpertChanges;
 
 /**
  * @maxItems 40
@@ -4953,9 +5204,28 @@ export interface WorkspaceChoice {
   tenant_id: string;
 }
 
+export type WorkspaceDraftDefaultPrivacyMode =
+  (typeof WorkspaceDraftDefaultPrivacyMode)[keyof typeof WorkspaceDraftDefaultPrivacyMode];
+
+export const WorkspaceDraftDefaultPrivacyMode = {
+  "de-identified": "de-identified",
+  clinical: "clinical",
+} as const;
+
+/**
+ * @minLength 1
+ * @maxLength 120
+ */
+export type WorkspaceName = string;
+
+export interface WorkspaceDraft {
+  name: WorkspaceName;
+  default_privacy_mode?: WorkspaceDraftDefaultPrivacyMode;
+}
+
 export interface WorkspaceSettingsChange {
   values: Values;
-  /** @maxItems 28 */
+  /** @maxItems 44 */
   locked?: string[];
 }
 
@@ -14517,6 +14787,661 @@ export const useShowModel = <TError = Problem, TContext = unknown>(
   TContext
 > => {
   return useMutation(getShowModelMutationOptions(options), queryClient);
+};
+
+export type testLabModelResponse200 = {
+  data: LabModelTest;
+  status: 200;
+};
+
+export type testLabModelResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type testLabModelResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type testLabModelResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type testLabModelResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type testLabModelResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type testLabModelResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type testLabModelResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type testLabModelResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type testLabModelResponseSuccess = testLabModelResponse200 & {
+  headers: Headers;
+};
+export type testLabModelResponseError = (
+  | testLabModelResponse400
+  | testLabModelResponse401
+  | testLabModelResponse403
+  | testLabModelResponse404
+  | testLabModelResponse409
+  | testLabModelResponse422
+  | testLabModelResponse429
+  | testLabModelResponse500
+) & {
+  headers: Headers;
+};
+
+export type testLabModelResponse = testLabModelResponseSuccess | testLabModelResponseError;
+
+export const getTestLabModelUrl = () => {
+  return `/api/tenant/models/test`;
+};
+
+/**
+ * @summary Test Lab Model
+ */
+export const testLabModel = async (
+  labModelTestRequest: LabModelTestRequest,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<testLabModelResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<testLabModelResponse>(getTestLabModelUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(labModelTestRequest),
+  });
+};
+
+export const getTestLabModelMutationKey = () => ["testLabModel"] as const;
+
+export const getTestLabModelMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof testLabModel>>,
+    TError,
+    TestLabModelMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof testLabModel>>,
+  TError,
+  TestLabModelMutationVariables,
+  TContext
+> => {
+  const mutationKey = getTestLabModelMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof testLabModel>>,
+    TestLabModelMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return testLabModel(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type TestLabModelMutationResult = NonNullable<Awaited<ReturnType<typeof testLabModel>>>;
+export type TestLabModelMutationBody = LabModelTestRequest;
+export type TestLabModelMutationError = Problem;
+export type TestLabModelMutationVariables = { data: LabModelTestRequest };
+
+/**
+ * @summary Test Lab Model
+ */
+export const useTestLabModel = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof testLabModel>>,
+      TError,
+      TestLabModelMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof testLabModel>>,
+  TError,
+  TestLabModelMutationVariables,
+  TContext
+> => {
+  return useMutation(getTestLabModelMutationOptions(options), queryClient);
+};
+
+export type connectLabModelResponse201 = {
+  data: LabModel;
+  status: 201;
+};
+
+export type connectLabModelResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type connectLabModelResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type connectLabModelResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type connectLabModelResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type connectLabModelResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type connectLabModelResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type connectLabModelResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type connectLabModelResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type connectLabModelResponseSuccess = connectLabModelResponse201 & {
+  headers: Headers;
+};
+export type connectLabModelResponseError = (
+  | connectLabModelResponse400
+  | connectLabModelResponse401
+  | connectLabModelResponse403
+  | connectLabModelResponse404
+  | connectLabModelResponse409
+  | connectLabModelResponse422
+  | connectLabModelResponse429
+  | connectLabModelResponse500
+) & {
+  headers: Headers;
+};
+
+export type connectLabModelResponse = connectLabModelResponseSuccess | connectLabModelResponseError;
+
+export const getConnectLabModelUrl = () => {
+  return `/api/tenant/models`;
+};
+
+/**
+ * @summary Connect Lab Model
+ */
+export const connectLabModel = async (
+  labModelDraft: LabModelDraft,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<connectLabModelResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<connectLabModelResponse>(getConnectLabModelUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(labModelDraft),
+  });
+};
+
+export const getConnectLabModelMutationKey = () => ["connectLabModel"] as const;
+
+export const getConnectLabModelMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof connectLabModel>>,
+    TError,
+    ConnectLabModelMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof connectLabModel>>,
+  TError,
+  ConnectLabModelMutationVariables,
+  TContext
+> => {
+  const mutationKey = getConnectLabModelMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof connectLabModel>>,
+    ConnectLabModelMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return connectLabModel(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ConnectLabModelMutationResult = NonNullable<
+  Awaited<ReturnType<typeof connectLabModel>>
+>;
+export type ConnectLabModelMutationBody = LabModelDraft;
+export type ConnectLabModelMutationError = Problem;
+export type ConnectLabModelMutationVariables = { data: LabModelDraft };
+
+/**
+ * @summary Connect Lab Model
+ */
+export const useConnectLabModel = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof connectLabModel>>,
+      TError,
+      ConnectLabModelMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof connectLabModel>>,
+  TError,
+  ConnectLabModelMutationVariables,
+  TContext
+> => {
+  return useMutation(getConnectLabModelMutationOptions(options), queryClient);
+};
+
+export type getLabModelResponse200 = {
+  data: LabModel;
+  status: 200;
+};
+
+export type getLabModelResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getLabModelResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getLabModelResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getLabModelResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getLabModelResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getLabModelResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getLabModelResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getLabModelResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getLabModelResponseSuccess = getLabModelResponse200 & {
+  headers: Headers;
+};
+export type getLabModelResponseError = (
+  | getLabModelResponse400
+  | getLabModelResponse401
+  | getLabModelResponse403
+  | getLabModelResponse404
+  | getLabModelResponse409
+  | getLabModelResponse422
+  | getLabModelResponse429
+  | getLabModelResponse500
+) & {
+  headers: Headers;
+};
+
+export type getLabModelResponse = getLabModelResponseSuccess | getLabModelResponseError;
+
+export const getGetLabModelUrl = (modelId: string) => {
+  return `/api/tenant/models/${modelId}`;
+};
+
+/**
+ * @summary Get Lab Model
+ */
+export const getLabModel = async (
+  modelId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getLabModelResponse> => {
+  return apiFetch<getLabModelResponse>(getGetLabModelUrl(modelId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetLabModelQueryKey = (modelId: string) => {
+  return [`/api/tenant/models/${modelId}`] as const;
+};
+
+export const getGetLabModelQueryOptions = <
+  TData = Awaited<ReturnType<typeof getLabModel>>,
+  TError = Problem,
+>(
+  modelId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getLabModel>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetLabModelQueryKey(modelId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getLabModel>>> = ({ signal }) =>
+    getLabModel(modelId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: modelId !== null && modelId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getLabModel>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetLabModelQueryResult = NonNullable<Awaited<ReturnType<typeof getLabModel>>>;
+export type GetLabModelQueryError = Problem;
+
+export function useGetLabModel<TData = Awaited<ReturnType<typeof getLabModel>>, TError = Problem>(
+  modelId: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getLabModel>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getLabModel>>,
+          TError,
+          Awaited<ReturnType<typeof getLabModel>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetLabModel<TData = Awaited<ReturnType<typeof getLabModel>>, TError = Problem>(
+  modelId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getLabModel>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getLabModel>>,
+          TError,
+          Awaited<ReturnType<typeof getLabModel>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetLabModel<TData = Awaited<ReturnType<typeof getLabModel>>, TError = Problem>(
+  modelId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getLabModel>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Lab Model
+ */
+
+export function useGetLabModel<TData = Awaited<ReturnType<typeof getLabModel>>, TError = Problem>(
+  modelId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getLabModel>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetLabModelQueryOptions(modelId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type testConnectedLabModelResponse200 = {
+  data: LabModelTest;
+  status: 200;
+};
+
+export type testConnectedLabModelResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type testConnectedLabModelResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type testConnectedLabModelResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type testConnectedLabModelResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type testConnectedLabModelResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type testConnectedLabModelResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type testConnectedLabModelResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type testConnectedLabModelResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type testConnectedLabModelResponseSuccess = testConnectedLabModelResponse200 & {
+  headers: Headers;
+};
+export type testConnectedLabModelResponseError = (
+  | testConnectedLabModelResponse400
+  | testConnectedLabModelResponse401
+  | testConnectedLabModelResponse403
+  | testConnectedLabModelResponse404
+  | testConnectedLabModelResponse409
+  | testConnectedLabModelResponse422
+  | testConnectedLabModelResponse429
+  | testConnectedLabModelResponse500
+) & {
+  headers: Headers;
+};
+
+export type testConnectedLabModelResponse =
+  | testConnectedLabModelResponseSuccess
+  | testConnectedLabModelResponseError;
+
+export const getTestConnectedLabModelUrl = (modelId: string) => {
+  return `/api/tenant/models/${modelId}/test`;
+};
+
+/**
+ * @summary Test Connected Lab Model
+ */
+export const testConnectedLabModel = async (
+  modelId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<testConnectedLabModelResponse> => {
+  return apiFetch<testConnectedLabModelResponse>(getTestConnectedLabModelUrl(modelId), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getTestConnectedLabModelMutationKey = () => ["testConnectedLabModel"] as const;
+
+export const getTestConnectedLabModelMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof testConnectedLabModel>>,
+    TError,
+    TestConnectedLabModelMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof testConnectedLabModel>>,
+  TError,
+  TestConnectedLabModelMutationVariables,
+  TContext
+> => {
+  const mutationKey = getTestConnectedLabModelMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof testConnectedLabModel>>,
+    TestConnectedLabModelMutationVariables
+  > = (props) => {
+    const { modelId } = props ?? {};
+
+    return testConnectedLabModel(modelId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type TestConnectedLabModelMutationResult = NonNullable<
+  Awaited<ReturnType<typeof testConnectedLabModel>>
+>;
+
+export type TestConnectedLabModelMutationError = Problem;
+export type TestConnectedLabModelMutationVariables = { modelId: string };
+
+/**
+ * @summary Test Connected Lab Model
+ */
+export const useTestConnectedLabModel = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof testConnectedLabModel>>,
+      TError,
+      TestConnectedLabModelMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof testConnectedLabModel>>,
+  TError,
+  TestConnectedLabModelMutationVariables,
+  TContext
+> => {
+  return useMutation(getTestConnectedLabModelMutationOptions(options), queryClient);
 };
 
 export type listModelRunAreasResponse200 = {
@@ -38704,6 +39629,178 @@ export const useReopenThread = <TError = Problem, TContext = unknown>(
   return useMutation(getReopenThreadMutationOptions(options), queryClient);
 };
 
+export type moveThreadResponse200 = {
+  data: ThreadDetail;
+  status: 200;
+};
+
+export type moveThreadResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type moveThreadResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type moveThreadResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type moveThreadResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type moveThreadResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type moveThreadResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type moveThreadResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type moveThreadResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type moveThreadResponseSuccess = moveThreadResponse200 & {
+  headers: Headers;
+};
+export type moveThreadResponseError = (
+  | moveThreadResponse400
+  | moveThreadResponse401
+  | moveThreadResponse403
+  | moveThreadResponse404
+  | moveThreadResponse409
+  | moveThreadResponse422
+  | moveThreadResponse429
+  | moveThreadResponse500
+) & {
+  headers: Headers;
+};
+
+export type moveThreadResponse = moveThreadResponseSuccess | moveThreadResponseError;
+
+export const getMoveThreadUrl = (taskId: string, slideId: string, threadId: string) => {
+  return `/api/review-tasks/${taskId}/slides/${slideId}/threads/${threadId}/anchor`;
+};
+
+/**
+ * @summary Move Thread
+ */
+export const moveThread = async (
+  taskId: string,
+  slideId: string,
+  threadId: string,
+  pinMove: PinMove,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<moveThreadResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<moveThreadResponse>(getMoveThreadUrl(taskId, slideId, threadId), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(pinMove),
+  });
+};
+
+export const getMoveThreadMutationKey = () => ["moveThread"] as const;
+
+export const getMoveThreadMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof moveThread>>,
+    TError,
+    MoveThreadMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof moveThread>>,
+  TError,
+  MoveThreadMutationVariables,
+  TContext
+> => {
+  const mutationKey = getMoveThreadMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof moveThread>>,
+    MoveThreadMutationVariables
+  > = (props) => {
+    const { taskId, slideId, threadId, data } = props ?? {};
+
+    return moveThread(taskId, slideId, threadId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type MoveThreadMutationResult = NonNullable<Awaited<ReturnType<typeof moveThread>>>;
+export type MoveThreadMutationBody = PinMove;
+export type MoveThreadMutationError = Problem;
+export type MoveThreadMutationVariables = {
+  taskId: string;
+  slideId: string;
+  threadId: string;
+  data: PinMove;
+};
+
+/**
+ * @summary Move Thread
+ */
+export const useMoveThread = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof moveThread>>,
+      TError,
+      MoveThreadMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof moveThread>>,
+  TError,
+  MoveThreadMutationVariables,
+  TContext
+> => {
+  return useMutation(getMoveThreadMutationOptions(options), queryClient);
+};
+
 export type saveOpinionResponse200 = {
   data: Opinion;
   status: 200;
@@ -42239,6 +43336,195 @@ export function useExportTrainingDataset<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getExportTrainingDatasetQueryOptions(taskId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type getTaskAiChangesResponse200 = {
+  data: AiChanges;
+  status: 200;
+};
+
+export type getTaskAiChangesResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getTaskAiChangesResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getTaskAiChangesResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getTaskAiChangesResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getTaskAiChangesResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getTaskAiChangesResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getTaskAiChangesResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getTaskAiChangesResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getTaskAiChangesResponseSuccess = getTaskAiChangesResponse200 & {
+  headers: Headers;
+};
+export type getTaskAiChangesResponseError = (
+  | getTaskAiChangesResponse400
+  | getTaskAiChangesResponse401
+  | getTaskAiChangesResponse403
+  | getTaskAiChangesResponse404
+  | getTaskAiChangesResponse409
+  | getTaskAiChangesResponse422
+  | getTaskAiChangesResponse429
+  | getTaskAiChangesResponse500
+) & {
+  headers: Headers;
+};
+
+export type getTaskAiChangesResponse =
+  | getTaskAiChangesResponseSuccess
+  | getTaskAiChangesResponseError;
+
+export const getGetTaskAiChangesUrl = (taskId: string) => {
+  return `/api/review-tasks/${taskId}/evaluation/ai-changes`;
+};
+
+/**
+ * @summary Get Task Ai Changes
+ */
+export const getTaskAiChanges = async (
+  taskId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getTaskAiChangesResponse> => {
+  return apiFetch<getTaskAiChangesResponse>(getGetTaskAiChangesUrl(taskId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetTaskAiChangesQueryKey = (taskId: string) => {
+  return [`/api/review-tasks/${taskId}/evaluation/ai-changes`] as const;
+};
+
+export const getGetTaskAiChangesQueryOptions = <
+  TData = Awaited<ReturnType<typeof getTaskAiChanges>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTaskAiChanges>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetTaskAiChangesQueryKey(taskId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getTaskAiChanges>>> = ({ signal }) =>
+    getTaskAiChanges(taskId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: taskId !== null && taskId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getTaskAiChanges>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetTaskAiChangesQueryResult = NonNullable<Awaited<ReturnType<typeof getTaskAiChanges>>>;
+export type GetTaskAiChangesQueryError = Problem;
+
+export function useGetTaskAiChanges<
+  TData = Awaited<ReturnType<typeof getTaskAiChanges>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTaskAiChanges>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getTaskAiChanges>>,
+          TError,
+          Awaited<ReturnType<typeof getTaskAiChanges>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetTaskAiChanges<
+  TData = Awaited<ReturnType<typeof getTaskAiChanges>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTaskAiChanges>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getTaskAiChanges>>,
+          TError,
+          Awaited<ReturnType<typeof getTaskAiChanges>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetTaskAiChanges<
+  TData = Awaited<ReturnType<typeof getTaskAiChanges>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTaskAiChanges>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Task Ai Changes
+ */
+
+export function useGetTaskAiChanges<
+  TData = Awaited<ReturnType<typeof getTaskAiChanges>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTaskAiChanges>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetTaskAiChangesQueryOptions(taskId, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;
@@ -48488,6 +49774,177 @@ export const useSwitchWorkspace = <TError = Problem, TContext = unknown>(
   TContext
 > => {
   return useMutation(getSwitchWorkspaceMutationOptions(options), queryClient);
+};
+
+export type createMyWorkspaceResponse201 = {
+  data: Workspace;
+  status: 201;
+};
+
+export type createMyWorkspaceResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type createMyWorkspaceResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type createMyWorkspaceResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type createMyWorkspaceResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type createMyWorkspaceResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type createMyWorkspaceResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type createMyWorkspaceResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type createMyWorkspaceResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type createMyWorkspaceResponseSuccess = createMyWorkspaceResponse201 & {
+  headers: Headers;
+};
+export type createMyWorkspaceResponseError = (
+  | createMyWorkspaceResponse400
+  | createMyWorkspaceResponse401
+  | createMyWorkspaceResponse403
+  | createMyWorkspaceResponse404
+  | createMyWorkspaceResponse409
+  | createMyWorkspaceResponse422
+  | createMyWorkspaceResponse429
+  | createMyWorkspaceResponse500
+) & {
+  headers: Headers;
+};
+
+export type createMyWorkspaceResponse =
+  | createMyWorkspaceResponseSuccess
+  | createMyWorkspaceResponseError;
+
+export const getCreateMyWorkspaceUrl = () => {
+  return `/api/me/workspaces`;
+};
+
+/**
+ * @summary Create My Workspace
+ */
+export const createMyWorkspace = async (
+  workspaceDraft: WorkspaceDraft,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<createMyWorkspaceResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<createMyWorkspaceResponse>(getCreateMyWorkspaceUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(workspaceDraft),
+  });
+};
+
+export const getCreateMyWorkspaceMutationKey = () => ["createMyWorkspace"] as const;
+
+export const getCreateMyWorkspaceMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createMyWorkspace>>,
+    TError,
+    CreateMyWorkspaceMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createMyWorkspace>>,
+  TError,
+  CreateMyWorkspaceMutationVariables,
+  TContext
+> => {
+  const mutationKey = getCreateMyWorkspaceMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createMyWorkspace>>,
+    CreateMyWorkspaceMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createMyWorkspace(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateMyWorkspaceMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createMyWorkspace>>
+>;
+export type CreateMyWorkspaceMutationBody = WorkspaceDraft;
+export type CreateMyWorkspaceMutationError = Problem;
+export type CreateMyWorkspaceMutationVariables = { data: WorkspaceDraft };
+
+/**
+ * @summary Create My Workspace
+ */
+export const useCreateMyWorkspace = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof createMyWorkspace>>,
+      TError,
+      CreateMyWorkspaceMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof createMyWorkspace>>,
+  TError,
+  CreateMyWorkspaceMutationVariables,
+  TContext
+> => {
+  return useMutation(getCreateMyWorkspaceMutationOptions(options), queryClient);
 };
 
 export type listTenantMembersResponse200 = {

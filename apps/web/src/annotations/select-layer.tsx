@@ -5,6 +5,9 @@ import { isTyping } from "../keys/registry.ts";
 import type { ViewerEngine } from "../viewer/viewer-engine.ts";
 import { screenScale, slideToScreen } from "../viewer/viewer-engine.ts";
 import type { AnnotationDocument } from "./document.ts";
+import { type PinRegistry, pinPointsOf } from "./pin-registry.ts";
+import { pinBodyScreenPixels } from "./pins.ts";
+import type { Point } from "./polygon-draft.ts";
 import { handlesOf, isReshapable } from "./reshape.ts";
 import {
   createSelectTool,
@@ -32,6 +35,7 @@ type SelectLayerProps = {
   onCommit?: (before: AnnotationDocument, after: AnnotationDocument, label: string) => void;
   onEditText?: (id: ShapeId) => void;
   onSelectionChange?: (ids: readonly ShapeId[]) => void;
+  pinRegistry?: PinRegistry;
 };
 
 type Screen = { x: number; y: number };
@@ -109,6 +113,7 @@ export function useSelectTool(
   onDocumentChange: (next: AnnotationDocument) => void,
   onCommit?: SelectLayerProps["onCommit"],
   onEditText?: SelectLayerProps["onEditText"],
+  pinRegistry?: PinRegistry,
 ): SelectTool {
   const latest = useRef({ doc, onDocumentChange, onCommit, onEditText });
   latest.current = { doc, onDocumentChange, onCommit, onEditText };
@@ -124,8 +129,17 @@ export function useSelectTool(
         pixelSize: () => 1 / screenScale(engine.getCamera()),
         commit: (before, after, label) => latest.current.onCommit?.(before, after, label),
         editText: (id) => latest.current.onEditText?.(id),
+        ...(pinRegistry
+          ? {
+              pins: {
+                points: () => pinPointsOf(pinRegistry, latest.current.doc),
+                open: (threadId) => pinRegistry.open(threadId),
+                remove: (threadIds, proceed) => pinRegistry.remove(threadIds, proceed),
+              },
+            }
+          : {}),
       }),
-    [engine, stage],
+    [engine, stage, pinRegistry],
   );
 }
 
@@ -138,10 +152,19 @@ export function SelectLayer({
   onCommit,
   onEditText,
   onSelectionChange,
+  pinRegistry,
 }: SelectLayerProps) {
   const camera = useSyncExternalStore(engine.subscribeCamera, engine.getCamera);
   const rect = useStageRect(stage);
-  const tool = useSelectTool(engine, stage, doc, onDocumentChange, onCommit, onEditText);
+  const tool = useSelectTool(
+    engine,
+    stage,
+    doc,
+    onDocumentChange,
+    onCommit,
+    onEditText,
+    pinRegistry,
+  );
   const state = useSyncExternalStore(tool.subscribe, tool.state);
   const escRegistry = useEscRegistry();
 
@@ -254,7 +277,7 @@ export function SelectLayer({
       },
     });
     const leaveSelection = escRegistry?.add("selection", {
-      open: () => tool.state().ids.length > 0,
+      open: () => tool.state().ids.length > 0 || tool.state().pinIds.length > 0,
       peel: () => tool.select([]),
     });
     const savedCursor = stage.style.cursor;
@@ -278,6 +301,7 @@ export function SelectLayer({
   if (!active) return null;
 
   const project = (x: number, y: number) => slideToScreen(camera, rect, { x, y });
+  const pinPoints = pinRegistry ? pinPointsOf(pinRegistry, doc) : new Map<string, Point>();
   const selected = state.ids
     .map((id) => doc.shapes.get(id))
     .filter((shape): shape is Shape => shape !== undefined);
@@ -299,6 +323,7 @@ export function SelectLayer({
     <svg
       data-testid="select-layer"
       data-selected={state.ids.join(",")}
+      data-selected-pins={state.pinIds.join(",")}
       data-gesture={state.gesture}
       data-editing={state.editing ?? ""}
       data-vertices={state.vertices.join(",")}
@@ -332,6 +357,26 @@ export function SelectLayer({
             />
           </g>
         );
+      })}
+      {state.pinIds.flatMap((threadId) => {
+        const point = pinPoints.get(threadId);
+        if (point === undefined) return [];
+        const base = project(point.x, point.y);
+        return [
+          <rect
+            key={threadId}
+            data-testid="select-pin"
+            data-thread={threadId}
+            x={base.x - 3}
+            y={base.y - pinBodyScreenPixels - 3}
+            width={pinBodyScreenPixels + 6}
+            height={pinBodyScreenPixels + 6}
+            rx={(pinBodyScreenPixels + 6) / 2}
+            fill="none"
+            className="stroke-accent"
+            strokeWidth={2}
+          />,
+        ];
       })}
       {group0 && group1 ? (
         <rect

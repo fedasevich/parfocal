@@ -128,16 +128,29 @@ test("the invite joins in one step and opens the first slide", async ({ page }) 
   await expect(page).toHaveURL(/\/projects\/[0-9a-f-]+\/slides\/[0-9a-f-]+\?task=/);
 });
 
-test("setup carries the role into the first project and ends on the first-week home", async ({
-  page,
-}) => {
+const startSetup = async (page: Page) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "Good afternoon, Lenka" })).toBeVisible();
   await page.evaluate(() => window.history.pushState(null, "", "/setup"));
+};
+
+const reachFirstProject = async (page: Page, role: RegExp) => {
+  await startSetup(page);
+  await page.getByRole("radio", { name: role }).click();
+  await page.getByRole("button", { name: "Next: Workspace" }).click();
+  await page.getByRole("button", { name: "Next: First project" }).click();
+};
+
+test("setup carries the role into the first project and ends in the sample project", async ({
+  page,
+}) => {
+  await startSetup(page);
   await page.getByRole("radio", { name: /Researcher/ }).click();
   await expect(page.getByText("Home opens on your projects")).toBeVisible();
   await page.getByRole("button", { name: "Next: Workspace" }).click();
   await page.getByRole("radio", { name: /Create a new workspace/ }).click();
+  await expect(page.getByText("gives you admin rights on it as a researcher")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Create it and continue" })).toBeDisabled();
   await page.getByRole("textbox", { name: "Name" }).fill("Brno AI group");
   await page.getByRole("button", { name: "Create it and continue" }).click();
   const create = page.getByRole("radio", { name: /Create a project/ });
@@ -148,13 +161,34 @@ test("setup carries the role into the first project and ends on the first-week h
   await expect(page.getByText("Created Brno AI group")).toBeVisible();
   await expect(page.getByText("Upload slides and their AI results")).toBeVisible();
   await page.getByRole("button", { name: "Open the sample project", exact: true }).click();
-  await expect(page).toHaveURL(/\/\?scene=new$/);
-  await expect(
-    page
-      .getByRole("main")
-      .getByText(/^(Start something|Start here|Continue where you left off)$/)
-      .first(),
-  ).toHaveText("Start something");
+  await expect(page).toHaveURL(/\/projects\/00000000-0000-4000-8003-000000000001(\?|$)/);
+});
+
+test("setup ends on the new project form when you choose to create a project", async ({ page }) => {
+  await reachFirstProject(page, /Researcher/);
+  await expect(page.getByRole("radio", { name: /Create a project/ })).toHaveAttribute(
+    "aria-checked",
+    "true",
+  );
+  await page.getByRole("button", { name: "Next: Viewer" }).click();
+  await page.getByRole("button", { name: "Next: Done" }).click();
+  await page.getByRole("button", { name: "Create my first project" }).click();
+  await expect(page).toHaveURL(/\/projects\/new$/);
+});
+
+test("setup ends on the home when you choose to wait for an invite", async ({ page }) => {
+  await reachFirstProject(page, /Reviewer/);
+  await expect(page.getByRole("radio", { name: /Open the sample project/ })).toHaveAttribute(
+    "aria-checked",
+    "true",
+  );
+  await page.getByRole("radio", { name: /Wait for an invite/ }).click();
+  await page.getByRole("button", { name: "Next: Viewer" }).click();
+  await page.getByRole("radio", { name: "Trackpad" }).click();
+  await page.getByRole("button", { name: "Next: Done" }).click();
+  await page.getByRole("button", { name: "Go to my home" }).click();
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.getByRole("heading", { name: "Good afternoon, Lenka" })).toBeVisible();
 });
 
 test("admin is Daniel's, with its own sections and the app's top bar", async ({ page }) => {

@@ -18,6 +18,8 @@ from parfocal_api.locales import (
 from parfocal_api.report_template import (
     EVERY_BLOCK,
     REPORT_MESSAGES,
+    ReportAiChange,
+    ReportAiChanges,
     ReportChange,
     ReportClass,
     ReportCompared,
@@ -31,6 +33,7 @@ from parfocal_api.report_template import (
 from parfocal_api.tables import DecisionStyle
 from parfocal_common.report_blocks import (
     Comparison,
+    ExpertChanges,
     ReportFormat,
     SlideFigure,
     SlideTable,
@@ -82,7 +85,10 @@ FULL_BLOCKS = (
     ),
     EVERY_BLOCK[9],
     Comparison(kind="comparison", title="Comparison", task_id=OTHER_TASK, metrics=["dice"]),
+    ExpertChanges(kind="ai-changes", title="Changes"),
+    ExpertChanges(kind="ai-changes", title="Changed slides", group_by="slide"),
 )
+AI_CHANGE = ReportAiChange("CLASS-SENTINEL", 3, 1, 1, 0, 1, 1, "REVIEWER-SENTINEL")
 FULL_REPORT = replace(
     REPORT,
     headline={"dice": 0.6, "kappa": 0.5},
@@ -119,6 +125,11 @@ FULL_REPORT = replace(
             on=date(2026, 11, 4),
         ),
     ),
+    ai_changes=ReportAiChanges(
+        classes=(AI_CHANGE,),
+        slides=(replace(AI_CHANGE, name="SLIDE-SENTINEL"),),
+        total=replace(AI_CHANGE, name=""),
+    ),
 )
 EMPTY_REPORT = ReportData(
     project_name="PROJECT-SENTINEL",
@@ -135,6 +146,7 @@ EMPTY_REPORT = ReportData(
         TextBlock(kind="text", title="Methods"),
         Comparison(kind="comparison", title="Comparison", metrics=["dice"]),
         Comparison(kind="comparison", title="Gone", task_id=MISSING_TASK, metrics=["dice"]),
+        ExpertChanges(kind="ai-changes", title="Changes"),
     ),
 )
 REPORT_VALUES = (

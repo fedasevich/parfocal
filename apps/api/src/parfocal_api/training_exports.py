@@ -23,12 +23,11 @@ from parfocal_api.check_options import CheckOptions, UncheckedExport, check_of
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.permissions import Permission, require
 from parfocal_api.problems import ConflictError, ForbiddenError
-from parfocal_api.review_order import Results
+from parfocal_api.review_order import CheckState, Results, state_of
 from parfocal_api.review_tasks import code_of, readable_task
 from parfocal_api.reviewed_export import path_parts
 from parfocal_api.tables import (
     AnnotationKind,
-    AnnotationOrigin,
     annotation_versions,
     annotations,
     result_objects,
@@ -272,6 +271,10 @@ async def ai_shapes(
     return found
 
 
+def is_checked(row: Any) -> bool:
+    return state_of(row.origin, row.deleted_at is not None) is not CheckState.UNCHECKED
+
+
 def origin_of(row: Any) -> DatasetOrigin | None:
     if row.deleted_at is not None:
         return None
@@ -321,9 +324,7 @@ async def slide_objects(
     for row in rows:
         kind = AnnotationKind(row.kind)
         origin = origin_of(row)
-        if row.source_number is not None and (
-            origin is not None or row.origin == AnnotationOrigin.AI_EDITED
-        ):
+        if row.source_number is not None and is_checked(row):
             covered.add((kind, row.source_number))
         if origin is None:
             continue

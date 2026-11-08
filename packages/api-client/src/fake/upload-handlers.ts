@@ -18,7 +18,7 @@ import {
   type UploadState,
   UploadStatus,
 } from "../generated/api.ts";
-import { cases, projects, uuid } from "./scenario.ts";
+import { cases, projects, slides, uuid } from "./scenario.ts";
 
 const slideExtensions = new Set([
   "svs",
@@ -209,7 +209,37 @@ const stateOf = (uploadId: string, choice: SlideChoice): UploadState => ({
   result_set_id: null,
 });
 
+const ingestLadder: { status: IngestStatus; step: string | null }[] = [
+  { status: IngestStatus.waiting, step: null },
+  { status: IngestStatus.processing, step: "tiles" },
+  { status: IngestStatus.processing, step: "tissue" },
+  { status: IngestStatus.processing, step: "results" },
+  { status: IngestStatus.processing, step: "place" },
+  { status: IngestStatus.processing, step: "place" },
+  { status: IngestStatus.processing, step: "place" },
+  { status: IngestStatus.ready, step: null },
+];
+
+const polls = new Map<string, number>();
+
+const statusOf = (uploadId: string): UploadState => {
+  const count = polls.get(uploadId) ?? 0;
+  polls.set(uploadId, count + 1);
+  const rung = ingestLadder[Math.min(count, ingestLadder.length - 1)];
+  return {
+    ...stateOf(uploadId, {}),
+    kind: UploadKind.slide,
+    upload_status: UploadStatus.completed,
+    status: rung?.status ?? IngestStatus.ready,
+    step: rung?.step ?? null,
+    slide_id: slides[0]?.id ?? null,
+  };
+};
+
 export const uploadHandlers = (): RequestHandler[] => [
+  http.get<{ uploadId: string }>("*/api/uploads/:uploadId/status", ({ params }) =>
+    HttpResponse.json(statusOf(params.uploadId)),
+  ),
   http.post("*/api/uploads/sorting", async ({ request }) =>
     HttpResponse.json(sortFiles((await request.json()) as SortingRequest)),
   ),

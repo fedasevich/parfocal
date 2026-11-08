@@ -10,7 +10,6 @@ import { jobDraftOperations } from "./job-handlers.ts";
 import { projectDraftOperations } from "./project-handlers.ts";
 import { reviewDraftOperations } from "./review-handlers.ts";
 import { checklist, reviewTasks, sampleProject, slideByIndex, threads } from "./scenario.ts";
-import { settingsDraftOperations } from "./settings-handlers.ts";
 import { signUpDraftOperations } from "./sign-up-handlers.ts";
 import { taskDraftOperations } from "./task-handlers.ts";
 import { teamDraftOperations } from "./team-handlers.ts";
@@ -26,6 +25,7 @@ export {
   getUpdateQueuedObjectMockHandler,
 } from "./adjudication-handlers.ts";
 export {
+  getAnswerWorkspaceMockHandler,
   getGetAdminOverviewMockHandler,
   getGetInvitePreviewMockHandler,
   getGetSecuritySettingsMockHandler,
@@ -50,10 +50,7 @@ export {
   getGetCosignReviewMockHandler,
   getReturnCosignRequestMockHandler,
 } from "./clinical-handlers.ts";
-export {
-  getConnectLabModelMockHandler,
-  getGetLabModelConnectionMockHandler,
-} from "./connect-model-handlers.ts";
+export { getGetLabModelConnectionMockHandler } from "./connect-model-handlers.ts";
 export {
   getGetModelRunDefaultsMockHandler,
   getListMyJobsMockHandler,
@@ -70,10 +67,6 @@ export {
   getListReviewObjectsMockHandler,
   getListThreadCommentsMockHandler,
 } from "./review-handlers.ts";
-export {
-  getGetMySettingsMockHandler,
-  getSetMyShortcutsMockHandler,
-} from "./settings-handlers.ts";
 export {
   getConfirmEmailMockHandler,
   getCreateAccountMockHandler,
@@ -166,7 +159,6 @@ export const draftOperations: DraftOperation[] = [
   ...signUpDraftOperations,
   ...reviewDraftOperations,
   ...clinicalDraftOperations,
-  ...settingsDraftOperations,
   ...connectModelDraftOperations,
   ...viewerDraftOperations,
   ...adjudicationDraftOperations,

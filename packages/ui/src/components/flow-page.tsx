@@ -44,7 +44,8 @@ function Breadcrumbs({
           <span key={item.label} className="inline-flex items-center gap-1.5">
             {renderLink({
               href: item.href ?? "#",
-              className: "text-fg-dim no-underline hover:text-fg hover:underline",
+              className:
+                "inline-flex min-h-6 items-center text-fg-dim no-underline hover:text-fg hover:underline",
               children: item.label,
             })}
             <span aria-hidden="true">/</span>
@@ -78,7 +79,7 @@ function stepReachable(step: FlowStep, state: StepState, index: number, reached:
 }
 
 const stepButton =
-  "inline-flex items-center gap-1.75 rounded-sm border-0 bg-transparent p-0 text-body-sm text-fg-dim focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent";
+  "inline-flex min-h-6 items-center gap-1.75 rounded-sm border-0 bg-transparent p-0 text-body-sm text-fg-dim focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent";
 
 function moveStepFocus(event: React.KeyboardEvent<HTMLOListElement>) {
   const keys = ["ArrowRight", "ArrowLeft", "Home", "End"];

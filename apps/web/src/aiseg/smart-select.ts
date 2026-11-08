@@ -32,8 +32,6 @@ export const boxSlopScreenPixels = 4;
 
 export const ringTolerance = 0.4;
 
-const pixelCentre = 0.5;
-
 export type SmartGesture =
   | { readonly kind: "point"; readonly positive: boolean; readonly extend: boolean }
   | { readonly kind: "box" };
@@ -147,18 +145,12 @@ export function maskToSlideRing(
   const rings = traceContours(field, frame.fittedWidth, frame.fittedHeight, 0);
   const anchor = anchorOf(prompts);
   const seed = anchor === null ? null : slideToModel(frame, anchor);
-  const chosen = chooseRing(
-    rings,
-    seed === null ? null : { x: seed.x - pixelCentre, y: seed.y - pixelCentre },
-  );
+  const chosen = chooseRing(rings, seed);
   if (chosen === null) return null;
   const simple = simplifyRing(chosen, ringTolerance);
   const slide = new Float32Array(simple.length);
   for (let i = 0; i < simple.length; i += 2) {
-    const where = modelToSlide(frame, {
-      x: (simple[i] ?? 0) + pixelCentre,
-      y: (simple[i + 1] ?? 0) + pixelCentre,
-    });
+    const where = modelToSlide(frame, { x: simple[i] ?? 0, y: simple[i + 1] ?? 0 });
     slide[i] = where.x;
     slide[i + 1] = where.y;
   }

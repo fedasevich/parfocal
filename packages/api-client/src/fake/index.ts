@@ -6,6 +6,7 @@ import { adminHandlers } from "./admin-handlers.ts";
 import { annotationHandlers } from "./annotation-handlers.ts";
 import { caseHandlers } from "./case-handlers.ts";
 import { caseReportHandlers, cosignRequestHandlers } from "./case-report-handlers.ts";
+import { connectModelHandlers } from "./connect-model-handlers.ts";
 import { consoleHandlers } from "./console-handlers.ts";
 import { coverageHandlers, tissueHandlers } from "./coverage-handlers.ts";
 import { createdRecordHandlers } from "./create-handlers.ts";
@@ -41,6 +42,7 @@ export function fakeApiHandlers(scope: FakeApiScope): RequestHandler[] {
     ...taskHandlers(),
     ...jobHandlers(),
     ...adminHandlers(),
+    ...connectModelHandlers(),
     ...adjudicationHandlers(),
     ...caseHandlers(),
     ...caseReportHandlers(),
@@ -75,7 +77,12 @@ export { annotationHandlers, resetFakeAnnotations } from "./annotation-handlers.
 export { resetSlideEdits } from "./case-handlers.ts";
 export { clinicalCaseId, resetFakeCaseReports } from "./case-report-handlers.ts";
 export { toClinicalReport, toCosignReview } from "./clinical-handlers.ts";
-export { toConnectedModel, toLabModelConnection } from "./connect-model-handlers.ts";
+export {
+  brokenLabServer,
+  toConnectedModel,
+  toLabModelConnection,
+  toTestedLabModel,
+} from "./connect-model-handlers.ts";
 export {
   type FakeConnectModelScene,
   fakeConnectModelScene,
@@ -104,6 +111,7 @@ export {
   resetJobsState,
   setFakeJobsScene,
 } from "./jobs-scene.ts";
+export { resetFakeProfile } from "./profile-changes.ts";
 export {
   projectSlideRows,
   toProjectOverview,

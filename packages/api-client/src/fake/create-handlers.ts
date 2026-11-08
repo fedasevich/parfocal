@@ -1,5 +1,5 @@
 import { HttpResponse, http, type RequestHandler } from "msw";
-import type { CaseDraft, ProjectDraft } from "../generated/api.ts";
+import type { CaseDraft, ProjectDraft, Workspace } from "../generated/api.ts";
 import { toCaseDetail } from "./case-handlers.ts";
 import { liveSecurityContact } from "./console-handlers.ts";
 import {
@@ -8,6 +8,7 @@ import {
   projects,
   type ScenarioCase,
   type ScenarioProject,
+  sampleProject,
   scenarioNow,
   uuid,
 } from "./scenario.ts";
@@ -36,6 +37,34 @@ const nextProjectNumber = () =>
   Math.max(...projects.map((project) => Number(project.code.slice(1)))) + 1;
 
 export const createdRecordHandlers = (): RequestHandler[] => [
+  http.post("*/api/me/workspaces", async ({ request }) => {
+    const draft = (await request.json()) as { name?: string };
+    const name = draft.name?.trim() ?? "";
+    if (name === "") return problem(422, "That request is not complete", "invalid-request");
+    const workspace: Workspace = {
+      tenant_id: uuid(1, 900),
+      role: "researcher",
+      admin_rights: true,
+      slug: name.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+      name,
+      kind: "research",
+      status: "active",
+      organisation_name: name,
+    };
+    return HttpResponse.json(workspace, { status: 201 });
+  }),
+  http.post("*/api/projects/sample", () =>
+    HttpResponse.json(
+      {
+        ...toProject(projects[0] as ScenarioProject),
+        id: sampleProject.id,
+        code: sampleProject.code,
+        name: sampleProject.name,
+        sample: true,
+      },
+      { status: 201 },
+    ),
+  ),
   http.post("*/api/projects", async ({ request }) => {
     const draft = (await request.json()) as ProjectDraft;
     if (draft.privacy_mode === "clinical" && liveSecurityContact() === null) {

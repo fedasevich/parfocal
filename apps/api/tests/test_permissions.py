@@ -48,6 +48,7 @@ from parfocal_api.tables import (
     display_presets,
     invitations,
     jobs,
+    lab_models,
     legal_holds,
     memberships,
     organisations,
@@ -91,6 +92,7 @@ OPEN_OPERATIONS = {
     "getMe": "signed-in",
     "updateMe": "signed-in",
     "switchWorkspace": "signed-in",
+    "createMyWorkspace": "signed-in",
     "getCurrentTenant": "member",
     "listTaxonomyTemplates": "member",
     "getOpinionFormTemplate": "member",
@@ -288,6 +290,7 @@ NEEDS_A_TASK = frozenset(
         "replyToThread",
         "resolveThread",
         "reopenThread",
+        "moveThread",
         "deleteThread",
         "createSharedObject",
         "importSharedObjects",
@@ -314,7 +317,23 @@ def template_body() -> dict[str, Any]:
 
 LINK_SITE = Site()
 LINK_SITE.file("/scan.svs", b"slide-bytes")
-LINK_OPERATIONS = frozenset({"listSourceFiles", "importFromLink"})
+LINK_SITE.json(
+    "/infer",
+    {
+        "model": "lab",
+        "version": "1",
+        "objects": [{"kind": "cell", "class": "a", "geometry": SQUARE}],
+    },
+)
+LINK_OPERATIONS = frozenset(
+    {
+        "listSourceFiles",
+        "importFromLink",
+        "testLabModel",
+        "connectLabModel",
+        "testConnectedLabModel",
+    }
+)
 
 
 @cache
@@ -610,6 +629,27 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     ),
     "resetModelTier": lambda _: Call("DELETE", "/api/tenant/model-tiers/outline/fast"),
     "hideModel": lambda _: Call("PUT", "/api/tenant/hidden-models/hovernet"),
+    "testLabModel": lambda _: Call(
+        "POST", "/api/tenant/models/test", {"address": LINK_SITE.url("/infer"), "sign_in": "none"}
+    ),
+    "connectLabModel": lambda _: Call(
+        "POST",
+        "/api/tenant/models",
+        {
+            "address": LINK_SITE.url("/infer"),
+            "sign_in": "none",
+            "name": f"matrix-{uuid.uuid4().hex[:8]}",
+            "version": "v1",
+            "taxonomy": "sentinel-node",
+            "class_map": [{"sent": "a", "becomes": "Tumor"}],
+            "who_can_run": "admins",
+            "project_ids": [],
+        },
+    ),
+    "getLabModel": lambda w: Call("GET", f"/api/tenant/models/{seeded(w, 'lab-model')}"),
+    "testConnectedLabModel": lambda w: Call(
+        "POST", f"/api/tenant/models/{seeded(w, 'lab-model')}/test"
+    ),
     "showModel": lambda _: Call("DELETE", "/api/tenant/hidden-models/hovernet"),
     "changeProjectPrivacy": lambda w: Call(
         "POST",
@@ -821,6 +861,9 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "exportTaskEvaluation": lambda w: Call(
         "GET", f"/api/review-tasks/{w.task}/evaluation/exports/objects.csv"
     ),
+    "getTaskAiChanges": lambda w: Call(
+        "GET", f"/api/review-tasks/{w.annotate_task}/evaluation/ai-changes"
+    ),
     "exportTrainingDataset": lambda w: Call(
         "GET", f"/api/review-tasks/{w.signed_annotate_task}/training-dataset"
     ),
@@ -940,6 +983,11 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     ),
     "reopenThread": lambda w: Call(
         "POST", f"/api/review-tasks/{w.task}/slides/{w.slide}/threads/{w.thread}/reopen"
+    ),
+    "moveThread": lambda w: Call(
+        "PATCH",
+        f"/api/review-tasks/{w.task}/slides/{w.slide}/threads/{w.thread}/anchor",
+        {"geometry": {"type": "Point", "coordinates": [3, 4]}},
     ),
     "deleteThread": lambda w: Call(
         "DELETE", f"/api/review-tasks/{w.task}/slides/{w.slide}/threads/{w.doomed_thread}"
@@ -1866,6 +1914,21 @@ async def seed(database: str, lead: Seat = RESEARCHER, presets_for: Seat = RESEA
             )
             await seed_case_reports(
                 connection, tenant_id, case.project_id, case.case_id, people[lead], deputy
+            )
+            await connection.execute(
+                insert(lab_models).values(
+                    id=uuid.uuid5(tenant_id, "lab-model"),
+                    tenant_id=tenant_id,
+                    name="seeded-lab-model",
+                    version="v1",
+                    address=LINK_SITE.url("/infer"),
+                    sign_in="none",
+                    tile_size=512,
+                    magnification=40,
+                    taxonomy="sentinel-node",
+                    class_map=[{"sent": "a", "becomes": None}],
+                    who_can_run="researchers",
+                )
             )
             queued_run, paused_run, failed_run = await seed_runs(
                 connection, tenant_id, case.project_id, case.loose_slide_id

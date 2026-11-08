@@ -27,6 +27,7 @@ import { FreehandLayer } from "../annotations/freehand-layer.tsx";
 import { LayersPanel } from "../annotations/layers-panel.tsx";
 import { LiveChangesMarker } from "../annotations/live-changes-marker.tsx";
 import { PinLayer } from "../annotations/pin-layer.tsx";
+import { createPinRegistry } from "../annotations/pin-registry.ts";
 import { type DraftControl, PolygonLayer } from "../annotations/polygon-layer.tsx";
 import { ProposalLayer } from "../annotations/proposal-layer.tsx";
 import { SaveStatus } from "../annotations/save-status.tsx";
@@ -43,6 +44,7 @@ import {
 } from "../annotations/use-saved-annotations.ts";
 import { legendDeviceOf } from "../devices/device-legend.ts";
 import { DeviceLegend } from "../devices/device-legend.tsx";
+import { applyMainCalibration } from "../devices/stage-calibration.ts";
 import { EscProvider, useEscOwner, useNewEscRegistry } from "../keys/esc-owner.tsx";
 import { useBindings } from "../keys/personal-keys.ts";
 import { useHotkeys } from "../keys/use-hotkeys.ts";
@@ -262,6 +264,7 @@ function OpenedSlide({
 }) {
   const host = useRef<HTMLDivElement | null>(null);
   const [hostNode, setHostNode] = useState<HTMLDivElement | null>(null);
+  const pinRegistry = useMemo(createPinRegistry, []);
   const hostRef = useCallback((node: HTMLDivElement | null) => {
     host.current = node;
     setHostNode(node);
@@ -468,6 +471,7 @@ function OpenedSlide({
         route: { onError: fail, ...labRouteOptions() },
         resolve: open,
       });
+      applyMainCalibration(viewport.engine);
       let unfollow = () => {};
       dispose = () => {
         unfollow();
@@ -596,11 +600,14 @@ function OpenedSlide({
               onCommit={saved.commit}
               onEditText={(id) => textControl.current?.edit(id)}
               onSelectionChange={setSelectedIds}
+              pinRegistry={pinRegistry}
             />
             <PinLayer
               engine={session.engine}
               stage={hostNode}
               active={tool === "comment"}
+              selecting={tool === "select"}
+              registry={pinRegistry}
               document={annotations}
               taskId={taskId}
               slideId={slideId}

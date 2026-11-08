@@ -54,7 +54,7 @@ test("every field is on the scrubbing allow-list", () => {
 
 test("the sink drops invalid events and passes valid ones", () => {
   const seen: string[] = [];
-  const sink = eventSink({ capture: (event) => void seen.push(event) });
+  const sink = eventSink({ capture: (event) => void seen.push(event) }, () => false);
   sink.track("task_started", { task_kind: "review", case_id: valid.case_id });
   sink.track("task_started", { task_kind: "gossip", case_id: valid.case_id });
   assert.deepEqual(seen, ["task_started"]);

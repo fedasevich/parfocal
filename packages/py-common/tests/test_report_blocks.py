@@ -13,7 +13,7 @@ def kinds_in_the_union() -> set[str]:
 
 def test_the_catalogue_is_the_closed_list_of_block_kinds() -> None:
     assert kinds_in_the_union() == {kind.value for kind in BlockKind}
-    assert len(BlockKind) == 11
+    assert len(BlockKind) == 12
 
 
 def test_a_block_takes_defaults_for_the_settings_it_leaves_out() -> None:

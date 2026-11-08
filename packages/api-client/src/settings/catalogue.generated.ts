@@ -5,10 +5,13 @@ export type SettingValues = {
   slide_brightness: number;
   density: "comfortable" | "compact";
   patient_names: "full" | "initials";
-  length_unit: "um" | "mm";
+  length_unit: "auto" | "um";
+  language: "en" | "cs";
   magnification_label: "objective" | "microns-per-pixel";
   tools: "rail" | "dock";
   side_panel_width: number;
+  hide_side_panel: boolean;
+  panel_while_moving: "pinned" | "auto";
   minimap: "useful" | "always" | "never";
   slide_strip: boolean;
   confidence_wording: "words" | "numbers" | "frequency" | "colour" | "hidden";
@@ -20,6 +23,8 @@ export type SettingValues = {
   notify_ai_finished: boolean;
   notify_replies: boolean;
   initials_while_sharing: boolean;
+  analytics_policy: "person" | "on" | "off";
+  analytics_opt_out: boolean;
   lock_after_minutes: number;
   patient_banner: boolean;
   default_privacy_mode: "de-identified" | "clinical";
@@ -29,13 +34,24 @@ export type SettingValues = {
   tumor_share_result_sentinel_node: boolean;
   tumor_share_result_pannuke: boolean;
   home_layout: "role" | "review" | "research" | "both";
+  presets: string[];
+  default_preset: number;
+  signature_block: boolean;
+  double_click: "zoom" | "toggle";
+  model_warnings: boolean;
+  slide_submitted_notice: "email" | "bell" | "quiet";
+  shortcut_preset: "default" | "qupath" | "figma";
+  shortcut_custom: Record<string, string[]>;
+  shortcut_single_letter: boolean;
+  shortcut_by_position: boolean;
+  shortcut_whole_slide_key: "both" | "hold" | "tap";
 };
 
 export type SettingKey = keyof SettingValues;
 
 export type SettingEntry = {
-  kind: "choice" | "switch" | "whole" | "id";
-  default: string | boolean | number;
+  kind: "choice" | "switch" | "whole" | "id" | "names" | "keys";
+  default: string | boolean | number | string[] | Record<string, string[]>;
   layers: Layer[];
   options?: string[];
   minimum?: number;
@@ -89,13 +105,24 @@ export const catalogue: Record<SettingKey, SettingEntry> = {
   },
   "length_unit": {
     "kind": "choice",
-    "default": "um",
+    "default": "auto",
     "layers": [
       "personal"
     ],
     "options": [
-      "um",
-      "mm"
+      "auto",
+      "um"
+    ]
+  },
+  "language": {
+    "kind": "choice",
+    "default": "en",
+    "layers": [
+      "personal"
+    ],
+    "options": [
+      "en",
+      "cs"
     ]
   },
   "magnification_label": {
@@ -122,12 +149,30 @@ export const catalogue: Record<SettingKey, SettingEntry> = {
   },
   "side_panel_width": {
     "kind": "whole",
-    "default": 320,
+    "default": 340,
     "layers": [
       "personal"
     ],
     "minimum": 240,
     "maximum": 560
+  },
+  "hide_side_panel": {
+    "kind": "switch",
+    "default": false,
+    "layers": [
+      "personal"
+    ]
+  },
+  "panel_while_moving": {
+    "kind": "choice",
+    "default": "pinned",
+    "layers": [
+      "personal"
+    ],
+    "options": [
+      "pinned",
+      "auto"
+    ]
   },
   "minimap": {
     "kind": "choice",
@@ -234,6 +279,25 @@ export const catalogue: Record<SettingKey, SettingEntry> = {
       "personal"
     ]
   },
+  "analytics_policy": {
+    "kind": "choice",
+    "default": "person",
+    "layers": [
+      "lab"
+    ],
+    "options": [
+      "person",
+      "on",
+      "off"
+    ]
+  },
+  "analytics_opt_out": {
+    "kind": "switch",
+    "default": false,
+    "layers": [
+      "personal"
+    ]
+  },
   "lock_after_minutes": {
     "kind": "whole",
     "default": 15,
@@ -314,6 +378,105 @@ export const catalogue: Record<SettingKey, SettingEntry> = {
       "review",
       "research",
       "both"
+    ]
+  },
+  "presets": {
+    "kind": "names",
+    "default": [],
+    "layers": [
+      "personal"
+    ],
+    "maximum": 3
+  },
+  "default_preset": {
+    "kind": "whole",
+    "default": 0,
+    "layers": [
+      "personal"
+    ],
+    "minimum": 0,
+    "maximum": 3
+  },
+  "signature_block": {
+    "kind": "switch",
+    "default": true,
+    "layers": [
+      "personal"
+    ]
+  },
+  "double_click": {
+    "kind": "choice",
+    "default": "zoom",
+    "layers": [
+      "personal"
+    ],
+    "options": [
+      "zoom",
+      "toggle"
+    ]
+  },
+  "model_warnings": {
+    "kind": "switch",
+    "default": true,
+    "layers": [
+      "personal"
+    ]
+  },
+  "slide_submitted_notice": {
+    "kind": "choice",
+    "default": "bell",
+    "layers": [
+      "personal"
+    ],
+    "options": [
+      "email",
+      "bell",
+      "quiet"
+    ]
+  },
+  "shortcut_preset": {
+    "kind": "choice",
+    "default": "default",
+    "layers": [
+      "personal"
+    ],
+    "options": [
+      "default",
+      "qupath",
+      "figma"
+    ]
+  },
+  "shortcut_custom": {
+    "kind": "keys",
+    "default": {},
+    "layers": [
+      "personal"
+    ]
+  },
+  "shortcut_single_letter": {
+    "kind": "switch",
+    "default": true,
+    "layers": [
+      "personal"
+    ]
+  },
+  "shortcut_by_position": {
+    "kind": "switch",
+    "default": true,
+    "layers": [
+      "personal"
+    ]
+  },
+  "shortcut_whole_slide_key": {
+    "kind": "choice",
+    "default": "both",
+    "layers": [
+      "personal"
+    ],
+    "options": [
+      "both",
+      "hold",
+      "tap"
     ]
   }
 };

@@ -84,6 +84,7 @@ export type AuditSeed = {
   action: string;
   details: string;
   project: ProjectCode;
+  day?: string;
 };
 
 export const auditToday: AuditSeed[] = [
@@ -104,7 +105,7 @@ export const auditToday: AuditSeed[] = [
   {
     time: "11:15",
     by: "LM",
-    action: "review.submitted",
+    action: "task.review-submitted",
     details: "Submitted her review of A1 · H&E",
     project: "P07",
   },
@@ -130,9 +131,25 @@ export const auditToday: AuditSeed[] = [
     details: "Rejected a call with a bad signature",
     project: "P07",
   },
+  {
+    time: "16:20",
+    by: "LM",
+    action: "project.changed",
+    details: "Changed the project settings",
+    project: "P03",
+    day: "2026-10-14",
+  },
+  {
+    time: "09:05",
+    by: "DH",
+    action: "member.role-changed",
+    details: "Made Karel a researcher",
+    project: "P03",
+    day: "2026-10-10",
+  },
 ];
 
-export const auditAt = (time: string) => at(time);
+export const auditAt = (time: string, day = today) => at(time, day);
 
 export const auditEventId = (index: number) => uuid(61, index + 1);
 

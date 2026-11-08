@@ -113,7 +113,11 @@ export function createUploadEngine(options: UploadEngineOptions): UploadEngine {
   uppy.on("state-update", (_before, after) => {
     for (const file of Object.values(after.files)) {
       const uploadId = file.s3Multipart?.uploadId;
-      if (uploadId === undefined || announced.has(file.id)) continue;
+      if (uploadId === undefined) continue;
+      if (entries.some((entry) => entry.id === file.id && entry.uploadId !== uploadId)) {
+        change(file.id, (entry) => ({ ...entry, uploadId }));
+      }
+      if (announced.has(file.id)) continue;
       announced.add(file.id);
       if (file.data instanceof Blob) createdFor.get(file.data)?.(uploadId);
     }
