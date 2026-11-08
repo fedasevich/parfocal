@@ -2984,7 +2984,7 @@ Cases are optional groups of slides inside a project (PROJ-001). Patient fields 
   Depends on CASES-013, INGEST-021, RSET-004. Refs mock: upload/files.
   Size: M.
 
-- [ ] CASES-017 · Moving a slide between cases
+- [x] CASES-017 · Moving a slide between cases
   A slide moves with its history to another case in the same project. Its result sets, IDs, decisions and threads move with it, and the researchers of tasks that hold it are notified. A move is refused while a task that holds the slide is signed off, until it is reopened (ADJ-004). A reason is required and both cases log the move.
   Done when API tests cover a move, a refused move on a signed-off task and the moved result sets, with audit entries on both cases.
   Depends on CASES-012, ADJ-004. Refs kit W44, kit Flow 12.
