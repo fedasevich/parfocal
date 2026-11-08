@@ -1,6 +1,6 @@
 # Decisions waiting for the owner
 
-Last updated: 2026-11-04
+Last updated: 2026-11-08
 
 Each decision lists its options, with the recommended one marked. Write your letter after "Your choice:", or leave it empty to take the recommended option. A short note is welcome where you pick "Other".
 
@@ -26,77 +26,21 @@ To take every recommendation at once, write "all recommended" here:
 
 Every other answer kept what was built: 37a (darker primary hover), 39a (Alt+Left and Alt+Right for view history), 43a (record number visible in initials mode), 50a (class keys 1 to 9) and 60a (no Model warnings block when there are none).
 
-## 64. Who sees the workspace security contact, from SEC-029 (security contact for each workspace)
+## What your answers of 2026-11-08 changed
 
-Admins set the contact in Admin, Workspace settings. Researchers without admin rights can also read it, because the existing workspace settings permission gives them view access, and reviewers cannot see it.
+| Answer | What changed |
+|---|---|
+| 64a, 65a, 67a, 69a and 70a | Kept as built. Researchers and admins read the workspace security contact, a de-identified workspace falls back to its owners, the ruler and arrow have no draw from centre, a node is the slide's block else the slide, and a signed evaluation keeps its signed checksum with the changes flagged |
+| 66b, search text in the URL | Kept in the URL as you chose. The industry check is decision 72 below |
+| 68b, pins in the select tool | ANN-037 (comment pins in the select tool) builds it, with a confirmation that names how many threads a delete removes |
+| 71a, duplicate in a link import | INGEST-031 (skipped status for a duplicate in a link import) builds the neutral "Skipped, already in this project" status |
 
-- a. Keep it readable by researchers and admins. (recommended)
-- b. Admins only.
+## 72. Search text in the URL after the industry check, from decision 66 (typed search text in the search page URL)
 
-Your choice:A
+You kept the typed text in `/search?q=...` and asked for the industry standard. It is to keep identifiers out of URLs. OWASP lists sensitive data in query strings as a weakness (CWE-598, information exposure through query strings), the US health regulator's guidance on tracking warns that full URLs with patient details reach analytics and logs, and Google Analytics forbids personal data in page URLs. Apps that keep search in the address, such as Gmail, hold no patient data. A shared search link would still work through a saved search with its own id.
 
-## 65. A de-identified workspace with no security contact, from SEC-029
-
-The contact is required only before a workspace holds clinical data. A de-identified workspace may leave it empty, and breach notices then go to the workspace owners.
-
-- a. Keep that fallback to the owners. (recommended)
-- b. Require the contact in every workspace.
-
-Your choice: A
-
-## 66. Typed search text in the search page URL, from SEC-010 (PHI-safe telemetry)
-
-The search page keeps the typed text in its address, `/search?q=...`, so a typed patient name lands in browser history and anything that records full URLs. Telemetry already drops query strings, and SEC-010 says URLs use ids, never names.
-
-- a. Move the text out of the URL into page state, so a search link opens empty. (recommended)
-- b. Keep it in the URL so searches can be shared and reloaded.
-
-Your choice: b, but check what is the industry standard
-
-
-## 67. Alt to draw an arrow or ruler from its centre, from ANN-034 (hardening the count, arrow, text, ruler and comment pin tools)
-
-Figma draws from the centre while Alt or Option is held. QuPath has no such convention, and pathologists mostly measure from one edge of a structure to the other.
-
-- a. No for the ruler, and add it for the arrow only if users ask. (recommended)
-- b. Add it to both now, the Figma way.
-
-Your choice: a
-
-## 68. Comment pins in the select tool, from ANN-035 (Figma style point editing and multi-shape moves)
-
-The select tool now picks markers, arrows, text and every drawn shape together, and Backspace or Delete removes the selection. Comment pins live in the document's pin table with a thread on the server, not in the shape table, so selecting a pin and pressing Delete would delete a comment thread with one key and no confirmation. Pins keep their own popover with a delete action.
-
-- a. Leave pins out of the select tool, delete them only from their popover. (recommended)
-- b. Let the select tool pick and move pins, and have Delete ask before removing the thread.
-
-Your choice:b
-
-## 69. What counts as a lymph node in a clinical report, from REPORT-024 (clinical report model and API)
-
-A clinical report counts positive nodes, but the database has no node number. [ADR 0252](adr/0252-clinical-report-storage-per-case.md) (clinical report storage per case) counts a node as the slide's tissue block when it has one, otherwise the slide itself, so two slides cut from one block count as one node.
-
-- a. A node is the slide's block, else the slide, as built. (recommended)
-- b. Give each slide in a case its own node number that the user sets.
-
-Your choice:
-
-## 70. The checksum after changes to a signed evaluation, from ADJ-005 (changes after sign-off)
-
-The owner can change decisions after sign-off with a reason, so the exported numbers no longer match the checksum stored at signing. [ADR 0257](adr/0257-changes-after-sign-off-keep-the-signed-checksum.md) (changes after sign-off keep the signed checksum) keeps the signed checksum, flags the report as changed after sign-off and lists every change with who, when, what and why. It can be reversed.
-
-- a. Keep the signed checksum and flag the changes, as built. (recommended)
-- b. Recompute the checksum after every change, so it matches the export but no longer proves what was signed.
-- c. Freeze the evaluation at signing and export only that until v2 is signed.
-
-Your choice:
-
-## 71. A duplicate left out of a link import, from INGEST-025 (import slides from a link)
-
-A link import leaves out a slide whose checksum is already in the project. The upload status now shows it as failed with the reason duplicate, which looks like an error.
-
-- a. Show it as "Skipped, already in this project" with its own neutral status. (recommended)
-- b. Keep it as failed with the reason duplicate.
+- a. Move the text into page state, and share searches later through saved searches with ids. (recommended)
+- b. Keep the text in the URL as built.
 
 Your choice:
 

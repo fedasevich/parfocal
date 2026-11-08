@@ -1153,6 +1153,12 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
   Depends on INGEST-000. Refs [ADR 0179](adr/0179-upload-and-server-readers-rechecked.md).
   Size: S.
 
+- [ ] INGEST-031 · Skipped status for a duplicate in a link import
+  Decision 71a (a duplicate left out of a link import). A slide whose checksum the project already has shows as "Skipped, already in this project" with its own neutral status in the upload status and the wizard, not as failed with the reason duplicate. The API returns a `skipped` state with the reason, and the counts of failed uploads leave it out.
+  Done when API tests return the skipped state for a duplicate, a component test shows the neutral status and wording, and the failed count leaves skipped slides out.
+  Depends on INGEST-025.
+  Size: S.
+
 ## 06 TILES · Tile delivery
 
 - [ ] TILES-000 · Research check for tile delivery
@@ -2651,6 +2657,12 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
 - [ ] ANN-036 · Save arrows, text and rulers
   Arrow, text and ruler shapes live only in the browser today, because the save step turns only polygons and markers into saved annotations, and a text edit would not count as a change. Save all three with their text and reload them on the slide, and treat a text edit as a change that syncs.
   Done when API and save queue tests cover create, edit, delete and reload of each kind, and a browser test reloads the page and finds them.
+  Depends on ANN-035.
+  Size: M.
+
+- [ ] ANN-037 · Comment pins in the select tool
+  Decision 68b (comment pins in the select tool). The select tool picks comment pins together with shapes, drags and nudges them, and saves the new place through the pin API. Backspace or Delete with pins in the selection opens a confirmation that names how many comment threads it removes, and only a confirmed delete removes the pins and their threads. Undo restores a moved pin, and a deleted thread is not undone silently.
+  Done when interaction tests cover picking, moving and the confirmed and cancelled delete, an API test covers the pin move, and a browser test deletes a pin with its thread after confirming.
   Depends on ANN-035.
   Size: M.
 ## 16 MEAS · Measurements

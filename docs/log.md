@@ -2,6 +2,10 @@
 
 Newest entries on top. One line per piece of work, naming the backlog ID where there is one and linking the result. This file is append-only.
 
+## 2026-11-08
+
+- Decisions of 2026-11-08 processed: 64a, 65a, 67a, 69a and 70a kept as built, 66b kept with the industry check raised as decision 72 (search text in the URL), 68b added ANN-037 (comment pins in the select tool), 71a added INGEST-031 (skipped status for a duplicate in a link import).
+
 ## 2026-11-06
 
 - Fixed the hand cursor showing in the select tool. deck.gl's default getCursor put an inline grab cursor on the viewer canvas, which overrode the cursor each tool sets on slide-host. viv-route.ts now passes getCursor returning inherit, so the canvas follows slide-host: an arrow in select, the hand in the hand tool. New select.spec.ts case checks both and fails without the fix. pnpm verify passes.
