@@ -7022,6 +7022,493 @@
         "x-permission-write": true
       }
     },
+    "/api/tenant/models/test": {
+      "post": {
+        "tags": [
+          "tenant"
+        ],
+        "summary": "Test Lab Model",
+        "operationId": "testLabModel",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LabModelTestRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LabModelTest"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in to continue",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You do not have access to this",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "This changed since you loaded it",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests, try again shortly",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Something went wrong",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "x-permission": "integrations",
+        "x-permission-write": true
+      }
+    },
+    "/api/tenant/models": {
+      "post": {
+        "tags": [
+          "tenant"
+        ],
+        "summary": "Connect Lab Model",
+        "operationId": "connectLabModel",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LabModelDraft"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LabModel"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in to continue",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You do not have access to this",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "This changed since you loaded it",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests, try again shortly",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Something went wrong",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "x-permission": "integrations",
+        "x-permission-write": true
+      }
+    },
+    "/api/tenant/models/{model_id}": {
+      "get": {
+        "tags": [
+          "tenant"
+        ],
+        "summary": "Get Lab Model",
+        "operationId": "getLabModel",
+        "parameters": [
+          {
+            "name": "model_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Model Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LabModel"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Sign in to continue"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "You do not have access to this"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "This changed since you loaded it"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Too many requests, try again shortly"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Something went wrong"
+          }
+        },
+        "x-permission": "integrations"
+      }
+    },
+    "/api/tenant/models/{model_id}/test": {
+      "post": {
+        "tags": [
+          "tenant"
+        ],
+        "summary": "Test Connected Lab Model",
+        "operationId": "testConnectedLabModel",
+        "parameters": [
+          {
+            "name": "model_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Model Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LabModelTest"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Sign in to continue"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "You do not have access to this"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "This changed since you loaded it"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Too many requests, try again shortly"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Something went wrong"
+          }
+        },
+        "x-permission": "integrations",
+        "x-permission-write": true
+      }
+    },
     "/api/projects/{project_id}/model-runs/{run_id}/areas": {
       "get": {
         "tags": [
@@ -37633,7 +38120,8 @@
           "thread",
           "display-preset",
           "report-link",
-          "clinical-report"
+          "clinical-report",
+          "lab-model"
         ],
         "title": "AuditTarget"
       },
@@ -39434,6 +39922,30 @@
           "class_id"
         ],
         "title": "ClassMapping"
+      },
+      "ClassMatch": {
+        "properties": {
+          "sent": {
+            "$ref": "#/components/schemas/SentName"
+          },
+          "becomes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Becomes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sent",
+          "becomes"
+        ],
+        "title": "ClassMatch"
       },
       "ClassMetrics": {
         "properties": {
@@ -41302,6 +41814,12 @@
           }
         }
       },
+      "HeaderName": {
+        "type": "string",
+        "maxLength": 80,
+        "minLength": 1,
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9-]*$"
+      },
       "HeadlineNumbers": {
         "properties": {
           "title": {
@@ -42251,6 +42769,337 @@
         ],
         "title": "KindCount"
       },
+      "LabModel": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "address": {
+            "type": "string",
+            "title": "Address"
+          },
+          "host": {
+            "type": "string",
+            "title": "Host"
+          },
+          "sign_in": {
+            "$ref": "#/components/schemas/LabModelSignIn"
+          },
+          "header_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Header Name"
+          },
+          "last_four": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Four"
+          },
+          "tile_size": {
+            "type": "integer",
+            "title": "Tile Size"
+          },
+          "magnification": {
+            "type": "integer",
+            "title": "Magnification"
+          },
+          "taxonomy": {
+            "$ref": "#/components/schemas/TaxonomyTemplate"
+          },
+          "class_map": {
+            "items": {
+              "$ref": "#/components/schemas/ClassMatch"
+            },
+            "type": "array",
+            "title": "Class Map"
+          },
+          "who_can_run": {
+            "$ref": "#/components/schemas/LabModelRunners"
+          },
+          "project_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "title": "Project Ids"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "version",
+          "address",
+          "host",
+          "sign_in",
+          "header_name",
+          "last_four",
+          "tile_size",
+          "magnification",
+          "taxonomy",
+          "class_map",
+          "who_can_run",
+          "project_ids",
+          "created_at"
+        ],
+        "title": "LabModel"
+      },
+      "LabModelDraft": {
+        "properties": {
+          "address": {
+            "$ref": "#/components/schemas/Address"
+          },
+          "sign_in": {
+            "$ref": "#/components/schemas/LabModelSignIn"
+          },
+          "header_name": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HeaderName"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "secret": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Secret"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "tile_size": {
+            "$ref": "#/components/schemas/TileSize",
+            "default": 512
+          },
+          "magnification": {
+            "$ref": "#/components/schemas/Magnification",
+            "default": 40
+          },
+          "name": {
+            "$ref": "#/components/schemas/LabModelName"
+          },
+          "version": {
+            "$ref": "#/components/schemas/ModelVersion"
+          },
+          "taxonomy": {
+            "$ref": "#/components/schemas/TaxonomyTemplate"
+          },
+          "class_map": {
+            "items": {
+              "$ref": "#/components/schemas/ClassMatch"
+            },
+            "type": "array",
+            "maxItems": 64,
+            "title": "Class Map"
+          },
+          "who_can_run": {
+            "$ref": "#/components/schemas/LabModelRunners"
+          },
+          "project_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "maxItems": 200,
+            "title": "Project Ids"
+          }
+        },
+        "type": "object",
+        "required": [
+          "address",
+          "sign_in",
+          "name",
+          "version",
+          "taxonomy",
+          "class_map",
+          "who_can_run",
+          "project_ids"
+        ],
+        "title": "LabModelDraft"
+      },
+      "LabModelName": {
+        "type": "string",
+        "maxLength": 80,
+        "minLength": 1
+      },
+      "LabModelRunners": {
+        "type": "string",
+        "enum": [
+          "admins",
+          "researchers"
+        ],
+        "title": "LabModelRunners"
+      },
+      "LabModelSignIn": {
+        "type": "string",
+        "enum": [
+          "none",
+          "token",
+          "header"
+        ],
+        "title": "LabModelSignIn"
+      },
+      "LabModelTest": {
+        "properties": {
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "follows-contract",
+              "not-contract"
+            ],
+            "title": "Outcome"
+          },
+          "sample_slide": {
+            "type": "string",
+            "title": "Sample Slide"
+          },
+          "returns": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Returns"
+          },
+          "answered_ms": {
+            "type": "integer",
+            "title": "Answered Ms"
+          },
+          "server_software": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Server Software"
+          },
+          "tiles": {
+            "items": {
+              "$ref": "#/components/schemas/SampleTile"
+            },
+            "type": "array",
+            "title": "Tiles"
+          },
+          "missing_geometry": {
+            "type": "integer",
+            "title": "Missing Geometry"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ModelOfTest"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "classes": {
+            "items": {
+              "$ref": "#/components/schemas/SentClass"
+            },
+            "type": "array",
+            "title": "Classes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "outcome",
+          "sample_slide",
+          "returns",
+          "answered_ms",
+          "server_software",
+          "tiles",
+          "missing_geometry",
+          "model",
+          "classes"
+        ],
+        "title": "LabModelTest"
+      },
+      "LabModelTestRequest": {
+        "properties": {
+          "address": {
+            "$ref": "#/components/schemas/Address"
+          },
+          "sign_in": {
+            "$ref": "#/components/schemas/LabModelSignIn"
+          },
+          "header_name": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HeaderName"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "secret": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Secret"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "tile_size": {
+            "$ref": "#/components/schemas/TileSize",
+            "default": 512
+          },
+          "magnification": {
+            "$ref": "#/components/schemas/Magnification",
+            "default": 40
+          },
+          "taxonomy": {
+            "$ref": "#/components/schemas/TaxonomyTemplate",
+            "default": "sentinel-node"
+          }
+        },
+        "type": "object",
+        "required": [
+          "address",
+          "sign_in"
+        ],
+        "title": "LabModelTestRequest"
+      },
       "LabSettings": {
         "properties": {
           "values": {
@@ -42789,6 +43638,14 @@
           "order"
         ],
         "title": "Lockable"
+      },
+      "Magnification": {
+        "type": "integer",
+        "enum": [
+          10,
+          20,
+          40
+        ]
       },
       "ManifestAnnotator": {
         "properties": {
@@ -43351,6 +44208,24 @@
         "maxLength": 80,
         "minLength": 1,
         "pattern": "^[A-Za-z0-9][A-Za-z0-9._/-]*$"
+      },
+      "ModelOfTest": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "version"
+        ],
+        "title": "ModelOfTest"
       },
       "ModelReference": {
         "properties": {
@@ -44669,6 +45544,39 @@
           "unmatched"
         ],
         "title": "Outcome"
+      },
+      "OutlineCell": {
+        "properties": {
+          "x": {
+            "type": "number",
+            "title": "X"
+          },
+          "y": {
+            "type": "number",
+            "title": "Y"
+          },
+          "rx": {
+            "type": "number",
+            "title": "Rx"
+          },
+          "ry": {
+            "type": "number",
+            "title": "Ry"
+          },
+          "class": {
+            "type": "string",
+            "title": "Class"
+          }
+        },
+        "type": "object",
+        "required": [
+          "x",
+          "y",
+          "rx",
+          "ry",
+          "class"
+        ],
+        "title": "OutlineCell"
       },
       "Pair": {
         "properties": {
@@ -48847,6 +49755,48 @@
         ],
         "title": "RunStage"
       },
+      "SampleTile": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "slide": {
+            "type": "string",
+            "title": "Slide"
+          },
+          "answered_ms": {
+            "type": "integer",
+            "title": "Answered Ms"
+          },
+          "regions": {
+            "type": "integer",
+            "title": "Regions"
+          },
+          "cells": {
+            "type": "integer",
+            "title": "Cells"
+          },
+          "classes": {
+            "type": "integer",
+            "title": "Classes"
+          },
+          "outline": {
+            "$ref": "#/components/schemas/TileOutline"
+          }
+        },
+        "type": "object",
+        "required": [
+          "label",
+          "slide",
+          "answered_ms",
+          "regions",
+          "cells",
+          "classes",
+          "outline"
+        ],
+        "title": "SampleTile"
+      },
       "ScaleQuestion": {
         "properties": {
           "key": {
@@ -49096,6 +50046,11 @@
         ],
         "title": "SearchScope"
       },
+      "Secret": {
+        "type": "string",
+        "maxLength": 4096,
+        "minLength": 1
+      },
       "SecurityContact": {
         "properties": {
           "email": {
@@ -49196,6 +50151,41 @@
       "SendNote": {
         "type": "string",
         "maxLength": 300
+      },
+      "SentClass": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "cells": {
+            "type": "integer",
+            "title": "Cells"
+          },
+          "suggested": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Suggested"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "cells",
+          "suggested"
+        ],
+        "title": "SentClass"
+      },
+      "SentName": {
+        "type": "string",
+        "maxLength": 80,
+        "minLength": 1
       },
       "ServiceAccount": {
         "properties": {
@@ -53414,6 +54404,51 @@
           "format"
         ],
         "title": "TileAccess"
+      },
+      "TileOutline": {
+        "properties": {
+          "regions": {
+            "items": {
+              "items": {
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "type": "array",
+                "maxItems": 2,
+                "minItems": 2
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "title": "Regions"
+          },
+          "cells": {
+            "items": {
+              "$ref": "#/components/schemas/OutlineCell"
+            },
+            "type": "array",
+            "title": "Cells"
+          }
+        },
+        "type": "object",
+        "required": [
+          "regions",
+          "cells"
+        ],
+        "title": "TileOutline"
+      },
+      "TileSize": {
+        "type": "integer",
+        "enum": [
+          256,
+          512,
+          1024
+        ]
       },
       "TokenDays": {
         "type": "integer",

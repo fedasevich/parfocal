@@ -34,6 +34,7 @@ from parfocal_api import (
     import_checks,
     inbox,
     invitations,
+    lab_models,
     link_imports,
     model_run_progress,
     model_runs,
@@ -192,6 +193,7 @@ def create_app(
     app.include_router(model_runs.router)
     app.include_router(model_tiers.router)
     app.include_router(hidden_models.router)
+    app.include_router(lab_models.router)
     app.include_router(model_run_progress.router)
     app.include_router(notifications.router)
     app.include_router(opinion_forms.template_router)

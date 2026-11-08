@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { after, afterEach, before, test } from "node:test";
 import { setupServer } from "msw/node";
 import { fakeApiHandlers, scenario, setFakeConnectModelScene } from "../src/fake/index.ts";
-import { connectLabModel, getLabModelConnection, listAiModels } from "../src/index.ts";
+import { connectLabModel, getLabModelConnection, testLabModel } from "../src/index.ts";
 
 const server = setupServer(...fakeApiHandlers("all"));
 let patchedFetch: typeof fetch;
@@ -63,13 +63,28 @@ test("a failing test names the cells that came back without a geometry", async (
   assert.deepEqual(data.test.tiles, []);
 });
 
-test("connecting the lab model answers the model as the AI models list shows it", async () => {
+test("a test call answers by the server and connecting keeps the class map and projects", async () => {
+  const passing = await testLabModel({
+    address: "https://ml.cuailab.cz/parfocal/infer",
+    sign_in: "token",
+    secret: "secret-3f9a",
+  });
+  assert.ok(passing.status === 200);
+  assert.equal(passing.data.outcome, "follows-contract");
+  const failing = await testLabModel({
+    address: "https://broken.example.org/infer",
+    sign_in: "none",
+  });
+  assert.ok(failing.status === 200);
+  assert.equal(failing.data.outcome, "not-contract");
+  assert.equal(failing.data.missing_geometry, 38);
   const projectIds = [scenario.projectByCode("P07").id];
-  const { data } = await connectLabModel({
+  const connected = await connectLabModel({
     name: "Lab HoVer-Net fork",
     version: "v2.1",
     address: "https://ml.cuailab.cz/parfocal/infer",
     sign_in: "token",
+    secret: "secret-3f9a",
     tile_size: 512,
     magnification: 40,
     taxonomy: "sentinel-node",
@@ -77,9 +92,10 @@ test("connecting the lab model answers the model as the AI models list shows it"
     who_can_run: "admins",
     project_ids: projectIds,
   });
-  const listed = (await listAiModels()).data.models.find((model) => model.name === data.name);
-  assert.equal(data.id, listed?.id);
-  assert.equal(data.source, "lab");
-  assert.equal(data.who_can_run, "People with admin rights in P07");
-  assert.equal(data.runs_on, "Your server · ml.cuailab.cz");
+  assert.ok(connected.status === 201);
+  const { data } = connected;
+  assert.equal(data.host, "ml.cuailab.cz");
+  assert.equal(data.last_four, "3f9a");
+  assert.deepEqual(data.class_map, [{ sent: "dead", becomes: null }]);
+  assert.deepEqual(data.project_ids, projectIds);
 });

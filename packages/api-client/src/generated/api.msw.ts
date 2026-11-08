@@ -60,6 +60,8 @@ import type {
   Invitation,
   IssuedToken,
   Job,
+  LabModel,
+  LabModelTest,
   LabSettings,
   LayerImportResult,
   LayerObject,
@@ -210,6 +212,8 @@ import {
   IngestStatus,
   JobControl,
   JobStatus,
+  LabModelRunners,
+  LabModelSignIn,
   Laterality,
   Layer,
   LinkRefusal,
@@ -3924,6 +3928,200 @@ export const getShowModelResponseMock = (
   title: faker.string.alpha({ length: { min: 10, max: 20 } }),
   shown: faker.datatype.boolean(),
   hidden_by: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  ...overrideResponse,
+});
+
+export const getTestLabModelResponseMock = (
+  overrideResponse: Partial<Extract<LabModelTest, object>> = {},
+): LabModelTest => ({
+  outcome: faker.helpers.arrayElement(["follows-contract", "not-contract"] as const),
+  sample_slide: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  returns: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+  ),
+  answered_ms: faker.number.int(),
+  server_software: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  tiles: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    label: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    slide: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    answered_ms: faker.number.int(),
+    regions: faker.number.int(),
+    cells: faker.number.int(),
+    classes: faker.number.int(),
+    outline: {
+      regions: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () =>
+          Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => [
+            faker.number.float({ fractionDigits: 2 }),
+            faker.number.float({ fractionDigits: 2 }),
+          ]),
+      ),
+      cells: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () => ({
+          x: faker.number.float({ fractionDigits: 2 }),
+          y: faker.number.float({ fractionDigits: 2 }),
+          rx: faker.number.float({ fractionDigits: 2 }),
+          ry: faker.number.float({ fractionDigits: 2 }),
+          class: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        }),
+      ),
+    },
+  })),
+  missing_geometry: faker.number.int(),
+  model: faker.helpers.arrayElement([
+    {
+      name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      version: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    },
+    null,
+  ]),
+  classes: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      cells: faker.number.int(),
+      suggested: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+    }),
+  ),
+  ...overrideResponse,
+});
+
+export const getConnectLabModelResponseMock = (
+  overrideResponse: Partial<Extract<LabModel, object>> = {},
+): LabModel => ({
+  id: faker.string.uuid(),
+  name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  version: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  address: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  host: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  sign_in: faker.helpers.arrayElement(Object.values(LabModelSignIn)),
+  header_name: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  last_four: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  tile_size: faker.number.int(),
+  magnification: faker.number.int(),
+  taxonomy: faker.helpers.arrayElement(Object.values(TaxonomyTemplate)),
+  class_map: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      sent: faker.string.alpha({ length: { min: 1, max: 80 } }),
+      becomes: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+    }),
+  ),
+  who_can_run: faker.helpers.arrayElement(Object.values(LabModelRunners)),
+  project_ids: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => faker.string.uuid(),
+  ),
+  created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  ...overrideResponse,
+});
+
+export const getGetLabModelResponseMock = (
+  overrideResponse: Partial<Extract<LabModel, object>> = {},
+): LabModel => ({
+  id: faker.string.uuid(),
+  name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  version: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  address: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  host: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  sign_in: faker.helpers.arrayElement(Object.values(LabModelSignIn)),
+  header_name: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  last_four: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  tile_size: faker.number.int(),
+  magnification: faker.number.int(),
+  taxonomy: faker.helpers.arrayElement(Object.values(TaxonomyTemplate)),
+  class_map: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      sent: faker.string.alpha({ length: { min: 1, max: 80 } }),
+      becomes: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+    }),
+  ),
+  who_can_run: faker.helpers.arrayElement(Object.values(LabModelRunners)),
+  project_ids: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => faker.string.uuid(),
+  ),
+  created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  ...overrideResponse,
+});
+
+export const getTestConnectedLabModelResponseMock = (
+  overrideResponse: Partial<Extract<LabModelTest, object>> = {},
+): LabModelTest => ({
+  outcome: faker.helpers.arrayElement(["follows-contract", "not-contract"] as const),
+  sample_slide: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  returns: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+  ),
+  answered_ms: faker.number.int(),
+  server_software: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  tiles: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    label: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    slide: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    answered_ms: faker.number.int(),
+    regions: faker.number.int(),
+    cells: faker.number.int(),
+    classes: faker.number.int(),
+    outline: {
+      regions: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () =>
+          Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => [
+            faker.number.float({ fractionDigits: 2 }),
+            faker.number.float({ fractionDigits: 2 }),
+          ]),
+      ),
+      cells: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () => ({
+          x: faker.number.float({ fractionDigits: 2 }),
+          y: faker.number.float({ fractionDigits: 2 }),
+          rx: faker.number.float({ fractionDigits: 2 }),
+          ry: faker.number.float({ fractionDigits: 2 }),
+          class: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        }),
+      ),
+    },
+  })),
+  missing_geometry: faker.number.int(),
+  model: faker.helpers.arrayElement([
+    {
+      name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      version: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    },
+    null,
+  ]),
+  classes: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      cells: faker.number.int(),
+      suggested: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+    }),
+  ),
   ...overrideResponse,
 });
 
@@ -13974,6 +14172,98 @@ export const getShowModelMockHandler = (
   );
 };
 
+export const getTestLabModelMockHandler = (
+  overrideResponse?:
+    | LabModelTest
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<LabModelTest> | LabModelTest),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/tenant/models/test",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getTestLabModelResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getConnectLabModelMockHandler = (
+  overrideResponse?:
+    | LabModel
+    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<LabModel> | LabModel),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/tenant/models",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getConnectLabModelResponseMock(),
+        { status: 201 },
+      );
+    },
+    options,
+  );
+};
+
+export const getGetLabModelMockHandler = (
+  overrideResponse?:
+    | LabModel
+    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<LabModel> | LabModel),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/tenant/models/:modelId",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetLabModelResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getTestConnectedLabModelMockHandler = (
+  overrideResponse?:
+    | LabModelTest
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<LabModelTest> | LabModelTest),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/tenant/models/:modelId/test",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getTestConnectedLabModelResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getListModelRunAreasMockHandler = (
   overrideResponse?:
     | RunAreas
@@ -19043,6 +19333,10 @@ export const getParfocalAPIMock = () => [
   getListModelVisibilityMockHandler(),
   getHideModelMockHandler(),
   getShowModelMockHandler(),
+  getTestLabModelMockHandler(),
+  getConnectLabModelMockHandler(),
+  getGetLabModelMockHandler(),
+  getTestConnectedLabModelMockHandler(),
   getListModelRunAreasMockHandler(),
   getListNotificationPreferencesMockHandler(),
   getSetNotificationPreferencesMockHandler(),

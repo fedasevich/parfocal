@@ -49,10 +49,7 @@ export {
   getGetCosignReviewMockHandler,
   getReturnCosignRequestMockHandler,
 } from "./clinical-handlers.ts";
-export {
-  getConnectLabModelMockHandler,
-  getGetLabModelConnectionMockHandler,
-} from "./connect-model-handlers.ts";
+export { getGetLabModelConnectionMockHandler } from "./connect-model-handlers.ts";
 export {
   getGetModelRunDefaultsMockHandler,
   getListMyJobsMockHandler,
