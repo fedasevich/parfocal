@@ -2345,7 +2345,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Refs mock 10, kit W5, [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
   Size: M.
 
-- [ ] REVIEW-010 · Review decisions API
+- [x] REVIEW-010 · Review decisions API
   Keep, retype, not a cell, skip, with reviewer, time, AI call and confidence at decision time. Reviewed shapes are never re-typed by a model afterwards.
   Done when API tests cover each decision and the "never re-typed" rule.
   Refs doc 22.
