@@ -165,7 +165,10 @@ export function SlideStill({
     top: (y - shown.y) * shown.scale + size.height / 2,
   });
   const onPointerDown = (event: PointerEvent<HTMLDivElement>) => {
-    if (event.button !== 0 || (event.target as HTMLElement).closest("button, a, [role=dialog]"))
+    if (
+      event.button !== 0 ||
+      (event.target as HTMLElement).closest("button, a, [role=dialog], [role=checkbox], label")
+    )
       return;
     drag.current = { x: event.clientX, y: event.clientY, from: shown };
     event.currentTarget.setPointerCapture(event.pointerId);

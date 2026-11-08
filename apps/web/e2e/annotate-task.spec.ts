@@ -105,7 +105,7 @@ test("D confirms the selected AI object, marks it and the progress line follows"
   await expect(object).toHaveAttribute("data-origin", "ai-confirmed");
   await expect(object.locator("path[stroke-dasharray]")).toHaveCount(0);
   await expect(page.getByRole("button", { name: /^Confirm O25/ })).toHaveCount(0);
-  await page.getByRole("checkbox", { name: "Who made it" }).press("Space");
+  await page.getByRole("checkbox", { name: "Who made it" }).click();
   await expect(page.getByRole("checkbox", { name: "Who made it" })).toBeChecked();
   await expect(object.locator('[data-badge="ai-confirmed"]')).toHaveCount(1);
   await page.getByRole("button", { name: /Undo/ }).click();
