@@ -3822,7 +3822,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when a KPI dashboard shows seeded data against the kit targets.
   Size: M.
 
-- [ ] EXP-007 · Consent and opt-out
+- [x] EXP-007 · Consent and opt-out
   Analytics opt-in or opt-out per tenant policy and per user.
   Done when tests confirm no events are sent after opt-out.
   Size: S.
