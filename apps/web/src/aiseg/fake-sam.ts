@@ -19,9 +19,14 @@ export interface FakePromptRecord {
   readonly prompt: SamPrompt;
 }
 
-export interface FakeSam extends Pick<SamClient, "encode" | "prompt"> {
+export const fakeMapSize = 256;
+export const fakeNucleusRadius = 7;
+export const fakeNucleusSpacing = 22;
+
+export interface FakeSam extends Pick<SamClient, "encode" | "prompt" | "segmentAll" | "drop"> {
   readonly prompts: FakePromptRecord[];
   readonly encodes: string[];
+  readonly dropped: string[];
 }
 
 function near(x: number, y: number, centre: { x: number; y: number }, radius: number): boolean {
@@ -66,12 +71,32 @@ export function fakeOutputs(prompt: SamPrompt): SamOutputs {
   };
 }
 
+export function fakeNucleusGrid(size: number = fakeMapSize): { x: number; y: number; r: number }[] {
+  const discs: { x: number; y: number; r: number }[] = [];
+  const first = fakeNucleusSpacing / 2;
+  for (let y = first; y < size - first; y += fakeNucleusSpacing) {
+    for (let x = first; x < size - first; x += fakeNucleusSpacing) {
+      discs.push({ x, y, r: fakeNucleusRadius });
+    }
+  }
+  return discs;
+}
+
 export function createFakeSam(): FakeSam {
   const prompts: FakePromptRecord[] = [];
   const encodes: string[] = [];
+  const dropped: string[] = [];
   return {
     prompts,
     encodes,
+    dropped,
+    segmentAll() {
+      const maps = fakeAisMaps(fakeMapSize, fakeMapSize, fakeNucleusGrid());
+      return Promise.resolve({ maps: { dims: [1, 3, fakeMapSize, fakeMapSize], data: maps } });
+    },
+    drop(id) {
+      dropped.push(id);
+    },
     encode(id) {
       encodes.push(id);
       return Promise.resolve({ id, ms: 1, evicted: [] });

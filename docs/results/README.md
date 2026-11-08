@@ -80,3 +80,4 @@ One file per measured run, named `YYYY-MM-DD-short-topic.md`. Copy [_template.md
 | 2026-11-08 | [A bulk insert of 10,000 annotations takes 1.37 s on an Apple M4 and 6.49 s on a busy hosted runner, with no slowdown from the text column](2026-11-08-bulk-annotation-budget.md) | TEST-006, ANN-036 | baseline |
 | 2026-11-08 | [Paged cells keep their confidence at one million nuclei, using 40.7 MB with the first view in 495 ms](2026-11-08-paged-cells-at-one-million.md) | REVIEW-015 | baseline |
 | 2026-11-08 | [Wheel zoom on Huron-1-40x.tif keeps the longest main-thread task at 26 ms in the fastest of three rounds, under the 50 ms limit](2026-11-08-wheel-zoom-frame-time.md) | VIEW-031 | baseline |
+| 2026-11-08 | [The auto region tool keeps the longest main-thread gap at 33.8 ms over five four tile passes on the fake model, with no long task, under the 50 ms limit](2026-11-08-auto-region-tool-main-thread.md) | AISEG-017 | benchmark |

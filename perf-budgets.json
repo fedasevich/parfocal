@@ -258,6 +258,21 @@
       "todo": "Measure the WebAssembly fallback, which encodes about four times slower."
     },
     {
+      "id": "aiseg.region-main-thread-task-ms",
+      "measures": "The longest main thread task (longest gap of a 4 ms timer plus any long task entry) during a four tile auto region pass on the fake model, with the AIS post-processing in a worker, worst of three runs",
+      "kind": "ms",
+      "unit": "ms",
+      "baseline": 34,
+      "limit": 100,
+      "headroom": 3,
+      "headroomReason": "A hosted runner with software rendering can be three times slower than the Apple M4 baseline of 34 ms, so the CI limit is 100 ms. Tile post-processing on the main thread takes about 120 ms a tile, so moving it back off the worker still fails, and the 50 ms long task line of the task holds on the Mac.",
+      "rttMs": 0,
+      "environment": "Chrome headless against the Vite dev server with the fake model and fake slide reader, 1280 x 720",
+      "check": "apps/web/e2e/auto-region.spec.ts",
+      "adr": "docs/adr/0261-auto-region-pass.md",
+      "result": "docs/results/2026-11-08-auto-region-tool-main-thread.md"
+    },
+    {
       "id": "api.bulk-10k-annotations-ms",
       "measures": "One POST of 10,000 cell annotations to the bulk annotation endpoint, from the request to the 201, one sample",
       "kind": "ms",

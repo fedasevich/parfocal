@@ -5,9 +5,14 @@ import { Button } from "@parfocal/ui/components/button";
 import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
 import { ToolRailButton } from "@parfocal/ui/components/tool-rail-button";
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { loadSmartServices, type SmartServicesContext } from "../aiseg/smart-services.ts";
+import {
+  loadSmartServices,
+  type SmartServicesContext,
+  shareServices,
+} from "../aiseg/smart-services.ts";
 import { type AnnotateTask, taskClassesOf } from "../annotations/annotate-task.ts";
 import { ArrowLayer } from "../annotations/arrow-layer.tsx";
+import { AutoLayer } from "../annotations/auto-layer.tsx";
 import { useClassKeys } from "../annotations/class-keys.ts";
 import { maxClassKeys } from "../annotations/classes.ts";
 import {
@@ -284,6 +289,7 @@ function OpenedSlide({
   const host = useRef<HTMLDivElement | null>(null);
   const [hostNode, setHostNode] = useState<HTMLDivElement | null>(null);
   const pinRegistry = useMemo(createPinRegistry, []);
+  const sharedServices = useMemo(() => shareServices(loadSmartServices), []);
   const hostRef = useCallback((node: HTMLDivElement | null) => {
     host.current = node;
     setHostNode(node);
@@ -538,7 +544,7 @@ function OpenedSlide({
         data-coverage-seen={coverage?.share.seen}
         data-coverage-pending={coverage?.pending}
         data-coverage-basis={coverage?.share.basis}
-        className="relative size-full min-h-0 bg-chrome data-[tool=polygon]:**:cursor-crosshair! data-[tool=freehand]:**:cursor-crosshair! data-[tool=rectangle]:**:cursor-crosshair! data-[tool=ellipse]:**:cursor-crosshair! data-[tool=marker]:**:cursor-crosshair! data-[tool=arrow]:**:cursor-crosshair! data-[tool=text]:**:cursor-text! data-[tool=ruler]:**:cursor-crosshair! data-[tool=comment]:**:cursor-crosshair! data-[tool=smart]:**:cursor-crosshair!"
+        className="relative size-full min-h-0 bg-chrome data-[tool=polygon]:**:cursor-crosshair! data-[tool=freehand]:**:cursor-crosshair! data-[tool=rectangle]:**:cursor-crosshair! data-[tool=ellipse]:**:cursor-crosshair! data-[tool=marker]:**:cursor-crosshair! data-[tool=arrow]:**:cursor-crosshair! data-[tool=text]:**:cursor-text! data-[tool=ruler]:**:cursor-crosshair! data-[tool=comment]:**:cursor-crosshair! data-[tool=smart]:**:cursor-crosshair! data-[tool=auto]:**:cursor-crosshair!"
       >
         {opened && hostNode ? <SlideChecker engine={opened.engine} stage={hostNode} /> : null}
         <div ref={hostRef} data-testid="slide-host" className="absolute inset-0" />
@@ -642,7 +648,17 @@ function OpenedSlide({
               active={tool === "smart"}
               document={annotations}
               activeClass={activeClass}
-              loader={loadSmartServices}
+              loader={sharedServices}
+              openRequest={session.open}
+              onDocumentChange={setAnnotations}
+            />
+            <AutoLayer
+              engine={session.engine}
+              stage={hostNode}
+              active={tool === "auto"}
+              document={annotations}
+              activeClass={activeClass}
+              loader={sharedServices}
               openRequest={session.open}
               onDocumentChange={setAnnotations}
             />
