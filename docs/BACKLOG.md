@@ -2142,7 +2142,7 @@ The case view becomes the slide view ([ADR 0053](adr/0053-ai-results-review-dire
   Depends on CASE-003.
   Size: S.
 
-- [ ] CASE-007 · Systematic scan mode
+- [x] CASE-007 · Systematic scan mode
   Step field by field along the serpentine path with a key, marking seen tissue.
   Done when E2E completes a scan on a small slide and coverage reaches 100%.
   Size: M.
