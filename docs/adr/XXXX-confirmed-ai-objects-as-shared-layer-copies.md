@@ -1,4 +1,4 @@
-# 0250. Confirmed AI objects as shared layer copies
+# XXXX. Confirmed AI objects as shared layer copies
 
 - Date: 2026-11-08
 - Status: Accepted
