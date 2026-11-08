@@ -30,4 +30,4 @@ One run on a shared machine, so the times are indicative only. Memory stays smal
 
 ## Follow-ups
 
-The web review screen still reads a flat object list. REVIEW-027 (outline modes in the review viewer) connects it to the paged reader.
+The web review screen still reads a flat object list. REVIEW-030 (the review screen reads paged results) connects it to the paged reader.
