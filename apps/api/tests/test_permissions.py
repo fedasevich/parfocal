@@ -927,6 +927,7 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
         "POST", f"/api/projects/{w.project}/case-imports", {"csv": "case\nMatrix", "dry_run": True}
     ),
     "listMyReviewTasks": lambda _: Call("GET", "/api/me/review-tasks"),
+    "getMyTrackRecord": lambda _: Call("GET", "/api/me/track-record"),
     "listMyCosignRequests": lambda _: Call("GET", "/api/me/cosign-requests"),
     "listTasksAssignedByMe": lambda _: Call("GET", "/api/me/assigned-tasks"),
     "listMySlides": lambda _: Call("GET", "/api/me/slides"),
