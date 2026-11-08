@@ -2683,7 +2683,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Depends on ANN-032.
   Size: S.
 
-- [ ] ANN-039 · Arrows and notes in threads, reports, imports and exports
+- [x] ANN-039 · Arrows and notes in threads, reports, imports and exports
   ANN-036 saves arrows and text notes under the letters A and N, but comment threads cannot attach to them by code, report blocks accept only the older letters, imported files cannot create notes, and exports leave the note text out. Accept A and N in threads and report blocks, import notes with their words, and export the note text only where the export already carries patient data.
   Done when API tests attach a thread to an arrow and a note, place both in a report block, import a note, and show the note text in an export that allows it and absent from one that does not.
   Depends on ANN-036.
