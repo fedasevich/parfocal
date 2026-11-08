@@ -4874,7 +4874,7 @@ Admin is its own page with its own sidebar and the app's top bar, never a page i
   Depends on VIZ-001, AITUM-002. Refs mock: layers/heat, doc 40 G4.
   Size: M.
 
-- [ ] VIZ-004 · Diff and agreement
+- [x] VIZ-004 · Diff and agreement
   AI against reviewed, model A against B and reviewer against reviewer, coloured by agreement and also drawn differently (dashed for AI only, double for reviewer only), so colour is never the only cue.
   Done when golden tests cover each comparison and a test proves each kind has a non-colour cue.
   Depends on VIZ-001, OBJ-002. Refs mock: layers/diff, doc 40 G1.
