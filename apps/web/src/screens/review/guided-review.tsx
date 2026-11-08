@@ -18,6 +18,7 @@ import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { polygonToGeoJson } from "../../annotations/geojson.ts";
 import { closeDraft, type Point, type PolygonDraft } from "../../annotations/polygon-draft.ts";
 import { showUndoToast } from "../../shell/undo-toasts.tsx";
+import { markTried } from "../home/getting-started.ts";
 import { useRememberResume } from "../home/remember-resume.ts";
 import { usePeople } from "../people.ts";
 import { okData } from "../placeholder.tsx";
@@ -106,7 +107,9 @@ function GuidedBody({
   const setup = guidedSetup(scene);
   const navigate = useNavigate();
   const person = usePeople();
-  const submitReview = useSubmitSlideReview();
+  const submitReview = useSubmitSlideReview({
+    mutation: { onSuccess: () => markTried("guided-review") },
+  });
   const threadsWarning = useOpenThreadsWarning(session.taskId, session.slideId);
   const style = setup.style ? { ...session.style, kind: setup.style } : session.style;
   const decisions = useDecisionSaves(session, style);

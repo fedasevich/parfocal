@@ -1,6 +1,7 @@
 import {
   ApiError,
   type Checklist,
+  getGetMySettingLayersQueryKey,
   type HomeProject,
   type MyTask,
   type Project,
@@ -12,6 +13,7 @@ import {
   useGetMySettingLayers,
   useGetNotificationCounts,
   useListProjects,
+  useSetMySettingLayers,
 } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
 import { Icon, type IconName } from "@parfocal/ui/components/icon";
@@ -19,7 +21,8 @@ import { Keycap } from "@parfocal/ui/components/keycap";
 import { AvatarStack } from "@parfocal/ui/components/person";
 import { ProgressBar } from "@parfocal/ui/components/progress-meter";
 import { StatusTag } from "@parfocal/ui/components/tag";
-import { Fragment, type ReactNode, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { Fragment, type ReactNode } from "react";
 import { now } from "../../clock.ts";
 import { destinations } from "../../shell/destinations.ts";
 import { useOverlay } from "../../shell/overlays.ts";
@@ -33,6 +36,7 @@ import { coverTile, lookUrl } from "../thumbnails.ts";
 import { Announcements } from "./announcements.tsx";
 import { DotRow, SideCard } from "./cards.tsx";
 import { continueTo, openInFullViewer } from "./continue-to.ts";
+import { checklistShows, stepsWithTried, stepTarget, useTried } from "./getting-started.ts";
 import {
   type HomeBlock,
   homeBlocks,
@@ -260,16 +264,9 @@ function ProjectCard({ project, members }: { project: HomeProject; members: Proj
   );
 }
 
-function ChecklistCard({ checklist }: { checklist: Checklist }) {
-  const [hidden, setHidden] = useState(false);
+function ChecklistCard({ steps, onHide }: { steps: Checklist["steps"]; onHide: () => void }) {
   const goTo = useGoTo();
-  if (hidden) return null;
-  const done = checklist.steps.filter((step) => step.done).length;
-  const targets: Record<string, string | undefined> = {
-    "guided-review": destinations.guided("sample"),
-    comment: destinations.guided("sample"),
-    opinion: destinations.guided("sample"),
-  };
+  const done = steps.filter((step) => step.done).length;
   return (
     <section
       aria-label="Getting started"
@@ -278,11 +275,11 @@ function ChecklistCard({ checklist }: { checklist: Checklist }) {
       <div className="flex items-center justify-between">
         <b className="text-body font-semibold text-fg">Getting started</b>
         <span className="font-mono text-caption text-fg-dim">
-          {done} of {checklist.steps.length}
+          {done} of {steps.length}
         </span>
       </div>
-      <ProgressBar value={percent(done, checklist.steps.length)} aria-label="Getting started" />
-      {checklist.steps.map((step) =>
+      <ProgressBar value={percent(done, steps.length)} aria-label="Getting started" />
+      {steps.map((step) =>
         step.done ? (
           <div
             key={step.key}
@@ -296,7 +293,7 @@ function ChecklistCard({ checklist }: { checklist: Checklist }) {
             key={step.key}
             type="button"
             onClick={() => {
-              const target = targets[step.key];
+              const target = stepTarget(step.key);
               if (target) void goTo(target);
             }}
             className="grid cursor-pointer grid-cols-[18px_1fr_14px] items-center gap-2.5 border-0 bg-transparent px-0.5 py-1.5 text-left text-body-sm text-fg"
@@ -310,7 +307,7 @@ function ChecklistCard({ checklist }: { checklist: Checklist }) {
           </button>
         ),
       )}
-      <Button variant="link" className="justify-self-start" onClick={() => setHidden(true)}>
+      <Button variant="link" className="justify-self-start" onClick={onHide}>
         Hide the checklist
       </Button>
     </section>
@@ -471,8 +468,16 @@ export function HomeScreen() {
   const counts = okData(useGetNotificationCounts().data);
   const projects = okData(useListProjects().data) ?? [];
   const goTo = useGoTo();
+  const queryClient = useQueryClient();
+  const tried = useTried();
   const layersQuery = useGetMySettingLayers();
   const layers = okData(layersQuery.data);
+  const saveLayers = useSetMySettingLayers({
+    mutation: {
+      onSuccess: () =>
+        void queryClient.invalidateQueries({ queryKey: getGetMySettingLayersQueryKey() }),
+    },
+  });
   if (me === undefined || layersQuery.isPending) {
     return <p className="p-8 text-body-sm text-fg-dim">Loading your home…</p>;
   }
@@ -489,7 +494,14 @@ export function HomeScreen() {
   const canPost =
     me.workspaces.find((workspace) => workspace.tenant_id === me.active_tenant_id)?.admin_rights ??
     false;
-  const firstWeek = checklist !== undefined && !checklist.hidden;
+  const checklistSteps = stepsWithTried(checklist?.steps ?? [], tried);
+  const firstWeek =
+    checklist !== undefined &&
+    checklistShows({
+      serverHidden: checklist.hidden,
+      personalHidden: layers?.personal.getting_started_hidden === true,
+      steps: checklistSteps,
+    });
   const layout = homeLayoutFor(
     resolveSetting("home_layout", {
       lab: layers?.lab ?? { values: {}, locked: [] },
@@ -584,7 +596,12 @@ export function HomeScreen() {
         </div>
         <aside className="grid gap-3">
           {firstWeek && checklist ? (
-            <ChecklistCard checklist={checklist} />
+            <ChecklistCard
+              steps={checklistSteps}
+              onHide={() =>
+                saveLayers.mutate({ data: { values: { getting_started_hidden: true } } })
+              }
+            />
           ) : (
             sideBlocks[layout].map((block) => <Fragment key={block}>{side[block]}</Fragment>)
           )}
