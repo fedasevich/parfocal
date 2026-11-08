@@ -179,6 +179,7 @@ test("the Privacy section lists initials, lock after, patient banner and other d
     matchingRows("privacy", "").map((item) => [item.key, item.scope]),
     [
       ["initials", "personal"],
+      ["analytics", "device"],
       ["lockAfter", "lab"],
       ["patientBanner", "lab"],
       ["otherDevices", "personal"],

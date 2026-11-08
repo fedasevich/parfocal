@@ -67,6 +67,7 @@ export type RowKey =
   | "noticeRun"
   | "noticeDue"
   | "initials"
+  | "analytics"
   | "lockAfter"
   | "patientBanner"
   | "otherDevices"
@@ -237,6 +238,12 @@ export const sectionRows: Record<Exclude<SettingsSection, "shortcuts">, SettingR
       "Initials while sharing",
       "personal",
       "Shows initials while your screen is shared or a guest is viewing.",
+    ),
+    row(
+      "analytics",
+      "Share usage statistics",
+      "device",
+      "Counts of what is used, never names, patient data or slide content. Off stops them at once on this device.",
     ),
     row("lockAfter", "Lock after", "lab", "Set by your lab. Unlocking returns to the same view."),
     row(

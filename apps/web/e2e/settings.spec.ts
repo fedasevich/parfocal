@@ -181,6 +181,18 @@ test("the Privacy section shows initials, lock after and the patient banner", as
   await expect(dialog(page).getByText(/^(Shown with|Hidden)/)).toBeVisible();
 });
 
+test("the Privacy section turns usage statistics off and keeps the choice", async ({ page }) => {
+  await page.goto("/settings/privacy");
+  const sharing = dialog(page).getByRole("switch", { name: "Share usage statistics" });
+  await expect(sharing).toHaveAttribute("aria-checked", "true");
+  await sharing.click();
+  await expect(sharing).toHaveAttribute("aria-checked", "false");
+  await page.reload();
+  await expect(
+    dialog(page).getByRole("switch", { name: "Share usage statistics" }),
+  ).toHaveAttribute("aria-checked", "false");
+});
+
 test("signing out other devices leaves only this one", async ({ page }) => {
   await page.goto("/settings/privacy");
   await dialog(page).getByRole("button", { name: "Sign out on other devices" }).click();
