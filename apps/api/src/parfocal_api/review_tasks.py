@@ -6,7 +6,7 @@ from typing import Annotated, Any, cast
 
 from fastapi import APIRouter, BackgroundTasks, Request
 from pydantic import BaseModel, Field, StringConstraints, model_validator
-from sqlalchemy import ColumnElement, func, insert, select, update
+from sqlalchemy import ColumnElement, Select, func, insert, select, update
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
@@ -40,6 +40,7 @@ from parfocal_api.project_access import project_grant, reads_whole
 from parfocal_api.projects import ProjectArchivedError, owned, visible
 from parfocal_api.review_order import Results, clear_order, store_order, stored_seeds
 from parfocal_api.tables import (
+    AnalysisTemplate,
     DecisionStyle,
     ProjectRole,
     ResultStatus,
@@ -50,6 +51,7 @@ from parfocal_api.tables import (
     cases,
     opinion_forms,
     project_members,
+    projects,
     result_sets,
     review_assignments,
     review_task_slides,
@@ -233,6 +235,7 @@ class ReviewTask(BaseModel):
     reminder_days: list[int]
     study_template_id: uuid.UUID | None
     study_template_version: int | None
+    analysis_template: AnalysisTemplate
     decision: DecisionSettings
     display: TaskDisplaySettings
     check: CheckOptions | None = None
@@ -470,6 +473,7 @@ def task_of(row: Any, slide_count: int, reviewer_count: int) -> ReviewTask:
         reminder_days=list(row.reminder_days),
         study_template_id=row.study_template_id,
         study_template_version=row.study_template_version,
+        analysis_template=AnalysisTemplate(row.analysis_template),
         decision=decision_of(row),
         display=display_of(row.display),
         check=check_of(row.check_options) if row.kind == TaskKind.ANNOTATE else None,
@@ -753,10 +757,16 @@ async def audit(
     )
 
 
+def with_template() -> Select[Any]:
+    return select(review_tasks, projects.c.template.label("analysis_template")).join(
+        projects, projects.c.id == review_tasks.c.project_id
+    )
+
+
 async def task_row(connection: AsyncConnection, task_id: uuid.UUID) -> Any:
     row = (
         await connection.execute(
-            select(review_tasks).where(
+            with_template().where(
                 review_tasks.c.id == task_id, review_tasks.c.archived_at.is_(None)
             )
         )
@@ -987,7 +997,7 @@ async def list_review_tasks(
     whole = reads_whole(
         await project_grant(connection, principal, project_id, Permission.SEE_SLIDES)
     )
-    statement = select(review_tasks).where(
+    statement = with_template().where(
         review_tasks.c.project_id == project_id, review_tasks.c.archived_at.is_(None)
     )
     if not whole:

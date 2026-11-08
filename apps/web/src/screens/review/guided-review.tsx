@@ -19,8 +19,10 @@ import {
   callOf,
   callToast,
   countOf,
+  leadAreaId,
   pickCall,
   roleText,
+  unsureAreaIds,
 } from "@parfocal/ui/lib/area-call";
 import { cn } from "@parfocal/ui/lib/utils";
 import { useNavigate } from "@tanstack/react-router";
@@ -552,6 +554,14 @@ function GuidedBody({
   const missingQuestions = questions
     .map((question, position) => ({ question, position }))
     .filter(({ question }) => question.required && !opinion[question.id]);
+  const unsureAreas: Blocker[] = session.nodeStaging
+    ? unsureAreaIds(regionAreas).map((id) => ({
+        id,
+        text: `${id} is not sure. The researcher sees it.`,
+        goTo: `Go to ${id}`,
+        onGoTo: () => jump(id),
+      }))
+    : [];
   const doneBlockers: Blocker[] = counts.open
     ? blockers
     : missingQuestions.map(({ question, position }) => ({
@@ -666,6 +676,7 @@ function GuidedBody({
       counts={{ ...counts, added: session.added.length }}
       questions={questions}
       blockers={doneBlockers}
+      unsure={unsureAreas}
       submitLabel={nextLabel}
       failed={failed}
       warning={threadsWarning}
@@ -685,6 +696,7 @@ function GuidedBody({
             current={currentId}
             answer={answer}
             skipped={setup.showSkipped ? objects.map((item) => item.object) : []}
+            lead={session.nodeStaging ? leadAreaId(regionAreas) : null}
             onJump={jump}
           />
         }

@@ -198,6 +198,7 @@ export const toCreatedTask = (projectId: string, draft: TaskDraft): ReviewTaskDe
   reminder_days: draft.reminder_days ?? [],
   study_template_id: draft.study_template_id ?? null,
   study_template_version: draft.study_template_version ?? null,
+  analysis_template: projects.find((project) => project.id === projectId)?.template ?? "none",
   decision: {
     style: draft.decision?.style ?? "certainty",
     counts_as: draft.decision?.counts_as ?? ["disagree", "disagree", "unsure", "agree", "agree"],
