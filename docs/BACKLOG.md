@@ -2983,7 +2983,7 @@ Cases are optional groups of slides inside a project (PROJ-001). Patient fields 
   Depends on CASES-001. Refs kit W42.
   Size: M.
 
-- [ ] CASES-016 · Slides that match no case
+- [x] CASES-016 · Slides that match no case
   A slide whose file name names no case stays loose in the project, and a result file that matches no slide waits in the upload's Not matched yet list until the user picks one. A loose slide can be filed into a case later.
   Done when API tests cover loose slides, filing one later and an upload whose other files are unaffected.
   Depends on CASES-013, INGEST-021, RSET-004. Refs mock: upload/files.
