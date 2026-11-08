@@ -63,6 +63,7 @@ import type { SlideAreaEntry } from "./slide-areas.ts";
 import { useSlideBrightness } from "./slide-brightness.ts";
 import { useSlideCoverage } from "./slide-coverage.ts";
 import { stageToolOf } from "./stage-tools.ts";
+import { SlideChecker, TileHintChip } from "./tile-loading.tsx";
 import type { ScanTissue } from "./tissue-scan.ts";
 import { TravelMinimap } from "./travel-minimap.tsx";
 import { useEngineAreaNav } from "./use-engine-area-nav.ts";
@@ -320,6 +321,10 @@ function OpenedSlide({
   const textControl = useRef<TextControl | null>(null);
   const [phase, setPhase] = useState<Phase>({ state: "loading" });
   const [session, setSession] = useState<Session | null>(null);
+  const [opened, setOpened] = useState<{
+    readonly engine: ViewerEngine;
+    readonly route: VivRoute | null;
+  } | null>(null);
   const developerMode = useDeveloperMode();
   const [brightness, setBrightness] = useSlideBrightness();
   const chosenDevice = useMemo(() => readDeviceSettings().device, []);
@@ -483,6 +488,7 @@ function OpenedSlide({
       };
       viewport.ready
         .then(() => {
+          if (!disposed) setOpened({ engine: viewport.engine, route: viewport.route() });
           unfollow = followLabPrefetch(viewport.route());
           return viewport.route()?.whenIdle();
         })
@@ -495,6 +501,7 @@ function OpenedSlide({
     }, fail);
     return () => {
       disposed = true;
+      setOpened(null);
       dispose?.();
     };
   }, [slideId]);
@@ -533,7 +540,9 @@ function OpenedSlide({
         data-coverage-basis={coverage?.share.basis}
         className="relative size-full min-h-0 bg-chrome data-[tool=polygon]:**:cursor-crosshair! data-[tool=freehand]:**:cursor-crosshair! data-[tool=rectangle]:**:cursor-crosshair! data-[tool=ellipse]:**:cursor-crosshair! data-[tool=marker]:**:cursor-crosshair! data-[tool=arrow]:**:cursor-crosshair! data-[tool=text]:**:cursor-text! data-[tool=ruler]:**:cursor-crosshair! data-[tool=comment]:**:cursor-crosshair! data-[tool=smart]:**:cursor-crosshair!"
       >
+        {opened && hostNode ? <SlideChecker engine={opened.engine} stage={hostNode} /> : null}
         <div ref={hostRef} data-testid="slide-host" className="absolute inset-0" />
+        {phase.state === "failed" ? null : <TileHintChip route={opened?.route ?? null} />}
         {session && developerMode ? (
           <Suspense fallback={null}>
             <LabLayer engine={session.engine} route={session.route} />

@@ -40,7 +40,10 @@ import {
 } from "./interpolation.ts";
 import type { PixelSlide } from "./pixel-slide.ts";
 import { createPrefetcher, type Prefetcher } from "./prefetch.ts";
+import type { TileLoadState } from "./tile-wait.ts";
 import { createVivLevels, type VivLevels } from "./viv-levels.ts";
+
+const idleLoadState: TileLoadState = { pending: 0, waitingMs: 0, answerMs: null };
 
 export const vivViewId = "slide";
 
@@ -82,6 +85,7 @@ export interface VivRoute extends RendererRoute<PixelSlide> {
   readonly deck: Deck<OrthographicView>;
   readonly whenIdle: (signal?: AbortSignal) => Promise<void>;
   readonly isSettled: () => boolean;
+  readonly loadState: () => TileLoadState;
   readonly decodeStats: () => DecodeStats | null;
   readonly jpegReports: () => readonly (DecodeReport | null)[];
   readonly sleep: DeckSleep | null;
@@ -386,6 +390,7 @@ export function createVivRoute(
     gpu: { status: guard.status, stats: guard.stats, failure: () => failure },
     whenIdle,
     isSettled: settled,
+    loadState: () => shown?.levels.loadState() ?? idleLoadState,
     decodeStats: () => shown?.reader?.stats() ?? null,
     jpegReports: () => shown?.reader?.jpegReports() ?? [],
     sleep,

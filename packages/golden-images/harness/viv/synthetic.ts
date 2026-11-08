@@ -36,7 +36,20 @@ function viewer(): HTMLElement {
   return element;
 }
 
+function frames(count: number): Promise<void> {
+  return new Promise((resolve) => {
+    let left = count;
+    const tick = () => {
+      left -= 1;
+      if (left <= 0) resolve();
+      else requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  });
+}
+
 let engine: ViewerEngine | null = null;
+let shownRoute: VivRoute | null = null;
 const errors: string[] = [];
 
 globalThis.addEventListener("error", (event) => {
@@ -83,7 +96,18 @@ const render = async (request: SyntheticRequest): Promise<SyntheticResult> => {
       route = factory(container);
       return route;
     },
-    openSlide: (ref) => Promise.resolve(pixelSlide(ref.id, createSyntheticSource())),
+    openSlide: (ref) =>
+      Promise.resolve(
+        pixelSlide(
+          ref.id,
+          createSyntheticSource({
+            ...(request.tiles?.hold ? { hold: request.tiles.hold } : {}),
+            ...(request.tiles?.delayFinestMs === undefined
+              ? {}
+              : { delayFinestMs: request.tiles.delayFinestMs }),
+          }),
+        ),
+      ),
   });
   engine = current;
   const host = viewer();
@@ -106,9 +130,21 @@ const render = async (request: SyntheticRequest): Promise<SyntheticResult> => {
   else current.setSlideBrightness(brightness);
   const mounted = route as VivRoute | null;
   if (mounted === null) throw new Error("The route never mounted");
-  await mounted.whenIdle();
+  shownRoute = mounted;
+  if (request.tiles?.settle === false) await frames(24);
+  else await mounted.whenIdle();
   return { camera: current.getCamera(), errors: [...errors], textures: textureFilters(mounted) };
 };
 
-const harness: SyntheticHarness = { render, reset };
+const moveTo: SyntheticHarness["moveTo"] = async (camera) => {
+  engine?.setCamera(camera);
+  await frames(2);
+};
+
+const loadState: SyntheticHarness["loadState"] = () => {
+  if (shownRoute === null) throw new Error("No route is showing a slide");
+  return shownRoute.loadState();
+};
+
+const harness: SyntheticHarness = { render, moveTo, loadState, reset };
 Object.assign(globalThis, { [syntheticHarnessGlobal]: harness });

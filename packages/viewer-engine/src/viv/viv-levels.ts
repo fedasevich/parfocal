@@ -6,6 +6,7 @@ import type {
   PixelSource,
   PixelWindow,
 } from "../pixel-source/types.ts";
+import { createTileWait, type TileLoadState } from "./tile-wait.ts";
 
 export const vivSignalAborted: unknown = "__vivSignalAborted";
 
@@ -57,6 +58,7 @@ export interface VivLevels {
   readonly ladder: readonly VirtualLevel[];
   readonly tileSize: number;
   readonly pending: () => number;
+  readonly loadState: () => TileLoadState;
   readonly regionFor: (level: number, x: number, y: number) => PlannedRegion | null;
 }
 
@@ -88,6 +90,7 @@ export interface VivLevelOptions {
   readonly onTileError?: (error: Error) => void;
   readonly read?: VivRegionReader;
   readonly onReadSettled?: () => void;
+  readonly now?: () => number;
 }
 
 export class UnsupportedVivSourceError extends Error {
@@ -213,7 +216,7 @@ export function createVivLevels(source: PixelSource, options: VivLevelOptions = 
   assertDrawable(source);
   const tileSize = vivTileSize(source);
   const ladder = virtualLadder(source.levels, tileSize);
-  let inFlight = 0;
+  const wait = createTileWait(options.now ?? (() => performance.now()));
 
   const read: VivRegionReader =
     options.read ?? ((region, _centre, signal) => readVivRegion(source, region, signal));
@@ -275,17 +278,19 @@ export function createVivLevels(source: PixelSource, options: VivLevelOptions = 
     signal: AbortSignal | undefined,
   ): Promise<VivTile> => {
     const { region: request, centre } = plan(virtual, region);
-    inFlight++;
+    const id = wait.begin();
+    let answered = false;
     try {
       if (signal?.aborted) throw vivSignalAborted;
       const tile = await read(request, centre, signal);
       if (signal?.aborted) throw vivSignalAborted;
+      answered = true;
       return tile;
     } catch (error) {
       if (signal?.aborted || error instanceof DecodePoolDisposedError) throw vivSignalAborted;
       throw error;
     } finally {
-      inFlight--;
+      wait.end(id, answered);
       options.onReadSettled?.();
     }
   };
@@ -319,5 +324,12 @@ export function createVivLevels(source: PixelSource, options: VivLevelOptions = 
     };
   });
 
-  return { levels, ladder, tileSize, pending: () => inFlight, regionFor };
+  return {
+    levels,
+    ladder,
+    tileSize,
+    pending: () => wait.state().pending,
+    loadState: wait.state,
+    regionFor,
+  };
 }
