@@ -28,6 +28,20 @@ function SettingScope({ scope, className }: { scope: SettingScopeKind; className
   );
 }
 
+function SettingsScopeLegend() {
+  return (
+    <div
+      data-slot="settings-scope-legend"
+      className="mt-auto flex flex-col gap-1.5 border-t border-line px-2.5 pt-3"
+    >
+      <span className="text-caption font-medium text-fg-faint">Who a setting applies to</span>
+      {(Object.keys(scopes) as SettingScopeKind[]).map((scope) => (
+        <SettingScope key={scope} scope={scope} />
+      ))}
+    </div>
+  );
+}
+
 type SettingsDialogProps = {
   open?: boolean;
   onOpenChange?: React.ComponentProps<typeof Dialog>["onOpenChange"];
@@ -259,4 +273,5 @@ export {
   SettingsNavItem,
   SettingsRow,
   SettingsRows,
+  SettingsScopeLegend,
 };

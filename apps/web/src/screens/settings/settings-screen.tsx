@@ -27,6 +27,7 @@ import {
   SettingsNavItem,
   SettingsRow,
   SettingsRows,
+  SettingsScopeLegend,
 } from "@parfocal/ui/components/settings-dialog";
 import { Slider } from "@parfocal/ui/components/slider";
 import { Switch } from "@parfocal/ui/components/switch";
@@ -675,6 +676,7 @@ function LoadedSettings({
               onClick={() => (item.key === shown?.key ? undefined : onSection(item.key))}
             />
           ))}
+          <SettingsScopeLegend />
         </SettingsNav>
       }
     >

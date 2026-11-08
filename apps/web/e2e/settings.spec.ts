@@ -155,6 +155,39 @@ test("rebinding J in Settings changes the key shown on Skip for now", async ({ p
   await expect(skip.locator("kbd")).toHaveText("W");
 });
 
+test("Cmd+comma opens Settings over the live screen and a backdrop click closes it", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await expect(async () => {
+    if (!/\/settings\/display$/.test(page.url())) await page.keyboard.press("Meta+,");
+    await expect(page).toHaveURL(/\/settings\/display$/, { timeout: 1000 });
+  }).toPass();
+  await expect(dialog(page).getByText("Who a setting applies to")).toBeVisible();
+  await page.mouse.click(4, 4);
+  await expect(page).toHaveURL(/\/$/);
+  await expect(dialog(page)).toHaveCount(0);
+});
+
+test("the window keeps one size and place on every section", async ({ page }) => {
+  await page.goto("/settings/display");
+  const nav = dialog(page).getByRole("navigation", { name: "Settings sections" });
+  await expect(dialog(page)).toBeVisible();
+  await expect(async () => {
+    const box = await dialog(page).boundingBox();
+    expect(box?.width).toBe(960);
+    expect(box?.x).toBe(160);
+  }).toPass();
+  const first = await dialog(page).boundingBox();
+  const sections = await nav.getByRole("button").allInnerTexts();
+  expect(sections.length).toBeGreaterThan(5);
+  for (const name of sections) {
+    await nav.getByRole("button", { name, exact: true }).click();
+    await expect(dialog(page).getByRole("heading", { level: 2 })).toBeVisible();
+    expect(await dialog(page).boundingBox()).toEqual(first);
+  }
+});
+
 test("the question mark key opens Shortcuts with the source badges", async ({ page }) => {
   await page.goto("/");
   await expect(async () => {
