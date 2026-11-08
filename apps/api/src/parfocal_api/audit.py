@@ -37,6 +37,7 @@ class AuditAction(StrEnum):
     USER_SIGNED_IN = "user.signed-in"
     USER_SIGNED_OUT = "user.signed-out"
     SESSIONS_ENDED = "user.sessions-ended"
+    PROFILE_CHANGED = "user.profile-changed"
     SESSION_POLICY_CHANGED = "tenant.session-policy-changed"
     SECURITY_CONTACT_CHANGED = "tenant.security-contact-changed"
     CASE_OPENED = "case.opened"

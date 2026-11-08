@@ -173,6 +173,32 @@ def test_a_user_edits_their_profile(browser: Browser) -> None:
     assert browser.client.patch("/api/me", json={"title": ""}).json()["title"] is None
 
 
+def test_a_name_change_is_audited_by_ids_only(browser: Browser, second_browser: Browser) -> None:
+    browser.login()
+    second_browser.login()
+    before = second_browser.client.get("/api/me").json()["display_name"]
+    response = browser.client.patch("/api/me", json={"display_name": "Jana Nováková"})
+    assert response.json()["display_name"] == "Jana Nováková"
+    audited = browser.sql(
+        "SELECT audit_events.tenant_id, target_type, target_id = actor_id, details "
+        "FROM audit_events JOIN audit_people ON audit_people.id = actor_id "
+        f"WHERE subject = '{browser.idp.subject}' AND action = 'user.profile-changed'"
+    )
+    assert audited == [(None, "person", True, '{"fields":["display_name"]}')]
+    assert "Nováková" not in str(browser.sql("SELECT details FROM audit_events"))
+    assert second_browser.client.get("/api/me").json()["display_name"] == before
+
+
+def test_an_unchanged_profile_writes_no_audit_event(browser: Browser) -> None:
+    browser.login()
+    assert browser.client.patch("/api/me", json={}).status_code == 200
+    audited = browser.sql(
+        "SELECT count(*) FROM audit_events JOIN audit_people ON audit_people.id = actor_id "
+        f"WHERE subject = '{browser.idp.subject}' AND action = 'user.profile-changed'"
+    )
+    assert audited == [(0,)]
+
+
 def test_a_later_login_keeps_the_edited_profile(browser: Browser) -> None:
     browser.login()
     browser.client.patch("/api/me", json={"display_name": "Jana Nováková", "initials": "JN"})
@@ -190,12 +216,16 @@ def test_a_later_login_keeps_the_edited_profile(browser: Browser) -> None:
         ("avatar_colour", -1),
         ("title", "x" * 41),
         ("display_name", " "),
+        ("display_name", ""),
+        ("display_name", "x" * 201),
     ],
 )
 def test_invalid_profile_changes_are_refused(browser: Browser, field: str, value: object) -> None:
     browser.login()
+    before = browser.client.get("/api/me").json()
     response = browser.client.patch("/api/me", json={field: value})
     assert response.status_code == 422
+    assert browser.client.get("/api/me").json() == before
     assert [error["location"][-1] for error in response.json()["errors"]] == [field]
 
 

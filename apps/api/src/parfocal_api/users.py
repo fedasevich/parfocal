@@ -8,7 +8,7 @@ from sqlalchemy import exists, func, insert, literal_column, or_, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncConnection
 
-from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
+from parfocal_api.audit import Actor, AuditAction, AuditTarget, actor_of, record
 from parfocal_api.auth import AUTH_SCOPE, SESSION_COOKIE, auth_state, digest
 from parfocal_api.context import (
     CurrentPrincipal,
@@ -28,6 +28,7 @@ from parfocal_api.problems import (
 from parfocal_api.projects import code_of
 from parfocal_api.tables import (
     AVATAR_COLOURS,
+    ActorKind,
     ProjectRole,
     Role,
     TenantKind,
@@ -243,14 +244,26 @@ async def get_me(principal: CurrentPrincipal, connection: UserConnection) -> Me:
 
 @me_router.patch("", operation_id="updateMe")
 async def update_me(
-    change: ProfileChange, principal: CurrentPrincipal, connection: UserConnection
+    change: ProfileChange,
+    request: Request,
+    principal: CurrentPrincipal,
+    connection: UserConnection,
 ) -> Me:
     person = signed_in(principal)
     values = change.model_dump(exclude_unset=True)
     if "title" in values and not values["title"]:
         values["title"] = None
     if values:
-        await connection.execute(update(users).where(users.c.id == person.user_id).values(values))
+        async with scoped_transaction(auth_state(request).engine, AUTH_SCOPE) as auth:
+            await auth.execute(update(users).where(users.c.id == person.user_id).values(values))
+            await record(
+                auth,
+                Actor(ActorKind.USER, person.subject),
+                AuditAction.PROFILE_CHANGED,
+                AuditTarget.PERSON,
+                person=person.subject,
+                details={"fields": sorted(values)},
+            )
     return await me_of(connection, person)
 
 

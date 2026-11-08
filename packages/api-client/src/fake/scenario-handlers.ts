@@ -25,6 +25,7 @@ import type {
 } from "../generated/api.ts";
 import { viewerPartsOf } from "./analysis-templates.ts";
 import { currentAnnouncements } from "./announcement-board.ts";
+import { profileChangeHandler, withProfileChanges } from "./profile-changes.ts";
 import { linkImportHandler, sourceFilesHandler } from "./project-handlers.ts";
 import {
   changeProjectDefaults,
@@ -71,7 +72,7 @@ const toWorkspace = (workspace: (typeof workspaces)[number]): Workspace => ({
   organisation_name: workspace.organisation,
 });
 
-export const toMe = (): Me => ({
+const scenarioMe = (): Me => ({
   user_id: me().id,
   display_name: me().name,
   initials: me().key,
@@ -81,6 +82,8 @@ export const toMe = (): Me => ({
   active_tenant_id: activeFakeWorkspace(),
   workspaces: workspaces.map(toWorkspace),
 });
+
+export const toMe = (): Me => withProfileChanges(scenarioMe());
 
 export const toMembers = (): Member[] =>
   Object.values(people).map((person) => ({
@@ -359,6 +362,7 @@ export function scenarioHandlers(): RequestHandler[] {
     linkImportHandler(),
     getGetSessionMockHandler(() => toSession()),
     getGetMeMockHandler(() => toMe()),
+    profileChangeHandler(scenarioMe),
     getGetMyHomeMockHandler(() =>
       inScenarioWorkspace() ? toHome() : emptyWorkspaceHome(toHome()),
     ),
