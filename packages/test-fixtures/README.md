@@ -7,7 +7,7 @@ Slides for tests. Large public slides are downloaded into a cache with checksums
 ```
 pnpm fixtures                 # the small group, about 6 MB, which CI fetches
 pnpm fixtures formats         # one slide per POC-supported format, about 2.4 GB
-pnpm fixtures viewer          # the slides the browser golden images open, about 170 MB
+pnpm fixtures viewer          # the slides the browser golden images open, about 514 MB
 pnpm fixtures camelyon big    # several groups at once
 pnpm fixtures all             # everything, about 25 GB
 ```
@@ -16,7 +16,7 @@ pnpm fixtures all             # everything, about 25 GB
 |---|---|
 | `small` | `CMU-1-Small-Region.svs`, the MIRAX `CMU-1-Saved-1_16.zip` and the CAMELYON16 annotation XML for `tumor_009` and `test_001`. The `db` CI job fetches and caches it for the upload to ready test of INGEST-017 (publish step and slide status) |
 | `formats` | One OpenSlide test slide per format the POC read: Aperio SVS (JPEG and JPEG 2000), generic TIFF, NDPI, Leica SCN, Ventana BIF, DICOM, Huron, Argos, Philips TIFF and Zeiss CZI |
-| `viewer` | The slides the browser golden images open, today only `CMU-1.svs` (170 MB), which the `browser` CI job fetches and caches |
+| `viewer` | The slides the browser golden images open, `CMU-1.svs`, `CMU-1-JP2K-33005.svs` and `CMU-1.tiff` (about 514 MB), which the `browser` CI job fetches and caches |
 | `big` | Whole scanned slides at native magnification, 0.3 to 3.9 GB each |
 | `huge` | `Hamamatsu-1.ndpi`, 6.9 GB |
 | `camelyon` | CAMELYON16 `tumor_009.tif` (a training slide), `test_001.tif` and both annotation XML files |
