@@ -2411,7 +2411,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Depends on AINUC-003. Refs POC [`src/segment/confidence.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/segment/confidence.ts), mock 6, [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
   Size: M.
 
-- [ ] REVIEW-019 · Type bar next to the cell and arrow jumps
+- [x] REVIEW-019 · Type bar next to the cell and arrow jumps
   A bar beside the selected cell with Keep, Tumor, Stroma, Immune, Other and Not a cell, each with its key in a keycap (K, 1 to 4, X), placed below or above the cell so it never covers it, and the only place the type buttons appear. Each type names what it covers on hover, with the wording reviewed in [ADR 0194](adr/0194-confidence-display-rules-and-evidence.md): Tumor is neoplastic cells, mitoses included, Stroma is fibroblasts, endothelial and smooth muscle cells, Immune is lymphocytes, plasma cells, histiocytes, neutrophils and eosinophils, Other is benign epithelium, necrotic and apoptotic cells and any other cell, and Not a cell is debris, pigment, red blood cells, folds or blur. Clicking any cell on the slide selects it. While a cell is selected the arrow keys jump to the nearest unsure cell in that direction (within a cone, undecided cells first, across zones), Shift+arrows pan, J and Shift+J step through the zone, Esc goes back to the zone and then to the list.
   Done when E2E answers cells with the mouse only and with the keyboard only, and unit tests cover the direction search and its edge cases (no cell that way, cells already decided).
   Refs mock 6, [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
