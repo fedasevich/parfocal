@@ -43,6 +43,7 @@ export type RegionStyle = {
   stroke: string;
   fill?: string;
   dash?: string;
+  double?: boolean;
   width?: number;
   opacity?: number;
 };
@@ -272,19 +273,31 @@ export function SlideStill({
                 ? currentTint
                 : (custom?.stroke ?? (claimHidden ? "rgb(255 255 255 / 0.75)" : "var(--c-tumor)"));
               if (custom?.stroke === "none") return null;
+              const doubled = !current && custom?.double === true;
               return (
-                <path
-                  key={id}
-                  d={shape.path}
-                  fill={current ? "rgb(255 255 255 / 0.08)" : (custom?.fill ?? "none")}
-                  stroke={stroke}
-                  strokeWidth={current ? 3 : (custom?.width ?? 1.5)}
-                  strokeOpacity={custom?.opacity}
-                  fillOpacity={custom?.opacity}
-                  strokeDasharray={custom?.dash}
-                  strokeLinecap="round"
-                  vectorEffect="non-scaling-stroke"
-                />
+                <g key={id}>
+                  <path
+                    d={shape.path}
+                    fill={current ? "rgb(255 255 255 / 0.08)" : (custom?.fill ?? "none")}
+                    stroke={stroke}
+                    strokeWidth={current ? 3 : doubled ? 6 : (custom?.width ?? 1.5)}
+                    strokeOpacity={custom?.opacity}
+                    fillOpacity={custom?.opacity}
+                    strokeDasharray={custom?.dash}
+                    strokeLinecap="round"
+                    vectorEffect="non-scaling-stroke"
+                  />
+                  {doubled ? (
+                    <path
+                      d={shape.path}
+                      fill="none"
+                      stroke="#0b0b0b"
+                      strokeWidth={2}
+                      data-double-line=""
+                      vectorEffect="non-scaling-stroke"
+                    />
+                  ) : null}
+                </g>
               );
             })}
         {image === "hpf"
