@@ -4754,7 +4754,7 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Depends on TASK-006. Refs mock: invite.
   Size: M.
 
-- [ ] ONB-004 · First-run setup
+- [x] ONB-004 · First-run setup
   Five skippable steps whose choices carry through: role and specialties (the role sets the recommended first project and the checklist), the workspace (join, ask or create with a name, logo and default privacy), the first project (sample, create or wait), the input device and the theme (applied at once), and a checklist that ends in the chosen place.
   The person who creates a workspace becomes a researcher with admin rights, whatever they picked as their role, and setup says so ([ADR 0096](adr/0096-researcher-and-reviewer-with-admin-rights.md), researcher and reviewer with admin rights).
   Done when component tests cover each choice and its effect, E2E finishes setup into each of the three first-project choices, and an API test shows the creator of a workspace holds admin rights.
