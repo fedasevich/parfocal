@@ -214,7 +214,7 @@
     },
     {
       "id": "aiseg.region-outline-ms",
-      "measures": "AIS post-processing of one 512 px tile of 169 synthetic nuclei (smoothing, markers, watershed and sub-pixel outlines), fastest of three runs",
+      "measures": "AIS post-processing of one 512 px tile of 169 synthetic nuclei (smoothing, markers, watershed and sub-pixel outlines), fastest of nine runs so a busy machine still finds a quiet sample",
       "kind": "ms",
       "unit": "ms",
       "baseline": 122,
