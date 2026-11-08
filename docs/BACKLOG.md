@@ -2472,7 +2472,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Depends on REVIEW-016.
   Size: M.
 
-- [ ] REVIEW-029 · Send the shown AI call with cell decisions
+- [x] REVIEW-029 · Send the shown AI call with cell decisions
   REVIEW-010 stores the AI class and confidence a reviewer saw with each cell decision, reported by the client, and REVIEW-013's track record reads it, but the web client does not send `ai_class_id` and `ai_score` with cell decisions yet, so live track records stay empty. Send the class and score the screen showed with every cell decision and skip.
   Done when a browser test makes a cell decision and an API read shows its AI class and score, and the track record of that reviewer counts it in the right band.
   Depends on REVIEW-010, REVIEW-013.
