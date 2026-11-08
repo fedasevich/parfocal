@@ -4314,7 +4314,7 @@ IDs short enough to say out loud, scoped to the slide ([ADR 0053](adr/0053-ai-re
   Done when unit tests cover each rule and an alias that still resolves.
   Depends on OBJ-001, RSET-007.
 
-- [ ] OBJ-004 · ID resolution and search
+- [x] OBJ-004 · ID resolution and search
   Any part of a full path resolves to the object, including aliases, for links, search (CASES-009) and the palette (CMD-002).
   Done when API tests resolve every form and an alias after a merge.
   Depends on OBJ-003.
