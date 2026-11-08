@@ -30,6 +30,7 @@ import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { polygonToGeoJson } from "../../annotations/geojson.ts";
 import { closeDraft, type Point, type PolygonDraft } from "../../annotations/polygon-draft.ts";
 import { showUndoToast } from "../../shell/undo-toasts.tsx";
+import { useCellTiming, useTaskRun } from "../../telemetry/use-task-timing.ts";
 import { markTried } from "../home/getting-started.ts";
 import { useRememberResume } from "../home/remember-resume.ts";
 import { usePeople } from "../people.ts";
@@ -213,6 +214,8 @@ function GuidedBody({
   const tabNow: GuidedTab = coachOn ? "review" : (tab ?? setup.tab);
   const current = objects[Math.min(index, Math.max(0, objects.length - 1))];
   const currentId = current?.object ?? "";
+  const timing = useTaskRun("review", session.slideId, "viewer");
+  useCellTiming(currentId, current?.kind === "cell");
   useRememberResume(
     scene === undefined && session.slideId
       ? {
@@ -457,6 +460,7 @@ function GuidedBody({
       return;
     }
     submitReview.mutate({ taskId: session.taskId, slideId: session.slideId });
+    timing.finish();
     void toSubmitted();
   };
 

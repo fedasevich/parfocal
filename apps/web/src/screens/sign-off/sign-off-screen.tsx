@@ -22,6 +22,7 @@ import { StatusTag } from "@parfocal/ui/components/tag";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { type ReactNode, useState } from "react";
+import { useTaskRun } from "../../telemetry/use-task-timing.ts";
 import { closeOn, ReasonModal, useSignature } from "../clinical-report/modals.tsx";
 import { headlineTiles } from "../evaluation/numbers.ts";
 import { andJoin } from "../format.ts";
@@ -88,6 +89,7 @@ function SignOffModal({
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const toast = useMockToast();
+  const timing = useTaskRun("report", taskId, "reports");
   const [amending, setAmending] = useState(scene === "amend");
   const [signingNext, setSigningNext] = useState(false);
   const [picked, setPicked] = useState(["pdf", "csv", "json"]);
@@ -108,6 +110,7 @@ function SignOffModal({
         {
           onSuccess: () => {
             done(true);
+            timing.finish();
             setSigningNext(false);
             void refresh();
             toast.show(`Evaluation v${signingVersion} is signed. Reviewers are told.`);

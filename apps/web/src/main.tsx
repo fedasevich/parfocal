@@ -14,6 +14,7 @@ import { installNameMask } from "./shell/hide-names.ts";
 import { installTheme } from "./shell/theme.ts";
 import { UndoToasts } from "./shell/undo-toasts.tsx";
 import { viewTransitions } from "./shell/view-transitions.ts";
+import { connectAppAnalytics } from "./telemetry/app-events.ts";
 import { watchSensitiveData } from "./telemetry/sensitive-data.ts";
 
 const config = readBuildConfig();
@@ -24,6 +25,7 @@ installDebugHandle(window, config.appEnv);
 provideDebug(benchmarkDebug(window));
 
 export const clients = selectWebClients(config, {});
+connectAppAnalytics(clients.analytics);
 
 const queryClient = createQueryClient(showErrorToast);
 installNameMask(queryClient);

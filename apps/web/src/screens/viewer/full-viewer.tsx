@@ -48,6 +48,7 @@ import { useFormat } from "../../format.ts";
 import { escLayer } from "../../keys/esc-ladder.ts";
 import { destinations } from "../../shell/destinations.ts";
 import { useResolvedSettings } from "../../shell/resolved-settings.ts";
+import { useCellTiming, useChromeSampling, useTaskRun } from "../../telemetry/use-task-timing.ts";
 import { formatDayMonth } from "../format.ts";
 import { useRememberResume } from "../home/remember-resume.ts";
 import { usePeople } from "../people.ts";
@@ -396,6 +397,9 @@ function ViewerBody({
   const pathOfObject = (object: string) =>
     objectIdPath({ project: projectCode, caseLabel: session.caseLabel, slide: slideLabel, object });
   const current = objects.find((item) => item.object === selected);
+  const timing = useTaskRun("review", session.slideId, "viewer");
+  useCellTiming(current?.object, current?.kind === "cell");
+  useChromeSampling("viewer", search.focus === true ? "focus" : "chrome");
   const addedCurrent = added.find((item) => item.object === selected);
   const people = (session.task?.slides[0]?.reviewer_ids ?? []).flatMap((id) => {
     const found = person(id);
@@ -874,6 +878,7 @@ function ViewerBody({
       return;
     }
     submitReview.mutate({ taskId: session.taskId, slideId: session.slideId });
+    timing.finish();
     void navigate({
       to: "/tasks/$taskId/submitted",
       params: { taskId: session.taskId },

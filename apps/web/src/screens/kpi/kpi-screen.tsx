@@ -1,15 +1,25 @@
+import { readEventLog } from "../../telemetry/event-log.ts";
+import { liveKpiEvents } from "./kpi-live.ts";
 import { areaMedians, computeKpis, formatKpiValue } from "./kpi-model.ts";
 import { seededKpiEvents } from "./kpi-seed.ts";
 
 export function KpiScreen() {
-  const kpis = computeKpis(seededKpiEvents);
-  const areas = areaMedians(seededKpiEvents);
+  const live = liveKpiEvents(readEventLog());
+  const events = live.length > 0 ? live : seededKpiEvents;
+  const kpis = computeKpis(events);
+  const areas = areaMedians(events);
   return (
     <main className="mx-auto grid max-w-5xl gap-6 p-8" data-testid="kpi-dashboard">
       <header className="grid gap-1">
         <h1 className="font-semibold text-page-title text-fg">Task timing</h1>
-        <p className="text-body text-fg-dim" data-testid="kpi-seeded-note">
-          Seeded sample data. Real figures come from ids-only events of people who allow analytics.
+        <p
+          className="text-body text-fg-dim"
+          data-testid="kpi-seeded-note"
+          data-source={live.length > 0 ? "recorded" : "seeded"}
+        >
+          {live.length > 0
+            ? "Figures from the ids-only timing events recorded on this device."
+            : "Seeded sample data. Real figures come from ids-only events of people who allow analytics."}
         </p>
       </header>
       <table className="w-full text-body" data-testid="kpi-table">
