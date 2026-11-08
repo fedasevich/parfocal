@@ -69,3 +69,45 @@ test("Enter in focus mode goes back and the type bar buttons decide with the mou
   await page.keyboard.press("Enter");
   await expect(page.getByTestId("cell-focus")).toHaveCount(0);
 });
+
+test("cells are answered with the mouse only on the slide", async ({ page }) => {
+  await page.goto(await fullViewerUrl(page, "T1·C145"));
+  await expect(bar(page)).toBeVisible();
+  await expect(
+    page.getByRole("complementary", { name: "Side panel" }).getByRole("group", {
+      name: /^Your answer on T1·C145/,
+    }),
+  ).toHaveCount(0);
+  await expect(bar(page).getByRole("button", { name: /Immune/ })).toHaveAttribute(
+    "title",
+    /neutrophils and eosinophils/,
+  );
+  const first = objectInUrl(page);
+  await bar(page)
+    .getByRole("button", { name: /Stroma/ })
+    .click();
+  await expect(page.getByText(`${first}: disagree`)).toBeVisible();
+  const stage = await page.locator('[data-slot="slide-still"]').boundingBox();
+  const box = await bar(page).boundingBox();
+  expect(stage && box).toBeTruthy();
+  if (!stage || !box) return;
+  expect(box.y).toBeGreaterThan(stage.y);
+});
+
+test("cells are answered with the keyboard only on the slide", async ({ page }) => {
+  await page.goto(await fullViewerUrl(page, "T1·C145"));
+  await expect(bar(page)).toBeVisible();
+  const first = objectInUrl(page);
+  await page.keyboard.press("3");
+  await expect(page.getByText(new RegExp(`${first}: (agree|disagree)`))).toBeVisible();
+  const before = objectInUrl(page);
+  for (const arrow of ["ArrowRight", "ArrowDown", "ArrowLeft", "ArrowUp"]) {
+    await page.keyboard.press(arrow);
+    if (objectInUrl(page) !== before) break;
+  }
+  await expect.poll(() => objectInUrl(page)).not.toBe(before);
+  await page.keyboard.press("x");
+  await expect(page.getByText(/: disagree$/).first()).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(bar(page)).toHaveCount(0);
+});

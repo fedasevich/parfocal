@@ -230,18 +230,20 @@ export function ObjectFoot({
       ) : null}
       <ConfidenceByColour chip={text.chip} />
       <b className="text-body font-semibold">{text.question}</b>
-      <DecisionButtons
-        decisionStyle={style.kind}
-        size="large"
-        className="[&_button]:h-9.5 [&_button]:text-body"
-        value={answer?.raw}
-        onValueChange={onAnswer}
-        classes={classes}
-        aiClass={object.class_name}
-        disabled={disabledReason !== undefined}
-        title={disabledReason}
-        label={`Your answer on ${object.object}`}
-      />
+      {object.kind === "cell" ? null : (
+        <DecisionButtons
+          decisionStyle={style.kind}
+          size="large"
+          className="[&_button]:h-9.5 [&_button]:text-body"
+          value={answer?.raw}
+          onValueChange={onAnswer}
+          classes={classes}
+          aiClass={object.class_name}
+          disabled={disabledReason !== undefined}
+          title={disabledReason}
+          label={`Your answer on ${object.object}`}
+        />
+      )}
       {noteBlock}
     </div>
   );

@@ -53,6 +53,21 @@ export type SlideTag = { object: string; text: string; color: string };
 
 export type Tiles = "sharp" | "loading" | "unloaded";
 
+const cellHitRadius = 22;
+
+function cellAt(point: { x: number; y: number }): string | undefined {
+  let best: string | undefined;
+  let bestDistance = cellHitRadius;
+  for (const [id, cell] of Object.entries(cellShapes)) {
+    const distance = Math.hypot(cell.x - point.x, cell.y - point.y);
+    if (distance < bestDistance) {
+      best = id;
+      bestDistance = distance;
+    }
+  }
+  return best;
+}
+
 export function homeCamera(view: StillView, size: Size): Camera {
   if (view.kind === "cell") {
     const cell = cellShapes[view.object];
@@ -132,6 +147,7 @@ type SlideStillProps = {
   underlay?: ((state: { camera: Camera; size: Size }) => ReactNode) | undefined;
   overlay?: (state: { camera: Camera; size: Size; home: Camera; moved: boolean }) => ReactNode;
   onPointPick?: ((point: Pin) => void) | undefined;
+  onCellPick?: ((object: string) => void) | undefined;
 };
 
 export function SlideStill({
@@ -162,6 +178,7 @@ export function SlideStill({
   underlay,
   overlay,
   onPointPick,
+  onCellPick,
 }: SlideStillProps) {
   const ref = useRef<HTMLDivElement>(null);
   const size = useElementSize(ref);
@@ -205,12 +222,19 @@ export function SlideStill({
   const onPointerUp = (event: PointerEvent<HTMLDivElement>) => {
     const start = drag.current;
     endDrag();
-    if (start === null || onPointPick === undefined) return;
+    if (start === null) return;
     if (!isClick(start, { x: event.clientX, y: event.clientY })) return;
     const box = event.currentTarget.getBoundingClientRect();
-    onPointPick(
-      slidePoint(start.from, size, { x: event.clientX - box.left, y: event.clientY - box.top }),
-    );
+    const point = slidePoint(start.from, size, {
+      x: event.clientX - box.left,
+      y: event.clientY - box.top,
+    });
+    const hit = image === "hpf" && onCellPick ? cellAt(point) : undefined;
+    if (hit !== undefined) {
+      onCellPick?.(hit);
+      return;
+    }
+    onPointPick?.(point);
   };
   const target = view.kind === "whole" ? null : view.object;
   const tagAt =
