@@ -3894,6 +3894,12 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Depends on EXP-007.
   Size: S.
 
+- [ ] EXP-012 · Task timer in the review flows
+  EXP-006 added a task timer and four ids-only timing events behind the analytics opt-out, and a KPI dashboard on seeded data, but nothing starts or stops the timer. Start and stop it in the guided review, the full viewer, the zone gallery, focus mode and sign-out, sample chrome coverage in the viewer, and feed the dashboard from the real events.
+  Done when a browser test reviews a slide and signs it out and the timer's events carry the slide, area and cell times, and no event is sent after opt-out.
+  Depends on EXP-006.
+  Size: S.
+
 ---
 
 ## 34 OPS · Infrastructure and operations
