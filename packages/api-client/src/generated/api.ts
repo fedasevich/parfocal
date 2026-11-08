@@ -4369,6 +4369,8 @@ export interface SearchHit {
   case_label?: string | null;
   slide_id?: string | null;
   object_id?: string | null;
+  resolved_from?: string | null;
+  task_id?: string | null;
 }
 
 export interface SearchResults {
@@ -5526,6 +5528,9 @@ export type SearchParams = {
    */
   q: string;
   scope?: SearchScope;
+  project_id?: string | null;
+  slide_id?: string | null;
+  task_id?: string | null;
 };
 
 export type ListVerdictsParams = {
