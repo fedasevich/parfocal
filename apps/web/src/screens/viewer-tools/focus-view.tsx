@@ -15,6 +15,7 @@ import { type Camera, midSize, SlideStill } from "../review/slide-still.tsx";
 import { useDecisionSaves } from "../review/use-decision-saves.ts";
 import { lookUrl } from "../thumbnails.ts";
 import { type HotSpot, pathPoints, placeMinimap, type ScreenRect } from "./minimap-placement.ts";
+import { hotWeight } from "./minimap-weights.ts";
 import { MinimapAreas, toScreen, viewportOf } from "./slide-maps.tsx";
 import { SlidePeek, usePeekKey } from "./slide-peek.tsx";
 import { midEdge, seenPercent, seenTrail } from "./tool-geometry.ts";
@@ -112,7 +113,7 @@ export function FocusView({
           const card: ScreenRect = [size.width - 330, size.height - 170, 316, 156];
           const hot: HotSpot[] = edgePoints.map((point) => {
             const at = toScreen(shown, size, point);
-            return [at.x, at.y, 3];
+            return [at.x, at.y, hotWeight.tumorEdge];
           });
           const box = minimapBox("full", [0, 0, overviewImage.width, overviewImage.height]);
           const place = placeMinimap(size, box, hot, [

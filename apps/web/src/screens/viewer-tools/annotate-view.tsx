@@ -31,6 +31,7 @@ import { ViewerFrame } from "../review/viewer-frame.tsx";
 import type { SceneOf } from "../scenes.ts";
 import { lookUrl } from "../thumbnails.ts";
 import { type HotSpot, placeMinimap } from "./minimap-placement.ts";
+import { hotWeight } from "./minimap-weights.ts";
 import { tiersFor } from "./model-tiers.ts";
 import { annotateRail, toolHints } from "./rails.ts";
 import { areaExtent, toScreen, viewportOf } from "./slide-maps.tsx";
@@ -279,7 +280,7 @@ export function AnnotateView({ tools, scene, initialTool, onScene, onLeave }: An
           const corner = toScreen(shown, size, [promptBox.x, promptBox.y]);
           const hot: HotSpot[] = autoRegionProposals.map((cell) => {
             const at = toScreen(shown, size, [cell.x, cell.y]);
-            return [at.x, at.y, 5];
+            return [at.x, at.y, hotWeight.proposal];
           });
           const place = placeMinimap(size, box, hot, [
             [size.width / 2 - 250, size.height - 58, 500, 50],
