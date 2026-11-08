@@ -1,6 +1,7 @@
 import {
   type InboxItem,
   useGetNotificationCounts,
+  useGetSessionPolicy,
   useListNotificationPreferences,
   useListNotifications,
   useMarkNotificationsRead,
@@ -13,13 +14,15 @@ import {
 } from "@parfocal/ui/components/notifications-panel";
 import { Popover, PopoverContent, PopoverTrigger } from "@parfocal/ui/components/popover";
 import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { now } from "../clock.ts";
 import { relativeTime } from "../screens/format.ts";
 import { okData } from "../screens/placeholder.tsx";
+import { defaultIdleLockMinutes } from "../session/lock-rules.ts";
 import { destinations } from "./destinations.ts";
-import { playChime, readStatNotice, shownInBell, statToChime } from "./notification-gate.ts";
+import { chimeUnlessHeld, playChime, readStatNotice, shownInBell } from "./notification-gate.ts";
 import { useOverlay } from "./overlays.ts";
+import { readingHold } from "./reading-hold.ts";
 import { useGoTo } from "./router-link.tsx";
 
 type BellTab = "all" | "mentions" | "jobs";
@@ -89,19 +92,24 @@ function useGatedInbox() {
   return { shown, hiddenUnread, stat, loaded: page !== undefined };
 }
 
+const heardIds: { current: Set<string> | null } = { current: null };
+
 function useStatSound() {
   const { shown, stat, loaded } = useGatedInbox();
-  const heard = useRef<Set<string> | null>(null);
+  const policy = okData(useGetSessionPolicy().data);
+  const idleMinutes = policy?.idle_lock_minutes ?? defaultIdleLockMinutes;
   useEffect(() => {
     if (!loaded) return;
-    if (heard.current === null) {
-      heard.current = new Set(shown.map((item) => item.id));
+    if (heardIds.current === null) {
+      heardIds.current = new Set(shown.map((item) => item.id));
       return;
     }
-    const fresh = statToChime(shown, heard.current, stat);
-    for (const item of shown) heard.current.add(item.id);
+    const held = readingHold.isHeld(Date.now(), idleMinutes);
+    if (held) return;
+    const fresh = chimeUnlessHeld(shown, heardIds.current, stat, held);
+    for (const item of shown) heardIds.current.add(item.id);
     if (fresh.length > 0) playChime();
-  }, [shown, stat, loaded]);
+  }, [shown, stat, loaded, idleMinutes]);
 }
 
 function InboxPanel({ onClose }: { onClose: () => void }) {

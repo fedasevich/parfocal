@@ -46,6 +46,22 @@ export function statToChime(
   return items.filter((item) => isStat(item) && !item.read && !heard.has(item.id));
 }
 
+export function releaseInOrder(items: InboxItem[], heard: ReadonlySet<string>): InboxItem[] {
+  return items
+    .filter((item) => !item.read && !heard.has(item.id))
+    .sort((a, b) => a.created_at.localeCompare(b.created_at));
+}
+
+export function chimeUnlessHeld(
+  items: InboxItem[],
+  heard: ReadonlySet<string>,
+  stat: StatNotice,
+  held: boolean,
+): InboxItem[] {
+  if (held) return [];
+  return statToChime(items, heard, stat).sort((a, b) => a.created_at.localeCompare(b.created_at));
+}
+
 export function playChime() {
   try {
     const context = new AudioContext();
