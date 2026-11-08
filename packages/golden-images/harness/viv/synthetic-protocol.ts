@@ -8,6 +8,11 @@ export interface SyntheticRequest {
   readonly brightnessBy?: "engine" | "css-filter";
   readonly annotations?: boolean;
   readonly outlineMode?: OutlineMode;
+  readonly tiles?: {
+    readonly hold?: "finest" | "all";
+    readonly delayFinestMs?: number;
+    readonly settle?: boolean;
+  };
 }
 
 export interface TextureFilter {
@@ -24,6 +29,8 @@ export interface SyntheticResult {
 
 export interface SyntheticHarness {
   render(request: SyntheticRequest): Promise<SyntheticResult>;
+  moveTo(camera: SyntheticRequest["camera"]): Promise<void>;
+  loadState(): { pending: number; waitingMs: number; answerMs: number | null };
   reset(): void;
 }
 

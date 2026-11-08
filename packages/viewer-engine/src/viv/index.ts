@@ -67,6 +67,7 @@ export {
   type SlideViewport,
   type SlideViewportOptions,
 } from "./slide-viewport.ts";
+export { createTileWait, type TileLoadState, type TileWait } from "./tile-wait.ts";
 export {
   fetchTissueBox,
   readTissueBox,

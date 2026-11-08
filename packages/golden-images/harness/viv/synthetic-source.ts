@@ -58,7 +58,33 @@ function rasterOf(level: number, window: PixelWindow): PixelResult {
   return { absent: false, width, height, planes };
 }
 
-export function createSyntheticSource(): PixelSource {
+export interface TileTiming {
+  readonly hold?: "finest" | "all";
+  readonly delayFinestMs?: number;
+}
+
+function slowed(source: PixelSource, timing: TileTiming): PixelSource {
+  const gate = <Result>(level: number, run: () => Promise<Result>): Promise<Result> => {
+    const held = timing.hold === "all" || (timing.hold === "finest" && level === 0);
+    if (held) return new Promise<Result>(() => {});
+    if (level === 0 && timing.delayFinestMs !== undefined) {
+      const delay = timing.delayFinestMs;
+      return new Promise<Result>((resolve, reject) => {
+        setTimeout(() => {
+          void run().then(resolve, reject);
+        }, delay);
+      });
+    }
+    return run();
+  };
+  return {
+    ...source,
+    getTile: (request) => gate(request.level, () => source.getTile(request)),
+    getRaster: (request) => gate(request.level, () => source.getRaster(request)),
+  };
+}
+
+export function createSyntheticSource(timing: TileTiming = {}): PixelSource {
   const levels = Array.from({ length: syntheticLevelCount }, (_, level) => ({
     downsample: 2 ** level,
     ...levelSize(level),
@@ -70,7 +96,7 @@ export function createSyntheticSource(): PixelSource {
     const window = request.window ?? [0, 0, size.width, size.height];
     return Promise.resolve(rasterOf(request.level, window));
   };
-  return {
+  const source: PixelSource = {
     formatId: "generic-tiff",
     levels,
     tileSize: { width: syntheticTileSize, height: syntheticTileSize },
@@ -89,4 +115,5 @@ export function createSyntheticSource(): PixelSource {
     getRaster,
     close: () => {},
   };
+  return slowed(source, timing);
 }
