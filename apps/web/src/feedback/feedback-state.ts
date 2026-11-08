@@ -30,16 +30,26 @@ export function useFeedback(): FeedbackState {
 
 const nextFrame = () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
 
+async function redactedScreenshot(): Promise<string | null> {
+  try {
+    const { captureRedacted } = await import("./capture.ts");
+    await nextFrame();
+    await nextFrame();
+    return await captureRedacted(document);
+  } catch {
+    return null;
+  }
+}
+
+export function routePath(pathname: string): string {
+  const safe = pathname.replace(/[^A-Za-z0-9/_.-]/g, "");
+  return (safe.startsWith("/") ? safe : `/${safe}`).slice(0, 300);
+}
+
 export async function openFeedback(): Promise<void> {
   if (feedbackStore.getState().step !== "closed") return;
   feedbackStore.setState({ step: "capturing" });
-  const [{ captureRedacted }, { routePath }] = await Promise.all([
-    import("./capture.ts"),
-    import("./phi-areas.ts"),
-  ]);
-  await nextFrame();
-  await nextFrame();
-  const screenshot = await captureRedacted(document);
+  const screenshot = await redactedScreenshot();
   feedbackStore.setState({
     step: "writing",
     screenshot,

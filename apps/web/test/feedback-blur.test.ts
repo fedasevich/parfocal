@@ -1,11 +1,11 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
+import { routePath } from "../src/feedback/feedback-state.ts";
 import {
   blurAreas,
   mosaic,
   mosaicBlock,
   phiSelector,
-  routePath,
   snappedArea,
 } from "../src/feedback/phi-areas.ts";
 
@@ -74,6 +74,7 @@ test("slides, images, patient details and typed text are all areas to blur", () 
     "video",
     "[data-phi]",
     "[data-testid='patient-banner']",
+    "[data-testid='slide-row']",
     "nav[aria-label='breadcrumb']",
     "tbody",
     "input",

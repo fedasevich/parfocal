@@ -13,6 +13,9 @@ export const phiSelector = [
   "[role='listbox']",
   "[role='menu']",
   "[data-testid='patient-banner']",
+  "[data-testid='slide-row']",
+  "[data-slot='slide-row']",
+  "[data-slot='gallery-tile']",
   "input",
   "textarea",
   "select",
@@ -50,11 +53,6 @@ export function blurAreas(found: Area[], frame: Size, margin = phiMargin): Area[
     const clamped = clampedArea(grownArea(area, margin), frame);
     return clamped ? [clamped] : [];
   });
-}
-
-export function routePath(pathname: string): string {
-  const safe = pathname.replace(/[^A-Za-z0-9/_.-]/g, "");
-  return (safe.startsWith("/") ? safe : `/${safe}`).slice(0, 300);
 }
 
 export function snappedArea(area: Area, block = mosaicBlock): Area {

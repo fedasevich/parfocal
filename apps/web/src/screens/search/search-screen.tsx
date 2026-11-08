@@ -122,7 +122,7 @@ export function SearchScreen({
         onValueChange={(value) => change({ scope: value as SearchPageScope })}
         options={searchScopes.map((scope) => ({ value: scope.value, label: scope.label }))}
       />
-      <div aria-live="polite" className="grid max-w-[760px] gap-2">
+      <div aria-live="polite" className="grid max-w-[760px] gap-2" data-phi="">
         {!ready ? (
           <p className="m-0 text-body-sm text-fg-dim">Type at least two letters to search.</p>
         ) : found.isPending && !onlyActions ? (
