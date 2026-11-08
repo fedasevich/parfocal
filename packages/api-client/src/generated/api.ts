@@ -374,7 +374,7 @@ export interface Annotation {
   code: string;
   geometry: AnnotationGeometry;
   class_id: string | null;
-  text: string | null;
+  text?: string | null;
   task_id: string | null;
   version: number;
   created_by_user_id: string | null;

@@ -377,3 +377,11 @@ def test_ten_thousand_shapes_are_accepted_in_one_request_within_budget(
     assert [ref["number"] for ref in response.json()] == list(range(1, 10_001))
     assert elapsed < BULK_BUDGET_SECONDS, elapsed
     assert len(client.get(s.path).json()) == 10_000
+
+
+def test_an_annotation_snapshot_from_before_text_still_reads() -> None:
+    from parfocal_api.annotations import Annotation
+
+    field = Annotation.model_fields["text"]
+    assert not field.is_required()
+    assert field.default is None

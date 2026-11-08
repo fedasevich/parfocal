@@ -158,7 +158,7 @@ class Annotation(BaseModel):
     code: str
     geometry: dict[str, Any]
     class_id: uuid.UUID | None
-    text: str | None
+    text: str | None = None
     task_id: uuid.UUID | None
     version: int
     created_by_user_id: uuid.UUID | None
