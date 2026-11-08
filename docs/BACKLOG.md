@@ -1301,7 +1301,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Refs [`poc/src/slide/omezarr.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/slide/omezarr.ts), [`poc/src/slide/codecs/jpeg-chunk.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/slide/codecs/jpeg-chunk.ts).
   Size: L.
 
-- [ ] VIEW-018 · Multichannel fluorescence display
+- [x] VIEW-018 · Multichannel fluorescence display
   Channel visibility, colour, contrast limits per channel, up to Viv's channel limit, contrast change in one frame.
   Done when the 16-bit fixture shows contrast changes within one frame (POC: 16 ms) in a perf test. This includes mounting `createVivChannelLevels` in `createVivRoute` and channel-aware region reads in the decode workers.
   Refs doc 32, [ADR 0111](adr/0111-jpeg-2000-in-the-decode-workers-and-ome-channel-pages.md).
