@@ -33,6 +33,8 @@ import { SmartLayer } from "../annotations/smart-layer.tsx";
 import { type TextControl, TextLayer } from "../annotations/text-layer.tsx";
 import { useProposals } from "../annotations/use-proposals.ts";
 import { useSavedAnnotations } from "../annotations/use-saved-annotations.ts";
+import { legendDeviceOf } from "../devices/device-legend.ts";
+import { DeviceLegend } from "../devices/device-legend.tsx";
 import { EscProvider, useEscOwner, useNewEscRegistry } from "../keys/esc-owner.tsx";
 import { useBindings } from "../keys/personal-keys.ts";
 import { useHotkeys } from "../keys/use-hotkeys.ts";
@@ -40,6 +42,7 @@ import { MeasurementList } from "../measure/measurement-list.tsx";
 import { RulerLayer } from "../measure/ruler-layer.tsx";
 import { areaRoleText, areaRows } from "../screens/viewer/area-nav.ts";
 import { annotateRail } from "../screens/viewer-tools/rails.ts";
+import { readDeviceSettings } from "../shell/device-settings.ts";
 import { loadViewerEngine } from "./load-engine.ts";
 import { MagnificationControl, type ViewerModule } from "./magnification-control.tsx";
 import { describeOpenFailure, type OpenFailure } from "./open-failure.ts";
@@ -272,6 +275,7 @@ function OpenedSlide({
   const [phase, setPhase] = useState<Phase>({ state: "loading" });
   const [session, setSession] = useState<Session | null>(null);
   const [brightness, setBrightness] = useSlideBrightness();
+  const chosenDevice = useMemo(() => readDeviceSettings().device, []);
   const [outlineMode, setOutlineMode] = useOutlineMode();
   const saved = useSavedAnnotations(slideId, session !== null);
   const annotations = saved.document;
@@ -698,6 +702,12 @@ function OpenedSlide({
             Loading the slide
           </p>
         ) : null}
+        {chosenDevice === undefined ? null : (
+          <DeviceLegend
+            device={legendDeviceOf(chosenDevice)}
+            context={workspace === "annotate" ? "annotate" : "review"}
+          />
+        )}
         {phase.state === "loading" ? null : (
           <SaveStatus state={saved.saveState} unsaved={saved.unsaved} />
         )}

@@ -37,6 +37,7 @@ import { type ReactNode, useCallback, useEffect, useState } from "react";
 import { now } from "../../clock.ts";
 import { setLengthUnits } from "../../measure/length-units.ts";
 import { applyDensity } from "../../shell/density.ts";
+import { writeDeviceSetting } from "../../shell/device-settings.ts";
 import { personOf } from "../../shell/global-shell.tsx";
 import { usePinnedStrip } from "../../shell/pinned-strip.ts";
 import { chooseTheme, readTheme, type ThemeChoice } from "../../shell/theme.ts";
@@ -487,7 +488,10 @@ function LoadedSettings({
           ["gamepad", "Gamepad"],
           ["pen", "Pen"],
         ]}
-        onChange={(value) => setD("device", value)}
+        onChange={(value) => {
+          writeDeviceSetting("device", value);
+          setD("device", value);
+        }}
       />
     ),
     wheel: () => (
