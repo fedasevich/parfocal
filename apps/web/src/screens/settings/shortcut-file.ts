@@ -1,4 +1,4 @@
-import type { ShortcutSettings } from "@parfocal/api-client";
+import type { ShortcutSettings } from "../../keys/shortcut-settings.ts";
 import { keyActions, reservedKeys, shortcutPresetNames } from "./keymap.ts";
 
 export const shortcutFileName = "shortcuts.json";

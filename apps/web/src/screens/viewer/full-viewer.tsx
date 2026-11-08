@@ -2,7 +2,6 @@ import {
   type AnalysisTemplate,
   type SlideAiProgress,
   useGetMyHome,
-  useGetMySettings,
   useGetProject,
   useGetResultSetTyper,
   useGetSlideAiProgress,
@@ -48,6 +47,7 @@ import { provideDebug } from "../../debug-handle.ts";
 import { useFormat } from "../../format.ts";
 import { escLayer } from "../../keys/esc-ladder.ts";
 import { destinations } from "../../shell/destinations.ts";
+import { useResolvedSettings } from "../../shell/resolved-settings.ts";
 import { formatDayMonth } from "../format.ts";
 import { useRememberResume } from "../home/remember-resume.ts";
 import { usePeople } from "../people.ts";
@@ -229,7 +229,7 @@ function ViewerBody({
   const setup = viewerSetup(scene);
   const navigator = isNavigatorScene(scene) ? scene : null;
   const measuring = search.tool === "ruler";
-  const personalSettings = useGetMySettings().data?.data.personal;
+  const personalSettings = useResolvedSettings();
   const minimapSetting = personalSettings?.minimap ?? "useful";
   const peekOpen = search.peek === true;
   const [peekHeld, setPeekHeld] = useState(false);

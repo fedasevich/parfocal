@@ -1,5 +1,5 @@
-import { useGetMySettings } from "@parfocal/api-client";
 import { createFormat, defaultFormatSettings, type Format } from "@parfocal/ui/lib/format";
+import { useResolvedSettings } from "./shell/resolved-settings.ts";
 
 const formats = new Map<string, Format>();
 
@@ -19,7 +19,7 @@ export const defaultFormat = formatFor(
 );
 
 export function useFormat(): Format {
-  const personal = useGetMySettings().data?.data.personal;
-  if (personal === undefined) return defaultFormat;
-  return formatFor(personal.language, personal.lengths);
+  const settings = useResolvedSettings();
+  if (settings === undefined) return defaultFormat;
+  return formatFor(settings.language, settings.length_unit);
 }

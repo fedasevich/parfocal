@@ -11,9 +11,11 @@ import type {
   TierTask,
 } from "../generated/api.ts";
 import { catalogue, type SettingKey } from "../settings/catalogue.generated.ts";
+import { fitsSetting } from "../settings/resolve.ts";
 import { currentAnnouncements, resetAnnouncementBoard } from "./announcement-board.ts";
 import { sessionPolicy, tenant } from "./scenario-admin.ts";
 import { toAnnouncement } from "./scenario-handlers.ts";
+import { taskDisplay } from "./scenario-review.ts";
 import { modelTiers, tierModels } from "./scenario-viewer-tools.ts";
 
 const seededPolicy = { ...sessionPolicy };
@@ -21,8 +23,24 @@ const seededPolicy = { ...sessionPolicy };
 const copyOfTiers = () => modelTiers.map((mapping) => ({ ...mapping }));
 
 let lab: LabSettings = { values: {}, locked: [] };
-const seededPersonal = { home_layout: "both" };
-let personal: Record<string, unknown> = { ...seededPersonal };
+const seededPersonal: Record<string, unknown> = {
+  home_layout: "both",
+  presets: (taskDisplay["RT-14"]?.presets ?? []).map((preset) => preset.name),
+};
+const personalKey = "parfocal.fake.personal-settings";
+const session = (): Storage | null =>
+  typeof sessionStorage === "undefined" ? null : sessionStorage;
+const storedPersonal = (): Record<string, unknown> | null => {
+  const stored = session()?.getItem(personalKey);
+  return stored === null || stored === undefined
+    ? null
+    : (JSON.parse(stored) as Record<string, unknown>);
+};
+let personal: Record<string, unknown> = storedPersonal() ?? { ...seededPersonal };
+const keepPersonal = (values: Record<string, unknown>) => {
+  personal = values;
+  session()?.setItem(personalKey, JSON.stringify(values));
+};
 let tiers: TierMapping[] = copyOfTiers();
 const seededSecurityContact = "security@lab.example";
 let securityContact: string | null = seededSecurityContact;
@@ -30,6 +48,7 @@ let securityContact: string | null = seededSecurityContact;
 export const resetConsoleActions = () => {
   lab = { values: {}, locked: [] };
   personal = { ...seededPersonal };
+  session()?.removeItem(personalKey);
   tiers = copyOfTiers();
   securityContact = seededSecurityContact;
   resetAnnouncementBoard();
@@ -59,23 +78,7 @@ const needs: Record<TierTask, string> = { tumor: "regions", outline: "cells", ty
 
 const isKey = (key: string): key is SettingKey => key in catalogue;
 
-const fits = (key: SettingKey, value: unknown) => {
-  const entry = catalogue[key];
-  switch (entry.kind) {
-    case "choice":
-      return typeof value === "string" && (entry.options ?? []).includes(value);
-    case "switch":
-      return typeof value === "boolean";
-    case "id":
-      return typeof value === "string" && value !== "";
-    case "whole":
-      return (
-        Number.isInteger(value) &&
-        (value as number) >= (entry.minimum ?? Number.NEGATIVE_INFINITY) &&
-        (value as number) <= (entry.maximum ?? Number.POSITIVE_INFINITY)
-      );
-  }
-};
+const fits = (key: SettingKey, value: unknown) => fitsSetting(catalogue[key], value);
 
 export function consoleHandlers(): RequestHandler[] {
   return [
@@ -102,8 +105,10 @@ export function consoleHandlers(): RequestHandler[] {
           return problem(409, "setting-locked", "Your workspace locked this setting");
         }
       }
-      personal = Object.fromEntries(
-        Object.entries({ ...personal, ...body.values }).filter(([, value]) => value !== null),
+      keepPersonal(
+        Object.fromEntries(
+          Object.entries({ ...personal, ...body.values }).filter(([, value]) => value !== null),
+        ),
       );
       return HttpResponse.json<MySettingLayers>({
         lab: liveWorkspaceSettings(),

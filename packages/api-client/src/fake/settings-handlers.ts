@@ -1,11 +1,5 @@
 import { HttpResponse, http, type RequestHandler } from "msw";
 import {
-  type MySettings,
-  mySettingsSchema,
-  type ShortcutSettings,
-  shortcutSettingsSchema,
-} from "../draft/get-my-settings.ts";
-import {
   getEndOtherSessionsMockHandler,
   getGetMyAvailabilityMockHandler,
   getListNotificationPreferencesMockHandler,
@@ -19,19 +13,16 @@ import type {
   PreferenceChange,
   SessionSummary,
 } from "../generated/api.ts";
-import type { DraftOperation } from "./draft-handlers.ts";
 import { people } from "./scenario.ts";
 import { sessionPolicy } from "./scenario-admin.ts";
-import { mySettings, noticeChannels, sessions } from "./scenario-settings.ts";
+import { noticeChannels, sessions } from "./scenario-settings.ts";
 import { fakeView } from "./view.ts";
 
 let othersEnded = false;
 let myAvailability: AvailabilityChange = { status: "available" };
-let savedShortcuts: ShortcutSettings | null = null;
 
 export const resetSettingsActions = () => {
   othersEnded = false;
-  savedShortcuts = null;
   myAvailability = { status: "available" };
 };
 
@@ -82,45 +73,6 @@ export const toPreferences = (): Preference[] =>
     realtime: false,
     mandatory: false,
   }));
-
-export const getGetMySettingsMockHandler = (overrideResponse?: MySettings) =>
-  http.get("*/api/me/settings", () =>
-    HttpResponse.json(
-      mySettingsSchema.parse(
-        overrideResponse ??
-          (savedShortcuts === null ? mySettings : { ...mySettings, shortcuts: savedShortcuts }),
-      ),
-    ),
-  );
-
-export const getSetMyShortcutsMockHandler = (overrideResponse?: ShortcutSettings) =>
-  http.put("*/api/me/shortcuts", async ({ request }) => {
-    if (overrideResponse) return HttpResponse.json(overrideResponse);
-    const parsed = shortcutSettingsSchema.safeParse(await request.json());
-    if (!parsed.success) {
-      return HttpResponse.json(
-        { type: "about:blank", title: "The shortcuts are not valid", status: 422 },
-        { status: 422, headers: { "content-type": "application/problem+json" } },
-      );
-    }
-    savedShortcuts = parsed.data;
-    return HttpResponse.json(parsed.data);
-  });
-
-export const settingsDraftOperations: DraftOperation[] = [
-  {
-    operationId: "getMySettings",
-    method: "get",
-    path: "/api/me/settings",
-    handler: () => getGetMySettingsMockHandler(),
-  },
-  {
-    operationId: "setMyShortcuts",
-    method: "put",
-    path: "/api/me/shortcuts",
-    handler: () => getSetMyShortcutsMockHandler(),
-  },
-];
 
 export function settingsHandlers(): RequestHandler[] {
   return [

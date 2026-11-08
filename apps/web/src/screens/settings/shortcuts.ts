@@ -1,6 +1,6 @@
-import type { ShortcutSettings } from "@parfocal/api-client";
 import { expandSlot, isSingleLetterKey, keysOverlap } from "../../keys/actions.ts";
 import { keyNames, unshifted } from "../../keys/registry.ts";
+import type { ShortcutSettings } from "../../keys/shortcut-settings.ts";
 import { type KeyAction, keyAction, keyActions, type PresetKey, reservedKeys } from "./keymap.ts";
 
 export type ShortcutFilter = "all" | "changed" | "conflicts";

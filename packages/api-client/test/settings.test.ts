@@ -11,21 +11,18 @@ import {
   createAnnouncement,
   endAnnouncement,
   endOtherSessions,
-  getGetMySettingsQueryOptions,
   getMyAvailability,
   getMySettingLayers,
-  getMySettings,
   getSessionPolicy,
-  isDraftMeta,
   listAnnouncements,
   listModelTiers,
   listNotificationPreferences,
   listSessions,
   resetModelTier,
+  resolveSettings,
   setModelTier,
   setMyAvailability,
   setMySettingLayers,
-  setMyShortcuts,
   setWorkspaceSettings,
   updateSessionPolicy,
 } from "../src/index.ts";
@@ -50,18 +47,24 @@ after(() => {
   globalThis.fetch = patchedFetch;
 });
 
-test("getMySettings is a draft that answers with the scenario's settings", async () => {
-  assert.equal(isDraftMeta(getGetMySettingsQueryOptions().meta), true);
-  const { data } = await getMySettings();
-  assert.equal(data.personal.default_preset, "task");
-  assert.equal(data.shortcuts.preset, "default");
-  assert.deepEqual(data.shortcuts.custom, {});
+const personalLayer = async () => {
+  const layers = await getMySettingLayers();
+  if (layers.status !== 200) throw new Error("no layers");
+  return layers.data;
+};
+
+test("the seeded personal layer resolves to the screen's defaults", async () => {
+  const values = resolveSettings({ ...(await personalLayer()), device: {} });
+  assert.equal(values.default_preset, 0);
+  assert.equal(values.shortcut_preset, "default");
+  assert.deepEqual(values.shortcut_custom, {});
+  assert.equal(values.side_panel_width, 340);
+  assert.equal(values.language, "en");
 });
 
 test("the saved presets are the ones RT-14 offers on its preset keys", async () => {
-  const { data } = await getMySettings();
   const rt14 = scenarioReview.taskDisplay["RT-14"]?.presets.map((preset) => preset.name);
-  assert.deepEqual(data.personal.presets, rt14);
+  assert.deepEqual((await personalLayer()).personal["presets"], rt14);
 });
 
 test("two other devices are signed in until they are signed out", async () => {
@@ -119,16 +122,16 @@ test("the workspace keeps its defaults and locks, and refuses a lock without a v
 test("a personal setting is kept, cleared with null and refused when unknown", async () => {
   const seeded = await getMySettingLayers();
   if (seeded.status !== 200) throw new Error("no layers");
-  assert.deepEqual(seeded.data.personal, { home_layout: "both" });
+  assert.equal(seeded.data.personal["home_layout"], "both");
   const saved = await setMySettingLayers({ values: { home_layout: "research" } });
   if (saved.status !== 200) throw new Error("not saved");
-  assert.deepEqual(saved.data.personal, { home_layout: "research" });
+  assert.equal(saved.data.personal["home_layout"], "research");
   const layers = await getMySettingLayers();
   if (layers.status !== 200) throw new Error("no layers");
-  assert.deepEqual(layers.data.personal, { home_layout: "research" });
+  assert.equal(layers.data.personal["home_layout"], "research");
   const cleared = await setMySettingLayers({ values: { home_layout: null } });
   if (cleared.status !== 200) throw new Error("not cleared");
-  assert.deepEqual(cleared.data.personal, {});
+  assert.equal(cleared.data.personal["home_layout"], undefined);
   await assert.rejects(setMySettingLayers({ values: { home_layout: "anywhere" } }), {
     status: 400,
   });
@@ -200,33 +203,30 @@ test("available with a note or a past end is refused like the API", async () => 
   assert.equal((await getMyAvailability()).data.status, "available");
 });
 
-test("saved shortcuts come back from getMySettings until the fake is reset", async () => {
-  const saved = await setMyShortcuts({
-    preset: "qupath",
-    custom: { dnext: ["W"] },
-    single_letter: false,
-    by_position: false,
-    whole_slide_key: "tap",
+test("saved shortcuts come back from the personal layer until the fake is reset", async () => {
+  await setMySettingLayers({
+    values: {
+      shortcut_preset: "qupath",
+      shortcut_custom: { dnext: ["W"] },
+      shortcut_single_letter: false,
+      shortcut_whole_slide_key: "tap",
+    },
   });
-  assert.deepEqual(saved.data.custom, { dnext: ["W"] });
-  const { data } = await getMySettings();
-  assert.equal(data.shortcuts.preset, "qupath");
-  assert.deepEqual(data.shortcuts.custom, { dnext: ["W"] });
-  assert.equal(data.shortcuts.single_letter, false);
-  assert.equal(data.shortcuts.whole_slide_key, "tap");
-  resetSettingsActions();
-  assert.deepEqual((await getMySettings()).data.shortcuts.custom, {});
+  const values = resolveSettings({ ...(await personalLayer()), device: {} });
+  assert.equal(values.shortcut_preset, "qupath");
+  assert.deepEqual(values.shortcut_custom, { dnext: ["W"] });
+  assert.equal(values.shortcut_single_letter, false);
+  assert.equal(values.shortcut_by_position, true);
+  assert.equal(values.shortcut_whole_slide_key, "tap");
+  resetConsoleActions();
+  assert.equal((await personalLayer()).personal["shortcut_custom"], undefined);
 });
 
-test("shortcuts with an unknown whole slide mode are refused", async () => {
-  await assert.rejects(
-    setMyShortcuts({
-      preset: "default",
-      custom: {},
-      single_letter: true,
-      by_position: true,
-      whole_slide_key: "double" as "tap",
-    }),
-    { status: 422 },
-  );
+test("shortcuts with an unknown whole slide mode or a bare key are refused", async () => {
+  await assert.rejects(setMySettingLayers({ values: { shortcut_whole_slide_key: "double" } }), {
+    status: 400,
+  });
+  await assert.rejects(setMySettingLayers({ values: { shortcut_custom: { dnext: "W" } } }), {
+    status: 400,
+  });
 });

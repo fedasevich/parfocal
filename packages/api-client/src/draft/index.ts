@@ -17,23 +17,6 @@ export {
   useGetMyChecklist,
 } from "./get-my-checklist.ts";
 export {
-  type GetMySettingsQueryError,
-  type GetMySettingsQueryResult,
-  getGetMySettingsQueryKey,
-  getGetMySettingsQueryOptions,
-  getGetMySettingsUrl,
-  getMySettings,
-  type getMySettingsResponse,
-  type MySettings,
-  mySettingsSchema,
-  NoticeChannel,
-  ShortcutPreset,
-  type ShortcutSettings,
-  shortcutSettingsSchema,
-  useGetMySettings,
-  WholeSlideKey,
-} from "./get-my-settings.ts";
-export {
   type GetProjectScopeOptionsQueryError,
   type GetProjectScopeOptionsQueryResult,
   getGetProjectScopeOptionsQueryKey,
@@ -249,6 +232,5 @@ export {
 export * from "./model-runs.ts";
 export * from "./project.ts";
 export * from "./report-layout.ts";
-export * from "./set-my-shortcuts.ts";
 export { type DraftMeta, draftMeta, isDraftMeta } from "./support.ts";
 export * from "./type-outlines.ts";
