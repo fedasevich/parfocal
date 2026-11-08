@@ -557,7 +557,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Done when one command builds the report locally, CI attaches it to pull requests, and the summary names the largest modules of the first-page chunk.
   Size: S.
 
-- [ ] FOUND-032 · Room on the first page bundle
+- [x] FOUND-032 · Room on the first page bundle
   After ANN-031 the first page is 349938 gzip bytes against the 350000 budget of ADR 0048 (routing). The `developer-data` chunk (about 4007 bytes) and the `walkthrough` chunk (about 3301 bytes) load on the first page, likely through search schema imports. Move them behind their routes without raising the budget.
   Done when the bundle budget test shows the first page at least 5000 bytes under its limit and the developer and walkthrough routes still pass their browser specs.
   Size: S.
