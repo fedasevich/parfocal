@@ -18,6 +18,7 @@ type Address = ipaddress.IPv4Address | ipaddress.IPv6Address
 
 class LinkRefusal(StrEnum):
     SCHEME = "link-scheme"
+    CREDENTIALS = "link-credentials"
     ADDRESS = "link-address"
     REDIRECTS = "link-redirects"
     TOO_LARGE = "link-too-large"
@@ -29,6 +30,9 @@ class LinkRefusal(StrEnum):
 
 LINK_FAILURES = {
     LinkRefusal.SCHEME: "Only HTTPS links can be imported.",
+    LinkRefusal.CREDENTIALS: (
+        "The address holds a user name or password, which Parfocal never sends or stores."
+    ),
     LinkRefusal.ADDRESS: (
         "The link points at a private or internal address, which Parfocal never fetches."
     ),
@@ -95,6 +99,8 @@ def host_header(url: httpx2.URL) -> str:
 
 
 async def target_of(url: httpx2.URL, policy: LinkPolicy) -> Target:
+    if url.userinfo:
+        raise LinkRefusedError(LinkRefusal.CREDENTIALS)
     trusted = policy.trusts(url)
     if url.scheme != "https" and not (url.scheme == "http" and trusted):
         raise LinkRefusedError(LinkRefusal.SCHEME)

@@ -43596,6 +43596,7 @@
         "type": "string",
         "enum": [
           "link-scheme",
+          "link-credentials",
           "link-address",
           "link-redirects",
           "link-too-large",
@@ -50049,7 +50050,7 @@
       "Secret": {
         "type": "string",
         "maxLength": 4096,
-        "minLength": 1
+        "minLength": 8
       },
       "SecurityContact": {
         "properties": {

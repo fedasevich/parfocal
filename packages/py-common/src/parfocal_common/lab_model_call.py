@@ -35,6 +35,7 @@ class SignIn(StrEnum):
 class CallRefusal(StrEnum):
     ADDRESS = "address"
     SCHEME = "scheme"
+    CREDENTIALS = "credentials"
     REDIRECT = "redirect"
     UNREACHABLE = "unreachable"
     TIMEOUT = "timeout"
@@ -47,6 +48,9 @@ CALL_FAILURES = {
         "The address points at a private or internal server, which Parfocal never calls."
     ),
     CallRefusal.SCHEME: "Only HTTPS addresses can be connected.",
+    CallRefusal.CREDENTIALS: (
+        "The address holds a user name or password. Use the sign-in fields for credentials."
+    ),
     CallRefusal.REDIRECT: "The server answered with a redirect, which Parfocal does not follow.",
     CallRefusal.UNREACHABLE: "The server could not be reached.",
     CallRefusal.TIMEOUT: "The server took too long to answer.",
@@ -57,6 +61,7 @@ CALL_FAILURES = {
 LINK_TO_CALL = {
     LinkRefusal.ADDRESS: CallRefusal.ADDRESS,
     LinkRefusal.SCHEME: CallRefusal.SCHEME,
+    LinkRefusal.CREDENTIALS: CallRefusal.CREDENTIALS,
     LinkRefusal.UNREACHABLE: CallRefusal.UNREACHABLE,
     LinkRefusal.TIMEOUT: CallRefusal.TIMEOUT,
     LinkRefusal.TOO_LARGE: CallRefusal.TOO_LARGE,

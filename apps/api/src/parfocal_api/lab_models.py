@@ -53,7 +53,7 @@ type Address = Annotated[
     str, StringConstraints(strip_whitespace=True, min_length=1, max_length=2048)
 ]
 type Secret = Annotated[
-    str, StringConstraints(strip_whitespace=True, min_length=1, max_length=4096)
+    str, StringConstraints(strip_whitespace=True, min_length=8, max_length=4096)
 ]
 type HeaderName = Annotated[
     str,
@@ -362,7 +362,9 @@ async def check_projects(connection: AsyncConnection, ids: list[uuid.UUID]) -> l
     if not chosen:
         return []
     found = await connection.scalar(
-        select(func.count()).select_from(projects).where(projects.c.id.in_(chosen))
+        select(func.count())
+        .select_from(projects)
+        .where(projects.c.id.in_(chosen), projects.c.deleted_at.is_(None))
     )
     if found != len(chosen):
         raise LabModelProjectNotFoundError

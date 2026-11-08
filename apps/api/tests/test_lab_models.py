@@ -284,3 +284,41 @@ def test_only_people_with_admin_rights_connect_or_test_a_model(
         assert linked(lab.people[who]).post(MODELS, json=draft(site, lab)).status_code == 403
         assert linked(lab.people[who]).post(f"{MODELS}/test", json=server(site)).status_code == 403
     assert site.requests == []
+
+
+@pytest.mark.parametrize("userinfo", ["key@", "user:secret-pass@"])
+def test_an_address_with_credentials_is_refused_and_never_stored(
+    linked: ApiAs, lab: Lab, site: Site, database: str, userinfo: str
+) -> None:
+    site.json(INFER, ANSWER)
+    address = site.url(INFER).replace("http://", f"http://{userinfo}")
+    acting = linked(lab.people["owner"])
+    refused(
+        acting.post(f"{MODELS}/test", json=server(site, address=address)),
+        CallRefusal.CREDENTIALS,
+    )
+    refused(acting.post(MODELS, json=draft(site, lab, address=address)), CallRefusal.CREDENTIALS)
+    assert site.requests == []
+    stored = owner(database, f"SELECT count(*) FROM lab_models WHERE tenant_id = '{lab.tenant}'")
+    assert stored[0][0] == 0
+
+
+def test_a_deleted_project_may_not_use_the_model(
+    linked: ApiAs, lab: Lab, site: Site, database: str
+) -> None:
+    deleted = make_project(database, lab.tenant)
+    owner(database, f"UPDATE projects SET deleted_at = now() WHERE id = '{deleted}'")
+    body = draft(site, lab, project_ids=[str(lab.project), str(deleted)])
+    assert problem(linked(lab.people["owner"]).post(MODELS, json=body)) == (
+        400,
+        "lab-model-project-not-found",
+    )
+
+
+def test_a_token_shorter_than_eight_characters_is_refused(
+    linked: ApiAs, lab: Lab, site: Site
+) -> None:
+    acting = linked(lab.people["owner"])
+    assert acting.post(MODELS, json=draft(site, lab, secret="abc1234")).status_code == 422
+    assert acting.post(f"{MODELS}/test", json=server(site, secret="abc1234")).status_code == 422
+    assert site.requests == []

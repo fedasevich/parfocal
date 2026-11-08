@@ -2497,7 +2497,7 @@ export interface LabModel {
 }
 
 /**
- * @minLength 1
+ * @minLength 8
  * @maxLength 4096
  */
 export type Secret = string;
@@ -2739,6 +2739,7 @@ export type LinkRefusal = (typeof LinkRefusal)[keyof typeof LinkRefusal];
 
 export const LinkRefusal = {
   "link-scheme": "link-scheme",
+  "link-credentials": "link-credentials",
   "link-address": "link-address",
   "link-redirects": "link-redirects",
   "link-too-large": "link-too-large",
