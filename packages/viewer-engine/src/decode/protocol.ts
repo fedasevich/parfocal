@@ -17,7 +17,7 @@ export type DecodeReply =
   | {
       readonly type: "tile";
       readonly id: number;
-      readonly data: Uint8Array<ArrayBuffer>;
+      readonly data: Uint8Array<ArrayBuffer> | Uint16Array<ArrayBuffer>;
       readonly width: number;
       readonly height: number;
     }

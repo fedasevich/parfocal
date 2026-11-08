@@ -43,6 +43,12 @@ import type { PixelSlide } from "./pixel-slide.ts";
 import { createPrefetcher, type Prefetcher } from "./prefetch.ts";
 import { createTileFade, installTileFade, tileFadeProp } from "./tile-fade.ts";
 import type { TileLoadState } from "./tile-wait.ts";
+import {
+  type ChannelDisplay,
+  createVivChannelLevels,
+  type VivChannelLevels,
+  vivChannelLayerProps,
+} from "./viv-channel-levels.ts";
 import { createVivLevels, type FailedTile, type VivLevels } from "./viv-levels.ts";
 
 const idleLoadState: TileLoadState = { pending: 0, waitingMs: 0, answerMs: null };
@@ -50,6 +56,19 @@ const idleLoadState: TileLoadState = { pending: 0, waitingMs: 0, answerMs: null 
 export const vivViewId = "slide";
 
 const stableSelections = [{ z: 0, t: 0, c: 0 }];
+
+const channelInputs = new WeakMap<
+  VivChannelLevels,
+  { readonly loader: readonly unknown[]; readonly selections: readonly object[] }
+>();
+
+function stableChannelInputs(levels: VivChannelLevels, selections: readonly object[]) {
+  const known = channelInputs.get(levels);
+  if (known) return known;
+  const created = { loader: [...levels.levels], selections: selections.map((s) => ({ ...s })) };
+  channelInputs.set(levels, created);
+  return created;
+}
 
 const idleFramesRequired = 2;
 
@@ -112,11 +131,17 @@ export interface VivRoute extends RendererRoute<PixelSlide> {
   readonly prefetchEnabled: () => boolean;
   readonly prefetchVector: () => MotionVector | null;
   readonly prefetchStats: () => PrefetchStats | null;
+  readonly channels: () => VivChannelLevels | null;
+  readonly setChannelDisplay: (display: readonly ChannelDisplay[]) => void;
 }
+
+type RouteLevels = Pick<VivLevels, "pending" | "loadState" | "failures" | "clearFailure">;
 
 interface Shown {
   readonly slide: PixelSlide;
-  readonly levels: VivLevels;
+  readonly levels: RouteLevels;
+  readonly rgb: VivLevels | null;
+  readonly channelLevels: VivChannelLevels | null;
   readonly layer: Layer;
   readonly reader: WorkerRegionReader | null;
   readonly prefetcher: Prefetcher | null;
@@ -163,6 +188,7 @@ export function createVivRoute(
   let overlays: readonly OverlayLayer[] = [];
   let overlayLayers: Layer[] = [];
   let brightness = 1;
+  let channelDisplay: readonly ChannelDisplay[] = [];
   let prefetchOn = options.prefetch ?? true;
   const overlayBuilder = createOverlayLayerBuilder();
   let changes = 0;
@@ -245,21 +271,53 @@ export function createVivRoute(
     changed();
   };
 
-  const slideLayer = (slide: PixelSlide, levels: VivLevels): Layer =>
-    new MultiscaleImageLayer<[]>({
-      id: `slide-${slide.id}`,
-      loader: [...levels.levels],
+  const slideLayer = (current: Pick<Shown, "slide" | "rgb" | "channelLevels">): Layer => {
+    const extras = {
+      ...unpickable,
+      [interpolationRuleProp]: interpolationRule,
+      [tileFadeProp]: tileFade,
+    };
+    if (current.channelLevels !== null) {
+      const props = vivChannelLayerProps(current.channelLevels, channelDisplay);
+      const stable = stableChannelInputs(current.channelLevels, props.selections);
+      return new MultiscaleImageLayer<[]>({
+        id: `slide-${current.slide.id}`,
+        loader: stable.loader,
+        selections: stable.selections,
+        contrastLimits: props.contrastLimits.map((limits) => [...limits] as [number, number]),
+        colors: props.colors.map((color) => [...color] as [number, number, number]),
+        channelsVisible: [...props.channelsVisible],
+        dtype: props.dtype,
+        ...extras,
+      } as never) as Layer;
+    }
+    return new MultiscaleImageLayer<[]>({
+      id: `slide-${current.slide.id}`,
+      loader: [...(current.rgb?.levels ?? [])],
       selections: stableSelections,
       contrastLimits: [],
       channelsVisible: [true],
       dtype: "Uint8",
-      ...unpickable,
-      ...{
-        [interpolationRuleProp]: interpolationRule,
-        [tileFadeProp]: tileFade,
-        tintColor: slideTint(brightness),
-      },
+      ...extras,
+      ...{ tintColor: slideTint(brightness) },
     }) as Layer;
+  };
+
+  const channelShown = (slide: PixelSlide, reader: WorkerRegionReader | null): Shown => {
+    const channelLevels = createVivChannelLevels(slide.source, {
+      onTileError: options.onTileError ?? reportError,
+      onReadSettled: () => sleep?.wake("read"),
+      ...(reader ? { read: reader.readChannel } : {}),
+    });
+    const levels: RouteLevels = {
+      pending: channelLevels.pending,
+      loadState: () => idleLoadState,
+      failures: () => [],
+      clearFailure: () => undefined,
+    };
+    const base = { slide, levels, rgb: null, channelLevels, reader, prefetcher: null };
+    return { ...base, layer: slideLayer(base) };
+  };
 
   const showSlide = (slide: PixelSlide | null) => {
     if (failure !== null || slide === shown?.slide) return;
@@ -269,6 +327,12 @@ export function createVivRoute(
       return;
     }
     const reader = readerFor(slide);
+    channelDisplay = [];
+    if (slide.source.photometric === "channels") {
+      shown = channelShown(slide, reader);
+      applyLayers();
+      return;
+    }
     const levels = createVivLevels(slide.source, {
       onTileError: options.onTileError ?? reportError,
       onReadSettled: () => sleep?.wake("read"),
@@ -286,7 +350,8 @@ export function createVivRoute(
           enabled: prefetchOn,
         })
       : null;
-    shown = { slide, levels, layer: slideLayer(slide, levels), reader, prefetcher };
+    const base = { slide, levels, rgb: levels, channelLevels: null, reader, prefetcher };
+    shown = { ...base, layer: slideLayer(base) };
     applyLayers();
   };
 
@@ -369,7 +434,7 @@ export function createVivRoute(
     deck = createDeck(next);
     if (sleep) installFrameProvider(deck as unknown as Deck, sleep);
     stopObservingCanvas = observeCanvasSize(next, () => sleep?.wake("resize"));
-    if (shown) shown = { ...shown, layer: slideLayer(shown.slide, shown.levels) };
+    if (shown) shown = { ...shown, layer: slideLayer(shown) };
     applyLayers();
   };
 
@@ -472,8 +537,16 @@ export function createVivRoute(
     setSlideBrightness: (factor) => {
       if (factor === brightness) return;
       brightness = factor;
-      if (shown) shown = { ...shown, layer: slideLayer(shown.slide, shown.levels) };
+      if (shown) shown = { ...shown, layer: slideLayer(shown) };
       applyLayers();
+    },
+    channels: () => shown?.channelLevels ?? null,
+    setChannelDisplay: (display) => {
+      channelDisplay = display;
+      if (shown?.channelLevels) {
+        shown = { ...shown, layer: slideLayer(shown) };
+        applyLayers();
+      }
     },
     invalidateOverlay: (id) => {
       if (!overlays.some((overlay) => overlay.id === id)) return;

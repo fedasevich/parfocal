@@ -1,4 +1,5 @@
 import type { DecodeReport } from "../pixel-source/types.ts";
+import type { VivChannelRegionReader, VivChannelTile } from "../viv/viv-channel-levels.ts";
 import type { VivRegion, VivRegionReader, VivTile } from "../viv/viv-levels.ts";
 import { regionKey } from "../viv/viv-levels.ts";
 import { type BytePort, serveBytes } from "./byte-relay.ts";
@@ -36,6 +37,7 @@ export interface DecodeStats extends DecodePoolStats {
 
 export interface WorkerRegionReader {
   readonly read: VivRegionReader;
+  readonly readChannel: VivChannelRegionReader;
   prefetch(region: VivRegion, centre: PoolPoint): boolean;
   dropPrefetch(keep?: ReadonlySet<string>): number;
   prefetchStats(): PrefetchStats;
@@ -67,7 +69,7 @@ function messageChannel(): BytePorts {
 }
 
 interface Waiting {
-  readonly resolve: (tile: VivTile) => void;
+  readonly resolve: (tile: VivTile | VivChannelTile) => void;
   readonly reject: (error: Error) => void;
 }
 
@@ -80,11 +82,11 @@ export function createWorkerRegionReader(options: WorkerReaderOptions): WorkerRe
   const ports: BytePort[] = [];
   let nextId = 0;
 
-  const pool = createDecodePool<VivRegion, VivTile>({
+  const pool = createDecodePool<VivRegion, VivTile | VivChannelTile>({
     ...(options.size === undefined ? {} : { size: options.size }),
     retain: options.retain ?? defaultRetainedResults,
     run: (slot, region) =>
-      new Promise<VivTile>((resolve, reject) => {
+      new Promise<VivTile | VivChannelTile>((resolve, reject) => {
         const worker = workers[slot];
         if (worker === undefined) {
           reject(new DecodeWorkerError(`Decode worker ${slot} is missing`));
@@ -136,7 +138,10 @@ export function createWorkerRegionReader(options: WorkerReaderOptions): WorkerRe
   ready.catch(() => undefined);
 
   return {
-    read: (region, centre, signal) => pool.request(regionKey(region), region, centre, signal),
+    read: (region, centre, signal) =>
+      pool.request(regionKey(region), region, centre, signal) as Promise<VivTile>,
+    readChannel: (region, centre, signal) =>
+      pool.request(regionKey(region), region, centre, signal),
     prefetch: (region, centre) => pool.prefetch(regionKey(region), region, centre),
     dropPrefetch: (keep) => pool.dropPrefetch(keep),
     prefetchStats: () => pool.prefetchStats(),
