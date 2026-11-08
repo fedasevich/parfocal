@@ -38,6 +38,15 @@ export const eventSchema = {
   task_started: { task_kind: choice(...taskKinds), case_id: id },
   task_finished: { task_kind: choice(...taskKinds), case_id: id, duration_ms: count },
   task_abandoned: { task_kind: choice(...taskKinds), case_id: id, duration_ms: count },
+  area_time_recorded: { area: choice(...areas), duration_ms: count },
+  cell_review_timed: { slide_id: id, duration_ms: count },
+  chrome_coverage_measured: { area: choice(...areas), coverage_permille: count },
+  reading_time_compared: {
+    task_kind: choice(...taskKinds),
+    case_id: id,
+    estimated_ms: count,
+    duration_ms: count,
+  },
 } as const satisfies Record<string, Record<string, Field>>;
 
 export type EventName = keyof typeof eventSchema;
