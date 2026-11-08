@@ -200,7 +200,7 @@ function SourceSwitch({ scene, go, openFormats }: Pick<StepProps, "scene" | "go"
       <button
         type="button"
         onClick={openFormats}
-        className="inline-flex cursor-pointer items-center gap-1.5 border-0 bg-transparent p-0 text-body-sm font-medium text-fg-dim hover:text-fg"
+        className="inline-flex min-h-6 cursor-pointer items-center gap-1.5 border-0 bg-transparent p-0 text-body-sm font-medium text-fg-dim hover:text-fg"
       >
         <Icon name="help" />
         What files work?
