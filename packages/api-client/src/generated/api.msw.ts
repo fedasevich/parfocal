@@ -8944,6 +8944,9 @@ export const getGetTaskEvaluationResponseMock = (
   ...overrideResponse,
 });
 
+export const getExportTrainingDatasetResponseMock = (): Blob =>
+  new Blob([new Uint8Array(faker.number.int({ min: 1, max: 64 }))]);
+
 export const getStartEvaluationVersionResponseMock = (
   overrideResponse: Partial<Extract<EvaluationVersionStarted, object>> = {},
 ): EvaluationVersionStarted => ({
@@ -17210,6 +17213,30 @@ export const getExportTaskEvaluationMockHandler = (
   );
 };
 
+export const getExportTrainingDatasetMockHandler = (
+  overrideResponse?:
+    | Blob
+    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<Blob> | Blob),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/review-tasks/:taskId/training-dataset",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      const binaryBody =
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getExportTrainingDatasetResponseMock();
+      return new HttpResponse(binaryBody, {
+        status: 200,
+        headers: { "Content-Type": "application/octet-stream" },
+      });
+    },
+    options,
+  );
+};
+
 export const getStartEvaluationVersionMockHandler = (
   overrideResponse?:
     | EvaluationVersionStarted
@@ -18937,6 +18964,7 @@ export const getParfocalAPIMock = () => [
   getListMyAdjudicationsMockHandler(),
   getGetTaskEvaluationMockHandler(),
   getExportTaskEvaluationMockHandler(),
+  getExportTrainingDatasetMockHandler(),
   getStartEvaluationVersionMockHandler(),
   getListEvaluationChangesMockHandler(),
   getGetSignOffSummaryMockHandler(),

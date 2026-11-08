@@ -42046,6 +42046,207 @@ export function useExportTaskEvaluation<
   return withQueryKey(query, queryOptions.queryKey);
 }
 
+export type exportTrainingDatasetResponse200 = {
+  data: Blob;
+  status: 200;
+};
+
+export type exportTrainingDatasetResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type exportTrainingDatasetResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type exportTrainingDatasetResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type exportTrainingDatasetResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type exportTrainingDatasetResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type exportTrainingDatasetResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type exportTrainingDatasetResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type exportTrainingDatasetResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type exportTrainingDatasetResponseSuccess = exportTrainingDatasetResponse200 & {
+  headers: Headers;
+};
+export type exportTrainingDatasetResponseError = (
+  | exportTrainingDatasetResponse400
+  | exportTrainingDatasetResponse401
+  | exportTrainingDatasetResponse403
+  | exportTrainingDatasetResponse404
+  | exportTrainingDatasetResponse409
+  | exportTrainingDatasetResponse422
+  | exportTrainingDatasetResponse429
+  | exportTrainingDatasetResponse500
+) & {
+  headers: Headers;
+};
+
+export type exportTrainingDatasetResponse =
+  | exportTrainingDatasetResponseSuccess
+  | exportTrainingDatasetResponseError;
+
+export const getExportTrainingDatasetUrl = (taskId: string) => {
+  return `/api/review-tasks/${taskId}/training-dataset`;
+};
+
+/**
+ * @summary Export Training Dataset
+ */
+export const exportTrainingDataset = async (
+  taskId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<exportTrainingDatasetResponse> => {
+  return apiFetch<exportTrainingDatasetResponse>(getExportTrainingDatasetUrl(taskId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getExportTrainingDatasetQueryKey = (taskId: string) => {
+  return [`/api/review-tasks/${taskId}/training-dataset`] as const;
+};
+
+export const getExportTrainingDatasetQueryOptions = <
+  TData = Awaited<ReturnType<typeof exportTrainingDataset>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof exportTrainingDataset>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getExportTrainingDatasetQueryKey(taskId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof exportTrainingDataset>>> = ({ signal }) =>
+    exportTrainingDataset(taskId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: taskId !== null && taskId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof exportTrainingDataset>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type ExportTrainingDatasetQueryResult = NonNullable<
+  Awaited<ReturnType<typeof exportTrainingDataset>>
+>;
+export type ExportTrainingDatasetQueryError = Problem;
+
+export function useExportTrainingDataset<
+  TData = Awaited<ReturnType<typeof exportTrainingDataset>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof exportTrainingDataset>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof exportTrainingDataset>>,
+          TError,
+          Awaited<ReturnType<typeof exportTrainingDataset>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useExportTrainingDataset<
+  TData = Awaited<ReturnType<typeof exportTrainingDataset>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof exportTrainingDataset>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof exportTrainingDataset>>,
+          TError,
+          Awaited<ReturnType<typeof exportTrainingDataset>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useExportTrainingDataset<
+  TData = Awaited<ReturnType<typeof exportTrainingDataset>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof exportTrainingDataset>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Export Training Dataset
+ */
+
+export function useExportTrainingDataset<
+  TData = Awaited<ReturnType<typeof exportTrainingDataset>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof exportTrainingDataset>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getExportTrainingDatasetQueryOptions(taskId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
 export type startEvaluationVersionResponse201 = {
   data: EvaluationVersionStarted;
   status: 201;

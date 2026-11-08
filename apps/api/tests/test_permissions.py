@@ -232,6 +232,7 @@ class Workspace:
     annotate_task: uuid.UUID = field(default_factory=uuid.uuid4)
     checked_annotate_task: uuid.UUID = field(default_factory=uuid.uuid4)
     ready_annotate_task: uuid.UUID = field(default_factory=uuid.uuid4)
+    signed_annotate_task: uuid.UUID = field(default_factory=uuid.uuid4)
     layer_object: uuid.UUID = field(default_factory=uuid.uuid4)
     doomed_layer_object: uuid.UUID = field(default_factory=uuid.uuid4)
 
@@ -819,6 +820,9 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     ),
     "exportTaskEvaluation": lambda w: Call(
         "GET", f"/api/review-tasks/{w.task}/evaluation/exports/objects.csv"
+    ),
+    "exportTrainingDataset": lambda w: Call(
+        "GET", f"/api/review-tasks/{w.signed_annotate_task}/training-dataset"
     ),
     "createReportLink": lambda w: Call("POST", f"/api/review-tasks/{w.task}/evaluation/links"),
     "listReportLinks": lambda w: Call("GET", f"/api/review-tasks/{w.task}/evaluation/links"),
@@ -1638,6 +1642,20 @@ async def seed(database: str, lead: Seat = RESEARCHER, presets_for: Seat = RESEA
                 )[0]
                 for number in (91, 92)
             ]
+            signed_annotate_task, _, _ = await seed_annotate_task(
+                connection,
+                tenant_id,
+                case.project_id,
+                case.loose_slide_id,
+                result_set,
+                people[lead],
+                93,
+            )
+            await connection.execute(
+                update(review_task_slides)
+                .where(review_task_slides.c.task_id == signed_annotate_task)
+                .values(signed_off_at=func.now())
+            )
             submitted_task, ready_task, signed_task, versioned_task = [
                 await seed_task(
                     connection,
@@ -1973,6 +1991,7 @@ async def seed(database: str, lead: Seat = RESEARCHER, presets_for: Seat = RESEA
             annotate_task=annotate_task,
             checked_annotate_task=checked_annotate_task,
             ready_annotate_task=ready_annotate_task,
+            signed_annotate_task=signed_annotate_task,
             layer_object=layer_object,
             doomed_layer_object=doomed_layer_object,
         )

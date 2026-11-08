@@ -79,6 +79,7 @@ from parfocal_api import (
     tenants,
     threads,
     tile_access,
+    training_exports,
     uploads,
     users,
     verdicts,
@@ -246,6 +247,7 @@ def create_app(
     app.include_router(adjudications.router)
     app.include_router(evaluation.router)
     app.include_router(evaluation_exports.router)
+    app.include_router(training_exports.router)
     app.include_router(evaluation_versions.router)
     app.include_router(report_links.router)
     app.include_router(report_links.public_router)

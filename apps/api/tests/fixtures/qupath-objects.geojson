@@ -1,0 +1,37 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "id": "6f0b6d2e-3c4a-4a8e-9d6b-0c1f2e3a4b5c",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[100, 100], [400, 100], [400, 300], [100, 300], [100, 100]]]
+      },
+      "properties": {
+        "objectType": "annotation",
+        "name": "Tumour area",
+        "classification": {"name": "Tumour", "color": [200, 0, 0]},
+        "isLocked": false
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "0d3e4f5a-6b7c-4d8e-9f0a-1b2c3d4e5f60",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[120, 120], [140, 120], [140, 140], [120, 140], [120, 120]]]
+      },
+      "nucleusGeometry": {
+        "type": "Polygon",
+        "coordinates": [[[125, 125], [135, 125], [135, 135], [125, 135], [125, 125]]]
+      },
+      "properties": {
+        "objectType": "cell",
+        "classification": {"name": "Tumour", "color": [200, 0, 0]},
+        "isLocked": false,
+        "measurements": {"Nucleus: Area": 100.0}
+      }
+    }
+  ]
+}
