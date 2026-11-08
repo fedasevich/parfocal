@@ -1411,7 +1411,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Done when the perf test keeps 60 fps while panning during a region pass (POC without pause: 28 to 32 fps). It is measured against a stand-in busy job until the first browser inference task exists, and then repeated with the real region pass.
   Refs [ADR 0113](adr/0113-interaction-signal-units-and-touch-gestures.md), doc 31, [`poc/src/app/interaction.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/app/interaction.ts).
 
-- [ ] VIEW-041 · How a slide loads
+- [x] VIEW-041 · How a slide loads
   The coarse level shows first, stretched under the view, and sharper tiles fade in over it without ever showing white or black. A quiet checker in chrome colours marks only places where no level has loaded, and outside the slide bounds the canvas is the plain background. Overlays draw at once over soft tiles and the checker. A hint by the magnification chip ("Loading sharper tiles · 12 left") appears after 1 s of waiting, and after 5 s it names the slow source and how long it answers, with a link to its status. Failed tiles keep the grey placeholder with Retry ([ADR 0095](adr/0095-ux-round-5-upload-by-slide-and-decision-notes.md)).
   Done when golden tests show the coarse level under missing tiles, the checker only where no level loaded and the background past the edge, a test with a delayed tile server checks the hint at 1 s and the slow source at 5 s, and no frame shows an empty tile during a fling on the throttled fixture.
   Depends on VIEW-002, VIEW-004, NAV-001. Refs mock: states/loading, mock: states/unloaded, mock: states/slow, doc 42.
