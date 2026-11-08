@@ -25,6 +25,10 @@ type ReviewTopBarProps = React.ComponentProps<"header"> & {
   taskSub: string;
   slideName: string;
   slideThumb?: string | undefined;
+  slideSummary?: string | undefined;
+  showAnnotate?: boolean;
+  panelHidden?: boolean | undefined;
+  onTogglePanel?: (() => void) | undefined;
   progress?: DecisionSplit | undefined;
   progressTitle: string;
   progressSub: string;
@@ -50,6 +54,10 @@ function ReviewTopBar({
   taskSub,
   slideName,
   slideThumb,
+  slideSummary,
+  showAnnotate = false,
+  panelHidden,
+  onTogglePanel,
   progress,
   progressTitle,
   progressSub,
@@ -81,7 +89,7 @@ function ReviewTopBar({
   const backBody = (
     <>
       <Icon name="back" />
-      <span>{backLabel}</span>
+      <span className="sr-only">Back to {backLabel}</span>
     </>
   );
   const backClass =
@@ -127,6 +135,9 @@ function ReviewTopBar({
           >
             {thumb}
             <b className="text-body-sm font-semibold">{slideName}</b>
+            {slideSummary ? (
+              <small className="hidden text-caption text-fg-dim xl:inline">{slideSummary}</small>
+            ) : null}
             <Icon name="down" className="text-fg-faint" />
           </PopoverTrigger>
           <PopoverContent
@@ -189,10 +200,24 @@ function ReviewTopBar({
           options={[
             { value: "guided", label: "Guided" },
             { value: "full", label: "Full viewer" },
-            ...(mode === "annotate" ? [{ value: "annotate", label: "Annotate" }] : []),
+            ...(showAnnotate || mode === "annotate"
+              ? [{ value: "annotate", label: "Annotate" }]
+              : []),
           ]}
         />
       )}
+      {onTogglePanel ? (
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label="Side panel"
+          aria-pressed={panelHidden === undefined ? undefined : !panelHidden}
+          title={panelHidden ? "Show the side panel" : "Hide the side panel"}
+          onClick={onTogglePanel}
+        >
+          <Icon name="panel" />
+        </Button>
+      ) : null}
       {moreItems && moreItems.length > 0 ? (
         <DropdownMenu>
           <DropdownMenuTrigger
