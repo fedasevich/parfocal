@@ -13,6 +13,7 @@ import { type ReactNode, useEffect, useState } from "react";
 import { useBindings } from "../../keys/personal-keys.ts";
 import { useHotkeys } from "../../keys/use-hotkeys.ts";
 import { formatMillimetres, useLengthUnits } from "../../measure/length-units.ts";
+import { useToolsLayout } from "../../shell/tools-layout.ts";
 import { type Count, countWord } from "./decision-style.ts";
 import { InspectorDock } from "./inspector-dock.tsx";
 import { useInspectorLayout } from "./inspector-layout.ts";
@@ -36,10 +37,12 @@ function RailToolButton({
   item,
   pressed,
   onToolChange,
+  tipSide,
 }: {
   item: RailTool;
   pressed: boolean;
   onToolChange: ((tool: string) => void) | undefined;
+  tipSide: "right" | "top";
 }) {
   const keyHint = useKeyLabel(item.action, item.key);
   return (
@@ -48,6 +51,7 @@ function RailToolButton({
       label={item.label}
       {...(keyHint === null ? {} : { keyHint })}
       ai={item.ai ?? false}
+      tipSide={tipSide}
       pressed={pressed}
       {...(onToolChange ? { onPressedChange: () => onToolChange(item.tool) } : {})}
     />
@@ -112,6 +116,9 @@ export function ViewerFrame({
   const panelKey = useKeyLabel("panel");
   useRailKeys(railGroups, onToolChange, railKeys);
   const [layout, setLayout] = useInspectorLayout(session.meId);
+  const toolsLayout = useToolsLayout();
+  const docked = toolsLayout === "dock";
+  const tipSide = docked ? "top" : "right";
   const [panning, setPanning] = useState(false);
   const panelBindings = useBindings(["viewer"], ["panel"]);
   useHotkeys(panelBindings, (fired) => {
@@ -135,6 +142,7 @@ export function ViewerFrame({
       className="flex h-dvh min-w-0 flex-col bg-page text-fg"
       data-testid="full-viewer"
       data-scene={scene}
+      data-tools={toolsLayout}
     >
       {topBar ?? (
         <ReviewTop
@@ -152,39 +160,44 @@ export function ViewerFrame({
       )}
       {banner}
       <div className="relative flex min-h-0 flex-1">
-        <ToolRail className="justify-between">
-          <div className="grid gap-1">
-            {railGroups.map((group) => (
-              <ToolRailGroup key={group.map((item) => item.tool).join("-")}>
-                {group.map((item) => (
-                  <RailToolButton
-                    key={item.tool}
-                    item={item}
-                    pressed={item.tool === tool}
-                    onToolChange={onToolChange}
-                  />
-                ))}
-              </ToolRailGroup>
-            ))}
-          </div>
-          <ToolRailGroup>
-            {onCompare ? (
+        {docked ? null : (
+          <ToolRail className="justify-between">
+            <div className="grid gap-1">
+              {railGroups.map((group) => (
+                <ToolRailGroup key={group.map((item) => item.tool).join("-")}>
+                  {group.map((item) => (
+                    <RailToolButton
+                      key={item.tool}
+                      item={item}
+                      pressed={item.tool === tool}
+                      onToolChange={onToolChange}
+                      tipSide={tipSide}
+                    />
+                  ))}
+                </ToolRailGroup>
+              ))}
+            </div>
+            <ToolRailGroup>
+              {onCompare ? (
+                <ToolRailButton
+                  icon="slides"
+                  label="Compare slides"
+                  tipSide={tipSide}
+                  pressed={false}
+                  onPressedChange={onCompare}
+                />
+              ) : null}
               <ToolRailButton
-                icon="slides"
-                label="Compare slides"
-                pressed={false}
-                onPressedChange={onCompare}
+                icon="panel"
+                label={layout.hidden ? "Show the side panel" : "Hide the side panel"}
+                tipSide={tipSide}
+                pressed={!layout.hidden}
+                onPressedChange={() => setLayout({ hidden: !layout.hidden })}
+                {...(panelKey === null ? {} : { keyHint: panelKey })}
               />
-            ) : null}
-            <ToolRailButton
-              icon="panel"
-              label={layout.hidden ? "Show the side panel" : "Hide the side panel"}
-              pressed={!layout.hidden}
-              onPressedChange={() => setLayout({ hidden: !layout.hidden })}
-              {...(panelKey === null ? {} : { keyHint: panelKey })}
-            />
-          </ToolRailGroup>
-        </ToolRail>
+            </ToolRailGroup>
+          </ToolRail>
+        )}
         <div className="flex min-w-0 flex-1 flex-col">
           <div
             data-vt-target=""
@@ -194,6 +207,42 @@ export function ViewerFrame({
             }}
           >
             {children}
+            {docked ? (
+              <ToolRail layout="dock">
+                {railGroups.map((group) => (
+                  <ToolRailGroup key={group.map((item) => item.tool).join("-")}>
+                    {group.map((item) => (
+                      <RailToolButton
+                        key={item.tool}
+                        item={item}
+                        pressed={item.tool === tool}
+                        onToolChange={onToolChange}
+                        tipSide={tipSide}
+                      />
+                    ))}
+                  </ToolRailGroup>
+                ))}
+                <ToolRailGroup>
+                  {onCompare ? (
+                    <ToolRailButton
+                      icon="slides"
+                      label="Compare slides"
+                      tipSide={tipSide}
+                      pressed={false}
+                      onPressedChange={onCompare}
+                    />
+                  ) : null}
+                  <ToolRailButton
+                    icon="panel"
+                    label={layout.hidden ? "Show the side panel" : "Hide the side panel"}
+                    tipSide={tipSide}
+                    pressed={!layout.hidden}
+                    onPressedChange={() => setLayout({ hidden: !layout.hidden })}
+                    {...(panelKey === null ? {} : { keyHint: panelKey })}
+                  />
+                </ToolRailGroup>
+              </ToolRail>
+            ) : null}
           </div>
           {below}
         </div>
