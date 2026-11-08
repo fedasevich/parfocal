@@ -2849,7 +2849,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Done when a test aligns two serial-section fixtures within a tolerance, or an ADR defers it.
   Size: M.
 
-- [ ] CMP-007 · Compare entry points and per-side layers
+- [x] CMP-007 · Compare entry points and per-side layers
   "Side by side" on any slide in the slides popover opens it next to the current one. "Compare slides" opens the screen with the right-side picker already open. Layers (tumor map outline, measurements, comments) are chosen per side.
   Done when E2E opens a pair from each entry point and a golden test shows an overlay on one side only.
   Depends on CASE-002. Refs [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md).
