@@ -3045,7 +3045,7 @@ Cases are optional groups of slides inside a project (PROJ-001). Patient fields 
   Depends on SEC-004, CASE-011.
   Size: M.
 
-- [ ] CASES-027 · File or move a slide from the project page
+- [x] CASES-027 · File or move a slide from the project page
   CASES-017 added the move call and CASES-016 showed loose slides need it, but no screen calls it. On the project page, a loose slide gets "File into a case" and a filed slide gets "Move to another case", both asking for a reason and showing the refusal when a signed-off task holds the slide.
   Done when a browser test files a loose slide, moves a filed one with a reason, and sees the refusal on a slide held by a signed-off task.
   Depends on CASES-016, CASES-017.
