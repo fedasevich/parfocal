@@ -10,7 +10,10 @@ import {
 import { type Look, lookUrl } from "../thumbnails.ts";
 import { isClick, type Pin, slidePoint } from "./comment-pin.ts";
 import type { Count } from "./decision-style.ts";
-import { cellShapes, hpfSize, overviewSize, regionShapes } from "./slide-geometry.ts";
+import { cellShapes, hpfSize, midSize, overviewSize, regionShapes } from "./slide-geometry.ts";
+
+export { midSize };
+
 import { placeSlideTags } from "./tag-placement.ts";
 
 export type StillView =
@@ -28,8 +31,6 @@ const cellScale = 3.5;
 export const readoutPerScale = { overview: 1 / 1.52, mid: 10, hpf: 25 } as const;
 
 export const imageOf = (view: StillView) => (view.kind === "cell" ? "hpf" : "overview");
-
-export const midSize = { width: 1600, height: 1000 } as const;
 
 export type StillLook = Exclude<Look, "heat">;
 

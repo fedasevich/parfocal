@@ -2,6 +2,8 @@ export const overviewSize = { width: 1400, height: 1924 } as const;
 
 export const hpfSize = { width: 1600, height: 1000 } as const;
 
+export const midSize = { width: 1600, height: 1000 } as const;
+
 export const regionShapes: Record<string, { box: [number, number, number, number]; path: string }> =
   {
     T1: {

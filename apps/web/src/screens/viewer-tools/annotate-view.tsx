@@ -3,12 +3,7 @@ import { Button } from "@parfocal/ui/components/button";
 import { Keycap } from "@parfocal/ui/components/keycap";
 import { MagnificationBar } from "@parfocal/ui/components/magnification-bar";
 import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
-import {
-  MapOutline,
-  MapViewport,
-  minimapBox,
-  SmartMinimap,
-} from "@parfocal/ui/components/smart-minimap";
+import { MapOutline, MapViewport, SmartMinimap } from "@parfocal/ui/components/smart-minimap";
 import { UndoToast } from "@parfocal/ui/components/undo-toast";
 import {
   ContextBar,
@@ -25,25 +20,31 @@ import { destinations } from "../../shell/destinations.ts";
 import { useGoTo } from "../../shell/router-link.tsx";
 import { okData } from "../placeholder.tsx";
 import { ReviewTop } from "../review/review-top.tsx";
-import { hpfSize, regionShapes } from "../review/slide-geometry.ts";
+import { regionShapes } from "../review/slide-geometry.ts";
 import { type Camera, SlideStill } from "../review/slide-still.tsx";
 import { ViewerFrame } from "../review/viewer-frame.tsx";
 import type { SceneOf } from "../scenes.ts";
 import { lookUrl } from "../thumbnails.ts";
-import { type HotSpot, placeMinimap } from "./minimap-placement.ts";
-import { hotWeight } from "./minimap-weights.ts";
+import { placeMinimap } from "./minimap-placement.ts";
+import {
+  annotateCentre,
+  annotateHome,
+  annotatePromptBox,
+  annotateSpots,
+  mapBoxOf,
+} from "./minimap-scenes.ts";
 import { tiersFor } from "./model-tiers.ts";
 import { annotateRail, toolHints } from "./rails.ts";
-import { areaExtent, toScreen, viewportOf } from "./slide-maps.tsx";
-import { autoRegionProposals, cellsUnderReview } from "./tool-geometry.ts";
-import { coverHome } from "./tool-maths.ts";
+import { viewportOf } from "./slide-maps.tsx";
+import { autoRegionProposals } from "./tool-geometry.ts";
 import type { ToolSession } from "./tool-session.tsx";
+import { HeldCorner } from "./use-held-corner.tsx";
 
 const overviewImage = { src: lookUrl("overview"), width: 1400, height: 1924 };
 
-const centre = cellsUnderReview[2] ?? { x: 676, y: 834 };
+const centre = annotateCentre;
 
-const promptBox = { x: centre.x - 110, y: centre.y - 150, size: 300 };
+const promptBox = annotatePromptBox;
 
 const classColour = (name: string | null) =>
   name === "Tumor"
@@ -209,7 +210,7 @@ export function AnnotateView({ tools, scene, initialTool, onScene, onLeave }: An
       <SlideStill
         view={{ kind: "whole" }}
         look="hpf"
-        homeOf={coverHome(hpfSize, [centre.x + 60, centre.y], 1.6)}
+        homeOf={annotateHome}
         camera={camera}
         onCameraChange={setCamera}
         regionDecisions={{}}
@@ -275,18 +276,9 @@ export function AnnotateView({ tools, scene, initialTool, onScene, onLeave }: An
           ) : null
         }
         overlay={({ camera: shown, size }) => {
-          const extent = areaExtent("T2");
-          const box = minimapBox("compact", extent);
-          const corner = toScreen(shown, size, [promptBox.x, promptBox.y]);
-          const hot: HotSpot[] = autoRegionProposals.map((cell) => {
-            const at = toScreen(shown, size, [cell.x, cell.y]);
-            return [at.x, at.y, hotWeight.proposal];
-          });
-          const place = placeMinimap(size, box, hot, [
-            [size.width / 2 - 250, size.height - 58, 500, 50],
-            [size.width / 2 - 370, 6, 740, 50],
-            [corner.x, corner.y, promptBox.size * shown.scale, promptBox.size * shown.scale],
-          ]);
+          const spots = annotateSpots(shown, size);
+          const { extent } = spots;
+          const fresh = placeMinimap(size, mapBoxOf(spots), spots.hot, spots.blocked);
           return (
             <>
               {tool === "auto" ? (
@@ -337,18 +329,22 @@ export function AnnotateView({ tools, scene, initialTool, onScene, onLeave }: An
                   note="The full model name shows when you point at a tier. Your lab decides which model each tier uses, and the report always records the exact model and version."
                 />
               ) : null}
-              <SmartMinimap
-                data-corner={place.corner}
-                size="compact"
-                image={overviewImage}
-                extent={extent}
-                foot="Area 2"
-                footEnd={`${proposals} proposals`}
-                style={{ left: place.x, top: place.y }}
-              >
-                <MapOutline path={regionShapes.T2?.path ?? ""} />
-                <MapViewport rect={viewportOf("hpf", shown, size)} />
-              </SmartMinimap>
+              <HeldCorner fresh={fresh} camera={shown}>
+                {(place) => (
+                  <SmartMinimap
+                    data-corner={place.corner}
+                    size="compact"
+                    image={overviewImage}
+                    extent={extent}
+                    foot="Area 2"
+                    footEnd={`${proposals} proposals`}
+                    style={{ left: place.x, top: place.y }}
+                  >
+                    <MapOutline path={regionShapes.T2?.path ?? ""} />
+                    <MapViewport rect={viewportOf("hpf", shown, size)} />
+                  </SmartMinimap>
+                )}
+              </HeldCorner>
               <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
                 <MagnificationBar
                   magnification={55}

@@ -112,6 +112,8 @@ import {
   ViewerFrame,
 } from "../review/viewer-frame.tsx";
 import { MeasureCanvas, measuredSize } from "../viewer-tools/measure-canvas.tsx";
+import { MeasuredBlock } from "../viewer-tools/measured-block.tsx";
+import type { ScreenRect } from "../viewer-tools/minimap-placement.ts";
 import { NavigatorCanvas, OverviewCanvas } from "../viewer-tools/navigator-canvas.tsx";
 import { peekSpot } from "../viewer-tools/peek-model.ts";
 import { reviewRail, reviewRailKeys } from "../viewer-tools/rails.ts";
@@ -290,6 +292,7 @@ function ViewerBody({
   );
   const [filter, setFilter] = useState<ListFilter>(setup.filter);
   const [cellsOpen, setCellsOpen] = useState(setup.cells);
+  const [cellsRect, setCellsRect] = useState<ScreenRect | null>(null);
   const [cellsFolded, setCellsFolded] = useState(false);
   const [confirmRest, setConfirmRest] = useState(false);
   const [camera, setCamera] = useState<Camera | null>(null);
@@ -1329,6 +1332,8 @@ function ViewerBody({
                       object: cell.object,
                       decided: answer(cell.object) !== undefined,
                     }))}
+                    pins={shownPin ? [shownPin] : []}
+                    cellsPanel={cellsRect}
                     onMoveView={setCamera}
                     onOpen={() => onSearch({ peek: true })}
                     onPopOut={() =>
@@ -1348,49 +1353,57 @@ function ViewerBody({
                 ) : null}
                 {current?.kind === "cell" ? (
                   cellsOpen ? (
-                    <CellsGrid
+                    <MeasuredBlock
                       className="absolute bottom-18 left-1/2 w-fit -translate-x-1/2"
-                      cells={cells}
-                      current={current.object}
-                      answer={answer}
-                      answerKeys={answersOf(style, session.classes, current).map(
-                        (item) => item.key,
-                      )}
-                      claimHidden={!showsClaim(style)}
-                      folded={cellsFolded}
-                      confirming={confirmRest}
-                      onPick={(object) => pick(object)}
-                      onNotNucleus={buttonsOff ? undefined : notNucleus}
-                      onAgreeRest={() => setConfirmRest(true)}
-                      onCancelRest={() => setConfirmRest(false)}
-                      onApplyRest={() => {
-                        const next = new Map(overrides);
-                        for (const cell of openCells) {
-                          next.set(cell.object, {
-                            value: "agree",
-                            raw: rawFor(style, "agree", cell),
-                            reasons: [],
-                            note: null,
+                      onRect={setCellsRect}
+                    >
+                      <CellsGrid
+                        cells={cells}
+                        current={current.object}
+                        answer={answer}
+                        answerKeys={answersOf(style, session.classes, current).map(
+                          (item) => item.key,
+                        )}
+                        claimHidden={!showsClaim(style)}
+                        folded={cellsFolded}
+                        confirming={confirmRest}
+                        onPick={(object) => pick(object)}
+                        onNotNucleus={buttonsOff ? undefined : notNucleus}
+                        onAgreeRest={() => setConfirmRest(true)}
+                        onCancelRest={() => setConfirmRest(false)}
+                        onApplyRest={() => {
+                          const next = new Map(overrides);
+                          for (const cell of openCells) {
+                            next.set(cell.object, {
+                              value: "agree",
+                              raw: rawFor(style, "agree", cell),
+                              reasons: [],
+                              note: null,
+                            });
+                          }
+                          setOverrides(next);
+                          setConfirmRest(false);
+                          setToast({
+                            id: Date.now(),
+                            text: `${openCells.length} cells marked agree`,
+                            undo: () => setOverrides(overrides),
                           });
-                        }
-                        setOverrides(next);
-                        setConfirmRest(false);
-                        setToast({
-                          id: Date.now(),
-                          text: `${openCells.length} cells marked agree`,
-                          undo: () => setOverrides(overrides),
-                        });
-                      }}
-                      onFoldChange={setCellsFolded}
-                      onClose={() => setCellsOpen(false)}
-                    />
+                        }}
+                        onFoldChange={setCellsFolded}
+                        onClose={() => setCellsOpen(false)}
+                      />
+                    </MeasuredBlock>
                   ) : (
-                    <CellsLauncher
+                    <MeasuredBlock
                       className="absolute bottom-18 left-1/2 -translate-x-1/2"
-                      decided={cells.length - openCells.length}
-                      total={cells.length}
-                      onClick={() => setCellsOpen(true)}
-                    />
+                      onRect={setCellsRect}
+                    >
+                      <CellsLauncher
+                        decided={cells.length - openCells.length}
+                        total={cells.length}
+                        onClick={() => setCellsOpen(true)}
+                      />
+                    </MeasuredBlock>
                   )
                 ) : null}
                 {whole ? null : (
