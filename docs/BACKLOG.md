@@ -1330,7 +1330,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Done when `reader-check.ts` passes on OS-1.bif within 2 grey levels of the reference tiles with a seam ratio under 2, and the existing BIF golden is updated.
   Size: M.
 
-- [ ] VIEW-058 · Sharper tiles fade in and failed tiles retry
+- [x] VIEW-058 · Sharper tiles fade in and failed tiles retry
   VIEW-041 shows the coarse level under missing tiles and a loading hint, but sharper tiles pop in at once and a failed tile has no Retry. Fade sharper tiles in over the coarse level without showing white or black, and keep a failed tile as the grey placeholder with a Retry that refetches only that tile, as ADR 0095 (upload by slide and decision notes) describes.
   Done when a golden test catches a frame mid-fade with no white or black pixels, and a browser test fails one tile, sees the placeholder with Retry and sees it load after Retry.
   Depends on VIEW-041.
