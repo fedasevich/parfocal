@@ -5,6 +5,7 @@ import pytest
 from db_support import ApiAs
 from order_support import run_orders
 from test_annotations import make_slide
+from test_evaluation_exports import text_of
 from test_review_order import Ordered, ordered
 from workspace_support import owner
 
@@ -197,3 +198,44 @@ def test_only_people_who_see_the_whole_annotate_task_get_the_ai_changes(
     hidden = api(o.people["first"]).get(f"/api/review-tasks/{task}/evaluation/ai-changes")
     assert hidden.status_code == 403, hidden.text
     assert hidden.json()["code"] == "evaluation-hidden"
+
+
+def report_text(api: ApiAs, o: Ordered, task: str) -> str:
+    response = api(o.people["owner"]).get(f"/api/review-tasks/{task}/evaluation/exports/report.pdf")
+    assert response.status_code == 200, response.text
+    assert response.headers["content-type"] == "application/pdf"
+    assert response.content.startswith(b"%PDF")
+    return text_of(response.content)
+
+
+def test_the_pdf_export_of_an_annotate_task_shows_the_ai_changes(api: ApiAs, database: str) -> None:
+    o, task, _, letter = worked_task(api, database)
+
+    def people(first: int, second: int) -> str:
+        given = {letter["first"]: first, letter["second"]: second}
+        return f"A {given['A']}, B {given['B']}"
+
+    text = report_text(api, o, task)
+    for expected in (
+        "Evaluation report",
+        "Fix the AI",
+        "Changes to the AI by class",
+        "Changes to the AI by slide",
+        f"Tumour 3 1 1 0 1 1 {people(1, 2)}",
+        f"Stroma 2 0 0 1 1 1 {letter['second']} 2",
+        f"Immune 0 0 0 0 0 2 {letter['first']} 2",
+        f"All 5 1 1 1 2 4 {people(3, 4)}",
+    ):
+        assert expected in text, (expected, text)
+    for left_out in ("Agree", "Disagree", "Appendix", "Sensitivity", "Only an annotate task"):
+        assert left_out not in text, (left_out, text)
+    assert report_text(api, o, task) == text
+
+
+def test_an_annotate_task_exports_only_its_report(api: ApiAs, database: str) -> None:
+    o, task, _, _ = worked_task(api, database)
+    exports = f"/api/review-tasks/{task}/evaluation/exports"
+    refused = api(o.people["owner"]).get(f"{exports}/objects.csv")
+    assert (refused.status_code, refused.json()["code"]) == (409, "not-a-review-task")
+    hidden = api(o.people["first"]).get(f"{exports}/report.pdf")
+    assert (hidden.status_code, hidden.json()["code"]) == (403, "evaluation-hidden")
