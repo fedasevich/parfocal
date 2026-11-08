@@ -260,3 +260,16 @@ export const cellShapes: Record<string, { x: number; y: number; path: string }> 
     path: "M645,873L649,877L656,874L663,881L666,877L665,871L660,867L653,867Z",
   },
 };
+
+export type CellShape = { x: number; y: number; path: string };
+
+const fixtureCellShapes: Record<string, CellShape> = { ...cellShapes };
+
+export function replaceCellShapes(next: Readonly<Record<string, CellShape>>): void {
+  for (const key of Object.keys(cellShapes)) delete cellShapes[key];
+  Object.assign(cellShapes, next);
+}
+
+export function restoreCellShapes(): void {
+  replaceCellShapes(fixtureCellShapes);
+}

@@ -29,6 +29,7 @@ const slideSearch = z.object({
   peek: z.boolean().optional(),
   tab: z.enum(viewerTabs).optional(),
   modal: z.enum(["preset"]).optional(),
+  pagedCells: z.number().int().optional(),
 });
 
 export type SlideSearch = z.infer<typeof slideSearch>;

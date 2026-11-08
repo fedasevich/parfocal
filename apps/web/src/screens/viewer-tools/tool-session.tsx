@@ -12,9 +12,11 @@ import {
   countAnswers,
 } from "../review/review-state.ts";
 import type { SlideCounts } from "../review/review-top.tsx";
+import { type PagedReview, usePagedReview } from "../review/use-paged-review.ts";
 
 export type ToolSession = {
   session: ReviewSession;
+  paged: PagedReview | null;
   projectId: string;
   projectCode: string;
   answer: (object: string) => Answer | undefined;
@@ -58,7 +60,14 @@ function SessionLoader({
   taskId: string;
   children: (tools: ToolSession) => ReactNode;
 }) {
-  const session = useReviewSession(taskId, slideId);
+  const loaded = useReviewSession(taskId, slideId);
+  const paged = usePagedReview(loaded.classes.map((item) => item.name));
+  const session = paged
+    ? {
+        ...loaded,
+        objects: [...loaded.objects.filter((item) => item.kind !== "cell"), ...paged.cells],
+      }
+    : loaded;
   const project = okData(useGetProject(projectId).data);
   const [overrides, setOverrides] = useState<Answers>(new Map());
   if (!session.ready || project === undefined) return loading;
@@ -73,6 +82,7 @@ function SessionLoader({
   const answer = (object: string) => answerOf(base, overrides, object);
   return children({
     session,
+    paged,
     projectId,
     projectCode: project.code,
     answer,
