@@ -221,3 +221,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0255](0255-smart-select-gestures-and-proposals.md) | Smart select keeps each object as a pending proposal in one model run and takes the best of four candidate masks | Accepted | 2026-11-06 |
 | [0256](0256-embedding-prewarm.md) | The smart session encodes the view centre after 350 ms of stillness and shares one encode per patch | Accepted | 2026-11-06 |
 | [0257](0257-changes-after-sign-off-keep-the-signed-checksum.md) | Changes after sign-off keep the signed checksum and are flagged in the report | Accepted | 2026-11-06 |
+| [0258](0258-confirmed-ai-objects-as-shared-layer-copies.md) | Confirmed AI objects as shared layer copies | Accepted | 2026-11-08 |
