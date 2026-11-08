@@ -19,6 +19,7 @@ import type { SceneOf } from "../scenes.ts";
 import { lookUrl } from "../thumbnails.ts";
 import { cueStyle, edgeCues, neighbourTargets } from "./edge-cues.ts";
 import { type HotSpot, pathPoints, placeMinimap, type ScreenRect } from "./minimap-placement.ts";
+import { hotWeight, measurementSpots } from "./minimap-weights.ts";
 import {
   type AreaMark,
   areaExtent,
@@ -146,23 +147,27 @@ export function NavigatorCanvas({
         if (reading) {
           for (const point of edgePoints) {
             const at = toScreen(shown, size, point);
-            hot.push([at.x, at.y, 3]);
+            hot.push([at.x, at.y, hotWeight.tumorEdge]);
           }
           for (const cue of cues) blocked.push(cue.rect);
           if (scene === "travel") mapSize = "travel";
           if (scene === "avoid") {
             const from = { x: size.width - 330, y: size.height - 190 };
             const to = { x: size.width - 95, y: size.height - 130 };
-            for (let step = 0; step <= 1; step += 0.1)
-              hot.push([from.x + (to.x - from.x) * step, from.y + (to.y - from.y) * step, 200]);
+            hot.push(...measurementSpots([from.x, from.y], [to.x, to.y]));
             extra = <RulerLine from={from} to={to} label="1.62 mm" />;
           }
         } else {
           mapSize = scene === "focus" ? "pip" : "compact";
           extent = areaExtent("T2");
+          for (const other of cellsUnderReview) {
+            if (other === cellAt) continue;
+            const at = toScreen(shown, size, [other.x, other.y]);
+            hot.push([at.x, at.y, hotWeight.cellToCheck]);
+          }
           if (cellAt) {
             const at = toScreen(shown, size, [cellAt.x, cellAt.y]);
-            hot.push([at.x, at.y, 50]);
+            hot.push([at.x, at.y, hotWeight.currentCell]);
           }
           if (scene === "focus") {
             blocked.push([size.width / 2 - 290, size.height - 192, 580, 120]);
