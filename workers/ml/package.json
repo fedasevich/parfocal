@@ -8,7 +8,8 @@
     "export:sam": "uv run --package parfocal-ml --extra export python -m parfocal_ml.sam_onnx.export",
     "smoke:fixture": "uv run --package parfocal-ml python -m parfocal_ml.sam_onnx.smoke_fixture",
     "verify:sam": "uv run --package parfocal-ml --extra export python -m parfocal_ml.sam_onnx.verify",
-    "test:weights": "uv run --package parfocal-ml --extra export pytest tests/test_sam_onnx.py tests/test_interactive.py -m weights -q",
+    "test:weights": "uv run --package parfocal-ml --extra export pytest tests/test_sam_onnx.py tests/test_interactive.py tests/test_ais_region.py -m weights -q",
+    "bench:ais-region": "uv run --package parfocal-ml --extra onnx python -m parfocal_ml.ais_region",
     "bench:interactive": "uv run --package parfocal-ml --extra onnx python -m parfocal_ml.interactive"
   },
   "dependencies": {

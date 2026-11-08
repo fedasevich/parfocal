@@ -211,6 +211,36 @@
       "check": "packages/viewer-engine/browser/nuclei-paging.spec.ts",
       "adr": "docs/adr/0242-client-chunk-paging-for-large-nuclei-sets.md",
       "result": "docs/results/2026-11-06-client-chunk-paging.md"
+    },
+    {
+      "id": "aiseg.region-outline-ms",
+      "measures": "AIS post-processing of one 512 px tile of 169 synthetic nuclei (smoothing, markers, watershed and sub-pixel outlines), fastest of three runs",
+      "kind": "ms",
+      "unit": "ms",
+      "baseline": 122,
+      "limit": 360,
+      "headroom": 3,
+      "headroomReason": "All of it is single-thread CPU work, 122 to 138 ms over three runs on an Apple M4 shared with other agents. A hosted runner can be three times slower on CPU work.",
+      "rttMs": 0,
+      "environment": "Node test, no network",
+      "check": "apps/web/test/aiseg-ais-instances.test.ts",
+      "adr": "docs/adr/XXXX-auto-region-pass.md",
+      "result": "docs/results/2026-11-08-auto-region-pass-on-tnbc.md"
+    },
+    {
+      "id": "aiseg.region-pass-ms",
+      "measures": "A warm auto region pass over 192 by 192 µm at the nuclei preset (four 512 px tiles read, encoded, AIS decoded and outlined), fastest of the second and third pass",
+      "kind": "manual",
+      "unit": "ms",
+      "baseline": 12303,
+      "limit": 24600,
+      "headroom": 2,
+      "headroomReason": "About 95 percent of the baseline is encode and AIS decode on the GPU of an Apple M4 shared with other agents, so twice the baseline covers a busy machine without hiding a regression in the pass itself.",
+      "environment": "Chrome headless with WebGPU on an Apple M4, real graphs from the models cache, fixture patches in memory",
+      "check": "apps/web/region-bench/region-pass.spec.ts",
+      "adr": "docs/adr/XXXX-auto-region-pass.md",
+      "result": "docs/results/2026-11-08-auto-region-pass-on-tnbc.md",
+      "todo": "Measure the WebAssembly fallback, which encodes about four times slower."
     }
   ]
 }
