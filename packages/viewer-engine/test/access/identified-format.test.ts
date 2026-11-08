@@ -1,11 +1,11 @@
 import assert from "node:assert/strict";
 import { join } from "node:path";
 import { after, describe, test } from "node:test";
+import { syntheticDir } from "@parfocal/test-fixtures";
 import { identifiedSlideFormat, signedOpenRequest } from "../../src/access/signed-slide.ts";
 import { type Fetcher, TileAccess } from "../../src/access/tile-access.ts";
 import { createDefaultPixelSourceRegistry } from "../../src/index.ts";
 import { UnsupportedFormatError } from "../../src/pixel-source/types.ts";
-import { syntheticDir } from "../pixel-source/fixtures.ts";
 import { serve } from "../pixel-source/serve.ts";
 
 const misnamed = "slide.ndpi";

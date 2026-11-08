@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { after, describe, it } from "node:test";
+import { syntheticDir } from "@parfocal/test-fixtures";
 import { openTiffSource, type PixelResult, type Raster } from "../../src/index.ts";
 import {
   boxDownsamplePlane,
@@ -10,7 +11,6 @@ import {
   vivChannelLayerProps,
 } from "../../src/viv/index.ts";
 import { vivSignalAborted } from "../../src/viv/viv-levels.ts";
-import { syntheticDir } from "../pixel-source/fixtures.ts";
 import { serve } from "../pixel-source/serve.ts";
 
 const served = await serve({ "/synthetic": syntheticDir });

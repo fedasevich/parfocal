@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, before, describe, it } from "node:test";
 import { type LatencyProxy, startLatencyProxy } from "@parfocal/latency-proxy";
+import { syntheticDir } from "@parfocal/test-fixtures";
 import { budget, exceeds } from "../../../../scripts/perf-budgets.ts";
 import {
   openTiffSource,
@@ -15,7 +16,6 @@ import {
   TileIndexError,
   tileOffsets,
 } from "../../src/pixel-source/index.ts";
-import { syntheticDir } from "./fixtures.ts";
 import { type Served, serve } from "./serve.ts";
 import { writeSpreadBigTiff } from "./spread-bigtiff.ts";
 

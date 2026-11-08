@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { after, describe, it } from "node:test";
+import { syntheticDir } from "@parfocal/test-fixtures";
 import type { DecodeReply, DecodeRequest } from "../../src/decode/protocol.ts";
 import { type DecodeWorkerScope, startDecodeWorker } from "../../src/decode/worker-runtime.ts";
 import {
@@ -15,7 +16,6 @@ import {
   type VivLevels,
   type VivTile,
 } from "../../src/viv/index.ts";
-import { syntheticDir } from "../pixel-source/fixtures.ts";
 import { serve } from "../pixel-source/serve.ts";
 import { writeZarrFixture } from "../pixel-source/zarr-fixture.ts";
 

@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { after, describe, it } from "node:test";
+import { cachedFixture, fixturesDir, syntheticDir } from "@parfocal/test-fixtures";
 import {
   createDefaultPixelSourceRegistry,
   createPatchReader,
@@ -10,11 +11,6 @@ import {
   startPatchWorker,
   type WorkerPatchReaderOptions,
 } from "@parfocal/viewer-engine";
-import {
-  cachedFixture,
-  cachedFixtureDir,
-  syntheticDir,
-} from "../../../packages/viewer-engine/test/pixel-source/fixtures.ts";
 import { serve } from "../../../packages/viewer-engine/test/pixel-source/serve.ts";
 import { writeZarrFixture } from "../../../packages/viewer-engine/test/pixel-source/zarr-fixture.ts";
 import {
@@ -46,7 +42,7 @@ const sparseZarr = await writeZarrFixture({
 
 const served = await serve({
   "/synthetic": syntheticDir,
-  "/cache": cachedFixtureDir(),
+  "/cache": fixturesDir(),
   "/zarr": zarr.root,
   "/sparse-zarr": sparseZarr.root,
 });

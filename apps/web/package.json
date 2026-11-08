@@ -40,6 +40,7 @@
     "@axe-core/playwright": "4.14.0",
     "@babel/core": "8.0.10",
     "@parfocal/golden-images": "workspace:*",
+    "@parfocal/test-fixtures": "workspace:*",
     "@parfocal/typescript-config": "workspace:*",
     "@parfocal/upload-spike": "workspace:*",
     "@playwright/test": "1.64.0",

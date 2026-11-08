@@ -5,6 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, before, describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
+import { cachedFixture, fixturesDir, syntheticDir } from "@parfocal/test-fixtures";
 import { cachedFetch } from "../../src/decode/byte-relay.ts";
 import { createRangeCache } from "../../src/decode/range-cache.ts";
 import {
@@ -26,7 +27,6 @@ import {
   type VivTile,
   virtualLadder,
 } from "../../src/viv/viv-levels.ts";
-import { cachedFixture, cachedFixtureDir, syntheticDir } from "./fixtures.ts";
 import { serve } from "./serve.ts";
 
 const ingestDir = fileURLToPath(new URL("../../../../workers/ingest/", import.meta.url));
@@ -197,13 +197,13 @@ describe("coarse-zoom tile reads on the slides whose vendor pyramid skips levels
     folder = await mkdtemp(join(tmpdir(), "overview-levels-"));
     for (const name of affected) {
       const output = join(folder, `${name}.overview-levels.tiff`);
-      const downsamples = writeSidecar(join(cachedFixtureDir(), name), output);
+      const downsamples = writeSidecar(join(fixturesDir(), name), output);
       references.set(name, {
         path: `../derived/${name}.overview-levels.tiff`,
         downsamples: downsamples.split(",").map(Number),
       });
     }
-    served = await serve({ "/cache": cachedFixtureDir(), "/derived": folder });
+    served = await serve({ "/cache": fixturesDir(), "/derived": folder });
   });
 
   after(async () => {

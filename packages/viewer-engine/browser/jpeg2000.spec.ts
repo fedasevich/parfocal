@@ -94,7 +94,10 @@ test("an Aperio JPEG 2000 slide decodes in the worker with OpenSlide's colours (
   page,
 }) => {
   const availability = fixtureAvailability("JP2K-33003-1.svs");
-  test.skip(availability.status === "missing", "fixture not downloaded");
+  test.skip(
+    availability.status === "missing" && !availability.required,
+    availability.status === "missing" ? availability.message : "",
+  );
   const { report } = await run(page, "JP2K-33003-1.svs", "aperio-svs", "cache");
   expect(report.workerError).toBeNull();
 });

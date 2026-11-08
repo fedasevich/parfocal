@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { after, describe, it } from "node:test";
+import { syntheticDir } from "@parfocal/test-fixtures";
 import { fromUrl } from "geotiff";
 import {
   openTiffSource,
@@ -10,7 +11,6 @@ import {
   type SlideIndex,
 } from "../../src/pixel-source/index.ts";
 import { createVivChannelLevels } from "../../src/viv/index.ts";
-import { syntheticDir } from "./fixtures.ts";
 import { serve } from "./serve.ts";
 
 const mxif = "synthetic-mxif-uint16-be.ome.tiff";
