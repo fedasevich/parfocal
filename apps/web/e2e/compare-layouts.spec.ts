@@ -31,7 +31,7 @@ const layout = (page: Page, name: string) =>
 test("each layout places its panes where the layout says", async ({ page }) => {
   test.setTimeout(90_000);
   await openCompare(page);
-  const frame = page.locator("[data-layout]");
+  const frame = page.locator("[data-layout]:not([data-slot])");
 
   await expect(frame).toHaveAttribute("data-layout", "side");
   let panes = await boxes(page);
