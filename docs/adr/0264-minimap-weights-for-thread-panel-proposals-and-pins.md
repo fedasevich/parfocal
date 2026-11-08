@@ -1,4 +1,4 @@
-# XXXX. The minimap scores proposals at 5, pins at 20, and treats an open thread and the cells panel as blocked
+# 0264. The minimap scores proposals at 5, pins at 20, and treats an open thread and the cells panel as blocked
 
 - Date: 2026-11-08
 - Status: Accepted
