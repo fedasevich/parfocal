@@ -26,6 +26,7 @@ import { DragLayer } from "../annotations/drag-layer.tsx";
 import { FreehandLayer } from "../annotations/freehand-layer.tsx";
 import { LayersPanel } from "../annotations/layers-panel.tsx";
 import { PinLayer } from "../annotations/pin-layer.tsx";
+import { createPinRegistry } from "../annotations/pin-registry.ts";
 import { type DraftControl, PolygonLayer } from "../annotations/polygon-layer.tsx";
 import { ProposalLayer } from "../annotations/proposal-layer.tsx";
 import { SaveStatus } from "../annotations/save-status.tsx";
@@ -255,6 +256,7 @@ function OpenedSlide({
 }) {
   const host = useRef<HTMLDivElement | null>(null);
   const [hostNode, setHostNode] = useState<HTMLDivElement | null>(null);
+  const pinRegistry = useMemo(createPinRegistry, []);
   const hostRef = useCallback((node: HTMLDivElement | null) => {
     host.current = node;
     setHostNode(node);
@@ -573,11 +575,14 @@ function OpenedSlide({
               onDocumentChange={setAnnotations}
               onCommit={saved.commit}
               onEditText={(id) => textControl.current?.edit(id)}
+              pinRegistry={pinRegistry}
             />
             <PinLayer
               engine={session.engine}
               stage={hostNode}
               active={tool === "comment"}
+              selecting={tool === "select"}
+              registry={pinRegistry}
               document={annotations}
               taskId={taskId}
               slideId={slideId}

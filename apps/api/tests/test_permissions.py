@@ -288,6 +288,7 @@ NEEDS_A_TASK = frozenset(
         "replyToThread",
         "resolveThread",
         "reopenThread",
+        "moveThread",
         "deleteThread",
         "createSharedObject",
         "importSharedObjects",
@@ -943,6 +944,11 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     ),
     "reopenThread": lambda w: Call(
         "POST", f"/api/review-tasks/{w.task}/slides/{w.slide}/threads/{w.thread}/reopen"
+    ),
+    "moveThread": lambda w: Call(
+        "PATCH",
+        f"/api/review-tasks/{w.task}/slides/{w.slide}/threads/{w.thread}/anchor",
+        {"geometry": {"type": "Point", "coordinates": [3, 4]}},
     ),
     "deleteThread": lambda w: Call(
         "DELETE", f"/api/review-tasks/{w.task}/slides/{w.slide}/threads/{w.doomed_thread}"

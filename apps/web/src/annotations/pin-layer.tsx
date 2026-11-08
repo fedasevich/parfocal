@@ -1,10 +1,13 @@
 import {
+  deleteThread,
   getListThreadsQueryKey,
   type Thread,
   useCreateThread,
   useListThreads,
+  useMoveThread,
 } from "@parfocal/api-client";
 import { CommentComposer } from "@parfocal/ui/components/comment-thread";
+import { SmallModal } from "@parfocal/ui/components/small-modal";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useEscRegistry } from "../keys/esc-owner.tsx";
@@ -15,8 +18,10 @@ import type { ViewerEngine } from "../viewer/viewer-engine.ts";
 import { screenToSlide, slideToScreen } from "../viewer/viewer-engine.ts";
 import { bindClickPress, clickSlopScreenPixels } from "./click-press.ts";
 import type { AnnotationDocument } from "./document.ts";
+import type { PinRegistry } from "./pin-registry.ts";
+import { removalDetail, removalTitle } from "./pin-removal.ts";
 import { PinThread } from "./pin-thread.tsx";
-import { movePin, pinHitScreenPixels, pinPoint, placePin, pointOfAnchor } from "./pins.ts";
+import { dropPin, movePin, pinHitScreenPixels, pinPoint, placePin, pointOfAnchor } from "./pins.ts";
 import type { Point } from "./polygon-draft.ts";
 import { useStageRect } from "./stage-size.ts";
 import { popoverSpot } from "./thread-popover.ts";
@@ -25,6 +30,8 @@ type PinLayerProps = {
   engine: ViewerEngine;
   stage: HTMLElement;
   active: boolean;
+  selecting?: boolean;
+  registry?: PinRegistry;
   document: AnnotationDocument;
   taskId: string | undefined;
   slideId: string;
@@ -38,6 +45,8 @@ const onPinOrThread = (event: Event) =>
   event.target.closest('[data-slot="comment-pin"], [data-testid="pin-thread"]') !== null;
 
 const noTaskReason = "Open the slide from a task to comment on it";
+
+type Removal = { threadIds: readonly string[]; proceed: () => void };
 
 type Drag = { threadId: string; point: Point; moved: boolean };
 
@@ -98,6 +107,8 @@ export function PinLayer({
   engine,
   stage,
   active,
+  selecting = false,
+  registry,
   document: doc,
   taskId,
   slideId,
@@ -118,6 +129,11 @@ export function PinLayer({
   const [openId, setOpenId] = useState<string | null>(null);
   const latest = useRef({ doc, engine, onDocumentChange, onCommit, draft, drag, openId });
   latest.current = { doc, engine, onDocumentChange, onCommit, draft, drag, openId };
+  const [removal, setRemoval] = useState<Removal | null>(null);
+  const [removing, setRemoving] = useState(false);
+  const [removalFailed, setRemovalFailed] = useState(false);
+  const move = useMoveThread();
+  const sentPoints = useRef(new Map<string, string>());
   const closeThread = useCallback(() => setOpenId(null), []);
   const create = useCreateThread();
   const dragStart = useRef<{ from: Point; grab: Point } | null>(null);
@@ -192,12 +208,100 @@ export function PinLayer({
     latest.current.onCommit(before, after, "Move comment pin");
   };
 
+  const confirmRemoval = async () => {
+    if (removal === null || taskId === undefined) return;
+    setRemoving(true);
+    setRemovalFailed(false);
+    const gone: string[] = [];
+    for (const threadId of removal.threadIds) {
+      try {
+        const response = await deleteThread(taskId, slideId, threadId, { confirm: true });
+        if (response.status === 204) gone.push(threadId);
+      } catch {
+        break;
+      }
+    }
+    let next = latest.current.doc;
+    for (const threadId of gone) next = dropPin(next, threadId);
+    if (next !== latest.current.doc) latest.current.onDocumentChange(next);
+    void queryClient.invalidateQueries({ queryKey: getListThreadsQueryKey(taskId, slideId) });
+    setRemoving(false);
+    if (gone.length < removal.threadIds.length) {
+      setRemovalFailed(true);
+      return;
+    }
+    setOpenId(null);
+    setRemoval(null);
+    removal.proceed();
+  };
+
   const pins = threads.flatMap((thread) => {
     if (thread.resolved_at !== null) return [];
     const dragged = drag?.threadId === thread.id ? drag.point : null;
     const point = dragged ?? pinPoint(doc, thread.id, pointOfAnchor(thread.anchor));
     return point === null ? [] : [{ thread, point }];
   });
+
+  const anchors = new Map<string, Point>();
+  for (const { thread, point } of pins) {
+    if (thread.anchor.kind === "point") anchors.set(thread.id, point);
+  }
+  const serverPoints = new Map<string, Point>();
+  for (const thread of threads) {
+    const saved = pointOfAnchor(thread.anchor);
+    if (saved !== null && thread.resolved_at === null) serverPoints.set(thread.id, saved);
+  }
+
+  if (registry) {
+    registry.anchors = serverPoints;
+    registry.open = (threadId) => {
+      setDraft(null);
+      setOpenId(threadId);
+    };
+    registry.remove = (threadIds, proceed) => {
+      setRemovalFailed(false);
+      setRemoval({ threadIds, proceed });
+    };
+  }
+
+  const settledKey = pins
+    .map(({ thread, point }) => `${thread.id}:${point.x},${point.y}`)
+    .join("|");
+  const syncMoves = useRef<() => void>(() => undefined);
+  syncMoves.current = () => {
+    if (taskId === undefined || drag !== null) return;
+    for (const [threadId, point] of anchors) {
+      const saved = serverPoints.get(threadId);
+      if (saved === undefined) continue;
+      const key = `${point.x},${point.y}`;
+      if (Math.abs(saved.x - point.x) < 1e-6 && Math.abs(saved.y - point.y) < 1e-6) {
+        sentPoints.current.delete(threadId);
+        continue;
+      }
+      if (sentPoints.current.get(threadId) === key) continue;
+      sentPoints.current.set(threadId, key);
+      move.mutate(
+        {
+          taskId,
+          slideId,
+          threadId,
+          data: { geometry: { type: "Point", coordinates: [point.x, point.y] } },
+        },
+        {
+          onSuccess: () => {
+            void queryClient.invalidateQueries({
+              queryKey: getListThreadsQueryKey(taskId, slideId),
+            });
+          },
+        },
+      );
+    }
+  };
+  useEffect(() => {
+    if (settledKey === "" && drag !== null) return;
+    const timer = window.setTimeout(() => syncMoves.current(), 250);
+    return () => window.clearTimeout(timer);
+  }, [settledKey, drag]);
 
   const opened = pins.find(({ thread }) => thread.id === openId);
   const openedAt = opened ? slideToScreen(camera, rect, opened.point) : null;
@@ -222,7 +326,7 @@ export function PinLayer({
             data-dragging={drag?.threadId === thread.id}
             aria-label={`Comment by ${author?.name ?? "someone"}: ${thread.title}`}
             title={thread.title}
-            className="pointer-events-auto absolute grid size-7 -translate-y-full cursor-grab place-items-center rounded-full rounded-bl-none border-0 bg-accent-fill p-0 font-semibold text-caption text-on-accent shadow-md active:cursor-grabbing"
+            className={`${selecting ? "pointer-events-none" : "pointer-events-auto"} absolute grid size-7 -translate-y-full cursor-grab place-items-center rounded-full rounded-bl-none border-0 bg-accent-fill p-0 font-semibold text-caption text-on-accent shadow-md active:cursor-grabbing`}
             style={{ left: at.x, top: at.y }}
             onPointerDown={(event) => {
               if (event.button !== 0) return;
@@ -275,6 +379,25 @@ export function PinLayer({
           onClose={closeThread}
         />
       ) : null}
+      <SmallModal
+        open={removal !== null}
+        onOpenChange={(open) => {
+          if (!open && !removing) setRemoval(null);
+        }}
+        title={removalTitle(removal?.threadIds.length ?? 0)}
+        subtitle={removalDetail(removal?.threadIds ?? [], threads)}
+        primaryLabel="Delete"
+        primaryBusy={removing}
+        onPrimary={() => void confirmRemoval()}
+        onCancel={() => setRemoval(null)}
+      >
+        {removalFailed ? (
+          <p role="alert" className="m-0 text-body-sm text-bad">
+            Some threads could not be deleted. Only the person who started a thread or a project
+            owner deletes it.
+          </p>
+        ) : null}
+      </SmallModal>
       {draft && draftAt ? (
         <>
           <span
