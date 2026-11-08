@@ -28,7 +28,7 @@ const isGone = (error: unknown) => error instanceof ApiError && error.status ===
 export const editOf = (version: number, body: AnnotationDraft): AnnotationEdit => ({
   version,
   geometry: body.geometry,
-  ...(body.kind === "cell" ? { class_id: body.class_id ?? null } : {}),
+  ...(body.kind === "cell" || body.kind === "region" ? { class_id: body.class_id ?? null } : {}),
   ...(body.kind === "text" ? { text: body.text ?? null } : {}),
 });
 

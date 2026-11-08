@@ -82,7 +82,7 @@ describe("shared layer saves", () => {
     assert.deepEqual(outcome, { kind: "done", value: { version: 3 } });
     assert.equal(calls[0]?.method, "PATCH");
     assert.ok(calls[0]?.url.endsWith("/api/review-tasks/t-1/slides/s-1/shared-layer/objects/o-1"));
-    assert.deepEqual(calls[0]?.body, { version: 2, geometry: draft.geometry });
+    assert.deepEqual(calls[0]?.body, { version: 2, geometry: draft.geometry, class_id: null });
   });
 
   test("a stale edit answers with the colleague's version from the conflict", async () => {

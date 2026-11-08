@@ -6,6 +6,7 @@ import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
 import { ToolRailButton } from "@parfocal/ui/components/tool-rail-button";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { loadSmartServices, type SmartServicesContext } from "../aiseg/smart-services.ts";
+import { type AnnotateTask, taskClassesOf } from "../annotations/annotate-task.ts";
 import { ArrowLayer } from "../annotations/arrow-layer.tsx";
 import { useClassKeys } from "../annotations/class-keys.ts";
 import { maxClassKeys } from "../annotations/classes.ts";
@@ -43,6 +44,7 @@ import { RulerLayer } from "../measure/ruler-layer.tsx";
 import { areaRoleText, areaRows } from "../screens/viewer/area-nav.ts";
 import { annotateRail } from "../screens/viewer-tools/rails.ts";
 import { readDeviceSettings } from "../shell/device-settings.ts";
+import { AnnotateTaskPanel } from "./annotate-task-panel.tsx";
 import { followLabPrefetch, labRouteOptions } from "./lab-route.ts";
 import { loadViewerEngine } from "./load-engine.ts";
 import { MagnificationControl, type ViewerModule } from "./magnification-control.tsx";
@@ -188,10 +190,16 @@ export function SlideStage({
   systematicScan = false,
   outlines = false,
   workspace = "annotate",
+  annotateTask = null,
+  layerKnown = true,
+  onOpenSlide,
 }: {
   slideId: string;
   projectId?: string;
   taskId?: string;
+  annotateTask?: AnnotateTask | null;
+  layerKnown?: boolean;
+  onOpenSlide?: (slideId: string) => void;
   areas?: readonly SlideAreaEntry[];
   viewed?: ViewedLink;
   systematicScan?: boolean;
@@ -210,6 +218,9 @@ export function SlideStage({
       systematicScan={systematicScan}
       outlines={outlines}
       workspace={workspace}
+      annotateTask={annotateTask}
+      layerKnown={layerKnown}
+      onOpenSlide={onOpenSlide}
       onRetry={() => setAttempt((count) => count + 1)}
     />
   );
@@ -224,11 +235,17 @@ function OpenedSlide({
   systematicScan,
   outlines,
   workspace,
+  annotateTask,
+  layerKnown,
+  onOpenSlide,
   onRetry,
 }: {
   slideId: string;
   projectId: string | undefined;
   taskId: string | undefined;
+  annotateTask: AnnotateTask | null;
+  layerKnown: boolean;
+  onOpenSlide: ((slideId: string) => void) | undefined;
   areas: readonly SlideAreaEntry[];
   viewed: ViewedLink | undefined;
   systematicScan: boolean;
@@ -278,7 +295,9 @@ function OpenedSlide({
   const [brightness, setBrightness] = useSlideBrightness();
   const chosenDevice = useMemo(() => readDeviceSettings().device, []);
   const [outlineMode, setOutlineMode] = useOutlineMode();
-  const saved = useSavedAnnotations(slideId, session !== null);
+  const sharedTaskId = annotateTask?.taskId ?? null;
+  const snapshot = annotateTask?.classes ?? null;
+  const saved = useSavedAnnotations(slideId, session !== null && layerKnown, sharedTaskId);
   const annotations = saved.document;
   const proposals = useProposals(saved, slideId);
   const setAnnotations = saved.setDocument;
@@ -299,24 +318,29 @@ function OpenedSlide({
     [undoEdit, redoEdit],
   );
   useHotkeys(undoBindings, onUndoKey);
-  const [classes, setClasses] = useState<readonly ProjectClass[]>([]);
+  const [projectClasses, setProjectClasses] = useState<readonly ProjectClass[]>([]);
   const [activeClass, setActiveClass] = useState<string | null>(null);
   useEffect(() => {
-    if (projectId === undefined) return;
+    if (snapshot !== null || projectId === undefined) return;
     let cancelled = false;
     void listProjectClasses(projectId).then(
       (response) => {
         if (cancelled || response.status !== 200) return;
-        const sorted = [...response.data].sort((a, b) => a.key - b.key);
-        setClasses(sorted);
-        setActiveClass((current) => current ?? sorted[0]?.id ?? null);
+        setProjectClasses(response.data);
       },
       () => undefined,
     );
     return () => {
       cancelled = true;
     };
-  }, [projectId]);
+  }, [projectId, snapshot]);
+  const classes = useMemo(
+    () => taskClassesOf(snapshot, projectClasses),
+    [snapshot, projectClasses],
+  );
+  useEffect(() => {
+    setActiveClass((current) => current ?? classes[0]?.id ?? null);
+  }, [classes]);
   const pickSlot = useCallback(
     (slot: number) => {
       const picked = classes[slot - 1];
@@ -468,6 +492,7 @@ function OpenedSlide({
         data-fitted-ms={phase.state === "ready" ? Math.round(phase.fittedMs) : undefined}
         data-tool={tool}
         data-workspace={workspace}
+        data-layer={sharedTaskId === null ? "slide" : "shared"}
         data-drag={setup.dragBehaviour}
         data-annotations={saved.loaded ? "loaded" : "loading"}
         data-save-state={saved.saveState}
@@ -572,6 +597,17 @@ function OpenedSlide({
               onDocumentChange={setAnnotations}
             />
             <ProposalLayer engine={session.engine} stage={hostNode} proposals={proposals.pending} />
+            {annotateTask ? (
+              <AnnotateTaskPanel
+                engine={session.engine}
+                stage={hostNode}
+                task={annotateTask}
+                classes={classes}
+                saveState={saved.saveState}
+                colourOf={colourOf}
+                onOpenSlide={onOpenSlide}
+              />
+            ) : null}
             {workspace === "annotate" || tool !== restingTool || proposalCount > 0 ? (
               <ContextBarView
                 model={contextModel}

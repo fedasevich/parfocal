@@ -1,10 +1,13 @@
+import { useGetProject, useGetReviewTask } from "@parfocal/api-client";
 import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
 import { ViewedRing } from "@parfocal/ui/components/viewed-ring";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useState } from "react";
 import { z } from "zod";
+import { annotateTaskOf, layerKnownOf } from "../annotations/annotate-task.ts";
 import { readBuildConfig } from "../config.ts";
 import { ViewingNow } from "../presence/viewing-now.tsx";
+import { okData } from "../screens/placeholder.tsx";
 import type { CaseLoad } from "../viewer/case-load.ts";
 import { loadViewerEngine } from "../viewer/load-engine.ts";
 import { CasePatientBanner } from "../viewer/patient-banner-view.tsx";
@@ -68,6 +71,17 @@ function LiveSlide() {
     chosen,
     loaded.state === "ready" ? loaded.load.task?.kind : undefined,
   );
+  const taskQuery = useGetReviewTask(task ?? "", { query: { enabled: task !== undefined } });
+  const taskDetail = okData(taskQuery.data);
+  const layerKnown = layerKnownOf(task, taskQuery.isSuccess || taskQuery.isError);
+  const owner = okData(useGetProject(projectId).data)?.my_role === "owner";
+  const annotateTask = annotateTaskOf(taskDetail, slideId, owner);
+  const openSlide = (next: string) =>
+    void navigate({
+      to: "/projects/$projectId/slides/$slideId/live",
+      params: { projectId, slideId: next },
+      search: { task },
+    });
   const switchTo = (next: SlideWorkspace) =>
     void navigate({ search: (previous) => ({ ...previous, workspace: next }), replace: true });
   return (
@@ -107,8 +121,11 @@ function LiveSlide() {
           {...(task === undefined ? {} : { taskId: task })}
           areas={areas}
           viewed={viewed}
-          outlines={fakeOutlines && task !== undefined}
+          outlines={fakeOutlines && task !== undefined && annotateTask === null}
           workspace={workspace}
+          annotateTask={annotateTask}
+          layerKnown={layerKnown}
+          onOpenSlide={openSlide}
           systematicScan={loaded.state === "ready" && slideAreas.loaded && areas.length === 0}
         />
       </div>

@@ -190,3 +190,20 @@ describe("saved forms of marks", () => {
     assert.equal(shape?.text, "Their note");
   });
 });
+
+test("a polygon always sends its class, so clearing the class clears it on the server", () => {
+  const classed = made({
+    kind: "polygon",
+    points: Float32Array.of(0, 0, 10, 0, 10, 10),
+    classKey: "c1",
+  });
+  const cleared = made({ kind: "polygon", points: Float32Array.of(0, 0, 10, 0, 10, 10) });
+  assert.equal(draftOf(classed.shape)?.class_id, "c1");
+  const body = draftOf(cleared.shape);
+  assert.ok(body);
+  assert.equal(body.class_id, null);
+  assert.equal(editOf(2, body).class_id, null);
+  assert.ok("class_id" in editOf(2, body));
+  const loaded = shapeOf({ kind: "region", geometry: { ...body.geometry }, class_id: "c2" });
+  assert.equal(loaded?.kind === "polygon" ? loaded.classKey : undefined, "c2");
+});
