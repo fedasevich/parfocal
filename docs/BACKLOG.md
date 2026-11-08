@@ -1821,7 +1821,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Refs mock: home, doc 39, doc 41, [ADR 0053](adr/0053-ai-results-review-direction.md).
   Size: M.
 
-- [ ] SHELL-003 · Slide top bar
+- [x] SHELL-003 · Slide top bar
   A quiet bar: icon-only back, the slide picker (thumbnail, slide, case, n of N and a count of result sets per slide) that opens the slides popover (CASE-002), the Guided, Full viewer and Annotate switch, the progress ring (CASE-015), the panel toggle, a more menu (share, add a result set, run a model, compare, focus mode, shortcuts, settings) and Submit review as the primary button for reviewers. Popovers close on Esc and on an outside click.
   Done when component tests cover each element and each popover, and E2E covers keyboard access to all of them.
   Refs mock: case, doc 38 "Viewer".
