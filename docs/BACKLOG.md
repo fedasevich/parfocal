@@ -2632,7 +2632,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Size: L.
 
 
-- [ ] ANN-032 · Check state on AI objects
+- [x] ANN-032 · Check state on AI objects
   Each AI object on an annotate slide is unchecked, confirmed, edited or deleted. One key confirms the selected object, which keeps its geometry and gets the origin `ai-confirmed`, and editing or deleting it also counts as checked. The slide shows how many objects in the check scope are checked.
   Done when API tests cover confirm, undo of a confirm and the counts, and component tests cover the key, the mark on a confirmed object and the progress line.
   Depends on ANN-030, TASK-015, PROTO-020. Refs [ADR 0238](adr/0238-check-options-and-presets-on-annotate-tasks.md).
