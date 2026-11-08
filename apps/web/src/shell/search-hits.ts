@@ -15,7 +15,12 @@ export function hitHref(hit: SearchHit): string | null {
   const projectId = hit.project?.id;
   if (hit.kind === "project") return destinations.project(hit.id);
   if ((hit.kind === "slide" || hit.kind === "object") && projectId && hit.slide_id) {
-    return destinations.slide(projectId, hit.slide_id, undefined, hit.object_id ?? undefined);
+    return destinations.slide(
+      projectId,
+      hit.slide_id,
+      hit.task_id ?? undefined,
+      hit.object_id ?? undefined,
+    );
   }
   if (hit.kind === "case" && projectId) return destinations.project(projectId);
   return null;
