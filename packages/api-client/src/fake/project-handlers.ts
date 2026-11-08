@@ -168,6 +168,7 @@ export const toReviewTask = (task: ScenarioReviewTask): ReviewTask => {
     reminder_days: [2, 1],
     study_template_id: null,
     study_template_version: null,
+    analysis_template: task.analysisTemplate ?? "none",
     decision: decisionSettingsFor(task.code),
     counts_as_changes: countsAsChangesFor(task.code),
     display: taskDisplayFor(task.code),

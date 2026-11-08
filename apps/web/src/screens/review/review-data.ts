@@ -79,7 +79,7 @@ export function useReviewSession(taskId: string, slideId: string): ReviewSession
     neighbours,
     threads,
     meId: me?.user_id,
-    nodeStaging: false,
+    nodeStaging: task?.analysis_template === "sentinel-node",
     ready: task !== undefined && reviewObjects !== undefined,
   };
 }

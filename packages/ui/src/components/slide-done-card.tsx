@@ -113,6 +113,7 @@ type SlideDoneCardProps = React.ComponentProps<"div"> & {
   counts: SlideDoneCounts;
   questions: OpinionQuestion[];
   blockers?: Blocker[];
+  unsure?: Blocker[];
   submitLabel: string;
   failed?: boolean;
   warning?: string | undefined;
@@ -127,6 +128,7 @@ function SlideDoneCard({
   counts,
   questions,
   blockers = [],
+  unsure = [],
   submitLabel,
   failed = false,
   warning,
@@ -216,6 +218,7 @@ function SlideDoneCard({
         ))}
       </div>
       <BeforeYouList id={listId} title="Before you submit" blockers={blockers} />
+      <BeforeYouList data-slot="unsure-list" title="Still not sure" blockers={unsure} showSingle />
       {warning ? (
         <InlineError tone="warn" role="status" data-slot="submit-warning">
           {warning}

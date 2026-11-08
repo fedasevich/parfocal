@@ -98,6 +98,7 @@ export type ScenarioReviewTask = {
   progress: Partial<Record<PersonKey, number>>;
   blinded: boolean;
   status: "review" | "assigned" | "signed";
+  analysisTemplate?: ScenarioProject["template"];
   signedOn?: string;
   ownerView?: {
     progress: Partial<Record<PersonKey, number>>;

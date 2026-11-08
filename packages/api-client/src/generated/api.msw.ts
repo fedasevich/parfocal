@@ -5339,6 +5339,7 @@ export const getCreateReviewTaskResponseMock = (
   ),
   study_template_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   study_template_version: faker.helpers.arrayElement([faker.number.int(), null]),
+  analysis_template: faker.helpers.arrayElement(Object.values(AnalysisTemplate)),
   decision: {
     style: faker.helpers.arrayElement(Object.values(DecisionStyle)),
     counts_as: faker.helpers.arrayElements(Object.values(VerdictValue)),
@@ -5478,6 +5479,7 @@ export const getListReviewTasksResponseMock = (): ReviewTask[] =>
     ).map(() => faker.number.int()),
     study_template_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
     study_template_version: faker.helpers.arrayElement([faker.number.int(), null]),
+    analysis_template: faker.helpers.arrayElement(Object.values(AnalysisTemplate)),
     decision: {
       style: faker.helpers.arrayElement(Object.values(DecisionStyle)),
       counts_as: faker.helpers.arrayElements(Object.values(VerdictValue)),
@@ -5602,6 +5604,7 @@ export const getGetReviewTaskResponseMock = (
   ),
   study_template_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   study_template_version: faker.helpers.arrayElement([faker.number.int(), null]),
+  analysis_template: faker.helpers.arrayElement(Object.values(AnalysisTemplate)),
   decision: {
     style: faker.helpers.arrayElement(Object.values(DecisionStyle)),
     counts_as: faker.helpers.arrayElements(Object.values(VerdictValue)),
@@ -5741,6 +5744,7 @@ export const getChangeReviewTaskResponseMock = (
   ),
   study_template_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   study_template_version: faker.helpers.arrayElement([faker.number.int(), null]),
+  analysis_template: faker.helpers.arrayElement(Object.values(AnalysisTemplate)),
   decision: {
     style: faker.helpers.arrayElement(Object.values(DecisionStyle)),
     counts_as: faker.helpers.arrayElements(Object.values(VerdictValue)),
@@ -5910,6 +5914,7 @@ export const getAddTaskReviewerResponseMock = (
   ),
   study_template_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   study_template_version: faker.helpers.arrayElement([faker.number.int(), null]),
+  analysis_template: faker.helpers.arrayElement(Object.values(AnalysisTemplate)),
   decision: {
     style: faker.helpers.arrayElement(Object.values(DecisionStyle)),
     counts_as: faker.helpers.arrayElements(Object.values(VerdictValue)),

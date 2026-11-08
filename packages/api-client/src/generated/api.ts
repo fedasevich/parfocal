@@ -4192,6 +4192,7 @@ export interface ReviewTask {
   reminder_days: number[];
   study_template_id: string | null;
   study_template_version: number | null;
+  analysis_template: AnalysisTemplate;
   decision: DecisionSettings;
   display: TaskDisplaySettings;
   check?: CheckOptions | null;
@@ -4228,6 +4229,7 @@ export interface ReviewTaskDetail {
   reminder_days: number[];
   study_template_id: string | null;
   study_template_version: number | null;
+  analysis_template: AnalysisTemplate;
   decision: DecisionSettings;
   display: TaskDisplaySettings;
   check?: CheckOptions | null;

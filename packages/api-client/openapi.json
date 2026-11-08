@@ -49066,6 +49066,9 @@
             ],
             "title": "Study Template Version"
           },
+          "analysis_template": {
+            "$ref": "#/components/schemas/AnalysisTemplate"
+          },
           "decision": {
             "$ref": "#/components/schemas/DecisionSettings"
           },
@@ -49135,6 +49138,7 @@
           "reminder_days",
           "study_template_id",
           "study_template_version",
+          "analysis_template",
           "decision",
           "display",
           "counts_as_changes",
@@ -49256,6 +49260,9 @@
             ],
             "title": "Study Template Version"
           },
+          "analysis_template": {
+            "$ref": "#/components/schemas/AnalysisTemplate"
+          },
           "decision": {
             "$ref": "#/components/schemas/DecisionSettings"
           },
@@ -49332,6 +49339,7 @@
           "reminder_days",
           "study_template_id",
           "study_template_version",
+          "analysis_template",
           "decision",
           "display",
           "counts_as_changes",

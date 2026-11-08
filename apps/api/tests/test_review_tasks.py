@@ -141,6 +141,19 @@ def test_everyone_reviews_every_slide_of_the_named_slides_and_cases(
     assert [row[0] for row in audited] == ["task.created"]
 
 
+def test_a_task_carries_the_analysis_template_of_its_project(api: ApiAs, database: str) -> None:
+    s = study(database)
+    task = create(api, s).json()
+    assert task["analysis_template"] == "none"
+    project = f"/api/projects/{s.project}"
+    changed = api(s.people["owner"]).patch(project, json={"template": "sentinel-node"})
+    assert changed.status_code == 200, changed.text
+    read = api(s.people["first"]).get(f"/api/review-tasks/{task['id']}").json()
+    assert read["analysis_template"] == "sentinel-node"
+    listed = api(s.people["first"]).get(s.tasks).json()
+    assert [row["analysis_template"] for row in listed] == ["sentinel-node"]
+
+
 def test_an_even_split_deals_slides_in_turn(api: ApiAs, database: str) -> None:
     s = study(database)
     create(api, s)

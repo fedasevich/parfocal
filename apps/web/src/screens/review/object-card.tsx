@@ -35,10 +35,19 @@ type DotsProps = {
   current: string;
   answer: (object: string) => Answer | undefined;
   skipped: string[];
+  lead?: string | null;
   onJump: (object: string) => void;
 };
 
-export function ObjectDots({ regions, cells, current, answer, skipped, onJump }: DotsProps) {
+export function ObjectDots({
+  regions,
+  cells,
+  current,
+  answer,
+  skipped,
+  lead = null,
+  onJump,
+}: DotsProps) {
   const cellsDone = cells.filter((cell) => answer(cell.object)).length;
   const onCell = cells.some((cell) => cell.object === current);
   return (
@@ -55,7 +64,8 @@ export function ObjectDots({ regions, cells, current, answer, skipped, onJump }:
             key={region.object}
             type="button"
             onClick={() => onJump(region.object)}
-            title={`${region.object}, ${dotStateWord(value, skip)}`}
+            title={`${region.object}, ${dotStateWord(value, skip)}${region.object === lead ? ", sets the category" : ""}`}
+            data-lead={region.object === lead || undefined}
             aria-label={region.object}
             aria-current={region.object === current ? "true" : undefined}
             className={cn(
@@ -91,6 +101,11 @@ export function ObjectDots({ regions, cells, current, answer, skipped, onJump }:
             {cellsDone} of {cells.length}
           </b>
         </button>
+      ) : null}
+      {lead ? (
+        <span data-slot="lead-area" className="text-caption text-fg-dim">
+          <b className="font-mono font-semibold text-fg">{lead}</b> sets the category
+        </span>
       ) : null}
     </fieldset>
   );

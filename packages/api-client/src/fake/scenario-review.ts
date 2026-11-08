@@ -22,6 +22,7 @@ export const rt16: ScenarioReviewTask = {
   progress: { LM: 0, SM: 0 },
   blinded: true,
   status: "assigned",
+  analysisTemplate: "sentinel-node",
 };
 
 export const rt13: ScenarioReviewTask = {
