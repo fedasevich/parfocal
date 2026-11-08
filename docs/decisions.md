@@ -54,6 +54,15 @@ ADR 0024 (workspaces are tenants) says only platform operators create workspaces
 
 Your choice:
 
+## 74. Wheel zoom measured as main-thread time, from VIEW-031 (wheel zoom regression check)
+
+The task asks for no frame over 50 ms during wheel zoom on the Huron fixture. CI and headless runs draw with software WebGL, where frames are 66 to 233 ms apart from drawing alone, so the check now measures the longest main-thread task instead, about 26 ms against a 50 ms limit. Real GPU frame time stays a manual budget measured by hand.
+
+- a. Accept main-thread task time in CI and keep frame time as the manual check. (recommended)
+- b. Also add a frame time check on your Mac with a real GPU before ticking.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 Nothing else in review needs you. Nine tasks that only waited for green CI were ticked on 2026-11-02.
