@@ -86,6 +86,5 @@ test("dragging the viewport rectangle moves the view and does not open the peek"
   await page.mouse.move(x + 20, y + 14, { steps: 4 });
   await page.mouse.up();
   await expect(page).not.toHaveURL(/peek=true/);
-  const after = await viewport.boundingBox();
-  expect(after?.x).not.toBe(before.x);
+  await expect.poll(async () => (await viewport.boundingBox())?.x).not.toBe(before.x);
 });

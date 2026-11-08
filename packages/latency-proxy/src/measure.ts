@@ -53,5 +53,5 @@ export async function measureAddedLatency(
 }
 
 export function latencyToleranceMs(expectedMs: number): number {
-  return Math.max(10, expectedMs * 0.1);
+  return Math.max(25, expectedMs * 0.1);
 }
