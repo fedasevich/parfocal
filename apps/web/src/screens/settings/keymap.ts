@@ -223,6 +223,13 @@ const keymap: [string, KeyContext, Scope, Row[]][] = [
       ["search", "Find any action", ["⌘K"], "fig", { scope: "global", inInputs: true }],
       ["sheet", "Shortcut sheet", ["?"], "fig", { scope: "global" }],
       ["settings", "Settings", ["⌘,"], "fig", { scope: "global", inInputs: true }],
+      [
+        "developer",
+        "Developer drawer",
+        ["⇧⌘D"],
+        "new",
+        { scope: "global", note: "for researchers with developer mode" },
+      ],
       ["hideui", "Hide all UI", ["⌘\\"], "fig", { inInputs: true }],
       [
         "signout",
