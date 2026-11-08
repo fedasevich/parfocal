@@ -2612,7 +2612,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Done when tests cover undo of clear and comment cleanup.
   Size: S.
 
-- [ ] ANN-027 · Run piece promotion and pruning
+- [x] ANN-027 · Run piece promotion and pruning
   Promote run pieces to shapes on edit or in bulk (confirm above 5,000), drop least confident pieces.
   Done when tests cover promotion and pruning with undo.
   Size: S.
