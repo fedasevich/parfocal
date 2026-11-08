@@ -21,6 +21,7 @@ import {
 import { Textarea } from "@parfocal/ui/components/textarea";
 import { Zone } from "@parfocal/ui/components/zone";
 import { type ReactNode, useRef, useState } from "react";
+import { useLengthUnits } from "../../measure/length-units.ts";
 import { destinations } from "../../shell/destinations.ts";
 import { SidebarToggle } from "../../shell/sidebar-toggle.tsx";
 import { formatClock, formatDayMonth } from "../format.ts";
@@ -37,8 +38,8 @@ import {
   depositSource,
   type Extranodal,
   extranodalNames,
-  fmtMm,
   formatField,
+  mmText,
   parseNumber,
   plural,
   positiveNodes,
@@ -56,6 +57,7 @@ import { DonePanel } from "./steps.tsx";
 type CosignScreenProps = { projectId: string; caseId: string; scene: CosignScene | undefined };
 
 export function CosignScreen(props: CosignScreenProps) {
+  useLengthUnits();
   const { loaded, pending, failed } = useCaseReportData(props.projectId, props.caseId);
   if (!loaded) {
     return (
@@ -110,14 +112,14 @@ const aiValues = (data: ReportData, from: Values) => {
   const out: Record<string, string> = {};
   if (sizes.length) {
     const largest = Math.max(...sizes);
-    out["size"] = `${fmtMm(largest)} mm`;
+    out["size"] = mmText(largest);
     out["cat"] = largest > 2 ? "Macrometastasis" : "Micrometastasis";
   }
   for (const deposit of from.deposits) {
     const ai = data.objects.find(
       (candidate) => candidate.slide === deposit.slide && candidate.object_id === deposit.objectId,
     );
-    if (ai && ai.ai_size_mm > 0) out[`deps.${deposit.id}`] = `${fmtMm(ai.ai_size_mm)} mm`;
+    if (ai && ai.ai_size_mm > 0) out[`deps.${deposit.id}`] = mmText(ai.ai_size_mm);
   }
   return out;
 };

@@ -13,7 +13,7 @@ import { Textarea } from "@parfocal/ui/components/textarea";
 import { TokenField } from "@parfocal/ui/components/token-field";
 import { useEffect, useRef, useState } from "react";
 import { FieldNote } from "../new-task/parts.tsx";
-import { type Dep, fmtMm, parseNumber, type ReportData } from "./model.ts";
+import { type Dep, mmText, parseNumber, type ReportData } from "./model.ts";
 import { fieldId, KvList, linkButton } from "./parts.tsx";
 
 export const closeOn = (onClose: () => void) => (open: boolean) => {
@@ -80,7 +80,7 @@ export function DepositModal({
       item: {
         id: `${object.slide}:${object.object_id}`,
         name: `${object.object_id} on ${slide?.label ?? object.slide}`,
-        sub: `Node ${slide?.node ?? 1} · ${fmtMm(object.size_mm)} mm, ${object.measured_by === "you" ? "measured by you" : "AI outline"}`,
+        sub: `Node ${slide?.node ?? 1} · ${mmText(object.size_mm)}, ${object.measured_by === "you" ? "measured by you" : "AI outline"}`,
         find: `${object.object_id} ${object.slide} ${slide?.label ?? ""} ${slide?.short ?? ""}`,
         ...(used
           ? { dim: "Already listed" }
@@ -172,7 +172,7 @@ export function DepositModal({
             error={shown["obj"]}
             help={
               picked
-                ? `${fmtMm(picked.size_mm)} mm, ${picked.measured_by === "you" ? "measured by you" : "from the AI outline"}. You can change the size in the list.`
+                ? `${mmText(picked.size_mm)}, ${picked.measured_by === "you" ? "measured by you" : "from the AI outline"}. You can change the size in the list.`
                 : "Type an object ID or a slide, for example T4 or A2."
             }
           />

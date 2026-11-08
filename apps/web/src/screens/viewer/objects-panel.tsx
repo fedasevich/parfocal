@@ -11,6 +11,7 @@ import { AiRunningSteps, type AiStep } from "@parfocal/ui/components/visualize";
 import { Zone } from "@parfocal/ui/components/zone";
 import type { ReactNode } from "react";
 import { useFormat } from "../../format.ts";
+import { formatMillimetres, useLengthUnits } from "../../measure/length-units.ts";
 import { ConfidenceByColour } from "../review/confidence-chip.tsx";
 import type { CardText, ReviewStyle } from "../review/decision-style.ts";
 import { noteAction } from "../review/note-key.ts";
@@ -50,6 +51,7 @@ export function RunningObjects({
   progress: SlideAiProgress;
   objects: ReviewObject[];
 }) {
+  useLengthUnits();
   const found = objects.filter((item) => progress.found.includes(item.object));
   return (
     <>
@@ -75,7 +77,7 @@ export function RunningObjects({
               </small>
             </span>
             <span className="font-mono text-fg-dim">{item.score.toFixed(2)}</span>
-            <span className="font-mono text-fg-dim">{item.size_mm?.toFixed(1)} mm</span>
+            <span className="font-mono text-fg-dim">{formatMillimetres(item.size_mm ?? 0)}</span>
           </li>
         ))}
         <NextFoundRow key={`next-${found.length}`} />
@@ -287,11 +289,14 @@ export function MeasurementFoot({
   onClose: () => void;
   onRemove: () => void;
 }) {
+  useLengthUnits();
   return (
     <div className="grid gap-2.5" data-slot="object-foot">
       <div className="flex items-center gap-2">
         <ObjectIdTag>{object}</ObjectIdTag>
-        <span className="flex-1 text-body-sm text-fg-dim">Measurement · {mm.toFixed(2)} mm</span>
+        <span className="flex-1 text-body-sm text-fg-dim">
+          Measurement · {formatMillimetres(mm, 2)}
+        </span>
         <Button variant="ghost" size="icon-sm" aria-label="Close" onClick={onClose}>
           <Icon name="close" />
         </Button>

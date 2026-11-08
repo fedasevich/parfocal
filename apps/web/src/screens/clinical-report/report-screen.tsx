@@ -16,6 +16,7 @@ import { PreviewOverlay } from "@parfocal/ui/components/preview-overlay";
 import { Zone } from "@parfocal/ui/components/zone";
 import { useRouter } from "@tanstack/react-router";
 import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
+import { formatMillimetres, useLengthUnits } from "../../measure/length-units.ts";
 import { useFlowOwner, useKeptFlow } from "../../session/kept-flow.ts";
 import { destinations } from "../../shell/destinations.ts";
 import { SidebarToggle } from "../../shell/sidebar-toggle.tsx";
@@ -89,6 +90,7 @@ type ReportScreenProps = {
 };
 
 export function ReportScreen(props: ReportScreenProps) {
+  useLengthUnits();
   const owner = useFlowOwner();
   const cases = useListCases(
     { project_id: props.projectId },
@@ -342,7 +344,7 @@ function ReportFlow({
         ),
       });
       toast.show({
-        text: `${pending.objectId} on ${slideOf(data, pending.slide).short} measured ${object.size_mm.toFixed(1)} mm with the ruler`,
+        text: `${pending.objectId} on ${slideOf(data, pending.slide).short} measured ${formatMillimetres(object.size_mm)} with the ruler`,
       });
     },
     onInsert: (text) => {

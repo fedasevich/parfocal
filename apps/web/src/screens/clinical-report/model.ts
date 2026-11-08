@@ -1,5 +1,6 @@
 import type { ClinicalReport, ClinicalValues } from "@parfocal/api-client";
 import type { ReportDocumentModel } from "@parfocal/ui/lib/report-document";
+import { formatMillimetres } from "../../measure/length-units.ts";
 import type { mockScenes } from "../scenes.ts";
 
 export type ReportScene = (typeof mockScenes.creport)[number];
@@ -87,6 +88,8 @@ export const fieldNames = { diag: "Final diagnosis", micro: "Microscopic", comme
 
 export const fmtMm = (value: number) => value.toFixed(value < 1 ? 2 : 1);
 
+export const mmText = (value: number) => formatMillimetres(value, value < 1 ? 2 : 1);
+
 export const plural = (count: number, word: string) => `${count} ${word}${count === 1 ? "" : "s"}`;
 
 export const andJoin = (items: string[]) =>
@@ -160,7 +163,7 @@ export function diagnosisOf(data: ReportData, values: Values): string {
   const detail =
     size === null
       ? ""
-      : `, ${categoryNames[categoryOf(size)].toLowerCase()}, ${count > 1 ? `${count} deposits, largest ` : ""}${fmtMm(size)} mm`;
+      : `, ${categoryNames[categoryOf(size)].toLowerCase()}, ${count > 1 ? `${count} deposits, largest ` : ""}${mmText(size)}`;
   return `${data.case.site}: METASTATIC CARCINOMA${detail} (${positiveNodes(data, values.deposits)}/${examined}).`;
 }
 
@@ -180,14 +183,14 @@ export const depositSource = (data: ReportData, deposit: Dep) =>
 
 export const depositShort = (data: ReportData, deposit: Dep) => {
   const mm = depositMm(deposit);
-  return `${mm === null ? "no size" : `${fmtMm(mm)} mm`}, ${depositSource(data, deposit)}`;
+  return `${mm === null ? "no size" : mmText(mm)}, ${depositSource(data, deposit)}`;
 };
 
 export const depositLine = (data: ReportData, deposit: Dep) => {
   const slide = slideOf(data, deposit.slide);
   const mm = depositMm(deposit);
   const note = deposit.note.trim();
-  return `${mm === null ? "Not measured" : `${fmtMm(mm)} mm`}, node ${slide.node}, slide ${slide.label}, ${deposit.objectId ? `object ${deposit.objectId}` : "measured by hand"}${note ? `. ${note}` : ""}`;
+  return `${mm === null ? "Not measured" : mmText(mm)}, node ${slide.node}, slide ${slide.label}, ${deposit.objectId ? `object ${deposit.objectId}` : "measured by hand"}${note ? `. ${note}` : ""}`;
 };
 
 export const nextDepositId = (report: Report) =>
@@ -540,7 +543,7 @@ export function factsOf(data: ReportData, values: Values): Fact[] {
       : {
           icon: "ruler",
           label: "Deposits",
-          text: `${plural(deposits.length, "deposit")} in ${plural(positive, "node")}${big ? `, largest ${big.id} at ${fmtMm(depositMm(big) ?? 0)} mm, ${depositSource(data, big)}` : ""}`,
+          text: `${plural(deposits.length, "deposit")} in ${plural(positive, "node")}${big ? `, largest ${big.id} at ${mmText(depositMm(big) ?? 0)}, ${depositSource(data, big)}` : ""}`,
           ...(big?.objectId ? { link: big.objectId } : {}),
         };
   return [
@@ -593,7 +596,7 @@ export function chipsOf(data: ReportData, values: Values): Chip[] {
             icon: "ruler",
             label: `All ${measured.length} deposits`,
             source: `${positive} of ${examined} nodes`,
-            text: `${measured.length} deposits in ${positive} of ${examined} nodes: ${andJoin(measured.map((deposit) => `${deposit.id} ${fmtMm(depositMm(deposit) ?? 0)} mm (${depositSource(data, deposit)})`))}.`,
+            text: `${measured.length} deposits in ${positive} of ${examined} nodes: ${andJoin(measured.map((deposit) => `${deposit.id} ${mmText(depositMm(deposit) ?? 0)} (${depositSource(data, deposit)})`))}.`,
           },
         ]
       : [];
@@ -602,9 +605,9 @@ export function chipsOf(data: ReportData, values: Values): Chip[] {
     ...all,
     ...measured.map((deposit) => ({
       icon: "ruler" as const,
-      label: `${deposit.id} · ${fmtMm(depositMm(deposit) ?? 0)} mm`,
+      label: `${deposit.id} · ${mmText(depositMm(deposit) ?? 0)}`,
       source: depositSource(data, deposit),
-      text: `Deposit ${deposit.id} measures ${fmtMm(depositMm(deposit) ?? 0)} mm (${depositSource(data, deposit)}).`,
+      text: `Deposit ${deposit.id} measures ${mmText(depositMm(deposit) ?? 0)} (${depositSource(data, deposit)}).`,
     })),
     {
       icon: "flag",
@@ -628,7 +631,7 @@ export function chipsOf(data: ReportData, values: Values): Chip[] {
 export const formatField = (data: ReportData, field: string, values: Values) => {
   if (field === "size") {
     const size = largestMm(values.deposits);
-    return size === null ? "" : `${fmtMm(size)} mm`;
+    return size === null ? "" : mmText(size);
   }
   if (field === "pos") return String(positiveNodes(data, values.deposits));
   if (field === "pn") return suggestedPn(data, values) ?? "";
@@ -636,7 +639,7 @@ export const formatField = (data: ReportData, field: string, values: Values) => 
     const deposit = values.deposits.find((candidate) => candidate.id === field.slice(5));
     if (!deposit) return "";
     const mm = depositMm(deposit);
-    return mm === null ? deposit.size.trim() : `${fmtMm(mm)} mm`;
+    return mm === null ? deposit.size.trim() : mmText(mm);
   }
   if (field === "cat") return values.category ? categoryNames[values.category] : "";
   if (field === "ene") return values.extranodal ? extranodalNames[values.extranodal] : "";
@@ -739,7 +742,7 @@ export function documentOf(
           `Deposit ${deposit.id}`,
           depositLine(data, deposit),
         ]),
-        ["Size of largest metastatic deposit", size === null ? "Not given" : `${fmtMm(size)} mm`],
+        ["Size of largest metastatic deposit", size === null ? "Not given" : mmText(size)],
         ["Category", values.category ? categoryNames[values.category] : "Not given"],
         [
           "Extranodal extension",

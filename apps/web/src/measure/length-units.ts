@@ -53,6 +53,23 @@ export function formatMicrons(microns: number, units: LengthUnits = lengthUnitsN
   return `${(microns / 1000).toFixed(2)} mm`;
 }
 
+export function formatMillimetres(
+  millimetres: number,
+  digits = 1,
+  units: LengthUnits = lengthUnitsNow(),
+): string {
+  if (units === "um") return formatMicrons(millimetres * 1000, "um");
+  return `${millimetres.toFixed(digits)} mm`;
+}
+
+export function lengthUnitsFromSetting(value: string | undefined): LengthUnits {
+  return value === "um" ? "um" : "auto";
+}
+
+export function applySavedLengthUnits(value: string | undefined): void {
+  if (value !== undefined) setLengthUnits(lengthUnitsFromSetting(value));
+}
+
 export function formatSquareMicrons(
   microns: number,
   units: LengthUnits = lengthUnitsNow(),

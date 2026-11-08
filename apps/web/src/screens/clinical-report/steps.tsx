@@ -27,11 +27,11 @@ import {
   extranodalNames,
   factsOf,
   fieldNames,
-  fmtMm,
   hasStep,
   largestIndex,
   largestMm,
   meOf,
+  mmText,
   modeOf,
   parseNumber,
   positiveNodes,
@@ -147,7 +147,7 @@ function CategoryField({ data, report, errors, setValues, update }: StepProps) {
   const size = largestMm(values.deposits);
   const suggested = size === null ? null : categoryOf(size);
   const big = values.deposits[largestIndex(values.deposits)];
-  const from = big && size !== null ? `${big.id}, the largest deposit at ${fmtMm(size)} mm` : "";
+  const from = big && size !== null ? `${big.id}, the largest deposit at ${mmText(size)}` : "";
   const help = suggested
     ? values.category
       ? `Suggested from ${from}: ${categoryNames[suggested].toLowerCase()}.`
@@ -173,8 +173,8 @@ function CategoryField({ data, report, errors, setValues, update }: StepProps) {
           <p className="m-0 flex items-start gap-1.5 text-body-sm leading-[1.45] text-warn">
             <Icon name="warn" className="mt-0.5" />
             <span>
-              A deposit of {fmtMm(size)} mm is a {categoryNames[suggested].toLowerCase()}. Confirm
-              the size or pick {categoryNames[suggested]}.
+              A deposit of {mmText(size)} is a {categoryNames[suggested].toLowerCase()}. Confirm the
+              size or pick {categoryNames[suggested]}.
             </span>
           </p>
         ) : (

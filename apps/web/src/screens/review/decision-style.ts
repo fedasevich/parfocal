@@ -4,6 +4,7 @@ import {
   type DecisionAnswer,
   type ProjectClass,
 } from "@parfocal/ui/lib/decision-answers";
+import { formatMillimetres } from "../../measure/length-units.ts";
 import {
   type ConfidenceChip,
   confidenceChip,
@@ -58,7 +59,7 @@ export function cardText(
   const cls = object.class_name.toLowerCase();
   const cell = object.kind === "cell";
   const sure = sureText(object, confidence);
-  const size = object.size_mm === null ? null : `${object.size_mm.toFixed(1)} mm across`;
+  const size = object.size_mm === null ? null : `${formatMillimetres(object.size_mm)} across`;
   const other =
     cell && object.other_class && confidence !== "hidden"
       ? `It could be ${object.other_class.toLowerCase()}.`
