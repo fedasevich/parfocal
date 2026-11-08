@@ -2255,7 +2255,7 @@ The case view becomes the slide view ([ADR 0053](adr/0053-ai-results-review-dire
   Refs mock 17, kit W12.
   Size: M.
 
-- [ ] NAV-011 · Travel animation and route line
+- [x] NAV-011 · Travel animation and route line
   Camera flight with a route line to the target, skip with `]` again.
   Done when tests confirm a new key press cancels the flight at its current position.
   Size: M.
