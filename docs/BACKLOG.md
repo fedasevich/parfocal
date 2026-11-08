@@ -2340,7 +2340,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Refs doc 33, mock 6, [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
   Size: S.
 
-- [ ] REVIEW-007 · Cells gallery in the zone view
+- [x] REVIEW-007 · Cells gallery in the zone view
   The open zone's unsure cells as tiles in the findings panel, each marked on the slide. Click a tile or a cell on the slide to select it, J for the next unsure cell, "Rest look right" (Shift+K) keeps every remaining call in the zone. There is no separate gallery screen, mock 9 opens a zone in findings.
   Done when E2E checks a zone by mouse and by keyboard and every decision is persisted.
   Refs mock 6, mock 9, [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
