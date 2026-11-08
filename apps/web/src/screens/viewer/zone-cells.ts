@@ -1,5 +1,10 @@
 import type { ReviewObject } from "@parfocal/api-client";
-import { isUnsureCall, type UnsureZone, unsureZonesFor } from "@parfocal/ui/lib/unsure-zones";
+import {
+  type Extent,
+  isUnsureCall,
+  type UnsureZone,
+  unsureZonesFor,
+} from "@parfocal/ui/lib/unsure-zones";
 import { cellShapes, hpfSize } from "../review/slide-geometry.ts";
 
 export type CellZone = {
@@ -13,9 +18,17 @@ export function isUnsureCell(cell: ReviewObject): boolean {
   return isUnsureCall(top, 1 - top);
 }
 
-export function zonesOfCells(cells: readonly ReviewObject[]): CellZone[] {
+export type ZonePlacement = {
+  positionOf: (object: string) => { x: number; y: number } | undefined;
+  extent: Extent;
+};
+
+export function zonesOfCells(
+  cells: readonly ReviewObject[],
+  placement?: ZonePlacement,
+): CellZone[] {
   const placed = cells.flatMap((cell) => {
-    const shape = cellShapes[cell.object];
+    const shape = placement ? placement.positionOf(cell.object) : cellShapes[cell.object];
     return shape === undefined
       ? []
       : [
@@ -23,12 +36,15 @@ export function zonesOfCells(cells: readonly ReviewObject[]): CellZone[] {
             id: cell.object,
             x: shape.x,
             y: shape.y,
-            unsure: isUnsureCell(cell),
+            unsure: placement ? true : isUnsureCell(cell),
             topTypes: [cell.class_name, cell.other_class ?? "Other"] as const,
           },
         ];
   });
-  const { zones } = unsureZonesFor(placed, [0, 0, hpfSize.width, hpfSize.height]);
+  const { zones } = unsureZonesFor(
+    placed,
+    placement ? placement.extent : [0, 0, hpfSize.width, hpfSize.height],
+  );
   const byId = new Map(cells.map((cell) => [cell.object, cell]));
   return zones.map((zone: UnsureZone) => ({
     id: zone.id,
@@ -38,7 +54,9 @@ export function zonesOfCells(cells: readonly ReviewObject[]): CellZone[] {
         const cell = byId.get(id);
         return cell === undefined ? [] : [cell];
       })
-      .sort((a, b) => Math.abs(a.score - 0.5) - Math.abs(b.score - 0.5)),
+      .sort((a, b) =>
+        placement ? a.score - b.score : Math.abs(a.score - 0.5) - Math.abs(b.score - 0.5),
+      ),
   }));
 }
 

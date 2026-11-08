@@ -29,7 +29,7 @@ export function CellFocus({
   onObject: (object: string) => void;
   onLeave: () => void;
 }) {
-  const { session, answer, setAnswer } = tools;
+  const { session, answer, setAnswer, paged } = tools;
   const decisions = useDecisionSaves(session, session.style);
   const [camera, setCamera] = useState<Camera | null>(null);
   const cells = session.objects.filter((item) => item.kind === "cell" && item.object in cellShapes);
@@ -41,6 +41,13 @@ export function CellFocus({
       : [];
   });
   const decided = current ? answer(current.object) : undefined;
+  const pagedFollow = paged?.follow;
+  const here = cellShapes[object];
+  const hereX = here ? Math.round(here.x / 150) * 150 : null;
+  const hereY = here ? Math.round(here.y / 150) * 150 : null;
+  useEffect(() => {
+    pagedFollow?.(hereX === null || hereY === null ? null : { x: hereX, y: hereY });
+  }, [pagedFollow, hereX, hereY]);
   const shownCamera = useRef<Camera | null>(null);
 
   const moveTo = (next: string | undefined) => {
@@ -121,7 +128,7 @@ export function CellFocus({
         bare
         minimap={false}
         hint={false}
-        cellStyle={fadedCell}
+        cellStyle={paged ? (id) => paged.styleOf(id, fadedCell()) : fadedCell}
         overlay={({ camera: shown, size }) => {
           const centre = cellCentre(object, shown, size);
           shownCamera.current = shown;
