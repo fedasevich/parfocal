@@ -27,6 +27,13 @@ import { cn } from "@parfocal/ui/lib/utils";
 import { type ReactNode, useState } from "react";
 import { debugHandleName } from "../../debug-handle.ts";
 import {
+  type LabSettings,
+  labDefaults,
+  labDetailLevels,
+  setLabSetting,
+  useLabSettings,
+} from "../../lab/lab-settings.ts";
+import {
   camelyonSlides,
   countOf,
   fieldChipFor,
@@ -53,6 +60,27 @@ import {
 } from "./developer-data.ts";
 
 type Values = Record<string, string | boolean>;
+
+const labTextKeys = {
+  cull: "culling",
+  interp: "interpolation",
+  nuclei: "nuclei",
+} as const satisfies Record<string, keyof LabSettings>;
+
+const labFlagKeys = {
+  prefetch: "prefetch",
+  vector: "motionVector",
+  hud: "hud",
+  mpause: "pauseModels",
+} as const satisfies Record<string, keyof LabSettings>;
+
+const isLabTextKey = (key: string): key is keyof typeof labTextKeys => key in labTextKeys;
+const isLabFlagKey = (key: string): key is keyof typeof labFlagKeys => key in labFlagKeys;
+
+const detailLabel = (level: LabSettings["detailLevel"]) =>
+  `${level.slice(0, 1).toUpperCase()}${level.slice(1)}`;
+
+const detailItems = labDetailLevels.map(detailLabel);
 
 function Segments({
   label,
@@ -188,16 +216,29 @@ export function DeveloperScreen({
   onClose,
 }: DeveloperScreenProps) {
   const [values, setValues] = useState<Values>({});
+  const lab = useLabSettings();
   const text = (key: string, fallback: string) => {
+    if (isLabTextKey(key)) return lab[labTextKeys[key]];
     const value = values[key];
     return typeof value === "string" ? value : fallback;
   };
   const on = (key: string, fallback: boolean) => {
+    if (isLabFlagKey(key)) return lab[labFlagKeys[key]];
     const value = values[key];
     return typeof value === "boolean" ? value : fallback;
   };
-  const set = (key: string, value: string | boolean) =>
+  const set = (key: string, value: string | boolean) => {
+    if (isLabTextKey(key)) {
+      const target = labTextKeys[key];
+      setLabSetting(target, value as never);
+      return;
+    }
+    if (isLabFlagKey(key)) {
+      setLabSetting(labFlagKeys[key], value === true);
+      return;
+    }
     setValues((previous) => ({ ...previous, [key]: value }));
+  };
   const seg = (key: string, label: string, pairs: [string, string][], fallback: string) => (
     <Segments
       label={label}
@@ -219,7 +260,7 @@ export function DeveloperScreen({
   const route = routeName(renderer, text("backend", "webgl"));
   const sample = text("sample", "IDR OME-Zarr");
   const hud = on("hud", true);
-  const nucleiCount = countOf(text("nuclei", "100k"));
+  const nucleiCount = countOf(lab.nuclei);
   const nucleiChip = nucleiChipFor(nucleiCount);
   const fieldChip = fieldChipFor(text("grid", "256"));
 
@@ -470,9 +511,11 @@ export function DeveloperScreen({
           <DevRow label="Count" hint="Off, 10k, 100k, 500k or 1M">
             <Pick
               label="Count"
-              value="100k"
+              value={syntheticCounts.find((entry) => entry.key === lab.nuclei)?.label ?? ""}
               items={syntheticCounts.map((entry) => entry.label)}
-              onChange={(next) => set("nuclei", next)}
+              onChange={(next) =>
+                set("nuclei", syntheticCounts.find((entry) => entry.label === next)?.key ?? "off")
+              }
             />
           </DevRow>
           {live(`${nucleiCount.toLocaleString("en-US")} nuclei queued`)}
@@ -484,8 +527,15 @@ export function DeveloperScreen({
           >
             <Pick
               label="Mode"
-              value="Tiered"
-              items={["Off", "Fade", "Dots", "Density", "Tiered"]}
+              value={detailLabel(lab.detailLevel)}
+              items={detailItems}
+              onChange={(next) =>
+                setLabSetting(
+                  "detailLevel",
+                  labDetailLevels.find((level) => detailLabel(level) === next) ??
+                    labDefaults.detailLevel,
+                )
+              }
             />
           </DevRow>
           <DevRow label="Fill opacity">

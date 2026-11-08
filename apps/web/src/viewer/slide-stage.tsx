@@ -43,6 +43,7 @@ import { RulerLayer } from "../measure/ruler-layer.tsx";
 import { areaRoleText, areaRows } from "../screens/viewer/area-nav.ts";
 import { annotateRail } from "../screens/viewer-tools/rails.ts";
 import { readDeviceSettings } from "../shell/device-settings.ts";
+import { followLabPrefetch, labRouteOptions } from "./lab-route.ts";
 import { loadViewerEngine } from "./load-engine.ts";
 import { MagnificationControl, type ViewerModule } from "./magnification-control.tsx";
 import { describeOpenFailure, type OpenFailure } from "./open-failure.ts";
@@ -418,12 +419,19 @@ function OpenedSlide({
       const viewport = engine.mountSlideViewport({
         container,
         slideId,
-        route: { onError: fail },
+        route: { onError: fail, ...labRouteOptions() },
         resolve: open,
       });
-      dispose = () => viewport.dispose();
+      let unfollow = () => {};
+      dispose = () => {
+        unfollow();
+        viewport.dispose();
+      };
       viewport.ready
-        .then(() => viewport.route()?.whenIdle())
+        .then(() => {
+          unfollow = followLabPrefetch(viewport.route());
+          return viewport.route()?.whenIdle();
+        })
         .then(() => {
           if (disposed) return;
           setSession({ engine: viewport.engine, module: engine, open });
