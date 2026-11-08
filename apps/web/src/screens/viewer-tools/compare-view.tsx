@@ -14,13 +14,7 @@ import {
   SlidesOnScreenPanel,
 } from "@parfocal/ui/components/viewer-tools";
 import { Zone } from "@parfocal/ui/components/zone";
-import {
-  createLinkedViews,
-  moveView,
-  relinkViews,
-  toggleLinked,
-  unlinkViews,
-} from "@parfocal/viewer-engine";
+import { createLinkedViews, relinkViews, toggleLinked, unlinkViews } from "@parfocal/viewer-engine";
 import { type CSSProperties, useEffect, useState } from "react";
 import { useBindings } from "../../keys/personal-keys.ts";
 import { useHotkeys } from "../../keys/use-hotkeys.ts";
@@ -29,7 +23,13 @@ import { type Camera, midSize, SlideStill } from "../review/slide-still.tsx";
 import { ViewerFrame } from "../review/viewer-frame.tsx";
 import type { SceneOf } from "../scenes.ts";
 import { lookUrl } from "../thumbnails.ts";
-import { cameraOfView, viewOfCamera } from "./link-camera.ts";
+import {
+  cameraOfView,
+  moveCameraKeepingRotation,
+  rotatePane,
+  rotationOfView,
+  rotationStep,
+} from "./link-camera.ts";
 import { reviewRail } from "./rails.ts";
 import { midEdge } from "./tool-geometry.ts";
 import { coverHome } from "./tool-maths.ts";
@@ -115,9 +115,12 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
     setLayers(layers.map((row) => ({ ...row, left: row.right, right: row.left })));
     setPicking(null);
   };
+  const rotationOf = (side: PaneSide) => rotationOfView(link.views[side]);
   const cameraOn = (side: PaneSide) => cameraOfView(link.views[side]);
   const moveCamera = (side: PaneSide, camera: Camera | null) =>
-    setLink((state) => moveView(state, side, viewOfCamera(camera)));
+    setLink((state) => moveCameraKeepingRotation(state, side, camera));
+  const rotateOn = (side: PaneSide, shown: Camera, change: { by: number } | { to: number }) =>
+    setLink((state) => rotatePane(state, side, shown, change));
   const setLinked = (on: boolean) =>
     setLink((state) => (on ? relinkViews(state, linkReference) : unlinkViews(state)));
 
@@ -153,6 +156,42 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
             view={{ kind: "whole" }}
             look="mid"
             homeOf={coverHome(midSize, [760, 520])}
+            rotation={rotationOf(side)}
+            overlay={({ camera }) => (
+              <fieldset
+                aria-label={`Rotate ${side} pane`}
+                className="absolute right-3 bottom-16 m-0 flex min-w-0 border-0 items-center gap-1 rounded-full bg-black/60 px-1.5 py-1 text-body-sm text-white"
+                onPointerDown={(event) => event.stopPropagation()}
+              >
+                <button
+                  type="button"
+                  aria-label={`Rotate ${side} pane left`}
+                  className="rounded-full px-2 py-0.5 hover:bg-white/15"
+                  onClick={() => rotateOn(side, camera, { by: -rotationStep })}
+                >
+                  ↺
+                </button>
+                <span data-testid={`rotation-${side}`} className="min-w-9 text-center font-mono">
+                  {rotationOf(side)}°
+                </span>
+                <button
+                  type="button"
+                  aria-label={`Rotate ${side} pane right`}
+                  className="rounded-full px-2 py-0.5 hover:bg-white/15"
+                  onClick={() => rotateOn(side, camera, { by: rotationStep })}
+                >
+                  ↻
+                </button>
+                <button
+                  type="button"
+                  aria-label={`Reset ${side} pane rotation`}
+                  className="rounded-full px-2 py-0.5 hover:bg-white/15"
+                  onClick={() => rotateOn(side, camera, { to: 0 })}
+                >
+                  0°
+                </button>
+              </fieldset>
+            )}
             camera={cameraOn(side)}
             onCameraChange={(camera) => moveCamera(side, camera)}
             regionDecisions={{}}
