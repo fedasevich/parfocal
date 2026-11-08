@@ -3726,7 +3726,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when an automated check confirms targets of at least 24 px on desktop and 44 px on tablet layouts.
   Size: S.
 
-- [ ] DEV-012 · Devices drive the viewer through intents
+- [x] DEV-012 · Devices drive the viewer through intents
   DEV-001 maps every device's input to intents in `apps/web/src/devices/intents.ts` with the DEV-005 calibration, but the viewer still reads wheel and keys directly. Route the slide stage and review loop through the intents, so a saved speed or dead zone changes the viewer, without changing today's feel at default calibration.
   Done when a browser test changes the wheel speed in Settings and sees a smaller zoom step, and the wheel, pinch and review key specs pass unchanged.
   Depends on DEV-001, DEV-005.
