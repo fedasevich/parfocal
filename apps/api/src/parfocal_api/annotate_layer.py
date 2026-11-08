@@ -72,6 +72,16 @@ class AiObjectEdit(BaseModel):
         return self
 
 
+class AiObjectConfirm(BaseModel):
+    geometry: Geometry | None = None
+
+    @model_validator(mode="after")
+    def valid_shape(self) -> AiObjectConfirm:
+        if self.geometry is not None:
+            checked(self.geometry)
+        return self
+
+
 class LayerObject(BaseModel):
     id: uuid.UUID
     slide_id: uuid.UUID
@@ -110,6 +120,11 @@ class LayerObjectChangedError(ConflictError):
 class CellShapeNeededError(BadRequestError):
     code = "cell-shape-needed"
     title = "Send the cell's outline when you change an AI cell"
+
+
+class NotConfirmedError(ConflictError):
+    code = "not-confirmed"
+    title = "This AI object is not confirmed"
 
 
 class NoAiResultsError(BadRequestError):
@@ -303,10 +318,10 @@ async def ai_shape(
     row: Any,
     kind: AnnotationKind,
     found: ObjectId,
-    draft: AiObjectEdit,
+    geometry: Geometry | None,
 ) -> Any:
-    if draft.geometry is not None:
-        return await outline(connection, kind, draft.geometry)
+    if geometry is not None:
+        return await outline(connection, kind, geometry)
     if kind is AnnotationKind.CELL:
         raise CellShapeNeededError
     return (
@@ -335,6 +350,91 @@ async def copy_of(
     return None if found is None else object_of(found)
 
 
+def undone(copy: LayerObject) -> bool:
+    return copy.origin is AnnotationOrigin.AI_CONFIRMED and copy.deleted_at is not None
+
+
+async def source_of(
+    connection: AsyncConnection, row: Any, object_id: str
+) -> tuple[ObjectId, AnnotationKind]:
+    found = ai_object(object_id)
+    if found.split:
+        raise NotAnAiObjectError("Only whole AI objects are copied into the layer")
+    if row.result_set_id is None:
+        raise NoAiResultsError
+    await check_exists(connection, row, found)
+    return found, KINDS[found.letter]
+
+
+async def open_copy(
+    connection: AsyncConnection, row: Any, kind: AnnotationKind, found: ObjectId
+) -> LayerObject | None:
+    existing = await copy_of(connection, row, kind, found.number)
+    if existing is not None and not undone(existing):
+        raise LayerObjectChangedError(existing)
+    return existing
+
+
+async def copy_in(
+    connection: AsyncConnection,
+    principal: Principal,
+    row: Any,
+    kind: AnnotationKind,
+    found: ObjectId,
+    values: dict[str, Any],
+    change: AnnotationChange,
+) -> uuid.UUID:
+    tenant_id = database_scope(principal).tenant_id
+    assert tenant_id is not None
+    number = await reserve(connection, tenant_id, row.slide_id, LETTERS[kind], 1)
+    made = await connection.scalar(
+        insert(annotations)
+        .values(
+            tenant_id=tenant_id,
+            project_id=row.project_id,
+            slide_id=row.slide_id,
+            task_id=row.task_id,
+            kind=kind,
+            number=number,
+            source_number=found.number,
+            created_by_user_id=author_of(principal),
+            **values,
+        )
+        .on_conflict_do_nothing(index_elements=SOURCE_INDEX, index_where=SOURCE_WHERE)
+        .returning(annotations.c.id)
+    )
+    if made is None:
+        raced = await copy_of(connection, row, kind, found.number)
+        assert raced is not None
+        raise LayerObjectChangedError(raced)
+    await record_versions(connection, [made], change, principal)
+    return made
+
+
+async def revive(
+    connection: AsyncConnection,
+    principal: Principal,
+    copy: LayerObject,
+    values: dict[str, Any],
+    change: AnnotationChange,
+) -> uuid.UUID:
+    revived = await connection.scalar(
+        update(annotations)
+        .where(
+            annotations.c.id == copy.id,
+            annotations.c.version == copy.version,
+            annotations.c.origin == AnnotationOrigin.AI_CONFIRMED,
+            annotations.c.deleted_at.is_not(None),
+        )
+        .values(version=annotations.c.version + 1, updated_at=func.now(), **values)
+        .returning(annotations.c.id)
+    )
+    if revived is None:
+        raise LayerObjectChangedError(copy)
+    await record_versions(connection, [copy.id], change, principal)
+    return copy.id
+
+
 @router.put(
     "/ai/{object_id}",
     operation_id="changeAiObject",
@@ -353,51 +453,98 @@ async def change_ai_object(
     reason: Annotated[str | None, Query(max_length=500)] = None,
 ) -> LayerObject:
     row = await editable_layer(connection, principal, task_id, slide_id, reason)
-    found = ai_object(object_id)
-    if found.split:
-        raise NotAnAiObjectError("Only whole AI objects are copied into the layer")
-    if row.result_set_id is None:
-        raise NoAiResultsError
-    await check_exists(connection, row, found)
-    kind = KINDS[found.letter]
-    existing = await copy_of(connection, row, kind, found.number)
-    if existing is not None:
-        raise LayerObjectChangedError(existing)
+    found, kind = await source_of(connection, row, object_id)
+    existing = await open_copy(connection, row, kind, found)
     if draft.class_id is not None:
         await check_classes(connection, row.project_id, {draft.class_id})
-    geometry = await ai_shape(connection, row, kind, found, draft)
-    tenant_id = database_scope(principal).tenant_id
-    assert tenant_id is not None
-    number = await reserve(connection, tenant_id, slide_id, LETTERS[kind], 1)
-    made = await connection.scalar(
-        insert(annotations)
-        .values(
-            tenant_id=tenant_id,
-            project_id=row.project_id,
-            slide_id=slide_id,
-            task_id=task_id,
-            kind=kind,
-            number=number,
-            geometry=geometry,
-            class_id=draft.class_id,
-            origin=AnnotationOrigin.AI_EDITED,
-            source_number=found.number,
-            created_by_user_id=author_of(principal),
-            deleted_at=func.now() if draft.deleted else None,
-        )
-        .on_conflict_do_nothing(index_elements=SOURCE_INDEX, index_where=SOURCE_WHERE)
-        .returning(annotations.c.id)
-    )
-    if made is None:
-        raced = await copy_of(connection, row, kind, found.number)
-        assert raced is not None
-        raise LayerObjectChangedError(raced)
+    values = {
+        "geometry": await ai_shape(connection, row, kind, found, draft.geometry),
+        "class_id": draft.class_id,
+        "origin": AnnotationOrigin.AI_EDITED,
+        "deleted_at": func.now() if draft.deleted else None,
+    }
     change = AnnotationChange.DELETED if draft.deleted else AnnotationChange.EDITED
-    await record_versions(connection, [made], change, principal)
+    made = (
+        await copy_in(connection, principal, row, kind, found, values, change)
+        if existing is None
+        else await revive(connection, principal, existing, values, change)
+    )
     announce(background, live, row, made)
     logged_as = LayerChange.DELETED if draft.deleted else LayerChange.EDITED
     await logged(connection, principal, row, found.text(ascii=True), logged_as, reason)
     return await layer_object(connection, task_id, slide_id, made)
+
+
+@router.post(
+    "/ai/{object_id}/confirm",
+    operation_id="confirmAiObject",
+    status_code=201,
+    **require(Permission.REVIEW, write=True),
+)
+async def confirm_ai_object(
+    task_id: uuid.UUID,
+    slide_id: uuid.UUID,
+    object_id: str,
+    draft: AiObjectConfirm,
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
+    background: BackgroundTasks,
+    live: RealtimeClient,
+    reason: Annotated[str | None, Query(max_length=500)] = None,
+) -> LayerObject:
+    row = await editable_layer(connection, principal, task_id, slide_id, reason)
+    found, kind = await source_of(connection, row, object_id)
+    existing = await open_copy(connection, row, kind, found)
+    values = {
+        "geometry": await ai_shape(connection, row, kind, found, draft.geometry),
+        "class_id": None,
+        "origin": AnnotationOrigin.AI_CONFIRMED,
+        "deleted_at": None,
+    }
+    made = (
+        await copy_in(connection, principal, row, kind, found, values, AnnotationChange.CREATED)
+        if existing is None
+        else await revive(connection, principal, existing, values, AnnotationChange.RESTORED)
+    )
+    announce(background, live, row, made)
+    await logged(connection, principal, row, found.text(ascii=True), LayerChange.EDITED, reason)
+    return await layer_object(connection, task_id, slide_id, made)
+
+
+@router.delete(
+    "/ai/{object_id}/confirm",
+    operation_id="undoAiConfirm",
+    status_code=204,
+    **require(Permission.REVIEW, write=True),
+)
+async def undo_ai_confirm(
+    task_id: uuid.UUID,
+    slide_id: uuid.UUID,
+    object_id: str,
+    version: Annotated[int, Query(ge=1)],
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
+    background: BackgroundTasks,
+    live: RealtimeClient,
+    reason: Annotated[str | None, Query(max_length=500)] = None,
+) -> Response:
+    row = await editable_layer(connection, principal, task_id, slide_id, reason)
+    found, kind = await source_of(connection, row, object_id)
+    existing = await copy_of(connection, row, kind, found.number)
+    if existing is None or existing.origin is not AnnotationOrigin.AI_CONFIRMED or undone(existing):
+        raise NotConfirmedError
+    await save(
+        connection,
+        principal,
+        row,
+        existing.id,
+        version,
+        {"deleted_at": func.now()},
+        AnnotationChange.DELETED,
+    )
+    announce(background, live, row, existing.id)
+    await logged(connection, principal, row, found.text(ascii=True), LayerChange.EDITED, reason)
+    return Response(status_code=204)
 
 
 async def save(
@@ -452,6 +599,8 @@ async def change_shared_object(
         if edit.class_id is not None:
             await check_classes(connection, row.project_id, {edit.class_id})
         values["class_id"] = edit.class_id
+    if current.origin is AnnotationOrigin.AI_CONFIRMED:
+        values["origin"] = AnnotationOrigin.AI_EDITED
     saved = await save(
         connection, principal, row, annotation_id, edit.version, values, AnnotationChange.EDITED
     )
@@ -478,14 +627,12 @@ async def delete_shared_object(
     reason: Annotated[str | None, Query(max_length=500)] = None,
 ) -> Response:
     row = await editable_layer(connection, principal, task_id, slide_id, reason)
+    current = await layer_object(connection, task_id, slide_id, annotation_id)
+    values: dict[str, Any] = {"deleted_at": func.now()}
+    if current.origin is AnnotationOrigin.AI_CONFIRMED:
+        values["origin"] = AnnotationOrigin.AI_EDITED
     gone = await save(
-        connection,
-        principal,
-        row,
-        annotation_id,
-        version,
-        {"deleted_at": func.now()},
-        AnnotationChange.DELETED,
+        connection, principal, row, annotation_id, version, values, AnnotationChange.DELETED
     )
     announce(background, live, row, annotation_id)
     await logged(connection, principal, row, gone.code, LayerChange.DELETED, reason)

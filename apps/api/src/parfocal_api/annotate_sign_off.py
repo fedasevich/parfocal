@@ -17,7 +17,7 @@ from parfocal_api.principals import MemberPrincipal, Principal
 from parfocal_api.problems import BadRequestError, ConflictError, ForbiddenError
 from parfocal_api.project_access import role_in
 from parfocal_api.projects import ProjectArchivedError
-from parfocal_api.review_order import unchecked_objects
+from parfocal_api.review_order import CheckState, check_counts, unchecked_objects
 from parfocal_api.reviewed_layer import task_slide
 from parfocal_api.tables import (
     ProjectRole,
@@ -48,6 +48,30 @@ class ExpertCheck(BaseModel):
     nothing_to_mark: bool
 
 
+class CheckProgress(BaseModel):
+    scope: int
+    checked: int
+    unchecked: int
+    confirmed: int
+    edited: int
+    deleted: int
+
+
+def progress_of(counts: dict[CheckState, int] | None) -> CheckProgress | None:
+    if counts is None:
+        return None
+    unchecked = counts[CheckState.UNCHECKED]
+    total = sum(counts.values())
+    return CheckProgress(
+        scope=total,
+        checked=total - unchecked,
+        unchecked=unchecked,
+        confirmed=counts[CheckState.CONFIRMED],
+        edited=counts[CheckState.EDITED],
+        deleted=counts[CheckState.DELETED],
+    )
+
+
 class AnnotateSlideStatus(BaseModel):
     task_id: uuid.UUID
     slide_id: uuid.UUID
@@ -57,6 +81,7 @@ class AnnotateSlideStatus(BaseModel):
     open_threads: int
     unchecked_objects: int
     all_checked_required: bool
+    check_progress: CheckProgress | None
 
 
 class NotAssignedExpertError(ForbiddenError):
@@ -196,6 +221,7 @@ async def status_of(
             else 0
         ),
         all_checked_required=required,
+        check_progress=progress_of(await check_counts(connection, task_id, slide_id)),
     )
 
 

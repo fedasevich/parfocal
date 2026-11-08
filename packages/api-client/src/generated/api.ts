@@ -292,6 +292,10 @@ export const AgreementPart = {
   form: "form",
 } as const;
 
+export interface AiObjectConfirm {
+  geometry?: Geometry | null;
+}
+
 export interface AiObjectEdit {
   geometry?: Geometry | null;
   class_id?: string | null;
@@ -328,6 +332,15 @@ export interface ExpertCheck {
   nothing_to_mark: boolean;
 }
 
+export interface CheckProgress {
+  scope: number;
+  checked: number;
+  unchecked: number;
+  confirmed: number;
+  edited: number;
+  deleted: number;
+}
+
 export interface AnnotateSlideStatus {
   task_id: string;
   slide_id: string;
@@ -337,6 +350,7 @@ export interface AnnotateSlideStatus {
   open_threads: number;
   unchecked_objects: number;
   all_checked_required: boolean;
+  check_progress: CheckProgress | null;
 }
 
 export type AnnotationGeometry = { [key: string]: unknown };
@@ -401,6 +415,7 @@ export type AnnotationOrigin = (typeof AnnotationOrigin)[keyof typeof Annotation
 export const AnnotationOrigin = {
   human: "human",
   "ai-edited": "ai-edited",
+  "ai-confirmed": "ai-confirmed",
 } as const;
 
 export interface AnnotationRef {
@@ -4982,6 +4997,18 @@ export type CreateSharedObjectParams = {
 };
 
 export type ChangeAiObjectParams = {
+  reason?: string | null;
+};
+
+export type ConfirmAiObjectParams = {
+  reason?: string | null;
+};
+
+export type UndoAiConfirmParams = {
+  /**
+   * @minimum 1
+   */
+  version: number;
   reason?: string | null;
 };
 
@@ -25802,6 +25829,370 @@ export const useChangeAiObject = <TError = Problem, TContext = unknown>(
   TContext
 > => {
   return useMutation(getChangeAiObjectMutationOptions(options), queryClient);
+};
+
+export type confirmAiObjectResponse201 = {
+  data: LayerObject;
+  status: 201;
+};
+
+export type confirmAiObjectResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type confirmAiObjectResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type confirmAiObjectResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type confirmAiObjectResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type confirmAiObjectResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type confirmAiObjectResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type confirmAiObjectResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type confirmAiObjectResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type confirmAiObjectResponseSuccess = confirmAiObjectResponse201 & {
+  headers: Headers;
+};
+export type confirmAiObjectResponseError = (
+  | confirmAiObjectResponse400
+  | confirmAiObjectResponse401
+  | confirmAiObjectResponse403
+  | confirmAiObjectResponse404
+  | confirmAiObjectResponse409
+  | confirmAiObjectResponse422
+  | confirmAiObjectResponse429
+  | confirmAiObjectResponse500
+) & {
+  headers: Headers;
+};
+
+export type confirmAiObjectResponse = confirmAiObjectResponseSuccess | confirmAiObjectResponseError;
+
+export const getConfirmAiObjectUrl = (
+  taskId: string,
+  slideId: string,
+  objectId: string,
+  params?: ConfirmAiObjectParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/review-tasks/${taskId}/slides/${slideId}/shared-layer/ai/${objectId}/confirm?${stringifiedParams}`
+    : `/api/review-tasks/${taskId}/slides/${slideId}/shared-layer/ai/${objectId}/confirm`;
+};
+
+/**
+ * @summary Confirm Ai Object
+ */
+export const confirmAiObject = async (
+  taskId: string,
+  slideId: string,
+  objectId: string,
+  aiObjectConfirm: AiObjectConfirm,
+  params?: ConfirmAiObjectParams,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<confirmAiObjectResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<confirmAiObjectResponse>(
+    getConfirmAiObjectUrl(taskId, slideId, objectId, params),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+      body: JSON.stringify(aiObjectConfirm),
+    },
+  );
+};
+
+export const getConfirmAiObjectMutationKey = () => ["confirmAiObject"] as const;
+
+export const getConfirmAiObjectMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof confirmAiObject>>,
+    TError,
+    ConfirmAiObjectMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof confirmAiObject>>,
+  TError,
+  ConfirmAiObjectMutationVariables,
+  TContext
+> => {
+  const mutationKey = getConfirmAiObjectMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof confirmAiObject>>,
+    ConfirmAiObjectMutationVariables
+  > = (props) => {
+    const { taskId, slideId, objectId, data, params } = props ?? {};
+
+    return confirmAiObject(taskId, slideId, objectId, data, params, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ConfirmAiObjectMutationResult = NonNullable<
+  Awaited<ReturnType<typeof confirmAiObject>>
+>;
+export type ConfirmAiObjectMutationBody = AiObjectConfirm;
+export type ConfirmAiObjectMutationError = Problem;
+export type ConfirmAiObjectMutationVariables = {
+  taskId: string;
+  slideId: string;
+  objectId: string;
+  data: AiObjectConfirm;
+  params?: ConfirmAiObjectParams;
+};
+
+/**
+ * @summary Confirm Ai Object
+ */
+export const useConfirmAiObject = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof confirmAiObject>>,
+      TError,
+      ConfirmAiObjectMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof confirmAiObject>>,
+  TError,
+  ConfirmAiObjectMutationVariables,
+  TContext
+> => {
+  return useMutation(getConfirmAiObjectMutationOptions(options), queryClient);
+};
+
+export type undoAiConfirmResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type undoAiConfirmResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type undoAiConfirmResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type undoAiConfirmResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type undoAiConfirmResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type undoAiConfirmResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type undoAiConfirmResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type undoAiConfirmResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type undoAiConfirmResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type undoAiConfirmResponseSuccess = undoAiConfirmResponse204 & {
+  headers: Headers;
+};
+export type undoAiConfirmResponseError = (
+  | undoAiConfirmResponse400
+  | undoAiConfirmResponse401
+  | undoAiConfirmResponse403
+  | undoAiConfirmResponse404
+  | undoAiConfirmResponse409
+  | undoAiConfirmResponse422
+  | undoAiConfirmResponse429
+  | undoAiConfirmResponse500
+) & {
+  headers: Headers;
+};
+
+export type undoAiConfirmResponse = undoAiConfirmResponseSuccess | undoAiConfirmResponseError;
+
+export const getUndoAiConfirmUrl = (
+  taskId: string,
+  slideId: string,
+  objectId: string,
+  params: UndoAiConfirmParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/review-tasks/${taskId}/slides/${slideId}/shared-layer/ai/${objectId}/confirm?${stringifiedParams}`
+    : `/api/review-tasks/${taskId}/slides/${slideId}/shared-layer/ai/${objectId}/confirm`;
+};
+
+/**
+ * @summary Undo Ai Confirm
+ */
+export const undoAiConfirm = async (
+  taskId: string,
+  slideId: string,
+  objectId: string,
+  params: UndoAiConfirmParams,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<undoAiConfirmResponse> => {
+  return apiFetch<undoAiConfirmResponse>(getUndoAiConfirmUrl(taskId, slideId, objectId, params), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getUndoAiConfirmMutationKey = () => ["undoAiConfirm"] as const;
+
+export const getUndoAiConfirmMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof undoAiConfirm>>,
+    TError,
+    UndoAiConfirmMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof undoAiConfirm>>,
+  TError,
+  UndoAiConfirmMutationVariables,
+  TContext
+> => {
+  const mutationKey = getUndoAiConfirmMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof undoAiConfirm>>,
+    UndoAiConfirmMutationVariables
+  > = (props) => {
+    const { taskId, slideId, objectId, params } = props ?? {};
+
+    return undoAiConfirm(taskId, slideId, objectId, params, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UndoAiConfirmMutationResult = NonNullable<Awaited<ReturnType<typeof undoAiConfirm>>>;
+
+export type UndoAiConfirmMutationError = Problem;
+export type UndoAiConfirmMutationVariables = {
+  taskId: string;
+  slideId: string;
+  objectId: string;
+  params: UndoAiConfirmParams;
+};
+
+/**
+ * @summary Undo Ai Confirm
+ */
+export const useUndoAiConfirm = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof undoAiConfirm>>,
+      TError,
+      UndoAiConfirmMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof undoAiConfirm>>,
+  TError,
+  UndoAiConfirmMutationVariables,
+  TContext
+> => {
+  return useMutation(getUndoAiConfirmMutationOptions(options), queryClient);
 };
 
 export type changeSharedObjectResponse200 = {

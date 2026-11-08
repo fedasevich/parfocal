@@ -1,5 +1,6 @@
 import uuid
 from collections.abc import Mapping, Sequence
+from enum import StrEnum
 from typing import Annotated, Any, cast
 
 from fastapi import APIRouter, Depends, Query, Request
@@ -26,6 +27,7 @@ from parfocal_api.problems import ConflictError
 from parfocal_api.reviewed_layer import KINDS, review_slide
 from parfocal_api.tables import (
     AnnotationKind,
+    AnnotationOrigin,
     ResultObjectKind,
     annotations,
     model_runs,
@@ -380,20 +382,67 @@ async def write_order(
     )
 
 
-async def checked_keys(
-    connection: AsyncConnection, task_id: uuid.UUID
-) -> set[tuple[uuid.UUID, Letter, int]]:
+class CheckState(StrEnum):
+    UNCHECKED = "unchecked"
+    CONFIRMED = "confirmed"
+    EDITED = "edited"
+    DELETED = "deleted"
+
+
+def state_of(origin: str, deleted: bool) -> CheckState:
+    if origin == AnnotationOrigin.AI_CONFIRMED:
+        return CheckState.UNCHECKED if deleted else CheckState.CONFIRMED
+    return CheckState.DELETED if deleted else CheckState.EDITED
+
+
+async def check_states(
+    connection: AsyncConnection, task_id: uuid.UUID, slide_id: uuid.UUID | None = None
+) -> dict[tuple[uuid.UUID, Letter, int], CheckState]:
     rows = await connection.execute(
-        select(annotations.c.slide_id, annotations.c.kind, annotations.c.source_number).where(
-            annotations.c.task_id == task_id, annotations.c.source_number.is_not(None)
+        select(
+            annotations.c.slide_id,
+            annotations.c.kind,
+            annotations.c.source_number,
+            annotations.c.origin,
+            annotations.c.deleted_at,
+        ).where(
+            annotations.c.task_id == task_id,
+            annotations.c.source_number.is_not(None),
+            *([] if slide_id is None else [annotations.c.slide_id == slide_id]),
         )
     )
     letters = {kind: letter for letter, kind in KINDS.items()}
     return {
-        (row.slide_id, letters[AnnotationKind(row.kind)], row.source_number)
+        (row.slide_id, letters[AnnotationKind(row.kind)], row.source_number): state_of(
+            row.origin, row.deleted_at is not None
+        )
         for row in rows
         if AnnotationKind(row.kind) in letters
     }
+
+
+async def checked_keys(
+    connection: AsyncConnection, task_id: uuid.UUID
+) -> set[tuple[uuid.UUID, Letter, int]]:
+    states = await check_states(connection, task_id)
+    return {key for key, state in states.items() if state is not CheckState.UNCHECKED}
+
+
+async def check_counts(
+    connection: AsyncConnection, task_id: uuid.UUID, slide_id: uuid.UUID
+) -> dict[CheckState, int] | None:
+    packed = await connection.scalar(
+        select(review_order.c.objects).where(
+            review_order.c.task_id == task_id, review_order.c.slide_id == slide_id
+        )
+    )
+    if packed is None:
+        return None
+    states = await check_states(connection, task_id, slide_id)
+    counts = dict.fromkeys(CheckState, 0)
+    for letter, number in unpack(bytes(packed)):
+        counts[states.get((slide_id, letter, number), CheckState.UNCHECKED)] += 1
+    return counts
 
 
 async def unchecked_objects(

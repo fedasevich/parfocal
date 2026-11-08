@@ -64,8 +64,8 @@ test("keys are read by position, so a Czech keyboard keeps the same map", () => 
 });
 
 test("a free key is taken at once and shows as changed", () => {
-  const next = capture(startRecording(freshShortcuts(), "truler", 0), { key: "d", code: "KeyD" });
-  assert.deepEqual(keysOf(next.state, "truler"), ["D"]);
+  const next = capture(startRecording(freshShortcuts(), "truler", 0), { key: "w", code: "KeyW" });
+  assert.deepEqual(keysOf(next.state, "truler"), ["W"]);
   assert.equal(next.state.recording, null);
 });
 

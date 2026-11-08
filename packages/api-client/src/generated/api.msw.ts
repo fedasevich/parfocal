@@ -5999,6 +5999,30 @@ export const getChangeAiObjectResponseMock = (
   ...overrideResponse,
 });
 
+export const getConfirmAiObjectResponseMock = (
+  overrideResponse: Partial<Extract<LayerObject, object>> = {},
+): LayerObject => ({
+  id: faker.string.uuid(),
+  slide_id: faker.string.uuid(),
+  kind: faker.helpers.arrayElement(Object.values(AnnotationKind)),
+  number: faker.number.int(),
+  code: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  origin: faker.helpers.arrayElement(Object.values(AnnotationOrigin)),
+  source: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
+  geometry: {},
+  class_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  version: faker.number.int(),
+  created_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  changed_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  updated_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  deleted_at: faker.helpers.arrayElement([
+    faker.date.past().toISOString().slice(0, 19) + "Z",
+    null,
+  ]),
+  ...overrideResponse,
+});
+
 export const getChangeSharedObjectResponseMock = (
   overrideResponse: Partial<Extract<LayerObject, object>> = {},
 ): LayerObject => ({
@@ -6102,6 +6126,17 @@ export const getGetAnnotateSlideStatusResponseMock = (
   open_threads: faker.number.int(),
   unchecked_objects: faker.number.int(),
   all_checked_required: faker.datatype.boolean(),
+  check_progress: faker.helpers.arrayElement([
+    {
+      scope: faker.number.int(),
+      checked: faker.number.int(),
+      unchecked: faker.number.int(),
+      confirmed: faker.number.int(),
+      edited: faker.number.int(),
+      deleted: faker.number.int(),
+    },
+    null,
+  ]),
   ...overrideResponse,
 });
 
@@ -6128,6 +6163,17 @@ export const getCheckAnnotateSlideResponseMock = (
   open_threads: faker.number.int(),
   unchecked_objects: faker.number.int(),
   all_checked_required: faker.datatype.boolean(),
+  check_progress: faker.helpers.arrayElement([
+    {
+      scope: faker.number.int(),
+      checked: faker.number.int(),
+      unchecked: faker.number.int(),
+      confirmed: faker.number.int(),
+      edited: faker.number.int(),
+      deleted: faker.number.int(),
+    },
+    null,
+  ]),
   ...overrideResponse,
 });
 
@@ -6154,6 +6200,17 @@ export const getUncheckAnnotateSlideResponseMock = (
   open_threads: faker.number.int(),
   unchecked_objects: faker.number.int(),
   all_checked_required: faker.datatype.boolean(),
+  check_progress: faker.helpers.arrayElement([
+    {
+      scope: faker.number.int(),
+      checked: faker.number.int(),
+      unchecked: faker.number.int(),
+      confirmed: faker.number.int(),
+      edited: faker.number.int(),
+      deleted: faker.number.int(),
+    },
+    null,
+  ]),
   ...overrideResponse,
 });
 
@@ -6180,6 +6237,17 @@ export const getSignOffAnnotateSlideResponseMock = (
   open_threads: faker.number.int(),
   unchecked_objects: faker.number.int(),
   all_checked_required: faker.datatype.boolean(),
+  check_progress: faker.helpers.arrayElement([
+    {
+      scope: faker.number.int(),
+      checked: faker.number.int(),
+      unchecked: faker.number.int(),
+      confirmed: faker.number.int(),
+      edited: faker.number.int(),
+      deleted: faker.number.int(),
+    },
+    null,
+  ]),
   ...overrideResponse,
 });
 
@@ -14994,6 +15062,49 @@ export const getChangeAiObjectMockHandler = (
   );
 };
 
+export const getConfirmAiObjectMockHandler = (
+  overrideResponse?:
+    | LayerObject
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<LayerObject> | LayerObject),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/review-tasks/:taskId/slides/:slideId/shared-layer/ai/:objectId/confirm",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getConfirmAiObjectResponseMock(),
+        { status: 201 },
+      );
+    },
+    options,
+  );
+};
+
+export const getUndoAiConfirmMockHandler = (
+  overrideResponse?:
+    | void
+    | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void),
+  options?: RequestHandlerOptions,
+) => {
+  return http.delete(
+    "*/api/review-tasks/:taskId/slides/:slideId/shared-layer/ai/:objectId/confirm",
+    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info);
+      }
+
+      return new HttpResponse(null, { status: 204 });
+    },
+    options,
+  );
+};
+
 export const getChangeSharedObjectMockHandler = (
   overrideResponse?:
     | LayerObject
@@ -18495,6 +18606,8 @@ export const getParfocalAPIMock = () => [
   getGetSharedLayerMockHandler(),
   getCreateSharedObjectMockHandler(),
   getChangeAiObjectMockHandler(),
+  getConfirmAiObjectMockHandler(),
+  getUndoAiConfirmMockHandler(),
   getChangeSharedObjectMockHandler(),
   getDeleteSharedObjectMockHandler(),
   getListSharedObjectHistoryMockHandler(),
