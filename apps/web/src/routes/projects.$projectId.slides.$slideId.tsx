@@ -15,6 +15,7 @@ const slideSearch = z.object({
   y: z.number().min(0).max(1).optional(),
   z: z.number().min(0).max(20).optional(),
   object: z.string().optional(),
+  with: z.string().optional(),
   scene: z
     .enum([
       ...mockScenes.case,
@@ -62,6 +63,7 @@ function SlideView() {
               key={scene}
               tools={tools}
               scene={scene === "picking" ? "picking" : "picked"}
+              rightSlideId={search.with}
               onLeave={(change) => onSearch(change)}
             />
           )

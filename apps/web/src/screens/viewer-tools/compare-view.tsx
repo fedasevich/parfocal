@@ -71,13 +71,14 @@ const other = (side: PaneSide): PaneSide => (side === "left" ? "right" : "left")
 type CompareViewProps = {
   tools: ToolSession;
   scene: SceneOf<"compare">;
+  rightSlideId?: string | undefined;
   onLeave: (change: {
     scene?: undefined;
     tab?: "objects" | "display" | "comments" | "opinion";
   }) => void;
 };
 
-export function CompareView({ tools, scene, onLeave }: CompareViewProps) {
+export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareViewProps) {
   const { session, projectId, counts } = tools;
   const all = okData(useListProjectSlides(projectId).data) ?? [];
   const caseSlides = all
@@ -85,7 +86,7 @@ export function CompareView({ tools, scene, onLeave }: CompareViewProps) {
     .map((slide, index) => toCompareSlide(slide, index, session.slideId));
   const [chosen, setChosen] = useState<Record<PaneSide, string | null>>({
     left: null,
-    right: null,
+    right: rightSlideId ?? null,
   });
   const [picking, setPicking] = useState<PaneSide | null>(scene === "picking" ? "right" : null);
   const [link, setLink] = useState(() => createLinkedViews(sides));

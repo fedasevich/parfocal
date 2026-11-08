@@ -271,3 +271,16 @@ test("focus mode opens from the More menu of the annotate workspace", async ({ p
   await expect(page.getByTestId("focus-mode")).toBeVisible();
   await expect(page.locator("header")).toHaveCount(0);
 });
+
+test("a layer set on one side draws only in that pane", async ({ page }) => {
+  const links = await toolLinks(page);
+  await page.goto(hrefOf(links, "Compare slides · Slides picked"));
+  const left = page.getByRole("region", { name: /^Left:/ });
+  const right = page.getByRole("region", { name: /^Right:/ });
+  const outline = (pane: typeof left) => pane.locator("path[stroke='var(--c-tumor)']");
+  await expect(outline(left)).toHaveCount(1);
+  await expect(outline(right)).toHaveCount(0);
+  await page.getByRole("button", { name: "Swap sides" }).click();
+  await expect(outline(left)).toHaveCount(0);
+  await expect(outline(right)).toHaveCount(1);
+});

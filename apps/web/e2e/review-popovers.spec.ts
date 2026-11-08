@@ -159,3 +159,25 @@ test("the pinned slide strip is off until the setting turns it on", async ({ pag
   await page.goto(url);
   await expect(page.getByRole("navigation", { name: "Slides of this case" })).toHaveCount(0);
 });
+
+test("Side by side opens the chosen slide on the right and Compare slides opens its picker", async ({
+  page,
+}) => {
+  test.setTimeout(90_000);
+  await page.goto(await fullViewerUrl(page));
+  let slides = await openSlidesPopover(page);
+  const button = slides.getByRole("button", { name: /Side by side with/ }).first();
+  const label = (await button.getAttribute("aria-label")) ?? "";
+  const target = label.replace("Side by side with ", "").split(" ")[0] ?? "";
+  await button.click();
+  await expect(page).toHaveURL(/scene=picked/);
+  await expect(page.getByRole("region", { name: /^Left: A1/ })).toBeVisible();
+  await expect(page.getByRole("region", { name: new RegExp(`^Right: ${target}`) })).toBeVisible();
+  await expect(page.getByRole("listbox", { name: "Slide for the right side" })).toHaveCount(0);
+
+  await page.goto(await fullViewerUrl(page));
+  slides = await openSlidesPopover(page);
+  await slides.getByRole("button", { name: "Compare slides" }).click();
+  await expect(page).toHaveURL(/scene=picking/);
+  await expect(page.getByRole("listbox", { name: "Slide for the right side" })).toBeVisible();
+});
