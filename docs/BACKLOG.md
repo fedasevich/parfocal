@@ -4641,7 +4641,7 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Depends on EVAL-014, AIP-008. Refs [ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md).
   Size: L.
 
-- [ ] EVAL-016 · Annotate task reports in the evaluation export
+- [x] EVAL-016 · Annotate task reports in the evaluation export
   EVAL-013 added the ai-changes report block, but the evaluation PDF export accepts only review tasks, so no annotate task report shows it. Let the export take an annotate task with the blocks that apply to it, ai-changes among them, and leave out the blocks that need review decisions.
   Done when an API test exports an annotate task report with the ai-changes block and its hand-counted values, and a review task export is unchanged.
   Depends on EVAL-013.
