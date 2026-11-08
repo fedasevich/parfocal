@@ -10,7 +10,7 @@ import { AppShell, Sidebar, type SidebarSection, TopBar } from "@parfocal/ui/com
 import type { PersonInfo } from "@parfocal/ui/components/person";
 import { personFromProfile } from "@parfocal/ui/lib/avatar-colours";
 import { useMatches, useParams } from "@tanstack/react-router";
-import { type ReactNode, useState } from "react";
+import { lazy, type ReactNode, Suspense, useState } from "react";
 import { canOpenAdmin } from "../screens/admin/admin-access.ts";
 import { projectColour } from "../screens/palette.ts";
 import { okData } from "../screens/placeholder.tsx";
@@ -22,8 +22,11 @@ import { useOverlay } from "./overlays.ts";
 import { useGoTo, useRouterLink } from "./router-link.tsx";
 import { foldedShellRouteIds } from "./shell-routes.ts";
 import { ShellSidebarContext } from "./sidebar-toggle.tsx";
-import { SurveyPrompt } from "./survey-prompt.tsx";
 import { ShellWorkspaceSwitcher, workspaceBrand } from "./workspace-switcher.tsx";
+
+const SurveyPrompt = lazy(async () => ({
+  default: (await import("./survey-prompt.tsx")).SurveyPrompt,
+}));
 
 export function personOf(me: Me | undefined): PersonInfo {
   return personFromProfile(me ?? { display_name: "", initials: "", avatar_colour: 0 });
@@ -136,7 +139,9 @@ export function GlobalShell({ children }: { children: ReactNode }) {
         <ShellSidebarContext value={{ folded, open: showSide, toggle: () => setNavOpen(!navOpen) }}>
           {children}
         </ShellSidebarContext>
-        <SurveyPrompt />
+        <Suspense fallback={null}>
+          <SurveyPrompt />
+        </Suspense>
       </AppShell>
     </JobsTrayProvider>
   );

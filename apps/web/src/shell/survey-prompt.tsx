@@ -1,23 +1,19 @@
 import { Button } from "@parfocal/ui/components/button";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { surveyPrompter } from "../telemetry/app-events.ts";
-import { seqEnds, seqPoints, seqQuestion, susItems, susScale } from "../telemetry/survey-items.ts";
+import { seqPoints } from "../telemetry/survey-items.ts";
+import { seqEnds, seqQuestion, susItems, susScale } from "../telemetry/survey-text.ts";
 import type { SurveyOffer } from "../telemetry/surveys.ts";
 
 const recheckMs = 15_000;
-const sessionFlag = "parfocal.survey-session";
+let sessionCounted = false;
 
 function useOffer(): SurveyOffer | null {
   const [tick, setTick] = useState(0);
   useEffect(() => {
-    try {
-      if (window.sessionStorage.getItem(sessionFlag) === null) {
-        window.sessionStorage.setItem(sessionFlag, "1");
-        surveyPrompter.sessionStarted();
-      }
-    } catch {
-      return;
-    }
+    if (sessionCounted) return;
+    sessionCounted = true;
+    surveyPrompter.sessionStarted();
   }, []);
   useEffect(() => {
     const timer = window.setInterval(() => setTick((value) => value + 1), recheckMs);

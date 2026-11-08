@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { eventSink } from "../src/telemetry/events.ts";
-import { seqPoints, susItems, susScoreTenths } from "../src/telemetry/survey-items.ts";
+import { seqPoints, susItemCount, susScoreTenths } from "../src/telemetry/survey-items.ts";
+import { susItems } from "../src/telemetry/survey-text.ts";
 import { createSurveyPrompter, readSurveyState, surveyRules } from "../src/telemetry/surveys.ts";
 
 const caseId = "case-00000001";
@@ -45,7 +46,7 @@ function setup(options: { held?: boolean; optedOut?: boolean } = {}) {
 }
 
 test("the SUS has the ten standard items and scores a perfect run at 100", () => {
-  assert.equal(susItems.length, 10);
+  assert.equal(susItems.length, susItemCount);
   assert.equal(susItems[0], "I think that I would like to use this system frequently.");
   assert.equal(
     susItems[9],
