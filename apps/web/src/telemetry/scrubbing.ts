@@ -30,6 +30,19 @@ export const allowedFields: ReadonlySet<string> = new Set([
   "area",
   "estimated_ms",
   "coverage_permille",
+  "ease_score",
+  "sus_score_tenths",
+  "survey",
+  "item_one",
+  "item_two",
+  "item_three",
+  "item_four",
+  "item_five",
+  "item_six",
+  "item_seven",
+  "item_eight",
+  "item_nine",
+  "item_ten",
 ]);
 
 const minimumSensitiveLength = 3;
