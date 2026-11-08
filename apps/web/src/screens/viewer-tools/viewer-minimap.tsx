@@ -7,11 +7,11 @@ import {
   MapViewport,
   SmartMinimap,
 } from "@parfocal/ui/components/smart-minimap";
-import { magnificationBarRect } from "@parfocal/ui/lib/magnification-bar";
 import { type MapRect, type MinimapSetting, minimapBox } from "@parfocal/ui/lib/minimap-box";
 import { mapExtent, pointerDistance } from "@parfocal/ui/lib/minimap-machine";
 import { useMinimap } from "@parfocal/ui/lib/use-minimap";
 import { useCallback, useEffect, useRef, useState } from "react";
+import type { Pin } from "../review/comment-pin.ts";
 import { cellShapes, overviewSize, regionShapes } from "../review/slide-geometry.ts";
 import {
   type Camera,
@@ -24,11 +24,12 @@ import { lookUrl } from "../thumbnails.ts";
 import { mmBetween } from "./edge-cues.ts";
 import { minimapContent } from "./minimap-content.ts";
 import { placeMinimap, type ScreenRect } from "./minimap-placement.ts";
-import { heldPlacement } from "./minimap-weights.ts";
+import { viewerSpots } from "./minimap-scenes.ts";
 import { type AreaMark, MinimapAreas } from "./slide-maps.tsx";
 import { tissueShareOnScreen } from "./tissue-share.ts";
 import { seenTrail } from "./tool-geometry.ts";
 import { boxCentre, fromOverview, viewportOf } from "./tool-maths.ts";
+import { useHeldCorner } from "./use-held-corner.tsx";
 
 const overviewImage = {
   src: lookUrl("overview"),
@@ -37,10 +38,6 @@ const overviewImage = {
 };
 
 const slideExtent: MapRect = [0, 0, overviewSize.width, overviewSize.height];
-
-const wholeSlideButtonWidth = 140;
-
-const toastWidth = 340;
 
 export function ViewerMinimap({
   setting,
@@ -52,6 +49,10 @@ export function ViewerMinimap({
   blockLeft,
   blockToast,
   cells,
+  pins = [],
+  proposals = [],
+  openThread = null,
+  cellsPanel = null,
   travelTo = null,
   onOpen,
   onPopOut,
@@ -66,6 +67,10 @@ export function ViewerMinimap({
   blockLeft: boolean;
   blockToast: boolean;
   cells: { object: string; decided: boolean }[];
+  pins?: Pin[];
+  proposals?: { x: number; y: number }[];
+  openThread?: ScreenRect | null;
+  cellsPanel?: ScreenRect | null;
   travelTo?: string | null;
   onOpen: () => void;
   onPopOut: () => void;
@@ -95,24 +100,20 @@ export function ViewerMinimap({
   const area: MapRect = [box[0], box[1], box[2] - box[0], box[3] - box[1]];
   const extent = mapExtent(minimap.mode === "hidden" ? "reading" : minimap.mode, slideExtent, area);
   const sized = minimapBox(minimap.size ?? "full", extent);
-  const blocked: ScreenRect[] = [
-    magnificationBarRect(size, { open: false, brightnessChanged: false }),
-  ];
-  if (blockLeft) blocked.push([16, size.height - 60, wholeSlideButtonWidth, 44]);
-  if (blockToast) blocked.push([size.width - toastWidth, size.height - 64, toastWidth - 16, 48]);
-  const fresh = placeMinimap(size, sized, [], blocked);
-  const shownRef = useRef<typeof fresh | null>(null);
-  const [resting, setResting] = useState(true);
-  const lastCamera = useRef(camera);
-  useEffect(() => {
-    if (lastCamera.current === camera) return;
-    lastCamera.current = camera;
-    setResting(false);
-    const timer = window.setTimeout(() => setResting(true), 200);
-    return () => window.clearTimeout(timer);
-  }, [camera]);
-  const place = heldPlacement(shownRef.current, fresh, !resting);
-  shownRef.current = place;
+  const spots = viewerSpots({
+    camera,
+    size,
+    blockLeft,
+    blockToast,
+    cells: view.kind === "cell" ? cells : [],
+    currentCell: view.kind === "cell" ? view.object : undefined,
+    pins,
+    proposals,
+    openThread,
+    cellsPanel,
+  });
+  const fresh = placeMinimap(size, sized, spots.hot, spots.blocked);
+  const place = useHeldCorner(fresh, camera);
 
   const [host, setHost] = useState<HTMLElement | null>(null);
   const attach = useCallback(

@@ -1,28 +1,21 @@
 import { Keycap } from "@parfocal/ui/components/keycap";
 import { MagnificationBar } from "@parfocal/ui/components/magnification-bar";
-import {
-  MapTrail,
-  MapViewport,
-  minimapBox,
-  SmartMinimap,
-} from "@parfocal/ui/components/smart-minimap";
+import { MapTrail, MapViewport, SmartMinimap } from "@parfocal/ui/components/smart-minimap";
 import { StatusTag } from "@parfocal/ui/components/tag";
 import { FloatingPill, FocusCard } from "@parfocal/ui/components/viewer-tools";
 import { useEffect, useState } from "react";
 import { useAnswerKeys } from "../review/answer-keys.ts";
 import { answersOf, countsAs, countWord } from "../review/decision-style.ts";
-import { type Camera, midSize, SlideStill } from "../review/slide-still.tsx";
+import { type Camera, SlideStill } from "../review/slide-still.tsx";
 import { useDecisionSaves } from "../review/use-decision-saves.ts";
 import { lookUrl } from "../thumbnails.ts";
-import { type HotSpot, pathPoints, placeMinimap, type ScreenRect } from "./minimap-placement.ts";
-import { hotWeight } from "./minimap-weights.ts";
-import { MinimapAreas, toScreen, viewportOf } from "./slide-maps.tsx";
+import { placeMinimap } from "./minimap-placement.ts";
+import { focusHome, focusSpots, mapBoxOf } from "./minimap-scenes.ts";
+import { MinimapAreas, viewportOf } from "./slide-maps.tsx";
 import { SlidePeek, usePeekKey } from "./slide-peek.tsx";
 import { midEdge, seenPercent, seenTrail } from "./tool-geometry.ts";
-import { coverHome } from "./tool-maths.ts";
 import type { ToolSession } from "./tool-session.tsx";
-
-const edgePoints = pathPoints(midEdge);
+import { HeldCorner } from "./use-held-corner.tsx";
 
 const overviewImage = { src: lookUrl("overview"), width: 1400, height: 1924 };
 
@@ -91,7 +84,7 @@ export function FocusView({
       <SlideStill
         view={{ kind: "whole" }}
         look="mid"
-        homeOf={coverHome(midSize, [700, 520])}
+        homeOf={focusHome}
         camera={camera}
         onCameraChange={setCamera}
         regionDecisions={{}}
@@ -110,17 +103,8 @@ export function FocusView({
           />
         )}
         overlay={({ camera: shown, size }) => {
-          const card: ScreenRect = [size.width - 330, size.height - 170, 316, 156];
-          const hot: HotSpot[] = edgePoints.map((point) => {
-            const at = toScreen(shown, size, point);
-            return [at.x, at.y, hotWeight.tumorEdge];
-          });
-          const box = minimapBox("full", [0, 0, overviewImage.width, overviewImage.height]);
-          const place = placeMinimap(size, box, hot, [
-            [size.width / 2 - 250, size.height - 58, 500, 50],
-            card,
-            [size.width / 2 - 170, 0, 340, 50],
-          ]);
+          const spots = focusSpots(shown, size);
+          const fresh = placeMinimap(size, mapBoxOf(spots), spots.hot, spots.blocked);
           return (
             <>
               <FloatingPill>
@@ -157,23 +141,27 @@ export function FocusView({
                   ]}
                 />
               ) : null}
-              <SmartMinimap
-                data-corner={place.corner}
-                image={overviewImage}
-                title={
-                  <>
-                    <b>Whole slide</b> · {seenPercent.reading}% seen
-                  </>
-                }
-                foot={`T2 of ${areas.length}`}
-                footEnd={`10× · ${regions.filter((region) => answer(region.object)).length} of ${areas.length} decided`}
-                onOpen={() => onPeekChange(true)}
-                style={{ left: place.x, top: place.y }}
-              >
-                <MapTrail rects={seenTrail} />
-                <MinimapAreas areas={areas} checked={["T1"]} current="T2" />
-                <MapViewport rect={viewportOf("mid", shown, size)} />
-              </SmartMinimap>
+              <HeldCorner fresh={fresh} camera={shown}>
+                {(place) => (
+                  <SmartMinimap
+                    data-corner={place.corner}
+                    image={overviewImage}
+                    title={
+                      <>
+                        <b>Whole slide</b> · {seenPercent.reading}% seen
+                      </>
+                    }
+                    foot={`T2 of ${areas.length}`}
+                    footEnd={`10× · ${regions.filter((region) => answer(region.object)).length} of ${areas.length} decided`}
+                    onOpen={() => onPeekChange(true)}
+                    style={{ left: place.x, top: place.y }}
+                  >
+                    <MapTrail rects={seenTrail} />
+                    <MinimapAreas areas={areas} checked={["T1"]} current="T2" />
+                    <MapViewport rect={viewportOf("mid", shown, size)} />
+                  </SmartMinimap>
+                )}
+              </HeldCorner>
               <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
                 <MagnificationBar
                   magnification={9}
