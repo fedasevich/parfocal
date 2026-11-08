@@ -5,7 +5,12 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useStageRect } from "../annotations/stage-size.ts";
 import { destinations } from "../shell/destinations.ts";
 import { clipToStage, hintCopy, type TileHint, tileHintOf } from "./tile-hint.ts";
-import { slideToScreen, type ViewerEngine, type VivRoute } from "./viewer-engine.ts";
+import {
+  type FailedTile,
+  slideToScreen,
+  type ViewerEngine,
+  type VivRoute,
+} from "./viewer-engine.ts";
 
 const pollMs = 200;
 
@@ -71,6 +76,76 @@ export function TileHintChip({ route }: { route: VivRoute | null }) {
     >
       {hintCopy(hint)}
     </TileHintCard>
+  );
+}
+
+const minRetryTilePx = 56;
+
+function useFailedTiles(route: VivRoute | null): readonly FailedTile[] {
+  const [failed, setFailed] = useState<readonly FailedTile[]>([]);
+  useEffect(() => {
+    if (route === null) return;
+    const read = () => {
+      const next = route.failedTiles();
+      setFailed((old) =>
+        old.length === next.length && old.every((tile, index) => tile.key === next[index]?.key)
+          ? old
+          : next,
+      );
+    };
+    read();
+    const timer = window.setInterval(read, pollMs);
+    return () => window.clearInterval(timer);
+  }, [route]);
+  return failed;
+}
+
+export function FailedTilePlaceholders({
+  engine,
+  route,
+  stage,
+}: {
+  engine: ViewerEngine;
+  route: VivRoute;
+  stage: HTMLElement;
+}) {
+  const camera = useSyncExternalStore(engine.subscribeCamera, engine.getCamera);
+  const rect = useStageRect(stage);
+  const failed = useFailedTiles(route);
+  return (
+    <>
+      {failed.map((tile) => {
+        const from = slideToScreen(camera, rect, { x: tile.left, y: tile.top });
+        const to = slideToScreen(camera, rect, {
+          x: tile.left + tile.width,
+          y: tile.top + tile.height,
+        });
+        const box = clipToStage(
+          { left: from.x, top: from.y, width: to.x - from.x, height: to.y - from.y },
+          rect,
+        );
+        if (box.width <= 0 || box.height <= 0) return null;
+        return (
+          <div
+            key={tile.key}
+            data-testid="tile-placeholder"
+            data-tile={tile.key}
+            className="pointer-events-none absolute flex items-center justify-center bg-line/70"
+            style={box}
+          >
+            {box.width >= minRetryTilePx && box.height >= minRetryTilePx ? (
+              <Button
+                size="sm"
+                className="pointer-events-auto"
+                onClick={() => route.retryTile(tile.key)}
+              >
+                Retry
+              </Button>
+            ) : null}
+          </div>
+        );
+      })}
+    </>
   );
 }
 

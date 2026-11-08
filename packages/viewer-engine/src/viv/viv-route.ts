@@ -1,4 +1,5 @@
 import { Deck, type Layer, OrthographicView } from "@deck.gl/core";
+import { BitmapLayer as DeckBitmapLayer } from "@deck.gl/layers";
 import { BitmapLayer, MultiscaleImageLayer } from "@hms-dbmi/viv";
 import { type Camera, originCamera } from "../camera/camera.ts";
 import type { MotionVector } from "../camera/motion-predictor.ts";
@@ -40,8 +41,9 @@ import {
 } from "./interpolation.ts";
 import type { PixelSlide } from "./pixel-slide.ts";
 import { createPrefetcher, type Prefetcher } from "./prefetch.ts";
+import { createTileFade, installTileFade, tileFadeProp } from "./tile-fade.ts";
 import type { TileLoadState } from "./tile-wait.ts";
-import { createVivLevels, type VivLevels } from "./viv-levels.ts";
+import { createVivLevels, type FailedTile, type VivLevels } from "./viv-levels.ts";
 
 const idleLoadState: TileLoadState = { pending: 0, waitingMs: 0, answerMs: null };
 
@@ -52,6 +54,18 @@ const stableSelections = [{ z: 0, t: 0, c: 0 }];
 const idleFramesRequired = 2;
 
 const unpickable: object = { pickable: false };
+
+interface TilingLayer {
+  readonly state?: {
+    readonly tileset?: {
+      readonly tiles: readonly {
+        readonly index: { readonly x: number; readonly y: number; readonly z: number };
+        readonly setNeedsReload: () => void;
+      }[];
+    };
+  };
+  readonly setNeedsUpdate: () => void;
+}
 
 interface FrameLoopHandle {
   setProps(props: { animationFrameProvider: DeckSleep["provider"] }): unknown;
@@ -64,6 +78,8 @@ function installFrameProvider(deck: Deck, sleep: DeckSleep): void {
 
 export interface VivRouteOptions {
   readonly onError?: (error: Error) => void;
+  readonly onTileError?: (error: Error) => void;
+  readonly tileFade?: { readonly durationMs?: number; readonly now?: () => number };
   readonly useDevicePixels?: boolean | number;
   readonly preserveDrawingBuffer?: boolean;
   readonly decodeWorkers?: number;
@@ -86,6 +102,8 @@ export interface VivRoute extends RendererRoute<PixelSlide> {
   readonly whenIdle: (signal?: AbortSignal) => Promise<void>;
   readonly isSettled: () => boolean;
   readonly loadState: () => TileLoadState;
+  readonly failedTiles: () => readonly FailedTile[];
+  readonly retryTile: (key: string) => void;
   readonly decodeStats: () => DecodeStats | null;
   readonly jpegReports: () => readonly (DecodeReport | null)[];
   readonly sleep: DeckSleep | null;
@@ -121,6 +139,11 @@ export function createVivRoute(
 ): VivRoute {
   const host = hostElement(container);
   installTileInterpolation(BitmapLayer);
+  installTileFade(DeckBitmapLayer);
+  const tileFade = createTileFade(
+    options.tileFade?.now ?? systemClock,
+    options.tileFade?.durationMs,
+  );
   const interpolationRule = options.interpolation ?? defaultInterpolationRule;
   const reportError =
     options.onError ??
@@ -231,7 +254,11 @@ export function createVivRoute(
       channelsVisible: [true],
       dtype: "Uint8",
       ...unpickable,
-      ...{ [interpolationRuleProp]: interpolationRule, tintColor: slideTint(brightness) },
+      ...{
+        [interpolationRuleProp]: interpolationRule,
+        [tileFadeProp]: tileFade,
+        tintColor: slideTint(brightness),
+      },
     }) as Layer;
 
   const showSlide = (slide: PixelSlide | null) => {
@@ -243,7 +270,7 @@ export function createVivRoute(
     }
     const reader = readerFor(slide);
     const levels = createVivLevels(slide.source, {
-      onTileError: reportError,
+      onTileError: options.onTileError ?? reportError,
       onReadSettled: () => sleep?.wake("read"),
       ...(reader ? { read: reader.read } : {}),
     });
@@ -271,9 +298,21 @@ export function createVivRoute(
     changed();
   };
 
+  let fadeWasActive = false;
+
   const settled = (): boolean => {
     if (failure !== null) return true;
     if (!gpuUsable()) return false;
+    if (tileFade.active()) {
+      fadeWasActive = true;
+      return false;
+    }
+    if (fadeWasActive) {
+      fadeWasActive = false;
+      changes++;
+      deck.redraw("parfocal tile fade end");
+      return false;
+    }
     if (renderedChanges !== changes) return false;
     if (deck.needsRedraw({ clearRedrawFlags: false })) return false;
     if (shown === null) return true;
@@ -356,6 +395,27 @@ export function createVivRoute(
   });
   guard.attach(canvas);
 
+  const retryTile = (key: string) => {
+    const current = shown;
+    const failure = current?.levels.failures().find((tile) => tile.key === key);
+    if (!current || !failure) return;
+    current.levels.clearFailure(key);
+    const manager = (deck as unknown as { layerManager?: { getLayers(): TilingLayer[] } })
+      .layerManager;
+    for (const layer of manager?.getLayers() ?? []) {
+      const tile = layer.state?.tileset?.tiles.find(
+        (candidate) =>
+          Math.abs(candidate.index.z) === failure.level &&
+          candidate.index.x === failure.x &&
+          candidate.index.y === failure.y,
+      );
+      if (!tile) continue;
+      tile.setNeedsReload();
+      layer.setNeedsUpdate();
+    }
+    changed();
+  };
+
   const whenIdle = (signal?: AbortSignal) =>
     new Promise<void>((resolve, reject) => {
       let calm = 0;
@@ -391,6 +451,8 @@ export function createVivRoute(
     whenIdle,
     isSettled: settled,
     loadState: () => shown?.levels.loadState() ?? idleLoadState,
+    failedTiles: () => shown?.levels.failures() ?? [],
+    retryTile,
     decodeStats: () => shown?.reader?.stats() ?? null,
     jpegReports: () => shown?.reader?.jpegReports() ?? [],
     sleep,

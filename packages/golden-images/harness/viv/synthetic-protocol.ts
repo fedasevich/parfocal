@@ -12,6 +12,7 @@ export interface SyntheticRequest {
     readonly hold?: "finest" | "all";
     readonly delayFinestMs?: number;
     readonly settle?: boolean;
+    readonly fadeMs?: number;
   };
 }
 
@@ -29,6 +30,7 @@ export interface SyntheticResult {
 
 export interface SyntheticHarness {
   render(request: SyntheticRequest): Promise<SyntheticResult>;
+  fadeTo(elapsedMs: number): Promise<void>;
   moveTo(camera: SyntheticRequest["camera"]): Promise<void>;
   loadState(): { pending: number; waitingMs: number; answerMs: number | null };
   reset(): void;

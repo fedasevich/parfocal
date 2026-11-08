@@ -67,6 +67,13 @@ export {
   type SlideViewport,
   type SlideViewportOptions,
 } from "./slide-viewport.ts";
+export {
+  createTileFade,
+  defaultTileFadeMs,
+  installTileFade,
+  type TileFade,
+  tileFadeProp,
+} from "./tile-fade.ts";
 export { createTileWait, type TileLoadState, type TileWait } from "./tile-wait.ts";
 export {
   fetchTissueBox,
@@ -93,6 +100,7 @@ export {
 export {
   boxDownsampleToInterleaved,
   createVivLevels,
+  type FailedTile,
   type PlannedRegion,
   readVivRegion,
   regionKey,
