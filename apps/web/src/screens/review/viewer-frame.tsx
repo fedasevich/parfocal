@@ -12,6 +12,7 @@ import { cn } from "@parfocal/ui/lib/utils";
 import { type ReactNode, useEffect, useState } from "react";
 import { useBindings } from "../../keys/personal-keys.ts";
 import { useHotkeys } from "../../keys/use-hotkeys.ts";
+import { formatMillimetres, useLengthUnits } from "../../measure/length-units.ts";
 import { type Count, countWord } from "./decision-style.ts";
 import { InspectorDock } from "./inspector-dock.tsx";
 import { useInspectorLayout } from "./inspector-layout.ts";
@@ -266,6 +267,7 @@ export function ObjectsSummary({
 }
 
 export function AiSays({ setName, objects }: { setName: string; objects: ReviewObject[] }) {
+  useLengthUnits();
   const regions = objects.filter((item) => item.kind === "region");
   const sizes = regions.map((item) => item.size_mm ?? 0);
   const cells = objects.length - regions.length;
@@ -278,7 +280,7 @@ export function AiSays({ setName, objects }: { setName: string; objects: ReviewO
           {
             icon: "flag",
             label: "Tumor regions",
-            value: `${regions.length}, ${Math.max(...sizes).toFixed(1)} to ${Math.min(...sizes).toFixed(2)} mm`,
+            value: `${regions.length}, ${formatMillimetres(Math.max(...sizes))} to ${formatMillimetres(Math.min(...sizes), 2)}`,
           },
           { icon: "target", label: "Cells", value: `18,240, ${cells} in your sample` },
         ]}
@@ -344,6 +346,7 @@ export function ObjectList({
   notes,
   measurements = [],
 }: ObjectListProps) {
+  useLengthUnits();
   const shown = filter ?? "all";
   const matches = (object: string) => {
     if (shown === "all") return true;
@@ -411,7 +414,9 @@ export function ObjectList({
                 <span className="font-mono text-fg-dim">
                   {showScore ? item.score.toFixed(2) : ""}
                 </span>
-                <span className="font-mono text-fg-dim">{item.size_mm?.toFixed(1)} mm</span>
+                <span className="font-mono text-fg-dim">
+                  {formatMillimetres(item.size_mm ?? 0)}
+                </span>
               </button>
             </li>
           );
@@ -473,7 +478,7 @@ export function ObjectList({
                 </small>
               </span>
               <span />
-              <span className="font-mono text-fg-dim">{item.mm.toFixed(2)} mm</span>
+              <span className="font-mono text-fg-dim">{formatMillimetres(item.mm, 2)}</span>
             </button>
           </li>
         ))}
