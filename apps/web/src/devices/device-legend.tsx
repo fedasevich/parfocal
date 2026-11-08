@@ -17,7 +17,7 @@ export function DeviceLegend({
       className="absolute top-4 left-4 z-10 grid w-64 gap-2.5 rounded-zone border border-line bg-chrome p-4 text-body-sm shadow-lg"
     >
       <div className="flex items-center gap-2 font-semibold text-body">
-        <Icon name={device} size="md" />
+        <Icon name={device === "footswitch" ? "keyboard" : device} size="md" />
         <span>{deviceNames[device]}</span>
         <span className="ml-auto rounded-full bg-chrome-2 px-2 py-0.5 font-medium text-caption text-fg-dim capitalize">
           {context}

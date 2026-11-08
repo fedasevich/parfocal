@@ -5,6 +5,7 @@ export const legendDevices = [
   "gamepad",
   "pen",
   "keyboard",
+  "footswitch",
 ] as const;
 
 export type LegendDevice = (typeof legendDevices)[number];
@@ -22,7 +23,10 @@ export const deviceNames: Record<LegendDevice, string> = {
   gamepad: "Gamepad",
   pen: "Tablet and pen",
   keyboard: "Keyboard",
+  footswitch: "Footswitch",
 };
+
+export const footswitchDefaultKey = "J";
 
 export const legendRows: Record<LegendDevice, Record<LegendContext, readonly LegendRow[]>> = {
   mouse: {
@@ -142,6 +146,26 @@ export const legendRows: Record<LegendDevice, Record<LegendContext, readonly Leg
       ["Tools", "V H S U P R O L T C B"],
       ["Accept", "Enter"],
       ["Discard", "Esc"],
+      ["Undo", "⌘Z"],
+    ],
+  },
+  footswitch: {
+    read: [
+      ["Next area", "]"],
+      ["Previous area", "["],
+      ["Pan", "Use the mouse"],
+      ["Zoom", "Use the mouse"],
+    ],
+    review: [
+      ["Next cell", footswitchDefaultKey],
+      ["Keep", "K"],
+      ["Back", "Shift+J"],
+      ["Retype", "Use the keyboard"],
+    ],
+    annotate: [
+      ["Accept", "Enter"],
+      ["Discard", "Esc"],
+      ["Draw", "Use the mouse"],
       ["Undo", "⌘Z"],
     ],
   },
