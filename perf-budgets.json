@@ -118,6 +118,21 @@
       "todo": "Record the hosted-runner number from the first browser CI run and tighten the headroom."
     },
     {
+      "id": "viewer.wheel-zoom-longest-task-ms",
+      "measures": "Longest page task on the renderer main thread while 12 wheel notches zoom Huron-1-40x.tif and the view settles, fastest of three runs",
+      "kind": "ms",
+      "unit": "ms",
+      "baseline": 26.3,
+      "limit": 50.0,
+      "headroom": 1.9,
+      "headroomReason": "The baseline is the fastest run of three on an Apple M4 shared with other agents, and the slowest runs of the same sessions took 36 to 52 ms. The 50 ms limit is the done-when line of VIEW-031 (wheel zoom has no frame over 50 ms), which stays under three times the baseline.",
+      "rttMs": 0,
+      "environment": "Chrome headless with SwiftShader, 1280 x 720, loopback server, no latency proxy",
+      "check": "packages/viewer-engine/browser/wheel-zoom.spec.ts",
+      "adr": "docs/adr/0098-viv-and-deck-gl-versions.md",
+      "result": "docs/results/2026-11-08-wheel-zoom-frame-time.md"
+    },
+    {
       "id": "viewer.sidecar-open-ms",
       "measures": "Opening an 11-level spread BigTIFF with its tile index sidecar and reading the coarsest tile, fastest of three runs",
       "kind": "ms",

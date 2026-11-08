@@ -1,5 +1,6 @@
 import {
   type BoundViewHistory,
+  bindViewerInput,
   bindViewHistory,
   type Camera,
   createDefaultPixelSourceRegistry,
@@ -8,6 +9,7 @@ import {
   type PrefetchStats,
   type SlideFormatId,
   type ViewerEngine,
+  type ViewerInputBinding,
   viewRestMs,
   zoomForMagnification,
 } from "../../src/index.ts";
@@ -85,6 +87,16 @@ export interface PanHarness {
   flyTo(target: Camera): Promise<Camera>;
   back(): Promise<Camera | null>;
   forward(): Promise<Camera | null>;
+  bindWheel(): void;
+  startFrames(): void;
+  stopFrames(): Promise<FrameReport>;
+}
+
+export interface FrameReport {
+  readonly frames: number;
+  readonly worstMs: number;
+  readonly p95Ms: number;
+  readonly camera: Camera;
 }
 
 declare global {
@@ -97,6 +109,9 @@ const errors: string[] = [];
 let engine: ViewerEngine | null = null;
 let route: VivRoute | null = null;
 let history: BoundViewHistory | null = null;
+let wheel: ViewerInputBinding | null = null;
+let frameTimes: number[] | null = null;
+let lastFrameAt = 0;
 
 globalThis.addEventListener("unhandledrejection", (event) => {
   errors.push(String(event.reason));
@@ -266,7 +281,42 @@ async function step(move: (bound: BoundViewHistory) => boolean): Promise<Camera 
   return move(history) ? rest() : null;
 }
 
+function bindWheel(): void {
+  wheel?.dispose();
+  wheel = bindViewerInput(viewer(), mounted().engine, { wheelMode: "auto" });
+}
+
+function sampleFrame(now: number): void {
+  if (frameTimes === null) return;
+  frameTimes.push(now - lastFrameAt);
+  lastFrameAt = now;
+  requestAnimationFrame(sampleFrame);
+}
+
+function startFrames(): void {
+  frameTimes = [];
+  lastFrameAt = performance.now();
+  requestAnimationFrame(sampleFrame);
+}
+
+async function stopFrames(): Promise<FrameReport> {
+  const { engine: current, route: shown } = mounted();
+  await shown.whenIdle(AbortSignal.timeout(60_000));
+  const sampled = frameTimes ?? [];
+  frameTimes = null;
+  const sorted = [...sampled].sort((a, b) => a - b);
+  return {
+    frames: sorted.length,
+    worstMs: sorted.at(-1) ?? 0,
+    p95Ms: sorted[Math.floor(sorted.length * 0.95)] ?? 0,
+    camera: current.getCamera(),
+  };
+}
+
 function close(): void {
+  wheel?.dispose();
+  wheel = null;
+  frameTimes = null;
   history?.dispose();
   history = null;
   engine?.dispose();
@@ -285,4 +335,7 @@ window.panHarness = {
   flyTo,
   back: () => step((bound) => bound.back()),
   forward: () => step((bound) => bound.forward()),
+  bindWheel,
+  startFrames,
+  stopFrames,
 };

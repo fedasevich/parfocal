@@ -13,6 +13,7 @@ export interface MainThreadSummary {
   readonly chromeInternalMs: number;
   readonly pageMs: number;
   readonly longest: readonly MainThreadTask[];
+  readonly longestPageMs: number;
 }
 
 interface TraceEvent {
@@ -55,5 +56,6 @@ export function summarizeMainThread(trace: Buffer): MainThreadSummary {
     chromeInternalMs: sum(internal),
     pageMs: sum(page),
     longest: [...tasks].sort((a, b) => b.ms - a.ms).slice(0, 3),
+    longestPageMs: Math.max(0, ...page.map((task) => task.ms)),
   };
 }
