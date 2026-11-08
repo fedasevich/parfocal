@@ -148,6 +148,16 @@ test("search filters the sections and Esc clears it", async ({ page }) => {
   await expect(dialog(page).getByRole("heading", { name: "Display" })).toBeVisible();
 });
 
+test("the Privacy section shows initials, lock after and the patient banner", async ({ page }) => {
+  await page.goto("/settings/privacy");
+  const initials = dialog(page).getByRole("switch", { name: "Initials while sharing" });
+  const before = await initials.getAttribute("aria-checked");
+  await initials.click();
+  await expect(initials).not.toHaveAttribute("aria-checked", before ?? "");
+  await expect(dialog(page).getByText(/^\d+ min$/)).toBeVisible();
+  await expect(dialog(page).getByText(/^(Shown with|Hidden)/)).toBeVisible();
+});
+
 test("signing out other devices leaves only this one", async ({ page }) => {
   await page.goto("/settings/privacy");
   await dialog(page).getByRole("button", { name: "Sign out on other devices" }).click();
