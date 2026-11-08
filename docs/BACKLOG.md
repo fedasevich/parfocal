@@ -3637,7 +3637,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when tests confirm calibration values are stored per device.
   Size: S.
 
-- [ ] DEV-006 · Device legend on the canvas
+- [x] DEV-006 · Device legend on the canvas
   A card showing the current device's controls in the current context (read, review, annotate).
   Done when component tests render the legend for every device.
   Refs mock §2.13.
