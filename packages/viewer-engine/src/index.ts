@@ -326,6 +326,12 @@ export {
 } from "./input/wheel.ts";
 export type { CellChunk } from "./nuclei/cell-chunk.ts";
 export { readCellChunk } from "./nuclei/cell-chunk.ts";
+export type { CellConfidence } from "./nuclei/cell-confidence.ts";
+export {
+  calibratedShares,
+  confidenceOf,
+  isUnsureCell,
+} from "./nuclei/cell-confidence.ts";
 export { CellEdits } from "./nuclei/cell-edits.ts";
 export type { CellSummary, ChunkEntry, Rect as CellRect } from "./nuclei/cell-summary.ts";
 export {
@@ -339,10 +345,12 @@ export {
 export { ChunkCache, DEFAULT_VERTEX_BUDGET } from "./nuclei/chunk-cache.ts";
 export type {
   CellSource,
+  ClassNameOf,
   LoadedCell,
   PagedCellsOptions,
   PagedStats,
   ShowReport,
+  UnsureCell,
 } from "./nuclei/paged-cells.ts";
 export {
   FETCH_BATCH,

@@ -40465,6 +40465,37 @@
         "maxLength": 60,
         "minLength": 1
       },
+      "ClassProbability": {
+        "properties": {
+          "position": {
+            "type": "integer",
+            "title": "Position"
+          },
+          "class_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Class Id"
+          },
+          "probability": {
+            "type": "number",
+            "title": "Probability"
+          }
+        },
+        "type": "object",
+        "required": [
+          "position",
+          "class_id",
+          "probability"
+        ],
+        "title": "ClassProbability"
+      },
       "ClinicalTemplate": {
         "type": "string",
         "enum": [
@@ -51010,6 +51041,20 @@
             ],
             "title": "Score"
           },
+          "probabilities": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ClassProbability"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Probabilities"
+          },
           "geometry": {
             "$ref": "#/components/schemas/AiOutline"
           },
@@ -51024,6 +51069,7 @@
           "number",
           "class_id",
           "score",
+          "probabilities",
           "geometry",
           "check"
         ],

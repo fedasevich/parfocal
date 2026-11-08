@@ -50,6 +50,7 @@ const ai = (object: string, classId: string | null = null): SharedAiObject => ({
   number: Number(object.slice(1)),
   class_id: classId,
   score: 0.5,
+  probabilities: null,
   geometry: square,
   check: "unchecked",
 });

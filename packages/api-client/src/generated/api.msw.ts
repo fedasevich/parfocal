@@ -6361,6 +6361,14 @@ export const getListSharedAiObjectsResponseMock = (
       number: faker.number.int(),
       class_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
       score: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+      probabilities: faker.helpers.arrayElement([
+        Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+          position: faker.number.int(),
+          class_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+          probability: faker.number.float({ fractionDigits: 2 }),
+        })),
+        null,
+      ]),
       geometry: faker.helpers.arrayElement([
         { ...getListSharedAiObjectsResponsePolygonGeometryMock() },
         { ...getListSharedAiObjectsResponseMultiPolygonGeometryMock() },

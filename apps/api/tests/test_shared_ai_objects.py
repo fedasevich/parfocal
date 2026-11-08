@@ -153,3 +153,28 @@ def test_the_read_refuses_a_review_task_and_a_slide_outside_the_task(
     assert (review.status_code, review.json()["code"]) == (409, "not-an-annotate-task")
     stranger = layer.replace(str(o.slides[0]), str(uuid.uuid4()))
     assert api(o.people["first"]).get(f"{stranger}/ai").status_code == 404
+
+
+def shares(item: Any) -> list[float] | None:
+    found = item["probabilities"]
+    return None if found is None else [entry["probability"] for entry in found]
+
+
+def test_every_page_keeps_the_cell_probabilities_with_their_classes(
+    api: ApiAs, database: str
+) -> None:
+    o, layer = checking(api, database)
+    tumor = str(tumor_class(database, o))
+    pages = [read(api, o, layer, offset=offset, limit=3) for offset in (6, 9)]
+    objects = {item["object"]: item for page in pages for item in page["objects"]}
+    assert list(objects) == CELLS
+    assert shares(objects["C1"]) == pytest.approx([30 / 255, 225 / 255])
+    assert shares(objects["C3"]) == pytest.approx([240 / 255, 15 / 255])
+    assert [entry["position"] for entry in objects["C2"]["probabilities"]] == [0, 1]
+    assert [entry["class_id"] for entry in objects["C2"]["probabilities"]] == [tumor, None]
+    assert shares(objects["C4"]) == pytest.approx([128 / 255, 127 / 255])
+    assert shares(objects["C5"]) is None
+    assert shares(objects["C6"]) is None
+    regions = read(api, o, layer, limit=6)["objects"]
+    assert {item["kind"] for item in regions} == {"region"}
+    assert {shares(item) is None for item in regions} == {True}

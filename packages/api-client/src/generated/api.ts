@@ -1378,6 +1378,12 @@ export interface ClassMetrics {
   sensitivity: RateOut;
 }
 
+export interface ClassProbability {
+  position: number;
+  class_id: string | null;
+  probability: number;
+}
+
 export type Code = (typeof Code)[keyof typeof Code];
 
 export const Code = {
@@ -4477,6 +4483,7 @@ export interface SharedAiObject {
   number: number;
   class_id: string | null;
   score: number | null;
+  probabilities: ClassProbability[] | null;
   geometry: AiOutline;
   check: CheckState;
 }
