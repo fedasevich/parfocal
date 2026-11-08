@@ -709,7 +709,6 @@ export function createSelectTool(host: SelectHost): SelectTool {
   };
 
   const removeSelected = (): boolean => {
-    const before = host.document();
     const shape = editShape();
     if (shape) {
       const geometry = removeVertices(shape, state.vertices);
