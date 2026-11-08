@@ -1525,6 +1525,12 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Refs mock `developer` screen, kit gallery "Developer mode, Viv by default", [ADR 0189](adr/0189-developer-drawer-control-list.md).
   Size: M.
 
+- [ ] LAB-018 · Drawer controls drive the viewer
+  LAB-001 saves all nine developer drawer controls, but only interpolation and prefetch change the Viv route. Make the renderer choice switch the route behind the renderer interface, and make culling, detail level, synthetic nuclei, the HUD, the motion vector and pause models change what the viewer does.
+  Done when a test per control shows the viewer reading the saved choice, and a browser test changes one control and sees the viewer change.
+  Depends on LAB-001.
+  Size: M.
+
 - [ ] LAB-002 · Performance HUD
   Fps, frame time, resident tiles, inflight requests, atlas use, decode p95, annotations drawn and culled, LOD tier. Atlas use shows only on the WebGPU route. Floats in a free corner (top left, top right or bottom left) and can be hidden.
   Done when a test confirms the HUD costs under 0.5 ms per frame.
