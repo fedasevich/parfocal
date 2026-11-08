@@ -38,6 +38,9 @@ def test_a_temperature_fitted_on_one_split_calibrates_another() -> None:
     assert result.test_set_accuracy == pytest.approx((test.argmax(axis=1) == labels).mean())
     assert 0 < result.test_set_confident_share < 1
     assert result.validated_sites == ("a", "b")
+    assert [band.name for band in result.bands] == ["confident", "likely", "unsure", "doubtful"]
+    assert sum(band.share for band in result.bands) == pytest.approx(1)
+    assert result.bands[0].share == pytest.approx(result.test_set_confident_share)
 
 
 def test_unsure_means_doubtful_or_close_as_the_viewer_counts_it() -> None:
@@ -72,3 +75,7 @@ def test_the_registry_holds_what_the_fit_gives_on_pannuke() -> None:
         assert stored.test_set_confident_share == round(fitted.test_set_confident_share, 4)
         assert stored.test_set_unsure_share == round(fitted.test_set_unsure_share, 4)
         assert stored.validated_sites == fitted.validated_sites
+        assert [(str(row.band), row.lowest, row.share, row.accuracy) for row in stored.bands] == [
+            (band.name, band.lowest, round(band.share, 3), round(band.accuracy or 0, 3))
+            for band in fitted.bands
+        ]

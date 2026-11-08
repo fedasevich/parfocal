@@ -67,3 +67,4 @@ So 18 of 19 tissues are validated sites for both view counts, and Lung is not.
 
 - The rows live in the code catalogue until AIP-002 (model registry) adds a registry table, which should carry them over with the fitting split and the result file link.
 - AILEARN-005 (recalibration after each round) writes new rows. Running tasks keep their stored order, as ADR 0117 (review order stored per task slide) says.
+- AINUC-007 (confidence bands) added the four band rows to each catalogue entry: the cutoffs 0.80, 0.55 and 0.40 with each band's share and accuracy from the [2026-10-18 reproduction](2026-10-18-typing-calibration-reproduction.md) at three decimals. The calibration command now prints them, and the cached-output test checks the catalogue rows against the fit.
