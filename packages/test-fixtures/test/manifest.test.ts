@@ -24,10 +24,16 @@ test("every group has fixtures and the default group stays small", () => {
   assert.ok(small.reduce((sum, fixture) => sum + fixture.bytes, 0) < 10 * 1048576);
 });
 
-test("the viewer group holds CMU-1.svs for the browser goldens and stays under 256 MB", () => {
-  const viewer = selectFixtures(manifest, ["viewer"]);
-  assert.ok(viewer.some((fixture) => fixture.file === "CMU-1.svs"));
-  assert.ok(viewer.reduce((sum, fixture) => sum + fixture.bytes, 0) < 256 * 1048576);
+test("the viewer group holds the browser golden slides and stays under 512 MB", () => {
+  const viewer = selectFixtures(manifest, ["viewer"]).map((fixture) => fixture.file);
+  for (const file of ["CMU-1.svs", "CMU-1-JP2K-33005.svs", "CMU-1.tiff"]) {
+    assert.ok(viewer.includes(file), file);
+  }
+  const bytes = selectFixtures(manifest, ["viewer"]).reduce(
+    (sum, fixture) => sum + fixture.bytes,
+    0,
+  );
+  assert.ok(bytes < 512 * 1048576);
 });
 
 test("all selects every remote fixture and unknown groups fail", () => {

@@ -4,12 +4,7 @@ import { expect, test } from "@playwright/test";
 import type { ViteDevServer } from "vite";
 import { checkGolden, compareFrames, goldenPath, readPng, toleranceFor } from "../src/index.ts";
 import { assertSwiftShader } from "../src/playwright.ts";
-import {
-  fixtureAvailability,
-  openHarness,
-  renderVivFrame,
-  startVivHarness,
-} from "./viv-harness.ts";
+import { openHarness, renderVivFrame, skipUnlessCached, startVivHarness } from "./viv-harness.ts";
 import { cmu1MicronsPerPixel, cmu1TissueCentre, type VivGoldenScene } from "./viv-scenes.ts";
 
 const goldenDirectory = fileURLToPath(new URL("../goldens", import.meta.url));
@@ -66,11 +61,7 @@ test.beforeEach(async ({ page }) => {
 for (const scene of [syntheticFit, syntheticSparseFit, cmu1Tiff10x]) {
   test(`${scene.name} matches its golden image`, async ({ page }, testInfo) => {
     if (scene.fixture === cmu1Tiff10x.fixture) {
-      const availability = fixtureAvailability(scene.fixture);
-      test.skip(
-        availability.status === "missing",
-        availability.status === "missing" ? availability.message : "",
-      );
+      skipUnlessCached(scene.fixture);
     }
     const { result, frame } = await renderVivFrame(page, scene);
     expect(result.errors).toEqual([]);
@@ -87,11 +78,7 @@ for (const scene of [syntheticFit, syntheticSparseFit, cmu1Tiff10x]) {
 }
 
 test("CMU-1.tiff draws the same tissue as the CMU-1.svs golden at 10x", async ({ page }) => {
-  const availability = fixtureAvailability(cmu1Tiff10x.fixture);
-  test.skip(
-    availability.status === "missing",
-    availability.status === "missing" ? availability.message : "",
-  );
+  skipUnlessCached(cmu1Tiff10x.fixture);
   const { frame } = await renderVivFrame(page, cmu1Tiff10x);
   const golden = readPng(goldenPath(goldenDirectory, "viv-cmu-1-svs-10x"));
   const comparison = compareFrames(frame, golden, toleranceFor("svs-jpeg"));

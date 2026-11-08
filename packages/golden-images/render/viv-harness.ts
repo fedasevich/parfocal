@@ -4,7 +4,7 @@ import type { AddressInfo } from "node:net";
 import { basename, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { fixturesDir, loadManifest, syntheticDir } from "@parfocal/test-fixtures";
-import type { Page } from "@playwright/test";
+import { type Page, test } from "@playwright/test";
 import { createServer, type Plugin, type ViteDevServer } from "vite";
 import {
   harnessGlobal,
@@ -43,6 +43,14 @@ export function fixtureAvailability(file: string): FixtureAvailability {
     required,
     message: `${file} is not downloaded, run: pnpm fixtures ${entry.groups.join(" ")}`,
   };
+}
+
+export function skipUnlessCached(file: string): void {
+  const availability = fixtureAvailability(file);
+  if (availability.status === "ready") return;
+  if (availability.required)
+    throw new Error(`${availability.message}, PARFOCAL_REQUIRE_FIXTURES needs it`);
+  test.skip(true, availability.message);
 }
 
 function sendFixture(request: IncomingMessage, response: ServerResponse, path: string): void {
