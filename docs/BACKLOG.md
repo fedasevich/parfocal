@@ -1153,7 +1153,7 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
   Depends on INGEST-000. Refs [ADR 0179](adr/0179-upload-and-server-readers-rechecked.md).
   Size: S.
 
-- [ ] INGEST-031 · Skipped status for a duplicate in a link import
+- [x] INGEST-031 · Skipped status for a duplicate in a link import
   Decision 71a (a duplicate left out of a link import). A slide whose checksum the project already has shows as "Skipped, already in this project" with its own neutral status in the upload status and the wizard, not as failed with the reason duplicate. The API returns a `skipped` state with the reason, and the counts of failed uploads leave it out.
   Done when API tests return the skipped state for a duplicate, a component test shows the neutral status and wording, and the failed count leaves skipped slides out.
   Depends on INGEST-025.
