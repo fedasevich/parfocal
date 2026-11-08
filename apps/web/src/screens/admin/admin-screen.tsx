@@ -15,16 +15,12 @@ import {
 import { okData } from "../placeholder.tsx";
 import { type AdminAccess, adminAccessOf, refusalOf } from "./admin-access.ts";
 import { AdminShell, adminHref, adminSectionList } from "./admin-shell.tsx";
+import { AuditExportButton, AuditSection } from "./audit.tsx";
+import { type AuditFilter, defaultAuditFilter } from "./audit-model.ts";
 import { ConnectModelScreen } from "./connect-model.tsx";
 import { OverviewSection } from "./overview.tsx";
 import { PeopleSection } from "./people.tsx";
-import {
-  ApiSection,
-  AuditSection,
-  ModelsSection,
-  ProjectsSection,
-  SecuritySection,
-} from "./sections.tsx";
+import { ApiSection, ModelsSection, ProjectsSection, SecuritySection } from "./sections.tsx";
 import { StorageSection } from "./storage.tsx";
 import { editorTitle, type TemplateDraft, TemplateEditor, TemplatesSection } from "./templates.tsx";
 import { WorkspaceSettingsSection } from "./workspace-settings.tsx";
@@ -47,6 +43,7 @@ export function AdminScreen({ section, scene, modal, change }: Props) {
   const goTo = useGoTo();
   const [notice, notify] = useNotice();
   const [source, setSource] = useState<StudyTemplateSummary | TemplateDraft | null>(null);
+  const [auditFilter, setAuditFilter] = useState<AuditFilter>(defaultAuditFilter);
   const workspaceName =
     me?.workspaces.find((item) => item.tenant_id === me.active_tenant_id)?.name ?? "The workspace";
   const open = (next: AdminSection) =>
@@ -155,12 +152,7 @@ export function AdminScreen({ section, scene, modal, change }: Props) {
         Connect a source
       </Button>
     ),
-    audit: (
-      <Button onClick={() => notify("Exports today's events as a signed CSV (mock)")}>
-        <Icon name="download" />
-        Export CSV
-      </Button>
-    ),
+    audit: <AuditExportButton filter={auditFilter} notify={notify} />,
   };
   const body: Record<AdminSection, React.ReactNode> = {
     overview: <OverviewSection open={open} />,
@@ -186,8 +178,8 @@ export function AdminScreen({ section, scene, modal, change }: Props) {
     ),
     storage: <StorageSection notify={notify} />,
     api: <ApiSection notify={notify} />,
-    audit: <AuditSection />,
-    security: <SecuritySection />,
+    audit: <AuditSection filter={auditFilter} onFilter={setAuditFilter} />,
+    security: <SecuritySection notify={notify} />,
     settings: <WorkspaceSettingsSection notify={notify} />,
   };
   return (

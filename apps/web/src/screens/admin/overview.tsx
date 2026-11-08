@@ -10,10 +10,12 @@ import { Icon } from "@parfocal/ui/components/icon";
 import { AvatarStack, Person } from "@parfocal/ui/components/person";
 import { StatusTag } from "@parfocal/ui/components/tag";
 import { Zone } from "@parfocal/ui/components/zone";
+import { now } from "../../clock.ts";
 import { formatClock } from "../format.ts";
 import type { AdminSection } from "../onboarding/scenes.ts";
 import { toPersonInfo, usePeople } from "../people.ts";
 import { okData } from "../placeholder.tsx";
+import { auditLabel, auditParams, defaultAuditFilter } from "./audit-model.ts";
 import { ModelStatus, TextLink, tb } from "./common.tsx";
 import { storageParts } from "./storage.tsx";
 
@@ -41,7 +43,7 @@ export function OverviewSection({ open }: { open: (section: AdminSection) => voi
   const members = okData(useListTenantMembers().data) ?? [];
   const models = useListAiModels().data?.data;
   const storage = useGetStorageUsage().data?.data;
-  const events = okData(useListAuditEvents().data) ?? [];
+  const events = okData(useListAuditEvents(auditParams(defaultAuditFilter, now())).data) ?? [];
   const personOf = usePeople();
   if (overview === undefined) return null;
   const researchersShown = members.slice(0, 6).map(toPersonInfo);
@@ -174,9 +176,14 @@ export function OverviewSection({ open }: { open: (section: AdminSection) => voi
                 return (
                   <SummaryRow key={event.id}>
                     {person ? (
-                      <Person person={person} size={28} sub={event.details} className="min-w-0" />
+                      <Person
+                        person={person}
+                        size={28}
+                        sub={auditLabel(event.action)}
+                        className="min-w-0"
+                      />
                     ) : (
-                      <SystemActor size={28} sub={event.details} />
+                      <SystemActor size={28} sub={auditLabel(event.action)} />
                     )}
                     <span className="font-mono text-caption text-fg-faint">
                       {formatClock(new Date(event.occurred_at))}
