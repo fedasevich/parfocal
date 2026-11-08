@@ -28,6 +28,8 @@ export const allowedFields: ReadonlySet<string> = new Set([
   "tool",
   "task_kind",
   "area",
+  "estimated_ms",
+  "coverage_permille",
 ]);
 
 const minimumSensitiveLength = 3;

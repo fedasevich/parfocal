@@ -34,6 +34,8 @@ ALLOWED_FIELDS = frozenset(
         "tool",
         "task_kind",
         "area",
+        "estimated_ms",
+        "coverage_permille",
     }
 )
 

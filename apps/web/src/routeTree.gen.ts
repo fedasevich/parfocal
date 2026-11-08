@@ -14,6 +14,7 @@ import { Route as AdminRouteImport } from "./routes/admin.tsx";
 import { Route as DeveloperRouteImport } from "./routes/developer.tsx";
 import { Route as InviteRouteImport } from "./routes/invite.tsx";
 import { Route as IssueStatesRouteImport } from "./routes/issue-states.tsx";
+import { Route as KpiRouteImport } from "./routes/kpi.tsx";
 import { Route as MyWorkRouteImport } from "./routes/my-work.tsx";
 import { Route as PrototypeRouteImport } from "./routes/prototype.tsx";
 import { Route as SearchRouteImport } from "./routes/search.tsx";
@@ -77,6 +78,11 @@ const InviteRoute = InviteRouteImport.update({
 const IssueStatesRoute = IssueStatesRouteImport.update({
   id: "/issue-states",
   path: "/issue-states",
+  getParentRoute: () => rootRouteImport,
+} as any);
+const KpiRoute = KpiRouteImport.update({
+  id: "/kpi",
+  path: "/kpi",
   getParentRoute: () => rootRouteImport,
 } as any);
 const MyWorkRoute = MyWorkRouteImport.update({
@@ -295,6 +301,7 @@ export interface FileRoutesByFullPath {
   "/developer": typeof DeveloperRoute;
   "/invite": typeof InviteRoute;
   "/issue-states": typeof IssueStatesRoute;
+  "/kpi": typeof KpiRoute;
   "/my-work": typeof MyWorkRoute;
   "/prototype": typeof PrototypeRoute;
   "/search": typeof SearchRoute;
@@ -341,6 +348,7 @@ export interface FileRoutesByTo {
   "/developer": typeof DeveloperRoute;
   "/invite": typeof InviteRoute;
   "/issue-states": typeof IssueStatesRoute;
+  "/kpi": typeof KpiRoute;
   "/my-work": typeof MyWorkRoute;
   "/prototype": typeof PrototypeRoute;
   "/search": typeof SearchRoute;
@@ -388,6 +396,7 @@ export interface FileRoutesById {
   "/developer": typeof DeveloperRoute;
   "/invite": typeof InviteRoute;
   "/issue-states": typeof IssueStatesRoute;
+  "/kpi": typeof KpiRoute;
   "/my-work": typeof MyWorkRoute;
   "/prototype": typeof PrototypeRoute;
   "/search": typeof SearchRoute;
@@ -436,6 +445,7 @@ export interface FileRouteTypes {
     | "/developer"
     | "/invite"
     | "/issue-states"
+    | "/kpi"
     | "/my-work"
     | "/prototype"
     | "/search"
@@ -482,6 +492,7 @@ export interface FileRouteTypes {
     | "/developer"
     | "/invite"
     | "/issue-states"
+    | "/kpi"
     | "/my-work"
     | "/prototype"
     | "/search"
@@ -528,6 +539,7 @@ export interface FileRouteTypes {
     | "/developer"
     | "/invite"
     | "/issue-states"
+    | "/kpi"
     | "/my-work"
     | "/prototype"
     | "/search"
@@ -575,6 +587,7 @@ export interface RootRouteChildren {
   DeveloperRoute: typeof DeveloperRoute;
   InviteRoute: typeof InviteRoute;
   IssueStatesRoute: typeof IssueStatesRoute;
+  KpiRoute: typeof KpiRoute;
   MyWorkRoute: typeof MyWorkRoute;
   PrototypeRoute: typeof PrototypeRoute;
   SearchRoute: typeof SearchRoute;
@@ -651,6 +664,13 @@ declare module "@tanstack/react-router" {
       path: "/issue-states";
       fullPath: "/issue-states";
       preLoaderRoute: typeof IssueStatesRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/kpi": {
+      id: "/kpi";
+      path: "/kpi";
+      fullPath: "/kpi";
+      preLoaderRoute: typeof KpiRouteImport;
       parentRoute: typeof rootRouteImport;
     };
     "/my-work": {
@@ -935,6 +955,7 @@ const rootRouteChildren: RootRouteChildren = {
   DeveloperRoute: DeveloperRoute,
   InviteRoute: InviteRoute,
   IssueStatesRoute: IssueStatesRoute,
+  KpiRoute: KpiRoute,
   MyWorkRoute: MyWorkRoute,
   PrototypeRoute: PrototypeRoute,
   SearchRoute: SearchRoute,
