@@ -3691,7 +3691,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when tests with recorded HID reports cover each mapping.
   Size: M.
 
-- [ ] DEV-005 · Device calibration
+- [x] DEV-005 · Device calibration
   Calibrate dead zones and speed.
   Done when tests confirm calibration values are stored per device.
   Size: S.
