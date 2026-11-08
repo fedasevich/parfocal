@@ -2283,6 +2283,12 @@ The case view becomes the slide view ([ADR 0053](adr/0053-ai-results-review-dire
   Depends on NAV-014.
   Size: M.
 
+- [ ] NAV-016 · Minimap weights in every scene
+  NAV-007 named the minimap weights and tests them on hand-built hot points, but no scene feeds the open thread or the floating cells panel as blocks, and only `ViewerMinimap` holds its corner while panning. Feed every scene's hot points and blocks from the screen state, and hold the corner while panning in the navigator, annotate and focus views too.
+  Done when unit tests build each mock scene's hot points from the scene code and reproduce the mock's placement, and a browser test pans and sees the corner stay.
+  Depends on NAV-007.
+  Size: S.
+
 ---
 
 ## 14 REVIEW · Review workspace
