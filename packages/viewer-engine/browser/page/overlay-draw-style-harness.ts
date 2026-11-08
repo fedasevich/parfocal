@@ -77,6 +77,8 @@ async function render(
   document.body.replaceChildren();
   const canvas = document.createElement("canvas");
   canvas.id = "scene";
+  canvas.width = viewSize;
+  canvas.height = viewSize;
   canvas.style.width = `${viewSize}px`;
   canvas.style.height = `${viewSize}px`;
   canvas.style.display = "block";
