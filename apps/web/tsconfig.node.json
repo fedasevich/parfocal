@@ -6,7 +6,9 @@
     "e2e",
     "playwright.config.ts",
     "playwright.hover.config.ts",
-    "hover-bench/*.ts"
+    "playwright.region.config.ts",
+    "hover-bench/*.ts",
+    "region-bench/*.ts"
   ],
   "compilerOptions": {
     "lib": ["es2024", "dom", "dom.iterable"]

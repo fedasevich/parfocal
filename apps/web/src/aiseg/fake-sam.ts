@@ -115,3 +115,37 @@ export function createFakeReader(slide: {
     },
   };
 }
+
+export interface FakeDisc {
+  readonly x: number;
+  readonly y: number;
+  readonly r: number;
+}
+
+export function fakeAisMaps(
+  width: number,
+  height: number,
+  discs: readonly FakeDisc[],
+): Float32Array {
+  const plane = width * height;
+  const maps = new Float32Array(plane * 3);
+  maps.fill(1, plane);
+  for (const disc of discs) {
+    const top = Math.max(0, Math.floor(disc.y - disc.r));
+    const bottom = Math.min(height - 1, Math.ceil(disc.y + disc.r));
+    const left = Math.max(0, Math.floor(disc.x - disc.r));
+    const right = Math.min(width - 1, Math.ceil(disc.x + disc.r));
+    for (let y = top; y <= bottom; y++) {
+      for (let x = left; x <= right; x++) {
+        const distance = Math.hypot(x - disc.x, y - disc.y);
+        if (distance > disc.r) continue;
+        const index = y * width + x;
+        const depth = distance / disc.r;
+        maps[index] = 1;
+        maps[plane + index] = Math.min(maps[plane + index] ?? 1, depth);
+        maps[plane * 2 + index] = Math.min(maps[plane * 2 + index] ?? 1, depth * 0.8);
+      }
+    }
+  }
+  return maps;
+}
