@@ -71,3 +71,28 @@ test("the area list picks an area, ] steps on from it and the rows mark visits",
     "true",
   );
 });
+
+test("] starts a flight with a route line, a key press cancels it where it is and a second ] skips to the area", async ({
+  page,
+}) => {
+  const nav = await openSlide(page);
+  const travel = page.getByTestId("travel-minimap");
+  await page.keyboard.press("]");
+  await expect(nav).toHaveAttribute("data-current", "T1");
+  await page.keyboard.press("]");
+  await expect(travel).toBeVisible();
+  await expect(travel).toHaveAttribute("data-target", "T2");
+  await expect(travel.locator('[data-slot="map-route"]')).toBeVisible();
+  await page.keyboard.press("ArrowLeft");
+  await expect(travel).toHaveCount(0);
+  const stopped = await magnification(page);
+  await page.waitForTimeout(800);
+  expect(await magnification(page)).toBeCloseTo(stopped, 1);
+
+  await page.keyboard.press("]");
+  await expect(travel).toHaveAttribute("data-target", "T3");
+  await page.keyboard.press("]");
+  await expect(travel).toHaveCount(0);
+  await expect(nav).toHaveAttribute("data-current", "T3");
+  await expect(nav).toHaveAttribute("data-visited", /T3/);
+});
