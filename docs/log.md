@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-08
 
+- SET-008 (notifications section) added the replies, STAT assigned and STAT sound rows, saved channel choices through the notification preferences API, and gated the bell so kinds set to Quiet are hidden and new STAT tasks play a chime. A STAT task is read as task-assigned with priority stat, and the STAT choice and sound stay on the device until the settings API covers them.
 - SET-002 (settings modal shell): Cmd+comma opens Settings, the navigation shows a legend of the three scope badges, and Playwright specs cover closing, navigation and one window size on every section. Moving the screen off the draft getMySettings onto the layered settings moves to SET-013 (settings screen on the layered settings), because many rows are not in the settings catalogue yet.
 - EXP-002 (PHI-free event taxonomy) added nine typed, ids-only analytics events in apps/web/src/telemetry/events.ts with a sink that drops invalid events, a schema test that rejects free text, and five new fields on the shared web and Python scrubbing allow-lists. Nothing emits the events yet.
 - DEV-007 (footswitch mapping) adds a Footswitch device to the controls legend. Its default key is J, the key bound to next cell, and a test checks that the key and the registry match.

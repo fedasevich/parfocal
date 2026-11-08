@@ -3535,7 +3535,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Depends on CMD-001, CMD-006. Refs mock 19, mock 21, mock: settings/conflict, mock: settings/reserved, mock: settings/safety, [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
   Size: M.
 
-- [ ] SET-008 · Notifications section
+- [x] SET-008 · Notifications section
   AI finished, replies, STAT assigned, STAT sound.
   Done when tests confirm the preferences gate notifications.
   Size: S.
