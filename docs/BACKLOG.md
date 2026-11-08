@@ -4182,7 +4182,7 @@ A project holds slides, AI results and review tasks. Cases inside it are optiona
   Depends on PROJ-001. Refs doc 37 "Viewer", mock: case.
   Size: M.
 
-- [ ] PROJ-006 · Project page
+- [x] PROJ-006 · Project page
   A header with the name, privacy tag, members and Upload and New review task, then tabs. Slides lists the slides grouped by case with result sets and reviewers, filters (result set, needs review, no results) and a search, and a row opens the slide with Open shown on hover. Review tasks lists the project's tasks. Settings is PROJ-008. Files dropped anywhere on the page open the upload (INGEST-021).
   Done when component tests cover each tab and filter, and E2E opens a slide from a row and starts an upload by dropping files.
   Depends on PROJ-001, WL-001. Refs mock: project, doc 38 "Project", doc 40 R5.
