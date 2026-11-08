@@ -22,6 +22,7 @@ import { useOverlay } from "./overlays.ts";
 import { useGoTo, useRouterLink } from "./router-link.tsx";
 import { foldedShellRouteIds } from "./shell-routes.ts";
 import { ShellSidebarContext } from "./sidebar-toggle.tsx";
+import { SurveyPrompt } from "./survey-prompt.tsx";
 import { ShellWorkspaceSwitcher, workspaceBrand } from "./workspace-switcher.tsx";
 
 export function personOf(me: Me | undefined): PersonInfo {
@@ -135,6 +136,7 @@ export function GlobalShell({ children }: { children: ReactNode }) {
         <ShellSidebarContext value={{ folded, open: showSide, toggle: () => setNavOpen(!navOpen) }}>
           {children}
         </ShellSidebarContext>
+        <SurveyPrompt />
       </AppShell>
     </JobsTrayProvider>
   );
