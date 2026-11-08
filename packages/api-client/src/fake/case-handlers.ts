@@ -3,6 +3,8 @@ import type {
   CaseDetail,
   SlideDetail,
   SlideDetailsChange,
+  SlideMove,
+  SlideMoved,
   SlideOrder,
   SpecimenDetail,
 } from "../generated/api.ts";
@@ -14,11 +16,20 @@ type SlideEdit = Partial<Pick<SlideDetail, "label" | "stain" | "block_id" | "lev
 
 const slideEdits = new Map<string, SlideEdit>();
 const caseOrders = new Map<string, string[]>();
+const movedFrom = new Map<string, string | null>();
 
 export const resetSlideEdits = () => {
   slideEdits.clear();
   caseOrders.clear();
+  for (const [id, label] of movedFrom) {
+    const slide = slides.find((item) => item.id === id);
+    if (slide !== undefined) slide.caseLabel = label;
+  }
+  movedFrom.clear();
 };
+
+const heldBySignedOffTask = (slide: ScenarioSlide) =>
+  slide.project === "P07" && slide.caseLabel === "S26-04812" && slide.label === "A1";
 
 const problem = (status: number, title: string, code: string) =>
   HttpResponse.json(
@@ -141,6 +152,39 @@ export const caseHandlers = (): RequestHandler[] => [
     if (change.level !== undefined) edit.level = change.level;
     slideEdits.set(slide.id, edit);
     return HttpResponse.json(toSlideDetail(slide));
+  }),
+  http.post<{ slideId: string }>("*/api/slides/:slideId/move", async ({ params, request }) => {
+    const slide = slides.find((item) => item.id === params.slideId);
+    if (slide === undefined) return problem(404, "Slide not found", "not-found");
+    const move = (await request.json()) as SlideMove;
+    const target = cases.find((item) => item.id === move.case_id);
+    if (target === undefined) return problem(404, "Case not found", "not-found");
+    if (target.project !== slide.project)
+      return problem(
+        400,
+        "A slide moves only to another case in its own project",
+        "case-outside-project",
+      );
+    if (target.label === slide.caseLabel)
+      return problem(400, "The slide is already in this case", "slide-already-in-case");
+    if (heldBySignedOffTask(slide))
+      return problem(
+        409,
+        "A task that holds this slide is signed off. An owner can reopen it",
+        "task-signed-off",
+      );
+    const from = caseOfSlide(slide);
+    if (!movedFrom.has(slide.id)) movedFrom.set(slide.id, slide.caseLabel);
+    slide.caseLabel = target.label;
+    const moved: SlideMoved = {
+      slide_id: slide.id,
+      from_case_id: from?.id ?? null,
+      to_case_id: target.id,
+      result_set_ids: [],
+      task_ids: [],
+      block_cleared: false,
+    };
+    return HttpResponse.json(moved);
   }),
   http.put<{ caseId: string }>("*/api/cases/:caseId/slide-order", async ({ params, request }) => {
     const current = slidesOfCase(params.caseId).map((slide) => slide.id);
