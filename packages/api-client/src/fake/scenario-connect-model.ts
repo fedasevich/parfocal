@@ -1,4 +1,4 @@
-import type { TileOutline } from "../draft/get-lab-model-connection.ts";
+import type { TileOutline } from "../generated/api.ts";
 
 export const labServer = {
   address: "https://ml.cuailab.cz/parfocal/infer",

@@ -85,3 +85,53 @@ test("Run a model links to Connect your own model", async ({ page }) => {
   await expect(page).toHaveURL(/\/admin\?scene=addmodel/);
   await expect(page.getByRole("heading", { name: "Where it runs" })).toBeVisible();
 });
+
+test("a stub server is tested with the typed token and connected with its class map", async ({
+  page,
+}) => {
+  const sent: { url: string; body: Record<string, unknown> }[] = [];
+  page.on("request", (request) => {
+    if (request.method() === "POST" && request.url().includes("/api/tenant/models")) {
+      const body = request.postDataJSON() as Record<string, unknown>;
+      sent.push({ url: new URL(request.url()).pathname, body });
+    }
+  });
+  await page.goto("/admin?scene=addmodel");
+  await page.getByRole("textbox", { name: "Address" }).fill("https://stub.example.org/infer");
+  await page.getByLabel("Token").fill("stub-token-7c41");
+  await page.getByRole("button", { name: "Test connection" }).click();
+  await expect(page).toHaveURL(/scene=addtested/);
+  await expect(page.getByText("Follows the contract")).toBeVisible();
+  await page.getByRole("button", { name: "Next: classes and access" }).click();
+  await page.getByRole("combobox", { name: "Class for dead" }).click();
+  await page.getByRole("option", { name: "Leave out of results" }).click();
+  await page.getByRole("button", { name: "Add model" }).click();
+  await expect(page.getByText("Lab HoVer-Net fork v2.1 added.")).toBeVisible();
+  expect(sent.map((call) => call.url.replace(/^.*\/api\//, "/api/"))).toEqual([
+    "/api/tenant/models/test",
+    "/api/tenant/models",
+  ]);
+  expect(sent[0]?.body).toMatchObject({
+    address: "https://stub.example.org/infer",
+    sign_in: "token",
+    secret: "stub-token-7c41",
+    tile_size: 512,
+    magnification: 40,
+  });
+  expect(sent[1]?.body).toMatchObject({
+    name: "Lab HoVer-Net fork",
+    address: "https://stub.example.org/infer",
+    secret: "stub-token-7c41",
+    taxonomy: "sentinel-node",
+  });
+  expect(sent[1]?.body["class_map"]).toContainEqual({ sent: "dead", becomes: null });
+});
+
+test("a stub server that breaks the contract shows the failed test", async ({ page }) => {
+  await page.goto("/admin?scene=addmodel");
+  await page.getByRole("textbox", { name: "Address" }).fill("https://broken.example.org/infer");
+  await page.getByRole("button", { name: "Test connection" }).click();
+  await expect(page).toHaveURL(/scene=addfail/);
+  await expect(page.getByText("38 cells came back without a")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Next: classes and access" })).toBeDisabled();
+});

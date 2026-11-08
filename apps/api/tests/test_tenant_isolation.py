@@ -52,6 +52,8 @@ from parfocal_api.tables import (
     job_steps,
     job_units,
     jobs,
+    lab_model_projects,
+    lab_models,
     legal_holds,
     memberships,
     model_tiers,
@@ -1012,6 +1014,38 @@ async def seed_hidden_models(connection: AsyncConnection, seeded: Seeded) -> Non
     seeded.markers.add(str(user))
 
 
+async def seed_lab_models(connection: AsyncConnection, seeded: Seeded) -> None:
+    marker = f"lab-model-{uuid.uuid4().hex[:10]}"
+    model_id = uuid.uuid5(seeded.tenant_id, "lab-model")
+    await connection.execute(
+        insert(lab_models).values(
+            id=model_id,
+            tenant_id=seeded.tenant_id,
+            name=marker,
+            version="v1",
+            address="https://ml.example.org/infer",
+            sign_in="none",
+            tile_size=512,
+            magnification=40,
+            taxonomy="sentinel-node",
+            class_map=[],
+            who_can_run="admins",
+        )
+    )
+    seeded.ids["lab_model"] = model_id
+    seeded.markers.add(marker)
+
+
+async def seed_lab_model_projects(connection: AsyncConnection, seeded: Seeded) -> None:
+    await connection.execute(
+        insert(lab_model_projects).values(
+            lab_model_id=seeded.ids["lab_model"],
+            project_id=seeded.ids["project"],
+            tenant_id=seeded.tenant_id,
+        )
+    )
+
+
 async def seed_slide_coverage(connection: AsyncConnection, seeded: Seeded) -> None:
     await connection.execute(
         insert(slide_coverage).values(
@@ -1234,6 +1268,8 @@ SEEDERS: dict[str, Seeder] = {
     "site_validations": seed_site_validations,
     "model_tiers": seed_model_tiers,
     "hidden_models": seed_hidden_models,
+    "lab_models": seed_lab_models,
+    "lab_model_projects": seed_lab_model_projects,
     "slide_coverage": seed_slide_coverage,
     "display_presets": seed_display_presets,
     "display_choices": seed_display_choices,
@@ -1502,6 +1538,11 @@ GET_ROUTES = {
     "listSiteValidations": Route(Exposure.TENANT, lambda _: "/api/site-validations"),
     "listModelTiers": Route(Exposure.TENANT, lambda _: "/api/tenant/model-tiers"),
     "listModelVisibility": Route(Exposure.TENANT, lambda _: "/api/tenant/hidden-models"),
+    "getLabModel": Route(
+        Exposure.TENANT,
+        lambda s: f"/api/tenant/models/{s.ids['lab_model']}",
+        admin_rights=True,
+    ),
     "listProjectModels": Route(
         Exposure.PUBLIC, lambda a: f"/api/projects/{a.ids['project']}/models"
     ),
