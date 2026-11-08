@@ -23,6 +23,11 @@ export const allowedFields: ReadonlySet<string> = new Set([
   "release",
   "count",
   "size_bytes",
+  "result_id",
+  "decision",
+  "tool",
+  "task_kind",
+  "area",
 ]);
 
 const minimumSensitiveLength = 3;
