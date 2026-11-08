@@ -4677,7 +4677,7 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Depends on JOBS-003, AIP-011, DS-021. Refs mock: job, doc 41.
   Size: M.
 
-- [ ] JOBS-005 · Connect a lab model
+- [x] JOBS-005 · Connect a lab model
   A researcher with admin rights points Parfocal at the lab's HTTP endpoint (MONAI Label, Triton or any service following the Parfocal contract) with its authentication, tile size and magnification, tests it with a sample tile, maps its classes and chooses who can run it. The endpoint follows the address rules of INGEST-025 when saved and on every call, follows no redirects, keeps its credentials sealed with the tenant data key, and lists the projects that may use it ([threat model](security/threat-model.md) J1 to J3).
   Done when API tests cover a passing and a failing test call and the class map, and E2E connects a stub endpoint.
   Depends on JOBS-001, PROJ-004. Refs mock: admin/addmodel, doc 39.
