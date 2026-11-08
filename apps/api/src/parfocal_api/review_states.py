@@ -39,6 +39,7 @@ from parfocal_api.tables import (
     result_sets,
     review_assignments,
     review_edits,
+    review_skips,
     review_task_slides,
     review_tasks,
     slides,
@@ -273,6 +274,9 @@ async def assignment_rows(connection: AsyncConnection, task_id: uuid.UUID) -> li
                 annotations.c.task_id == task_id
             ),
             select(verdicts.c.slide_id, verdicts.c.user_id).where(verdicts.c.task_id == task_id),
+            select(review_skips.c.slide_id, review_skips.c.user_id).where(
+                review_skips.c.task_id == task_id
+            ),
             select(opinions.c.slide_id, opinions.c.user_id).where(opinions.c.task_id == task_id),
         )
         .subquery()

@@ -17,6 +17,20 @@ depends_on: str | Sequence[str] | None = None
 
 AI_CLASS_KEY = "fk_verdicts_ai_class_id_project_id_project_classes"
 
+BACKFILL_REGION_CALLS = """
+UPDATE verdicts AS v
+SET ai_class_id = called.class_id, ai_score = called.score
+FROM (
+  SELECT s.task_id, s.slide_id, o.number, c.class_id, o.score
+  FROM review_task_slides AS s
+  JOIN result_objects AS o ON o.result_set_id = s.result_set_id AND o.kind = 'region'
+  LEFT JOIN result_set_classes AS c
+    ON c.result_set_id = o.result_set_id AND c.position = o.class_index
+) AS called
+WHERE v.kind = 'region' AND v.task_id = called.task_id AND v.slide_id = called.slide_id
+  AND v.number = called.number
+"""
+
 
 def upgrade() -> None:
     op.add_column("verdicts", sa.Column("ai_class_id", sa.Uuid(), nullable=True))
@@ -29,6 +43,9 @@ def upgrade() -> None:
         ["id", "project_id"],
     )
     op.create_check_constraint("ai_score", "verdicts", "ai_score BETWEEN 0 AND 255")
+    op.execute("ALTER TABLE verdicts DISABLE TRIGGER verdicts_touch_updated_at")
+    op.execute(BACKFILL_REGION_CALLS)
+    op.execute("ALTER TABLE verdicts ENABLE TRIGGER verdicts_touch_updated_at")
     op.create_table(
         "review_skips",
         sa.Column("tenant_id", sa.Uuid[uuid.UUID](), nullable=False, index=True),

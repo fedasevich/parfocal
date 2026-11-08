@@ -820,8 +820,8 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `user_id` | personal |
 | `kind` | operational |
 | `number` | operational |
-| `ai_class_id` | operational |
-| `ai_score` | operational |
+| `ai_class_id` | operational. The AI call at decision time, read from the result set for a region and reported by the reviewer's client for a cell, unchecked against the cell chunks |
+| `ai_score` | operational. The AI call at decision time, read from the result set for a region and reported by the reviewer's client for a cell, unchecked against the cell chunks |
 | `created_at` | operational |
 | `updated_at` | operational |
 
@@ -1219,8 +1219,8 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `reopened_at` | operational |
 | `reopened_note` | phi |
 | `preset` | personal |
-| `ai_class_id` | operational |
-| `ai_score` | operational |
+| `ai_class_id` | operational. The AI call at decision time, read from the result set for a region and reported by the reviewer's client for a cell, unchecked against the cell chunks |
+| `ai_score` | operational. The AI call at decision time, read from the result set for a region and reported by the reviewer's client for a cell, unchecked against the cell chunks |
 | `created_at` | operational |
 | `updated_at` | operational |
 

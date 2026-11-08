@@ -6,7 +6,7 @@ from typing import Annotated, Any
 
 from fastapi import APIRouter, Response
 from pydantic import BaseModel, Field, StringConstraints, model_validator
-from sqlalchemy import case, delete, select, update
+from sqlalchemy import delete, func, select, update
 from sqlalchemy.dialects.postgresql import insert as upsert
 from sqlalchemy.ext.asyncio import AsyncConnection
 
@@ -81,6 +81,16 @@ type Answer = Annotated[str, StringConstraints(strip_whitespace=True, min_length
 
 type Score = Annotated[int, Field(ge=0, le=255)]
 
+REPORTED_CALL = (
+    "The AI call shown when deciding. For a cell the reviewer's client reports it and the API "
+    "checks only that the class is one the result set uses, because cell calls live in the "
+    "result chunks. For a region the API reads it from the result set and ignores this field."
+)
+SAVED_CALL = (
+    "The AI call when the object was first decided, kept for as long as the decision exists. "
+    "Reported by the client for cells and read from the result set for regions."
+)
+
 
 class VerdictDraft(BaseModel):
     answer: Answer | None = None
@@ -89,8 +99,8 @@ class VerdictDraft(BaseModel):
     reasons: list[VerdictReason] = []
     reason_class_id: uuid.UUID | None = None
     note: Note | None = None
-    ai_class_id: uuid.UUID | None = None
-    ai_score: Score | None = None
+    ai_class_id: uuid.UUID | None = Field(default=None, description=REPORTED_CALL)
+    ai_score: Score | None = Field(default=None, description=REPORTED_CALL)
 
     @model_validator(mode="after")
     def reasons_fit_value(self) -> VerdictDraft:
@@ -121,8 +131,8 @@ class Verdict(BaseModel):
     reopened_at: datetime | None = None
     reopened_note: str | None = None
     preset: str | None = None
-    ai_class_id: uuid.UUID | None = None
-    ai_score: int | None = None
+    ai_class_id: uuid.UUID | None = Field(default=None, description=SAVED_CALL)
+    ai_score: int | None = Field(default=None, description=SAVED_CALL)
 
 
 class ReasonNotForAnswerError(BadRequestError):
@@ -232,6 +242,22 @@ async def ai_call(
         if not await connection.scalar(select(used.exists())):
             raise NotASetClassError
     return shown_class_id, shown_score
+
+
+async def lock_object(
+    connection: AsyncConnection,
+    task_id: uuid.UUID,
+    slide_id: uuid.UUID,
+    user_id: uuid.UUID | None,
+    kind: AnnotationKind,
+    number: int,
+) -> None:
+    key = f"review-object:{task_id}:{slide_id}:{user_id}:{kind}:{number}"
+    await connection.execute(select(func.pg_advisory_xact_lock(func.hashtextextended(key, 0))))
+
+
+def ai_details(class_id: uuid.UUID | None, score: int | None) -> dict[str, Any]:
+    return {"ai_class_id": str(class_id) if class_id else None, "ai_score": score}
 
 
 def same_object(
@@ -409,6 +435,7 @@ async def save_verdict(
     await require_judging_allowed(connection, principal, row.project_id, task_id, slide_id)
     found = ai_object(object_id)
     kind = KINDS[found.letter]
+    await lock_object(connection, task_id, slide_id, user_of(principal), kind, found.number)
     style = DecisionStyle(row.decision_style)
     answer = draft.pressed
     answer_in_style(style, answer, draft.answer_class_id)
@@ -427,7 +454,6 @@ async def save_verdict(
     ai_class_id, ai_score = await ai_call(
         connection, row, kind, found.number, draft.ai_class_id, draft.ai_score
     )
-    no_call = verdicts.c.ai_class_id.is_(None) & verdicts.c.ai_score.is_(None)
     previous = (
         await connection.execute(
             select(verdicts.c.reason_class_id).where(
@@ -468,13 +494,7 @@ async def save_verdict(
                 verdicts.c.kind,
                 verdicts.c.number,
             ],
-            set_={
-                **values,
-                "ai_class_id": case(
-                    (no_call, saving.excluded.ai_class_id), else_=verdicts.c.ai_class_id
-                ),
-                "ai_score": case((no_call, saving.excluded.ai_score), else_=verdicts.c.ai_score),
-            },
+            set_=values,
         )
     )
     await connection.execute(
@@ -486,6 +506,13 @@ async def save_verdict(
         await undo_retype(connection, row, me, kind, found.number, previous.reason_class_id)
     if draft.reason_class_id is not None:
         await retype(connection, row, me, kind, found.number, draft.reason_class_id)
+    saved = (
+        await connection.execute(
+            select(verdicts).where(
+                *same_object(verdicts, task_id, slide_id, me, kind, found.number)
+            )
+        )
+    ).one()
     await audit(
         connection,
         principal,
@@ -497,15 +524,9 @@ async def save_verdict(
             "answer": answer,
             "value": value.value,
             "reasons": [reason.value for reason in draft.reasons],
+            **ai_details(saved.ai_class_id, saved.ai_score),
         },
     )
-    saved = (
-        await connection.execute(
-            select(verdicts).where(
-                *same_object(verdicts, task_id, slide_id, me, kind, found.number)
-            )
-        )
-    ).one()
     return verdict_of(saved)
 
 
@@ -527,6 +548,7 @@ async def clear_verdict(
     found = ai_object(object_id)
     kind = KINDS[found.letter]
     me = user_of(principal)
+    await lock_object(connection, task_id, slide_id, me, kind, found.number)
     cleared = (
         await connection.execute(
             delete(verdicts)

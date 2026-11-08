@@ -49366,7 +49366,8 @@
                 "type": "null"
               }
             ],
-            "title": "Ai Class Id"
+            "title": "Ai Class Id",
+            "description": "The AI call shown when deciding. For a cell the reviewer's client reports it and the API checks only that the class is one the result set uses, because cell calls live in the result chunks. For a region the API reads it from the result set and ignores this field."
           },
           "ai_score": {
             "anyOf": [
@@ -49377,7 +49378,8 @@
                 "type": "null"
               }
             ],
-            "title": "Ai Score"
+            "title": "Ai Score",
+            "description": "The AI call shown when deciding. For a cell the reviewer's client reports it and the API checks only that the class is one the result set uses, because cell calls live in the result chunks. For a region the API reads it from the result set and ignores this field."
           },
           "updated_at": {
             "type": "string",
@@ -49408,7 +49410,8 @@
                 "type": "null"
               }
             ],
-            "title": "Ai Class Id"
+            "title": "Ai Class Id",
+            "description": "The AI call shown when deciding. For a cell the reviewer's client reports it and the API checks only that the class is one the result set uses, because cell calls live in the result chunks. For a region the API reads it from the result set and ignores this field."
           },
           "ai_score": {
             "anyOf": [
@@ -49418,7 +49421,8 @@
               {
                 "type": "null"
               }
-            ]
+            ],
+            "description": "The AI call shown when deciding. For a cell the reviewer's client reports it and the API checks only that the class is one the result set uses, because cell calls live in the result chunks. For a region the API reads it from the result set and ignores this field."
           }
         },
         "type": "object",
@@ -53131,7 +53135,8 @@
                 "type": "null"
               }
             ],
-            "title": "Ai Class Id"
+            "title": "Ai Class Id",
+            "description": "The AI call when the object was first decided, kept for as long as the decision exists. Reported by the client for cells and read from the result set for regions."
           },
           "ai_score": {
             "anyOf": [
@@ -53142,7 +53147,8 @@
                 "type": "null"
               }
             ],
-            "title": "Ai Score"
+            "title": "Ai Score",
+            "description": "The AI call when the object was first decided, kept for as long as the decision exists. Reported by the client for cells and read from the result set for regions."
           }
         },
         "type": "object",
@@ -53235,7 +53241,8 @@
                 "type": "null"
               }
             ],
-            "title": "Ai Class Id"
+            "title": "Ai Class Id",
+            "description": "The AI call shown when deciding. For a cell the reviewer's client reports it and the API checks only that the class is one the result set uses, because cell calls live in the result chunks. For a region the API reads it from the result set and ignores this field."
           },
           "ai_score": {
             "anyOf": [
@@ -53245,7 +53252,8 @@
               {
                 "type": "null"
               }
-            ]
+            ],
+            "description": "The AI call shown when deciding. For a cell the reviewer's client reports it and the API checks only that the class is one the result set uses, because cell calls live in the result chunks. For a region the API reads it from the result set and ignores this field."
           }
         },
         "type": "object",

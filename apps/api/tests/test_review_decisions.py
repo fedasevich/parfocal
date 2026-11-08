@@ -218,3 +218,60 @@ def test_reviewed_shapes_are_never_re_typed_by_a_model_afterwards(
     assert api(c.r.people["first"]).delete(f"{c.r.base}/verdicts/T1").status_code == 204
     fresh = decide(api, c, "T1", {"value": "agree"})
     assert (fresh.json()["ai_class_id"], fresh.json()["ai_score"]) == (str(c.stroma), 30)
+
+
+def test_a_reviewer_who_only_skipped_has_started(api: ApiAs, database: str) -> None:
+    c = called(api, database)
+    r = c.r
+    assert skip(api, c, "C1", {"ai_class_id": c.tumor, "ai_score": 7}).status_code == 200
+    slides = api(r.people["owner"]).get(f"/api/review-tasks/{r.task}/states").json()["slides"]
+    by_user = {item["user_id"]: item["state"] for item in slides[0]["reviewers"]}
+    assert by_user[str(r.people["first"].user_id)] == "in-review"
+    task = f"/api/review-tasks/{r.task}"
+    switched = api(r.people["owner"]).patch(task, json={"ai_hidden_first_read": True})
+    assert (switched.status_code, switched.json()["code"]) == (409, "task-started")
+    moved = api(r.people["owner"]).post(
+        f"{task}/reassignments",
+        json={
+            "from_user_id": str(r.people["first"].user_id),
+            "to_user_id": str(r.people["third"].user_id),
+        },
+    )
+    assert (moved.status_code, moved.json()["code"]) == (409, "nothing-to-move")
+    listed = api(r.people["first"]).get(f"{r.base}/skips").json()
+    assert [item["object"] for item in listed] == ["C1"]
+
+
+def test_the_ai_call_is_audited_with_each_decision_and_skip(api: ApiAs, database: str) -> None:
+    c = called(api, database)
+    skip(api, c, "C1", {"ai_class_id": c.tumor, "ai_score": 7})
+    decide(api, c, "C2", {"value": "agree", "ai_class_id": c.tumor, "ai_score": 99})
+    rows = owner(
+        database,
+        "SELECT details::jsonb ->> 'ai_class_id', (details::jsonb ->> 'ai_score')::int "
+        f"FROM audit_events WHERE target_id = '{c.r.task}' AND action IN "
+        "('review.object-skipped', 'review.verdict-set') ORDER BY seq",
+    )
+    assert [tuple(row) for row in rows] == [(c.tumor, 7), (c.tumor, 99)]
+
+
+def test_a_region_decided_before_its_class_was_mapped_keeps_that_call(
+    api: ApiAs, database: str
+) -> None:
+    c = called(api, database)
+    behind_the_triggers(
+        database,
+        f"UPDATE result_set_classes SET class_id = NULL WHERE result_set_id = '{c.r.result_set}';",
+    )
+    decide(api, c, "T1", {"value": "agree"})
+    behind_the_triggers(
+        database,
+        f"UPDATE result_set_classes SET class_id = '{c.r.tumor}' "
+        f"WHERE result_set_id = '{c.r.result_set}';",
+    )
+    again = decide(api, c, "T1", {"value": "agree"})
+    assert (again.json()["ai_class_id"], again.json()["ai_score"]) == (None, 200)
+    decide(api, c, "T2", {"value": "agree"})
+    rows = class_rows(api, c)
+    assert rows["T1"] == ("tumour", "tumour")
+    assert rows["T2"] == ("Tumor", "Tumor")

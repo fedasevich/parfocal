@@ -1901,6 +1901,12 @@ class VerdictReason(StrEnum):
     NEED_SECOND_LOOK = "need_second_look"
 
 
+AI_CALL = {
+    **OPERATIONAL,
+    "note": "The AI call at decision time, read from the result set for a region and reported "
+    "by the reviewer's client for a cell, unchecked against the cell chunks",
+}
+
 verdicts = Table(
     "verdicts",
     metadata,
@@ -1921,8 +1927,8 @@ verdicts = Table(
     Column("reopened_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
     Column("reopened_note", String(500), nullable=True, info=PHI),
     Column("preset", String(40), nullable=True, info=PERSONAL),
-    Column("ai_class_id", Uuid[uuid.UUID](), nullable=True, info=OPERATIONAL),
-    Column("ai_score", SmallInteger, nullable=True, info=OPERATIONAL),
+    Column("ai_class_id", Uuid[uuid.UUID](), nullable=True, info=AI_CALL),
+    Column("ai_score", SmallInteger, nullable=True, info=AI_CALL),
     *timestamps(),
     ForeignKeyConstraint(
         ["task_id", "slide_id", "user_id"],
@@ -1983,8 +1989,8 @@ review_skips = Table(
     Column("user_id", Uuid[uuid.UUID](), primary_key=True, info=PERSONAL),
     Column("kind", String(10), primary_key=True, info=OPERATIONAL),
     Column("number", Integer, primary_key=True, info=OPERATIONAL),
-    Column("ai_class_id", Uuid[uuid.UUID](), nullable=True, info=OPERATIONAL),
-    Column("ai_score", SmallInteger, nullable=True, info=OPERATIONAL),
+    Column("ai_class_id", Uuid[uuid.UUID](), nullable=True, info=AI_CALL),
+    Column("ai_score", SmallInteger, nullable=True, info=AI_CALL),
     *timestamps(),
     ForeignKeyConstraint(
         ["task_id", "slide_id", "user_id"],

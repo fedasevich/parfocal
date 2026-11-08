@@ -4304,13 +4304,17 @@ export interface Skip {
   object: string;
   kind: AnnotationKind;
   number: number;
+  /** The AI call shown when deciding. For a cell the reviewer's client reports it and the API checks only that the class is one the result set uses, because cell calls live in the result chunks. For a region the API reads it from the result set and ignores this field. */
   ai_class_id: string | null;
+  /** The AI call shown when deciding. For a cell the reviewer's client reports it and the API checks only that the class is one the result set uses, because cell calls live in the result chunks. For a region the API reads it from the result set and ignores this field. */
   ai_score: number | null;
   updated_at: string;
 }
 
 export interface SkipDraft {
+  /** The AI call shown when deciding. For a cell the reviewer's client reports it and the API checks only that the class is one the result set uses, because cell calls live in the result chunks. For a region the API reads it from the result set and ignores this field. */
   ai_class_id?: string | null;
+  /** The AI call shown when deciding. For a cell the reviewer's client reports it and the API checks only that the class is one the result set uses, because cell calls live in the result chunks. For a region the API reads it from the result set and ignores this field. */
   ai_score?: Score | null;
 }
 
@@ -4868,7 +4872,9 @@ export interface Verdict {
   reopened_at?: string | null;
   reopened_note?: string | null;
   preset?: string | null;
+  /** The AI call when the object was first decided, kept for as long as the decision exists. Reported by the client for cells and read from the result set for regions. */
   ai_class_id?: string | null;
+  /** The AI call when the object was first decided, kept for as long as the decision exists. Reported by the client for cells and read from the result set for regions. */
   ai_score?: number | null;
 }
 
@@ -4884,7 +4890,9 @@ export interface VerdictDraft {
   reasons?: VerdictReason[];
   reason_class_id?: string | null;
   note?: ParfocalApiVerdictsNote | null;
+  /** The AI call shown when deciding. For a cell the reviewer's client reports it and the API checks only that the class is one the result set uses, because cell calls live in the result chunks. For a region the API reads it from the result set and ignores this field. */
   ai_class_id?: string | null;
+  /** The AI call shown when deciding. For a cell the reviewer's client reports it and the API checks only that the class is one the result set uses, because cell calls live in the result chunks. For a region the API reads it from the result set and ignores this field. */
   ai_score?: Score | null;
 }
 

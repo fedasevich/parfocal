@@ -31,6 +31,7 @@ from parfocal_api.tables import (
     opinions,
     review_assignments,
     review_edits,
+    review_skips,
     review_task_slides,
     task_nudges,
     task_reassignments,
@@ -175,6 +176,9 @@ async def started_slides(
         ),
         select(review_edits.c.slide_id).where(
             review_edits.c.task_id == task_id, review_edits.c.user_id == user_id
+        ),
+        select(review_skips.c.slide_id).where(
+            review_skips.c.task_id == task_id, review_skips.c.user_id == user_id
         ),
         select(opinions.c.slide_id).where(
             opinions.c.task_id == task_id, opinions.c.user_id == user_id

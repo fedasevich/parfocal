@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Any
 
 from fastapi import APIRouter, Response
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy import delete, select
 from sqlalchemy.dialects.postgresql import insert as upsert
 
@@ -14,21 +14,29 @@ from parfocal_api.permissions import Permission, require
 from parfocal_api.problems import BadRequestError, ConflictError
 from parfocal_api.reviewed_layer import KINDS, ai_object, assigned_slide, check_exists, review_slide
 from parfocal_api.tables import AnnotationKind, review_skips, verdicts
-from parfocal_api.verdicts import Score, ai_call, audit, same_object
+from parfocal_api.verdicts import (
+    REPORTED_CALL,
+    Score,
+    ai_call,
+    ai_details,
+    audit,
+    lock_object,
+    same_object,
+)
 from parfocal_common.object_ids import Letter, ObjectId
 
 
 class SkipDraft(BaseModel):
-    ai_class_id: uuid.UUID | None = None
-    ai_score: Score | None = None
+    ai_class_id: uuid.UUID | None = Field(default=None, description=REPORTED_CALL)
+    ai_score: Score | None = Field(default=None, description=REPORTED_CALL)
 
 
 class Skip(BaseModel):
     object: str
     kind: AnnotationKind
     number: int
-    ai_class_id: uuid.UUID | None
-    ai_score: int | None
+    ai_class_id: uuid.UUID | None = Field(description=REPORTED_CALL)
+    ai_score: int | None = Field(description=REPORTED_CALL)
     updated_at: datetime
 
 
@@ -70,6 +78,7 @@ async def skip_object(
     kind = KINDS[found.letter]
     await check_exists(connection, row, found)
     me = user_of(principal)
+    await lock_object(connection, task_id, slide_id, me, kind, found.number)
     decided = select(verdicts).where(
         *same_object(verdicts, task_id, slide_id, me, kind, found.number)
     )
@@ -106,7 +115,7 @@ async def skip_object(
         principal,
         AuditAction.REVIEW_OBJECT_SKIPPED,
         row,
-        {"object": found.text(ascii=True)},
+        {"object": found.text(ascii=True), **ai_details(ai_class_id, ai_score)},
     )
     saved = (
         await connection.execute(
@@ -136,6 +145,7 @@ async def clear_skip(
     found = ai_object(object_id)
     kind = KINDS[found.letter]
     me = user_of(principal)
+    await lock_object(connection, task_id, slide_id, me, kind, found.number)
     cleared = (
         await connection.execute(
             delete(review_skips)

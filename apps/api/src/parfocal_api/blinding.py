@@ -12,6 +12,7 @@ from parfocal_api.tables import (
     opinions,
     review_assignments,
     review_edits,
+    review_skips,
     review_tasks,
     verdicts,
 )
@@ -185,6 +186,7 @@ async def task_started(connection: AsyncConnection, task_id: uuid.UUID) -> bool:
         moved,
         select(verdicts.c.task_id).where(verdicts.c.task_id == task_id),
         select(review_edits.c.task_id).where(review_edits.c.task_id == task_id),
+        select(review_skips.c.task_id).where(review_skips.c.task_id == task_id),
         select(opinions.c.task_id).where(opinions.c.task_id == task_id),
         select(annotations.c.task_id).where(annotations.c.task_id == task_id),
     ]
