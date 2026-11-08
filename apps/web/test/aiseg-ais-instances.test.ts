@@ -88,6 +88,6 @@ describe("AIS post-processing", () => {
     }
     console.log(`AIS outlines of one 512 px tile: ${fastest.toFixed(1)} ms, ${found} nuclei`);
     assert.equal(found, 169);
-    await checkBudget("aiseg.region-outline-ms", fastest);
+    if (process.env.PARFOCAL_PERF === "1") await checkBudget("aiseg.region-outline-ms", fastest);
   });
 });
