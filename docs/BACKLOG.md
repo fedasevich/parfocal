@@ -3550,7 +3550,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Depends on SET-002.
   Size: M.
 
-- [ ] SET-014 · Save the display name
+- [x] SET-014 · Save the display name
   SET-010 lets the user edit their name in Settings, Account, but no endpoint stores it, so the edit is lost when Settings reopens. Add a profile update endpoint for the display name with an audit event, call it from the Account section, and show the new name in the account menu and on report signatures.
   Done when API tests cover the update, its audit event and a refused empty name, and a browser test edits the name and finds it after a reload.
   Depends on SET-010.
