@@ -3717,7 +3717,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when Playwright pointer-type tests confirm a finger never draws in Annotate.
   Size: M.
 
-- [ ] DEV-010 · Bottom sheet interactions
+- [x] DEV-010 · Bottom sheet interactions
   Drag between heights, swipe left for the next cell.
   Done when touch tests cover each gesture.
   Size: S.
