@@ -4,11 +4,12 @@ from typing import Annotated, Literal
 
 from fastapi import APIRouter, Request
 from pydantic import BaseModel, StringConstraints
-from sqlalchemy import insert, update
+from sqlalchemy import exists, insert, select, update
 
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
-from parfocal_api.auth import AUTH_SCOPE, SESSION_COOKIE, digest
+from parfocal_api.auth import SESSION_COOKIE, digest
 from parfocal_api.context import CurrentPrincipal, engine_of
+from parfocal_api.problems import ConflictError, UnauthenticatedError
 from parfocal_api.study_templates import seed_built_ins
 from parfocal_api.tables import (
     Plan,
@@ -25,6 +26,12 @@ from parfocal_api.tables import (
 )
 from parfocal_api.users import Workspace, signed_in
 from parfocal_common.db import DatabaseScope, scoped_transaction
+
+
+class AlreadyAnAdminError(ConflictError):
+    code = "already-an-admin"
+    title = "You already have admin rights on a workspace"
+
 
 router = APIRouter(prefix="/api/me", tags=["me"])
 
@@ -48,9 +55,22 @@ async def create_my_workspace(
     draft: WorkspaceDraft, request: Request, principal: CurrentPrincipal
 ) -> Workspace:
     person = signed_in(principal)
+    session_id = request.cookies.get(SESSION_COOKIE)
+    if not session_id:
+        raise UnauthenticatedError
     slug = slug_of(draft.name)
-    engine = engine_of(request)
-    async with scoped_transaction(engine, DatabaseScope(platform=True)) as connection:
+    tenant_id = uuid.uuid4()
+    scope = DatabaseScope(tenant_id=tenant_id, user_id=person.user_id, platform=True, auth=True)
+    async with scoped_transaction(engine_of(request), scope) as connection:
+        holds_admin_rights = await connection.scalar(
+            select(
+                exists().where(
+                    memberships.c.user_id == person.user_id, memberships.c.admin_rights.is_(True)
+                )
+            )
+        )
+        if holds_admin_rights:
+            raise AlreadyAnAdminError
         organisation_id = (
             await connection.execute(
                 insert(organisations)
@@ -58,20 +78,17 @@ async def create_my_workspace(
                 .returning(organisations.c.id)
             )
         ).scalar_one()
-        tenant_id = (
-            await connection.execute(
-                insert(tenants)
-                .values(
-                    organisation_id=organisation_id,
-                    slug=slug,
-                    name=draft.name,
-                    kind=TenantKind.RESEARCH,
-                    region=Region.EU,
-                    plan=Plan.PILOT,
-                )
-                .returning(tenants.c.id)
+        await connection.execute(
+            insert(tenants).values(
+                id=tenant_id,
+                organisation_id=organisation_id,
+                slug=slug,
+                name=draft.name,
+                kind=TenantKind.RESEARCH,
+                region=Region.EU,
+                plan=Plan.PILOT,
             )
-        ).scalar_one()
+        )
         await seed_built_ins(connection, tenant_id)
         await connection.execute(
             insert(memberships).values(
@@ -81,7 +98,19 @@ async def create_my_workspace(
                 admin_rights=True,
             )
         )
+        await connection.execute(
+            insert(workspace_settings).values(
+                tenant_id=tenant_id, values={"default_privacy_mode": draft.default_privacy_mode}
+            )
+        )
         actor = actor_of(principal)
+        await record(
+            connection,
+            actor,
+            AuditAction.ORGANISATION_CREATED,
+            AuditTarget.ORGANISATION,
+            organisation_id,
+        )
         await record(
             connection,
             actor,
@@ -97,24 +126,14 @@ async def create_my_workspace(
             AuditTarget.PERSON,
             person=person.subject,
             tenant_id=tenant_id,
+            details={"role": Role.RESEARCHER.value, "admin_rights": True},
         )
-    async with scoped_transaction(
-        engine, DatabaseScope(tenant_id=tenant_id, user_id=person.user_id)
-    ) as inside:
-        await inside.execute(
-            insert(workspace_settings).values(
-                tenant_id=tenant_id, values={"default_privacy_mode": draft.default_privacy_mode}
-            )
+        await connection.execute(
+            update(sessions)
+            .where(sessions.c.id_hash == digest(session_id))
+            .values(active_tenant_id=tenant_id)
         )
-    session_id = request.cookies.get(SESSION_COOKIE)
-    async with scoped_transaction(engine, AUTH_SCOPE) as auth:
-        if session_id:
-            await auth.execute(
-                update(sessions)
-                .where(sessions.c.id_hash == digest(session_id))
-                .values(active_tenant_id=tenant_id)
-            )
-        await auth.execute(
+        await connection.execute(
             update(users).where(users.c.id == person.user_id).values(last_tenant_id=tenant_id)
         )
     return Workspace(

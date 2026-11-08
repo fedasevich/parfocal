@@ -31,3 +31,7 @@ Option 1. It keeps the isolation rule as simple as it is today and makes the res
 - Anything shared across an organisation's workspaces, such as SSO (IAM-012) and organisation admins, hangs off `organisations` rather than `tenant_id`.
 - Moving a case from diagnostic to research is a de-identified copy into another tenant, not a flag. TODO when a research task needs it.
 - IAM-002, IAM-005 and IAM-006 were edited to match.
+
+## Update 2026-11-08
+
+First-run setup lets a signed-in person create a workspace for themselves through `POST /api/me/workspaces`. The person becomes a researcher with admin rights on it, and the call also creates the organisation that holds it. To stop one person from creating tenants without limit, the call is refused with 409 and the code `already-an-admin` when the caller already holds admin rights on any workspace. Self-created pilot workspaces get the EU region until residency is chosen ([ADR 0147](0147-cloud-provider-regions-and-pilot-cost.md), cloud provider regions and pilot cost). Every other tenant is still created by platform operators.
