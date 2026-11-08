@@ -1,7 +1,7 @@
-# XXXX. The auto region pass runs the AIS decoder per 512 px tile with a 64 px halo, keeps nuclei by centroid and is gated on TNBC through the TypeScript post-processing
+# 0261. The auto region pass runs the AIS decoder per 512 px tile with a 64 px halo, keeps nuclei by centroid and is gated on TNBC through the TypeScript post-processing
 
 - Date: 2026-11-08
-- Status: Proposed
+- Status: Accepted
 - Deciders: Yurii Fedas (to confirm), proposed by the agent building AISEG-010 (auto region tool)
 - Backlog: AISEG-010 (auto region tool). Builds on [ADR 0246](0246-pathosam-onnx-export-contract.md) (the PathoSAM ONNX export contract), [ADR 0248](0248-detector-runner-stitches-full-resolution-ais-maps.md) (the server detector stitches full AIS maps), [ADR 0250](0250-sam-graph-per-execution-provider.md) (each execution provider loads its own PathoSAM graphs), [ADR 0253](0253-sam-inference-worker.md) (one inference worker) and [ADR 0154](0154-performance-budget-file-and-regression-rule.md) (the performance budget file)
 
