@@ -3430,7 +3430,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   On hold since 2026-11-04. The owner parked compliance, legal, email and pilot paperwork as not worth the time yet. Resume when the owner asks or before the first tenant with real patient data.
   Size: M.
 
-- [ ] AILEARN-001 · Correction capture
+- [x] AILEARN-001 · Correction capture
   Only reviewed decisions with reviewer identity are training data. Plain recolours outside review do not teach.
   Done when tests confirm which events become training examples.
   Refs doc 25.
