@@ -1481,7 +1481,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Done when a result file records the devices, the values tried and the values kept.
   Depends on VIEW-023. Refs [ADR 0113](adr/0113-interaction-signal-units-and-touch-gestures.md).
   Size: S.
-- [ ] VIEW-054 · JPEG 2000 slide in the viewer fixture group
+- [x] VIEW-054 · JPEG 2000 slide in the viewer fixture group
   The real JPEG 2000 goldens and the CMU-1.tiff golden run in browser CI, which needs `CMU-1-JP2K-33005.svs` (132,565,343 bytes) and `CMU-1.tiff` (204,117,846 bytes) in the `viewer` fixture group and its CI cache.
   Done when the `browser` CI job fetches them under the cache key and the goldens run instead of skipping.
   Depends on VIEW-011. Refs [ADR 0111](adr/0111-jpeg-2000-in-the-decode-workers-and-ome-channel-pages.md).
