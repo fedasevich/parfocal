@@ -2085,7 +2085,7 @@ My work replaces the worklist ([ADR 0053](adr/0053-ai-results-review-direction.m
   Depends on WL-001, WL-017. Refs mock: worklist/all.
   Size: M.
 
-- [ ] WL-020 · The API announces worklist changes
+- [x] WL-020 · The API announces worklist changes
   WL-016 refreshes My work and Home when the `user:<id>` realtime room announces `worklist.changed`, but the API never publishes it, so only fake mode updates live. Publish it after a new task, reviewer progress, a finished job and a status change, to every user the change touches, with ids only and no names.
   Done when API tests show each of the four changes publishes to the right user rooms with an ids-only payload, and a failed publish does not fail the request.
   Depends on WL-016.

@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-09
 
+- WL-020 (the API announces worklist changes) publishes worklist.changed with ids only to the user rooms of everyone a change touches, after a new task, an added reviewer, a reassignment or its undo, a slide submit or reopen, a task sign-off, reopen or edit, and a finished ingest job through a new finished-job hook, and a failed publish is logged and never fails the request or job. The ingest worker announces only once ROOM_TOKEN_KEY and REALTIME_INTERNAL_URL are set, ML worker model runs and a reviewer's first edit announce nothing yet.
 - WL-016 (realtime worklist updates) makes My work and Home refresh when the user realtime room announces worklist.changed, loaded lazily from those screens, and fake mode delivers it between tabs over a BroadcastChannel so a two-session E2E sees a new task within 2 s. The API does not publish worklist.changed yet, so the real room sends nothing until WL-020 (the API announces worklist changes).
 - REVIEW-030 (the review screen reads paged results) connected the full viewer, the zone gallery and focus mode to the engine's paged cell reader, behind ?pagedCells=N in the fake API. A browser test on 250,000 synthetic cells generated per chunk checks the fade, a zone, a decision saved with its AI call and focus mode. The zone and jump set is the 1,200 least-sure cells in one field at the slide centre, so only the faded outlines follow the camera, which REVIEW-031 (unsure zones follow the camera on paged results) extends.
 
