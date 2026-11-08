@@ -37,6 +37,7 @@ import { SlideViewers, useProjectViewers } from "../../presence/viewing-now.tsx"
 import { okData } from "../placeholder.tsx";
 import { CaseSlidesEditor } from "./case-slides-editor.tsx";
 import { usePeople } from "./people.ts";
+import { isFiltering, matchesFilters, noFilters, type SlideFilters } from "./slide-filter-model.ts";
 import { SlideMoveDialog } from "./slide-move-dialog.tsx";
 import { moveTitle } from "./slide-move-model.ts";
 
@@ -146,9 +147,25 @@ export function SlidesTab({
   const caseList = okData(useListCases({ project_id: project.id }).data) ?? [];
   const caseIdOf = (label: string) => caseList.find((item) => item.label === label)?.id;
   const owner = project.my_role === "owner";
-  const groups = groupSlides(slides, overview);
-  const isOpen = (group: Group, index: number) =>
-    shut[group.key] === undefined ? index === 0 || group.key === "loose" : !shut[group.key];
+  const [filters, setFilters] = useState<SlideFilters>(noFilters);
+  const filtering = isFiltering(filters);
+  const shown = slides.filter((slide) => matchesFilters(slide, filters));
+  const groups = groupSlides(shown, overview)
+    .map((group) =>
+      filtering
+        ? {
+            ...group,
+            count: group.slides.length,
+            sub: `${group.slides.length} matching slide${group.slides.length === 1 ? "" : "s"}`,
+          }
+        : group,
+    )
+    .filter((group) => !filtering || group.slides.length > 0);
+  const isOpen = (group: Group, index: number) => {
+    if (filtering) return true;
+    if (shut[group.key] === undefined) return index === 0 || group.key === "loose";
+    return !shut[group.key];
+  };
   return (
     <>
       <div className="flex flex-none items-center gap-2.5">
@@ -160,11 +177,14 @@ export function SlidesTab({
           <Input
             aria-label="Filter by slide, file or case"
             placeholder="Filter by slide, file or case"
+            value={filters.query}
+            onChange={(event) => setFilters({ ...filters, query: event.target.value })}
             className="h-7 pl-8 text-caption"
           />
         </div>
         <Select
-          defaultValue="any"
+          value={filters.resultSetId}
+          onValueChange={(value) => setFilters({ ...filters, resultSetId: String(value) })}
           items={[
             { value: "any", label: "Any result set" },
             ...sets.map((set) => ({ value: set.id, label: setName(set) })),
@@ -182,10 +202,16 @@ export function SlidesTab({
             ))}
           </SelectContent>
         </Select>
-        <FilterChip onClick={() => toast("Shows slides with reviews still open (mock)")}>
+        <FilterChip
+          pressed={filters.needsReview}
+          onPressedChange={(needsReview) => setFilters({ ...filters, needsReview })}
+        >
           Needs review <span className="font-mono">{overview?.needs_review ?? 0}</span>
         </FilterChip>
-        <FilterChip onClick={() => toast("Shows slides without any result set (mock)")}>
+        <FilterChip
+          pressed={filters.noResults}
+          onPressedChange={(noResults) => setFilters({ ...filters, noResults })}
+        >
           No results <span className="font-mono">{overview?.no_results ?? 0}</span>
         </FilterChip>
         <span className="flex-1" />
@@ -207,6 +233,13 @@ export function SlidesTab({
             </TableRow>
           </TableHeader>
           <TableBody>
+            {filtering && groups.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={4} className="px-4 py-6 text-center text-fg-dim">
+                  No slides match these filters.
+                </TableCell>
+              </TableRow>
+            ) : null}
             {groups.map((group, index) => {
               const expanded = isOpen(group, index);
               return (
