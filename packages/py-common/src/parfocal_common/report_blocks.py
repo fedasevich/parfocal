@@ -28,12 +28,14 @@ class BlockKind(StrEnum):
     SLIDE_FIGURE = "slide-figure"
     TEXT = "text"
     COMPARISON = "comparison"
+    AI_CHANGES = "ai-changes"
 
 
 type Metric = Literal["sensitivity", "precision", "dice", "kappa", "cell-agreement"]
 type RegionColumn = Literal["sensitivity", "precision", "dice"]
 type AgreementPart = Literal["regions", "cells", "form"]
 type SlideColumn = Literal["objects", "disagreements", "time"]
+type ChangeGroup = Literal["class", "slide"]
 type ChartStyle = Literal["bars", "table"]
 type Layer = Literal["ai", "reviewed"]
 type Download = Literal["pdf", "docx", "html", "decisions", "objects", "geojson", "json"]
@@ -174,6 +176,12 @@ class Comparison(Block):
         return self
 
 
+class ExpertChanges(Block):
+    kind: Literal["ai-changes"]
+    group_by: ChangeGroup = "class"
+    people: StrictBool = True
+
+
 type ReportBlock = Annotated[
     HeadlineNumbers
     | RegionMetrics
@@ -185,7 +193,8 @@ type ReportBlock = Annotated[
     | SlideTable
     | SlideFigure
     | TextBlock
-    | Comparison,
+    | Comparison
+    | ExpertChanges,
     Field(discriminator="kind"),
 ]
 type ReportBlocks = Annotated[list[ReportBlock], Field(max_length=MAX_BLOCKS)]
