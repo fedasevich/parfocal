@@ -26,6 +26,7 @@ from parfocal_api.principals import MemberPrincipal, Principal
 from parfocal_api.problems import ConflictError, ForbiddenError, NotFoundError, ProblemError
 from parfocal_api.project_access import role_in
 from parfocal_api.projects import ProjectArchivedError, visible
+from parfocal_api.realtime import Realtime, RealtimeClient
 from parfocal_api.review_order import unchecked_objects
 from parfocal_api.review_tasks import readable_task
 from parfocal_api.tables import (
@@ -45,6 +46,7 @@ from parfocal_api.tables import (
     slides,
     verdicts,
 )
+from parfocal_api.worklist_events import announce_worklist, task_people
 
 
 class State(StrEnum):
@@ -408,6 +410,7 @@ async def review_move(
     task_id: uuid.UUID,
     slide_id: uuid.UUID,
     move: Move,
+    announced: tuple[BackgroundTasks, Realtime],
 ) -> TaskStates:
     task = await task_of(connection, task_id)
     await readable_task(connection, principal, task_id)
@@ -439,6 +442,15 @@ async def review_move(
         )
         .values(submitted_at=func.now() if move is Move.SUBMIT else None)
     )
+    background, live = announced
+    announce_worklist(
+        background,
+        live,
+        task.tenant_id,
+        [user_of(principal), task.created_by_user_id],
+        task=task_id,
+        slide=slide_id,
+    )
     return await states_of(connection, await task_of(connection, task_id))
 
 
@@ -467,8 +479,12 @@ async def submit_slide_review(
     slide_id: uuid.UUID,
     principal: CurrentPrincipal,
     connection: TenantConnection,
+    background: BackgroundTasks,
+    live: RealtimeClient,
 ) -> TaskStates:
-    return await review_move(connection, principal, task_id, slide_id, Move.SUBMIT)
+    return await review_move(
+        connection, principal, task_id, slide_id, Move.SUBMIT, (background, live)
+    )
 
 
 @router.post(
@@ -481,8 +497,12 @@ async def reopen_slide_review(
     slide_id: uuid.UUID,
     principal: CurrentPrincipal,
     connection: TenantConnection,
+    background: BackgroundTasks,
+    live: RealtimeClient,
 ) -> TaskStates:
-    return await review_move(connection, principal, task_id, slide_id, Move.REOPEN_REVIEW)
+    return await review_move(
+        connection, principal, task_id, slide_id, Move.REOPEN_REVIEW, (background, live)
+    )
 
 
 async def task_move(
@@ -520,6 +540,7 @@ async def sign_off_review_task(
     connection: TenantConnection,
     http: Request,
     background: BackgroundTasks,
+    live: RealtimeClient,
     confirmation: SignOffConfirmation | None = None,
 ) -> TaskStates:
     task = await task_move(connection, principal, task_id, Move.SIGN_OFF)
@@ -539,6 +560,9 @@ async def sign_off_review_task(
         tenant_id=task.tenant_id,
         details={"version": number, "confirmed_with": confirmed_with},
     )
+    announce_worklist(
+        background, live, task.tenant_id, await task_people(connection, task_id), task=task_id
+    )
     return await states_of(connection, await task_of(connection, task_id))
 
 
@@ -550,7 +574,12 @@ async def reopen_review_task(
     draft: VersionDraft,
     principal: CurrentPrincipal,
     connection: TenantConnection,
+    background: BackgroundTasks,
+    live: RealtimeClient,
 ) -> TaskStates:
-    await task_move(connection, principal, task_id, Move.REOPEN_TASK)
+    task = await task_move(connection, principal, task_id, Move.REOPEN_TASK)
     await start_next_version(connection, principal, task_id, draft.reason)
+    announce_worklist(
+        background, live, task.tenant_id, await task_people(connection, task_id), task=task_id
+    )
     return await states_of(connection, await task_of(connection, task_id))

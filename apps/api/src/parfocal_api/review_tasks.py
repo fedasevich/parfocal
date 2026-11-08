@@ -38,6 +38,7 @@ from parfocal_api.principals import MemberPrincipal, Principal
 from parfocal_api.problems import BadRequestError, ConflictError, NotFoundError
 from parfocal_api.project_access import project_grant, reads_whole
 from parfocal_api.projects import ProjectArchivedError, owned, visible
+from parfocal_api.realtime import RealtimeClient
 from parfocal_api.review_order import Results, clear_order, store_order, stored_seeds
 from parfocal_api.tables import (
     AnalysisTemplate,
@@ -64,6 +65,7 @@ from parfocal_api.tables import (
 from parfocal_api.task_notices import tell_due_changed
 from parfocal_api.taxonomy import ProjectClass, classes_of
 from parfocal_api.verdicts import recount
+from parfocal_api.worklist_events import announce_worklist, task_people
 from parfocal_common.scope import Scope as SamplingScope
 from parfocal_common.scope import ScopeKind
 
@@ -841,6 +843,8 @@ async def create_review_task(
     principal: CurrentPrincipal,
     connection: TenantConnection,
     results: Results,
+    live: RealtimeClient,
+    background: BackgroundTasks,
 ) -> ReviewTaskDetail:
     project = await owned(connection, principal, project_id)
     if project.archived_at is not None:
@@ -984,6 +988,9 @@ async def create_review_task(
             }
         ),
     )
+    announce_worklist(
+        background, live, project.tenant_id, await task_people(connection, task_id), task=task_id
+    )
     return await detail_of(connection, principal, await task_row(connection, task_id), True)
 
 
@@ -1043,6 +1050,7 @@ async def change_review_task(
     results: Results,
     http: Request,
     background: BackgroundTasks,
+    live: RealtimeClient,
 ) -> ReviewTaskDetail:
     row = await task_row(connection, task_id)
     project = await owned(connection, principal, row.project_id)
@@ -1148,4 +1156,7 @@ async def change_review_task(
     if "due_on" in values and values["due_on"] != row.due_on:
         await tell_due_changed(connection, row, values["due_on"])
         background.add_task(deliver_after_commit, http.app, row.tenant_id)
+    announce_worklist(
+        background, live, row.tenant_id, await task_people(connection, task_id), task=task_id
+    )
     return await detail_of(connection, principal, await task_row(connection, task_id), True)

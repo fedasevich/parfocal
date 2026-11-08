@@ -4,6 +4,10 @@ import os
 import socket
 import uuid
 
+import httpx2
+
+from parfocal_api.realtime import NoRealtime, RealtimeSettings, realtime_for
+from parfocal_api.worklist_events import job_announcer
 from parfocal_common.db import create_engine
 from parfocal_common.jobs import load_workflow, work
 from parfocal_common.structured_logging import configure_logging
@@ -32,6 +36,8 @@ async def main() -> None:
     configure_logging("ingest", os.environ.get("APP_ENV", "dev"))
     engine = create_engine(arguments.database_url)
     workflows = [load_workflow(path) for path in arguments.workflow or DEFAULT_WORKFLOWS]
+    http = httpx2.AsyncClient(timeout=5)
+    live = realtime_for(RealtimeSettings(), http)
     try:
         await work(
             engine,
@@ -40,8 +46,10 @@ async def main() -> None:
             arguments.idle_exit,
             arguments.poll,
             arguments.workspace,
+            None if isinstance(live, NoRealtime) else job_announcer(engine, live),
         )
     finally:
+        await http.aclose()
         await engine.dispose()
 
 

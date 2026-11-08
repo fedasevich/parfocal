@@ -1,7 +1,7 @@
 import uuid
 from dataclasses import dataclass
 
-from fastapi import APIRouter, Response
+from fastapi import APIRouter, BackgroundTasks, Response
 from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncConnection
 
@@ -22,6 +22,7 @@ from parfocal_api.projects import (
     owned,
     project_of,
 )
+from parfocal_api.realtime import NoRealtime
 from parfocal_api.result_sets import (
     RegionRow,
     ResultSetDraft,
@@ -183,6 +184,8 @@ async def seed(
         principal,
         connection,
         results,
+        NoRealtime(),
+        BackgroundTasks(),
     )
     await audit(
         connection,
