@@ -3544,7 +3544,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Refs [ADR 0021](adr/0021-chosen-home-worklist-status-board-and-account-menu.md).
   Size: M.
 
-- [ ] SET-013 · Settings screen on the layered settings
+- [x] SET-013 · Settings screen on the layered settings
   SET-002 built the modal shell but left the screen on the draft `getMySettings`. Add the missing rows to the settings catalogue and the generated TypeScript (language, presets, signature, panel width, double-click, model warnings, hide panel, notice channel, shortcuts), move the screen onto `getMySettingLayers`, `setMySettingLayers` and `resolveSettings` of SET-001 (settings storage and resolution), and delete the draft and its handler.
   Done when API tests cover the new catalogue rows, a browser test changes a setting and reloads to find it, and no code calls `getMySettings`.
   Depends on SET-002.
