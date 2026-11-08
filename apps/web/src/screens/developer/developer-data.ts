@@ -2,25 +2,13 @@ import type { DeveloperNavGroup, HudBox } from "@parfocal/ui/components/develope
 import { benchmarkColumns } from "../../lab/pan-sweep.ts";
 import { sampleCatalogue } from "../../lab/synthetic-data.ts";
 import type { SceneOf } from "../scenes.ts";
+import { developerSectionKeys, rendererKeys } from "./developer-keys.ts";
+
+export { developerSectionKeys, rendererKeys };
 
 export type DeveloperScene = SceneOf<"developer">;
 
-export const developerSectionKeys = [
-  "renderer",
-  "tiles",
-  "annot",
-  "heatmap",
-  "models",
-  "typing",
-  "job",
-  "bench",
-  "hud",
-  "ref",
-] as const;
-
 export type DeveloperSection = (typeof developerSectionKeys)[number];
-
-export const rendererKeys = ["viv", "webgpu", "deck"] as const;
 
 export type Renderer = (typeof rendererKeys)[number];
 
