@@ -52,6 +52,7 @@ import { areaRoleText, areaRows } from "../screens/viewer/area-nav.ts";
 import { annotateRail } from "../screens/viewer-tools/rails.ts";
 import { useDeveloperMode } from "../shell/developer-mode.ts";
 import { readDeviceSettings } from "../shell/device-settings.ts";
+import { useToolsLayout } from "../shell/tools-layout.ts";
 import { AnnotateTaskPanel } from "./annotate-task-panel.tsx";
 import { followLabPrefetch, labRouteOptions } from "./lab-route.ts";
 import { loadViewerEngine } from "./load-engine.ts";
@@ -333,6 +334,7 @@ function OpenedSlide({
   } | null>(null);
   const developerMode = useDeveloperMode();
   const [brightness, setBrightness] = useSlideBrightness();
+  const toolsLayout = useToolsLayout();
   const chosenDevice = useMemo(() => readDeviceSettings().device, []);
   const [outlineMode, setOutlineMode] = useOutlineMode();
   const sharedTaskId = annotateTask?.taskId ?? null;
@@ -535,6 +537,7 @@ function OpenedSlide({
         data-fitted-ms={phase.state === "ready" ? Math.round(phase.fittedMs) : undefined}
         data-tool={tool}
         data-workspace={workspace}
+        data-tools={toolsLayout}
         data-layer={sharedTaskId === null ? "slide" : "shared"}
         data-drag={setup.dragBehaviour}
         data-annotations={saved.loaded ? "loaded" : "loading"}
@@ -692,11 +695,22 @@ function OpenedSlide({
                 }
               />
             ) : null}
-            <div className="absolute top-4 left-4 flex flex-col rounded-ctl border border-line bg-chrome">
+            <div
+              data-slot="stage-tools"
+              className={
+                toolsLayout === "dock"
+                  ? "absolute bottom-3.5 left-1/2 z-6 flex -translate-x-1/2 rounded-zone border border-line bg-chrome p-1.25 shadow-pop"
+                  : "absolute top-4 left-4 flex flex-col rounded-ctl border border-line bg-chrome"
+              }
+            >
               {setup.rail.map((group) => (
                 <div
                   key={group.map((item) => item.tool).join("-")}
-                  className="flex flex-col border-b border-line last:border-b-0"
+                  className={
+                    toolsLayout === "dock"
+                      ? "flex border-r border-line px-1 last:border-r-0"
+                      : "flex flex-col border-b border-line last:border-b-0"
+                  }
                 >
                   {group.map((item) => {
                     const stageTool = stageToolOf(item.tool);
@@ -705,6 +719,7 @@ function OpenedSlide({
                         key={item.tool}
                         icon={item.icon}
                         label={item.label}
+                        tipSide={toolsLayout === "dock" ? "top" : "right"}
                         ai={item.ai ?? false}
                         {...(item.action === undefined ? {} : { action: item.action })}
                         data-tool={item.tool}
@@ -798,7 +813,10 @@ function OpenedSlide({
           <ScanKeys session={session} host={hostNode} tissue={coverage?.tissue ?? null} />
         ) : null}
         {session ? (
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
+          <div
+            data-slot="stage-magnification"
+            className="absolute bottom-4 left-1/2 -translate-x-1/2"
+          >
             <MagnificationControl
               engine={session.engine}
               units={session.module}

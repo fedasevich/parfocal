@@ -97,3 +97,33 @@
     min-height: 52px;
   }
 }
+
+[data-tools="dock"] [data-slot="context-bar"] {
+  top: 4.5rem;
+}
+
+[data-tools="dock"]
+  :is(:has(> [data-slot="magnification-bar"]), [data-slot="stage-magnification"]) {
+  bottom: 5.25rem;
+}
+
+[data-slot="tool-rail"][data-layout="dock"] [data-slot="tool-rail-group"] {
+  width: auto;
+  flex-direction: row;
+  border-bottom: 0;
+  border-right: 1px solid var(--line);
+  padding: 0 4px;
+}
+
+[data-slot="tool-rail"][data-layout="dock"] [data-slot="tool-rail-group"]:last-of-type {
+  border-right: 0;
+}
+
+@media (pointer: coarse) {
+  [data-testid="full-viewer"] [data-slot="tool-rail"][data-layout="dock"] {
+    top: auto;
+    bottom: 14px;
+    left: 50%;
+    padding: 6px;
+  }
+}

@@ -12,6 +12,7 @@ type ToolRailButtonProps = Omit<TogglePrimitive.Props, "children"> & {
   action?: string;
   ai?: boolean;
   state?: "hover";
+  tipSide?: "right" | "top";
 };
 
 function ToolRailButton({
@@ -21,6 +22,7 @@ function ToolRailButton({
   action,
   ai = false,
   state,
+  tipSide = "right",
   className,
   ...props
 }: ToolRailButtonProps) {
@@ -54,7 +56,7 @@ function ToolRailButton({
           </span>
         ) : null}
       </TooltipTrigger>
-      <TooltipContent side="right">
+      <TooltipContent side={tipSide}>
         {label}
         {keyHint ? ` · ${keyHint}` : ""}
       </TooltipContent>
@@ -62,15 +64,22 @@ function ToolRailButton({
   );
 }
 
-function ToolRail({ className, ...props }: React.ComponentProps<"div">) {
+function ToolRail({
+  className,
+  layout = "rail",
+  ...props
+}: React.ComponentProps<"div"> & { layout?: "rail" | "dock" }) {
   return (
     <div
       data-slot="tool-rail"
+      data-layout={layout}
       role="toolbar"
-      aria-orientation="vertical"
+      aria-orientation={layout === "dock" ? "horizontal" : "vertical"}
       aria-label="Tools"
       className={cn(
-        "flex w-13 flex-col items-center gap-0.5 border-r border-line bg-chrome py-2",
+        layout === "dock"
+          ? "absolute bottom-3.5 left-1/2 z-6 flex -translate-x-1/2 items-center gap-0.5 rounded-zone border border-line bg-chrome p-1.25 shadow-pop"
+          : "flex w-13 flex-col items-center gap-0.5 border-r border-line bg-chrome py-2",
         className,
       )}
       {...props}
