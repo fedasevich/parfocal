@@ -84,6 +84,7 @@ async def holding_tasks(connection: AsyncConnection, slide_id: uuid.UUID) -> lis
             .join(review_tasks, review_tasks.c.id == review_task_slides.c.task_id)
             .where(review_task_slides.c.slide_id == slide_id)
             .order_by(review_tasks.c.id)
+            .with_for_update()
         )
     ).all()
     if any(row.signed_off_at is not None or row.slide_signed_off_at is not None for row in held):
