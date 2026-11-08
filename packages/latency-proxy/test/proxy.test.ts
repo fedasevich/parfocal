@@ -55,7 +55,7 @@ describe("added round-trip time", () => {
       const sample = await measureAddedLatency(
         `${origin.url}/bytes/1024`,
         `${proxy.url}/bytes/1024`,
-        5,
+        15,
       );
       const tolerance = latencyToleranceMs(rttMs);
       const best = sample.proxiedMinMs - sample.directMinMs;
