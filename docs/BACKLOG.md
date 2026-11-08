@@ -2852,7 +2852,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Done when the linking model (pan, zoom, rotation, manual offset) is written as an ADR.
   Size: S.
 
-- [ ] CMP-001 · Split viewer layouts
+- [x] CMP-001 · Split viewer layouts
   1, 2 side by side, 2 stacked, 4.
   Done when golden tests cover each layout and the memory test passes with four viewers.
   Size: M.
