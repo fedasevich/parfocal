@@ -11,6 +11,7 @@ import { useEffect } from "react";
 import { now } from "../../clock.ts";
 import { destinations } from "../../shell/destinations.ts";
 import { useGoTo } from "../../shell/router-link.tsx";
+import { useWorklistLive } from "../../worklist-live/use-worklist-live.ts";
 import { formatLongDay, plural } from "../format.ts";
 import { okData } from "../placeholder.tsx";
 import { AllSlidesTab } from "./all-slides-tab.tsx";
@@ -45,6 +46,7 @@ export function MyWorkScreen({
   const assigned = okData(useListTasksAssignedByMe().data) ?? [];
   const slides = okData(useListMySlides(slideQuery(state.filters, state.q)).data)?.slides ?? [];
   const me = okData(useGetMe().data);
+  useWorklistLive(me?.user_id);
   const everySlide = okData(useListMySlides().data)?.slides ?? [];
   const active = activeTasks(tasks);
   const resume = okData(useGetMyHome().data)?.resume ?? null;
