@@ -51,6 +51,20 @@ export function displaySettings(
   };
 }
 
+export function withOverrides(
+  base: DisplaySettings,
+  overrides: Partial<DisplaySettings>,
+  display: TaskDisplay | undefined,
+  extra: DisplayLock[] = [],
+): DisplaySettings {
+  const locked = new Set([
+    ...(display?.locks ?? []).map((lock) => lock.setting),
+    ...extra.map((lock) => lock.setting),
+  ]);
+  const allowed = Object.entries(overrides).filter(([key]) => !locked.has(key));
+  return { ...base, ...Object.fromEntries(allowed) };
+}
+
 type DisplayTabProps = {
   display: TaskDisplay | undefined;
   preset: string | null;
@@ -63,6 +77,9 @@ type DisplayTabProps = {
   onPresetPick?: (name: string | null) => void;
   onSaveAs?: () => void;
   idLabels?: { on: boolean; onChange: (on: boolean) => void };
+  overrides?: Partial<DisplaySettings>;
+  onSettingChange?: (key: keyof DisplaySettings, value: string | number | boolean) => void;
+  classVisibility?: ReactNode;
 };
 
 export function DisplayTab({
@@ -77,8 +94,16 @@ export function DisplayTab({
   onPresetPick,
   onSaveAs,
   idLabels,
+  overrides = {},
+  onSettingChange,
+  classVisibility,
 }: DisplayTabProps) {
-  const picked = displaySettings(display, preset, extraLocks, confidence);
+  const picked = withOverrides(
+    displaySettings(display, preset, extraLocks, confidence),
+    overrides,
+    display,
+    extraLocks,
+  );
   const settings = idLabels ? { ...picked, ids: idLabels.on } : picked;
   return (
     <div className="grid gap-3">
@@ -93,6 +118,8 @@ export function DisplayTab({
         viewer={viewer}
         resultSets={resultSets}
         after={after}
+        classVisibility={classVisibility}
+        {...(onSettingChange ? { onSettingChange } : {})}
         {...(idLabels ? { onIdsChange: idLabels.onChange } : {})}
         preset={{
           current: preset ?? "Task default",

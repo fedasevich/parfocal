@@ -107,16 +107,20 @@ function displaySummary(zone: "draw" | "ai" | "move", settings: DisplaySettings)
   return `${word("order", settings.order)} · ${settings.zoom} · ${settings.auto ? "moves on by itself" : "stays after an answer"}`;
 }
 
+type SettingChange = (key: keyof DisplaySettings, value: string | number | boolean) => void;
+
 function SegRow({
   label,
   name,
   value,
   lock,
+  onChange,
 }: {
   label: string;
   name: string;
   value: string;
   lock?: Lock | undefined;
+  onChange?: SettingChange | undefined;
 }) {
   return (
     <ControlRow label={label} locked={lock}>
@@ -125,7 +129,13 @@ function SegRow({
           aria-labelledby={labelId}
           fill
           wrap={name === "order"}
-          defaultValue={value}
+          {...(onChange
+            ? {
+                value,
+                onValueChange: (next: unknown) =>
+                  onChange(name as keyof DisplaySettings, String(next)),
+              }
+            : { defaultValue: value })}
           options={displayOptions[name] ?? []}
         />
       )}
@@ -141,6 +151,7 @@ function RangeRow({
   step,
   format,
   help,
+  onChange,
 }: {
   label: string;
   value: number;
@@ -149,6 +160,7 @@ function RangeRow({
   step: number;
   format: (value: number) => string;
   help?: string;
+  onChange?: ((value: number) => void) | undefined;
 }) {
   return (
     <ControlRow label={label} help={help}>
@@ -156,7 +168,13 @@ function RangeRow({
         <span className="flex items-center gap-3">
           <Slider
             className="w-60"
-            defaultValue={value}
+            {...(onChange
+              ? {
+                  value,
+                  onValueChange: (next: number | readonly number[]) =>
+                    onChange(typeof next === "number" ? next : (next[0] ?? value)),
+                }
+              : { defaultValue: value })}
             min={min}
             max={max}
             step={step}
@@ -293,6 +311,8 @@ type DisplayPanelProps = React.ComponentProps<"div"> & {
   resultSets?: React.ReactNode;
   after?: React.ReactNode;
   onIdsChange?: (on: boolean) => void;
+  onSettingChange?: SettingChange;
+  classVisibility?: React.ReactNode;
 };
 
 function DisplayPanel({
@@ -304,6 +324,8 @@ function DisplayPanel({
   resultSets,
   after,
   onIdsChange,
+  onSettingChange: onChange,
+  classVisibility,
   className,
   ...props
 }: DisplayPanelProps) {
@@ -317,8 +339,20 @@ function DisplayPanel({
         summary={displaySummary("draw", settings)}
         defaultOpen={!folded.includes("draw")}
       >
-        <SegRow label="Draw as" name="draw" value={settings.draw} lock={locks.draw} />
-        <SegRow label="Width" name="width" value={settings.width} lock={locks.width} />
+        <SegRow
+          label="Draw as"
+          name="draw"
+          value={settings.draw}
+          lock={locks.draw}
+          onChange={onChange}
+        />
+        <SegRow
+          label="Width"
+          name="width"
+          value={settings.width}
+          lock={locks.width}
+          onChange={onChange}
+        />
         <RangeRow
           label="Opacity"
           value={settings.opacity}
@@ -326,14 +360,22 @@ function DisplayPanel({
           max={100}
           step={10}
           format={(value) => `${value}%`}
+          onChange={onChange && ((value) => onChange("opacity", value))}
         />
-        <SegRow label="Color by" name="colorBy" value={settings.colorBy} lock={locks.colorBy} />
+        <SegRow
+          label="Color by"
+          name="colorBy"
+          value={settings.colorBy}
+          lock={locks.colorBy}
+          onChange={onChange}
+        />
         <SwitchRow
           label="ID labels"
           sub="The ID tags on the slide"
           checked={settings.ids}
           onChange={onIdsChange}
         />
+        {classVisibility}
       </FoldingZone>
       <FoldingZone
         title="What the AI shows"
@@ -345,6 +387,7 @@ function DisplayPanel({
           name="confidence"
           value={settings.confidence}
           lock={locks.confidence}
+          onChange={onChange}
         />
         <RangeRow
           label="Heatmap"
@@ -362,6 +405,7 @@ function DisplayPanel({
           step={0.05}
           format={(value) => value.toFixed(2)}
           help="Objects under it draw dashed and faint"
+          onChange={onChange && ((value) => onChange("cutoff", value))}
         />
         {resultSets ? (
           <div className="grid gap-2">

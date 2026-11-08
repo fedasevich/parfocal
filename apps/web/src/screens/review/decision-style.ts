@@ -4,7 +4,12 @@ import {
   type DecisionAnswer,
   type ProjectClass,
 } from "@parfocal/ui/lib/decision-answers";
-import { type ReviewConfidence, sureText } from "./ai-wording.ts";
+import {
+  type ConfidenceChip,
+  confidenceChip,
+  type ReviewConfidence,
+  sureText,
+} from "./ai-wording.ts";
 import type { Count, ReviewStyle } from "./decision-mapping.ts";
 
 export * from "./decision-mapping.ts";
@@ -42,6 +47,7 @@ export type CardText = {
   above: string | null;
   question: string;
   context: string | null;
+  chip: ConfidenceChip | null;
 };
 
 export function cardText(
@@ -58,6 +64,10 @@ export function cardText(
       ? `It could be ${object.other_class.toLowerCase()}.`
       : null;
   const context = cell ? other : size;
+  const chip =
+    style.kind === "certainty" || style.kind === "agree"
+      ? confidenceChip(object, confidence)
+      : null;
   if (style.kind === "certainty") {
     const claim = cell
       ? `${object.class_name} cell${sure}.${other ? ` ${other}` : ""}`
@@ -69,6 +79,7 @@ export function cardText(
         ? `How sure are you that this is ${anA(cls)} ${cls} cell?`
         : `How sure are you that ${object.object} is ${cls}?`,
       context: null,
+      chip,
     };
   }
   if (style.kind === "agree") {
@@ -79,6 +90,7 @@ export function cardText(
         ? `The AI says this is ${anA(cls)} ${cls} cell${sure}.`
         : `The AI says ${object.object} is ${cls}${sure}.`,
       context: confidence === "color" ? `Confidence as a color · ${context ?? ""}` : context,
+      chip,
     };
   }
   if (style.kind === "yesno") {
@@ -87,6 +99,7 @@ export function cardText(
       above: null,
       question: style.question ?? "Is this tumor?",
       context: null,
+      chip: null,
     };
   }
   return {
@@ -94,6 +107,7 @@ export function cardText(
     above: null,
     question: cell ? "What is this cell?" : `What is ${object.object}?`,
     context: null,
+    chip: null,
   };
 }
 

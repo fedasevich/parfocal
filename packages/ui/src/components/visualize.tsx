@@ -6,6 +6,7 @@ import {
   DropdownMenuTrigger,
 } from "@parfocal/ui/components/dropdown-menu";
 import { Icon, type IconName } from "@parfocal/ui/components/icon";
+import { Keycap } from "@parfocal/ui/components/keycap";
 import { Switch } from "@parfocal/ui/components/switch";
 import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
@@ -58,6 +59,64 @@ function VizKey({ color, label, count, className, ...props }: VizKeyProps) {
       />
       <span className="flex-1">{label}</span>
       {count === undefined ? null : <b className="font-mono font-semibold text-fg">{count}</b>}
+    </div>
+  );
+}
+
+type ClassVisibilityRow = {
+  name: string;
+  color: string;
+  count: number;
+  visible: boolean;
+  key?: string | undefined;
+};
+
+type ClassVisibilityProps = Omit<React.ComponentProps<"div">, "onChange" | "onToggle"> & {
+  rows: ClassVisibilityRow[];
+  onVisibleChange?: (name: string, visible: boolean) => void;
+};
+
+function ClassVisibility({ rows, onVisibleChange, className, ...props }: ClassVisibilityProps) {
+  const toggleByKey = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.ctrlKey || event.metaKey || event.altKey) return;
+    const row = rows.find((item) => item.key === event.key);
+    if (!row) return;
+    event.preventDefault();
+    onVisibleChange?.(row.name, !row.visible);
+  };
+  return (
+    <div
+      data-slot="class-visibility"
+      role="group"
+      aria-label="Show or hide a class"
+      className={cn("grid gap-1.5", className)}
+      onKeyDown={toggleByKey}
+      {...props}
+    >
+      {rows.map((row) => (
+        <label
+          key={row.name}
+          data-class={row.name}
+          className={cn(
+            "flex cursor-pointer items-center gap-2.5 text-body-sm text-fg-dim",
+            !row.visible && "opacity-60",
+          )}
+        >
+          <i
+            aria-hidden="true"
+            className="size-3 shrink-0 rounded-[3px]"
+            style={{ background: row.color }}
+          />
+          <span className="flex-1 text-fg">{row.name}</span>
+          <b className="font-mono font-semibold text-fg">{row.count.toLocaleString("en-US")}</b>
+          {row.key ? <Keycap keys={row.key} size="sm" /> : null}
+          <Switch
+            aria-label={`Show ${row.name}`}
+            checked={row.visible}
+            onCheckedChange={(on) => onVisibleChange?.(row.name, on)}
+          />
+        </label>
+      ))}
     </div>
   );
 }
@@ -405,6 +464,9 @@ export {
   AiRunningSteps,
   type AiStep,
   ClassCounts,
+  ClassVisibility,
+  type ClassVisibilityProps,
+  type ClassVisibilityRow,
   type ResultSetRowItem,
   ResultSetRows,
   ScoreHistogram,
