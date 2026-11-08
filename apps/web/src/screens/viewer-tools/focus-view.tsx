@@ -9,6 +9,7 @@ import { answersOf, countsAs, countWord } from "../review/decision-style.ts";
 import { type Camera, SlideStill } from "../review/slide-still.tsx";
 import { useDecisionSaves } from "../review/use-decision-saves.ts";
 import { lookUrl } from "../thumbnails.ts";
+import { CellFocus } from "./cell-focus.tsx";
 import { placeMinimap } from "./minimap-placement.ts";
 import { focusHome, focusSpots, mapBoxOf } from "./minimap-scenes.ts";
 import { MinimapAreas, viewportOf } from "./slide-maps.tsx";
@@ -21,19 +22,27 @@ const overviewImage = { src: lookUrl("overview"), width: 1400, height: 1924 };
 
 const tone = { agree: "ok", disagree: "bad", unsure: "warn" } as const;
 
-export function FocusView({
-  tools,
-  object,
-  onShowUi,
-  peekOpen,
-  onPeekChange,
-}: {
+type FocusViewProps = {
   tools: ToolSession;
   object: string | undefined;
   onShowUi: () => void;
+  onObject: (object: string) => void;
   peekOpen: boolean;
   onPeekChange: (open: boolean) => void;
-}) {
+};
+
+export function FocusView(props: FocusViewProps) {
+  const { tools, object, onShowUi, onObject } = props;
+  const onCell = tools.session.objects.some(
+    (item) => item.kind === "cell" && item.object === object,
+  );
+  if (onCell && object !== undefined) {
+    return <CellFocus tools={tools} object={object} onObject={onObject} onLeave={onShowUi} />;
+  }
+  return <RegionFocus {...props} />;
+}
+
+function RegionFocus({ tools, object, onShowUi, peekOpen, onPeekChange }: FocusViewProps) {
   const [held, setHeld] = useState(false);
   usePeekKey(
     peekOpen,

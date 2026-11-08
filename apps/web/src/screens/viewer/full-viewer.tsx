@@ -507,6 +507,15 @@ function ViewerBody({
         return;
       }
       if (event.metaKey || event.ctrlKey || event.altKey || event.defaultPrevented) return;
+      if (
+        event.key === "Enter" &&
+        current?.kind === "cell" &&
+        !target.closest("button, a, summary, select")
+      ) {
+        event.preventDefault();
+        onSearch({ focus: true, scene: undefined, tool: undefined });
+        return;
+      }
       if (event.key !== "Escape") return;
       const layer = escLayer({
         overlay: peekOpen,
