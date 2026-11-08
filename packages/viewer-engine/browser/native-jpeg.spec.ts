@@ -56,7 +56,10 @@ test("the middle tile of CMU-1.svs decodes natively with the POC's mean absolute
   page,
 }) => {
   const availability = fixtureAvailability("CMU-1.svs");
-  test.skip(availability.status === "missing", "fixture not downloaded");
+  test.skip(
+    availability.status === "missing" && !availability.required,
+    availability.status === "missing" ? availability.message : "",
+  );
   await openHarness(page);
   const error = await page.evaluate(
     (url) => window.nativeJpegHarness.middleTileError(url),
@@ -71,7 +74,10 @@ for (const candidate of candidates) {
     page,
   }) => {
     const availability = fixtureAvailability(candidate.file);
-    test.skip(availability.status === "missing", "fixture not downloaded");
+    test.skip(
+      availability.status === "missing" && !availability.required,
+      availability.status === "missing" ? availability.message : "",
+    );
     await openHarness(page);
     const result = await page.evaluate(
       ({ url, formatId }) => window.nativeJpegHarness.measure(url, formatId),

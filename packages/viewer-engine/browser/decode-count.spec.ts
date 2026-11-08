@@ -15,7 +15,10 @@ for (const view of views) {
   test(`Viv reads every region of CMU-1.svs once at the ${view.name} view, not once per channel`, async ({
     page,
   }) => {
-    test.skip(availability.status === "missing", "fixture not downloaded");
+    test.skip(
+      availability.status === "missing" && !availability.required,
+      availability.status === "missing" ? availability.message : "",
+    );
     await page.goto(harnessUrl("/app/decode-count.html"));
     await page.waitForFunction(() => window.decodeCountHarness !== undefined);
     const run = (workers: number): Promise<DecodeCountReport> =>
