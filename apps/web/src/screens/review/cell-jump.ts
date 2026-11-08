@@ -64,6 +64,25 @@ export function placeBar(
   return { left, top, width: bar.width, height: bar.height };
 }
 
+export const panStep = 96;
+
+export function panned<T extends Point & { scale: number }>(camera: T, direction: Direction): T {
+  const way = unit[direction];
+  const distance = panStep / camera.scale;
+  return { ...camera, x: camera.x + way.x * distance, y: camera.y + way.y * distance };
+}
+
+export function previousOpen(
+  order: string[],
+  current: string | undefined,
+  isOpen: (object: string) => boolean,
+): string | undefined {
+  const start = current === undefined ? order.length : order.indexOf(current);
+  const before = order.slice(0, Math.max(start, 0)).reverse();
+  const after = order.slice(start + 1).reverse();
+  return [...before, ...after].find(isOpen);
+}
+
 export function touchesCircle(box: BarBox, centre: Point, radius: number): boolean {
   const nearestX = Math.min(Math.max(centre.x, box.left), box.left + box.width);
   const nearestY = Math.min(Math.max(centre.y, box.top), box.top + box.height);

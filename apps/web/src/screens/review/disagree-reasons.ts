@@ -9,7 +9,7 @@ export type ReasonOption = {
 
 type Kind = "region" | "cell";
 
-const classPhrase = (name: string) =>
+export const classPhrase = (name: string) =>
   name.toLowerCase() === "immune" ? "an immune cell" : name.toLowerCase();
 
 export function otherClasses(classes: ProjectClass[], aiClass: string): ProjectClass[] {

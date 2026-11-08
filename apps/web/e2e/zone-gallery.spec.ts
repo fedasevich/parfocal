@@ -40,10 +40,7 @@ test("a zone is gone through by mouse and every decision is saved", async ({ pag
   expect(count).toBeGreaterThan(1);
   await tiles(page).first().click();
   await expect(page).toHaveURL(/object=/);
-  await panel(page)
-    .getByRole("group", { name: /^Your answer on/ })
-    .getByRole("button", { name: /Agree/ })
-    .click();
+  await page.getByTestId("cell-type-bar").getByRole("button", { name: /Keep/ }).click();
   await expect(page.getByText(/: agree$/).first()).toBeVisible();
   await panel(page)
     .getByRole("button", { name: /Rest look right/ })

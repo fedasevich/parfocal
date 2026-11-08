@@ -42,6 +42,7 @@ export const isSingleLetterKey = (key: string) => singleLetterKey.test(key);
 
 const directionKeys: Record<string, [string, string, string, string]> = {
   Arrows: ["↑", "↓", "←", "→"],
+  "⇧Arrows": ["⇧↑", "⇧↓", "⇧←", "⇧→"],
   WASD: ["W", "S", "A", "D"],
   IJKL: ["I", "K", "J", "L"],
 };

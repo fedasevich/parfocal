@@ -54,6 +54,7 @@ import { usePeople } from "../people.ts";
 import { okData } from "../placeholder.tsx";
 import { useAnswerKeys } from "../review/answer-keys.ts";
 import { type CameraSearch, cameraFromSearch, cameraToSearch } from "../review/camera-search.ts";
+import { type CellSpot, panned, previousOpen } from "../review/cell-jump.ts";
 import { CellsGrid } from "../review/cells-grid.tsx";
 import { useSetName } from "../review/cells-on-slide.tsx";
 import { escapeComment, type Pin, pinForClick } from "../review/comment-pin.ts";
@@ -93,6 +94,7 @@ import {
   countAnswers,
 } from "../review/review-state.ts";
 import { ReviewTop } from "../review/review-top.tsx";
+import { cellShapes } from "../review/slide-geometry.ts";
 import {
   type Camera,
   imageOf,
@@ -103,6 +105,14 @@ import {
 import { recallSlideCamera, rememberSlideCamera } from "../review/slide-switch.ts";
 import { ThreadsTab, useOpenThreadsWarning } from "../review/threads-tab.tsx";
 import { overviewTissue, scanField, scanScale } from "../review/tissue-mask.ts";
+import {
+  chosenType,
+  type TypeChoice,
+  typeAnswers,
+  typeChoice,
+  typeOptions,
+} from "../review/type-bar.ts";
+import { cellCentre, TypeBar, useCellArrows } from "../review/type-bar.tsx";
 import { useDecisionSaves } from "../review/use-decision-saves.ts";
 import { useOpinionDraft } from "../review/use-opinion-draft.ts";
 import {
@@ -412,17 +422,17 @@ function ViewerBody({
     setOverrides(next);
     return next;
   };
-  const decide = (raw: string) => {
+  const decide = (raw: string, choice?: TypeChoice) => {
     if (current === undefined || buttonsOff) return;
-    const value = countsAs(style, raw, current);
+    const value = choice?.value ?? countsAs(style, raw, current);
     const kept = answer(current.object);
     const next = put(current.object, {
       value,
       raw,
-      reasons: kept?.value === value ? kept.reasons : [],
+      reasons: choice?.reasons ?? (kept?.value === value ? kept.reasons : []),
       note: kept?.note ?? null,
     });
-    decisions.save(current.object, raw, value);
+    decisions.save(current.object, raw, value, choice?.draft);
     setToast({
       id: Date.now(),
       text: `${current.object}: ${value === "unsure" ? "not sure" : value}`,
@@ -431,7 +441,7 @@ function ViewerBody({
         decisions.restore(current.object, kept);
       },
     });
-    if (value !== "agree") setNote({ open: true, reasons: [], text: "" });
+    if (value !== "agree") setNote({ open: true, reasons: choice?.reasons ?? [], text: "" });
     if (current.kind === "cell") {
       const inZone = openZone?.cells.some((cell) => cell.object === current.object)
         ? nextUnsureCell(openZone, current.object, (object) => !answerOf(base, next, object))
@@ -501,11 +511,44 @@ function ViewerBody({
     if (kept) setNote({ open: true, reasons: kept.reasons, text: kept.note ?? "" });
   });
 
+  const onCell = current?.kind === "cell";
+  const decideType = (id: string) => {
+    if (current === undefined) return;
+    const option = typeOptions.find((item) => item.id === id);
+    if (option === undefined) decide(id);
+    else {
+      const choice = typeChoice(style, option, current, session.classes);
+      decide(choice.raw, choice);
+    }
+  };
   useAnswerKeys(
-    answersOf(style, session.classes, current),
-    decide,
+    onCell ? typeAnswers : answersOf(style, session.classes, current),
+    onCell ? decideType : decide,
     current !== undefined && tab === "objects",
   );
+  const spots: CellSpot[] = cells.flatMap((cell) => {
+    const shape = cellShapes[cell.object];
+    return shape
+      ? [
+          {
+            object: cell.object,
+            x: shape.x,
+            y: shape.y,
+            decided: answer(cell.object) !== undefined,
+          },
+        ]
+      : [];
+  });
+  const stillCamera = useRef<Camera | null>(null);
+  useCellArrows({
+    spots,
+    current: current?.object,
+    enabled: onCell && tab === "objects" && !peekOpen,
+    onJump: pick,
+    onPan: (direction) => {
+      if (stillCamera.current) setCamera(panned(stillCamera.current, direction));
+    },
+  });
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -542,6 +585,7 @@ function ViewerBody({
       if (layer === "comment") leaveComment();
       else if (layer === "selection") pick(undefined);
       else if (layer === "focus") onSearch({ focus: undefined });
+      else if (layer === null && openZoneId !== null && tab === "objects") setOpenZoneId(null);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -583,7 +627,13 @@ function ViewerBody({
   };
 
   const zoneKeys = openZone !== undefined && tab === "objects";
-  useObjectKeys(nextInZone, () => undefined, zoneKeys);
+  const previousInZone = () => {
+    if (openZone === undefined) return;
+    const order = openZone.cells.map((cell) => cell.object);
+    const before = previousOpen(order, selected ?? undefined, (object) => !answer(object));
+    if (before !== undefined) pick(before);
+  };
+  useObjectKeys(nextInZone, previousInZone, zoneKeys);
   useRestKey(restLookRight, zoneKeys);
   const stillView: StillView = current
     ? current.kind === "cell"
@@ -1367,151 +1417,166 @@ function ViewerBody({
             underlay={
               running ? () => <RunningHeat reached={readReach(progress)} /> : drawing.underlay
             }
+            onCellPick={search.tool === undefined ? pick : undefined}
             onPointPick={(point) => {
               const placed = pinForClick(search.tool, point);
               if (placed === null) return;
               setPin(placed);
               onSearch({ object: undefined, tab: "comments" });
             }}
-            overlay={(still) => (
-              <>
-                {canvasNotice}
-                {shownPin ? (
-                  <PinMark pin={shownPin} camera={still.camera} size={still.size} />
-                ) : null}
-                {drawing.legend ? (
-                  <div className="absolute top-4 left-4">{drawing.legend}</div>
-                ) : null}
-                {drawing.extra}
-                {nothing || running || setup.issue === "slidefail" ? null : (
-                  <ViewerMinimap
-                    setting={minimapSetting}
-                    view={stillView}
-                    camera={still.camera}
-                    size={still.size}
-                    areas={areas}
-                    checked={regions
-                      .filter((region) => answer(region.object))
-                      .map((region) => region.object)}
-                    blockLeft={!whole}
-                    blockToast={toast !== null}
-                    cells={cells.map((cell) => ({
-                      object: cell.object,
-                      decided: answer(cell.object) !== undefined,
-                    }))}
-                    pins={shownPin ? [shownPin] : []}
-                    cellsPanel={cellsRect}
-                    onMoveView={setCamera}
-                    onOpen={() => onSearch({ peek: true })}
-                    onPopOut={() =>
-                      setToast({
-                        id: Date.now(),
-                        text: "Opens the whole slide on the second monitor",
-                      })
-                    }
-                  />
-                )}
-                {whole && cells.length && !running && view === "panel" ? (
-                  <CellCluster
-                    className="absolute top-[50%] left-[54%]"
-                    split={countAnswers(cells, answer)}
-                    onClick={() => pick(firstOpenCell)}
-                  />
-                ) : null}
-                {current?.kind === "cell" ? (
-                  cellsOpen ? (
-                    <MeasuredBlock
-                      className="absolute bottom-18 left-1/2 w-fit -translate-x-1/2"
-                      onRect={setCellsRect}
-                    >
-                      <CellsGrid
-                        cells={cells}
-                        current={current.object}
-                        answer={answer}
-                        answerKeys={answersOf(style, session.classes, current).map(
-                          (item) => item.key,
-                        )}
-                        claimHidden={!showsClaim(style)}
-                        folded={cellsFolded}
-                        confirming={confirmRest}
-                        onPick={(object) => pick(object)}
-                        onNotNucleus={buttonsOff ? undefined : notNucleus}
-                        onAgreeRest={() => setConfirmRest(true)}
-                        onCancelRest={() => setConfirmRest(false)}
-                        onApplyRest={() => {
-                          const next = new Map(overrides);
-                          for (const cell of openCells) {
-                            next.set(cell.object, {
-                              value: "agree",
-                              raw: rawFor(style, "agree", cell),
-                              reasons: [],
-                              note: null,
+            overlay={(still) => {
+              stillCamera.current = still.camera;
+              return (
+                <>
+                  {canvasNotice}
+                  {onCell && tab === "objects" && current && !running ? (
+                    <TypeBar
+                      object={current.object}
+                      centre={cellCentre(current.object, still.camera, still.size)}
+                      scale={still.camera.scale}
+                      size={still.size}
+                      chosen={chosenType(style, current, session.classes, answer(current.object))}
+                      disabledReason={buttonsOff}
+                      onChoose={(option) => decideType(option.id)}
+                    />
+                  ) : null}
+                  {shownPin ? (
+                    <PinMark pin={shownPin} camera={still.camera} size={still.size} />
+                  ) : null}
+                  {drawing.legend ? (
+                    <div className="absolute top-4 left-4">{drawing.legend}</div>
+                  ) : null}
+                  {drawing.extra}
+                  {nothing || running || setup.issue === "slidefail" ? null : (
+                    <ViewerMinimap
+                      setting={minimapSetting}
+                      view={stillView}
+                      camera={still.camera}
+                      size={still.size}
+                      areas={areas}
+                      checked={regions
+                        .filter((region) => answer(region.object))
+                        .map((region) => region.object)}
+                      blockLeft={!whole}
+                      blockToast={toast !== null}
+                      cells={cells.map((cell) => ({
+                        object: cell.object,
+                        decided: answer(cell.object) !== undefined,
+                      }))}
+                      pins={shownPin ? [shownPin] : []}
+                      cellsPanel={cellsRect}
+                      onMoveView={setCamera}
+                      onOpen={() => onSearch({ peek: true })}
+                      onPopOut={() =>
+                        setToast({
+                          id: Date.now(),
+                          text: "Opens the whole slide on the second monitor",
+                        })
+                      }
+                    />
+                  )}
+                  {whole && cells.length && !running && view === "panel" ? (
+                    <CellCluster
+                      className="absolute top-[50%] left-[54%]"
+                      split={countAnswers(cells, answer)}
+                      onClick={() => pick(firstOpenCell)}
+                    />
+                  ) : null}
+                  {current?.kind === "cell" ? (
+                    cellsOpen ? (
+                      <MeasuredBlock
+                        className="absolute bottom-18 left-1/2 w-fit -translate-x-1/2"
+                        onRect={setCellsRect}
+                      >
+                        <CellsGrid
+                          cells={cells}
+                          current={current.object}
+                          answer={answer}
+                          answerKeys={answersOf(style, session.classes, current).map(
+                            (item) => item.key,
+                          )}
+                          claimHidden={!showsClaim(style)}
+                          folded={cellsFolded}
+                          confirming={confirmRest}
+                          onPick={(object) => pick(object)}
+                          onNotNucleus={buttonsOff ? undefined : notNucleus}
+                          onAgreeRest={() => setConfirmRest(true)}
+                          onCancelRest={() => setConfirmRest(false)}
+                          onApplyRest={() => {
+                            const next = new Map(overrides);
+                            for (const cell of openCells) {
+                              next.set(cell.object, {
+                                value: "agree",
+                                raw: rawFor(style, "agree", cell),
+                                reasons: [],
+                                note: null,
+                              });
+                            }
+                            setOverrides(next);
+                            setConfirmRest(false);
+                            setToast({
+                              id: Date.now(),
+                              text: `${openCells.length} cells marked agree`,
+                              undo: () => setOverrides(overrides),
                             });
-                          }
-                          setOverrides(next);
-                          setConfirmRest(false);
-                          setToast({
-                            id: Date.now(),
-                            text: `${openCells.length} cells marked agree`,
-                            undo: () => setOverrides(overrides),
-                          });
-                        }}
-                        onFoldChange={setCellsFolded}
-                        onClose={() => setCellsOpen(false)}
-                      />
-                    </MeasuredBlock>
-                  ) : (
-                    <MeasuredBlock
-                      className="absolute bottom-18 left-1/2 -translate-x-1/2"
-                      onRect={setCellsRect}
+                          }}
+                          onFoldChange={setCellsFolded}
+                          onClose={() => setCellsOpen(false)}
+                        />
+                      </MeasuredBlock>
+                    ) : (
+                      <MeasuredBlock
+                        className="absolute bottom-18 left-1/2 -translate-x-1/2"
+                        onRect={setCellsRect}
+                      >
+                        <CellsLauncher
+                          decided={cells.length - openCells.length}
+                          total={cells.length}
+                          onClick={() => setCellsOpen(true)}
+                        />
+                      </MeasuredBlock>
+                    )
+                  ) : null}
+                  {whole ? null : (
+                    <Button
+                      size="lg"
+                      className="absolute bottom-4 left-4"
+                      onClick={() => pick(undefined)}
                     >
-                      <CellsLauncher
-                        decided={cells.length - openCells.length}
-                        total={cells.length}
-                        onClick={() => setCellsOpen(true)}
-                      />
-                    </MeasuredBlock>
-                  )
-                ) : null}
-                {whole ? null : (
-                  <Button
-                    size="lg"
-                    className="absolute bottom-4 left-4"
-                    onClick={() => pick(undefined)}
-                  >
-                    <Icon name="expand" />
-                    Whole slide
-                  </Button>
-                )}
-                <div className="absolute bottom-4 left-1/2 grid -translate-x-1/2 justify-items-center gap-2">
-                  {tileHint}
-                  <MagnificationBar
-                    magnification={
-                      camera
-                        ? magnificationOf(stillView, camera)
-                        : stillView.kind === "cell"
-                          ? 40
-                          : whole
-                            ? 1.25
-                            : 2.5
-                    }
-                    scaleLabel={stillView.kind === "cell" ? "10 µm" : whole ? "5 mm" : "500 µm"}
-                    scalePx={92}
-                    micronsPerPixel={stillView.kind === "cell" ? 0.11 : whole ? 33.87 : 4.43}
-                  />
-                </div>
-                {toast ? (
-                  <div className="absolute right-4 bottom-4">
-                    <UndoToast
-                      key={toast.id}
-                      message={toast.text}
-                      {...(toast.undo ? { onUndo: toast.undo } : {})}
-                      onExpire={() => setToast(null)}
+                      <Icon name="expand" />
+                      Whole slide
+                    </Button>
+                  )}
+                  <div className="absolute bottom-4 left-1/2 grid -translate-x-1/2 justify-items-center gap-2">
+                    {tileHint}
+                    <MagnificationBar
+                      magnification={
+                        camera
+                          ? magnificationOf(stillView, camera)
+                          : stillView.kind === "cell"
+                            ? 40
+                            : whole
+                              ? 1.25
+                              : 2.5
+                      }
+                      scaleLabel={stillView.kind === "cell" ? "10 µm" : whole ? "5 mm" : "500 µm"}
+                      scalePx={92}
+                      micronsPerPixel={stillView.kind === "cell" ? 0.11 : whole ? 33.87 : 4.43}
                     />
                   </div>
-                ) : null}
-              </>
-            )}
+                  {toast ? (
+                    <div className="absolute right-4 bottom-4">
+                      <UndoToast
+                        key={toast.id}
+                        message={toast.text}
+                        {...(toast.undo ? { onUndo: toast.undo } : {})}
+                        onExpire={() => setToast(null)}
+                      />
+                    </div>
+                  ) : null}
+                </>
+              );
+            }}
           />
         )}
       </ViewerFrame>

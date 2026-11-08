@@ -4,9 +4,11 @@ import {
   type CellSpot,
   jumpTarget,
   nearestOpen,
+  panned,
   placeBar,
+  previousOpen,
   touchesCircle,
-} from "../src/screens/viewer-tools/cell-focus-geometry.ts";
+} from "../src/screens/review/cell-jump.ts";
 
 const cells: CellSpot[] = [
   { object: "A", x: 100, y: 100, decided: false },
@@ -58,4 +60,51 @@ test("the bar goes below the cell, above it near the bottom, and never touches i
   }
   assert.ok(placeBar(middle, 30, bar, size).top > middle.y);
   assert.ok(placeBar(lower, 30, bar, size).top < lower.y);
+});
+
+test("a jump reaches an undecided cell far away before a decided one close by", () => {
+  const far: CellSpot[] = [
+    { object: "A", x: 0, y: 0, decided: false },
+    { object: "near", x: 30, y: 0, decided: true },
+    { object: "far", x: 900, y: 40, decided: false },
+  ];
+  assert.equal(jumpTarget(far, "A", "right"), "far");
+});
+
+test("when every cell that way is decided the nearest decided one is the target", () => {
+  const done = cells.map((cell) => ({ ...cell, decided: true }));
+  assert.equal(jumpTarget(done, "A", "right"), "B");
+});
+
+test("with one cell on the slide no arrow goes anywhere", () => {
+  const alone: CellSpot[] = [{ object: "A", x: 5, y: 5, decided: false }];
+  for (const way of ["left", "right", "up", "down"] as const) {
+    assert.equal(jumpTarget(alone, "A", way), undefined);
+  }
+});
+
+test("two cells on the same spot are not each other's target", () => {
+  const stacked: CellSpot[] = [
+    { object: "A", x: 5, y: 5, decided: false },
+    { object: "B", x: 5, y: 5, decided: false },
+  ];
+  assert.equal(jumpTarget(stacked, "A", "right"), undefined);
+});
+
+test("shift and an arrow pans the camera by a fixed screen distance", () => {
+  const camera = { x: 100, y: 100, scale: 2 };
+  assert.deepEqual(panned(camera, "right"), { x: 148, y: 100, scale: 2 });
+  assert.deepEqual(panned(camera, "up"), { x: 100, y: 52, scale: 2 });
+});
+
+test("shift and J steps back through the open cells of a zone and wraps", () => {
+  const order = ["a", "b", "c", "d"];
+  const open = (object: string) => object !== "b";
+  assert.equal(previousOpen(order, "c", open), "a");
+  assert.equal(previousOpen(order, "a", open), "d");
+  assert.equal(
+    previousOpen(order, "a", () => false),
+    undefined,
+  );
+  assert.equal(previousOpen(order, undefined, open), "d");
 });
