@@ -64,6 +64,7 @@ import { useSlideBrightness } from "./slide-brightness.ts";
 import { useSlideCoverage } from "./slide-coverage.ts";
 import { stageToolOf } from "./stage-tools.ts";
 import type { ScanTissue } from "./tissue-scan.ts";
+import { TravelMinimap } from "./travel-minimap.tsx";
 import { useEngineAreaNav } from "./use-engine-area-nav.ts";
 import { useTissueScan } from "./use-tissue-scan.ts";
 import { useViewerKeys } from "./use-viewer-keys.ts";
@@ -126,8 +127,17 @@ function ViewerKeys({ session }: { session: Session }) {
   return null;
 }
 
-function AreaKeys({ session, areas }: { session: Session; areas: readonly SlideAreaEntry[] }) {
-  const nav = useEngineAreaNav(session.engine, session.module, areas);
+function AreaKeys({
+  session,
+  areas,
+  host,
+}: {
+  session: Session;
+  areas: readonly SlideAreaEntry[];
+  host: HTMLElement | null;
+}) {
+  const nav = useEngineAreaNav(session.engine, session.module, areas, host);
+  const rows = useMemo(() => areaRows(areas, () => undefined), [areas]);
   const roles = useMemo(
     () =>
       new Map(
@@ -139,23 +149,34 @@ function AreaKeys({ session, areas }: { session: Session; areas: readonly SlideA
     [areas],
   );
   if (areas.length === 0) return null;
+  const targetRow = rows.find((row) => row.object === nav.travelling?.object);
   return (
-    <section
-      aria-label="Areas"
-      data-testid="area-nav"
-      data-current={nav.current ?? ""}
-      data-visited={[...nav.visited].sort().join(" ")}
-      className="absolute top-4 right-4 grid w-[min(320px,calc(100%-6rem))] gap-2 rounded-ctl border border-line bg-chrome p-3"
-    >
-      <h2 className="m-0 font-semibold text-body-sm">Areas, largest first</h2>
-      <AreaList
-        areas={areas}
-        current={nav.current}
-        visited={nav.visited}
-        roleOf={(object) => roles.get(object)}
-        onGoTo={nav.goTo}
-      />
-    </section>
+    <>
+      {nav.travelling ? (
+        <TravelMinimap
+          engine={session.engine}
+          travel={nav.travelling}
+          label={`area ${targetRow?.number ?? ""}`.trim()}
+          host={host}
+        />
+      ) : null}
+      <section
+        aria-label="Areas"
+        data-testid="area-nav"
+        data-current={nav.current ?? ""}
+        data-visited={[...nav.visited].sort().join(" ")}
+        className="absolute top-4 right-4 grid w-[min(320px,calc(100%-6rem))] gap-2 rounded-ctl border border-line bg-chrome p-3"
+      >
+        <h2 className="m-0 font-semibold text-body-sm">Areas, largest first</h2>
+        <AreaList
+          areas={areas}
+          current={nav.current}
+          visited={nav.visited}
+          roleOf={(object) => roles.get(object)}
+          onGoTo={nav.goTo}
+        />
+      </section>
+    </>
   );
 }
 
@@ -744,7 +765,7 @@ function OpenedSlide({
           </>
         ) : null}
         {session ? <ViewerKeys session={session} /> : null}
-        {session ? <AreaKeys session={session} areas={areas} /> : null}
+        {session ? <AreaKeys session={session} areas={areas} host={hostNode} /> : null}
         {session && hostNode && systematicScan ? (
           <ScanKeys session={session} host={hostNode} tissue={coverage?.tissue ?? null} />
         ) : null}

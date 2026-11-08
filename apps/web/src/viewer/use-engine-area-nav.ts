@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useBindings } from "../keys/personal-keys.ts";
 import type { Fired } from "../keys/registry.ts";
 import { useHotkeys } from "../keys/use-hotkeys.ts";
 import { areaKey, markVisited } from "../screens/viewer/area-nav.ts";
 import type { ViewerModule } from "./magnification-control.tsx";
 import type { SlideAreaEntry } from "./slide-areas.ts";
+import { createTravel } from "./travel.ts";
 import type { ViewerEngine } from "./viewer-engine.ts";
 
 const areaKeys = ["area", "prevarea", "nextarea"] as const;
@@ -15,6 +16,7 @@ export function useEngineAreaNav(
   engine: ViewerEngine,
   module: AreaModule,
   areas: readonly SlideAreaEntry[],
+  host: HTMLElement | null = null,
 ) {
   const [current, setCurrent] = useState<string | null>(null);
   const [visited, setVisited] = useState<ReadonlySet<string>>(() => new Set());
@@ -41,17 +43,42 @@ export function useEngineAreaNav(
 
   useEffect(() => engine.subscribeCamera(mark), [engine, mark]);
 
+  const hostRef = useRef(host);
+  hostRef.current = host;
+  const travel = useMemo(
+    () =>
+      createTravel(engine, {
+        viewport: () => {
+          const box = hostRef.current?.getBoundingClientRect();
+          return { width: box?.width ?? 0, height: box?.height ?? 0 };
+        },
+        onArrive: () => mark(),
+      }),
+    [engine, mark],
+  );
+  const travelling = useSyncExternalStore(travel.subscribe, travel.get);
+
+  useEffect(() => {
+    if (travelling === null) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (travel.press(event) === "skip") {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    };
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
+  }, [travel, travelling]);
+
   const goTo = useCallback(
     (object: string) => {
       const area = latest.current.areas.find((entry) => entry.object === object);
       if (area === undefined) return;
       setCurrent(object);
       latest.current.current = object;
-      void engine.flyToArea(area.bounds).then((end) => {
-        if (end === "arrived") mark();
-      });
+      void travel.start(object, area.bounds);
     },
-    [engine, mark],
+    [travel],
   );
 
   const bindings = useBindings(["viewer"], areaKeys);
@@ -64,5 +91,5 @@ export function useEngineAreaNav(
   );
   useHotkeys(bindings, onFire);
 
-  return { current, visited, goTo };
+  return { current, visited, goTo, travelling };
 }
