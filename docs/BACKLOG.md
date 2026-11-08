@@ -2062,7 +2062,7 @@ My work replaces the worklist ([ADR 0053](adr/0053-ai-results-review-direction.m
   Done when API and E2E tests cover each action with audit entries.
   Size: M.
 
-- [ ] WL-016 · Realtime worklist updates
+- [x] WL-016 · Realtime worklist updates
   New tasks, reviewer progress, finished jobs and status changes update without reload.
   Done when E2E with two sessions shows an update within 2 s.
   Depends on COLLAB-001.
