@@ -3554,7 +3554,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
 
 ## 28 CMD · Command palette and shortcuts
 
-- [ ] CMD-000 · Research check
+- [x] CMD-000 · Research check
   Done when STACK-014 is confirmed.
   Size: S.
 
@@ -3779,7 +3779,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
 
 ## 34 OPS · Infrastructure and operations
 
-- [ ] OPS-000 · Research check
+- [x] OPS-000 · Research check
   Done when STACK-029, STACK-030 and STACK-032 are confirmed.
   Size: S.
 
