@@ -4830,7 +4830,7 @@ Admin is its own page with its own sidebar and the app's top bar, never a page i
   Depends on ADMIN-001, REMOTE-002, IAM-011.
   Size: L.
 
-- [ ] ADMIN-007 · Audit log and security
+- [x] ADMIN-007 · Audit log and security
   The audit log with filters and a signed export (SEC-024), and the security settings (single sign-on, session policy, MFA).
   Done when E2E filters and exports the log.
   Depends on ADMIN-001, SEC-024.
