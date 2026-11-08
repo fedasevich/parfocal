@@ -6,6 +6,8 @@ export type Theirs = {
   readonly geometry: Readonly<Record<string, unknown>>;
   readonly classId: string | null;
   readonly changedBy: string | null;
+  readonly kind?: string | null;
+  readonly text?: string | null;
 };
 
 export type Outcome<T> =

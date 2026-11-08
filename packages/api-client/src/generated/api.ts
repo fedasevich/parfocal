@@ -362,6 +362,8 @@ export const AnnotationKind = {
   measurement: "measurement",
   region: "region",
   cell: "cell",
+  arrow: "arrow",
+  text: "text",
 } as const;
 
 export interface Annotation {
@@ -372,6 +374,7 @@ export interface Annotation {
   code: string;
   geometry: AnnotationGeometry;
   class_id: string | null;
+  text: string | null;
   task_id: string | null;
   version: number;
   created_by_user_id: string | null;
@@ -389,10 +392,17 @@ export const AnnotationChange = {
   restored: "restored",
 } as const;
 
+/**
+ * @minLength 1
+ * @maxLength 200
+ */
+export type Words = string;
+
 export interface AnnotationDraft {
   kind: AnnotationKind;
   geometry: Geometry;
   class_id?: string | null;
+  text?: Words | null;
 }
 
 export interface AnnotationDrafts {
@@ -408,6 +418,7 @@ export interface AnnotationEdit {
   version: number;
   geometry?: Geometry | null;
   class_id?: string | null;
+  text?: Words | null;
 }
 
 export type AnnotationOrigin = (typeof AnnotationOrigin)[keyof typeof AnnotationOrigin];
@@ -432,6 +443,7 @@ export interface AnnotationVersion {
   change: AnnotationChange;
   geometry: AnnotationVersionGeometry;
   class_id: string | null;
+  text: string | null;
   changed_by_user_id: string | null;
   changed_at: string;
   file_name?: string | null;
@@ -2369,6 +2381,7 @@ export interface LayerObject {
   source: string | null;
   geometry: LayerObjectGeometry;
   class_id: string | null;
+  text: string | null;
   version: number;
   created_by_user_id: string | null;
   changed_by_user_id: string | null;

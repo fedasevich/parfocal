@@ -4,14 +4,6 @@ import { adoptTheirs } from "./conflicts.ts";
 import { deleteMarker, dropMarker } from "./count-markers.ts";
 import { type AnnotationDocument, addShape, createDocument } from "./document.ts";
 import {
-  markerPointOf,
-  pointToGeoJson,
-  polygonPointsOf,
-  polygonToGeoJson,
-  savedMarkerKind,
-  savedPolygonKind,
-} from "./geojson.ts";
-import {
   canRedo,
   canUndo,
   createHistory,
@@ -32,28 +24,12 @@ import {
   type Remote,
 } from "./save-queue.ts";
 import { annotationTransport, sharedLayerTransport } from "./save-transport.ts";
-import { at, type GroupId, type Shape, type ShapeId } from "./shapes.ts";
+import { draftOf, sameBody, shapeOf } from "./saved-shapes.ts";
+import type { GroupId, Shape, ShapeId } from "./shapes.ts";
 
 export type SaveState = QueuePhase;
 
 export type SaveConflict = Conflict<AnnotationDraft>;
-
-const sameBody = (before: Shape, after: Shape) => {
-  if (before.classKey !== after.classKey) return false;
-  if (before.points.length !== after.points.length) return false;
-  return before.points.every((value, index) => value === after.points[index]);
-};
-
-const bodyOf = (shape: Shape): AnnotationDraft | null =>
-  shape.kind === "polygon"
-    ? { kind: savedPolygonKind, geometry: polygonToGeoJson(shape.points) }
-    : shape.kind === "point"
-      ? {
-          kind: savedMarkerKind,
-          geometry: pointToGeoJson({ x: at(shape.points, 0), y: at(shape.points, 1) }),
-          class_id: shape.classKey,
-        }
-      : null;
 
 export type SavedAnnotations = {
   readonly document: AnnotationDocument;
@@ -138,7 +114,7 @@ export function useSavedAnnotations(
 
   const createFor = useCallback(
     (shape: Shape) => {
-      const body = bodyOf(shape);
+      const body = draftOf(shape);
       if (body === null) return;
       const remote: Remote = { id: null, version: 1 };
       remotes.current.set(shape.id, remote);
@@ -159,7 +135,7 @@ export function useSavedAnnotations(
   const updateFor = useCallback(
     (shape: Shape) => {
       const remote = remotes.current.get(shape.id);
-      const body = bodyOf(shape);
+      const body = draftOf(shape);
       if (remote !== undefined && body !== null) queue.enqueueUpdate(remote, body);
     },
     [queue],
@@ -182,31 +158,16 @@ export function useSavedAnnotations(
   useEffect(() => {
     if (!enabled) return;
     let cancelled = false;
-    void Promise.all([
-      listAnnotations(slideId, { kind: savedPolygonKind }),
-      listAnnotations(slideId, { kind: savedMarkerKind }),
-    ]).then(
-      ([regions, markers]) => {
-        if (cancelled || regions.status !== 200) return;
+    void listAnnotations(slideId).then(
+      (saved) => {
+        if (cancelled || saved.status !== 200) return;
         let next = current.current;
-        for (const annotation of regions.data) {
-          const points = polygonPointsOf(annotation);
-          if (points === null) continue;
-          const added = addShape(next, { kind: "polygon", points });
+        for (const annotation of saved.data) {
+          const input = shapeOf(annotation);
+          if (input === null) continue;
+          const added = addShape(next, input);
           next = added.document;
           remotes.current.set(added.shape.id, { id: annotation.id, version: annotation.version });
-        }
-        if (markers.status === 200) {
-          for (const annotation of markers.data) {
-            const point = markerPointOf(annotation);
-            if (point === null) continue;
-            const added = dropMarker(next, point, annotation.class_id);
-            next = added.document;
-            remotes.current.set(added.shape.id, {
-              id: annotation.id,
-              version: annotation.version,
-            });
-          }
         }
         setDocument(next);
         setLoaded(true);

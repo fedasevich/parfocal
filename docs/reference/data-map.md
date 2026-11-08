@@ -12,7 +12,7 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 
 | Class | Columns |
 |---|---|
-| `phi` | 44 |
+| `phi` | 46 |
 | `personal` | 84 |
 | `secret` | 10 |
 | `operational` | 673 |
@@ -53,6 +53,7 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `change` | operational |
 | `geometry` | operational |
 | `class_id` | operational |
+| `text` | phi |
 | `changed_by_user_id` | personal |
 | `changed_at` | operational |
 
@@ -68,6 +69,7 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `number` | operational |
 | `geometry` | operational |
 | `class_id` | operational |
+| `text` | phi |
 | `task_id` | operational |
 | `version` | operational |
 | `origin` | operational |

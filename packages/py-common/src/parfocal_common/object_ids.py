@@ -11,6 +11,8 @@ class Letter(StrEnum):
     ROI = "R"
     ZONE = "Z"
     MEASUREMENT = "M"
+    ARROW = "A"
+    TEXT = "N"
 
 
 DISPLAY_SEPARATOR = "·"
@@ -21,7 +23,7 @@ LOOSE_CASE = "~"
 SPLIT_LETTERS = "abcdefghijklmnopqrstuvwxyz"
 PATTERN = re.compile(
     r"^(?:T(?P<region>[1-9]\d*)[·.])?"
-    r"(?P<letter>[TCRZM])(?P<number>[1-9]\d*)(?P<split>[a-z]*)(?P<mark>[+⁺]?)$",
+    r"(?P<letter>[TCRZMAN])(?P<number>[1-9]\d*)(?P<split>[a-z]*)(?P<mark>[+⁺]?)$",
     re.IGNORECASE,
 )
 

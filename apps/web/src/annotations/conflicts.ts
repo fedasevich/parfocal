@@ -2,6 +2,7 @@ import { dropMarker } from "./count-markers.ts";
 import { type AnnotationDocument, addShape, removeShape, updateShape } from "./document.ts";
 import { markerPointOf, polygonPointsOf } from "./geojson.ts";
 import type { Theirs } from "./save-queue.ts";
+import { shapeOf } from "./saved-shapes.ts";
 import { type ShapeId, singleRing } from "./shapes.ts";
 
 type Raw = Readonly<Record<string, unknown>>;
@@ -14,12 +15,15 @@ export function theirsFromCurrent(current: unknown): Theirs | null {
   const { version, geometry, class_id: classId, deleted_at: deletedAt } = current;
   if (typeof version !== "number" || !isRecord(geometry)) return null;
   const changedBy = current["changed_by_user_id"];
+  const { kind, text } = current;
   return {
     version,
     deleted: typeof deletedAt === "string",
     geometry,
     classId: typeof classId === "string" ? classId : null,
     changedBy: typeof changedBy === "string" ? changedBy : null,
+    kind: typeof kind === "string" ? kind : null,
+    text: typeof text === "string" ? text : null,
   };
 }
 
@@ -87,6 +91,27 @@ export function adoptTheirs(doc: AnnotationDocument, id: ShapeId | null, theirs:
   const present = id !== null && doc.shapes.has(id);
   if (theirs.deleted) {
     return { document: present ? removeShape(doc, id) : doc, shapeId: null };
+  }
+  const saved =
+    theirs.kind === undefined || theirs.kind === null
+      ? null
+      : shapeOf({
+          kind: theirs.kind,
+          geometry: theirs.geometry,
+          class_id: theirs.classId,
+          text: theirs.text ?? null,
+        });
+  if (saved !== null) {
+    if (!present) {
+      const added = addShape(doc, saved);
+      return { document: added.document, shapeId: added.shape.id };
+    }
+    const changed = updateShape(doc, id, {
+      geometry: singleRing(saved.points),
+      ...(saved.kind === "point" ? { classKey: saved.classKey ?? null } : {}),
+      ...(saved.kind === "text" ? { text: saved.text ?? null } : {}),
+    });
+    return { document: changed.document, shapeId: id };
   }
   const part = partOf(theirs.geometry);
   if (part === null) return { document: doc, shapeId: present ? id : null };

@@ -196,6 +196,89 @@ def test_bad_shapes_and_classes_are_refused(
     assert (response.status_code, response.json()["code"]) == (status, code), response.text
 
 
+def line(x0: float, y0: float, x1: float, y1: float) -> dict[str, Any]:
+    return {"type": "LineString", "coordinates": [[x0, y0], [x1, y1]]}
+
+
+def spot(x: float, y: float) -> dict[str, Any]:
+    return {"type": "Point", "coordinates": [x, y]}
+
+
+@pytest.mark.parametrize(
+    ("draft", "edit", "code"),
+    [
+        (
+            {"kind": "measurement", "geometry": line(0, 0, 30, 40)},
+            {"geometry": line(5, 5, 60, 80)},
+            "M1",
+        ),
+        (
+            {"kind": "arrow", "geometry": line(10, 10, 90, 20)},
+            {"geometry": line(90, 20, 10, 10)},
+            "A1",
+        ),
+        (
+            {"kind": "text", "geometry": spot(40, 50), "text": "  Mitosis here  "},
+            {"text": "Two mitoses"},
+            "N1",
+        ),
+    ],
+)
+def test_rulers_arrows_and_text_are_saved_edited_reloaded_and_deleted(
+    api: ApiAs, database: str, draft: dict[str, Any], edit: dict[str, Any], code: str
+) -> None:
+    s = studio(database)
+    client = api(s.people["owner"])
+    created = client.post(s.path, json=draft)
+    assert created.status_code == 201, created.text
+    body = created.json()
+    expected_text = draft.get("text", "").strip() or None
+    assert (body["code"], body["geometry"], body["text"]) == (
+        code,
+        draft["geometry"],
+        expected_text,
+    )
+    one = f"{s.path}/{body['id']}"
+    changed = client.patch(one, json={"version": 1, **edit})
+    assert changed.status_code == 200, changed.text
+    reloaded = client.get(s.path, params={"kind": draft["kind"]}).json()
+    assert [a["id"] for a in reloaded] == [body["id"]]
+    assert reloaded[0]["geometry"] == edit.get("geometry", draft["geometry"])
+    assert reloaded[0]["text"] == edit.get("text", expected_text)
+    history = client.get(f"{one}/history").json()
+    assert [h["text"] for h in history] == [expected_text, edit.get("text", expected_text)]
+    assert client.delete(one, params={"version": 2}).status_code == 204
+    assert client.get(s.path, params={"kind": draft["kind"]}).json() == []
+
+
+@pytest.mark.parametrize(
+    "draft",
+    [
+        {"kind": "text", "geometry": spot(1, 2)},
+        {"kind": "text", "geometry": spot(1, 2), "text": "   "},
+        {"kind": "text", "geometry": spot(1, 2), "text": "x" * 201},
+        {"kind": "text", "geometry": line(0, 0, 1, 1), "text": "Here"},
+        {"kind": "arrow", "geometry": line(0, 0, 1, 1), "text": "Here"},
+        {"kind": "arrow", "geometry": spot(1, 2)},
+    ],
+)
+def test_text_belongs_only_to_text_notes(api: ApiAs, database: str, draft: dict[str, Any]) -> None:
+    s = studio(database)
+    response = api(s.people["owner"]).post(s.path, json=draft)
+    assert (response.status_code, response.json()["code"]) == (422, "validation"), response.text
+
+
+def test_only_a_text_note_takes_a_text_edit(api: ApiAs, database: str) -> None:
+    s = studio(database)
+    client = api(s.people["owner"])
+    arrow = client.post(s.path, json={"kind": "arrow", "geometry": line(0, 0, 5, 5)}).json()
+    refused = client.patch(f"{s.path}/{arrow['id']}", json={"version": 1, "text": "Look"})
+    assert (refused.status_code, refused.json()["code"]) == (400, "invalid-shape")
+    note = client.post(s.path, json={"kind": "text", "geometry": spot(3, 3), "text": "Look"}).json()
+    cleared = client.patch(f"{s.path}/{note['id']}", json={"version": 1, "text": None})
+    assert (cleared.status_code, cleared.json()["code"]) == (400, "invalid-shape")
+
+
 def test_a_bulk_error_names_the_shape(api: ApiAs, database: str) -> None:
     s = studio(database)
     bowtie = {"type": "Polygon", "coordinates": [[[0, 0], [10, 10], [10, 0], [0, 10], [0, 0]]]}

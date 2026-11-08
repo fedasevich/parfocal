@@ -1200,6 +1200,8 @@ class AnnotationKind(StrEnum):
     MEASUREMENT = "measurement"
     REGION = "region"
     CELL = "cell"
+    ARROW = "arrow"
+    TEXT = "text"
 
 
 class AnnotationChange(StrEnum):
@@ -1223,7 +1225,7 @@ slide_counters = Table(
     Column("letter", String(1), primary_key=True, info=OPERATIONAL),
     Column("last", Integer, nullable=False, info=OPERATIONAL),
     ForeignKeyConstraint(["slide_id"], ["slides.id"]),
-    CheckConstraint("letter IN ('T', 'C', 'R', 'Z', 'M')", name="letter"),
+    CheckConstraint("letter IN ('T', 'C', 'R', 'Z', 'M', 'A', 'N')", name="letter"),
     CheckConstraint("last >= 0", name="last"),
 )
 
@@ -1242,6 +1244,7 @@ annotations = Table(
         info=OPERATIONAL,
     ),
     Column("class_id", Uuid[uuid.UUID](), nullable=True, info=OPERATIONAL),
+    Column("text", String(200), nullable=True, info=PHI),
     Column("task_id", Uuid[uuid.UUID](), nullable=True, index=True, info=OPERATIONAL),
     Column("version", Integer, nullable=False, server_default="1", info=OPERATIONAL),
     Column(
@@ -1286,6 +1289,7 @@ annotations = Table(
     CheckConstraint("number > 0", name="number"),
     CheckConstraint("version > 0", name="version"),
     CheckConstraint("ST_IsValid(geometry)", name="geometry_valid"),
+    CheckConstraint("(kind = 'text') = (text IS NOT NULL)", name="text"),
 )
 
 annotation_versions = Table(
@@ -1302,6 +1306,7 @@ annotation_versions = Table(
         info=OPERATIONAL,
     ),
     Column("class_id", Uuid[uuid.UUID](), nullable=True, info=OPERATIONAL),
+    Column("text", String(200), nullable=True, info=PHI),
     Column(
         "changed_by_user_id",
         Uuid[uuid.UUID](),

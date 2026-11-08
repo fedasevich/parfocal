@@ -76,6 +76,7 @@ function annotationWith(geometry: Record<string, unknown>): Annotation {
     code: "T+1",
     geometry,
     class_id: null,
+    text: null,
     task_id: null,
     version: 1,
     created_by_user_id: null,

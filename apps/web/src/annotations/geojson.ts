@@ -1,4 +1,9 @@
-import type { PointGeometry, PolygonGeometry, Position } from "@parfocal/api-client";
+import type {
+  LineStringGeometry,
+  PointGeometry,
+  PolygonGeometry,
+  Position,
+} from "@parfocal/api-client";
 import type { Point } from "./polygon-draft.ts";
 import { at } from "./shapes.ts";
 
@@ -7,6 +12,30 @@ type WithGeometry = { readonly geometry: Readonly<Record<string, unknown>> };
 export const savedPolygonKind = "region";
 
 export const savedMarkerKind = "cell";
+
+export const savedRulerKind = "measurement";
+
+export const savedArrowKind = "arrow";
+
+export const savedTextKind = "text";
+
+export function segmentToGeoJson(points: Float32Array): LineStringGeometry {
+  return {
+    type: "LineString",
+    coordinates: [
+      [at(points, 0), at(points, 1)],
+      [at(points, 2), at(points, 3)],
+    ],
+  };
+}
+
+export function segmentPointsOf(annotation: WithGeometry): Float32Array | null {
+  const { geometry } = annotation;
+  if (geometry["type"] !== "LineString") return null;
+  const ends: unknown = geometry["coordinates"];
+  if (!Array.isArray(ends) || ends.length !== 2 || !ends.every(isPosition)) return null;
+  return Float32Array.from(ends.flat());
+}
 
 export function pointToGeoJson(point: Point): PointGeometry {
   return { type: "Point", coordinates: [point.x, point.y] };
