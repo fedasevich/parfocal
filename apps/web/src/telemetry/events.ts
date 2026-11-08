@@ -1,4 +1,5 @@
 import type { Analytics } from "../clients.ts";
+import { analyticsOptedOut } from "./consent.ts";
 
 const idPattern = /^[A-Za-z0-9][A-Za-z0-9_-]{7,63}$/u;
 
@@ -85,9 +86,13 @@ export type EventSink = {
   track<Name extends EventName>(name: Name, properties: EventProperties<Name>): void;
 };
 
-export function eventSink(analytics: Analytics): EventSink {
+export function eventSink(
+  analytics: Analytics,
+  optedOut: () => boolean = analyticsOptedOut,
+): EventSink {
   return {
     track(name, properties) {
+      if (optedOut()) return;
       if (eventProblems(name, properties).length > 0) return;
       analytics.capture(name, properties);
     },

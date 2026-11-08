@@ -48,6 +48,7 @@ import { personOf } from "../../shell/global-shell.tsx";
 import { readStatNotice, writeStatChannel, writeStatSound } from "../../shell/notification-gate.ts";
 import { usePinnedStrip } from "../../shell/pinned-strip.ts";
 import { chooseTheme, readTheme, type ThemeChoice } from "../../shell/theme.ts";
+import { analyticsOptedOut, setAnalyticsOptOut } from "../../telemetry/consent.ts";
 import {
   type OutlineModeChoice,
   outlineModeChoices,
@@ -288,6 +289,7 @@ function LoadedSettings({
     return () => clearTimeout(timer);
   }, [message]);
 
+  const [shareOff, setShareOff] = useState(() => analyticsOptedOut());
   const query = normalQuery(typed);
   const shown = shownSection(section, query);
   const visible = visibleSections(query);
@@ -587,6 +589,11 @@ function LoadedSettings({
       toggle("Initials while sharing", values.initials_while_sharing, (value) =>
         save({ initials_while_sharing: value }),
       ),
+    analytics: () =>
+      toggle("Share usage statistics", !shareOff, (value) => {
+        setAnalyticsOptOut(!value);
+        setShareOff(!value);
+      }),
     lockAfter: () => lockAfterText(policy?.idle_lock_minutes),
     patientBanner: () => patientBannerText(layers.lab),
     otherDevices: () =>
