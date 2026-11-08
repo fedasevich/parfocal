@@ -1325,6 +1325,11 @@ function ViewerBody({
                       .map((region) => region.object)}
                     blockLeft={!whole}
                     blockToast={toast !== null}
+                    cells={cells.map((cell) => ({
+                      object: cell.object,
+                      decided: answer(cell.object) !== undefined,
+                    }))}
+                    onMoveView={setCamera}
                     onOpen={() => onSearch({ peek: true })}
                     onPopOut={() =>
                       setToast({

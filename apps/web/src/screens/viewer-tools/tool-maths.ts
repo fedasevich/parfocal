@@ -17,6 +17,13 @@ export function toOverview(look: StillLook, point: [number, number]): [number, n
   return [centre[0] + (point[0] - imageCentre[0]) * k, centre[1] + (point[1] - imageCentre[1]) * k];
 }
 
+export function fromOverview(look: StillLook, point: [number, number]): [number, number] {
+  if (look === "overview") return point;
+  const k = perImagePixel[look];
+  const centre = cropCentre[look];
+  return [imageCentre[0] + (point[0] - centre[0]) / k, imageCentre[1] + (point[1] - centre[1]) / k];
+}
+
 export function viewportOf(look: StillLook, camera: Camera, size: Size): MapRect {
   const width = size.width / camera.scale;
   const height = size.height / camera.scale;
