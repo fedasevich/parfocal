@@ -104,6 +104,7 @@ export {
   resetJobsState,
   setFakeJobsScene,
 } from "./jobs-scene.ts";
+export { resetFakeProfile } from "./profile-changes.ts";
 export {
   projectSlideRows,
   toProjectOverview,

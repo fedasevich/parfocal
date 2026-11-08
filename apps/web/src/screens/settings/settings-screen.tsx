@@ -1,4 +1,5 @@
 import {
+  getGetMeQueryKey,
   getGetMySettingLayersQueryKey,
   getGetMySettingsQueryKey,
   getListNotificationPreferencesQueryKey,
@@ -16,6 +17,7 @@ import {
   useSetMySettingLayers,
   useSetMyShortcuts,
   useSetNotificationPreferences,
+  useUpdateMe,
 } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
 import { Icon } from "@parfocal/ui/components/icon";
@@ -257,6 +259,7 @@ function LoadedSettings({
   );
   const [message, setMessage] = useState<{ id: number; text: string } | null>(null);
   const [savedName, setSavedName] = useState<string | null>(null);
+  const updateMe = useUpdateMe();
   const [nameDraft, setNameDraft] = useState<string | null>(null);
   const [lastScene, setLastScene] = useState(scene);
   if (scene !== lastScene) {
@@ -614,6 +617,7 @@ function LoadedSettings({
         <PersonAvatar person={personOf(me)} size={20} />
         <input
           aria-label="Name"
+          maxLength={200}
           className="h-7 w-64 rounded-sm border border-line bg-surface px-2 text-body text-fg"
           value={nameDraft ?? shownName}
           onChange={(event) => setNameDraft(event.target.value)}
@@ -638,9 +642,25 @@ function LoadedSettings({
   function commitName() {
     const next = (nameDraft ?? shownName).trim();
     setNameDraft(null);
-    if (next === "" || next === shownName) return;
+    if (next === shownName) return;
+    if (next === "") {
+      notify("Your name can't be empty");
+      return;
+    }
     setSavedName(next);
-    notify("Name saved");
+    updateMe.mutate(
+      { data: { display_name: next } },
+      {
+        onSuccess: () => {
+          notify("Name saved");
+          void queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
+        },
+        onError: () => {
+          setSavedName(null);
+          notify("Your name was not saved. Try again.");
+        },
+      },
+    );
   }
 
   function lockedValue(value: string, reason: string, className?: string) {
