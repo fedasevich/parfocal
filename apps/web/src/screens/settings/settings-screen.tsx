@@ -40,6 +40,12 @@ import type { WordingSetting } from "@parfocal/ui/lib/confidence-words";
 import { useQueryClient } from "@tanstack/react-query";
 import { type ReactNode, useCallback, useEffect, useState } from "react";
 import { now } from "../../clock.ts";
+import {
+  type Calibration,
+  calibrationDefaults,
+  readCalibration,
+  writeCalibration,
+} from "../../devices/calibration.ts";
 import { settingValuesOfShortcuts, shortcutsOfSettings } from "../../keys/shortcut-settings.ts";
 import { setLengthUnits } from "../../measure/length-units.ts";
 import { applyDensity } from "../../shell/density.ts";
@@ -86,6 +92,7 @@ type Device = {
   device: string;
   wheel: string;
   speed: number;
+  deadZone: number;
   invertZoom: boolean;
   spaceMouseRotation: boolean;
 };
@@ -94,7 +101,8 @@ const deviceDefaults: Device = {
   brightness: 100,
   device: "mouse",
   wheel: "zoom",
-  speed: 60,
+  speed: calibrationDefaults.speed,
+  deadZone: calibrationDefaults.deadZone,
   invertZoom: false,
   spaceMouseRotation: false,
 };
@@ -233,7 +241,11 @@ function LoadedSettings({
     setPicked((previous) => ({ ...previous, ...change }));
     saveLayers.mutate({ data: { values: change } });
   };
-  const [device, setDevice] = useState<Device>(deviceDefaults);
+  const [device, setDevice] = useState<Device>(() => {
+    const chosen = readDeviceSettings().device;
+    const main = typeof chosen === "string" ? chosen : deviceDefaults.device;
+    return { ...deviceDefaults, device: main, ...readCalibration(main) };
+  });
   const [pinnedStrip, setPinnedStrip] = usePinnedStrip();
   const [outlineMode, setOutlineMode] = useOutlineMode();
   const [theme, setTheme] = useState<ThemeChoice>(() => readTheme());
@@ -296,6 +308,8 @@ function LoadedSettings({
   const others = sessions.filter((session) => !session.current);
   const setD = <Key extends keyof Device>(key: Key, value: Device[Key]) =>
     setDevice((previous) => ({ ...previous, [key]: value }));
+  const changeCalibration = (change: Partial<Calibration>) =>
+    setDevice((previous) => ({ ...previous, ...writeCalibration(previous.device, change) }));
   const channel = (key: RowKey): Channel =>
     channels[key] ??
     (key === "noticeSubmit"
@@ -530,7 +544,7 @@ function LoadedSettings({
         ]}
         onChange={(value) => {
           writeDeviceSetting("device", value);
-          setD("device", value);
+          setDevice((previous) => ({ ...previous, device: value, ...readCalibration(value) }));
         }}
       />
     ),
@@ -562,7 +576,15 @@ function LoadedSettings({
         label="Pan and zoom speed"
         value={device.speed}
         unit=""
-        onChange={(value) => setD("speed", value)}
+        onChange={(value) => changeCalibration({ speed: value })}
+      />
+    ),
+    deadZone: () => (
+      <Stepper
+        label="Dead zone"
+        value={device.deadZone}
+        unit="%"
+        onChange={(value) => changeCalibration({ deadZone: value })}
       />
     ),
     invertZoom: () =>

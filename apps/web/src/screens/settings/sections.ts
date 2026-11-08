@@ -55,6 +55,7 @@ export type RowKey =
   | "wheel"
   | "doubleClick"
   | "speed"
+  | "deadZone"
   | "invertZoom"
   | "spaceMouseRotation"
   | "noticeTask"
@@ -186,6 +187,7 @@ export const sectionRows: Record<Exclude<SettingsSection, "shortcuts">, SettingR
     ),
     row("doubleClick", "Double-click", "personal", "What a double click on the slide does."),
     row("speed", "Pan and zoom speed", "device", "For the mouse, the trackpad and the arrow keys."),
+    row("deadZone", "Dead zone", "device", "Ignores small movements of a stick or SpaceMouse cap."),
     row("invertZoom", "Invert zoom direction", "device", "Scrolling up zooms out instead of in."),
     row(
       "spaceMouseRotation",
