@@ -37,6 +37,7 @@ import {
   rotationOfView,
   rotationStep,
 } from "./link-camera.ts";
+import { otherSide as other, type PaneSlideIds, pickSlide, swapSlides } from "./pane-slides.ts";
 import { reviewRail } from "./rails.ts";
 import { midEdge } from "./tool-geometry.ts";
 import { coverHome } from "./tool-maths.ts";
@@ -72,8 +73,6 @@ function toCompareSlide(slide: ProjectSlide, index: number, currentId: string): 
 
 const sides: readonly PaneSide[] = ["left", "right"];
 const linkReference: PaneSide = "left";
-
-const other = (side: PaneSide): PaneSide => (side === "left" ? "right" : "left");
 
 type CompareViewProps = {
   tools: ToolSession;
@@ -115,14 +114,14 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
     right: chosen.right ?? fallbackRight?.id,
   };
   const slideOn = (side: PaneSide) => caseSlides.find((slide) => slide.id === ids[side]);
+  const show = (next: PaneSlideIds) =>
+    setChosen({ left: next.left ?? null, right: next.right ?? null });
   const pick = (side: PaneSide, id: string) => {
-    const there = other(side);
-    if (ids[there] === id) setChosen({ [side]: id, [there]: ids[side] ?? null } as typeof chosen);
-    else setChosen({ ...chosen, left: ids.left ?? null, right: ids.right ?? null, [side]: id });
+    show(pickSlide(ids, side, id));
     setPicking(null);
   };
   const swap = () => {
-    setChosen({ left: ids.right ?? null, right: ids.left ?? null });
+    show(swapSlides(ids));
     setLayers(layers.map((row) => ({ ...row, left: row.right, right: row.left })));
     setPicking(null);
   };
