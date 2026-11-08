@@ -150,6 +150,6 @@ def test_the_read_refuses_a_review_task_and_a_slide_outside_the_task(
     review = api(o.people["first"]).get(
         f"/api/review-tasks/{o.task}/slides/{o.slides[0]}/shared-layer/ai"
     )
-    assert review.status_code in {404, 409}, review.text
+    assert (review.status_code, review.json()["code"]) == (409, "not-an-annotate-task")
     stranger = layer.replace(str(o.slides[0]), str(uuid.uuid4()))
     assert api(o.people["first"]).get(f"{stranger}/ai").status_code == 404
