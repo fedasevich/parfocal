@@ -190,12 +190,14 @@ export function SlideStage({
   outlines = false,
   workspace = "annotate",
   annotateTask = null,
+  layerKnown = true,
   onOpenSlide,
 }: {
   slideId: string;
   projectId?: string;
   taskId?: string;
   annotateTask?: AnnotateTask | null;
+  layerKnown?: boolean;
   onOpenSlide?: (slideId: string) => void;
   areas?: readonly SlideAreaEntry[];
   viewed?: ViewedLink;
@@ -216,6 +218,7 @@ export function SlideStage({
       outlines={outlines}
       workspace={workspace}
       annotateTask={annotateTask}
+      layerKnown={layerKnown}
       onOpenSlide={onOpenSlide}
       onRetry={() => setAttempt((count) => count + 1)}
     />
@@ -232,6 +235,7 @@ function OpenedSlide({
   outlines,
   workspace,
   annotateTask,
+  layerKnown,
   onOpenSlide,
   onRetry,
 }: {
@@ -239,6 +243,7 @@ function OpenedSlide({
   projectId: string | undefined;
   taskId: string | undefined;
   annotateTask: AnnotateTask | null;
+  layerKnown: boolean;
   onOpenSlide: ((slideId: string) => void) | undefined;
   areas: readonly SlideAreaEntry[];
   viewed: ViewedLink | undefined;
@@ -291,7 +296,7 @@ function OpenedSlide({
   const [outlineMode, setOutlineMode] = useOutlineMode();
   const sharedTaskId = annotateTask?.taskId ?? null;
   const snapshot = annotateTask?.classes ?? null;
-  const saved = useSavedAnnotations(slideId, session !== null, sharedTaskId);
+  const saved = useSavedAnnotations(slideId, session !== null && layerKnown, sharedTaskId);
   const annotations = saved.document;
   const proposals = useProposals(saved, slideId);
   const setAnnotations = saved.setDocument;
@@ -312,23 +317,15 @@ function OpenedSlide({
     [undoEdit, redoEdit],
   );
   useHotkeys(undoBindings, onUndoKey);
-  const [classes, setClasses] = useState<readonly ProjectClass[]>([]);
+  const [projectClasses, setProjectClasses] = useState<readonly ProjectClass[]>([]);
   const [activeClass, setActiveClass] = useState<string | null>(null);
   useEffect(() => {
-    if (snapshot !== null) {
-      const sorted = taskClassesOf(snapshot, []);
-      setClasses(sorted);
-      setActiveClass((current) => current ?? sorted[0]?.id ?? null);
-      return;
-    }
-    if (projectId === undefined) return;
+    if (snapshot !== null || projectId === undefined) return;
     let cancelled = false;
     void listProjectClasses(projectId).then(
       (response) => {
         if (cancelled || response.status !== 200) return;
-        const sorted = [...response.data].sort((a, b) => a.key - b.key);
-        setClasses(sorted);
-        setActiveClass((current) => current ?? sorted[0]?.id ?? null);
+        setProjectClasses(response.data);
       },
       () => undefined,
     );
@@ -336,6 +333,13 @@ function OpenedSlide({
       cancelled = true;
     };
   }, [projectId, snapshot]);
+  const classes = useMemo(
+    () => taskClassesOf(snapshot, projectClasses),
+    [snapshot, projectClasses],
+  );
+  useEffect(() => {
+    setActiveClass((current) => current ?? classes[0]?.id ?? null);
+  }, [classes]);
   const pickSlot = useCallback(
     (slot: number) => {
       const picked = classes[slot - 1];

@@ -23,6 +23,6 @@ Option 1. An annotate task opened on the live slide saves through the shared lay
 
 ## Consequences
 
-- The API needs the AI object read before the panel works outside the fake API. TODO: a backlog task for it.
+- The API needs the AI object read before the panel works outside the fake API, which ANN-040 (serve a slide's AI objects for an annotate task) builds.
 - The PROTO-020 screens stay as the design reference and are not wired.
 - Polygons now save their class, which the slide annotation API already accepted.

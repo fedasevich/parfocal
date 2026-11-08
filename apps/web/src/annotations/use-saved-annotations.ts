@@ -173,10 +173,14 @@ export function useSavedAnnotations(
   useEffect(() => {
     if (!enabled) return;
     let cancelled = false;
+    remotes.current.clear();
+    setDocument(createDocument());
+    setHistory(createHistory());
+    setLoaded(false);
     void savedRecords(slideId, sharedTaskId).then(
       (records) => {
         if (cancelled || records === null) return;
-        let next = current.current;
+        let next = createDocument();
         for (const annotation of records) {
           const input = shapeOf(annotation);
           if (input === null) continue;
@@ -192,7 +196,7 @@ export function useSavedAnnotations(
     return () => {
       cancelled = true;
     };
-  }, [slideId, sharedTaskId, enabled, setDocument]);
+  }, [slideId, sharedTaskId, enabled, setDocument, setHistory]);
 
   const recordEdit = useCallback(
     (before: AnnotationDocument, after: AnnotationDocument, label: string) => {

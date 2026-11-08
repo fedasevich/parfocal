@@ -6,7 +6,6 @@ import type {
   SharedAiObject,
 } from "@parfocal/api-client";
 import type { CheckState } from "./check-state.ts";
-import { maxClassKeys } from "./classes.ts";
 
 export type LayerOrigin = "ai" | "ai-edited" | "ai-confirmed" | "human";
 
@@ -25,10 +24,12 @@ export function annotateTaskOf(
   owner: boolean,
 ): AnnotateTask | null {
   if (task === undefined || task.kind !== "annotate") return null;
+  const slide = task.slides.find((item) => item.slide_id === slideId);
+  if (slide === undefined) return null;
   return {
     taskId: task.id,
     slideId,
-    resultSetId: task.slides.find((slide) => slide.slide_id === slideId)?.result_set_id ?? null,
+    resultSetId: slide.result_set_id,
     classes: task.classes,
     slideIds: task.slides.map((slide) => slide.slide_id),
     owner,
@@ -42,18 +43,8 @@ export function taskClassesOf(
   return [...(snapshot ?? project)].sort((left, right) => left.key - right.key);
 }
 
-export type ClassSlot = {
-  readonly id: string;
-  readonly name: string;
-  readonly slot: number | null;
-};
-
-export const classSlotsOf = (classes: readonly ProjectClass[]): ClassSlot[] =>
-  classes.map((item, index) => ({
-    id: item.id,
-    name: item.name,
-    slot: index < maxClassKeys ? index + 1 : null,
-  }));
+export const layerKnownOf = (taskId: string | undefined, taskSettled: boolean): boolean =>
+  taskId === undefined || taskSettled;
 
 export type AiResultView = {
   readonly available: boolean;

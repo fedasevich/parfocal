@@ -30,7 +30,7 @@ export function draftOf(shape: Shape): AnnotationDraft | null {
       return {
         kind: savedPolygonKind,
         geometry: polygonToGeoJson(shape.points),
-        ...(shape.classKey === null ? {} : { class_id: shape.classKey }),
+        class_id: shape.classKey,
       };
     case "point":
       return { kind: savedMarkerKind, geometry: spot(shape), class_id: shape.classKey };

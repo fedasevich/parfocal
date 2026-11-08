@@ -81,7 +81,11 @@ export function AnnotateTaskPanel({
   const personOf = usePeople();
   const layerQuery = useGetSharedLayer(taskId, slideId);
   const layer = okData(layerQuery.data)?.objects ?? [];
-  const aiList = okData(useListSharedAiObjects(taskId, slideId).data);
+  const aiQuery = useListSharedAiObjects(taskId, slideId, {
+    query: { enabled: task.resultSetId !== null },
+  });
+  const aiList = okData(aiQuery.data);
+  const loaded = layerQuery.isSuccess && (task.resultSetId === null || aiQuery.isSuccess);
   const statusQueries = useQueries({
     queries: task.slideIds.map((id) => getGetAnnotateSlideStatusQueryOptions(taskId, id)),
   });
@@ -138,7 +142,7 @@ export function AnnotateTaskPanel({
       .map((object) => ({ class_id: object.copy?.class_id ?? object.class_id })),
   ]);
   const progress = taskProgressOf(statuses, me);
-  const nothingToMark = drawn.length === 0 && ai.length === 0;
+  const nothingToMark = loaded && drawn.length === 0 && ai.length === 0;
 
   const confirmSelected = useCallback(() => {
     if (selectedAi === undefined || selectedAi.check !== "unchecked" || locked) return;
@@ -269,6 +273,11 @@ export function AnnotateTaskPanel({
             </Button>
           </div>
         ) : null}
+        {aiQuery.isError ? (
+          <p role="alert" className="m-0 text-body-sm text-danger">
+            The AI result did not load. Reload the slide to try again.
+          </p>
+        ) : null}
         {refusal ? (
           <p role="alert" className="m-0 text-body-sm text-danger">
             {refusal}
@@ -277,6 +286,7 @@ export function AnnotateTaskPanel({
         {step === "open" ? (
           <Button
             variant="primary"
+            disabled={!loaded}
             onClick={() =>
               void run(() =>
                 checkAnnotateSlide(taskId, slideId, nothingToMark ? { nothing_to_mark: true } : {}),

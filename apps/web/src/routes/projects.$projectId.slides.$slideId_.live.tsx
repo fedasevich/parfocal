@@ -4,7 +4,7 @@ import { ViewedRing } from "@parfocal/ui/components/viewed-ring";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useState } from "react";
 import { z } from "zod";
-import { annotateTaskOf } from "../annotations/annotate-task.ts";
+import { annotateTaskOf, layerKnownOf } from "../annotations/annotate-task.ts";
 import { readBuildConfig } from "../config.ts";
 import { ViewingNow } from "../presence/viewing-now.tsx";
 import { okData } from "../screens/placeholder.tsx";
@@ -71,9 +71,9 @@ function LiveSlide() {
     chosen,
     loaded.state === "ready" ? loaded.load.task?.kind : undefined,
   );
-  const taskDetail = okData(
-    useGetReviewTask(task ?? "", { query: { enabled: task !== undefined } }).data,
-  );
+  const taskQuery = useGetReviewTask(task ?? "", { query: { enabled: task !== undefined } });
+  const taskDetail = okData(taskQuery.data);
+  const layerKnown = layerKnownOf(task, taskQuery.isSuccess || taskQuery.isError);
   const owner = okData(useGetProject(projectId).data)?.my_role === "owner";
   const annotateTask = annotateTaskOf(taskDetail, slideId, owner);
   const openSlide = (next: string) =>
@@ -121,9 +121,10 @@ function LiveSlide() {
           {...(task === undefined ? {} : { taskId: task })}
           areas={areas}
           viewed={viewed}
-          outlines={fakeOutlines && task !== undefined}
+          outlines={fakeOutlines && task !== undefined && annotateTask === null}
           workspace={workspace}
           annotateTask={annotateTask}
+          layerKnown={layerKnown}
           onOpenSlide={openSlide}
           systematicScan={loaded.state === "ready" && slideAreas.loaded && areas.length === 0}
         />

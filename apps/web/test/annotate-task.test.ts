@@ -14,7 +14,7 @@ import {
   annotateTaskOf,
   canSignOff,
   classCountsOf,
-  classSlotsOf,
+  layerKnownOf,
   nextSlideOf,
   originMarkOf,
   slideStepOf,
@@ -92,17 +92,12 @@ const checked = (user = "me") => ({
   nothing_to_mark: false,
 });
 
-test("the class strip comes from the task snapshot, ordered by key, with keys 1 to 9", () => {
+test("the class strip comes from the task snapshot, ordered by key", () => {
   const classes = taskClassesOf(snapshot, project);
   assert.deepEqual(
     classes.map((item) => item.name),
     ["Tumor cell", "Lymphocyte", "Mitosis"],
   );
-  const many = Array.from({ length: 11 }, (_, index) => cls(index + 1, `C${index + 1}`));
-  const slots = classSlotsOf(taskClassesOf(many, project));
-  assert.equal(slots[0]?.slot, 1);
-  assert.equal(slots[8]?.slot, 9);
-  assert.equal(slots[9]?.slot, null);
 });
 
 test("without a snapshot the strip falls back to the project classes", () => {
@@ -233,4 +228,21 @@ test("only an owner signs off, and only once every expert has checked", () => {
     false,
   );
   assert.equal(canSignOff({ ...ready, signed_off_at: "2026-11-08T12:00:00Z" }, true), false);
+});
+
+test("a task without the opened slide is not an annotate task for that slide", () => {
+  const task = {
+    id: "t",
+    kind: "annotate",
+    classes: snapshot,
+    slides: [{ slide_id: "a", result_set_id: "rs1", reviewer_ids: [] }],
+  } as unknown as ReviewTaskDetail;
+  assert.equal(annotateTaskOf(task, "other", true), null);
+  assert.equal(annotateTaskOf(task, "a", true)?.resultSetId, "rs1");
+});
+
+test("annotations wait for the task to settle so they load from the right layer", () => {
+  assert.equal(layerKnownOf(undefined, false), true);
+  assert.equal(layerKnownOf("t", false), false);
+  assert.equal(layerKnownOf("t", true), true);
 });
