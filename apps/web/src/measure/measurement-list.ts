@@ -1,5 +1,6 @@
 import { type AnnotationDocument, isShapeHidden } from "../annotations/document.ts";
 import { isClosedKind, type Shape, type ShapeId } from "../annotations/shapes.ts";
+import type { LengthUnits } from "./length-units.ts";
 import { formatRulerLength, segmentOfRuler } from "./ruler-maths.ts";
 import { formatArea, formatPerimeter, measureShape } from "./shape-measure.ts";
 
@@ -21,6 +22,7 @@ export function buildMeasurementRows(
   micronsPerPixel: number | null,
   drawnAt: ReadonlyMap<ShapeId, number>,
   classNames: MeasurementNames = new Map(),
+  units?: LengthUnits,
 ): MeasurementRow[] {
   const rows: MeasurementRow[] = [];
   const shapes = [...doc.shapes.values()].sort((a, b) => a.id - b.id);
@@ -36,7 +38,7 @@ export function buildMeasurementRows(
         label,
         kind: "ruler",
         shapeKind: shape.kind,
-        value: formatRulerLength(segmentOfRuler(shape), micronsPerPixel),
+        value: formatRulerLength(segmentOfRuler(shape), micronsPerPixel, units),
         area: null,
         category: "Ruler",
         drawnAt: time,
@@ -50,8 +52,8 @@ export function buildMeasurementRows(
       label,
       kind: "area",
       shapeKind: shape.kind,
-      value: formatPerimeter(measure),
-      area: formatArea(measure),
+      value: formatPerimeter(measure, units),
+      area: formatArea(measure, units),
       category:
         shape.classKey === null
           ? "No category"

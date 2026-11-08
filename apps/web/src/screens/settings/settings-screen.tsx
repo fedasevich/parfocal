@@ -35,6 +35,7 @@ import type { WordingSetting } from "@parfocal/ui/lib/confidence-words";
 import { useQueryClient } from "@tanstack/react-query";
 import { type ReactNode, useCallback, useEffect, useState } from "react";
 import { now } from "../../clock.ts";
+import { setLengthUnits } from "../../measure/length-units.ts";
 import { applyDensity } from "../../shell/density.ts";
 import { personOf } from "../../shell/global-shell.tsx";
 import { usePinnedStrip } from "../../shell/pinned-strip.ts";
@@ -343,7 +344,10 @@ function LoadedSettings({
           ["auto", "µm and mm"],
           ["um", "Always µm"],
         ]}
-        onChange={(value) => setP("lengths", value as Personal["lengths"])}
+        onChange={(value) => {
+          setP("lengths", value as Personal["lengths"]);
+          setLengthUnits(value === "um" ? "um" : "auto");
+        }}
       />
     ),
     language: () => (

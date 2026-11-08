@@ -7,6 +7,7 @@ import {
   ringOf,
   type Shape,
 } from "../annotations/shapes.ts";
+import { formatMicrons, formatSquareMicrons, type LengthUnits } from "./length-units.ts";
 
 export type ShapeMeasure = {
   readonly areaSquarePixels: number;
@@ -89,19 +90,14 @@ export function measureShape(shape: Shape, micronsPerPixel: number | null): Shap
   };
 }
 
-export function formatArea(measure: ShapeMeasure): string {
+export function formatArea(measure: ShapeMeasure, units?: LengthUnits): string {
   const microns = measure.areaSquareMicrons;
   if (microns === null) return `${Math.round(measure.areaSquarePixels)} px²`;
-  if (microns < 100) return `${microns.toFixed(1)} µm²`;
-  if (microns < 999_500) return `${Math.round(microns)} µm²`;
-  return `${(microns / 1_000_000).toFixed(2)} mm²`;
+  return formatSquareMicrons(microns, units);
 }
 
-export function formatPerimeter(measure: ShapeMeasure): string {
+export function formatPerimeter(measure: ShapeMeasure, units?: LengthUnits): string {
   const microns = measure.perimeterMicrons;
   if (microns === null) return `${Math.round(measure.perimeterPixels)} px`;
-  const tenths = Math.round(microns * 10) / 10;
-  if (tenths < 100) return `${tenths.toFixed(1)} µm`;
-  if (microns < 999.5) return `${Math.round(microns)} µm`;
-  return `${(microns / 1000).toFixed(2)} mm`;
+  return formatMicrons(microns, units);
 }

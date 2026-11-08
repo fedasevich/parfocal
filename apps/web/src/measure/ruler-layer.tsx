@@ -12,6 +12,7 @@ import { useStageRect } from "../annotations/stage-size.ts";
 import { useEscRegistry } from "../keys/esc-owner.tsx";
 import type { ViewerEngine } from "../viewer/viewer-engine.ts";
 import { screenToSlide, slideToScreen } from "../viewer/viewer-engine.ts";
+import { useLengthUnits } from "./length-units.ts";
 import {
   formatRulerLength,
   minimumDragScreenPixels,
@@ -38,6 +39,7 @@ export function RulerLayer({ engine, stage, active, document: doc, onApply }: Ru
   const [draft, setDraft] = useState<Segment | null>(null);
   const latest = useRef({ doc, onApply, engine });
   latest.current = { doc, onApply, engine };
+  const units = useLengthUnits();
   const spacing = engine.getSlide()?.micronsPerPixel ?? null;
 
   useEffect(() => {
@@ -155,7 +157,7 @@ export function RulerLayer({ engine, stage, active, document: doc, onApply }: Ru
           dashed={dashed}
           from={slideToScreen(camera, rect, segment.from)}
           to={slideToScreen(camera, rect, segment.to)}
-          label={formatRulerLength(segment, spacing)}
+          label={formatRulerLength(segment, spacing, units)}
         />
       ))}
     </div>
