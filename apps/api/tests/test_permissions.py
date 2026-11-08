@@ -289,6 +289,8 @@ NEEDS_A_TASK = frozenset(
         "createSharedObject",
         "importSharedObjects",
         "changeAiObject",
+        "confirmAiObject",
+        "undoAiConfirm",
         "addRunToTaskSlide",
         "changeSharedObject",
         "deleteSharedObject",
@@ -717,6 +719,8 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
         {"file_name": "case.geojson", "content": {"type": "Feature", "geometry": SQUARE}},
     ),
     "changeAiObject": lambda w: Call("PUT", f"{w.shared_layer}/ai/T1", {"deleted": True}),
+    "confirmAiObject": lambda w: Call("POST", f"{w.shared_layer}/ai/T2/confirm", {}),
+    "undoAiConfirm": lambda w: Call("DELETE", f"{w.shared_layer}/ai/T3/confirm?version=1"),
     "addRunToTaskSlide": lambda w: Call(
         "POST",
         f"/api/review-tasks/{w.annotate_task}/slides/{w.slide}/runs",
@@ -1296,6 +1300,20 @@ async def seed_annotate_task(
     ]
     assert isinstance(kept, uuid.UUID)
     assert isinstance(doomed, uuid.UUID)
+    await connection.execute(
+        insert(annotations).values(
+            tenant_id=tenant_id,
+            project_id=project_id,
+            slide_id=slide_id,
+            task_id=task_id,
+            kind="region",
+            number=5000 + number,
+            geometry=func.ST_GeomFromText("POLYGON((0 0,9 0,9 9,0 9,0 0))", 0),
+            origin="ai-confirmed",
+            source_number=3,
+            created_by_user_id=user_id,
+        )
+    )
     return task_id, kept, doomed
 
 

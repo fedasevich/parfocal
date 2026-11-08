@@ -88,16 +88,30 @@ test("a click on an object opens its origin, author and history", async ({ page 
   await expect(hand).toContainText("Anna Kopecká");
 });
 
-test("C confirms the selected AI object and the progress line follows", async ({ page }) => {
+test("D confirms the selected AI object, marks it and the progress line follows", async ({
+  page,
+}) => {
   const links = await taskLinks(page);
   await page.goto(hrefOf(links, "Annotate task · Checking AI objects"));
+  const object = page.locator('[data-object="O25"]');
   await expect(progressLine(page)).toHaveText("21 of 46 checked", { timeout: 20_000 });
+  await expect(page.getByRole("button", { name: /^Confirm O25/ })).toContainText("D");
   await page.keyboard.press("c");
+  await expect(progressLine(page)).toHaveText("21 of 46 checked");
+  await expect(object).toHaveAttribute("data-origin", "ai");
+  await expect(object.locator("path[stroke-dasharray]")).toHaveCount(1);
+  await page.keyboard.press("d");
   await expect(progressLine(page)).toHaveText("22 of 46 checked");
-  await expect(page.locator('[data-object="O25"]')).toHaveAttribute("data-origin", "ai-confirmed");
+  await expect(object).toHaveAttribute("data-origin", "ai-confirmed");
+  await expect(object.locator("path[stroke-dasharray]")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /^Confirm O25/ })).toHaveCount(0);
+  await page.getByRole("checkbox", { name: "Who made it" }).press("Space");
+  await expect(page.getByRole("checkbox", { name: "Who made it" })).toBeChecked();
+  await expect(object.locator('[data-badge="ai-confirmed"]')).toHaveCount(1);
   await page.getByRole("button", { name: /Undo/ }).click();
   await expect(progressLine(page)).toHaveText("21 of 46 checked");
-  await expect(page.locator('[data-object="O25"]')).toHaveAttribute("data-origin", "ai");
+  await expect(object).toHaveAttribute("data-origin", "ai");
+  await expect(object.locator("[data-badge]")).toHaveCount(0);
 });
 
 test("marking the slide checked waits for every AI object, then shows the checked card", async ({

@@ -1212,6 +1212,7 @@ class AnnotationChange(StrEnum):
 class AnnotationOrigin(StrEnum):
     HUMAN = "human"
     AI_EDITED = "ai-edited"
+    AI_CONFIRMED = "ai-confirmed"
 
 
 slide_counters = Table(
@@ -1245,7 +1246,7 @@ annotations = Table(
     Column("version", Integer, nullable=False, server_default="1", info=OPERATIONAL),
     Column(
         "origin",
-        String(10),
+        String(16),
         nullable=False,
         server_default=AnnotationOrigin.HUMAN.value,
         info=OPERATIONAL,
@@ -1270,7 +1271,7 @@ annotations = Table(
         postgresql_where=text("source_number IS NOT NULL"),
     ),
     one_of("origin", AnnotationOrigin),
-    CheckConstraint("(origin = 'ai-edited') = (source_number IS NOT NULL)", name="source"),
+    CheckConstraint("(origin <> 'human') = (source_number IS NOT NULL)", name="source"),
     CheckConstraint("origin = 'human' OR task_id IS NOT NULL", name="source_task"),
     ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),
     ForeignKeyConstraint(["slide_id", "project_id"], ["slides.id", "slides.project_id"]),

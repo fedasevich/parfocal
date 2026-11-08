@@ -19,7 +19,19 @@ import { MagnificationBar } from "@parfocal/ui/components/magnification-bar";
 import { UndoToast } from "@parfocal/ui/components/undo-toast";
 import { ContextBar, ContextDivider, ContextPill } from "@parfocal/ui/components/viewer-tools";
 import { Zone } from "@parfocal/ui/components/zone";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  checkProgressOf,
+  confirmAction,
+  confirmActions,
+  canConfirm as confirmable,
+  confirmedCopy,
+  confirms,
+  progressLine,
+} from "../../annotations/check-state.ts";
+import { useBindings } from "../../keys/personal-keys.ts";
+import type { Fired } from "../../keys/registry.ts";
+import { useHotkeys } from "../../keys/use-hotkeys.ts";
 import { ReviewTop } from "../review/review-top.tsx";
 import { hpfSize } from "../review/slide-geometry.ts";
 import { type Camera, SlideStill } from "../review/slide-still.tsx";
@@ -150,9 +162,7 @@ function TaskWorkspace({ tools, scene, people }: TaskWorkspaceProps) {
     if (before === undefined) return;
     const what = kind === "confirmed" ? "Confirmed, geometry kept" : "Deleted, not a nucleus";
     const apply = (object: TaskObject): TaskObject => ({
-      ...object,
-      origin: kind === "confirmed" ? "ai-confirmed" : object.origin,
-      check: kind,
+      ...(kind === "confirmed" ? confirmedCopy(object) : { ...object, check: kind }),
       author: people.me,
       history: [...object.history, { id: kind, who: people.me, what, when: "11:20" }],
     });
@@ -169,16 +179,20 @@ function TaskWorkspace({ tools, scene, people }: TaskWorkspaceProps) {
   };
 
   const confirmSelected = () => {
-    if (selectedObject?.kind === "ai" && selectedObject.check === "unchecked") {
-      setCheck(selectedObject.id, "confirmed");
-    }
+    if (selectedObject && confirmable(selectedObject)) setCheck(selectedObject.id, "confirmed");
   };
+
+  const latestConfirm = useRef(confirmSelected);
+  latestConfirm.current = confirmSelected;
+  const confirmBindings = useBindings(["annotate"], confirmActions);
+  const onConfirmKey = useCallback((fired: Fired) => {
+    if (confirms(fired)) latestConfirm.current();
+  }, []);
+  useHotkeys(confirmBindings, onConfirmKey);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if ((event.target as HTMLElement).closest("input, textarea, [role=dialog]")) return;
-      if (event.metaKey || event.ctrlKey || event.altKey) return;
-      if (event.key === "c") confirmSelected();
       if (event.key === "Escape") setSelected(null);
     };
     window.addEventListener("keydown", onKey);
@@ -198,10 +212,10 @@ function TaskWorkspace({ tools, scene, people }: TaskWorkspaceProps) {
 
   const markChecked = () => setSlide("checked");
 
-  const canConfirm = selectedObject?.kind === "ai" && selectedObject.check === "unchecked";
+  const canConfirm = confirmable(selectedObject);
   const progressText = running
     ? `${objects.length + runObjects.length} objects from the run`
-    : `${checkedOf(counts)} of ${counts.total} checked`;
+    : progressLine(checkProgressOf(all));
   const checkedSummary = empty
     ? "You marked this slide as having nothing to mark. Colleagues see it as checked."
     : `${counts.total} AI objects checked: ${counts.confirmed} confirmed, ${counts.edited} edited, ${counts.deleted} deleted. You added ${all.filter((object) => object.kind === "human" && object.author === people.me).length} by hand.`;
@@ -403,7 +417,8 @@ function TaskWorkspace({ tools, scene, people }: TaskWorkspaceProps) {
                 <>
                   <ContextDivider />
                   <Button size="sm" variant="primary" onClick={confirmSelected}>
-                    Confirm {selectedObject?.id} <Keycap keys="C" size="sm" />
+                    Confirm {selectedObject?.id}{" "}
+                    <Keycap action={confirmAction} keys="D" size="sm" />
                   </Button>
                   <Button size="sm" onClick={() => setCheck(selectedObject?.id ?? "", "deleted")}>
                     Delete

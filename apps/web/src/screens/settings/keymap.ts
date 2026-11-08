@@ -183,6 +183,20 @@ const keymap: [string, KeyContext, Scope, Row[]][] = [
     ],
   ],
   [
+    "Checking AI objects",
+    "all",
+    "annotate",
+    [
+      [
+        "aconfirm",
+        "Confirm the selected AI object",
+        ["D"],
+        "new",
+        { note: "on annotate tasks. Editing or deleting an AI object also checks it" },
+      ],
+    ],
+  ],
+  [
     "Compare",
     "compare",
     "compare",
