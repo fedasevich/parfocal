@@ -117,7 +117,7 @@ export const annotationHandlers = (): RequestHandler[] => [
             ? found.geometry
             : { ...edit.geometry },
         class_id: edit.class_id === undefined ? found.class_id : edit.class_id,
-        text: edit.text === undefined ? found.text : (edit.text?.trim() ?? null),
+        text: edit.text === undefined ? (found.text ?? null) : (edit.text?.trim() ?? null),
         version: found.version + 1,
         updated_at: new Date().toISOString(),
       };
