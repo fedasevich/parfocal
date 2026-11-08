@@ -1,4 +1,12 @@
+import type { TypedOutline } from "../overlay/outline-modes.ts";
+import type { ClassName } from "../overlay/outline-style.ts";
 import { type CellChunk, readCellChunk } from "./cell-chunk.ts";
+import {
+  type CellConfidence,
+  confidenceOf,
+  isUnsureCell,
+  UNCALIBRATED,
+} from "./cell-confidence.ts";
 import { CellEdits } from "./cell-edits.ts";
 import {
   type CellSummary,
@@ -25,6 +33,7 @@ export interface PagedCellsOptions {
   readonly vertexBudget?: number;
   readonly batch?: number;
   readonly pad?: number;
+  readonly temperature?: number;
   readonly signal?: AbortSignal;
   readonly onChange?: () => void;
 }
@@ -56,7 +65,23 @@ export interface LoadedCell {
   readonly score: number;
   readonly flags: number;
   readonly ring: Float32Array;
+  readonly probs: Uint8Array | null;
+  readonly altClass: number | null;
+  readonly confidence: CellConfidence | null;
 }
+
+export interface UnsureCell {
+  readonly number: number;
+  readonly row: number;
+  readonly x: number;
+  readonly y: number;
+  readonly classIndex: number;
+  readonly confidence: CellConfidence | null;
+}
+
+export type ClassNameOf = (classIndex: number) => ClassName | null;
+
+const BYTE = 255;
 
 export async function fetchBytes(
   url: string,
@@ -176,6 +201,58 @@ export class PagedCells {
     }
   }
 
+  get temperature(): number {
+    return this.options.temperature ?? UNCALIBRATED;
+  }
+
+  rowConfidence(row: number): CellConfidence | null {
+    return confidenceOf(this.summary.probs, row, this.summary.classes, this.temperature);
+  }
+
+  unsureIn(view: Rect, limit = Infinity): UnsureCell[] {
+    const { summary } = this;
+    const found: UnsureCell[] = [];
+    for (let row = 0; row < summary.count; row++) {
+      const x = summary.x[row] ?? 0;
+      const y = summary.y[row] ?? 0;
+      if (x < view[0] || x >= view[2] || y < view[1] || y >= view[3]) continue;
+      if (!this.rowIsLive(row)) continue;
+      const confidence = this.rowConfidence(row);
+      if (!isUnsureCell(confidence, summary.flags[row] ?? 0)) continue;
+      found.push({
+        number: numberOfRow(summary, row),
+        row,
+        x,
+        y,
+        classIndex: this.rowClass(row),
+        confidence,
+      });
+    }
+    found.sort(
+      (a, b) => (a.confidence?.top ?? 0) - (b.confidence?.top ?? 0) || a.number - b.number,
+    );
+    return found.slice(0, limit);
+  }
+
+  outlines(classNameOf: ClassNameOf): TypedOutline[] {
+    const classes = this.summary.classes;
+    const outlines: TypedOutline[] = [];
+    this.forEachLive((chunk, local, classIndex) => {
+      const className = classNameOf(classIndex);
+      if (className === null) return;
+      const confidence = confidenceOf(chunk.probs, local, classes, this.temperature);
+      const from = (chunk.offsets[local] ?? 0) * 2;
+      const to = (chunk.offsets[local + 1] ?? 0) * 2;
+      outlines.push({
+        ring: chunk.points.subarray(from, to),
+        className,
+        top: confidence?.top ?? (chunk.score[local] ?? BYTE) / BYTE,
+        second: confidence?.second ?? 0,
+      });
+    });
+    return outlines;
+  }
+
   rowIsLive(row: number): boolean {
     return !this.edits.isRemoved(numberOfRow(this.summary, row));
   }
@@ -216,6 +293,9 @@ export class PagedCells {
       score: chunk.score[local] ?? 0,
       flags: chunk.flags[local] ?? 0,
       ring: chunk.points.subarray(from, to),
+      probs: probsOf(chunk, local, this.summary.classes),
+      altClass: chunk.altClass?.[local] ?? null,
+      confidence: confidenceOf(chunk.probs, local, this.summary.classes, this.temperature),
     };
   }
 
@@ -235,6 +315,11 @@ export class PagedCells {
     this.cache.put(chunk);
     return chunk;
   }
+}
+
+function probsOf(chunk: CellChunk, local: number, classes: number): Uint8Array | null {
+  if (chunk.probs === null || classes < 1) return null;
+  return chunk.probs.subarray(local * classes, (local + 1) * classes);
 }
 
 function distanceToView(entry: ChunkEntry, view: Rect): number {

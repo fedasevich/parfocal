@@ -42,6 +42,7 @@ from parfocal_api.review_order import (
     ResultFilesUnreadableError,
     Results,
     check_states,
+    temperature_of,
 )
 from parfocal_api.reviewed_layer import (
     KINDS,
@@ -70,6 +71,7 @@ from parfocal_common.cell_chunks import ChunkError
 from parfocal_common.chunk_store import Cell, read_chunk
 from parfocal_common.object_ids import Letter, ObjectId
 from parfocal_common.result_store import MissingObjectError, ResultStore
+from parfocal_common.review_order import UNCALIBRATED, calibrated_shares
 
 CHANGED_EVENT = "layer.object-changed"
 SOURCE_INDEX = ["task_id", "slide_id", "kind", "source_number"]
@@ -132,12 +134,19 @@ class SharedLayer(BaseModel):
 type AiOutline = Annotated[PolygonGeometry | MultiPolygonGeometry, Field(discriminator="type")]
 
 
+class ClassProbability(BaseModel):
+    position: int
+    class_id: uuid.UUID | None
+    probability: float
+
+
 class SharedAiObject(BaseModel):
     object: str
     kind: Literal["region", "cell"]
     number: int
     class_id: uuid.UUID | None
     score: float | None
+    probabilities: list[ClassProbability] | None
     geometry: AiOutline
     check: CheckState
 
@@ -800,6 +809,17 @@ async def ai_cells(
     return found
 
 
+def class_probabilities(
+    cell: Cell, classes: dict[int, uuid.UUID], temperature: float
+) -> list[ClassProbability] | None:
+    if not cell.probs:
+        return None
+    return [
+        ClassProbability(position=position, class_id=classes.get(position), probability=share)
+        for position, share in enumerate(calibrated_shares(cell.probs, temperature))
+    ]
+
+
 def cell_outline(ring: Sequence[float]) -> PolygonGeometry:
     points = [(ring[i], ring[i + 1]) for i in range(0, len(ring), 2)]
     return PolygonGeometry(type="Polygon", coordinates=[[*points, points[0]]])
@@ -861,6 +881,7 @@ async def list_shared_ai_objects(
             number=item.number,
             class_id=None if item.class_index is None else classes.get(item.class_index),
             score=fraction(item.score),
+            probabilities=None,
             geometry=json.loads(item.geojson),
             check=check(Letter.REGION, item.number),
         )
@@ -870,6 +891,7 @@ async def list_shared_ai_objects(
         cells = await ai_cells(
             connection, results, set_id, max(offset - region_total, 0), limit - len(objects)
         )
+        temperature = await temperature_of(connection, set_id) if cells else UNCALIBRATED
         objects.extend(
             SharedAiObject(
                 object=ObjectId(Letter.CELL, cell.number).text(ascii=True),
@@ -877,6 +899,7 @@ async def list_shared_ai_objects(
                 number=cell.number,
                 class_id=classes.get(cell.class_index),
                 score=fraction(cell.score),
+                probabilities=class_probabilities(cell, classes, temperature),
                 geometry=cell_outline(cell.ring),
                 check=check(Letter.CELL, cell.number),
             )

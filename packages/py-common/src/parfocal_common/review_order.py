@@ -28,15 +28,22 @@ class Rated:
     centre: tuple[float, float] | None = None
 
 
-def calibrated(probabilities: Sequence[int], class_index: int, temperature: float) -> int:
+def calibrated_shares(probabilities: Sequence[int], temperature: float) -> list[float]:
     if temperature == UNCALIBRATED:
-        return probabilities[class_index]
+        return [value / BYTE for value in probabilities]
     logits = [
         math.log(max(value / BYTE, PROBABILITY_FLOOR)) / temperature for value in probabilities
     ]
     top = max(logits)
     weights = [math.exp(value - top) for value in logits]
-    return round(BYTE * weights[class_index] / sum(weights))
+    total = sum(weights)
+    return [weight / total for weight in weights]
+
+
+def calibrated(probabilities: Sequence[int], class_index: int, temperature: float) -> int:
+    if temperature == UNCALIBRATED:
+        return probabilities[class_index]
+    return round(BYTE * calibrated_shares(probabilities, temperature)[class_index])
 
 
 def certainty_of(

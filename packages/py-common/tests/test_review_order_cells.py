@@ -12,6 +12,7 @@ from parfocal_common.review_order import (
     CellChunk,
     CellPool,
     calibrated,
+    calibrated_shares,
     least_sure_first,
     pack,
     scoped_cells,
@@ -175,6 +176,15 @@ def test_calibration_keeps_bytes_at_one_and_softens_them_above_one() -> None:
     assert calibrated([200, 55], 0, 2.0) == round(255 * 1 / (1 + (55 / 200) ** 0.5))
     assert calibrated([200, 55], 1, 2.0) < 128 < calibrated([200, 55], 0, 2.0) < 200
     assert calibrated([255, 0, 0], 0, 1.42) == 255
+
+
+def test_calibrated_shares_sum_to_one_and_match_the_byte_figure() -> None:
+    assert calibrated_shares([200, 55], 1.0) == pytest.approx([200 / 255, 55 / 255])
+    soft = calibrated_shares([200, 55, 0], 1.42)
+    assert sum(soft) == pytest.approx(1)
+    assert [round(255 * share) for share in soft] == [
+        calibrated([200, 55, 0], index, 1.42) for index in range(3)
+    ]
 
 
 def test_the_temperature_can_swap_two_cells_of_three_classes() -> None:

@@ -57,6 +57,11 @@ const aiCells: SharedAiObject[] = [0.42, 0.61, 0.73, 0.88, 0.55, 0.94].map((scor
   number: index + 1,
   class_id: annotateTaskClasses[index % 2]?.id ?? null,
   score,
+  probabilities: [0, 1].map((position) => ({
+    position,
+    class_id: annotateTaskClasses[position]?.id ?? null,
+    probability: position === index % 2 ? score : 1 - score,
+  })),
   geometry: square(2200 + index * 140, 2400 + (index % 3) * 120, 60),
   check: "unchecked",
 }));
