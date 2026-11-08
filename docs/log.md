@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-08
 
+- SET-002 (settings modal shell): Cmd+comma opens Settings, the navigation shows a legend of the three scope badges, and Playwright specs cover closing, navigation and one window size on every section. Moving the screen off the draft getMySettings onto the layered settings moves to SET-013 (settings screen on the layered settings), because many rows are not in the settings catalogue yet.
 - EXP-002 (PHI-free event taxonomy) added nine typed, ids-only analytics events in apps/web/src/telemetry/events.ts with a sink that drops invalid events, a schema test that rejects free text, and five new fields on the shared web and Python scrubbing allow-lists. Nothing emits the events yet.
 - DEV-007 (footswitch mapping) adds a Footswitch device to the controls legend. Its default key is J, the key bound to next cell, and a test checks that the key and the registry match.
 - DEV-006 (device legend on the canvas) adds the legend card with the mock's rows for six devices in read, review and annotate. It shows on the slide stage when a main input device is saved in device settings, in the review or annotate context, and a browser test covers every device. Nothing selects the read rows yet, and there is no mock-style toggle for the legend.

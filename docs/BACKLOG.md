@@ -3497,7 +3497,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Server storage for personal and lab settings, device storage for device settings, resolution order lab locked, then personal, then device, then default. Typed schema shared by client and server.
   Done when unit tests cover resolution for every scope combination.
 
-- [ ] SET-002 · Settings modal shell
+- [x] SET-002 · Settings modal shell
   Left navigation, scope badges legend, live application behind the dimmed backdrop, closes with Esc, the close button or a backdrop click. Opens with Cmd+comma and from the account menu (SHELL-012). The window keeps one stable size across sections and long sections scroll inside it, so moving between sections never resizes or moves it. The settings prototype reads the draft `getMySettings`. This task moves it onto `getMySettingLayers`, `setMySettingLayers` and `resolveSettings` of SET-001 (settings storage and resolution), adds the prototype's shortcuts and presets to the catalogue or to their own task, and deletes the draft and its handler.
   Done when component tests cover navigation and closing, and a test confirms the window's size is the same on every section.
   Refs [ADR 0021](adr/0021-chosen-home-worklist-status-board-and-account-menu.md).
