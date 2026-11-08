@@ -4842,6 +4842,12 @@ Admin is its own page with its own sidebar and the app's top bar, never a page i
   Depends on ADMIN-001, EVAL-007. Refs mock: admin/templates, mock: admin/tpledit, doc 43.
   Size: L.
 
+- [ ] ADMIN-009 · Named actors and real sign-in settings in Admin
+  ADMIN-007 shows "A member" in the audit log's Who column against the real API, because audit events name actors by pseudonym, and the Security page's single sign-on and two factor switches save nothing. Let admins with the audit permission resolve a pseudonym to the member's name in the log view only, never in the export or logs, and wire single sign-on and two factors to the IdP settings that IAM-012 and the session policy already hold.
+  Done when an API test resolves actor names for an admin and refuses others, the export still carries pseudonyms only, and a browser test changes the two factor setting and reads it back.
+  Depends on ADMIN-007.
+  Size: M.
+
 ---
 
 ## 51 VIZ · Layers and visualization
