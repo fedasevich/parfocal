@@ -12,6 +12,16 @@ import { Icon } from "@parfocal/ui/components/icon";
 import { Keycap } from "@parfocal/ui/components/keycap";
 import { SidePanel } from "@parfocal/ui/components/side-panel";
 import { type OpinionQuestion, SlideDoneCard } from "@parfocal/ui/components/slide-done-card";
+import {
+  type AreaCall,
+  type AreaCount,
+  areaRole,
+  callOf,
+  callToast,
+  countOf,
+  pickCall,
+  roleText,
+} from "@parfocal/ui/lib/area-call";
 import { cn } from "@parfocal/ui/lib/utils";
 import { useNavigate } from "@tanstack/react-router";
 import { type ReactNode, useEffect, useMemo, useState } from "react";
@@ -319,6 +329,37 @@ function GuidedBody({
     }
     if (settings.auto) advance(index, next);
   };
+  const regionAreas = regions.map((region) => ({
+    id: region.object,
+    call: callOf(answer(region.object)?.value),
+  }));
+  const callArea = (picked: AreaCall) => {
+    if (current === undefined || buttonsOff) return;
+    const kept = answer(currentId);
+    const call = pickCall(callOf(kept?.value), picked);
+    if (call === null) {
+      put(currentId, null);
+      decisions.restore(currentId, undefined);
+      showUndoToast({ message: callToast(regionAreas, currentId, null) });
+      return;
+    }
+    const raw = rawFor(style, countOf(call), current);
+    const next = put(currentId, {
+      value: countOf(call),
+      raw,
+      reasons: [],
+      note: kept?.note ?? null,
+    });
+    decisions.save(currentId, raw, countOf(call));
+    showUndoToast({
+      message: callToast(regionAreas, currentId, call),
+      undo: () => {
+        setOverrides(new Map(next).set(currentId, kept ?? null));
+        decisions.restore(currentId, kept);
+      },
+    });
+    if (settings.auto && call !== "unsure") advance(index, next);
+  };
   const notNucleus = (object: string) => {
     const target = objects.find((item) => item.object === object);
     if (target === undefined || answer(object)) return;
@@ -421,7 +462,12 @@ function GuidedBody({
     if (!showDone && !noResults && answer(currentId)) openNote();
   });
 
-  useAnswerKeys(answersOf(style, session.classes, current), answerWith, !showDone && !noResults);
+  const areaMode = session.nodeStaging && current?.kind === "region";
+  useAnswerKeys(
+    answersOf(style, session.classes, current),
+    (raw) => (areaMode ? callArea(callOf(raw as AreaCount) ?? "unsure") : answerWith(raw)),
+    !showDone && !noResults,
+  );
 
   useObjectKeys(
     () => goTo(index + 1),
@@ -654,6 +700,15 @@ function GuidedBody({
         disagreeOpen={disagreeOpen}
         note={note}
         coach={coachTips}
+        areaCall={
+          areaMode
+            ? {
+                value: callOf(kept?.value),
+                role: roleText[areaRole(regionAreas, currentId)],
+                onCall: callArea,
+              }
+            : undefined
+        }
         onAnswer={answerWith}
         onReason={toggleReason}
         onBackToAnswers={() => setDisagreeOpen(false)}

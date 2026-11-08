@@ -275,3 +275,27 @@ def test_a_region_decided_before_its_class_was_mapped_keeps_that_call(
     rows = class_rows(api, c)
     assert rows["T1"] == ("tumour", "tumour")
     assert rows["T2"] == ("Tumor", "Tumor")
+
+
+def test_the_three_area_calls_are_stored_with_the_reviewer_and_time_and_audited(
+    api: ApiAs, database: str
+) -> None:
+    c = called(api, database)
+    first = str(c.r.people["first"].user_id)
+    for value in ("agree", "disagree", "unsure"):
+        response = decide(api, c, "T1", {"value": value})
+        assert response.status_code == 200, response.text
+        body = response.json()
+        assert body["value"] == value
+        assert body["updated_at"]
+        assert decisions(api, c, "owner", reviewer_id=first)["T1"]["value"] == value
+    assert audited(database, c).count("review.verdict-set") == 3
+
+
+def test_toggling_an_area_call_off_clears_it_and_is_audited(api: ApiAs, database: str) -> None:
+    c = called(api, database)
+    decide(api, c, "T1", {"value": "disagree"})
+    cleared = api(c.r.people["first"]).delete(f"{c.r.base}/verdicts/T1")
+    assert cleared.status_code in (200, 204), cleared.text
+    assert "T1" not in decisions(api, c)
+    assert audited(database, c)[-1] == "review.verdict-cleared"
