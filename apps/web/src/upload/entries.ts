@@ -14,6 +14,7 @@ export type UploadEntry = FileIdentity & {
   bytesUploaded: number;
   attempt: number;
   retryAt: number | null;
+  uploadId?: string;
 };
 
 const HINTS_KEY = "parfocal.uploads.interrupted";

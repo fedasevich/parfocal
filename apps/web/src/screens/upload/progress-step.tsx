@@ -1,4 +1,4 @@
-import type { UploadBatch, UploadBatchSlide } from "@parfocal/api-client";
+import type { UploadBatch } from "@parfocal/api-client";
 import { Banner } from "@parfocal/ui/components/banner";
 import { Button } from "@parfocal/ui/components/button";
 import { Icon } from "@parfocal/ui/components/icon";
@@ -21,12 +21,18 @@ import {
 
 type Progress = { percent: number; tone: "ok" | "tiles" | "accent" | "warn"; text: string };
 
-function StepList({
+export type StepListSlide = {
+  steps: { label: string; detail?: string | null | undefined }[];
+  steps_done: number;
+  running: { percent: number | null; text: string } | null;
+};
+
+export function StepList({
   slide,
   projectId,
   firstSlideId,
 }: {
-  slide: UploadBatchSlide;
+  slide: StepListSlide;
   projectId: string;
   firstSlideId: string | undefined;
 }) {
@@ -59,7 +65,11 @@ function StepList({
             </span>
             {current && slide.running ? (
               <span className="flex w-57.5 items-center gap-2.5">
-                <ProgressBar value={slide.running.percent} className="flex-1" />
+                {slide.running.percent === null ? (
+                  <span className="flex-1" />
+                ) : (
+                  <ProgressBar value={slide.running.percent} className="flex-1" />
+                )}
                 <span className="text-caption whitespace-nowrap text-fg-dim">
                   {slide.running.text}
                 </span>
