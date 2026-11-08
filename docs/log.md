@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-08
 
+- EXP-002 (PHI-free event taxonomy) added nine typed, ids-only analytics events in apps/web/src/telemetry/events.ts with a sink that drops invalid events, a schema test that rejects free text, and five new fields on the shared web and Python scrubbing allow-lists. Nothing emits the events yet.
 - DEV-007 (footswitch mapping) adds a Footswitch device to the controls legend. Its default key is J, the key bound to next cell, and a test checks that the key and the registry match.
 - DEV-006 (device legend on the canvas) adds the legend card with the mock's rows for six devices in read, review and annotate. It shows on the slide stage when a main input device is saved in device settings, in the review or annotate context, and a browser test covers every device. Nothing selects the read rows yet, and there is no mock-style toggle for the legend.
 - MEAS-005 (units setting) added a length units store with µm and mm automatically or always µm, applied to the ruler label, the measurement list and the pin thread measurement, kept in localStorage under parfocal.length-units and wired to the Lengths choice in Settings. The objects panel, review panels and clinical report still show mm, and the store does not yet load the server's saved setting at start.

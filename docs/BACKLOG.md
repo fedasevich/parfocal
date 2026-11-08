@@ -3730,7 +3730,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when tests cover targeting rules.
   Size: M.
 
-- [ ] EXP-002 · PHI-free event taxonomy
+- [x] EXP-002 · PHI-free event taxonomy
   Events for navigation, review decisions, tool use and task boundaries, with ids only.
   Done when a schema test rejects events with free text fields.
   Size: S.
