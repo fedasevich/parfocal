@@ -22,6 +22,8 @@ import {
 } from "./paged-review.ts";
 import { type CellShape, replaceCellShapes, restoreCellShapes } from "./slide-geometry.ts";
 import type { RegionStyle } from "./slide-still.tsx";
+import { buildUnsureIndex } from "./unsure-index.ts";
+import { FOLLOW_LIMIT, fieldCentreOf, fieldKeyOf, WorkingSet } from "./working-set.ts";
 
 type EngineModule = typeof import("../../viewer/viewer-engine.ts");
 
@@ -38,6 +40,7 @@ export type PagedReview = {
   positionOf: (object: string) => Point | undefined;
   styleOf: (object: string, base: RegionStyle | undefined) => RegionStyle | undefined;
   follow: (centre: Point | null) => void;
+  pin: (objects: Iterable<string>) => void;
   probe: PagedProbe;
 };
 
@@ -88,34 +91,74 @@ export function usePagedReview(classNames: readonly string[]): PagedReview | nul
     };
   }, [count]);
 
+  const set = useRef(new WorkingSet());
+  const initialKey = "initial";
+
+  const commit = useCallback(
+    (loaded: Opened, indexed: boolean) => {
+      const cells = set.current.cells();
+      const shapes = placeholderShapes(cells, loaded.paged);
+      base.current = shapes;
+      baseTops.current = new Map(
+        cells.map((cell) => [`C${cell.number}`, cell.confidence?.top ?? 1]),
+      );
+      tops.current = baseTops.current;
+      replaceCellShapes(shapes);
+      setWorkingSet(cells.map((cell) => reviewObjectOf(cell, names.split("|"))));
+      setProbe((before) => ({
+        ...before,
+        ready: true,
+        cells: loaded.paged.summary.count,
+        paged: loaded.paged.paged,
+        distinctAlphas: distinctAlphas(tops.current, loaded.engine.fadeAlpha),
+        workingSet: cells.length,
+        indexed: indexed ? set.current.indexSize() : before.indexed,
+        fields: before.fields,
+      }));
+    },
+    [names],
+  );
+
   useEffect(() => {
     if (opened === null || names === "") return;
-    const { paged, field, engine } = opened;
-    const view = fieldAround(field, FIELD_WIDTH, FIELD_HEIGHT);
-    const found = paged.unsureIn(view, WORKING_SET);
-    const objects = found.map((cell) => reviewObjectOf(cell, names.split("|")));
-    const shapes = placeholderShapes(found, paged);
-    base.current = shapes;
-    baseTops.current = new Map(found.map((cell) => [`C${cell.number}`, cell.confidence?.top ?? 1]));
-    tops.current = baseTops.current;
-    replaceCellShapes(shapes);
-    setWorkingSet(objects);
-    setProbe({
-      ready: true,
-      cells: paged.summary.count,
-      paged: paged.paged,
-      resident: 0,
-      drawn: 0,
-      distinctAlphas: distinctAlphas(tops.current, engine.fadeAlpha),
-      workingSet: objects.length,
+    const { paged, field } = opened;
+    set.current = new WorkingSet();
+    set.current.addField(
+      initialKey,
+      paged.unsureIn(fieldAround(field, FIELD_WIDTH, FIELD_HEIGHT), WORKING_SET),
+    );
+    commit(opened, false);
+    let stopped = false;
+    void buildUnsureIndex(
+      paged,
+      { isUnsureCell: opened.engine.isUnsureCell, numberOfRow: opened.engine.numberOfRow },
+      () => stopped,
+    ).then((cells) => {
+      if (stopped) return;
+      set.current.setIndex(cells);
+      commit(opened, true);
     });
-  }, [opened, names]);
+    return () => {
+      stopped = true;
+    };
+  }, [opened, names, commit]);
 
   const follow = useCallback(
     (centre: Point | null) => {
       if (opened === null || baseTops.current === noTops) return;
       const { paged, engine, field } = opened;
       const ticket = ++generation.current;
+      const key = centre === null ? initialKey : fieldKeyOf(centre);
+      if (set.current.hasField(key)) set.current.touch(key);
+      else {
+        const around = fieldCentreOf(key);
+        set.current.addField(
+          key,
+          paged.unsureIn(fieldAround(around, FIELD_WIDTH, FIELD_HEIGHT), FOLLOW_LIMIT),
+        );
+        commit(opened, false);
+        setProbe((before) => ({ ...before, fields: before.fields + 1 }));
+      }
       const view = fieldAround(centre ?? field, WINDOW_WIDTH, WINDOW_HEIGHT);
       void paged.show(view).then((report) => {
         if (report.superseded || ticket !== generation.current) return;
@@ -137,8 +180,10 @@ export function usePagedReview(classNames: readonly string[]): PagedReview | nul
         }));
       });
     },
-    [opened],
+    [opened, commit],
   );
+
+  const pin = useCallback((objects: Iterable<string>) => set.current.pin(objects), []);
 
   const styleOf = useCallback(
     (object: string, style: RegionStyle | undefined): RegionStyle | undefined => {
@@ -162,6 +207,7 @@ export function usePagedReview(classNames: readonly string[]): PagedReview | nul
     positionOf,
     styleOf,
     follow,
+    pin,
     probe,
   };
 }

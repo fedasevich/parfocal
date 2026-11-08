@@ -652,13 +652,24 @@ function ViewerBody({
   const cameraImage = imageOf(stillView);
   const shownCamera = camera ?? cameraFromSearch(cameraImage, search);
   const pagedFollow = paged?.follow;
-  const pagedAt = (axis: "x" | "y") =>
-    stillView.kind === "cell" && shownCamera ? Math.round(shownCamera[axis] / 150) * 150 : null;
+  const pagedHere = stillView.kind === "cell" ? paged?.positionOf(stillView.object) : undefined;
+  const pagedAt = (axis: "x" | "y") => {
+    const at = shownCamera ?? pagedHere;
+    return stillView.kind === "cell" && at ? Math.round(at[axis] / 150) * 150 : null;
+  };
   const pagedX = pagedAt("x");
   const pagedY = pagedAt("y");
   useEffect(() => {
     pagedFollow?.(pagedX === null || pagedY === null ? null : { x: pagedX, y: pagedY });
   }, [pagedFollow, pagedX, pagedY]);
+  const pagedPin = paged?.pin;
+  const decidedKey = cells
+    .filter((cell) => answer(cell.object))
+    .map((cell) => cell.object)
+    .join(",");
+  useEffect(() => {
+    if (decidedKey !== "") pagedPin?.(decidedKey.split(","));
+  }, [pagedPin, decidedKey]);
   const ranked = areaRows(areas, (object) => answer(object)?.value);
   const areaNav = useAreaNav({
     order: areaOrder(ranked),
