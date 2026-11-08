@@ -2478,7 +2478,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Depends on REVIEW-010, REVIEW-013.
   Size: S.
 
-- [ ] REVIEW-030 · The review screen reads paged results
+- [x] REVIEW-030 · The review screen reads paged results
   REVIEW-015 made every page of a paged result keep its cell probabilities, and the engine's paged cell reader handles one million cells, but the web review screen still reads a flat object list. Read cells through the paged reader in the full viewer, the zone gallery and focus mode, so the fade, unsure zones and decisions work on whole-slide results.
   Done when a browser test reviews cells on a paged result of at least 100,000 synthetic cells in the full viewer, with the fade, a zone and a saved decision.
   Depends on REVIEW-015.

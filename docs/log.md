@@ -2,6 +2,10 @@
 
 Newest entries on top. One line per piece of work, naming the backlog ID where there is one and linking the result. This file is append-only.
 
+## 2026-11-09
+
+- REVIEW-030 (the review screen reads paged results) connected the full viewer, the zone gallery and focus mode to the engine's paged cell reader, behind ?pagedCells=N in the fake API. A browser test on 250,000 synthetic cells generated per chunk checks the fade, a zone, a decision saved with its AI call and focus mode. The zone and jump set is the 1,200 least-sure cells in one field at the slide centre, so only the faded outlines follow the camera, which REVIEW-031 (unsure zones follow the camera on paged results) extends.
+
 ## 2026-11-08
 
 - VIEW-054 (JPEG 2000 slide in the viewer fixture group) ticked: CI run 42528015448 on c35eeab5 passed with the CMU-1-JP2K-33005.svs and CMU-1.tiff goldens running in the golden-images job, CMU-1.tiff decoded natively in the viewer-engine job and 79 GB free on the runner after the fetch. The viewer-engine jpeg2000.spec.ts decode test at line 93 still skips there.
