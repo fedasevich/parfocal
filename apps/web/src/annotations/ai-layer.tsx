@@ -24,7 +24,10 @@ export function AiLayer({ engine, stage, objects, selected, colourOf }: AiLayerP
       className="pointer-events-none absolute inset-0 size-full overflow-visible"
     >
       {shown.map((object) => {
-        const ring = object.geometry.coordinates[0] ?? [];
+        const ring =
+          (object.geometry.type === "Polygon"
+            ? object.geometry.coordinates[0]
+            : object.geometry.coordinates[0]?.[0]) ?? [];
         const points = ring
           .map(([x, y]) => {
             const at = slideToScreen(camera, rect, { x, y });

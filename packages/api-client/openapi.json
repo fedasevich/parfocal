@@ -16334,6 +16334,162 @@
         "x-permission-emergency": true
       }
     },
+    "/api/review-tasks/{task_id}/slides/{slide_id}/shared-layer/ai": {
+      "get": {
+        "tags": [
+          "review-tasks"
+        ],
+        "summary": "List Shared Ai Objects",
+        "operationId": "listSharedAiObjects",
+        "parameters": [
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Task Id"
+            }
+          },
+          {
+            "name": "slide_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Slide Id"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 5000,
+              "minimum": 1,
+              "default": 1000,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SharedAiObjects"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Sign in to continue"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "You do not have access to this"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "This changed since you loaded it"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Too many requests, try again shortly"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Something went wrong"
+          }
+        },
+        "x-permission": "see-slides",
+        "x-permission-emergency": true
+      }
+    },
     "/api/review-tasks/{task_id}/slides/{slide_id}/shared-layer/imports": {
       "post": {
         "tags": [
@@ -35805,6 +35961,23 @@
         "type": "object",
         "title": "AiObjectEdit"
       },
+      "AiOutline": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/PolygonGeometry"
+          },
+          {
+            "$ref": "#/components/schemas/MultiPolygonGeometry"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "type",
+          "mapping": {
+            "MultiPolygon": "#/components/schemas/MultiPolygonGeometry",
+            "Polygon": "#/components/schemas/PolygonGeometry"
+          }
+        }
+      },
       "AnalysisTemplate": {
         "type": "string",
         "enum": [
@@ -38285,6 +38458,16 @@
         },
         "type": "array",
         "maxItems": 4
+      },
+      "CheckState": {
+        "type": "string",
+        "enum": [
+          "unchecked",
+          "confirmed",
+          "edited",
+          "deleted"
+        ],
+        "title": "CheckState"
       },
       "ChoiceQuestion": {
         "properties": {
@@ -48349,6 +48532,129 @@
           "unknown"
         ],
         "title": "Sex"
+      },
+      "SharedAiObject": {
+        "properties": {
+          "object": {
+            "type": "string",
+            "title": "Object"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "region",
+              "cell"
+            ],
+            "title": "Kind"
+          },
+          "number": {
+            "type": "integer",
+            "title": "Number"
+          },
+          "class_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Class Id"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          },
+          "geometry": {
+            "$ref": "#/components/schemas/AiOutline"
+          },
+          "check": {
+            "$ref": "#/components/schemas/CheckState"
+          }
+        },
+        "type": "object",
+        "required": [
+          "object",
+          "kind",
+          "number",
+          "class_id",
+          "score",
+          "geometry",
+          "check"
+        ],
+        "title": "SharedAiObject"
+      },
+      "SharedAiObjects": {
+        "properties": {
+          "task_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Task Id"
+          },
+          "slide_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Slide Id"
+          },
+          "result_set_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result Set Id"
+          },
+          "result_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result Name"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset"
+          },
+          "objects": {
+            "items": {
+              "$ref": "#/components/schemas/SharedAiObject"
+            },
+            "type": "array",
+            "title": "Objects"
+          }
+        },
+        "type": "object",
+        "required": [
+          "task_id",
+          "slide_id",
+          "result_set_id",
+          "result_name",
+          "total",
+          "offset",
+          "objects"
+        ],
+        "title": "SharedAiObjects"
       },
       "SharedEvaluation": {
         "properties": {

@@ -4,13 +4,15 @@ import {
   type AnnotateSlideStatus,
   apiFetch,
   type CheckDraft,
-  type DraftQueryOptions,
-  defineDraftQuery,
   type LayerObject,
+  listSharedAiObjects,
+  type SharedAiObject,
+  type SharedAiObjects,
   type SharedLayer,
 } from "@parfocal/api-client";
 import { useQuery } from "@tanstack/react-query";
-import { z } from "zod";
+
+export type { SharedAiObject };
 
 const slidePath = (taskId: string, slideId: string) =>
   `/api/review-tasks/${taskId}/slides/${slideId}`;
@@ -67,38 +69,34 @@ export const confirmAi = (
 export const changeAi = (taskId: string, slideId: string, objectId: string, body: AiObjectEdit) =>
   send<LayerObject>(`${sharedLayerPath(taskId, slideId)}/ai/${objectId}`, "PUT", body);
 
-const sharedAiObjectSchema = z.object({
-  object: z.string(),
-  kind: z.enum(["region", "cell"]),
-  number: z.number().int().positive(),
-  class_id: z.string().nullable(),
-  score: z.number().min(0).max(1),
-  geometry: z.object({
-    type: z.literal("Polygon"),
-    coordinates: z.array(z.array(z.tuple([z.number(), z.number()]))),
-  }),
-});
+const AI_PAGE = 5000;
 
-const sharedAiObjectsSchema = z.object({
-  task_id: z.string(),
-  slide_id: z.string(),
-  result_set_id: z.string().nullable(),
-  result_name: z.string().nullable(),
-  objects: z.array(sharedAiObjectSchema),
-});
+async function aiPage(taskId: string, slideId: string, offset: number) {
+  const answer = await listSharedAiObjects(taskId, slideId, { offset, limit: AI_PAGE });
+  if (answer.status !== 200) throw new Error(answer.data.title);
+  return answer;
+}
 
-export type SharedAiObject = z.infer<typeof sharedAiObjectSchema>;
-
-const sharedAiDraft = defineDraftQuery(
-  "listSharedAiObjects",
-  (taskId: string, slideId: string) => `${sharedLayerPath(taskId, slideId)}/ai`,
-  sharedAiObjectsSchema,
-);
-
-type SharedAiAnswer = Awaited<ReturnType<typeof sharedAiDraft.fetcher>>;
-
-export const useSharedAiObjects = (
+export async function readSharedAiObjects(
   taskId: string,
   slideId: string,
-  options?: DraftQueryOptions<SharedAiAnswer, SharedAiAnswer, unknown>,
-) => sharedAiDraft.useDraftQuery([taskId, slideId], options);
+): Promise<Answer<SharedAiObjects>> {
+  const first = await aiPage(taskId, slideId, 0);
+  const objects = [...first.data.objects];
+  while (objects.length < first.data.total) {
+    const page = await aiPage(taskId, slideId, objects.length);
+    if (page.data.objects.length === 0) break;
+    objects.push(...page.data.objects);
+  }
+  return { ...first, data: { ...first.data, objects } };
+}
+
+export const sharedAiObjectsKey = (taskId: string, slideId: string) =>
+  [`${sharedLayerPath(taskId, slideId)}/ai`] as const;
+
+export const useSharedAiObjects = (taskId: string, slideId: string, enabled: boolean) =>
+  useQuery({
+    queryKey: sharedAiObjectsKey(taskId, slideId),
+    queryFn: () => readSharedAiObjects(taskId, slideId),
+    enabled,
+  });

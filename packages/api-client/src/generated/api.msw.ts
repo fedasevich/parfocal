@@ -124,6 +124,7 @@ import type {
   Session,
   SessionPolicy,
   SessionSummary,
+  SharedAiObjects,
   SharedLayer,
   SharedReport,
   SignedPart,
@@ -189,6 +190,7 @@ import {
   CheckKind,
   CheckOrder,
   CheckPreset,
+  CheckState,
   ClinicalTemplate,
   Code,
   ColourBy,
@@ -6095,6 +6097,69 @@ export const getListSharedObjectHistoryResponseMock = (): AnnotationVersion[] =>
       null,
     ]),
   }));
+
+export const getListSharedAiObjectsResponsePolygonGeometryMock = (
+  overrideResponse: Partial<PolygonGeometry> = {},
+): PolygonGeometry => ({
+  ...{
+    type: faker.helpers.arrayElement(["Polygon"] as const),
+    coordinates: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () =>
+        Array.from({ length: faker.number.int({ min: 4, max: 10 }) }, (_, i) => i + 1).map(() => [
+          faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+          faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+        ]),
+    ),
+  },
+  ...overrideResponse,
+});
+
+export const getListSharedAiObjectsResponseMultiPolygonGeometryMock = (
+  overrideResponse: Partial<MultiPolygonGeometry> = {},
+): MultiPolygonGeometry => ({
+  ...{
+    type: faker.helpers.arrayElement(["MultiPolygon"] as const),
+    coordinates: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () =>
+        Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
+          Array.from({ length: faker.number.int({ min: 4, max: 10 }) }, (_, i) => i + 1).map(() => [
+            faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+            faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+          ]),
+        ),
+    ),
+  },
+  ...overrideResponse,
+});
+
+export const getListSharedAiObjectsResponseMock = (
+  overrideResponse: Partial<Extract<SharedAiObjects, object>> = {},
+): SharedAiObjects => ({
+  task_id: faker.string.uuid(),
+  slide_id: faker.string.uuid(),
+  result_set_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  result_name: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  total: faker.number.int(),
+  offset: faker.number.int(),
+  objects: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      object: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      kind: faker.helpers.arrayElement(["region", "cell"] as const),
+      number: faker.number.int(),
+      class_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      score: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+      geometry: faker.helpers.arrayElement([
+        { ...getListSharedAiObjectsResponsePolygonGeometryMock() },
+        { ...getListSharedAiObjectsResponseMultiPolygonGeometryMock() },
+      ]),
+      check: faker.helpers.arrayElement(Object.values(CheckState)),
+    }),
+  ),
+  ...overrideResponse,
+});
 
 export const getImportSharedObjectsResponseMock = (
   overrideResponse: Partial<Extract<LayerImportResult, object>> = {},
@@ -15235,6 +15300,30 @@ export const getListSharedObjectHistoryMockHandler = (
   );
 };
 
+export const getListSharedAiObjectsMockHandler = (
+  overrideResponse?:
+    | SharedAiObjects
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<SharedAiObjects> | SharedAiObjects),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/review-tasks/:taskId/slides/:slideId/shared-layer/ai",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getListSharedAiObjectsResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getImportSharedObjectsMockHandler = (
   overrideResponse?:
     | LayerImportResult
@@ -18675,6 +18764,7 @@ export const getParfocalAPIMock = () => [
   getChangeSharedObjectMockHandler(),
   getDeleteSharedObjectMockHandler(),
   getListSharedObjectHistoryMockHandler(),
+  getListSharedAiObjectsMockHandler(),
   getImportSharedObjectsMockHandler(),
   getGetAnnotateSlideStatusMockHandler(),
   getCheckAnnotateSlideMockHandler(),

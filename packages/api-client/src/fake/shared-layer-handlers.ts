@@ -6,8 +6,11 @@ import type {
   AnnotationEdit,
   CheckDraft,
   CheckProgress,
+  CheckState,
   LayerObject,
   ProjectClass,
+  SharedAiObject,
+  SharedAiObjects,
   SharedLayer,
 } from "../generated/api.ts";
 import { people, resultSets } from "./scenario.ts";
@@ -35,23 +38,6 @@ const resultSet = resultSets.find((set) => set.key === "sam") ?? resultSets[0];
 const resultSetOf = (slideId: string) =>
   slideId === annotateTaskSlides.withResults ? (resultSet?.id ?? null) : null;
 
-type SharedAiObject = {
-  object: string;
-  kind: "region" | "cell";
-  number: number;
-  class_id: string | null;
-  score: number;
-  geometry: { type: "Polygon"; coordinates: [number, number][][] };
-};
-
-type SharedAiObjects = {
-  task_id: string;
-  slide_id: string;
-  result_set_id: string | null;
-  result_name: string | null;
-  objects: SharedAiObject[];
-};
-
 const square = (x: number, y: number, size: number): SharedAiObject["geometry"] => ({
   type: "Polygon",
   coordinates: [
@@ -72,6 +58,7 @@ const aiCells: SharedAiObject[] = [0.42, 0.61, 0.73, 0.88, 0.55, 0.94].map((scor
   class_id: annotateTaskClasses[index % 2]?.id ?? null,
   score,
   geometry: square(2200 + index * 140, 2400 + (index % 3) * 120, 60),
+  check: "unchecked",
 }));
 
 export const toSharedAiObjects = (taskId: string, slideId: string): SharedAiObjects => ({
@@ -79,6 +66,8 @@ export const toSharedAiObjects = (taskId: string, slideId: string): SharedAiObje
   slide_id: slideId,
   result_set_id: resultSetOf(slideId),
   result_name: resultSetOf(slideId) === null ? null : (resultSet?.name ?? null),
+  total: resultSetOf(slideId) === null ? 0 : aiCells.length,
+  offset: 0,
   objects: resultSetOf(slideId) === null ? [] : aiCells,
 });
 
@@ -245,9 +234,27 @@ function aiCopy(
 }
 
 export const sharedLayerHandlers = (): RequestHandler[] => [
-  http.get<Params>(`${base}/shared-layer/ai`, ({ params }) =>
-    HttpResponse.json(toSharedAiObjects(params.taskId, params.slideId)),
-  ),
+  http.get<Params>(`${base}/shared-layer/ai`, ({ params, request }) => {
+    const query = new URL(request.url).searchParams;
+    const offset = Number(query.get("offset") ?? 0);
+    const limit = Number(query.get("limit") ?? 1000);
+    const all = toSharedAiObjects(params.taskId, params.slideId);
+    const copies = layerOf(readStore(), keyOf(params.taskId, params.slideId));
+    const checkOf = (object: string): CheckState => {
+      const copy = copies.find((item) => item.source === object);
+      if (copy === undefined) return "unchecked";
+      if (copy.origin === "ai-confirmed")
+        return copy.deleted_at === null ? "confirmed" : "unchecked";
+      return copy.deleted_at === null ? "edited" : "deleted";
+    };
+    return HttpResponse.json({
+      ...all,
+      offset,
+      objects: all.objects
+        .slice(offset, offset + limit)
+        .map((item) => ({ ...item, check: checkOf(item.object) })),
+    });
+  }),
   http.get<Params>(`${base}/shared-layer`, ({ params }) => {
     if (params.taskId !== annotateStubTaskId) return undefined;
     const store = readStore();
@@ -353,7 +360,7 @@ export const sharedLayerHandlers = (): RequestHandler[] => [
             code: source.object,
           })),
         origin: "ai-confirmed",
-        geometry: source.geometry,
+        geometry: { ...source.geometry },
         class_id: null,
         deleted_at: null,
         version: (found?.version ?? 0) + 1,
