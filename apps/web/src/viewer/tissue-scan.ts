@@ -81,7 +81,8 @@ export function tissueScanPath(
   const rows = Math.ceil(extent.height / field.height);
   const path: ScanField[] = [];
   for (let row = 0; row < rows; row += 1) {
-    for (let column = 0; column < columns; column += 1) {
+    for (let step = 0; step < columns; step += 1) {
+      const column = row % 2 === 0 ? step : columns - 1 - step;
       const box = {
         x: extent.x + column * field.width,
         y: extent.y + row * field.height,

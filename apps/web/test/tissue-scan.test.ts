@@ -81,6 +81,37 @@ test("fields without a tissue centre are skipped", () => {
   );
 });
 
+test("the path is serpentine, left to right on even rows and right to left on odd rows", () => {
+  const tissue = tissueFrom(["####", "####", "####"]);
+  const path = tissueScanPath(tissue, { width: 128, height: 64 });
+  assert.deepEqual(
+    path.map((field) => [field.column, field.row]),
+    [
+      [0, 0],
+      [1, 0],
+      [1, 1],
+      [0, 1],
+      [0, 2],
+      [1, 2],
+    ],
+  );
+  assert.deepEqual(
+    path.map((field) => field.index),
+    [0, 1, 2, 3, 4, 5],
+  );
+});
+
+test("each step of the serpentine path starts within one field of the last", () => {
+  const tissue = tissueFrom(fixtureRows);
+  const path = tissueScanPath(tissue, { width: 128, height: 128 });
+  for (let at = 1; at < path.length; at += 1) {
+    const before = path[at - 1];
+    const here = path[at];
+    assert.ok(before && here);
+    assert.ok(Math.abs(here.row - before.row) <= 1);
+  }
+});
+
 test("the field follows the real viewport at the scan zoom with a small overlap", () => {
   const field = scanFieldAt({ width: 1000, height: 600 }, -2);
   assert.equal(field.width, 3800);
