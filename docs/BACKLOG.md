@@ -557,6 +557,11 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Done when one command builds the report locally, CI attaches it to pull requests, and the summary names the largest modules of the first-page chunk.
   Size: S.
 
+- [ ] FOUND-032 · Room on the first page bundle
+  After ANN-031 the first page is 349938 gzip bytes against the 350000 budget of ADR 0048 (routing). The `developer-data` chunk (about 4007 bytes) and the `walkthrough` chunk (about 3301 bytes) load on the first page, likely through search schema imports. Move them behind their routes without raising the budget.
+  Done when the bundle budget test shows the first page at least 5000 bytes under its limit and the developer and walkthrough routes still pass their browser specs.
+  Size: S.
+
 - [ ] FOUND-031 · Heavy dependency and lazy loading audit
   Every route page, admin and the form pages included, is already its own lazy chunk through TanStack Router `autoCodeSplitting` since SHELL-001 (routes and code splitting), so look below the page level. Using the FOUND-030 report, find the heaviest dependencies and the shell code the first page loads but does not show, such as dialogs, the jobs tray, the bell, the settings shortcut and section tables and rarely used Base UI parts. Move it behind `React.lazy` or dynamic imports, replace or trim the heaviest dependencies where a lighter one does the job, and lower the first-page budget in `perf-budgets.json` to the new size plus 10 KB of headroom. Write the before and after sizes in a result file and note in `knowledge/` how to repeat the audit, so it runs again at each milestone.
   Done when the first-page gzip size is smaller than before, the lowered budget passes, the result file records both sizes, and the E2E suite stays green.
