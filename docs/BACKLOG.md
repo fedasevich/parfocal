@@ -3309,7 +3309,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Depends on AISEG-010, AISEG-015. Refs docs 15, 26.
   Size: M.
 
-- [ ] AISEG-017 · Auto region tool on screen
+- [x] AISEG-017 · Auto region tool on screen
   AISEG-010 built and measured the AIS region pass, click and detect-in-selection, but nothing in the Annotate workspace starts it. Add the auto rail button with key U, the "N found" context bar with accept and discard, progress per tile, and move the per tile post-processing off the main thread into a worker so the screen does not pause once per tile.
   Done when a browser test drags a region on a fixture, sees the found count, accepts and finds the shapes saved, and a perf test shows no main thread task over 50 ms during a pass.
   Depends on AISEG-010.
