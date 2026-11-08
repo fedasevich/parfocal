@@ -3,6 +3,7 @@ import {
   type PixelSourceRegistry,
 } from "../pixel-source/registry.ts";
 import type { PixelSource } from "../pixel-source/types.ts";
+import { readVivChannelRegion } from "../viv/viv-channel-levels.ts";
 import { readVivRegion } from "../viv/viv-levels.ts";
 import { relayFetch } from "./byte-relay.ts";
 import {
@@ -42,7 +43,11 @@ export function startDecodeWorker(
       return;
     }
     opened
-      .then((source) => readVivRegion(source, region))
+      .then((source) =>
+        region.channel === undefined
+          ? readVivRegion(source, region)
+          : readVivChannelRegion(source, { ...region, channel: region.channel }),
+      )
       .then(
         (tile) => scope.postMessage({ type: "tile", id, ...tile }, [tile.data.buffer]),
         (error: unknown) => fail(id, error),

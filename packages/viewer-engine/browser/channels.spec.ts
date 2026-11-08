@@ -75,3 +75,50 @@ for (const [file, top] of [
     expect(recoloured[2]).toBeLessThan(full[2] / 4);
   });
 }
+
+test("the route draws the 16-bit fixture through worker channel reads and changes contrast within one frame", async ({
+  page,
+}) => {
+  await page.goto(harnessUrl("/app/channels.html"));
+  await page.waitForFunction(() => window.channelsHarness !== undefined);
+  const opened = await page.evaluate(
+    (url) => window.channelsHarness.openRoute(url, "ome-tiff"),
+    harnessUrl("/synthetic/synthetic-channels-uint16.ome.tiff"),
+  );
+  expect(opened.dtype).toBe("Uint16");
+  const fitted = await page.evaluate(() => window.channelsHarness.fitRoute([]));
+  expect(fitted.errors).toEqual([]);
+  const frame = await captureScreenshot(page.locator("#viewer canvas"));
+  const left = (fitted.canvas.width - slide.width * fitted.scale) / 2;
+  const top = (fitted.canvas.height - slide.height * fitted.scale) / 2;
+  const at = (shot: Frame) =>
+    average(
+      shot,
+      Math.round(left + probeInSlide.x * fitted.scale),
+      Math.round(top + probeInSlide.y * fitted.scale),
+    );
+  const full = at(frame);
+  const dapi = (probeInSlide.x / (slide.width - 1)) * 0.6;
+  expect(Math.abs(full[2] - dapi * 255)).toBeLessThan(4);
+
+  const timings = [];
+  for (const limit of [0.5, 0.25, 0.75, 1]) {
+    timings.push(
+      await page.evaluate(
+        (top16) => window.channelsHarness.changeContrast([{ contrast: [0, top16] }]),
+        65_535 * limit,
+      ),
+    );
+  }
+  for (const timing of timings) {
+    expect(timing.errors).toEqual([]);
+    expect(timing.workerReads).toBe(0);
+    expect(timing.frames).toBeLessThanOrEqual(2);
+  }
+  console.log(`contrast change ms ${timings.map((t) => t.milliseconds.toFixed(1)).join(" ")}`);
+
+  await page.evaluate(() => window.channelsHarness.changeContrast([{ contrast: [0, 32_767] }]));
+  const halved = at(await captureScreenshot(page.locator("#viewer canvas")));
+  expect(halved[2] / full[2]).toBeGreaterThan(1.9);
+  expect(halved[2] / full[2]).toBeLessThan(2.1);
+});

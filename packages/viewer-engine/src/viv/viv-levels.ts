@@ -86,6 +86,7 @@ export interface VivRegion {
   readonly window: PixelWindow;
   readonly width: number;
   readonly height: number;
+  readonly channel?: number;
 }
 
 export interface RegionCentre {
@@ -222,7 +223,8 @@ export async function readVivRegion(
 }
 
 export function regionKey(region: VivRegion): string {
-  return `${region.backing}/${region.residual}/${region.window.join(",")}`;
+  const channel = region.channel === undefined ? "" : `/c${region.channel}`;
+  return `${region.backing}/${region.residual}/${region.window.join(",")}${channel}`;
 }
 
 export function createVivLevels(source: PixelSource, options: VivLevelOptions = {}): VivLevels {

@@ -6,8 +6,10 @@ import type {
   PixelSource,
 } from "../pixel-source/types.ts";
 import {
+  type RegionCentre,
   UnsupportedVivSourceError,
   type VirtualLevel,
+  type VivRegion,
   virtualLadder,
   vivSignalAborted,
   vivTileSize,
@@ -15,7 +17,7 @@ import {
 
 export type VivChannelDtype = "Uint8" | "Uint16";
 
-export type VivChannelArray = Uint8Array | Uint16Array;
+export type VivChannelArray = Uint8Array<ArrayBuffer> | Uint16Array<ArrayBuffer>;
 
 export interface VivChannelSelection {
   readonly c: number;
@@ -56,7 +58,16 @@ export interface VivChannelLevels {
   readonly pending: () => number;
 }
 
+export type VivChannelRegion = VivRegion & { readonly channel: number };
+
+export type VivChannelRegionReader = (
+  region: VivChannelRegion,
+  centre: RegionCentre,
+  signal?: AbortSignal,
+) => Promise<VivChannelTile>;
+
 export interface VivChannelLevelOptions {
+  readonly read?: VivChannelRegionReader;
   readonly onTileError?: (error: Error) => void;
   readonly onReadSettled?: () => void;
 }
@@ -122,6 +133,50 @@ function emptyTile(dtype: VivChannelDtype, width: number, height: number): VivCh
   return { data, width, height };
 }
 
+function toChannelTile(
+  result: PixelResult,
+  dtype: VivChannelDtype,
+  region: VivChannelRegion,
+): VivChannelTile {
+  const { width, height, channel } = region;
+  if (result.absent) return emptyTile(dtype, width, height);
+  const plane = result.planes[channel];
+  if (plane === undefined) throw new RangeError(`Channel ${channel} is missing`);
+  return {
+    data: boxDownsamplePlane(
+      plane,
+      dtype,
+      result.width,
+      result.height,
+      region.residual,
+      width,
+      height,
+    ),
+    width,
+    height,
+  };
+}
+
+export async function readVivChannelRegion(
+  source: PixelSource,
+  region: VivChannelRegion,
+  signal?: AbortSignal,
+): Promise<VivChannelTile> {
+  if (
+    !Number.isInteger(region.channel) ||
+    region.channel < 0 ||
+    region.channel >= source.channels.length
+  ) {
+    throw new RangeError(`Channel ${region.channel} is outside the slide`);
+  }
+  const result = await source.getRaster({
+    level: region.backing,
+    window: region.window,
+    ...(signal ? { signal } : {}),
+  });
+  return toChannelTile(result, vivChannelDtype(source), region);
+}
+
 export function createVivChannelLevels(
   source: PixelSource,
   options: VivChannelLevelOptions = {},
@@ -131,23 +186,6 @@ export function createVivChannelLevels(
   const tileSize = vivTileSize(source);
   const ladder = virtualLadder(source.levels, tileSize);
   let inFlight = 0;
-
-  const toTile = (
-    result: PixelResult,
-    channel: number,
-    residual: number,
-    width: number,
-    height: number,
-  ): VivChannelTile => {
-    if (result.absent) return emptyTile(dtype, width, height);
-    const plane = result.planes[channel];
-    if (plane === undefined) throw new RangeError(`Channel ${channel} is missing`);
-    return {
-      data: boxDownsamplePlane(plane, dtype, result.width, result.height, residual, width, height),
-      width,
-      height,
-    };
-  };
 
   const readRegion = async (
     virtual: VirtualLevel,
@@ -162,21 +200,31 @@ export function createVivChannelLevels(
     }
     const [x0, y0, x1, y1] = region;
     const { residual } = virtual;
+    const planned: VivChannelRegion = {
+      backing: virtual.backing,
+      residual,
+      window: [
+        x0 * residual,
+        y0 * residual,
+        Math.min(x1 * residual, backing.width),
+        Math.min(y1 * residual, backing.height),
+      ],
+      width: x1 - x0,
+      height: y1 - y0,
+      channel,
+    };
+    const centre = {
+      x: ((x0 + x1) / 2) * virtual.downsample,
+      y: ((y0 + y1) / 2) * virtual.downsample,
+    };
     inFlight++;
     try {
       if (signal?.aborted) throw vivSignalAborted;
-      const result = await source.getRaster({
-        level: virtual.backing,
-        window: [
-          x0 * residual,
-          y0 * residual,
-          Math.min(x1 * residual, backing.width),
-          Math.min(y1 * residual, backing.height),
-        ],
-        ...(signal ? { signal } : {}),
-      });
+      const tile = await (options.read
+        ? options.read(planned, centre, signal)
+        : readVivChannelRegion(source, planned, signal));
       if (signal?.aborted) throw vivSignalAborted;
-      return toTile(result, channel, residual, x1 - x0, y1 - y0);
+      return tile;
     } catch (error) {
       if (signal?.aborted) throw vivSignalAborted;
       throw error;

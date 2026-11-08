@@ -6,6 +6,8 @@ import {
   boxDownsamplePlane,
   createVivChannelLevels,
   createVivLevels,
+  readVivChannelRegion,
+  regionKey,
   UnsupportedVivSourceError,
   vivChannelDtype,
   vivChannelLayerProps,
@@ -131,6 +133,38 @@ describe("Viv levels over a multichannel PixelSource", () => {
     ]);
     assert.deepEqual(props.channelsVisible, [true, false, true]);
     assert.equal(props.dtype, "Uint16");
+    source.close();
+  });
+
+  it("reads a channel region for the decode workers and keys it by channel", async () => {
+    const source = await open("synthetic-channels-uint16.ome.tiff");
+    const region = {
+      backing: 0,
+      residual: 1,
+      window: [256, 256, 512, 512] as const,
+      width: 256,
+      height: 256,
+    };
+    const raster = present(await source.getRaster({ level: 0, window: region.window }));
+    const tile = await readVivChannelRegion(source, { ...region, channel: 1 });
+    assert.ok(tile.data instanceof Uint16Array);
+    assert.deepEqual([...tile.data], [...(raster.planes[1] ?? [])]);
+    assert.notEqual(regionKey({ ...region, channel: 0 }), regionKey({ ...region, channel: 1 }));
+    await assert.rejects(readVivChannelRegion(source, { ...region, channel: 3 }), RangeError);
+    source.close();
+  });
+
+  it("feeds the route reader when one is given", async () => {
+    const source = await open("synthetic-channels-uint8.ome.tiff");
+    const seen: number[] = [];
+    const viv = createVivChannelLevels(source, {
+      read: (region) => {
+        seen.push(region.channel);
+        return readVivChannelRegion(source, region);
+      },
+    });
+    await viv.levels[0]?.getTile({ x: 0, y: 0, selection: { c: 2 } });
+    assert.deepEqual(seen, [2]);
     source.close();
   });
 });
