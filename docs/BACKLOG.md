@@ -2375,7 +2375,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Refs mock §2.4, doc 33, [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
   Size: M.
 
-- [ ] REVIEW-013 · Track record by confidence band
+- [x] REVIEW-013 · Track record by confidence band
   Per user and typer, the share of calls kept per band, persisted server-side. An overall figure is shown only when every band that matters has enough checks.
   Done when unit tests cover the band split and the threshold for showing an overall figure.
   Refs doc 33.
