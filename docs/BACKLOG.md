@@ -2340,7 +2340,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Refs mock 6, mock 9, [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
   Size: M.
 
-- [ ] REVIEW-008 · Settled rule
+- [x] REVIEW-008 · Settled rule
   For a small cluster, the tumor cell count settles when its range can no longer cross 200. Chip moves from open to settled with a toast "You can stop here". The same rule drives REVIEW-017 for cellularity cases.
   Done when unit tests cover the rule and E2E sees the toast after the expected number of decisions.
   Size: M.
