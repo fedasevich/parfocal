@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-08
 
+- DEV-007 (footswitch mapping) adds a Footswitch device to the controls legend. Its default key is J, the key bound to next cell, and a test checks that the key and the registry match.
 - DEV-006 (device legend on the canvas) adds the legend card with the mock's rows for six devices in read, review and annotate. It shows on the slide stage when a main input device is saved in device settings, in the review or annotate context, and a browser test covers every device. Nothing selects the read rows yet, and there is no mock-style toggle for the legend.
 - MEAS-005 (units setting) added a length units store with µm and mm automatically or always µm, applied to the ruler label, the measurement list and the pin thread measurement, kept in localStorage under parfocal.length-units and wired to the Lengths choice in Settings. The objects panel, review panels and clinical report still show mm, and the store does not yet load the server's saved setting at start.
 - CMD-004 (key conflict check) added a web test inside verify that fails when two actions in one active scope share a key, for every preset on seven screen scope sets and each decision style. Shift+L for the arrow tool and the compare link is resolved by scope. No worklist preview action exists in the keymap yet, so the P against polygon case waits for it.

@@ -3643,7 +3643,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Refs mock §2.13.
   Size: S.
 
-- [ ] DEV-007 · Footswitch mapping
+- [x] DEV-007 · Footswitch mapping
   A footswitch sending a key maps to next cell.
   Done when a test confirms the default mapping.
   Size: S.
