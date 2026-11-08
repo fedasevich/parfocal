@@ -1114,7 +1114,7 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
   Depends on INGEST-021, AIP-005, AIP-010, SET-011. Refs mock 4 "Choosing what the AI runs", [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
   Size: L.
 
-- [ ] INGEST-024 · Upload progress with steps per slide
+- [x] INGEST-024 · Upload progress with steps per slide
   One bar for the whole upload with the time left and one per file. Each file row opens its processing steps: uploaded, tiles built, tissue found, results read, placed on the slide and IDs given, or "no results" for a slide that came without them, with a check per finished step and a bar on the running one. "Open now with what is ready" appears once tissue is found. The last step lists slides without results with Run a model (JOBS-002) or leave them.
   Done when component tests cover running, waiting and finished slides, and E2E opens a slide while its results are still being placed.
   Depends on INGEST-021, RSET-001, OBJ-001. Refs mock: upload/progress, mock: upload/done, doc 39.
