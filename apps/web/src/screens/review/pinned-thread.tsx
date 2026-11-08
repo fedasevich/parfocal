@@ -4,6 +4,7 @@ import { CommentComposer } from "@parfocal/ui/components/comment-thread";
 import { Icon } from "@parfocal/ui/components/icon";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { markTried } from "../home/getting-started.ts";
 import { type Pin, pinOnScreen, pinThread } from "./comment-pin.ts";
 import type { Camera } from "./slide-still.tsx";
 
@@ -45,6 +46,7 @@ export function PinnedThread({
   const create = useCreateThread({
     mutation: {
       onSuccess: () => {
+        markTried("comment");
         void queryClient.invalidateQueries({ queryKey: getListThreadsQueryKey(taskId, slideId) });
         onPosted();
       },

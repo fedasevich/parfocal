@@ -19,6 +19,7 @@ import {
 } from "../review/slide-still.tsx";
 import { lookUrl } from "../thumbnails.ts";
 import { placeMinimap, type ScreenRect } from "./minimap-placement.ts";
+import { heldPlacement } from "./minimap-weights.ts";
 import { type AreaMark, MinimapAreas } from "./slide-maps.tsx";
 import { tissueShareOnScreen } from "./tissue-share.ts";
 import { seenTrail } from "./tool-geometry.ts";
@@ -78,7 +79,19 @@ export function ViewerMinimap({
   ];
   if (blockLeft) blocked.push([16, size.height - 60, wholeSlideButtonWidth, 44]);
   if (blockToast) blocked.push([size.width - toastWidth, size.height - 64, toastWidth - 16, 48]);
-  const place = placeMinimap(size, sized, [], blocked);
+  const fresh = placeMinimap(size, sized, [], blocked);
+  const shownRef = useRef<typeof fresh | null>(null);
+  const [resting, setResting] = useState(true);
+  const lastCamera = useRef(camera);
+  useEffect(() => {
+    if (lastCamera.current === camera) return;
+    lastCamera.current = camera;
+    setResting(false);
+    const timer = window.setTimeout(() => setResting(true), 200);
+    return () => window.clearTimeout(timer);
+  }, [camera]);
+  const place = heldPlacement(shownRef.current, fresh, !resting);
+  shownRef.current = place;
 
   const [host, setHost] = useState<HTMLElement | null>(null);
   const attach = useCallback(

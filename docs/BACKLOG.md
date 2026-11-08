@@ -2231,7 +2231,7 @@ The case view becomes the slide view ([ADR 0053](adr/0053-ai-results-review-dire
   Refs kit Interaction spec, mock 7. Built on STACK-005 state machine choice. [ADR 0185](adr/0185-smart-minimap-state-machine-and-placement.md) has the states, edges, weights and the gaps to close.
   Size: M.
 
-- [ ] NAV-007 · Minimap placement scoring
+- [x] NAV-007 · Minimap placement scoring
   Score each corner by preference plus weighted hot points under it (tumor edge, measurement, current cell, doubtful cells, proposals, pins) plus blocks for chrome. The lowest score wins, ties go to bottom right. Move with a 300 ms ease, never while panning. The kit gives no weights for an open thread, the floating cells panel, proposals and pins, so this task picks them and records them in [ADR 0185](adr/0185-smart-minimap-state-machine-and-placement.md), as the owner agreed on 2026-11-04.
   Done when unit tests reproduce the mock's placement decisions for each scene.
   Refs mock 7 placement algorithm. [ADR 0185](adr/0185-smart-minimap-state-machine-and-placement.md) has the states, edges, weights and the gaps to close.
@@ -2282,6 +2282,12 @@ The case view becomes the slide view ([ADR 0053](adr/0053-ai-results-review-dire
   Done when API tests return area bounds for a slide with isolation, and a browser test on a real slide picks an area from the list and steps with ] from it.
   Depends on NAV-014.
   Size: M.
+
+- [ ] NAV-016 · Minimap weights in every scene
+  NAV-007 named the minimap weights and tests them on hand-built hot points, but no scene feeds the open thread or the floating cells panel as blocks, and only `ViewerMinimap` holds its corner while panning. Feed every scene's hot points and blocks from the screen state, and hold the corner while panning in the navigator, annotate and focus views too.
+  Done when unit tests build each mock scene's hot points from the scene code and reproduce the mock's placement, and a browser test pans and sees the corner stay.
+  Depends on NAV-007.
+  Size: S.
 
 ---
 
@@ -3717,7 +3723,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when Playwright pointer-type tests confirm a finger never draws in Annotate.
   Size: M.
 
-- [ ] DEV-010 · Bottom sheet interactions
+- [x] DEV-010 · Bottom sheet interactions
   Drag between heights, swipe left for the next cell.
   Done when touch tests cover each gesture.
   Size: S.
@@ -4790,7 +4796,7 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Done when API tests seed and delete it, and an evaluation test proves it is excluded.
   Depends on PROJ-001, RSET-001, TASK-001.
 
-- [ ] ONB-006 · Getting-started checklist
+- [x] ONB-006 · Getting-started checklist
   On Home until each item has been tried once, and hideable.
   Done when component tests tick items from real events.
   Depends on ONB-004, HOME-002. Refs mock: home/new.
