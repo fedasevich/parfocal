@@ -242,8 +242,8 @@ export const sectionRows: Record<Exclude<SettingsSection, "shortcuts">, SettingR
     row(
       "analytics",
       "Share usage statistics",
-      "device",
-      "Counts of what is used, never names, patient data or slide content. Off stops them at once on this device.",
+      "personal",
+      "Counts of what is used, never names, patient data or slide content. Off stops them at once, on every device you sign in on, unless your lab decides.",
     ),
     row("lockAfter", "Lock after", "lab", "Set by your lab. Unlocking returns to the same view."),
     row(
