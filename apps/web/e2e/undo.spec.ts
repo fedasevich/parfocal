@@ -28,9 +28,7 @@ async function drawSquare(page: Page, box: { x: number; y: number }) {
   await page.mouse.click(box.x + corners[0][0] + 2, box.y + corners[0][1] + 1);
 }
 
-test("undo takes back a drawn polygon on the server too and redo puts it back", async ({
-  page,
-}) => {
+test("undo takes back a drawn polygon on the server too", async ({ page }) => {
   const stage = await openSlide(page);
   const box = (await stage.boundingBox()) ?? { x: 0, y: 0 };
   await drawSquare(page, box);
@@ -44,8 +42,13 @@ test("undo takes back a drawn polygon on the server too and redo puts it back", 
   await page.reload();
   await expect(stage).toHaveAttribute("data-annotations", "loaded");
   await expect(shape).toHaveCount(0);
+});
 
+test("redo puts an undone polygon back on the server too", async ({ page }) => {
+  const stage = await openSlide(page);
+  const box = (await stage.boundingBox()) ?? { x: 0, y: 0 };
   await drawSquare(page, box);
+  const shape = page.getByTestId("polygon-shape");
   await expect(shape).toHaveCount(1);
   await page.keyboard.press("Control+z");
   await expect(shape).toHaveCount(0);
