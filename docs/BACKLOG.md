@@ -2460,6 +2460,12 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Depends on REVIEW-012.
   Size: S.
 
+- [ ] REVIEW-028 · Node staging on for sentinel tasks
+  REVIEW-016 built the area calls, but `nodeStaging` is a fixed false in `review-data.ts` because no API signal says a task uses the sentinel node template. Expose the task's analysis template in the review task API, turn the node staging layout on from it, show the lead area in the area list, and list unsure areas before submit with the helpers `leadAreaId` and `unsureAreaIds`.
+  Done when an API test returns the template on a sentinel task, and a browser test on a sentinel task makes all three calls, sees the category hand over when the lead area is Not tumor, and sees unsure areas listed before submit.
+  Depends on REVIEW-016.
+  Size: M.
+
 ---
 
 ## 15 ANN · Annotate workspace
