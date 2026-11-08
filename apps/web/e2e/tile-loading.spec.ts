@@ -51,3 +51,47 @@ test("the checker marks only the slide area and the canvas stays clear above it"
     .evaluate((canvas) => getComputedStyle(canvas).backgroundColor);
   expect(canvasBackground).toMatch(/rgba\(0, 0, 0, 0\)|transparent/);
 });
+
+test("a tile that fails keeps a grey placeholder with Retry and loads after Retry", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const state = { armed: true, spoiled: 0, reads: 0 };
+    Object.assign(window, { tileFault: state });
+    const post = Object.getOwnPropertyDescriptor(Worker.prototype, "postMessage")?.value as (
+      this: Worker,
+      ...args: unknown[]
+    ) => void;
+    Worker.prototype.postMessage = function (this: Worker, message: unknown, ...rest: unknown[]) {
+      const read = message as { type?: string; region?: { backing: number } };
+      if (read?.type === "read") {
+        state.reads += 1;
+        if (state.armed && read.region?.backing === 0) {
+          state.armed = false;
+          state.spoiled += 1;
+          return post.call(this, { ...read, region: { ...read.region, backing: 99 } }, ...rest);
+        }
+      }
+      return post.call(this, message, ...rest);
+    };
+  });
+  await page.goto(livePath);
+  const stage = page.getByTestId("slide-stage");
+  await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 15_000 });
+  const placeholders = page.getByTestId("tile-placeholder");
+  await expect(placeholders).toHaveCount(1, { timeout: 10_000 });
+  await expect(placeholders.first().getByRole("button", { name: "Retry" })).toBeVisible();
+  const key = await placeholders.first().getAttribute("data-tile");
+  const readsBefore = await page.evaluate(
+    () => (window as unknown as { tileFault: { reads: number } }).tileFault.reads,
+  );
+  await placeholders.first().getByRole("button", { name: "Retry" }).click();
+  await expect(page.locator(`[data-tile="${key}"]`)).toHaveCount(0, { timeout: 10_000 });
+  await page.waitForTimeout(500);
+  const readsAfter = await page.evaluate(
+    () => (window as unknown as { tileFault: { reads: number } }).tileFault.reads,
+  );
+  expect(readsAfter - readsBefore).toBe(1);
+  await expect(placeholders).toHaveCount(0);
+  await expect(stage).toHaveAttribute("data-state", "ready");
+});

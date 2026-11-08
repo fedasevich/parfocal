@@ -210,3 +210,50 @@ test("a tile server that answers late is measured so the hint can fire at one an
   expect(afterFiveSeconds.waitingMs).toBeGreaterThanOrEqual(5000);
   expect(afterFiveSeconds.answerMs).toBeGreaterThanOrEqual(5000);
 });
+
+const isBlend = (pixel: number[]) => pixel.every((value) => value > 8 && value < 247);
+
+test("a frame caught mid-fade blends the sharp tiles into the coarse level with no empty pixels", async ({
+  page,
+}) => {
+  const fadeMs = 1000;
+  await open(page);
+  await page.evaluate(
+    async ({ name, scene }) => {
+      const harness = (globalThis as unknown as Record<string, SyntheticHarness>)[name];
+      if (harness === undefined) throw new Error("The synthetic harness did not load");
+      await harness.render(scene);
+    },
+    {
+      name: syntheticHarnessGlobal,
+      scene: {
+        camera: inside,
+        interpolation: "finest-nearest",
+        tiles: { fadeMs, settle: false },
+      } satisfies SyntheticRequest,
+    },
+  );
+  const frameAt = async (elapsedMs: number) => {
+    await page.evaluate(
+      async ({ name, elapsed }) => {
+        const harness = (globalThis as unknown as Record<string, SyntheticHarness>)[name];
+        if (harness === undefined) throw new Error("The synthetic harness did not load");
+        await harness.fadeTo(elapsed);
+      },
+      { name: syntheticHarnessGlobal, elapsed: elapsedMs },
+    );
+    return captureScreenshot(page.locator("#viewer canvas"));
+  };
+  const total = 800 * 600;
+  const start = await frameAt(0);
+  expect(count(start, whole, isBackground)).toBe(0);
+  expect(count(start, whole, isCoarse)).toBeGreaterThan(total * 0.99);
+  const middle = await frameAt(fadeMs / 2);
+  expect(count(middle, whole, isBackground)).toBe(0);
+  expect(count(middle, whole, isCoarse)).toBeLessThan(total * 0.01);
+  expect(count(middle, whole, isBlend)).toBeGreaterThan(total * 0.5);
+  const end = await frameAt(fadeMs);
+  expect(count(end, whole, isBackground)).toBe(0);
+  expect(count(end, whole, isCoarse)).toBeLessThan(total * 0.01);
+  expect(count(end, whole, isBlend)).toBeGreaterThan(total * 0.75);
+});

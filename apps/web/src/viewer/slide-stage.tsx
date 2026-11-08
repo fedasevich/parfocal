@@ -63,7 +63,7 @@ import type { SlideAreaEntry } from "./slide-areas.ts";
 import { useSlideBrightness } from "./slide-brightness.ts";
 import { useSlideCoverage } from "./slide-coverage.ts";
 import { stageToolOf } from "./stage-tools.ts";
-import { SlideChecker, TileHintChip } from "./tile-loading.tsx";
+import { FailedTilePlaceholders, SlideChecker, TileHintChip } from "./tile-loading.tsx";
 import type { ScanTissue } from "./tissue-scan.ts";
 import { TravelMinimap } from "./travel-minimap.tsx";
 import { useEngineAreaNav } from "./use-engine-area-nav.ts";
@@ -477,7 +477,7 @@ function OpenedSlide({
       const viewport = engine.mountSlideViewport({
         container,
         slideId,
-        route: { onError: fail, ...labRouteOptions() },
+        route: { onError: fail, onTileError: () => {}, ...labRouteOptions() },
         resolve: open,
       });
       applyMainCalibration(viewport.engine);
@@ -542,6 +542,9 @@ function OpenedSlide({
       >
         {opened && hostNode ? <SlideChecker engine={opened.engine} stage={hostNode} /> : null}
         <div ref={hostRef} data-testid="slide-host" className="absolute inset-0" />
+        {opened?.route && hostNode ? (
+          <FailedTilePlaceholders engine={opened.engine} route={opened.route} stage={hostNode} />
+        ) : null}
         {phase.state === "failed" ? null : <TileHintChip route={opened?.route ?? null} />}
         {session && developerMode ? (
           <Suspense fallback={null}>

@@ -49,6 +49,7 @@ function frames(count: number): Promise<void> {
 }
 
 let engine: ViewerEngine | null = null;
+let fadeClock = 0;
 let shownRoute: VivRoute | null = null;
 const errors: string[] = [];
 
@@ -83,10 +84,12 @@ function textureFilters(route: VivRoute): TextureFilter[] {
 
 const render = async (request: SyntheticRequest): Promise<SyntheticResult> => {
   reset();
+  fadeClock = 0;
   let route: VivRoute | null = null;
   const factory = vivRendererFactory({
     interpolation: request.interpolation,
     decodeWorkers: 0,
+    tileFade: { durationMs: request.tiles?.fadeMs ?? 0, now: () => fadeClock },
     onError: (error) => {
       errors.push(error.message);
     },
@@ -141,10 +144,17 @@ const moveTo: SyntheticHarness["moveTo"] = async (camera) => {
   await frames(2);
 };
 
+const fadeTo: SyntheticHarness["fadeTo"] = async (elapsedMs) => {
+  fadeClock = elapsedMs;
+  shownRoute?.sleep?.wake("change");
+  shownRoute?.deck.redraw("fade clock");
+  await frames(3);
+};
+
 const loadState: SyntheticHarness["loadState"] = () => {
   if (shownRoute === null) throw new Error("No route is showing a slide");
   return shownRoute.loadState();
 };
 
-const harness: SyntheticHarness = { render, moveTo, loadState, reset };
+const harness: SyntheticHarness = { render, moveTo, fadeTo, loadState, reset };
 Object.assign(globalThis, { [syntheticHarnessGlobal]: harness });
