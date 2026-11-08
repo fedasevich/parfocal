@@ -14,7 +14,15 @@ import {
   SlidesOnScreenPanel,
 } from "@parfocal/ui/components/viewer-tools";
 import { Zone } from "@parfocal/ui/components/zone";
-import { createLinkedViews, relinkViews, toggleLinked, unlinkViews } from "@parfocal/viewer-engine";
+import {
+  alignViews,
+  alignWithOffset,
+  createLinkedViews,
+  registerThumbnails,
+  relinkViews,
+  toggleLinked,
+  unlinkViews,
+} from "@parfocal/viewer-engine";
 import { type CSSProperties, useEffect, useState } from "react";
 import { useBindings } from "../../keys/personal-keys.ts";
 import { useHotkeys } from "../../keys/use-hotkeys.ts";
@@ -26,11 +34,13 @@ import { lookUrl } from "../thumbnails.ts";
 import {
   cameraOfView,
   moveCameraKeepingRotation,
+  offsetFromRegistration,
   rotatePane,
   rotationOfView,
   rotationStep,
 } from "./link-camera.ts";
 import { reviewRail } from "./rails.ts";
+import { grayPixelsOf } from "./thumbnail-pixels.ts";
 import { midEdge } from "./tool-geometry.ts";
 import { coverHome } from "./tool-maths.ts";
 import type { ToolSession } from "./tool-session.tsx";
@@ -123,6 +133,30 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
     setLink((state) => rotatePane(state, side, shown, change));
   const setLinked = (on: boolean) =>
     setLink((state) => (on ? relinkViews(state, linkReference) : unlinkViews(state)));
+
+  const [alignment, setAlignment] = useState<"idle" | "working" | "done" | "none">("idle");
+  const lineUp = async () => {
+    setAlignment("working");
+    try {
+      const url = lookUrl("mid");
+      const [from, to] = await Promise.all([grayPixelsOf(url), grayPixelsOf(url)]);
+      const found = registerThumbnails(from, to);
+      if (found === null) {
+        setAlignment("none");
+        return;
+      }
+      const centre = link.views.left ?? { x: midSize.width / 2, y: midSize.height / 2 };
+      const offset = offsetFromRegistration(found, midSize, centre);
+      setLink((state) => alignWithOffset(state, linkReference, "right", offset));
+      setAlignment("done");
+    } catch {
+      setAlignment("none");
+    }
+  };
+  const clearAlignment = () => {
+    setLink((state) => alignViews(state, linkReference));
+    setAlignment("idle");
+  };
 
   const bindings = useBindings(["compare"], ["linkviews"]);
   useHotkeys(bindings, ({ action }) => {
@@ -275,6 +309,36 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
               { value: "four", label: "4" },
             ]}
           />
+        </div>
+        <div className="grid gap-1.5 rounded-zone bg-chrome-2 p-3">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              className="rounded-full bg-white/10 px-3 py-1 text-body-sm hover:bg-white/15 disabled:opacity-50"
+              disabled={alignment === "working" || left === undefined || right === undefined}
+              onClick={() => void lineUp()}
+            >
+              Line up automatically
+            </button>
+            {alignment === "done" ? (
+              <button
+                type="button"
+                className="rounded-full px-3 py-1 text-body-sm text-fg-dim hover:bg-white/10"
+                onClick={clearAlignment}
+              >
+                Clear
+              </button>
+            ) : null}
+          </div>
+          <p role="status" data-testid="alignment-status" className="m-0 text-caption text-fg-dim">
+            {alignment === "working"
+              ? "Comparing the two overviews"
+              : alignment === "done"
+                ? "Proposed from the overviews. Drag or rotate a pane to adjust."
+                : alignment === "none"
+                  ? "No clear match between these two. Line them up by hand."
+                  : "Proposes a starting offset and rotation from the overviews."}
+          </p>
         </div>
         <p className="m-0 text-caption text-fg-dim">
           The capsule question in the comments is answered on the CK level at the same spot. The

@@ -72,6 +72,7 @@ export {
 export type { LinkedView, LinkedViews, PaneViews, ViewOffset } from "./camera/linked-views.ts";
 export {
   alignViews,
+  alignWithOffset,
   createLinkedViews,
   isNoOffset,
   moveView,
@@ -128,6 +129,8 @@ export {
   wheelZoomOctaves,
   withoutMotion,
 } from "./camera/profile.ts";
+export type { GrayImage, Registration } from "./camera/registration.ts";
+export { registerThumbnails } from "./camera/registration.ts";
 export type {
   MagnificationReadout,
   MicronsPerPixel,

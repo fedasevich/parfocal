@@ -3,6 +3,7 @@ import { test } from "node:test";
 import { createLinkedViews, relinkViews, unlinkViews } from "@parfocal/viewer-engine";
 import {
   moveCameraKeepingRotation,
+  offsetFromRegistration,
   rotatePane,
   rotationOfView,
   wrapDegrees,
@@ -51,4 +52,21 @@ test("reset returns a pane to zero and angles wrap", () => {
   assert.equal(rotationOfView(rotatePane(over, "left", camera, { to: 0 }).views.left), 0);
   assert.equal(wrapDegrees(180), -180);
   assert.equal(wrapDegrees(-190), 170);
+});
+
+test("a registration turns into the offset that lines the right pane up with the left", () => {
+  const size = { width: 1600, height: 1000 };
+  const still = offsetFromRegistration(
+    { rotation: 0, shiftX: 0.1, shiftY: -0.05, score: 1 },
+    size,
+    { x: 300, y: 400 },
+  );
+  assert.equal(still.x, 160);
+  assert.equal(still.y, -50);
+  const turned = offsetFromRegistration({ rotation: 90, shiftX: 0, shiftY: 0, score: 1 }, size, {
+    x: 800,
+    y: 500,
+  });
+  assert.ok(Math.abs(turned.x) < 1e-9 && Math.abs(turned.y) < 1e-9);
+  assert.equal(turned.rotation, -90);
 });

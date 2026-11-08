@@ -1,4 +1,10 @@
-import { type LinkedView, type LinkedViews, moveView } from "@parfocal/viewer-engine";
+import {
+  type LinkedView,
+  type LinkedViews,
+  moveView,
+  type Registration,
+  type ViewOffset,
+} from "@parfocal/viewer-engine";
 import type { Camera } from "../review/slide-still.tsx";
 
 export const rotationStep = 15;
@@ -15,6 +21,24 @@ export function cameraOfView(view: LinkedView | null): Camera | null {
 
 export function rotationOfView(view: LinkedView | null): number {
   return view === null ? 0 : view.rotation;
+}
+
+export function offsetFromRegistration(
+  registration: Registration,
+  size: { width: number; height: number },
+  centre: { x: number; y: number },
+): ViewOffset {
+  const radians = (registration.rotation * Math.PI) / 180;
+  const cos = Math.cos(radians);
+  const sin = Math.sin(radians);
+  const rx = centre.x - size.width / 2;
+  const ry = centre.y - size.height / 2;
+  return {
+    x: rx * cos - ry * sin + size.width / 2 + registration.shiftX * size.width - centre.x,
+    y: rx * sin + ry * cos + size.height / 2 + registration.shiftY * size.height - centre.y,
+    zoom: 0,
+    rotation: -registration.rotation,
+  };
 }
 
 export const wrapDegrees = (degrees: number): number =>
