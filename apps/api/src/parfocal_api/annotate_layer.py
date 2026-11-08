@@ -23,6 +23,7 @@ from parfocal_api.annotations import (
     checked,
     code_of,
     record_versions,
+    words_for,
 )
 from parfocal_api.audit import AuditAction, AuditTarget
 from parfocal_api.context import CurrentPrincipal, TenantConnection
@@ -92,6 +93,7 @@ class LayerObject(BaseModel):
     source: str | None
     geometry: dict[str, Any]
     class_id: uuid.UUID | None
+    text: str | None
     version: int
     created_by_user_id: uuid.UUID | None
     changed_by_user_id: uuid.UUID | None
@@ -153,6 +155,7 @@ COLUMNS = (
     annotations.c.source_number,
     func.ST_AsGeoJSON(annotations.c.geometry).label("geojson"),
     annotations.c.class_id,
+    annotations.c.text,
     annotations.c.version,
     annotations.c.created_by_user_id,
     LAST_CHANGE.label("changed_by_user_id"),
@@ -179,6 +182,7 @@ def object_of(row: Any) -> LayerObject:
         source=source,
         geometry=json.loads(row.geojson),
         class_id=row.class_id,
+        text=row.text,
         version=row.version,
         created_by_user_id=row.created_by_user_id,
         changed_by_user_id=row.changed_by_user_id,
@@ -605,6 +609,8 @@ async def change_shared_object(
         if edit.class_id is not None:
             await check_classes(connection, row.project_id, {edit.class_id})
         values["class_id"] = edit.class_id
+    if "text" in edit.model_fields_set:
+        values["text"] = words_for(current.kind, edit.text)
     if current.origin is AnnotationOrigin.AI_CONFIRMED:
         values["origin"] = AnnotationOrigin.AI_EDITED
     saved = await save(
@@ -665,6 +671,7 @@ async def list_shared_object_history(
             annotation_versions.c.change,
             func.ST_AsGeoJSON(annotation_versions.c.geometry).label("geojson"),
             annotation_versions.c.class_id,
+            annotation_versions.c.text,
             annotation_versions.c.changed_by_user_id,
             annotation_versions.c.changed_at,
         )
@@ -678,6 +685,7 @@ async def list_shared_object_history(
             change=AnnotationChange(item.change),
             geometry=json.loads(item.geojson),
             class_id=item.class_id,
+            text=item.text,
             changed_by_user_id=item.changed_by_user_id,
             changed_at=item.changed_at,
             file_name=file_name if item.change == AnnotationChange.CREATED else None,

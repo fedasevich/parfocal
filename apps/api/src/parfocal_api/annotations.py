@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import Annotated, Any, Literal
 
 from fastapi import APIRouter, Query, Response
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, StringConstraints, model_validator
 from sqlalchemy import bindparam, func, select, text, update
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.ext.asyncio import AsyncConnection
@@ -39,6 +39,8 @@ LETTERS = {
     AnnotationKind.MEASUREMENT: Letter.MEASUREMENT,
     AnnotationKind.REGION: Letter.REGION,
     AnnotationKind.CELL: Letter.CELL,
+    AnnotationKind.ARROW: Letter.ARROW,
+    AnnotationKind.TEXT: Letter.TEXT,
 }
 PERSON_MADE_AI_KINDS = frozenset({AnnotationKind.REGION, AnnotationKind.CELL})
 SHAPES = {
@@ -46,8 +48,14 @@ SHAPES = {
     AnnotationKind.MEASUREMENT: frozenset({"LineString", "Polygon"}),
     AnnotationKind.REGION: frozenset({"Polygon", "MultiPolygon"}),
     AnnotationKind.CELL: frozenset({"Polygon", "Point"}),
+    AnnotationKind.ARROW: frozenset({"LineString"}),
+    AnnotationKind.TEXT: frozenset({"Point"}),
 }
+MAX_TEXT = 200
 
+type Words = Annotated[
+    str, StringConstraints(strip_whitespace=True, min_length=1, max_length=MAX_TEXT)
+]
 type Coordinate = Annotated[float, Field(ge=-10_000_000, le=10_000_000, allow_inf_nan=False)]
 type Position = tuple[Coordinate, Coordinate]
 type Ring = Annotated[list[Position], Field(min_length=4)]
@@ -106,6 +114,7 @@ class AnnotationDraft(BaseModel):
     kind: AnnotationKind
     geometry: Geometry
     class_id: uuid.UUID | None = None
+    text: Words | None = None
 
     @model_validator(mode="after")
     def fits_kind(self) -> AnnotationDraft:
@@ -113,6 +122,8 @@ class AnnotationDraft(BaseModel):
         if self.geometry.type not in SHAPES[self.kind]:
             allowed = " or ".join(sorted(SHAPES[self.kind]))
             raise ValueError(f"A {self.kind} is a {allowed}")
+        if (self.kind is AnnotationKind.TEXT) != (self.text is not None):
+            raise ValueError("A text note has words, and only a text note does")
         return self
 
 
@@ -124,13 +135,14 @@ class AnnotationEdit(BaseModel):
     version: Annotated[int, Field(ge=1)]
     geometry: Geometry | None = None
     class_id: uuid.UUID | None = None
+    text: Words | None = None
 
     @model_validator(mode="after")
     def has_change(self) -> AnnotationEdit:
         if self.geometry is not None:
             checked(self.geometry)
-        if not {"geometry", "class_id"} & self.model_fields_set:
-            raise ValueError("Change the shape or the class")
+        if not {"geometry", "class_id", "text"} & self.model_fields_set:
+            raise ValueError("Change the shape, the class or the text")
         return self
 
 
@@ -146,6 +158,7 @@ class Annotation(BaseModel):
     code: str
     geometry: dict[str, Any]
     class_id: uuid.UUID | None
+    text: str | None = None
     task_id: uuid.UUID | None
     version: int
     created_by_user_id: uuid.UUID | None
@@ -166,6 +179,7 @@ class AnnotationVersion(BaseModel):
     change: AnnotationChange
     geometry: dict[str, Any]
     class_id: uuid.UUID | None
+    text: str | None
     changed_by_user_id: uuid.UUID | None
     changed_at: datetime
     file_name: str | None = None
@@ -201,6 +215,7 @@ COLUMNS = (
     annotations.c.number,
     GEOJSON,
     annotations.c.class_id,
+    annotations.c.text,
     annotations.c.task_id,
     annotations.c.version,
     annotations.c.created_by_user_id,
@@ -225,6 +240,7 @@ def annotation_of(row: Any) -> Annotation:
         code=code_of(kind, row.number),
         geometry=json.loads(row.geojson),
         class_id=row.class_id,
+        text=row.text,
         task_id=row.task_id,
         version=row.version,
         created_by_user_id=row.created_by_user_id,
@@ -306,10 +322,11 @@ async def check_shapes(connection: AsyncConnection, shapes: Sequence[str]) -> No
 
 INSERT_ANNOTATIONS = text(
     "INSERT INTO annotations (tenant_id, project_id, slide_id, kind, number, geometry, "
-    "class_id, task_id, created_by_user_id) "
+    "class_id, text, task_id, created_by_user_id) "
     "SELECT :tenant_id, :project_id, :slide_id, kind, number, "
-    "ST_SetSRID(ST_GeomFromGeoJSON(shape), 0), class_id, :task_id, :user_id "
-    "FROM unnest(:kinds, :numbers, :shapes, :class_ids) AS given(kind, number, shape, class_id) "
+    "ST_SetSRID(ST_GeomFromGeoJSON(shape), 0), class_id, words, :task_id, :user_id "
+    "FROM unnest(:kinds, :numbers, :shapes, :class_ids, :texts) "
+    "AS given(kind, number, shape, class_id, words) "
     "RETURNING id, kind, number"
 ).bindparams(
     bindparam("task_id", type_=Uuid()),
@@ -317,12 +334,13 @@ INSERT_ANNOTATIONS = text(
     bindparam("numbers", type_=ARRAY(Integer)),
     bindparam("shapes", type_=ARRAY(String)),
     bindparam("class_ids", type_=ARRAY(Uuid())),
+    bindparam("texts", type_=ARRAY(String)),
 )
 
 RECORD_VERSIONS = text(
     "INSERT INTO annotation_versions "
-    "(tenant_id, annotation_id, version, change, geometry, class_id, changed_by_user_id) "
-    "SELECT tenant_id, id, version, :change, geometry, class_id, :user_id "
+    "(tenant_id, annotation_id, version, change, geometry, class_id, text, changed_by_user_id) "
+    "SELECT tenant_id, id, version, :change, geometry, class_id, text, :user_id "
     "FROM annotations WHERE id = ANY(:ids)"
 ).bindparams(bindparam("ids", type_=ARRAY(Uuid())))
 
@@ -373,6 +391,7 @@ async def add(
                 "numbers": numbers,
                 "shapes": shapes,
                 "class_ids": [draft.class_id for draft in drafts],
+                "texts": [draft.text for draft in drafts],
             },
         )
     ).all()
@@ -554,6 +573,8 @@ async def change_annotation(
         if edit.class_id is not None:
             await check_classes(connection, slide.project_id, {edit.class_id})
         values["class_id"] = edit.class_id
+    if "text" in edit.model_fields_set:
+        values["text"] = words_for(current.kind, edit.text)
     return await bump(
         connection,
         principal,
@@ -564,6 +585,14 @@ async def change_annotation(
         values,
         AnnotationChange.EDITED,
     )
+
+
+def words_for(kind: AnnotationKind, words: str | None) -> str:
+    if kind is not AnnotationKind.TEXT:
+        raise InvalidShapeError(f"A {kind} carries no text")
+    if words is None:
+        raise InvalidShapeError("A text note keeps its words")
+    return words
 
 
 @router.delete(
@@ -639,6 +668,7 @@ async def list_annotation_history(
             annotation_versions.c.change,
             func.ST_AsGeoJSON(annotation_versions.c.geometry).label("geojson"),
             annotation_versions.c.class_id,
+            annotation_versions.c.text,
             annotation_versions.c.changed_by_user_id,
             annotation_versions.c.changed_at,
         )
@@ -651,6 +681,7 @@ async def list_annotation_history(
             change=AnnotationChange(row.change),
             geometry=json.loads(row.geojson),
             class_id=row.class_id,
+            text=row.text,
             changed_by_user_id=row.changed_by_user_id,
             changed_at=row.changed_at,
         )

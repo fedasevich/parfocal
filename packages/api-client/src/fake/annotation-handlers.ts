@@ -8,6 +8,8 @@ const letters: Record<Annotation["kind"], string> = {
   measurement: "M",
   region: "T+",
   cell: "C+",
+  arrow: "A",
+  text: "N",
 };
 
 type Store = Record<string, Annotation[]>;
@@ -50,6 +52,7 @@ export const toSavedAnnotation = (
     code: `${letters[draft.kind]}${number}`,
     geometry: { ...draft.geometry },
     class_id: draft.class_id ?? null,
+    text: draft.kind === "text" ? (draft.text?.trim() ?? null) : null,
     task_id: null,
     version: 1,
     created_by_user_id: null,
@@ -114,6 +117,7 @@ export const annotationHandlers = (): RequestHandler[] => [
             ? found.geometry
             : { ...edit.geometry },
         class_id: edit.class_id === undefined ? found.class_id : edit.class_id,
+        text: edit.text === undefined ? (found.text ?? null) : (edit.text?.trim() ?? null),
         version: found.version + 1,
         updated_at: new Date().toISOString(),
       };

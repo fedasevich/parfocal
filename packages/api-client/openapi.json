@@ -35854,6 +35854,17 @@
             ],
             "title": "Class Id"
           },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          },
           "task_id": {
             "anyOf": [
               {
@@ -35952,6 +35963,16 @@
               }
             ],
             "title": "Class Id"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Words"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -36007,6 +36028,16 @@
               }
             ],
             "title": "Class Id"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Words"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -36021,7 +36052,9 @@
           "roi",
           "measurement",
           "region",
-          "cell"
+          "cell",
+          "arrow",
+          "text"
         ],
         "title": "AnnotationKind"
       },
@@ -36088,6 +36121,17 @@
             ],
             "title": "Class Id"
           },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          },
           "changed_by_user_id": {
             "anyOf": [
               {
@@ -36123,6 +36167,7 @@
           "change",
           "geometry",
           "class_id",
+          "text",
           "changed_by_user_id",
           "changed_at"
         ],
@@ -41163,6 +41208,17 @@
             ],
             "title": "Class Id"
           },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          },
           "version": {
             "type": "integer",
             "title": "Version"
@@ -41225,6 +41281,7 @@
           "source",
           "geometry",
           "class_id",
+          "text",
           "version",
           "created_by_user_id",
           "changed_by_user_id",
@@ -52571,6 +52628,11 @@
           "second-look"
         ],
         "title": "Why"
+      },
+      "Words": {
+        "type": "string",
+        "maxLength": 200,
+        "minLength": 1
       },
       "Workspace": {
         "properties": {

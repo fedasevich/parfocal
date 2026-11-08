@@ -143,7 +143,7 @@ def candidates(content: dict[str, Any] | list[Any]) -> list[Candidate]:
 
 
 def kind_of(candidate: Candidate, geometry_type: str) -> AnnotationKind | None:
-    if candidate.kind in AnnotationKind:
+    if candidate.kind in AnnotationKind and candidate.kind != AnnotationKind.TEXT:
         chosen = AnnotationKind(candidate.kind)
         return chosen if geometry_type in SHAPES[chosen] else None
     if candidate.object_type in CELL_TYPES and geometry_type in SHAPES[AnnotationKind.CELL]:
