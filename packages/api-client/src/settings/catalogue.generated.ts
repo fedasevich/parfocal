@@ -33,6 +33,10 @@ export type SettingValues = {
   tumor_share_cutoff: number;
   tumor_share_result_sentinel_node: boolean;
   tumor_share_result_pannuke: boolean;
+  unsure_zone_square_px: number;
+  unsure_zone_min_nuclei: number;
+  unsure_zone_min_unsure_percent: number;
+  unsure_zone_min_unsure_cells: number;
   home_layout: "role" | "review" | "research" | "both";
   presets: string[];
   default_preset: number;
@@ -366,6 +370,42 @@ export const catalogue: Record<SettingKey, SettingEntry> = {
     "layers": [
       "lab"
     ]
+  },
+  "unsure_zone_square_px": {
+    "kind": "whole",
+    "default": 128,
+    "layers": [
+      "lab"
+    ],
+    "minimum": 16,
+    "maximum": 1024
+  },
+  "unsure_zone_min_nuclei": {
+    "kind": "whole",
+    "default": 3,
+    "layers": [
+      "lab"
+    ],
+    "minimum": 1,
+    "maximum": 100
+  },
+  "unsure_zone_min_unsure_percent": {
+    "kind": "whole",
+    "default": 30,
+    "layers": [
+      "lab"
+    ],
+    "minimum": 1,
+    "maximum": 100
+  },
+  "unsure_zone_min_unsure_cells": {
+    "kind": "whole",
+    "default": 4,
+    "layers": [
+      "lab"
+    ],
+    "minimum": 1,
+    "maximum": 1000
   },
   "home_layout": {
     "kind": "choice",
