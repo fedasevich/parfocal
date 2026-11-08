@@ -12,6 +12,8 @@ export function PagedProbeMarker({ probe }: { probe: PagedProbe }) {
       data-drawn={probe.drawn}
       data-distinct-alphas={probe.distinctAlphas}
       data-working-set={probe.workingSet}
+      data-indexed={probe.indexed}
+      data-fields={probe.fields}
     />
   );
 }

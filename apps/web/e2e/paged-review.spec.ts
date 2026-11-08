@@ -53,7 +53,7 @@ test("a reviewer fades, zones and decides cells on a paged result of 250,000 nuc
 
   await panel(page)
     .getByRole("list", { name: "Zones where the AI is unsure" })
-    .getByRole("button", { name: /Zone 1/ })
+    .getByRole("button", { name: /^Zone 1(?!\d)/ })
     .click();
   const count = await tiles(page).count();
   expect(count).toBeGreaterThan(1);
@@ -89,4 +89,53 @@ test("a reviewer fades, zones and decides cells on a paged result of 250,000 nuc
   await expect(page.locator("[data-testid=cell-focus] [data-object]").first()).toBeAttached({
     timeout: 60_000,
   });
+});
+
+test("the zone list covers the slide and a far field keeps its zone and the first decision", async ({
+  page,
+}) => {
+  await page.goto(await pagedUrl(page));
+  await expect(probe(page)).toHaveAttribute("data-ready", "true", { timeout: 60_000 });
+  await expect
+    .poll(async () => Number(await probe(page).getAttribute("data-indexed")), { timeout: 60_000 })
+    .toBeGreaterThan(1000);
+
+  const zoneList = panel(page).getByRole("list", { name: "Zones where the AI is unsure" });
+  const zoneButtons = zoneList.getByRole("button", { name: /^Zone \d+/ });
+  await expect.poll(() => zoneButtons.count()).toBeGreaterThan(20);
+
+  await zoneButtons.first().click();
+  await tiles(page).first().click();
+  await expect(page).toHaveURL(/object=C\d+/);
+  const firstObject = new URL(page.url()).searchParams.get("object") ?? "";
+  await page.getByTestId("cell-type-bar").getByRole("button", { name: /Keep/ }).click();
+  await expect(page.getByText(/: agree$/).first()).toBeVisible();
+  await expect.poll(async () => (await savedDecisions(page)).length).toBeGreaterThan(0);
+
+  const before = Number(await probe(page).getAttribute("data-working-set"));
+  const fieldsBefore = Number(await probe(page).getAttribute("data-fields"));
+  await panel(page).getByRole("button", { name: "All zones" }).click();
+  await zoneButtons.last().click();
+  await tiles(page).first().click();
+  await expect(page).toHaveURL(/object=C\d+/);
+  const farObject = new URL(page.url()).searchParams.get("object") ?? "";
+  expect(farObject).not.toBe(firstObject);
+  await expect
+    .poll(async () => Number(await probe(page).getAttribute("data-fields")))
+    .toBeGreaterThan(fieldsBefore);
+  await expect
+    .poll(async () => Number(await probe(page).getAttribute("data-drawn")), { timeout: 60_000 })
+    .toBeGreaterThan(50);
+  expect(Number(await probe(page).getAttribute("data-working-set"))).toBeGreaterThan(before);
+
+  await page.keyboard.press("ArrowRight");
+  await expect.poll(() => new URL(page.url()).searchParams.get("object")).not.toBe(farObject);
+
+  const allZones = panel(page).getByRole("button", { name: "All zones" });
+  if ((await allZones.count()) > 0) await allZones.click();
+  await zoneButtons.first().click();
+  await expect(tiles(page).first()).toBeVisible();
+  await expect(
+    panel(page).getByRole("button", { name: new RegExp(`^${firstObject} .*, agree$`) }),
+  ).toBeVisible();
 });

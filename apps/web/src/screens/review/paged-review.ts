@@ -21,6 +21,8 @@ export type PagedProbe = {
   drawn: number;
   distinctAlphas: number;
   workingSet: number;
+  indexed: number;
+  fields: number;
 };
 
 export const idleProbe: PagedProbe = {
@@ -31,6 +33,8 @@ export const idleProbe: PagedProbe = {
   drawn: 0,
   distinctAlphas: 0,
   workingSet: 0,
+  indexed: 0,
+  fields: 0,
 };
 
 export function pagedCountFrom(search: string): number | null {
