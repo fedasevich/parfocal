@@ -9,7 +9,8 @@ async function displayScene(page: Page) {
   await expect(page.getByTestId("full-viewer")).toBeVisible();
 }
 
-const regionPaths = (page: Page) => page.locator('[data-slot="slide-still"] svg > path');
+const regionPaths = (page: Page) =>
+  page.locator('[data-slot="slide-still"] svg > g > path:not([data-double-line])');
 
 const row = (page: Page, label: string) =>
   page.locator('[data-slot="control-row"]').filter({ hasText: label });
