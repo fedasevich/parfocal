@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-08
 
+- SET-010 (account section) added an editable name with a saved toast, locked email, role and workspace with the reason for each lock, and the signature block toggle with a preview line. The name edit stays in the screen only until SET-014 (save the display name) adds a profile update endpoint.
 - SET-009 (privacy and session section) added the Patient banner row, a lab setting, beside the existing initials while sharing, lock after and sign out other devices rows. Unit tests and a browser spec now cover all four, and sign out other devices uses the existing endOtherSessions API.
 - SET-008 (notifications section) added the replies, STAT assigned and STAT sound rows, saved channel choices through the notification preferences API, and gated the bell so kinds set to Quiet are hidden and new STAT tasks play a chime. A STAT task is read as task-assigned with priority stat, and the STAT choice and sound stay on the device until the settings API covers them.
 - SET-002 (settings modal shell): Cmd+comma opens Settings, the navigation shows a legend of the three scope badges, and Playwright specs cover closing, navigation and one window size on every section. Moving the screen off the draft getMySettings onto the layered settings moves to SET-013 (settings screen on the layered settings), because many rows are not in the settings catalogue yet.

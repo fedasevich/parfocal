@@ -3545,7 +3545,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when tests cover each setting.
   Size: S.
 
-- [ ] SET-010 · Account section
+- [x] SET-010 · Account section
   Name, role (lab), workspace (lab), signature block for reports.
   Done when tests cover editing and locked fields.
   Size: S.
