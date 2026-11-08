@@ -131,6 +131,7 @@ import type {
   SignOffSummary,
   SignOutSet,
   SiteValidation,
+  Skip,
   SlideArea,
   SlideCoverage,
   SlideDetail,
@@ -7074,6 +7075,8 @@ export const getSaveVerdictResponseMock = (
     null,
   ]),
   preset: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
+  ai_class_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  ai_score: faker.helpers.arrayElement([faker.number.int(), null]),
   ...overrideResponse,
 });
 
@@ -7102,6 +7105,30 @@ export const getListVerdictsResponseMock = (): Verdict[] =>
       faker.string.alpha({ length: { min: 10, max: 20 } }),
       null,
     ]),
+    ai_class_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    ai_score: faker.helpers.arrayElement([faker.number.int(), null]),
+  }));
+
+export const getSkipObjectResponseMock = (
+  overrideResponse: Partial<Extract<Skip, object>> = {},
+): Skip => ({
+  object: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  kind: faker.helpers.arrayElement(Object.values(AnnotationKind)),
+  number: faker.number.int(),
+  ai_class_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  ai_score: faker.helpers.arrayElement([faker.number.int(), null]),
+  updated_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  ...overrideResponse,
+});
+
+export const getListSkipsResponseMock = (): Skip[] =>
+  Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    object: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    kind: faker.helpers.arrayElement(Object.values(AnnotationKind)),
+    number: faker.number.int(),
+    ai_class_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    ai_score: faker.helpers.arrayElement([faker.number.int(), null]),
+    updated_at: faker.date.past().toISOString().slice(0, 19) + "Z",
   }));
 
 export const getGetMyDisplayResponseMock = (
@@ -16308,6 +16335,69 @@ export const getListVerdictsMockHandler = (
   );
 };
 
+export const getSkipObjectMockHandler = (
+  overrideResponse?:
+    | Skip
+    | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<Skip> | Skip),
+  options?: RequestHandlerOptions,
+) => {
+  return http.put(
+    "*/api/review-tasks/:taskId/slides/:slideId/skips/:objectId",
+    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getSkipObjectResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getClearSkipMockHandler = (
+  overrideResponse?:
+    | void
+    | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void),
+  options?: RequestHandlerOptions,
+) => {
+  return http.delete(
+    "*/api/review-tasks/:taskId/slides/:slideId/skips/:objectId",
+    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info);
+      }
+
+      return new HttpResponse(null, { status: 204 });
+    },
+    options,
+  );
+};
+
+export const getListSkipsMockHandler = (
+  overrideResponse?:
+    | Skip[]
+    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<Skip[]> | Skip[]),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/review-tasks/:taskId/slides/:slideId/skips",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getListSkipsResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getGetMyDisplayMockHandler = (
   overrideResponse?:
     | MyDisplay
@@ -18722,6 +18812,9 @@ export const getParfocalAPIMock = () => [
   getSaveVerdictMockHandler(),
   getClearVerdictMockHandler(),
   getListVerdictsMockHandler(),
+  getSkipObjectMockHandler(),
+  getClearSkipMockHandler(),
+  getListSkipsMockHandler(),
   getGetMyDisplayMockHandler(),
   getChooseMyDisplayMockHandler(),
   getListDisplayPresetsMockHandler(),

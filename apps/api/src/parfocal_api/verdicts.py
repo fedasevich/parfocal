@@ -5,8 +5,8 @@ from types import SimpleNamespace
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Response
-from pydantic import BaseModel, StringConstraints, model_validator
-from sqlalchemy import delete, select, update
+from pydantic import BaseModel, Field, StringConstraints, model_validator
+from sqlalchemy import case, delete, select, update
 from sqlalchemy.dialects.postgresql import insert as upsert
 from sqlalchemy.ext.asyncio import AsyncConnection
 
@@ -40,6 +40,7 @@ from parfocal_api.tables import (
     result_objects,
     result_set_classes,
     review_edits,
+    review_skips,
     verdicts,
 )
 from parfocal_common.object_ids import Letter, ObjectId
@@ -78,6 +79,8 @@ type Note = Annotated[str, StringConstraints(strip_whitespace=True, max_length=5
 
 type Answer = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=10)]
 
+type Score = Annotated[int, Field(ge=0, le=255)]
+
 
 class VerdictDraft(BaseModel):
     answer: Answer | None = None
@@ -86,6 +89,8 @@ class VerdictDraft(BaseModel):
     reasons: list[VerdictReason] = []
     reason_class_id: uuid.UUID | None = None
     note: Note | None = None
+    ai_class_id: uuid.UUID | None = None
+    ai_score: Score | None = None
 
     @model_validator(mode="after")
     def reasons_fit_value(self) -> VerdictDraft:
@@ -116,11 +121,18 @@ class Verdict(BaseModel):
     reopened_at: datetime | None = None
     reopened_note: str | None = None
     preset: str | None = None
+    ai_class_id: uuid.UUID | None = None
+    ai_score: int | None = None
 
 
 class ReasonNotForAnswerError(BadRequestError):
     code = "reason-not-for-answer"
     title = "This reason does not go with an answer that counts this way"
+
+
+class NotASetClassError(BadRequestError):
+    code = "not-a-set-class"
+    title = "The AI call names a class this result set does not use"
 
 
 class ReasonNotForKindError(BadRequestError):
@@ -151,6 +163,8 @@ def verdict_of(row: Any) -> Verdict:
         reopened_at=row.reopened_at,
         reopened_note=row.reopened_note,
         preset=row.preset,
+        ai_class_id=row.ai_class_id,
+        ai_score=row.ai_score,
     )
 
 
@@ -182,6 +196,42 @@ async def ai_region_class(
         )
     )
     return found if isinstance(found, uuid.UUID) else None
+
+
+async def ai_call(
+    connection: AsyncConnection,
+    row: Any,
+    kind: AnnotationKind,
+    number: int,
+    shown_class_id: uuid.UUID | None,
+    shown_score: int | None,
+) -> tuple[uuid.UUID | None, int | None]:
+    if kind is AnnotationKind.REGION:
+        found = (
+            await connection.execute(
+                select(result_set_classes.c.class_id, result_objects.c.score)
+                .select_from(result_objects)
+                .outerjoin(
+                    result_set_classes,
+                    (result_set_classes.c.result_set_id == result_objects.c.result_set_id)
+                    & (result_set_classes.c.position == result_objects.c.class_index),
+                )
+                .where(
+                    result_objects.c.result_set_id == row.result_set_id,
+                    result_objects.c.kind == "region",
+                    result_objects.c.number == number,
+                )
+            )
+        ).one_or_none()
+        return (found.class_id, found.score) if found is not None else (None, None)
+    if shown_class_id is not None:
+        used = select(result_set_classes).where(
+            result_set_classes.c.result_set_id == row.result_set_id,
+            result_set_classes.c.class_id == shown_class_id,
+        )
+        if not await connection.scalar(select(used.exists())):
+            raise NotASetClassError
+    return shown_class_id, shown_score
 
 
 def same_object(
@@ -374,6 +424,10 @@ async def save_verdict(
     if draft.reason_class_id is not None:
         await check_classes(connection, row.project_id, {draft.reason_class_id})
     me = user_of(principal)
+    ai_class_id, ai_score = await ai_call(
+        connection, row, kind, found.number, draft.ai_class_id, draft.ai_score
+    )
+    no_call = verdicts.c.ai_class_id.is_(None) & verdicts.c.ai_score.is_(None)
     previous = (
         await connection.execute(
             select(verdicts.c.reason_class_id).where(
@@ -393,19 +447,20 @@ async def save_verdict(
         "reopened_note": None,
         "preset": await preset_in_force(connection, task_id, me),
     }
+    saving = upsert(verdicts).values(
+        tenant_id=row.tenant_id,
+        project_id=row.project_id,
+        task_id=task_id,
+        slide_id=slide_id,
+        user_id=me,
+        kind=kind,
+        number=found.number,
+        ai_class_id=ai_class_id,
+        ai_score=ai_score,
+        **values,
+    )
     await connection.execute(
-        upsert(verdicts)
-        .values(
-            tenant_id=row.tenant_id,
-            project_id=row.project_id,
-            task_id=task_id,
-            slide_id=slide_id,
-            user_id=me,
-            kind=kind,
-            number=found.number,
-            **values,
-        )
-        .on_conflict_do_update(
+        saving.on_conflict_do_update(
             index_elements=[
                 verdicts.c.task_id,
                 verdicts.c.slide_id,
@@ -413,7 +468,18 @@ async def save_verdict(
                 verdicts.c.kind,
                 verdicts.c.number,
             ],
-            set_=values,
+            set_={
+                **values,
+                "ai_class_id": case(
+                    (no_call, saving.excluded.ai_class_id), else_=verdicts.c.ai_class_id
+                ),
+                "ai_score": case((no_call, saving.excluded.ai_score), else_=verdicts.c.ai_score),
+            },
+        )
+    )
+    await connection.execute(
+        delete(review_skips).where(
+            *same_object(review_skips, task_id, slide_id, me, kind, found.number)
         )
     )
     if previous is not None and previous.reason_class_id not in {None, draft.reason_class_id}:

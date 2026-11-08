@@ -4064,6 +4064,12 @@ export interface SchemaProblem {
   message: string;
 }
 
+/**
+ * @minimum 0
+ * @maximum 255
+ */
+export type Score = number;
+
 export interface SearchHit {
   kind: HitKind;
   id: string;
@@ -4292,6 +4298,20 @@ export interface SiteValidation {
   announcement_id: string;
   created_by_user_id: string | null;
   created_at: string;
+}
+
+export interface Skip {
+  object: string;
+  kind: AnnotationKind;
+  number: number;
+  ai_class_id: string | null;
+  ai_score: number | null;
+  updated_at: string;
+}
+
+export interface SkipDraft {
+  ai_class_id?: string | null;
+  ai_score?: Score | null;
 }
 
 export interface SlideArea {
@@ -4848,6 +4868,8 @@ export interface Verdict {
   reopened_at?: string | null;
   reopened_note?: string | null;
   preset?: string | null;
+  ai_class_id?: string | null;
+  ai_score?: number | null;
 }
 
 /**
@@ -4862,6 +4884,8 @@ export interface VerdictDraft {
   reasons?: VerdictReason[];
   reason_class_id?: string | null;
   note?: ParfocalApiVerdictsNote | null;
+  ai_class_id?: string | null;
+  ai_score?: Score | null;
 }
 
 export interface VersionCheck {
@@ -5119,6 +5143,10 @@ export type SearchParams = {
 };
 
 export type ListVerdictsParams = {
+  reviewer_id?: string | null;
+};
+
+export type ListSkipsParams = {
   reviewer_id?: string | null;
 };
 
@@ -35415,6 +35443,525 @@ export function useListVerdicts<TData = Awaited<ReturnType<typeof listVerdicts>>
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getListVerdictsQueryOptions(taskId, slideId, params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type skipObjectResponse200 = {
+  data: Skip;
+  status: 200;
+};
+
+export type skipObjectResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type skipObjectResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type skipObjectResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type skipObjectResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type skipObjectResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type skipObjectResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type skipObjectResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type skipObjectResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type skipObjectResponseSuccess = skipObjectResponse200 & {
+  headers: Headers;
+};
+export type skipObjectResponseError = (
+  | skipObjectResponse400
+  | skipObjectResponse401
+  | skipObjectResponse403
+  | skipObjectResponse404
+  | skipObjectResponse409
+  | skipObjectResponse422
+  | skipObjectResponse429
+  | skipObjectResponse500
+) & {
+  headers: Headers;
+};
+
+export type skipObjectResponse = skipObjectResponseSuccess | skipObjectResponseError;
+
+export const getSkipObjectUrl = (taskId: string, slideId: string, objectId: string) => {
+  return `/api/review-tasks/${taskId}/slides/${slideId}/skips/${objectId}`;
+};
+
+/**
+ * @summary Skip Object
+ */
+export const skipObject = async (
+  taskId: string,
+  slideId: string,
+  objectId: string,
+  skipDraft: SkipDraft,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<skipObjectResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<skipObjectResponse>(getSkipObjectUrl(taskId, slideId, objectId), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(skipDraft),
+  });
+};
+
+export const getSkipObjectMutationKey = () => ["skipObject"] as const;
+
+export const getSkipObjectMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof skipObject>>,
+    TError,
+    SkipObjectMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof skipObject>>,
+  TError,
+  SkipObjectMutationVariables,
+  TContext
+> => {
+  const mutationKey = getSkipObjectMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof skipObject>>,
+    SkipObjectMutationVariables
+  > = (props) => {
+    const { taskId, slideId, objectId, data } = props ?? {};
+
+    return skipObject(taskId, slideId, objectId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SkipObjectMutationResult = NonNullable<Awaited<ReturnType<typeof skipObject>>>;
+export type SkipObjectMutationBody = SkipDraft;
+export type SkipObjectMutationError = Problem;
+export type SkipObjectMutationVariables = {
+  taskId: string;
+  slideId: string;
+  objectId: string;
+  data: SkipDraft;
+};
+
+/**
+ * @summary Skip Object
+ */
+export const useSkipObject = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof skipObject>>,
+      TError,
+      SkipObjectMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof skipObject>>,
+  TError,
+  SkipObjectMutationVariables,
+  TContext
+> => {
+  return useMutation(getSkipObjectMutationOptions(options), queryClient);
+};
+
+export type clearSkipResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type clearSkipResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type clearSkipResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type clearSkipResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type clearSkipResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type clearSkipResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type clearSkipResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type clearSkipResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type clearSkipResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type clearSkipResponseSuccess = clearSkipResponse204 & {
+  headers: Headers;
+};
+export type clearSkipResponseError = (
+  | clearSkipResponse400
+  | clearSkipResponse401
+  | clearSkipResponse403
+  | clearSkipResponse404
+  | clearSkipResponse409
+  | clearSkipResponse422
+  | clearSkipResponse429
+  | clearSkipResponse500
+) & {
+  headers: Headers;
+};
+
+export type clearSkipResponse = clearSkipResponseSuccess | clearSkipResponseError;
+
+export const getClearSkipUrl = (taskId: string, slideId: string, objectId: string) => {
+  return `/api/review-tasks/${taskId}/slides/${slideId}/skips/${objectId}`;
+};
+
+/**
+ * @summary Clear Skip
+ */
+export const clearSkip = async (
+  taskId: string,
+  slideId: string,
+  objectId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<clearSkipResponse> => {
+  return apiFetch<clearSkipResponse>(getClearSkipUrl(taskId, slideId, objectId), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getClearSkipMutationKey = () => ["clearSkip"] as const;
+
+export const getClearSkipMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof clearSkip>>,
+    TError,
+    ClearSkipMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof clearSkip>>,
+  TError,
+  ClearSkipMutationVariables,
+  TContext
+> => {
+  const mutationKey = getClearSkipMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof clearSkip>>,
+    ClearSkipMutationVariables
+  > = (props) => {
+    const { taskId, slideId, objectId } = props ?? {};
+
+    return clearSkip(taskId, slideId, objectId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ClearSkipMutationResult = NonNullable<Awaited<ReturnType<typeof clearSkip>>>;
+
+export type ClearSkipMutationError = Problem;
+export type ClearSkipMutationVariables = { taskId: string; slideId: string; objectId: string };
+
+/**
+ * @summary Clear Skip
+ */
+export const useClearSkip = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof clearSkip>>,
+      TError,
+      ClearSkipMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof clearSkip>>,
+  TError,
+  ClearSkipMutationVariables,
+  TContext
+> => {
+  return useMutation(getClearSkipMutationOptions(options), queryClient);
+};
+
+export type listSkipsResponse200 = {
+  data: Skip[];
+  status: 200;
+};
+
+export type listSkipsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listSkipsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listSkipsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listSkipsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listSkipsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listSkipsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listSkipsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type listSkipsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listSkipsResponseSuccess = listSkipsResponse200 & {
+  headers: Headers;
+};
+export type listSkipsResponseError = (
+  | listSkipsResponse400
+  | listSkipsResponse401
+  | listSkipsResponse403
+  | listSkipsResponse404
+  | listSkipsResponse409
+  | listSkipsResponse422
+  | listSkipsResponse429
+  | listSkipsResponse500
+) & {
+  headers: Headers;
+};
+
+export type listSkipsResponse = listSkipsResponseSuccess | listSkipsResponseError;
+
+export const getListSkipsUrl = (taskId: string, slideId: string, params?: ListSkipsParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/review-tasks/${taskId}/slides/${slideId}/skips?${stringifiedParams}`
+    : `/api/review-tasks/${taskId}/slides/${slideId}/skips`;
+};
+
+/**
+ * @summary List Skips
+ */
+export const listSkips = async (
+  taskId: string,
+  slideId: string,
+  params?: ListSkipsParams,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listSkipsResponse> => {
+  return apiFetch<listSkipsResponse>(getListSkipsUrl(taskId, slideId, params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListSkipsQueryKey = (taskId: string, slideId: string, params?: ListSkipsParams) => {
+  return [
+    `/api/review-tasks/${taskId}/slides/${slideId}/skips`,
+    ...(params ? [params] : []),
+  ] as const;
+};
+
+export const getListSkipsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listSkips>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  params?: ListSkipsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listSkips>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListSkipsQueryKey(taskId, slideId, params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listSkips>>> = ({ signal }) =>
+    listSkips(taskId, slideId, params, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: taskId !== null && taskId !== undefined && slideId !== null && slideId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof listSkips>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type ListSkipsQueryResult = NonNullable<Awaited<ReturnType<typeof listSkips>>>;
+export type ListSkipsQueryError = Problem;
+
+export function useListSkips<TData = Awaited<ReturnType<typeof listSkips>>, TError = Problem>(
+  taskId: string,
+  slideId: string,
+  params: undefined | ListSkipsParams,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listSkips>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listSkips>>,
+          TError,
+          Awaited<ReturnType<typeof listSkips>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListSkips<TData = Awaited<ReturnType<typeof listSkips>>, TError = Problem>(
+  taskId: string,
+  slideId: string,
+  params?: ListSkipsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listSkips>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listSkips>>,
+          TError,
+          Awaited<ReturnType<typeof listSkips>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListSkips<TData = Awaited<ReturnType<typeof listSkips>>, TError = Problem>(
+  taskId: string,
+  slideId: string,
+  params?: ListSkipsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listSkips>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Skips
+ */
+
+export function useListSkips<TData = Awaited<ReturnType<typeof listSkips>>, TError = Problem>(
+  taskId: string,
+  slideId: string,
+  params?: ListSkipsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listSkips>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListSkipsQueryOptions(taskId, slideId, params, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;

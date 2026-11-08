@@ -100,6 +100,8 @@ class AuditAction(StrEnum):
     REVIEW_OBJECT_MERGED = "review.object-merged"
     REVIEW_VERDICT_SET = "review.verdict-set"
     REVIEW_VERDICT_CLEARED = "review.verdict-cleared"
+    REVIEW_OBJECT_SKIPPED = "review.object-skipped"
+    REVIEW_SKIP_CLEARED = "review.skip-cleared"
     REVIEW_DECISION_SET = "review.decision-set"
     REVIEW_DECISION_CLEARED = "review.decision-cleared"
     REVIEW_OBJECT_LEFT_OPEN = "review.object-left-open"

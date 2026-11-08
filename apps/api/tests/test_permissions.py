@@ -277,6 +277,8 @@ NEEDS_A_TASK = frozenset(
         "reopenSlideReview",
         "saveVerdict",
         "clearVerdict",
+        "skipObject",
+        "clearSkip",
         "getMyDisplay",
         "chooseMyDisplay",
         "saveOpinion",
@@ -889,6 +891,11 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "clearVerdict": lambda w: Call(
         "DELETE", f"/api/review-tasks/{w.task}/slides/{w.slide}/verdicts/T1"
     ),
+    "listSkips": lambda w: Call("GET", f"/api/review-tasks/{w.task}/slides/{w.slide}/skips"),
+    "skipObject": lambda w: Call(
+        "PUT", f"/api/review-tasks/{w.task}/slides/{w.slide}/skips/T3", {}
+    ),
+    "clearSkip": lambda w: Call("DELETE", f"/api/review-tasks/{w.task}/slides/{w.slide}/skips/T3"),
     "getReviewTaskStates": lambda w: Call("GET", f"/api/review-tasks/{w.task}/states"),
     "getMyDisplay": lambda w: Call("GET", f"/api/review-tasks/{w.task}/my-display"),
     "chooseMyDisplay": lambda w: Call(

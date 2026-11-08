@@ -13,9 +13,9 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | Class | Columns |
 |---|---|
 | `phi` | 46 |
-| `personal` | 84 |
+| `personal` | 85 |
 | `secret` | 10 |
-| `operational` | 673 |
+| `operational` | 685 |
 | `public` | 0 |
 
 ## adjudication_objects
@@ -809,6 +809,22 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `objects` | operational |
 | `created_at` | operational |
 
+## review_skips
+
+| Column | Class |
+|---|---|
+| `tenant_id` | operational |
+| `project_id` | operational |
+| `task_id` | operational |
+| `slide_id` | operational |
+| `user_id` | personal |
+| `kind` | operational |
+| `number` | operational |
+| `ai_class_id` | operational |
+| `ai_score` | operational |
+| `created_at` | operational |
+| `updated_at` | operational |
+
 ## review_task_slides
 
 | Column | Class |
@@ -1203,6 +1219,8 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `reopened_at` | operational |
 | `reopened_note` | phi |
 | `preset` | personal |
+| `ai_class_id` | operational |
+| `ai_score` | operational |
 | `created_at` | operational |
 | `updated_at` | operational |
 

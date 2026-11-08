@@ -73,6 +73,7 @@ from parfocal_api.tables import (
     review_assignments,
     review_edits,
     review_order,
+    review_skips,
     review_task_slides,
     review_tasks,
     service_accounts,
@@ -181,6 +182,7 @@ CASE_TABLES = {
     "opinions",
     "disagreement_decisions",
     "verdicts",
+    "review_skips",
     "review_edits",
     "review_order",
     "review_tasks",
@@ -686,6 +688,18 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
         )
     )
     seeded.markers.add(verdict_note)
+    await connection.execute(
+        insert(review_skips).values(
+            tenant_id=seeded.tenant_id,
+            project_id=case.project_id,
+            task_id=task_id,
+            slide_id=case.loose_slide_id,
+            user_id=seeded.ids["user"],
+            kind="cell",
+            number=1,
+            ai_class_id=class_id,
+        )
+    )
     await connection.execute(
         insert(opinions).values(
             tenant_id=seeded.tenant_id,
@@ -1424,6 +1438,10 @@ GET_ROUTES = {
     "listVerdicts": Route(
         Exposure.TENANT,
         lambda a: f"/api/review-tasks/{a.ids['task']}/slides/{a.ids['slide']}/verdicts",
+    ),
+    "listSkips": Route(
+        Exposure.TENANT,
+        lambda a: f"/api/review-tasks/{a.ids['task']}/slides/{a.ids['slide']}/skips",
     ),
     "listThreads": Route(
         Exposure.TENANT,

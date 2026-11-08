@@ -161,13 +161,17 @@ async def layer_items(
         edit = edits.get(("region", region.number))
         if edit is not None and (edit.deleted or edit.retired):
             continue
-        ai_class = classes.get((row.slide_id, region.number))
+        verdict = given.get(("region", region.number))
+        ai_class = (
+            names.get(verdict.ai_class_id)
+            if verdict is not None and verdict.ai_class_id in names
+            else classes.get((row.slide_id, region.number))
+        )
         changed: list[str] = []
         if edit is not None and edit.class_id is not None:
             changed.append("retyped")
         if edit is not None and edit.geojson is not None:
             changed.append("reshaped")
-        verdict = given.get(("region", region.number))
         out.append(
             item(
                 "region",
