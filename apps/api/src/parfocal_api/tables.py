@@ -1901,6 +1901,12 @@ class VerdictReason(StrEnum):
     NEED_SECOND_LOOK = "need_second_look"
 
 
+AI_CALL = {
+    **OPERATIONAL,
+    "note": "The AI call at decision time, read from the result set for a region and reported "
+    "by the reviewer's client for a cell, unchecked against the cell chunks",
+}
+
 verdicts = Table(
     "verdicts",
     metadata,
@@ -1921,6 +1927,8 @@ verdicts = Table(
     Column("reopened_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
     Column("reopened_note", String(500), nullable=True, info=PHI),
     Column("preset", String(40), nullable=True, info=PERSONAL),
+    Column("ai_class_id", Uuid[uuid.UUID](), nullable=True, info=AI_CALL),
+    Column("ai_score", SmallInteger, nullable=True, info=AI_CALL),
     *timestamps(),
     ForeignKeyConstraint(
         ["task_id", "slide_id", "user_id"],
@@ -1929,6 +1937,12 @@ verdicts = Table(
     ForeignKeyConstraint(
         ["reason_class_id", "project_id"], ["project_classes.id", "project_classes.project_id"]
     ),
+    ForeignKeyConstraint(
+        ["ai_class_id", "project_id"],
+        ["project_classes.id", "project_classes.project_id"],
+        name="fk_verdicts_ai_class_id_project_id_project_classes",
+    ),
+    CheckConstraint("ai_score BETWEEN 0 AND 255", name="ai_score"),
     ForeignKeyConstraint(
         ["answer_class_id", "project_id"],
         ["project_classes.id", "project_classes.project_id"],
@@ -1963,6 +1977,32 @@ verdicts = Table(
         "('wrong_class' = ANY(reasons)) = (reason_class_id IS NOT NULL)",
         name="wrong_class_names_class",
     ),
+)
+
+review_skips = Table(
+    "review_skips",
+    metadata,
+    Column("tenant_id", Uuid[uuid.UUID](), nullable=False, index=True, info=OPERATIONAL),
+    Column("project_id", Uuid[uuid.UUID](), nullable=False, info=OPERATIONAL),
+    Column("task_id", Uuid[uuid.UUID](), primary_key=True, info=OPERATIONAL),
+    Column("slide_id", Uuid[uuid.UUID](), primary_key=True, info=OPERATIONAL),
+    Column("user_id", Uuid[uuid.UUID](), primary_key=True, info=PERSONAL),
+    Column("kind", String(10), primary_key=True, info=OPERATIONAL),
+    Column("number", Integer, primary_key=True, info=OPERATIONAL),
+    Column("ai_class_id", Uuid[uuid.UUID](), nullable=True, info=AI_CALL),
+    Column("ai_score", SmallInteger, nullable=True, info=AI_CALL),
+    *timestamps(),
+    ForeignKeyConstraint(
+        ["task_id", "slide_id", "user_id"],
+        ["review_assignments.task_id", "review_assignments.slide_id", "review_assignments.user_id"],
+    ),
+    ForeignKeyConstraint(
+        ["ai_class_id", "project_id"], ["project_classes.id", "project_classes.project_id"]
+    ),
+    ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),
+    CheckConstraint("kind IN ('region', 'cell')", name="kind"),
+    CheckConstraint("number > 0", name="number"),
+    CheckConstraint("ai_score BETWEEN 0 AND 255", name="ai_score"),
 )
 
 display_presets = Table(

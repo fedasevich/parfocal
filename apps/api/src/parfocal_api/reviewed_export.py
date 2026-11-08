@@ -17,7 +17,13 @@ from parfocal_api.blinding import (
     user_of,
 )
 from parfocal_api.context import CurrentPrincipal, TenantConnection
-from parfocal_api.evaluation import ai_objects, class_names, first_of_each_match, region_classes
+from parfocal_api.evaluation import (
+    UNCLASSIFIED,
+    ai_objects,
+    class_names,
+    first_of_each_match,
+    region_classes,
+)
 from parfocal_api.permissions import Permission, require
 from parfocal_api.problems import BadRequestError
 from parfocal_api.project_access import project_grant, reads_whole
@@ -28,6 +34,7 @@ from parfocal_api.tables import (
     cases,
     projects,
     result_objects,
+    result_set_classes,
     result_sets,
     review_edits,
     slides,
@@ -98,6 +105,13 @@ def item(
     }
 
 
+def called_class(
+    class_id: uuid.UUID | None, source_name: str | None, names: dict[uuid.UUID, str]
+) -> str:
+    unmapped = source_name or UNCLASSIFIED
+    return names.get(class_id, unmapped) if class_id is not None else unmapped
+
+
 async def ai_regions(connection: AsyncConnection, set_id: uuid.UUID) -> list[Any]:
     return list(
         (
@@ -105,6 +119,12 @@ async def ai_regions(connection: AsyncConnection, set_id: uuid.UUID) -> list[Any
                 select(
                     result_objects.c.number,
                     func.ST_AsGeoJSON(result_objects.c.geometry).label("geojson"),
+                    result_set_classes.c.source_name,
+                )
+                .outerjoin(
+                    result_set_classes,
+                    (result_set_classes.c.result_set_id == result_objects.c.result_set_id)
+                    & (result_set_classes.c.position == result_objects.c.class_index),
                 )
                 .where(result_objects.c.result_set_id == set_id, result_objects.c.kind == "region")
                 .order_by(result_objects.c.number)
@@ -161,13 +181,17 @@ async def layer_items(
         edit = edits.get(("region", region.number))
         if edit is not None and (edit.deleted or edit.retired):
             continue
-        ai_class = classes.get((row.slide_id, region.number))
+        verdict = given.get(("region", region.number))
+        ai_class = (
+            classes.get((row.slide_id, region.number))
+            if verdict is None
+            else called_class(verdict.ai_class_id, region.source_name, names)
+        )
         changed: list[str] = []
         if edit is not None and edit.class_id is not None:
             changed.append("retyped")
         if edit is not None and edit.geojson is not None:
             changed.append("reshaped")
-        verdict = given.get(("region", region.number))
         out.append(
             item(
                 "region",

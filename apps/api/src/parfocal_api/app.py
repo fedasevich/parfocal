@@ -53,6 +53,7 @@ from parfocal_api import (
     result_sets,
     retention,
     review_order,
+    review_skips,
     review_states,
     review_tasks,
     reviewed_export,
@@ -234,6 +235,7 @@ def create_app(
     app.include_router(search.router)
     app.include_router(review_states.router)
     app.include_router(verdicts.router)
+    app.include_router(review_skips.router)
     app.include_router(display.router)
     app.include_router(display.presets_router)
     app.include_router(threads.router)

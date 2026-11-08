@@ -21,6 +21,15 @@ def classes_in_use() -> list[DataClass | None]:
     ]
 
 
+def class_of(info: dict[str, object]) -> str:
+    return str(classification_of(info) or "TODO")
+
+
+def note_of(info: dict[str, object]) -> str:
+    note = info.get("note")
+    return f". {note}" if isinstance(note, str) else ""
+
+
 def render() -> str:
     classes = [
         f"| `{data_class.value}` | {DATA_CLASS_MEANINGS[data_class]} |" for data_class in DataClass
@@ -29,7 +38,7 @@ def render() -> str:
     for table in declared_tables():
         sections += [f"## {table.name}", "", "| Column | Class |", "|---|---|"]
         sections += [
-            f"| `{column.name}` | {classification_of(column.info) or 'TODO'} |"
+            f"| `{column.name}` | {class_of(column.info)}{note_of(column.info)} |"
             for column in table.columns
         ]
         sections.append("")
