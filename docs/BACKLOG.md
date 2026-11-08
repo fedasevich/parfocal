@@ -3311,7 +3311,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   The least sure first order applies the temperature before it rates objects, when a task is made ([ADR 0117](adr/0117-review-order-is-stored-per-task-slide.md), review order stored per task slide).
   Size: M.
 
-- [ ] AINUC-007 · Confidence bands
+- [x] AINUC-007 · Confidence bands
   Confident, likely, unsure, doubtful thresholds per typer from calibration data.
   Done when unit tests reproduce the band accuracies reported by MLEVAL.
   Size: S.
