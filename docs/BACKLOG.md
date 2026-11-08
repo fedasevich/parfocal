@@ -3716,7 +3716,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when touch tests cover each gesture.
   Size: S.
 
-- [ ] DEV-011 · Touch targets audit
+- [x] DEV-011 · Touch targets audit
   Done when an automated check confirms targets of at least 24 px on desktop and 44 px on tablet layouts.
   Size: S.
 
