@@ -55,6 +55,7 @@ function SlideView() {
               tools={tools}
               object={search.object}
               onShowUi={() => onSearch({ focus: undefined, peek: undefined })}
+              onObject={(next) => onSearch({ object: next })}
               peekOpen={search.peek === true}
               onPeekChange={(open) => onSearch({ peek: open || undefined })}
             />
