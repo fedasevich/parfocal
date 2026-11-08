@@ -2387,7 +2387,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Refs docs 28, 29.
   Size: S.
 
-- [ ] REVIEW-015 · Paged results keep confidence
+- [x] REVIEW-015 · Paged results keep confidence
   The cells gallery and fade work on paged whole-slide results because the chunk schema carries probabilities.
   Done when E2E reviews cells on a 1M-nucleus paged result.
   Depends on AINUC-003.
