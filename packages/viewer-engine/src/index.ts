@@ -404,6 +404,17 @@ export {
   scoreColour,
 } from "./overlay/draw-style.ts";
 export {
+  colorizeFieldMap,
+  createFieldMapOverlay,
+  defaultFieldMapOpacity,
+  defaultFieldMapThreshold,
+  type FieldMapKind,
+  type FieldMapOptions,
+  fieldMapColor,
+  fieldMapKinds,
+  fieldMapStops,
+} from "./overlay/field-maps.ts";
+export {
   colorizeHeatmap,
   createHeatmapOverlay,
   defaultHeatmapLook,
@@ -411,7 +422,10 @@ export {
   type HeatmapOverlay,
   type HeatmapOverlayOptions,
   heatmapSourceLabel,
+  heatmapStrengthState,
+  heatmapStrengthSteps,
   isHeatmapOverlay,
+  snapHeatmapStrength,
   withHeatmapLook,
 } from "./overlay/heatmap.ts";
 export {

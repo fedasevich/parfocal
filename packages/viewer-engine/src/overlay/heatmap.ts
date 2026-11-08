@@ -103,3 +103,15 @@ export function withHeatmapLook(
 export function heatmapSourceLabel(source: HeatmapSource): string {
   return source.version === null ? source.model : `${source.model} ${source.version}`;
 }
+
+export const heatmapStrengthSteps: readonly number[] = [0, 20, 30, 40, 50, 60, 70, 80, 90, 100];
+
+export function snapHeatmapStrength(strength: number): number {
+  if (Number.isNaN(strength) || strength < 15) return 0;
+  return Math.min(100, Math.max(20, Math.round(strength / 10) * 10));
+}
+
+export function heatmapStrengthState(strength: number): { visible: boolean; opacity: number } {
+  const snapped = snapHeatmapStrength(strength);
+  return { visible: snapped > 0, opacity: snapped / 100 };
+}

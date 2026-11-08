@@ -77,6 +77,11 @@ const displayOptions: Record<string, SegmentOption[]> = {
   ],
 };
 
+function snapHeatmapStrength(strength: number): number {
+  if (Number.isNaN(strength) || strength < 15) return 0;
+  return Math.min(100, Math.max(20, Math.round(strength / 10) * 10));
+}
+
 const defaultDisplaySettings: DisplaySettings = {
   draw: "outline",
   width: "2",
@@ -151,6 +156,7 @@ function RangeRow({
   step,
   format,
   help,
+  lock,
   onChange,
 }: {
   label: string;
@@ -160,10 +166,11 @@ function RangeRow({
   step: number;
   format: (value: number) => string;
   help?: string;
+  lock?: Lock | undefined;
   onChange?: ((value: number) => void) | undefined;
 }) {
   return (
-    <ControlRow label={label} help={help}>
+    <ControlRow label={label} help={help} locked={lock}>
       {() => (
         <span className="flex items-center gap-3">
           <Slider
@@ -396,6 +403,8 @@ function DisplayPanel({
           max={100}
           step={10}
           format={(value) => (value ? `${value}%` : "Off")}
+          lock={locks.heatmap}
+          onChange={onChange && ((value) => onChange("heatmap", snapHeatmapStrength(value)))}
         />
         <RangeRow
           label="Score cutoff"
@@ -454,4 +463,5 @@ export {
   displaySummary,
   PresetMenu,
   type PresetMenuProps,
+  snapHeatmapStrength,
 };
