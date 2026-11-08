@@ -26,7 +26,7 @@
       "url": "https://openslide.cs.cmu.edu/download/openslide-testdata/Generic-TIFF/CMU-1.tiff",
       "sha256": "73a7e89bc15576587c3d68e55d9bf92f09690280166240b48ff4b48230b13bcd",
       "bytes": 204117846,
-      "groups": ["formats"]
+      "groups": ["formats", "viewer"]
     },
     {
       "file": "JP2K-33003-1.svs",
@@ -40,7 +40,7 @@
       "url": "https://openslide.cs.cmu.edu/download/openslide-testdata/Aperio/CMU-1-JP2K-33005.svs",
       "sha256": "9a1923cd9bcb260ba4d99d64f8d6e32550648c332ba48817f920662f3a513420",
       "bytes": 132565343,
-      "groups": ["formats"]
+      "groups": ["formats", "viewer"]
     },
     {
       "file": "CMU-1.ndpi",

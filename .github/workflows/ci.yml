@@ -265,7 +265,9 @@ jobs:
         with:
           path: ~/.cache/parfocal/fixtures
           key: fixtures-browser-${{ steps.fixtures.outputs.key }}
+      - run: df -h "$HOME"
       - run: pnpm fixtures small viewer
+      - run: df -h "$HOME"
       - run: google-chrome --version
       - if: ${{ github.event_name != 'workflow_dispatch' }}
         run: pnpm turbo run test:browser --filter=@parfocal/${{ matrix.package }}

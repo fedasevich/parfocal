@@ -10,12 +10,7 @@ import {
   toleranceFor,
 } from "../src/index.ts";
 import { assertSwiftShader } from "../src/playwright.ts";
-import {
-  fixtureAvailability,
-  openHarness,
-  renderVivFrame,
-  startVivHarness,
-} from "./viv-harness.ts";
+import { openHarness, renderVivFrame, skipUnlessCached, startVivHarness } from "./viv-harness.ts";
 import { cmu1TissueCentre, type VivGoldenScene } from "./viv-scenes.ts";
 
 const sameSlideMeanError = 10;
@@ -68,14 +63,6 @@ test.beforeEach(async ({ page }) => {
   await openHarness(page, server);
   await assertSwiftShader(page);
 });
-
-function skipUnlessCached(fixture: string): void {
-  const availability = fixtureAvailability(fixture);
-  test.skip(
-    availability.status === "missing",
-    availability.status === "missing" ? availability.message : "",
-  );
-}
 
 function greyShare(frame: Frame): number {
   let grey = 0;

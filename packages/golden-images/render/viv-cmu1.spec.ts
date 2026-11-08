@@ -17,6 +17,7 @@ import {
   fixtureAvailability,
   openHarness,
   renderVivFrame,
+  skipUnlessCached,
   startVivHarness,
 } from "./viv-harness.ts";
 import {
@@ -155,8 +156,7 @@ test("a route that trusts the native decoder on CMU-1.svs fails every golden", a
 test("CMU-1.tiff, stored as YCbCr JPEG, draws the colours of the CMU-1.svs golden", async ({
   page,
 }) => {
-  const tiff = fixtureAvailability("CMU-1.tiff");
-  test.skip(tiff.status === "missing", tiff.status === "missing" ? tiff.message : "");
+  skipUnlessCached("CMU-1.tiff");
   const scene = VIV_SCENES.find((candidate) => candidate.name.endsWith("-10x"));
   if (scene === undefined) throw new Error("No 10x scene is defined");
   const { result, frame } = await renderVivFrame(page, {
