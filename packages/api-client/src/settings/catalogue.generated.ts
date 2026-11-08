@@ -23,6 +23,8 @@ export type SettingValues = {
   notify_ai_finished: boolean;
   notify_replies: boolean;
   initials_while_sharing: boolean;
+  analytics_policy: "person" | "on" | "off";
+  analytics_opt_out: boolean;
   lock_after_minutes: number;
   patient_banner: boolean;
   default_privacy_mode: "de-identified" | "clinical";
@@ -273,6 +275,25 @@ export const catalogue: Record<SettingKey, SettingEntry> = {
   "initials_while_sharing": {
     "kind": "switch",
     "default": true,
+    "layers": [
+      "personal"
+    ]
+  },
+  "analytics_policy": {
+    "kind": "choice",
+    "default": "person",
+    "layers": [
+      "lab"
+    ],
+    "options": [
+      "person",
+      "on",
+      "off"
+    ]
+  },
+  "analytics_opt_out": {
+    "kind": "switch",
+    "default": false,
     "layers": [
       "personal"
     ]

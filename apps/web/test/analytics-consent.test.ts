@@ -1,9 +1,11 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
+  type AnalyticsChoices,
+  analyticsAllowed,
   analyticsOptedOut,
   consentedAnalytics,
-  setAnalyticsOptOut,
+  rememberAnalyticsChoices,
 } from "../src/telemetry/consent.ts";
 import { eventSink } from "../src/telemetry/events.ts";
 
@@ -18,48 +20,64 @@ const memory = () => {
 
 const started = { task_kind: "review", case_id: "case-00001" } as const;
 
-test("analytics are on until the user opts out and the choice is kept", () => {
-  const storage = memory();
-  assert.equal(analyticsOptedOut(storage), false);
-  assert.equal(setAnalyticsOptOut(true, storage), true);
-  assert.equal(analyticsOptedOut(storage), true);
-  setAnalyticsOptOut(false, storage);
-  assert.equal(analyticsOptedOut(storage), false);
+const choices = (
+  analytics_policy: AnalyticsChoices["analytics_policy"],
+  analytics_opt_out: boolean,
+): AnalyticsChoices => ({ analytics_policy, analytics_opt_out });
+
+test("the workspace policy wins over what the person chose", () => {
+  assert.equal(analyticsAllowed(choices("person", false)), true);
+  assert.equal(analyticsAllowed(choices("person", true)), false);
+  assert.equal(analyticsAllowed(choices("off", false)), false);
+  assert.equal(analyticsAllowed(choices("on", true)), true);
 });
 
-test("the choice sits beside the other device settings", () => {
+test("nothing is sent before the workspace policy is known on this device", () => {
+  assert.equal(analyticsOptedOut(memory()), true);
+});
+
+test("the remembered choices sit beside the other device settings", () => {
   const storage = memory();
   storage.setItem("parfocal.device-settings", JSON.stringify({ theme: "dark" }));
-  setAnalyticsOptOut(true, storage);
+  rememberAnalyticsChoices(choices("person", true), storage);
   assert.deepEqual(JSON.parse(storage.getItem("parfocal.device-settings") ?? ""), {
     theme: "dark",
+    analytics_policy: "person",
     analytics_opt_out: true,
   });
 });
 
-test("no event is sent after opt-out, and sending resumes after opting back in", () => {
+test("no event is sent when the workspace turns analytics off whatever the person chose", () => {
   const storage = memory();
   const seen: string[] = [];
   const optedOut = () => analyticsOptedOut(storage);
   const client = consentedAnalytics({ capture: (event) => void seen.push(event) }, optedOut);
   const sink = eventSink(client, optedOut);
+  rememberAnalyticsChoices(choices("person", false), storage);
   sink.track("task_started", started);
-  setAnalyticsOptOut(true, storage);
+  rememberAnalyticsChoices(choices("off", false), storage);
   sink.track("task_started", started);
-  sink.track("task_finished", { ...started, duration_ms: 5 });
+  client.capture("anything", {});
   assert.deepEqual(seen, ["task_started"]);
-  setAnalyticsOptOut(false, storage);
+  rememberAnalyticsChoices(choices("person", false), storage);
   sink.track("task_started", started);
   assert.deepEqual(seen, ["task_started", "task_started"]);
 });
 
-test("the analytics client alone drops events after opt-out", () => {
-  const storage = memory();
+test("a person's opt-out holds on a second device that loads the same personal layer", () => {
+  const secondDevice = memory();
+  assert.equal(analyticsOptedOut(secondDevice), true);
+  rememberAnalyticsChoices(choices("person", true), secondDevice);
   const seen: string[] = [];
   const client = consentedAnalytics({ capture: (event) => void seen.push(event) }, () =>
-    analyticsOptedOut(storage),
+    analyticsOptedOut(secondDevice),
   );
-  setAnalyticsOptOut(true, storage);
   client.capture("anything", {});
   assert.deepEqual(seen, []);
+});
+
+test("a workspace that turns analytics on overrides a person's opt-out", () => {
+  const storage = memory();
+  rememberAnalyticsChoices(choices("on", true), storage);
+  assert.equal(analyticsOptedOut(storage), false);
 });

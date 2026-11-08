@@ -76,6 +76,26 @@ export function tumorShareChange(
   return { values: { [key]: value }, locked: lab.locked };
 }
 
+export type AnalyticsPolicy = "person" | "on" | "off";
+
+export const analyticsPolicyOptions: { value: AnalyticsPolicy; label: string }[] = [
+  { value: "person", label: "Each person" },
+  { value: "on", label: "On for everyone" },
+  { value: "off", label: "Off for everyone" },
+];
+
+export function analyticsPolicyOf(lab: LabSettings): AnalyticsPolicy {
+  const policy = lab.values["analytics_policy"];
+  return policy === "on" || policy === "off" ? policy : "person";
+}
+
+export function analyticsPolicyChange(
+  lab: LabSettings,
+  policy: AnalyticsPolicy,
+): WorkspaceSettingsChange {
+  return { values: { analytics_policy: policy }, locked: lab.locked };
+}
+
 export function durationText(minutes: number): string {
   if (minutes % 60 !== 0) return `${minutes} minutes`;
   const hours = minutes / 60;
