@@ -6,6 +6,7 @@ import { createRoot } from "react-dom/client";
 import { selectWebClients } from "./clients.ts";
 import { readBuildConfig } from "./config.ts";
 import { installDebugHandle, provideDebug } from "./debug-handle.ts";
+import { FeedbackHost } from "./feedback/feedback-host.tsx";
 import { benchmarkDebug } from "./lab/pan-sweep.ts";
 import { createQueryClient } from "./query-client.ts";
 import { createAppRouter } from "./router.ts";
@@ -56,6 +57,7 @@ createRoot(container, {
       <RouterProvider router={router} />
       <ErrorToasts />
       <UndoToasts />
+      <FeedbackHost />
     </QueryClientProvider>
   </StrictMode>,
 );

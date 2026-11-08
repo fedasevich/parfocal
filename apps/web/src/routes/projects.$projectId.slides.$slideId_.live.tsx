@@ -48,7 +48,7 @@ function facts(load: CaseLoad): string[] {
 
 function CaseHeader({ load }: { load: CaseLoad }) {
   return (
-    <div className="min-w-0" data-testid="case-header">
+    <div className="min-w-0" data-testid="case-header" data-phi="">
       <h1 className="truncate font-semibold text-body">{load.slide?.label ?? "Slide"}</h1>
       <p className="truncate text-body-sm text-fg-dim">{facts(load).join(" · ")}</p>
     </div>

@@ -688,6 +688,7 @@ export const AuditTarget = {
   "report-link": "report-link",
   "clinical-report": "clinical-report",
   "lab-model": "lab-model",
+  feedback: "feedback",
 } as const;
 
 export type Availability = (typeof Availability)[keyof typeof Availability];
@@ -2004,6 +2005,27 @@ export const FailureClass = {
   transient: "transient",
   permanent: "permanent",
 } as const;
+
+export interface FeedbackDraft {
+  /**
+   * @minLength 1
+   * @maxLength 4000
+   */
+  text: string;
+  /**
+   * @maxLength 300
+   * @pattern ^/[A-Za-z0-9/_.\-]*$
+   */
+  path: string;
+  app_version?: string | null;
+  viewport?: number[] | null;
+  screenshot_png?: string | null;
+}
+
+export interface FeedbackSent {
+  id: string;
+  screenshot: boolean;
+}
 
 export interface FieldError {
   location: (string | number)[];
@@ -30555,6 +30577,170 @@ export const useEndAnnouncement = <TError = Problem, TContext = unknown>(
   TContext
 > => {
   return useMutation(getEndAnnouncementMutationOptions(options), queryClient);
+};
+
+export type sendFeedbackResponse200 = {
+  data: FeedbackSent;
+  status: 200;
+};
+
+export type sendFeedbackResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type sendFeedbackResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type sendFeedbackResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type sendFeedbackResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type sendFeedbackResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type sendFeedbackResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type sendFeedbackResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type sendFeedbackResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type sendFeedbackResponseSuccess = sendFeedbackResponse200 & {
+  headers: Headers;
+};
+export type sendFeedbackResponseError = (
+  | sendFeedbackResponse400
+  | sendFeedbackResponse401
+  | sendFeedbackResponse403
+  | sendFeedbackResponse404
+  | sendFeedbackResponse409
+  | sendFeedbackResponse422
+  | sendFeedbackResponse429
+  | sendFeedbackResponse500
+) & {
+  headers: Headers;
+};
+
+export type sendFeedbackResponse = sendFeedbackResponseSuccess | sendFeedbackResponseError;
+
+export const getSendFeedbackUrl = () => {
+  return `/api/feedback`;
+};
+
+/**
+ * @summary Send Feedback
+ */
+export const sendFeedback = async (
+  feedbackDraft: FeedbackDraft,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<sendFeedbackResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<sendFeedbackResponse>(getSendFeedbackUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(feedbackDraft),
+  });
+};
+
+export const getSendFeedbackMutationKey = () => ["sendFeedback"] as const;
+
+export const getSendFeedbackMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof sendFeedback>>,
+    TError,
+    SendFeedbackMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof sendFeedback>>,
+  TError,
+  SendFeedbackMutationVariables,
+  TContext
+> => {
+  const mutationKey = getSendFeedbackMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof sendFeedback>>,
+    SendFeedbackMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return sendFeedback(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SendFeedbackMutationResult = NonNullable<Awaited<ReturnType<typeof sendFeedback>>>;
+export type SendFeedbackMutationBody = FeedbackDraft;
+export type SendFeedbackMutationError = Problem;
+export type SendFeedbackMutationVariables = { data: FeedbackDraft };
+
+/**
+ * @summary Send Feedback
+ */
+export const useSendFeedback = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof sendFeedback>>,
+      TError,
+      SendFeedbackMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof sendFeedback>>,
+  TError,
+  SendFeedbackMutationVariables,
+  TContext
+> => {
+  return useMutation(getSendFeedbackMutationOptions(options), queryClient);
 };
 
 export type listSiteValidationsResponse200 = {

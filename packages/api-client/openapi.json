@@ -18673,6 +18673,125 @@
         "x-permission-write": true
       }
     },
+    "/api/feedback": {
+      "post": {
+        "tags": [
+          "feedback"
+        ],
+        "summary": "Send Feedback",
+        "operationId": "sendFeedback",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FeedbackDraft"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeedbackSent"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in to continue",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You do not have access to this",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "This changed since you loaded it",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests, try again shortly",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Something went wrong",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/site-validations": {
       "get": {
         "tags": [
@@ -38522,7 +38641,8 @@
           "display-preset",
           "report-link",
           "clinical-report",
-          "lab-model"
+          "lab-model",
+          "feedback"
         ],
         "title": "AuditTarget"
       },
@@ -42162,6 +42282,88 @@
           "permanent"
         ],
         "title": "FailureClass"
+      },
+      "FeedbackDraft": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "maxLength": 4000,
+            "minLength": 1,
+            "title": "Text"
+          },
+          "path": {
+            "type": "string",
+            "maxLength": 300,
+            "pattern": "^/[A-Za-z0-9/_.\\-]*$",
+            "title": "Path"
+          },
+          "app_version": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 80
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "App Version"
+          },
+          "viewport": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "integer",
+                  "maximum": 20000.0,
+                  "minimum": 0.0
+                },
+                "type": "array",
+                "maxItems": 2
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Viewport"
+          },
+          "screenshot_png": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 5592409
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Screenshot Png"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text",
+          "path"
+        ],
+        "title": "FeedbackDraft"
+      },
+      "FeedbackSent": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "screenshot": {
+            "type": "boolean",
+            "title": "Screenshot"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "screenshot"
+        ],
+        "title": "FeedbackSent"
       },
       "FieldError": {
         "properties": {

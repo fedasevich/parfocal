@@ -46,6 +46,7 @@ import type {
   EvaluationVersionStarted,
   ExpertChanges,
   ExportReviewedLayer200,
+  FeedbackSent,
   FirstRead,
   FormVersion,
   GetResultsSchema200,
@@ -6644,6 +6645,14 @@ export const getEndAnnouncementResponseMock = (
   ends_at: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + "Z", null]),
   created_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  ...overrideResponse,
+});
+
+export const getSendFeedbackResponseMock = (
+  overrideResponse: Partial<Extract<FeedbackSent, object>> = {},
+): FeedbackSent => ({
+  id: faker.string.uuid(),
+  screenshot: faker.datatype.boolean(),
   ...overrideResponse,
 });
 
@@ -16327,6 +16336,30 @@ export const getEndAnnouncementMockHandler = (
   );
 };
 
+export const getSendFeedbackMockHandler = (
+  overrideResponse?:
+    | FeedbackSent
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<FeedbackSent> | FeedbackSent),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/feedback",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getSendFeedbackResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getListSiteValidationsMockHandler = (
   overrideResponse?:
     | SiteValidation[]
@@ -19677,6 +19710,7 @@ export const getParfocalAPIMock = () => [
   getListAnnouncementsMockHandler(),
   getCreateAnnouncementMockHandler(),
   getEndAnnouncementMockHandler(),
+  getSendFeedbackMockHandler(),
   getListSiteValidationsMockHandler(),
   getRecordSiteValidationMockHandler(),
   getGetMyHomeMockHandler(),

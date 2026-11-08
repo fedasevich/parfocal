@@ -124,7 +124,9 @@ function ReviewTopBar({
           title="Submit opens the next slide"
         >
           {thumb}
-          <b className="text-body-sm font-semibold">{slideName}</b>
+          <b className="text-body-sm font-semibold" data-phi="">
+            {slideName}
+          </b>
         </span>
       ) : (
         <Popover open={slidesOpen} onOpenChange={setSlidesOpen}>
@@ -134,7 +136,9 @@ function ReviewTopBar({
             className="inline-flex h-8 shrink-0 cursor-pointer items-center gap-2 rounded-ctl border border-line-strong bg-btn-bg px-2 text-fg outline-none hover:border-fg-faint focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent aria-expanded:border-fg-faint"
           >
             {thumb}
-            <b className="text-body-sm font-semibold">{slideName}</b>
+            <b className="text-body-sm font-semibold" data-phi="">
+              {slideName}
+            </b>
             {slideSummary ? (
               <small className="hidden text-caption text-fg-dim xl:inline">{slideSummary}</small>
             ) : null}
