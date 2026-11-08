@@ -25,6 +25,7 @@ export {
   getUpdateQueuedObjectMockHandler,
 } from "./adjudication-handlers.ts";
 export {
+  getAnswerWorkspaceMockHandler,
   getGetAdminOverviewMockHandler,
   getGetInvitePreviewMockHandler,
   getGetSecuritySettingsMockHandler,

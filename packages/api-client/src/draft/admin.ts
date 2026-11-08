@@ -1,3 +1,4 @@
+export * from "./answer-workspace.ts";
 export * from "./confirm-email.ts";
 export * from "./connect-lab-model.ts";
 export * from "./create-account.ts";

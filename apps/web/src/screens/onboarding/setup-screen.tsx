@@ -1,5 +1,8 @@
 import {
   getGetMySettingLayersQueryKey,
+  useAnswerWorkspace,
+  useCreateMyWorkspace,
+  useCreateSampleProject,
   useGetMe,
   useListJoinableWorkspaces,
   useSetMySettingLayers,
@@ -34,17 +37,25 @@ import { FilterChip, StatusTag } from "@parfocal/ui/components/tag";
 import { cn } from "@parfocal/ui/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { destinations } from "../../shell/destinations.ts";
+import { writeDeviceSetting } from "../../shell/device-settings.ts";
 import { personOf } from "../../shell/global-shell.tsx";
 import { useGoTo } from "../../shell/router-link.tsx";
 import { chooseTheme, readTheme, type ThemeChoice } from "../../shell/theme.ts";
-import { homeLayoutOfSetup, type SetupRole as Role } from "../home/home-layout.ts";
+import type { SetupRole as Role } from "../home/home-layout.ts";
 import { okData } from "../placeholder.tsx";
 import { slideImage } from "./auth-side.tsx";
 import { onboardingScenes, type SetupStep } from "./scenes.ts";
-
-type First = "sample" | "create" | "wait";
-type Device = "mouse" | "trackpad" | "spacemouse" | "gamepad" | "pen" | "keyboard";
+import {
+  creatorNote,
+  type SetupDevice as Device,
+  type SetupFirst as First,
+  firstDestination,
+  personalValuesOf,
+  recommendedFirst,
+  type SetupMode,
+  wheelModeOf,
+  workspaceMoveOf,
+} from "./setup-rules.ts";
 
 const roles: Record<Role, { icon: IconName; title: string; detail: string; effect: string }> = {
   res: {
@@ -169,7 +180,7 @@ type Choices = {
   spec: string[];
   title: string;
   ws: string;
-  mode: "deid" | "clin";
+  mode: SetupMode;
   first: First;
   device: Device;
   keys: string;
@@ -190,7 +201,12 @@ export function SetupScreen({ step, change }: Props) {
         void queryClient.invalidateQueries({ queryKey: getGetMySettingLayersQueryKey() }),
     },
   });
+  const answerWorkspace = useAnswerWorkspace();
+  const createWorkspace = useCreateMyWorkspace();
+  const createSample = useCreateSampleProject();
   const goTo = useGoTo();
+  const [failed, setFailed] = useState("");
+  const [moved, setMoved] = useState("");
   const index = onboardingScenes.setup.indexOf(step);
   const [reached, setReached] = useState(index);
   const [other, setOther] = useState(false);
@@ -224,7 +240,7 @@ export function SetupScreen({ step, change }: Props) {
       ? u.newName || "your new workspace"
       : joinable.find((item) => item.id === ws)?.name;
   const device = devices.find((item) => item.key === u.device) ?? devices[0];
-  const recommended: First = u.role === "res" ? "create" : "sample";
+  const recommended = recommendedFirst(u.role);
   const summary = [
     `${roles[u.role].title}${u.spec.length ? ` · ${u.spec.slice(0, 2).join(", ")}` : ""}`,
     ws === "new" ? "New workspace" : ws === other_?.id ? "Request sent" : "Joined",
@@ -246,7 +262,7 @@ export function SetupScreen({ step, change }: Props) {
             title={roles[key].title}
             detail={roles[key].detail}
             selected={u.role === key}
-            onClick={() => set({ role: key, first: key === "res" ? "create" : "sample" })}
+            onClick={() => set({ role: key, first: recommendedFirst(key) })}
           />
         ))}
       </div>
@@ -375,7 +391,7 @@ export function SetupScreen({ step, change }: Props) {
               <SegmentedControl
                 aria-label="New projects start as"
                 value={u.mode}
-                onValueChange={(value) => set({ mode: value as Choices["mode"] })}
+                onValueChange={(value) => set({ mode: value as SetupMode })}
                 options={[
                   { value: "deid", label: "De-identified" },
                   { value: "clin", label: "Clinical" },
@@ -389,9 +405,7 @@ export function SetupScreen({ step, change }: Props) {
                   : "Patient fields allowed, every view of them is logged."}
               </span>
             </AuthField>
-            <span className="text-caption text-fg-dim">
-              Creating a workspace gives you admin rights on it as a researcher.
-            </span>
+            <span className="text-caption text-fg-dim">{creatorNote}</span>
           </div>
         </div>
       ) : null}
@@ -516,15 +530,55 @@ export function SetupScreen({ step, change }: Props) {
       : index === 1 && ws === "new"
         ? "Create it and continue"
         : `Next: ${stepNames[index + 1] ?? ""}`;
-  const finish = () => {
-    saveLayers.mutate({ data: { values: { home_layout: homeLayoutOfSetup[u.role] } } });
-    void goTo(
-      u.first === "sample"
-        ? "/?scene=new"
-        : u.first === "create"
-          ? destinations.newProject()
-          : destinations.home(),
-    );
+  const workspaceMove = () =>
+    workspaceMoveOf({
+      picked: ws,
+      matchedId: matched?.id,
+      askedId: other_?.id,
+      name: u.newName,
+      mode: u.mode,
+    });
+  const next = async () => {
+    setFailed("");
+    try {
+      if (index === 0) {
+        await updateMe.mutateAsync({ data: { title: u.title === "No title" ? null : u.title } });
+      }
+      if (index === 1) {
+        const move = workspaceMove();
+        const key = JSON.stringify(move);
+        if (move.kind !== "none" && key !== moved) {
+          if (move.kind === "create") {
+            await createWorkspace.mutateAsync({
+              data: { name: move.name, default_privacy_mode: move.privacy },
+            });
+            await queryClient.invalidateQueries();
+          } else {
+            await answerWorkspace.mutateAsync({
+              data: { workspace_id: move.workspaceId, how: move.kind },
+            });
+          }
+          setMoved(key);
+        }
+      }
+      go(index + 1);
+    } catch {
+      setFailed("That did not go through. Try again, or skip this step and do it later.");
+    }
+  };
+  const finish = async () => {
+    setFailed("");
+    try {
+      await saveLayers.mutateAsync({
+        data: { values: personalValuesOf({ role: u.role, viewer: u.keys }) },
+      });
+      writeDeviceSetting("wheel_mode", wheelModeOf(u.device));
+      const sample = u.first === "sample" ? await createSample.mutateAsync() : undefined;
+      if (sample !== undefined && sample.status !== 201) throw new Error("No sample project");
+      void goTo(firstDestination(u.first, sample?.data.id));
+    } catch {
+      setFailed("Setup could not be finished. Try again.");
+    }
   };
   const finishLabel =
     u.first === "create"
@@ -554,24 +608,25 @@ export function SetupScreen({ step, change }: Props) {
     >
       <AuthForm width="wizard">
         {bodies[index]}
+        {failed ? (
+          <Banner inline tone="bad">
+            {failed}
+          </Banner>
+        ) : null}
         <div className="mt-1.5 flex items-center gap-2.5 border-t border-line pt-4.5">
           {last ? null : <AuthLink onClick={() => go(index + 1)}>Skip this step</AuthLink>}
           <span className="flex-1" />
           {index > 0 ? <Button onClick={() => go(index - 1)}>Back</Button> : null}
           {last ? (
-            <Button variant="primary" size="lg" onClick={finish}>
+            <Button variant="primary" size="lg" onClick={() => void finish()}>
               {finishLabel}
             </Button>
           ) : (
             <Button
               variant="primary"
               size="lg"
-              onClick={() => {
-                if (index === 0) {
-                  updateMe.mutate({ data: { title: u.title === "No title" ? null : u.title } });
-                }
-                go(index + 1);
-              }}
+              disabled={index === 1 && ws === "new" && u.newName.trim() === ""}
+              onClick={() => void next()}
             >
               {nextLabel}
             </Button>
