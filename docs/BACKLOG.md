@@ -4790,7 +4790,7 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Done when API tests seed and delete it, and an evaluation test proves it is excluded.
   Depends on PROJ-001, RSET-001, TASK-001.
 
-- [ ] ONB-006 · Getting-started checklist
+- [x] ONB-006 · Getting-started checklist
   On Home until each item has been tried once, and hideable.
   Done when component tests tick items from real events.
   Depends on ONB-004, HOME-002. Refs mock: home/new.
