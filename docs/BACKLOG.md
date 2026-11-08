@@ -4827,7 +4827,7 @@ Admin is its own page with its own sidebar and the app's top bar, never a page i
   Depends on RSET-001, VIEW-026, TASK-011. Refs mock: layers/display, doc 38 answer 2, doc 44.
   Size: M.
 
-- [ ] VIZ-002 · How objects draw
+- [x] VIZ-002 · How objects draw
   Per class visibility with counts and keys, and the Display panel's How objects draw group: draw as outline, fill or dots (cells as dots, regions still outlined), width 1, 2 or 3 at screen scale, opacity 20 to 100, colour by class, score or decision, and ID labels. The score cutoff in What the AI shows draws objects below it dashed at half opacity and never changes the scope. Confidence shows as a number, a word, a colour or hidden in the "AI says" line, and colour also tints the current object's outline ([ADR 0132](adr/0132-display-settings-presets-and-task-locks.md), display settings, presets and task locks).
   Done when golden tests cover each style, width and opacity, and tests prove the cutoff dims objects below it without changing the scope, and each confidence form renders.
   Depends on VIZ-001, VIEW-027, TASK-011. Refs mock: layers/display, mock: guided/display, doc 44.
