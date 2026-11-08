@@ -40,6 +40,7 @@ export type ReviewSession = {
   neighbours: Neighbours | undefined;
   threads: SlideThread[];
   meId: string | undefined;
+  nodeStaging: boolean;
   ready: boolean;
 };
 
@@ -78,6 +79,7 @@ export function useReviewSession(taskId: string, slideId: string): ReviewSession
     neighbours,
     threads,
     meId: me?.user_id,
+    nodeStaging: false,
     ready: task !== undefined && reviewObjects !== undefined,
   };
 }

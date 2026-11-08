@@ -1,4 +1,5 @@
 import type { ReviewObject } from "@parfocal/api-client";
+import { AreaCallButtons } from "@parfocal/ui/components/area-call";
 import { Button } from "@parfocal/ui/components/button";
 import { MentionText } from "@parfocal/ui/components/comment-thread";
 import { DecisionButtons, type ProjectClass } from "@parfocal/ui/components/decision-buttons";
@@ -6,6 +7,7 @@ import { Icon, type IconName } from "@parfocal/ui/components/icon";
 import { Keycap } from "@parfocal/ui/components/keycap";
 import { Person, type PersonInfo } from "@parfocal/ui/components/person";
 import { FilterChip, ObjectIdTag } from "@parfocal/ui/components/tag";
+import type { AreaCall } from "@parfocal/ui/lib/area-call";
 import { cn } from "@parfocal/ui/lib/utils";
 import type { ReactNode } from "react";
 import { ConfidenceByColour } from "./confidence-chip.tsx";
@@ -210,6 +212,7 @@ type ObjectCardProps = {
   disagreeOpen: boolean;
   note: ReactNode;
   coach?: ReactNode;
+  areaCall?: { value: AreaCall | null; role: string; onCall: (call: AreaCall) => void } | undefined;
   onAnswer: (raw: string) => void;
   onReason: (reason: string) => void;
   onBackToAnswers: () => void;
@@ -235,6 +238,7 @@ export function ObjectCard({
   disagreeOpen,
   note,
   coach,
+  areaCall,
   onAnswer,
   onReason,
   onBackToAnswers,
@@ -346,16 +350,28 @@ export function ObjectCard({
         <h2 className="m-0 text-title font-semibold leading-snug text-fg">{text.question}</h2>
         {text.context ? <p className="m-0 text-body text-fg-dim">{text.context}</p> : null}
       </div>
-      <DecisionButtons
-        decisionStyle={style.kind}
-        value={selected}
-        onValueChange={onAnswer}
-        classes={classes}
-        aiClass={object.class_name}
-        range={{ agreeFrom: style.agreeFrom, disagreeTo: style.disagreeTo }}
-        disabled={disabled}
-        label={`Your answer on ${object.object}`}
-      />
+      {areaCall ? (
+        <div className="grid gap-2">
+          <small className="text-body-sm font-semibold text-fg-dim">{areaCall.role}</small>
+          <AreaCallButtons
+            area={object.object}
+            value={areaCall.value}
+            onCall={areaCall.onCall}
+            disabled={disabled}
+          />
+        </div>
+      ) : (
+        <DecisionButtons
+          decisionStyle={style.kind}
+          value={selected}
+          onValueChange={onAnswer}
+          classes={classes}
+          aiClass={object.class_name}
+          range={{ agreeFrom: style.agreeFrom, disagreeTo: style.disagreeTo }}
+          disabled={disabled}
+          label={`Your answer on ${object.object}`}
+        />
+      )}
       {pending ? (
         <span className="inline-flex items-center gap-2 text-body-sm text-warn">
           <Icon name="clock" />
