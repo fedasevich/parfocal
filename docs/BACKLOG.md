@@ -1084,7 +1084,7 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
   Done when API and component tests cover editing and reordering.
   Size: M.
 
-- [ ] INGEST-020 · Bulk import tool for pilot onboarding
+- [x] INGEST-020 · Bulk import tool for pilot onboarding
   A CLI that uploads a folder of slides with a CSV manifest mapping files to cases.
   Done when a test imports 20 fixture slides into 5 cases.
   Depends on CASES-006.
