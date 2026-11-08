@@ -10,9 +10,11 @@ from typing import Any
 
 from fastapi import APIRouter
 from fastapi.responses import Response
+from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncConnection
 
+from parfocal_api.ai_changes import ai_changes, report_changes
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.evaluation import (
     UNCLASSIFIED,
@@ -30,12 +32,14 @@ from parfocal_api.report_template import (
     RenderedReport,
     ReportChange,
     ReportCompared,
+    ReportData,
     ReportDecision,
     ReportObject,
     headline_of,
     render_report,
     report_data,
 )
+from parfocal_api.review_order import Results
 from parfocal_api.review_tasks import readable_task
 from parfocal_api.reviewed_export import (
     LETTERS,
@@ -47,6 +51,7 @@ from parfocal_api.reviewed_export import (
 from parfocal_api.study_templates import BUILT_INS, template_at
 from parfocal_api.tables import (
     BuiltInTemplate,
+    TaskKind,
     annotations,
     evaluation_changes,
     evaluation_versions,
@@ -60,7 +65,15 @@ from parfocal_api.tables import (
 from parfocal_api.task_kinds import review_only
 from parfocal_common import evaluation as engine
 from parfocal_common.object_ids import ObjectId, ObjectPath
-from parfocal_common.report_blocks import BLOCKS, Comparison, ReportBlock, ReportFormat
+from parfocal_common.report_blocks import (
+    BLOCKS,
+    Comparison,
+    ExpertChanges,
+    ReportBlock,
+    ReportFormat,
+    SlideFigure,
+    TextBlock,
+)
 
 CHECKSUM_HEADER = "X-Parfocal-Evaluation-Checksum"
 VERSION_HEADER = "X-Parfocal-Evaluation-Version"
@@ -141,7 +154,7 @@ class Version:
 router = APIRouter(prefix="/api/review-tasks/{task_id}/evaluation/exports", tags=["review-tasks"])
 
 
-def checksum_of(evaluation: Evaluation) -> str:
+def checksum_of(evaluation: BaseModel) -> str:
     canonical = json.dumps(
         evaluation.model_dump(mode="json"), sort_keys=True, separators=(",", ":")
     ).encode()
@@ -493,6 +506,54 @@ async def rendered_report(
     return render_report(data, locale)
 
 
+ANNOTATE_BLOCKS = (ExpertChanges, TextBlock, SlideFigure)
+ANNOTATE_DEFAULT: tuple[ReportBlock, ...] = (
+    ExpertChanges(kind="ai-changes", title="Changes to the AI by class"),
+    ExpertChanges(kind="ai-changes", title="Changes to the AI by slide", group_by="slide"),
+)
+
+
+def annotate_layout(
+    blocks: tuple[ReportBlock, ...], report_format: ReportFormat
+) -> tuple[tuple[ReportBlock, ...], ReportFormat]:
+    kept = tuple(block for block in blocks if isinstance(block, ANNOTATE_BLOCKS))
+    if not any(isinstance(block, ExpertChanges) for block in kept):
+        kept = (*ANNOTATE_DEFAULT, *kept)
+    return kept, report_format.model_copy(update={"appendices": []})
+
+
+async def annotate_report(
+    connection: AsyncConnection, task: Any, results: Results, locale: Locale
+) -> tuple[RenderedReport, Version]:
+    found = await ai_changes(connection, task, results)
+    version = Version(number=1, checksum=checksum_of(found), signed_at=task.signed_off_at)
+    project = (
+        await connection.execute(
+            select(projects.c.name, projects.c.sample).where(projects.c.id == task.project_id)
+        )
+    ).one()
+    template_blocks, template_format = await task_layout(connection, task)
+    blocks, report_format = annotate_layout(
+        template_blocks if task.study_template_id is not None else (), template_format
+    )
+    data = ReportData(
+        project_name=str(project.name),
+        task_name=task.name,
+        version=version.number,
+        checksum=version.checksum,
+        signed_off_on=version.signed_at.date() if version.signed_at else None,
+        sample=bool(project.sample),
+        classes=(),
+        fleiss_kappa=None,
+        decisions={},
+        blocks=blocks,
+        format=report_format,
+        ai_changes=report_changes(found),
+        review=False,
+    )
+    return render_report(data, locale), version
+
+
 def pdf_of(report: RenderedReport, version: Version) -> bytes:
     try:
         import typst
@@ -521,12 +582,17 @@ async def export_task_evaluation(
     kind: ExportKind,
     principal: CurrentPrincipal,
     connection: TenantConnection,
+    results: Results,
     locale: Locale = DEFAULT_LOCALE,
 ) -> Response:
     task, whole = await readable_task(connection, principal, task_id)
-    review_only(task.kind)
+    if task.kind != TaskKind.ANNOTATE or kind is not ExportKind.PDF:
+        review_only(task.kind)
     if not whole:
         raise EvaluationHiddenError
+    if task.kind == TaskKind.ANNOTATE:
+        report, version = await annotate_report(connection, task, results, locale)
+        return attachment(kind, pdf_of(report, version), version)
     evaluation = await evaluate(connection, task)
     version = await version_of(connection, task, evaluation)
     content: str | bytes
@@ -542,6 +608,10 @@ async def export_task_evaluation(
             content = await annotations_json(connection, task, version)
         case ExportKind.ANNOTATIONS_GEOJSON:
             content = await annotations_geojson(connection, task, version)
+    return attachment(kind, content, version)
+
+
+def attachment(kind: ExportKind, content: str | bytes, version: Version) -> Response:
     file_name = f"evaluation_v{version.number}_{kind.value}"
     return Response(
         content=content,

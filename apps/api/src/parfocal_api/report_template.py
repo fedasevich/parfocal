@@ -302,6 +302,7 @@ class ReportData:
     signed_by: str = ""
     changes: tuple[ReportChange, ...] = ()
     ai_changes: ReportAiChanges | None = None
+    review: bool = True
 
 
 @dataclass(frozen=True)
@@ -684,18 +685,22 @@ def render_report(data: ReportData, locale: Locale = DEFAULT_LOCALE) -> Rendered
         return [f"#grid(columns: (1fr, 1fr), column-gutter: 14pt, {', '.join(cells)})", ""]
 
     def closing() -> list[str]:
-        lines = [
-            f"== {typst_text(messages['report.decisions'])}",
-            *table(
-                (messages["report.decisions"], messages["report.count"]),
-                [
-                    (messages[f"report.decision.{key}"], str(data.decisions.get(key, 0)))
-                    for key in DECISIONS
-                ],
-                "report.missing",
-            ),
-            "",
-        ]
+        lines = (
+            [
+                f"== {typst_text(messages['report.decisions'])}",
+                *table(
+                    (messages["report.decisions"], messages["report.count"]),
+                    [
+                        (messages[f"report.decision.{key}"], str(data.decisions.get(key, 0)))
+                        for key in DECISIONS
+                    ],
+                    "report.missing",
+                ),
+                "",
+            ]
+            if data.review
+            else []
+        )
         if data.changes:
             lines += [
                 f"== {typst_text(messages['report.changes'])}",
