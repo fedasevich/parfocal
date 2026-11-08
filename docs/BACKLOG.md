@@ -2683,6 +2683,12 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Done when API tests attach a thread to an arrow and a note, place both in a report block, import a note, and show the note text in an export that allows it and absent from one that does not.
   Depends on ANN-036.
   Size: M.
+
+- [ ] ANN-040 · Serve a slide's AI objects for an annotate task
+  ANN-031 reads the AI objects of an annotate task slide, with their outlines, origin and check state, through a drafted `listSharedAiObjects` that only the fake API serves. Add the API read under the shared layer routes, paged for large result sets, with tenant and task guards, regenerate the client and delete the draft.
+  Done when API tests cover the read, paging, a slide with no result set and the cross-tenant refusal, and the annotate task browser spec runs on the real client with no draft left.
+  Depends on ANN-031.
+  Size: M.
 ## 16 MEAS · Measurements
 
 - [ ] MEAS-000 · Research check
