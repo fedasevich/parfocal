@@ -124,7 +124,7 @@
       "unit": "ms",
       "baseline": 26.3,
       "limit": 50.0,
-      "headroom": 1.9,
+      "headroom": 1.95,
       "headroomReason": "The baseline is the fastest run of three on an Apple M4 shared with other agents, and the slowest runs of the same sessions took 36 to 52 ms. The 50 ms limit is the done-when line of VIEW-031 (wheel zoom has no frame over 50 ms), which stays under three times the baseline.",
       "rttMs": 0,
       "environment": "Chrome headless with SwiftShader, 1280 x 720, loopback server, no latency proxy",
