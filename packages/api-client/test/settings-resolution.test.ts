@@ -24,6 +24,10 @@ const other = (entry: SettingEntry): unknown => {
       return entry.minimum;
     case "id":
       return "0b0c6d3e-6a55-4d2f-9d3e-5d8d7d1c9a10";
+    case "names":
+      return ["Tumor first"];
+    case "keys":
+      return { ruler: ["R"] };
   }
 };
 

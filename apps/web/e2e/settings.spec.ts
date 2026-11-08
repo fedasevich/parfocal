@@ -253,3 +253,21 @@ test("the question mark key opens Shortcuts with the source badges", async ({ pa
     await expect(shortcuts.getByText(source, { exact: true }).first()).toBeAttached();
   }
 });
+
+test("a changed layout and a recorded key are still there after a reload", async ({ page }) => {
+  await page.goto("/settings/layout");
+  const width = dialog(page).getByRole("radiogroup", { name: "Side panel width" });
+  await width.getByRole("radio", { name: "Wide" }).click();
+  const tools = dialog(page).getByRole("radiogroup", { name: "Tools" });
+  await tools.getByRole("radio", { name: "Bottom dock" }).click();
+  await expect(tools.getByRole("radio", { name: "Bottom dock" })).toBeChecked();
+  await page.goto("/settings/shortcuts");
+  await dialog(page).getByRole("button", { name: "Ruler: L" }).click();
+  await page.keyboard.press("j");
+  await expect(dialog(page).getByRole("button", { name: "Ruler: J" })).toBeVisible();
+  await page.reload();
+  await expect(dialog(page).getByRole("button", { name: "Ruler: J" })).toBeVisible();
+  await page.goto("/settings/layout");
+  await expect(width.getByRole("radio", { name: "Wide" })).toBeChecked();
+  await expect(tools.getByRole("radio", { name: "Bottom dock" })).toBeChecked();
+});

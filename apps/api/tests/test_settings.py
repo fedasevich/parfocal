@@ -63,6 +63,67 @@ def test_confidence_wording_offers_frequency_and_keeps_words_by_default() -> Non
     assert setting.problem("percent") is not None
 
 
+SCREEN_ROWS: dict[str, tuple[object, object, object]] = {
+    "language": ("en", "cs", "de"),
+    "presets": ([], ["Tumor first", "Dots, no IDs"], ["one", "two", "three", "four"]),
+    "default_preset": (0, 3, 4),
+    "signature_block": (True, False, "yes"),
+    "side_panel_width": (340, 420, 100),
+    "hide_side_panel": (False, True, 1),
+    "panel_while_moving": ("pinned", "auto", "hidden"),
+    "double_click": ("zoom", "toggle", "rotate"),
+    "model_warnings": (True, False, None),
+    "slide_submitted_notice": ("bell", "email", "loud"),
+    "length_unit": ("auto", "um", "mm"),
+    "tools": ("rail", "dock", "left"),
+    "shortcut_preset": ("default", "qupath", "photoshop"),
+    "shortcut_custom": ({}, {"ruler": ["R", "⇧R"]}, {"ruler": "R"}),
+    "shortcut_single_letter": (True, False, "on"),
+    "shortcut_by_position": (True, False, 0),
+    "shortcut_whole_slide_key": ("both", "tap", "double"),
+}
+
+
+@pytest.mark.parametrize("key", sorted(SCREEN_ROWS))
+def test_every_settings_screen_row_is_personal_with_its_default_and_values(key: str) -> None:
+    default, other, wrong = SCREEN_ROWS[key]
+    setting = BY_KEY[key]
+    assert setting.layers == {Layer.PERSONAL}
+    stored_default = (
+        list(setting.default) if isinstance(setting.default, tuple) else setting.default
+    )
+    assert stored_default == default
+    assert setting.problem(default) is None
+    assert setting.problem(other) is None
+    assert setting.problem(wrong) is not None
+
+
+def test_names_and_keys_refuse_empty_long_and_too_many_entries() -> None:
+    presets = BY_KEY["presets"]
+    assert presets.problem([""]) is not None
+    assert presets.problem(["x" * 61]) is not None
+    assert presets.problem([3]) is not None
+    custom = BY_KEY["shortcut_custom"]
+    assert custom.problem({"": ["R"]}) is not None
+    assert custom.problem({"ruler": ["R", "S", "T", "U", "V"]}) is not None
+    assert custom.problem({f"action-{index}": ["R"] for index in range(201)}) is not None
+    assert custom.problem(["R"]) is not None
+
+
+@pytest.mark.db
+def test_the_screen_rows_save_and_come_back_from_the_personal_layer(
+    api: ApiAs, database: str
+) -> None:
+    people = make_workspace(database, PEOPLE).people
+    reviewer = api(people["reviewer"])
+    values = {key: other for key, (_, other, _) in SCREEN_ROWS.items()}
+    saved = reviewer.put(ME, json={"values": values})
+    assert saved.status_code == 200, saved.text
+    assert reviewer.get(ME).json()["personal"] == values
+    wrong = reviewer.put(ME, json={"values": {"shortcut_custom": {"ruler": "R"}}})
+    assert problem(wrong) == (400, "invalid-setting")
+
+
 @pytest.mark.db
 def test_personal_settings_are_kept_per_person_and_cleared_with_null(
     api: ApiAs, database: str

@@ -1,36 +1,5 @@
-import type { MySettings } from "../draft/get-my-settings.ts";
-import { taskDisplay } from "./scenario-review.ts";
-
 const uuid = (group: number, index: number) =>
   `00000000-0000-4000-8${String(group).padStart(3, "0")}-${String(index).padStart(12, "0")}`;
-
-export const mySettings: MySettings = {
-  personal: {
-    density: "comfortable",
-    lengths: "auto",
-    language: "en",
-    presets: (taskDisplay["RT-14"]?.presets ?? []).map((preset) => preset.name),
-    default_preset: "task",
-    signature_block: true,
-    tools: "left",
-    side_panel_width: 340,
-    hide_side_panel: false,
-    panel_while_moving: "pinned",
-    minimap: "useful",
-    pinned_slide_strip: false,
-    model_warnings: true,
-    double_click: "zoom",
-    initials_while_sharing: true,
-    slide_submitted_notice: "bell",
-  },
-  shortcuts: {
-    preset: "default",
-    custom: {},
-    single_letter: true,
-    by_position: true,
-    whole_slide_key: "both",
-  },
-};
 
 export type ScenarioSession = {
   id: string;
