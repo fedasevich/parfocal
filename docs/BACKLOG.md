@@ -1519,7 +1519,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Done when the drawer's control list is confirmed against doc 34 lab-tagged leaves and kit W25.
   Size: S.
 
-- [ ] LAB-001 · Developer drawer
+- [x] LAB-001 · Developer drawer
   Opens with Ctrl+Shift+D or `?lab`, only for users with the developer permission. The ten sections of the mock in four groups, as [ADR 0189](adr/0189-developer-drawer-control-list.md) lists them. Renderer, culling, detail level, interpolation, synthetic nuclei, prefetch, motion vector, HUD and pause models drive the viewer. The heatmap, model, typing and job zones drive their features once those tasks land.
   Done when component tests cover each control and a permission test hides it from doctors.
   Refs mock `developer` screen, kit gallery "Developer mode, Viv by default", [ADR 0189](adr/0189-developer-drawer-control-list.md).
