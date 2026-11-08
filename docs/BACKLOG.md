@@ -2387,7 +2387,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Depends on AINUC-003.
   Size: M.
 
-- [ ] REVIEW-016 · Your call on an area
+- [x] REVIEW-016 · Your call on an area
   Tumor, Not tumor or Unsure per area, with Enter for Tumor. The call is the decision on the area's ID (GUIDE-001), ticks the area in the list and moves the progress bar. Unsure keeps the area open and lists it before submit. Marking the lead area Not tumor hands the category to the next largest.
   Done when component tests cover the three calls and toggling off, and API tests persist the call with the reviewer and time and write it to the audit log.
   Refs kit W3, [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md).
