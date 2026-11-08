@@ -2666,7 +2666,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Depends on ANN-035.
   Size: M.
 
-- [ ] ANN-038 · The Who made it checkbox toggles on click
+- [x] ANN-038 · The Who made it checkbox toggles on click
   On the annotate task screen, clicking the "Who made it" checkbox does not toggle it, probably because the wrapping label toggles it a second time, while Space works. Make one click toggle it once, and check the other checkboxes wrapped in labels on that screen for the same fault.
   Done when a browser test clicks the checkbox and finds it toggled, and the annotate task spec uses a click instead of Space.
   Depends on ANN-032.
