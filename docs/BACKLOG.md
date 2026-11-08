@@ -4629,7 +4629,7 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Depends on ANN-030, ANN-032, EVAL-006. Refs [ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md).
   Size: M.
 
-- [ ] EVAL-014 · Training dataset export
+- [x] EVAL-014 · Training dataset export
   Exports the signed-off slides of an annotate task as GeoJSON per slide, each object with its class name, key and colour, origin, pseudonymous author letter and full ID, in the form QuPath reads, plus a manifest with the slides, microns per pixel, level-0 sizes, the class snapshot, the annotators, the sign-off and a checksum per file. Origins are `human`, `ai-confirmed` and `ai-edited`. Unchecked AI objects are left out unless the task includes them as `ai-unchecked` ({A}), and the manifest records the check options and how many were left out.
   Done when round-trip tests re-import every GeoJSON file with no loss, a schema test validates the manifest, and a test opens an exported file in QuPath's GeoJSON reader or a fixture of its format.
   Depends on TASK-014, ANN-024, ANN-032. Refs [ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md).
