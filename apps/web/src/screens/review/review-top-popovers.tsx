@@ -198,12 +198,18 @@ export function useReviewTopPopovers({
     taskTitle: task ? `${task.code} · ${task.name}` : undefined,
     researcher: person(task?.created_by_user_id)?.name,
   });
-  const compareStub = "Opens the compare view. Picking the exact slide arrives with side by side.";
+  const compareStub = "Opens the compare view with the right side picker open";
   const compareTo = (scene: "picking" | "picked") => {
     if (!projectId) return undefined;
     return () => void goTo(destinations.compareSlides(projectId, session.slideId, task?.id, scene));
   };
-  const openSideBySide = compareTo("picked");
+  const openSideBySide = (otherSlideId: string) => {
+    if (!projectId) return undefined;
+    return () =>
+      void goTo(
+        destinations.compareSlides(projectId, session.slideId, task?.id, "picked", otherSlideId),
+      );
+  };
   const slidesPopover = (
     <SlidesPopover
       caseTitle={caseTitle}
@@ -214,7 +220,7 @@ export function useReviewTopPopovers({
       looseHeading={task ? `Loose slides in task ${task.code}` : undefined}
       looseSlides={looseSlides}
       onPick={pick}
-      onSideBySide={openSideBySide ? () => openSideBySide() : undefined}
+      onSideBySide={projectId ? (id) => openSideBySide(id)?.() : undefined}
       sideBySideTitle={compareStub}
       footer={{
         resultSetsLabel: `Result sets of ${session.slideName.split(" ")[0] ?? ""}`,
