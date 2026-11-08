@@ -2727,7 +2727,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Done when tests cover both settings.
   Size: S.
 
-- [ ] MEAS-007 · Length units everywhere and from the saved setting
+- [x] MEAS-007 · Length units everywhere and from the saved setting
   MEAS-005 applies the units setting to the ruler label, the measurement list and the pin thread measurement only. Apply it also to the objects panel, the review panels and the clinical report, and load the store from the user's saved server setting when the app starts.
   Done when unit tests cover each of those places in both settings and a test shows a saved server value applied at start without opening Settings.
   Depends on MEAS-005.
