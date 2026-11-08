@@ -302,6 +302,8 @@ export interface AiObjectEdit {
   deleted?: boolean;
 }
 
+export type AiOutline = PolygonGeometry | MultiPolygonGeometry;
+
 export type AnalysisTemplate = (typeof AnalysisTemplate)[keyof typeof AnalysisTemplate];
 
 export const AnalysisTemplate = {
@@ -1174,6 +1176,15 @@ export interface CheckOptions {
   sign_off: SignOffRule;
   unchecked_export: UncheckedExport;
 }
+
+export type CheckState = (typeof CheckState)[keyof typeof CheckState];
+
+export const CheckState = {
+  unchecked: "unchecked",
+  confirmed: "confirmed",
+  edited: "edited",
+  deleted: "deleted",
+} as const;
 
 export type ChoiceQuestionKind = (typeof ChoiceQuestionKind)[keyof typeof ChoiceQuestionKind];
 
@@ -4179,6 +4190,33 @@ export interface SetRef {
   status: ResultStatus;
 }
 
+export type SharedAiObjectKind = (typeof SharedAiObjectKind)[keyof typeof SharedAiObjectKind];
+
+export const SharedAiObjectKind = {
+  region: "region",
+  cell: "cell",
+} as const;
+
+export interface SharedAiObject {
+  object: string;
+  kind: SharedAiObjectKind;
+  number: number;
+  class_id: string | null;
+  score: number | null;
+  geometry: AiOutline;
+  check: CheckState;
+}
+
+export interface SharedAiObjects {
+  task_id: string;
+  slide_id: string;
+  result_set_id: string | null;
+  result_name: string | null;
+  total: number;
+  offset: number;
+  objects: SharedAiObject[];
+}
+
 export type SharedEvaluationDice = { [key: string]: RateOut };
 
 export interface SharedKappa {
@@ -5086,6 +5124,18 @@ export type DeleteSharedObjectParams = {
    */
   version: number;
   reason?: string | null;
+};
+
+export type ListSharedAiObjectsParams = {
+  /**
+   * @minimum 0
+   */
+  offset?: number;
+  /**
+   * @minimum 1
+   * @maximum 5000
+   */
+  limit?: number;
 };
 
 export type ImportSharedObjectsParams = {
@@ -27038,6 +27088,243 @@ export function useListSharedObjectHistory<
     annotationId,
     options,
   );
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type listSharedAiObjectsResponse200 = {
+  data: SharedAiObjects;
+  status: 200;
+};
+
+export type listSharedAiObjectsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listSharedAiObjectsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listSharedAiObjectsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listSharedAiObjectsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listSharedAiObjectsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listSharedAiObjectsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listSharedAiObjectsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type listSharedAiObjectsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listSharedAiObjectsResponseSuccess = listSharedAiObjectsResponse200 & {
+  headers: Headers;
+};
+export type listSharedAiObjectsResponseError = (
+  | listSharedAiObjectsResponse400
+  | listSharedAiObjectsResponse401
+  | listSharedAiObjectsResponse403
+  | listSharedAiObjectsResponse404
+  | listSharedAiObjectsResponse409
+  | listSharedAiObjectsResponse422
+  | listSharedAiObjectsResponse429
+  | listSharedAiObjectsResponse500
+) & {
+  headers: Headers;
+};
+
+export type listSharedAiObjectsResponse =
+  | listSharedAiObjectsResponseSuccess
+  | listSharedAiObjectsResponseError;
+
+export const getListSharedAiObjectsUrl = (
+  taskId: string,
+  slideId: string,
+  params?: ListSharedAiObjectsParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/review-tasks/${taskId}/slides/${slideId}/shared-layer/ai?${stringifiedParams}`
+    : `/api/review-tasks/${taskId}/slides/${slideId}/shared-layer/ai`;
+};
+
+/**
+ * @summary List Shared Ai Objects
+ */
+export const listSharedAiObjects = async (
+  taskId: string,
+  slideId: string,
+  params?: ListSharedAiObjectsParams,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listSharedAiObjectsResponse> => {
+  return apiFetch<listSharedAiObjectsResponse>(getListSharedAiObjectsUrl(taskId, slideId, params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListSharedAiObjectsQueryKey = (
+  taskId: string,
+  slideId: string,
+  params?: ListSharedAiObjectsParams,
+) => {
+  return [
+    `/api/review-tasks/${taskId}/slides/${slideId}/shared-layer/ai`,
+    ...(params ? [params] : []),
+  ] as const;
+};
+
+export const getListSharedAiObjectsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listSharedAiObjects>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  params?: ListSharedAiObjectsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listSharedAiObjects>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getListSharedAiObjectsQueryKey(taskId, slideId, params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listSharedAiObjects>>> = ({ signal }) =>
+    listSharedAiObjects(taskId, slideId, params, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: taskId !== null && taskId !== undefined && slideId !== null && slideId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof listSharedAiObjects>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type ListSharedAiObjectsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listSharedAiObjects>>
+>;
+export type ListSharedAiObjectsQueryError = Problem;
+
+export function useListSharedAiObjects<
+  TData = Awaited<ReturnType<typeof listSharedAiObjects>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  params: undefined | ListSharedAiObjectsParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listSharedAiObjects>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listSharedAiObjects>>,
+          TError,
+          Awaited<ReturnType<typeof listSharedAiObjects>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListSharedAiObjects<
+  TData = Awaited<ReturnType<typeof listSharedAiObjects>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  params?: ListSharedAiObjectsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listSharedAiObjects>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listSharedAiObjects>>,
+          TError,
+          Awaited<ReturnType<typeof listSharedAiObjects>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListSharedAiObjects<
+  TData = Awaited<ReturnType<typeof listSharedAiObjects>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  params?: ListSharedAiObjectsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listSharedAiObjects>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Shared Ai Objects
+ */
+
+export function useListSharedAiObjects<
+  TData = Awaited<ReturnType<typeof listSharedAiObjects>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  params?: ListSharedAiObjectsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listSharedAiObjects>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListSharedAiObjectsQueryOptions(taskId, slideId, params, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;

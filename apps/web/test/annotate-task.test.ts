@@ -51,6 +51,7 @@ const ai = (object: string, classId: string | null = null): SharedAiObject => ({
   class_id: classId,
   score: 0.5,
   geometry: square,
+  check: "unchecked",
 });
 
 const layerObject = (patch: Partial<LayerObject>): LayerObject => ({

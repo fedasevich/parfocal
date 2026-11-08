@@ -81,9 +81,7 @@ export function AnnotateTaskPanel({
   const personOf = usePeople();
   const layerQuery = useSharedLayer(taskId, slideId);
   const layer = okData(layerQuery.data)?.objects ?? [];
-  const aiQuery = useSharedAiObjects(taskId, slideId, {
-    query: { enabled: task.resultSetId !== null },
-  });
+  const aiQuery = useSharedAiObjects(taskId, slideId, task.resultSetId !== null);
   const aiList = okData(aiQuery.data);
   const loaded = layerQuery.isSuccess && (task.resultSetId === null || aiQuery.isSuccess);
   const statusQueries = useQueries({

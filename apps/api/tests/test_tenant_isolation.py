@@ -1519,6 +1519,12 @@ GET_ROUTES = {
             f"/api/review-tasks/{a.ids['annotate_task']}/slides/{a.ids['slide']}/check-status"
         ),
     ),
+    "listSharedAiObjects": Route(
+        Exposure.TENANT,
+        lambda a: (
+            f"/api/review-tasks/{a.ids['annotate_task']}/slides/{a.ids['slide']}/shared-layer/ai"
+        ),
+    ),
     "listSharedObjectHistory": Route(
         Exposure.TENANT,
         lambda a: (
@@ -1729,6 +1735,7 @@ def test_an_annotate_task_and_its_class_snapshot_stay_in_their_workspace(
     assert shared in api(a.member()).get(layer).text
     for attempt in (
         api(b.member()).get(layer),
+        api(b.member()).get(f"{layer}/ai"),
         api(b.member()).post(f"{layer}/objects", json={"kind": "region", "geometry": SQUARE}),
         api(b.member()).put(f"{layer}/ai/T1", json={"deleted": True}),
         api(b.member()).post(f"{layer}/ai/T1/confirm", json={}),

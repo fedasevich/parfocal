@@ -1,11 +1,12 @@
 import json
 import uuid
+from collections.abc import Sequence
 from datetime import datetime
 from types import SimpleNamespace
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 
 from fastapi import APIRouter, BackgroundTasks, Query, Response
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, Field, model_validator
 from sqlalchemy import func, select, text, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncConnection
@@ -17,6 +18,8 @@ from parfocal_api.annotations import (
     AnnotationEdit,
     AnnotationVersion,
     Geometry,
+    MultiPolygonGeometry,
+    PolygonGeometry,
     add,
     author_of,
     check_classes,
@@ -26,12 +29,20 @@ from parfocal_api.annotations import (
     words_for,
 )
 from parfocal_api.audit import AuditAction, AuditTarget
+from parfocal_api.blinding import require_ai_shown
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.numbering import reserve
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import Principal, database_scope
 from parfocal_api.problems import BadRequestError, ConflictError, NotFoundError
 from parfocal_api.realtime import Realtime, RealtimeClient, RoomEvent
+from parfocal_api.review_order import (
+    CheckState,
+    ResultFilesMissingError,
+    ResultFilesUnreadableError,
+    Results,
+    check_states,
+)
 from parfocal_api.reviewed_layer import (
     KINDS,
     NotAnAiObjectError,
@@ -49,14 +60,23 @@ from parfocal_api.tables import (
     annotation_versions,
     annotations,
     audit_events,
+    result_chunks,
     result_objects,
+    result_set_classes,
+    result_sets,
 )
 from parfocal_api.task_kinds import annotate_only
-from parfocal_common.object_ids import ObjectId
+from parfocal_common.cell_chunks import ChunkError
+from parfocal_common.chunk_store import Cell, read_chunk
+from parfocal_common.object_ids import Letter, ObjectId
+from parfocal_common.result_store import MissingObjectError, ResultStore
 
 CHANGED_EVENT = "layer.object-changed"
 SOURCE_INDEX = ["task_id", "slide_id", "kind", "source_number"]
 SOURCE_WHERE = text("source_number IS NOT NULL")
+AI_PAGE = 1000
+MAX_AI_PAGE = 5000
+TOP_SCORE = 255
 
 
 class AiObjectEdit(BaseModel):
@@ -107,6 +127,29 @@ class SharedLayer(BaseModel):
     slide_id: uuid.UUID
     result_set_id: uuid.UUID | None
     objects: list[LayerObject]
+
+
+type AiOutline = Annotated[PolygonGeometry | MultiPolygonGeometry, Field(discriminator="type")]
+
+
+class SharedAiObject(BaseModel):
+    object: str
+    kind: Literal["region", "cell"]
+    number: int
+    class_id: uuid.UUID | None
+    score: float | None
+    geometry: AiOutline
+    check: CheckState
+
+
+class SharedAiObjects(BaseModel):
+    task_id: uuid.UUID
+    slide_id: uuid.UUID
+    result_set_id: uuid.UUID | None
+    result_name: str | None
+    total: int
+    offset: int
+    objects: list[SharedAiObject]
 
 
 class LayerObjectChangedError(ConflictError):
@@ -692,3 +735,159 @@ async def list_shared_object_history(
         )
         for item in rows
     ]
+
+
+def fraction(score: int | None) -> float | None:
+    return None if score is None else score / TOP_SCORE
+
+
+async def class_ids(connection: AsyncConnection, set_id: uuid.UUID) -> dict[int, uuid.UUID]:
+    rows = await connection.execute(
+        select(result_set_classes.c.position, result_set_classes.c.class_id).where(
+            result_set_classes.c.result_set_id == set_id,
+            result_set_classes.c.class_id.is_not(None),
+        )
+    )
+    return {row.position: row.class_id for row in rows}
+
+
+async def ai_regions(
+    connection: AsyncConnection, set_id: uuid.UUID, offset: int, limit: int
+) -> list[Any]:
+    rows = await connection.execute(
+        select(
+            result_objects.c.number,
+            result_objects.c.class_index,
+            result_objects.c.score,
+            func.ST_AsGeoJSON(result_objects.c.geometry).label("geojson"),
+        )
+        .where(result_objects.c.result_set_id == set_id, result_objects.c.kind == "region")
+        .order_by(result_objects.c.number)
+        .offset(offset)
+        .limit(limit)
+    )
+    return list(rows)
+
+
+async def stored_cells(store: ResultStore, object_key: str) -> list[Cell]:
+    try:
+        return await read_chunk(store, object_key)
+    except MissingObjectError as error:
+        raise ResultFilesMissingError from error
+    except ChunkError as error:
+        raise ResultFilesUnreadableError from error
+
+
+async def ai_cells(
+    connection: AsyncConnection, store: ResultStore, set_id: uuid.UUID, offset: int, limit: int
+) -> list[Cell]:
+    chunks = await connection.execute(
+        select(result_chunks.c.object_key, result_chunks.c.cell_count)
+        .where(result_chunks.c.result_set_id == set_id)
+        .order_by(result_chunks.c.chunk)
+    )
+    found: list[Cell] = []
+    skip = offset
+    for chunk in chunks:
+        if len(found) == limit:
+            break
+        if skip >= chunk.cell_count:
+            skip -= chunk.cell_count
+            continue
+        cells = await stored_cells(store, chunk.object_key)
+        found.extend(cells[skip : skip + limit - len(found)])
+        skip = 0
+    return found
+
+
+def cell_outline(ring: Sequence[float]) -> PolygonGeometry:
+    points = [(ring[i], ring[i + 1]) for i in range(0, len(ring), 2)]
+    return PolygonGeometry(type="Polygon", coordinates=[[*points, points[0]]])
+
+
+async def ai_counts(connection: AsyncConnection, set_id: uuid.UUID) -> tuple[int, int]:
+    regions = await connection.scalar(
+        select(func.count()).where(
+            result_objects.c.result_set_id == set_id, result_objects.c.kind == "region"
+        )
+    )
+    cells = await connection.scalar(
+        select(func.coalesce(func.sum(result_chunks.c.cell_count), 0)).where(
+            result_chunks.c.result_set_id == set_id
+        )
+    )
+    return int(regions or 0), int(cells or 0)
+
+
+@router.get(
+    "/ai",
+    operation_id="listSharedAiObjects",
+    **require(Permission.SEE_SLIDES, emergency=True),
+)
+async def list_shared_ai_objects(
+    task_id: uuid.UUID,
+    slide_id: uuid.UUID,
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
+    results: Results,
+    offset: Annotated[int, Query(ge=0)] = 0,
+    limit: Annotated[int, Query(ge=1, le=MAX_AI_PAGE)] = AI_PAGE,
+) -> SharedAiObjects:
+    row = await readable_layer(connection, principal, task_id, slide_id)
+    set_id = row.result_set_id
+    if set_id is None:
+        return SharedAiObjects(
+            task_id=task_id,
+            slide_id=slide_id,
+            result_set_id=None,
+            result_name=None,
+            total=0,
+            offset=offset,
+            objects=[],
+        )
+    await require_ai_shown(connection, principal, row.project_id, slide_id)
+    name = await connection.scalar(select(result_sets.c.name).where(result_sets.c.id == set_id))
+    region_total, cell_total = await ai_counts(connection, set_id)
+    classes = await class_ids(connection, set_id)
+    states = await check_states(connection, task_id, slide_id)
+
+    def check(letter: Letter, number: int) -> CheckState:
+        return states.get((slide_id, letter, number), CheckState.UNCHECKED)
+
+    objects = [
+        SharedAiObject(
+            object=ObjectId(Letter.REGION, item.number).text(ascii=True),
+            kind="region",
+            number=item.number,
+            class_id=None if item.class_index is None else classes.get(item.class_index),
+            score=fraction(item.score),
+            geometry=json.loads(item.geojson),
+            check=check(Letter.REGION, item.number),
+        )
+        for item in await ai_regions(connection, set_id, offset, limit)
+    ]
+    if len(objects) < limit:
+        cells = await ai_cells(
+            connection, results, set_id, max(offset - region_total, 0), limit - len(objects)
+        )
+        objects.extend(
+            SharedAiObject(
+                object=ObjectId(Letter.CELL, cell.number).text(ascii=True),
+                kind="cell",
+                number=cell.number,
+                class_id=classes.get(cell.class_index),
+                score=fraction(cell.score),
+                geometry=cell_outline(cell.ring),
+                check=check(Letter.CELL, cell.number),
+            )
+            for cell in cells
+        )
+    return SharedAiObjects(
+        task_id=task_id,
+        slide_id=slide_id,
+        result_set_id=set_id,
+        result_name=name,
+        total=region_total + cell_total,
+        offset=offset,
+        objects=objects,
+    )

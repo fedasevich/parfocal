@@ -721,6 +721,7 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "listSharedObjectHistory": lambda w: Call(
         "GET", f"{w.shared_layer}/objects/{w.layer_object}/history"
     ),
+    "listSharedAiObjects": lambda w: Call("GET", f"{w.shared_layer}/ai"),
     "createSharedObject": lambda w: Call(
         "POST", f"{w.shared_layer}/objects", {"kind": "region", "geometry": SQUARE}
     ),
