@@ -29,6 +29,11 @@ ALLOWED_FIELDS = frozenset(
         "release",
         "count",
         "size_bytes",
+        "result_id",
+        "decision",
+        "tool",
+        "task_kind",
+        "area",
     }
 )
 
