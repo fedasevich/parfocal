@@ -59,6 +59,7 @@ export interface RegionPassOptions {
   readonly signal?: AbortSignal;
   readonly onProgress?: (progress: RegionProgress) => void;
   readonly onTile?: (nuclei: readonly RegionNucleus[]) => void;
+  readonly outline?: (maps: Float32Array, width: number, height: number) => Promise<AisInstance[]>;
 }
 
 export class RegionPassAbortedError extends Error {
@@ -223,7 +224,11 @@ export async function runRegionPass(options: RegionPassOptions): Promise<RegionN
       const pool = samImageSize / size;
       const width = Math.min(size, Math.ceil(frame.fittedWidth / pool));
       const height = Math.min(size, Math.ceil(frame.fittedHeight / pool));
-      const instances = aisInstances(cropMaps(data, size, width, height), width, height);
+      const cropped = cropMaps(data, size, width, height);
+      const instances =
+        options.outline === undefined
+          ? aisInstances(cropped, width, height)
+          : await options.outline(cropped, width, height);
       const core = tile.core === "patch" ? patchBounds(patch) : tile.core;
       const kept = instancesToSlide(instances, frame, size).filter(
         (nucleus) =>
