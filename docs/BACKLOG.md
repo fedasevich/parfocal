@@ -2351,7 +2351,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Done when unit tests cover the rule and E2E sees the toast after the expected number of decisions.
   Size: M.
 
-- [ ] REVIEW-009 · Focus mode for one cell
+- [x] REVIEW-009 · Focus mode for one cell
   Enter on a selected cell zooms in with every other cell faded and zone outlines hidden. The type bar, keys and arrow jumps are the same as in findings (REVIEW-019). Enter or Esc goes back. Minimap shrinks to the locator.
   Done when E2E reviews a zone by keyboard only in focus mode and the bar never covers the cell.
   Refs mock 10, kit W5, [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
