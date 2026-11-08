@@ -38,7 +38,7 @@ function nucleiNear(patch: Patch): { x: number; y: number; r: number }[] {
   return discs;
 }
 
-function fakes() {
+function fakes(clamp = false) {
   let last: Patch | null = null;
   const reads: PresetPatchQuery[] = [];
   const dropped: string[] = [];
@@ -49,8 +49,8 @@ function fakes() {
         key: `${query.x}|${query.y}`,
         level: 0,
         downsample: 1,
-        x: Math.round(query.x) - 256,
-        y: Math.round(query.y) - 256,
+        x: clamp ? Math.max(0, Math.round(query.x) - 256) : Math.round(query.x) - 256,
+        y: clamp ? Math.max(0, Math.round(query.y) - 256) : Math.round(query.y) - 256,
         width: 512,
         height: 512,
         absent: false,
@@ -111,12 +111,28 @@ describe("region pass", () => {
   it("keeps the whole patch under a click", async () => {
     const { reader, sam, reads } = fakes();
     const nuclei = await runRegionPass({
-      tiles: [clickTile({ x: 6000, y: 6000 }, plan)],
+      tiles: [clickTile({ x: 6000, y: 6000 })],
       preset: "nuclei",
       reader,
       sam,
     });
     assert.equal(reads.length, 1);
+    assert.ok(nuclei.length >= 12 * 12);
+  });
+
+  it("keeps the whole patch the reader returns when a click near the slide edge is clamped", async () => {
+    const { reader, sam } = fakes(true);
+    const nuclei = await runRegionPass({
+      tiles: [clickTile({ x: 100, y: 100 })],
+      preset: "nuclei",
+      reader,
+      sam,
+    });
+    const inStrip = nuclei.filter(
+      (nucleus) => nucleus.centroid.x > 356 && nucleus.centroid.x < 512,
+    );
+    assert.ok(inStrip.length > 0);
+    assert.ok(nuclei.every((nucleus) => nucleus.centroid.x >= 0 && nucleus.centroid.y >= 0));
     assert.ok(nuclei.length >= 12 * 12);
   });
 

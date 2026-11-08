@@ -57,8 +57,8 @@ Outlines of one synthetic 512 px tile of 169 nuclei in Node, fastest of three: 1
 - The gated pair is 0.0049 PQ above the baseline. All three pairs are within the tolerance, and the 4-bit encoder of the WebGPU variant gives 0.004 PQ less than the uint8 one, in line with its larger embedding error in the [export result](2026-11-06-pathosam-onnx-export.md).
 - The int8 weight-only AIS decoder costs nothing in PQ against fp32 (0.8284 against 0.8282).
 - PQ above the POC's 0.8235 may come from TNBC v1.1, which has three nuclei fewer than the POC's copy, or from the two outline tracers. That is an assumption, not measured.
-- About 95 percent of the browser pass is encode and AIS decode, about 2.9 s per tile on WebGPU. A region of 1 mm² would be about 68 tiles, so about 3.5 minutes. The outline times in Node vary with machine load, 76 to 203 ms median for maps of the same kind, so they are CPU contention, not a property of the graph.
-- `aiseg.region-pass-ms` (manual, baseline 12,303 ms, limit 24,600) and `aiseg.region-outline-ms` (CI, baseline 122 ms, limit 360) are new in `perf-budgets.json`, and both runs passed them.
+- About 95 percent of the browser pass is encode and AIS decode, about 2.9 s of the 3.06 s each tile takes on WebGPU (12,229 ms / 4 tiles). A tile's core is 384 px at 0.25 µm/px, so 96 µm on a side. A 1 mm² square is 1,000 / 96 = 10.4 cores on a side, so about 10.4² = 108 tiles by area and 11 × 11 = 121 whole tiles. At 3.06 s per tile that is 108 × 3.06 = 331 s, about 5.5 minutes, or 121 × 3.06 = 370 s, about 6.2 minutes with whole tiles. The outline times in Node vary with machine load, 76 to 203 ms median for maps of the same kind, so they are CPU contention, not a property of the graph.
+- `aiseg.region-pass-ms` (manual, baseline 12,229 ms, the fastest warm pass of both runs as ADR 0154 asks, limit 24,458 at twice that) and `aiseg.region-outline-ms` (CI, baseline 122 ms, limit 360) are new in `perf-budgets.json`, and both runs passed them.
 
 ## Follow-ups
 

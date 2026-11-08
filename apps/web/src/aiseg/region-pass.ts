@@ -1,5 +1,6 @@
 import {
   modelToSlide,
+  type Patch,
   type SamClient,
   type SamFrame,
   type SamOutputs,
@@ -28,6 +29,10 @@ export interface SlidePoint {
 
 export interface RegionTile {
   readonly centre: SlidePoint;
+  readonly core: SlideRect | "patch";
+}
+
+export interface PlannedTile extends RegionTile {
   readonly core: SlideRect;
 }
 
@@ -71,11 +76,11 @@ export function planRegionTiles(
   region: SlideRect,
   plan: PresetPatchPlan,
   haloPixels: number = regionHaloPixels,
-): RegionTile[] {
+): PlannedTile[] {
   if (region.width <= 0 || region.height <= 0) return [];
   const halo = Math.min(haloPixels, Math.floor((plan.patchPixels - 1) / 4));
   const step = (plan.patchPixels - halo * 2) * levelDownsample(plan);
-  const tiles: RegionTile[] = [];
+  const tiles: PlannedTile[] = [];
   const across = Math.max(1, Math.ceil(region.width / step));
   const down = Math.max(1, Math.ceil(region.height / step));
   for (let row = 0; row < down; row++) {
@@ -94,11 +99,16 @@ export function planRegionTiles(
   return tiles;
 }
 
-export function clickTile(at: SlidePoint, plan: PresetPatchPlan): RegionTile {
-  const size = plan.level0Pixels;
+export function clickTile(at: SlidePoint): RegionTile {
+  return { centre: at, core: "patch" };
+}
+
+export function patchBounds(patch: Patch): SlideRect {
   return {
-    centre: at,
-    core: { x: at.x - size / 2, y: at.y - size / 2, width: size, height: size },
+    x: patch.x * patch.downsample,
+    y: patch.y * patch.downsample,
+    width: patch.width * patch.downsample,
+    height: patch.height * patch.downsample,
   };
 }
 
@@ -214,9 +224,10 @@ export async function runRegionPass(options: RegionPassOptions): Promise<RegionN
       const width = Math.min(size, Math.ceil(frame.fittedWidth / pool));
       const height = Math.min(size, Math.ceil(frame.fittedHeight / pool));
       const instances = aisInstances(cropMaps(data, size, width, height), width, height);
+      const core = tile.core === "patch" ? patchBounds(patch) : tile.core;
       const kept = instancesToSlide(instances, frame, size).filter(
         (nucleus) =>
-          rectContains(tile.core, nucleus.centroid) &&
+          rectContains(core, nucleus.centroid) &&
           (options.keep === undefined || options.keep(nucleus.centroid)),
       );
       found.push(...kept);
