@@ -48,3 +48,44 @@ test("clicking the faded map still opens the whole-slide peek", async ({ page })
   await map.getByRole("button", { name: "Open the whole slide" }).click();
   await expect(page).toHaveURL(/peek=true/);
 });
+
+test("clicking the map opens the whole-slide peek", async ({ page }) => {
+  await openScene(page, "Full viewer, one object · An open region, T5");
+  const open = minimap(page).getByRole("button", { name: "Open the whole slide" });
+  await expect(open).toBeVisible();
+  await open.click();
+  await expect(page).toHaveURL(/peek=true/);
+});
+
+test("the area map shows a dot for each cell of the area", async ({ page }) => {
+  await openScene(page, "Full viewer · Cells panel open");
+  await expect(minimap(page).locator('[data-slot="map-dots"] circle').first()).toBeVisible();
+});
+
+test("dragging the viewport rectangle moves the view and does not open the peek", async ({
+  page,
+}) => {
+  await openScene(page, "Full viewer, one object · An open region, T5");
+  const viewport = minimap(page).locator('[data-slot="map-viewport"]');
+  await expect(minimap(page)).toBeVisible();
+  let settled = await viewport.boundingBox();
+  await expect
+    .poll(async () => {
+      const now = await viewport.boundingBox();
+      const same = JSON.stringify(now) === JSON.stringify(settled);
+      settled = now;
+      return same;
+    })
+    .toBe(true);
+  const before = settled;
+  if (before === null) throw new Error("the viewport rectangle has no box");
+  const x = before.x + before.width / 2;
+  const y = before.y + before.height / 2;
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x + 20, y + 14, { steps: 4 });
+  await page.mouse.up();
+  await expect(page).not.toHaveURL(/peek=true/);
+  const after = await viewport.boundingBox();
+  expect(after?.x).not.toBe(before.x);
+});

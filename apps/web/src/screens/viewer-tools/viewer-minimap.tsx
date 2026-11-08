@@ -1,5 +1,8 @@
 import {
+  MapDots,
   MapOutline,
+  type MapPoint,
+  MapRoute,
   MapTrail,
   MapViewport,
   SmartMinimap,
@@ -9,7 +12,7 @@ import { type MapRect, type MinimapSetting, minimapBox } from "@parfocal/ui/lib/
 import { mapExtent, pointerDistance } from "@parfocal/ui/lib/minimap-machine";
 import { useMinimap } from "@parfocal/ui/lib/use-minimap";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { overviewSize, regionShapes } from "../review/slide-geometry.ts";
+import { cellShapes, overviewSize, regionShapes } from "../review/slide-geometry.ts";
 import {
   type Camera,
   imageOf,
@@ -18,12 +21,14 @@ import {
   shapeKey,
 } from "../review/slide-still.tsx";
 import { lookUrl } from "../thumbnails.ts";
+import { mmBetween } from "./edge-cues.ts";
+import { minimapContent } from "./minimap-content.ts";
 import { placeMinimap, type ScreenRect } from "./minimap-placement.ts";
 import { heldPlacement } from "./minimap-weights.ts";
 import { type AreaMark, MinimapAreas } from "./slide-maps.tsx";
 import { tissueShareOnScreen } from "./tissue-share.ts";
 import { seenTrail } from "./tool-geometry.ts";
-import { viewportOf } from "./tool-maths.ts";
+import { boxCentre, fromOverview, viewportOf } from "./tool-maths.ts";
 
 const overviewImage = {
   src: lookUrl("overview"),
@@ -46,8 +51,11 @@ export function ViewerMinimap({
   checked,
   blockLeft,
   blockToast,
+  cells,
+  travelTo = null,
   onOpen,
   onPopOut,
+  onMoveView,
 }: {
   setting: MinimapSetting;
   view: StillView;
@@ -57,8 +65,11 @@ export function ViewerMinimap({
   checked: string[];
   blockLeft: boolean;
   blockToast: boolean;
+  cells: { object: string; decided: boolean }[];
+  travelTo?: string | null;
   onOpen: () => void;
   onPopOut: () => void;
+  onMoveView: (camera: Camera) => void;
 }) {
   const viewport = viewportOf(imageOf(view), camera, size);
   const tissueShare = tissueShareOnScreen(viewport);
@@ -69,7 +80,17 @@ export function ViewerMinimap({
     send({ type: "CAMERA", tissueShare, magnification });
   }, [send, tissueShare, magnification]);
 
-  const current = view.kind === "region" ? shapeKey(view.object) : "T2";
+  const travelling = travelTo !== null;
+  useEffect(() => {
+    send({ type: travelling ? "TRAVEL_START" : "TRAVEL_ARRIVE" });
+  }, [send, travelling]);
+
+  const current =
+    view.kind === "region"
+      ? shapeKey(view.object)
+      : view.kind === "cell"
+        ? shapeKey(view.object.split("·")[0] ?? "T2")
+        : "T2";
   const box = regionShapes[current]?.box ?? [0, 0, 0, 0];
   const area: MapRect = [box[0], box[1], box[2] - box[0], box[3] - box[1]];
   const extent = mapExtent(minimap.mode === "hidden" ? "reading" : minimap.mode, slideExtent, area);
@@ -121,9 +142,43 @@ export function ViewerMinimap({
     };
   }, [send, host]);
 
+  const moveView = useCallback(
+    (centre: MapPoint) => {
+      const look = imageOf(view);
+      const [x, y] = fromOverview(look, centre);
+      onMoveView({ x, y, scale: camera.scale });
+    },
+    [view, camera.scale, onMoveView],
+  );
+
   if (minimap.size === null) return null;
-  const reading = minimap.size === "full" || minimap.size === "travel";
   const position = Math.max(1, areas.findIndex((item) => item.object === current) + 1);
+  const targetShape = travelTo === null ? undefined : regionShapes[shapeKey(travelTo)];
+  const here: MapPoint = [viewport[0] + viewport[2] / 2, viewport[1] + viewport[3] / 2];
+  const targetCentre = targetShape ? boxCentre(targetShape.box) : undefined;
+  const content = minimapContent({
+    mode: minimap.mode === "hidden" ? "reading" : minimap.mode,
+    areaCount: areas.length,
+    decidedCount: checked.length,
+    position,
+    magnification,
+    cells: cells.flatMap((cell) => {
+      const shape = cellShapes[cell.object];
+      return shape && cell.object.startsWith(`${current}·`)
+        ? [{ point: [shape.x, shape.y] as MapPoint, decided: cell.decided }]
+        : [];
+    }),
+    travel:
+      travelTo !== null && targetCentre
+        ? {
+            label: `area ${Math.max(1, areas.findIndex((item) => item.object === shapeKey(travelTo)) + 1)}`,
+            mm: mmBetween(here, targetCentre),
+            from: here,
+            to: targetCentre,
+          }
+        : null,
+  });
+  const shows = (layer: (typeof content.layers)[number]) => content.layers.includes(layer);
   return (
     <SmartMinimap
       ref={attach}
@@ -133,22 +188,32 @@ export function ViewerMinimap({
       image={overviewImage}
       extent={extent}
       faded={minimap.faded}
-      title={<b>Whole slide</b>}
-      foot={reading ? `${position} of ${areas.length}` : `Area ${position}`}
-      footEnd={reading ? `${checked.length} of ${areas.length} decided` : ""}
+      title={
+        <>
+          <b>{content.title.strong}</b>
+          {content.title.rest}
+        </>
+      }
+      foot={content.foot}
+      footEnd={content.footEnd}
+      viewport={viewport}
       onOpen={onOpen}
       onPopOut={onPopOut}
+      onMoveView={minimap.size === "pip" ? undefined : moveView}
       style={{ left: place.x, top: place.y }}
     >
-      {reading ? (
-        <>
-          <MapTrail rects={seenTrail} />
-          <MinimapAreas areas={areas} checked={checked} current={current} />
-        </>
-      ) : (
-        <MapOutline path={regionShapes[current]?.path ?? ""} />
-      )}
-      {minimap.size === "pip" ? null : <MapViewport rect={viewport} />}
+      {shows("trail") ? <MapTrail rects={seenTrail} /> : null}
+      {shows("areas") ? <MinimapAreas areas={areas} checked={checked} current={current} /> : null}
+      {shows("outline") ? <MapOutline path={regionShapes[current]?.path ?? ""} /> : null}
+      {content.dots ? (
+        <MapDots
+          dots={content.dots.points}
+          done={content.dots.done}
+          current={content.dots.current}
+        />
+      ) : null}
+      {content.route ? <MapRoute from={content.route.from} to={content.route.to} /> : null}
+      {shows("viewport") ? <MapViewport rect={viewport} /> : null}
     </SmartMinimap>
   );
 }

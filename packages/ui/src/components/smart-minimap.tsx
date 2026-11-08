@@ -222,6 +222,8 @@ type SmartMinimapProps = Omit<React.ComponentProps<"div">, "title"> & {
   faded?: boolean;
   onOpen?: (() => void) | undefined;
   onPopOut?: (() => void) | undefined;
+  viewport?: MapRect | undefined;
+  onMoveView?: ((centre: MapPoint) => void) | undefined;
   children?: React.ReactNode;
 };
 
@@ -235,17 +237,37 @@ function SmartMinimap({
   faded = false,
   onOpen,
   onPopOut,
+  viewport,
+  onMoveView,
   children,
   className,
   style,
   ...props
 }: SmartMinimapProps) {
   const [pointer, setPointer] = useState(false);
+  const drag = useRef<{ moved: boolean } | null>(null);
   const box: MapRect = extent ?? [0, 0, image.width, image.height];
   const sizes = minimapBox(size, box);
   const scale = box[2] / sizes.mapWidth;
   const head = size === "full" || size === "travel";
   const footShown = size !== "pip";
+  const mapPoint = (event: React.PointerEvent<HTMLElement>): MapPoint => {
+    const bounds = event.currentTarget.getBoundingClientRect();
+    return [
+      box[0] + ((event.clientX - bounds.left) / bounds.width) * box[2],
+      box[1] + ((event.clientY - bounds.top) / bounds.height) * box[3],
+    ];
+  };
+  const onViewport = (point: MapPoint) => {
+    if (!viewport) return false;
+    const slack = 6 * scale;
+    return (
+      point[0] >= viewport[0] - slack &&
+      point[0] <= viewport[0] + viewport[2] + slack &&
+      point[1] >= viewport[1] - slack &&
+      point[1] <= viewport[1] + viewport[3] + slack
+    );
+  };
   const map = (
     <svg
       aria-hidden="true"
@@ -300,7 +322,27 @@ function SmartMinimap({
             type="button"
             aria-label="Open the whole slide"
             title="Click to open the whole slide (or hold Z)"
-            onClick={onOpen}
+            onClick={() => {
+              const dragged = drag.current?.moved === true;
+              drag.current = null;
+              if (!dragged) onOpen();
+            }}
+            onPointerDown={(event) => {
+              if (!onMoveView || !onViewport(mapPoint(event))) return;
+              drag.current = { moved: false };
+              event.currentTarget.setPointerCapture(event.pointerId);
+            }}
+            onPointerMove={(event) => {
+              if (!drag.current) return;
+              drag.current.moved = true;
+              onMoveView?.(mapPoint(event));
+            }}
+            onPointerUp={(event) => {
+              if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+                event.currentTarget.releasePointerCapture(event.pointerId);
+              }
+            }}
+            data-draggable={onMoveView ? "true" : undefined}
             className="absolute inset-0 cursor-zoom-in rounded-[5px] border-0 bg-transparent p-0 outline-none hover:shadow-[0_0_0_2px_var(--accent)] focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-2 focus-visible:outline-accent"
           >
             {size === "pip" ? null : (
