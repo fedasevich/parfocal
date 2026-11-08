@@ -3846,6 +3846,12 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Depends on EXP-008. Refs [`poc/study/public/study.js`](https://github.com/fedasevich/pathlogy-poc/blob/master/study/public/study.js), [ADR 0021](adr/0021-chosen-home-worklist-status-board-and-account-menu.md).
   Size: M.
 
+- [ ] EXP-011 · Analytics policy per workspace and per person
+  EXP-007 lets each device opt out of usage analytics. Add a workspace policy in Admin (on, off, or each person chooses) in the lab settings layer, keep the person's choice in their own layer so it follows them across devices, and let the workspace policy win over the person.
+  Done when tests show no events are sent when the workspace turns analytics off whatever the person chose, and a person's opt-out holds on a second device.
+  Depends on EXP-007.
+  Size: S.
+
 ---
 
 ## 34 OPS · Infrastructure and operations
