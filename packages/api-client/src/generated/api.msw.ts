@@ -9446,7 +9446,7 @@ export const getListStudyTemplatesResponseSlideFigureMock = (
     kind: faker.helpers.arrayElement(["slide-figure"] as const),
     slide_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
     object_id: faker.helpers.arrayElement([
-      faker.helpers.fromRegExp("^(?:T[1-9][0-9]{0,8}\\.)?[TCRZM][1-9][0-9]{0,8}[a-z]{0,3}\\+?$"),
+      faker.helpers.fromRegExp("^(?:T[1-9][0-9]{0,8}\\.)?[TCRZMAN][1-9][0-9]{0,8}[a-z]{0,3}\\+?$"),
       null,
     ]),
     layers: faker.helpers.arrayElements(Object.values(Layer)),
@@ -9820,7 +9820,7 @@ export const getCreateStudyTemplateResponseSlideFigureMock = (
     kind: faker.helpers.arrayElement(["slide-figure"] as const),
     slide_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
     object_id: faker.helpers.arrayElement([
-      faker.helpers.fromRegExp("^(?:T[1-9][0-9]{0,8}\\.)?[TCRZM][1-9][0-9]{0,8}[a-z]{0,3}\\+?$"),
+      faker.helpers.fromRegExp("^(?:T[1-9][0-9]{0,8}\\.)?[TCRZMAN][1-9][0-9]{0,8}[a-z]{0,3}\\+?$"),
       null,
     ]),
     layers: faker.helpers.arrayElements(Object.values(Layer)),
@@ -10195,7 +10195,7 @@ export const getGetStudyTemplateResponseSlideFigureMock = (
     kind: faker.helpers.arrayElement(["slide-figure"] as const),
     slide_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
     object_id: faker.helpers.arrayElement([
-      faker.helpers.fromRegExp("^(?:T[1-9][0-9]{0,8}\\.)?[TCRZM][1-9][0-9]{0,8}[a-z]{0,3}\\+?$"),
+      faker.helpers.fromRegExp("^(?:T[1-9][0-9]{0,8}\\.)?[TCRZMAN][1-9][0-9]{0,8}[a-z]{0,3}\\+?$"),
       null,
     ]),
     layers: faker.helpers.arrayElements(Object.values(Layer)),
@@ -10570,7 +10570,7 @@ export const getEditStudyTemplateResponseSlideFigureMock = (
     kind: faker.helpers.arrayElement(["slide-figure"] as const),
     slide_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
     object_id: faker.helpers.arrayElement([
-      faker.helpers.fromRegExp("^(?:T[1-9][0-9]{0,8}\\.)?[TCRZM][1-9][0-9]{0,8}[a-z]{0,3}\\+?$"),
+      faker.helpers.fromRegExp("^(?:T[1-9][0-9]{0,8}\\.)?[TCRZMAN][1-9][0-9]{0,8}[a-z]{0,3}\\+?$"),
       null,
     ]),
     layers: faker.helpers.arrayElements(Object.values(Layer)),
@@ -10953,7 +10953,7 @@ export const getGetStudyTemplateVersionResponseSlideFigureMock = (
     kind: faker.helpers.arrayElement(["slide-figure"] as const),
     slide_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
     object_id: faker.helpers.arrayElement([
-      faker.helpers.fromRegExp("^(?:T[1-9][0-9]{0,8}\\.)?[TCRZM][1-9][0-9]{0,8}[a-z]{0,3}\\+?$"),
+      faker.helpers.fromRegExp("^(?:T[1-9][0-9]{0,8}\\.)?[TCRZMAN][1-9][0-9]{0,8}[a-z]{0,3}\\+?$"),
       null,
     ]),
     layers: faker.helpers.arrayElements(Object.values(Layer)),
@@ -11328,7 +11328,7 @@ export const getRetireStudyTemplateResponseSlideFigureMock = (
     kind: faker.helpers.arrayElement(["slide-figure"] as const),
     slide_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
     object_id: faker.helpers.arrayElement([
-      faker.helpers.fromRegExp("^(?:T[1-9][0-9]{0,8}\\.)?[TCRZM][1-9][0-9]{0,8}[a-z]{0,3}\\+?$"),
+      faker.helpers.fromRegExp("^(?:T[1-9][0-9]{0,8}\\.)?[TCRZMAN][1-9][0-9]{0,8}[a-z]{0,3}\\+?$"),
       null,
     ]),
     layers: faker.helpers.arrayElements(Object.values(Layer)),
@@ -11703,7 +11703,7 @@ export const getRestoreStudyTemplateResponseSlideFigureMock = (
     kind: faker.helpers.arrayElement(["slide-figure"] as const),
     slide_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
     object_id: faker.helpers.arrayElement([
-      faker.helpers.fromRegExp("^(?:T[1-9][0-9]{0,8}\\.)?[TCRZM][1-9][0-9]{0,8}[a-z]{0,3}\\+?$"),
+      faker.helpers.fromRegExp("^(?:T[1-9][0-9]{0,8}\\.)?[TCRZMAN][1-9][0-9]{0,8}[a-z]{0,3}\\+?$"),
       null,
     ]),
     layers: faker.helpers.arrayElements(Object.values(Layer)),

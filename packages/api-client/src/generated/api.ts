@@ -2998,7 +2998,7 @@ export interface NudgeCreate {
 }
 
 /**
- * @pattern ^(?:T[1-9][0-9]{0,8}\.)?[TCRZM][1-9][0-9]{0,8}[a-z]{0,3}\+?$
+ * @pattern ^(?:T[1-9][0-9]{0,8}\.)?[TCRZMAN][1-9][0-9]{0,8}[a-z]{0,3}\+?$
  */
 export type ObjectId = string;
 

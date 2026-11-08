@@ -43,6 +43,7 @@ COLUMNS = [
     ("origin", ColumnType.STRING),
     ("score", ColumnType.INT),
     ("path", ColumnType.STRING),
+    ("text", ColumnType.STRING),
 ]
 MEDIA_TYPES = {
     "geojson": "application/geo+json",
@@ -71,6 +72,7 @@ class Feature:
     class_name: str | None
     origin: str
     score: int | None
+    text: str | None = None
 
 
 @dataclass(frozen=True)
@@ -99,6 +101,8 @@ def properties_of(feature: Feature, where: tuple[str, str | None, str]) -> dict[
     }
     if feature.score is not None:
         details["score"] = feature.score
+    if feature.text is not None:
+        details["text"] = feature.text
     return details
 
 
@@ -120,6 +124,7 @@ def parfocal_object(feature: Feature, where: tuple[str, str | None, str]) -> dic
         "kind": feature.kind,
         "source_id": feature.object_id.text(ascii=True),
         **({"class": feature.class_name} if feature.class_name else {}),
+        **({"text": feature.text} if feature.text is not None else {}),
         "geometry": feature.geometry,
         "properties": {"parfocal": properties_of(feature, where)},
     }
@@ -133,6 +138,7 @@ def flatgeobuf_feature(feature: Feature, where: tuple[str, str | None, str]) -> 
         "origin": feature.origin,
         "score": feature.score,
         "path": path_of(where, feature.object_id),
+        "text": feature.text,
     }
     return flatgeobuf.feature(feature.geometry, COLUMNS, values)
 
@@ -200,6 +206,7 @@ async def annotation_rows(
             annotations.c.kind,
             annotations.c.number,
             annotations.c.class_id,
+            annotations.c.text,
             func.ST_AsGeoJSON(annotations.c.geometry).label("geojson"),
         )
         .where(
@@ -221,6 +228,7 @@ async def annotation_rows(
             names.get(row.class_id) if row.class_id else None,
             "human",
             None,
+            row.text,
         )
         for row in rows
     ]

@@ -48,9 +48,8 @@ type BlockClassName = Annotated[
     str, StringConstraints(strip_whitespace=True, min_length=1, max_length=80)
 ]
 type QuestionKey = Annotated[str, StringConstraints(pattern=r"^[a-z][a-z0-9_]{0,39}$")]
-type ObjectId = Annotated[
-    str, StringConstraints(pattern=r"^(?:T[1-9][0-9]{0,8}\.)?[TCRZM][1-9][0-9]{0,8}[a-z]{0,3}\+?$")
-]
+OBJECT_ID = r"^(?:T[1-9][0-9]{0,8}\.)?[TCRZMAN][1-9][0-9]{0,8}[a-z]{0,3}\+?$"
+type ObjectId = Annotated[str, StringConstraints(pattern=OBJECT_ID)]
 type Rows = Annotated[StrictInt, Field(ge=1, le=500)]
 
 
