@@ -259,7 +259,7 @@
     },
     {
       "id": "aiseg.region-main-thread-task-ms",
-      "measures": "The longest main thread task (longest gap of a 4 ms timer plus any long task entry) during a four tile auto region pass on the fake model, with the AIS post-processing in a worker, worst of three runs",
+      "measures": "The longest main thread long task entry during a four tile auto region pass on the fake model, with the AIS post-processing in a worker, the fastest of three passes in one test as ADR 0154 asks for time budgets. The baseline is the largest 4 ms timer gap of five M4 runs that had no long task, so it bounds the longest task from above",
       "kind": "ms",
       "unit": "ms",
       "baseline": 34,

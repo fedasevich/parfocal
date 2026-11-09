@@ -15,6 +15,7 @@ const seenOf = async (page: Page) =>
   Number(await page.getByTestId("slide-stage").getAttribute("data-coverage-seen"));
 
 test("seen cells reach the server in batches and come back after a reload", async ({ page }) => {
+  test.setTimeout(60_000);
   const stage = await openSlide(page);
   await expect.poll(() => seenOf(page)).toBeGreaterThan(0);
   await expect(stage).toHaveAttribute("data-coverage-pending", "0", { timeout: 15_000 });

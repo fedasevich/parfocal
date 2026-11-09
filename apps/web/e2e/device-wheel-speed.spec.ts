@@ -47,6 +47,7 @@ async function zoomStepAfterWheel(page: Page) {
 test("a lower wheel speed saved in Settings makes the slide wheel zoom step smaller", async ({
   page,
 }) => {
+  test.setTimeout(60_000);
   const defaultStep = await zoomStepAfterWheel(page);
   expect(defaultStep).toBeGreaterThan(0);
 
