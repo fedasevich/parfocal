@@ -4132,6 +4132,29 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when a result file records the per-spec times before and after, and the web browser job runs under 45 minutes on three runs in a row.
   Size: M.
 
+- [ ] TEST-022 · Text contrast and links in sentences pass axe
+  TEST-009 (accessibility testing) allowlisted every axe finding instead of fixing it, so a green run only means nothing got worse. This task fixes the `color-contrast` and `link-in-text-block` findings. Muted table text, the red tag at a 16 percent mix and other tags get colours at 4.5:1 or better in both themes, changed in the design tokens rather than per screen, and a link inside a sentence gets an underline. Each fixed rule leaves `apps/web/e2e/a11y-allowlist.ts`.
+  Done when both rules are gone from the allowlist, the browser suite passes with enforcement on, and the golden images that change are re-recorded with a note on what moved.
+  Depends on TEST-009.
+  Size: M.
+
+- [ ] TEST-023 · Names, roles and nested controls pass axe
+  Fixes the allowlisted `nested-interactive`, `label-content-name-mismatch`, `aria-required-children` and progress bar name findings from TEST-009 (accessibility testing). A row or card that holds a button stops being a button itself, every accessible name contains the visible text, a closed or empty listbox or combobox popup has the children its role needs or is not rendered, and the upload progress bar gets a name. Each fixed rule leaves `apps/web/e2e/a11y-allowlist.ts`.
+  Done when those four rules are gone from the allowlist and the browser suite passes with enforcement on.
+  Depends on TEST-009.
+  Size: M.
+
+- [ ] TEST-024 · Keyboard reachable scroll regions and 24 pixel targets pass axe
+  Fixes the allowlisted `scrollable-region-focusable` and `target-size` findings from TEST-009 (accessibility testing). Scrolling regions in Developer, upload and the worklist spike can be reached with the keyboard, and every control is at least 24 by 24 pixels or has the spacing WCAG 2.2 allows. Each fixed rule leaves `apps/web/e2e/a11y-allowlist.ts`.
+  Done when both rules are gone from the allowlist, the browser suite passes with enforcement on, and the allowlist is empty or every rule left names why it stays.
+  Depends on TEST-009.
+  Size: M.
+
+- [ ] TEST-025 · Four specs that fail before their axe step
+  The full local run for TEST-009 (accessibility testing) failed four specs before axe ran: the guided-check row click that keeps the guided object, two guided-review scene tests and the command palette's Measure only on a slide. Nobody looked at why. Find whether each is a stale spec or a real bug, fix it, and check that the routes they reach are scanned.
+  Done when the four specs pass locally three times in a row and in one CI run.
+  Size: S.
+
 ---
 
 ## 36 PILOT · Documentation and pilot readiness
