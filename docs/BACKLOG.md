@@ -3630,7 +3630,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when tests cover each setting and per-device speed persistence.
   Size: M.
 
-- [ ] SET-007 · Shortcuts section
+- [x] SET-007 · Shortcuts section
   The rebinding editor from CMD-006, with the preset (viewer default, QuPath-like, Figma-like), filters for all, your changes and conflicts, and reset all. `?` opens Settings at this section. Its issue states sit in the row being edited: a key that already does something else offers to swap or take it, a key the browser keeps is refused with a request to pick another, and a key that changes a report needs ⌘ or ⌃. The Deciding group lists the keys of each decision style (GUIDE-015).
   Done when tests rebind a key and the keycaps update everywhere, and component tests cover the conflict, the reserved key and the safety rule.
   Depends on CMD-001, CMD-006. Refs mock 19, mock 21, mock: settings/conflict, mock: settings/reserved, mock: settings/safety, [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
