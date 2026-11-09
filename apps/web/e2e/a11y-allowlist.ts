@@ -44,6 +44,7 @@ export const allowedViolations: readonly AllowedViolation[] = [
       "/projects/:id*",
       "/projects/:id/slides/:id*",
       "/projects/:id/slides/:id/annotate*",
+      "/projects/:id/slides/:id/live",
       "/settings/shortcuts*",
       "/setup*",
       "/sign-in*",

@@ -87,7 +87,8 @@ test("Anna sees her adjudication entry and nothing to read", async ({ page }) =>
   await expect(page.getByText("asked by Daniel Hruška · T4, T5 and T1·C145 on A1")).toBeVisible();
   await expect(page.getByText("Nothing new for you.")).toBeVisible();
   await page
-    .getByRole("option", { name: /Decide 3 objects/ })
+    .getByRole("listitem")
+    .filter({ hasText: /Decide 3 objects/ })
     .getByRole("button", { name: "Start" })
     .click();
   await expect(page).toHaveURL(/\/disagreements\?scene=adjudicate$/);

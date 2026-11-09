@@ -55,7 +55,7 @@ test("the review buttons are between 52 and 60 px tall", async ({ page }) => {
   await handle(page).tap();
   await page
     .getByRole("complementary", { name: "Side panel" })
-    .getByRole("button", { name: /^T5 Tumor region/ })
+    .getByRole("button", { name: /^T5 Tumor region(?!.* area \d+$)/ })
     .tap();
   const group = page.getByRole("group", { name: "Your answer on T5" });
   await expect(group).toBeVisible();
