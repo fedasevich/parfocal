@@ -77,7 +77,7 @@ const mouseSteps: readonly TraceStep[] = [
   },
 ];
 
-function trackpadSteps(name: string, tap: string): readonly TraceStep[] {
+function trackpadSteps(name: string, tap: string, twoFingerClick: string): readonly TraceStep[] {
   return [
     {
       id: "scroll-down-slow",
@@ -140,6 +140,12 @@ function trackpadSteps(name: string, tap: string): readonly TraceStep[] {
       title: `${name}, double-click`,
       instruction: `${tap} twice quickly on the pad. If your pad has no tap to click, skip this step.`,
     },
+    {
+      id: "two-finger-click",
+      gesture: "two-finger-click",
+      title: `${name}, two-finger click`,
+      instruction: `${twoFingerClick} once on the pad. If your pad has no two-finger click, skip this step.`,
+    },
   ];
 }
 
@@ -158,7 +164,11 @@ export const deviceProfiles: readonly DeviceProfile[] = [
     title: "Mac trackpad",
     summary: "The built-in trackpad of a MacBook or a Magic Trackpad.",
     optional: false,
-    steps: trackpadSteps("Mac trackpad", "Tap or click"),
+    steps: trackpadSteps(
+      "Mac trackpad",
+      "Tap or click",
+      "Click with two fingers resting on the pad, or hold Ctrl and click",
+    ),
   },
   {
     id: "windows-touchpad",
@@ -166,7 +176,11 @@ export const deviceProfiles: readonly DeviceProfile[] = [
     title: "Windows precision touchpad",
     summary: "Optional. Needs a Windows laptop with a precision touchpad.",
     optional: true,
-    steps: trackpadSteps("Windows touchpad", "Tap"),
+    steps: trackpadSteps(
+      "Windows touchpad",
+      "Tap",
+      "Tap with two fingers at once, or click the right half of the pad",
+    ),
   },
 ];
 

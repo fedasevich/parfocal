@@ -43,7 +43,8 @@ import { useSavedAnnotations } from "../annotations/use-saved-annotations.ts";
 import { legendDeviceOf } from "../devices/device-legend.ts";
 import { DeviceLegend } from "../devices/device-legend.tsx";
 import { engineWheelMode, navigationEvent, readNavigation } from "../devices/navigation.ts";
-import { applyMainCalibration } from "../devices/stage-calibration.ts";
+import { applyMainCalibration, mainCalibration } from "../devices/stage-calibration.ts";
+import { bindTrackpadListeners } from "../devices/trackpad-listeners.ts";
 import { EscProvider, useEscOwner, useNewEscRegistry } from "../keys/esc-owner.tsx";
 import { useBindings } from "../keys/personal-keys.ts";
 import { useHotkeys } from "../keys/use-hotkeys.ts";
@@ -514,6 +515,22 @@ function OpenedSlide({
     mark();
     return session.engine.subscribeCamera(mark);
   }, [session, hostNode]);
+
+  useEffect(() => {
+    const surface = hostNode?.parentElement;
+    if (session === null || !hostNode || !surface) return;
+    return bindTrackpadListeners(surface, {
+      device: () => legendDeviceOf(chosenDevice),
+      context: () => (workspace === "annotate" ? "annotate" : "review"),
+      calibration: mainCalibration,
+      onIntent: (intent, at) => {
+        hostNode.dataset["trackpadIntent"] = intent.kind;
+        if (intent.kind === "zoom") {
+          session.engine.zoomBy(intent.octaves, at, { animate: intent.animate });
+        }
+      },
+    });
+  }, [session, hostNode, chosenDevice, workspace]);
 
   useEffect(() => {
     session?.engine.setSlideBrightness(brightness);

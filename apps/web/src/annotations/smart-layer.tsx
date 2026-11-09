@@ -1,3 +1,4 @@
+import { isTwoFingerClick, secondaryButton } from "@parfocal/viewer-engine";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useHoverPreview } from "../aiseg/hover-preview-setting.ts";
 import { createPrewarmTrigger } from "../aiseg/smart-prewarm.ts";
@@ -219,7 +220,7 @@ export function SmartLayer({
       void session.current?.then((value) => value.clearHover());
       current = {
         id: event.pointerId,
-        button: event.button,
+        button: isTwoFingerClick(event) ? secondaryButton : event.button,
         altKey: event.altKey,
         shiftKey: event.shiftKey,
         start: slideAt(latest.current.engine, stage, event),

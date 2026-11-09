@@ -11,7 +11,8 @@ export type TraceGestureName =
   | "drag"
   | "middle-drag"
   | "double-click"
-  | "alt-double-click";
+  | "alt-double-click"
+  | "two-finger-click";
 
 interface TraceModifiers {
   readonly ctrlKey: boolean;
