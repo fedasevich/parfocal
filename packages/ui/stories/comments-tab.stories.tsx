@@ -85,3 +85,30 @@ export const OnlyResolved: Story = {
 };
 
 export const NoThreads: Story = { render: () => <Tab items={[]} /> };
+
+const scoped: CommentThreadCard[] = [
+  {
+    id: "t2",
+    anchor: "T2",
+    kind: "Tumor region",
+    scope: "RT-14 Margin review",
+    title: "Does the boundary run past the capsule fold?",
+    author: people.DH,
+    messages: 3,
+    at: "15 Oct 10:02",
+    resolved: false,
+  },
+  {
+    id: "pin",
+    anchor: "Pin",
+    kind: "Pin",
+    scope: "Slide",
+    title: "Is this the fold we saw last week?",
+    author: people.LM,
+    messages: 1,
+    at: "17 Oct 08:15",
+    resolved: false,
+  },
+];
+
+export const SlideAndTaskThreads: Story = { render: () => <Tab items={scoped} /> };

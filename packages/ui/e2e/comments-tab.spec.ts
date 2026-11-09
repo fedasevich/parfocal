@@ -56,3 +56,13 @@ test("a slide with no threads says so under both filters", async ({ page }) => {
   await page.getByRole("radio", { name: "Resolved 0" }).click();
   await expect(page.locator('[data-slot="threads-empty"]')).toHaveText("No resolved threads yet.");
 });
+
+test("each thread says whether it lives on the slide or on a task", async ({ page }) => {
+  await page.goto(story("components-comments-tab--slide-and-task-threads"));
+  await expect(cards(page)).toHaveCount(2);
+  await expect(cards(page).nth(0).locator('[data-slot="thread-scope"]')).toHaveText(
+    "RT-14 Margin review",
+  );
+  await expect(cards(page).nth(1).locator('[data-slot="thread-scope"]')).toHaveText("Slide");
+  await expect(cards(page).nth(1)).toContainText("Is this the fold we saw last week?");
+});

@@ -17,6 +17,7 @@ type CommentThreadCard = {
   id: string;
   anchor: string;
   kind: string;
+  scope?: string | undefined;
   title: string;
   author?: PersonInfo | undefined;
   messages: number;
@@ -66,6 +67,14 @@ function ThreadCardRow({
         <span className="flex items-center gap-2.5">
           <ObjectIdTag>{thread.anchor}</ObjectIdTag>
           <b className="min-w-0 flex-1 truncate text-body-sm font-semibold">{thread.kind}</b>
+          {thread.scope ? (
+            <span
+              data-slot="thread-scope"
+              className="max-w-28 shrink-0 truncate rounded-ctl border border-line px-1.5 text-caption text-fg-dim"
+            >
+              {thread.scope}
+            </span>
+          ) : null}
           {thread.resolved ? (
             <span className="inline-flex items-center gap-1 text-caption text-ok">
               <Icon name="check" size="xs" />

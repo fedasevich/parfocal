@@ -249,6 +249,7 @@ def create_app(
     app.include_router(display.router)
     app.include_router(display.presets_router)
     app.include_router(threads.router)
+    app.include_router(threads.slide_router)
     app.include_router(opinions.router)
     app.include_router(first_reads.router)
     app.include_router(disagreements.router)

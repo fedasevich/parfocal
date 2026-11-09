@@ -167,3 +167,29 @@ test("Resolve closes the thread and takes its pin off the slide", async ({ page 
   await expect(thread(page)).toHaveCount(0);
   await expect(pins(page)).toHaveCount(0);
 });
+
+test("a pin goes on a slide opened outside any task and its thread takes replies", async ({
+  page,
+}) => {
+  await page.goto(`/projects/${p07}?tab=slides`);
+  await page.getByTestId("slide-row").filter({ hasText: "tumor_044" }).click();
+  const stage = page.getByTestId("slide-stage");
+  await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 30_000 });
+  expect(new URL(page.url()).searchParams.get("task")).toBeNull();
+  const posted = page.waitForRequest(
+    (request) =>
+      request.method() === "POST" &&
+      new URL(request.url()).pathname.endsWith("/threads") &&
+      new URL(request.url()).pathname.startsWith(`/api/projects/${p07}/slides/`),
+  );
+  const box = (await stage.boundingBox()) ?? { x: 0, y: 0 };
+  await placePin(page, { x: box.x + 500, y: box.y + 450 }, "Before any task");
+  await posted;
+  await expect(pins(page)).toHaveCount(1);
+  await pins(page).first().click();
+  const thread = page.getByTestId("pin-thread");
+  await expect(thread).toContainText("Before any task");
+  await thread.getByRole("textbox").fill("Seen it too");
+  await page.keyboard.press("Enter");
+  await expect(thread).toContainText("Seen it too");
+});
