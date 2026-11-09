@@ -86,6 +86,13 @@ export function createRangeCache(options: RangeCacheOptions = {}): RangeCache {
       if (response.status !== 206 || startOf(contentRange) !== first * blockSize) {
         throw new Error(`The server answered a range request with status ${response.status}`);
       }
+      const asked = (last + 1 - first) * blockSize;
+      const expected = total === null ? asked : Math.min(asked, total - first * blockSize);
+      if (total !== null && bytes.byteLength < expected) {
+        throw new Error(
+          `The server answered ${bytes.byteLength} of the ${expected} bytes asked for`,
+        );
+      }
       return bytes;
     })();
     const promises: Promise<Block>[] = [];

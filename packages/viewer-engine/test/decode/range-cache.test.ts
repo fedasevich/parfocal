@@ -118,6 +118,32 @@ describe("the shared range cache", () => {
     assert.equal(server.seen.length, 1);
   });
 
+  it("refuses a reply shorter than the range asked for and caches nothing of it", async () => {
+    const file = fileOf(100);
+    let short = true;
+    const seen: (string | null)[] = [];
+    const fetch = (_input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+      const range = new Headers(init?.headers).get("range");
+      seen.push(range);
+      const match = /^bytes=(\d+)-(\d+)$/.exec(range ?? "");
+      const start = Number(match?.[1]);
+      const end = Math.min(Number(match?.[2]), file.length - 1);
+      const body = file.slice(start, short ? start + (end + 1 - start) / 2 : end + 1);
+      return Promise.resolve(
+        new Response(body, {
+          status: 206,
+          headers: { "content-range": `bytes ${start}-${end}/${file.length}` },
+        }),
+      );
+    };
+    const cache = createRangeCache({ blockSize, fetch });
+    await assert.rejects(cache.get(url, "bytes=0-31"), /16 of the 32 bytes asked for/);
+    short = false;
+    const whole = await cache.get(url, "bytes=0-31");
+    assert.deepEqual(whole.bytes, file.slice(0, 32));
+    assert.deepEqual(seen, ["bytes=0-31", "bytes=0-31"]);
+  });
+
   it("evicts the least recently used block beyond its limit", async () => {
     const file = fileOf(64);
     const server = fakeServer(file);
