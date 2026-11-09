@@ -5103,6 +5103,12 @@ Admin is its own page with its own sidebar and the app's top bar, never a page i
   Depends on VIZ-010.
   Size: L.
 
+- [ ] VIZ-013 · Engine behind the still for any slide
+  Review of VIZ-012 (guided review and the full viewer on the live slide) found the engine draws real pixels but takes objects from the mock region table, so a non-fixture slide shows no or misplaced outlines. Feed real object geometry to the engine, clamp the still's camera to the engine's bounds so wheel-out and off-slide drags stay aligned, clear the drawing before the viewport is disposed, release the WebGL probe context and move it out of render, align the no-results guard between the two screens and surface tile failures, and add a test that the canvas and the SVG line up.
+  Done when browser tests open a non-fixture slide with real objects in both screens and find outlines aligned with pixels after wheel-out and a drag, and leaving the screen raises no engine error.
+  Depends on VIZ-012.
+  Size: M.
+
 ---
 
 ## 52 ADAPT · Reverting or reworking the built hospital code
