@@ -348,9 +348,21 @@ jobs:
             apps/web/bundle-report/treemap.html
             apps/web/bundle-report/summary.json
 
+  dependency-scan:
+    if: github.event_name != 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+      - uses: ./.github/actions/install-osv-scanner
+      - run: node scripts/osv-scan.ts self-test
+      - run: node scripts/osv-scan.ts scan
+
   ci-ok:
     if: always()
-    needs: [changes, lint, typecheck, test, db, formats, e2e, browser]
+    needs: [changes, lint, typecheck, test, db, formats, e2e, browser, dependency-scan]
     runs-on: ubuntu-latest
     steps:
       - run: test "${{ needs.changes.result == 'success' && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}" = "true"
