@@ -29,6 +29,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { polygonToGeoJson } from "../../annotations/geojson.ts";
 import { closeDraft, type Point, type PolygonDraft } from "../../annotations/polygon-draft.ts";
+import { useLabDecisionCutoff } from "../../shell/resolved-settings.ts";
 import { showUndoToast } from "../../shell/undo-toasts.tsx";
 import { useCellTiming, useTaskRun } from "../../telemetry/use-task-timing.ts";
 import { markTried } from "../home/getting-started.ts";
@@ -232,6 +233,7 @@ function GuidedBody({
     ? [{ setting: "confidence", value: "hidden", reason: setup.confidenceLock }]
     : [];
   const myLayers = okData(useGetMySettingLayers().data);
+  const labCutoff = useLabDecisionCutoff();
   const wording =
     scene === undefined
       ? resolveSetting("confidence_wording", {
@@ -240,7 +242,13 @@ function GuidedBody({
           device: {},
         }).value
       : null;
-  const sceneSettings = displaySettings(session.display, setup.preset, extraLocks);
+  const sceneSettings = displaySettings(
+    session.display,
+    setup.preset,
+    extraLocks,
+    undefined,
+    labCutoff,
+  );
   const confidence: ReviewConfidence =
     wording === null
       ? (sceneSettings.confidence as Confidence)

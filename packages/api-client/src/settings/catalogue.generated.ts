@@ -15,7 +15,10 @@ export type SettingValues = {
   minimap: "useful" | "always" | "never";
   slide_strip: boolean;
   confidence_wording: "words" | "numbers" | "frequency" | "colour" | "hidden";
-  outline_mode: "outline" | "fill" | "dots";
+  outline_mode: "fade" | "mark-unsure" | "bands";
+  tier_outline: "best" | "good" | "fast";
+  inspector_track_record: boolean;
+  inspector_calibration: boolean;
   decision_cutoff: number;
   wheel_mode: "zoom" | "pan";
   invert_zoom: boolean;
@@ -214,14 +217,40 @@ export const catalogue: Record<SettingKey, SettingEntry> = {
   },
   "outline_mode": {
     "kind": "choice",
-    "default": "outline",
+    "default": "fade",
     "layers": [
       "personal"
     ],
     "options": [
-      "outline",
-      "fill",
-      "dots"
+      "fade",
+      "mark-unsure",
+      "bands"
+    ]
+  },
+  "tier_outline": {
+    "kind": "choice",
+    "default": "best",
+    "layers": [
+      "personal"
+    ],
+    "options": [
+      "best",
+      "good",
+      "fast"
+    ]
+  },
+  "inspector_track_record": {
+    "kind": "switch",
+    "default": true,
+    "layers": [
+      "personal"
+    ]
+  },
+  "inspector_calibration": {
+    "kind": "switch",
+    "default": true,
+    "layers": [
+      "personal"
     ]
   },
   "decision_cutoff": {

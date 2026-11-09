@@ -73,6 +73,11 @@ SCREEN_ROWS: dict[str, tuple[object, object, object]] = {
     "panel_while_moving": ("pinned", "auto", "hidden"),
     "double_click": ("zoom", "toggle", "rotate"),
     "model_warnings": (True, False, None),
+    "outline_mode": ("fade", "bands", "fill"),
+    "tier_outline": ("best", "fast", "better"),
+    "inspector_track_record": (True, False, "yes"),
+    "inspector_calibration": (True, False, 0),
+    "confidence_wording": ("words", "frequency", "percent"),
     "slide_submitted_notice": ("bell", "email", "loud"),
     "length_unit": ("auto", "um", "mm"),
     "tools": ("rail", "dock", "left"),
@@ -273,3 +278,23 @@ def test_every_console_write_needs_admin_rights_and_is_audited(api: ApiAs, datab
         "model-tier.set",
         "announcement.posted",
     }
+
+
+@pytest.mark.db
+def test_the_decision_cutoff_is_the_labs_and_a_pathologist_cannot_change_it(
+    api: ApiAs, database: str
+) -> None:
+    assert BY_KEY["decision_cutoff"].layers == {Layer.LAB}
+    workspace = make_workspace(database, PEOPLE, admins={"admin"})
+    people = workspace.people
+    saved = api(people["admin"]).put(WORKSPACE, json={"values": {"decision_cutoff": 65}})
+    assert saved.status_code == 200
+    assert api(people["reviewer"]).get(ME).json()["lab"]["values"] == {"decision_cutoff": 65}
+    own = api(people["reviewer"]).put(ME, json={"values": {"decision_cutoff": 10}})
+    assert problem(own) == (400, "unknown-setting")
+    attempt = {"values": {"decision_cutoff": 10}}
+    assert api(people["reviewer"]).put(WORKSPACE, json=attempt).status_code == 403
+    assert api(people["researcher"]).put(WORKSPACE, json=attempt).status_code == 403
+    too_high = api(people["admin"]).put(WORKSPACE, json={"values": {"decision_cutoff": 101}})
+    assert too_high.status_code == 400
+    assert api(people["reviewer"]).get(ME).json()["lab"]["values"] == {"decision_cutoff": 65}

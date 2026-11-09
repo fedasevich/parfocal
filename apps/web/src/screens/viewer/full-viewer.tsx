@@ -2,6 +2,7 @@ import {
   type AnalysisTemplate,
   type SlideAiProgress,
   useGetMyHome,
+  useGetMyTrackRecord,
   useGetProject,
   useGetResultSetTyper,
   useGetSlideAiProgress,
@@ -47,7 +48,7 @@ import { provideDebug } from "../../debug-handle.ts";
 import { useFormat } from "../../format.ts";
 import { escLayer } from "../../keys/esc-ladder.ts";
 import { destinations } from "../../shell/destinations.ts";
-import { useResolvedSettings } from "../../shell/resolved-settings.ts";
+import { useLabDecisionCutoff, useResolvedSettings } from "../../shell/resolved-settings.ts";
 import { useCellTiming, useChromeSampling, useTaskRun } from "../../telemetry/use-task-timing.ts";
 import { formatDayMonth } from "../format.ts";
 import { useRememberResume } from "../home/remember-resume.ts";
@@ -133,6 +134,8 @@ import { peekSpot } from "../viewer-tools/peek-model.ts";
 import { reviewRail, reviewRailKeys } from "../viewer-tools/rails.ts";
 import { SlidePeek, usePeekKey } from "../viewer-tools/slide-peek.tsx";
 import { ViewerMinimap } from "../viewer-tools/viewer-minimap.tsx";
+import { CalibrationBlock, TrackRecordBlock } from "./ai-record-blocks.tsx";
+import { calibrationLines, trackRecordLines } from "./ai-record-lines.ts";
 import { areaOrder, areaRoleText, areaRows } from "./area-nav.ts";
 import { layerDrawing, setColours } from "./layer-views.tsx";
 import { confidenceTintOf, objectStyle } from "./object-draw.ts";
@@ -271,6 +274,7 @@ function ViewerBody({
   const typer = okData(
     useGetResultSetTyper(typerSetId ?? "", { query: { enabled: typerSetId !== undefined } }).data,
   );
+  const trackRecord = okData(useGetMyTrackRecord().data);
   const running = progress?.state === "running";
   const style = session.style;
   const paged = usePagedReview(session.classes.map((item) => item.name));
@@ -377,8 +381,9 @@ function ViewerBody({
         presets: [...session.display.presets, ...saved.map((item) => ({ ...item, settings: {} }))],
       }
     : undefined;
+  const labCutoff = useLabDecisionCutoff();
   const pickedSettings = withOverrides(
-    displaySettings(display, preset, extraLocks),
+    displaySettings(display, preset, extraLocks, undefined, labCutoff),
     drawOverrides,
     display,
     extraLocks,
@@ -924,6 +929,14 @@ function ViewerBody({
         <AiSays setName={`${setName}, imported 12 Oct`} objects={objects} />
         <ModelWarningsBlock
           warnings={viewerModelWarnings(typer, objects, personalSettings?.model_warnings ?? true)}
+        />
+        <TrackRecordBlock
+          enabled={personalSettings?.inspector_track_record ?? true}
+          lines={trackRecordLines(trackRecord, typer?.name ?? "")}
+        />
+        <CalibrationBlock
+          enabled={personalSettings?.inspector_calibration ?? true}
+          lines={calibrationLines(typer)}
         />
         <ObjectList
           objects={objects}

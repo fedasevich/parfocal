@@ -5,6 +5,7 @@ import {
   defaultDisplaySettings,
 } from "@parfocal/ui/components/display-panel";
 import type { ReactNode } from "react";
+import { useLabDecisionCutoff } from "../../shell/resolved-settings.ts";
 
 const lockedWords: Record<string, Record<string, string>> = {
   order: { ai: "AI order", size: "Largest first", leastsure: "Least sure first", random: "Random" },
@@ -40,11 +41,13 @@ export function displaySettings(
   preset: string | null,
   locks: DisplayLock[] = [],
   confidence?: string,
+  labCutoff?: number,
 ): DisplaySettings {
   const picked = display?.presets.find((item) => item.name === preset)?.settings ?? {};
   const locked = Object.fromEntries(locks.map((lock) => [lock.setting, lock.value]));
   return {
     ...defaultDisplaySettings,
+    ...(labCutoff === undefined ? {} : { cutoff: labCutoff }),
     ...(confidence === undefined ? {} : { confidence }),
     ...picked,
     ...locked,
@@ -99,7 +102,7 @@ export function DisplayTab({
   classVisibility,
 }: DisplayTabProps) {
   const picked = withOverrides(
-    displaySettings(display, preset, extraLocks, confidence),
+    displaySettings(display, preset, extraLocks, confidence, useLabDecisionCutoff()),
     overrides,
     display,
     extraLocks,

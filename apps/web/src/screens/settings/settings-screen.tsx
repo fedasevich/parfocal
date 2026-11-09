@@ -85,6 +85,7 @@ import {
   shortcutSettingsOf,
 } from "./shortcuts.ts";
 import { isListening, ShortcutsSection, useKeyCapture } from "./shortcuts-section.tsx";
+import { wordingExample } from "./wording-example.ts";
 import { wordingNow, wordingPairs } from "./wording-row.ts";
 
 type Device = {
@@ -247,7 +248,7 @@ function LoadedSettings({
     return { ...deviceDefaults, device: main, ...readCalibration(main) };
   });
   const [pinnedStrip, setPinnedStrip] = usePinnedStrip();
-  const [outlineMode, setOutlineMode] = useOutlineMode();
+  const [, setOutlineMode] = useOutlineMode();
   const [theme, setTheme] = useState<ThemeChoice>(() => readTheme());
   const [stat, setStat] = useState(readStatNotice);
   const savePreferences = useSetNotificationPreferences({
@@ -513,22 +514,53 @@ function LoadedSettings({
     outlineMode: () => (
       <Segments
         label="Outline display"
-        value={outlineMode}
+        value={values.outline_mode}
         pairs={outlineModeChoices.map((choice) => [choice, outlineModeLabels[choice]])}
-        onChange={(value) => setOutlineMode(value as OutlineModeChoice)}
+        onChange={(value) => {
+          setOutlineMode(value as OutlineModeChoice);
+          save({ outline_mode: value as OutlineModeChoice });
+        }}
       />
     ),
-    confidenceWording: () => (
+    confidenceWording: () => {
+      const current =
+        picked.confidence_wording ??
+        wordingNow({ lab: layers.lab, personal: layers.personal, device: {} });
+      return (
+        <span className="grid gap-1.5">
+          <Segments
+            label="Confidence wording"
+            value={current}
+            pairs={wordingPairs}
+            onChange={(value) => save({ confidence_wording: value as WordingSetting })}
+          />
+          <small className="text-caption text-fg-dim" data-slot="wording-example">
+            Example: {wordingExample(current)}
+          </small>
+        </span>
+      );
+    },
+    decisionCutoff: () => lockedValue(`${values.decision_cutoff}%`, "Set by your lab for everyone"),
+    tierOutline: () => (
       <Segments
-        label="Confidence wording"
-        value={
-          picked.confidence_wording ??
-          wordingNow({ lab: layers.lab, personal: layers.personal, device: {} })
-        }
-        pairs={wordingPairs}
-        onChange={(value) => save({ confidence_wording: value as WordingSetting })}
+        label="Outline model tier"
+        value={values.tier_outline}
+        pairs={[
+          ["best", "Best"],
+          ["good", "Good"],
+          ["fast", "Fast"],
+        ]}
+        onChange={(value) => save({ tier_outline: value as SettingValues["tier_outline"] })}
       />
     ),
+    trackRecord: () =>
+      toggle("Track record block", values.inspector_track_record, (value) =>
+        save({ inspector_track_record: value }),
+      ),
+    calibration: () =>
+      toggle("Calibration details block", values.inspector_calibration, (value) =>
+        save({ inspector_calibration: value }),
+      ),
     modelWarnings: () =>
       toggle("Model warnings", values.model_warnings, (value) => save({ model_warnings: value })),
     device: () => (
