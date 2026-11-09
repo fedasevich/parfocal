@@ -1,5 +1,12 @@
 import type { ReviewObject } from "@parfocal/api-client";
 import { bandOf } from "@parfocal/ui/lib/confidence-words";
+import {
+  belowCutoffAlpha,
+  belowCutoffDash as dashPattern,
+  filledAlpha,
+  scoreRampHigh,
+  scoreRampLow,
+} from "@parfocal/viewer-engine/draw-constants";
 import { bandColour } from "../review/ai-wording.ts";
 import type { RegionStyle } from "../review/slide-still.tsx";
 
@@ -13,11 +20,11 @@ export type ObjectDrawSettings = {
 
 export type DecisionOf = (object: string) => "agree" | "disagree" | "unsure" | undefined;
 
-export const belowCutoffFactor = 0.5;
+export const belowCutoffFactor = belowCutoffAlpha;
 
-export const belowCutoffDash = "6 4";
+export const belowCutoffDash = dashPattern.join(" ");
 
-export const filledShare = 40;
+export const filledShare = Math.round(filledAlpha * 100);
 
 const decisionCss = {
   agree: "var(--v-agree)",
@@ -26,7 +33,7 @@ const decisionCss = {
   open: "rgb(190 190 190)",
 } as const;
 
-const scoreStops = { low: [67, 56, 202], high: [250, 204, 21] } as const;
+const scoreStops = { low: scoreRampLow, high: scoreRampHigh } as const;
 
 export function scoreCss(score: number): string {
   const at = Math.min(1, Math.max(0, score));
