@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./a11y.ts";
 
 test("hiding a Parfocal model dims its row and undo brings it back", async ({ page }) => {
   await page.goto("/admin?section=models");

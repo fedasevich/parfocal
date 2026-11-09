@@ -1,5 +1,5 @@
 import { magnificationBarRect } from "@parfocal/ui/lib/magnification-bar";
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Page, test } from "./a11y.ts";
 
 const p07 = "00000000-0000-4000-8003-000000000007";
 

@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./a11y.ts";
 
 const sampleProject = "00000000-0000-4000-8003-000000000001";
 const tumor001 = "00000000-0000-4000-8005-000000000101";

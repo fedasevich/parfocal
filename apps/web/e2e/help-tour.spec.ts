@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./a11y.ts";
 
 test("the first-run offer starts the tour and the ten steps reach Done", async ({ page }) => {
   test.slow();

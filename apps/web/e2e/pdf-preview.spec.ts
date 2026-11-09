@@ -1,4 +1,4 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Page, test } from "./a11y.ts";
 
 const rt14 = "00000000-0000-4000-8007-000000000014";
 const project = "00000000-0000-4000-8003-000000000007";

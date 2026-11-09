@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./a11y.ts";
 
 test("line up automatically proposes an offset and clearing keeps the panes linked", async ({
   page,

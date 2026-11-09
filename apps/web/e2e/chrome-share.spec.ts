@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./a11y.ts";
 import { chromeBudget, chromeHeight, chromeShare, chromeWidths } from "./chrome-share.ts";
 
 const p07 = "00000000-0000-4000-8003-000000000007";

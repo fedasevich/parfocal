@@ -1,7 +1,8 @@
 import { appendFileSync, readFileSync, writeFileSync } from "node:fs";
-import { test as base, type Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { test as base } from "./a11y.ts";
 
-export { expect } from "@playwright/test";
+export { expect } from "./a11y.ts";
 
 export const seededPatientPatterns: readonly RegExp[] = [
   /fake(?:\s|%20|\+|_|-)*patient/giu,

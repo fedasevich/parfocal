@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./a11y.ts";
 
 test("an admin sets how long deleted items are kept and it stays after a reload", async ({
   page,

@@ -1,4 +1,4 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Page, test } from "./a11y.ts";
 
 const status = (page: Page) => page.getByRole("status", { name: "Hotkey status" });
 const note = (page: Page) => page.getByRole("textbox", { name: "Note" });

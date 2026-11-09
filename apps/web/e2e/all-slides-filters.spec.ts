@@ -1,4 +1,4 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Page, test } from "./a11y.ts";
 
 const chip = (page: Page, label: string) =>
   page.locator('[data-slot="filter-chip"]').filter({ hasText: `${label}:` });

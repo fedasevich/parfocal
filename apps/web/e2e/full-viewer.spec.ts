@@ -1,5 +1,5 @@
 import { fieldMapStops } from "@parfocal/viewer-engine";
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Page, test } from "./a11y.ts";
 import { inPart, parts } from "./parts.ts";
 
 const viewer = (page: Page) => page.getByTestId("full-viewer");

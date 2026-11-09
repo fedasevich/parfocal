@@ -1,4 +1,4 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Page, test } from "./a11y.ts";
 
 const task = (page: Page, code: string) =>
   page.getByRole("region", { name: new RegExp(`^${code} · `) });

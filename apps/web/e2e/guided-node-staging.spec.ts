@@ -1,4 +1,4 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Page, test } from "./a11y.ts";
 
 const rt16 = "00000000-0000-4000-8043-000000000016";
 const a1 = "00000000-0000-4000-8005-000000000001";

@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./a11y.ts";
 
 const livePath = "/projects/p-1/slides/missing-1/live";
 

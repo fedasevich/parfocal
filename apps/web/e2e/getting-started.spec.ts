@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./a11y.ts";
 
 test("the checklist hides for good through the personal settings", async ({ page }) => {
   await page.goto("/?scene=new");

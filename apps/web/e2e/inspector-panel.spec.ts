@@ -1,4 +1,4 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Page, test } from "./a11y.ts";
 
 const panel = (page: Page) => page.getByRole("complementary", { name: "Side panel" });
 const handle = (page: Page) => page.getByRole("separator", { name: "Resize the side panel" });

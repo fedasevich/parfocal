@@ -1,4 +1,4 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Page, test } from "./a11y.ts";
 
 const dialog = (page: Page) => page.getByRole("dialog", { name: "Settings" });
 const group = (page: Page, name: string) => dialog(page).getByRole("radiogroup", { name });

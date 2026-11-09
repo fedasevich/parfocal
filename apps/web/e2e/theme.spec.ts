@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./a11y.ts";
 
 const html = (page: import("@playwright/test").Page) => page.locator("html");
 test.describe.configure({ timeout: 90_000 });

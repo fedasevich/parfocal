@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./a11y.ts";
 
 test("rotating one compare pane turns both while linked and only itself once unlinked", async ({
   page,
