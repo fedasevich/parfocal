@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-09
 
+- Locust load scenarios for the API, tiles and realtime with a guard that refuses any target but localhost or staging, run with pnpm load. API and tile smoke runs passed locally with no failures. Realtime needs an edge Worker and a member session.
 - EVAL-010 The PDF preview shows SVG pages from the same Typst report builder as the export, from the report page, the template list, the editor and the new-task template step, with API tests showing the page count matches the PDF and E2E for each entry. Fable review found the SVG safe as img data and permissions sound, and the merge with COLLAB-017 keeps the reader's blinding in the annotate preview. Follow-up EVAL-016 pages and caches long previews.
 - Two-finger click maps to a negativePoint intent in Annotate and a Safari pinch step to an unanimated zoom, with four synthetic Mac and Windows trackpad traces replayed in tests and marked to record on real hardware. DOM listeners for the new intents are DEV-010.
 - Decision notes save with the decision and its quick reasons, take Enter, Esc and mentions, and show in guided review, the full viewer, the cell gallery, the Comments tab and the adjudicator view, with unit, browser and axe tests. It found notes and quick reasons were never sent to the API before. Mentions in notes notify nobody yet, GUIDE-022 adds it.
