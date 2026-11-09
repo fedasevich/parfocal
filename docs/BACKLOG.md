@@ -1041,7 +1041,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when the chosen rule has an API test and an edge test, and presence is sent only in the room kinds the record lists.
   Size: S.
 
-- [ ] SEC-041 · The closed range check does not trust the size in the token
+- [x] SEC-041 · The closed range check does not trust the size in the token
   The check of restricted byte ranges uses the size in the tile token, so it would be skipped or misaligned if the stored object were ever larger ([edge token review](results/2026-11-09-edge-token-review.md), suspicion S2). The two sizes cannot differ today.
   Done when an edge test with a token whose size is smaller than the object shows no closed range read for the three ranges in the review, and a negative size is refused.
   Size: S.
@@ -1445,7 +1445,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on VIEW-041.
   Size: S.
 
-- [ ] VIEW-059 · No black edge row on virtual levels
+- [x] VIEW-059 · No black edge row on virtual levels
   A virtual level whose backing level is stored one pixel short gets a black last row or column, because the read window is clamped to the backing level and the output size is not, so the last row averages zero samples ([viewer engine review](results/2026-11-09-viewer-engine-review.md), finding 1). `CMU-1.svs` has it at 4x, 8x and 16x. A second form leaves an empty window that throws for a one-pixel tile column. Repeat the edge sample in both downsample functions and keep the window inside the backing level, for RGB and for channels.
   Done when a unit test shows no zero in the last row of a short backing level for both routes, a tile column with an empty window reads, and the golden images still pass.
   Size: S.
@@ -1471,7 +1471,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Done when the sharded fixture opens through `cachedFetch` with the expected pixels and no request without a Range header for a shard file.
   Size: S.
 
-- [ ] VIEW-064 · Failed tiles on multichannel slides show, retry and report
+- [x] VIEW-064 · Failed tiles on multichannel slides show, retry and report
   The channel levels keep no failed tile map, so a tile that fails once on a fluorescence slide stays blank with no placeholder, no retry and no slow-load hint, and a disposed decode pool is not mapped to Viv's abort sentinel there ([viewer engine review](results/2026-11-09-viewer-engine-review.md), finding 5).
   Done when a unit test shows a failed channel tile listed in `failures()` and gone after a retry, and a disposed pool answering with the abort sentinel.
   Size: S.
@@ -1481,9 +1481,9 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Done when a unit test shows the read rejecting and nothing cached.
   Size: S.
 
-- [ ] VIEW-066 · Settle three viewer engine suspicions
+- [x] VIEW-066 · Settle three viewer engine suspicions
   Not proven by reading ([viewer engine review](results/2026-11-09-viewer-engine-review.md), suspicions 2, 3 and 4): an OME-Zarr level with no declared scale gets a downsample that is not snapped to a power of two, the patch reader ties a shared read to the first caller's abort signal, and the ids `hamamatsu-ndpi`, `ventana-bif`, `mirax` and `dicom` have no registered reader though signed slides map file names to them.
-  Done when each has a test that shows the fault or a note in the result file that says why it cannot happen.
+  Done when each has a test that shows the fault or a note in a new result file that says why it cannot happen.
   Size: S.
 
 - [x] VIEW-067 · A range far past the file cannot freeze the byte cache
@@ -3547,7 +3547,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Depends on AISEG-017.
   Size: S.
 
-- [ ] AISEG-020 · The outline worker is replaced after it stops
+- [x] AISEG-020 · The outline worker is replaced after it stops
   `createAisOutliner` in `apps/web/src/aiseg/ais-outliner.ts` rejects the waiting requests when its worker fires `error`, but keeps the dead worker, so every later request is posted to it and never answered. It also has no `messageerror` listener. Found while fixing VIEW-068 (an inference worker that stops).
   Done when a unit test shows a request made after the worker stopped answered by a fresh worker, and a request waiting at a `messageerror` rejected.
   Size: S.
@@ -4362,6 +4362,11 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
 - [ ] TEST-030 · Find why the table Tab order test fails on its first ci attempt
   "Tab reaches every row's checkbox and action, and Space picks a row" in `packages/ui/e2e/table.spec.ts` failed its first attempt and passed its retry in three ci runs on 2026-11-09. It did not fail on the Mac in 10 plain runs, with the CPU slowed 6 and 20 times, or with the story script delayed 400 ms, so the cause is unknown. The test now reports every Tab stop it reached instead of one `false`, so the next failure names the element that took focus.
   Done when a ci failure has shown which stop was wrong, the cause is fixed in the table or the spec, and the test stays out of the `flaky-*` artifacts for a week of main.
+  Size: S.
+
+- [ ] TEST-031 · Three web specs get room for a slow runner
+  The ci run on commit 71294ded failed on three web tests that sat at their time limit while every other job passed: the redo test in `apps/web/e2e/undo.spec.ts` (a reload, then the slide not ready inside 30 seconds), the review task test in `apps/web/e2e/workspaces.spec.ts` (15 seconds for the slide to be ready) and the fake data test in `apps/web/e2e/guided-review.spec.ts` that made six page loads in one 30 second test. The web jobs of that run took 33 and 34 minutes against 23 and 25. Give the slide 25 seconds to be ready, give the two slide specs a 60 and 90 second test limit, wait for the slide after each reload, and split the six page loads into three tests.
+  Done when the three specs pass locally with no retries and none of their tests fails or sits in a `flaky-*` artifact of the next three ci runs on main.
   Size: S.
 
 ---

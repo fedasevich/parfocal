@@ -24,4 +24,6 @@ A control that goes away on its own needs one step, not two. The undo toast live
 
 Before changing a flaky spec, check that its failing run is older than its last fix. On 2026-11-09 the `worklist-live` test and the `auto-region` long task budget each sat in one `flaky-*` artifact, and both runs came before the commits that had already steadied them (54be52fe and 663ab37f), so neither needed a second change.
 
+A test at its limit turns main red on a slow runner even though nothing regressed. On 2026-11-10 the run on commit 71294ded failed on three web tests while every other job passed, with the web jobs taking 33 and 34 minutes against 23 and 25 (TEST-031, three web specs get room for a slow runner). A test that opens a slide needs 25 seconds for `data-state="ready"` and a test limit of 60 seconds, or 90 when it opens the slide twice. After `page.reload()` wait for the slide again before any other assertion. A test that loads six pages is three tests.
+
 One cause is still unknown: the table Tab order test in `packages/ui` fails its first ci attempt and never fails on the Mac (TEST-030, find why the table Tab order test fails on its first ci attempt).
