@@ -11,6 +11,10 @@ dev = [
     "ruff>=0.16,<0.17",
     "uvicorn>=0.54,<0.55",
 ]
+load = [
+    "locust>=2.47,<3",
+    "websockets>=15",
+]
 
 [tool.ruff]
 target-version = "py314"
