@@ -2906,7 +2906,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Depends on ANN-030, ANN-031, COLLAB-007. Refs [ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md).
   Size: M.
 
-- [ ] COLLAB-017 · Blind first switch on annotate tasks
+- [x] COLLAB-017 · Blind first switch on annotate tasks
   A task switch, off by default, keeps an expert's new objects from colleagues until that expert marks the slide checked, so first opinions stay independent.
   Done when API tests hide and then show another expert's objects around the check, and component tests cover the switch in the task stepper.
   Depends on ANN-030, TASK-014, PROTO-020. Refs [ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md).
