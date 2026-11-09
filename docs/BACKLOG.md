@@ -4431,7 +4431,7 @@ A researcher hands slides to reviewers as a review task ([ADR 0053](adr/0053-ai-
   Depends on TASK-002, GUIDE-007, GUIDE-015, CASES-020. Refs mock: guided/skipped, mock: guided/required, mock: guided/submitfail, mock: next, doc 44. In a task that hides the AI, the first read comes before submit and the API answers `first-read-needed` without it ([ADR 0118](adr/0118-blinding-and-a-kept-first-read.md)).
   Size: L.
 
-- [ ] TASK-009 · Study template in a new review task
+- [x] TASK-009 · Study template in a new review task
   The first step of a new review task asks for the study template, with the project's default picked. The template fills what to check, the opinion form and how and when, and each step marks what came from the template. Changing a preset keeps the template for the report. The summary names the template ([ADR 0097](adr/0097-report-templates-built-from-blocks.md)).
   The API only records the pinned version, so the stepper fills the steps from the presets itself, and a template with its own opinion form questions publishes them as the project's next form version first ([ADR 0120](adr/0120-study-templates-are-workspace-rows-and-tasks-only-pin-them.md), study templates as workspace rows that a task only pins).
   Done when component tests show each step filled from two different templates and a changed preset kept, and E2E creates a task from a template and finds its blocks in the report.

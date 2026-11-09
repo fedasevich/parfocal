@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-09
 
+- The template step marks what each section got from the study template, flags a changed preset while keeping the template pinned for the report, and publishes the template's opinion form as the next version before creating the task. The E2E checks the template's blocks in the report preview, since the fake API keeps no per-task template.
 - The class list select, retention zone and session lock time in Admin now save through the existing workspace settings, retention and session policy APIs, with API, unit and browser tests and no migration. Remaining mock switches, the unused lock_after_minutes setting and the retention permission mismatch go to ADMIN-011.
 - EVAL-010 Correction, the paging and cache follow-up is EVAL-017 (page and cache long PDF previews), not EVAL-016.
 - DEV-002 Correction, the follow-up that wires the listeners is DEV-013 (wire two-finger click and Safari pinch to the viewer), not DEV-010.
