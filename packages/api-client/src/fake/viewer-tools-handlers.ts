@@ -12,6 +12,7 @@ import { liveModelTiers } from "./console-handlers.ts";
 import type { DraftOperation } from "./draft-handlers.ts";
 import { slideByIndex } from "./scenario.ts";
 import { layersOnA1 } from "./scenario-viewer-tools.ts";
+import { servingOf } from "./worker-outage.ts";
 
 export const toAnnotationLayers = (slideId: string): AnnotationLayers =>
   annotationLayersSchema.parse({
@@ -20,7 +21,8 @@ export const toAnnotationLayers = (slideId: string): AnnotationLayers =>
     new_shapes_go_to: slideId === slideByIndex(1).id ? "area2-tumor" : "",
   });
 
-export const toModelTiers = (): TierMapping[] => liveModelTiers();
+export const toModelTiers = (): TierMapping[] =>
+  liveModelTiers().map((mapping) => ({ ...mapping, serving: servingOf(mapping.model?.name) }));
 
 export const getListAnnotationLayersMockHandler = (overrideResponse?: AnnotationLayers) =>
   http.get<{ slideId: string }>("*/api/slides/:slideId/annotation-layers", ({ params }) =>

@@ -1,3 +1,4 @@
+import { fieldMapStops } from "@parfocal/viewer-engine";
 import { expect, type Page, test } from "@playwright/test";
 import { inPart, parts } from "./parts.ts";
 
@@ -9,7 +10,7 @@ async function viewerLinks(page: Page) {
   const links = page
     .getByRole("list", { name: "Screens" })
     .getByRole("link", { name: /^(Full viewer|Visualize)/ });
-  await expect(links).toHaveCount(30);
+  await expect(links).toHaveCount(31);
   return links.evaluateAll((anchors) =>
     anchors.map((anchor) => ({
       name: anchor.textContent ?? "",
@@ -45,6 +46,7 @@ const shows: Record<string, string> = {
   "Visualize · Objects on the slide": "Ways to show results",
   "Visualize · Heatmap": "Tumor probability",
   "Visualize · Cell density": "Cells per 0.1 mm²",
+  "Visualize · Confidence map": "How sure the AI is",
   "Visualize · AI vs reviewed": "AI and reviewer agree",
   "Visualize · Model vs model": "Matched by overlap",
   "Visualize · Reviewer vs reviewer": "Cohen's kappa 0.71",
@@ -130,6 +132,52 @@ test("View in the Display tab switches between the ways to show results", async 
   await expect(page.getByRole("region", { name: "Objects on A1" })).toBeVisible();
   await page.getByRole("button", { name: "3 comments on T2" }).click();
   await expect(page).toHaveURL(/tab=comments/);
+});
+
+test("the Confidence map turns on and off from the View group with the engine colours", async ({
+  page,
+}) => {
+  const links = await viewerLinks(page);
+  await page.goto(hrefOf(links, "Visualize · Objects on the slide"));
+  const views = page.getByRole("radiogroup", { name: "Ways to show results" });
+  await expect(page.locator('[data-slot="confidence-map"]')).toHaveCount(0);
+  await views.getByRole("radio", { name: "Confidence map" }).click();
+  await expect(page).toHaveURL(/scene=confidence/);
+  await expect(page.getByText("How sure the AI is")).toBeVisible();
+  await expect(page.locator('[data-slot="confidence-map"]')).toHaveCount(1);
+  await expect(page.getByText("Show from")).toBeVisible();
+  const ramp = await page
+    .locator('[data-slot="viz-ramp"] > div')
+    .first()
+    .evaluate((node) => {
+      return (node as HTMLElement).style.background;
+    });
+  const normal = (text: string) => text.replace(/\s+/g, "").toLowerCase();
+  const stops = fieldMapStops.confidence.map((hex) => {
+    const channel = (at: number) => Number.parseInt(hex.slice(at, at + 2), 16);
+    return `rgb(${channel(1)},${channel(3)},${channel(5)})`;
+  });
+  for (const stop of stops) expect(normal(ramp)).toContain(stop);
+  await views.getByRole("radio", { name: "Objects on the slide" }).click();
+  await expect(page).toHaveURL(/scene=panel/);
+  await expect(page.locator('[data-slot="confidence-map"]')).toHaveCount(0);
+  await expect(page.getByText("How sure the AI is")).toHaveCount(0);
+});
+
+test("a task that hides confidence locks the Confidence map in the View group", async ({
+  page,
+}) => {
+  const links = await viewerLinks(page);
+  await page.goto(hrefOf(links, "Visualize · Display, a setting locked by the task"));
+  const views = page.getByRole("radiogroup", { name: "Ways to show results" });
+  const entry = views.getByRole("radio", { name: "Confidence map" });
+  await expect(entry).toHaveAttribute("aria-disabled", "true");
+  await entry.click({ force: true });
+  await expect(page).not.toHaveURL(/scene=confidence/);
+  await expect(views.getByRole("radio", { name: "Heatmap" })).not.toHaveAttribute(
+    "aria-disabled",
+    "true",
+  );
 });
 
 test("Save as opens Save a preset, which saves under a new name", async ({ page }) => {

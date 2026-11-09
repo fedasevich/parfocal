@@ -135,6 +135,7 @@ function ClassVisibility({ rows, onVisibleChange, className, ...props }: ClassVi
 const ramps = {
   heat: "linear-gradient(90deg, rgb(239 68 68 / 0), rgb(239 68 68 / 0.45), #dc2626)",
   density: "linear-gradient(90deg, #7c3aed, #f97316, #facc15)",
+  confidence: "linear-gradient(90deg, #1e1b4b, #0ea5e9, #e0f2fe)",
 } as const;
 
 type VizRampProps = React.ComponentProps<"div"> & {
@@ -198,7 +199,7 @@ function SwipeHandle({
   );
 }
 
-type ViewOption = { value: string; label: string };
+type ViewOption = { value: string; label: string; lockedReason?: string };
 
 type ViewPickerProps = Omit<React.ComponentProps<"div">, "onChange"> & {
   views: ViewOption[];
@@ -217,16 +218,22 @@ function ViewPicker({ views, value, onValueChange, className, ...props }: ViewPi
     >
       {views.map((view) => {
         const on = view.value === value;
+        const locked = view.lockedReason !== undefined;
         return (
           <button
             key={view.value}
             type="button"
             role="radio"
             aria-checked={on}
-            onClick={() => onValueChange?.(view.value)}
+            aria-disabled={locked || undefined}
+            title={view.lockedReason}
+            onClick={() => {
+              if (!locked) onValueChange?.(view.value);
+            }}
             className={cn(
               "flex h-8.5 cursor-pointer items-center justify-between rounded-ctl border border-transparent bg-transparent px-2 text-left text-body-sm text-fg-dim hover:bg-chrome-2 hover:text-fg",
               on && "border-accent bg-accent-soft font-semibold text-fg",
+              locked && "cursor-not-allowed opacity-55 hover:bg-transparent hover:text-fg-dim",
             )}
           >
             {view.label}

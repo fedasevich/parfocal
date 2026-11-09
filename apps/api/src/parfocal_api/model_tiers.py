@@ -1,7 +1,7 @@
 from collections.abc import Mapping
-from typing import Any
+from typing import Annotated, Any
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy import delete, literal_column, select
 from sqlalchemy.dialects.postgresql import insert as upsert
@@ -15,6 +15,7 @@ from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import database_scope
 from parfocal_api.problems import BadRequestError
 from parfocal_api.tables import TierTask, model_tiers
+from parfocal_api.worker_serving import Serving, WorkerProbe, probe_of, serving_of
 from parfocal_common.model_runs import ModelTier
 
 NEEDS: Mapping[TierTask, ModelMakes] = {
@@ -58,6 +59,7 @@ class TierMapping(BaseModel):
     tier: ModelTier
     model: TierModel | None
     set_by_lab: bool
+    serving: Serving = Serving.READY
 
 
 class TierModelNotFoundError(BadRequestError):
@@ -130,10 +132,18 @@ def checked_choice(task: TierTask, choice: TierChoice) -> str:
 
 
 @router.get("", operation_id="listModelTiers")
-async def list_model_tiers(connection: TenantConnection) -> list[TierMapping]:
+async def list_model_tiers(
+    connection: TenantConnection, probe: Annotated[WorkerProbe, Depends(probe_of)]
+) -> list[TierMapping]:
     rows = await lab_rows(connection)
-    return [
+    mappings = [
         mapping_of(task, tier, rows.get((task, tier))) for task in TierTask for tier in ModelTier
+    ]
+    return [
+        mapping.model_copy(
+            update={"serving": serving_of(probe, mapping.model.name if mapping.model else None)}
+        )
+        for mapping in mappings
     ]
 
 

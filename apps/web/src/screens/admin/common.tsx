@@ -1,9 +1,10 @@
 import type { AiModel } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
 import { Icon } from "@parfocal/ui/components/icon";
-import { StatusTag, type StatusTone } from "@parfocal/ui/components/tag";
+import { StatusTag } from "@parfocal/ui/components/tag";
 import { now } from "../../clock.ts";
 import { daysBetween } from "../format.ts";
+import { modelStatus } from "./model-status.ts";
 
 export const tb = (value: number) => `${+value.toFixed(1)} TB`;
 
@@ -18,15 +19,6 @@ export function lastActive(at: string | null): string {
   if (days === 0) return `${Math.round(minutes / 60)} h ago`;
   if (days === 1) return "Yesterday";
   return `${days} days ago`;
-}
-
-export function modelStatus(model: AiModel): { text: string; tone: StatusTone } {
-  if (model.status === "answering") {
-    return { text: `Answering · ${model.latency_ms ?? 0} ms`, tone: "ok" };
-  }
-  if (model.status === "imports-only") return { text: "Imports only", tone: "accent" };
-  if (model.status === "hidden") return { text: "Hidden", tone: "neutral" };
-  return { text: "Active", tone: "ok" };
 }
 
 export function ModelStatus({ model }: { model: AiModel }) {

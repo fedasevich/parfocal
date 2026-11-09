@@ -7,6 +7,8 @@ import pytest
 from db_support import ApiAs
 from test_my_work import task
 from test_review_tasks import Study, study
+from test_reviewed_layer import Review, merge, review
+from test_slide_moves import MOVE_REASON, cases_for, tenant_of
 from workspace_support import owner
 
 from parfocal_api.notification_catalogue import BREAKS_MUTES, CATALOGUE, Entry, TargetKind
@@ -131,3 +133,130 @@ def test_a_target_is_refused_to_others_and_when_it_is_out_of_reach(
     thread = notification(database, s, "first", NotificationKind.MENTION, uuid.uuid4())
     missing = target(api, s, "first", thread)
     assert (missing.status_code, missing.json()["code"]) == (404, "target-gone")
+
+
+def told(database: str, r: Review, who: str, kind: NotificationKind, about: object) -> str:
+    return str(
+        owner(
+            database,
+            "INSERT INTO notifications (tenant_id, user_id, kind, target_type, target_id, "
+            f"payload, in_app, realtime, email_status) VALUES ('{tenant_of(database, r)}', "
+            f"'{r.people[who].user_id}', '{kind}', '{CATALOGUE[kind].target}', '{about}', "
+            f"'{json.dumps(linked_object(r))}'::jsonb, true, true, 'none') RETURNING id",
+        )[0][0]
+    )
+
+
+def linked_object(r: Review) -> dict[str, str]:
+    return {"task_id": str(r.task), "object_id": "T2"}
+
+
+def opened(api: ApiAs, r: Review, who: str, link: str) -> Any:
+    found = api(r.people[who]).get(f"/api/me/notifications/{link}/target")
+    assert found.status_code == 200, found.text
+    return found.json()
+
+
+@pytest.mark.db
+def test_every_kind_carries_its_origin_as_ids_and_route_names(api: ApiAs, database: str) -> None:
+    r = review(api, database)
+    thread = api(r.people["owner"]).post(
+        f"{r.base}/threads",
+        json={
+            "title": "Is this tumour?",
+            "body": "Check this edge",
+            "anchor": {"kind": "point", "geometry": {"type": "Point", "coordinates": [4, 2]}},
+        },
+    )
+    assert thread.status_code == 201, thread.text
+    job = owner(
+        database,
+        "INSERT INTO jobs (tenant_id, project_id, kind) "
+        f"VALUES ('{tenant_of(database, r)}', '{r.project}', 'model-run') RETURNING id",
+    )[0][0]
+    project = {"route": "project", "project_id": str(r.project)}
+    in_task = {"route": "task", "project_id": str(r.project), "task_id": str(r.task)}
+    about: dict[TargetKind, tuple[object, dict[str, str]]] = {
+        TargetKind.TASK: (r.task, project),
+        TargetKind.EVALUATION: (r.task, project),
+        TargetKind.JOB: (job, project),
+        TargetKind.PROJECT: (r.project, {"route": "home"}),
+        TargetKind.SLIDE: (r.slide, in_task),
+        TargetKind.THREAD: (thread.json()["id"], in_task),
+    }
+    assert set(about) == set(TargetKind) - {TargetKind.DELIVERY}
+    for kind, entry in CATALOGUE.items():
+        if entry.target is TargetKind.DELIVERY:
+            continue
+        target_id, expected = about[entry.target]
+        origin = opened(api, r, "owner", told(database, r, "owner", kind, target_id))["origin"]
+        assert set(origin) == {"route", "project_id", "case_id", "task_id", "slide_id"}
+        assert {key: value for key, value in origin.items() if value is not None} == expected, kind
+    assigned = told(database, r, "first", NotificationKind.TASK_ASSIGNED, r.task)
+    assert opened(api, r, "first", assigned)["origin"] == {
+        "route": "my-work",
+        "project_id": None,
+        "case_id": None,
+        "task_id": None,
+        "slide_id": None,
+    }
+
+
+@pytest.mark.db
+def test_a_link_follows_a_moved_slide_and_a_merged_object(api: ApiAs, database: str) -> None:
+    r = review(api, database)
+    source, moved_to, mover = cases_for(database, r)
+    link = told(database, r, "first", NotificationKind.RESULT_SET_ADDED, r.slide)
+    before = opened(api, r, "first", link)
+    assert (before["case_id"], before["object_id"], before["resolved_from"]) == (
+        str(source),
+        "T2",
+        None,
+    )
+
+    moved = api(mover).post(
+        f"/api/slides/{r.slide}/move", json={"case_id": str(moved_to), "reason": MOVE_REASON}
+    )
+    assert moved.status_code == 200, moved.text
+    assert merge(api, r, "T2", "T1").status_code == 201
+
+    after = opened(api, r, "first", link)
+    assert (after["slide_id"], after["case_id"]) == (str(r.slide), str(moved_to))
+    assert (after["object_id"], after["resolved_from"]) == ("T1", "T2")
+    assert after["origin"]["route"] == "task"
+    notice = owner(
+        database,
+        f"SELECT id FROM notifications WHERE kind = 'slide-moved' AND target_id = '{r.slide}'",
+    )[0][0]
+    shown = opened(api, r, "owner", str(notice))
+    assert (shown["case_id"], shown["origin"]) == (
+        str(moved_to),
+        {
+            "route": "case",
+            "project_id": str(r.project),
+            "case_id": str(moved_to),
+            "task_id": None,
+            "slide_id": None,
+        },
+    )
+    hits = (
+        api(r.people["first"])
+        .get(
+            "/api/search",
+            params={
+                "q": "T2",
+                "scope": "objects",
+                "task_id": str(r.task),
+                "slide_id": str(r.slide),
+            },
+        )
+        .json()["hits"]
+    )
+    assert [(hit["object_id"], hit["resolved_from"]) for hit in hits] == [("T1", "T2")]
+    assert hits[0]["origin"] == {
+        "route": "search",
+        "project_id": None,
+        "case_id": None,
+        "task_id": str(r.task),
+        "slide_id": str(r.slide),
+    }

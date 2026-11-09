@@ -19,6 +19,7 @@
   "devDependencies": {
     "@parfocal/typescript-config": "workspace:*",
     "@types/react": "19.3.0",
+    "ajv": "8.20.0",
     "orval": "8.40.0",
     "react": "19.3.1"
   },

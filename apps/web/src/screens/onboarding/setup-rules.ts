@@ -29,6 +29,21 @@ export const personalValuesOf = (choice: {
   shortcut_preset: shortcutPresetOf(choice.viewer),
 });
 
+export const newWorkspaceColour = "#2f6fdf";
+
+export const logoMarkOf = (name: string): string =>
+  name
+    .split(/[^A-Za-z0-9]+/)
+    .filter((word) => word !== "")
+    .slice(0, 2)
+    .map((word) => word[0]?.toUpperCase() ?? "")
+    .join("");
+
+export const specialtiesOf = (picked: string[], other: string | null): string[] => {
+  const typed = other?.trim() ?? "";
+  return [...new Set([...picked, ...(typed === "" ? [] : [typed])])];
+};
+
 export const workspaceMoveOf = (choice: {
   picked: string;
   matchedId: string | undefined;

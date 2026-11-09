@@ -76,6 +76,19 @@ export function tumorShareChange(
   return { values: { [key]: value }, locked: lab.locked };
 }
 
+export const decisionCutoffChoices = [30, 40, 50, 60, 70];
+
+export const defaultDecisionCutoff = 50;
+
+export function decisionCutoffOf(lab: LabSettings): number {
+  const cutoff = lab.values["decision_cutoff"];
+  return typeof cutoff === "number" ? cutoff : defaultDecisionCutoff;
+}
+
+export function decisionCutoffChange(lab: LabSettings, cutoff: number): WorkspaceSettingsChange {
+  return { values: { decision_cutoff: cutoff }, locked: lab.locked };
+}
+
 export type AnalyticsPolicy = "person" | "on" | "off";
 
 export const analyticsPolicyOptions: { value: AnalyticsPolicy; label: string }[] = [

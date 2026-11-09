@@ -153,6 +153,9 @@ export const auditAt = (time: string, day = today) => at(time, day);
 
 export const auditEventId = (index: number) => uuid(61, index + 1);
 
+export const auditPseudonym = (key: PersonKey) =>
+  uuid(62, key.charCodeAt(0) * 256 + key.charCodeAt(1));
+
 export type ServiceAccountSeed = {
   id: string;
   name: string;
@@ -205,7 +208,7 @@ export type AiModelSeed = {
   whoCanRun: string;
   resultSets: number;
   shown: boolean;
-  status: "active" | "answering" | "imports-only" | "hidden";
+  status: "active" | "answering" | "offline" | "imports-only" | "hidden";
   latencyMs: number | null;
 };
 
@@ -499,13 +502,6 @@ export const signInMethods = [
     on: true,
     locked: false,
   },
-  {
-    key: "two-factor-admins",
-    label: "Two factors with admin rights",
-    detail: "Always required",
-    on: true,
-    locked: true,
-  },
 ];
 
 export const twoFactor = { people: 22, of: workspaceTotals.people };
@@ -673,6 +669,11 @@ export const inviteSeed = {
 };
 
 export const joinableWorkspaces = [
-  { workspace: 0, members: workspaceTotals.people, projects: projects.length, matchesEmail: true },
-  { workspace: 1, members: 11, projects: 3, matchesEmail: false },
+  {
+    workspace: 0,
+    members: workspaceTotals.people,
+    projects: projects.length,
+    how: "join" as const,
+  },
+  { workspace: 1, members: 11, projects: 3, how: "ask" as const },
 ];

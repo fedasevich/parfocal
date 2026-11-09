@@ -469,6 +469,13 @@ export {
   placeLabels,
 } from "./overlay/labels.ts";
 export {
+  createObjectDrawing,
+  type DisplayDrawChoices,
+  drawSettingsFromChoices,
+  type ObjectDrawing,
+  type ObjectDrawingOptions,
+} from "./overlay/object-drawing.ts";
+export {
   bandAlphas,
   type ConfidenceBand,
   closeCallMargin,

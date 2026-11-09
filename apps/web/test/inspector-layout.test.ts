@@ -1,25 +1,12 @@
 import assert from "node:assert/strict";
-import { beforeEach, test } from "node:test";
+import { test } from "node:test";
 import {
   clampInspectorWidth,
   defaultInspectorLayout,
   dragInspector,
-  readInspectorLayout,
-  writeInspectorLayout,
+  layoutOfSettings,
+  settingsOfLayoutPatch,
 } from "../src/screens/review/inspector-layout.ts";
-
-const memory = new Map<string, string>();
-
-beforeEach(() => {
-  memory.clear();
-  const storage = {
-    getItem: (key: string) => memory.get(key) ?? null,
-    setItem: (key: string, value: string) => void memory.set(key, value),
-  };
-  Object.assign(globalThis, {
-    window: { localStorage: storage, dispatchEvent: () => true, addEventListener: () => {} },
-  });
-});
 
 test("the width opens at 340 and is kept between 280 and 560", () => {
   assert.equal(defaultInspectorLayout.width, 340);
@@ -35,17 +22,26 @@ test("dragging below 220 hides the panel and above it keeps it", () => {
   assert.deepEqual(dragInspector(700), { width: 560, hidden: false });
 });
 
-test("each user keeps their own width, hidden state and option", () => {
-  writeInspectorLayout("u1", { width: 480, hidden: true, hideWhilePanning: true });
-  writeInspectorLayout("u2", { width: 300, hidden: false, hideWhilePanning: false });
-  assert.deepEqual(readInspectorLayout("u1"), { width: 480, hidden: true, hideWhilePanning: true });
-  assert.equal(readInspectorLayout("u2").width, 300);
-  assert.deepEqual(readInspectorLayout("u3"), defaultInspectorLayout);
+test("the saved settings become the panel layout", () => {
+  assert.deepEqual(
+    layoutOfSettings({ side_panel_width: 420, hide_side_panel: true, panel_while_moving: "auto" }),
+    { width: 420, hidden: true, hideWhilePanning: true },
+  );
+  assert.deepEqual(
+    layoutOfSettings({
+      side_panel_width: 340,
+      hide_side_panel: false,
+      panel_while_moving: "pinned",
+    }),
+    defaultInspectorLayout,
+  );
 });
 
-test("damaged storage falls back to the defaults", () => {
-  memory.set("parfocal.inspector-panel", "{nope");
-  assert.deepEqual(readInspectorLayout("u1"), defaultInspectorLayout);
-  memory.set("parfocal.inspector-panel", JSON.stringify({ u1: { width: "wide", hidden: 1 } }));
-  assert.deepEqual(readInspectorLayout("u1"), defaultInspectorLayout);
+test("a panel change becomes only the settings it touches", () => {
+  assert.deepEqual(settingsOfLayoutPatch({ width: 900 }), { side_panel_width: 560 });
+  assert.deepEqual(settingsOfLayoutPatch({ hidden: true }), { hide_side_panel: true });
+  assert.deepEqual(settingsOfLayoutPatch({ hideWhilePanning: false }), {
+    panel_while_moving: "pinned",
+  });
+  assert.deepEqual(settingsOfLayoutPatch({}), {});
 });

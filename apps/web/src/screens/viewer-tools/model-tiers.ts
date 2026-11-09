@@ -50,4 +50,5 @@ export const tiersFor = (mappings: TierMapping[], task: TierTask): Tier[] =>
       model: modelText(mapping),
       speed: tierSpeeds[mapping.tier],
       colour: tierColours[mapping.tier],
+      offline: mapping.serving === "offline",
     }));

@@ -8,6 +8,7 @@ import {
   VizRamp,
 } from "@parfocal/ui/components/visualize";
 import type { ReactNode } from "react";
+import { fieldMapColor, fieldMapStops } from "../../viewer/viewer-engine.ts";
 import type { Confidence } from "../review/decision-style.ts";
 import { overviewSize, regionShapes } from "../review/slide-geometry.ts";
 import { type Camera, type RegionStyle, type SlideTag, shapeKey } from "../review/slide-still.tsx";
@@ -25,6 +26,12 @@ const agreementColours = {
 const readerColours = { same: "#4ade80", split: "#f59e0b", unsure: "#f472b6" } as const;
 
 const heatCutoff = 0.6;
+
+export const confidenceCutoff = 0.4;
+
+export const confidenceStops = fieldMapStops.confidence;
+
+const rgbOf = (value: number) => `rgb(${fieldMapColor("confidence", value).join(" ")})`;
 
 export type LayerInput = {
   view: LayerView;
@@ -188,6 +195,58 @@ export function layerDrawing(input: LayerInput): LayerDrawing {
       legend: (
         <VizLegend kind="Density" title="Cells per 0.1 mm²">
           <VizRamp ramp="density" labels={["0", "400", "800+"]} />
+        </VizLegend>
+      ),
+      extra: null,
+    };
+  }
+  if (view === "confidence") {
+    const shown = regions.filter((item) => item.score >= confidenceCutoff);
+    const faded = regions
+      .filter((item) => item.score < confidenceCutoff)
+      .map((item) => item.object);
+    return {
+      regionStyle: () => ({ stroke: "none" }),
+      tags: shown.map((item) => ({
+        object: item.object,
+        text: item.object,
+        color: rgbOf(item.score),
+      })),
+      underlay: () => (
+        <g data-slot="confidence-map">
+          {shown.map((item) => {
+            const { x, y, width } = centreOf(item.object);
+            return (
+              <circle
+                key={item.object}
+                cx={x}
+                cy={y}
+                r={Math.max(60, width * 0.7)}
+                fill={rgbOf(item.score)}
+                opacity={0.75}
+              />
+            );
+          })}
+        </g>
+      ),
+      legend: (
+        <VizLegend
+          kind="Confidence"
+          title="How sure the AI is"
+          note={
+            faded.length
+              ? `Regions ${faded.join(" and ")} fade out below ${confidenceCutoff.toFixed(2)}.`
+              : undefined
+          }
+        >
+          <VizRamp ramp="confidence" labels={["0", "0.5", "1"]} />
+          <span className="flex items-center justify-between gap-3 text-fg-dim">
+            Show from
+            <span className="h-1 flex-1 overflow-hidden rounded-full bg-chrome-2">
+              <i className="block h-full w-[40%] bg-accent-fill" />
+            </span>
+            <b className="font-mono font-semibold text-fg">{confidenceCutoff.toFixed(2)}</b>
+          </span>
         </VizLegend>
       ),
       extra: null,

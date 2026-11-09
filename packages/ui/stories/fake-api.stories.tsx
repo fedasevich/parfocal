@@ -48,6 +48,7 @@ export const WithAnOverride: Story = {
         avatar_colour: 8,
         title: "Researcher · AI evaluation",
         email: null,
+        specialties: [],
         active_tenant_id: null,
         workspaces: [],
       }),

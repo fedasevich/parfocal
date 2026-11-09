@@ -19,6 +19,7 @@ export type LayerView =
   | "panel"
   | "heat"
   | "density"
+  | "confidence"
   | "diff"
   | "models"
   | "readers"
@@ -29,12 +30,15 @@ export const layerViews: { value: LayerView; label: string }[] = [
   { value: "panel", label: "Objects on the slide" },
   { value: "heat", label: "Heatmap" },
   { value: "density", label: "Cell density" },
+  { value: "confidence", label: "Confidence map" },
   { value: "diff", label: "AI vs reviewed" },
   { value: "models", label: "Model vs model" },
   { value: "readers", label: "Reviewer vs reviewer" },
   { value: "swipe", label: "Swipe between two sets" },
   { value: "table", label: "Object table and stats" },
 ];
+
+export const mapViews: ReadonlySet<LayerView> = new Set(["heat", "density", "confidence"]);
 
 export type ObjectFilter = "all" | "open" | Count | "added";
 
@@ -96,6 +100,7 @@ const scenes: Record<ViewerScene, Partial<ViewerSetup>> = {
   panel: display,
   heat: { ...display, view: "heat" },
   density: { ...display, view: "density" },
+  confidence: { ...display, view: "confidence" },
   diff: { ...display, view: "diff" },
   models: { ...display, view: "models" },
   readers: { ...display, view: "readers" },
@@ -123,6 +128,7 @@ const layersSceneSet: Record<LayersScene, true> = {
   panel: true,
   heat: true,
   density: true,
+  confidence: true,
   diff: true,
   models: true,
   readers: true,

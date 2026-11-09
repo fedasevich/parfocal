@@ -19,6 +19,7 @@ from parfocal_api.tables import personal_settings, workspace_settings
 from parfocal_common.db import CURRENT_TENANT
 
 MAX_KEYS = len(CATALOGUE)
+AUDITED_VALUES = frozenset({"two_factor_required"})
 
 type Values = Annotated[dict[str, Any], Field(max_length=MAX_KEYS)]
 
@@ -167,6 +168,10 @@ async def set_workspace_settings(
         AuditTarget.TENANT,
         tenant_id,
         tenant_id=tenant_id,
-        details={"keys": sorted(change.values), "locked": locked},
+        details={
+            "keys": sorted(change.values),
+            "locked": locked,
+            **{key: value for key, value in change.values.items() if key in AUDITED_VALUES},
+        },
     )
     return LabSettings(values=values, locked=locked)

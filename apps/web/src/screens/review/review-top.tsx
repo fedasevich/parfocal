@@ -60,7 +60,7 @@ export function ReviewTop({
   const me = okData(useGetMe().data);
   const renderLink = useRouterLink();
   const navigate = useNavigate();
-  const [layout, setLayout] = useInspectorLayout(session.meId);
+  const [layout, setLayout] = useInspectorLayout();
   const position = session.neighbours
     ? `Slide ${session.neighbours.position} of ${session.neighbours.total}`
     : "";

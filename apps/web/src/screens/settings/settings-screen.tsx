@@ -67,6 +67,7 @@ import {
   outlineModeLabels,
   useOutlineMode,
 } from "../../viewer/outline-mode.ts";
+import { setSlideBrightness, useSlideBrightness } from "../../viewer/slide-brightness.ts";
 import { andJoin } from "../format.ts";
 import { type HomeLayoutChoice, homeLayoutOptions } from "../home/home-layout.ts";
 import { okData } from "../placeholder.tsx";
@@ -93,10 +94,10 @@ import {
   shortcutSettingsOf,
 } from "./shortcuts.ts";
 import { isListening, ShortcutsSection, useKeyCapture } from "./shortcuts-section.tsx";
+import { wordingExample } from "./wording-example.ts";
 import { wordingNow, wordingPairs } from "./wording-row.ts";
 
 type Device = {
-  brightness: number;
   device: string;
   speed: number;
   deadZone: number;
@@ -104,7 +105,6 @@ type Device = {
 };
 
 const deviceDefaults: Device = {
-  brightness: 100,
   device: "mouse",
   speed: calibrationDefaults.speed,
   deadZone: calibrationDefaults.deadZone,
@@ -256,8 +256,9 @@ function LoadedSettings({
     setNavigation(readNavigation());
   };
   const [pinnedStrip, setPinnedStrip] = usePinnedStrip();
-  const [outlineMode, setOutlineMode] = useOutlineMode();
+  const [, setOutlineMode] = useOutlineMode();
   const [theme, setTheme] = useState<ThemeChoice>(() => readTheme());
+  const [slideBrightness] = useSlideBrightness();
   const [stat, setStat] = useState(readStatNotice);
   const savePreferences = useSetNotificationPreferences({
     mutation: {
@@ -389,9 +390,9 @@ function LoadedSettings({
     brightness: () => (
       <Stepper
         label="Slide brightness"
-        value={device.brightness}
+        value={slideBrightness}
         unit="%"
-        onChange={(value) => setD("brightness", value)}
+        onChange={setSlideBrightness}
       />
     ),
     density: () => (
@@ -425,14 +426,45 @@ function LoadedSettings({
       />
     ),
     language: () => (
-      <Segments
-        label="Language"
-        value={values.language}
-        pairs={[
-          ["en", "English"],
-          ["cs", "Čeština"],
+      <SegmentedControl
+        fill
+        aria-label="Language"
+        value="en"
+        onValueChange={() => undefined}
+        options={[
+          { value: "en", label: "English" },
+          { value: "cs", label: "Čeština", disabled: true },
         ]}
-        onChange={(value) => save({ language: value as SettingValues["language"] })}
+      />
+    ),
+    patientNames: () =>
+      layers.lab.locked.includes("patient_names") ? (
+        lockedValue(
+          values.patient_names === "initials" ? "Initials only" : "Full name",
+          "Set by your lab for everyone",
+        )
+      ) : (
+        <Segments
+          label="Patient names"
+          value={values.patient_names}
+          pairs={[
+            ["full", "Full name"],
+            ["initials", "Initials only"],
+          ]}
+          onChange={(value) => save({ patient_names: value as SettingValues["patient_names"] })}
+        />
+      ),
+    magnificationLabel: () => (
+      <Segments
+        label="Magnification label"
+        value={values.magnification_label}
+        pairs={[
+          ["objective", "Objective"],
+          ["microns-per-pixel", "µm per pixel"],
+        ]}
+        onChange={(value) =>
+          save({ magnification_label: value as SettingValues["magnification_label"] })
+        }
       />
     ),
     presetKeys: () =>
@@ -524,22 +556,53 @@ function LoadedSettings({
     outlineMode: () => (
       <Segments
         label="Outline display"
-        value={outlineMode}
+        value={values.outline_mode}
         pairs={outlineModeChoices.map((choice) => [choice, outlineModeLabels[choice]])}
-        onChange={(value) => setOutlineMode(value as OutlineModeChoice)}
+        onChange={(value) => {
+          setOutlineMode(value as OutlineModeChoice);
+          save({ outline_mode: value as OutlineModeChoice });
+        }}
       />
     ),
-    confidenceWording: () => (
+    confidenceWording: () => {
+      const current =
+        picked.confidence_wording ??
+        wordingNow({ lab: layers.lab, personal: layers.personal, device: {} });
+      return (
+        <span className="grid gap-1.5">
+          <Segments
+            label="Confidence wording"
+            value={current}
+            pairs={wordingPairs}
+            onChange={(value) => save({ confidence_wording: value as WordingSetting })}
+          />
+          <small className="text-caption text-fg-dim" data-slot="wording-example">
+            Example: {wordingExample(current)}
+          </small>
+        </span>
+      );
+    },
+    decisionCutoff: () => lockedValue(`${values.decision_cutoff}%`, "Set by your lab for everyone"),
+    tierOutline: () => (
       <Segments
-        label="Confidence wording"
-        value={
-          picked.confidence_wording ??
-          wordingNow({ lab: layers.lab, personal: layers.personal, device: {} })
-        }
-        pairs={wordingPairs}
-        onChange={(value) => save({ confidence_wording: value as WordingSetting })}
+        label="Outline model tier"
+        value={values.tier_outline}
+        pairs={[
+          ["best", "Best"],
+          ["good", "Good"],
+          ["fast", "Fast"],
+        ]}
+        onChange={(value) => save({ tier_outline: value as SettingValues["tier_outline"] })}
       />
     ),
+    trackRecord: () =>
+      toggle("Track record block", values.inspector_track_record, (value) =>
+        save({ inspector_track_record: value }),
+      ),
+    calibration: () =>
+      toggle("Calibration details block", values.inspector_calibration, (value) =>
+        save({ inspector_calibration: value }),
+      ),
     modelWarnings: () =>
       toggle("Model warnings", values.model_warnings, (value) => save({ model_warnings: value })),
     device: () => (

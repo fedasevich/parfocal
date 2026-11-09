@@ -164,6 +164,53 @@ test("setup carries the role into the first project and ends in the sample proje
   await expect(page).toHaveURL(/\/projects\/00000000-0000-4000-8003-000000000001(\?|$)/);
 });
 
+test("setup saves the specialties and joins the workspace that matches the email", async ({
+  page,
+}) => {
+  const saved: unknown[] = [];
+  const joined: string[] = [];
+  page.on("request", (request) => {
+    if (request.method() === "PATCH" && request.url().endsWith("/api/me")) {
+      saved.push(request.postDataJSON());
+    }
+    if (request.method() === "POST" && request.url().includes("/api/me/joinable-workspaces/")) {
+      joined.push(new URL(request.url()).pathname.split("/").at(-1) ?? "");
+    }
+  });
+  await startSetup(page);
+  await page.getByRole("button", { name: "+ Other" }).click();
+  await page.getByRole("textbox", { name: "Another specialty" }).fill("Neuropathology");
+  await page.getByRole("button", { name: "Next: Workspace" }).click();
+  await expect(page.getByText("You join at once")).toBeVisible();
+  await page.getByRole("button", { name: "Next: First project" }).click();
+  await expect(page.getByRole("heading", { name: "Start with a project" })).toBeVisible();
+  expect(saved).toContainEqual(
+    expect.objectContaining({ specialties: ["Breast", "Lymph nodes", "Neuropathology"] }),
+  );
+  expect(joined).toEqual(["membership"]);
+  await page.getByRole("button", { name: "Next: Viewer" }).click();
+  await page.getByRole("button", { name: "Next: Done" }).click();
+  await expect(page.getByText("Joined Fakultní nemocnice Vltava")).toBeVisible();
+});
+
+test("setup asks to join a workspace that needs an admin to say yes", async ({ page }) => {
+  const asked: string[] = [];
+  page.on("request", (request) => {
+    if (request.method() === "POST" && request.url().includes("/api/me/joinable-workspaces/")) {
+      asked.push(new URL(request.url()).pathname.split("/").at(-1) ?? "");
+    }
+  });
+  await startSetup(page);
+  await page.getByRole("button", { name: "Next: Workspace" }).click();
+  await page.getByRole("radio", { name: /Charles University AI Lab/ }).click();
+  await page.getByRole("button", { name: "Send the request and continue" }).click();
+  await expect(page.getByRole("heading", { name: "Start with a project" })).toBeVisible();
+  expect(asked).toEqual(["access-requests"]);
+  await page.getByRole("button", { name: "Next: Viewer" }).click();
+  await page.getByRole("button", { name: "Next: Done" }).click();
+  await expect(page.getByText("Asked to join Charles University AI Lab")).toBeVisible();
+});
+
 test("setup ends on the new project form when you choose to create a project", async ({ page }) => {
   await reachFirstProject(page, /Researcher/);
   await expect(page.getByRole("radio", { name: /Create a project/ })).toHaveAttribute(
@@ -245,6 +292,37 @@ test("Resend sends a pending invite again and keeps one row for it", async ({ pa
   ).toBeVisible();
   await expect(page.getByRole("row", { name: /karel@cuailab.example/ })).toHaveCount(1);
   await expect(page.getByText("3 invites waiting")).toBeVisible();
+});
+
+test("role changes, admin rights and resends are audited", async ({ page }) => {
+  await page.goto("/admin?section=people");
+  const daniel = page.getByRole("switch", { name: "Admin rights for Daniel Hruška" });
+  await expect(daniel).toBeDisabled();
+  await page.getByRole("combobox", { name: "Role of Tomáš Beneš" }).click();
+  await page.getByRole("option", { name: "Researcher" }).click();
+  await expect(page.getByText("Tomáš Beneš is a researcher now.")).toBeVisible();
+  const tomas = page.getByRole("switch", { name: "Admin rights for Tomáš Beneš" });
+  await tomas.click();
+  await expect(tomas).toBeChecked();
+  await expect(daniel).toBeEnabled();
+  await tomas.click();
+  await expect(page.getByText("Tomáš Beneš no longer has admin rights")).toBeVisible();
+  await expect(tomas).not.toBeChecked();
+  await expect(daniel).toBeDisabled();
+  await page
+    .getByRole("row", { name: /karel@cuailab.example/ })
+    .getByRole("button", { name: "Resend the invite to karel@cuailab.example" })
+    .click();
+  await expect(page.getByText("Invite sent again to karel@cuailab.example")).toBeVisible();
+  await page
+    .getByRole("navigation", { name: "Admin sections" })
+    .getByRole("link", { name: "Audit log" })
+    .click();
+  const log = page.getByRole("table");
+  await expect(log.getByRole("row", { name: /Changed a role/ })).toHaveCount(1);
+  await expect(log.getByRole("row", { name: /Gave admin rights/ })).toHaveCount(1);
+  await expect(log.getByRole("row", { name: /Removed admin rights/ })).toHaveCount(1);
+  await expect(log.getByRole("row", { name: /Sent an invitation again/ })).toHaveCount(1);
 });
 
 test("a new template opens in the editor and blocks are added by click", async ({ page }) => {
