@@ -343,6 +343,31 @@ export const ModelTierPicker: Story = {
   },
 };
 
+export const ModelTierPickerOffline: Story = {
+  render: function Render() {
+    const [value, setValue] = useState("Best");
+    const [closed, setClosed] = useState(false);
+    const offlineTiers = tiers.map((tier) =>
+      tier.name === "Good" ? { ...tier, offline: true } : tier,
+    );
+    return (
+      <div className="relative h-[440px] w-[460px]">
+        <TierPill tier={offlineTiers[1] as Tier} />
+        <output data-testid="picked">{value}</output>
+        <output data-testid="closed">{closed ? "closed" : "open"}</output>
+        <TierPicker
+          className="top-10 left-0"
+          title="Model for outlining nuclei"
+          tiers={offlineTiers}
+          value={value}
+          onValueChange={setValue}
+          onClose={() => setClosed(true)}
+        />
+      </div>
+    );
+  },
+};
+
 export const EditableLayers: Story = {
   render: function Render() {
     const [hidden, setHidden] = useState<string[]>([]);
