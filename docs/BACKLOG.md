@@ -4420,7 +4420,7 @@ A researcher hands slides to reviewers as a review task ([ADR 0053](adr/0053-ai-
   Depends on TASK-005, EVAL-007. Refs mock: task, doc 43.
   Size: M.
 
-- [ ] TASK-010 · Reveal the AI after a first read, end to end
+- [x] TASK-010 · Reveal the AI after a first read, end to end
   In a task that hides the AI, a reviewer opens a task slide and sees no AI objects, answers the opinion form, adds an object they found, records the first read, sees the AI appear, gives decisions and submits. Their first read stays as it was recorded.
   Done when E2E walks that flow and checks that the AI is absent before the first read and present after it, and that the first read is unchanged after the decisions and the submit.
   Depends on TASK-004, GUIDE-002, GUIDE-007. Split from TASK-004 ([ADR 0118](adr/0118-blinding-and-a-kept-first-read.md)).
