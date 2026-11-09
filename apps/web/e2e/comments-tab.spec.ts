@@ -10,8 +10,9 @@ test("the Comments tab lists open threads and swaps to the resolved ones", async
   await expect(page.getByRole("radio", { name: "Open 3" })).toBeChecked();
   await expect(page.getByRole("radio", { name: "Resolved 1" })).toBeVisible();
   await expect(cards(page)).toHaveCount(3);
-  await expect(cards(page).first()).toContainText("Does the boundary run past the capsule fold?");
-  await expect(cards(page).first()).toHaveAttribute("data-selected", "true");
+  await expect(cards(page).first()).toContainText("Histiocyte, not tumor");
+  await expect(cards(page).nth(1)).toContainText("Does the boundary run past the capsule fold?");
+  await expect(cards(page).nth(1)).toHaveAttribute("data-selected", "true");
   await page.getByRole("radio", { name: "Resolved 1" }).click();
   await expect(cards(page)).toHaveCount(1);
   await expect(cards(page).first()).toContainText("T4");
@@ -21,7 +22,7 @@ test("the Comments tab lists open threads and swaps to the resolved ones", async
 test("a thread card opens its thread and Go to follows the location", async ({ page }) => {
   await page.goto(`/tasks/${rt14}/comments?slide=${a1}&thread=T2`);
   await cards(page)
-    .nth(1)
+    .first()
     .getByRole("button", { name: /Histiocyte, not tumor/ })
     .click();
   await expect(page).toHaveURL(/thread=T1%C2%B7C145|thread=T1·C145/);
