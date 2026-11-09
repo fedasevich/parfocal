@@ -3852,7 +3852,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
 
 ## 32 EXP · Experiments, analytics and surveys
 
-- [ ] EXP-000 · Research check
+- [x] EXP-000 · Research check
   Done when STACK-033 is confirmed and the event taxonomy is written as an ADR.
   Size: S.
 
