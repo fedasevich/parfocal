@@ -57030,7 +57030,7 @@
       "Values": {
         "additionalProperties": true,
         "type": "object",
-        "maxProperties": 50
+        "maxProperties": 53
       },
       "Verdict": {
         "properties": {
@@ -57646,7 +57646,7 @@
               "type": "string"
             },
             "type": "array",
-            "maxItems": 50,
+            "maxItems": 53,
             "title": "Locked",
             "default": []
           }

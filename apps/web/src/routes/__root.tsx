@@ -7,6 +7,7 @@ import { CommandPalette } from "../shell/command-palette.tsx";
 import { useAppliedDensity } from "../shell/density.ts";
 import { GlobalShell } from "../shell/global-shell.tsx";
 import { useAppliedLengthUnits } from "../shell/length-units-setting.ts";
+import { useAppliedOutlineMode } from "../shell/outline-mode-setting.ts";
 import { overlaySearch } from "../shell/overlays.ts";
 import { useReadingReport } from "../shell/reading-report.ts";
 import { SettingsKey } from "../shell/settings-key.tsx";
@@ -26,6 +27,7 @@ function Root() {
   });
   useAppliedDensity();
   useAppliedLengthUnits();
+  useAppliedOutlineMode();
   useReadingReport();
   useAnalyticsConsentSync();
   return (

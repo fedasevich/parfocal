@@ -51,6 +51,10 @@ export type RowKey =
   | "strip"
   | "defaultPreset"
   | "modelWarnings"
+  | "trackRecord"
+  | "calibration"
+  | "decisionCutoff"
+  | "tierOutline"
   | "outlineMode"
   | "confidenceWording"
   | "device"
@@ -186,10 +190,34 @@ export const sectionRows: Record<Exclude<SettingsSection, "shortcuts">, SettingR
       "Guided review and the full viewer open with it. Settings a task locks stay as the task sets them.",
     ),
     row(
+      "decisionCutoff",
+      "Decision cutoff",
+      "lab",
+      "Set by your lab. Outlines scoring under it are faded in the viewer.",
+    ),
+    row(
+      "tierOutline",
+      "Outline model tier",
+      "personal",
+      "The tier the annotate tools start with when you ask for outlines. Your lab decides which model each tier uses.",
+    ),
+    row(
       "modelWarnings",
       "Model warnings",
       "personal",
       "Says when a model was trained on other tissue.",
+    ),
+    row(
+      "trackRecord",
+      "Track record block",
+      "personal",
+      "Shows how often your checks kept the model's calls, in the inspector.",
+    ),
+    row(
+      "calibration",
+      "Calibration details block",
+      "personal",
+      "Shows whether the model's confidence was calibrated and on how many sites, in the inspector.",
     ),
   ],
   navigation: [
