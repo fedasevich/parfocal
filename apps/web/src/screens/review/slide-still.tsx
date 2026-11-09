@@ -273,6 +273,7 @@ export function SlideStill({
       ref={ref}
       data-slot="slide-still"
       data-view={view.kind}
+      data-scale={shown.scale.toFixed(2)}
       className={cn(
         "relative min-h-0 flex-1 cursor-grab touch-none overflow-hidden bg-[#262626] select-none active:cursor-grabbing",
         className,

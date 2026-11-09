@@ -73,6 +73,7 @@ import {
   showsClaim,
 } from "../review/decision-style.ts";
 import { disagreeOptions, reasonDraft } from "../review/disagree-reasons.ts";
+import { shownSetsOf } from "../review/display-model.ts";
 import {
   type DisplayLock,
   DisplayTab,
@@ -371,7 +372,7 @@ function ViewerBody({
   const choice = useDisplayChoice(session, setup.preset);
   const preset = choice.preset;
   const [hiddenClasses, setHiddenClasses] = useState<ReadonlySet<string>>(new Set());
-  const [shownSets, setShownSets] = useState<Record<string, boolean>>({ reviewed: true });
+  const shownSets = shownSetsOf(session.myDisplay?.settings);
   const [failed, setFailed] = useState(setup.submitFail);
   const [tellMe, setTellMe] = useState(false);
   const [toast, setToast] = useState<{ text: string; undo?: () => void; id: number } | null>(null);
@@ -1083,7 +1084,7 @@ function ViewerBody({
 
   const resultSetRows = (
     <ResultSetRows
-      onToggle={(key, on) => setShownSets((current) => ({ ...current, [key]: on }))}
+      onToggle={choice.showSet}
       locked={
         setsLock
           ? {

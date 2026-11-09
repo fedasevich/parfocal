@@ -24,7 +24,9 @@ import {
   type TaskDisplayView,
   toApi,
   withOtherSets,
+  withShownSet,
 } from "./display-model.ts";
+import { createLatestQueue, saveThenChoose } from "./display-saves.ts";
 import type { ReviewSession } from "./review-data.ts";
 
 export type SaveResult = { status: "saved" | "taken" | "failed"; undo?: () => void };
@@ -39,6 +41,7 @@ export type DisplayChoice = {
   saveAs: (name: string, scope: "task" | "all") => Promise<SaveResult>;
   saveChanges: () => void;
   remember: () => () => void;
+  showSet: (key: string, on: boolean) => void;
 };
 
 export function useDisplayChoice(
@@ -56,34 +59,39 @@ export function useDisplayChoice(
   const overrides = display && myDisplay ? overridesOf(myDisplay, display) : {};
   const changed = Object.keys(overrides).length > 0;
 
-  const keep = (next: MyDisplay) =>
+  const queue = useRef(createLatestQueue());
+  const latest = useRef(myDisplay);
+  if (queue.current.idle()) latest.current = myDisplay;
+
+  const keep = (next: MyDisplay) => {
+    latest.current = next;
     queryClient.setQueryData(key, { status: 200, data: next, headers: new Headers() });
+  };
 
   const putRaw = async (presetId: string | null, settings: MyDisplay["settings"]) => {
-    if (!myDisplay) return;
-    const named = myDisplay.presets.find((item) => item.id === presetId);
+    const current = latest.current;
+    if (!current) return;
+    const named = current.presets.find((item) => item.id === presetId);
     keep({
-      ...myDisplay,
+      ...current,
       preset_id: presetId,
       preset: named?.name ?? "Task default",
       settings,
     });
-    try {
-      const result = await chooser.mutateAsync({
-        taskId,
-        data: { preset_id: presetId, settings },
-      });
-      if (result.status === 200) keep(result.data);
-    } catch {
-      void queryClient.invalidateQueries({ queryKey: key });
-    }
+    await queue.current.run(
+      () => chooser.mutateAsync({ taskId, data: { preset_id: presetId, settings } }),
+      (result) => {
+        if (result.status === 200) keep(result.data);
+      },
+      () => void queryClient.invalidateQueries({ queryKey: key }),
+    );
   };
 
   const put = (presetId: string | null, values: PanelValues) =>
-    putRaw(presetId, withOtherSets(toApi(values), myDisplay?.settings));
+    putRaw(presetId, withOtherSets(toApi(values), latest.current?.settings));
 
   const remember = () => {
-    const before = myDisplay;
+    const before = latest.current;
     return () => {
       if (before) void putRaw(before.preset_id, before.settings);
     };
@@ -91,6 +99,15 @@ export function useDisplayChoice(
 
   const idOf = (name: string | null) =>
     name === null ? null : (myDisplay?.presets.find((item) => item.name === name)?.id ?? null);
+
+  const showSet = (setKey: string, on: boolean) => {
+    const current = latest.current;
+    if (!current) return;
+    void putRaw(current.preset_id, {
+      ...current.settings,
+      other_sets: withShownSet(current.settings.other_sets, setKey, on),
+    });
+  };
 
   const pick = (name: string | null) => {
     void put(idOf(name), composeValues(display, name, {}));
@@ -108,35 +125,47 @@ export function useDisplayChoice(
   const saveAs: DisplayChoice["saveAs"] = async (name, scope) => {
     if (!myDisplay) return { status: "failed" };
     const values = composeValues(display, preset, overrides);
+    const before = remember();
     try {
-      const saved = await preserver.mutateAsync({
-        data: { name, task_id: scope === "task" ? taskId : null, settings: toApi(values) },
+      const created = await saveThenChoose({
+        save: async () => {
+          const saved = await preserver.mutateAsync({
+            data: {
+              name,
+              task_id: scope === "task" ? taskId : null,
+              settings: withOtherSets(toApi(values), latest.current?.settings),
+            },
+          });
+          if (saved.status !== 201) throw new Error("The preset was not saved");
+          return saved.data;
+        },
+        choose: (saved) =>
+          chooser.mutateAsync({
+            taskId,
+            data: { preset_id: saved.id, settings: saved.settings },
+          }),
+        discard: (saved) => remover.mutateAsync({ presetId: saved.id }),
       });
-      if (saved.status !== 201) return { status: "failed" };
       keep({
         ...myDisplay,
-        presets: [...myDisplay.presets, saved.data],
-        preset_id: saved.data.id,
-        preset: saved.data.name,
-        settings: saved.data.settings,
-      });
-      await chooser.mutateAsync({
-        taskId,
-        data: { preset_id: saved.data.id, settings: saved.data.settings },
+        presets: [...myDisplay.presets, created],
+        preset_id: created.id,
+        preset: created.name,
+        settings: created.settings,
       });
       void queryClient.invalidateQueries({ queryKey: key });
-      const undo = remember();
       return {
         status: "saved",
         undo: () => {
-          undo();
+          before();
           remover.mutate(
-            { presetId: saved.data.id },
+            { presetId: created.id },
             { onSettled: () => void queryClient.invalidateQueries({ queryKey: key }) },
           );
         },
       };
     } catch (error) {
+      void queryClient.invalidateQueries({ queryKey: key });
       return {
         status:
           error instanceof ApiError && error.problem?.code === "display-preset-name-taken"
@@ -151,7 +180,10 @@ export function useDisplayChoice(
     if (!current || !myDisplay) return;
     const values = composeValues(display, preset, overrides);
     changer.mutate(
-      { presetId: current.id, data: { settings: toApi(values) } },
+      {
+        presetId: current.id,
+        data: { settings: withOtherSets(toApi(values), latest.current?.settings) },
+      },
       { onSuccess: () => void queryClient.invalidateQueries({ queryKey: key }) },
     );
   };
@@ -175,6 +207,7 @@ export function useDisplayChoice(
     saveAs,
     saveChanges,
     remember,
+    showSet,
   };
 }
 
