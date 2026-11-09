@@ -40,7 +40,7 @@ Each Python package has its own `[tool.basedpyright]` block, strict for `apps/ap
 
 ## The ADR check tests stay on unittest
 
-`scripts/test_check_adrs.py` uses `unittest` so the `docs` workflow can run it with plain Python and no installs. Ruff's `PT009` is ignored for `scripts/test_*.py` only. pytest also collects these tests from the root through `pythonpath = ["scripts"]`.
+`scripts/test_check_adrs.py` uses `unittest` so the `docs` job of the `ci` workflow can run it with plain Python and no installs, and so does every other `scripts/test_*.py`. A script test that imports pytest fails that job. Ruff's `PT009` and `PT027` are ignored for `scripts/test_*.py` only. pytest also collects these tests from the root through `pythonpath = ["scripts"]`.
 
 ## Oxlint needs the solution-style tsconfig
 

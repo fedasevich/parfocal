@@ -109,7 +109,7 @@ What the lead does with a hand-back:
 
 - If the "Done when" line is met, tick. If only CI or a deploy is missing, move the task to review or blocked with a note naming the wait.
 - A real product choice goes into `docs/decisions.md` with a recommended option.
-- Watch `main`'s CI between merges and fix a red run before starting more agents.
+- Watch `main`'s CI between merges with `bash scripts/lead/ci.sh`, which prints every workflow of the pushed head and the last finished `ci` run, and fix a red run before starting more agents. A push to `main` no longer cancels the `ci` run in progress, so each finished run is a result, and the docs checks are a job under `ci-ok`.
 
 ## Tasks in review
 
