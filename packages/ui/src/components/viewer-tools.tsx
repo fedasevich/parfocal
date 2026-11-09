@@ -163,6 +163,7 @@ type Tier = {
   model: string;
   speed: 1 | 2 | 3;
   colour: string;
+  offline?: boolean;
 };
 
 function TierPill({
@@ -177,9 +178,10 @@ function TierPill({
       data-slot="tier-pill"
       aria-haspopup="dialog"
       aria-expanded={open}
-      title={tier.model}
+      title={tier.offline ? `${tier.model} - offline` : tier.model}
+      data-offline={tier.offline || undefined}
       className={cn(
-        "inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-line bg-chrome-2 px-2 py-0.75 text-caption text-fg hover:border-accent aria-expanded:border-accent",
+        "inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-line bg-chrome-2 px-2 py-0.75 text-caption text-fg hover:border-accent aria-expanded:border-accent data-offline:text-fg-faint",
         className,
       )}
       {...props}
@@ -187,9 +189,10 @@ function TierPill({
       <i
         aria-hidden="true"
         className="size-1.75 rounded-full"
-        style={{ background: tier.colour }}
+        style={{ background: tier.offline ? "var(--fg-faint)" : tier.colour }}
       />
       {tier.name}
+      {tier.offline ? " (offline)" : null}
       <Icon name="down" size="xs" />
     </button>
   );
@@ -258,18 +261,22 @@ function TierPicker({
       </div>
       <div role="radiogroup" aria-label={title} className="grid gap-0.5">
         {tiers.map((tier) => {
-          const selected = tier.name === value;
+          const offline = tier.offline === true;
+          const selected = tier.name === value && !offline;
           const shown = pointed === tier.name;
           return (
             <div
               key={tier.name}
               role="radio"
               aria-checked={selected}
+              aria-disabled={offline || undefined}
               tabIndex={0}
               data-pointed={shown || undefined}
-              onClick={() => onValueChange(tier.name)}
+              onClick={() => {
+                if (!offline) onValueChange(tier.name);
+              }}
               onKeyDown={(event) => {
-                if (event.key === "Enter" || event.key === " ") {
+                if (!offline && (event.key === "Enter" || event.key === " ")) {
                   event.preventDefault();
                   onValueChange(tier.name);
                 }
@@ -278,7 +285,7 @@ function TierPicker({
               onPointerLeave={() => setPointed(null)}
               onFocus={() => setPointed(tier.name)}
               onBlur={() => setPointed(null)}
-              className="grid cursor-pointer grid-cols-[22px_1fr_auto] items-start gap-2.5 rounded-ctl px-2.5 py-2.25 outline-none hover:bg-chrome-2 focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent aria-checked:bg-accent-soft"
+              className="grid cursor-pointer grid-cols-[22px_1fr_auto] items-start gap-2.5 rounded-ctl px-2.5 py-2.25 outline-none hover:bg-chrome-2 focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent aria-checked:bg-accent-soft aria-disabled:cursor-not-allowed aria-disabled:opacity-60"
             >
               <i
                 aria-hidden="true"
@@ -288,6 +295,11 @@ function TierPicker({
               <span className="grid">
                 <b className="flex items-center gap-2 text-body font-semibold">
                   {tier.name}
+                  {offline ? (
+                    <span className="inline-flex h-4.5 items-center rounded-full bg-chrome-3 px-1.5 text-label font-medium text-fg-dim">
+                      offline
+                    </span>
+                  ) : null}
                   {selected ? (
                     <span className="inline-flex h-4.5 items-center rounded-full bg-[#15803d] px-1.5 text-label font-medium text-white">
                       selected
@@ -295,7 +307,9 @@ function TierPicker({
                   ) : null}
                 </b>
                 <small className="mt-0.5 text-body-sm leading-[1.45] text-fg-dim">
-                  {tier.description}
+                  {offline
+                    ? "The server that runs this model is not answering. Pick another tier or try again later."
+                    : tier.description}
                 </small>
                 {shown ? (
                   <code className="mt-1 font-mono text-caption text-fg-faint">{tier.model}</code>

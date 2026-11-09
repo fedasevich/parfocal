@@ -33,6 +33,7 @@ import {
   startedRunId,
   toSlideRef,
 } from "./scenario-jobs.ts";
+import { isWorkerOffline, servingOf } from "./worker-outage.ts";
 
 const projectCodeOf = (projectId: string) =>
   projects.find((project) => project.id === projectId || project.code === projectId)?.code;
@@ -155,7 +156,8 @@ export const toProjectModels = (): ProjectModel[] =>
       server: model.server,
       runs_ahead: model.runsAhead,
       queue_minutes: model.queueMinutes,
-      latency_ms: model.latencyMs,
+      latency_ms: isWorkerOffline(model.name) ? null : model.latencyMs,
+      serving: servingOf(model.name),
     }),
   );
 

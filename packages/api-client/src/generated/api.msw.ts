@@ -247,6 +247,7 @@ import {
   Role,
   Rule,
   ServiceScope,
+  Serving,
   Sex,
   SignOffRule,
   SignOutRight,
@@ -3893,6 +3894,7 @@ export const getListProjectModelsResponseMock = (): ProjectModel[] =>
     runs_ahead: faker.number.int(),
     queue_minutes: faker.number.int(),
     latency_ms: faker.helpers.arrayElement([faker.number.int(), null]),
+    serving: faker.helpers.arrayElement(Object.values(Serving)),
   }));
 
 export const getListModelTiersResponseMock = (): TierMapping[] =>
@@ -3910,6 +3912,7 @@ export const getListModelTiersResponseMock = (): TierMapping[] =>
       null,
     ]),
     set_by_lab: faker.datatype.boolean(),
+    serving: faker.helpers.arrayElement(Object.values(Serving)),
   }));
 
 export const getSetModelTierResponseMock = (
@@ -3928,6 +3931,7 @@ export const getSetModelTierResponseMock = (
     null,
   ]),
   set_by_lab: faker.datatype.boolean(),
+  serving: faker.helpers.arrayElement(Object.values(Serving)),
   ...overrideResponse,
 });
 
@@ -3947,6 +3951,7 @@ export const getResetModelTierResponseMock = (
     null,
   ]),
   set_by_lab: faker.datatype.boolean(),
+  serving: faker.helpers.arrayElement(Object.values(Serving)),
   ...overrideResponse,
 });
 

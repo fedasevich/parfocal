@@ -205,7 +205,7 @@ export type AiModelSeed = {
   whoCanRun: string;
   resultSets: number;
   shown: boolean;
-  status: "active" | "answering" | "imports-only" | "hidden";
+  status: "active" | "answering" | "offline" | "imports-only" | "hidden";
   latencyMs: number | null;
 };
 

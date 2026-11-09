@@ -72,7 +72,12 @@ export {
   toSignOffSummary,
   toTaskEvaluation,
 } from "./adjudication-handlers.ts";
-export { resetAdminActions, toInvitePreview, toSignInOptions } from "./admin-handlers.ts";
+export {
+  resetAdminActions,
+  toAiModels,
+  toInvitePreview,
+  toSignInOptions,
+} from "./admin-handlers.ts";
 export { annotationHandlers, resetFakeAnnotations } from "./annotation-handlers.ts";
 export { resetSlideEdits } from "./case-handlers.ts";
 export { clinicalCaseId, resetFakeCaseReports } from "./case-report-handlers.ts";
@@ -105,6 +110,7 @@ export {
 } from "./coverage-handlers.ts";
 export { resetCreatedRecords } from "./create-handlers.ts";
 export { type DraftOperation, draftHandlers, draftOperations } from "./draft-handlers.ts";
+export { toProjectModels } from "./job-handlers.ts";
 export {
   type FakeJobsScene,
   fakeJobsState,
@@ -202,4 +208,5 @@ export {
   tasksAssignedBy,
   toSlideRow,
 } from "./work-handlers.ts";
+export { bringWorkersBack, takeWorkersOffline } from "./worker-outage.ts";
 export { setFakeSuspendedWorkspace } from "./workspace-scene.ts";

@@ -5,7 +5,7 @@ from datetime import UTC, datetime
 from types import SimpleNamespace
 from typing import Annotated, Any, Literal, Self
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Depends, Query
 from pydantic import (
     BaseModel,
     BeforeValidator,
@@ -60,6 +60,7 @@ from parfocal_api.tables import (
     slides,
     stage_throughput,
 )
+from parfocal_api.worker_serving import Serving, WorkerProbe, probe_of, serving_of
 from parfocal_common.jobs import ALLOWED_FROM, JobControl, JobStatus, StepStatus, move
 from parfocal_common.model_runs import KIND as MODEL_RUN
 from parfocal_common.model_runs import (
@@ -246,11 +247,17 @@ class ProjectModel(BaseModel):
     runs_ahead: int
     queue_minutes: int
     latency_ms: int | None
+    serving: Serving = Serving.READY
 
 
 class ModelNotFoundError(BadRequestError):
     code = "model-not-found"
     title = "No model has this name. Give its version or pick a listed model"
+
+
+class ModelOfflineError(ConflictError):
+    code = "model-offline"
+    title = "The worker for this model is offline. Try again when it is back"
 
 
 class SlideNotInProjectError(BadRequestError):
@@ -585,6 +592,7 @@ async def start_model_runs(
     draft: ModelRunDraft,
     principal: CurrentPrincipal,
     connection: TenantConnection,
+    probe: Annotated[WorkerProbe, Depends(probe_of)],
 ) -> list[ModelRun]:
     project = await visible(connection, principal, project_id)
     await require_controlling(connection, principal, project_id, project.archived_at is not None)
@@ -596,6 +604,9 @@ async def start_model_runs(
         connection,
         {parameters.detector.name} | ({parameters.typer.name} if parameters.typer else set()),
     )
+    for chosen in (parameters.detector, parameters.typer):
+        if chosen is not None and serving_of(probe, chosen.name) is Serving.OFFLINE:
+            raise ModelOfflineError(f"{chosen.name} has no worker answering right now")
     settings = settings_from(draft, parameters)
     batch_id = uuid.uuid4()
     actor = actor_of(principal)
@@ -830,7 +841,10 @@ async def runs_ahead(connection: AsyncConnection) -> list[QueuedRun]:
     **require(Permission.SEE_SLIDES, emergency=True),
 )
 async def list_project_models(
-    project_id: uuid.UUID, principal: CurrentPrincipal, connection: TenantConnection
+    project_id: uuid.UUID,
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
+    probe: Annotated[WorkerProbe, Depends(probe_of)],
 ) -> list[ProjectModel]:
     await visible(connection, principal, project_id)
     rates = {
@@ -856,6 +870,7 @@ async def list_project_models(
             runs_ahead=len(ahead),
             queue_minutes=queue_minutes(ahead, minutes, minutes[model.name], now),
             latency_ms=None,
+            serving=serving_of(probe, model.name),
         )
         for model in CATALOGUE
         if model.name not in hidden

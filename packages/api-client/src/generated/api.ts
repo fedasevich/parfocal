@@ -3664,6 +3664,13 @@ export interface ProjectDraft {
   taxonomy?: TaxonomyTemplate | null;
 }
 
+export type Serving = (typeof Serving)[keyof typeof Serving];
+
+export const Serving = {
+  ready: "ready",
+  offline: "offline",
+} as const;
+
 export interface ProjectModel {
   id: string;
   name: string;
@@ -3678,6 +3685,7 @@ export interface ProjectModel {
   runs_ahead: number;
   queue_minutes: number;
   latency_ms: number | null;
+  serving?: Serving;
 }
 
 export interface Proportion {
@@ -5109,6 +5117,7 @@ export interface TierMapping {
   tier: ModelTier;
   model: TierModel | null;
   set_by_lab: boolean;
+  serving?: Serving;
 }
 
 export interface TileAccess {

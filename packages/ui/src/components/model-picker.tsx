@@ -9,6 +9,7 @@ type ModelOption = {
   description: string;
   makes: string[];
   perSlide: string;
+  offline?: boolean;
 };
 
 type ModelGroup = { title: string; options: ModelOption[] };
@@ -28,12 +29,16 @@ function ModelChips({ makes, className }: { makes: string[]; className?: string 
   );
 }
 
-function ModelTitle({ option }: { option: Pick<ModelOption, "title" | "description"> }) {
+function ModelTitle({
+  option,
+}: {
+  option: Pick<ModelOption, "title" | "description" | "offline">;
+}) {
   return (
     <span className="min-w-0">
       <b className="block text-body font-semibold text-fg">{option.title}</b>
       <small className="mt-px block text-body-sm leading-[1.45] text-fg-dim">
-        {option.description}
+        {option.offline ? "Offline. Its server is not answering." : option.description}
       </small>
     </span>
   );
@@ -116,12 +121,14 @@ function ModelPicker({
                       role="option"
                       tabIndex={0}
                       aria-selected={on}
+                      aria-disabled={option.offline || undefined}
                       onClick={() => {
+                        if (option.offline) return;
                         onValueChange(option.id);
                         onOpenChange(false);
                       }}
                       onKeyDown={(event) => {
-                        if (event.key === "Enter" || event.key === " ") {
+                        if (!option.offline && (event.key === "Enter" || event.key === " ")) {
                           event.preventDefault();
                           onValueChange(option.id);
                           onOpenChange(false);
@@ -130,12 +137,13 @@ function ModelPicker({
                       className={cn(
                         "grid cursor-pointer grid-cols-[minmax(0,1fr)_auto_104px_16px] items-center gap-3 rounded-lg px-2.5 py-2 hover:bg-[color-mix(in_srgb,var(--fg)_6%,transparent)] focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent",
                         on && "bg-surf-hl",
+                        option.offline && "cursor-not-allowed opacity-60",
                       )}
                     >
                       <ModelTitle option={option} />
                       <ModelChips makes={option.makes} />
                       <span className="text-right text-caption whitespace-nowrap text-fg-dim">
-                        {option.perSlide}
+                        {option.offline ? "offline" : option.perSlide}
                       </span>
                       {on ? <Icon name="check" className="text-accent" /> : <span />}
                     </div>

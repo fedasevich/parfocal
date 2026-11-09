@@ -47799,6 +47799,10 @@
               }
             ],
             "title": "Latency Ms"
+          },
+          "serving": {
+            "$ref": "#/components/schemas/Serving",
+            "default": "ready"
           }
         },
         "type": "object",
@@ -51223,6 +51227,14 @@
           "see-people"
         ],
         "title": "ServiceScope"
+      },
+      "Serving": {
+        "type": "string",
+        "enum": [
+          "ready",
+          "offline"
+        ],
+        "title": "Serving"
       },
       "Session": {
         "properties": {
@@ -55251,6 +55263,10 @@
           "set_by_lab": {
             "type": "boolean",
             "title": "Set By Lab"
+          },
+          "serving": {
+            "$ref": "#/components/schemas/Serving",
+            "default": "ready"
           }
         },
         "type": "object",
