@@ -1,0 +1,15 @@
+name: Install trivy
+description: Download the pinned trivy release, check its checksum and put it on the PATH.
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        TRIVY_VERSION: 0.76.2
+        TRIVY_SHA256: bc0fc726e017b8927a62b2d3531d7a84ee01769daf5c99ed866dced54089fdbf
+      run: |
+        curl -fsSLo /tmp/trivy.tar.gz "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz"
+        echo "${TRIVY_SHA256}  /tmp/trivy.tar.gz" | sha256sum --check
+        tar -xzf /tmp/trivy.tar.gz -C /tmp trivy
+        sudo install -m 0755 /tmp/trivy /usr/local/bin/trivy
+        trivy --version
