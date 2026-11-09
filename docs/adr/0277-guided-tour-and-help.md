@@ -1,4 +1,4 @@
-# 0275. The guided tour is ten steps from the mock's chapters and its progress is one personal setting
+# 0277. The guided tour is ten steps from the mock's chapters and its progress is one personal setting
 
 - Date: 2026-11-09
 - Status: Accepted

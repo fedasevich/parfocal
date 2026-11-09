@@ -4,6 +4,8 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-09
 
+- AIP-001 Its ADR is 0276 (model artifacts are write-once objects with a manifest), renumbered after a clash.
+- PILOT-001 A ten-step guided tour, a Help dialog from the account menu and a first-run offer on Home, with progress in the personal setting tour_progress and an E2E that completes the walkthrough (ADR 0277). Merging it beside the run's other features pushed the first page to 350697 gzip bytes, so the budget was re-baselined with a 380000 limit under ADR 0154. The tour stays the same for every role for now.
 - The annotate sample size is an input defaulting to 200, and the estimate, summary and request share it. The UI by-hand preset order now matches the API.
 - The full viewer and paged screen show a first read notice with a link to guided review while a first read is open, scene is ignored on hide-the-AI tasks, and the fake result set lists hide RT-17's AI only for requests from RT-17 pages.
 - Model artifacts are write-once objects at models/family/version with a SHA-256 manifest, refused on checksum mismatch or overwrite with If-None-Match, and an ADR records it. The table waits for AIP-002 (model registry) and the ML worker still loads weights from its local folder.

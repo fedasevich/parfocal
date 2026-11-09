@@ -239,3 +239,5 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0273](0273-test-pyramid-and-ownership.md) | The test pyramid has six levels, each owned by one place and one CI job | Accepted | 2026-11-09 |
 | [0274](0274-analytics-event-taxonomy-and-posthog-confirmation.md) | Analytics events are a closed, ids-only list, and PostHog Cloud stays the vendor | Accepted | 2026-11-09 |
 | [0275](0275-decline-a-workspace-ask-and-set-the-join-domain.md) | Decline a workspace ask by removing it, and set the join domain in Admin | Accepted | 2026-11-09 |
+| [0276](0276-model-artifacts-are-write-once-objects-with-a-manifest.md) | Model artifacts are write-once objects under a per-version manifest in object storage | Accepted | 2026-11-09 |
+| [0277](0277-guided-tour-and-help.md) | The guided tour is ten steps from the mock's chapters and its progress is one personal setting | Accepted | 2026-11-09 |

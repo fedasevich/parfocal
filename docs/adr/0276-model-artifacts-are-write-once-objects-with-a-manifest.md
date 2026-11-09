@@ -1,4 +1,4 @@
-# 0275. Model artifacts are write-once objects under a per-version manifest in object storage
+# 0276. Model artifacts are write-once objects under a per-version manifest in object storage
 
 - Date: 2026-11-09
 - Status: Accepted

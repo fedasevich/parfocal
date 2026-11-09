@@ -4135,7 +4135,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   On hold since 2026-11-04. The owner parked compliance, legal, email and pilot paperwork as not worth the time yet. Resume when the owner asks or before the first tenant with real patient data.
   Size: S.
 
-- [ ] PILOT-001 · User help and onboarding
+- [x] PILOT-001 · User help and onboarding
   In-app help, a guided first-run walkthrough based on the mock's ten-step tour, the shortcut sheet.
   Done when E2E completes the walkthrough.
   Refs mock guided walkthrough.
