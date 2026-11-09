@@ -1,7 +1,7 @@
 import type { ReviewObject } from "@parfocal/api-client";
 import { AreaCallButtons } from "@parfocal/ui/components/area-call";
 import { Button } from "@parfocal/ui/components/button";
-import { MentionText } from "@parfocal/ui/components/comment-thread";
+import { MentionPicker, MentionText } from "@parfocal/ui/components/comment-thread";
 import { DecisionButtons, type ProjectClass } from "@parfocal/ui/components/decision-buttons";
 import { Icon, type IconName } from "@parfocal/ui/components/icon";
 import { Keycap } from "@parfocal/ui/components/keycap";
@@ -9,7 +9,7 @@ import { Person, type PersonInfo } from "@parfocal/ui/components/person";
 import { FilterChip, ObjectIdTag } from "@parfocal/ui/components/tag";
 import type { AreaCall } from "@parfocal/ui/lib/area-call";
 import { cn } from "@parfocal/ui/lib/utils";
-import type { ReactNode } from "react";
+import { type KeyboardEvent, type ReactNode, useEffect, useRef, useState } from "react";
 import { ConfidenceByColour } from "./confidence-chip.tsx";
 import {
   type CardText,
@@ -21,7 +21,10 @@ import {
 } from "./decision-style.ts";
 import { disagreeOptions } from "./disagree-reasons.ts";
 import { dotGlyphOf, dotStateWord } from "./guided-progress.ts";
+import { mentionOptions, mentionQuery, withMention } from "./mention-picking.ts";
+import { noteKeyAction, noteLimit, tooLong } from "./note-model.ts";
 import type { Answer } from "./review-state.ts";
+import { useMentionable } from "./use-mentionable.ts";
 
 const dotTone: Record<Count, string> = {
   agree: "bg-v-agree text-black",
@@ -117,6 +120,8 @@ type NoteEditorProps = {
   chosen: string[];
   text: string;
   offReason: string | undefined;
+  meId?: string | undefined;
+  blindReviewers?: string[];
   onReason: (reason: string) => void;
   onText: (text: string) => void;
   onSave: () => void;
@@ -129,13 +134,52 @@ export function NoteEditor({
   chosen,
   text,
   offReason,
+  meId,
+  blindReviewers = [],
   onReason,
   onText,
   onSave,
   onCancel,
 }: NoteEditorProps) {
+  const members = useMentionable();
+  const [active, setActive] = useState(0);
+  const field = useRef<HTMLTextAreaElement>(null);
+  useEffect(() => field.current?.focus(), []);
+  const options = mentionOptions(text, members, meId, blindReviewers);
+  const query = mentionQuery(text);
+  const pickable = options.filter((option) => !option.disabledReason);
+  const chosenOption = pickable[Math.min(active, pickable.length - 1)];
+  const pick = (id: string) => {
+    const name = members.find((member) => member.id === id)?.name;
+    if (name) onText(withMention(text, name));
+  };
+  const saveable = !offReason && !tooLong({ reasons: chosen, text });
+  const onKey = (event: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (
+      query !== undefined &&
+      ["ArrowDown", "ArrowUp", "Enter", "Tab", "Escape"].includes(event.key)
+    ) {
+      event.preventDefault();
+      event.stopPropagation();
+      if (event.key === "Escape") onText(`${text} `);
+      else if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+        const step = event.key === "ArrowDown" ? 1 : pickable.length - 1;
+        setActive((active + step) % Math.max(1, pickable.length));
+      } else if (chosenOption) pick(chosenOption.id);
+      return;
+    }
+    const action = noteKeyAction(event.key, event.shiftKey, event.nativeEvent.isComposing, false);
+    if (action === "none") return;
+    event.preventDefault();
+    event.stopPropagation();
+    if (action === "cancel") onCancel();
+    else if (saveable) onSave();
+  };
   return (
-    <div className="grid gap-2.5 rounded-zone border border-line bg-surf-section p-2.5">
+    <div
+      data-slot="note-editor"
+      className="grid gap-2.5 rounded-zone border border-line bg-surf-section p-2.5"
+    >
       {reasons.length ? (
         <fieldset
           aria-label="Quick reasons, optional"
@@ -152,26 +196,34 @@ export function NoteEditor({
           ))}
         </fieldset>
       ) : null}
-      <textarea
-        rows={2}
-        value={text}
-        onChange={(event) => onText(event.target.value)}
-        placeholder="Add a note, type @ to mention someone"
-        aria-label={`Note on your decision for ${object}`}
-        className="min-h-13.5 w-full resize-y rounded-ctl border border-accent bg-surf-field px-2.5 py-2 text-body-sm leading-[1.45] text-fg outline-none placeholder:text-fg-faint focus-visible:shadow-[0_0_0_3px_var(--accent-soft)]"
-      />
+      <div className="relative grid">
+        <textarea
+          ref={field}
+          rows={2}
+          value={text}
+          onChange={(event) => onText(event.target.value)}
+          onKeyDown={onKey}
+          placeholder="Add a note, type @ to mention someone"
+          aria-label={`Note on your decision for ${object}`}
+          className="min-h-13.5 w-full resize-y rounded-ctl border border-accent bg-surf-field px-2.5 py-2 text-body-sm leading-[1.45] text-fg outline-none placeholder:text-fg-faint focus-visible:shadow-[0_0_0_3px_var(--accent-soft)]"
+        />
+        {query === undefined ? null : (
+          <MentionPicker
+            options={options}
+            activeId={chosenOption?.id}
+            query={query}
+            onPick={pick}
+          />
+        )}
+      </div>
       <div className="flex items-center gap-2">
-        <span className="flex-1 text-caption text-fg-dim">Optional</span>
+        <span className="flex-1 text-caption text-fg-dim">
+          {tooLong({ reasons: chosen, text }) ? `Up to ${noteLimit} characters` : "Optional"}
+        </span>
         <Button variant="ghost" size="sm" onClick={onCancel}>
           Cancel <Keycap action="esc" keys="Esc" size="sm" />
         </Button>
-        <Button
-          variant="primary"
-          size="sm"
-          disabled={Boolean(offReason)}
-          title={offReason}
-          onClick={onSave}
-        >
+        <Button variant="primary" size="sm" disabled={!saveable} title={offReason} onClick={onSave}>
           Save <Keycap keys="↵" size="sm" />
         </Button>
       </div>

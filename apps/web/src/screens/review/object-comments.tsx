@@ -1,21 +1,16 @@
-import {
-  type SlideThread,
-  type ThreadComment,
-  useListTenantMembers,
-  useListThreadComments,
-} from "@parfocal/api-client";
+import { type SlideThread, type ThreadComment, useListThreadComments } from "@parfocal/api-client";
 import {
   CommentComposer,
   type CommentMessage,
   CommentThread,
-  type MentionOption,
   MentionPicker,
 } from "@parfocal/ui/components/comment-thread";
 import { ObjectIdTag } from "@parfocal/ui/components/tag";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import { commentDraftId, useKeptDraft } from "../../session/kept-drafts.ts";
-import { toPersonInfo, usePeople } from "../people.ts";
-import { okData } from "../placeholder.tsx";
+import { usePeople } from "../people.ts";
+import { mentionOptions, mentionQuery, withMention } from "./mention-picking.ts";
+import { useMentionable } from "./use-mentionable.ts";
 
 const stamp = new Intl.DateTimeFormat("en-GB", {
   day: "numeric",
@@ -25,14 +20,6 @@ const stamp = new Intl.DateTimeFormat("en-GB", {
 });
 
 export const formatStamp = (at: string) => stamp.format(new Date(at)).replace(",", "");
-
-const mentionQuery = (text: string) => text.match(/(^|\s)@([^\s@]{0,24})$/)?.[2];
-
-const fold = (text: string) =>
-  text
-    .normalize("NFD")
-    .replace(/\p{Diacritic}/gu, "")
-    .toLowerCase();
 
 export function useThreadMessages(thread: SlideThread | undefined, meId: string | undefined) {
   const person = usePeople();
@@ -73,7 +60,7 @@ export function ObjectThread({
   onSent,
 }: ThreadBodyProps) {
   const loaded = useThreadMessages(thread, meId);
-  const members = okData(useListTenantMembers().data) ?? [];
+  const members = useMentionable();
   const person = usePeople();
   const [sent, setSent] = useState<CommentMessage[]>([]);
   const [draft, setDraft] = useKeptDraft(
@@ -85,28 +72,11 @@ export function ObjectThread({
   const [active, setActive] = useState(0);
   const messages = [...loaded, ...sent];
   const query = mentionQuery(draft);
-  const options: MentionOption[] =
-    query === undefined
-      ? []
-      : members
-          .filter((member) => member.user_id !== meId)
-          .filter((member) =>
-            fold(member.display_name)
-              .split(" ")
-              .some((word) => word.startsWith(fold(query))),
-          )
-          .map((member) => ({
-            id: member.user_id,
-            person: toPersonInfo(member),
-            sub: member.title ?? "",
-            ...(blind && blindReviewers.includes(member.user_id)
-              ? { disabledReason: "Reviews this task blind" }
-              : {}),
-          }));
+  const options = mentionOptions(draft, members, meId, blind ? blindReviewers : []);
   const pickable = options.filter((option) => !option.disabledReason);
   const pick = (id: string) => {
-    const name = members.find((member) => member.user_id === id)?.display_name;
-    if (name) setDraft(draft.replace(/@([^\s@]{0,24})$/, `@${name} `));
+    const name = members.find((member) => member.id === id)?.name;
+    if (name) setDraft(withMention(draft, name));
   };
   const send = () => {
     const text = draft.trim();
@@ -178,9 +148,17 @@ export function ObjectThread({
   );
 }
 
-type ObjectCommentsProps = Omit<ThreadBodyProps, "thread"> & { threads: SlideThread[] };
+type ObjectCommentsProps = Omit<ThreadBodyProps, "thread"> & {
+  threads: SlideThread[];
+  decisionNotes?: ReactNode;
+};
 
-export function ObjectComments({ object, threads, ...props }: ObjectCommentsProps) {
+export function ObjectComments({
+  object,
+  threads,
+  decisionNotes = null,
+  ...props
+}: ObjectCommentsProps) {
   const thread = threads.find((item) => item.anchor === object);
   return (
     <div className="grid gap-4">
@@ -188,6 +166,14 @@ export function ObjectComments({ object, threads, ...props }: ObjectCommentsProp
         <span className="text-body text-fg-dim">Comments on this object</span>
         <ObjectIdTag size="lg">{object}</ObjectIdTag>
       </div>
+      {decisionNotes ? (
+        <section aria-label={`Decision notes on ${object}`} className="grid gap-2">
+          <h3 className="m-0 text-label font-semibold uppercase tracking-wide text-fg-dim">
+            Decision notes
+          </h3>
+          {decisionNotes}
+        </section>
+      ) : null}
       <ObjectThread key={object} object={object} thread={thread} {...props} />
     </div>
   );

@@ -80,6 +80,8 @@ import { FirstReadNotice } from "../review/first-read-notice.tsx";
 import { CanvasNotice } from "../review/guided-review.tsx";
 import { finishingAnswers } from "../review/guided-scenes.ts";
 import { useNoteKey } from "../review/note-key.ts";
+import { hasNote, reasonBody, withNote } from "../review/note-model.ts";
+import { answerLabel, SavedNote } from "../review/object-card.tsx";
 import { ObjectComments } from "../review/object-comments.tsx";
 import { useObjectKeys } from "../review/object-keys.ts";
 import { PagedProbeMarker } from "../review/paged-probe.tsx";
@@ -461,7 +463,16 @@ function ViewerBody({
       reasons: choice?.reasons ?? (kept?.value === value ? kept.reasons : []),
       note: kept?.note ?? null,
     });
-    decisions.save(current.object, raw, value, choice?.draft);
+    decisions.save(
+      current.object,
+      raw,
+      value,
+      choice?.draft ??
+        (kept?.value === value
+          ? reasonBody(kept.reasons, value, current, session.classes)
+          : undefined),
+      kept?.note,
+    );
     setToast({
       id: Date.now(),
       text: `${current.object}: ${value === "unsure" ? "not sure" : value}`,
@@ -509,8 +520,17 @@ function ViewerBody({
   const saveNote = () => {
     if (current === undefined) return;
     const kept = answer(current.object);
-    if (kept)
-      put(current.object, { ...kept, reasons: note.reasons, note: note.text.trim() || null });
+    if (kept) {
+      const next = withNote(kept, note);
+      put(current.object, next);
+      decisions.save(
+        current.object,
+        next.raw,
+        next.value,
+        reasonBody(next.reasons, next.value, current, session.classes),
+        next.note,
+      );
+    }
     setNote({ ...note, open: false });
   };
 
@@ -1159,6 +1179,22 @@ function ViewerBody({
       />
     );
 
+  const decisionNotesOf = (object: string) => {
+    const kept = answer(object);
+    if (!kept || !hasNote(kept)) return null;
+    return (
+      <SavedNote
+        answer={kept}
+        label={answerLabel(style, kept, session.classes)}
+        author={person(session.meId)}
+        onEdit={() => {
+          setNote({ open: true, reasons: kept.reasons, text: kept.note ?? "" });
+          onSearch({ tab: "objects" });
+        }}
+      />
+    );
+  };
+
   const commentsBody = shownPin ? (
     <PinnedThread
       key={`${shownPin.x},${shownPin.y}`}
@@ -1175,6 +1211,7 @@ function ViewerBody({
   ) : selected ? (
     <ObjectComments
       object={selected}
+      decisionNotes={decisionNotesOf(selected)}
       threads={session.threads}
       meId={session.meId}
       blind={session.task?.blinded ?? false}
