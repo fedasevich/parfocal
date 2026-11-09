@@ -42,6 +42,16 @@ Every other answer kept what was built: 37a (darker primary hover), 39a (Alt+Lef
 | 72a, search text out of the URL | HOME-012 (search text out of the page URL) moves the typed text into page state. Sharing a search waits for saved searches with ids |
 | 73a, 74a and 75a | Kept as built. Anyone signed in may create one workspace, the wheel zoom check measures main-thread task time in CI with frame time as a manual budget, and a matching email domain joins at once by default |
 
+## 76. The fix and skip keys of the guided check in Annotate, from GUIDE-019 (guided check in Annotate)
+
+The guided check steps through AI objects with D to confirm, Shift Y to fix, Shift X to delete and Shift E to skip. Fix gives the object the task's next class and does not edit its outline, since a shape is fixed by confirming and then using the edit tool. Guided review of a slide skips with J, but J already means something in Annotate, so the check uses Shift E.
+
+- a. Keep fix as a class change and Shift E for skip, as built. (recommended)
+- b. Make fix open the outline editor on the object, and keep Shift E.
+- c. Keep fix as built, and move skip to the same key as guided review by giving J up in Annotate.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 Nothing else in review needs you. Nine tasks that only waited for green CI were ticked on 2026-11-02.
