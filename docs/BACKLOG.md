@@ -5067,6 +5067,12 @@ Admin is its own page with its own sidebar and the app's top bar, never a page i
   Depends on VIZ-000.
   Size: M.
 
+- [ ] VIZ-011 · Display choices drive guided review
+  Review of VIZ-007 (Display panel) found that order, zoom, move on and button place are saved but do not yet change guided review, although ADR 0268 (how display state reaches the overlay system) says they drive the camera and working set. Make them drive it, keep a failed second save after Save as from leaving an orphan preset, stop rapid Shift preset presses from racing so the decision stamps the preset shown, persist the reviewer's other sets choice from VIZ-001 in my display, and move the adjudicator view off the draft `getTaskDisplay`.
+  Done when browser tests show each of order, zoom, move on and button place changing guided review, and unit tests cover the Save as failure and the racing presses.
+  Depends on VIZ-007.
+  Size: M.
+
 ---
 
 ## 52 ADAPT · Reverting or reworking the built hospital code
