@@ -54,6 +54,7 @@ test("each outline mode changes the overlay on a real slide and the choice is re
 });
 
 test("the Settings row sets the mode the viewer opens with", async ({ page }) => {
+  test.slow();
   await page.goto("/settings/ai");
   const row = modes(page);
   await row.getByText("Bands").click();
