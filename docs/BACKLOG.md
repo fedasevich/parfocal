@@ -4983,7 +4983,7 @@ Admin is its own page with its own sidebar and the app's top bar, never a page i
   In the full viewer the comparisons sit in the Display panel's View group ([ADR 0132](adr/0132-display-settings-presets-and-task-locks.md), display settings, presets and task locks).
   Size: M.
 
-- [ ] VIZ-005 · Swipe and side by side
+- [x] VIZ-005 · Swipe and side by side
   A swipe line and a side-by-side split between two sets.
   Done when E2E drags the swipe and both halves stay in sync.
   Depends on VIZ-004, CMP-002.
