@@ -1,0 +1,84 @@
+{
+  "origin": "synthetic",
+  "todo": "TODO: synthetic, modelled on documented browser behaviour. Replace with a trace recorded on the real device through the input traces page.",
+  "label": "Windows Chrome precision touchpad",
+  "wheelDevice": "trackpad",
+  "basis": "Chrome on Windows reports a precision touchpad scroll as pixel-mode wheel events with small whole-number deltas and a diagonal component at the start of a swipe. A pinch is a wheel event with ctrlKey and a small deltaY. A two-finger tap is a secondary button press.",
+  "steps": [
+    {
+      "type": "wheel",
+      "deltaX": 3,
+      "deltaY": 8,
+      "deltaMode": 0,
+      "ctrlKey": false,
+      "metaKey": false,
+      "shiftKey": false,
+      "expect": "pan",
+      "panSign": [-1, -1]
+    },
+    {
+      "type": "wheel",
+      "deltaX": 0,
+      "deltaY": 12,
+      "deltaMode": 0,
+      "ctrlKey": false,
+      "metaKey": false,
+      "shiftKey": false,
+      "expect": "pan",
+      "panSign": [0, -1]
+    },
+    {
+      "type": "wheel",
+      "deltaX": 0,
+      "deltaY": 21,
+      "deltaMode": 0,
+      "ctrlKey": false,
+      "metaKey": false,
+      "shiftKey": false,
+      "expect": "pan",
+      "panSign": [0, -1]
+    },
+    {
+      "type": "wheel",
+      "deltaX": -6,
+      "deltaY": 0,
+      "deltaMode": 0,
+      "ctrlKey": false,
+      "metaKey": false,
+      "shiftKey": false,
+      "expect": "pan",
+      "panSign": [1, 0]
+    },
+    {
+      "type": "wheel",
+      "deltaX": 0,
+      "deltaY": -1.5,
+      "deltaMode": 0,
+      "ctrlKey": true,
+      "metaKey": false,
+      "shiftKey": false,
+      "expect": "zoom",
+      "zoomSign": 1,
+      "animate": false
+    },
+    {
+      "type": "wheel",
+      "deltaX": 0,
+      "deltaY": 2,
+      "deltaMode": 0,
+      "ctrlKey": true,
+      "metaKey": false,
+      "shiftKey": false,
+      "expect": "zoom",
+      "zoomSign": -1,
+      "animate": false
+    },
+    {
+      "type": "pointer",
+      "button": 2,
+      "ctrlKey": false,
+      "pointerType": "mouse",
+      "expect": "negativePoint"
+    }
+  ]
+}

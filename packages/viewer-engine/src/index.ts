@@ -305,6 +305,12 @@ export {
   touchTuning,
 } from "./input/touch.ts";
 export {
+  type ClickInput,
+  isTwoFingerClick,
+  safariPinchOctaves,
+  secondaryButton,
+} from "./input/trackpad.ts";
+export {
   classifyWheel,
   freshWheelClassifier,
   isMacMouseStep,

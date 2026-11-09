@@ -1,0 +1,98 @@
+{
+  "origin": "synthetic",
+  "todo": "TODO: synthetic, modelled on documented browser behaviour. Replace with a trace recorded on the real device through the input traces page.",
+  "label": "macOS Chrome trackpad",
+  "wheelDevice": "trackpad",
+  "basis": "Two-finger scroll is a stream of pixel-mode wheel events with fractional deltas on both axes. A pinch is a wheel event with ctrlKey and a small fractional deltaY. A two-finger click is a secondary button press and Ctrl+click is the legacy form.",
+  "steps": [
+    {
+      "type": "wheel",
+      "deltaX": 0.5,
+      "deltaY": 3.25,
+      "deltaMode": 0,
+      "ctrlKey": false,
+      "metaKey": false,
+      "shiftKey": false,
+      "expect": "pan",
+      "panSign": [-1, -1]
+    },
+    {
+      "type": "wheel",
+      "deltaX": 0,
+      "deltaY": 7.75,
+      "deltaMode": 0,
+      "ctrlKey": false,
+      "metaKey": false,
+      "shiftKey": false,
+      "expect": "pan",
+      "panSign": [0, -1]
+    },
+    {
+      "type": "wheel",
+      "deltaX": -12.5,
+      "deltaY": 0,
+      "deltaMode": 0,
+      "ctrlKey": false,
+      "metaKey": false,
+      "shiftKey": false,
+      "expect": "pan",
+      "panSign": [1, 0]
+    },
+    {
+      "type": "wheel",
+      "deltaX": 0,
+      "deltaY": -2.5,
+      "deltaMode": 0,
+      "ctrlKey": false,
+      "metaKey": false,
+      "shiftKey": false,
+      "expect": "pan",
+      "panSign": [0, 1]
+    },
+    {
+      "type": "wheel",
+      "deltaX": 0,
+      "deltaY": -2.5,
+      "deltaMode": 0,
+      "ctrlKey": true,
+      "metaKey": false,
+      "shiftKey": false,
+      "expect": "zoom",
+      "zoomSign": 1,
+      "animate": false
+    },
+    {
+      "type": "wheel",
+      "deltaX": 0,
+      "deltaY": 3.1,
+      "deltaMode": 0,
+      "ctrlKey": true,
+      "metaKey": false,
+      "shiftKey": false,
+      "expect": "zoom",
+      "zoomSign": -1,
+      "animate": false
+    },
+    {
+      "type": "pointer",
+      "button": 2,
+      "ctrlKey": false,
+      "pointerType": "mouse",
+      "expect": "negativePoint"
+    },
+    {
+      "type": "pointer",
+      "button": 0,
+      "ctrlKey": true,
+      "pointerType": "mouse",
+      "expect": "negativePoint"
+    },
+    {
+      "type": "pointer",
+      "button": 0,
+      "ctrlKey": false,
+      "pointerType": "mouse",
+      "expect": "none"
+    }
+  ]
+}

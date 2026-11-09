@@ -1,0 +1,50 @@
+{
+  "origin": "synthetic",
+  "todo": "TODO: synthetic, modelled on documented browser behaviour. Replace with a trace recorded on the real device through the input traces page.",
+  "label": "macOS Safari trackpad",
+  "wheelDevice": "trackpad",
+  "basis": "Safari reports a pinch as gesturechange events with a cumulative scale since gesturestart, and a two-finger scroll as pixel-mode wheel events.",
+  "steps": [
+    {
+      "type": "wheel",
+      "deltaX": 1.5,
+      "deltaY": 4.5,
+      "deltaMode": 0,
+      "ctrlKey": false,
+      "metaKey": false,
+      "shiftKey": false,
+      "expect": "pan",
+      "panSign": [-1, -1]
+    },
+    {
+      "type": "safariPinch",
+      "previousScale": 1,
+      "scale": 1.05,
+      "expect": "zoom"
+    },
+    {
+      "type": "safariPinch",
+      "previousScale": 1.05,
+      "scale": 1.2,
+      "expect": "zoom"
+    },
+    {
+      "type": "safariPinch",
+      "previousScale": 1.2,
+      "scale": 1.1,
+      "expect": "zoom"
+    },
+    {
+      "type": "safariPinch",
+      "previousScale": 1.1,
+      "scale": 1.1,
+      "expect": "none"
+    },
+    {
+      "type": "safariPinch",
+      "previousScale": 1,
+      "scale": 40,
+      "expect": "zoom"
+    }
+  ]
+}
