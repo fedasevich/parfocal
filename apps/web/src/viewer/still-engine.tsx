@@ -1,16 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { loadViewerEngine } from "./load-engine.ts";
-import type { ViewerModule } from "./magnification-control.tsx";
-import {
-  engineCameraOf,
-  engineRing,
-  overviewFrame,
-  type StillCamera,
-  type StillFrame,
-  stillCameraOf,
-} from "./still-frame.ts";
+import { engineCameraOf, engineRing, type StillCamera } from "./still-frame.ts";
+import { runStillEngine, type StillLink, type StillOpened } from "./still-lifecycle.ts";
 import { grantFor } from "./tile-grant.ts";
-import type { ViewerEngine } from "./viewer-engine.ts";
+
+export type { StillLink };
 
 export type StillObject = {
   readonly id: string;
@@ -30,19 +24,7 @@ export type StillDrawChoices = {
   readonly confidence: string;
 };
 
-export type StillLink = {
-  readonly frame: StillFrame;
-  readonly clamp: (camera: StillCamera) => StillCamera;
-};
-
-type ObjectDrawing = ReturnType<ViewerModule["createObjectDrawing"]>;
-
-type Live = {
-  readonly engine: ViewerEngine;
-  readonly module: ViewerModule;
-  readonly frame: StillFrame;
-  readonly drawing: ObjectDrawing;
-};
+type Live = StillOpened;
 
 const classNames = ["tumor", "stroma", "immune", "other"] as const;
 
@@ -51,29 +33,6 @@ type EngineClass = (typeof classNames)[number];
 const classOf = (name: string): EngineClass =>
   classNames.find((item) => item === name.toLowerCase()) ?? "other";
 
-const drawingId = "still-objects";
-
-const sameCamera = (a: StillCamera, b: StillCamera) =>
-  Math.abs(a.x - b.x) < 1e-6 &&
-  Math.abs(a.y - b.y) < 1e-6 &&
-  Math.abs(a.scale / b.scale - 1) < 1e-9;
-
-function linkOf(module: ViewerModule, engine: ViewerEngine, frame: StillFrame): StillLink {
-  return {
-    frame,
-    clamp: (camera) => {
-      const asked = engineCameraOf(camera, frame);
-      const kept = module.clampCamera(asked, {
-        ...engine.getCameraBounds(),
-        maxZoom: Number.POSITIVE_INFINITY,
-      });
-      if (kept === asked) return camera;
-      const back = stillCameraOf(kept, frame);
-      return sameCamera(back, camera) ? camera : back;
-    },
-  };
-}
-
 export function StillEngine({
   slideId,
   camera,
@@ -81,6 +40,7 @@ export function StillEngine({
   choices,
   hiddenClasses,
   onReady,
+  onTiles,
 }: {
   slideId: string;
   camera: StillCamera;
@@ -88,14 +48,16 @@ export function StillEngine({
   choices: StillDrawChoices;
   hiddenClasses: ReadonlySet<string>;
   onReady: (link: StillLink | null) => void;
+  onTiles: (failed: number) => void;
 }) {
   const host = useRef<HTMLDivElement>(null);
   const { x: cameraX, y: cameraY, scale: cameraScale } = camera;
   const report = useRef(onReady);
   report.current = onReady;
+  const tiles = useRef(onTiles);
+  tiles.current = onTiles;
   const [live, setLive] = useState<Live | null>(null);
   const [ready, setReady] = useState(false);
-  const [tileFailures, setTileFailures] = useState(0);
   const [engineCamera, setEngineCamera] = useState("");
   const [drawn, setDrawn] = useState({
     overlays: 0,
@@ -109,66 +71,39 @@ export function StillEngine({
   useEffect(() => {
     const container = host.current;
     if (container === null) return;
-    let disposed = false;
-    let dispose: (() => void) | null = null;
-    setTileFailures(0);
-    const fail = () => {
-      if (disposed) return;
+    let cancelled = false;
+    let stop: (() => void) | null = null;
+    const down = () => {
       setLive(null);
       setReady(false);
       report.current(null);
+      tiles.current(0);
     };
-    void loadViewerEngine().then((module) => {
-      if (disposed) return;
-      const access = module.createSlideAccess((previous) => grantFor(slideId, previous));
-      const viewport = module.mountSlideViewport({
-        container,
-        slideId,
-        route: {
-          onError: fail,
-          onTileError: () => {
-            if (!disposed) setTileFailures((count) => count + 1);
+    void loadViewerEngine().then(
+      (module) => {
+        if (cancelled) return;
+        stop = runStillEngine({
+          module,
+          container,
+          slideId,
+          grant: (previous) => grantFor(slideId, previous),
+          onOpened: setLive,
+          onLink: (link) => {
+            setReady(true);
+            report.current(link);
           },
-        },
-        resolve: async () => {
-          const grant = await access.grant();
-          return module.signedOpenRequest({
-            access: access.access,
-            basePath: grant.basePath,
-            original: grant.original,
-            identifiedFormat: grant.format ?? null,
-          });
-        },
-      });
-      let drawing: ObjectDrawing | null = null;
-      dispose = () => {
-        drawing?.clear();
-        drawing = null;
-        viewport.dispose();
-      };
-      let link: StillLink | null = null;
-      viewport.ready
-        .then((slide) => {
-          if (disposed) return;
-          const frame = overviewFrame(slide);
-          drawing = module.createObjectDrawing({ id: drawingId, host: viewport.engine });
-          link = linkOf(module, viewport.engine, frame);
-          setLive({ engine: viewport.engine, module, frame, drawing });
-          return viewport.route()?.whenIdle();
-        })
-        .then(() => {
-          if (disposed || link === null) return;
-          setReady(true);
-          report.current(link);
-        })
-        .catch(fail);
-    }, fail);
+          onTiles: (failed) => tiles.current(failed),
+          onFail: down,
+        });
+      },
+      () => {
+        if (!cancelled) down();
+      },
+    );
     return () => {
-      disposed = true;
-      setLive(null);
-      setReady(false);
-      report.current(null);
-      dispose?.();
+      cancelled = true;
+      stop?.();
+      down();
     };
   }, [slideId]);
 
@@ -177,6 +112,7 @@ export function StillEngine({
     live.engine.setCamera(
       engineCameraOf({ x: cameraX, y: cameraY, scale: cameraScale }, live.frame),
     );
+    live.checkTiles();
     const now = live.engine.getCamera();
     setEngineCamera(`${now.x.toFixed(2)},${now.y.toFixed(2)},${now.zoom.toFixed(4)}`);
   }, [live, cameraX, cameraY, cameraScale]);
@@ -263,18 +199,8 @@ export function StillEngine({
         data-frame={
           live === null ? "" : `${live.frame.scale},${live.frame.offsetX},${live.frame.offsetY}`
         }
-        data-tile-failures={tileFailures}
         className="absolute inset-0"
       />
-      {tileFailures > 0 ? (
-        <span
-          role="status"
-          data-testid="still-tile-failures"
-          className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-black/70 px-3 py-1.5 text-body-sm font-medium text-white"
-        >
-          Some tiles did not load. Parts of the slide may look blank.
-        </span>
-      ) : null}
     </div>
   );
 }

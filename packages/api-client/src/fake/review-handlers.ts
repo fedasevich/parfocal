@@ -97,9 +97,17 @@ import { toReviewTaskDetail, toTaskStates } from "./work-handlers.ts";
 const taskById = (taskId: string) =>
   [...reviewTasks, rt16, rt17].find((task) => task.id === taskId);
 
+const fakeSlideSize = { width: 1024, height: 768 };
+
 const slideSummary = (slideId: string) => {
   const slide = slides.find((candidate) => candidate.id === slideId) ?? reviewedSlide;
-  return { label: slide.label, case_label: slide.caseLabel, stain: slide.stain };
+  return {
+    label: slide.label,
+    case_label: slide.caseLabel,
+    stain: slide.stain,
+    width: fakeSlideSize.width,
+    height: fakeSlideSize.height,
+  };
 };
 
 export const toReviewObjects = (taskId: string, slideId: string): ReviewObjects =>

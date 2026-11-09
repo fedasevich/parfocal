@@ -10,7 +10,11 @@ import { useWebglAvailable } from "./webgl.ts";
 export type Backdrop = (state: {
   camera: { x: number; y: number; scale: number };
   onReady: (link: StillLink | null) => void;
+  onTiles: (failed: number) => void;
 }) => ReactNode;
+
+export const noResultsOn = (taskAsks: boolean, objects: readonly unknown[]) =>
+  taskAsks && objects.length === 0;
 
 export function engineBehindStill({
   cellView,
@@ -41,7 +45,7 @@ export function useStillBackdrop({
 }): Backdrop | undefined {
   const webgl = useWebglAvailable();
   if (!enabled || !webgl) return undefined;
-  return ({ camera, onReady }) => (
+  return ({ camera, onReady, onTiles }) => (
     <StillEngine
       slideId={slideId}
       camera={camera}
@@ -49,6 +53,7 @@ export function useStillBackdrop({
       choices={choices}
       hiddenClasses={hiddenClasses}
       onReady={onReady}
+      onTiles={onTiles}
     />
   );
 }

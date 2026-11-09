@@ -37,7 +37,7 @@ import { ConnectionBanner } from "../../shell/connection-banner.tsx";
 import { useLabDecisionCutoff } from "../../shell/resolved-settings.ts";
 import { showUndoToast } from "../../shell/undo-toasts.tsx";
 import { useCellTiming, useTaskRun } from "../../telemetry/use-task-timing.ts";
-import { engineBehindStill, useStillBackdrop } from "../../viewer/still-backdrop.tsx";
+import { engineBehindStill, noResultsOn, useStillBackdrop } from "../../viewer/still-backdrop.tsx";
 import { useStillObjects } from "../../viewer/use-still-objects.ts";
 import { markTried } from "../home/getting-started.ts";
 import { useRememberResume } from "../home/remember-resume.ts";
@@ -188,7 +188,7 @@ function GuidedBody({
     [session.objects, sceneSettings.order, session.taskId, session.slideId],
   );
   const objects = setup.issue === "noresults" ? [] : orderedObjects;
-  const noResults = objects.length === 0;
+  const noResults = noResultsOn(true, objects);
   const regions = objects.filter((item) => item.kind === "region");
   const cells = objects.filter((item) => item.kind === "cell");
   const base = baseAnswers(
@@ -593,6 +593,7 @@ function GuidedBody({
     regions,
     (object) => answer(object)?.value,
     view.kind === "region" ? currentId : null,
+    session.slideSize,
   );
   const backdrop = useStillBackdrop({
     enabled: engineBehindStill({
@@ -971,6 +972,7 @@ function GuidedBody({
             backdrop={backdrop}
             engineDrawn={claimShown ? still.ids : undefined}
             outlines={still.outlines}
+            outlineFrame={still.frame}
             regionDecisions={regionDecisions}
             cellDecisions={cellDecisions}
             ringedCells={confirmRest ? openCells.map((cell) => cell.object) : []}

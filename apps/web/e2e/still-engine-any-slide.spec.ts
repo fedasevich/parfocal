@@ -154,3 +154,29 @@ test("the full viewer draws the real outlines of a slide outside the mock and ke
   await expect(engine(page)).toHaveCount(0);
   expect(errors.filter((text) => /engine|disposed|WebGL/i.test(text))).toEqual([]);
 });
+
+test("with WebGL off the still draws the real outlines and the region home over its own image", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const prototype = HTMLCanvasElement.prototype;
+    const original = Object.getOwnPropertyDescriptor(prototype, "getContext")?.value as (
+      this: HTMLCanvasElement,
+      kind: string,
+      options?: unknown,
+    ) => RenderingContext | null;
+    prototype.getContext = function (this: HTMLCanvasElement, kind: string, options?: unknown) {
+      if (kind.startsWith("webgl")) return null;
+      return original.call(this, kind, options);
+    } as typeof prototype.getContext;
+  });
+  await page.goto(`/tasks/${rt14}/guided?slide=${outlinedSlide}`);
+  await expect(still(page).locator("svg image")).toHaveCount(1);
+  await expect(engine(page)).toHaveCount(0);
+  await expect(still(page).locator('svg[role="img"] > g > path')).toHaveCount(3);
+  const [x = 0, y = 0] = numbers(await still(page).getAttribute("data-camera"));
+  const frameScale = 768 / 1924;
+  const offsetX = (1024 - 1400 * frameScale) / 2;
+  expect(Math.abs(x * frameScale + offsetX - 250)).toBeLessThan(1);
+  expect(Math.abs(y * frameScale - 240)).toBeLessThan(1);
+});

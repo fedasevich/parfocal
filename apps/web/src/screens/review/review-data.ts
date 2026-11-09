@@ -45,6 +45,7 @@ export type ReviewSession = {
   threads: SlideThread[];
   meId: string | undefined;
   nodeStaging: boolean;
+  slideSize: { width: number; height: number } | null;
   ready: boolean;
 };
 
@@ -92,6 +93,7 @@ export function useReviewSession(taskId: string, slideId: string): ReviewSession
     threads,
     meId: me?.user_id,
     nodeStaging: task?.analysis_template === "sentinel-node",
+    slideSize: slide?.width && slide.height ? { width: slide.width, height: slide.height } : null,
     ready: task !== undefined && reviewObjects !== undefined,
   };
 }

@@ -2,7 +2,7 @@ import type { ReviewObject } from "@parfocal/api-client";
 import { useMemo, useRef } from "react";
 import { regionShapes } from "../screens/review/slide-geometry.ts";
 import type { StillObject } from "./still-engine.tsx";
-import { ringOfPath } from "./still-frame.ts";
+import { overviewFrame, ringOfPath, type StillFrame } from "./still-frame.ts";
 
 type Decision = "agree" | "disagree" | "unsure";
 
@@ -30,11 +30,17 @@ export function useStillObjects(
   objects: readonly ReviewObject[],
   decisionOf: (object: string) => Decision | undefined,
   exclude: string | null,
+  slideSize: { width: number; height: number } | null = null,
 ): {
   objects: readonly StillObject[];
   ids: ReadonlySet<string>;
   outlines: SlideOutlines | undefined;
+  frame: StillFrame | undefined;
 } {
+  const outlined = objects.flatMap((item): [string, readonly number[]][] =>
+    item.kind === "region" && item.outline ? [[item.object, item.outline]] : [],
+  );
+  const outlineSignature = outlined.map(([id, ring]) => `${id}:${ring.join(",")}`).join("|");
   const kept = useRef<{ signature: string; value: readonly StillObject[] } | null>(null);
   const value = objects.flatMap((item): StillObject[] => {
     if (item.kind !== "region" || item.object === exclude) return [];
@@ -53,17 +59,13 @@ export function useStillObjects(
   });
   const signature = value
     .map(
-      (item) =>
-        `${item.id}:${item.className}:${item.score}:${item.decision ?? ""}:${item.inSlide ? item.ring.length : ""}`,
+      (item) => `${item.id}:${item.className}:${item.score}:${item.decision ?? ""}:${item.inSlide}`,
     )
-    .join("|");
+    .join("|")
+    .concat("#", outlineSignature);
   if (kept.current?.signature !== signature) kept.current = { signature, value };
   const objectsNow = kept.current.value;
   const ids = useMemo(() => new Set(objectsNow.map((item) => item.id)), [objectsNow]);
-  const outlined = objects.flatMap((item): [string, readonly number[]][] =>
-    item.kind === "region" && item.outline ? [[item.object, item.outline]] : [],
-  );
-  const outlineSignature = outlined.map(([id, ring]) => `${id}:${ring.join(",")}`).join("|");
   const keptOutlines = useRef<{ signature: string; value: SlideOutlines | undefined } | null>(null);
   if (keptOutlines.current?.signature !== outlineSignature) {
     keptOutlines.current = {
@@ -71,5 +73,11 @@ export function useStillObjects(
       value: outlined.length === 0 ? undefined : new Map(outlined),
     };
   }
-  return { objects: objectsNow, ids, outlines: keptOutlines.current.value };
+  const width = slideSize?.width ?? 0;
+  const height = slideSize?.height ?? 0;
+  const frame = useMemo(
+    () => (width > 0 && height > 0 ? overviewFrame({ width, height }) : undefined),
+    [width, height],
+  );
+  return { objects: objectsNow, ids, outlines: keptOutlines.current.value, frame };
 }

@@ -9,7 +9,7 @@ import {
   useState,
 } from "react";
 import type { StillLink } from "../../viewer/still-engine.tsx";
-import { type StillShape, stillShapeOf } from "../../viewer/still-frame.ts";
+import { type StillFrame, type StillShape, stillShapeOf } from "../../viewer/still-frame.ts";
 import type { SlideOutlines } from "../../viewer/use-still-objects.ts";
 import { type Look, lookUrl } from "../thumbnails.ts";
 import { isClick, type Pin, slidePoint } from "./comment-pin.ts";
@@ -33,10 +33,13 @@ type Shapes = Readonly<Record<string, StillShape>>;
 
 const noShapes: Shapes = {};
 
-function shapesOf(outlines: SlideOutlines, link: StillLink | null): Shapes {
-  if (link === null) return noShapes;
+const nearCamera = (a: Camera, b: Camera) =>
+  Math.abs(a.scale / b.scale - 1) < 1e-3 && Math.hypot(a.x - b.x, a.y - b.y) < 0.5;
+
+function shapesOf(outlines: SlideOutlines, frame: StillFrame | undefined): Shapes {
+  if (frame === undefined) return noShapes;
   return Object.fromEntries(
-    [...outlines].map(([object, ring]) => [shapeKey(object), stillShapeOf(ring, link.frame)]),
+    [...outlines].map(([object, ring]) => [shapeKey(object), stillShapeOf(ring, frame)]),
   );
 }
 
@@ -166,10 +169,12 @@ type SlideStillProps = {
         camera: Camera;
         size: Size;
         onReady: (link: StillLink | null) => void;
+        onTiles: (failed: number) => void;
       }) => ReactNode)
     | undefined;
   engineDrawn?: ReadonlySet<string> | undefined;
   outlines?: SlideOutlines | undefined;
+  outlineFrame?: StillFrame | undefined;
   onPointPick?: ((point: Pin) => void) | undefined;
   onCellPick?: ((object: string) => void) | undefined;
 };
@@ -204,22 +209,32 @@ export function SlideStill({
   backdrop,
   engineDrawn,
   outlines,
+  outlineFrame,
   onPointPick,
   onCellPick,
 }: SlideStillProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [link, setLink] = useState<StillLink | null>(null);
+  const [failedTiles, setFailedTiles] = useState(0);
   const engineLink = backdrop === undefined ? null : link;
   const viaEngine = engineLink !== null;
+  const frame = outlineFrame ?? engineLink?.frame;
   const shapes = useMemo(
-    () => (outlines === undefined ? regionShapes : shapesOf(outlines, engineLink)),
-    [outlines, engineLink],
+    () => (outlines === undefined ? regionShapes : shapesOf(outlines, frame)),
+    [outlines, frame],
   );
   const size = useElementSize(ref);
   const home = homeOf ? homeOf(size, shapes) : homeCamera(view, size, shapes);
   const clamp = (next: Camera): Camera => (engineLink === null ? next : engineLink.clamp(next));
   const shown = clamp(camera ?? home);
   const moveTo = (next: Camera) => onCameraChange(clamp(next));
+  const written = useRef<Camera | null>(null);
+  useEffect(() => {
+    if (camera === null || shown === camera || nearCamera(shown, camera)) return;
+    if (written.current !== null && nearCamera(written.current, shown)) return;
+    written.current = shown;
+    onCameraChange(shown);
+  }, [camera, shown, onCameraChange]);
   const drag = useRef<{ x: number; y: number; from: Camera } | null>(null);
   const image = look ?? imageOf(view);
   const full = lookSizes[image];
@@ -316,7 +331,7 @@ export function SlideStill({
         moveTo({ ...shown, scale: shown.scale * factor });
       }}
     >
-      {backdrop?.({ camera: shown, size, onReady: setLink })}
+      {backdrop?.({ camera: shown, size, onReady: setLink, onTiles: setFailedTiles })}
       <svg
         role="img"
         aria-label={target ? `The slide around ${target}` : "The whole slide"}
@@ -438,6 +453,16 @@ export function SlideStill({
             })
           : null}
       </svg>
+      {viaEngine && failedTiles > 0 ? (
+        <span
+          role="status"
+          data-testid="still-tile-failures"
+          data-failed={failedTiles}
+          className="pointer-events-none absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-black/70 px-3 py-1.5 text-body-sm font-medium text-white"
+        >
+          Some tiles did not load. Parts of the slide may look blank.
+        </span>
+      ) : null}
       {tiles === "unloaded" ? (
         <div
           aria-hidden="true"
