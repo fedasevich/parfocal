@@ -62,7 +62,10 @@ export function buildBoundsIndex(bounds: Float32Array, active?: Uint8Array): Bou
       continue;
     }
     for (let r = span.r0; r <= span.r1; r++) {
-      for (let c = span.c0; c <= span.c1; c++) starts[r * columns + c + 1]++;
+      for (let c = span.c0; c <= span.c1; c++) {
+        const at = r * columns + c + 1;
+        starts[at] = (starts[at] ?? 0) + 1;
+      }
     }
   }
   for (let k = 0; k < columns * rows; k++) starts[k + 1] = (starts[k + 1] ?? 0) + (starts[k] ?? 0);
