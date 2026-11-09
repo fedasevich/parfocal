@@ -4908,7 +4908,7 @@ Admin is its own page with its own sidebar and the app's top bar, never a page i
   Depends on ADMIN-001, PROJ-001.
   Size: M.
 
-- [ ] ADMIN-005 · AI models
+- [x] ADMIN-005 · AI models
   Parfocal models with the Shown switch (JOBS-006), the lab's models (JOBS-005) and running jobs with Cancel and Undo.
   Done when E2E hides a model and cancels a run with undo.
   Depends on ADMIN-001, JOBS-005, JOBS-006.
