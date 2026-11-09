@@ -39,7 +39,7 @@ export function Warn({ icon = "warn", children }: { icon?: IconName; children: R
   return (
     <div className="flex items-start gap-1.5 text-body-sm leading-[1.45] text-warn">
       <Icon name={icon} className="mt-0.5 shrink-0" />
-      <span>{children}</span>
+      <span className="[&_a]:underline [&_a]:underline-offset-2">{children}</span>
     </div>
   );
 }

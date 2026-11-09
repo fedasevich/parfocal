@@ -345,7 +345,10 @@ export function ModelsSection({ notify }: { notify: Notify }) {
             {parfocal.map((model) => {
               const on = visibility.shownOf(model);
               return (
-                <TableRow key={model.id} className={on ? "" : "opacity-55"}>
+                <TableRow
+                  key={model.id}
+                  className={on ? "" : "[&>td]:text-fg-faint [&_b]:text-fg-faint"}
+                >
                   <TableCell>
                     <NameCell
                       lead={<Icon name="smart" />}

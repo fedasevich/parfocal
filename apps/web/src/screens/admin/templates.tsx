@@ -181,7 +181,10 @@ export function TemplatesSection({
               const off = template.retired_at !== null;
               const own = template.built_in === null;
               return (
-                <TableRow key={template.id} className={off ? "opacity-55" : ""}>
+                <TableRow
+                  key={template.id}
+                  className={off ? "[&>td]:text-fg-faint [&_b]:text-fg-faint" : ""}
+                >
                   <TableCell>
                     <span className="flex items-center gap-2">
                       <NameCell

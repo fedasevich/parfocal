@@ -72,7 +72,7 @@ function QueueRow({
         selected
           ? "[&>td]:bg-surf-panel dark:[&>td]:bg-chrome-2"
           : "hover:[&>td]:bg-surf-panel dark:hover:[&>td]:bg-chrome-2/60",
-        locked && "opacity-55",
+        locked && "text-fg-faint [&>td]:text-fg-faint",
         className,
       )}
       {...props}
