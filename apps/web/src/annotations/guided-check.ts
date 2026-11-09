@@ -16,6 +16,17 @@ export function guidedBindings(): Binding[] {
 
 export const guides = (fired: Fired) => fired.phase === "press" && fired.action === guideAction;
 
+export const guidedAvailable = (aiShown: boolean, aiCount: number, locked: boolean) =>
+  aiShown && aiCount > 0 && !locked;
+
+export const guidedToggle = (on: boolean, available: boolean) => (on ? false : available);
+
+export const selectionAfterRowClick = (
+  guided: boolean,
+  selected: string | null,
+  clicked: string,
+) => (guided ? selected : clicked);
+
 export type Queued = {
   readonly object: string;
   readonly number: number;
