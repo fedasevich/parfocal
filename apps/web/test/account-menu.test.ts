@@ -43,6 +43,14 @@ test("the shell store holds initials only and tells its listeners at once", () =
   assert.equal(heard, 2);
 });
 
+test("the shell store keeps the sidebar open flag and reset closes it", () => {
+  shellStore.setState({ navOpen: true });
+  assert.equal(shellStore.getState().navOpen, true);
+  assert.equal(shellStore.getState().initialsOnly, false);
+  shellStore.reset();
+  assert.equal(shellStore.getState().navOpen, false);
+});
+
 test("a kept draft belongs to its writer and an empty draft is dropped", () => {
   const values = new Map<string, string>();
   Object.assign(globalThis, {
