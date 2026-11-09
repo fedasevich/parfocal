@@ -87,6 +87,30 @@ async def ai_hidden_on(
     return bool(await connection.scalar(select(mine.exists())))
 
 
+async def blinded_on(
+    connection: AsyncConnection,
+    principal: Principal,
+    project_id: uuid.UUID,
+    slide_id: uuid.UUID,
+) -> bool:
+    if not isinstance(principal, MemberPrincipal):
+        return False
+    if await sees_whole(connection, principal, project_id):
+        return False
+    unsubmitted = (
+        select(review_assignments.c.slide_id)
+        .join(review_tasks, review_tasks.c.id == review_assignments.c.task_id)
+        .where(
+            review_assignments.c.user_id == principal.user_id,
+            review_assignments.c.slide_id == slide_id,
+            review_tasks.c.archived_at.is_(None),
+            review_tasks.c.blinded.is_(True),
+            review_assignments.c.submitted_at.is_(None),
+        )
+    )
+    return bool(await connection.scalar(select(unsubmitted.exists())))
+
+
 async def require_ai_shown(
     connection: AsyncConnection,
     principal: Principal,
