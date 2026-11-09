@@ -15,7 +15,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.ai_changes import ai_changes, report_changes
-from parfocal_api.blind_first import seen_by
+from parfocal_api.blind_first import seen_by, viewer_of
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.evaluation import (
     UNCLASSIFIED,
@@ -30,6 +30,7 @@ from parfocal_api.locales import DEFAULT_LOCALE, Locale
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import Principal
 from parfocal_api.problems import ProblemError
+from parfocal_api.report_cache import ReportCache, ReportKey
 from parfocal_api.report_template import (
     RenderedReport,
     ReportChange,
@@ -603,7 +604,48 @@ def svg_pages_of(report: RenderedReport, version: Version) -> list[str]:
     pages = typst_module().compile(
         report.source.encode(), format="svg", **typst_options(report, version)
     )
-    return [page.decode() for page in pages]
+    return [page.decode() for page in ([pages] if isinstance(pages, bytes) else pages)]
+
+
+REPORTS = ReportCache(entries=16, total_bytes=48 * 1024 * 1024)
+
+
+def source_digest(report: RenderedReport, version: Version) -> str:
+    options = typst_options(report, version)
+    whole = json.dumps([report.source, options], sort_keys=True, default=str)
+    return hashlib.sha256(whole.encode()).hexdigest()
+
+
+def report_key(
+    principal: Principal, task: Any, report: RenderedReport, version: Version, form: str
+) -> ReportKey:
+    return ReportKey(
+        tenant_id=task.tenant_id,
+        task_id=task.id,
+        checksum=version.checksum,
+        locale=report.locale.value,
+        viewer=viewer_of(principal) if task.blind_first else None,
+        source=source_digest(report, version),
+        form=form,
+    )
+
+
+def task_svg_pages(
+    principal: Principal, task: Any, report: RenderedReport, version: Version
+) -> tuple[str, ...]:
+    return REPORTS.kept(
+        report_key(principal, task, report, version, "svg"),
+        lambda: tuple(svg_pages_of(report, version)),
+        lambda pages: sum(len(page) for page in pages),
+    )
+
+
+def task_pdf(principal: Principal, task: Any, report: RenderedReport, version: Version) -> bytes:
+    return REPORTS.kept(
+        report_key(principal, task, report, version, "pdf"),
+        lambda: pdf_of(report, version),
+        len,
+    )
 
 
 @router.get(
@@ -627,7 +669,7 @@ async def export_task_evaluation(
         raise EvaluationHiddenError
     if kind is ExportKind.PDF:
         report, version = await task_report(connection, principal, task, results, locale)
-        return attachment(kind, pdf_of(report, version), version)
+        return attachment(kind, task_pdf(principal, task, report, version), version)
     evaluation = await evaluate(connection, task)
     version = await version_of(connection, task, evaluation)
     content: str | bytes
