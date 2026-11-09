@@ -164,6 +164,53 @@ test("setup carries the role into the first project and ends in the sample proje
   await expect(page).toHaveURL(/\/projects\/00000000-0000-4000-8003-000000000001(\?|$)/);
 });
 
+test("setup saves the specialties and joins the workspace that matches the email", async ({
+  page,
+}) => {
+  const saved: unknown[] = [];
+  const joined: string[] = [];
+  page.on("request", (request) => {
+    if (request.method() === "PATCH" && request.url().endsWith("/api/me")) {
+      saved.push(request.postDataJSON());
+    }
+    if (request.method() === "POST" && request.url().includes("/api/me/joinable-workspaces/")) {
+      joined.push(new URL(request.url()).pathname.split("/").at(-1) ?? "");
+    }
+  });
+  await startSetup(page);
+  await page.getByRole("button", { name: "+ Other" }).click();
+  await page.getByRole("textbox", { name: "Another specialty" }).fill("Neuropathology");
+  await page.getByRole("button", { name: "Next: Workspace" }).click();
+  await expect(page.getByText("You join at once")).toBeVisible();
+  await page.getByRole("button", { name: "Next: First project" }).click();
+  await expect(page.getByRole("heading", { name: "Start with a project" })).toBeVisible();
+  expect(saved).toContainEqual(
+    expect.objectContaining({ specialties: ["Breast", "Lymph nodes", "Neuropathology"] }),
+  );
+  expect(joined).toEqual(["membership"]);
+  await page.getByRole("button", { name: "Next: Viewer" }).click();
+  await page.getByRole("button", { name: "Next: Done" }).click();
+  await expect(page.getByText("Joined Fakultní nemocnice Vltava")).toBeVisible();
+});
+
+test("setup asks to join a workspace that needs an admin to say yes", async ({ page }) => {
+  const asked: string[] = [];
+  page.on("request", (request) => {
+    if (request.method() === "POST" && request.url().includes("/api/me/joinable-workspaces/")) {
+      asked.push(new URL(request.url()).pathname.split("/").at(-1) ?? "");
+    }
+  });
+  await startSetup(page);
+  await page.getByRole("button", { name: "Next: Workspace" }).click();
+  await page.getByRole("radio", { name: /Charles University AI Lab/ }).click();
+  await page.getByRole("button", { name: "Send the request and continue" }).click();
+  await expect(page.getByRole("heading", { name: "Start with a project" })).toBeVisible();
+  expect(asked).toEqual(["access-requests"]);
+  await page.getByRole("button", { name: "Next: Viewer" }).click();
+  await page.getByRole("button", { name: "Next: Done" }).click();
+  await expect(page.getByText("Asked to join Charles University AI Lab")).toBeVisible();
+});
+
 test("setup ends on the new project form when you choose to create a project", async ({ page }) => {
   await reachFirstProject(page, /Researcher/);
   await expect(page.getByRole("radio", { name: /Create a project/ })).toHaveAttribute(

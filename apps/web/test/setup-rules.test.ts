@@ -2,9 +2,11 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
   firstDestination,
+  logoMarkOf,
   personalValuesOf,
   recommendedFirst,
   shortcutPresetOf,
+  specialtiesOf,
   wheelModeOf,
   workspaceMoveOf,
 } from "../src/screens/onboarding/setup-rules.ts";
@@ -55,4 +57,17 @@ test("setup ends in the place of the chosen first project", () => {
   assert.equal(firstDestination("create"), "/projects/new");
   assert.equal(firstDestination("wait"), "/");
   assert.equal(firstDestination("sample"), "/");
+});
+
+test("setup keeps the picked specialties and the typed one once each", () => {
+  assert.deepEqual(specialtiesOf(["Breast", "GI"], null), ["Breast", "GI"]);
+  assert.deepEqual(specialtiesOf(["Breast"], " Neuropathology "), ["Breast", "Neuropathology"]);
+  assert.deepEqual(specialtiesOf(["Breast"], "Breast"), ["Breast"]);
+  assert.deepEqual(specialtiesOf([], "  "), []);
+});
+
+test("a new workspace logo is the first letters of its first two words", () => {
+  assert.equal(logoMarkOf("brno nodes lab"), "BN");
+  assert.equal(logoMarkOf("Sentinel"), "S");
+  assert.equal(logoMarkOf("  "), "");
 });

@@ -14,6 +14,7 @@ from parfocal_api.cases import keyring_of
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.identifiers import find_patients, load_keys
 from parfocal_api.my_work import ProjectRef
+from parfocal_api.origins import Origin, OriginRoute
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import MemberPrincipal, database_scope
 from parfocal_api.project_access import readable, readable_slide
@@ -66,6 +67,7 @@ class SearchHit(BaseModel):
     object_id: str | None = None
     resolved_from: str | None = None
     task_id: uuid.UUID | None = None
+    origin: Origin = Origin(route=OriginRoute.SEARCH)
 
 
 class SearchResults(BaseModel):
@@ -389,4 +391,7 @@ async def search(
         hits += await patient_hits(request, connection, principal, q)
     if SearchScope.PEOPLE in wanted:
         hits += await person_hits(connection, principal, q)
-    return SearchResults(query=q, hits=hits)
+    origin = Origin(
+        route=OriginRoute.SEARCH, project_id=project_id, task_id=task_id, slide_id=slide_id
+    )
+    return SearchResults(query=q, hits=[hit.model_copy(update={"origin": origin}) for hit in hits])

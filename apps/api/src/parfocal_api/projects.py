@@ -73,6 +73,14 @@ class MemberChange(BaseModel):
     role: ProjectRole
 
 
+class DeletedProject(BaseModel):
+    id: uuid.UUID
+    code: str
+    name: str
+    colour: int
+    deleted_at: datetime
+
+
 class Project(BaseModel):
     id: uuid.UUID
     code: str
@@ -347,6 +355,41 @@ async def list_projects(
         )
     ids = await connection.scalars(statement.order_by(projects.c.number))
     return [await project_of(connection, principal, project_id) for project_id in ids]
+
+
+@router.get("/deleted", operation_id="listDeletedProjects", **require(Permission.CREATE_CASES))
+async def list_deleted_projects(
+    principal: CurrentPrincipal, connection: TenantConnection
+) -> list[DeletedProject]:
+    if not isinstance(principal, MemberPrincipal):
+        return []
+    rows = await connection.execute(
+        select(
+            projects.c.id,
+            projects.c.number,
+            projects.c.name,
+            projects.c.colour,
+            projects.c.deleted_at,
+        )
+        .join(project_members, project_members.c.project_id == projects.c.id)
+        .where(
+            IN_THIS_TENANT,
+            projects.c.deleted_at.is_not(None),
+            project_members.c.user_id == principal.user_id,
+            project_members.c.role == ProjectRole.OWNER.value,
+        )
+        .order_by(projects.c.deleted_at.desc(), projects.c.number)
+    )
+    return [
+        DeletedProject(
+            id=row.id,
+            code=code_of(row.number),
+            name=row.name,
+            colour=row.colour,
+            deleted_at=row.deleted_at,
+        )
+        for row in rows
+    ]
 
 
 @router.get(

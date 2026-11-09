@@ -228,3 +228,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0262](0262-training-dataset-export-as-a-zip-of-qupath-geojson.md) | Training dataset export as a zip of QuPath GeoJSON | Accepted | 2026-11-08 |
 | [0263](0263-lab-model-endpoints-with-sealed-credentials.md) | A lab model is a saved endpoint with a separate test call, link import address rules and a token sealed with the tenant data key | Accepted | 2026-11-08 |
 | [0264](0264-minimap-weights-for-thread-panel-proposals-and-pins.md) | The minimap scores proposals at 5, pins at 20, and treats an open thread and the cells panel as blocked | Accepted | 2026-11-08 |
+| [0265](0265-join-a-workspace-by-verified-email-domain.md) | A person joins a workspace whose verified email domain matches theirs, or asks its admins, and public mail domains never match | Accepted | 2026-11-09 |

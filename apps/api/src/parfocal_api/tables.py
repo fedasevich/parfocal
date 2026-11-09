@@ -104,6 +104,15 @@ class TenantStatus(StrEnum):
     SUSPENDED = "suspended"
 
 
+class JoinPolicy(StrEnum):
+    JOIN = "join"
+    ASK = "ask"
+
+
+LOGO_PATTERN = "^[A-Z0-9]{1,3}$"
+LOGO_COLOUR_PATTERN = "^#[0-9a-f]{6}$"
+
+
 def one_of(column: str, values: type[StrEnum]) -> CheckConstraint:
     allowed = ", ".join(f"'{value}'" for value in values)
     return CheckConstraint(f"{column} IN ({allowed})", name=column)
@@ -175,8 +184,21 @@ tenants = Table(
         info=OPERATIONAL,
     ),
     Column("suspended_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
+    Column("email_domain", String(253), nullable=True, index=True, info=OPERATIONAL),
+    Column(
+        "join_policy",
+        String(10),
+        nullable=False,
+        server_default=JoinPolicy.JOIN.value,
+        info=OPERATIONAL,
+    ),
+    Column("logo", String(3), nullable=True, info=OPERATIONAL),
+    Column("logo_colour", String(7), nullable=True, info=OPERATIONAL),
     *timestamps(),
     CheckConstraint(f"slug ~ '{SLUG_PATTERN}'", name="slug"),
+    one_of("join_policy", JoinPolicy),
+    CheckConstraint(f"logo ~ '{LOGO_PATTERN}'", name="logo"),
+    CheckConstraint(f"logo_colour ~ '{LOGO_COLOUR_PATTERN}'", name="logo_colour"),
     one_of("kind", TenantKind),
     one_of("region", Region),
     one_of("plan", Plan),
@@ -273,6 +295,7 @@ users = Table(
     Column("initials", String(3), nullable=False, info=PERSONAL),
     Column("avatar_colour", SmallInteger, nullable=False, info=OPERATIONAL),
     Column("title", String(40), nullable=True, info=PERSONAL),
+    Column("specialties", ARRAY(String(60)), nullable=False, server_default="{}", info=PERSONAL),
     Column("email_digest", String(10), nullable=False, server_default="off", info=OPERATIONAL),
     Column("quiet_from", Time, nullable=True, info=OPERATIONAL),
     Column("quiet_until", Time, nullable=True, info=OPERATIONAL),
@@ -995,6 +1018,7 @@ class NotificationKind(StrEnum):
     INTEGRATION_DOWN = "integration-down"
     ADJUDICATION_REQUESTED = "adjudication-requested"
     SLIDE_MOVED = "slide-moved"
+    WORKSPACE_ACCESS_ASKED = "workspace-access-asked"
 
 
 class EmailStatus(StrEnum):
@@ -1156,6 +1180,51 @@ case_requests = Table(
     ),
     ForeignKeyConstraint(["case_id", "tenant_id"], ["cases.id", "cases.tenant_id"]),
 )
+
+
+class AccessRequestStatus(StrEnum):
+    PENDING = "pending"
+    APPROVED = "approved"
+
+
+workspace_access_requests = Table(
+    "workspace_access_requests",
+    metadata,
+    *owned_ids(),
+    Column("user_id", Uuid[uuid.UUID](), ForeignKey("users.id"), nullable=False, info=PERSONAL),
+    Column(
+        "status",
+        String(10),
+        nullable=False,
+        server_default=AccessRequestStatus.PENDING.value,
+        info=OPERATIONAL,
+    ),
+    Column(
+        "asked_at",
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        info=OPERATIONAL,
+    ),
+    Column("decided_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
+    Column(
+        "decided_by_user_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("users.id"),
+        nullable=True,
+        info=PERSONAL,
+    ),
+    one_of("status", AccessRequestStatus),
+    CheckConstraint("(status = 'pending') = (decided_at IS NULL)", name="decided_at"),
+    Index(
+        "ux_workspace_access_requests_pending",
+        "tenant_id",
+        "user_id",
+        unique=True,
+        postgresql_where=text("status = 'pending'"),
+    ),
+)
+
 
 emergency_grants = Table(
     "emergency_grants",

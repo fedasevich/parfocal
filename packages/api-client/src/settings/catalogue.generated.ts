@@ -15,7 +15,10 @@ export type SettingValues = {
   minimap: "useful" | "always" | "never";
   slide_strip: boolean;
   confidence_wording: "words" | "numbers" | "frequency" | "colour" | "hidden";
-  outline_mode: "outline" | "fill" | "dots";
+  outline_mode: "fade" | "mark-unsure" | "bands";
+  tier_outline: "best" | "good" | "fast";
+  inspector_track_record: boolean;
+  inspector_calibration: boolean;
   decision_cutoff: number;
   wheel_mode: "zoom" | "pan";
   invert_zoom: boolean;
@@ -26,6 +29,7 @@ export type SettingValues = {
   analytics_policy: "person" | "on" | "off";
   analytics_opt_out: boolean;
   lock_after_minutes: number;
+  two_factor_required: boolean;
   patient_banner: boolean;
   default_privacy_mode: "de-identified" | "clinical";
   default_classes: "none" | "sentinel-node" | "pannuke";
@@ -214,14 +218,40 @@ export const catalogue: Record<SettingKey, SettingEntry> = {
   },
   "outline_mode": {
     "kind": "choice",
-    "default": "outline",
+    "default": "fade",
     "layers": [
       "personal"
     ],
     "options": [
-      "outline",
-      "fill",
-      "dots"
+      "fade",
+      "mark-unsure",
+      "bands"
+    ]
+  },
+  "tier_outline": {
+    "kind": "choice",
+    "default": "best",
+    "layers": [
+      "personal"
+    ],
+    "options": [
+      "best",
+      "good",
+      "fast"
+    ]
+  },
+  "inspector_track_record": {
+    "kind": "switch",
+    "default": true,
+    "layers": [
+      "personal"
+    ]
+  },
+  "inspector_calibration": {
+    "kind": "switch",
+    "default": true,
+    "layers": [
+      "personal"
     ]
   },
   "decision_cutoff": {
@@ -311,6 +341,13 @@ export const catalogue: Record<SettingKey, SettingEntry> = {
     ],
     "minimum": 1,
     "maximum": 240
+  },
+  "two_factor_required": {
+    "kind": "switch",
+    "default": false,
+    "layers": [
+      "lab"
+    ]
   },
   "patient_banner": {
     "kind": "switch",

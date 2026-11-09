@@ -17,6 +17,7 @@ import {
 import { Zone } from "@parfocal/ui/components/zone";
 import { useEffect, useState } from "react";
 import { destinations } from "../../shell/destinations.ts";
+import { useResolvedSettings } from "../../shell/resolved-settings.ts";
 import { useGoTo } from "../../shell/router-link.tsx";
 import { okData } from "../placeholder.tsx";
 import { ReviewTop } from "../review/review-top.tsx";
@@ -69,7 +70,9 @@ export function AnnotateView({ tools, scene, initialTool, onScene, onLeave }: An
   const layers = okData(useListAnnotationLayers(session.slideId).data);
   const tierList = tiersFor(okData(useListModelTiers().data) ?? [], "outline");
   const [tool, setTool] = useState<string>(initialTool ?? "auto");
-  const [tierName, setTierName] = useState("Best");
+  const savedTier = useResolvedSettings()?.tier_outline ?? "best";
+  const [pickedTier, setTierName] = useState<string | null>(null);
+  const tierName = pickedTier ?? `${savedTier.charAt(0).toUpperCase()}${savedTier.slice(1)}`;
   const [proposals, setProposals] = useState(autoRegionProposals.length);
   const [added, setAdded] = useState(0);
   const [hidden, setHidden] = useState<string[]>([]);

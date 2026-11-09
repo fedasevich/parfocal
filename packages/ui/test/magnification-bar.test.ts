@@ -100,3 +100,7 @@ test("the readout shows the objective, the digital label above the scan objectiv
   assert.equal(formatReadout(80, true, 0.125), "80× digital · 0.13 µm/px");
   assert.equal(formatReadout(2.5, false, 4), "2.5× · 4.00 µm/px");
 });
+
+test("the microns per pixel label leaves the preset names as objectives", () => {
+  assert.equal(formatMagnification(10, "microns-per-pixel"), "10×");
+});

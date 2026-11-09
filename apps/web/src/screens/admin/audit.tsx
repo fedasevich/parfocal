@@ -1,6 +1,6 @@
 import {
-  type AuditEvent,
   exportAuditEvents,
+  type NamedAuditEvent,
   useListAuditEvents,
   useListProjects,
   useListTenantMembers,
@@ -50,10 +50,11 @@ function whenText(at: Date, today: Date): string {
   return daysBetween(at, today) === 0 ? clock : `${formatDayMonth(at)} ${clock}`;
 }
 
-function Actor({ event }: { event: AuditEvent }) {
+function Actor({ event }: { event: NamedAuditEvent }) {
   const personOf = usePeople();
-  const person = personOf(event.actor_id);
+  const person = personOf(event.actor_user_id);
   if (person) return <Person person={person} size={20} />;
+  if (event.actor_name) return <span>{event.actor_name}</span>;
   if (event.actor_kind === "member" || event.actor_kind === "user") {
     return <span className="text-fg-dim">A member</span>;
   }

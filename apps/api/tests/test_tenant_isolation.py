@@ -96,6 +96,7 @@ from parfocal_api.tables import (
     uploads,
     users,
     verdicts,
+    workspace_access_requests,
     workspace_settings,
 )
 from parfocal_common.chunk_store import Cell, build_cells, write_cells
@@ -1052,6 +1053,14 @@ async def seed_lab_models(connection: AsyncConnection, seeded: Seeded) -> None:
     seeded.markers.add(marker)
 
 
+async def seed_workspace_access_requests(connection: AsyncConnection, seeded: Seeded) -> None:
+    user = seeded.ids["user"]
+    await connection.execute(
+        insert(workspace_access_requests).values(tenant_id=seeded.tenant_id, user_id=user)
+    )
+    seeded.markers.add(str(user))
+
+
 async def seed_lab_model_projects(connection: AsyncConnection, seeded: Seeded) -> None:
     await connection.execute(
         insert(lab_model_projects).values(
@@ -1286,6 +1295,7 @@ SEEDERS: dict[str, Seeder] = {
     "hidden_models": seed_hidden_models,
     "lab_models": seed_lab_models,
     "lab_model_projects": seed_lab_model_projects,
+    "workspace_access_requests": seed_workspace_access_requests,
     "slide_coverage": seed_slide_coverage,
     "display_presets": seed_display_presets,
     "display_choices": seed_display_choices,
@@ -1407,6 +1417,10 @@ GET_ROUTES = {
         Exposure.PUBLIC, lambda _: "/api/me/notification-preferences"
     ),
     "getMySettingLayers": Route(Exposure.PUBLIC, lambda _: "/api/me/setting-layers"),
+    "listJoinableWorkspaces": Route(Exposure.PUBLIC, lambda _: "/api/me/joinable-workspaces"),
+    "listWorkspaceAccessRequests": Route(
+        Exposure.TENANT, lambda _: "/api/tenant/access-requests", admin_rights=True
+    ),
     "getOpinionForm": Route(
         Exposure.TENANT, lambda a: f"/api/projects/{a.ids['project']}/opinion-form"
     ),

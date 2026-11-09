@@ -13,9 +13,9 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | Class | Columns |
 |---|---|
 | `phi` | 46 |
-| `personal` | 86 |
+| `personal` | 89 |
 | `secret` | 11 |
-| `operational` | 703 |
+| `operational` | 712 |
 | `public` | 0 |
 
 ## adjudication_objects
@@ -1141,6 +1141,10 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `plan` | operational |
 | `status` | operational |
 | `suspended_at` | operational |
+| `email_domain` | operational |
+| `join_policy` | operational |
+| `logo` | operational |
+| `logo_colour` | operational |
 | `created_at` | operational |
 | `updated_at` | operational |
 
@@ -1220,6 +1224,7 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `initials` | personal |
 | `avatar_colour` | operational |
 | `title` | personal |
+| `specialties` | personal |
 | `email_digest` | operational |
 | `quiet_from` | operational |
 | `quiet_until` | operational |
@@ -1253,6 +1258,18 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `ai_score` | operational. The AI call at decision time, read from the result set for a region and reported by the reviewer's client for a cell, unchecked against the cell chunks |
 | `created_at` | operational |
 | `updated_at` | operational |
+
+## workspace_access_requests
+
+| Column | Class |
+|---|---|
+| `id` | operational |
+| `tenant_id` | operational |
+| `user_id` | personal |
+| `status` | operational |
+| `asked_at` | operational |
+| `decided_at` | operational |
+| `decided_by_user_id` | personal |
 
 ## workspace_settings
 

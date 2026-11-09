@@ -60,6 +60,9 @@ import {
   classOptions,
   cutoffChoices,
   type DefaultKey,
+  decisionCutoffChange,
+  decisionCutoffChoices,
+  decisionCutoffOf,
   defaultChange,
   defaultsOf,
   durationText,
@@ -485,6 +488,45 @@ function TumorShare({ lab, notify }: { lab: LabSettings; notify: Notify }) {
   );
 }
 
+function DecisionCutoffZone({ lab, notify }: { lab: LabSettings; notify: Notify }) {
+  const queryClient = useQueryClient();
+  const save = useSetWorkspaceSettings();
+  const current = decisionCutoffOf(lab);
+  const apply = (value: number, said: string, undo?: () => void) =>
+    save.mutate(
+      { data: decisionCutoffChange(lab, value) },
+      {
+        onSuccess: () => {
+          void queryClient.invalidateQueries({ queryKey: getGetMySettingLayersQueryKey() });
+          notify(said, undo);
+        },
+        onError: (error) => notify(failure(error)),
+      },
+    );
+  return (
+    <Zone
+      title="Decision cutoff"
+      sub="The score below which the viewer fades an outline for everyone in the lab. Reviewers see it in their settings but cannot change it."
+    >
+      <div className={rows}>
+        <Labelled label="Cutoff" help="Scores under this percentage count as unsure.">
+          <NumberChoice
+            label="Decision cutoff"
+            value={current}
+            choices={decisionCutoffChoices}
+            format={(value) => `${value}%`}
+            onChange={(value) =>
+              apply(value, `The decision cutoff is ${value}%.`, () =>
+                apply(current, "Cutoff restored."),
+              )
+            }
+          />
+        </Labelled>
+      </div>
+    </Zone>
+  );
+}
+
 function AnalyticsZone({ lab, notify }: { lab: LabSettings; notify: Notify }) {
   const queryClient = useQueryClient();
   const save = useSetWorkspaceSettings();
@@ -831,6 +873,7 @@ export function WorkspaceSettingsSection({ notify }: { notify: Notify }) {
       <LockTimes notify={notify} />
       <SecurityContactZone notify={notify} />
       <Defaults lab={lab} notify={notify} />
+      <DecisionCutoffZone lab={lab} notify={notify} />
       <TumorShare lab={lab} notify={notify} />
       <PatientBannerZone lab={lab} notify={notify} />
       <AnalyticsZone lab={lab} notify={notify} />
