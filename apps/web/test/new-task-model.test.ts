@@ -12,6 +12,7 @@ import {
   mappingOk,
   mappingText,
   type Preset,
+  preselectedTemplate,
   sceneDraft,
   scopePhrase,
   sendLabel,
@@ -382,4 +383,17 @@ test("the other decision styles need no mapping", () => {
       [],
     );
   }
+});
+
+test("a project without its own default starts from the workspace default", () => {
+  const templates = [
+    { id: "a", retired: false },
+    { id: "b", retired: false },
+    { id: "c", retired: true },
+  ];
+  assert.equal(preselectedTemplate("a", "b", templates), "a");
+  assert.equal(preselectedTemplate("", "b", templates), "b");
+  assert.equal(preselectedTemplate("", "c", templates), "");
+  assert.equal(preselectedTemplate("", null, templates), "");
+  assert.equal(preselectedTemplate("c", "b", templates), "b");
 });

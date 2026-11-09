@@ -20,6 +20,7 @@ from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import MemberPrincipal, Principal
 from parfocal_api.problems import ConflictError, NotFoundError
 from parfocal_api.review_tasks import Scope, StudyTemplateRetiredError
+from parfocal_api.settings_api import lab_of
 from parfocal_api.tables import (
     BuiltInTemplate,
     StartMode,
@@ -95,6 +96,11 @@ class StudyTemplateVersion(BaseModel):
     version: int
     name: str
     created_at: datetime
+
+
+class TemplateIsDefaultError(ConflictError):
+    code = "study-template-is-default"
+    title = "This study template is the workspace default. Pick another default first"
 
 
 class TemplateNameTakenError(ConflictError):
@@ -521,6 +527,10 @@ async def set_retired(
     connection: AsyncConnection, principal: Principal, template_id: uuid.UUID, retired: bool
 ) -> StudyTemplate:
     row = await current_row(connection, template_id)
+    if retired and row.retired_at is None:
+        default = (await lab_of(connection)).values.get("default_study_template")
+        if default == str(template_id):
+            raise TemplateIsDefaultError
     if (row.retired_at is not None) != retired:
         await connection.execute(
             update(study_templates)

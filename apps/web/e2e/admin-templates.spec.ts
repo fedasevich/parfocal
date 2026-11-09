@@ -115,3 +115,14 @@ test("a built-in template is duplicated, changed and saved as a new template", a
   expect(body.format.orientation).toBe("landscape");
   await expect(page.getByRole("row", { name: /Detection study, landscape/ })).toBeVisible();
 });
+
+test("the workspace default cannot be retired", async ({ page }) => {
+  await page.goto("/admin?section=templates");
+  await page.getByRole("button", { name: "More for Detection study" }).click();
+  await page.getByRole("menuitem", { name: "Use for new projects" }).click();
+  await expect(page.getByRole("row", { name: /Detection study/ })).toContainText("Default");
+  await page.getByRole("button", { name: "More for Detection study" }).click();
+  await page.getByRole("menuitem", { name: "Retire" }).click();
+  await expect(page.getByText("Pick another default first.")).toBeVisible();
+  await expect(page.getByRole("row", { name: /Detection study/ })).not.toContainText("Retired");
+});

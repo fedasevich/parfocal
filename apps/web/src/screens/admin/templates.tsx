@@ -96,10 +96,15 @@ export function TemplatesSection({
     queryClient.invalidateQueries({ queryKey: getListStudyTemplatesQueryKey() });
   const retireOrRestore = (template: StudyTemplateSummary) => {
     const off = template.retired_at !== null;
+    if (!off && defaultId === template.id) {
+      notify(`${template.name} is the default for new projects. Pick another default first.`);
+      return;
+    }
     const run = off ? restore : retire;
     run.mutate(
       { templateId: template.id },
       {
+        onError: () => notify("That did not work. Try again."),
         onSuccess: (response) => {
           if (response.status >= 300) {
             notify(problemTitle(response.data));
@@ -113,7 +118,16 @@ export function TemplatesSection({
             () => {
               (off ? retire : restore).mutate(
                 { templateId: template.id },
-                { onSuccess: () => void refresh() },
+                {
+                  onSuccess: (undone) => {
+                    if (undone.status >= 300) {
+                      notify(problemTitle(undone.data));
+                      return;
+                    }
+                    void refresh();
+                  },
+                  onError: () => notify("That did not work. Try again."),
+                },
               );
             },
           );

@@ -1,6 +1,9 @@
+import AxeBuilder from "@axe-core/playwright";
 import { expect, type Locator, type Page, test } from "@playwright/test";
 
 const story = (id: string) => `/iframe.html?id=${id}&viewMode=story&globals=a11y.manual:!true`;
+
+const wcagTags = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22a", "wcag22aa"];
 
 type Out = { blocks: Record<string, unknown>[]; format: Record<string, unknown> };
 
@@ -387,3 +390,18 @@ test("the task presets tab shows what the host puts in it", async ({ page }) => 
   await page.getByRole("tab", { name: "Task presets" }).click();
   await expect(page.getByText("Presets are set by the screen")).toBeVisible();
 });
+
+for (const theme of ["dark", "light"] as const) {
+  test(`the editor has no axe violations in ${theme}`, async ({ page }) => {
+    await page.goto(
+      `/iframe.html?id=components-report-editor--with-blocks&viewMode=story&globals=theme:${theme};a11y.manual:!true`,
+    );
+    await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+    await expect(page.getByTestId("out")).toBeVisible();
+    await onPage(page, "headline-numbers").click();
+    const results = await new AxeBuilder({ page }).withTags(wcagTags).analyze();
+    expect(results.violations).toEqual([]);
+    await page.getByRole("tab", { name: "Page and format" }).click();
+    expect((await new AxeBuilder({ page }).withTags(wcagTags).analyze()).violations).toEqual([]);
+  });
+}

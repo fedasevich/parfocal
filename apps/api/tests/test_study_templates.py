@@ -237,6 +237,21 @@ def test_retire_and_restore(api: ApiAs, database: str) -> None:
     ]
 
 
+def test_the_workspace_default_cannot_be_retired(api: ApiAs, database: str) -> None:
+    admin = api(team(database)["admin"])
+    created = admin.post(TEMPLATES, json=template("Default one")).json()
+    path = f"{TEMPLATES}/{created['id']}"
+    set_default = admin.put(
+        "/api/tenant/settings", json={"values": {"default_study_template": created["id"]}}
+    )
+    assert set_default.status_code == 200
+    refused = admin.post(f"{path}/retire")
+    assert (refused.status_code, refused.json()["code"]) == (409, "study-template-is-default")
+    cleared = admin.put("/api/tenant/settings", json={"values": {"default_study_template": None}})
+    assert cleared.status_code == 200
+    assert admin.post(f"{path}/retire").status_code == 200
+
+
 @pytest.mark.parametrize(
     ("change", "location"),
     [

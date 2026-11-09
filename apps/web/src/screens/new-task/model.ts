@@ -286,6 +286,18 @@ export function applyTemplate(draft: Draft, template: TemplateChoice, data: Task
   };
 }
 
+export function preselectedTemplate(
+  projectDefault: string,
+  workspaceDefault: string | null,
+  templates: readonly { id: string; retired: boolean }[],
+) {
+  const usable = (id: string | null) =>
+    id !== null && id !== "" && templates.some((item) => item.id === id && !item.retired);
+  if (usable(projectDefault)) return projectDefault;
+  if (usable(workspaceDefault)) return workspaceDefault as string;
+  return projectDefault;
+}
+
 export function initialDraft(data: TaskData): Draft {
   const template =
     data.templates.find((candidate) => candidate.id === data.defaultTemplateId) ??

@@ -1,6 +1,7 @@
 import {
   type ResultSet,
   type StudyTemplateSummary,
+  useGetMySettingLayers,
   useGetProject,
   useGetProjectScopeOptions,
   useGetReviewTaskDefaults,
@@ -18,6 +19,7 @@ import { toReviewStyle } from "../review/decision-style.ts";
 import {
   andJoin,
   type DecisionKindKey,
+  preselectedTemplate,
   type ReminderKey,
   type ResultSetChoice,
   reminderChoices,
@@ -128,8 +130,9 @@ export function useTaskData(projectId: string): {
     workload: useListReviewerWorkload(),
     scopeOptions: useGetProjectScopeOptions(projectId),
   };
+  const layers = useGetMySettingLayers();
   const all = Object.values(queries);
-  const pending = all.some((query) => query.isPending);
+  const pending = all.some((query) => query.isPending) || layers.isPending;
   const failed = all.some((query) => query.isError);
   const project = okData(queries.project.data);
   const defaults = queries.defaults.data?.data;
@@ -213,6 +216,7 @@ export function useTaskData(projectId: string): {
       },
     ];
   });
+  const workspaceDefault = okData(layers.data)?.lab.values["default_study_template"];
   const data: TaskData = {
     code: defaults.code,
     taskId: defaults.task_id,
@@ -225,7 +229,11 @@ export function useTaskData(projectId: string): {
     resultSets: resultSets.map(toResultSet),
     names: Object.fromEntries(defaults.names.map((item) => [item.result_set_id, item.name])),
     templates: choices,
-    defaultTemplateId: defaults.study_template_id,
+    defaultTemplateId: preselectedTemplate(
+      defaults.study_template_id,
+      typeof workspaceDefault === "string" ? workspaceDefault : null,
+      choices,
+    ),
     people,
     rois: scopeOptions.rois,
     zones: scopeOptions.unsure_zones.map((zone) => ({
