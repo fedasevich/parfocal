@@ -4,6 +4,8 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-09
 
+- TEST-014: the dependency-scan job passed on the ci runs of 2026-11-09.
+- TEST-021: three ci runs in a row on 2026-11-09 (42651763689, 42661057859, 42666737479) finished the three web browser shards in 19 to 30 minutes, under the 45 minute target.
 - COLLAB-019: Object comments in guided review, the full viewer and the pinned-ID popover now post through the threads API (create on an object anchor, reply after) and read through the task thread routes, the fake keeps them across reload, with browser, API mention and api-client tests. Replies in an object thread display flat because the real message has no reply-to field.
 - CMP-008: Compare offset, rotation and scale per slide pair are saved in the personal compare_alignments setting, stamped with both slides' upload and sha256, restored when the pair reopens, dropped when either slide is replaced or deleted, and reset by Clear. No new table or route.
 - VIZ-011: Order, zoom, move on and button place now drive guided review. Save as no longer leaves an orphan preset, rapid Shift presses queue so the last one wins, the other sets choice is saved in my display, and the adjudicator view reads getMyDisplay. Saving the other sets choice has no browser test of its own.
