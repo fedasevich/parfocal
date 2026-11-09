@@ -1,4 +1,4 @@
-# XXXX. Review objects carry their outline in slide pixels, and the engine's bounds limit the still's camera
+# 0284. Review objects carry their outline in slide pixels, and the engine's bounds limit the still's camera
 
 - Date: 2026-11-09
 - Status: Accepted
