@@ -71,7 +71,16 @@ import {
   reviewedSlide,
   reviewsA1,
 } from "./review-verdicts.ts";
-import { people, projectByCode, reviewTasks, slideByIndex, slides, threads } from "./scenario.ts";
+import {
+  people,
+  projectByCode,
+  projects,
+  reviewTasks,
+  slideByIndex,
+  slideReviews,
+  slides,
+  threads,
+} from "./scenario.ts";
 import {
   addedByLenka,
   agreementWithSimona,
@@ -298,25 +307,58 @@ const movePosted = (threadId: string, body: PinMove) => {
   keepPosted();
 };
 
+const openForViewer = (task: (typeof reviewTasks)[number], slideId: string) => {
+  const viewer = fakeView().viewer;
+  const review = slideReviews.find(
+    (item) =>
+      item.task === task.code && item.by === viewer && slideByIndex(item.slide).id === slideId,
+  );
+  if (review !== undefined) return review.state !== "submitted";
+  return toTaskStates(task).slides.some(
+    (slide) =>
+      slide.slide_id === slideId &&
+      slide.reviewers.some(
+        (reviewer) => reviewer.user_id === people[viewer].id && reviewer.submitted_at === null,
+      ),
+  );
+};
+
+const blindedTaskOn = (projectId: string, slideId: string) =>
+  reviewTasks
+    .filter((task) => task.blinded && projectByCode(task.project).id === projectId)
+    .some((task) => openForViewer(task, slideId));
+
+const seesSlideAuthor = (projectId: string, slideId: string) => {
+  const viewer = fakeView().viewer;
+  if (!blindedTaskOn(projectId, slideId)) return () => true;
+  const researcher = projects.find((project) => project.id === projectId)?.owner;
+  const open = new Set([viewer, researcher].map((key) => (key ? people[key].id : "")));
+  return (author: string) => open.has(author);
+};
+
 export const toTasklessThreads = (
   projectId: string,
   slideId: string,
   resolved: boolean | null,
-): Thread[] =>
-  postedThreads
+): Thread[] => {
+  const sees = seesSlideAuthor(projectId, slideId);
+  return postedThreads
     .filter(
       (item) => item.task_id === null && item.project_id === projectId && item.slide_id === slideId,
     )
-    .filter((item) => !removedThreads.has(item.id))
+    .filter((item) => !removedThreads.has(item.id) && sees(item.created_by))
     .map(withResolution)
     .filter((item) => resolved === null || (item.resolved_at === null) === !resolved);
+};
 
 const tasklessDetail = (threadId: string): ThreadDetail => {
   const thread = postedThreads.find((item) => item.id === threadId && item.task_id === null);
-  if (thread === undefined || removedThreads.has(threadId)) {
+  const sees = thread && seesSlideAuthor(thread.project_id, thread.slide_id);
+  if (thread === undefined || removedThreads.has(threadId) || !sees?.(thread.created_by)) {
     throw new Error(`The fake has no slide thread ${threadId}`);
   }
-  return toThreadDetail(withResolution(thread));
+  const detail = toThreadDetail(withResolution(thread));
+  return { ...detail, messages: detail.messages.filter((message) => sees(message.author_id)) };
 };
 
 const tasklessThreadHandlers = () => [
