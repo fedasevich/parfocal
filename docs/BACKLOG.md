@@ -4751,7 +4751,7 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Depends on EVAL-008, EVAL-002, ADJ-005. Refs mock: evaluation/arrange, doc 43.
   Size: L.
 
-- [ ] EVAL-010 · PDF preview
+- [x] EVAL-010 · PDF preview
   Preview the PDF opens the file the export would download, rendered by the Typst worker as SVG pages, in a viewer with the file name, paper and page count, page thumbnails that jump to a page, the current page, zoom, Print, Download and Close. It opens from the report page, from the template list and editor with the sample project's numbers, and from the template step of a new review task ([ADR 0097](adr/0097-report-templates-built-from-blocks.md)).
   Done when component tests cover thumbnails, the page indicator while scrolling, zoom and closing, an API test returns the same pages as the PDF export for a seeded task, and E2E opens the preview from the report and from a template.
   Depends on EVAL-008, STACK-035. Refs mock: evaluation/pdf, mock: admin/templates, doc 43.
