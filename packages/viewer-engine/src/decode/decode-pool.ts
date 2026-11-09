@@ -15,6 +15,14 @@ export interface DecodePoolOptions<Job, Result> {
   readonly retain?: number;
 }
 
+const recentDecodeCapacity = 128;
+
+function percentileOf(values: readonly number[], fraction: number): number | null {
+  if (values.length === 0) return null;
+  const sorted = [...values].sort((a, b) => a - b);
+  return sorted[Math.min(sorted.length - 1, Math.ceil(sorted.length * fraction) - 1)] ?? null;
+}
+
 export interface DecodePoolStats {
   readonly size: number;
   readonly queued: number;
@@ -28,6 +36,7 @@ export interface DecodePoolStats {
   readonly lateKept: number;
   readonly lateUsed: number;
   readonly lateEvicted: number;
+  readonly decodeP95Ms: number | null;
 }
 
 export interface PrefetchStats {
@@ -103,6 +112,8 @@ export function createDecodePool<Job, Result>(
   let focus: PoolPoint | null = null;
   let order = 0;
   let disposed = false;
+  const startedAt = new Map<string, number>();
+  const recentDecodeMs: number[] = [];
   const counts = {
     dispatched: 0,
     completed: 0,
@@ -149,6 +160,12 @@ export function createDecodePool<Job, Result>(
   const settle = (entry: Entry<Job, Result>, outcome: PromiseSettledResult<Result>) => {
     if (disposed) return;
     entries.delete(entry.key);
+    const started = startedAt.get(entry.key);
+    startedAt.delete(entry.key);
+    if (started !== undefined && outcome.status === "fulfilled") {
+      recentDecodeMs.push(performance.now() - started);
+      if (recentDecodeMs.length > recentDecodeCapacity) recentDecodeMs.shift();
+    }
     const waiters = [...entry.waiters];
     entry.waiters.clear();
     if (outcome.status === "fulfilled") {
@@ -184,6 +201,7 @@ export function createDecodePool<Job, Result>(
         activeLow++;
       }
       counts.dispatched++;
+      startedAt.set(entry.key, performance.now());
       let running: Promise<Result>;
       try {
         running = options.run(slot, entry.job);
@@ -308,6 +326,7 @@ export function createDecodePool<Job, Result>(
         queued: queue.length,
         active: size - freeSlots.length,
         ...counts,
+        decodeP95Ms: percentileOf(recentDecodeMs, 0.95),
       };
     },
     idle() {

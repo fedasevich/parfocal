@@ -65,6 +65,7 @@ const labTextKeys = {
   cull: "culling",
   interp: "interpolation",
   nuclei: "nuclei",
+  corner: "hudCorner",
 } as const satisfies Record<string, keyof LabSettings>;
 
 const labFlagKeys = {
