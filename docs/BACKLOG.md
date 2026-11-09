@@ -773,6 +773,12 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when the table-driven permission test covers a researcher with and without admin rights and a reviewer on every endpoint, a migration test turns an admin membership and an invitation into a researcher with admin rights, an API test refuses removing the last holder and refuses the right on a reviewer, and the audit entry is checked.
   Depends on IAM-022. Refs doc 43, kit: Pipeline and roles.
 
+- [ ] IAM-025 · Ask for a second factor at sign-in when a workspace requires it
+  ADMIN-009 saves a workspace's two_factor_required switch from the Admin Security page, but sign-in does not read it, so the page says it is not enforced yet. When the switch is on, sign-in into that workspace asks the IdP for a second factor, through acr_values or the organisation's MFA policy, and a session without one is refused with a clear message. The Security page then drops its "not enforced yet" wording.
+  Done when an API test refuses a one-factor session on a workspace that requires two and accepts it on one that does not, and the browser test for the Security page checks the new wording.
+  Depends on ADMIN-009, IAM-001.
+  Size: M.
+
 ---
 
 ## 04 SEC · Security and compliance (GDPR, HIPAA, ISO 27001 readiness)
