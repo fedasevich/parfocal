@@ -13,7 +13,7 @@ from typing import Any
 import httpx2
 import numpy as np
 import pytest
-from case_support import seed_case
+from case_support import seed_case, seed_project
 from db_support import APP_URL, OWNER_URL, ApiAs, query, with_database
 from link_support import Site
 from pypdf import PdfReader
@@ -47,6 +47,7 @@ from parfocal_api.tables import (
     emergency_grants,
     evaluation_changes,
     evaluation_versions,
+    gpu_usage,
     hidden_models,
     invitations,
     job_steps,
@@ -66,6 +67,7 @@ from parfocal_api.tables import (
     platform_operators,
     project_classes,
     project_members,
+    projects,
     report_links,
     result_chunks,
     result_objects,
@@ -210,6 +212,7 @@ CASE_TABLES = {
     "job_steps",
     "job_units",
     "stage_throughput",
+    "gpu_usage",
     "notification_preferences",
     "personal_settings",
     "workspace_settings",
@@ -436,6 +439,7 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
             role="owner",
         )
     )
+    await seed_deleted_projects(connection, seeded)
     notification_id = await connection.scalar(
         insert(notifications)
         .values(
@@ -968,6 +972,23 @@ async def seed_uploads(connection: AsyncConnection, seeded: Seeded) -> None:
     seeded.markers.update({str(seeded.ids["upload"]), stored.headers["etag"].strip('"')})
 
 
+async def seed_deleted_projects(connection: AsyncConnection, seeded: Seeded) -> None:
+    project_id = await seed_project(connection, seeded.tenant_id)
+    name = f"Deleted project {uuid.uuid4().hex[:8]}"
+    await connection.execute(
+        update(projects).where(projects.c.id == project_id).values(name=name, deleted_at=func.now())
+    )
+    await connection.execute(
+        insert(project_members).values(
+            tenant_id=seeded.tenant_id,
+            project_id=project_id,
+            user_id=seeded.ids["user"],
+            role="owner",
+        )
+    )
+    seeded.markers.add(name)
+
+
 async def seed_model_runs(connection: AsyncConnection, seeded: Seeded) -> None:
     detector = f"detector-{uuid.uuid4().hex[:10]}"
     job_id = await enqueue_model_run(
@@ -981,6 +1002,17 @@ async def seed_model_runs(connection: AsyncConnection, seeded: Seeded) -> None:
     )
     seeded.ids["model_run"] = job_id
     seeded.markers.update({str(job_id), detector})
+    await connection.execute(
+        insert(gpu_usage).values(
+            tenant_id=seeded.tenant_id,
+            job_id=job_id,
+            kind="model-run",
+            model=detector,
+            model_version="1",
+            worker="seed",
+            seconds=1.0,
+        )
+    )
 
 
 async def seed_site_validations(connection: AsyncConnection, seeded: Seeded) -> None:
@@ -1395,6 +1427,7 @@ GET_ROUTES = {
     "getRetentionPolicy": Route(
         Exposure.TENANT, lambda _: "/api/tenant/retention", admin_rights=True
     ),
+    "getAiUsage": Route(Exposure.TENANT, lambda _: "/api/tenant/ai-usage", admin_rights=True),
     "listLegalHolds": Route(
         Exposure.TENANT, lambda _: "/api/tenant/legal-holds", admin_rights=True
     ),
@@ -1404,6 +1437,7 @@ GET_ROUTES = {
         lambda a: f"/api/projects/{a.ids['project']}/patients/{a.ids['patient']}/personal-data",
     ),
     "listProjects": Route(Exposure.TENANT, lambda _: "/api/projects"),
+    "listDeletedProjects": Route(Exposure.TENANT, lambda _: "/api/projects/deleted"),
     "getProject": Route(Exposure.TENANT, lambda a: f"/api/projects/{a.ids['project']}"),
     "listTaxonomyTemplates": Route(Exposure.PUBLIC, lambda _: "/api/taxonomy-templates"),
     "getOpinionFormTemplate": Route(Exposure.PUBLIC, lambda _: "/api/opinion-form-template"),

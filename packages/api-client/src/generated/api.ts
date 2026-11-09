@@ -364,6 +364,33 @@ export interface AiObjectEdit {
 
 export type AiOutline = PolygonGeometry | MultiPolygonGeometry;
 
+export interface AiUsageModel {
+  model: string | null;
+  model_version: string | null;
+  gpu_seconds: number;
+  jobs: number;
+}
+
+export interface AiUsageJob {
+  job_id: string;
+  kind: string;
+  project_id: string | null;
+  slide_id: string | null;
+  model: string | null;
+  model_version: string | null;
+  gpu_seconds: number;
+  last_recorded_at: string;
+}
+
+export interface AiUsage {
+  since: string | null;
+  until: string | null;
+  gpu_seconds: number;
+  jobs: number;
+  models: AiUsageModel[];
+  recent_jobs: AiUsageJob[];
+}
+
 export type AnalysisTemplate = (typeof AnalysisTemplate)[keyof typeof AnalysisTemplate];
 
 export const AnalysisTemplate = {
@@ -5708,6 +5735,11 @@ export type ListAdjudicationObjectsParams = {
 
 export type ExportTaskEvaluationParams = {
   locale?: Locale;
+};
+
+export type GetAiUsageParams = {
+  since?: string | null;
+  until?: string | null;
 };
 
 export type ListMySlidesParams = {
@@ -44252,6 +44284,190 @@ export function useGetTaskAiChanges<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getGetTaskAiChangesQueryOptions(taskId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type getAiUsageResponse200 = {
+  data: AiUsage;
+  status: 200;
+};
+
+export type getAiUsageResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getAiUsageResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getAiUsageResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getAiUsageResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getAiUsageResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getAiUsageResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getAiUsageResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getAiUsageResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getAiUsageResponseSuccess = getAiUsageResponse200 & {
+  headers: Headers;
+};
+export type getAiUsageResponseError = (
+  | getAiUsageResponse400
+  | getAiUsageResponse401
+  | getAiUsageResponse403
+  | getAiUsageResponse404
+  | getAiUsageResponse409
+  | getAiUsageResponse422
+  | getAiUsageResponse429
+  | getAiUsageResponse500
+) & {
+  headers: Headers;
+};
+
+export type getAiUsageResponse = getAiUsageResponseSuccess | getAiUsageResponseError;
+
+export const getGetAiUsageUrl = (params?: GetAiUsageParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/tenant/ai-usage?${stringifiedParams}`
+    : `/api/tenant/ai-usage`;
+};
+
+/**
+ * @summary Get Ai Usage
+ */
+export const getAiUsage = async (
+  params?: GetAiUsageParams,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getAiUsageResponse> => {
+  return apiFetch<getAiUsageResponse>(getGetAiUsageUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetAiUsageQueryKey = (params?: GetAiUsageParams) => {
+  return [`/api/tenant/ai-usage`, ...(params ? [params] : [])] as const;
+};
+
+export const getGetAiUsageQueryOptions = <
+  TData = Awaited<ReturnType<typeof getAiUsage>>,
+  TError = Problem,
+>(
+  params?: GetAiUsageParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAiUsage>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetAiUsageQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getAiUsage>>> = ({ signal }) =>
+    getAiUsage(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getAiUsage>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetAiUsageQueryResult = NonNullable<Awaited<ReturnType<typeof getAiUsage>>>;
+export type GetAiUsageQueryError = Problem;
+
+export function useGetAiUsage<TData = Awaited<ReturnType<typeof getAiUsage>>, TError = Problem>(
+  params: undefined | GetAiUsageParams,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAiUsage>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAiUsage>>,
+          TError,
+          Awaited<ReturnType<typeof getAiUsage>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetAiUsage<TData = Awaited<ReturnType<typeof getAiUsage>>, TError = Problem>(
+  params?: GetAiUsageParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAiUsage>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAiUsage>>,
+          TError,
+          Awaited<ReturnType<typeof getAiUsage>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetAiUsage<TData = Awaited<ReturnType<typeof getAiUsage>>, TError = Problem>(
+  params?: GetAiUsageParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAiUsage>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Ai Usage
+ */
+
+export function useGetAiUsage<TData = Awaited<ReturnType<typeof getAiUsage>>, TError = Problem>(
+  params?: GetAiUsageParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAiUsage>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetAiUsageQueryOptions(params, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;

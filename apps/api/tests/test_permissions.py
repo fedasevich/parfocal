@@ -853,6 +853,7 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
         },
     ),
     "getRetentionPolicy": lambda _: Call("GET", "/api/tenant/retention"),
+    "getAiUsage": lambda _: Call("GET", "/api/tenant/ai-usage"),
     "setRetentionPolicy": lambda _: Call("PUT", "/api/tenant/retention", {}),
     "listLegalHolds": lambda _: Call("GET", "/api/tenant/legal-holds"),
     "placeLegalHold": lambda _: Call("POST", "/api/tenant/legal-holds", {"reason": "Matrix hold"}),

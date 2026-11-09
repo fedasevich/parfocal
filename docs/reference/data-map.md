@@ -15,7 +15,7 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `phi` | 46 |
 | `personal` | 89 |
 | `secret` | 11 |
-| `operational` | 712 |
+| `operational` | 723 |
 | `public` | 0 |
 
 ## adjudication_objects
@@ -343,6 +343,22 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `evaluation` | operational |
 | `blocks` | operational |
 | `format` | operational |
+
+## gpu_usage
+
+| Column | Class |
+|---|---|
+| `id` | operational |
+| `tenant_id` | operational |
+| `job_id` | operational |
+| `kind` | operational |
+| `model` | operational |
+| `model_version` | operational |
+| `tier` | operational |
+| `gpu` | operational |
+| `worker` | operational |
+| `seconds` | operational |
+| `recorded_at` | operational |
 
 ## hidden_models
 

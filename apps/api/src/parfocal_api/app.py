@@ -8,6 +8,7 @@ from pydantic import BaseModel
 from parfocal_api import (
     adjudications,
     ai_changes,
+    ai_usage,
     annotate_import,
     annotate_layer,
     annotate_sign_off,
@@ -257,6 +258,7 @@ def create_app(
     app.include_router(evaluation_exports.router)
     app.include_router(training_exports.router)
     app.include_router(ai_changes.router)
+    app.include_router(ai_usage.router)
     app.include_router(evaluation_versions.router)
     app.include_router(report_links.router)
     app.include_router(report_links.public_router)
