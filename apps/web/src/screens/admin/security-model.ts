@@ -1,6 +1,7 @@
 import type { LabSettings, SecuritySetting, WorkspaceSettingsChange } from "@parfocal/api-client";
 
 export const TWO_FACTOR_KEY = "two_factor_required";
+export const IDLE_LOCK_KEY = "idle-lock";
 
 const ssoNotSetUp: SecuritySetting = {
   key: "sso",
