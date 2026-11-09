@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-09
 
+- Pure grouping rules by class, provenance, cluster radius in microns and containment, with 17 unit tests and no new dependency.
 - AIP-001 Its ADR is 0276 (model artifacts are write-once objects with a manifest), renumbered after a clash.
 - PILOT-001 A ten-step guided tour, a Help dialog from the account menu and a first-run offer on Home, with progress in the personal setting tour_progress and an E2E that completes the walkthrough (ADR 0277). Merging it beside the run's other features pushed the first page to 350697 gzip bytes, so the budget was re-baselined with a 380000 limit under ADR 0154. The tour stays the same for every role for now.
 - The annotate sample size is an input defaulting to 200, and the estimate, summary and request share it. The UI by-hand preset order now matches the API.

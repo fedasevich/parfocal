@@ -2616,7 +2616,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Result sets and their styles are the top of the Layers tab (VIZ-001).
   Size: M.
 
-- [ ] ANN-016 · Grouping rules
+- [x] ANN-016 · Grouping rules
   Class, cluster (radius in µm), containment, provenance.
   Done when unit tests cover each rule.
   Refs [`poc/src/annotations/grouping.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/annotations/grouping.ts).
