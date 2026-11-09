@@ -17,7 +17,11 @@ const publish = (next: Connection) => {
 
 const answers = async () => {
   try {
-    await fetch(`/?connection-check=${Date.now()}`, { method: "HEAD", cache: "no-store" });
+    await fetch(`/?connection-check=${Date.now()}`, {
+      method: "HEAD",
+      cache: "no-store",
+      signal: AbortSignal.timeout(retryEveryMs),
+    });
     return true;
   } catch {
     return false;
@@ -43,9 +47,12 @@ const scheduleRetry = () => {
 };
 
 export async function retryNow(): Promise<void> {
-  if (state.online) return;
+  if (state.online || state.retrying) return;
+  clearTimeout(timer);
   publish({ online: false, retrying: true });
-  if (await answers()) {
+  const answered = await answers();
+  if (state.online) return;
+  if (answered) {
     restore();
     return;
   }
