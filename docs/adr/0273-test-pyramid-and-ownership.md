@@ -1,4 +1,4 @@
-# XXXX. The test pyramid has six levels, each owned by one place and one CI job
+# 0273. The test pyramid has six levels, each owned by one place and one CI job
 
 - Date: 2026-11-09
 - Status: Accepted
