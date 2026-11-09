@@ -149,3 +149,17 @@ test("the ring in the top bar opens the tray from home", async ({ page }) => {
   await expect(tray(page)).toContainText("Paused at 38%");
   await expect(tray(page)).toContainText("HoVer-Net v2.1");
 });
+
+test("the upload's end runs a model on the slides without results", async ({ page }) => {
+  const errors = watchErrors(page);
+  await page.goto(`/projects/${p07}/upload?scene=done`);
+  const zone = page.getByTestId("no-results-zone");
+  await expect(zone).toContainText("no results");
+  await zone.getByRole("button", { name: "Run a model" }).click();
+  await expect(runModel(page)).toBeVisible();
+  await expect(runModel(page)).toContainText("About");
+  await page.getByRole("button", { name: /Run on \d+ slides?/ }).click();
+  await expect(runModel(page)).toBeHidden();
+  await expect(tray(page)).toContainText("Starting");
+  expect(errors).toEqual([]);
+});

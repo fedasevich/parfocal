@@ -452,6 +452,7 @@ function SlideRow({
               <Link
                 to="/projects/$projectId/run-model"
                 params={{ projectId: project.id }}
+                search={{ slides: [slide.id] }}
                 onClick={(event) => event.stopPropagation()}
                 className="inline-flex min-h-6 items-center font-medium text-accent hover:underline"
               >
