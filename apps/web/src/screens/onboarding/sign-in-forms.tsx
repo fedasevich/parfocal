@@ -132,14 +132,7 @@ export function EmailForm({ flow }: { flow: Flow }) {
   return (
     <AuthForm>
       <AuthHeading title="Sign in to Parfocal">{flow.workspace.name} workspace</AuthHeading>
-      {flow.scene === "expired" ? (
-        <Banner inline tone="info" icon="clock">
-          Your session ended after {options?.session_hours ?? 8} hours. Sign in to go on. Your last
-          decision, {options?.last_decision ?? "your last one"}, is saved.
-        </Banner>
-      ) : (
-        <DeepLinkLine options={options} />
-      )}
+      <DeepLinkLine options={options} />
       {showsSso ? (
         <SsoButton
           workspace={{ name: matched.name, logo: matched.logo, colour: matched.colour }}

@@ -5,22 +5,12 @@ import {
   useListTenantMembers,
   useRequestProjectAccess,
 } from "@parfocal/api-client";
-import {
-  AuthFoot,
-  AuthForm,
-  AuthHeading,
-  LockCard,
-  PasskeySheet,
-} from "@parfocal/ui/components/auth";
-import { Banner } from "@parfocal/ui/components/banner";
-import { Button } from "@parfocal/ui/components/button";
-import { Icon } from "@parfocal/ui/components/icon";
-import { Person } from "@parfocal/ui/components/person";
+import { LockCard, PasskeySheet } from "@parfocal/ui/components/auth";
 import { useState } from "react";
 import { destinations } from "../../shell/destinations.ts";
 import { personOf } from "../../shell/global-shell.tsx";
+import { NoAccessPage, SessionExpiredPage } from "../../shell/issue-pages.tsx";
 import { useGoTo } from "../../shell/router-link.tsx";
-import { toPersonInfo } from "../people.ts";
 import { okData } from "../placeholder.tsx";
 import { PitchLayout, slideImage, useSignInOptions, workspaceOf } from "./auth-side.tsx";
 import { useNotice } from "./notice.tsx";
@@ -46,6 +36,7 @@ export function SignInScreen({ scene, change, returnTo }: Props) {
   const goTo = useGoTo();
   const [notice, show] = useNotice();
   const workspace = workspaceOf(options);
+  const [signingInAgain, setSigningInAgain] = useState(false);
   const [typedEmail, setEmail] = useState<string | null>(null);
   const email = typedEmail ?? me?.email ?? options?.email ?? "";
   const link = options?.deep_link ?? null;
@@ -114,6 +105,16 @@ export function SignInScreen({ scene, change, returnTo }: Props) {
 
   if (scene === "noaccess") return <NoAccess />;
 
+  if (scene === "expired" && !signingInAgain) {
+    return (
+      <SessionExpiredPage
+        hours={options?.session_hours ?? 8}
+        lastSaved={options?.last_decision ?? "just now"}
+        onSignIn={() => setSigningInAgain(true)}
+      />
+    );
+  }
+
   const forms: Record<"magic" | "sso" | "forgot" | "reset", React.ReactNode> = {
     magic: <MagicForm flow={flow} />,
     sso: <SsoForm flow={flow} />,
@@ -130,74 +131,35 @@ export function SignInScreen({ scene, change, returnTo }: Props) {
 }
 
 function NoAccess() {
-  const me = okData(useGetMe().data);
   const projects = okData(useListProjects().data) ?? [];
   const members = okData(useListTenantMembers().data) ?? [];
-  const goTo = useGoTo();
   const [notice, show] = useNotice();
   const ask = useRequestProjectAccess();
   const [asked, setAsked] = useState(false);
   const project = projects.find((item) => item.code === "P03");
   const ownerId = project?.members.find((member) => member.role === "owner")?.user_id;
-  const owner = members.find((member) => member.user_id === ownerId);
-  const ownerName = owner?.display_name ?? "the owner";
-  const ownerFirst = ownerName.split(" ")[0];
+  const ownerName =
+    members.find((member) => member.user_id === ownerId)?.display_name ?? "the owner";
   return (
-    <PitchLayout>
-      <AuthForm>
-        <AuthHeading title={`No access to ${project?.name ?? "this project"}`}>
-          Signed in as <b>{me?.email}</b>
-        </AuthHeading>
-        <Banner inline tone="warn" icon="lock">
-          You are not a member of {project?.name}. Ask {ownerName}, its owner, to add you.
-        </Banner>
-        {owner ? (
-          <div className="text-left">
-            <Person
-              person={toPersonInfo(owner)}
-              size={24}
-              sub={`Owner of ${project?.name ?? "the project"}`}
-            />
-          </div>
-        ) : null}
-        {asked ? (
-          <Button
-            variant="primary"
-            size="lg"
-            block
-            disabled
-            title={`${ownerName} has your request`}
-          >
-            <Icon name="check" />
-            Asked, 11:02
-          </Button>
-        ) : (
-          <Button
-            variant="primary"
-            size="lg"
-            block
-            onClick={() => {
-              if (project === undefined) return;
-              ask.mutate(
-                { projectId: project.id },
-                {
-                  onSuccess: () => {
-                    setAsked(true);
-                    show(`Asked ${ownerName} to add you to ${project.name}`);
-                  },
-                },
-              );
-            }}
-          >
-            Ask for access
-          </Button>
-        )}
-        <Button size="lg" block onClick={() => void goTo(destinations.myWork())}>
-          Go to My work
-        </Button>
-        <AuthFoot>{ownerFirst} gets your request in the bell and by email.</AuthFoot>
-      </AuthForm>
+    <>
+      <NoAccessPage
+        projectName={project?.name ?? "this project"}
+        ownerName={ownerName}
+        asked={asked}
+        onAsk={() => {
+          if (project === undefined) return;
+          ask.mutate(
+            { projectId: project.id },
+            {
+              onSuccess: () => {
+                setAsked(true);
+                show(`Asked ${ownerName} to add you to ${project.name}`);
+              },
+            },
+          );
+        }}
+      />
       {notice}
-    </PitchLayout>
+    </>
   );
 }

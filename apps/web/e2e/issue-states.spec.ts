@@ -10,7 +10,8 @@ test("the issue states index opens from the prototype index with every flow", as
   await expect(page).toHaveURL(/\/issue-states$/);
   await expect(page.getByRole("heading", { name: "Issue states", level: 1 })).toBeVisible();
   const index = page.getByTestId("issue-states");
-  await expect(index.getByRole("region")).toHaveCount(15);
+  await expect(index.getByRole("region")).toHaveCount(16);
+  await expect(index.locator("a[data-page-link]")).toHaveCount(5);
   await expect(index.locator("[data-issue-state]")).toHaveCount(45);
   await expect(index.locator("a[data-state-button]")).toHaveCount(52);
   await expect(index.locator("button[data-state-button][aria-disabled=true]")).toHaveCount(0);
@@ -38,6 +39,7 @@ for (const part of parts) {
       await page.goto(href);
       await expect(page.locator("main, [role=dialog], h1, h2").first(), key).toBeVisible();
       await expect(page.getByRole("heading", { name: "Page not found" }), key).toHaveCount(0);
+      await expect(page.getByTestId("issue-server-error"), key).toHaveCount(0);
       await expect(page.getByText(/^Placeholder\. The screen is built by/), key).toHaveCount(0);
     }
     expect(errors).toEqual([]);
@@ -54,4 +56,10 @@ test("Show opens the state as its persona and Back to the index returns", async 
   await page.getByRole("link", { name: "Back to the index" }).click();
   await expect(page).toHaveURL(/\/issue-states$/);
   await expect(page.getByTestId("prototype-bar")).toHaveCount(0);
+});
+
+test("a shared page opens from the index", async ({ page }) => {
+  await page.goto("/issue-states");
+  await page.locator('a[data-page-link="expired"]').click();
+  await expect(page.getByTestId("issue-session-expired")).toBeVisible();
 });

@@ -47,6 +47,8 @@ import { type ReactNode, useEffect, useRef, useState } from "react";
 import { provideDebug } from "../../debug-handle.ts";
 import { useFormat } from "../../format.ts";
 import { escLayer } from "../../keys/esc-ladder.ts";
+import { useConnection } from "../../shell/connection.ts";
+import { ConnectionBanner } from "../../shell/connection-banner.tsx";
 import { destinations } from "../../shell/destinations.ts";
 import { useLabDecisionCutoff, useResolvedSettings } from "../../shell/resolved-settings.ts";
 import { useCellTiming, useChromeSampling, useTaskRun } from "../../telemetry/use-task-timing.ts";
@@ -263,6 +265,7 @@ function ViewerBody({
   )?.id;
   const scene = search.scene;
   const setup = viewerSetup(scene);
+  const { online } = useConnection();
   const navigator = isNavigatorScene(scene) ? scene : null;
   const measuring = search.tool === "ruler";
   const personalSettings = useResolvedSettings();
@@ -1209,48 +1212,42 @@ function ViewerBody({
     />
   );
 
-  const banner = setup.connLost ? (
-    <Banner
-      tone="warn"
-      actions={
-        <Button size="sm" onClick={() => setToast({ id: Date.now(), text: "Still offline" })}>
-          Retry now
-        </Button>
-      }
-    >
-      <b>Connection lost.</b> Decisions can't be saved right now. Nothing is lost. Retrying...
-    </Banner>
-  ) : readOnly ? (
-    <Banner
-      tone="info"
-      icon="lock"
-      actions={
-        <Button size="sm">
-          Ask {person(session.task?.created_by_user_id)?.name.split(" ")[0] ?? "the researcher"} to
-          amend
-        </Button>
-      }
-    >
-      <b>Signed off 15 Oct.</b> Changes need an amendment.
-    </Banner>
-  ) : setup.sourceOff ? (
-    <Banner
-      tone="warn"
-      icon="link"
-      actions={
-        <Button
-          size="sm"
-          onClick={() => void router.navigate({ href: `${destinations.admin()}?section=storage` })}
-        >
-          Source status
-        </Button>
-      }
-    >
-      <b>Scanner archive is not answering since 10:40.</b> {slideLabel} is read in place from there,
-      so it opens from the 7-day tile cache. Places never viewed show a quiet checker until the
-      source is back.
-    </Banner>
-  ) : null;
+  const banner =
+    setup.connLost || !online ? (
+      <ConnectionBanner pinned={setup.connLost} />
+    ) : readOnly ? (
+      <Banner
+        tone="info"
+        icon="lock"
+        actions={
+          <Button size="sm">
+            Ask {person(session.task?.created_by_user_id)?.name.split(" ")[0] ?? "the researcher"}{" "}
+            to amend
+          </Button>
+        }
+      >
+        <b>Signed off 15 Oct.</b> Changes need an amendment.
+      </Banner>
+    ) : setup.sourceOff ? (
+      <Banner
+        tone="warn"
+        icon="link"
+        actions={
+          <Button
+            size="sm"
+            onClick={() =>
+              void router.navigate({ href: `${destinations.admin()}?section=storage` })
+            }
+          >
+            Source status
+          </Button>
+        }
+      >
+        <b>Scanner archive is not answering since 10:40.</b> {slideLabel} is read in place from
+        there, so it opens from the 7-day tile cache. Places never viewed show a quiet checker until
+        the source is back.
+      </Banner>
+    ) : null;
 
   const canvasNotice =
     setup.issue === "slidefail" ? (
