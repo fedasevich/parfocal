@@ -208,7 +208,7 @@ export const toCreatedTask = (projectId: string, draft: TaskDraft): ReviewTaskDe
   display: draft.display ?? taskDisplayFor(newTask.code),
   created_by_user_id: people.DH.id,
   created_at: `${newTask.sentOn}T14:30:00+02:00`,
-  slide_count: draft.result_sets?.length ?? draft.slide_ids?.length ?? 0,
+  slide_count: draft.slide_ids?.length || (draft.result_sets?.length ?? 0),
   reviewer_count: draft.reviewer_ids.length,
   slides: (draft.result_sets ?? []).map((set) => ({
     slide_id: set.slide_id,

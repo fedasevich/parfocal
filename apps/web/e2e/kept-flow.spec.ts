@@ -62,6 +62,8 @@ test("New review task comes back on its step with the name kept", async ({ page 
   const newTask = `/projects/${p07}/tasks/new`;
   await page.goto(newTask);
   const flow = page.getByTestId("new-task");
+  await expect(current(page, "new-task")).toHaveText(/Kind/);
+  await flow.getByRole("button", { name: "Next" }).click();
   await flow.getByRole("textbox", { name: "Task name" }).fill("Round 9 kept");
   for (const step of ["Reviewers", "What to check", "How it runs", "Send"]) {
     await flow.getByRole("button", { name: "Next" }).click();

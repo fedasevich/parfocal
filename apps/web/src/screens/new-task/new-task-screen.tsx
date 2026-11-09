@@ -1,4 +1,5 @@
 import { type TaskDraft, useCreateReviewTask, useInviteTaskReviewer } from "@parfocal/api-client";
+import { annotatePresets } from "@parfocal/ui/components/annotate-task";
 import type { LinkRenderer } from "@parfocal/ui/components/app-shell";
 import { BeforeYouList } from "@parfocal/ui/components/before-you-list";
 import { Button, buttonVariants } from "@parfocal/ui/components/button";
@@ -11,12 +12,15 @@ import { useFlowOwner, useKeptFlow } from "../../session/kept-flow.ts";
 import { SidebarToggle } from "../../shell/sidebar-toggle.tsx";
 import { QueryState } from "../placeholder.tsx";
 import { decisionSettings } from "../review/decision-style.ts";
+import { checkChangeOf, checkPresetOf } from "./annotate-draft.ts";
 import { AddSlidesModal, PreviewQuestionModal } from "./modals.tsx";
 import {
   applyTemplate,
   blockersFor,
   type Draft,
   fieldErrors,
+  initialDraft,
+  isAnnotate,
   issues,
   type PageKey,
   perSlideOn,
@@ -28,6 +32,7 @@ import {
   scopeKinds,
   sendLabel,
   slidesInTask,
+  slidesWithResult,
   stepKeys,
   stepNames,
   stepState,
@@ -40,6 +45,7 @@ import { fieldId } from "./parts.tsx";
 import {
   CheckStep,
   HowStep,
+  KindStep,
   ReviewersStep,
   SendStep,
   SentPanel,
@@ -109,6 +115,27 @@ const scopeOf = (draft: Draft): NonNullable<TaskDraft["scope"]> => {
   return { kind: "all-regions" };
 };
 
+function annotateFields(draft: Draft, data: TaskData): Partial<TaskDraft> {
+  const fromPreset = annotatePresets.find((item) => item.key === draft.preset)?.options;
+  const change = fromPreset ? checkChangeOf(draft.check, fromPreset) : undefined;
+  const withResult = draft.check.hasResult ? slidesWithResult(draft, data) : [];
+  return {
+    kind: "annotate",
+    blinded: false,
+    ai_hidden_first_read: false,
+    start_mode: "viewer",
+    study_template_id: null,
+    study_template_version: null,
+    result_sets: withResult.map((slide) => ({
+      slide_id: slide.id,
+      result_set_id: draft.resultSetId,
+    })),
+    scope: { kind: "whole-slide" },
+    preset: checkPresetOf[draft.preset],
+    ...(change ? { check: change } : {}),
+  };
+}
+
 function toTaskDraft(draft: Draft, data: TaskData): TaskDraft {
   const slides = slidesInTask(draft, data);
   const template = data.templates.find((candidate) => candidate.id === draft.templateId);
@@ -125,6 +152,7 @@ function toTaskDraft(draft: Draft, data: TaskData): TaskDraft {
           ),
         }
       : {}),
+    slide_ids: slides.map((slide) => slide.id),
     result_sets: slides.map((slide) => ({ slide_id: slide.id, result_set_id: draft.resultSetId })),
     scope: scopeOf(draft),
     blinded: draft.blind,
@@ -135,6 +163,7 @@ function toTaskDraft(draft: Draft, data: TaskData): TaskDraft {
     study_template_id: draft.templateId,
     study_template_version: template ? Number(template.version.slice(1)) : null,
     decision: decisionSettings(styleOf[draft.decision.kind], draft.decision),
+    ...(isAnnotate(draft) ? annotateFields(draft, data) : {}),
   };
 }
 
@@ -151,7 +180,7 @@ function NewTaskFlow({
     owner,
     id: `new-task:${data.projectId}`,
     count: stepKeys.length,
-    draft: sceneDraft(data, scene),
+    draft: keep ? initialDraft(data) : sceneDraft(data, scene),
     at: step === undefined || step === "sent" ? undefined : stepKeys.indexOf(step),
     keep,
   });
@@ -166,7 +195,7 @@ function NewTaskFlow({
   const invite = useInviteTaskReviewer();
   const renderLink = useLinkRenderer();
   const kept = keep ? stepKeys[flow.kept?.current ?? -1] : undefined;
-  const page: PageKey = step ?? kept ?? sceneStep[scene];
+  const page: PageKey = step ?? kept ?? (keep ? "kind" : sceneStep[scene]);
   const all = issues(draft, data);
   const errors = fieldErrors(draft, data);
 
@@ -212,6 +241,7 @@ function NewTaskFlow({
   const update = (change: (current: Draft) => Draft) => setDraft(change);
   const projectHref = `/projects/${data.projectId}`;
   const sent = page === "sent";
+  const taskTitle = isAnnotate(draft) ? "New annotate task" : "New review task";
   const index = sent ? stepKeys.length : stepKeys.indexOf(page);
 
   const steps: FlowStep[] = stepKeys.map((key) => {
@@ -380,7 +410,7 @@ function NewTaskFlow({
         crumbs={[
           { label: data.projectName, href: `${projectHref}?tab=slides` },
           { label: "Review tasks", href: `${projectHref}?tab=tasks` },
-          { label: sent ? data.code : "New review task" },
+          { label: sent ? data.code : taskTitle },
         ]}
         title={
           sent ? (
@@ -388,7 +418,7 @@ function NewTaskFlow({
               <span className="font-mono">{data.code}</span> · {draft.name.trim()}
             </>
           ) : (
-            "New review task"
+            taskTitle
           )
         }
         subtitle={sent ? undefined : <span className="font-mono">{data.code}</span>}
@@ -402,6 +432,7 @@ function NewTaskFlow({
         status={sent ? sentLine : undefined}
         bar={bar}
       >
+        {page === "kind" ? <KindStep {...stepProps} /> : null}
         {page === "slides" ? <SlidesStep {...stepProps} /> : null}
         {page === "reviewers" ? <ReviewersStep {...stepProps} /> : null}
         {page === "check" ? <CheckStep {...stepProps} /> : null}
