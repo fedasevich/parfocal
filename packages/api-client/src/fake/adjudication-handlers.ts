@@ -42,6 +42,7 @@ import {
   startNextVersion,
 } from "./queue-scene.ts";
 import { toThreads } from "./review-handlers.ts";
+import { savedNoteOf } from "./review-verdicts.ts";
 import {
   adjudications,
   type PersonKey,
@@ -49,6 +50,7 @@ import {
   projectByCode,
   reviewTasks,
   scenarioNow,
+  signedInAs,
   slideByIndex,
   slides,
 } from "./scenario.ts";
@@ -133,7 +135,7 @@ const toQueueRow = (seed: QueueSeedRow): QueueRow => {
       user_id: idOf(item.by),
       raw: item.raw,
       reason: item.reason,
-      note: item.note,
+      note: noteOf(seed, item.by, item.note),
     })),
     state: live.state,
     decision,
@@ -157,9 +159,14 @@ export const toDisagreementQueue = (taskId: string): DisagreementQueue =>
 const seedOf = (slideId: string, object: string) =>
   queueRows.find((seed) => slideByIndex(seed.slide).id === slideId && seed.object === object);
 
+const noteOf = (seed: QueueSeedRow, who: PersonKey, seeded: string | null) =>
+  who === signedInAs
+    ? (savedNoteOf(task().id, slideByIndex(seed.slide).id, seed.object) ?? seeded)
+    : seeded;
+
 const answerOf = (seed: QueueSeedRow, who: PersonKey) => {
   const found = seed.answers.find((item) => item.by === who) ?? seed.answers[0];
-  return { raw: found.raw, reason: found.reason, note: found.note };
+  return { raw: found.raw, reason: found.reason, note: noteOf(seed, found.by, found.note) };
 };
 
 const forAdjudicator = (live: LiveRow) =>

@@ -1,3 +1,4 @@
+import { MentionText } from "@parfocal/ui/components/comment-thread";
 import { Icon, type IconName } from "@parfocal/ui/components/icon";
 import {
   Table,
@@ -150,7 +151,7 @@ function QuotedNote({ className, children, ...props }: React.ComponentProps<"q">
       )}
       {...props}
     >
-      {children}
+      {typeof children === "string" ? <MentionText text={children} /> : children}
     </q>
   );
 }

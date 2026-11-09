@@ -176,6 +176,9 @@ export const rememberDecision = (
   savedDecisions.set(key, kept);
 };
 
+export const savedNoteOf = (taskId: string, slideId: string, object: string): string | null =>
+  savedDecisions.get(savedKey(taskId, slideId))?.get(object)?.note ?? null;
+
 const startingDecisions = (taskId: string, slideId: string): Verdict[] => {
   if (!reviewsA1(taskId, slideId)) return [];
   const decided = lenkaDecisionsInReview();
