@@ -1,13 +1,36 @@
 import type { ReactNode } from "react";
-import { type StillDrawChoices, StillEngine, type StillObject } from "./still-engine.tsx";
-import { webglAvailable } from "./webgl.ts";
+import {
+  type StillDrawChoices,
+  StillEngine,
+  type StillLink,
+  type StillObject,
+} from "./still-engine.tsx";
+import { useWebglAvailable } from "./webgl.ts";
 
-type Backdrop = (state: {
+export type Backdrop = (state: {
   camera: { x: number; y: number; scale: number };
-  onReady: (up: boolean) => void;
+  onReady: (link: StillLink | null) => void;
+  onTiles: (failed: number) => void;
 }) => ReactNode;
 
-export function stillBackdrop({
+export const noResultsOn = (taskAsks: boolean, objects: readonly unknown[]) =>
+  taskAsks && objects.length === 0;
+
+export function engineBehindStill({
+  cellView,
+  tilesFailed,
+  noResults,
+  ownLayers = false,
+}: {
+  cellView: boolean;
+  tilesFailed: boolean;
+  noResults: boolean;
+  ownLayers?: boolean;
+}): boolean {
+  return !cellView && !tilesFailed && !noResults && !ownLayers;
+}
+
+export function useStillBackdrop({
   enabled,
   slideId,
   objects,
@@ -20,8 +43,9 @@ export function stillBackdrop({
   choices: StillDrawChoices;
   hiddenClasses?: ReadonlySet<string>;
 }): Backdrop | undefined {
-  if (!enabled || !webglAvailable()) return undefined;
-  return ({ camera, onReady }) => (
+  const webgl = useWebglAvailable();
+  if (!enabled || !webgl) return undefined;
+  return ({ camera, onReady, onTiles }) => (
     <StillEngine
       slideId={slideId}
       camera={camera}
@@ -29,6 +53,7 @@ export function stillBackdrop({
       choices={choices}
       hiddenClasses={hiddenClasses}
       onReady={onReady}
+      onTiles={onTiles}
     />
   );
 }

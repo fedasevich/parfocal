@@ -103,3 +103,7 @@ For each slide the function removes, `retention.purge` deletes every object unde
 ## Row-level security keeps ILIKE off a trigram index
 
 Under the tenant policy, `label ILIKE '%term%'` runs as a sequential scan even with a GIN trigram index, because `ILIKE` is not leakproof and Postgres applies the policy first. As the table owner the same query uses the index, so an `EXPLAIN` outside the tenant scope is misleading. At 100,000 cases the scan takes about 27 ms ([search spike](../results/2026-10-18-search-spike.md)). Read plans inside `scoped_transaction` with the app role.
+
+## The runtime role must not bypass row-level security
+
+`require_row_security` in `parfocal_common.db` raises `UnsafeDatabaseRoleError` when the role behind `DATABASE_URL` is a superuser or holds `BYPASSRLS`. The API calls it at start, and so do the worker loop and the retention, stale upload and operator commands. On Neon the project's default role and every role made in the console, through the API or with the CLI can bypass row-level security, so create `parfocal_app` with SQL as the owner (`CREATE ROLE parfocal_app LOGIN PASSWORD '...' NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS`) and point `DATABASE_URL` at it. TODO: confirm the Neon role rule on a real project when staging exists. Source: SEC-032 and the [tenant isolation review](../results/2026-11-09-tenant-isolation-review.md).

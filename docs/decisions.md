@@ -76,6 +76,16 @@ No milestone has closed since 2026-10-06 and the roadmap has no dates, while the
 
 Your choice, with the date:
 
+## 84. A new workspace and its mail domain, from the [tenant isolation review](results/2026-11-09-tenant-isolation-review.md)
+
+Decision 75a (a matching email domain joins at once) is safe only when the domain belongs to one organisation. A new workspace saves its creator's domain by itself, and the list of public mail providers can never be complete, so a stranger with a free mailbox on an unlisted provider can see and join such a workspace. Nothing is deployed, so nobody is exposed yet. IAM-026 (a workspace on a shared mail domain is not open to strangers) builds the answer.
+
+- a. A new workspace saves no domain. An admin turns on joining by domain in the join settings, which already check that the domain is the admin's own and not public. (recommended, safe without any list)
+- b. Keep saving the domain, with the policy "ask", so a stranger can only send a request that an admin approves.
+- c. Keep it as built and grow the list of public providers from a published list.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 Nothing else in review needs you. Nine tasks that only waited for green CI were ticked on 2026-11-02.

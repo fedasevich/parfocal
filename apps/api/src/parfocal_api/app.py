@@ -103,7 +103,7 @@ from parfocal_api.realtime import realtime_for
 from parfocal_api.request_logging import RequestLogging
 from parfocal_api.settings import ApiSettings
 from parfocal_common.clients import Clients, ProductionFactories, select_clients
-from parfocal_common.db import create_engine
+from parfocal_common.db import create_engine, require_row_security
 from parfocal_common.envelope import MasterKeyring
 from parfocal_common.object_store import ObjectStore
 from parfocal_common.result_store import ObjectResultStore, ResultStore
@@ -132,14 +132,17 @@ def public_origin(settings: ApiSettings) -> str:
 
 
 @asynccontextmanager
-async def close_clients(app: FastAPI) -> AsyncGenerator[None]:
-    yield
+async def checked_role_then_closed_clients(app: FastAPI) -> AsyncGenerator[None]:
     state: auth.AuthState = app.state.auth
-    await state.identity.http.aclose()
-    storage: ObjectStore = app.state.storage
-    await storage.http.aclose()
-    await app.state.realtime_http.aclose()
-    await state.engine.dispose()
+    try:
+        await require_row_security(state.engine)
+        yield
+    finally:
+        await state.identity.http.aclose()
+        storage: ObjectStore = app.state.storage
+        await storage.http.aclose()
+        await app.state.realtime_http.aclose()
+        await state.engine.dispose()
 
 
 class ParfocalApi(FastAPI):
@@ -148,7 +151,7 @@ class ParfocalApi(FastAPI):
             title="Parfocal API",
             version="0.0.0",
             responses=PROBLEM_RESPONSES,
-            lifespan=close_clients,
+            lifespan=checked_role_then_closed_clients,
         )
         self.settings = settings
         self.clients = clients

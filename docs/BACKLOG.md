@@ -573,7 +573,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Done when two pushes in a row to main each end with a finished run, a failing docs check fails `ci-ok`, and the lead's check reports any failed workflow of the head commit.
   Size: M.
 
-- [ ] FOUND-034 · Guard against duplicate decision record numbers
+- [x] FOUND-034 · Guard against duplicate decision record numbers
   Three records carry the number 0278 (blind first on annotate tasks, load tests run on Locust, and a decision note stays on the decision), because parallel merges numbered them at once, and `scripts/check_adrs.py` does not look for duplicates ([project review](results/2026-11-09-project-review.md)). Give two of them free numbers with their links and index rows, and make the check and `scripts/lead/number_adrs.py` refuse a number that is taken.
   Done when a test shows `check_adrs.py` failing on a duplicate number, every record has its own number and the check passes.
   Size: S.
@@ -810,6 +810,11 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Depends on ADMIN-009, IAM-001.
   Size: M.
 
+- [ ] IAM-026 · A workspace on a shared mail domain is not open to strangers
+  A person who creates a workspace saves their mail domain on it with the join policy `join`, and only a hand-kept list of 32 domains and 7 prefixes keeps consumer mail providers out ([tenant isolation review](results/2026-11-09-tenant-isolation-review.md), confirmed finding 1). On a provider missing from the list, such as `onet.pl`, `btinternet.com` or `comcast.net`, any stranger with a free mailbox sees the workspace's name, logo and counts and joins it as a reviewer. Decision 84 (a new workspace and its mail domain) picks the fix.
+  Done when a test shows a stranger on an unlisted shared provider neither listing nor joining a workspace made there, and the chosen rule is recorded.
+  Size: S.
+
 ---
 
 ## 04 SEC · Security and compliance (GDPR, HIPAA, ISO 27001 readiness)
@@ -988,6 +993,27 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
 - [ ] SEC-031 · Hard stops for destructive agent actions
   The production rules in `AGENTS.md` are prose. The owner's sessions run with permissions bypassed and no deny list, the connected MCP servers give every session and subagent tools that delete a Neon project or branch and an R2 bucket, and `.env` holds a Cloudflare token that writes R2 and DNS ([project review](results/2026-11-09-project-review.md)). Add deny rules or a `PreToolUse` guard in `.claude/settings.json` for destructive MCP tools and for commands that destroy, delete, purge, rotate or reset cloud resources, remove the two deprecated Cloudflare MCP servers (bindings and observability) from `.mcp.json`, and keep a token limited to dev and staging in `.env`, which the owner creates. Additive production writes under ADR 0151 (standing approval within $30 a month) stay allowed.
   Done when a guard test proves the listed tools and commands are refused for agents, the deprecated servers are gone, [knowledge/agent-tooling.md](knowledge/agent-tooling.md) lists what is refused and how the owner runs such an action, and `.env.example` names the limited token.
+  Size: M.
+
+- [x] SEC-032 · The API and the workers refuse a database role that bypasses row-level security
+  Tenant isolation rests on the role in `DATABASE_URL` being neither a superuser nor a `BYPASSRLS` role, and nothing checked it ([tenant isolation review](results/2026-11-09-tenant-isolation-review.md), confirmed finding 3). With the owner connection string, which Neon hands out by default, every route would read and change every workspace's rows with no error. Add `require_row_security` to `parfocal_common.db` and call it when the API starts, in the worker loop and in the retention, stale upload and operator commands.
+  Done when a db test shows the API, the worker loop and each command raising `UnsafeDatabaseRoleError` for the owner role and passing for `parfocal_app`, and [knowledge/database.md](knowledge/database.md) says how to create the role on Neon.
+  Size: S.
+
+- [ ] SEC-033 · Isolation checks that read the policies and probe every table
+  The isolation checks compare policy names and GET routes only ([tenant isolation review](results/2026-11-09-tenant-isolation-review.md), confirmed finding 2). A policy written as `USING (true)`, a second permissive policy, a tenant table with no seeded row and an unscoped write route all pass today, and 172 of 306 operations are not GET. Pin every policy's command, kind and both expressions in a reviewed snapshot file, probe every table with a `tenant_id` column as `parfocal_app` under another workspace's scope and under no scope, and classify every operation so each write route is sent as the other workspace.
+  Done when the snapshot test fails on a changed or added policy, the probe fails for a tenant table that shows a row or has none seeded, and a test fails when an operation of any method is missing from the suite.
+  Size: M.
+
+- [ ] SEC-034 · Narrow three database escape hatches
+  Three rules allow more than the code that uses them needs ([tenant isolation review](results/2026-11-09-tenant-isolation-review.md), confirmed finding 4). The auth scope may rewrite any column of any workspace's `api_tokens` row though it only sets `last_used_at`, a signed-in person may change their own `email` and `subject` in `users` though only the email schedule is self-service, and the join routes open a scope with platform and auth both on for a workspace id taken from the URL. None is reachable from a request today. Grant `UPDATE` on `api_tokens` by column, refuse a change of `email` or `subject` outside the auth and platform scopes, and make the join routes check under the platform scope first and then write under the tenant scope, as accepting an invitation does.
+  Done when a database probe as `parfocal_app` fails to move or revive an API token under the auth scope and fails to change the person's own email under a member scope, and the join routes pass their tests without the platform flag in the write transaction.
+  Size: M.
+
+- [ ] SEC-035 · Foreign keys to tenant tables carry the tenant
+  About sixty foreign keys to tenant tables leave out `tenant_id`, and foreign key checks ignore row-level security, so a row in one workspace can name a parent in another when a route skips the parent check ([tenant isolation review](results/2026-11-09-tenant-isolation-review.md), suspicion 2). Eight sampled insert paths all check the parent first, the others were not read. Add `UNIQUE (id, tenant_id)` to the parents that lack it and make the single-column keys composite, starting with `resume_states`, `display_choices`, `display_presets`, `lab_model_projects` and `threads`, whose rows a client names directly.
+  Done when a database probe as `parfocal_app` fails to insert a child that names a parent of another workspace for every key in the review's list, and the db tests pass.
+  Depends on FOUND-035.
   Size: M.
 
 ---
@@ -5214,7 +5240,7 @@ Admin is its own page with its own sidebar and the app's top bar, never a page i
   Depends on VIZ-010.
   Size: L.
 
-- [ ] VIZ-013 · Engine behind the still for any slide
+- [x] VIZ-013 · Engine behind the still for any slide
   Review of VIZ-012 (guided review and the full viewer on the live slide) found the engine draws real pixels but takes objects from the mock region table, so a non-fixture slide shows no or misplaced outlines. Feed real object geometry to the engine, clamp the still's camera to the engine's bounds so wheel-out and off-slide drags stay aligned, clear the drawing before the viewport is disposed, release the WebGL probe context and move it out of render, align the no-results guard between the two screens and surface tile failures, and add a test that the canvas and the SVG line up.
   Done when browser tests open a non-fixture slide with real objects in both screens and find outlines aligned with pixels after wheel-out and a drag, and leaving the screen raises no engine error.
   Depends on VIZ-012.

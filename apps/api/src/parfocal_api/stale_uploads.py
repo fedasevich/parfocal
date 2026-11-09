@@ -11,7 +11,12 @@ from parfocal_api.audit import AuditAction, AuditTarget, record
 from parfocal_api.retention import SYSTEM
 from parfocal_api.settings import ApiSettings
 from parfocal_api.tables import UploadStatus, tenants, uploads
-from parfocal_common.db import DatabaseScope, create_engine, scoped_transaction
+from parfocal_common.db import (
+    DatabaseScope,
+    create_engine,
+    require_row_security,
+    scoped_transaction,
+)
 from parfocal_common.jobs import PLATFORM
 from parfocal_common.object_store import ObjectStore
 from parfocal_common.settings import load_settings
@@ -65,6 +70,7 @@ async def abort_stale_uploads(
 async def run_once(settings: ApiSettings) -> int:
     engine = create_engine(str(settings.database_url))
     try:
+        await require_row_security(engine)
         async with httpx2.AsyncClient(timeout=30) as http:
             store = ObjectStore(settings.storage(), http)
             return len(await abort_stale_uploads(engine, store))

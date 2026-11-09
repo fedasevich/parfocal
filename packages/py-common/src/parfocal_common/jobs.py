@@ -33,7 +33,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine
 
 from parfocal_common.data_classes import OPERATIONAL
-from parfocal_common.db import DatabaseScope, metadata, scoped_transaction
+from parfocal_common.db import DatabaseScope, metadata, require_row_security, scoped_transaction
 from parfocal_common.stage_throughput import RunLabels, StageSample, record_throughput
 
 logger = logging.getLogger("parfocal.jobs")
@@ -681,6 +681,7 @@ async def work(
     tenant_id: uuid.UUID | None = None,
     on_finished: JobFinished | None = None,
 ) -> int:
+    await require_row_security(engine)
     kinds = {workflow.kind: workflow for workflow in workflows}
     finished = 0
     idle = 0.0
