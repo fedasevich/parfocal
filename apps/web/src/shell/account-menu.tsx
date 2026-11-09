@@ -14,7 +14,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { now } from "../clock.ts";
 import { openFeedback } from "../feedback/feedback-state.ts";
-import { openHelp } from "../help/tour-state.ts";
+import { openHelp } from "../help/help-open.ts";
 import { toPersonInfo } from "../screens/people.ts";
 import { okData } from "../screens/placeholder.tsx";
 import { nextAvailability, presenceOf, shownPerson } from "./account-presence.ts";
