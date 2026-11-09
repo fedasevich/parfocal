@@ -47,6 +47,35 @@ Every other answer kept what was built: 37a (darker primary hover), 39a (Alt+Lef
 | 79a, two workspaces on one domain | Kept as built. Setup offers every matching workspace |
 | 80a, owner blind too | Kept as the default. COLLAB-021 (turn blind first off on a running annotate task) lets the owner switch it off at any time |
 
+## 81. Staging before more features, from the [project review](results/2026-11-09-project-review.md)
+
+664 of 940 tasks are ticked and nothing has ever been deployed. The API has no deploy definition, and the picking order never reaches OPS-001 (base infrastructure as code) because it unblocks only one task.
+
+- a. Put the staging slice first in the picking order (OPS-001, OPS-002 deploy definitions, SKEL-001 staging environment, IAM-001 login provider setup, SKEL-009 CI deploys to staging) and start no other new task until the real end-to-end specs pass on staging. (recommended, it is the largest unproven risk, and it should fit the free plans and Modal's included $30)
+- b. Give the staging slice one agent in every parallel run and keep features going beside it.
+- c. Keep the current order.
+
+Your choice:
+
+## 82. What the thesis claims about people, from the project review
+
+No pathologist is available, so an agent reviewed the confidence zone names as the pathologist (decision 44c) and ran the incident tabletop on paper. A thesis reader could take those for real checks.
+
+- a. Claim only measured technical results and public dataset ground truth, with every simulated check labelled as simulated. FOUND-038 (records where an agent stood in for a person) lists them. (recommended, it needs nobody)
+- b. The same, plus a small moderated study with medical students or residents through PILOT-005 (moderated usability study, second round).
+- Other.
+
+Your choice:
+
+## 83. A date for the thesis slice, from the project review
+
+No milestone has closed since 2026-10-06 and the roadmap has no dates, while the backlog grew from about 600 to 940 tasks. With a date, agents can cut by it.
+
+- a. Give the thesis hand-in date. Agents then gate one thesis milestone on staging and move every task outside it to after the thesis. (recommended)
+- b. No date, keep building the whole backlog.
+
+Your choice, with the date:
+
 ## The review column, what each task waits for
 
 Nothing else in review needs you. Nine tasks that only waited for green CI were ticked on 2026-11-02.

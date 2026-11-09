@@ -520,7 +520,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Size: M.
 
 - [ ] FOUND-024 · Rename verdict to decision everywhere
-  The owner does not want the word "verdict" anywhere in the app (2026-11-02). It still names the `verdicts` table, the `/verdicts` API paths and the `saveVerdict`, `clearVerdict` and `listVerdicts` operations, the generated client, the review screens' state, the `verdict` column of the reviewed export, the `review.verdict-set` and `review.verdict-cleared` audit names, the `--v-*` chart tokens and ADR 0072 and ADR 0144 (charts). Rename them to decision with a migration that renames the table and its constraints, keeps old audit rows readable by mapping the old event names, and regenerates the client. Old migration files keep their names, because migration history is never rewritten.
+  The owner does not want the word "verdict" anywhere in the app (2026-11-02). It still names the `verdicts` table, the `/verdicts` API paths and the `saveVerdict`, `clearVerdict` and `listVerdicts` operations, the generated client, the review screens' state, the `verdict` column of the reviewed export, the `review.verdict-set` and `review.verdict-cleared` audit names, the `--v-*` chart tokens and ADR 0072 and ADR 0144 (charts). Rename them to decision with a migration that renames the table and its constraints, keeps old audit rows readable by mapping the old event names, and regenerates the client. Old migration files keep their names, because migration history is never rewritten. On 2026-11-09 the word had 994 hits in 106 files. Land this before FOUND-035 (squash the migrations into one baseline) and before any production database.
   Done when `git grep -iw verdict` finds nothing outside `apps/api/migrations/versions` files older than the rename, a guard in `pnpm verify` fails on a new use, and `pnpm verify` is green.
   Size: L.
 
@@ -567,6 +567,37 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Done when the first-page gzip size is smaller than before, the lowered budget passes, the result file records both sizes, and the E2E suite stays green.
   Depends on FOUND-030.
   Size: M.
+
+- [ ] FOUND-033 · A result for every push to main
+  On 2026-11-09 the `ci` workflow ran 39 times on main with 3 green, 9 failed and 27 cancelled ([project review](results/2026-11-09-project-review.md)). A run takes 20 to 30 minutes, the lead pushes faster, and FOUND-025 (faster and less wasteful CI) cancels a running ci when a newer push arrives, so most pushes never get a result. The `docs` workflow was red for 14 pushes unseen, because `ci-ok` leaves it out and the lead watches only `ci`. Make `scripts/lead/push.sh` wait until the last run on main has finished, or stop cancelling on main, put the docs checks under `ci-ok`, and make the lead's check read every workflow of the head commit. The push of 18:14 UTC (ci run 42672338835) failed in three workflows without starting their jobs and did not come back on the next two pushes, so note it if it does.
+  Done when two pushes in a row to main each end with a finished run, a failing docs check fails `ci-ok`, and the lead's check reports any failed workflow of the head commit.
+  Size: M.
+
+- [ ] FOUND-034 · Guard against duplicate decision record numbers
+  Three records carry the number 0278 (blind first on annotate tasks, load tests run on Locust, and a decision note stays on the decision), because parallel merges numbered them at once, and `scripts/check_adrs.py` does not look for duplicates ([project review](results/2026-11-09-project-review.md)). Give two of them free numbers with their links and index rows, and make the check and `scripts/lead/number_adrs.py` refuse a number that is taken.
+  Done when a test shows `check_adrs.py` failing on a duplicate number, every record has its own number and the check passes.
+  Size: S.
+
+- [ ] FOUND-035 · Squash the migrations into one baseline
+  There are 91 migration files, numbered up to `0110`, and no shared database yet, so replacing them with one baseline is free now and never again ([project review](results/2026-11-09-project-review.md)). Staging can be dropped and recreated, so this must land before the first production database, not before SKEL-001 (staging environment exists). The baseline also freezes the built-in study templates that `0044` imports from `parfocal_api.study_templates`. Needs an ADR, because [knowledge/database.md](knowledge/database.md) says every change since `0020` is a new migration.
+  Done when a test proves the baseline and the old chain give the same schema, the seed data imports no application code, the ADR is written and the db tests pass.
+  Depends on FOUND-024.
+  Size: M.
+
+- [ ] FOUND-036 · Split the largest source files
+  `apps/api/src/parfocal_api/tables.py` (3,053 lines), `apps/web/src/screens/viewer/full-viewer.tsx` (1,895), `apps/web/src/screens/new-task/steps.tsx` (1,627) and `apps/web/src/screens/review/guided-review.tsx` (1,289) are touched by many tasks, so parallel agents conflict in them and every read of them costs many tokens ([project review](results/2026-11-09-project-review.md)). Split each by domain or by part of the screen with no change in behaviour, and add a guard on file length.
+  Done when those four files are split, a guard in `pnpm verify` fails on a new source file over 1,200 lines outside generated code and tests, with today's larger files listed as exceptions, and the suites stay green.
+  Size: M.
+
+- [ ] FOUND-037 · Docs memory that cannot go stale
+  `docs/README.md` was last consolidated on 2026-10-18 and says 796 tasks with about 170 ticked, against 940 with 664 ticked on 2026-11-09. The roadmap says M2 (viewer parity) is not started while VIEW is 39 of 56 and has no row for MA (the annotation path), risk R11 still says the cloud is paused, and "In progress" names decision 15a, which is gone ([project review](results/2026-11-09-project-review.md)). Run the consolidation once, replace hand-written counts with a `board.py` command that prints tasks and ticks per epic and milestone, and make the lead consolidate at the end of each parallel run.
+  Done when README, roadmap and risks match the board on the day of the change, README holds no hand-written count, `board.py` prints the counts, and `knowledge/agent-workflow.md` names the lead's consolidation step.
+  Size: M.
+
+- [ ] FOUND-038 · Records where an agent stood in for a person
+  An agent reviewed the confidence zone names as the pathologist (decision 44c, ADR 0194 on confidence display rules) and ran the incident tabletop on paper (ADR 0186 on incident response), and many accepted records were never read by the owner (risk R12). List every record, result and compliance document where an agent stood in for a pathologist, a user or the owner on one page like [standing-approval-records.md](project/standing-approval-records.md), mark each in its own file as simulated, and name what a real check would need. Decision 82 (what the thesis claims about people) decides what the thesis may cite.
+  Done when the page exists and is indexed in `docs/README.md` and each listed file carries a one-line mark.
+  Size: S.
 
 ---
 
@@ -952,6 +983,11 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   The edge Worker limits login, upload and tile requests per client address with Cloudflare's rate limiting binding, and adds bot protection to login ([threat model](security/threat-model.md) X3 and T4).
   Done when a test against a preview shows a login flood from one address answered with 429 while another address signs in.
   Depends on SEC-012, STACK-025. Split from SEC-012 by [ADR 0088](adr/0088-rate-limits-in-postgres-and-at-the-edge.md).
+  Size: M.
+
+- [ ] SEC-031 · Hard stops for destructive agent actions
+  The production rules in `AGENTS.md` are prose. The owner's sessions run with permissions bypassed and no deny list, the connected MCP servers give every session and subagent tools that delete a Neon project or branch and an R2 bucket, and `.env` holds a Cloudflare token that writes R2 and DNS ([project review](results/2026-11-09-project-review.md)). Add deny rules or a `PreToolUse` guard in `.claude/settings.json` for destructive MCP tools and for commands that destroy, delete, purge, rotate or reset cloud resources, remove the two deprecated Cloudflare MCP servers (bindings and observability) from `.mcp.json`, and keep a token limited to dev and staging in `.env`, which the owner creates. Additive production writes under ADR 0151 (standing approval within $30 a month) stay allowed.
+  Done when a guard test proves the listed tools and commands are refused for agents, the deprecated servers are gone, [knowledge/agent-tooling.md](knowledge/agent-tooling.md) lists what is refused and how the owner runs such an action, and `.env.example` names the limited token.
   Size: M.
 
 ---
@@ -4177,6 +4213,22 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
 - [x] TEST-025 · Four specs that fail before their axe step
   The full local run for TEST-009 (accessibility testing) failed four specs before axe ran: the guided-check row click that keeps the guided object, two guided-review scene tests and the command palette's Measure only on a slide. Nobody looked at why. Find whether each is a stale spec or a real bug, fix it, and check that the routes they reach are scanned.
   Done when the four specs pass locally three times in a row and in one CI run.
+  Size: S.
+
+- [ ] TEST-026 · Core browser specs against the real API
+  165 browser specs in `apps/web/e2e` run on the fake API, whose hand-written handlers hold about 13,700 lines of behaviour and about 50 files of draft hooks for operations with no backend, while 6 specs in `apps/e2e` reach the real API ([project review](results/2026-11-09-project-review.md)). The generated client ties the fake's types to `openapi.json`, but nothing ties its behaviour to the backend's. Add a Playwright project that runs a named core subset of the existing specs with `PARFOCAL_PUBLIC_FAKE_API=off` against the local API and a seeded database, starting with the review loop and the annotation path, and a guard that prints the number of draft operations and fails when it grows.
+  Done when the project runs in CI on the db stack and covers login, upload, guided review with a decision, an annotate task and sign-off, every spec that passes on the fake and fails on the real API is logged as a bug in one of the two, and the guard runs in `pnpm verify`.
+  Depends on TEST-004.
+  Size: L.
+
+- [ ] TEST-027 · Database tests in parallel
+  The `db` job runs 2,680 tests one after another in 21 minutes (ci run 42666737479), the longest job in ci ([project review](results/2026-11-09-project-review.md)). Each test already makes its own workspace, so run them with pytest-xdist and one migrated database per worker cloned from a template.
+  Done when the db job finishes in under 10 minutes on three ci runs in a row with the same number of tests passing, and a result file records the times before and after.
+  Size: M.
+
+- [ ] TEST-028 · Model accuracy tests that cannot be skipped unseen
+  The tests in `workers/ml/tests` that need model weights, exported ONNX graphs or cached datasets are deselected by the `weights` marker or skip when the files are missing, and CI has none of the files, so the accuracy numbers are checked only on the owner's Mac when someone remembers ([project review](results/2026-11-09-project-review.md)). Add one command that runs them all with the files required, as `PARFOCAL_REQUIRE_FIXTURES` does for slides, and make the lead run it before ticking a task that changes `workers/ml` or a model graph, one such run at a time because of the Mac's memory.
+  Done when the command fails on a missing weight or dataset instead of skipping, a result file records one full run with its numbers, and `knowledge/agent-workflow.md` names when the lead runs it.
   Size: S.
 
 ---

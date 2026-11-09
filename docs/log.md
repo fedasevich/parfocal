@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-09
 
+- Project review of 2026-11-09 filed: the result file docs/results/2026-11-09-project-review.md holds the numbers, decisions 81 (staging before more features), 82 (what the thesis claims about people) and 83 (a date for the thesis slice) wait for the owner, and ten tasks were added, the FOUND ones for CI results, record numbers, a migration baseline, file sizes, docs memory and simulated checks, SEC-031 (hard stops for destructive agent actions) and the TEST ones for real API specs, parallel database tests and model accuracy tests. FOUND-024 (rename verdict to decision everywhere) now lands before the baseline.
 - TEST-010 (load test tooling): the docs workflow was red on every push since 2026-11-09 14:00 because scripts/test_load_target.py imported pytest and that workflow runs plain unittest. The test is now a unittest case like the other script tests, and ruff ignores PT027 for them.
 - COLLAB-020: A blinded reviewer with an unsubmitted slide no longer sees other people's slide threads or messages on it until they submit. Threads of project owners and viewers stay visible, a reopen hides the others again, and a hidden thread by id answers 404. The fake API and a browser spec match, and ADR 0118 notes the rule.
 - TEST-025: the four specs pass 3 of 3 locally with axe on after the earlier fix 38a071d8 (a fast second key is ignored while saving), and passed in ci run 42666737479 with enforcement on. No code change.
