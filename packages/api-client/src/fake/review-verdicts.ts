@@ -8,7 +8,7 @@ import type {
   ReviewOrder,
   Verdict,
 } from "../generated/api.ts";
-import { reviewTasks, slideByIndex } from "./scenario.ts";
+import { resultSets, reviewTasks, slideByIndex } from "./scenario.ts";
 import {
   lenkaDecisionsInReview,
   nextSlideFacts,
@@ -17,6 +17,7 @@ import {
   rt16,
   rt17,
 } from "./scenario-review.ts";
+import { taskSlides } from "./scenario-task.ts";
 import { annotateStoredOrder } from "./shared-layer-handlers.ts";
 import { fakeView } from "./view.ts";
 
@@ -46,6 +47,24 @@ const readsFirst = (taskId: string, slideId: string) =>
 
 export const firstReadOpen = (taskId: string, slideId: string) =>
   taskId === rt17.id && !firstReads.has(firstReadKey(taskId, slideId));
+
+const rt17Slides = () =>
+  taskSlides.filter((slide) => slide.sets.some((key) => key === rt17.resultSet));
+
+export const aiHiddenOnSlide = (slideId: string) =>
+  rt17.reviewers.includes(fakeView().viewer) &&
+  rt17Slides().some((slide) => slide.id === slideId) &&
+  firstReadOpen(rt17.id, slideId);
+
+export const aiHiddenForResultSet = (resultSetId: string) => {
+  const set = resultSets.find((candidate) => candidate.id === resultSetId);
+  return (
+    set !== undefined &&
+    rt17Slides().some(
+      (slide) => slide.sets.some((key) => key === set.key) && aiHiddenOnSlide(slide.id),
+    )
+  );
+};
 
 export const firstReadOf = (taskId: string, slideId: string) =>
   firstReads.get(firstReadKey(taskId, slideId));
@@ -94,7 +113,8 @@ export const addObject = (taskId: string, slideId: string, draft: AddedDraft): A
 };
 
 export const objectsOn = (taskId: string, slideId: string) => {
-  if (readsFirst(taskId, slideId)) return firstReadOpen(taskId, slideId) ? [] : reviewObjects;
+  if (taskId === rt17.id && firstReadOpen(taskId, slideId)) return [];
+  if (readsFirst(taskId, slideId)) return reviewObjects;
   if (reviewsA1(taskId, slideId)) return reviewObjects;
   if (reviewsNext(taskId, slideId)) {
     return reviewObjects.filter(

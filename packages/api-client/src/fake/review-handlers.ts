@@ -48,6 +48,7 @@ import type { DraftOperation } from "./draft-handlers.ts";
 import {
   addedOn,
   addObject,
+  aiHiddenForResultSet,
   firstReadOf,
   firstReadOpen,
   objectsOn,
@@ -384,8 +385,18 @@ export const reviewDraftOperations: DraftOperation[] = [
   },
 ];
 
+const aiHidden = () =>
+  problem(403, "ai-hidden", "The AI stays hidden on this slide until you record your first read");
+
 export function reviewHandlers(): RequestHandler[] {
   return [
+    http.get<{ resultSetId: string }>("*/api/result-sets/:resultSetId", ({ params }) =>
+      aiHiddenForResultSet(params.resultSetId) ? aiHidden() : undefined,
+    ),
+    http.get<{ resultSetId: string }>(
+      "*/api/result-sets/:resultSetId/cell-summary",
+      ({ params }) => (aiHiddenForResultSet(params.resultSetId) ? aiHidden() : undefined),
+    ),
     http.get<{ taskId: string }>("*/api/review-tasks/:taskId", ({ params }) => {
       if (params.taskId === annotateStubTaskId)
         return HttpResponse.json({
