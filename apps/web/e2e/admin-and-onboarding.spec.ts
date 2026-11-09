@@ -465,7 +465,7 @@ test("an admin opens an ask from the bell, approves another and declines the fir
   await expect(page.getByText("No one else is waiting.")).toBeVisible();
 });
 
-test("the join domain refuses a public mail domain and saves the policy and logo", async ({
+test("the join domain refuses a public or foreign domain and saves the policy and logo", async ({
   page,
 }) => {
   await page.goto("/admin?section=settings");
@@ -476,13 +476,19 @@ test("the join domain refuses a public mail domain and saves the policy and logo
   await domain.fill("gmail.com");
   await expect(page.getByText("A public mail domain would open the workspace")).toBeVisible();
   await expect(apply).toBeDisabled();
-  await domain.fill(" Path.FNVltava.example ");
+  await domain.fill("path.fnvltava.example");
+  await apply.click();
+  await expect(
+    page.getByText("You can only use the domain of your own confirmed email."),
+  ).toBeVisible();
+  await expect(apply).toBeDisabled();
+  await domain.fill(" FNVltava.Example ");
   await page.getByRole("radio", { name: "Join at once" }).click();
   await page.getByRole("textbox", { name: "Logo letters" }).fill("pv");
   await apply.click();
   await expect(
-    page.getByText("People with an @path.fnvltava.example email can join at once."),
+    page.getByText("People with an @fnvltava.example email can join at once."),
   ).toBeVisible();
-  await expect(domain).toHaveValue("path.fnvltava.example");
+  await expect(domain).toHaveValue("fnvltava.example");
   await expect(page.getByRole("textbox", { name: "Logo letters" })).toHaveValue("PV");
 });

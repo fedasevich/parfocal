@@ -1,4 +1,5 @@
 import {
+  ApiError,
   getGetJoinSettingsQueryKey,
   getGetMeQueryKey,
   type JoinPolicy,
@@ -21,20 +22,20 @@ import {
   changeOf,
   checkDomain,
   domainHelp,
+  domainNotYours,
+  domainOf,
   draftOf,
   type JoinDraft,
   joinPolicyOptions,
   logoColours,
   logoOf,
+  refusalText,
   savedText,
 } from "./join-settings-model.ts";
 
 const rows = "grid grid-cols-[200px_minmax(0,1fr)] items-start gap-x-4 gap-y-4 text-body-sm";
 
-const problemText = (body: unknown): string =>
-  typeof body === "object" && body !== null && "title" in body && typeof body.title === "string"
-    ? body.title
-    : "That did not save. Try again.";
+type Refusal = { domain: string; message: string };
 
 function JoinForm({
   saved,
@@ -49,17 +50,23 @@ function JoinForm({
   const save = useSetJoinSettings();
   const [draft, setDraft] = useState<JoinDraft>(draftOf(saved));
   const set = (next: Partial<JoinDraft>) => setDraft((current) => ({ ...current, ...next }));
+  const [refusal, setRefusal] = useState<Refusal | null>(null);
   const check = checkDomain(draft.domain);
+  const refused = refusal !== null && refusal.domain === domainOf(draft.domain);
+  const wrong = check === "invalid" || check === "public" || refused;
   const submit = () => {
     const change = changeOf(draft);
     save.mutate(
       { data: change },
       {
-        onSuccess: (response) => {
-          if (response.status !== 200) {
-            notify(problemText(response.data));
+        onError: (error) => {
+          if (error instanceof ApiError && error.problem?.code === domainNotYours) {
+            setRefusal({ domain: change.email_domain ?? "", message: refusalText });
             return;
           }
+          notify(error instanceof Error ? error.message : "That did not save. Try again.");
+        },
+        onSuccess: () => {
           void queryClient.invalidateQueries({ queryKey: getGetJoinSettingsQueryKey() });
           void queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
           notify(savedText(change));
@@ -72,7 +79,7 @@ function JoinForm({
       className={rows}
       onSubmit={(event) => {
         event.preventDefault();
-        if (canSave(draft, saved)) submit();
+        if (canSave(draft, saved) && !refused) submit();
       }}
     >
       <span className="pt-1.5 text-fg-dim">Logo</span>
@@ -113,7 +120,7 @@ function JoinForm({
       <div className="grid justify-items-start gap-1.5">
         <Input
           aria-label="Email domain"
-          aria-invalid={check === "invalid" || check === "public"}
+          aria-invalid={wrong}
           aria-describedby="join-domain-help"
           placeholder="hospital.example"
           maxLength={253}
@@ -123,12 +130,9 @@ function JoinForm({
         />
         <small
           id="join-domain-help"
-          className={cn(
-            "text-caption",
-            check === "invalid" || check === "public" ? "text-bad" : "text-fg-dim",
-          )}
+          className={cn("text-caption", wrong ? "text-bad" : "text-fg-dim")}
         >
-          {domainHelp[check]}
+          {refused ? refusal.message : domainHelp[check]}
         </small>
       </div>
       <span className="pt-1.5 text-fg-dim">People from the domain</span>
@@ -147,7 +151,11 @@ function JoinForm({
       </div>
       <span />
       <div>
-        <Button type="submit" variant="primary" disabled={!canSave(draft, saved) || save.isPending}>
+        <Button
+          type="submit"
+          variant="primary"
+          disabled={!canSave(draft, saved) || refused || save.isPending}
+        >
           Apply
         </Button>
       </div>

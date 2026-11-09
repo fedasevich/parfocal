@@ -48,25 +48,22 @@ export function JoinRequestsZone({
       queryClient.invalidateQueries({ queryKey: getListWorkspaceAccessRequestsQueryKey() }),
       queryClient.invalidateQueries({ queryKey: getListTenantMembersQueryKey() }),
     ]);
-  const answered = (status: number, said: string) => {
-    void refresh();
-    notify(status < 300 ? said : "This ask is already answered.");
-  };
+  const answered = (said: string) => ({
+    onSuccess: () => {
+      void refresh();
+      notify(said);
+    },
+    onError: () => {
+      void refresh();
+      notify("This ask is already answered.");
+    },
+  });
   const approveAsk = (ask: PendingAccessRequest) =>
-    approve.mutate(
-      { requestId: ask.id },
-      {
-        onSuccess: (response) =>
-          answered(response.status, `${ask.display_name} joined as a reviewer.`),
-      },
-    );
+    approve.mutate({ requestId: ask.id }, answered(`${ask.display_name} joined as a reviewer.`));
   const declineAsk = (ask: PendingAccessRequest) =>
     decline.mutate(
       { requestId: ask.id },
-      {
-        onSuccess: (response) =>
-          answered(response.status, `You declined ${ask.display_name}'s ask to join.`),
-      },
+      answered(`You declined ${ask.display_name}'s ask to join.`),
     );
   return (
     <Zone

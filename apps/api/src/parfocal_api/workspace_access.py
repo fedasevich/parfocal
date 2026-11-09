@@ -168,6 +168,11 @@ class PublicEmailDomainError(BadRequestError):
     title = "A public mail domain cannot let people into a workspace"
 
 
+class DomainNotYoursError(BadRequestError):
+    code = "domain-not-yours"
+    title = "A workspace can claim only the email domain you confirmed yourself"
+
+
 class NotJoinableError(NotFoundError):
     code = "workspace-not-joinable"
     title = "There is no such workspace open to your email address"
@@ -613,11 +618,18 @@ async def set_join_settings(
     async with scoped_transaction(
         engine_of(request), person_scope(principal, principal.tenant_id)
     ) as connection:
+        if change.email_domain is not None and change.email_domain != await domain_of(
+            connection, principal.user_id
+        ):
+            raise DomainNotYoursError(f"{change.email_domain} is not the domain of your email")
         before = (
             await connection.execute(
                 select(*JOIN_SETTINGS_COLUMNS).where(tenants.c.id == principal.tenant_id)
             )
         ).one()
+        given = change.model_fields_set
+        logo = change.logo if "logo" in given else before.logo
+        logo_colour = change.logo_colour if "logo_colour" in given else before.logo_colour
         row = (
             await connection.execute(
                 update(tenants)
@@ -625,8 +637,8 @@ async def set_join_settings(
                 .values(
                     email_domain=change.email_domain,
                     join_policy=change.join_policy,
-                    logo=change.logo,
-                    logo_colour=change.logo_colour,
+                    logo=logo,
+                    logo_colour=logo_colour,
                 )
                 .returning(*JOIN_SETTINGS_COLUMNS)
             )
@@ -642,8 +654,7 @@ async def set_join_settings(
                 "email_domain": change.email_domain,
                 "join_policy": change.join_policy.value,
                 "domain_changed": before.email_domain != change.email_domain,
-                "logo_changed": (before.logo, before.logo_colour)
-                != (change.logo, change.logo_colour),
+                "logo_changed": (before.logo, before.logo_colour) != (logo, logo_colour),
             },
         )
     return join_settings_of(row)

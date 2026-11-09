@@ -9,7 +9,7 @@ import type {
   Member,
   PendingAccessRequest,
 } from "../generated/api.ts";
-import { workspaceAsks } from "./scenario.ts";
+import { people, workspaceAsks } from "./scenario.ts";
 import { workspaceBrands } from "./scenario-admin.ts";
 
 const publicDomains = new Set([
@@ -102,6 +102,13 @@ export function workspaceJoinHandlers(): RequestHandler[] {
           "A public mail domain cannot let people into a workspace",
         );
       }
+      if (domain !== null && domain !== people.DH.email.split("@")[1]) {
+        return problem(
+          400,
+          "domain-not-yours",
+          "A workspace can claim only the email domain you confirmed yourself",
+        );
+      }
       if (change.logo != null && !logoPattern.test(change.logo)) {
         return problem(422, "invalid-request", "A logo is one to three capital letters or digits");
       }
@@ -111,8 +118,11 @@ export function workspaceJoinHandlers(): RequestHandler[] {
       settings = {
         email_domain: domain,
         join_policy: change.join_policy,
-        logo: change.logo ?? seededSettings().logo,
-        logo_colour: change.logo_colour ?? seededSettings().logo_colour,
+        logo: change.logo === undefined ? settings.logo : (change.logo ?? seededSettings().logo),
+        logo_colour:
+          change.logo_colour === undefined
+            ? settings.logo_colour
+            : (change.logo_colour ?? seededSettings().logo_colour),
       };
       return HttpResponse.json<JoinSettings>(settings);
     }),

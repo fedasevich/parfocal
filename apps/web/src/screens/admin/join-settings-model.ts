@@ -111,7 +111,12 @@ export const savedText = (change: JoinSettingsChange): string => {
 
 export const domainHelp: Record<DomainCheck, string> = {
   none: "No one finds the workspace by email. Invite people instead.",
-  ok: "People who confirm an email at this domain see the workspace when they set up.",
+  ok: "People who confirm an email at this domain see the workspace when they set up. It must be the domain of your own email.",
   invalid: "Enter a domain such as hospital.example, without the @.",
   public: "A public mail domain would open the workspace to anyone. Use your institution's domain.",
 };
+
+export const domainNotYours = "domain-not-yours";
+
+export const refusalText =
+  "You can only use the domain of your own confirmed email. Someone with an email at this domain and admin rights here can set it.";

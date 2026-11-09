@@ -262,11 +262,13 @@ def test_an_admin_sets_the_join_domain_policy_and_logo(
         "logo": "SL",
         "logo_colour": colour,
     }
-    moved = f"path.{domain}"
+    browser.client.put(
+        "/api/tenant/join-settings", json={"email_domain": None, "join_policy": "join"}
+    )
     changed = browser.client.put(
         "/api/tenant/join-settings",
         json={
-            "email_domain": f" {moved.upper()} ",
+            "email_domain": f" {domain.upper()} ",
             "join_policy": "ask",
             "logo": "PX",
             "logo_colour": "#0f766e",
@@ -274,7 +276,7 @@ def test_an_admin_sets_the_join_domain_policy_and_logo(
     )
     assert changed.status_code == 200
     expected = {
-        "email_domain": moved,
+        "email_domain": domain,
         "join_policy": "ask",
         "logo": "PX",
         "logo_colour": "#0f766e",
@@ -284,15 +286,41 @@ def test_an_admin_sets_the_join_domain_policy_and_logo(
     audited = browser.sql(
         "SELECT details::jsonb->>'join_policy', details::jsonb->>'domain_changed' "
         "FROM audit_events "
-        f"WHERE action = 'tenant.join-settings-changed' AND tenant_id = '{tenant_id}'"
+        f"WHERE action = 'tenant.join-settings-changed' AND tenant_id = '{tenant_id}' "
+        "ORDER BY seq"
     )
-    assert audited == [("ask", "true")]
+    assert audited == [("join", "true"), ("ask", "true")]
 
-    sign_in(colleague, f"asker@{moved}")
+    sign_in(colleague, f"asker@{domain}")
     joinable = colleague.client.get("/api/me/joinable-workspaces").json()
     assert [(item["id"], item["how"], item["logo"]) for item in joinable] == [
         (tenant_id, "ask", "PX")
     ]
+
+
+def test_a_workspace_cannot_claim_a_domain_its_admin_does_not_hold(
+    browser: Browser, domain: str
+) -> None:
+    create_workspace(browser, domain)
+    for other in (f"path.{domain}", f"other-{domain}"):
+        refused = browser.client.put(
+            "/api/tenant/join-settings", json={"email_domain": other, "join_policy": "join"}
+        )
+        assert (refused.status_code, refused.json()["code"]) == (400, "domain-not-yours")
+    assert browser.client.get("/api/tenant/join-settings").json()["email_domain"] == domain
+
+
+def test_a_change_without_a_logo_keeps_the_saved_logo(browser: Browser, domain: str) -> None:
+    create_workspace(browser, domain, logo="QX", logo_colour="#be185d")
+    kept = browser.client.put(
+        "/api/tenant/join-settings", json={"email_domain": domain, "join_policy": "ask"}
+    )
+    assert (kept.json()["logo"], kept.json()["logo_colour"]) == ("QX", "#be185d")
+    reset = browser.client.put(
+        "/api/tenant/join-settings",
+        json={"email_domain": domain, "join_policy": "ask", "logo": None},
+    )
+    assert (reset.json()["logo"], reset.json()["logo_colour"]) == ("SL", "#be185d")
 
 
 @pytest.mark.parametrize("public", ["gmail.com", "Seznam.cz", "outlook.de", "yahoo.co.uk"])

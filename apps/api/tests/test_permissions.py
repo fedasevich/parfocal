@@ -630,7 +630,7 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "getSecurityContact": lambda _: Call("GET", "/api/tenant/security-contact"),
     "getJoinSettings": lambda _: Call("GET", "/api/tenant/join-settings"),
     "setJoinSettings": lambda _: Call(
-        "PUT", "/api/tenant/join-settings", {"email_domain": "lab.example", "join_policy": "ask"}
+        "PUT", "/api/tenant/join-settings", {"email_domain": None, "join_policy": "ask"}
     ),
     "setSecurityContact": lambda _: Call(
         "PUT", "/api/tenant/security-contact", {"email": "security@example.test"}

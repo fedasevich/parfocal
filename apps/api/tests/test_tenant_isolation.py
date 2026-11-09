@@ -1087,9 +1087,13 @@ async def seed_lab_models(connection: AsyncConnection, seeded: Seeded) -> None:
 
 async def seed_workspace_access_requests(connection: AsyncConnection, seeded: Seeded) -> None:
     user = seeded.ids["user"]
-    await connection.execute(
-        insert(workspace_access_requests).values(tenant_id=seeded.tenant_id, user_id=user)
+    request_id = await connection.scalar(
+        insert(workspace_access_requests)
+        .values(tenant_id=seeded.tenant_id, user_id=user)
+        .returning(workspace_access_requests.c.id)
     )
+    assert isinstance(request_id, uuid.UUID)
+    seeded.ids["access_request"] = request_id
     seeded.markers.add(str(user))
 
 
@@ -1879,3 +1883,15 @@ def test_an_annotate_task_and_its_class_snapshot_stay_in_their_workspace(
     ):
         assert attempt.status_code == 404, attempt.text
         assert shared not in attempt.text
+
+
+def test_another_workspace_cannot_answer_an_ask(api: ApiAs, seeded: tuple[Seeded, Seeded]) -> None:
+    a, b = seeded
+    path = f"/api/tenant/access-requests/{a.ids['access_request']}"
+    for attempt in (
+        api(b.member(admin_rights=True)).delete(path),
+        api(b.member(admin_rights=True)).post(f"{path}/approval"),
+    ):
+        assert attempt.status_code == 404, attempt.text
+    pending = api(a.member(admin_rights=True)).get("/api/tenant/access-requests").json()
+    assert str(a.ids["access_request"]) in [item["id"] for item in pending]
