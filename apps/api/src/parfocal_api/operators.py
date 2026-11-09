@@ -5,13 +5,19 @@ from sqlalchemy import delete, insert, select
 
 from parfocal_api.settings import ApiSettings
 from parfocal_api.tables import platform_operators
-from parfocal_common.db import DatabaseScope, create_engine, scoped_transaction
+from parfocal_common.db import (
+    DatabaseScope,
+    create_engine,
+    require_row_security,
+    scoped_transaction,
+)
 from parfocal_common.settings import load_settings
 
 
 async def run(database_url: str, action: str, subject: str | None) -> list[str]:
     engine = create_engine(database_url)
     try:
+        await require_row_security(engine)
         async with scoped_transaction(engine, DatabaseScope(auth=True)) as connection:
             if action == "add" and subject:
                 await connection.execute(insert(platform_operators).values(subject=subject))

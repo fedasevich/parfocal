@@ -16,6 +16,18 @@ def adr_files(adr_dir: Path) -> dict[str, Path]:
     }
 
 
+def duplicate_problems(adr_dir: Path) -> list[str]:
+    names: dict[str, list[str]] = {}
+    for path in sorted(adr_dir.iterdir()):
+        if match := ADR_FILE.match(path.name):
+            names.setdefault(match.group(1), []).append(path.name)
+    return [
+        f"ADR {number} is used by {len(sharing)} records: {', '.join(sharing)}"
+        for number, sharing in sorted(names.items())
+        if len(sharing) > 1
+    ]
+
+
 def status_problems(number: str, path: Path, known: set[str]) -> list[str]:
     statuses = STATUS_LINE.findall(path.read_text())
     if len(statuses) != 1:
@@ -32,12 +44,12 @@ def status_problems(number: str, path: Path, known: set[str]) -> list[str]:
     return []
 
 
-def index_problems(adr_dir: Path, numbers: set[str]) -> list[str]:
+def index_problems(adr_dir: Path, files: dict[str, Path]) -> list[str]:
     index = (adr_dir / "README.md").read_text()
     return [
         f"README.md: ADR {number} is not listed in the index"
-        for number in sorted(numbers)
-        if number != "0000" and f"[{number}](" not in index
+        for number, path in sorted(files.items())
+        if number != "0000" and f"[{number}]({path.name})" not in index
     ]
 
 
@@ -49,7 +61,7 @@ def check(adr_dir: Path) -> list[str]:
         for number, path in files.items()
         for problem in status_problems(number, path, known)
     ]
-    return problems + index_problems(adr_dir, known)
+    return duplicate_problems(adr_dir) + problems + index_problems(adr_dir, files)
 
 
 def main() -> int:

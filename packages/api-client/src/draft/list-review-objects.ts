@@ -13,12 +13,19 @@ export const reviewObjectSchema = z.object({
   other_class: z.string().nullable(),
   detector_score: z.number().min(0).max(1).nullable().optional(),
   foreground: z.number().min(0).max(1).nullable().optional(),
+  outline: z.array(z.number()).min(6).nullable().optional(),
 });
 
 export const reviewObjectsSchema = z.object({
   task_id: z.string(),
   slide_id: z.string(),
-  slide: z.object({ label: z.string(), case_label: z.string().nullable(), stain: z.string() }),
+  slide: z.object({
+    label: z.string(),
+    case_label: z.string().nullable(),
+    stain: z.string(),
+    width: z.number().int().positive().nullable().optional(),
+    height: z.number().int().positive().nullable().optional(),
+  }),
   objects: z.array(reviewObjectSchema),
   added: z.array(z.object({ object: z.string(), note: z.string().nullable() })),
 });

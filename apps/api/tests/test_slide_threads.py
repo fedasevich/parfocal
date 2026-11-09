@@ -143,6 +143,38 @@ def test_a_reader_with_an_open_first_read_sees_only_their_own_and_the_researcher
     ]
 
 
+def test_a_blinded_reviewer_sees_others_slide_threads_only_after_submitting(
+    api: ApiAs, database: str
+) -> None:
+    s = study(api, database, blinded=True, hidden=False)
+    researchers = ok(open_on_slide(api, s, "owner", "Owner asks")).json()
+    foreign = ok(open_on_slide(api, s, "second", "Second asks")).json()
+    ok(open_on_slide(api, s, "first", "First asks"))
+    path = f"{slide_base(s)}/{researchers['id']}"
+    ok(api(s.people["second"]).post(f"{path}/messages", json={"body": "Second answers"}))
+    assert slide_titles(api, s, "first") == ["Owner asks", "First asks"]
+    everything = ["Owner asks", "Second asks", "First asks"]
+    assert slide_titles(api, s, "second") == everything
+    assert slide_titles(api, s, "viewer") == everything
+    seen = ok(api(s.people["first"]).get(path)).json()
+    assert [message["body"] for message in seen["messages"]] == ["Please look at the margin."]
+    assert api(s.people["first"]).get(f"{slide_base(s)}/{foreign['id']}").status_code == 404
+    ok(api(s.people["first"]).put(f"{s.base}/verdicts/T1", json={"value": "agree"}))
+    ok(api(s.people["first"]).post(f"{s.base}/submit"))
+    assert slide_titles(api, s, "first") == everything
+    ok(api(s.people["first"]).get(f"{slide_base(s)}/{foreign['id']}"))
+    ok(api(s.people["first"]).post(f"{s.base}/reopen"))
+    assert slide_titles(api, s, "first") == ["Owner asks", "First asks"]
+
+
+def test_an_unblinded_task_keeps_slide_threads_open_before_submit(
+    api: ApiAs, database: str
+) -> None:
+    s = study(api, database, blinded=False, hidden=False)
+    ok(open_on_slide(api, s, "second", "Second asks"))
+    assert slide_titles(api, s, "first") == ["Second asks"]
+
+
 def test_a_signed_off_task_does_not_stop_a_slide_thread(api: ApiAs, database: str) -> None:
     s = study(api, database, blinded=False, hidden=False)
     owner(database, f"UPDATE review_tasks SET signed_off_at = now() WHERE id = '{s.task}'")

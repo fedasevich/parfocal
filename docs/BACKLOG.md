@@ -520,7 +520,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Size: M.
 
 - [ ] FOUND-024 · Rename verdict to decision everywhere
-  The owner does not want the word "verdict" anywhere in the app (2026-11-02). It still names the `verdicts` table, the `/verdicts` API paths and the `saveVerdict`, `clearVerdict` and `listVerdicts` operations, the generated client, the review screens' state, the `verdict` column of the reviewed export, the `review.verdict-set` and `review.verdict-cleared` audit names, the `--v-*` chart tokens and ADR 0072 and ADR 0144 (charts). Rename them to decision with a migration that renames the table and its constraints, keeps old audit rows readable by mapping the old event names, and regenerates the client. Old migration files keep their names, because migration history is never rewritten.
+  The owner does not want the word "verdict" anywhere in the app (2026-11-02). It still names the `verdicts` table, the `/verdicts` API paths and the `saveVerdict`, `clearVerdict` and `listVerdicts` operations, the generated client, the review screens' state, the `verdict` column of the reviewed export, the `review.verdict-set` and `review.verdict-cleared` audit names, the `--v-*` chart tokens and ADR 0072 and ADR 0144 (charts). Rename them to decision with a migration that renames the table and its constraints, keeps old audit rows readable by mapping the old event names, and regenerates the client. Old migration files keep their names, because migration history is never rewritten. On 2026-11-09 the word had 994 hits in 106 files. Land this before FOUND-035 (squash the migrations into one baseline) and before any production database.
   Done when `git grep -iw verdict` finds nothing outside `apps/api/migrations/versions` files older than the rename, a guard in `pnpm verify` fails on a new use, and `pnpm verify` is green.
   Size: L.
 
@@ -567,6 +567,37 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Done when the first-page gzip size is smaller than before, the lowered budget passes, the result file records both sizes, and the E2E suite stays green.
   Depends on FOUND-030.
   Size: M.
+
+- [ ] FOUND-033 · A result for every push to main
+  On 2026-11-09 the `ci` workflow ran 39 times on main with 3 green, 9 failed and 27 cancelled ([project review](results/2026-11-09-project-review.md)). A run takes 20 to 30 minutes, the lead pushes faster, and FOUND-025 (faster and less wasteful CI) cancels a running ci when a newer push arrives, so most pushes never get a result. The `docs` workflow was red for 14 pushes unseen, because `ci-ok` leaves it out and the lead watches only `ci`. Make `scripts/lead/push.sh` wait until the last run on main has finished, or stop cancelling on main, put the docs checks under `ci-ok`, and make the lead's check read every workflow of the head commit. The push of 18:14 UTC (ci run 42672338835) failed in three workflows without starting their jobs and did not come back on the next two pushes, so note it if it does.
+  Done when two pushes in a row to main each end with a finished run, a failing docs check fails `ci-ok`, and the lead's check reports any failed workflow of the head commit.
+  Size: M.
+
+- [x] FOUND-034 · Guard against duplicate decision record numbers
+  Three records carry the number 0278 (blind first on annotate tasks, load tests run on Locust, and a decision note stays on the decision), because parallel merges numbered them at once, and `scripts/check_adrs.py` does not look for duplicates ([project review](results/2026-11-09-project-review.md)). Give two of them free numbers with their links and index rows, and make the check and `scripts/lead/number_adrs.py` refuse a number that is taken.
+  Done when a test shows `check_adrs.py` failing on a duplicate number, every record has its own number and the check passes.
+  Size: S.
+
+- [ ] FOUND-035 · Squash the migrations into one baseline
+  There are 91 migration files, numbered up to `0110`, and no shared database yet, so replacing them with one baseline is free now and never again ([project review](results/2026-11-09-project-review.md)). Staging can be dropped and recreated, so this must land before the first production database, not before SKEL-001 (staging environment exists). The baseline also freezes the built-in study templates that `0044` imports from `parfocal_api.study_templates`. Needs an ADR, because [knowledge/database.md](knowledge/database.md) says every change since `0020` is a new migration.
+  Done when a test proves the baseline and the old chain give the same schema, the seed data imports no application code, the ADR is written and the db tests pass.
+  Depends on FOUND-024.
+  Size: M.
+
+- [ ] FOUND-036 · Split the largest source files
+  `apps/api/src/parfocal_api/tables.py` (3,053 lines), `apps/web/src/screens/viewer/full-viewer.tsx` (1,895), `apps/web/src/screens/new-task/steps.tsx` (1,627) and `apps/web/src/screens/review/guided-review.tsx` (1,289) are touched by many tasks, so parallel agents conflict in them and every read of them costs many tokens ([project review](results/2026-11-09-project-review.md)). Split each by domain or by part of the screen with no change in behaviour, and add a guard on file length.
+  Done when those four files are split, a guard in `pnpm verify` fails on a new source file over 1,200 lines outside generated code and tests, with today's larger files listed as exceptions, and the suites stay green.
+  Size: M.
+
+- [ ] FOUND-037 · Docs memory that cannot go stale
+  `docs/README.md` was last consolidated on 2026-10-18 and says 796 tasks with about 170 ticked, against 940 with 664 ticked on 2026-11-09. The roadmap says M2 (viewer parity) is not started while VIEW is 39 of 56 and has no row for MA (the annotation path), risk R11 still says the cloud is paused, and "In progress" names decision 15a, which is gone ([project review](results/2026-11-09-project-review.md)). Run the consolidation once, replace hand-written counts with a `board.py` command that prints tasks and ticks per epic and milestone, and make the lead consolidate at the end of each parallel run.
+  Done when README, roadmap and risks match the board on the day of the change, README holds no hand-written count, `board.py` prints the counts, and `knowledge/agent-workflow.md` names the lead's consolidation step.
+  Size: M.
+
+- [ ] FOUND-038 · Records where an agent stood in for a person
+  An agent reviewed the confidence zone names as the pathologist (decision 44c, ADR 0194 on confidence display rules) and ran the incident tabletop on paper (ADR 0186 on incident response), and many accepted records were never read by the owner (risk R12). List every record, result and compliance document where an agent stood in for a pathologist, a user or the owner on one page like [standing-approval-records.md](project/standing-approval-records.md), mark each in its own file as simulated, and name what a real check would need. Decision 82 (what the thesis claims about people) decides what the thesis may cite.
+  Done when the page exists and is indexed in `docs/README.md` and each listed file carries a one-line mark.
+  Size: S.
 
 ---
 
@@ -779,6 +810,11 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Depends on ADMIN-009, IAM-001.
   Size: M.
 
+- [ ] IAM-026 · A workspace on a shared mail domain is not open to strangers
+  A person who creates a workspace saves their mail domain on it with the join policy `join`, and only a hand-kept list of 32 domains and 7 prefixes keeps consumer mail providers out ([tenant isolation review](results/2026-11-09-tenant-isolation-review.md), confirmed finding 1). On a provider missing from the list, such as `onet.pl`, `btinternet.com` or `comcast.net`, any stranger with a free mailbox sees the workspace's name, logo and counts and joins it as a reviewer. Decision 84 (a new workspace and its mail domain) picks the fix.
+  Done when a test shows a stranger on an unlisted shared provider neither listing nor joining a workspace made there, and the chosen rule is recorded.
+  Size: S.
+
 ---
 
 ## 04 SEC · Security and compliance (GDPR, HIPAA, ISO 27001 readiness)
@@ -952,6 +988,32 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   The edge Worker limits login, upload and tile requests per client address with Cloudflare's rate limiting binding, and adds bot protection to login ([threat model](security/threat-model.md) X3 and T4).
   Done when a test against a preview shows a login flood from one address answered with 429 while another address signs in.
   Depends on SEC-012, STACK-025. Split from SEC-012 by [ADR 0088](adr/0088-rate-limits-in-postgres-and-at-the-edge.md).
+  Size: M.
+
+- [ ] SEC-031 · Hard stops for destructive agent actions
+  The production rules in `AGENTS.md` are prose. The owner's sessions run with permissions bypassed and no deny list, the connected MCP servers give every session and subagent tools that delete a Neon project or branch and an R2 bucket, and `.env` holds a Cloudflare token that writes R2 and DNS ([project review](results/2026-11-09-project-review.md)). Add deny rules or a `PreToolUse` guard in `.claude/settings.json` for destructive MCP tools and for commands that destroy, delete, purge, rotate or reset cloud resources, remove the two deprecated Cloudflare MCP servers (bindings and observability) from `.mcp.json`, and keep a token limited to dev and staging in `.env`, which the owner creates. Additive production writes under ADR 0151 (standing approval within $30 a month) stay allowed.
+  Done when a guard test proves the listed tools and commands are refused for agents, the deprecated servers are gone, [knowledge/agent-tooling.md](knowledge/agent-tooling.md) lists what is refused and how the owner runs such an action, and `.env.example` names the limited token.
+  Size: M.
+
+- [x] SEC-032 · The API and the workers refuse a database role that bypasses row-level security
+  Tenant isolation rests on the role in `DATABASE_URL` being neither a superuser nor a `BYPASSRLS` role, and nothing checked it ([tenant isolation review](results/2026-11-09-tenant-isolation-review.md), confirmed finding 3). With the owner connection string, which Neon hands out by default, every route would read and change every workspace's rows with no error. Add `require_row_security` to `parfocal_common.db` and call it when the API starts, in the worker loop and in the retention, stale upload and operator commands.
+  Done when a db test shows the API, the worker loop and each command raising `UnsafeDatabaseRoleError` for the owner role and passing for `parfocal_app`, and [knowledge/database.md](knowledge/database.md) says how to create the role on Neon.
+  Size: S.
+
+- [ ] SEC-033 · Isolation checks that read the policies and probe every table
+  The isolation checks compare policy names and GET routes only ([tenant isolation review](results/2026-11-09-tenant-isolation-review.md), confirmed finding 2). A policy written as `USING (true)`, a second permissive policy, a tenant table with no seeded row and an unscoped write route all pass today, and 172 of 306 operations are not GET. Pin every policy's command, kind and both expressions in a reviewed snapshot file, probe every table with a `tenant_id` column as `parfocal_app` under another workspace's scope and under no scope, and classify every operation so each write route is sent as the other workspace.
+  Done when the snapshot test fails on a changed or added policy, the probe fails for a tenant table that shows a row or has none seeded, and a test fails when an operation of any method is missing from the suite.
+  Size: M.
+
+- [ ] SEC-034 · Narrow three database escape hatches
+  Three rules allow more than the code that uses them needs ([tenant isolation review](results/2026-11-09-tenant-isolation-review.md), confirmed finding 4). The auth scope may rewrite any column of any workspace's `api_tokens` row though it only sets `last_used_at`, a signed-in person may change their own `email` and `subject` in `users` though only the email schedule is self-service, and the join routes open a scope with platform and auth both on for a workspace id taken from the URL. None is reachable from a request today. Grant `UPDATE` on `api_tokens` by column, refuse a change of `email` or `subject` outside the auth and platform scopes, and make the join routes check under the platform scope first and then write under the tenant scope, as accepting an invitation does.
+  Done when a database probe as `parfocal_app` fails to move or revive an API token under the auth scope and fails to change the person's own email under a member scope, and the join routes pass their tests without the platform flag in the write transaction.
+  Size: M.
+
+- [ ] SEC-035 · Foreign keys to tenant tables carry the tenant
+  About sixty foreign keys to tenant tables leave out `tenant_id`, and foreign key checks ignore row-level security, so a row in one workspace can name a parent in another when a route skips the parent check ([tenant isolation review](results/2026-11-09-tenant-isolation-review.md), suspicion 2). Eight sampled insert paths all check the parent first, the others were not read. Add `UNIQUE (id, tenant_id)` to the parents that lack it and make the single-column keys composite, starting with `resume_states`, `display_choices`, `display_presets`, `lab_model_projects` and `threads`, whose rows a client names directly.
+  Done when a database probe as `parfocal_app` fails to insert a child that names a parent of another workspace for every key in the review's list, and the db tests pass.
+  Depends on FOUND-035.
   Size: M.
 
 ---
@@ -2904,13 +2966,13 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Depends on COLLAB-015, GUIDE-023.
   Size: S.
 
-- [ ] COLLAB-020 · Slide threads stay hidden during a blinded review
+- [x] COLLAB-020 · Slide threads stay hidden during a blinded review
   The owner chose 78a on 2026-11-09. A reviewer of a blinded task on a slide does not see other people's slide threads on that slide until they submit, the same way task threads are hidden under ADR 0118 (blinding and a kept first read). Their own slide threads stay visible, and the Comments tab and pins agree with the API.
   Done when API tests hide another person's slide thread from a blinded reviewer before submit and show it after, and a browser test finds no foreign pin on that slide before submit.
   Depends on COLLAB-015.
   Size: S.
 
-- [ ] COLLAB-021 · Turn blind first off on a running annotate task
+- [x] COLLAB-021 · Turn blind first off on a running annotate task
   The owner chose 80a on 2026-11-09, so the owner is blind too, and asked that the switch be easy to reverse and never invasive. The task owner can turn blind first off at any time in the task settings, which shows every expert's objects at once and is written to the audit log. Turning it back on hides again only objects not yet seen by others, and the stepper says plainly what each choice does.
   Done when API tests turn the switch off mid-task and see every object, turn it on again and see only unchecked new objects hidden, and a browser test toggles it from the task settings.
   Depends on COLLAB-017.
@@ -4090,7 +4152,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when a visual diff blocks a pull request until approved.
   Size: M.
 
-- [ ] TEST-009 · Accessibility testing
+- [x] TEST-009 · Accessibility testing
   axe on every story and E2E page, keyboard-only E2E flows for review and sign-out.
   Done when an a11y violation fails CI.
   Size: M.
@@ -4115,7 +4177,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when ingest and pre-read workflows have restart tests.
   Size: M.
 
-- [ ] TEST-014 · Security tests in CI
+- [x] TEST-014 · Security tests in CI
   DAST baseline scan on preview environments, dependency and container scans.
   Done when a known vulnerable dependency fails CI.
   Size: M.
@@ -4151,7 +4213,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Depends on TEST-006, RSET-005, JOBS-001, GUIDE-002.
   Size: L.
 
-- [ ] TEST-021 · Find why the web browser suite slowed on CI
+- [x] TEST-021 · Find why the web browser suite slowed on CI
   Across four ci runs on 2026-11-09 the web browser job grew from 38 to 66 minutes, issue-states parts from about 32 to 56 seconds and freehand drawing from 8.8 to 15.6 seconds, while the same specs run in about 22 seconds on the Mac. Longer test limits now absorb it. Compare per-spec times from the runs' reports against the last fast run, find whether the runner, a shared fixture, the fake API store, a dev server rebuild or a few new heavy specs cause it, and fix the cause or shard the job.
   Done when a result file records the per-spec times before and after, and the web browser job runs under 45 minutes on three runs in a row.
   Size: M.
@@ -4174,9 +4236,25 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Depends on TEST-009.
   Size: M.
 
-- [ ] TEST-025 · Four specs that fail before their axe step
+- [x] TEST-025 · Four specs that fail before their axe step
   The full local run for TEST-009 (accessibility testing) failed four specs before axe ran: the guided-check row click that keeps the guided object, two guided-review scene tests and the command palette's Measure only on a slide. Nobody looked at why. Find whether each is a stale spec or a real bug, fix it, and check that the routes they reach are scanned.
   Done when the four specs pass locally three times in a row and in one CI run.
+  Size: S.
+
+- [ ] TEST-026 · Core browser specs against the real API
+  165 browser specs in `apps/web/e2e` run on the fake API, whose hand-written handlers hold about 13,700 lines of behaviour and about 50 files of draft hooks for operations with no backend, while 6 specs in `apps/e2e` reach the real API ([project review](results/2026-11-09-project-review.md)). The generated client ties the fake's types to `openapi.json`, but nothing ties its behaviour to the backend's. Add a Playwright project that runs a named core subset of the existing specs with `PARFOCAL_PUBLIC_FAKE_API=off` against the local API and a seeded database, starting with the review loop and the annotation path, and a guard that prints the number of draft operations and fails when it grows.
+  Done when the project runs in CI on the db stack and covers login, upload, guided review with a decision, an annotate task and sign-off, every spec that passes on the fake and fails on the real API is logged as a bug in one of the two, and the guard runs in `pnpm verify`.
+  Depends on TEST-004.
+  Size: L.
+
+- [ ] TEST-027 · Database tests in parallel
+  The `db` job runs 2,680 tests one after another in 21 minutes (ci run 42666737479), the longest job in ci ([project review](results/2026-11-09-project-review.md)). Each test already makes its own workspace, so run them with pytest-xdist and one migrated database per worker cloned from a template.
+  Done when the db job finishes in under 10 minutes on three ci runs in a row with the same number of tests passing, and a result file records the times before and after.
+  Size: M.
+
+- [ ] TEST-028 · Model accuracy tests that cannot be skipped unseen
+  The tests in `workers/ml/tests` that need model weights, exported ONNX graphs or cached datasets are deselected by the `weights` marker or skip when the files are missing, and CI has none of the files, so the accuracy numbers are checked only on the owner's Mac when someone remembers ([project review](results/2026-11-09-project-review.md)). Add one command that runs them all with the files required, as `PARFOCAL_REQUIRE_FIXTURES` does for slides, and make the lead run it before ticking a task that changes `workers/ml` or a model graph, one such run at a time because of the Mac's memory.
+  Done when the command fails on a missing weight or dataset instead of skipping, a result file records one full run with its numbers, and `knowledge/agent-workflow.md` names when the lead runs it.
   Size: S.
 
 ---
@@ -5162,7 +5240,7 @@ Admin is its own page with its own sidebar and the app's top bar, never a page i
   Depends on VIZ-010.
   Size: L.
 
-- [ ] VIZ-013 · Engine behind the still for any slide
+- [x] VIZ-013 · Engine behind the still for any slide
   Review of VIZ-012 (guided review and the full viewer on the live slide) found the engine draws real pixels but takes objects from the mock region table, so a non-fixture slide shows no or misplaced outlines. Feed real object geometry to the engine, clamp the still's camera to the engine's bounds so wheel-out and off-slide drags stay aligned, clear the drawing before the viewport is disposed, release the WebGL probe context and move it out of render, align the no-results guard between the two screens and surface tile failures, and add a test that the canvas and the SVG line up.
   Done when browser tests open a non-fixture slide with real objects in both screens and find outlines aligned with pixels after wheel-out and a drag, and leaving the screen raises no engine error.
   Depends on VIZ-012.

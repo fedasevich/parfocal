@@ -19,7 +19,8 @@ def test_a_researcher_offers_a_layout_and_the_admin_is_notified(api: ApiAs, data
     notified = owner(
         database,
         "SELECT user_id::text, target_type, payload->>'name' FROM notifications "
-        "WHERE kind = 'template-offered'",
+        "WHERE kind = 'template-offered' "
+        f"AND tenant_id = '{people['admin'].tenant_id}'",
     )
     assert notified == [(str(people["admin"].user_id), "template-offer", "Lab layout")]
     assert [row[0] for row in audited(database, body["id"])] == ["template-offer.offered"]

@@ -1,4 +1,4 @@
-# 0278. A decision note stays on the decision and shows in the Comments tab as an entry above the thread
+# 0285. A decision note stays on the decision and shows in the Comments tab as an entry above the thread
 
 - Date: 2026-11-09
 - Status: Accepted
