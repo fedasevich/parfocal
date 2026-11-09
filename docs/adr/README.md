@@ -230,3 +230,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0264](0264-minimap-weights-for-thread-panel-proposals-and-pins.md) | The minimap scores proposals at 5, pins at 20, and treats an open thread and the cells panel as blocked | Accepted | 2026-11-08 |
 | [0265](0265-join-a-workspace-by-verified-email-domain.md) | A person joins a workspace whose verified email domain matches theirs, or asks its admins, and public mail domains never match | Accepted | 2026-11-09 |
 | [0266](0266-admin-sections-and-their-permissions.md) | The admin page has ten sections, each behind one permission | Accepted | 2026-11-09 |
+| [0267](0267-sign-up-and-setup-flow.md) | The sign-up and setup flow on top of the Zitadel login and invitations | Accepted | 2026-11-09 |

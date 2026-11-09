@@ -1,4 +1,4 @@
-# XXXX. The sign-up and setup flow on top of the Zitadel login and invitations
+# 0267. The sign-up and setup flow on top of the Zitadel login and invitations
 
 - Date: 2026-11-09
 - Status: Accepted
