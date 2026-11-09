@@ -124,6 +124,7 @@ export interface VivRoute extends RendererRoute<PixelSlide> {
   readonly failedTiles: () => readonly FailedTile[];
   readonly retryTile: (key: string) => void;
   readonly decodeStats: () => DecodeStats | null;
+  readonly residentTiles: () => number | null;
   readonly jpegReports: () => readonly (DecodeReport | null)[];
   readonly sleep: DeckSleep | null;
   readonly gpu: VivGpuState;
@@ -133,6 +134,25 @@ export interface VivRoute extends RendererRoute<PixelSlide> {
   readonly prefetchStats: () => PrefetchStats | null;
   readonly channels: () => VivChannelLevels | null;
   readonly setChannelDisplay: (display: readonly ChannelDisplay[]) => void;
+}
+
+function countResidentTiles(deck: unknown): number | null {
+  const manager = (deck as { layerManager?: unknown }).layerManager as
+    | { getLayers?: () => readonly unknown[] }
+    | undefined;
+  const layers = manager?.getLayers?.();
+  if (layers === undefined) return null;
+  let total = 0;
+  let found = false;
+  for (const layer of layers) {
+    const tileset = (
+      layer as { state?: { tileset?: { tiles?: readonly { isLoaded?: boolean }[] } } }
+    ).state?.tileset;
+    if (tileset?.tiles === undefined) continue;
+    found = true;
+    total += tileset.tiles.filter((tile) => tile.isLoaded === true).length;
+  }
+  return found ? total : null;
 }
 
 type RouteLevels = Pick<VivLevels, "pending" | "loadState" | "failures" | "clearFailure">;
@@ -519,6 +539,7 @@ export function createVivRoute(
     failedTiles: () => shown?.levels.failures() ?? [],
     retryTile,
     decodeStats: () => shown?.reader?.stats() ?? null,
+    residentTiles: () => countResidentTiles(deck),
     jpegReports: () => shown?.reader?.jpegReports() ?? [],
     sleep,
     setPrefetch: (enabled) => {

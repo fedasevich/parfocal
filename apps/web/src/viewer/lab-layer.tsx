@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useLabSettings } from "../lab/lab-settings.ts";
 import { generateNuclei, nucleiChipFor } from "../lab/synthetic-data.ts";
 import { detailDraw, insideView, labViewerPlan } from "./lab-plan.ts";
+import PerformanceHud from "./performance-hud.tsx";
 import type { ViewerEngine, VivRoute } from "./viewer-engine.ts";
 
 const densityCell = 24;
@@ -174,12 +175,16 @@ export default function LabLayer({
             {chip}
           </p>
         ) : null}
-        {plan.hud ? (
-          <p data-testid="lab-hud" className="m-0 rounded-ctl bg-chrome px-2 py-1">
-            {`${plan.route} · zoom ${readout.zoom} · drawn ${readout.drawn.toLocaleString("en-US")} · prefetch ${readout.queued} queued ${readout.used} used`}
-          </p>
-        ) : null}
       </div>
+      {plan.hud ? (
+        <PerformanceHud
+          route={route}
+          corner={settings.hudCorner}
+          drawn={readout.drawn}
+          total={plan.nucleiCount}
+          lodTier={plan.detailLevel}
+        />
+      ) : null}
     </>
   );
 }

@@ -6,6 +6,8 @@ export const labInterpolations = ["auto", "linear", "nearest"] as const;
 export const labDetailLevels = ["off", "fade", "dots", "density", "tiered"] as const;
 export const labNucleiCounts = ["off", "10k", "100k", "500k", "1M"] as const;
 
+export const labHudCorners = ["tl", "tr", "bl"] as const;
+
 export type LabSettings = {
   renderer: (typeof labRenderers)[number];
   culling: (typeof labCullModes)[number];
@@ -15,6 +17,7 @@ export type LabSettings = {
   detailLevel: (typeof labDetailLevels)[number];
   nuclei: (typeof labNucleiCounts)[number];
   hud: boolean;
+  hudCorner: (typeof labHudCorners)[number];
   pauseModels: boolean;
 };
 
@@ -27,6 +30,7 @@ export const labDefaults: LabSettings = {
   detailLevel: "tiered",
   nuclei: "100k",
   hud: true,
+  hudCorner: "tl",
   pauseModels: true,
 };
 
@@ -59,6 +63,7 @@ export function parseLabSettings(text: string | null): LabSettings {
     detailLevel: oneOf(labDetailLevels, raw["detailLevel"], labDefaults.detailLevel),
     nuclei: oneOf(labNucleiCounts, raw["nuclei"], labDefaults.nuclei),
     hud: flag(raw["hud"], labDefaults.hud),
+    hudCorner: oneOf(labHudCorners, raw["hudCorner"], labDefaults.hudCorner),
     pauseModels: flag(raw["pauseModels"], labDefaults.pauseModels),
   };
 }
