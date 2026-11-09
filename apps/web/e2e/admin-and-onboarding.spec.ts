@@ -128,6 +128,13 @@ test("the invite joins in one step and opens the first slide", async ({ page }) 
   await expect(page).toHaveURL(/\/projects\/[0-9a-f-]+\/slides\/[0-9a-f-]+\?task=/);
 });
 
+test("an invite link that does not work says so and offers sign in", async ({ page }) => {
+  await page.goto("/invite?token=gone-token");
+  await expect(page.getByRole("heading", { name: "This invite link does not work" })).toBeVisible();
+  await page.getByRole("button", { name: "Go to sign in" }).click();
+  await expect(page).toHaveURL(/\/sign-in/);
+});
+
 const startSetup = async (page: Page) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "Good afternoon, Lenka" })).toBeVisible();
