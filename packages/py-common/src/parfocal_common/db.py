@@ -78,7 +78,9 @@ SET_SCOPE = text(
 
 
 ROLE_BYPASSES_ROW_SECURITY = text(
-    "SELECT rolname, rolsuper OR rolbypassrls FROM pg_roles WHERE rolname = current_user"
+    "SELECT current_user, EXISTS ("
+    "SELECT 1 FROM pg_roles "
+    "WHERE (rolsuper OR rolbypassrls) AND pg_has_role(current_user, oid, 'member'))"
 )
 
 

@@ -1,7 +1,8 @@
 import asyncio
+import uuid
 
 import pytest
-from db_support import APP_URL, OWNER_URL, api_settings, with_database
+from db_support import APP_URL, OWNER_URL, api_settings, query, with_database
 from fastapi.testclient import TestClient
 from pydantic import PostgresDsn
 
@@ -36,6 +37,17 @@ def test_the_application_role_passes_the_check(database: str) -> None:
 def test_a_role_that_bypasses_row_security_is_refused_by_name(database: str) -> None:
     with pytest.raises(UnsafeDatabaseRoleError, match="parfocal"):
         asyncio.run(checked(with_database(OWNER_URL, database)))
+
+
+def test_a_member_of_a_role_that_bypasses_row_security_is_refused(database: str) -> None:
+    member = f"parfocal_member_{uuid.uuid4().hex[:8]}"
+    query(OWNER_URL, f"CREATE ROLE {member} LOGIN NOSUPERUSER NOBYPASSRLS IN ROLE parfocal")
+    try:
+        url = with_database(OWNER_URL, database).replace("//parfocal@", f"//{member}@")
+        with pytest.raises(UnsafeDatabaseRoleError, match=member):
+            asyncio.run(checked(url))
+    finally:
+        query(OWNER_URL, f"DROP ROLE {member}")
 
 
 def test_the_api_refuses_to_start_as_a_role_that_bypasses_row_security(database: str) -> None:
