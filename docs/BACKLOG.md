@@ -4554,7 +4554,7 @@ Doctors judge AI objects in a simple guided mode, or in the full viewer with the
   Depends on GUIDE-006, TASK-002. Split out of GUIDE-007 so the screen has no backend work.
   Required questions block the submit of a slide until they are answered, which TASK-008 (submit a slide review) checks ([ADR 0131](adr/0131-decision-styles-raw-answers-and-submit-gating.md), decision styles, raw answers and submit gating).
 
-- [ ] GUIDE-010 · Notes on decisions
+- [x] GUIDE-010 · Notes on decisions
   After any decision, in guided review, the full viewer and the cell view, an "Add a note" link and the ⇧N key (N is No in the yes or no style, DS-030) open a short field with Save on Enter and Cancel on Esc. Disagree and Unsure offer their quick reasons as toggles before the text, and none is required. A saved note shows the reviewer as avatar and name, the decision, the reasons and the text with Edit, can mention people as comments do, and never blocks moving on. Notes show as a thread on the object in the Comments tab, and under each reviewer's decision in the disagreement queue and the adjudicator view, blinded there ([ADR 0095](adr/0095-ux-round-5-upload-by-slide-and-decision-notes.md)).
   Done when component tests cover writing, editing and cancelling a note with each decision, E2E adds a note with a mention in guided review and finds it in the full viewer's Comments tab and in the adjudicator view, and an axe check passes on the open field.
   Depends on GUIDE-011, GUIDE-002, GUIDE-005, COLLAB-005, COLLAB-006. Refs mock: guided/note, mock: case, doc 42.
