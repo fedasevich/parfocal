@@ -3604,7 +3604,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Depends on SET-010.
   Size: S.
 
-- [ ] SET-003 · Display section
+- [x] SET-003 · Display section
   Theme, slide brightness, density, patient names, lengths, magnification label, language (English only, shown disabled). Theme and initials only can also be changed from the account menu (SHELL-012).
   Done when tests confirm each setting changes the UI live.
   Size: M.
