@@ -25,7 +25,7 @@ test("the tour has ten steps with distinct ids and plain text", () => {
 
 test("steps that need a project or task open its page, or stay put without one", () => {
   const routes = tourSteps.map((step) => step.route(withIds));
-  assert.deepEqual(routes.slice(1, 3), ["/projects/p1/upload", "/projects/p1/run-model"]);
+  assert.deepEqual(routes.slice(1, 3), ["/projects/p1/upload", "/projects/p1"]);
   assert.equal(routes[5], "/tasks/t1/guided");
   assert.equal(routes[9], "/settings/shortcuts");
   const bare = tourSteps.map((step) => step.route(withoutIds));

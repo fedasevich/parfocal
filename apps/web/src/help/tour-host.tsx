@@ -8,10 +8,9 @@ import {
 import { Button } from "@parfocal/ui/components/button";
 import { useQueryClient } from "@tanstack/react-query";
 import { useMatches, useRouter } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { okData } from "../screens/placeholder.tsx";
-import { HelpDialog } from "./help-dialog.tsx";
-import { startTour, stopTour, useActiveTourStep } from "./tour-state.ts";
+import { startTour, stopTour, useActiveTourStep, useHelpOpen } from "./tour-state.ts";
 import {
   isLastStep,
   offerShows,
@@ -22,6 +21,10 @@ import {
   tourLength,
   tourSteps,
 } from "./tour-steps.ts";
+
+const HelpDialog = lazy(async () => ({
+  default: (await import("./help-dialog.tsx")).HelpDialog,
+}));
 
 type Box = { left: number; top: number; width: number; height: number };
 
@@ -161,12 +164,17 @@ function TourOffer() {
   );
 }
 
-export function TourHost() {
+export default function TourHost() {
   const active = useActiveTourStep();
+  const helpOpen = useHelpOpen();
   return (
     <>
       {active === null ? <TourOffer /> : <TourCard index={active} />}
-      <HelpDialog />
+      {helpOpen ? (
+        <Suspense fallback={null}>
+          <HelpDialog />
+        </Suspense>
+      ) : null}
     </>
   );
 }

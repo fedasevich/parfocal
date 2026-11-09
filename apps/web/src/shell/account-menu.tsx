@@ -14,7 +14,6 @@ import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { now } from "../clock.ts";
 import { openFeedback } from "../feedback/feedback-state.ts";
-import { openHelp } from "../help/help-open.ts";
 import { toPersonInfo } from "../screens/people.ts";
 import { okData } from "../screens/placeholder.tsx";
 import { nextAvailability, presenceOf, shownPerson } from "./account-presence.ts";
@@ -23,6 +22,8 @@ import type { PersonaKey } from "./overlays.ts";
 import { useGoTo } from "./router-link.tsx";
 import { shellStore, useShell } from "./shell-store.ts";
 import { readTheme, chooseTheme as storeTheme, type ThemeChoice } from "./theme.ts";
+
+const openHelp = () => window.dispatchEvent(new Event("help"));
 
 export const logOutUrl = "/api/auth/logout";
 

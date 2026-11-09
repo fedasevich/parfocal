@@ -1,5 +1,4 @@
 import { useSyncExternalStore } from "react";
-import { helpRequests } from "./help-open.ts";
 
 let active: number | null = null;
 let helpOpen = false;
@@ -25,7 +24,7 @@ export const stopTour = () => {
   emit();
 };
 
-helpRequests.addEventListener("open", () => {
+window.addEventListener("help", () => {
   helpOpen = true;
   emit();
 });

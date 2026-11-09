@@ -17,9 +17,7 @@ import { inGlobalShell } from "../shell/shell-routes.ts";
 import { ShortcutsKey } from "../shell/shortcuts-key.tsx";
 import { useAnalyticsConsentSync } from "../telemetry/consent-sync.ts";
 
-const TourHost = lazy(async () => ({
-  default: (await import("../help/tour-host.tsx")).TourHost,
-}));
+const TourHost = lazy(() => import("../help/tour-host.tsx"));
 
 export const Route = createRootRoute({
   validateSearch: overlaySearch,

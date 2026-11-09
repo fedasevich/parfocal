@@ -27,8 +27,8 @@ export const tourSteps: readonly TourStep[] = [
   {
     id: "run-model",
     title: "Run a model",
-    text: "Slides that came without results can be sent to a model. Choose the model, see how long it takes, and run it. The run shows in the jobs tray.",
-    route: ({ projectId }) => (projectId ? destinations.runModel(projectId) : undefined),
+    text: "From a project, slides that came without results can be sent to a model with Run a model. Choose the model, see how long it takes, and run it. The run shows in the jobs tray.",
+    route: ({ projectId }) => (projectId ? destinations.project(projectId) : undefined),
   },
   {
     id: "new-task",
