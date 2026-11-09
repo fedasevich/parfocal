@@ -4211,6 +4211,12 @@ A project holds slides, AI results and review tasks. Cases inside it are optiona
   Depends on PROJ-003, ONB-005.
   Size: M.
 
+- [ ] PROJ-011 · Restore a deleted project and revoke its links
+  PROJ-010 soft-deletes a project and restores it only through `POST /api/projects/{id}/undelete`, and a shared report link to a deleted project answers 410 but its owner cannot revoke it, because the revoke route 404s on a deleted project. Add a Deleted projects list in Admin with Restore for owners, and let the owner revoke a deleted project's report links.
+  Done when a browser test deletes a project, finds it in Deleted projects, restores it and sees it back in every list, and an API test revokes a deleted project's report link.
+  Depends on PROJ-010.
+  Size: S.
+
 ---
 
 ## 41 RSET · Result sets and AI result import
