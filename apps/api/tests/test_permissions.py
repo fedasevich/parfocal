@@ -617,6 +617,7 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
         "GET", f"/api/projects/{w.project}/class-mappings/resolve?name=Neoplastic"
     ),
     "listProjects": lambda _: Call("GET", "/api/projects"),
+    "listDeletedProjects": lambda _: Call("GET", "/api/projects/deleted"),
     "getProject": lambda w: Call("GET", f"/api/projects/{w.project}"),
     "updateProject": lambda w: Call("PATCH", f"/api/projects/{w.project}", {"colour": 3}),
     "setWorkspaceSettings": lambda _: Call(

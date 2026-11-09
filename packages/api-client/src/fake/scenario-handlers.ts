@@ -46,6 +46,7 @@ import {
   type ScenarioProject,
   type ScenarioReviewTask,
   sampleProject,
+  scenarioNow,
   slideOf,
   slides,
   week,
@@ -422,6 +423,25 @@ export function scenarioHandlers(): RequestHandler[] {
       return HttpResponse.json(chosen);
     }),
     getListTenantMembersMockHandler(toMembers()),
+    http.get("*/api/projects/deleted", () =>
+      HttpResponse.json(
+        projects
+          .filter((project) => deletedProjects.has(project.id))
+          .map((project) => ({
+            id: project.id,
+            code: project.code,
+            name: project.name,
+            colour: project.colour,
+            deleted_at: scenarioNow,
+          })),
+      ),
+    ),
+    http.post<{ projectId: string }>("*/api/projects/:projectId/undelete", ({ params }) => {
+      const project = projects.find((candidate) => candidate.id === params.projectId);
+      if (project === undefined) return projectNotFound();
+      deletedProjects.delete(project.id);
+      return HttpResponse.json(toProject(project));
+    }),
     http.get<{ projectId: string }>("*/api/projects/:projectId", ({ params }) => {
       const project = projectNamed(params.projectId);
       return project === undefined ? projectNotFound() : HttpResponse.json(toProject(project));

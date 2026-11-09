@@ -34,6 +34,7 @@ import type {
   CreatedReportLink,
   CreatedServiceAccount,
   CreatedUpload,
+  DeletedProject,
   DisagreementReasons,
   DisplayPreset,
   EmailSchedule,
@@ -395,6 +396,15 @@ export const getListProjectsResponseMock = (): Project[] =>
         ]),
       }),
     ),
+  }));
+
+export const getListDeletedProjectsResponseMock = (): DeletedProject[] =>
+  Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    id: faker.string.uuid(),
+    code: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    colour: faker.number.int(),
+    deleted_at: faker.date.past().toISOString().slice(0, 19) + "Z",
   }));
 
 export const getGetProjectResponseMock = (
@@ -13386,6 +13396,30 @@ export const getListProjectsMockHandler = (
   );
 };
 
+export const getListDeletedProjectsMockHandler = (
+  overrideResponse?:
+    | DeletedProject[]
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<DeletedProject[]> | DeletedProject[]),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/projects/deleted",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getListDeletedProjectsResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getGetProjectMockHandler = (
   overrideResponse?:
     | Project
@@ -19648,6 +19682,7 @@ export const getParfocalAPIMock = () => [
   getEndOtherSessionsMockHandler(),
   getCreateProjectMockHandler(),
   getListProjectsMockHandler(),
+  getListDeletedProjectsMockHandler(),
   getGetProjectMockHandler(),
   getUpdateProjectMockHandler(),
   getDeleteProjectMockHandler(),
