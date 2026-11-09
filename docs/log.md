@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-09
 
+- TEST-025: the four specs pass 3 of 3 locally with axe on after the earlier fix 38a071d8 (a fast second key is ignored while saving), and passed in ci run 42666737479 with enforcement on. No code change.
 - TEST-009: ci run 42666737479 on 2026-11-09 passed all three web browser shards with axe enforcement on, so the allowlist holds. TEST-022, TEST-023 and TEST-024 now empty it.
 - COLLAB-021: The annotate task owner can switch blind first off and on again from task settings. PATCH blind_first with a new blind_first_since (migration 0110) keeps already shown objects shown and hides only later unchecked ones, and each change is audited as task.blind-first-changed without PHI. Tested by API and browser specs.
 - TEST-014: the dependency-scan job passed on the ci runs of 2026-11-09.

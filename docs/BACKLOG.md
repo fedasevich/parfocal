@@ -4174,7 +4174,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Depends on TEST-009.
   Size: M.
 
-- [ ] TEST-025 · Four specs that fail before their axe step
+- [x] TEST-025 · Four specs that fail before their axe step
   The full local run for TEST-009 (accessibility testing) failed four specs before axe ran: the guided-check row click that keeps the guided object, two guided-review scene tests and the command palette's Measure only on a slide. Nobody looked at why. Find whether each is a stale spec or a real bug, fix it, and check that the routes they reach are scanned.
   Done when the four specs pass locally three times in a row and in one CI run.
   Size: S.
