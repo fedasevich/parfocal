@@ -1,3 +1,4 @@
+import { WeakSigningKeyError } from "#capability.ts";
 import { guard, type LimitEnv } from "#rate-limits.ts";
 import { handleRealtime, isRealtimePath } from "#realtime.ts";
 import type { RoomEnv } from "#room.ts";
@@ -47,7 +48,9 @@ async function answer(
         message: error instanceof Error ? error.message : String(error),
       }),
     );
-    return problem(500, "internal-error", "The request could not be served");
+    return error instanceof WeakSigningKeyError
+      ? problem(503, "signing-key-not-configured", "Slide and room access are not configured")
+      : problem(500, "internal-error", "The request could not be served");
   }
 }
 

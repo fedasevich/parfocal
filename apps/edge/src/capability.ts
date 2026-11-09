@@ -39,10 +39,28 @@ export function toBase64Url(bytes: Uint8Array): string {
   return btoa(binary).replaceAll("+", "-").replaceAll("/", "_").replace(/=+$/, "");
 }
 
+export const MIN_SIGNING_KEY_BYTES = 32;
+
+export class WeakSigningKeyError extends Error {
+  constructor() {
+    super(`A signing key needs at least ${MIN_SIGNING_KEY_BYTES} bytes in base64`);
+    this.name = "WeakSigningKeyError";
+  }
+}
+
+function keyBytes(secret: string): Uint8Array<ArrayBuffer> {
+  let binary = "";
+  try {
+    binary = atob(secret.replaceAll("-", "+").replaceAll("_", "/"));
+  } catch {
+    throw new WeakSigningKeyError();
+  }
+  if (binary.length < MIN_SIGNING_KEY_BYTES) throw new WeakSigningKeyError();
+  return Uint8Array.from(binary, (char) => char.charCodeAt(0));
+}
+
 export async function signingKey(secret: string): Promise<CryptoKey> {
-  const raw = Uint8Array.from(atob(secret.replaceAll("-", "+").replaceAll("_", "/")), (char) =>
-    char.charCodeAt(0),
-  );
+  const raw = keyBytes(secret);
   return crypto.subtle.importKey("raw", raw, { name: "HMAC", hash: "SHA-256" }, false, [
     "sign",
     "verify",
