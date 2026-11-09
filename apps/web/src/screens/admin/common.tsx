@@ -1,7 +1,7 @@
 import type { AiModel } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
 import { Icon } from "@parfocal/ui/components/icon";
-import { StatusTag, type StatusTone } from "@parfocal/ui/components/tag";
+import { StatusTag } from "@parfocal/ui/components/tag";
 import { now } from "../../clock.ts";
 import { daysBetween } from "../format.ts";
 import { modelStatus } from "./model-status.ts";
