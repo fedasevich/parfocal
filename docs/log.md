@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-09
 
+- The class list select, retention zone and session lock time in Admin now save through the existing workspace settings, retention and session policy APIs, with API, unit and browser tests and no migration. Remaining mock switches, the unused lock_after_minutes setting and the retention permission mismatch go to ADMIN-011.
 - EVAL-010 Correction, the paging and cache follow-up is EVAL-017 (page and cache long PDF previews), not EVAL-016.
 - DEV-002 Correction, the follow-up that wires the listeners is DEV-013 (wire two-finger click and Safari pinch to the viewer), not DEV-010.
 - Tile resampling moved into the outline worker as a transferable buffer, and each tile's document write runs as a React transition. With the CPU slowed four times the region pass has no long task over 50 ms, down from 8 with the longest at 152 ms, and a unit test shows identical outlines.

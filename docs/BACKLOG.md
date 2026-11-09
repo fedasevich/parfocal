@@ -5009,7 +5009,7 @@ Admin is its own page with its own sidebar and the app's top bar, never a page i
   Depends on ADMIN-007.
   Size: M.
 
-- [ ] ADMIN-010 · Wire the class lists, retention and session lock controls
+- [x] ADMIN-010 · Wire the class lists, retention and session lock controls
   ADR 0266 (admin sections and their permissions) found three Admin controls that are still mock only: class lists, retention and session lock. Save each through the workspace settings API under its permission, or hide it until its feature exists.
   Done when API tests save and read back each setting with the permission refused to others, and a browser test changes one and reloads.
   Depends on ADMIN-000.
