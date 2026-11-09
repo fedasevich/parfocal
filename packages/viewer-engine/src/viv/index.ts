@@ -3,6 +3,7 @@ export {
   type DecodeStats,
   type DecodeWorker,
   DecodeWorkerError,
+  disposingOnThrow,
   spawnDecodeWorker,
   type WorkerReaderOptions,
   type WorkerRegionReader,

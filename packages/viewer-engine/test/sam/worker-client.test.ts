@@ -28,7 +28,9 @@ function linkedWorker(runtime: FakeRuntime) {
     },
   };
   const worker = {
-    addEventListener: (_type: "message", listener: Listener) => toClient.push(listener),
+    addEventListener: (type: string, listener: Listener) => {
+      if (type === "message") toClient.push(listener);
+    },
     postMessage: (message: SamRequest) => {
       posted.push(message);
       queueMicrotask(() => {
@@ -50,6 +52,51 @@ function linkedWorker(runtime: FakeRuntime) {
   });
   return { worker: worker as unknown as SamWorker, posted };
 }
+
+function silentWorker() {
+  const failures: ((event: Event) => void)[] = [];
+  const worker = {
+    addEventListener: (type: string, listener: (event: Event) => void) => {
+      if (type !== "message") failures.push(listener);
+    },
+    postMessage: () => undefined,
+    terminate: () => undefined,
+  };
+  return {
+    worker: worker as unknown as SamWorker,
+    fail: (type: "error" | "messageerror") => {
+      for (const listener of failures) listener(new Event(type));
+    },
+  };
+}
+
+describe("an inference worker that fails", () => {
+  for (const type of ["error", "messageerror"] as const) {
+    it(`rejects ready and later requests when the worker fires ${type} before it is ready`, async () => {
+      const { worker, fail } = silentWorker();
+      const client = createSamClient({ modelsUrl: "/models", spawn: () => worker });
+      try {
+        fail(type);
+        await assert.rejects(client.ready, SamWorkerError);
+        await assert.rejects(client.segmentAll("view-a"), SamWorkerError);
+      } finally {
+        client.close();
+      }
+    });
+  }
+
+  it("rejects a request that was waiting when the worker stopped", async () => {
+    const { worker, fail } = silentWorker();
+    const client = createSamClient({ modelsUrl: "/models", spawn: () => worker });
+    try {
+      const waiting = client.prompt("view-a", { points: [] });
+      fail("error");
+      await assert.rejects(waiting, SamWorkerError);
+    } finally {
+      client.close();
+    }
+  });
+});
 
 describe("inference worker client", () => {
   it("starts the worker, reports each graph and resolves ready", async () => {

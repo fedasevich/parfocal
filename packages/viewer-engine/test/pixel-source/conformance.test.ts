@@ -1,5 +1,8 @@
+import assert from "node:assert/strict";
 import { after, describe, it } from "node:test";
 import { fixturesDir, skipUnlessCached, syntheticDir } from "@parfocal/test-fixtures";
+import { cachedFetch } from "../../src/decode/byte-relay.ts";
+import { createRangeCache } from "../../src/decode/range-cache.ts";
 import {
   createDefaultPixelSourceRegistry,
   type OpenRequest,
@@ -343,6 +346,29 @@ const zarrExpected: Record<string, Expected> = {
   },
   "OME-Zarr 0.4 sparse": { levels: 2, photometric: "rgb", dtype: "uint8", micronsPerPixel: 0.5 },
 };
+
+describe("zarrita through the byte cache", () => {
+  it("reads a sharded store with ranges only and the same pixels as a direct open", async () => {
+    const index = written.findIndex(([name]) => name === "OME-Zarr 0.5 RGB sharded");
+    const url = served.url(`/zarr${index}`);
+    const direct = await openOmeZarrSource({ formatId: "ome-zarr", url });
+    const expected = await direct.getTile({ level: 0, x: 1, y: 1 });
+    direct.close();
+    const from = served.log.length;
+    const cached = await openOmeZarrSource({
+      formatId: "ome-zarr",
+      url,
+      fetch: cachedFetch(createRangeCache()),
+    });
+    const tile = await cached.getTile({ level: 0, x: 1, y: 1 });
+    cached.close();
+    const whole = served.log
+      .slice(from)
+      .filter((entry) => entry.path.includes("/c/") && entry.range === null);
+    assert.deepEqual(whole, []);
+    assert.deepEqual(tile, expected);
+  });
+});
 
 for (const [index, [name]] of written.entries()) {
   const expected = zarrExpected[name];

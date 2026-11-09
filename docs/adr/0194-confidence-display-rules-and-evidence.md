@@ -54,6 +54,8 @@ A typer without these numbers measured on held-out data gets the percent wording
 
 ## Wording review of zone names and type hints, 2026-11-04
 
+Simulated check, no pathologist took part ([agent-stand-in-records.md](../project/agent-stand-in-records.md)).
+
 Done by an agent acting as the reviewing pathologist, against the classes the typers produce (PanNuke's neoplastic, inflammatory, connective, dead and epithelial, folded into the kit's Tumor, Stroma, Immune and Other) and the terms a surgical pathologist uses at the microscope.
 
 | Item | Before | After | Why |

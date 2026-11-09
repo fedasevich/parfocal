@@ -93,6 +93,7 @@ JOIN pg_namespace n ON n.oid = c.relnamespace
 WHERE n.nspname = current_schema() ORDER BY 1, 2
 """
 
+
 def test_the_policies_at_head_are_the_reviewed_ones(empty_database: str) -> None:
     command.upgrade(alembic_config(empty_database), "head")
     found = [tuple(row) for row in query(empty_database, POLICIES)]
@@ -114,7 +115,9 @@ def test_no_table_shows_a_row_of_another_tenant_or_to_no_tenant(database, seeded
 
 ```python
 def test_every_operation_is_classified() -> None:
-    operations = {op["operationId"] for path in openapi_schema()["paths"].values() for op in path.values()}
+    operations = {
+        op["operationId"] for path in openapi_schema()["paths"].values() for op in path.values()
+    }
     assert operations == set(GET_ROUTES) | set(WRITE_ROUTES)
 ```
 
@@ -146,6 +149,7 @@ The smallest fix is a start-up check in `parfocal_common.db`, called from the ap
 ```python
 UNSAFE_ROLE = text("SELECT rolsuper OR rolbypassrls FROM pg_roles WHERE rolname = current_user")
 
+
 async def require_safe_role(engine: AsyncEngine) -> None:
     async with engine.connect() as connection:
         if await connection.scalar(UNSAFE_ROLE):
@@ -166,16 +170,24 @@ The tests miss all three because they exercise the routes, and the routes are co
 def test_the_auth_scope_cannot_move_or_revive_an_api_token(database, seeded) -> None:
     a, b = seeded
     with pytest.raises(DBAPIError):
-        run_as_app(database, DatabaseScope(auth=True),
-                   update(api_tokens).where(api_tokens.c.tenant_id == a.tenant_id)
-                   .values(tenant_id=b.tenant_id, revoked_at=None))
+        run_as_app(
+            database,
+            DatabaseScope(auth=True),
+            update(api_tokens)
+            .where(api_tokens.c.tenant_id == a.tenant_id)
+            .values(tenant_id=b.tenant_id, revoked_at=None),
+        )
+
 
 def test_a_member_cannot_change_their_own_email_in_the_database(database, seeded) -> None:
     a, _ = seeded
     scope = DatabaseScope(tenant_id=a.tenant_id, user_id=a.ids["user"])
     with pytest.raises(DBAPIError):
-        run_as_app(database, scope,
-                   update(users).where(users.c.id == a.ids["user"]).values(email="x@other.example"))
+        run_as_app(
+            database,
+            scope,
+            update(users).where(users.c.id == a.ids["user"]).values(email="x@other.example"),
+        )
 ```
 
 ## Suspicions
@@ -235,4 +247,4 @@ where `cross_tenant_children` builds one complete insert per single-column key w
 7. Background work. `claim` in `packages/py-common/src/parfocal_common/jobs.py:305` runs under the platform scope and touches only `jobs`. Every step, renewal and finish uses the tenant id of the claimed row. `retention.py:274-293`, `stale_uploads.py:24-62`, `worklist_events.py:111-118`, `review_order_job.py` and both workers open one tenant scope per tenant or per job. Storage keys are built as `t/<tenant_id>/...` from the row's own tenant id.
 8. `parfocal_retention_purge()` in `0036_retention.py:41-155` is the only `SECURITY DEFINER` function. It pins `search_path`, refuses to run without a tenant setting, filters every top-level statement by that tenant, and is executable by the application role only. The other functions are plain triggers that run as the caller.
 9. Unique constraints. The global ones are `organisations.slug`, `tenants.slug`, `users.subject`, `audit_people.subject`, `sessions.id`, the three token hashes and `uploads.object_key`. None is fed by a value a tenant member chooses freely (workspace slugs get a random suffix, object keys carry the tenant id), so none works as an existence oracle. The rest are scoped by a parent uuid.
-10. The in-process report cache is keyed by tenant id (`report_cache.py:9-17`), and room and tile tokens carry the tenant or the slide key read under the tenant scope. I did not review the edge worker that verifies them.
+10. The in-process report cache is keyed by tenant id (`report_cache.py:9-17`), and room and tile tokens carry the tenant or the slide key read under the tenant scope. I did not review the edge worker that verifies them. The edge token review pointed out that the issuers select the slide or project by id alone (`tile_access.py:130-143`, `room_access.py:64-70` and `:87-89`) and copy the tenant claim from that row, so row-level security is their only tenant boundary. That boundary holds on the tables they read: `slides` and `projects` get the standard `tenant_isolation` policy in `0012_projects_and_cases.py` and no later migration adds another policy to either. It also means that the role question in Suspicion 1 (the Neon runtime role may bypass row-level security) reaches stored slide bytes and live rooms, not only database rows, because a bypassing role would get a signed token for any tenant's slide.

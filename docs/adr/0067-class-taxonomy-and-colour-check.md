@@ -28,6 +28,7 @@ Option 2 in both cases.
 - `project_classes` holds `id`, `project_id`, `key` (1 to 9, unique in the project, checked at commit so keys can be swapped), `name` (up to 60 characters, unique in the project ignoring case) and `colour` (`#rrggbb`, stored in lower case), in migration `0021`.
 - `class_mappings` holds a source name, trimmed and case-folded, and the class it maps to, keyed on the project and the name. Removing a class removes its mappings.
 - Two classes must be at least 15 apart in CIEDE2000 under normal vision and under simulated protanopia, deuteranopia and tritanopia. Every class must also be at least 13 from white (unsure zones on the slide), 40 from the AI proposal black and 15 from both unsure panel colours. A refusal is 400 `colours-too-close`, with a detail that names the classes, the vision and the distance.
+- Simulated check, no reader with a colour vision deficiency took part ([agent-stand-in-records.md](../project/agent-stand-in-records.md)).
 - Templates live in code (`parfocal_api.class_templates`). Sentinel node is Tumor, Stroma, Immune and Other in the kit's colours. PanNuke is Neoplastic, Inflammatory, Connective and Dead in the same colours, plus Epithelial in #43999d.
 
 | Operation | Path | Rule |

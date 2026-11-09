@@ -2,6 +2,8 @@
 
 A STRIDE threat model for the five parts of Parfocal that take untrusted input or cross a trust boundary: upload, tile access, guest links, AI jobs and realtime. It is the output of SEC-016 (threat model) and was written on 2026-10-18 against the architecture of [ADR 0003](../adr/0003-pilot-platform-architecture.md), [ADR 0050](../adr/0050-deploy-pipeline-and-previews.md) and the backlog as it stood that day. Most of these parts are still planned, so the model describes the design they must meet, not code that was tested.
 
+Simulated check, no such person took part. Agents wrote this page where a security professional would write or review it ([agent-stand-in-records.md](../project/agent-stand-in-records.md)).
+
 ## How to read it
 
 - STRIDE letters: S spoofing, T tampering, R repudiation, I information disclosure, D denial of service, E elevation of privilege.

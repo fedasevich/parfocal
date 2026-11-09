@@ -15,6 +15,7 @@ from parfocal_api.project_access import require_reading, require_slide_reading
 from parfocal_api.review_tasks import readable_task
 from parfocal_api.tables import PrivacyMode, projects, slides
 from parfocal_api.tile_access import sign_capability
+from parfocal_api.token_keys import usable_secret
 from parfocal_api.uploads import Settings
 
 ROOM_TOKEN_VERSION = 1
@@ -122,7 +123,8 @@ async def get_room_access(
         raise ForbiddenError
     kind, room_id = parsed_room(room)
     project_id = await room_project(connection, principal, kind, room_id)
-    if settings.room_token_key is None or not settings.room_token_key.get_secret_value():
+    secret = usable_secret(settings.room_token_key)
+    if secret is None:
         raise RealtimeNotConfiguredError
     response.headers["Cache-Control"] = "private, no-store"
     expires = int(time.time()) + ROOM_TOKEN_SECONDS
@@ -136,7 +138,7 @@ async def get_room_access(
         "e": expires,
     }
     return RoomAccess(
-        token=sign_capability(settings.room_token_key.get_secret_value(), claims),
+        token=sign_capability(secret, claims),
         expires_at=datetime.fromtimestamp(expires, UTC),
         lifetime_seconds=ROOM_TOKEN_SECONDS,
         path=f"/rt/{name}",

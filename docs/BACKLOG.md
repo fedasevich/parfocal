@@ -589,12 +589,12 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Done when those four files are split, a guard in `pnpm verify` fails on a new source file over 1,200 lines outside generated code and tests, with today's larger files listed as exceptions, and the suites stay green.
   Size: M.
 
-- [ ] FOUND-037 · Docs memory that cannot go stale
+- [x] FOUND-037 · Docs memory that cannot go stale
   `docs/README.md` was last consolidated on 2026-10-18 and says 796 tasks with about 170 ticked, against 940 with 664 ticked on 2026-11-09. The roadmap says M2 (viewer parity) is not started while VIEW is 39 of 56 and has no row for MA (the annotation path), risk R11 still says the cloud is paused, and "In progress" names decision 15a, which is gone ([project review](results/2026-11-09-project-review.md)). Run the consolidation once, replace hand-written counts with a `board.py` command that prints tasks and ticks per epic and milestone, and make the lead consolidate at the end of each parallel run.
   Done when README, roadmap and risks match the board on the day of the change, README holds no hand-written count, `board.py` prints the counts, and `knowledge/agent-workflow.md` names the lead's consolidation step.
   Size: M.
 
-- [ ] FOUND-038 · Records where an agent stood in for a person
+- [x] FOUND-038 · Records where an agent stood in for a person
   An agent reviewed the confidence zone names as the pathologist (decision 44c, ADR 0194 on confidence display rules) and ran the incident tabletop on paper (ADR 0186 on incident response), and many accepted records were never read by the owner (risk R12). List every record, result and compliance document where an agent stood in for a pathologist, a user or the owner on one page like [standing-approval-records.md](project/standing-approval-records.md), mark each in its own file as simulated, and name what a real check would need. Decision 82 (what the thesis claims about people) decides what the thesis may cite.
   Done when the page exists and is indexed in `docs/README.md` and each listed file carries a one-line mark.
   Size: S.
@@ -1000,10 +1000,10 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when a db test shows the API, the worker loop and each command raising `UnsafeDatabaseRoleError` for the owner role and passing for `parfocal_app`, and [knowledge/database.md](knowledge/database.md) says how to create the role on Neon.
   Size: S.
 
-- [ ] SEC-033 · Isolation checks that read the policies and probe every table
-  The isolation checks compare policy names and GET routes only ([tenant isolation review](results/2026-11-09-tenant-isolation-review.md), confirmed finding 2). A policy written as `USING (true)`, a second permissive policy, a tenant table with no seeded row and an unscoped write route all pass today, and 172 of 306 operations are not GET. Pin every policy's command, kind and both expressions in a reviewed snapshot file, probe every table with a `tenant_id` column as `parfocal_app` under another workspace's scope and under no scope, and classify every operation so each write route is sent as the other workspace.
-  Done when the snapshot test fails on a changed or added policy, the probe fails for a tenant table that shows a row or has none seeded, and a test fails when an operation of any method is missing from the suite.
-  Size: M.
+- [x] SEC-033 · Isolation checks that read the policies and probe every table
+  The isolation checks compare policy names and GET routes only ([tenant isolation review](results/2026-11-09-tenant-isolation-review.md), confirmed finding 2). A policy written as `USING (true)`, a second permissive policy, a tenant table with no seeded row and an unscoped write route all pass today, and 172 of 306 operations are not GET. Pin every policy's command, kind, roles and both expressions in a reviewed snapshot file, and probe every table with a `tenant_id` column as `parfocal_app` under another workspace's scope and under no scope. SEC-043 (every write route is sent as another workspace) covers the routes.
+  Done when the snapshot test fails on a changed or added policy and the probe fails for a tenant table that shows a row or has none seeded.
+  Size: S.
 
 - [ ] SEC-034 · Narrow three database escape hatches
   Three rules allow more than the code that uses them needs ([tenant isolation review](results/2026-11-09-tenant-isolation-review.md), confirmed finding 4). The auth scope may rewrite any column of any workspace's `api_tokens` row though it only sets `last_used_at`, a signed-in person may change their own `email` and `subject` in `users` though only the email schedule is self-service, and the join routes open a scope with platform and auth both on for a workspace id taken from the URL. None is reachable from a request today. Grant `UPDATE` on `api_tokens` by column, refuse a change of `email` or `subject` outside the auth and platform scopes, and make the join routes check under the platform scope first and then write under the tenant scope, as accepting an invitation does.
@@ -1015,6 +1015,47 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when a database probe as `parfocal_app` fails to insert a child that names a parent of another workspace for every key in the review's list, and the db tests pass.
   Depends on FOUND-035.
   Size: M.
+
+- [ ] SEC-036 · A removed person cannot rejoin a room
+  After a revoke closes the socket, the same room token joins again until it expires, and an older token that joins later overwrites the index entry so a revoke can miss a newer socket ([edge token review](results/2026-11-09-edge-token-review.md), finding C1). ADR 0140 (realtime rooms and room tokens) says a removed person stops receiving events at once.
+  Done when edge tests show a refused rejoin with the token held before the revoke and a revoke that closes the newer socket after an older token joined.
+  Size: M.
+
+- [ ] SEC-037 · Caps on room sockets and limits on the room routes
+  A member can open thousands of sockets to one room with one token and send frames in a loop, the room routes have no limit class, and the internal route reads the whole body before it checks the signature ([edge token review](results/2026-11-09-edge-token-review.md), finding C2). Cap the sockets of one person in one room, count `/rt/` and `/rt-internal/` in the edge limits, and refuse a missing signature header or an oversized body before reading it. Belongs with SEC-027 (edge limits per IP).
+  Done when edge tests show the ninth socket of one person in one room refused, both routes in a limit class, and an oversized or unsigned internal call refused unread.
+  Size: M.
+
+- [x] SEC-038 · Tile and room keys of at least 32 bytes
+  The API signs tile tokens with an empty key when `TILE_TOKEN_KEY` is empty or a placeholder, because only the room issuer refuses an empty value and the decode drops characters outside the alphabet, and the Worker accepts a key of any length ([edge token review](results/2026-11-09-edge-token-review.md), finding C3).
+  Done when an empty, placeholder or short key answers 503 for tile and room access in the API tests and the Worker's `signingKey` refuses a key under 32 bytes.
+  Size: S.
+
+- [x] SEC-039 · Every edge response carries the security headers, also after a throw
+  `GET /rt/%zz` makes `decodeURIComponent` throw, and nothing catches it, so Cloudflare serves its own error page without the headers of ADR 0156 (security headers in the edge Worker). A missing binding takes the same path ([edge token review](results/2026-11-09-edge-token-review.md), finding C4).
+  Done when an edge test shows a malformed room path answered as a 404 problem and any throw answered as a 500 problem, both with the headers.
+  Size: S.
+
+- [ ] SEC-040 · Presence in a blinded task
+  A reviewer in a blinded task receives `presence.joined` and `presence.left` with the other reviewers' user ids, and presence is also announced in task and user rooms, which ADR 0269 (realtime event model by room and kind) does not list ([edge token review](results/2026-11-09-edge-token-review.md), finding C5). Decision 85 (presence in a blinded review) picks the rule.
+  Done when the chosen rule has an API test and an edge test, and presence is sent only in the room kinds the record lists.
+  Size: S.
+
+- [ ] SEC-041 · The closed range check does not trust the size in the token
+  The check of restricted byte ranges uses the size in the tile token, so it would be skipped or misaligned if the stored object were ever larger ([edge token review](results/2026-11-09-edge-token-review.md), suspicion S2). The two sizes cannot differ today.
+  Done when an edge test with a token whose size is smaller than the object shows no closed range read for the three ranges in the review, and a negative size is refused.
+  Size: S.
+
+- [ ] SEC-042 · The edge limits and the bot check guard the real API path
+  The Worker has no `/api` branch and no API origin, so the login and upload limits and the Turnstile check run on paths it answers with the app page, while the API would be reached at its own address with no edge limit ([edge token review](results/2026-11-09-edge-token-review.md), suspicion S1). The limits also fail open when a binding is absent, and the login match is exact. Decide the route with the staging slice: proxy `/api` through the Worker with a secret header that the API requires, fail closed outside local runs, and normalise the path before matching.
+  Done when a Worker test shows `/api/health` forwarded to the API origin, the deployed check shows the API address refusing a request that skipped the Worker, and a missing limit binding answers 503 outside local runs.
+  Depends on OPS-002.
+  Size: M.
+
+- [ ] SEC-043 · Every write route is sent as another workspace
+  The isolation suite lists and probes only GET operations, 134 of 306, and two hand-written tests cover the rest ([tenant isolation review](results/2026-11-09-tenant-isolation-review.md), confirmed finding 2). Classify every operation of every method, give each write operation a path and body built from one workspace's ids, send it as the other workspace and expect 403 or 404 with unchanged row counts.
+  Done when a test fails when an operation of any method is missing from the suite and every write operation is refused for the other workspace.
+  Size: L.
 
 ---
 
@@ -1402,6 +1443,57 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   VIEW-041 shows the coarse level under missing tiles and a loading hint, but sharper tiles pop in at once and a failed tile has no Retry. Fade sharper tiles in over the coarse level without showing white or black, and keep a failed tile as the grey placeholder with a Retry that refetches only that tile, as ADR 0095 (upload by slide and decision notes) describes.
   Done when a golden test catches a frame mid-fade with no white or black pixels, and a browser test fails one tile, sees the placeholder with Retry and sees it load after Retry.
   Depends on VIEW-041.
+  Size: S.
+
+- [ ] VIEW-059 · No black edge row on virtual levels
+  A virtual level whose backing level is stored one pixel short gets a black last row or column, because the read window is clamped to the backing level and the output size is not, so the last row averages zero samples ([viewer engine review](results/2026-11-09-viewer-engine-review.md), finding 1). `CMU-1.svs` has it at 4x, 8x and 16x. A second form leaves an empty window that throws for a one-pixel tile column. Repeat the edge sample in both downsample functions and keep the window inside the backing level, for RGB and for channels.
+  Done when a unit test shows no zero in the last row of a short backing level for both routes, a tile column with an empty window reads, and the golden images still pass.
+  Size: S.
+
+- [x] VIEW-060 · A decode worker that fails to start is an error, not a hang
+  A worker script that fails to load fires `error` and never posts, and the reader listens only for `message`, so its slot, its tiles and the stage hang on "Loading the slide" with no error ([viewer engine review](results/2026-11-09-viewer-engine-review.md), finding 2). The patch worker client has the same gap. A worker whose overview levels file fails once at open also keeps fewer levels than the page for the whole session (suspicion 1).
+  Done when a unit test shows `ready` and every read sent to a failed worker rejecting, the pool idle afterwards, the same for the patch worker client, and a failed overview levels open failing the worker's open.
+  Size: S.
+
+- [x] VIEW-061 · A slide the route cannot draw leaves no decode workers behind
+  `showSlide` spawns the decode workers and then builds the levels, which throw for a slide the RGB route cannot draw, so each attempt and each "Try again" leaks six workers ([viewer engine review](results/2026-11-09-viewer-engine-review.md), finding 3).
+  Done when a test with a counting worker factory shows every spawned worker terminated after `showSlide` throws.
+  Size: S.
+
+- [ ] VIEW-062 · Single-channel grey slides draw through the channel route
+  A one-sample BlackIsZero TIFF or a one-channel OME-Zarr is labelled "grey" and sent to the RGB route, which refuses it, though the channel route would draw it ([viewer engine review](results/2026-11-09-viewer-engine-review.md), finding 3).
+  Done when a grey fixture opens and draws in a browser spec with a golden image.
+  Depends on VIEW-061.
+  Size: S.
+
+- [x] VIEW-063 · Sharded OME-Zarr through the byte cache and the worker relay
+  zarrita reads a shard index with a HEAD request unless the store uses suffix requests, and the page byte cache and the worker relay forward only the URL and the Range header, so the HEAD becomes a full download and the next range is invalid ([viewer engine review](results/2026-11-09-viewer-engine-review.md), finding 4).
+  Done when the sharded fixture opens through `cachedFetch` with the expected pixels and no request without a Range header for a shard file.
+  Size: S.
+
+- [ ] VIEW-064 · Failed tiles on multichannel slides show, retry and report
+  The channel levels keep no failed tile map, so a tile that fails once on a fluorescence slide stays blank with no placeholder, no retry and no slow-load hint, and a disposed decode pool is not mapped to Viv's abort sentinel there ([viewer engine review](results/2026-11-09-viewer-engine-review.md), finding 5).
+  Done when a unit test shows a failed channel tile listed in `failures()` and gone after a retry, and a disposed pool answering with the abort sentinel.
+  Size: S.
+
+- [x] VIEW-065 · The range cache refuses a short 206 reply
+  A 206 reply with fewer bytes than asked for, not at the end of the file, is cached as complete and padded with zeros ([viewer engine review](results/2026-11-09-viewer-engine-review.md), finding 6).
+  Done when a unit test shows the read rejecting and nothing cached.
+  Size: S.
+
+- [ ] VIEW-066 · Settle three viewer engine suspicions
+  Not proven by reading ([viewer engine review](results/2026-11-09-viewer-engine-review.md), suspicions 2, 3 and 4): an OME-Zarr level with no declared scale gets a downsample that is not snapped to a power of two, the patch reader ties a shared read to the first caller's abort signal, and the ids `hamamatsu-ndpi`, `ventana-bif`, `mirax` and `dicom` have no registered reader though signed slides map file names to them.
+  Done when each has a test that shows the fault or a note in the result file that says why it cannot happen.
+  Size: S.
+
+- [x] VIEW-067 · A range far past the file cannot freeze the byte cache
+  The range cache walks every block of a range before it knows the file's size, so a range with a huge end, which a corrupt offset in a slide file or a shard index produces, blocks the page or the decode worker for good. Found while reproducing VIEW-063 (sharded OME-Zarr through the byte cache), where it turned a wrong shard index into a hang.
+  Done when a unit test shows a range longer than the cache can hold answered straight from the network, without one block entry made for it.
+  Size: S.
+
+- [x] VIEW-068 · An inference worker that stops is an error, not a hang
+  `createSamClient` in `packages/viewer-engine/src/sam/worker-client.ts` listened only for `message`, so a worker script that failed to load, a worker that crashed or a reply that could not be read left `ready` and every request pending for ever. Found while fixing VIEW-060 (a decode worker that fails to start), which had the same fault. The client now uses the shared `onWorkerFailure` and rejects `ready`, the waiting requests and every later one.
+  Done when unit tests show `ready`, a waiting request and a later request rejected after the worker fires `error` or `messageerror`.
   Size: S.
 
 - [x] VIEW-022 · Keyboard navigation
@@ -3453,6 +3545,11 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   The auto region pass resamples each tile's pixels with `samPixels` in `packages/viewer-engine/src/sam/smart-prompt.ts` on the main thread, which took 221 ms of main thread time with the CPU slowed four times, so the aiseg.region-main-thread-task-ms budget can still fail on a slow hosted runner. Move the resampling into the segmentation worker and pass the tile as a transferable buffer.
   Done when the browser budget test reads no long task over 50 ms with the CPU slowed four times, and the region pass gives the same outlines as before.
   Depends on AISEG-017.
+  Size: S.
+
+- [ ] AISEG-020 · The outline worker is replaced after it stops
+  `createAisOutliner` in `apps/web/src/aiseg/ais-outliner.ts` rejects the waiting requests when its worker fires `error`, but keeps the dead worker, so every later request is posted to it and never answered. It also has no `messageerror` listener. Found while fixing VIEW-068 (an inference worker that stops).
+  Done when a unit test shows a request made after the worker stopped answered by a fresh worker, and a request waiting at a `messageerror` rejected.
   Size: S.
 
 ## 23 AINUC · Whole-slide nuclei, typing and confidence

@@ -18,6 +18,7 @@ from parfocal_api.permissions import Permission, require
 from parfocal_api.problems import NotFoundError, ProblemError
 from parfocal_api.project_access import require_slide_reading
 from parfocal_api.tables import PrivacyMode, projects, slides
+from parfocal_api.token_keys import usable_secret
 from parfocal_api.uploads import Settings
 from parfocal_common.ingest import RESTRICTED_RANGES_NAME, folder_of, slide_prefix
 from parfocal_common.object_store import ObjectStore, StorageError
@@ -153,10 +154,10 @@ async def get_tile_access(
     )
     if row.original_key is None or row.file_bytes is None:
         raise SlideFileNotFoundError
-    if settings.tile_token_key is None:
+    secret = usable_secret(settings.tile_token_key)
+    if secret is None:
         raise TileAccessNotConfiguredError
     response.headers["Cache-Control"] = "private, no-store"
-    secret = settings.tile_token_key.get_secret_value()
     actor = actor_of(principal)
     now = int(datetime.now(UTC).timestamp())
     viewer = {

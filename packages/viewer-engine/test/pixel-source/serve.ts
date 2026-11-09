@@ -55,7 +55,12 @@ function sendRange(
   headers: Readonly<Record<string, string>>,
   entry: ServedRequest,
 ): void {
-  const range = /^bytes=(\d+)-(\d*)$/.exec(request.headers.range ?? "");
+  const header = request.headers.range ?? "";
+  const suffix = /^bytes=-(\d+)$/.exec(header);
+  const range =
+    suffix === null
+      ? /^bytes=(\d+)-(\d*)$/.exec(header)
+      : ["", String(Math.max(0, size - Number(suffix[1]))), ""];
   if (range === null) {
     response.writeHead(200, {
       ...headers,
