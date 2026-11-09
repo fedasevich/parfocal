@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-09
 
+- VIEW-031 Ticked, ci run on main at 5d16c289 is green including the wheel zoom budget, and the owner chose 74a.
 - HOME-012 Added from decision 72a on 2026-11-09, search text moves out of the URL.
 - ONB-010 Owner chose 75a on 2026-11-09, join at once by default stays as built.
 - ONB-004 Owner chose 73a on 2026-11-09, self-service creation with one workspace per person stays as built.
