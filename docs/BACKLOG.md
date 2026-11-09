@@ -2628,7 +2628,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Refs doc 25.
   Size: S.
 
-- [ ] ANN-018 · Hit testing at scale
+- [x] ANN-018 · Hit testing at scale
   Spatial index for shapes and runs, ignoring hidden and locked groups.
   Done when a perf test keeps hover hit tests under 1 ms with 1M nuclei.
   Size: M.

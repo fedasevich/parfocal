@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-09
 
+- ANN-018 A uniform grid spatial index over a bounds Float32Array backs pickShape and shapesInExtent and skips hidden and locked groups. With 1M nuclei hover p95 is 0.00088 ms against the 1 ms target, recorded in docs/results/2026-11-09-hit-testing-at-scale.md with the budget annotate.hit-test-1m-ms, whose tight limit may need hosted runner headroom. The index rebuilds on each document change.
 - ObjectDrawLayer draws objects through createObjectDrawing on the live review slide next to OutlineLayer, fed by displaySettings, and draw-constants are shared between the engine and the stills through a subpath export, with 20 overlay goldens and a live browser spec. The full viewer and guided review still draw SVG stills and never mount the live slide, so engine draws there wait for VIZ-012.
 - One connection banner in guided review and the full viewer, with listeners inside useConnection, the shared expired and no-access pages in sign-in, a shared pages section in the issue states index, and a scene loop that rejects the server error page. The unused holdSaveUntilBack and its toast were removed instead, since nothing saves while offline.
 - The Annotate model picker built under AIP-003 and AIP-015 now has browser tests for mock 11, the three choices, the selected mark, keyboard choice, Esc and close and an offline tier. The mock has no tier chip in Review, where a result set already names its model, so none was built.
