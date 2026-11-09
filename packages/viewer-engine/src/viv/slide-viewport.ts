@@ -1,6 +1,10 @@
 import { createViewerEngine } from "../engine/engine.ts";
 import type { SlideInfo, ViewerEngine } from "../engine/types.ts";
-import { bindViewerInput, type ViewerInputBinding } from "../input/dom-input.ts";
+import {
+  bindViewerInput,
+  type ViewerInputBinding,
+  type ViewerInputOptions,
+} from "../input/dom-input.ts";
 import {
   createDefaultPixelSourceRegistry,
   type PixelSourceRegistry,
@@ -18,11 +22,13 @@ export interface SlideViewportOptions {
   readonly resolve: OpenRequestResolver;
   readonly registry?: PixelSourceRegistry;
   readonly route?: VivRouteOptions;
+  readonly input?: ViewerInputOptions;
 }
 
 export interface SlideViewport {
   readonly engine: ViewerEngine;
   readonly ready: Promise<SlideInfo>;
+  readonly input: ViewerInputBinding;
   readonly route: () => VivRoute | null;
   readonly dispose: () => void;
 }
@@ -41,12 +47,13 @@ export function mountSlideViewport(options: SlideViewportOptions): SlideViewport
     ),
   });
   engine.mount(options.container);
-  const input: ViewerInputBinding = bindViewerInput(options.container, engine);
+  const input: ViewerInputBinding = bindViewerInput(options.container, engine, options.input);
   const ready = engine.openSlide({ id: options.slideId });
   ready.catch(() => undefined);
   return {
     engine,
     ready,
+    input,
     route: () => route,
     dispose: () => {
       input.dispose();

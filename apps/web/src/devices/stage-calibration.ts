@@ -1,7 +1,7 @@
 import type { CameraProfile } from "@parfocal/viewer-engine";
 import { readDeviceSettings } from "../shell/device-settings.ts";
 import { type Calibration, readCalibration } from "./calibration.ts";
-import { calibratedProfile } from "./intents.ts";
+import { currentProfile } from "./navigation.ts";
 
 export const defaultMainDevice = "mouse";
 
@@ -15,10 +15,9 @@ export function mainCalibration(): Calibration {
 }
 
 type ProfiledEngine = {
-  readonly getCameraProfile: () => CameraProfile;
   readonly setCameraProfile: (profile: CameraProfile) => void;
 };
 
 export function applyMainCalibration(engine: ProfiledEngine): void {
-  engine.setCameraProfile(calibratedProfile(engine.getCameraProfile(), mainCalibration()));
+  engine.setCameraProfile(currentProfile());
 }

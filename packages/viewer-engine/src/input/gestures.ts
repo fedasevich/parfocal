@@ -70,6 +70,7 @@ export type InputAction =
       readonly animate: boolean;
     }
   | { readonly kind: "magnify"; readonly magnification: number; readonly at: InputPoint }
+  | { readonly kind: "toggleMagnification"; readonly at: InputPoint }
   | { readonly kind: "fitSlide" }
   | { readonly kind: "capture"; readonly pointerId: number }
   | { readonly kind: "release"; readonly pointerId: number }
@@ -81,8 +82,11 @@ export interface GestureHooks {
   readonly panModifierHeld?: () => boolean;
   readonly hitsEditableShape?: (at: InputPoint) => boolean;
   readonly cameraProfile?: () => CameraProfile;
+  readonly doubleClick?: () => DoubleClickBehaviour;
   readonly touchTuning?: TouchTuning;
 }
+
+export type DoubleClickBehaviour = "zoom" | "toggle";
 
 export interface GestureInterpreter {
   readonly handle: (input: ViewerInput) => readonly InputAction[];
@@ -293,6 +297,9 @@ export function createGestureInterpreter(
     if (input.button !== primaryButton) return [];
     const at = point(input);
     if (hitsEditableShape(at)) return [];
+    if (hooks.doubleClick?.() === "toggle" && !input.altKey) {
+      return [{ kind: "preventDefault" }, { kind: "toggleMagnification", at }];
+    }
     return [
       { kind: "preventDefault" },
       {
