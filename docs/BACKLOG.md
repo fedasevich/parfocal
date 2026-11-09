@@ -4040,7 +4040,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when scenarios run against staging on demand.
   Size: M.
 
-- [ ] TEST-011 · Contract tests for the API client
+- [x] TEST-011 · Contract tests for the API client
   Done when the generated client is tested against recorded API responses and schema drift fails CI.
   Size: M.
 
