@@ -1279,15 +1279,14 @@ function WhenZone({ draft, data, update, errors }: StepProps) {
 }
 
 function AnnotateHowStep(props: StepProps) {
+  const { draft, update } = props;
   return (
     <>
-      <Zone
-        title="How it runs"
-        sub="The blind first switch is not available yet. Experts see each other's work from the start."
-      >
-        <div inert aria-disabled="true" className="opacity-60">
-          <BlindFirstSwitch checked={false} onCheckedChange={() => undefined} />
-        </div>
+      <Zone title="How it runs">
+        <BlindFirstSwitch
+          checked={draft.blindFirst}
+          onCheckedChange={(blindFirst) => update((current) => ({ ...current, blindFirst }))}
+        />
       </Zone>
       <WhenZone {...props} />
     </>
@@ -1432,7 +1431,7 @@ export function SendStep({ draft, data, update, goTo }: StepProps) {
     [
       "how",
       [
-        ["eye", "Blind first", "Off"],
+        ["eye", "Blind first", draft.blindFirst ? "On" : "Off"],
         ["calendar", "Due", draft.due ? dueText(draft.due) : ""],
         [
           "bell",

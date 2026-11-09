@@ -1,16 +1,17 @@
 import uuid
 from collections import defaultdict
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any
 
 from fastapi import APIRouter
 from pydantic import BaseModel
-from sqlalchemy import select
+from sqlalchemy import ColumnElement, select
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.adjudications import reviewers_of
+from parfocal_api.blind_first import seen_by
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.evaluation import EvaluationHiddenError
 from parfocal_api.permissions import Permission, require
@@ -222,6 +223,7 @@ async def slide_events(
     slide: Any,
     letters: Letters,
     classes: Mapping[uuid.UUID, ProjectClass],
+    seen: Sequence[ColumnElement[bool]] = (),
 ) -> list[Event]:
     rows = (
         await connection.execute(
@@ -233,7 +235,9 @@ async def slide_events(
                 annotations.c.class_id,
                 annotations.c.created_by_user_id,
                 annotations.c.deleted_at,
-            ).where(annotations.c.task_id == task_id, annotations.c.slide_id == slide.slide_id)
+            ).where(
+                annotations.c.task_id == task_id, annotations.c.slide_id == slide.slide_id, *seen
+            )
         )
     ).all()
     changers = await last_changers(connection, [row.id for row in rows])
@@ -276,7 +280,12 @@ async def slide_events(
     return events
 
 
-async def ai_changes(connection: AsyncConnection, task: Any, store: ResultStore) -> AiChanges:
+async def ai_changes(
+    connection: AsyncConnection,
+    task: Any,
+    store: ResultStore,
+    seen: Sequence[ColumnElement[bool]] = (),
+) -> AiChanges:
     stored: list[Any] = list(task.class_snapshot or [])
     snapshot = [ProjectClass.model_validate(item) for item in stored]
     classes = {item.id: item for item in snapshot}
@@ -294,7 +303,7 @@ async def ai_changes(connection: AsyncConnection, task: Any, store: ResultStore)
         slides.append(
             (row.slide_id, (await path_parts(connection, row.slide_id))[2], row.result_set_id)
         )
-        events.extend(await slide_events(connection, store, task.id, row, letters, classes))
+        events.extend(await slide_events(connection, store, task.id, row, letters, classes, seen))
     return tallied(task.id, slides, events, letters, snapshot)
 
 
@@ -313,4 +322,4 @@ async def get_task_ai_changes(
     annotate_only(task.kind)
     if not whole:
         raise EvaluationHiddenError
-    return await ai_changes(connection, task, results)
+    return await ai_changes(connection, task, results, seen_by(task.blind_first, principal))

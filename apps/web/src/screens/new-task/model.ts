@@ -225,6 +225,7 @@ export type Draft = {
   scopeOptions: { cells: number | string; low: number | string; roi: string[]; unsure: string[] };
   decision: { kind: DecisionKindKey; agreeFrom: number; disagreeTo: number };
   blind: boolean;
+  blindFirst: boolean;
   hide: boolean;
   start: "guided" | "full";
   form: string;
@@ -308,6 +309,7 @@ export function initialDraft(data: TaskData): Draft {
     scopeOptions: { cells: 50, low: 0.6, roi: [], unsure: [] },
     decision: { kind: "certainty5", agreeFrom: 4, disagreeTo: 2 },
     blind: true,
+    blindFirst: false,
     hide: false,
     start: "guided",
     form: "default",

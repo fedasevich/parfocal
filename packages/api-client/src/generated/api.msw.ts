@@ -5466,6 +5466,7 @@ export const getCreateReviewTaskResponseMock = (
     },
     null,
   ]),
+  blind_first: faker.datatype.boolean(),
   counts_as_changes: Array.from(
     { length: faker.number.int({ min: 1, max: 10 }) },
     (_, i) => i + 1,
@@ -5606,6 +5607,7 @@ export const getListReviewTasksResponseMock = (): ReviewTask[] =>
       },
       null,
     ]),
+    blind_first: faker.datatype.boolean(),
     counts_as_changes: Array.from(
       { length: faker.number.int({ min: 1, max: 10 }) },
       (_, i) => i + 1,
@@ -5731,6 +5733,7 @@ export const getGetReviewTaskResponseMock = (
     },
     null,
   ]),
+  blind_first: faker.datatype.boolean(),
   counts_as_changes: Array.from(
     { length: faker.number.int({ min: 1, max: 10 }) },
     (_, i) => i + 1,
@@ -5871,6 +5874,7 @@ export const getChangeReviewTaskResponseMock = (
     },
     null,
   ]),
+  blind_first: faker.datatype.boolean(),
   counts_as_changes: Array.from(
     { length: faker.number.int({ min: 1, max: 10 }) },
     (_, i) => i + 1,
@@ -6041,6 +6045,7 @@ export const getAddTaskReviewerResponseMock = (
     },
     null,
   ]),
+  blind_first: faker.datatype.boolean(),
   counts_as_changes: Array.from(
     { length: faker.number.int({ min: 1, max: 10 }) },
     (_, i) => i + 1,

@@ -249,7 +249,7 @@ async def import_shared_objects(
         details={"file_name": upload.file_name, "task_id": str(task_id), "slide_id": str(slide_id)},
     )
     for item in made:
-        announce(background, live, row, item.id)
+        await announce(connection, background, live, row, item.id)
         await logged(connection, principal, row, item.code, LayerChange.ADDED, reason)
     rows = await connection.execute(
         select(*LAYER_COLUMNS).where(*in_layer(task_id, slide_id), annotations.c.id.in_(ids))
