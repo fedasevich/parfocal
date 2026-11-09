@@ -589,12 +589,12 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Done when those four files are split, a guard in `pnpm verify` fails on a new source file over 1,200 lines outside generated code and tests, with today's larger files listed as exceptions, and the suites stay green.
   Size: M.
 
-- [ ] FOUND-037 · Docs memory that cannot go stale
+- [x] FOUND-037 · Docs memory that cannot go stale
   `docs/README.md` was last consolidated on 2026-10-18 and says 796 tasks with about 170 ticked, against 940 with 664 ticked on 2026-11-09. The roadmap says M2 (viewer parity) is not started while VIEW is 39 of 56 and has no row for MA (the annotation path), risk R11 still says the cloud is paused, and "In progress" names decision 15a, which is gone ([project review](results/2026-11-09-project-review.md)). Run the consolidation once, replace hand-written counts with a `board.py` command that prints tasks and ticks per epic and milestone, and make the lead consolidate at the end of each parallel run.
   Done when README, roadmap and risks match the board on the day of the change, README holds no hand-written count, `board.py` prints the counts, and `knowledge/agent-workflow.md` names the lead's consolidation step.
   Size: M.
 
-- [ ] FOUND-038 · Records where an agent stood in for a person
+- [x] FOUND-038 · Records where an agent stood in for a person
   An agent reviewed the confidence zone names as the pathologist (decision 44c, ADR 0194 on confidence display rules) and ran the incident tabletop on paper (ADR 0186 on incident response), and many accepted records were never read by the owner (risk R12). List every record, result and compliance document where an agent stood in for a pathologist, a user or the owner on one page like [standing-approval-records.md](project/standing-approval-records.md), mark each in its own file as simulated, and name what a real check would need. Decision 82 (what the thesis claims about people) decides what the thesis may cite.
   Done when the page exists and is indexed in `docs/README.md` and each listed file carries a one-line mark.
   Size: S.
