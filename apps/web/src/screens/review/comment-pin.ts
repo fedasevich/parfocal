@@ -1,4 +1,5 @@
 import type { ThreadCreate } from "@parfocal/api-client";
+import { type Mentionable, toMentionTokens } from "./mention-picking.ts";
 import type { Camera } from "./slide-still.tsx";
 
 export type Pin = { x: number; y: number };
@@ -32,12 +33,16 @@ export const pinTitle = (text: string) => {
   return line.length > 120 ? `${line.slice(0, 119)}…` : line;
 };
 
-export function pinThread(pin: Pin, text: string): ThreadCreate | null {
+export function pinThread(
+  pin: Pin,
+  text: string,
+  members: Pick<Mentionable, "id" | "name">[] = [],
+): ThreadCreate | null {
   const body = text.trim();
   if (!body) return null;
   return {
     title: pinTitle(body),
-    body,
+    body: toMentionTokens(body, members),
     anchor: {
       kind: "point",
       object_id: null,

@@ -8,6 +8,7 @@ import { markTried } from "../screens/home/getting-started.ts";
 import { usePeople } from "../screens/people.ts";
 import { okData } from "../screens/placeholder.tsx";
 import { pinThread } from "../screens/review/comment-pin.ts";
+import { useMentionable } from "../screens/review/use-mentionable.ts";
 import type { ViewerEngine } from "../viewer/viewer-engine.ts";
 import { screenToSlide, slideToScreen } from "../viewer/viewer-engine.ts";
 import { bindClickPress, clickSlopScreenPixels } from "./click-press.ts";
@@ -123,6 +124,7 @@ export function PinLayer({
   const camera = useSyncExternalStore(engine.subscribeCamera, engine.getCamera);
   const rect = useStageRect(stage);
   const people = usePeople();
+  const members = useMentionable();
   const queryClient = useQueryClient();
   const listed = useListThreads(taskId ?? "", slideId, undefined, {
     query: { enabled: taskId !== undefined },
@@ -199,7 +201,7 @@ export function PinLayer({
 
   const send = (text: string) => {
     const point = latest.current.draft;
-    const data = point === null ? null : pinThread(point, text);
+    const data = point === null ? null : pinThread(point, text, members);
     if (point === null || data === null || startHome === null) return;
     const home = startHome;
     create.mutate(

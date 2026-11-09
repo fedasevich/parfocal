@@ -260,7 +260,7 @@ export const comments: ScenarioComment[] = [
     "T1·C145",
     "DH",
     "2026-10-15T11:05:00+02:00",
-    "@Lenka Malá agreed. Mark it as immune so it counts.",
+    `@[${uuid(1, 1)}] agreed. Mark it as immune so it counts.`,
     5,
   ),
   comment(7, "R2⁺", "LM", "2026-10-15T10:44:00+02:00", "Check this rim on the CK slide."),

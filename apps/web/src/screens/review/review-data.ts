@@ -19,9 +19,11 @@ import {
 } from "@parfocal/api-client";
 import type { ProjectClass } from "@parfocal/ui/components/decision-buttons";
 import { formatDue } from "../format.ts";
+import { usePeople } from "../people.ts";
 import { okData } from "../placeholder.tsx";
 import { type ReviewStyle, toReviewStyle } from "./decision-style.ts";
 import { type TaskDisplayView, taskDisplayView } from "./display-model.ts";
+import { fromMentionTokensOrNull } from "./mention-picking.ts";
 
 export type ReviewSession = {
   taskId: string;
@@ -52,6 +54,8 @@ export function useReviewSession(taskId: string, slideId: string): ReviewSession
   const objectsQuery = useListReviewObjects(taskId, slideId);
   const reviewObjects = objectsQuery.data?.data;
   const verdicts = okData(useListVerdicts(taskId, slideId).data) ?? [];
+  const person = usePeople();
+  const nameOf = (userId: string) => person(userId)?.name;
   const myDisplay = okData(useGetMyDisplay(taskId).data);
   const opinion = okData(useGetOpinion(taskId, slideId).data);
   const neighbours = okData(useGetSlideNeighbours(slideId, { from: "task", task_id: taskId }).data);
@@ -73,7 +77,12 @@ export function useReviewSession(taskId: string, slideId: string): ReviewSession
     caseLabel: slide?.case_label ?? null,
     objects: reviewObjects?.objects ?? [],
     added: reviewObjects?.added ?? [],
-    verdicts: new Map(verdicts.map((verdict) => [verdict.object, verdict])),
+    verdicts: new Map(
+      verdicts.map((verdict) => [
+        verdict.object,
+        { ...verdict, note: fromMentionTokensOrNull(verdict.note, nameOf) },
+      ]),
+    ),
     style: toReviewStyle(task?.decision),
     classes: (classes ?? []).map((item) => ({ id: item.id, name: item.name, color: item.colour })),
     display: myDisplay ? taskDisplayView(myDisplay, task?.code ?? "") : undefined,

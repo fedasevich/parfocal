@@ -37,6 +37,7 @@ import { okData } from "../placeholder.tsx";
 import { useMockToast } from "../project/mock-toast.tsx";
 import { type ReviewStyle, toReviewStyle } from "../review/decision-mapping.ts";
 import { answersOf } from "../review/decision-style.ts";
+import { fromMentionTokens } from "../review/mention-picking.ts";
 import type { Camera } from "../review/slide-still.tsx";
 import { SlideStill } from "../review/slide-still.tsx";
 import { SendToAdjudicatorModal } from "./send-modal.tsx";
@@ -349,7 +350,11 @@ export function QueueScreen({ taskId, scene }: { taskId: string; scene: QueueSce
                         <StatusTag tone={answerTone[countOf(style, answer.raw, row.ai.class_name)]}>
                           {styledText(style, answer, classes, row.ai.class_name)}
                         </StatusTag>
-                        {answer.note ? <QuotedNote>{answer.note}</QuotedNote> : null}
+                        {answer.note ? (
+                          <QuotedNote>
+                            {fromMentionTokens(answer.note, (userId) => person(userId)?.name)}
+                          </QuotedNote>
+                        ) : null}
                       </>
                     )}
                   </EvidenceRow>

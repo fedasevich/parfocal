@@ -153,3 +153,25 @@ def test_the_bell_opens_the_note_for_its_recipient_only(api: ApiAs, database: st
     )
     gone = api(s.people["second"]).get(path)
     assert gone.status_code == 404
+
+
+def test_a_mention_saved_by_the_web_client_tells_that_person(api: ApiAs, database: str) -> None:
+    s = study(api, database, blinded=False, hidden=False)
+    owner(
+        database,
+        f"UPDATE users SET display_name = 'Daniel Hruška' WHERE id = '{s.user('owner')}'",
+    )
+    members = ok(api(s.people["first"]).get("/api/tenant/members")).json()
+    daniel = next(member for member in members if member["display_name"] == "Daniel Hruška")
+    typed = "Runs past the fold @Daniel Hruška worth a second look, @Nobody Here"
+    saved_text = typed.replace("@Daniel Hruška", f"@[{daniel['user_id']}]")
+    assert (
+        saved_text == f"Runs past the fold {mention(s, 'owner')} worth a second look, @Nobody Here"
+    )
+
+    saved = ok(decide(api, s, "first", saved_text))
+    assert saved.json()["note"] == saved_text
+    assert told(database, s) == [s.user("owner")]
+
+    ok(decide(api, s, "first", "Old note naming @Daniel Hruška in plain text", object_id="T2"))
+    assert told(database, s) == [s.user("owner")]

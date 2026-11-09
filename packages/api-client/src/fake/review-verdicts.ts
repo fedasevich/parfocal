@@ -302,7 +302,7 @@ export const decisionNotesOf = (taskId: string, slideId: string): DecisionNote[]
       value: "disagree",
       answer: "disagree",
       reasons: ["boundary_off"],
-      note: "Runs past the fold, @Daniel Hruška worth a look",
+      note: `Runs past the fold, @[${people.DH.id}] worth a look`,
       mentions: [people.DH.id],
       updated_at: "2026-10-15T11:05:00+02:00",
     },

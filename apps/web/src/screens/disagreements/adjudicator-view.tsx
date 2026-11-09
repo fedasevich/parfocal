@@ -37,6 +37,7 @@ import { reviewConfidence } from "../review/ai-wording.ts";
 import { toReviewStyle } from "../review/decision-mapping.ts";
 import { answersOf, showsClaim } from "../review/decision-style.ts";
 import { DisplayTab } from "../review/display-tab.tsx";
+import { fromMentionTokens } from "../review/mention-picking.ts";
 import { type Camera, SlideStill } from "../review/slide-still.tsx";
 import { lookUrl } from "../thumbnails.ts";
 import {
@@ -208,7 +209,11 @@ export function AdjudicatorView({ taskId }: { taskId: string }) {
         {card.reviewers.map((line) => (
           <EvidenceRow key={line.letter} icon="user" title={`Reviewer ${line.letter}`}>
             <StatusTag tone={line.tone}>{line.text}</StatusTag>
-            {line.note ? <QuotedNote>{line.note}</QuotedNote> : null}
+            {line.note ? (
+              <QuotedNote>
+                {fromMentionTokens(line.note, (userId) => person(userId)?.name)}
+              </QuotedNote>
+            ) : null}
           </EvidenceRow>
         ))}
       </EvidenceList>

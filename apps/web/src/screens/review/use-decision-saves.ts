@@ -11,11 +11,14 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { taskTimer } from "../../telemetry/app-events.ts";
 import { type Count, decisionBody, type ReviewStyle, shownCall } from "./decision-style.ts";
+import { toMentionTokens } from "./mention-picking.ts";
 import type { ReviewSession } from "./review-data.ts";
 import type { Answer } from "./review-state.ts";
+import { useMentionable } from "./use-mentionable.ts";
 
 export function useDecisionSaves(session: ReviewSession, style: ReviewStyle) {
   const queryClient = useQueryClient();
+  const members = useMentionable();
   const { taskId, slideId, classes, objects } = session;
   const refresh = () =>
     void queryClient.invalidateQueries({ queryKey: getListVerdictsQueryKey(taskId, slideId) });
@@ -42,7 +45,7 @@ export function useDecisionSaves(session: ReviewSession, style: ReviewStyle) {
           classes,
         ),
         ...reasons,
-        ...(note ? { note } : {}),
+        ...(note ? { note: toMentionTokens(note, members) } : {}),
       },
     });
   };

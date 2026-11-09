@@ -4,6 +4,7 @@ import type { ThreadMeasurement } from "@parfocal/ui/components/thread-popover";
 import type { PersonInfo } from "@parfocal/ui/lib/avatar-colours";
 import { buildMeasurementRows } from "../measure/measurement-list.ts";
 import { relativeTime } from "../screens/format.ts";
+import { fromMentionTokens } from "../screens/review/mention-picking.ts";
 import type { AnnotationDocument } from "./document.ts";
 import type { Point } from "./polygon-draft.ts";
 
@@ -25,7 +26,7 @@ export function threadMessages(
     author: personOf(message.author_id) ?? unknownAuthor,
     you: message.author_id === meId,
     at: relativeTime(new Date(message.created_at), at),
-    text: message.body,
+    text: fromMentionTokens(message.body, (userId) => personOf(userId)?.name),
   }));
 }
 
