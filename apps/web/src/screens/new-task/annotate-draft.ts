@@ -9,9 +9,7 @@ export const checkPresetOf: Record<AnnotatePresetKey, CheckPreset> = {
   mixed: "mixed",
 };
 
-export const sampleSize = 200;
-
-const partsOf = (scope: AnnotateCheck["scope"]): CheckPart[] => {
+const partsOf = ({ scope, sampleSize }: AnnotateCheck): CheckPart[] => {
   if (scope === "all") return [{ kind: "all-objects" }];
   if (scope === "sample") return [{ kind: "random-cells", count: sampleSize }];
   if (scope === "regions") return [{ kind: "inside-rois" }];
@@ -23,7 +21,8 @@ export function checkChangeOf(
   fromPreset: AnnotateCheck,
 ): CheckChange | undefined {
   const change: CheckChange = {};
-  if (check.scope !== fromPreset.scope) change.scope = partsOf(check.scope);
+  const sampleChanged = check.scope === "sample" && check.sampleSize !== fromPreset.sampleSize;
+  if (check.scope !== fromPreset.scope || sampleChanged) change.scope = partsOf(check);
   if (check.order !== fromPreset.order) {
     change.order = check.order === "least-sure" ? "least-sure-first" : "position";
   }

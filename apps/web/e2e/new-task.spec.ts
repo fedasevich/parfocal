@@ -193,3 +193,62 @@ test("picking another preset fills the check options and the estimate follows", 
     .click();
   await expect(checks).toHaveCount(0);
 });
+
+test("the Kind step offers both kinds and a preset only for annotate", async ({ page }) => {
+  await page.goto(`/projects/${projectId}/tasks/new`);
+  const body = flow(page);
+  await expect(body.getByRole("radio", { name: /^Review AI results/ })).toBeVisible();
+  await expect(body.getByRole("radio", { name: /^Annotate/ }).first()).toBeVisible();
+  await expect(body.getByRole("radio", { name: /^Check a sample/ })).toHaveCount(0);
+  await body
+    .getByRole("radio", { name: /^Annotate/ })
+    .first()
+    .click();
+  await expect(body.getByRole("heading", { name: "New annotate task" })).toBeVisible();
+  for (const name of [
+    "Annotate by hand",
+    "Check a whole-slide run",
+    "Check a sample",
+    "Fix AI on selected areas",
+    "Mixed",
+  ]) {
+    await expect(body.getByRole("radio", { name: new RegExp(`^${name}`) })).toBeVisible();
+  }
+  await expect(body.getByRole("radio", { name: /^Check a whole-slide run/ })).toBeChecked();
+  await body.getByRole("radio", { name: /^Check a sample/ }).click();
+  await expect(body.getByRole("radio", { name: /^Check a sample/ })).toBeChecked();
+});
+
+test("the sample size is set on the check step and sent in the created task", async ({ page }) => {
+  await page.goto(`/projects/${projectId}/tasks/new`);
+  const body = flow(page);
+  const step = body.locator('[aria-current="step"]');
+  await body
+    .getByRole("radio", { name: /^Annotate/ })
+    .first()
+    .click();
+  await body.getByRole("radio", { name: /^Check a sample/ }).click();
+  for (let index = 0; index < 3; index += 1) {
+    await body.getByRole("button", { name: "Next" }).click();
+  }
+  await expect(step).toHaveText(/What to check/);
+  const size = body.getByLabel("Sample size");
+  await expect(size).toHaveValue("200");
+  await expect(body.getByText(/random sample of 200 AI cells/)).toBeVisible();
+  await expect(body.getByText(/about 50/i)).toHaveCount(0);
+  await size.fill("80");
+  await expect(body.getByText(/random sample of 80 AI cells/)).toBeVisible();
+  await body.getByRole("button", { name: "Next" }).click();
+  await body.getByRole("button", { name: "Next" }).click();
+  await expect(step).toHaveText(/Send/);
+  const created = page.waitForRequest(
+    (request) => request.method() === "POST" && /\/review-tasks$/.test(request.url()),
+  );
+  await body.getByRole("button", { name: /^Create and notify/ }).click();
+  const draft: unknown = (await created).postDataJSON();
+  expect(draft).toMatchObject({
+    kind: "annotate",
+    preset: "check-sample",
+    check: { scope: [{ kind: "random-cells", count: 80 }] },
+  });
+});

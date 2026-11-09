@@ -305,10 +305,11 @@ test("the annotate estimate follows the preset, the slides and the experts", () 
     preset: "hand",
     check: {
       scope: "none",
-      order: "position",
+      order: "least-sure",
       rule: "warn",
       exportUnchecked: false,
       hasResult: false,
+      sampleSize: 200,
     },
   });
   assert.equal(
@@ -316,7 +317,27 @@ test("the annotate estimate follows the preset, the slides and the experts", () 
     "Roughly 1 hour for each expert, with 6 minutes of drawing per slide.",
   );
   const sample = annotating({ check: { ...run.check, scope: "sample" } });
-  assert.equal(summary(sample, data).objects, 38);
+  assert.equal(summary(sample, data).objects, 150);
+});
+
+test("the sample estimate and the request use the same size", () => {
+  const sample = annotating({
+    preset: "sample",
+    check: { ...annotating().check, scope: "sample" },
+  });
+  const preset = { ...sample.check };
+  const sent = (check: typeof sample.check) => checkChangeOf(check, preset)?.scope;
+  assert.equal(sent(sample.check), undefined);
+  const smaller = { ...sample.check, sampleSize: 80 };
+  assert.deepEqual(sent(smaller), [{ kind: "random-cells", count: 80 }]);
+  const objects = summary({ ...sample, check: smaller }, data).objects;
+  assert.equal(objects, 60);
+  assert.deepEqual(
+    issues({ ...sample, check: { ...smaller, sampleSize: 0 } }, data).filter(
+      (issue) => issue.field === "sampleSize",
+    ).length,
+    1,
+  );
 });
 
 test("a changed preset sends only what differs from it", () => {
