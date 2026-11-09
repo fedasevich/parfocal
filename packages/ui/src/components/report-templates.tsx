@@ -263,7 +263,6 @@ function PdfPreview({
             <button
               key={page}
               type="button"
-              aria-label={`Page ${page}`}
               aria-current={page === shown ? "page" : undefined}
               onClick={() => jumpTo(page)}
               className="group grid cursor-pointer justify-items-center gap-1 border-0 bg-transparent p-0 text-caption text-fg-dim"
@@ -284,14 +283,17 @@ function PdfPreview({
                   </span>
                 ) : null}
               </span>
-              <span aria-hidden="true">{page}</span>
+              <span>
+                <span className="sr-only">Page </span>
+                {page}
+              </span>
             </button>
           ))}
         </div>
         <div ref={holder} onScrollCapture={follow} className="min-h-0">
           <ScrollArea
             className="h-full"
-            viewportProps={{ tabIndex: 0, "aria-label": "Pages of the report" }}
+            viewportProps={{ tabIndex: 0, role: "region", "aria-label": "Pages of the report" }}
           >
             <div className="grid justify-items-center gap-6 p-6">
               {failed ? (
