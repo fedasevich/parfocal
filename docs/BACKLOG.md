@@ -3511,7 +3511,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Done when each promoted round has a fitted temperature and bands.
   Size: M.
 
-- [ ] AILEARN-006 · Held-out validation split from recent labels
+- [x] AILEARN-006 · Held-out validation split from recent labels
   Done when tests confirm the split excludes training examples and is stable across rounds.
   Size: S.
 
