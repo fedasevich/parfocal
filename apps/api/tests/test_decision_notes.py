@@ -79,7 +79,9 @@ def test_a_note_mention_tells_each_colleague_once_and_breaks_a_mute(
         "SELECT details FROM audit_events WHERE action = 'review.verdict-set' "
         f"AND target_id = '{s.task}' ORDER BY seq",
     )
-    details: list[dict[str, Any]] = [json.loads(json.dumps(row[0])) for row in audits]
+    details: list[dict[str, Any]] = [
+        json.loads(row[0]) if isinstance(row[0], str) else row[0] for row in audits
+    ]
     assert [item["mentions"] for item in details[-3:]] == [2, 2, 1]
     assert "@[" not in json.dumps(details)
 
