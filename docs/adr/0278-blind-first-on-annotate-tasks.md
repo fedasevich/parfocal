@@ -1,4 +1,4 @@
-# XXXX. Blind first on annotate tasks
+# 0278. Blind first on annotate tasks
 
 - Date: 2026-11-09
 - Status: Accepted
