@@ -1,4 +1,4 @@
-# XXXX. Decline a workspace ask by removing it, and set the join domain in Admin
+# 0275. Decline a workspace ask by removing it, and set the join domain in Admin
 
 - Date: 2026-11-09
 - Status: Accepted

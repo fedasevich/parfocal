@@ -238,3 +238,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0272](0272-input-device-support-and-fallbacks.md) | Input devices are read natively where the browser allows it and always have a mouse and keyboard fallback | Accepted | 2026-11-09 |
 | [0273](0273-test-pyramid-and-ownership.md) | The test pyramid has six levels, each owned by one place and one CI job | Accepted | 2026-11-09 |
 | [0274](0274-analytics-event-taxonomy-and-posthog-confirmation.md) | Analytics events are a closed, ids-only list, and PostHog Cloud stays the vendor | Accepted | 2026-11-09 |
+| [0275](0275-decline-a-workspace-ask-and-set-the-join-domain.md) | Decline a workspace ask by removing it, and set the join domain in Admin | Accepted | 2026-11-09 |
