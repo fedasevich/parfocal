@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-09
 
+- An ADR records the sign-up and setup flow as built on IAM-002 and IAM-007, with an invite winning over a domain match and a domain match over creating a workspace, and names the draft auth calls and ONB-011 as what is left.
 - GUIDE-019 Follow-ups added from the Fable review: GUIDE-020 (guided check follows the task's check scope and order) and GUIDE-021 (guided check key safety).
 - ADMIN-000 Correction, the follow-up for the mock controls is ADMIN-010 (wire the class lists, retention and session lock controls), not ADMIN-016.
 - ADR 0266 lists the ten admin sections with their permissions and build state. Class lists, retention and session lock are still mock controls, and ADMIN-016 now wires them.

@@ -4839,7 +4839,7 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
 
 ## 49 ONB · Sign-up, setup and the sample project
 
-- [ ] ONB-000 · Research check
+- [x] ONB-000 · Research check
   Done when an ADR records the sign-up and setup flow on top of IAM-002 and IAM-007.
   Size: S.
 
