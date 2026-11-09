@@ -1,4 +1,4 @@
-# XXXX. Input devices are read natively where the browser allows it and always have a mouse and keyboard fallback
+# 0272. Input devices are read natively where the browser allows it and always have a mouse and keyboard fallback
 
 - Date: 2026-11-09
 - Status: Accepted

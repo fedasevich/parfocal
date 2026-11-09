@@ -235,3 +235,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0269](0269-realtime-event-model-by-room-and-kind.md) | Realtime events are ids and kinds posted to project, slide, task and user rooms, and every screen refetches | Accepted | 2026-11-09 |
 | [0270](0270-settings-schema-scopes-and-defaults.md) | The settings schema: every setting has one scope, a default, and a place that stores it, and the mock rows with no key yet are planned | Accepted | 2026-11-09 |
 | [0271](0271-linked-compare-panes-keep-a-per-pane-offset.md) | Linked compare panes keep a per-pane offset in slide pixels, log2 zoom and degrees | Accepted | 2026-11-09 |
+| [0272](0272-input-device-support-and-fallbacks.md) | Input devices are read natively where the browser allows it and always have a mouse and keyboard fallback | Accepted | 2026-11-09 |
