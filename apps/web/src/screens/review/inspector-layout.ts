@@ -1,4 +1,11 @@
-import { useCallback, useSyncExternalStore } from "react";
+import {
+  getGetMySettingLayersQueryKey,
+  type SettingValues,
+  useSetMySettingLayers,
+} from "@parfocal/api-client";
+import { useQueryClient } from "@tanstack/react-query";
+import { useCallback, useMemo } from "react";
+import { useResolvedSettings } from "../../shell/resolved-settings.ts";
 
 export const inspectorDefaultWidth = 340;
 export const inspectorMinWidth = 280;
@@ -7,15 +14,16 @@ export const inspectorHideBelow = 220;
 
 export type InspectorLayout = { width: number; hidden: boolean; hideWhilePanning: boolean };
 
+type PanelSettings = Pick<
+  SettingValues,
+  "side_panel_width" | "hide_side_panel" | "panel_while_moving"
+>;
+
 export const defaultInspectorLayout: InspectorLayout = {
   width: inspectorDefaultWidth,
   hidden: false,
   hideWhilePanning: false,
 };
-
-const storageKey = "parfocal.inspector-panel";
-const changeEvent = "parfocal:inspector-panel";
-const guestKey = "guest";
 
 export function clampInspectorWidth(width: number): number {
   return Math.min(inspectorMaxWidth, Math.max(inspectorMinWidth, Math.round(width)));
@@ -26,78 +34,51 @@ export function dragInspector(width: number): { width: number; hidden: boolean }
   return { width: clampInspectorWidth(width), hidden: false };
 }
 
-function sanitised(value: unknown): InspectorLayout {
-  if (value === null || typeof value !== "object") return defaultInspectorLayout;
-  const entry = value as Record<string, unknown>;
-  const width = entry["width"];
+export function layoutOfSettings(values: PanelSettings): InspectorLayout {
   return {
-    width:
-      typeof width === "number" && Number.isFinite(width)
-        ? clampInspectorWidth(width)
-        : inspectorDefaultWidth,
-    hidden: entry["hidden"] === true,
-    hideWhilePanning: entry["hideWhilePanning"] === true,
+    width: clampInspectorWidth(values.side_panel_width),
+    hidden: values.hide_side_panel,
+    hideWhilePanning: values.panel_while_moving === "auto",
   };
 }
 
-function readStore(): Record<string, unknown> {
-  try {
-    const parsed: unknown = JSON.parse(window.localStorage.getItem(storageKey) ?? "{}");
-    return parsed !== null && typeof parsed === "object" && !Array.isArray(parsed)
-      ? (parsed as Record<string, unknown>)
-      : {};
-  } catch {
-    return {};
-  }
-}
-
-export function readInspectorLayout(userId: string | undefined): InspectorLayout {
-  return sanitised(readStore()[userId ?? guestKey]);
-}
-
-export function writeInspectorLayout(userId: string | undefined, layout: InspectorLayout) {
-  const store = readStore();
-  store[userId ?? guestKey] = layout;
-  try {
-    window.localStorage.setItem(storageKey, JSON.stringify(store));
-  } catch {
-    return;
-  }
-  window.dispatchEvent(new Event(changeEvent));
-}
-
-function subscribe(onChange: () => void) {
-  window.addEventListener(changeEvent, onChange);
-  window.addEventListener("storage", onChange);
-  return () => {
-    window.removeEventListener(changeEvent, onChange);
-    window.removeEventListener("storage", onChange);
+export function settingsOfLayoutPatch(patch: Partial<InspectorLayout>): Partial<PanelSettings> {
+  return {
+    ...(patch.width === undefined ? {} : { side_panel_width: clampInspectorWidth(patch.width) }),
+    ...(patch.hidden === undefined ? {} : { hide_side_panel: patch.hidden }),
+    ...(patch.hideWhilePanning === undefined
+      ? {}
+      : { panel_while_moving: patch.hideWhilePanning ? ("auto" as const) : ("pinned" as const) }),
   };
 }
 
-const snapshots = new Map<string, InspectorLayout>();
-
-function snapshot(userId: string | undefined): InspectorLayout {
-  const next = readInspectorLayout(userId);
-  const key = `${userId ?? guestKey}|${JSON.stringify(next)}`;
-  const known = snapshots.get(key);
-  if (known) return known;
-  snapshots.set(key, next);
-  return next;
-}
-
-export function useInspectorLayout(
-  userId: string | undefined,
-): [InspectorLayout, (patch: Partial<InspectorLayout>) => void] {
-  const layout = useSyncExternalStore(
-    subscribe,
-    () => snapshot(userId),
-    () => defaultInspectorLayout,
+export function useInspectorLayout(): [InspectorLayout, (patch: Partial<InspectorLayout>) => void] {
+  const settings = useResolvedSettings();
+  const queryClient = useQueryClient();
+  const { mutate } = useSetMySettingLayers({
+    mutation: {
+      onSettled: () =>
+        void queryClient.invalidateQueries({ queryKey: getGetMySettingLayersQueryKey() }),
+    },
+  });
+  const layout = useMemo(
+    () => (settings === undefined ? defaultInspectorLayout : layoutOfSettings(settings)),
+    [settings],
   );
   const update = useCallback(
-    (patch: Partial<InspectorLayout>) =>
-      writeInspectorLayout(userId, { ...readInspectorLayout(userId), ...patch }),
-    [userId],
+    (patch: Partial<InspectorLayout>) => {
+      const values = settingsOfLayoutPatch(patch);
+      queryClient.setQueryData(getGetMySettingLayersQueryKey(), (old: unknown) => {
+        const response = old as { status: number; data: { personal: object } } | undefined;
+        if (response?.status !== 200) return old;
+        return {
+          ...response,
+          data: { ...response.data, personal: { ...response.data.personal, ...values } },
+        };
+      });
+      mutate({ data: { values } });
+    },
+    [mutate, queryClient],
   );
   return [layout, update];
 }
