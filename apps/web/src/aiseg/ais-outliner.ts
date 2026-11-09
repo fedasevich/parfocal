@@ -8,6 +8,13 @@ export interface AisOutliner {
   readonly close: () => void;
 }
 
+export interface AisWorker {
+  postMessage(message: AisRequest, transfer: Transferable[]): void;
+  addEventListener(type: "message", listener: (event: MessageEvent<AisReply>) => void): void;
+  addEventListener(type: "error" | "messageerror", listener: (event: Event) => void): void;
+  terminate(): void;
+}
+
 type Answer = AisInstance[] | Float32Array;
 
 interface Waiting {
@@ -30,8 +37,12 @@ function geometryOnly(frame: SamFrame): SamFrame {
   };
 }
 
-export function createAisOutliner(): AisOutliner {
-  let worker: Worker | null = null;
+function spawnAisWorker(): AisWorker {
+  return new Worker(new URL("./ais-worker.ts", import.meta.url), { type: "module" });
+}
+
+export function createAisOutliner(spawn: () => AisWorker = spawnAisWorker): AisOutliner {
+  let worker: AisWorker | null = null;
   let next = 0;
   const waiting = new Map<number, Waiting>();
 
@@ -40,17 +51,26 @@ export function createAisOutliner(): AisOutliner {
     waiting.clear();
   };
 
-  const start = (): Worker => {
-    const created = new Worker(new URL("./ais-worker.ts", import.meta.url), { type: "module" });
-    created.onmessage = (event: MessageEvent<AisReply>) => {
+  const start = (): AisWorker => {
+    const created = spawn();
+    created.addEventListener("message", (event) => {
       const reply = event.data;
       const entry = waiting.get(reply.id);
       if (entry === undefined) return;
       waiting.delete(reply.id);
       if ("error" in reply) entry.reject(new Error(reply.error));
       else entry.resolve("pixels" in reply ? reply.pixels : reply.instances);
+    });
+    const stop = (reason: string) => {
+      if (worker !== created) return;
+      worker = null;
+      created.terminate();
+      failAll(new Error(reason));
     };
-    created.onerror = () => failAll(new Error("The outline worker stopped"));
+    created.addEventListener("error", () => stop("The outline worker stopped"));
+    created.addEventListener("messageerror", () =>
+      stop("A message from the outline worker could not be read"),
+    );
     return created;
   };
 
