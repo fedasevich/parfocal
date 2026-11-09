@@ -67,6 +67,7 @@ import {
   summary,
   type TaskData,
   type TemplateChoice,
+  templateChanges,
   whoReviews,
 } from "./model.ts";
 import {
@@ -839,6 +840,23 @@ export function CheckStep(props: StepProps) {
   );
 }
 
+function FromTemplate({
+  template,
+  changed,
+}: {
+  template: TemplateChoice | undefined;
+  changed: boolean;
+}) {
+  if (!template) return null;
+  return (
+    <span className="text-body-sm text-fg-dim" data-from-template={changed ? "changed" : "kept"}>
+      {changed
+        ? `Changed from ${template.name}. The report still uses the template.`
+        : `Filled in by ${template.name}`}
+    </span>
+  );
+}
+
 function ReviewCheckStep({ draft, data, update, errors, openModal }: StepProps) {
   const template = data.templates.find((candidate) => candidate.id === draft.templateId);
   const form = data.forms.find((candidate) => candidate.key === draft.form);
@@ -847,11 +865,7 @@ function ReviewCheckStep({ draft, data, update, errors, openModal }: StepProps) 
     <>
       <Zone
         title="Objects to check"
-        end={
-          template ? (
-            <span className="text-body-sm text-fg-dim">Filled in by {template.name}</span>
-          ) : null
-        }
+        end={<FromTemplate template={template} changed={templateChanges(draft, data).check} />}
       >
         <div className="grid gap-2" id={fieldId("scope")}>
           <GroupTitle>What to check</GroupTitle>
@@ -870,6 +884,7 @@ function ReviewCheckStep({ draft, data, update, errors, openModal }: StepProps) 
       </Zone>
       <Zone
         title="Decision question"
+        end={<FromTemplate template={template} changed={templateChanges(draft, data).how} />}
         sub="What reviewers answer for each object. Every answer keeps its raw value, so counts can be worked out again later."
       >
         <div className="grid gap-1.5">
@@ -914,7 +929,11 @@ function ReviewCheckStep({ draft, data, update, errors, openModal }: StepProps) 
           </Button>
         </div>
       </Zone>
-      <Zone title="Opinion form" sub="Asked once per slide, after the objects.">
+      <Zone
+        title="Opinion form"
+        sub="Asked once per slide, after the objects."
+        end={<FromTemplate template={template} changed={templateChanges(draft, data).form} />}
+      >
         <Select
           value={draft.form}
           onValueChange={(value) =>
