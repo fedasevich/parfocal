@@ -144,6 +144,24 @@ describe("the shared range cache", () => {
     assert.deepEqual(seen, ["bytes=0-31", "bytes=0-31"]);
   });
 
+  it("answers a range longer than it can hold straight from the network", async () => {
+    const file = fileOf(40);
+    const server = fakeServer(file);
+    const cache = createRangeCache({ blockSize, maxBlocks: 4, fetch: server.fetch });
+    const range = `bytes=10-${2 ** 44}`;
+    const reply = await cache.get(url, range);
+    assert.equal(reply.status, 206);
+    assert.deepEqual(reply.bytes, file.slice(10));
+    assert.deepEqual(
+      server.seen.map((request) => request.range),
+      [range],
+    );
+    assert.equal(cache.stats().cachedBlocks, 0);
+    const held = await cache.get(url, "bytes=0-39");
+    assert.deepEqual(held.bytes, file);
+    assert.equal(cache.stats().cachedBlocks, 3);
+  });
+
   it("evicts the least recently used block beyond its limit", async () => {
     const file = fileOf(64);
     const server = fakeServer(file);

@@ -1486,6 +1486,11 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Done when each has a test that shows the fault or a note in the result file that says why it cannot happen.
   Size: S.
 
+- [ ] VIEW-067 · A range far past the file cannot freeze the byte cache
+  The range cache walks every block of a range before it knows the file's size, so a range with a huge end, which a corrupt offset in a slide file or a shard index produces, blocks the page or the decode worker for good. Found while reproducing VIEW-063 (sharded OME-Zarr through the byte cache), where it turned a wrong shard index into a hang.
+  Done when a unit test shows a range longer than the cache can hold answered straight from the network, without one block entry made for it.
+  Size: S.
+
 - [x] VIEW-022 · Keyboard navigation
   Arrows pan, Shift for 3×, plus and minus zoom by 1.35×, 0 fits, Alt+1 to Alt+6 objective presets. A held arrow pans smoothly, easing up to speed and easing out on release, instead of repeating steps at the key repeat rate.
   Done when tests cover each binding through the key registry (CMD-001).
