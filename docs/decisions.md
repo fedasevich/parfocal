@@ -86,6 +86,15 @@ Decision 75a (a matching email domain joins at once) is safe only when the domai
 
 Your choice:
 
+## 85. Presence in a blinded review, from the [edge token review](results/2026-11-09-edge-token-review.md)
+
+Two reviewers on the same slide of a blinded task each receive a presence event with the other's user id, so each learns that the other is reading that slide now. ADR 0118 (blinding and a kept first read) leaves progress open, meaning who is assigned and who has submitted, and no record covers presence. SEC-040 (presence in a blinded task) builds the answer.
+
+- a. A reviewer who has not submitted in a blinded task neither receives presence nor is announced. (recommended, it matches the idea that a blinded reviewer learns nothing about another reviewer's work)
+- b. Keep presence as built, since who is assigned is already visible.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 Nothing else in review needs you. Nine tasks that only waited for green CI were ticked on 2026-11-02.

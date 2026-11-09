@@ -88,3 +88,5 @@ One file per measured run, named `YYYY-MM-DD-short-topic.md`. Copy [_template.md
 | 2026-11-09 | [The two-finger click and Safari pinch listeners turn dispatched events into the negative point and zoom intents, real hardware traces still to record](2026-11-09-trackpad-listeners.md) | DEV-013 | baseline |
 | 2026-11-09 | [Project review: 664 of 940 tasks ticked with nothing deployed, 3 of 39 ci runs on main green in a day, and 6 real API specs against 165 on the fake](2026-11-09-project-review.md) | FOUND-033 | baseline |
 | 2026-11-09 | [Tenant isolation review: no cross-workspace path found, four confirmed gaps and two suspicions](2026-11-09-tenant-isolation-review.md) | SEC-032 | check |
+| 2026-11-09 | [Viewer engine review: 6 confirmed faults and 4 suspicions, the black edge row on CMU-1.svs first](2026-11-09-viewer-engine-review.md) | VIEW-059 | check |
+| 2026-11-09 | [Edge token review: no way past the token check, 5 low findings around it and 2 suspicions](2026-11-09-edge-token-review.md) | SEC-036 | check |

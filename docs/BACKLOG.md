@@ -1016,6 +1016,42 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Depends on FOUND-035.
   Size: M.
 
+- [ ] SEC-036 · A removed person cannot rejoin a room
+  After a revoke closes the socket, the same room token joins again until it expires, and an older token that joins later overwrites the index entry so a revoke can miss a newer socket ([edge token review](results/2026-11-09-edge-token-review.md), finding C1). ADR 0140 (realtime rooms and room tokens) says a removed person stops receiving events at once.
+  Done when edge tests show a refused rejoin with the token held before the revoke and a revoke that closes the newer socket after an older token joined.
+  Size: M.
+
+- [ ] SEC-037 · Caps on room sockets and limits on the room routes
+  A member can open thousands of sockets to one room with one token and send frames in a loop, the room routes have no limit class, and the internal route reads the whole body before it checks the signature ([edge token review](results/2026-11-09-edge-token-review.md), finding C2). Cap the sockets of one person in one room, count `/rt/` and `/rt-internal/` in the edge limits, and refuse a missing signature header or an oversized body before reading it. Belongs with SEC-027 (edge limits per IP).
+  Done when edge tests show the ninth socket of one person in one room refused, both routes in a limit class, and an oversized or unsigned internal call refused unread.
+  Size: M.
+
+- [ ] SEC-038 · Tile and room keys of at least 32 bytes
+  The API signs tile tokens with an empty key when `TILE_TOKEN_KEY` is empty or a placeholder, because only the room issuer refuses an empty value and the decode drops characters outside the alphabet, and the Worker accepts a key of any length ([edge token review](results/2026-11-09-edge-token-review.md), finding C3).
+  Done when an empty, placeholder or short key answers 503 for tile and room access in the API tests and the Worker's `signingKey` refuses a key under 32 bytes.
+  Size: S.
+
+- [ ] SEC-039 · Every edge response carries the security headers, also after a throw
+  `GET /rt/%zz` makes `decodeURIComponent` throw, and nothing catches it, so Cloudflare serves its own error page without the headers of ADR 0156 (security headers in the edge Worker). A missing binding takes the same path ([edge token review](results/2026-11-09-edge-token-review.md), finding C4).
+  Done when an edge test shows a malformed room path answered as a 404 problem and any throw answered as a 500 problem, both with the headers.
+  Size: S.
+
+- [ ] SEC-040 · Presence in a blinded task
+  A reviewer in a blinded task receives `presence.joined` and `presence.left` with the other reviewers' user ids, and presence is also announced in task and user rooms, which ADR 0269 (realtime event model by room and kind) does not list ([edge token review](results/2026-11-09-edge-token-review.md), finding C5). Decision 85 (presence in a blinded review) picks the rule.
+  Done when the chosen rule has an API test and an edge test, and presence is sent only in the room kinds the record lists.
+  Size: S.
+
+- [ ] SEC-041 · The closed range check does not trust the size in the token
+  The check of restricted byte ranges uses the size in the tile token, so it would be skipped or misaligned if the stored object were ever larger ([edge token review](results/2026-11-09-edge-token-review.md), suspicion S2). The two sizes cannot differ today.
+  Done when an edge test with a token whose size is smaller than the object shows no closed range read for the three ranges in the review, and a negative size is refused.
+  Size: S.
+
+- [ ] SEC-042 · The edge limits and the bot check guard the real API path
+  The Worker has no `/api` branch and no API origin, so the login and upload limits and the Turnstile check run on paths it answers with the app page, while the API would be reached at its own address with no edge limit ([edge token review](results/2026-11-09-edge-token-review.md), suspicion S1). The limits also fail open when a binding is absent, and the login match is exact. Decide the route with the staging slice: proxy `/api` through the Worker with a secret header that the API requires, fail closed outside local runs, and normalise the path before matching.
+  Done when a Worker test shows `/api/health` forwarded to the API origin, the deployed check shows the API address refusing a request that skipped the Worker, and a missing limit binding answers 503 outside local runs.
+  Depends on OPS-002.
+  Size: M.
+
 ---
 
 ## 33 I18N · Internationalisation readiness
@@ -1402,6 +1438,47 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   VIEW-041 shows the coarse level under missing tiles and a loading hint, but sharper tiles pop in at once and a failed tile has no Retry. Fade sharper tiles in over the coarse level without showing white or black, and keep a failed tile as the grey placeholder with a Retry that refetches only that tile, as ADR 0095 (upload by slide and decision notes) describes.
   Done when a golden test catches a frame mid-fade with no white or black pixels, and a browser test fails one tile, sees the placeholder with Retry and sees it load after Retry.
   Depends on VIEW-041.
+  Size: S.
+
+- [ ] VIEW-059 · No black edge row on virtual levels
+  A virtual level whose backing level is stored one pixel short gets a black last row or column, because the read window is clamped to the backing level and the output size is not, so the last row averages zero samples ([viewer engine review](results/2026-11-09-viewer-engine-review.md), finding 1). `CMU-1.svs` has it at 4x, 8x and 16x. A second form leaves an empty window that throws for a one-pixel tile column. Repeat the edge sample in both downsample functions and keep the window inside the backing level, for RGB and for channels.
+  Done when a unit test shows no zero in the last row of a short backing level for both routes, a tile column with an empty window reads, and the golden images still pass.
+  Size: S.
+
+- [ ] VIEW-060 · A decode worker that fails to start is an error, not a hang
+  A worker script that fails to load fires `error` and never posts, and the reader listens only for `message`, so its slot, its tiles and the stage hang on "Loading the slide" with no error ([viewer engine review](results/2026-11-09-viewer-engine-review.md), finding 2). The patch worker client has the same gap. A worker whose overview levels file fails once at open also keeps fewer levels than the page for the whole session (suspicion 1).
+  Done when a unit test shows `ready` and every read sent to a failed worker rejecting, the pool idle afterwards, the same for the patch worker client, and a failed overview levels open failing the worker's open.
+  Size: S.
+
+- [ ] VIEW-061 · A slide the route cannot draw leaves no decode workers behind
+  `showSlide` spawns the decode workers and then builds the levels, which throw for a slide the RGB route cannot draw, so each attempt and each "Try again" leaks six workers ([viewer engine review](results/2026-11-09-viewer-engine-review.md), finding 3).
+  Done when a test with a counting worker factory shows every spawned worker terminated after `showSlide` throws.
+  Size: S.
+
+- [ ] VIEW-062 · Single-channel grey slides draw through the channel route
+  A one-sample BlackIsZero TIFF or a one-channel OME-Zarr is labelled "grey" and sent to the RGB route, which refuses it, though the channel route would draw it ([viewer engine review](results/2026-11-09-viewer-engine-review.md), finding 3).
+  Done when a grey fixture opens and draws in a browser spec with a golden image.
+  Depends on VIEW-061.
+  Size: S.
+
+- [ ] VIEW-063 · Sharded OME-Zarr through the byte cache and the worker relay
+  zarrita reads a shard index with a HEAD request unless the store uses suffix requests, and the page byte cache and the worker relay forward only the URL and the Range header, so the HEAD becomes a full download and the next range is invalid ([viewer engine review](results/2026-11-09-viewer-engine-review.md), finding 4).
+  Done when the sharded fixture opens through `cachedFetch` with the expected pixels and no request without a Range header for a shard file.
+  Size: S.
+
+- [ ] VIEW-064 · Failed tiles on multichannel slides show, retry and report
+  The channel levels keep no failed tile map, so a tile that fails once on a fluorescence slide stays blank with no placeholder, no retry and no slow-load hint, and a disposed decode pool is not mapped to Viv's abort sentinel there ([viewer engine review](results/2026-11-09-viewer-engine-review.md), finding 5).
+  Done when a unit test shows a failed channel tile listed in `failures()` and gone after a retry, and a disposed pool answering with the abort sentinel.
+  Size: S.
+
+- [ ] VIEW-065 · The range cache refuses a short 206 reply
+  A 206 reply with fewer bytes than asked for, not at the end of the file, is cached as complete and padded with zeros ([viewer engine review](results/2026-11-09-viewer-engine-review.md), finding 6).
+  Done when a unit test shows the read rejecting and nothing cached.
+  Size: S.
+
+- [ ] VIEW-066 · Settle three viewer engine suspicions
+  Not proven by reading ([viewer engine review](results/2026-11-09-viewer-engine-review.md), suspicions 2, 3 and 4): an OME-Zarr level with no declared scale gets a downsample that is not snapped to a power of two, the patch reader ties a shared read to the first caller's abort signal, and the ids `hamamatsu-ndpi`, `ventana-bif`, `mirax` and `dicom` have no registered reader though signed slides map file names to them.
+  Done when each has a test that shows the fault or a note in the result file that says why it cannot happen.
   Size: S.
 
 - [x] VIEW-022 · Keyboard navigation
