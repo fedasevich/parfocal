@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-09
 
+- TEST-009: the axe allowlist is filled from a full 852-test E2E run with 8 rules over 38 route patterns, each with a TODO. Four specs failed before their axe step and were not investigated: guided-check row click, two guided-review scenes and command-palette Measure. Shard order can surface more routes, which PARFOCAL_A11Y_RECORD logs.
 - Agent tooling tune-up from a Fable audit of recent sessions: added scripts/verify-changed.sh so agents check only changed packages and leave the full verify to the lead merge and CI, and added rules in task-runner.md, finish.md and agent-workflow.md for one plain command per Bash call in worktrees, waiting with until loops instead of sleep, and the 100 character commit header. Installed coreutils and linked gtimeout as ~/.local/bin/timeout.
 - TEST-021 On 2026-11-09 a red-CI fix gave the auto region budgets runner headroom under ADR 0154, fixed the PDF preview's axe issues and made the pin specs open the slide once. The outline-modes Settings row and workspaces review task specs still sit near the 30 s limit on hosted runners.
 - Migration 0108 adds a nullable review_tasks.report_layout that signing, the PDF and the preview follow, with audited GET and PUT report-layout routes in both permission suites, and Arrange is rebuilt on ReportEditor with Save for this task, Reset to the template and Save as template. The Compare with picker for comparison blocks is EVAL-018.
