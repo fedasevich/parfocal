@@ -151,6 +151,7 @@ import {
   isNavigatorScene,
   type LayerView,
   layerViews,
+  mapViews,
   type ViewerScene,
   type ViewerTab,
   viewerSetup,
@@ -1056,9 +1057,22 @@ function ViewerBody({
     />
   );
 
+  const mapsLock = session.display?.locks.find((lock) => lock.setting === "heatmap");
+  const confidenceHidden = extraLocks.find(
+    (lock) => lock.setting === "confidence" && lock.value === "hidden",
+  );
+  const pickableViews = layerViews.map((item) => {
+    const lock =
+      mapsLock && mapViews.has(item.value)
+        ? mapsLock
+        : confidenceHidden && item.value === "confidence"
+          ? confidenceHidden
+          : undefined;
+    return lock ? { ...item, lockedReason: lock.reason } : item;
+  });
   const viewZone = (
     <Zone title="View" end={<span className="text-caption text-fg-dim">Ways to show results</span>}>
-      <ViewPicker views={layerViews} value={view} onValueChange={goView} />
+      <ViewPicker views={pickableViews} value={view} onValueChange={goView} />
     </Zone>
   );
   const thread = session.threads.find((item) => item.anchor === current?.object);

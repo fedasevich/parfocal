@@ -117,6 +117,7 @@ export const mockScenes = {
     "panel",
     "heat",
     "density",
+    "confidence",
     "diff",
     "models",
     "readers",

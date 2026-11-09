@@ -37,6 +37,7 @@ const layersScenes: { scene: SceneOf<"layers">; label: string; note: string }[] 
   { scene: "panel", label: "Objects on the slide", note: "The Display tab with the View zone" },
   { scene: "heat", label: "Heatmap", note: "Tumor probability from 0.60" },
   { scene: "density", label: "Cell density", note: "Cells per 0.1 mm²" },
+  { scene: "confidence", label: "Confidence map", note: "How sure the AI is, shown from 0.40" },
   { scene: "diff", label: "AI vs reviewed", note: "Agree, AI only and reviewer only" },
   { scene: "models", label: "Model vs model", note: "CAMELYON against PathoSAM" },
   { scene: "readers", label: "Reviewer vs reviewer", note: "Lenka and Simona, kappa 0.71" },
