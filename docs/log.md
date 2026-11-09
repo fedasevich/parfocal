@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-09
 
+- Case creation UI completed with Upload slides on each case row for owners opening the case upload drawer, and a browser spec that creates a case in a de-identified and a clinical project and uploads a slide into each.
 - Found the web browser suite slows by a steady runner-dependent factor of up to 1.9 with no build-up over a run, and split browser (web) into three Playwright shards. Result in docs/results/2026-11-09-web-browser-suite-ci-slowdown.md.
 - Search text moved out of the URL: kept in page state, the palette hands it over in router state, a reload starts empty, and the search spec has no q parameter.
 - VIEW-031 Ticked, ci run on main at 5d16c289 is green including the wheel zoom budget, and the owner chose 74a.

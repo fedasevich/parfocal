@@ -2958,7 +2958,7 @@ Cases are optional groups of slides inside a project (PROJ-001). Patient fields 
   Patient (name, sex, birth date or age, MRN, encrypted per SEC-004), case (accession, priority, due, specimen, clinical note, clinical question, assignee, status), specimen, block, slide, as [ADR 0036](adr/0036-case-data-model.md) describes. The case's folder arrives with CASES-003. SEC-004 already created `patients` with the encrypted name, MRN and birth date and their blind indexes ([ADR 0034](adr/0034-blind-indexes-for-encrypted-patient-identifiers.md)), so this task adds the remaining columns and tables.
   Done when migrations, API tests and isolation tests pass.
 
-- [ ] CASES-002 · Case creation UI
+- [x] CASES-002 · Case creation UI
   Create a case inside a project with its ID and specimen. In a de-identified project a case has an ID only. In a clinical project patient fields are offered and every one is optional.
   Done when E2E creates a case in each privacy mode and uploads a slide into it.
   Depends on CASES-013, PROJ-007. Refs mock: newcase/case, mock: newcase/casec.
