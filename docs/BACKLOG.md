@@ -4134,7 +4134,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   On hold since 2026-11-04. The owner parked compliance, legal, email and pilot paperwork as not worth the time yet. Resume when the owner asks or before the first tenant with real patient data.
   Size: L.
 
-- [ ] PILOT-007 · Feedback channel
+- [x] PILOT-007 · Feedback channel
   In-app feedback with screenshot (PHI-blurred) routed to the team.
   Done when tests confirm screenshots are blurred over slide and patient areas.
   Size: M.
