@@ -87,6 +87,7 @@ function capabilityOf(claims: unknown): Capability | null {
     typeof s !== "string" ||
     typeof o !== "string" ||
     !Number.isSafeInteger(n) ||
+    (n as number) < 0 ||
     !Number.isSafeInteger(e) ||
     !Array.isArray(d) ||
     !d.every(isRange) ||
