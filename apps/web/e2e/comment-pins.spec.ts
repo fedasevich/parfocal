@@ -6,8 +6,8 @@ const rt14 = "00000000-0000-4000-8007-000000000014";
 async function openTaskSlide(page: Page) {
   await page.goto(`/projects/${p07}?tab=slides`);
   await page.getByTestId("slide-row").filter({ hasText: "tumor_044" }).click();
+  await page.waitForURL(/\/slides\//);
   const stage = page.getByTestId("slide-stage");
-  await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 30_000 });
   const url = new URL(page.url());
   await page.goto(`${url.pathname}?task=${rt14}&workspace=annotate`);
   await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 30_000 });
