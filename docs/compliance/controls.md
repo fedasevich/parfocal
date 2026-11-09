@@ -2,6 +2,8 @@
 
 This matrix maps the GDPR articles, the HIPAA Security Rule safeguards and the ISO/IEC 27001:2022 Annex A controls that matter for a health data platform to the tasks in [BACKLOG.md](../BACKLOG.md). It is the output of SEC-000.
 
+Simulated check, no such person took part. Agents wrote this page where a compliance auditor would write or review it ([agent-stand-in-records.md](../project/agent-stand-in-records.md)).
+
 ## How to read it
 
 - The task column lists backlog IDs, each followed by a few words that say what the task is.

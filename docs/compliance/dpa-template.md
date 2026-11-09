@@ -2,6 +2,8 @@
 
 A template for the agreement under GDPR Article 28(3) between a workspace (the controller) and Parfocal (the processor), written for SEC-021 (GDPR documentation). It is not legal advice. TODO: counsel reviews it before the first tenant with real patient data signs it.
 
+Simulated check, no such person took part. Agents wrote this page where counsel would write or review it ([agent-stand-in-records.md](../project/agent-stand-in-records.md)).
+
 Fields in square brackets are filled per tenant.
 
 ## Parties

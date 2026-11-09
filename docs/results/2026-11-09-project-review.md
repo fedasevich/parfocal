@@ -13,7 +13,7 @@ What in the way the project is built is most likely to hurt it, and what would f
 
 ## Method
 
-Counts come from `grep` over `docs/BACKLOG.md`, `git ls-files` with `wc -l`, `gh run list` and `gh run view`, `scripts/check_adrs.py`, `scripts/board.py` and the settings files. Times are UTC.
+An agent did this review, and no outside reviewer took part ([agent-stand-in-records.md](../project/agent-stand-in-records.md)). Counts come from `grep` over `docs/BACKLOG.md`, `git ls-files` with `wc -l`, `gh run list` and `gh run view`, `scripts/check_adrs.py`, `scripts/board.py` and the settings files. Times are UTC.
 
 ## Results
 
