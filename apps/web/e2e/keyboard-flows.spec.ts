@@ -69,12 +69,14 @@ test("sign out: the report dialog is reached, kept inside and closed without a p
   await expect(sso).toBeFocused();
   for (let step = 0; step < 12; step++) {
     await page.keyboard.press("Tab");
-    expect(
-      await dialog.evaluate((node) => {
-        const active = document.activeElement;
-        return node.contains(active) || active?.hasAttribute("data-base-ui-focus-guard") === true;
-      }),
-    ).toBe(true);
+    await expect
+      .poll(() =>
+        dialog.evaluate((node) => {
+          const active = document.activeElement;
+          return node.contains(active) || active?.hasAttribute("data-base-ui-focus-guard") === true;
+        }),
+      )
+      .toBe(true);
   }
   await page.keyboard.press("Escape");
   await expect(dialog).toBeHidden();
