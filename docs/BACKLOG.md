@@ -4450,6 +4450,12 @@ A researcher hands slides to reviewers as a review task ([ADR 0053](adr/0053-ai-
   Depends on TASK-010.
   Size: S.
 
+- [ ] TASK-018 · Sample size in the annotate task stepper
+  Review of TASK-005 (new review task stepper) found the sample check option says "about 50" while the preset sends 200, as ADR 0238 (check options and presets on annotate tasks) sets, so the estimate disagrees with the request. Fix the text and the estimate to use the sent size, add a sample size input to What to check sent as `random-cells.count`, align the UI by-hand preset order with the API preset, and add a component test for the Kind step.
+  Done when model tests show the estimate and the request use the same size, a browser test changes the sample size and finds it in the created task, and a component test covers the Kind step.
+  Depends on TASK-005.
+  Size: S.
+
 - [x] TASK-011 · Display defaults, locks and presets
   A task holds display defaults preset by its study template and changed in the New review task flow: draw as, width, opacity, colour by, ID labels, confidence as a number, a word, a colour or hidden, the heatmap, the score cutoff, the other result sets, the order, the zoom around the object, moving on by itself and where the buttons sit. The task may lock confidence, the heatmap, the score cutoff, the other result sets and the order, each with a reason of 5 to 120 characters, and the API refuses a reviewer's change to a locked value. A reviewer saves presets with a name of 1 to 40 characters, unique among their presets, for one task or for all their tasks. Every decision stores the preset in force, the task default or a preset's name, and the evaluation returns who used which preset on how many objects for the report's Methods block and its Preset column ([ADR 0132](adr/0132-display-settings-presets-and-task-locks.md), display settings, presets and task locks).
   Done when API tests cover the defaults from two templates, each lockable setting with and without a reason, a refused change to a locked value, saving, renaming and deleting presets with a refused duplicate name, the preset stored with a decision, and the preset counts in the evaluation, with isolation and audit.
