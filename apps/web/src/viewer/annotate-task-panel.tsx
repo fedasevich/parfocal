@@ -37,6 +37,7 @@ import {
   useSharedLayer,
 } from "../annotations/annotate-task-api.ts";
 import { confirmAction, confirmActions, confirms } from "../annotations/check-state.ts";
+import { guideAction, guides, nextClassOf } from "../annotations/guided-check.ts";
 
 import type { SaveState } from "../annotations/use-saved-annotations.ts";
 import { useBindings } from "../keys/personal-keys.ts";
@@ -44,7 +45,10 @@ import type { Fired } from "../keys/registry.ts";
 import { useHotkeys } from "../keys/use-hotkeys.ts";
 import { usePeople } from "../screens/people.ts";
 import { okData } from "../screens/placeholder.tsx";
+import { GuidedCheck } from "./guided-check.tsx";
 import type { ViewerEngine } from "./viewer-engine.ts";
+
+const guideActionList = [guideAction];
 
 type AnnotateTaskPanelProps = {
   engine: ViewerEngine;
@@ -92,6 +96,7 @@ export function AnnotateTaskPanel({
   const [aiHidden, setAiHidden] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
   const [refusal, setRefusal] = useState<string | null>(null);
+  const [guided, setGuided] = useState(false);
 
   const refetchLayer = layerQuery.refetch;
   const lastSave = useRef(saveState);
@@ -155,6 +160,31 @@ export function AnnotateTaskPanel({
     if (confirms(fired)) latestConfirm.current();
   }, []);
   useHotkeys(confirmBindings, onConfirmKey);
+
+  const guideBindings = useBindings(["annotate"], guideActionList);
+  const toggleGuide = useCallback(() => setGuided((on) => !on), []);
+  const onGuideKey = useCallback(
+    (fired: Fired) => {
+      if (guides(fired)) toggleGuide();
+    },
+    [toggleGuide],
+  );
+  useHotkeys(guideBindings, onGuideKey);
+
+  const reclassSelected = () => {
+    if (selectedAi === undefined || locked) return;
+    const classId = nextClassOf(
+      classes.map((item) => item.id),
+      selectedAi.copy?.class_id ?? selectedAi.class_id,
+    );
+    if (classId === null) return;
+    void run(() =>
+      changeAi(taskId, slideId, selectedAi.object, {
+        class_id: classId,
+        geometry: selectedAi.geometry,
+      }),
+    );
+  };
 
   const deleteSelected = () => {
     if (selectedAi === undefined || locked) return;
@@ -256,6 +286,25 @@ export function AnnotateTaskPanel({
             </li>
           ))}
         </ul>
+        {view.shown && ai.length > 0 && !locked ? (
+          guided ? (
+            <GuidedCheck
+              engine={engine}
+              objects={ai}
+              locked={locked}
+              canReclass={classes.length > 1}
+              onCurrent={setSelected}
+              onConfirm={confirmSelected}
+              onDelete={deleteSelected}
+              onReclass={reclassSelected}
+              onLeave={toggleGuide}
+            />
+          ) : (
+            <Button size="sm" onClick={toggleGuide}>
+              Guided check <Keycap action={guideAction} keys="⇧G" size="sm" />
+            </Button>
+          )
+        ) : null}
         {selectedAi && !locked ? (
           <div className="flex gap-2">
             <Button
