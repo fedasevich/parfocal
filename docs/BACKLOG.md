@@ -1548,7 +1548,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on LAB-001.
   Size: M.
 
-- [ ] LAB-002 · Performance HUD
+- [x] LAB-002 · Performance HUD
   Fps, frame time, resident tiles, inflight requests, atlas use, decode p95, annotations drawn and culled, LOD tier. Atlas use shows only on the WebGPU route. Floats in a free corner (top left, top right or bottom left) and can be hidden.
   Done when a test confirms the HUD costs under 0.5 ms per frame.
   Refs [`poc/src/app/hud.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/app/hud.ts).
