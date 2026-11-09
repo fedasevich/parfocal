@@ -4891,7 +4891,7 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
 
 Admin is its own page with its own sidebar and the app's top bar, never a page inside a page (doc 39). Researchers with admin rights open it, and nobody else sees it ([ADR 0096](adr/0096-researcher-and-reviewer-with-admin-rights.md), researcher and reviewer with admin rights).
 
-- [ ] ADMIN-000 · Research check
+- [x] ADMIN-000 · Research check
   Done when the admin sections and their permissions are listed in an ADR. Who opens the page is settled by [ADR 0096](adr/0096-researcher-and-reviewer-with-admin-rights.md).
   Size: S.
 

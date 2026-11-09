@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-09
 
+- ADR 0266 lists the ten admin sections with their permissions and build state. Class lists, retention and session lock are still mock controls, and ADMIN-016 now wires them.
 - Guided check in Annotate: Shift G walks unchecked AI objects least sure first, with confirm, re-class, delete and skip on keys and the queue growing with new objects. Fable review asked for one fix, the fix key now does nothing on a one-class task, and named follow-ups GUIDE-020 and GUIDE-021.
 - Case creation UI completed with Upload slides on each case row for owners opening the case upload drawer, and a browser spec that creates a case in a de-identified and a clinical project and uploads a slide into each.
 - Found the web browser suite slows by a steady runner-dependent factor of up to 1.9 with no build-up over a run, and split browser (web) into three Playwright shards. Result in docs/results/2026-11-09-web-browser-suite-ci-slowdown.md.
