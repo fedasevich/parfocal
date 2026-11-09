@@ -14,14 +14,12 @@ from parfocal_api.annotations import check_classes
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
 from parfocal_api.blinding import require_judging_allowed, require_seeing_reviewer, user_of
 from parfocal_api.context import CurrentPrincipal, TenantConnection
-from parfocal_api.decision_styles import (
-    BlindCellsUnsupportedError,
-    answer_in_style,
-    counted,
-)
+from parfocal_api.decision_styles import answer_in_style, counted
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import Principal
 from parfocal_api.problems import BadRequestError
+from parfocal_api.review_order import Results
+from parfocal_api.review_order import read_chunk as read_cell_chunk
 from parfocal_api.reviewed_layer import (
     KINDS,
     ai_object,
@@ -37,6 +35,7 @@ from parfocal_api.tables import (
     disagreement_decisions,
     display_choices,
     display_presets,
+    result_chunks,
     result_objects,
     result_set_classes,
     review_edits,
@@ -44,6 +43,7 @@ from parfocal_api.tables import (
     verdicts,
 )
 from parfocal_common.object_ids import Letter, ObjectId
+from parfocal_common.result_store import ResultStore
 
 REASONS = {
     AnnotationKind.REGION: frozenset(
@@ -206,6 +206,40 @@ async def ai_region_class(
         )
     )
     return found if isinstance(found, uuid.UUID) else None
+
+
+async def ai_cell_class(
+    connection: AsyncConnection, store: ResultStore, result_set_id: uuid.UUID, number: int
+) -> uuid.UUID | None:
+    keys = await connection.scalars(
+        select(result_chunks.c.object_key)
+        .where(result_chunks.c.result_set_id == result_set_id)
+        .order_by(result_chunks.c.chunk)
+    )
+    for object_key in keys:
+        chunk = await read_cell_chunk(store, object_key)
+        numbers = list(chunk.numbers)
+        if number in numbers:
+            found = await connection.scalar(
+                select(result_set_classes.c.class_id).where(
+                    result_set_classes.c.result_set_id == result_set_id,
+                    result_set_classes.c.position == chunk.classes[numbers.index(number)],
+                )
+            )
+            return found if isinstance(found, uuid.UUID) else None
+    return None
+
+
+async def ai_class_of(
+    connection: AsyncConnection,
+    store: ResultStore,
+    result_set_id: uuid.UUID,
+    kind: AnnotationKind,
+    number: int,
+) -> uuid.UUID | None:
+    if kind is AnnotationKind.REGION:
+        return await ai_region_class(connection, result_set_id, number)
+    return await ai_cell_class(connection, store, result_set_id, number)
 
 
 async def ai_call(
@@ -430,6 +464,7 @@ async def save_verdict(
     draft: VerdictDraft,
     principal: CurrentPrincipal,
     connection: TenantConnection,
+    results: Results,
 ) -> Verdict:
     row = await assigned_slide(connection, principal, task_id, slide_id)
     await require_judging_allowed(connection, principal, row.project_id, task_id, slide_id)
@@ -442,10 +477,8 @@ async def save_verdict(
     await check_exists(connection, row, found)
     ai_class = None
     if draft.answer_class_id is not None:
-        if kind is not AnnotationKind.REGION:
-            raise BlindCellsUnsupportedError
         await check_classes(connection, row.project_id, {draft.answer_class_id})
-        ai_class = await ai_region_class(connection, row.result_set_id, found.number)
+        ai_class = await ai_class_of(connection, results, row.result_set_id, kind, found.number)
     value = counted(style, answer, row.counts_as, draft.answer_class_id, ai_class)
     check_reasons(value, kind, draft.reasons)
     if draft.reason_class_id is not None:

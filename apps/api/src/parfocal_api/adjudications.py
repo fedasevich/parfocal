@@ -29,6 +29,7 @@ from parfocal_api.principals import MemberPrincipal, Principal
 from parfocal_api.problems import BadRequestError, ConflictError, NotFoundError
 from parfocal_api.project_access import role_in
 from parfocal_api.projects import code_of as project_code
+from parfocal_api.review_order import Results
 from parfocal_api.review_tasks import code_of as task_code
 from parfocal_api.review_tasks import readable_task, task_row
 from parfocal_api.reviewed_layer import KINDS, TaskSignedOffError, ai_object
@@ -413,6 +414,7 @@ async def decide_as_adjudicator(
     draft: DecisionDraft,
     principal: CurrentPrincipal,
     connection: TenantConnection,
+    results: Results,
 ) -> AdjudicatedObject:
     user_id = me(principal)
     task = await task_row(connection, task_id)
@@ -427,7 +429,7 @@ async def decide_as_adjudicator(
     if task.signed_off_at is not None:
         raise TaskSignedOffError
     found = ai_object(object_id)
-    value = await counted_value(connection, task, slide_id, found, draft)
+    value = await counted_value(connection, results, task, slide_id, found, draft)
     values = UNDECIDED | {
         "style": task.decision_style,
         "answer": draft.answer,

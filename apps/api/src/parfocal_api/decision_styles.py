@@ -46,11 +46,6 @@ class AnswerNotInStyleError(BadRequestError):
     title = "This answer is not one of the task's decision style"
 
 
-class BlindCellsUnsupportedError(BadRequestError):
-    code = "blind-cells-unsupported"
-    title = "Pick the class blind works on regions only for now"
-
-
 def answer_in_style(style: DecisionStyle, answer: str, class_id: uuid.UUID | None) -> None:
     if answer not in ANSWERS[style]:
         allowed = ", ".join(sorted(ANSWERS[style]))

@@ -12,11 +12,12 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 from parfocal_api.annotations import check_classes
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
 from parfocal_api.context import CurrentPrincipal, TenantConnection
-from parfocal_api.decision_styles import BlindCellsUnsupportedError, answer_in_style, counted
+from parfocal_api.decision_styles import answer_in_style, counted
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import MemberPrincipal, Principal
 from parfocal_api.problems import ConflictError, ForbiddenError, NotFoundError
 from parfocal_api.project_access import role_in
+from parfocal_api.review_order import Results
 from parfocal_api.review_tasks import readable_task
 from parfocal_api.reviewed_layer import KINDS, TaskSignedOffError, ai_object
 from parfocal_api.tables import (
@@ -37,9 +38,10 @@ from parfocal_api.tables import (
     verdicts,
 )
 from parfocal_api.task_kinds import review_only
-from parfocal_api.verdicts import ai_region_class
+from parfocal_api.verdicts import ai_class_of
 from parfocal_common.disagreements import Why, why_queued
 from parfocal_common.object_ids import Letter, ObjectId
+from parfocal_common.result_store import ResultStore
 
 type Note = Annotated[str, StringConstraints(strip_whitespace=True, max_length=500)]
 type ChangeReason = Annotated[
@@ -500,6 +502,7 @@ def decider(principal: Principal) -> uuid.UUID | None:
 
 async def counted_value(
     connection: AsyncConnection,
+    store: ResultStore,
     task: Any,
     slide_id: uuid.UUID,
     found: ObjectId,
@@ -509,8 +512,6 @@ async def counted_value(
     answer_in_style(style, draft.answer, draft.answer_class_id)
     ai_class = None
     if draft.answer_class_id is not None:
-        if KINDS[found.letter] is not AnnotationKind.REGION:
-            raise BlindCellsUnsupportedError
         await check_classes(connection, task.project_id, {draft.answer_class_id})
         result_set_id = (
             await connection.execute(
@@ -520,7 +521,9 @@ async def counted_value(
                 )
             )
         ).scalar_one()
-        ai_class = await ai_region_class(connection, result_set_id, found.number)
+        ai_class = await ai_class_of(
+            connection, store, result_set_id, KINDS[found.letter], found.number
+        )
     return counted(style, draft.answer, task.counts_as, draft.answer_class_id, ai_class)
 
 
@@ -536,6 +539,7 @@ async def decide_disagreement(
     draft: DecisionDraft,
     principal: CurrentPrincipal,
     connection: TenantConnection,
+    results: Results,
 ) -> QueuedObject:
     task, found, item = await decidable(
         connection, principal, task_id, slide_id, object_id, Late(draft.reason)
@@ -544,7 +548,7 @@ async def decide_disagreement(
         raise LookingAgainError
     if item.with_adjudicator():
         raise WithAdjudicatorError
-    value = await counted_value(connection, task, slide_id, found, draft)
+    value = await counted_value(connection, results, task, slide_id, found, draft)
     values = UNDECIDED | {
         "style": task.decision_style,
         "answer": draft.answer,

@@ -3,13 +3,22 @@ import uuid
 from typing import Any
 
 import pytest
+from chunk_support import CellRow, chunk_bytes, put_chunk
 from db_support import ApiAs
 from test_reviewed_layer import Review, review
 from workspace_support import owner
 
+from parfocal_common.cell_chunks import UNCLASSIFIED
+from parfocal_common.chunk_store import chunk_key
+from parfocal_common.result_imports import result_set_prefix
+
 pytestmark = pytest.mark.db
 
 DEFAULT = ["disagree", "disagree", "unsure", "agree", "agree"]
+CHUNKS: list[list[CellRow]] = [
+    [(1, 0, 200, 10.0, 10.0), (2, 1, 180, 20.0, 10.0)],
+    [(3, UNCLASSIFIED, 90, 2100.0, 10.0), (4, 0, 220, 2200.0, 10.0)],
+]
 
 
 def styled(api: ApiAs, r: Review, decision: dict[str, Any] | None) -> Any:
@@ -170,11 +179,70 @@ def test_an_answer_outside_the_style_is_refused(
         assert response.json()["code"] == code
 
 
-def test_blind_cells_wait_for_their_class_lookup(api: ApiAs, database: str) -> None:
+def cells_in_chunks(database: str, r: Review) -> uuid.UUID:
+    stroma = ai_says_tumor(database, r)
+    tenant = owner(database, f"SELECT tenant_id FROM projects WHERE id = '{r.project}'")[0][0]
+    owner(
+        database,
+        "DO $$ BEGIN PERFORM set_config('session_replication_role', 'replica', true); "
+        "INSERT INTO result_set_classes (tenant_id, project_id, result_set_id, position, "
+        f"source_name, class_id) VALUES ('{tenant}', '{r.project}', '{r.result_set}', 1, "
+        f"'stroma', '{stroma}'); END $$",
+    )
+    prefix = result_set_prefix(uuid.UUID(str(tenant)), r.slide, r.result_set)
+    for chunk, rows in enumerate(CHUNKS):
+        key = chunk_key(prefix, chunk)
+        owner(
+            database,
+            "DO $$ BEGIN PERFORM set_config('session_replication_role', 'replica', true); "
+            "INSERT INTO result_chunks (tenant_id, result_set_id, chunk, x, y, width, height, "
+            f"cell_count, vertex_count, object_key) VALUES ('{tenant}', '{r.result_set}', "
+            f"{chunk}, {chunk * 2048}, 0, 2048, 2048, {len(rows)}, {4 * len(rows)}, '{key}'); "
+            "END $$",
+        )
+        put_chunk(key, chunk_bytes(rows, None))
+    return stroma
+
+
+def picked(class_id: uuid.UUID) -> dict[str, str]:
+    return {"answer": "class", "answer_class_id": str(class_id)}
+
+
+def test_a_blind_answer_on_a_cell_counts_against_the_class_in_its_chunk(
+    api: ApiAs, database: str
+) -> None:
     r = review(api, database)
+    stroma = cells_in_chunks(database, r)
     task = task_of(api, r, {"style": "blind"})
-    body = {"answer": "class", "answer_class_id": str(r.tumor)}
-    assert refused(answer(api, r, task, "C1", body)) == (400, "blind-cells-unsupported")
+    cases = [
+        ("C1", r.tumor, "agree"),
+        ("C1", stroma, "disagree"),
+        ("C2", stroma, "agree"),
+        ("C2", r.tumor, "disagree"),
+        ("C4", r.tumor, "agree"),
+        ("C3", r.tumor, "disagree"),
+        ("C5", r.tumor, "disagree"),
+    ]
+    for object_id, class_id, value in cases:
+        assert counted(api, r, task, object_id, picked(class_id)) == ("blind", "class", value)
+    assert counted(api, r, task, "C1", {"answer": "unsure"})[2] == "unsure"
+
+
+def test_a_queue_decision_on_a_cell_counts_against_its_chunk_class(
+    api: ApiAs, database: str
+) -> None:
+    r = review(api, database)
+    stroma = cells_in_chunks(database, r)
+    task = task_of(api, r, {"style": "blind"})
+    for who, class_id in (("first", r.tumor), ("second", stroma)):
+        assert answer(api, r, task, "C2", picked(class_id), who).status_code == 200
+        submitted = api(r.people[who]).post(f"/api/review-tasks/{task}/slides/{r.slide}/submit")
+        assert submitted.status_code == 200, submitted.text
+    url = f"/api/review-tasks/{task}/disagreements/{r.slide}/C2"
+    for class_id, value in ((stroma, "agree"), (r.tumor, "disagree")):
+        decided = api(r.people["owner"]).put(url, json=picked(class_id))
+        assert decided.status_code == 200, decided.text
+        assert decided.json()["decision"]["value"] == value
 
 
 @pytest.mark.parametrize(
