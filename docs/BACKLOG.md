@@ -4833,7 +4833,7 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Depends on ONB-002, ONB-005, IAM-024. Refs mock: setup, doc 41.
   Size: L.
 
-- [ ] ONB-010 · Join or ask for a workspace and keep the setup profile
+- [x] ONB-010 · Join or ask for a workspace and keep the setup profile
   ONB-004 sends join and ask through a draft `answerWorkspace` that only the fake API answers, and does not save specialties or the workspace logo. Add the real join and access request endpoints with the workspace admins notified, save specialties on the person and the logo on the workspace with an additive migration, and delete the draft.
   Done when API tests cover join, ask, an admin approving the ask and the saved specialties and logo, and the setup browser spec runs on the real client with no draft left.
   Depends on ONB-004.
