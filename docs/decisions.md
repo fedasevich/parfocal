@@ -63,6 +63,15 @@ The task asks for no frame over 50 ms during wheel zoom on the Huron fixture. CI
 
 Your choice:
 
+## 75. Joining a workspace by email domain, from ONB-010 (join or ask for a workspace)
+
+Setup now offers a workspace whose verified email domain matches the person's, as ADR 0265 (join by verified email domain) records. A workspace's join policy defaults to join, so a person with a matching lab address becomes a reviewer at once, as the design shows. Public mail domains such as gmail.com never match. Admins cannot change the policy on a screen yet, which ONB-011 (answer asks and set the join domain in Admin) adds.
+
+- a. Join at once by default, and admins can switch a workspace to ask. (recommended)
+- b. Ask by default, so every join waits for an admin.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 Nothing else in review needs you. Nine tasks that only waited for green CI were ticked on 2026-11-02.

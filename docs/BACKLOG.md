@@ -4839,6 +4839,12 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Depends on ONB-004.
   Size: M.
 
+- [ ] ONB-011 · Answer workspace asks and set the join domain in Admin
+  ONB-010 lets a person ask to join a workspace and notifies its admins, but admins can only approve through the API, cannot decline, and cannot set the workspace's email domain, its join policy or an image logo. Add a Join requests list in Admin People with Approve and Decline, open it from the admin's notification, and add the email domain, join policy and logo upload to the workspace settings, with the domain refused when it is a public mail domain.
+  Done when API tests cover decline and the domain and policy change with a public domain refused, and a browser test opens an ask from the notification and approves another.
+  Depends on ONB-010.
+  Size: M.
+
 - [x] ONB-005 · Sample project
   A new workspace gets a sample project with 4 CAMELYON16 slides, two result sets and a review task for the person, deletable and left out of every evaluation.
   Done when API tests seed and delete it, and an evaluation test proves it is excluded.
