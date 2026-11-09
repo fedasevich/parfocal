@@ -20,13 +20,13 @@ test("two factors are off until the workspace saves them on", () => {
   assert.equal(twoFactorRequired(lab), true);
 });
 
-test("single sign-on is shown locked because it is set up with the identity provider", () => {
+test("sign-in methods show read-only because the identity provider sets them up", () => {
   const rows = signInRows(listed, lab);
   assert.deepEqual(
     rows.map((row) => [row.key, row.locked]),
     [
       ["sso", true],
-      ["password", false],
+      ["password", true],
       ["two_factor_required", false],
     ],
   );

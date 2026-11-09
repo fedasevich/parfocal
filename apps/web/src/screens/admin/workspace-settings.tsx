@@ -3,18 +3,15 @@ import {
   type AnnouncementKind,
   getGetMySettingLayersQueryKey,
   getGetSecurityContactQueryKey,
-  getGetSessionPolicyQueryKey,
   getListAnnouncementsQueryKey,
   getListModelTiersQueryKey,
   type LabSettings,
   type ModelTier,
-  type SessionPolicy,
   type TierTask,
   useCreateAnnouncement,
   useEndAnnouncement,
   useGetMySettingLayers,
   useGetSecurityContact,
-  useGetSessionPolicy,
   useListAnnouncements,
   useListModelTiers,
   useListStudyTemplates,
@@ -22,7 +19,6 @@ import {
   useSetModelTier,
   useSetSecurityContact,
   useSetWorkspaceSettings,
-  useUpdateSessionPolicy,
 } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
 import { Input } from "@parfocal/ui/components/input";
@@ -51,6 +47,14 @@ import { okData } from "../placeholder.tsx";
 import { type Notify, tableClass } from "./common.tsx";
 import { JoinSettingsZone } from "./join-settings.tsx";
 import {
+  ClassListChoice,
+  defaultEmergencyHours,
+  failure,
+  IdleLockChoice,
+  NumberChoice,
+  useSessionPolicy,
+} from "./shared-settings.tsx";
+import {
   type AnalyticsPolicy,
   type AnnouncementEnd,
   analyticsPolicyChange,
@@ -58,7 +62,6 @@ import {
   analyticsPolicyOptions,
   announcementEnds,
   announcementKinds,
-  classOptions,
   cutoffChoices,
   type DefaultKey,
   decisionCutoffChange,
@@ -66,10 +69,8 @@ import {
   decisionCutoffOf,
   defaultChange,
   defaultsOf,
-  durationText,
   emergencyHourChoices,
   endsAtFor,
-  idleLockChoices,
   isAnnouncementText,
   isSecurityContact,
   modelsForTask,
@@ -89,17 +90,11 @@ import {
   tierText,
   tumorShareChange,
   tumorShareOf,
-  withCurrent,
 } from "./workspace-settings-model.ts";
 
 const rows = "grid grid-cols-[200px_minmax(0,1fr)] items-start gap-x-4 gap-y-4 text-body-sm";
 
-const defaultEmergencyHours = 4;
-
 const emptyLab: LabSettings = { values: {}, locked: [] };
-
-const failure = (error: unknown) =>
-  error instanceof Error ? error.message : "That did not save. Try again.";
 
 function Labelled({
   label,
@@ -118,35 +113,6 @@ function Labelled({
         {help ? <small className="text-caption text-fg-dim">{help}</small> : null}
       </div>
     </>
-  );
-}
-
-function NumberChoice({
-  label,
-  value,
-  choices,
-  format,
-  onChange,
-}: {
-  label: string;
-  value: number;
-  choices: number[];
-  format: (value: number) => string;
-  onChange: (value: number) => void;
-}) {
-  return (
-    <Select value={String(value)} onValueChange={(next) => onChange(Number(next))}>
-      <SelectTrigger size="sm" aria-label={label} className="w-40">
-        <SelectValue>{format(value)}</SelectValue>
-      </SelectTrigger>
-      <SelectContent>
-        {withCurrent(choices, value).map((choice) => (
-          <SelectItem key={choice} value={String(choice)}>
-            {format(choice)}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
   );
 }
 
@@ -234,31 +200,8 @@ function SecurityContactZone({ notify }: { notify: Notify }) {
 }
 
 function LockTimes({ notify }: { notify: Notify }) {
-  const policy = okData(useGetSessionPolicy().data);
-  const queryClient = useQueryClient();
-  const update = useUpdateSessionPolicy();
+  const { policy, save } = useSessionPolicy(notify);
   if (policy === undefined) return null;
-  const save = (next: Partial<SessionPolicy>, said: string) => {
-    const before = policy;
-    const send = (change: SessionPolicy, message: string, undo?: () => void) =>
-      update.mutate(
-        {
-          data: {
-            idle_lock_minutes: change.idle_lock_minutes,
-            session_hours: change.session_hours,
-            emergency_hours: change.emergency_hours ?? defaultEmergencyHours,
-          },
-        },
-        {
-          onSuccess: () => {
-            void queryClient.invalidateQueries({ queryKey: getGetSessionPolicyQueryKey() });
-            notify(message, undo);
-          },
-          onError: (error) => notify(failure(error)),
-        },
-      );
-    send({ ...before, ...next }, said, () => send(before, "Lock times restored."));
-  };
   const hoursText = (hours: number) => (hours === 1 ? "1 hour" : `${hours} hours`);
   return (
     <Zone
@@ -270,18 +213,7 @@ function LockTimes({ notify }: { notify: Notify }) {
           label="Lock after inactivity"
           help="People unlock with their password or passkey."
         >
-          <NumberChoice
-            label="Lock after inactivity"
-            value={policy.idle_lock_minutes}
-            choices={idleLockChoices}
-            format={durationText}
-            onChange={(value) =>
-              save(
-                { idle_lock_minutes: value },
-                `Screens lock after ${durationText(value)} without activity.`,
-              )
-            }
-          />
+          <IdleLockChoice minutes={policy.idle_lock_minutes} save={save} />
         </Labelled>
         <Labelled label="Sign-in lasts" help="After this long people sign in again.">
           <NumberChoice
@@ -359,30 +291,7 @@ function Defaults({ lab, notify }: { lab: LabSettings; notify: Notify }) {
           />
         </Labelled>
         <Labelled label="Classes of new projects">
-          <Select
-            value={current.classes}
-            onValueChange={(value) =>
-              change(
-                "default_classes",
-                current.classes,
-                String(value),
-                "New projects start with that class list.",
-              )
-            }
-          >
-            <SelectTrigger size="sm" aria-label="Classes of new projects" className="w-48">
-              <SelectValue>
-                {classOptions.find((option) => option.value === current.classes)?.label}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              {classOptions.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <ClassListChoice lab={lab} notify={notify} label="Classes of new projects" />
         </Labelled>
         <Labelled label="Study template of new tasks">
           <Select

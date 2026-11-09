@@ -3753,7 +3753,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when replayed traces from macOS and Windows trackpads produce the right intents.
   Size: M.
 
-- [ ] DEV-010 · Wire two-finger click and Safari pinch to the viewer
+- [ ] DEV-013 · Wire two-finger click and Safari pinch to the viewer
   DEV-002 (trackpad detection and gestures) added the negativePoint and Safari pinch intents but no DOM listener produces them. Hook `pointerdown` and `contextmenu` for the two-finger click and `gesturestart`, `gesturechange` and `gestureend` for Safari, and record real Mac and Windows trackpad traces to replace the synthetic ones.
   Done when a browser test drives the listeners into each intent, and the trace fixtures are recorded on real hardware with a result file.
   Depends on DEV-002.
@@ -4431,7 +4431,7 @@ A researcher hands slides to reviewers as a review task ([ADR 0053](adr/0053-ai-
   Depends on TASK-002, GUIDE-007, GUIDE-015, CASES-020. Refs mock: guided/skipped, mock: guided/required, mock: guided/submitfail, mock: next, doc 44. In a task that hides the AI, the first read comes before submit and the API answers `first-read-needed` without it ([ADR 0118](adr/0118-blinding-and-a-kept-first-read.md)).
   Size: L.
 
-- [ ] TASK-009 · Study template in a new review task
+- [x] TASK-009 · Study template in a new review task
   The first step of a new review task asks for the study template, with the project's default picked. The template fills what to check, the opinion form and how and when, and each step marks what came from the template. Changing a preset keeps the template for the report. The summary names the template ([ADR 0097](adr/0097-report-templates-built-from-blocks.md)).
   The API only records the pinned version, so the stepper fills the steps from the presets itself, and a template with its own opinion form questions publishes them as the project's next form version first ([ADR 0120](adr/0120-study-templates-are-workspace-rows-and-tasks-only-pin-them.md), study templates as workspace rows that a task only pins).
   Done when component tests show each step filled from two different templates and a changed preset kept, and E2E creates a task from a template and finds its blocks in the report.
@@ -4769,7 +4769,7 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Depends on EVAL-008, STACK-035. Refs mock: evaluation/pdf, mock: admin/templates, doc 43.
   Size: L.
 
-- [ ] EVAL-016 · Page and cache long PDF previews
+- [x] EVAL-017 · Page and cache long PDF previews
   Review of EVAL-010 (PDF preview) found a long task report returns every SVG page in one response and compiles the same Typst source again for Download and Print. Return the first pages and fetch the rest as the viewer scrolls, and cache the compiled report by the task version checksum.
   Done when an API test pages a long seeded report, a second preview and a download reuse the cache, and the preview browser spec still passes.
   Depends on EVAL-010.
@@ -5009,10 +5009,16 @@ Admin is its own page with its own sidebar and the app's top bar, never a page i
   Depends on ADMIN-007.
   Size: M.
 
-- [ ] ADMIN-010 · Wire the class lists, retention and session lock controls
+- [x] ADMIN-010 · Wire the class lists, retention and session lock controls
   ADR 0266 (admin sections and their permissions) found three Admin controls that are still mock only: class lists, retention and session lock. Save each through the workspace settings API under its permission, or hide it until its feature exists.
   Done when API tests save and read back each setting with the permission refused to others, and a browser test changes one and reloads.
   Depends on ADMIN-000.
+  Size: M.
+
+- [x] ADMIN-011 · Last mock controls in Admin
+  ADMIN-010 (wire the class lists, retention and session lock controls) left the log-slides, watermark and EU switches in Security and the privacy and who-can-create controls in Projects as mock only. Wire each to a real setting or hide it until its feature exists, delete the unused `lock_after_minutes` setting since the lock reads the session policy, and make the retention route check the permission ADR 0266 (admin sections and their permissions) gives Storage, or correct the ADR.
+  Done when every control in Admin saves and reads back or is hidden, a test shows `lock_after_minutes` is gone, and the permission matrix covers the retention route under one permission.
+  Depends on ADMIN-010.
   Size: M.
 
 ---

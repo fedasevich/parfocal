@@ -3,6 +3,7 @@ import type {
   Announcement,
   LabSettings,
   MySettingLayers,
+  RetentionPolicy,
   SecurityContact,
   SecurityContactChange,
   SessionPolicyChange,
@@ -41,6 +42,18 @@ const keepPersonal = (values: Record<string, unknown>) => {
   personal = values;
   session()?.setItem(personalKey, JSON.stringify(values));
 };
+const retentionKey = "parfocal.fake.retention-policy";
+const emptyRetention: RetentionPolicy = { deleted_after_days: null, audit_after_days: null };
+const storedRetention = (): RetentionPolicy => {
+  const stored = session()?.getItem(retentionKey);
+  return stored === null || stored === undefined
+    ? { ...emptyRetention }
+    : (JSON.parse(stored) as RetentionPolicy);
+};
+const minAuditDays = 365;
+const fitsRetention = (policy: RetentionPolicy) =>
+  (policy.deleted_after_days ?? 1) >= 1 &&
+  (policy.audit_after_days ?? minAuditDays) >= minAuditDays;
 let tiers: TierMapping[] = copyOfTiers();
 const seededSecurityContact = "security@lab.example";
 let securityContact: string | null = seededSecurityContact;
@@ -49,6 +62,7 @@ export const resetConsoleActions = () => {
   lab = { values: {}, locked: [] };
   personal = { ...seededPersonal };
   session()?.removeItem(personalKey);
+  session()?.removeItem(retentionKey);
   tiers = copyOfTiers();
   securityContact = seededSecurityContact;
   resetAnnouncementBoard();
@@ -150,6 +164,19 @@ export function consoleHandlers(): RequestHandler[] {
       }
       securityContact = email;
       return HttpResponse.json<SecurityContact>({ email });
+    }),
+    http.get("*/api/tenant/retention", () => HttpResponse.json<RetentionPolicy>(storedRetention())),
+    http.put("*/api/tenant/retention", async ({ request }) => {
+      const change = (await request.json()) as RetentionPolicy;
+      const policy: RetentionPolicy = {
+        deleted_after_days: change.deleted_after_days ?? null,
+        audit_after_days: change.audit_after_days ?? null,
+      };
+      if (!fitsRetention(policy)) {
+        return problem(422, "invalid-request", "That retention period is too short");
+      }
+      session()?.setItem(retentionKey, JSON.stringify(policy));
+      return HttpResponse.json<RetentionPolicy>(policy);
     }),
     http.put("*/api/tenant/session-policy", async ({ request }) => {
       const change = (await request.json()) as SessionPolicyChange;

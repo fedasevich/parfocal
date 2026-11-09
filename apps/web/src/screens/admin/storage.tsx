@@ -14,7 +14,8 @@ import { StatusTag } from "@parfocal/ui/components/tag";
 import { Zone } from "@parfocal/ui/components/zone";
 import { useState } from "react";
 import { projectColour } from "../palette.ts";
-import { MoreButton, type Notify, TextLink, tableClass, tb } from "./common.tsx";
+import { MoreButton, type Notify, tableClass, tb } from "./common.tsx";
+import { RetentionZone } from "./retention.tsx";
 
 const partColours = ["var(--st-1)", "var(--st-2)", "var(--st-3)"];
 
@@ -36,18 +37,7 @@ export function StorageSection({ notify }: { notify: Notify }) {
   return (
     <>
       <div className="grid grid-cols-2 gap-(--space-zone)">
-        <Zone
-          title="Space"
-          end={
-            <TextLink
-              onClick={() =>
-                notify("Retention: tile cache 7 days, deleted projects kept 30 days (mock)")
-              }
-            >
-              Retention
-            </TextLink>
-          }
-        >
+        <Zone title="Space">
           <StorageBar
             totalTb={usage.total_tb}
             parts={storageParts(usage)}
@@ -101,6 +91,7 @@ export function StorageSection({ notify }: { notify: Notify }) {
           </div>
         </Zone>
       </div>
+      <RetentionZone notify={notify} />
       <Zone
         title="Sources"
         end={<span className="text-body-sm text-fg-dim">{usage.sources.length} sources</span>}

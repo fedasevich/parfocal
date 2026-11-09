@@ -506,30 +506,6 @@ export const signInMethods = [
 
 export const twoFactor = { people: 22, of: workspaceTotals.people };
 
-export const dataRules = [
-  {
-    key: "log-slides",
-    label: "Log every slide opened",
-    detail: "Clinical projects always log",
-    on: true,
-    locked: false,
-  },
-  {
-    key: "watermark",
-    label: "Watermark exports",
-    detail: "Puts the name of whoever exported on images and PDFs",
-    on: false,
-    locked: false,
-  },
-  {
-    key: "eu",
-    label: "Data stays in the EU",
-    detail: "Storage and processing in Prague",
-    on: true,
-    locked: true,
-  },
-];
-
 export type BlockKey =
   | "head"
   | "region"

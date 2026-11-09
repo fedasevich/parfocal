@@ -1,0 +1,14 @@
+name: Install osv-scanner
+description: Download the pinned osv-scanner release, check its checksum and put it on the PATH.
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        OSV_SCANNER_VERSION: 2.7.1
+        OSV_SCANNER_SHA256: fb7dab19a8bd9bbe5c3189f09d4b7ee1820c9553a23bac202648a56efd2f6ee8
+      run: |
+        curl -fsSLo /tmp/osv-scanner "https://github.com/google/osv-scanner/releases/download/v${OSV_SCANNER_VERSION}/osv-scanner_linux_amd64"
+        echo "${OSV_SCANNER_SHA256}  /tmp/osv-scanner" | sha256sum --check
+        sudo install -m 0755 /tmp/osv-scanner /usr/local/bin/osv-scanner
+        osv-scanner --version

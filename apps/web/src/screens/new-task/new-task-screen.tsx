@@ -1,4 +1,9 @@
-import { type TaskDraft, useCreateReviewTask, useInviteTaskReviewer } from "@parfocal/api-client";
+import {
+  type TaskDraft,
+  useCreateReviewTask,
+  useInviteTaskReviewer,
+  usePublishOpinionForm,
+} from "@parfocal/api-client";
 import { annotatePresets } from "@parfocal/ui/components/annotate-task";
 import type { LinkRenderer } from "@parfocal/ui/components/app-shell";
 import { BeforeYouList } from "@parfocal/ui/components/before-you-list";
@@ -38,6 +43,7 @@ import {
   stepState,
   type TaskData,
   type TaskScene,
+  templateOf,
   touchStep,
   whoReviews,
 } from "./model.ts";
@@ -193,6 +199,7 @@ function NewTaskFlow({
   const [toast, setToast] = useState<string | null>(null);
   const [sentTaskId, setSentTaskId] = useState<string | null>(null);
   const create = useCreateReviewTask();
+  const publishForm = usePublishOpinionForm();
   const invite = useInviteTaskReviewer();
   const renderLink = useLinkRenderer();
   const kept = keep ? stepKeys[flow.kept?.current ?? -1] : undefined;
@@ -291,24 +298,48 @@ function NewTaskFlow({
       setDraft((current) => stepKeys.reduce((acc, key) => touchStep(acc, all, key), current));
       return;
     }
-    create.mutate(
-      { projectId: data.projectId, data: toTaskDraft(draft, data) },
-      {
-        onSuccess: (response) => {
-          if (response.status === 201) {
-            const taskId = response.data.id;
-            setSentTaskId(taskId);
-            for (const email of draft.invites) {
-              invite.mutate(
-                { taskId, data: { email } },
-                { onError: () => setToast(`The invite to ${email} could not be sent. Try again.`) },
-              );
-            }
-          }
-          setDraft((current) => ({ ...current, sentAt: "15 Oct" }));
-          onNavigate({ step: "sent" });
+    const createTask = (formVersion: number | null) =>
+      create.mutate(
+        {
+          projectId: data.projectId,
+          data: {
+            ...toTaskDraft(draft, data),
+            ...(formVersion === null ? {} : { opinion_form_version: formVersion }),
+          },
         },
-        onError: () => setToast("The task could not be created. Try again."),
+        {
+          onSuccess: (response) => {
+            if (response.status === 201) {
+              const taskId = response.data.id;
+              setSentTaskId(taskId);
+              for (const email of draft.invites) {
+                invite.mutate(
+                  { taskId, data: { email } },
+                  {
+                    onError: () => setToast(`The invite to ${email} could not be sent. Try again.`),
+                  },
+                );
+              }
+            }
+            setDraft((current) => ({ ...current, sentAt: "15 Oct" }));
+            onNavigate({ step: "sent" });
+          },
+          onError: () => setToast("The task could not be created. Try again."),
+        },
+      );
+    const own = templateOf(draft, data);
+    const questions =
+      !isAnnotate(draft) && own && draft.form === own.preset.form ? own.formQuestions : null;
+    if (!questions) {
+      createTask(null);
+      return;
+    }
+    publishForm.mutate(
+      { projectId: data.projectId, data: { questions } },
+      {
+        onSuccess: (response) =>
+          response.status === 200 ? createTask(response.data.version) : createTask(null),
+        onError: () => setToast("The template's opinion form could not be published. Try again."),
       },
     );
   };

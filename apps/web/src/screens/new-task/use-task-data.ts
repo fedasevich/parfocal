@@ -178,6 +178,7 @@ export function useTaskData(projectId: string): {
         version: `v${template.version}`,
         kind: studyKinds[template.study_kind] ?? "Other",
         retired: template.retired_at !== null,
+        formQuestions: template.presets.opinion_form?.questions ?? null,
         preset: {
           scope: extra.scope_kinds,
           scopeOptions: {

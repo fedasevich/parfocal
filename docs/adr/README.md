@@ -243,3 +243,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0277](0277-guided-tour-and-help.md) | The guided tour is ten steps from the mock's chapters and its progress is one personal setting | Accepted | 2026-11-09 |
 | [0278](0278-blind-first-on-annotate-tasks.md) | Blind first on annotate tasks | Accepted | 2026-11-09 |
 | [0279](0279-pdf-preview-as-svg-pages-from-the-typst-worker.md) | The PDF preview shows the SVG pages the Typst worker makes, and the template preview fills a sample project's numbers on the server | Accepted | 2026-11-09 |
+| [0280](0280-security-scans-in-ci-run-on-osv-scanner-and-zap.md) | Security scans in CI run on osv-scanner and a ZAP baseline | Accepted | 2026-11-09 |

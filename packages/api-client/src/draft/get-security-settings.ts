@@ -15,7 +15,6 @@ export type SecuritySetting = z.infer<typeof securitySettingSchema>;
 
 export const securitySettingsSchema = z.object({
   sign_in: z.array(securitySettingSchema),
-  data: z.array(securitySettingSchema),
   two_factor: z.object({
     people: z.number().int().nonnegative(),
     of: z.number().int().nonnegative(),

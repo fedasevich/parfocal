@@ -23,6 +23,7 @@ import {
   summary,
   type TaskData,
   taskScenes,
+  templateChanges,
 } from "../src/screens/new-task/model.ts";
 
 const display: Preset["display"] = {
@@ -255,6 +256,45 @@ test("a template fills scope, decision and display", () => {
   assert.equal(draft.decision.kind, "blind");
   assert.equal(draft.display.draw, "dots");
   assert.equal(draft.scope.cells && draft.scope.low && !draft.scope.regions, true);
+});
+
+test("each step is filled from either of two templates", () => {
+  const [sentinel, cell] = data.templates;
+  assert.ok(sentinel && cell);
+  const base = sceneDraft(data, "slides");
+  const fromSentinel = applyTemplate(base, sentinel, data);
+  const fromCell = applyTemplate(fromSentinel, cell, data);
+  assert.equal(fromSentinel.templateId, "sn");
+  assert.equal(fromCell.templateId, "cell");
+  assert.deepEqual(
+    [fromSentinel.scope.regions, fromSentinel.decision.kind, fromSentinel.display.draw],
+    [true, "certainty5", "outline"],
+  );
+  assert.deepEqual(
+    [fromCell.scope.regions, fromCell.decision.kind, fromCell.display.draw],
+    [false, "blind", "dots"],
+  );
+  assert.deepEqual(templateChanges(fromSentinel, data), {
+    check: false,
+    how: false,
+    form: false,
+  });
+  assert.deepEqual(templateChanges(fromCell, data), { check: false, how: false, form: false });
+});
+
+test("a changed preset is marked and the template stays pinned", () => {
+  const sentinel = data.templates[0];
+  assert.ok(sentinel);
+  const draft = applyTemplate(sceneDraft(data, "slides"), sentinel, data);
+  const how = { ...draft, decision: { ...draft.decision, kind: "yesno" as const } };
+  assert.deepEqual(templateChanges(how, data), { check: false, how: true, form: false });
+  assert.equal(how.templateId, "sn");
+  const check = { ...draft, scope: { ...draft.scope, low: true } };
+  assert.equal(templateChanges(check, data).check, true);
+  const form = { ...draft, form: "none", required: [] };
+  assert.equal(templateChanges(form, data).form, true);
+  const restored = { ...how, decision: { ...draft.decision } };
+  assert.equal(templateChanges(restored, data).how, false);
 });
 
 test("every mock scene builds a draft", () => {

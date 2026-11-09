@@ -637,7 +637,7 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "getProject": lambda w: Call("GET", f"/api/projects/{w.project}"),
     "updateProject": lambda w: Call("PATCH", f"/api/projects/{w.project}", {"colour": 3}),
     "setWorkspaceSettings": lambda _: Call(
-        "PUT", "/api/tenant/settings", {"values": {"lock_after_minutes": 20}}
+        "PUT", "/api/tenant/settings", {"values": {"decision_cutoff": 60}}
     ),
     "getSecurityContact": lambda _: Call("GET", "/api/tenant/security-contact"),
     "getJoinSettings": lambda _: Call("GET", "/api/tenant/join-settings"),
@@ -1293,6 +1293,19 @@ def test_the_matrix_covers_every_permission_for_every_role() -> None:
     for grants in MATRIX.values():
         assert set(grants) == set(Role)
     assert set(Grant) == {Grant.ALL, Grant.ASSIGNED, Grant.VIEW_ONLY, Grant.EMERGENCY, Grant.NONE}
+
+
+def test_retention_and_legal_holds_check_one_permission() -> None:
+    guarded = guarded_operations()
+    retention = (
+        "getRetentionPolicy",
+        "setRetentionPolicy",
+        "listLegalHolds",
+        "placeLegalHold",
+        "releaseLegalHold",
+    )
+    assert {guarded[name] for name in retention} == {Permission.WORKSPACE_SETTINGS.value}
+    assert {"setRetentionPolicy", "placeLegalHold", "releaseLegalHold"} <= WRITES
 
 
 def test_admin_rights_add_only_the_setup_permissions() -> None:

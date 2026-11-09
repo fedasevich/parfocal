@@ -30,7 +30,9 @@ export function signInRows(
   lab: LabSettings | undefined,
 ): SecuritySetting[] {
   const sso = listed?.find((item) => item.key === "sso");
-  const rest = (listed ?? []).filter((item) => item.key !== "sso" && item.key !== TWO_FACTOR_KEY);
+  const rest = (listed ?? [])
+    .filter((item) => item.key !== "sso" && item.key !== TWO_FACTOR_KEY)
+    .map((item) => ({ ...item, locked: true }));
   return [
     sso ? { ...sso, locked: true } : ssoNotSetUp,
     ...rest,

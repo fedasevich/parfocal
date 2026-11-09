@@ -1,4 +1,4 @@
-import type { DisplayDefaults } from "@parfocal/api-client";
+import type { DisplayDefaults, Question } from "@parfocal/api-client";
 import { defaultSampleSize, sampleSizeLimit, validSampleSize } from "@parfocal/ui/lib/sample-size";
 
 export const stepKeys = ["kind", "slides", "reviewers", "check", "how", "send"] as const;
@@ -168,6 +168,7 @@ export type TemplateChoice = {
   kind: string;
   retired: boolean;
   preset: Preset;
+  formQuestions?: Question[] | null;
 };
 
 export type PersonChoice = {
@@ -250,6 +251,14 @@ export type Issue = {
   blockText?: string;
 };
 
+const scopeKindList = [
+  "regions",
+  "cells",
+  "low",
+  "roi",
+  "unsure",
+] as const satisfies readonly ScopeKind[];
+
 const noScope: Record<ScopeKind, boolean> = {
   regions: false,
   cells: false,
@@ -296,6 +305,40 @@ export function preselectedTemplate(
   if (usable(projectDefault)) return projectDefault;
   if (usable(workspaceDefault)) return workspaceDefault as string;
   return projectDefault;
+}
+
+export const templateOf = (draft: Draft, data: TaskData) =>
+  data.templates.find((candidate) => candidate.id === draft.templateId);
+
+const sameList = (left: readonly string[], right: readonly string[]) =>
+  left.length === right.length && [...left].sort().join() === [...right].sort().join();
+
+export type TemplateChanges = { check: boolean; how: boolean; form: boolean };
+
+export function templateChanges(draft: Draft, data: TaskData): TemplateChanges {
+  const template = templateOf(draft, data);
+  if (!template || draft.kind === "annotate") return { check: false, how: false, form: false };
+  const preset = template.preset;
+  const scopeKeys = scopeKindList.filter((key) => draft.scope[key]);
+  const options = draft.scopeOptions;
+  const check =
+    !sameList(scopeKeys, preset.scope) ||
+    String(options.cells) !== String(preset.scopeOptions.cells) ||
+    String(options.low) !== String(preset.scopeOptions.low) ||
+    !sameList(options.roi, preset.scopeOptions.roi) ||
+    !sameList(options.unsure, preset.scopeOptions.unsure);
+  const how =
+    draft.blind !== preset.blind ||
+    draft.hide !== preset.hide ||
+    draft.start !== preset.start ||
+    draft.split !== preset.split ||
+    draft.decision.kind !== preset.decision.kind ||
+    draft.decision.agreeFrom !== preset.decision.agreeFrom ||
+    draft.decision.disagreeTo !== preset.decision.disagreeTo ||
+    JSON.stringify(draft.display) !== JSON.stringify(preset.display);
+  const presetRequired = requiredOf(data.forms.find((form) => form.key === preset.form));
+  const form = draft.form !== preset.form || !sameList(draft.required, presetRequired);
+  return { check, how, form };
 }
 
 export function initialDraft(data: TaskData): Draft {

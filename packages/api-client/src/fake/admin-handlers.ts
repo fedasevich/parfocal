@@ -64,7 +64,6 @@ import {
   auditPseudonym,
   auditToday,
   canSignOut,
-  dataRules,
   expiredSession,
   institutions,
   invitations,
@@ -251,16 +250,6 @@ export const toWebhooks = (): Webhook[] =>
 export const toSecuritySettings = (): SecuritySettings =>
   securitySettingsSchema.parse({
     sign_in: signInMethods,
-    data: [
-      {
-        key: "idle-lock",
-        label: "Lock after inactivity",
-        detail: `${sessionPolicy.idleLockMinutes} minutes. Slides and names hide until you sign in again`,
-        on: true,
-        locked: false,
-      },
-      ...dataRules,
-    ],
     two_factor: twoFactor,
   });
 

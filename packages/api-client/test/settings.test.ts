@@ -114,7 +114,7 @@ test("the workspace keeps its defaults and locks, and refuses a lock without a v
   await assert.rejects(setWorkspaceSettings({ values: {}, locked: ["default_study_template"] }), {
     status: 400,
   });
-  await assert.rejects(setWorkspaceSettings({ values: { lock_after_minutes: 9000 } }), {
+  await assert.rejects(setWorkspaceSettings({ values: { decision_cutoff: 9000 } }), {
     status: 400,
   });
 });

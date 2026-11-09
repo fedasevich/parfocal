@@ -29966,6 +29966,29 @@
               "$ref": "#/components/schemas/Locale",
               "default": "en"
             }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 20,
+              "minimum": 1,
+              "default": 4,
+              "title": "Limit"
+            }
           }
         ],
         "responses": {
@@ -52389,6 +52412,11 @@
             "type": "boolean",
             "title": "Sample"
           },
+          "offset": {
+            "type": "integer",
+            "title": "Offset",
+            "default": 0
+          },
           "pages": {
             "items": {
               "type": "string"
@@ -59921,7 +59949,7 @@
       "Values": {
         "additionalProperties": true,
         "type": "object",
-        "maxProperties": 54
+        "maxProperties": 53
       },
       "Verdict": {
         "properties": {
@@ -60537,7 +60565,7 @@
               "type": "string"
             },
             "type": "array",
-            "maxItems": 54,
+            "maxItems": 53,
             "title": "Locked",
             "default": []
           }

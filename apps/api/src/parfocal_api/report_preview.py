@@ -1,7 +1,8 @@
 import uuid
 from datetime import date
+from typing import Annotated
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 from fastapi.responses import Response
 from pydantic import BaseModel, ConfigDict
 
@@ -13,6 +14,7 @@ from parfocal_api.evaluation_exports import (
     pdf_of,
     svg_pages_of,
     task_report,
+    task_svg_pages,
 )
 from parfocal_api.locales import DEFAULT_LOCALE, Locale
 from parfocal_api.permissions import Permission, require
@@ -32,6 +34,8 @@ from parfocal_api.tables import TaskKind
 from parfocal_api.task_kinds import review_only
 from parfocal_common.report_blocks import ReportBlocks, ReportFormat
 
+PREVIEW_PAGES = 4
+MAX_PREVIEW_PAGES = 20
 SAMPLE_CHECKSUM = "sha256:sample"
 SAMPLE_DAY = date(2026, 1, 15)
 SAMPLE_OBJECTS = (
@@ -51,6 +55,7 @@ class ReportPreview(BaseModel):
     orientation: str
     page_count: int
     sample: bool
+    offset: int = 0
     pages: list[str]
 
 
@@ -102,9 +107,13 @@ def sample_data(draft: TemplatePreviewDraft) -> ReportData:
 
 
 def preview_of(
-    report: RenderedReport, version: Version, title: str, file_name: str, sample: bool
+    report: RenderedReport,
+    pages: tuple[str, ...] | list[str],
+    title: str,
+    file_name: str,
+    sample: bool,
+    window: slice = slice(None),
 ) -> ReportPreview:
-    pages = svg_pages_of(report, version)
     return ReportPreview(
         title=title,
         file_name=file_name,
@@ -112,7 +121,8 @@ def preview_of(
         orientation=report.format.orientation,
         page_count=len(pages),
         sample=sample,
-        pages=pages,
+        offset=window.start or 0,
+        pages=list(pages[window]),
     )
 
 
@@ -130,6 +140,8 @@ async def preview_task_evaluation(
     connection: TenantConnection,
     results: Results,
     locale: Locale = DEFAULT_LOCALE,
+    offset: Annotated[int, Query(ge=0)] = 0,
+    limit: Annotated[int, Query(ge=1, le=MAX_PREVIEW_PAGES)] = PREVIEW_PAGES,
 ) -> ReportPreview:
     task, whole = await readable_task(connection, principal, task_id)
     if task.kind != TaskKind.ANNOTATE:
@@ -138,7 +150,9 @@ async def preview_task_evaluation(
         raise EvaluationHiddenError
     report, version = await task_report(connection, principal, task, results, locale)
     file_name = f"evaluation_v{version.number}_{ExportKind.PDF.value}"
-    return preview_of(report, version, str(task.name), file_name, False)
+    pages = task_svg_pages(principal, task, report, version)
+    window = slice(offset, offset + limit)
+    return preview_of(report, pages, str(task.name), file_name, False, window)
 
 
 def sample_file_name(draft: TemplatePreviewDraft) -> str:
@@ -157,7 +171,8 @@ async def preview_study_template(
 ) -> ReportPreview:
     version = Version(number=1, checksum=SAMPLE_CHECKSUM, signed_at=None)
     report = render_report(sample_data(draft), locale)
-    return preview_of(report, version, draft.name, sample_file_name(draft), True)
+    pages = svg_pages_of(report, version)
+    return preview_of(report, pages, draft.name, sample_file_name(draft), True)
 
 
 @router.post(
