@@ -60,6 +60,7 @@ import {
   outlineModeLabels,
   useOutlineMode,
 } from "../../viewer/outline-mode.ts";
+import { setSlideBrightness, useSlideBrightness } from "../../viewer/slide-brightness.ts";
 import { andJoin } from "../format.ts";
 import { type HomeLayoutChoice, homeLayoutOptions } from "../home/home-layout.ts";
 import { okData } from "../placeholder.tsx";
@@ -88,7 +89,6 @@ import { isListening, ShortcutsSection, useKeyCapture } from "./shortcuts-sectio
 import { wordingNow, wordingPairs } from "./wording-row.ts";
 
 type Device = {
-  brightness: number;
   device: string;
   wheel: string;
   speed: number;
@@ -98,7 +98,6 @@ type Device = {
 };
 
 const deviceDefaults: Device = {
-  brightness: 100,
   device: "mouse",
   wheel: "zoom",
   speed: calibrationDefaults.speed,
@@ -249,6 +248,7 @@ function LoadedSettings({
   const [pinnedStrip, setPinnedStrip] = usePinnedStrip();
   const [outlineMode, setOutlineMode] = useOutlineMode();
   const [theme, setTheme] = useState<ThemeChoice>(() => readTheme());
+  const [slideBrightness] = useSlideBrightness();
   const [stat, setStat] = useState(readStatNotice);
   const savePreferences = useSetNotificationPreferences({
     mutation: {
@@ -378,9 +378,9 @@ function LoadedSettings({
     brightness: () => (
       <Stepper
         label="Slide brightness"
-        value={device.brightness}
+        value={slideBrightness}
         unit="%"
-        onChange={(value) => setD("brightness", value)}
+        onChange={setSlideBrightness}
       />
     ),
     density: () => (
@@ -414,14 +414,45 @@ function LoadedSettings({
       />
     ),
     language: () => (
-      <Segments
-        label="Language"
-        value={values.language}
-        pairs={[
-          ["en", "English"],
-          ["cs", "Čeština"],
+      <SegmentedControl
+        fill
+        aria-label="Language"
+        value="en"
+        onValueChange={() => undefined}
+        options={[
+          { value: "en", label: "English" },
+          { value: "cs", label: "Čeština", disabled: true },
         ]}
-        onChange={(value) => save({ language: value as SettingValues["language"] })}
+      />
+    ),
+    patientNames: () =>
+      layers.lab.locked.includes("patient_names") ? (
+        lockedValue(
+          values.patient_names === "initials" ? "Initials only" : "Full name",
+          "Set by your lab for everyone",
+        )
+      ) : (
+        <Segments
+          label="Patient names"
+          value={values.patient_names}
+          pairs={[
+            ["full", "Full name"],
+            ["initials", "Initials only"],
+          ]}
+          onChange={(value) => save({ patient_names: value as SettingValues["patient_names"] })}
+        />
+      ),
+    magnificationLabel: () => (
+      <Segments
+        label="Magnification label"
+        value={values.magnification_label}
+        pairs={[
+          ["objective", "Objective"],
+          ["microns-per-pixel", "µm per pixel"],
+        ]}
+        onChange={(value) =>
+          save({ magnification_label: value as SettingValues["magnification_label"] })
+        }
       />
     ),
     presetKeys: () =>
