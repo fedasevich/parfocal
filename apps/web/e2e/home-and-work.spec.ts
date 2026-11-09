@@ -66,7 +66,7 @@ test("My work switches tabs and personas like the mock, and the preview follows 
   await expect(page.getByRole("row", { name: /RT-11/ })).toContainText("Signed off 14 Oct");
   await page.getByRole("tab", { name: /To review/ }).click();
   await expect(badge(page)).toHaveText("Fake data");
-  await page.getByRole("option", { name: /Round 2 · CAMELYON v1.0/ }).click();
+  await page.getByRole("button", { name: /Round 2 · CAMELYON v1.0/ }).click();
   const preview = page.getByRole("complementary", { name: "Preview of A1" });
   await expect(preview).toContainText("48 of 55 objects decided");
   await expect(preview).toContainText("3 threads");
@@ -221,7 +221,7 @@ test("To review continues into guided review at the next open object in one acti
 }) => {
   test.setTimeout(90_000);
   await page.goto("/my-work?tab=review");
-  const tasks = page.getByRole("listbox", { name: "Your tasks" });
+  const tasks = page.getByRole("main");
   await expect(tasks).toContainText("Continue where you left off");
   await expect(tasks).toContainText("Sentinel node AI evaluation · Tumor regions: all · due");
   await expect(tasks.getByText("Blind").first()).toBeVisible();
