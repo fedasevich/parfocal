@@ -70,6 +70,15 @@ Threads can now live on any slide, as you chose in 31b. A thread without a task 
 
 Your choice:
 
+## 79. Two workspaces with the same email domain, from ONB-011 (answer workspace asks and set the join domain in Admin)
+
+A workspace may now claim only its admin's own verified email domain, so nobody can capture another institution's people. Two workspaces of the same institution can still claim the same domain, and setup then offers both to a person with that address.
+
+- a. Allow it and offer every matching workspace in setup, as built. (recommended)
+- b. Allow one workspace per domain, and refuse a second claim with a message naming who to ask.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 Nothing else in review needs you. Nine tasks that only waited for green CI were ticked on 2026-11-02.
