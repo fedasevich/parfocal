@@ -882,7 +882,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when a monthly automated restore into a scratch environment passes integrity checks.
   Size: L.
 
-- [ ] SEC-015 · Vulnerability management
+- [x] SEC-015 · Vulnerability management
   Container, dependency and IaC scanning with SLAs by severity.
   Done when the scanners gate CI and a weekly report is generated.
   Size: M.
