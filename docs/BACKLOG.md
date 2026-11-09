@@ -2902,7 +2902,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
 
 ## 18 CMP · Compare slides
 
-- [ ] CMP-000 · Research check
+- [x] CMP-000 · Research check
   Done when the linking model (pan, zoom, rotation, manual offset) is written as an ADR.
   Size: S.
 
