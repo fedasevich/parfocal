@@ -121,6 +121,7 @@ Review is for what only the owner can give. A task "waiting for a green CI run o
 - In a worktree agent, use one plain command per Bash call. Put anything with a heredoc, loop, `$(...)`, `;` chain or `sed -i` in a scratchpad script and run it as `bash path`, and change files with Write or Edit, because the harness refuses compound commands there.
 - To wait for background work, use a Bash `until` loop or load Monitor with ToolSearch first. Never `sleep`. The tool name is `Bash`, capitalised.
 - Commit headers are at most 100 characters, or commitlint fails the commit.
+- `.claude/settings.json` sets `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE` to 25, so a session compacts at about 250k of its 1M window. A long lead run keeps its state in the run plan and heartbeat, so compaction loses nothing.
 - Pipe long output through `tail`, `head -50` or `grep`. Never print whole generated files, lockfiles or full diffs. Use `git diff --stat` first.
 
 ## Screenshots
