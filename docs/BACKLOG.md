@@ -5097,7 +5097,7 @@ Admin is its own page with its own sidebar and the app's top bar, never a page i
   Depends on VIZ-007.
   Size: M.
 
-- [ ] VIZ-012 · Guided review and the full viewer on the live slide
+- [x] VIZ-012 · Guided review and the full viewer on the live slide
   VIZ-010 (mount the engine overlay draws on the live slide) found that only the separate `live` route mounts the Viv slide stage. Guided review, the full viewer, the first-read step, Annotate tasks, the cell view, the focus view and the adjudicator view all draw the SVG `SlideStill`, so a reviewer never sees the real pixels there. Mount the live slide stage with the engine object layer in guided review and the full viewer first, keeping each screen's camera, keys and Display settings, and keep the still only as the fallback where WebGL is missing.
   Done when browser tests open guided review and the full viewer on a fixture slide and find the Viv canvas and the engine object layer drawing, the golden image tests pass, and the viewer performance budgets hold.
   Depends on VIZ-010.
