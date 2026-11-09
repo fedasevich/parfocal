@@ -4940,7 +4940,7 @@ Admin is its own page with its own sidebar and the app's top bar, never a page i
   Depends on VIZ-001, VIEW-027, TASK-011. Refs mock: layers/display, mock: guided/display, doc 44.
   Size: M.
 
-- [ ] VIZ-008 · How objects draw on the live slide
+- [x] VIZ-008 · How objects draw on the live slide
   VIZ-002 added the drawing styles, the score cutoff and the confidence tint to the engine's `drawObjectOverlays` and drives the still preview with them, but the live slide renderer does not use them. Wire the Display panel's How objects draw group, the cutoff and the confidence choice into the live Viv overlays.
   Done when the live renderer's golden tests match the still preview's for each style, width, opacity and the cutoff.
   Depends on VIZ-002.
