@@ -3062,7 +3062,7 @@ Cases are optional groups of slides inside a project (PROJ-001). Patient fields 
   Done when API tests cover each list kind, skipping and the end of the list.
   Depends on WL-001, TASK-001. Refs kit Navigation map, kit W61, kit Flow 16.
 
-- [ ] CASES-021 · Back targets in deep links
+- [x] CASES-021 · Back targets in deep links
   Every link the app produces (notifications, shared links, emails, search results) carries where it came from, so the client can return there. Links to moved slides and to merged objects resolve to their new place.
   Done when API tests resolve links after a slide move and an object merge (OBJ-003), and every link kind in the notification catalogue (NOTIF-006) carries its origin.
   Depends on CASES-017, OBJ-003, NOTIF-006. Refs kit Navigation map.
