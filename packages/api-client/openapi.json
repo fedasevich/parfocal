@@ -30748,6 +30748,260 @@
         "x-permission": "report-templates"
       }
     },
+    "/api/review-tasks/{task_id}/report-layout": {
+      "get": {
+        "tags": [
+          "review-tasks"
+        ],
+        "summary": "Get Task Report Layout",
+        "operationId": "getTaskReportLayout",
+        "parameters": [
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Task Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskReportLayout"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Sign in to continue"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "You do not have access to this"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "This changed since you loaded it"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Too many requests, try again shortly"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Something went wrong"
+          }
+        },
+        "x-permission": "see-slides",
+        "x-permission-emergency": true
+      },
+      "put": {
+        "tags": [
+          "review-tasks"
+        ],
+        "summary": "Set Task Report Layout",
+        "operationId": "setTaskReportLayout",
+        "parameters": [
+          {
+            "name": "task_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Task Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TaskReportLayoutDraft"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskReportLayout"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Sign in to continue"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "You do not have access to this"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "This changed since you loaded it"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Too many requests, try again shortly"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Something went wrong"
+          }
+        },
+        "x-permission": "create-cases",
+        "x-permission-write": true
+      }
+    },
     "/api/review-tasks/{task_id}/training-dataset": {
       "get": {
         "tags": [
@@ -58658,6 +58912,91 @@
         "type": "string",
         "maxLength": 120,
         "minLength": 1
+      },
+      "TaskReportLayout": {
+        "properties": {
+          "blocks": {
+            "$ref": "#/components/schemas/ReportBlocks"
+          },
+          "format": {
+            "$ref": "#/components/schemas/ReportFormat",
+            "default": {
+              "paper": "a4",
+              "orientation": "portrait",
+              "text_size": "normal",
+              "logo": true,
+              "title": "Evaluation report",
+              "subtitle": "{task} · {model} {version}",
+              "running_header": true,
+              "page_numbers": "page-of",
+              "draft_watermark": true,
+              "signature": true,
+              "label_language": "en",
+              "decimals": 2,
+              "appendices": [
+                "objects"
+              ],
+              "downloads": [
+                "pdf",
+                "docx",
+                "decisions",
+                "objects",
+                "geojson"
+              ]
+            }
+          },
+          "own": {
+            "type": "boolean",
+            "title": "Own"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "blocks",
+          "own"
+        ],
+        "title": "TaskReportLayout"
+      },
+      "TaskReportLayoutDraft": {
+        "properties": {
+          "blocks": {
+            "$ref": "#/components/schemas/ReportBlocks"
+          },
+          "format": {
+            "$ref": "#/components/schemas/ReportFormat",
+            "default": {
+              "paper": "a4",
+              "orientation": "portrait",
+              "text_size": "normal",
+              "logo": true,
+              "title": "Evaluation report",
+              "subtitle": "{task} · {model} {version}",
+              "running_header": true,
+              "page_numbers": "page-of",
+              "draft_watermark": true,
+              "signature": true,
+              "label_language": "en",
+              "decimals": 2,
+              "appendices": [
+                "objects"
+              ],
+              "downloads": [
+                "pdf",
+                "docx",
+                "decisions",
+                "objects",
+                "geojson"
+              ]
+            }
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "blocks"
+        ],
+        "title": "TaskReportLayoutDraft"
       },
       "TaskReviewerCreate": {
         "properties": {

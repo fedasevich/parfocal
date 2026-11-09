@@ -888,6 +888,7 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "previewTaskEvaluation": lambda w: Call(
         "GET", f"/api/review-tasks/{w.task}/evaluation/preview"
     ),
+    "getTaskReportLayout": lambda w: Call("GET", f"/api/review-tasks/{w.task}/report-layout"),
     "previewStudyTemplate": lambda _: Call(
         "POST", "/api/study-templates/preview", {"name": "Matrix", "blocks": []}
     ),
@@ -1077,6 +1078,9 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
         {"reason": "Measured again on A1"},
     ),
     "changeReviewTask": lambda w: Call("PATCH", f"/api/review-tasks/{w.task}", {"name": "Renamed"}),
+    "setTaskReportLayout": lambda w: Call(
+        "PUT", f"/api/review-tasks/{w.task}/report-layout", {"blocks": []}
+    ),
     "addTaskReviewer": lambda w: Call(
         "POST", f"/api/review-tasks/{w.add_task}/reviewers", {"user_id": str(w.lead)}
     ),

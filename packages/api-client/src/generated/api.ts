@@ -5186,6 +5186,17 @@ export interface TaskInvitationDraft {
   email: Email;
 }
 
+export interface TaskReportLayout {
+  blocks: ReportBlocks;
+  format?: ReportFormat;
+  own: boolean;
+}
+
+export interface TaskReportLayoutDraft {
+  blocks: ReportBlocks;
+  format?: ReportFormat;
+}
+
 export interface TaskReviewerCreate {
   user_id: string;
   slide_ids?: string[] | null;
@@ -46969,6 +46980,379 @@ export function useDownloadSavedStudyTemplatePreview<
 
   return withQueryKey(query, queryOptions.queryKey);
 }
+
+export type getTaskReportLayoutResponse200 = {
+  data: TaskReportLayout;
+  status: 200;
+};
+
+export type getTaskReportLayoutResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getTaskReportLayoutResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getTaskReportLayoutResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getTaskReportLayoutResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getTaskReportLayoutResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getTaskReportLayoutResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getTaskReportLayoutResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getTaskReportLayoutResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getTaskReportLayoutResponseSuccess = getTaskReportLayoutResponse200 & {
+  headers: Headers;
+};
+export type getTaskReportLayoutResponseError = (
+  | getTaskReportLayoutResponse400
+  | getTaskReportLayoutResponse401
+  | getTaskReportLayoutResponse403
+  | getTaskReportLayoutResponse404
+  | getTaskReportLayoutResponse409
+  | getTaskReportLayoutResponse422
+  | getTaskReportLayoutResponse429
+  | getTaskReportLayoutResponse500
+) & {
+  headers: Headers;
+};
+
+export type getTaskReportLayoutResponse =
+  | getTaskReportLayoutResponseSuccess
+  | getTaskReportLayoutResponseError;
+
+export const getGetTaskReportLayoutUrl = (taskId: string) => {
+  return `/api/review-tasks/${taskId}/report-layout`;
+};
+
+/**
+ * @summary Get Task Report Layout
+ */
+export const getTaskReportLayout = async (
+  taskId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getTaskReportLayoutResponse> => {
+  return apiFetch<getTaskReportLayoutResponse>(getGetTaskReportLayoutUrl(taskId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetTaskReportLayoutQueryKey = (taskId: string) => {
+  return [`/api/review-tasks/${taskId}/report-layout`] as const;
+};
+
+export const getGetTaskReportLayoutQueryOptions = <
+  TData = Awaited<ReturnType<typeof getTaskReportLayout>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getTaskReportLayout>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetTaskReportLayoutQueryKey(taskId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getTaskReportLayout>>> = ({ signal }) =>
+    getTaskReportLayout(taskId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: taskId !== null && taskId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getTaskReportLayout>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetTaskReportLayoutQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getTaskReportLayout>>
+>;
+export type GetTaskReportLayoutQueryError = Problem;
+
+export function useGetTaskReportLayout<
+  TData = Awaited<ReturnType<typeof getTaskReportLayout>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getTaskReportLayout>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getTaskReportLayout>>,
+          TError,
+          Awaited<ReturnType<typeof getTaskReportLayout>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetTaskReportLayout<
+  TData = Awaited<ReturnType<typeof getTaskReportLayout>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getTaskReportLayout>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getTaskReportLayout>>,
+          TError,
+          Awaited<ReturnType<typeof getTaskReportLayout>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetTaskReportLayout<
+  TData = Awaited<ReturnType<typeof getTaskReportLayout>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getTaskReportLayout>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Task Report Layout
+ */
+
+export function useGetTaskReportLayout<
+  TData = Awaited<ReturnType<typeof getTaskReportLayout>>,
+  TError = Problem,
+>(
+  taskId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getTaskReportLayout>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetTaskReportLayoutQueryOptions(taskId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type setTaskReportLayoutResponse200 = {
+  data: TaskReportLayout;
+  status: 200;
+};
+
+export type setTaskReportLayoutResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type setTaskReportLayoutResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type setTaskReportLayoutResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type setTaskReportLayoutResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type setTaskReportLayoutResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type setTaskReportLayoutResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type setTaskReportLayoutResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type setTaskReportLayoutResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type setTaskReportLayoutResponseSuccess = setTaskReportLayoutResponse200 & {
+  headers: Headers;
+};
+export type setTaskReportLayoutResponseError = (
+  | setTaskReportLayoutResponse400
+  | setTaskReportLayoutResponse401
+  | setTaskReportLayoutResponse403
+  | setTaskReportLayoutResponse404
+  | setTaskReportLayoutResponse409
+  | setTaskReportLayoutResponse422
+  | setTaskReportLayoutResponse429
+  | setTaskReportLayoutResponse500
+) & {
+  headers: Headers;
+};
+
+export type setTaskReportLayoutResponse =
+  | setTaskReportLayoutResponseSuccess
+  | setTaskReportLayoutResponseError;
+
+export const getSetTaskReportLayoutUrl = (taskId: string) => {
+  return `/api/review-tasks/${taskId}/report-layout`;
+};
+
+/**
+ * @summary Set Task Report Layout
+ */
+export const setTaskReportLayout = async (
+  taskId: string,
+  taskReportLayoutDraft: TaskReportLayoutDraft,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<setTaskReportLayoutResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<setTaskReportLayoutResponse>(getSetTaskReportLayoutUrl(taskId), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(taskReportLayoutDraft),
+  });
+};
+
+export const getSetTaskReportLayoutMutationKey = () => ["setTaskReportLayout"] as const;
+
+export const getSetTaskReportLayoutMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof setTaskReportLayout>>,
+    TError,
+    SetTaskReportLayoutMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof setTaskReportLayout>>,
+  TError,
+  SetTaskReportLayoutMutationVariables,
+  TContext
+> => {
+  const mutationKey = getSetTaskReportLayoutMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof setTaskReportLayout>>,
+    SetTaskReportLayoutMutationVariables
+  > = (props) => {
+    const { taskId, data } = props ?? {};
+
+    return setTaskReportLayout(taskId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SetTaskReportLayoutMutationResult = NonNullable<
+  Awaited<ReturnType<typeof setTaskReportLayout>>
+>;
+export type SetTaskReportLayoutMutationBody = TaskReportLayoutDraft;
+export type SetTaskReportLayoutMutationError = Problem;
+export type SetTaskReportLayoutMutationVariables = { taskId: string; data: TaskReportLayoutDraft };
+
+/**
+ * @summary Set Task Report Layout
+ */
+export const useSetTaskReportLayout = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof setTaskReportLayout>>,
+      TError,
+      SetTaskReportLayoutMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof setTaskReportLayout>>,
+  TError,
+  SetTaskReportLayoutMutationVariables,
+  TContext
+> => {
+  return useMutation(getSetTaskReportLayoutMutationOptions(options), queryClient);
+};
 
 export type exportTrainingDatasetResponse200 = {
   data: Blob;

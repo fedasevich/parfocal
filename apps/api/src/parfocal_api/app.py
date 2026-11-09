@@ -81,6 +81,7 @@ from parfocal_api import (
     slide_tissue,
     study_templates,
     task_changes,
+    task_report_layout,
     task_runs,
     taxonomy,
     tenants,
@@ -261,6 +262,7 @@ def create_app(
     app.include_router(evaluation.router)
     app.include_router(evaluation_exports.router)
     app.include_router(report_preview.router)
+    app.include_router(task_report_layout.router)
     app.include_router(training_exports.router)
     app.include_router(ai_changes.router)
     app.include_router(ai_usage.router)

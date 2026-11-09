@@ -1,10 +1,12 @@
 import {
   type EvaluationReport,
   reportBlockSchema,
+  type TaskReportLayout,
   useGetDisagreementQueue,
   useGetEvaluationReport,
   useGetReviewTask,
   useGetTaskEvaluation,
+  useGetTaskReportLayout,
   useListEvaluationChanges,
   useListReviewTasks,
   useListStudyTemplates,
@@ -13,7 +15,6 @@ import { Banner, InlineError } from "@parfocal/ui/components/banner";
 import { Button } from "@parfocal/ui/components/button";
 import { Breadcrumbs } from "@parfocal/ui/components/flow-page";
 import { Icon } from "@parfocal/ui/components/icon";
-import { BlockCatalogue, BlockSettings } from "@parfocal/ui/components/report-templates";
 import {
   Select,
   SelectContent,
@@ -21,27 +22,27 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@parfocal/ui/components/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@parfocal/ui/components/tabs";
 import { StatusTag } from "@parfocal/ui/components/tag";
 import { FoldingZone } from "@parfocal/ui/components/zone";
 import { useState } from "react";
 import { destinations } from "../../shell/destinations.ts";
 import { useRouterLink } from "../../shell/router-link.tsx";
 import { SidebarToggle } from "../../shell/sidebar-toggle.tsx";
-import { blockCopy } from "../admin/templates.tsx";
 import { usePeople } from "../people.ts";
 import { okData } from "../placeholder.tsx";
 import { useMockToast } from "../project/mock-toast.tsx";
+import { ArrangeEditor } from "./arrange-editor.tsx";
 import { LazyTaskPdf } from "./pdf-overlay-lazy.tsx";
 import { type PageBlock, planOf, ReportPage } from "./report-pages.tsx";
 import { ShareLinks } from "./share-links.tsx";
 
 export type EvaluationScene = "report" | "arrange" | "pdf" | "retiredtpl" | "exportfail";
 
-type BlockKind = PageBlock["kind"];
-
-const fromTemplate = (report: EvaluationReport): PageBlock[] =>
-  report.template.blocks.map((block, index) => ({ ...block, id: `${block.kind}-${index}` }));
+const fromLayout = (blocks: readonly object[]): PageBlock[] =>
+  blocks.map((block, index) => ({
+    ...reportBlockSchema.parse({ width: "full", ...block }),
+    id: `${String((block as { kind: string }).kind)}-${index}`,
+  }));
 
 const shortDay = (iso: string) =>
   new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
@@ -56,18 +57,29 @@ export function EvaluationScreen({
   onScene: (scene: EvaluationScene) => void;
 }) {
   const report = okData(useGetEvaluationReport(taskId).data);
-  if (!report) return null;
-  return <EvaluationBody taskId={taskId} report={report} scene={scene} onScene={onScene} />;
+  const layout = okData(useGetTaskReportLayout(taskId).data);
+  if (!report || !layout) return null;
+  return (
+    <EvaluationBody
+      taskId={taskId}
+      report={report}
+      layout={layout}
+      scene={scene}
+      onScene={onScene}
+    />
+  );
 }
 
 function EvaluationBody({
   taskId,
   report,
+  layout,
   scene,
   onScene,
 }: {
   taskId: string;
   report: EvaluationReport;
+  layout: TaskReportLayout;
   scene: EvaluationScene;
   onScene: (scene: EvaluationScene) => void;
 }) {
@@ -86,19 +98,19 @@ function EvaluationBody({
   const nameOf = (userId: string) => person(userId)?.name ?? "";
   const renderLink = useRouterLink();
   const toast = useMockToast();
-  const [blocks, setBlocks] = useState<PageBlock[]>(() => fromTemplate(report));
-  const [arranged, setArranged] = useState(false);
-  const [selected, setSelected] = useState<string | null>(null);
+  const [blocks, setBlocks] = useState<PageBlock[]>(() => fromLayout(layout.blocks));
+  const [arranged, setArranged] = useState(layout.own);
+  const [format, setFormat] = useState(
+    () => (layout.format ?? report.template.format) as typeof report.template.format,
+  );
   const [templateName, setTemplateName] = useState(report.template.name);
   const [version, setVersion] = useState(report.template.version);
   const [fileKind, setFileKind] = useState(report.formats[0]?.key ?? "pdf");
   const [failed, setFailed] = useState(scene === "exportfail");
   const arranging = scene === "arrange";
   const retired = report.template.retired_on !== null && version === report.template.version;
-  const current = blocks.find((block) => block.id === selected) ?? null;
   const file = `${report.task_code}_evaluation_v${report.version}`;
   const projectHref = destinations.project(report.project.id);
-  const format = report.template.format;
   const plan = planOf(blocks, format);
   const pageCount = plan.length;
   const pageProps = {
@@ -118,61 +130,25 @@ function EvaluationBody({
     setBlocks(next);
     setArranged(true);
   };
-  const add = (kind: BlockKind) => {
-    const block: PageBlock = {
-      id: `${kind}-${Date.now()}`,
-      kind,
-      title: blockCopy[kind].name,
-      width: "full",
-      show_title: true,
-      page_break: false,
-    };
-    const at = current ? blocks.indexOf(current) + 1 : blocks.length;
-    change([...blocks.slice(0, at), block, ...blocks.slice(at)]);
-    setSelected(block.id);
-  };
-  const move = (step: -1 | 1) => {
-    if (!current) return;
-    const at = blocks.indexOf(current);
-    const to = at + step;
-    if (to < 0 || to >= blocks.length) return;
-    const next = [...blocks];
-    next.splice(at, 1);
-    next.splice(to, 0, current);
-    change(next);
-  };
   const pickedBlock = blocks.find((block) => block.kind === "comparison" && block.task_id);
   const offered = others.find((other) => other.id === pickedBlock?.task_id) ?? others[0] ?? null;
-  const setCompared = (block: PageBlock, id: string | null) =>
-    change(blocks.map((item) => (item === block ? { ...item, task_id: id } : item)));
   const compare = () => {
     const shown = blocks.find((block) => block.kind === "comparison" && block.task_id);
-    if (shown) {
-      setSelected(shown.id);
-      return;
-    }
+    if (shown) return;
     if (!offered) return;
     const block: PageBlock = {
       id: `comparison-${Date.now()}`,
       kind: "comparison",
-      title: blockCopy.comparison.name,
+      title: "Comparison",
       width: "full",
       show_title: true,
       page_break: false,
       task_id: offered.id,
     };
     change([...blocks, block]);
-    setSelected(block.id);
     toast.show(`${offered.code}, ${offered.name}, is now next to this one`, () =>
       setBlocks(blocks),
     );
-  };
-  const remove = () => {
-    if (!current) return;
-    const before = blocks;
-    change(blocks.filter((block) => block !== current));
-    setSelected(null);
-    toast.show(`Removed ${current.title}`, () => setBlocks(before));
   };
   const download = () => {
     if (failed || (scene === "exportfail" && fileKind === "pdf")) {
@@ -220,7 +196,6 @@ function EvaluationBody({
           page={index + 1}
           plan={layout}
           {...pageProps}
-          {...(arranging ? { selected, onSelect: setSelected } : {})}
         />
       ))}
     </div>
@@ -261,150 +236,24 @@ function EvaluationBody({
         </div>
       </header>
       {arranging ? (
-        <div className="grid min-h-0 flex-1 grid-cols-[200px_minmax(0,1fr)_300px] gap-4">
-          <aside className="grid content-start gap-2 overflow-auto rounded-zone bg-surf-panel p-3.5">
-            <b className="text-body font-semibold">Blocks</b>
-            <p className="m-0 text-body-sm text-fg-dim">
-              Drag one onto the page, or click it to add it after the selected block.
-            </p>
-            <BlockCatalogue
-              aria-label="Block catalogue"
-              blocks={(Object.keys(blockCopy) as BlockKind[]).map((kind) => ({
-                id: kind,
-                name: blockCopy[kind].name,
-                shows: blockCopy[kind].shows,
-              }))}
-              onAdd={(id) => add(id as BlockKind)}
-            />
-          </aside>
-          <section
-            aria-label="Report pages"
-            className="min-h-0 overflow-auto rounded-zone bg-canvas"
-          >
-            {pages}
-          </section>
-          <aside className="grid min-h-0 grid-rows-[minmax(0,1fr)_auto] gap-3">
-            <Tabs defaultValue="block" className="min-h-0 overflow-auto">
-              <TabsList>
-                <TabsTrigger value="block">Block</TabsTrigger>
-                <TabsTrigger value="format">Page and format</TabsTrigger>
-              </TabsList>
-              <TabsContent value="block" className="grid content-start gap-3 pt-3">
-                {current ? (
-                  <div className="grid content-start gap-3 rounded-zone bg-surf-panel p-3.5">
-                    <div className="flex gap-1.5">
-                      <Button size="sm" onClick={() => move(-1)}>
-                        Up
-                      </Button>
-                      <Button size="sm" onClick={() => move(1)}>
-                        Down
-                      </Button>
-                      <Button size="sm" variant="destructive" onClick={remove}>
-                        Remove
-                      </Button>
-                    </div>
-                    <BlockSettings
-                      key={current.id}
-                      block={{
-                        id: current.id,
-                        name: current.title,
-                        shows: blockCopy[current.kind].shows,
-                      }}
-                    />
-                    {current.kind === "comparison" ? (
-                      <div className="grid gap-1.5">
-                        <span className="text-body-sm font-semibold">Compare with</span>
-                        <Select
-                          value={current.task_id ?? null}
-                          onValueChange={(value) =>
-                            setCompared(current, value ? String(value) : null)
-                          }
-                        >
-                          <SelectTrigger aria-label="Compare with" className="w-full">
-                            <SelectValue placeholder="Pick a review task">
-                              {(() => {
-                                const picked = others.find((other) => other.id === current.task_id);
-                                return picked ? `${picked.code} · ${picked.name}` : null;
-                              })()}
-                            </SelectValue>
-                          </SelectTrigger>
-                          <SelectContent>
-                            {others.map((other) => (
-                              <SelectItem key={other.id} value={other.id}>
-                                {other.code} · {other.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    ) : null}
-                  </div>
-                ) : null}
-                <section className="grid content-start gap-2 rounded-zone bg-surf-panel p-3.5">
-                  <div className="flex items-center justify-between">
-                    <b className="text-body font-semibold">Outline</b>
-                    <span className="text-body-sm text-fg-dim">{blocks.length} blocks</span>
-                  </div>
-                  <p className="m-0 text-body-sm text-fg-dim">
-                    Click a block on the page to change it. Drag blocks on the page or in this
-                    outline to move them.
-                  </p>
-                  <ol className="m-0 grid list-none gap-1 p-0">
-                    {blocks.map((block, index) => (
-                      <li key={block.id}>
-                        <button
-                          type="button"
-                          aria-pressed={selected === block.id}
-                          onClick={() => setSelected(block.id)}
-                          className="grid w-full cursor-pointer grid-cols-[20px_minmax(0,1fr)] gap-2 rounded-ctl border-0 bg-transparent px-2 py-1.5 text-left text-body-sm text-fg hover:bg-chrome-2 aria-pressed:bg-accent-soft"
-                        >
-                          <span className="text-fg-dim">{index + 1}</span>
-                          <span className="grid">
-                            <b className="font-medium">{block.title}</b>
-                            <small className="text-caption text-fg-dim">
-                              {blockCopy[block.kind].name}
-                              {block.width === "half" ? " · half width" : ""}
-                            </small>
-                          </span>
-                        </button>
-                      </li>
-                    ))}
-                  </ol>
-                </section>
-              </TabsContent>
-              <TabsContent value="format" className="grid gap-2 pt-3 text-body-sm text-fg-dim">
-                A4, portrait, the lab's logo, page numbers and the signature block, as{" "}
-                {templateName} v{version} sets them.
-              </TabsContent>
-            </Tabs>
-            <div className="grid gap-2">
-              <Button variant="primary" onClick={() => onScene("report")}>
-                Done
-              </Button>
-              <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
-                <Button
-                  onClick={() =>
-                    toast.show(`Offered to the library as ${templateName} for ${report.task_code}`)
-                  }
-                >
-                  <Icon name="file" />
-                  Save as template
-                </Button>
-                <Button
-                  variant="ghost"
-                  disabled={!arranged}
-                  title={arranged ? undefined : "Nothing changed"}
-                  onClick={() => {
-                    setBlocks(fromTemplate(report));
-                    setArranged(false);
-                    setSelected(null);
-                  }}
-                >
-                  Reset
-                </Button>
-              </div>
-            </div>
-          </aside>
+        <div className="min-h-0 flex-1 overflow-hidden rounded-zone">
+          <ArrangeEditor
+            taskId={taskId}
+            report={report}
+            notify={(message) => toast.show(message)}
+            onSaved={(saved) => {
+              setBlocks(
+                saved.blocks.map((block, index) => ({
+                  ...reportBlockSchema.parse({ width: "full", ...block }),
+                  id: `${String(block.kind)}-${index}`,
+                })),
+              );
+              setFormat(saved.format);
+              setArranged(true);
+              onScene("report");
+            }}
+            onBack={() => onScene("report")}
+          />
         </div>
       ) : (
         <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)_300px] gap-4">

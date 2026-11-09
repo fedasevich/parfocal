@@ -160,6 +160,7 @@ import type {
   StudyTemplateSummary,
   StudyTemplateVersion,
   Target,
+  TaskReportLayout,
   TaskSlide,
   TaskStates,
   Template,
@@ -10161,6 +10162,472 @@ export const getPreviewSavedStudyTemplateResponseMock = (
   ...overrideResponse,
 });
 
+export const getGetTaskReportLayoutResponseHeadlineNumbersMock = (
+  overrideResponse: Partial<HeadlineNumbers> = {},
+): HeadlineNumbers => ({
+  ...{
+    title: faker.string.alpha({ length: { min: 1, max: 120 } }),
+    show_title: faker.datatype.boolean(),
+    width: faker.helpers.arrayElement(["full", "half"] as const),
+    page_break: faker.datatype.boolean(),
+    kind: faker.helpers.arrayElement(["headline-numbers"] as const),
+    metrics: faker.helpers.arrayElements(Object.values(Metric)),
+    confidence_intervals: faker.datatype.boolean(),
+  },
+  ...overrideResponse,
+});
+
+export const getGetTaskReportLayoutResponseRegionMetricsMock = (
+  overrideResponse: Partial<RegionMetrics> = {},
+): RegionMetrics => ({
+  ...{
+    title: faker.string.alpha({ length: { min: 1, max: 120 } }),
+    show_title: faker.datatype.boolean(),
+    width: faker.helpers.arrayElement(["full", "half"] as const),
+    page_break: faker.datatype.boolean(),
+    kind: faker.helpers.arrayElement(["region-metrics"] as const),
+    columns: faker.helpers.arrayElements(Object.values(RegionColumn)),
+    sort_by: faker.helpers.arrayElement(Object.values(RegionColumn)),
+    rows: faker.helpers.arrayElement([faker.number.int({ min: 1, max: 500 }), null]),
+  },
+  ...overrideResponse,
+});
+
+export const getGetTaskReportLayoutResponseConfusionMatrixMock = (
+  overrideResponse: Partial<ConfusionMatrix> = {},
+): ConfusionMatrix => ({
+  ...{
+    title: faker.string.alpha({ length: { min: 1, max: 120 } }),
+    show_title: faker.datatype.boolean(),
+    width: faker.helpers.arrayElement(["full", "half"] as const),
+    page_break: faker.datatype.boolean(),
+    kind: faker.helpers.arrayElement(["confusion-matrix"] as const),
+    classes: faker.helpers.arrayElement([
+      Array.from({ length: faker.number.int({ min: 1, max: 32 }) }, (_, i) => i + 1).map(() =>
+        faker.string.alpha({ length: { min: 1, max: 80 } }),
+      ),
+      null,
+    ]),
+    values: faker.helpers.arrayElement(["count", "share"] as const),
+  },
+  ...overrideResponse,
+});
+
+export const getGetTaskReportLayoutResponseReviewerAgreementMock = (
+  overrideResponse: Partial<ReviewerAgreement> = {},
+): ReviewerAgreement => ({
+  ...{
+    title: faker.string.alpha({ length: { min: 1, max: 120 } }),
+    show_title: faker.datatype.boolean(),
+    width: faker.helpers.arrayElement(["full", "half"] as const),
+    page_break: faker.datatype.boolean(),
+    kind: faker.helpers.arrayElement(["reviewer-agreement"] as const),
+    parts: faker.helpers.arrayElements(Object.values(AgreementPart)),
+  },
+  ...overrideResponse,
+});
+
+export const getGetTaskReportLayoutResponseDisagreementReasonsMock = (
+  overrideResponse: Partial<DisagreementReasons> = {},
+): DisagreementReasons => ({
+  ...{
+    title: faker.string.alpha({ length: { min: 1, max: 120 } }),
+    show_title: faker.datatype.boolean(),
+    width: faker.helpers.arrayElement(["full", "half"] as const),
+    page_break: faker.datatype.boolean(),
+    kind: faker.helpers.arrayElement(["disagreement-reasons"] as const),
+    top: faker.helpers.arrayElement([faker.number.int({ min: 1, max: 50 }), null]),
+    style: faker.helpers.arrayElement(Object.values(ChartStyle)),
+  },
+  ...overrideResponse,
+});
+
+export const getGetTaskReportLayoutResponseOpinionAnswersMock = (
+  overrideResponse: Partial<OpinionAnswers> = {},
+): OpinionAnswers => ({
+  ...{
+    title: faker.string.alpha({ length: { min: 1, max: 120 } }),
+    show_title: faker.datatype.boolean(),
+    width: faker.helpers.arrayElement(["full", "half"] as const),
+    page_break: faker.datatype.boolean(),
+    kind: faker.helpers.arrayElement(["opinion-answers"] as const),
+    questions: faker.helpers.arrayElement([
+      Array.from({ length: faker.number.int({ min: 1, max: 12 }) }, (_, i) => i + 1).map(() =>
+        faker.helpers.fromRegExp("^[a-z][a-z0-9_]{0,39}$"),
+      ),
+      null,
+    ]),
+    style: faker.helpers.arrayElement(Object.values(ChartStyle)),
+  },
+  ...overrideResponse,
+});
+
+export const getGetTaskReportLayoutResponseWorstObjectsMock = (
+  overrideResponse: Partial<WorstObjects> = {},
+): WorstObjects => ({
+  ...{
+    title: faker.string.alpha({ length: { min: 1, max: 120 } }),
+    show_title: faker.datatype.boolean(),
+    width: faker.helpers.arrayElement(["full", "half"] as const),
+    page_break: faker.datatype.boolean(),
+    kind: faker.helpers.arrayElement(["worst-objects"] as const),
+    rows: faker.number.int({ min: 1, max: 100 }),
+    thumbnails: faker.datatype.boolean(),
+  },
+  ...overrideResponse,
+});
+
+export const getGetTaskReportLayoutResponseSlideTableMock = (
+  overrideResponse: Partial<SlideTable> = {},
+): SlideTable => ({
+  ...{
+    title: faker.string.alpha({ length: { min: 1, max: 120 } }),
+    show_title: faker.datatype.boolean(),
+    width: faker.helpers.arrayElement(["full", "half"] as const),
+    page_break: faker.datatype.boolean(),
+    kind: faker.helpers.arrayElement(["slide-table"] as const),
+    columns: faker.helpers.arrayElements(Object.values(SlideColumn)),
+    sort_by: faker.helpers.arrayElement(Object.values(SlideColumn)),
+  },
+  ...overrideResponse,
+});
+
+export const getGetTaskReportLayoutResponseSlideFigureMock = (
+  overrideResponse: Partial<SlideFigure> = {},
+): SlideFigure => ({
+  ...{
+    title: faker.string.alpha({ length: { min: 1, max: 120 } }),
+    show_title: faker.datatype.boolean(),
+    width: faker.helpers.arrayElement(["full", "half"] as const),
+    page_break: faker.datatype.boolean(),
+    kind: faker.helpers.arrayElement(["slide-figure"] as const),
+    slide_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    object_id: faker.helpers.arrayElement([
+      faker.helpers.fromRegExp("^(?:T[1-9][0-9]{0,8}\\.)?[TCRZMAN][1-9][0-9]{0,8}[a-z]{0,3}\\+?$"),
+      null,
+    ]),
+    layers: faker.helpers.arrayElements(Object.values(Layer)),
+    caption: faker.string.alpha({ length: { min: 10, max: 500 } }),
+  },
+  ...overrideResponse,
+});
+
+export const getGetTaskReportLayoutResponseTextBlockMock = (
+  overrideResponse: Partial<TextBlock> = {},
+): TextBlock => ({
+  ...{
+    title: faker.string.alpha({ length: { min: 1, max: 120 } }),
+    show_title: faker.datatype.boolean(),
+    width: faker.helpers.arrayElement(["full", "half"] as const),
+    page_break: faker.datatype.boolean(),
+    kind: faker.helpers.arrayElement(["text"] as const),
+    body: faker.string.alpha({ length: { min: 10, max: 5000 } }),
+  },
+  ...overrideResponse,
+});
+
+export const getGetTaskReportLayoutResponseComparisonMock = (
+  overrideResponse: Partial<Comparison> = {},
+): Comparison => ({
+  ...{
+    title: faker.string.alpha({ length: { min: 1, max: 120 } }),
+    show_title: faker.datatype.boolean(),
+    width: faker.helpers.arrayElement(["full", "half"] as const),
+    page_break: faker.datatype.boolean(),
+    kind: faker.helpers.arrayElement(["comparison"] as const),
+    task_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    metrics: faker.helpers.arrayElements(Object.values(Metric)),
+  },
+  ...overrideResponse,
+});
+
+export const getGetTaskReportLayoutResponseExpertChangesMock = (
+  overrideResponse: Partial<ExpertChanges> = {},
+): ExpertChanges => ({
+  ...{
+    title: faker.string.alpha({ length: { min: 1, max: 120 } }),
+    show_title: faker.datatype.boolean(),
+    width: faker.helpers.arrayElement(["full", "half"] as const),
+    page_break: faker.datatype.boolean(),
+    kind: faker.helpers.arrayElement(["ai-changes"] as const),
+    group_by: faker.helpers.arrayElement(Object.values(ChangeGroup)),
+    people: faker.datatype.boolean(),
+  },
+  ...overrideResponse,
+});
+
+export const getGetTaskReportLayoutResponseMock = (
+  overrideResponse: Partial<Extract<TaskReportLayout, object>> = {},
+): TaskReportLayout => ({
+  blocks: Array.from({ length: faker.number.int({ min: 1, max: 40 }) }, (_, i) => i + 1).map(() =>
+    faker.helpers.arrayElement([
+      { ...getGetTaskReportLayoutResponseHeadlineNumbersMock() },
+      { ...getGetTaskReportLayoutResponseRegionMetricsMock() },
+      { ...getGetTaskReportLayoutResponseConfusionMatrixMock() },
+      { ...getGetTaskReportLayoutResponseReviewerAgreementMock() },
+      { ...getGetTaskReportLayoutResponseDisagreementReasonsMock() },
+      { ...getGetTaskReportLayoutResponseOpinionAnswersMock() },
+      { ...getGetTaskReportLayoutResponseWorstObjectsMock() },
+      { ...getGetTaskReportLayoutResponseSlideTableMock() },
+      { ...getGetTaskReportLayoutResponseSlideFigureMock() },
+      { ...getGetTaskReportLayoutResponseTextBlockMock() },
+      { ...getGetTaskReportLayoutResponseComparisonMock() },
+      { ...getGetTaskReportLayoutResponseExpertChangesMock() },
+    ]),
+  ),
+  format: {
+    paper: faker.helpers.arrayElement(["a4", "letter"] as const),
+    orientation: faker.helpers.arrayElement(["portrait", "landscape"] as const),
+    text_size: faker.helpers.arrayElement(["small", "normal", "large"] as const),
+    logo: faker.datatype.boolean(),
+    title: faker.string.alpha({ length: { min: 1, max: 120 } }),
+    subtitle: faker.string.alpha({ length: { min: 10, max: 200 } }),
+    running_header: faker.datatype.boolean(),
+    page_numbers: faker.helpers.arrayElement(["none", "page", "page-of"] as const),
+    draft_watermark: faker.datatype.boolean(),
+    signature: faker.datatype.boolean(),
+    label_language: faker.helpers.arrayElement(["en", "cs", "de"] as const),
+    decimals: faker.number.int({ min: 0, max: 4 }),
+    appendices: faker.helpers.arrayElements(Object.values(Appendix)),
+    downloads: faker.helpers.arrayElements(Object.values(Download)),
+  },
+  own: faker.datatype.boolean(),
+  ...overrideResponse,
+});
+
+export const getSetTaskReportLayoutResponseHeadlineNumbersMock = (
+  overrideResponse: Partial<HeadlineNumbers> = {},
+): HeadlineNumbers => ({
+  ...{
+    title: faker.string.alpha({ length: { min: 1, max: 120 } }),
+    show_title: faker.datatype.boolean(),
+    width: faker.helpers.arrayElement(["full", "half"] as const),
+    page_break: faker.datatype.boolean(),
+    kind: faker.helpers.arrayElement(["headline-numbers"] as const),
+    metrics: faker.helpers.arrayElements(Object.values(Metric)),
+    confidence_intervals: faker.datatype.boolean(),
+  },
+  ...overrideResponse,
+});
+
+export const getSetTaskReportLayoutResponseRegionMetricsMock = (
+  overrideResponse: Partial<RegionMetrics> = {},
+): RegionMetrics => ({
+  ...{
+    title: faker.string.alpha({ length: { min: 1, max: 120 } }),
+    show_title: faker.datatype.boolean(),
+    width: faker.helpers.arrayElement(["full", "half"] as const),
+    page_break: faker.datatype.boolean(),
+    kind: faker.helpers.arrayElement(["region-metrics"] as const),
+    columns: faker.helpers.arrayElements(Object.values(RegionColumn)),
+    sort_by: faker.helpers.arrayElement(Object.values(RegionColumn)),
+    rows: faker.helpers.arrayElement([faker.number.int({ min: 1, max: 500 }), null]),
+  },
+  ...overrideResponse,
+});
+
+export const getSetTaskReportLayoutResponseConfusionMatrixMock = (
+  overrideResponse: Partial<ConfusionMatrix> = {},
+): ConfusionMatrix => ({
+  ...{
+    title: faker.string.alpha({ length: { min: 1, max: 120 } }),
+    show_title: faker.datatype.boolean(),
+    width: faker.helpers.arrayElement(["full", "half"] as const),
+    page_break: faker.datatype.boolean(),
+    kind: faker.helpers.arrayElement(["confusion-matrix"] as const),
+    classes: faker.helpers.arrayElement([
+      Array.from({ length: faker.number.int({ min: 1, max: 32 }) }, (_, i) => i + 1).map(() =>
+        faker.string.alpha({ length: { min: 1, max: 80 } }),
+      ),
+      null,
+    ]),
+    values: faker.helpers.arrayElement(["count", "share"] as const),
+  },
+  ...overrideResponse,
+});
+
+export const getSetTaskReportLayoutResponseReviewerAgreementMock = (
+  overrideResponse: Partial<ReviewerAgreement> = {},
+): ReviewerAgreement => ({
+  ...{
+    title: faker.string.alpha({ length: { min: 1, max: 120 } }),
+    show_title: faker.datatype.boolean(),
+    width: faker.helpers.arrayElement(["full", "half"] as const),
+    page_break: faker.datatype.boolean(),
+    kind: faker.helpers.arrayElement(["reviewer-agreement"] as const),
+    parts: faker.helpers.arrayElements(Object.values(AgreementPart)),
+  },
+  ...overrideResponse,
+});
+
+export const getSetTaskReportLayoutResponseDisagreementReasonsMock = (
+  overrideResponse: Partial<DisagreementReasons> = {},
+): DisagreementReasons => ({
+  ...{
+    title: faker.string.alpha({ length: { min: 1, max: 120 } }),
+    show_title: faker.datatype.boolean(),
+    width: faker.helpers.arrayElement(["full", "half"] as const),
+    page_break: faker.datatype.boolean(),
+    kind: faker.helpers.arrayElement(["disagreement-reasons"] as const),
+    top: faker.helpers.arrayElement([faker.number.int({ min: 1, max: 50 }), null]),
+    style: faker.helpers.arrayElement(Object.values(ChartStyle)),
+  },
+  ...overrideResponse,
+});
+
+export const getSetTaskReportLayoutResponseOpinionAnswersMock = (
+  overrideResponse: Partial<OpinionAnswers> = {},
+): OpinionAnswers => ({
+  ...{
+    title: faker.string.alpha({ length: { min: 1, max: 120 } }),
+    show_title: faker.datatype.boolean(),
+    width: faker.helpers.arrayElement(["full", "half"] as const),
+    page_break: faker.datatype.boolean(),
+    kind: faker.helpers.arrayElement(["opinion-answers"] as const),
+    questions: faker.helpers.arrayElement([
+      Array.from({ length: faker.number.int({ min: 1, max: 12 }) }, (_, i) => i + 1).map(() =>
+        faker.helpers.fromRegExp("^[a-z][a-z0-9_]{0,39}$"),
+      ),
+      null,
+    ]),
+    style: faker.helpers.arrayElement(Object.values(ChartStyle)),
+  },
+  ...overrideResponse,
+});
+
+export const getSetTaskReportLayoutResponseWorstObjectsMock = (
+  overrideResponse: Partial<WorstObjects> = {},
+): WorstObjects => ({
+  ...{
+    title: faker.string.alpha({ length: { min: 1, max: 120 } }),
+    show_title: faker.datatype.boolean(),
+    width: faker.helpers.arrayElement(["full", "half"] as const),
+    page_break: faker.datatype.boolean(),
+    kind: faker.helpers.arrayElement(["worst-objects"] as const),
+    rows: faker.number.int({ min: 1, max: 100 }),
+    thumbnails: faker.datatype.boolean(),
+  },
+  ...overrideResponse,
+});
+
+export const getSetTaskReportLayoutResponseSlideTableMock = (
+  overrideResponse: Partial<SlideTable> = {},
+): SlideTable => ({
+  ...{
+    title: faker.string.alpha({ length: { min: 1, max: 120 } }),
+    show_title: faker.datatype.boolean(),
+    width: faker.helpers.arrayElement(["full", "half"] as const),
+    page_break: faker.datatype.boolean(),
+    kind: faker.helpers.arrayElement(["slide-table"] as const),
+    columns: faker.helpers.arrayElements(Object.values(SlideColumn)),
+    sort_by: faker.helpers.arrayElement(Object.values(SlideColumn)),
+  },
+  ...overrideResponse,
+});
+
+export const getSetTaskReportLayoutResponseSlideFigureMock = (
+  overrideResponse: Partial<SlideFigure> = {},
+): SlideFigure => ({
+  ...{
+    title: faker.string.alpha({ length: { min: 1, max: 120 } }),
+    show_title: faker.datatype.boolean(),
+    width: faker.helpers.arrayElement(["full", "half"] as const),
+    page_break: faker.datatype.boolean(),
+    kind: faker.helpers.arrayElement(["slide-figure"] as const),
+    slide_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    object_id: faker.helpers.arrayElement([
+      faker.helpers.fromRegExp("^(?:T[1-9][0-9]{0,8}\\.)?[TCRZMAN][1-9][0-9]{0,8}[a-z]{0,3}\\+?$"),
+      null,
+    ]),
+    layers: faker.helpers.arrayElements(Object.values(Layer)),
+    caption: faker.string.alpha({ length: { min: 10, max: 500 } }),
+  },
+  ...overrideResponse,
+});
+
+export const getSetTaskReportLayoutResponseTextBlockMock = (
+  overrideResponse: Partial<TextBlock> = {},
+): TextBlock => ({
+  ...{
+    title: faker.string.alpha({ length: { min: 1, max: 120 } }),
+    show_title: faker.datatype.boolean(),
+    width: faker.helpers.arrayElement(["full", "half"] as const),
+    page_break: faker.datatype.boolean(),
+    kind: faker.helpers.arrayElement(["text"] as const),
+    body: faker.string.alpha({ length: { min: 10, max: 5000 } }),
+  },
+  ...overrideResponse,
+});
+
+export const getSetTaskReportLayoutResponseComparisonMock = (
+  overrideResponse: Partial<Comparison> = {},
+): Comparison => ({
+  ...{
+    title: faker.string.alpha({ length: { min: 1, max: 120 } }),
+    show_title: faker.datatype.boolean(),
+    width: faker.helpers.arrayElement(["full", "half"] as const),
+    page_break: faker.datatype.boolean(),
+    kind: faker.helpers.arrayElement(["comparison"] as const),
+    task_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    metrics: faker.helpers.arrayElements(Object.values(Metric)),
+  },
+  ...overrideResponse,
+});
+
+export const getSetTaskReportLayoutResponseExpertChangesMock = (
+  overrideResponse: Partial<ExpertChanges> = {},
+): ExpertChanges => ({
+  ...{
+    title: faker.string.alpha({ length: { min: 1, max: 120 } }),
+    show_title: faker.datatype.boolean(),
+    width: faker.helpers.arrayElement(["full", "half"] as const),
+    page_break: faker.datatype.boolean(),
+    kind: faker.helpers.arrayElement(["ai-changes"] as const),
+    group_by: faker.helpers.arrayElement(Object.values(ChangeGroup)),
+    people: faker.datatype.boolean(),
+  },
+  ...overrideResponse,
+});
+
+export const getSetTaskReportLayoutResponseMock = (
+  overrideResponse: Partial<Extract<TaskReportLayout, object>> = {},
+): TaskReportLayout => ({
+  blocks: Array.from({ length: faker.number.int({ min: 1, max: 40 }) }, (_, i) => i + 1).map(() =>
+    faker.helpers.arrayElement([
+      { ...getSetTaskReportLayoutResponseHeadlineNumbersMock() },
+      { ...getSetTaskReportLayoutResponseRegionMetricsMock() },
+      { ...getSetTaskReportLayoutResponseConfusionMatrixMock() },
+      { ...getSetTaskReportLayoutResponseReviewerAgreementMock() },
+      { ...getSetTaskReportLayoutResponseDisagreementReasonsMock() },
+      { ...getSetTaskReportLayoutResponseOpinionAnswersMock() },
+      { ...getSetTaskReportLayoutResponseWorstObjectsMock() },
+      { ...getSetTaskReportLayoutResponseSlideTableMock() },
+      { ...getSetTaskReportLayoutResponseSlideFigureMock() },
+      { ...getSetTaskReportLayoutResponseTextBlockMock() },
+      { ...getSetTaskReportLayoutResponseComparisonMock() },
+      { ...getSetTaskReportLayoutResponseExpertChangesMock() },
+    ]),
+  ),
+  format: {
+    paper: faker.helpers.arrayElement(["a4", "letter"] as const),
+    orientation: faker.helpers.arrayElement(["portrait", "landscape"] as const),
+    text_size: faker.helpers.arrayElement(["small", "normal", "large"] as const),
+    logo: faker.datatype.boolean(),
+    title: faker.string.alpha({ length: { min: 1, max: 120 } }),
+    subtitle: faker.string.alpha({ length: { min: 10, max: 200 } }),
+    running_header: faker.datatype.boolean(),
+    page_numbers: faker.helpers.arrayElement(["none", "page", "page-of"] as const),
+    draft_watermark: faker.datatype.boolean(),
+    signature: faker.datatype.boolean(),
+    label_language: faker.helpers.arrayElement(["en", "cs", "de"] as const),
+    decimals: faker.number.int({ min: 0, max: 4 }),
+    appendices: faker.helpers.arrayElements(Object.values(Appendix)),
+    downloads: faker.helpers.arrayElements(Object.values(Download)),
+  },
+  own: faker.datatype.boolean(),
+  ...overrideResponse,
+});
+
 export const getExportTrainingDatasetResponseMock = (): Blob =>
   new Blob([new Uint8Array(faker.number.int({ min: 1, max: 64 }))]);
 
@@ -19375,6 +19842,54 @@ export const getDownloadSavedStudyTemplatePreviewMockHandler = (
   );
 };
 
+export const getGetTaskReportLayoutMockHandler = (
+  overrideResponse?:
+    | TaskReportLayout
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<TaskReportLayout> | TaskReportLayout),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/review-tasks/:taskId/report-layout",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetTaskReportLayoutResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getSetTaskReportLayoutMockHandler = (
+  overrideResponse?:
+    | TaskReportLayout
+    | ((
+        info: Parameters<Parameters<typeof http.put>[1]>[0],
+      ) => Promise<TaskReportLayout> | TaskReportLayout),
+  options?: RequestHandlerOptions,
+) => {
+  return http.put(
+    "*/api/review-tasks/:taskId/report-layout",
+    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getSetTaskReportLayoutResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getExportTrainingDatasetMockHandler = (
   overrideResponse?:
     | Blob
@@ -21420,6 +21935,8 @@ export const getParfocalAPIMock = () => [
   getDownloadStudyTemplatePreviewMockHandler(),
   getPreviewSavedStudyTemplateMockHandler(),
   getDownloadSavedStudyTemplatePreviewMockHandler(),
+  getGetTaskReportLayoutMockHandler(),
+  getSetTaskReportLayoutMockHandler(),
   getExportTrainingDatasetMockHandler(),
   getGetTaskAiChangesMockHandler(),
   getGetAiUsageMockHandler(),

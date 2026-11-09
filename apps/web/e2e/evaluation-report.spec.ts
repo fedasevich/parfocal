@@ -100,21 +100,6 @@ test("comparing with a second task puts its numbers next to this one", async ({ 
   await expect(block).toContainText("Change is RT-15 minus RT-14.");
 });
 
-test("a comparison block picks its task from the other tasks of the project", async ({ page }) => {
-  await page.goto(url("arrange"));
-  await page.getByRole("button", { name: /Compare two result sets/ }).click();
-  await expect(page.locator('[data-kind="comparison"]')).toContainText(
-    "Pick a review task to compare with.",
-  );
-  const picker = page.getByRole("combobox", { name: "Compare with" });
-  await picker.click();
-  await expect(page.getByRole("option", { name: /RT-14/ })).toHaveCount(0);
-  await page.getByRole("option", { name: /RT-15/ }).click();
-  await expect(
-    page.locator('[data-kind="comparison"] [data-slot="comparison"] table'),
-  ).toContainText("RT-15, PathoSAM v1.2");
-});
-
 const titlesOn = (page: Page, name: string) =>
   page
     .getByRole("article", { name })
@@ -141,57 +126,60 @@ test("the pages split the blocks the way the PDF does", async ({ page }) => {
   await expect(half).toHaveClass(/col-span-1/);
 });
 
-test("every block kind renders on the page or says why it has nothing to show", async ({
+const catalogueButton = (page: Page, name: string) =>
+  page
+    .getByRole("complementary", { name: "Block catalogue" })
+    .locator("button")
+    .filter({ has: page.getByText(name, { exact: true }) });
+
+test("arranging adds, moves, removes and sets blocks, then the report and PDF follow", async ({
   page,
 }) => {
   await page.goto(url("arrange"));
-  const catalogue = page.getByLabel("Block catalogue");
-  await page.getByRole("button", { name: "Select the block Methods" }).click();
-  for (const name of [
-    "Region metrics per slide",
-    "Agreement between reviewers",
-    "Per-slide table",
-    "Slide figure",
-    "Compare two result sets",
-  ]) {
-    await catalogue.getByRole("button", { name: new RegExp(name) }).click();
-  }
-  const kinds = [
-    "headline-numbers",
-    "region-metrics",
-    "confusion-matrix",
-    "reviewer-agreement",
-    "disagreement-reasons",
-    "opinion-answers",
-    "worst-objects",
-    "slide-table",
-    "slide-figure",
-    "text",
-    "comparison",
-  ];
-  for (const kind of kinds) {
-    const block = page.locator(`[data-kind="${kind}"]`).first();
-    await expect(block, kind).toBeVisible();
-    expect((await block.innerText()).trim().length, kind).toBeGreaterThan(12);
-  }
-  await expect(page.locator('[data-kind="slide-figure"]')).toContainText(
-    "Pick a slide for this figure.",
+  await expect(page.getByRole("complementary", { name: "Block catalogue" })).toBeVisible();
+  const before = await page.locator("[data-slot='report-editor'] [aria-label^='Block ']").count();
+  await catalogueButton(page, "Text").click();
+  await expect(page.locator("[data-slot='report-editor'] [aria-label^='Block ']")).toHaveCount(
+    before + 1,
   );
-  await expect(page.locator('[data-kind="comparison"]')).toContainText(
-    "Pick a review task to compare with.",
+  await page.getByRole("textbox", { name: "Text" }).fill("Written for this task only.");
+  await page.getByRole("button", { name: "Move up" }).first().click();
+  await page
+    .getByRole("group", { name: /^Block 1,/ })
+    .locator("button[aria-pressed]")
+    .click();
+  await page.getByRole("button", { name: "Remove" }).first().click();
+  await expect(page.locator("[data-slot='report-editor'] [aria-label^='Block ']")).toHaveCount(
+    before,
   );
-  await expect(page.locator('[data-kind="slide-table"] table')).toBeVisible();
-  const ordered = await page
-    .locator("[data-kind]")
-    .evaluateAll((nodes) => nodes.map((node) => node.getAttribute("data-kind")));
-  expect(new Set(ordered)).toEqual(new Set(kinds));
-  await expect(page.getByText(/Arranging · 11 blocks/)).toBeVisible();
+  await page.getByRole("button", { name: "Save for this task" }).click();
+  await expect(
+    page.getByRole("status").filter({ hasText: "Arranged for this task" }),
+  ).toBeVisible();
+  await expect(page.getByRole("button", { name: "Arrange blocks and format" })).toBeVisible();
+  await expect(
+    page.locator('[data-kind="text"]').filter({ hasText: "Written for this task only." }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Preview the PDF" }).click();
+  await expect(page.getByRole("img", { name: "Page 1 of the report" })).toBeVisible();
+});
+
+test("an arrangement is offered to the library as a new template", async ({ page }) => {
+  await page.goto(url("arrange"));
+  await page.getByRole("tab", { name: "Page and format" }).click();
+  await page.getByRole("textbox", { name: "Name if saved as a template" }).fill("Lab layout");
+  await page.getByRole("button", { name: "Save as template" }).click();
+  await expect(page.getByText("Offered to the library as Lab layout")).toBeVisible();
 });
 
 for (const scene of ["report", "arrange", "pdf", "retiredtpl", "exportfail"]) {
   test(`the ${scene} scene passes axe`, async ({ page }) => {
     await page.goto(url(scene));
-    await expect(page.getByRole("article").first()).toBeVisible();
+    if (scene === "arrange") {
+      await expect(page.getByRole("complementary", { name: "Block catalogue" })).toBeVisible();
+    } else {
+      await expect(page.getByRole("article").first()).toBeVisible();
+    }
     if (scene === "pdf") {
       await expect(page.getByRole("img", { name: "Page 1 of the report" })).toBeVisible();
     }
