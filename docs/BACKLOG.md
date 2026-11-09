@@ -4984,7 +4984,7 @@ Admin is its own page with its own sidebar and the app's top bar, never a page i
   It sits in the Display panel's View group in the full viewer ([ADR 0132](adr/0132-display-settings-presets-and-task-locks.md), display settings, presets and task locks).
   Size: M.
 
-- [ ] VIZ-006 · Object table and stats
+- [x] VIZ-006 · Object table and stats
   A table of ID, class, score, size and decision that stays in sync with the slide, with counts and histograms and a CSV download. The Score column follows the confidence setting and hides when confidence is hidden, and a Preset column shows when anyone used a preset other than the task default ([ADR 0132](adr/0132-display-settings-presets-and-task-locks.md), display settings, presets and task locks).
   Done when component tests sync a selection both ways, hide the Score column with confidence hidden and show the Preset column only when a preset was used, and a test counts the CSV rows.
   Depends on VIZ-001, OBJ-005, TASK-011. Refs mock: layers/table, mock: case/objects.
