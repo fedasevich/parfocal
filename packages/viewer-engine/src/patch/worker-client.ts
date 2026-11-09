@@ -2,6 +2,7 @@ import { type BytePort, serveBytes } from "../decode/byte-relay.ts";
 import { onWorkerFailure, type WorkerHandle, type WorkerOpenRequest } from "../decode/protocol.ts";
 import { createRangeCache, type RangeCache } from "../decode/range-cache.ts";
 import {
+  abortError,
   type PatchCacheStats,
   type PatchQuery,
   type PatchRead,
@@ -38,10 +39,6 @@ export function spawnPatchWorker(): PatchWorker {
     type: "module",
     name: "parfocal-patch",
   });
-}
-
-function abortError(signal: AbortSignal): Error {
-  return signal.reason instanceof Error ? signal.reason : new DOMException("Aborted", "AbortError");
 }
 
 function messageChannel(): PatchBytePorts {
