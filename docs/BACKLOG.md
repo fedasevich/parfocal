@@ -4997,7 +4997,7 @@ Admin is its own page with its own sidebar and the app's top bar, never a page i
   Depends on ADMIN-001, SEC-024.
   Size: M.
 
-- [ ] ADMIN-008 · Report templates
+- [x] ADMIN-008 · Report templates
   The workspace's study template library: the five built-in templates and the lab's own, each with its kind of study, its blocks as a strip, the tasks that use it and its version, with Preview, Duplicate or Edit, Use for new projects and Retire with an Undo. New template asks for a name, the kind of study, what to start from and the paper. The editor shows the report as its pages filled with the sample project's numbers. Blocks are dragged from the catalogue onto a page or clicked in after the selected block, a selected block has a toolbar to move, duplicate and remove it, and the side panel has three tabs. Block holds the title, showing the title, full or half width, a page break and the fields of that kind of block. Page and format holds the paper (A4 or US Letter), orientation, text size, workspace logo, title and subtitle with placeholders, running header, page numbers, draft watermark, signature block, language of labels, decimals, appendices and the downloads offered. Task presets hold the objects to check, opinion form, blinding, first read, start mode and split ([ADR 0097](adr/0097-report-templates-built-from-blocks.md)).
   Done when component tests cover adding a block by drag and by click, moving, duplicating, removing and setting each kind of block, and every format setting, with the mouse and the keyboard, E2E creates a template, previews its PDF, uses it in a review task and retires it, and an axe check passes on the editor.
   Depends on ADMIN-001, EVAL-007. Refs mock: admin/templates, mock: admin/tpledit, doc 43.
