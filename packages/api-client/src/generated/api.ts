@@ -1642,6 +1642,14 @@ export interface DeclineDraft {
   note?: SendNote | null;
 }
 
+export interface DeletedProject {
+  id: string;
+  code: string;
+  name: string;
+  colour: number;
+  deleted_at: string;
+}
+
 export type DisagreementReasonsWidth =
   (typeof DisagreementReasonsWidth)[keyof typeof DisagreementReasonsWidth];
 
@@ -6885,6 +6893,194 @@ export function useListProjects<TData = Awaited<ReturnType<typeof listProjects>>
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getListProjectsQueryOptions(params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type listDeletedProjectsResponse200 = {
+  data: DeletedProject[];
+  status: 200;
+};
+
+export type listDeletedProjectsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listDeletedProjectsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listDeletedProjectsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listDeletedProjectsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listDeletedProjectsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listDeletedProjectsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listDeletedProjectsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type listDeletedProjectsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listDeletedProjectsResponseSuccess = listDeletedProjectsResponse200 & {
+  headers: Headers;
+};
+export type listDeletedProjectsResponseError = (
+  | listDeletedProjectsResponse400
+  | listDeletedProjectsResponse401
+  | listDeletedProjectsResponse403
+  | listDeletedProjectsResponse404
+  | listDeletedProjectsResponse409
+  | listDeletedProjectsResponse422
+  | listDeletedProjectsResponse429
+  | listDeletedProjectsResponse500
+) & {
+  headers: Headers;
+};
+
+export type listDeletedProjectsResponse =
+  | listDeletedProjectsResponseSuccess
+  | listDeletedProjectsResponseError;
+
+export const getListDeletedProjectsUrl = () => {
+  return `/api/projects/deleted`;
+};
+
+/**
+ * @summary List Deleted Projects
+ */
+export const listDeletedProjects = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listDeletedProjectsResponse> => {
+  return apiFetch<listDeletedProjectsResponse>(getListDeletedProjectsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListDeletedProjectsQueryKey = () => {
+  return [`/api/projects/deleted`] as const;
+};
+
+export const getListDeletedProjectsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listDeletedProjects>>,
+  TError = Problem,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listDeletedProjects>>, TError, TData>>;
+  request?: SecondParameter<typeof apiFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListDeletedProjectsQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listDeletedProjects>>> = ({ signal }) =>
+    listDeletedProjects({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listDeletedProjects>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ListDeletedProjectsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listDeletedProjects>>
+>;
+export type ListDeletedProjectsQueryError = Problem;
+
+export function useListDeletedProjects<
+  TData = Awaited<ReturnType<typeof listDeletedProjects>>,
+  TError = Problem,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listDeletedProjects>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listDeletedProjects>>,
+          TError,
+          Awaited<ReturnType<typeof listDeletedProjects>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListDeletedProjects<
+  TData = Awaited<ReturnType<typeof listDeletedProjects>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listDeletedProjects>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listDeletedProjects>>,
+          TError,
+          Awaited<ReturnType<typeof listDeletedProjects>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListDeletedProjects<
+  TData = Awaited<ReturnType<typeof listDeletedProjects>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listDeletedProjects>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Deleted Projects
+ */
+
+export function useListDeletedProjects<
+  TData = Awaited<ReturnType<typeof listDeletedProjects>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listDeletedProjects>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListDeletedProjectsQueryOptions(options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;
