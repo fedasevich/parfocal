@@ -2,6 +2,10 @@
 
 Newest entries on top. One line per piece of work, naming the backlog ID where there is one and linking the result. This file is append-only.
 
+## 2026-11-10
+
+- TEST-023: Names, roles and nested controls pass axe and their rules left the allowlist. Specs match the new row names, the full web suite ran with enforcement (870 passed, then the 9 spec failures fixed and 58 passed enforced), and the Brush rail button on the live slide at 480 by 640 stays allowed under target-size as a TODO for TEST-024.
+
 ## 2026-11-09
 
 - Browser runs for the review batch on the Mac, with load averages near 30 from another session's runs: engine browser specs 140 passed and 1 failed, golden images 82 passed and 1 failed with 18 not run behind it. The engine failure is the wheel zoom budget on Huron-1-40x.tif (68 ms against a limit of 50), and unchanged main at c68955bc measured 70 ms in the same minute, so it is the load. The golden failure is the ID labels layer, whose golden comes from the Linux CI runner, and unchanged main differs by the same 2,148 pixels on the Mac. The 23 other overlay goldens pass on the branch. VIEW-059 (black edge row) stays unticked until ci is green on the pushed head.

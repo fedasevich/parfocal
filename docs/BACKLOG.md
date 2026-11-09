@@ -4321,7 +4321,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Depends on TEST-009.
   Size: M.
 
-- [ ] TEST-023 · Names, roles and nested controls pass axe
+- [x] TEST-023 · Names, roles and nested controls pass axe
   Fixes the allowlisted `nested-interactive`, `label-content-name-mismatch`, `aria-required-children` and progress bar name findings from TEST-009 (accessibility testing). A row or card that holds a button stops being a button itself, every accessible name contains the visible text, a closed or empty listbox or combobox popup has the children its role needs or is not rendered, and the upload progress bar gets a name. Each fixed rule leaves `apps/web/e2e/a11y-allowlist.ts`.
   Done when those four rules are gone from the allowlist and the browser suite passes with enforcement on.
   Depends on TEST-009.
