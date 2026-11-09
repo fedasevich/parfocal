@@ -33,6 +33,10 @@ test("each outline mode changes the overlay on a real slide and the choice is re
   await expect(layer(page)).toHaveAttribute("data-overlays", "1");
   signatures.set("bands", (await layer(page).getAttribute("data-signature")) ?? "");
 
+  const saved = page.waitForResponse(
+    (response) =>
+      response.request().method() === "PUT" && response.url().endsWith("/api/me/setting-layers"),
+  );
   await modes(page).getByText("Mark unsure").click();
   await expect(layer(page)).toHaveAttribute("data-mode", "mark-unsure");
   await expect(layer(page)).toHaveAttribute("data-overlays", "2");
@@ -40,6 +44,7 @@ test("each outline mode changes the overlay on a real slide and the choice is re
 
   expect(new Set(signatures.values()).size).toBe(3);
 
+  await saved;
   await page.reload();
   await expect(page.getByTestId("slide-stage")).toHaveAttribute("data-state", "ready", {
     timeout: 30_000,

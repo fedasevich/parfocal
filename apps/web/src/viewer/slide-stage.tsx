@@ -54,6 +54,7 @@ import { annotateRail } from "../screens/viewer-tools/rails.ts";
 import { useDeveloperMode } from "../shell/developer-mode.ts";
 import { readDeviceSettings } from "../shell/device-settings.ts";
 import { useMagnificationLabel } from "../shell/magnification-label-setting.ts";
+import { useSavedOutlineMode } from "../shell/outline-mode-setting.ts";
 import { useResolvedSettings } from "../shell/resolved-settings.ts";
 import { useToolsLayout } from "../shell/tools-layout.ts";
 import { AnnotateTaskPanel } from "./annotate-task-panel.tsx";
@@ -62,12 +63,7 @@ import { loadViewerEngine } from "./load-engine.ts";
 import { MagnificationControl, type ViewerModule } from "./magnification-control.tsx";
 import { describeOpenFailure, type OpenFailure } from "./open-failure.ts";
 import { OutlineLayer } from "./outline-layer.tsx";
-import {
-  type OutlineModeChoice,
-  outlineModeChoices,
-  outlineModeLabels,
-  useOutlineMode,
-} from "./outline-mode.ts";
+import { type OutlineModeChoice, outlineModeChoices, outlineModeLabels } from "./outline-mode.ts";
 import type { SlideAreaEntry } from "./slide-areas.ts";
 import { useSlideBrightness } from "./slide-brightness.ts";
 import { useSlideCoverage } from "./slide-coverage.ts";
@@ -342,7 +338,7 @@ function OpenedSlide({
   const magnificationLabel = useMagnificationLabel();
   const toolsLayout = useToolsLayout();
   const chosenDevice = useMemo(() => readDeviceSettings().device, []);
-  const [outlineMode, setOutlineMode] = useOutlineMode();
+  const [outlineMode, setOutlineMode] = useSavedOutlineMode();
   const sharedTaskId = annotateTask?.taskId ?? null;
   const snapshot = annotateTask?.classes ?? null;
   const saved = useSavedAnnotations(slideId, session !== null && layerKnown, sharedTaskId);
