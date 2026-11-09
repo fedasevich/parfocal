@@ -4633,6 +4633,12 @@ Doctors judge AI objects in a simple guided mode, or in the full viewer with the
   Depends on GUIDE-010.
   Size: M.
 
+- [ ] GUIDE-023 · Mentions saved as user tokens
+  GUIDE-022 (mentions in decision notes notify) found the web app writes a mention as a plain name such as "@Daniel Hruška" in decision notes and thread messages, while the API notifies only `@[user-id]` tokens, so against the real API nobody is told. Convert a picked mention to its token on save and back to the name on display, in notes and in thread messages, keeping old plain-name text readable.
+  Done when unit tests convert both ways, an API test notifies a person mentioned from the web client's saved text, and the decision notes and comments browser specs pass against the token form.
+  Depends on GUIDE-022.
+  Size: S.
+
 ## 45 ADJ · Disagreements, adjudication and sign-off
 
 - [x] ADJ-000 · Research check

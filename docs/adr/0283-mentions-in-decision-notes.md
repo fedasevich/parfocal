@@ -1,4 +1,4 @@
-# 0280. A mention in a decision note is a `mention` on a decision target, held until its author may be seen
+# 0283. A mention in a decision note is a `mention` on a decision target, held until its author may be seen
 
 - Date: 2026-11-09
 - Status: Accepted

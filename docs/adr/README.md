@@ -246,3 +246,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0280](0280-security-scans-in-ci-run-on-osv-scanner-and-zap.md) | Security scans in CI run on osv-scanner and a ZAP baseline | Accepted | 2026-11-09 |
 | [0281](0281-vulnerability-slas-and-iac-scan.md) | Vulnerability SLAs by severity, a Trivy IaC scan and a weekly report | Accepted | 2026-11-09 |
 | [0282](0282-guided-review-and-the-full-viewer-draw-the-slide-through-the-engine-behind-the-still.md) | Guided review and the full viewer draw the slide through the engine behind the still, and the still stays as the fallback | Accepted | 2026-11-09 |
+| [0283](0283-mentions-in-decision-notes.md) | A mention in a decision note is a `mention` on a decision target, held until its author may be seen | Accepted | 2026-11-09 |
