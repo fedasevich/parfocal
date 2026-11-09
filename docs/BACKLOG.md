@@ -4946,7 +4946,7 @@ Admin is its own page with its own sidebar and the app's top bar, never a page i
   Depends on VIZ-002.
   Size: M.
 
-- [ ] VIZ-009 · Confidence map in the View group
+- [x] VIZ-009 · Confidence map in the View group
   VIZ-003 added the confidence map to the engine but not to the Display panel's View group, because the screens have no mock scene for it. Add the entry with its threshold beside the heatmap and density map, with a mock scene, and lock it with the other maps when a task locks the display.
   Done when a browser test turns the confidence map on and off from the View group and a golden matches the engine's confidence golden.
   Depends on VIZ-003.
