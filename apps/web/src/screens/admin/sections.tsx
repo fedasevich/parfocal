@@ -2,7 +2,9 @@ import {
   type AiModel,
   getGetMySettingLayersQueryKey,
   type LabSettings,
+  type Project,
   type SecuritySetting,
+  useArchiveProject,
   useGetMySettingLayers,
   useGetSecuritySettings,
   useGetSessionPolicy,
@@ -13,9 +15,11 @@ import {
   useListServiceAccounts,
   useListTaxonomyTemplates,
   useListWebhooks,
+  useRestoreProject,
   useSetWorkspaceSettings,
   useShowModel,
 } from "@parfocal/api-client";
+
 import { NameCell, SettingRow } from "@parfocal/ui/components/admin";
 import { Button } from "@parfocal/ui/components/button";
 import { Icon } from "@parfocal/ui/components/icon";
@@ -52,13 +56,42 @@ import {
   tableClass,
 } from "./common.tsx";
 import { DeletedProjectsZone } from "./deleted-projects.tsx";
+import {
+  archiveActionLabel,
+  archiveDoneNotice,
+  archiveRefusalNotice,
+  canChangeArchive,
+  isArchived,
+  type ProjectView,
+  projectStatusLabel,
+  projectsCountLabel,
+} from "./projects-model.ts";
 import { signInRows, TWO_FACTOR_KEY, twoFactorChange } from "./security-model.ts";
+
 import { durationText } from "./workspace-settings-model.ts";
 
 const right = "text-right";
 
 export function ProjectsSection({ notify }: { notify: Notify }) {
-  const projects = okData(useListProjects().data) ?? [];
+  const [view, setView] = useState<ProjectView>("active");
+  const projects = okData(useListProjects({ archived: view === "archived" }).data) ?? [];
+  const queryClient = useQueryClient();
+  const archive = useArchiveProject();
+  const restore = useRestoreProject();
+  const changeArchive = (project: Project) => {
+    (isArchived(project) ? restore : archive).mutate(
+      { projectId: project.id },
+      {
+        onSuccess: () => {
+          void queryClient.invalidateQueries({
+            predicate: (query) => String(query.queryKey[0]).startsWith("/api/projects"),
+          });
+          notify(archiveDoneNotice(project));
+        },
+        onError: () => notify(archiveRefusalNotice(project)),
+      },
+    );
+  };
   const usage = useGetStorageUsage().data?.data;
   const taxonomies = okData(useListTaxonomyTemplates().data) ?? [];
   const personOf = usePeople();
@@ -70,13 +103,29 @@ export function ProjectsSection({ notify }: { notify: Notify }) {
     <>
       <Zone
         title="Projects"
-        end={<span className="text-body-sm text-fg-dim">{projects.length} projects</span>}
+        end={
+          <span className="flex items-center gap-3">
+            <SegmentedControl
+              aria-label="Which projects to list"
+              value={view}
+              onValueChange={(value) => setView(value === "archived" ? "archived" : "active")}
+              options={[
+                { value: "active", label: "Active" },
+                { value: "archived", label: "Archived" },
+              ]}
+            />
+            <span className="text-body-sm text-fg-dim">
+              {projectsCountLabel(projects.length, view)}
+            </span>
+          </span>
+        }
       >
         <Table className={tableClass}>
           <TableHeader>
             <TableRow>
               <TableHead>Project</TableHead>
               <TableHead>Privacy</TableHead>
+              <TableHead>Status</TableHead>
               <TableHead>Owner</TableHead>
               <TableHead>Members</TableHead>
               <TableHead className={right}>Space</TableHead>
@@ -109,6 +158,11 @@ export function ProjectsSection({ notify }: { notify: Notify }) {
                     </StatusTag>
                   </TableCell>
                   <TableCell>
+                    <StatusTag tone={isArchived(project) ? "neutral" : "ok"}>
+                      {projectStatusLabel(project)}
+                    </StatusTag>
+                  </TableCell>
+                  <TableCell>
                     {ownerPerson ? <Person person={ownerPerson} size={20} /> : null}
                   </TableCell>
                   <TableCell>
@@ -132,7 +186,16 @@ export function ProjectsSection({ notify }: { notify: Notify }) {
                       <Button size="sm" onClick={() => void goTo(destinations.project(project.id))}>
                         Open
                       </Button>
-                      <MoreButton label={`More for ${project.name}`} />
+                      <Button
+                        size="sm"
+                        aria-label={`${archiveActionLabel(project)} ${project.name}`}
+                        disabled={
+                          !canChangeArchive(project) || archive.isPending || restore.isPending
+                        }
+                        onClick={() => changeArchive(project)}
+                      >
+                        {archiveActionLabel(project)}
+                      </Button>
                     </span>
                   </TableCell>
                 </TableRow>

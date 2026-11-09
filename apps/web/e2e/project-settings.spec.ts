@@ -128,6 +128,16 @@ test("an owner finds a deleted project in Deleted projects and restores it", asy
   expect(restores).toHaveLength(1);
   await expect(page.getByRole("cell", { name: "Sentinel node AI evaluation P07" })).toBeVisible();
 
+  const projectRow = page.getByRole("row", { name: /Sentinel node AI evaluation/ });
+  await page.getByRole("button", { name: "Archive Sentinel node AI evaluation" }).click();
+  await expect(projectRow).toHaveCount(0);
+  await page.getByRole("radio", { name: "Archived" }).click();
+  await expect(projectRow).toContainText("Archived");
+  await page.getByRole("button", { name: "Unarchive Sentinel node AI evaluation" }).click();
+  await expect(projectRow).toHaveCount(0);
+  await page.getByRole("radio", { name: "Active" }).click();
+  await expect(projectRow).toContainText("Active");
+
   await page.getByRole("link", { name: "Back to Parfocal" }).click();
   await expect(page.getByText("Sentinel node AI evaluation").first()).toBeVisible();
 });

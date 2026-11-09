@@ -4,7 +4,6 @@ import {
   getGetMyHomeMockHandler,
   getGetSessionMockHandler,
   getListMyReviewTasksMockHandler,
-  getListProjectsMockHandler,
   getListTenantMembersMockHandler,
 } from "../generated/api.msw.ts";
 import type {
@@ -126,7 +125,7 @@ export const toProject = (project: ScenarioProject): Project => ({
   template: project.template,
   viewer_parts: viewerPartsOf(project.template),
   ...projectDefaultsOf(project),
-  archived_at: null,
+  archived_at: archivedProjects.has(project.id) ? scenarioNow : null,
   created_at: project.createdAt,
   my_role: clinicalRoleOf(project, fakeView().viewer) ?? roleIn(project, fakeView().viewer),
   members: project.members.map((key) => {
@@ -141,6 +140,7 @@ export const toProject = (project: ScenarioProject): Project => ({
 });
 
 const deletedProjects = new Set<string>();
+const archivedProjects = new Set<string>();
 
 const projectNamed = (projectId: string) =>
   projects.find(
@@ -413,11 +413,31 @@ export function scenarioHandlers(): RequestHandler[] {
       inScenarioWorkspace() ? toHome() : emptyWorkspaceHome(toHome()),
     ),
     getListMyReviewTasksMockHandler(() => myTasks()),
-    getListProjectsMockHandler(() =>
-      inScenarioWorkspace()
-        ? projects.filter((project) => !deletedProjects.has(project.id)).map(toProject)
-        : [],
-    ),
+    http.get("*/api/projects", ({ request }) => {
+      const archived = new URL(request.url).searchParams.get("archived") === "true";
+      return HttpResponse.json(
+        inScenarioWorkspace()
+          ? projects
+              .filter(
+                (project) =>
+                  !deletedProjects.has(project.id) && archivedProjects.has(project.id) === archived,
+              )
+              .map(toProject)
+          : [],
+      );
+    }),
+    http.post<{ projectId: string }>("*/api/projects/:projectId/archive", ({ params }) => {
+      const project = projectNamed(params.projectId);
+      if (project === undefined) return projectNotFound();
+      archivedProjects.add(project.id);
+      return HttpResponse.json(toProject(project));
+    }),
+    http.post<{ projectId: string }>("*/api/projects/:projectId/restore", ({ params }) => {
+      const project = projectNamed(params.projectId);
+      if (project === undefined) return projectNotFound();
+      archivedProjects.delete(project.id);
+      return HttpResponse.json(toProject(project));
+    }),
     http.put("*/api/me/workspace", async ({ request }) => {
       const { tenant_id } = (await request.json()) as { tenant_id: string };
       const outcome = switchFakeWorkspace(tenant_id);
