@@ -100,7 +100,9 @@ export function MyWorkScreen({
   useEffect(() => {
     if (state.sel === undefined) return;
     document
-      .querySelector("main [aria-selected='true']:not([role='tab'])")
+      .querySelector(
+        "main [aria-selected='true']:not([role='tab']), main [data-list-row][aria-pressed='true']",
+      )
       ?.scrollIntoView({ block: "nearest" });
   }, [state.sel]);
   const today = formatLongDay(now());

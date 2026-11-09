@@ -26,7 +26,7 @@ export function ClassStrip({ classes, activeClass, onPick }: ClassStripProps) {
           data-testid="class-swatch"
           data-class={item.id}
           title={item.name}
-          aria-label={item.name}
+          aria-label={`${item.name}, key ${index + 1}`}
           aria-pressed={activeClass === item.id}
           onClick={() => onPick(item.id)}
           className="inline-flex items-center gap-1.5 rounded-md border border-line px-1.5 py-0.75 aria-pressed:border-accent aria-pressed:bg-accent/15"

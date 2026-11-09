@@ -92,6 +92,7 @@ function RegionRow({
         <span />
       )}
       {note ? <span className="col-span-full pt-0.5 text-caption text-fg-dim">{note}</span> : null}
+      {label ? <span className="sr-only">{label}</span> : null}
     </>
   );
   const look = cn(regionRowClass, selected && "bg-accent-soft", className);
@@ -101,7 +102,6 @@ function RegionRow({
         <button
           type="button"
           aria-current={selected || undefined}
-          aria-label={label}
           className={cn(
             look,
             "cursor-pointer hover:bg-chrome-3 focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent",

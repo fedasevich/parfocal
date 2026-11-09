@@ -24,7 +24,7 @@ test("review: a reviewer picks an object and decides it with the keyboard only",
   await page.goto(await plainFullViewerUrl(page));
   const panel = page.getByRole("complementary", { name: "Side panel" });
   const rowOf = (object: string) =>
-    panel.getByRole("button", { name: new RegExp(`^${object} Tumor region`) });
+    panel.getByRole("button", { name: new RegExp(`^${object} Tumor region(?!.* area \\d+$)`) });
   const decide = async (object: string, key: string, shown: string) => {
     await rowOf(object).focus();
     await expect(rowOf(object)).toBeFocused();

@@ -50,9 +50,10 @@ function ToolRailButton({
         {keyHint ? (
           <span
             aria-hidden="true"
-            className="absolute right-0.5 bottom-px font-mono text-[8px] leading-none font-medium text-fg-faint group-data-pressed:text-on-accent group-data-pressed:opacity-80"
+            data-shifted={keyHint.startsWith("⇧") || undefined}
+            className="absolute right-0.5 bottom-px font-mono text-[8px] leading-none font-medium text-fg-faint group-data-pressed:text-on-accent group-data-pressed:opacity-80 data-shifted:before:content-['⇧']"
           >
-            {keyHint}
+            {keyHint.replace(/^⇧/, "")}
           </span>
         ) : null}
       </TooltipTrigger>
