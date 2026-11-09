@@ -11,6 +11,7 @@ const meOf = (role: "researcher" | "reviewer", active = "a"): Me => ({
   avatar_colour: 0,
   title: "",
   email: "tp@example.org",
+  specialties: [],
   active_tenant_id: active,
   workspaces: [
     {
@@ -22,6 +23,8 @@ const meOf = (role: "researcher" | "reviewer", active = "a"): Me => ({
       kind: "research",
       status: "active",
       organisation_name: "Lab",
+      logo: "L",
+      logo_colour: "#2f6fdf",
     },
   ],
 });

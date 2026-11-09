@@ -4,7 +4,6 @@ import {
   getGetMyHomeMockHandler,
   getGetSessionMockHandler,
   getListMyReviewTasksMockHandler,
-  getListProjectsMockHandler,
   getListTenantMembersMockHandler,
 } from "../generated/api.msw.ts";
 import type {
@@ -46,12 +45,13 @@ import {
   type ScenarioProject,
   type ScenarioReviewTask,
   sampleProject,
+  scenarioNow,
   slideOf,
   slides,
   week,
   workspaces,
 } from "./scenario.ts";
-import { adminRightsHolders } from "./scenario-admin.ts";
+import { adminRightsHolders, workspaceBrands } from "./scenario-admin.ts";
 import { fakeView } from "./view.ts";
 import {
   activeFakeWorkspace,
@@ -61,7 +61,7 @@ import {
 
 const me = () => people[fakeView().viewer];
 
-const toWorkspace = (workspace: (typeof workspaces)[number]): Workspace => ({
+const toWorkspace = (workspace: (typeof workspaces)[number], index: number): Workspace => ({
   tenant_id: workspace.id,
   role: me().role,
   admin_rights: adminRightsHolders.includes(me().key),
@@ -70,6 +70,8 @@ const toWorkspace = (workspace: (typeof workspaces)[number]): Workspace => ({
   kind: workspace.kind,
   status: "active",
   organisation_name: workspace.organisation,
+  logo: workspaceBrands[index]?.logo ?? workspace.name.slice(0, 2).toUpperCase(),
+  logo_colour: workspaceBrands[index]?.colour ?? "#2f6fdf",
 });
 
 const scenarioMe = (): Me => ({
@@ -79,6 +81,7 @@ const scenarioMe = (): Me => ({
   avatar_colour: me().colour,
   title: me().title,
   email: me().email,
+  specialties: ["Breast", "Lymph nodes"],
   active_tenant_id: activeFakeWorkspace(),
   workspaces: workspaces.map(toWorkspace),
 });
@@ -122,7 +125,7 @@ export const toProject = (project: ScenarioProject): Project => ({
   template: project.template,
   viewer_parts: viewerPartsOf(project.template),
   ...projectDefaultsOf(project),
-  archived_at: null,
+  archived_at: archivedProjects.has(project.id) ? scenarioNow : null,
   created_at: project.createdAt,
   my_role: clinicalRoleOf(project, fakeView().viewer) ?? roleIn(project, fakeView().viewer),
   members: project.members.map((key) => {
@@ -137,6 +140,7 @@ export const toProject = (project: ScenarioProject): Project => ({
 });
 
 const deletedProjects = new Set<string>();
+const archivedProjects = new Set<string>();
 
 const projectNamed = (projectId: string) =>
   projects.find(
@@ -409,11 +413,31 @@ export function scenarioHandlers(): RequestHandler[] {
       inScenarioWorkspace() ? toHome() : emptyWorkspaceHome(toHome()),
     ),
     getListMyReviewTasksMockHandler(() => myTasks()),
-    getListProjectsMockHandler(() =>
-      inScenarioWorkspace()
-        ? projects.filter((project) => !deletedProjects.has(project.id)).map(toProject)
-        : [],
-    ),
+    http.get("*/api/projects", ({ request }) => {
+      const archived = new URL(request.url).searchParams.get("archived") === "true";
+      return HttpResponse.json(
+        inScenarioWorkspace()
+          ? projects
+              .filter(
+                (project) =>
+                  !deletedProjects.has(project.id) && archivedProjects.has(project.id) === archived,
+              )
+              .map(toProject)
+          : [],
+      );
+    }),
+    http.post<{ projectId: string }>("*/api/projects/:projectId/archive", ({ params }) => {
+      const project = projectNamed(params.projectId);
+      if (project === undefined) return projectNotFound();
+      archivedProjects.add(project.id);
+      return HttpResponse.json(toProject(project));
+    }),
+    http.post<{ projectId: string }>("*/api/projects/:projectId/restore", ({ params }) => {
+      const project = projectNamed(params.projectId);
+      if (project === undefined) return projectNotFound();
+      archivedProjects.delete(project.id);
+      return HttpResponse.json(toProject(project));
+    }),
     http.put("*/api/me/workspace", async ({ request }) => {
       const { tenant_id } = (await request.json()) as { tenant_id: string };
       const outcome = switchFakeWorkspace(tenant_id);
@@ -422,6 +446,25 @@ export function scenarioHandlers(): RequestHandler[] {
       return HttpResponse.json(chosen);
     }),
     getListTenantMembersMockHandler(toMembers()),
+    http.get("*/api/projects/deleted", () =>
+      HttpResponse.json(
+        projects
+          .filter((project) => deletedProjects.has(project.id))
+          .map((project) => ({
+            id: project.id,
+            code: project.code,
+            name: project.name,
+            colour: project.colour,
+            deleted_at: scenarioNow,
+          })),
+      ),
+    ),
+    http.post<{ projectId: string }>("*/api/projects/:projectId/undelete", ({ params }) => {
+      const project = projects.find((candidate) => candidate.id === params.projectId);
+      if (project === undefined) return projectNotFound();
+      deletedProjects.delete(project.id);
+      return HttpResponse.json(toProject(project));
+    }),
     http.get<{ projectId: string }>("*/api/projects/:projectId", ({ params }) => {
       const project = projectNamed(params.projectId);
       return project === undefined ? projectNotFound() : HttpResponse.json(toProject(project));

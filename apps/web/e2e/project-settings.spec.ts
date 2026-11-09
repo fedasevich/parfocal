@@ -100,3 +100,44 @@ test("an owner deletes a project only after typing its name", async ({ page }) =
   expect(deletions).toEqual([{ name: "Sentinel node AI evaluation" }]);
   await expect(page).not.toHaveURL(/\/projects\//);
 });
+
+test("an owner finds a deleted project in Deleted projects and restores it", async ({ page }) => {
+  const restores: string[] = [];
+  page.on("request", (request) => {
+    if (request.method() === "POST" && request.url().endsWith(`/api/projects/${p07}/undelete`))
+      restores.push(request.url());
+  });
+  await page.goto(`/projects/${p07}?tab=settings&as=DH`);
+  await page
+    .getByTestId("project-settings")
+    .getByRole("button", { name: "Delete project" })
+    .click();
+  const dialog = page.getByRole("dialog", { name: "Delete P07?" });
+  await dialog.getByRole("textbox").fill("Sentinel node AI evaluation");
+  await dialog.getByRole("button", { name: "Delete project" }).click();
+  await expect(dialog).toHaveCount(0);
+
+  await page.evaluate(() => {
+    window.history.pushState({}, "", "/admin?section=projects");
+    window.dispatchEvent(new PopStateEvent("popstate"));
+  });
+  const deleted = page.getByTestId("deleted-projects");
+  await expect(deleted).toContainText("Sentinel node AI evaluation");
+  await deleted.getByRole("button", { name: "Restore Sentinel node AI evaluation" }).click();
+  await expect(page.getByTestId("deleted-projects-empty")).toBeVisible();
+  expect(restores).toHaveLength(1);
+  await expect(page.getByRole("cell", { name: "Sentinel node AI evaluation P07" })).toBeVisible();
+
+  const projectRow = page.getByRole("row", { name: /Sentinel node AI evaluation/ });
+  await page.getByRole("button", { name: "Archive Sentinel node AI evaluation" }).click();
+  await expect(projectRow).toHaveCount(0);
+  await page.getByRole("radio", { name: "Archived" }).click();
+  await expect(projectRow).toContainText("Archived");
+  await page.getByRole("button", { name: "Unarchive Sentinel node AI evaluation" }).click();
+  await expect(projectRow).toHaveCount(0);
+  await page.getByRole("radio", { name: "Active" }).click();
+  await expect(projectRow).toContainText("Active");
+
+  await page.getByRole("link", { name: "Back to Parfocal" }).click();
+  await expect(page.getByText("Sentinel node AI evaluation").first()).toBeVisible();
+});

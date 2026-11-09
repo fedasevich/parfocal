@@ -773,6 +773,12 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when the table-driven permission test covers a researcher with and without admin rights and a reviewer on every endpoint, a migration test turns an admin membership and an invitation into a researcher with admin rights, an API test refuses removing the last holder and refuses the right on a reviewer, and the audit entry is checked.
   Depends on IAM-022. Refs doc 43, kit: Pipeline and roles.
 
+- [ ] IAM-025 · Ask for a second factor at sign-in when a workspace requires it
+  ADMIN-009 saves a workspace's two_factor_required switch from the Admin Security page, but sign-in does not read it, so the page says it is not enforced yet. When the switch is on, sign-in into that workspace asks the IdP for a second factor, through acr_values or the organisation's MFA policy, and a session without one is refused with a clear message. The Security page then drops its "not enforced yet" wording.
+  Done when an API test refuses a one-factor session on a workspace that requires two and accepts it on one that does not, and the browser test for the Security page checks the new wording.
+  Depends on ADMIN-009, IAM-001.
+  Size: M.
+
 ---
 
 ## 04 SEC · Security and compliance (GDPR, HIPAA, ISO 27001 readiness)
@@ -3056,7 +3062,7 @@ Cases are optional groups of slides inside a project (PROJ-001). Patient fields 
   Done when API tests cover each list kind, skipping and the end of the list.
   Depends on WL-001, TASK-001. Refs kit Navigation map, kit W61, kit Flow 16.
 
-- [ ] CASES-021 · Back targets in deep links
+- [x] CASES-021 · Back targets in deep links
   Every link the app produces (notifications, shared links, emails, search results) carries where it came from, so the client can return there. Links to moved slides and to merged objects resolve to their new place.
   Done when API tests resolve links after a slide move and an object merge (OBJ-003), and every link kind in the notification catalogue (NOTIF-006) carries its origin.
   Depends on CASES-017, OBJ-003, NOTIF-006. Refs kit Navigation map.
@@ -3604,17 +3610,17 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Depends on SET-010.
   Size: S.
 
-- [ ] SET-003 · Display section
+- [x] SET-003 · Display section
   Theme, slide brightness, density, patient names, lengths, magnification label, language (English only, shown disabled). Theme and initials only can also be changed from the account menu (SHELL-012).
   Done when tests confirm each setting changes the UI live.
   Size: M.
 
-- [ ] SET-004 · Layout section
+- [x] SET-004 · Layout section
   Tools rail or dock with previews, side panel width and hide, panel while moving, minimap mode, pinned slide strip (off by default, CASE-002).
   Done when tests cover each setting.
   Size: M.
 
-- [ ] SET-005 · AI and confidence section
+- [x] SET-005 · AI and confidence section
   Wording with a live example, outline mode, model tiers per task, cutoff (lab, locked), inspector blocks (warnings, track record, calibration details).
   Done when tests cover each setting and the locked cutoff cannot be edited by a pathologist.
   Size: M.
@@ -4040,7 +4046,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when scenarios run against staging on demand.
   Size: M.
 
-- [ ] TEST-011 · Contract tests for the API client
+- [x] TEST-011 · Contract tests for the API client
   Done when the generated client is tested against recorded API responses and schema drift fails CI.
   Size: M.
 
@@ -4211,7 +4217,7 @@ A project holds slides, AI results and review tasks. Cases inside it are optiona
   Depends on PROJ-003, ONB-005.
   Size: M.
 
-- [ ] PROJ-011 · Restore a deleted project and revoke its links
+- [x] PROJ-011 · Restore a deleted project and revoke its links
   PROJ-010 soft-deletes a project and restores it only through `POST /api/projects/{id}/undelete`, and a shared report link to a deleted project answers 410 but its owner cannot revoke it, because the revoke route 404s on a deleted project. Add a Deleted projects list in Admin with Restore for owners, and let the owner revoke a deleted project's report links.
   Done when a browser test deletes a project, finds it in Deleted projects, restores it and sees it back in every list, and an API test revokes a deleted project's report link.
   Depends on PROJ-010.
@@ -4833,10 +4839,16 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Depends on ONB-002, ONB-005, IAM-024. Refs mock: setup, doc 41.
   Size: L.
 
-- [ ] ONB-010 · Join or ask for a workspace and keep the setup profile
+- [x] ONB-010 · Join or ask for a workspace and keep the setup profile
   ONB-004 sends join and ask through a draft `answerWorkspace` that only the fake API answers, and does not save specialties or the workspace logo. Add the real join and access request endpoints with the workspace admins notified, save specialties on the person and the logo on the workspace with an additive migration, and delete the draft.
   Done when API tests cover join, ask, an admin approving the ask and the saved specialties and logo, and the setup browser spec runs on the real client with no draft left.
   Depends on ONB-004.
+  Size: M.
+
+- [ ] ONB-011 · Answer workspace asks and set the join domain in Admin
+  ONB-010 lets a person ask to join a workspace and notifies its admins, but admins can only approve through the API, cannot decline, and cannot set the workspace's email domain, its join policy or an image logo. Add a Join requests list in Admin People with Approve and Decline, open it from the admin's notification, and add the email domain, join policy and logo upload to the workspace settings, with the domain refused when it is a public mail domain.
+  Done when API tests cover decline and the domain and policy change with a public domain refused, and a browser test opens an ask from the notification and approves another.
+  Depends on ONB-010.
   Size: M.
 
 - [x] ONB-005 · Sample project
@@ -4872,13 +4884,13 @@ Admin is its own page with its own sidebar and the app's top bar, never a page i
   Depends on SHELL-001, IAM-024. Refs mock: admin.
   Size: M.
 
-- [ ] ADMIN-002 · Overview
+- [x] ADMIN-002 · Overview
   Stat tiles and a short summary per section. Storage shows the same split bar as ADMIN-006 in a compact size.
   Done when component tests render seeded data.
   Depends on ADMIN-001.
   Size: S.
 
-- [ ] ADMIN-003 · People and roles
+- [x] ADMIN-003 · People and roles
   People with a role dropdown (researcher or reviewer), an admin rights switch on researchers, projects, last active and status, with invite, resend and search (IAM-014). Above the list, a table states what each role and admin rights are responsible for, in the words of ADR 0096.
   Done when E2E changes a role, gives and removes admin rights and resends an invite, each audited, and a component test shows the switch disabled for the last holder and absent on reviewers.
   Depends on ADMIN-001, IAM-014.
@@ -4914,7 +4926,7 @@ Admin is its own page with its own sidebar and the app's top bar, never a page i
   Depends on ADMIN-001, EVAL-007. Refs mock: admin/templates, mock: admin/tpledit, doc 43.
   Size: L.
 
-- [ ] ADMIN-009 · Named actors and real sign-in settings in Admin
+- [x] ADMIN-009 · Named actors and real sign-in settings in Admin
   ADMIN-007 shows "A member" in the audit log's Who column against the real API, because audit events name actors by pseudonym, and the Security page's single sign-on and two factor switches save nothing. Let admins with the audit permission resolve a pseudonym to the member's name in the log view only, never in the export or logs, and wire single sign-on and two factors to the IdP settings that IAM-012 and the session policy already hold.
   Done when an API test resolves actor names for an admin and refuses others, the export still carries pseudonyms only, and a browser test changes the two factor setting and reads it back.
   Depends on ADMIN-007.
@@ -4940,13 +4952,13 @@ Admin is its own page with its own sidebar and the app's top bar, never a page i
   Depends on VIZ-001, VIEW-027, TASK-011. Refs mock: layers/display, mock: guided/display, doc 44.
   Size: M.
 
-- [ ] VIZ-008 · How objects draw on the live slide
+- [x] VIZ-008 · How objects draw on the live slide
   VIZ-002 added the drawing styles, the score cutoff and the confidence tint to the engine's `drawObjectOverlays` and drives the still preview with them, but the live slide renderer does not use them. Wire the Display panel's How objects draw group, the cutoff and the confidence choice into the live Viv overlays.
   Done when the live renderer's golden tests match the still preview's for each style, width, opacity and the cutoff.
   Depends on VIZ-002.
   Size: M.
 
-- [ ] VIZ-009 · Confidence map in the View group
+- [x] VIZ-009 · Confidence map in the View group
   VIZ-003 added the confidence map to the engine but not to the Display panel's View group, because the screens have no mock scene for it. Add the entry with its threshold beside the heatmap and density map, with a mock scene, and lock it with the other maps when a task locks the display.
   Done when a browser test turns the confidence map on and off from the View group and a golden matches the engine's confidence golden.
   Depends on VIZ-003.
@@ -4972,7 +4984,7 @@ Admin is its own page with its own sidebar and the app's top bar, never a page i
   It sits in the Display panel's View group in the full viewer ([ADR 0132](adr/0132-display-settings-presets-and-task-locks.md), display settings, presets and task locks).
   Size: M.
 
-- [ ] VIZ-006 · Object table and stats
+- [x] VIZ-006 · Object table and stats
   A table of ID, class, score, size and decision that stays in sync with the slide, with counts and histograms and a CSV download. The Score column follows the confidence setting and hides when confidence is hidden, and a Preset column shows when anyone used a preset other than the task default ([ADR 0132](adr/0132-display-settings-presets-and-task-locks.md), display settings, presets and task locks).
   Done when component tests sync a selection both ways, hide the Score column with confidence hidden and show the Preset column only when a preset was used, and a test counts the CSV rows.
   Depends on VIZ-001, OBJ-005, TASK-011. Refs mock: layers/table, mock: case/objects.

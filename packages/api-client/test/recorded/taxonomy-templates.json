@@ -1,0 +1,62 @@
+{
+  "method": "GET",
+  "path": "/api/taxonomy-templates",
+  "status": 200,
+  "body": [
+    {
+      "template": "sentinel-node",
+      "classes": [
+        {
+          "key": 1,
+          "name": "Tumor",
+          "colour": "#f87171"
+        },
+        {
+          "key": 2,
+          "name": "Stroma",
+          "colour": "#6ee7b7"
+        },
+        {
+          "key": 3,
+          "name": "Immune",
+          "colour": "#c084fc"
+        },
+        {
+          "key": 4,
+          "name": "Other",
+          "colour": "#fbbf24"
+        }
+      ]
+    },
+    {
+      "template": "pannuke",
+      "classes": [
+        {
+          "key": 1,
+          "name": "Neoplastic",
+          "colour": "#f87171"
+        },
+        {
+          "key": 2,
+          "name": "Inflammatory",
+          "colour": "#c084fc"
+        },
+        {
+          "key": 3,
+          "name": "Connective",
+          "colour": "#6ee7b7"
+        },
+        {
+          "key": 4,
+          "name": "Dead",
+          "colour": "#fbbf24"
+        },
+        {
+          "key": 5,
+          "name": "Epithelial",
+          "colour": "#43999d"
+        }
+      ]
+    }
+  ]
+}

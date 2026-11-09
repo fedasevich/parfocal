@@ -52,6 +52,7 @@ import { areaRoleText, areaRows } from "../screens/viewer/area-nav.ts";
 import { annotateRail } from "../screens/viewer-tools/rails.ts";
 import { useDeveloperMode } from "../shell/developer-mode.ts";
 import { readDeviceSettings } from "../shell/device-settings.ts";
+import { useMagnificationLabel } from "../shell/magnification-label-setting.ts";
 import { useToolsLayout } from "../shell/tools-layout.ts";
 import { AnnotateTaskPanel } from "./annotate-task-panel.tsx";
 import { followLabPrefetch, labRouteOptions } from "./lab-route.ts";
@@ -334,6 +335,7 @@ function OpenedSlide({
   } | null>(null);
   const developerMode = useDeveloperMode();
   const [brightness, setBrightness] = useSlideBrightness();
+  const magnificationLabel = useMagnificationLabel();
   const toolsLayout = useToolsLayout();
   const chosenDevice = useMemo(() => readDeviceSettings().device, []);
   const [outlineMode, setOutlineMode] = useOutlineMode();
@@ -822,6 +824,7 @@ function OpenedSlide({
               units={session.module}
               brightness={brightness}
               onBrightnessChange={setBrightness}
+              labelAs={magnificationLabel}
             />
           </div>
         ) : null}

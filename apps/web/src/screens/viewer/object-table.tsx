@@ -1,4 +1,4 @@
-import type { ReviewObject, SlideResultStats } from "@parfocal/api-client";
+import type { SlideResultStats } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Input } from "@parfocal/ui/components/input";
@@ -13,72 +13,14 @@ import {
 import { ObjectIdTag, StatusTag } from "@parfocal/ui/components/tag";
 import { ClassCounts, ScoreHistogram } from "@parfocal/ui/components/visualize";
 import { Zone } from "@parfocal/ui/components/zone";
-import type { Format } from "@parfocal/ui/lib/format";
 import { useState } from "react";
-import { defaultFormat } from "../../format.ts";
 import { type Count, countWord } from "../review/decision-style.ts";
-import type { Answer } from "../review/review-state.ts";
+import { columnTitle, type TableRowItem, tableColumns } from "./object-table-rows.ts";
 
 const tone = { agree: "ok", disagree: "bad", unsure: "warn" } as const satisfies Record<
   Count,
   string
 >;
-
-export type TableRowItem = {
-  object: string;
-  kind: string;
-  score: number | null;
-  size: string;
-  answer: Answer | undefined;
-  added: boolean;
-  note: string;
-};
-
-export function tableRows(
-  objects: ReviewObject[],
-  added: { object: string; size: string; note: string | null }[],
-  answer: (object: string) => Answer | undefined,
-  format: Format = defaultFormat,
-): TableRowItem[] {
-  const regions = objects.filter((item) => item.kind === "region");
-  const cells = objects
-    .filter((item) => item.kind === "cell")
-    .filter((item) => {
-      const decided = answer(item.object);
-      return decided?.note || decided?.value === "disagree";
-    });
-  const noteOf = (decided: Answer | undefined) =>
-    (decided?.reasons[0] ?? decided?.note ?? "").toLowerCase();
-  return [
-    ...regions.map((item) => ({
-      object: item.object,
-      kind: "Tumor region",
-      score: item.score,
-      size: item.size_mm == null ? "" : format.size(item.size_mm),
-      answer: answer(item.object),
-      added: false,
-      note: noteOf(answer(item.object)),
-    })),
-    ...added.map((item) => ({
-      object: item.object,
-      kind: "Tumor region",
-      score: null,
-      size: item.size,
-      answer: undefined,
-      added: true,
-      note: (item.note ?? "").replace(/^./, (first) => first.toLowerCase()),
-    })),
-    ...cells.map((item) => ({
-      object: item.object,
-      kind: `${item.class_name} cell`,
-      score: item.score,
-      size: "",
-      answer: answer(item.object),
-      added: false,
-      note: noteOf(answer(item.object)),
-    })),
-  ];
-}
 
 type ObjectTablePanelProps = {
   slideLabel: string;
@@ -87,6 +29,7 @@ type ObjectTablePanelProps = {
   stats: SlideResultStats | undefined;
   classColour: (name: string) => string;
   showScore: boolean;
+  presetUsed: boolean;
   cutoff: number;
   selected: string | null;
   onPick: (object: string) => void;
@@ -100,12 +43,14 @@ export function ObjectTablePanel({
   stats,
   classColour,
   showScore,
+  presetUsed,
   cutoff,
   selected,
   onPick,
   onCsv,
 }: ObjectTablePanelProps) {
   const [find, setFind] = useState("");
+  const columns = tableColumns({ showScore, presetUsed });
   const shown = rows.filter((row) => row.object.toLowerCase().includes(find.trim().toLowerCase()));
   return (
     <section
@@ -137,13 +82,9 @@ export function ObjectTablePanel({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>ID</TableHead>
-                <TableHead>Kind</TableHead>
-                {showScore ? <TableHead>Score</TableHead> : null}
-                <TableHead>Size</TableHead>
-                <TableHead>Your decision</TableHead>
-                <TableHead>Preset</TableHead>
-                <TableHead>Note</TableHead>
+                {columns.map((column) => (
+                  <TableHead key={column}>{columnTitle[column]}</TableHead>
+                ))}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -188,7 +129,7 @@ export function ObjectTablePanel({
                       <span className="text-fg-dim">open</span>
                     )}
                   </TableCell>
-                  <TableCell className="text-fg-dim">{row.answer ? "Task default" : ""}</TableCell>
+                  {presetUsed ? <TableCell className="text-fg-dim">{row.preset}</TableCell> : null}
                   <TableCell className="text-fg-dim">{row.note}</TableCell>
                 </TableRow>
               ))}

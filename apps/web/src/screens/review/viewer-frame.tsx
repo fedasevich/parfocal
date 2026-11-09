@@ -115,7 +115,7 @@ export function ViewerFrame({
 }: ViewerFrameProps) {
   const panelKey = useKeyLabel("panel");
   useRailKeys(railGroups, onToolChange, railKeys);
-  const [layout, setLayout] = useInspectorLayout(session.meId);
+  const [layout, setLayout] = useInspectorLayout();
   const toolsLayout = useToolsLayout();
   const docked = toolsLayout === "dock";
   const tipSide = docked ? "top" : "right";

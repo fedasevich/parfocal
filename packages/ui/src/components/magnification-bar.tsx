@@ -109,7 +109,10 @@ function MagnificationBar({
     onOpenChange,
   );
   const near = nearestPreset(magnification);
-  const current = formatMagnification(magnification, labelAs);
+  const current =
+    labelAs === "microns-per-pixel"
+      ? `${micronsPerPixel.toFixed(2)} µm/px`
+      : formatMagnification(magnification, labelAs);
   const brightnessChanged = brightness !== 100;
   const showBrightness = shown || brightnessChanged;
   return (
@@ -167,7 +170,7 @@ function MagnificationBar({
         data-part="current"
         className={cn(
           "overflow-hidden font-mono text-caption font-semibold motion-safe:transition-[max-width,opacity,margin] motion-safe:duration-(--motion-slow)",
-          shown ? "mr-0 max-w-0 opacity-0" : "mr-2.5 max-w-[60px] opacity-100",
+          shown ? "mr-0 max-w-0 opacity-0" : "mr-2.5 max-w-[90px] opacity-100",
         )}
       >
         {current}

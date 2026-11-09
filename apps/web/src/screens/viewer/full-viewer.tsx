@@ -2,6 +2,7 @@ import {
   type AnalysisTemplate,
   type SlideAiProgress,
   useGetMyHome,
+  useGetMyTrackRecord,
   useGetProject,
   useGetResultSetTyper,
   useGetSlideAiProgress,
@@ -47,7 +48,7 @@ import { provideDebug } from "../../debug-handle.ts";
 import { useFormat } from "../../format.ts";
 import { escLayer } from "../../keys/esc-ladder.ts";
 import { destinations } from "../../shell/destinations.ts";
-import { useResolvedSettings } from "../../shell/resolved-settings.ts";
+import { useLabDecisionCutoff, useResolvedSettings } from "../../shell/resolved-settings.ts";
 import { useCellTiming, useChromeSampling, useTaskRun } from "../../telemetry/use-task-timing.ts";
 import { formatDayMonth } from "../format.ts";
 import { useRememberResume } from "../home/remember-resume.ts";
@@ -133,10 +134,13 @@ import { peekSpot } from "../viewer-tools/peek-model.ts";
 import { reviewRail, reviewRailKeys } from "../viewer-tools/rails.ts";
 import { SlidePeek, usePeekKey } from "../viewer-tools/slide-peek.tsx";
 import { ViewerMinimap } from "../viewer-tools/viewer-minimap.tsx";
+import { CalibrationBlock, TrackRecordBlock } from "./ai-record-blocks.tsx";
+import { calibrationLines, trackRecordLines } from "./ai-record-lines.ts";
 import { areaOrder, areaRoleText, areaRows } from "./area-nav.ts";
 import { layerDrawing, setColours } from "./layer-views.tsx";
 import { confidenceTintOf, objectStyle } from "./object-draw.ts";
-import { ObjectTablePanel, tableRows } from "./object-table.tsx";
+import { ObjectTablePanel } from "./object-table.tsx";
+import { tableColumns, tableCsv, tableRows } from "./object-table-rows.ts";
 import {
   AddedFoot,
   MeasurementFoot,
@@ -151,6 +155,7 @@ import {
   isNavigatorScene,
   type LayerView,
   layerViews,
+  mapViews,
   type ViewerScene,
   type ViewerTab,
   viewerSetup,
@@ -217,6 +222,15 @@ type BodyProps = FullViewerProps & {
   template: AnalysisTemplate;
 };
 
+function downloadCsv(text: string, fileName: string) {
+  const url = URL.createObjectURL(new Blob([text], { type: "text/csv" }));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = fileName;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
 function addedSize(note: string | null) {
   return note?.match(/(\d+(?:\.\d+)?) mm/)?.[0] ?? "";
 }
@@ -271,6 +285,7 @@ function ViewerBody({
   const typer = okData(
     useGetResultSetTyper(typerSetId ?? "", { query: { enabled: typerSetId !== undefined } }).data,
   );
+  const trackRecord = okData(useGetMyTrackRecord().data);
   const running = progress?.state === "running";
   const style = session.style;
   const paged = usePagedReview(session.classes.map((item) => item.name));
@@ -377,8 +392,9 @@ function ViewerBody({
         presets: [...session.display.presets, ...saved.map((item) => ({ ...item, settings: {} }))],
       }
     : undefined;
+  const labCutoff = useLabDecisionCutoff();
   const pickedSettings = withOverrides(
-    displaySettings(display, preset, extraLocks),
+    displaySettings(display, preset, extraLocks, undefined, labCutoff),
     drawOverrides,
     display,
     extraLocks,
@@ -787,6 +803,17 @@ function ViewerBody({
     reviewedOn,
   });
   const showScore = confidence !== "hidden";
+  const objectTableRows = tableRows(
+    objects,
+    added.map((item) => ({
+      object: item.object,
+      size: addedSize(item.note),
+      note: item.note,
+    })),
+    answer,
+    format,
+    preset ?? "",
+  );
   const classColour = (name: string) =>
     session.classes.find((item) => item.name === name)?.color ?? "var(--fg-faint)";
   const styleOfObject = (id: string) => {
@@ -925,6 +952,14 @@ function ViewerBody({
         <ModelWarningsBlock
           warnings={viewerModelWarnings(typer, objects, personalSettings?.model_warnings ?? true)}
         />
+        <TrackRecordBlock
+          enabled={personalSettings?.inspector_track_record ?? true}
+          lines={trackRecordLines(trackRecord, typer?.name ?? "")}
+        />
+        <CalibrationBlock
+          enabled={personalSettings?.inspector_calibration ?? true}
+          lines={calibrationLines(typer)}
+        />
         <ObjectList
           objects={objects}
           counts={counts}
@@ -1056,9 +1091,22 @@ function ViewerBody({
     />
   );
 
+  const mapsLock = session.display?.locks.find((lock) => lock.setting === "heatmap");
+  const confidenceHidden = extraLocks.find(
+    (lock) => lock.setting === "confidence" && lock.value === "hidden",
+  );
+  const pickableViews = layerViews.map((item) => {
+    const lock =
+      mapsLock && mapViews.has(item.value)
+        ? mapsLock
+        : confidenceHidden && item.value === "confidence"
+          ? confidenceHidden
+          : undefined;
+    return lock ? { ...item, lockedReason: lock.reason } : item;
+  });
   const viewZone = (
     <Zone title="View" end={<span className="text-caption text-fg-dim">Ways to show results</span>}>
-      <ViewPicker views={layerViews} value={view} onValueChange={goView} />
+      <ViewPicker views={pickableViews} value={view} onValueChange={goView} />
     </Zone>
   );
   const thread = session.threads.find((item) => item.anchor === current?.object);
@@ -1376,27 +1424,27 @@ function ViewerBody({
             <ObjectTablePanel
               slideLabel={slideLabel}
               pathOf={pathOfObject}
-              rows={tableRows(
-                objects,
-                added.map((item) => ({
-                  object: item.object,
-                  size: addedSize(item.note),
-                  note: item.note,
-                })),
-                answer,
-                format,
-              )}
+              rows={objectTableRows}
               stats={stats}
               classColour={(name) =>
                 session.classes.find((item) => item.name === name)?.color ?? "var(--fg-faint)"
               }
               showScore={showScore}
+              presetUsed={preset !== null}
               cutoff={settings.cutoff}
               selected={selected}
               onPick={(object) => onSearch({ object })}
-              onCsv={() =>
-                setToast({ id: Date.now(), text: "Downloads the table as CSV with full IDs" })
-              }
+              onCsv={() => {
+                downloadCsv(
+                  tableCsv(
+                    objectTableRows,
+                    tableColumns({ showScore, presetUsed: preset !== null }),
+                    pathOfObject,
+                  ),
+                  `objects-${slideLabel}.csv`,
+                );
+                setToast({ id: Date.now(), text: "Downloaded the table as CSV with full IDs" });
+              }}
             />
           ) : null
         }

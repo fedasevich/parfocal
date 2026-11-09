@@ -35,7 +35,9 @@ export type RowKey =
   | "theme"
   | "brightness"
   | "density"
+  | "patientNames"
   | "lengths"
+  | "magnificationLabel"
   | "language"
   | "presetKeys"
   | "presets"
@@ -49,6 +51,10 @@ export type RowKey =
   | "strip"
   | "defaultPreset"
   | "modelWarnings"
+  | "trackRecord"
+  | "calibration"
+  | "decisionCutoff"
+  | "tierOutline"
   | "outlineMode"
   | "confidenceWording"
   | "device"
@@ -95,7 +101,19 @@ export const sectionRows: Record<Exclude<SettingsSection, "shortcuts">, SettingR
       "Changes the slide only, never the interface or the monitor. ⌥↑ and ⌥↓ do the same on the slide.",
     ),
     row("density", "Density", "personal", "Compact fits more rows on a laptop screen."),
+    row(
+      "patientNames",
+      "Patient names",
+      "personal",
+      "Full name or initials in the clinical viewer. Your lab can set this for everyone.",
+    ),
     row("lengths", "Lengths", "personal", "How sizes read on the slide and in reports."),
+    row(
+      "magnificationLabel",
+      "Magnification label",
+      "personal",
+      "What the bar on the slide shows first. The objective is 20× or 40×, the other is the scale in µm per pixel.",
+    ),
     row(
       "language",
       "Language",
@@ -172,10 +190,34 @@ export const sectionRows: Record<Exclude<SettingsSection, "shortcuts">, SettingR
       "Guided review and the full viewer open with it. Settings a task locks stay as the task sets them.",
     ),
     row(
+      "decisionCutoff",
+      "Decision cutoff",
+      "lab",
+      "Set by your lab. Outlines scoring under it are faded in the viewer.",
+    ),
+    row(
+      "tierOutline",
+      "Outline model tier",
+      "personal",
+      "The tier the annotate tools start with when you ask for outlines. Your lab decides which model each tier uses.",
+    ),
+    row(
       "modelWarnings",
       "Model warnings",
       "personal",
       "Says when a model was trained on other tissue.",
+    ),
+    row(
+      "trackRecord",
+      "Track record block",
+      "personal",
+      "Shows how often your checks kept the model's calls, in the inspector.",
+    ),
+    row(
+      "calibration",
+      "Calibration details block",
+      "personal",
+      "Shows whether the model's confidence was calibrated and on how many sites, in the inspector.",
     ),
   ],
   navigation: [

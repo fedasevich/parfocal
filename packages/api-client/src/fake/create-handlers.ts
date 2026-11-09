@@ -38,7 +38,11 @@ const nextProjectNumber = () =>
 
 export const createdRecordHandlers = (): RequestHandler[] => [
   http.post("*/api/me/workspaces", async ({ request }) => {
-    const draft = (await request.json()) as { name?: string };
+    const draft = (await request.json()) as {
+      name?: string;
+      logo?: string | null;
+      logo_colour?: string | null;
+    };
     const name = draft.name?.trim() ?? "";
     if (name === "") return problem(422, "That request is not complete", "invalid-request");
     const workspace: Workspace = {
@@ -50,6 +54,8 @@ export const createdRecordHandlers = (): RequestHandler[] => [
       kind: "research",
       status: "active",
       organisation_name: name,
+      logo: draft.logo ?? name.slice(0, 2).toUpperCase(),
+      logo_colour: draft.logo_colour ?? "#2f6fdf",
     };
     return HttpResponse.json(workspace, { status: 201 });
   }),

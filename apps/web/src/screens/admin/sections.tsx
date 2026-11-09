@@ -1,8 +1,11 @@
 import {
   type AiModel,
+  getGetMySettingLayersQueryKey,
+  type LabSettings,
   type Project,
   type SecuritySetting,
   useArchiveProject,
+  useGetMySettingLayers,
   useGetSecuritySettings,
   useGetSessionPolicy,
   useGetStorageUsage,
@@ -13,8 +16,10 @@ import {
   useListTaxonomyTemplates,
   useListWebhooks,
   useRestoreProject,
+  useSetWorkspaceSettings,
   useShowModel,
 } from "@parfocal/api-client";
+
 import { NameCell, SettingRow } from "@parfocal/ui/components/admin";
 import { Button } from "@parfocal/ui/components/button";
 import { Icon } from "@parfocal/ui/components/icon";
@@ -50,6 +55,7 @@ import {
   TextLink,
   tableClass,
 } from "./common.tsx";
+import { DeletedProjectsZone } from "./deleted-projects.tsx";
 import {
   archiveActionLabel,
   archiveDoneNotice,
@@ -60,6 +66,8 @@ import {
   projectStatusLabel,
   projectsCountLabel,
 } from "./projects-model.ts";
+import { signInRows, TWO_FACTOR_KEY, twoFactorChange } from "./security-model.ts";
+
 import { durationText } from "./workspace-settings-model.ts";
 
 const right = "text-right";
@@ -196,6 +204,7 @@ export function ProjectsSection({ notify }: { notify: Notify }) {
           </TableBody>
         </Table>
       </Zone>
+      <DeletedProjectsZone notify={notify} />
       <Zone title="New projects">
         <div className="grid grid-cols-[180px_minmax(0,1fr)] items-start gap-x-4 gap-y-4 text-body-sm">
           <span className="pt-1 text-fg-dim">Privacy</span>
@@ -567,22 +576,44 @@ const idleRow = (minutes: number): SecuritySetting => ({
 });
 
 export function SecuritySection({ notify }: { notify: Notify }) {
+  const queryClient = useQueryClient();
   const settings = useGetSecuritySettings().data?.data;
   const policy = okData(useGetSessionPolicy().data);
+  const lab = okData(useGetMySettingLayers().data)?.lab;
+  const save = useSetWorkspaceSettings();
   const [values, setValues] = useState<Record<string, boolean>>({});
-  if (settings === undefined && policy === undefined) return null;
+  if (settings === undefined && policy === undefined && lab === undefined) return null;
   const sessionRows = [
     ...(policy ? [idleRow(policy.idle_lock_minutes)] : []),
     ...(settings?.data ?? []).filter((item) => item.key !== "idle-lock" || policy === undefined),
   ];
+  const saveTwoFactor = (current: LabSettings, on: boolean) =>
+    save.mutate(
+      { data: twoFactorChange(current, on) },
+      {
+        onSuccess: () => {
+          void queryClient.invalidateQueries({ queryKey: getGetMySettingLayersQueryKey() });
+          notify(
+            on
+              ? "Saved. Sign-in does not ask for a second factor yet."
+              : "Saved. Two factors are no longer required for everyone.",
+          );
+        },
+        onError: () => notify("The two factor setting did not save. Try again."),
+      },
+    );
   const row = (item: SecuritySetting) => (
     <SettingRow
       key={item.key}
       label={item.label}
       detail={item.detail}
-      on={values[item.key] ?? item.on}
+      on={item.key === TWO_FACTOR_KEY ? item.on : (values[item.key] ?? item.on)}
       locked={item.locked}
       onChange={(on) => {
+        if (item.key === TWO_FACTOR_KEY && lab) {
+          saveTwoFactor(lab, on);
+          return;
+        }
         setValues({ ...values, [item.key]: on });
         notify(
           item.key === "idle-lock"
@@ -594,16 +625,16 @@ export function SecuritySection({ notify }: { notify: Notify }) {
   );
   return (
     <div className="grid grid-cols-2 gap-(--space-zone)">
-      {settings ? (
-        <Zone title="Sign-in">
-          <div>{settings.sign_in.map(row)}</div>
+      <Zone title="Sign-in">
+        <div>{signInRows(settings?.sign_in, lab).map(row)}</div>
+        {settings ? (
           <ProgressBar
             value={percent(settings.two_factor.people, settings.two_factor.of)}
             label="People with two factors"
             valueText={`${settings.two_factor.people} of ${settings.two_factor.of}`}
           />
-        </Zone>
-      ) : null}
+        ) : null}
+      </Zone>
       <Zone title="Sessions and data">
         <div>{sessionRows.map(row)}</div>
       </Zone>

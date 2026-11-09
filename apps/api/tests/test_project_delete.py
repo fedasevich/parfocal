@@ -177,3 +177,16 @@ def test_an_owner_restores_a_deleted_project(api: ApiAs, database: str) -> None:
         ("project.deleted", "{}"),
         ("project.undeleted", "{}"),
     ]
+
+
+def test_the_deleted_list_shows_only_owned_deleted_projects(api: ApiAs, database: str) -> None:
+    r = review(api, database)
+    lead, reviewer = r.people["owner"], r.people["first"]
+    name = name_of(database, r.project)
+    assert api(lead).get("/api/projects/deleted").json() == []
+    assert delete(api, lead, r.project, name).status_code == 204
+    rows = api(lead).get("/api/projects/deleted").json()
+    assert [(row["id"], row["name"]) for row in rows] == [(str(r.project), name)]
+    assert api(reviewer).get("/api/projects/deleted").status_code == 403
+    assert undelete(api, lead, r.project).status_code == 200
+    assert api(lead).get("/api/projects/deleted").json() == []

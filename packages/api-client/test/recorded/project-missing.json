@@ -1,0 +1,12 @@
+{
+  "method": "GET",
+  "path": "/api/projects/00000000-0000-0000-0000-000000000001",
+  "status": 404,
+  "body": {
+    "type": "https://parfocal.eu/problems/not-found",
+    "title": "Not found",
+    "status": 404,
+    "code": "not-found",
+    "detail": "Project not found"
+  }
+}

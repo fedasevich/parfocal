@@ -10,7 +10,7 @@ import {
   setFakeView,
 } from "../src/fake/index.ts";
 import {
-  answerWorkspace,
+  askToJoinWorkspace,
   createInvitation,
   createMyWorkspace,
   createSampleProject,
@@ -18,8 +18,10 @@ import {
   getInvitePreview,
   getMe,
   getStorageUsage,
+  joinWorkspace,
   listAiModels,
   listInvitations,
+  listJoinableWorkspaces,
   listMemberActivity,
   listStudyTemplates,
   listTenantMembers,
@@ -170,8 +172,16 @@ test("a person who creates a workspace is a researcher with admin rights", async
 });
 
 test("setup joins the matching workspace at once and asks for the other one", async () => {
-  assert.equal((await answerWorkspace({ workspace_id: "w", how: "join" })).data.state, "joined");
-  assert.equal((await answerWorkspace({ workspace_id: "w", how: "ask" })).data.state, "requested");
+  const listed = await listJoinableWorkspaces();
+  assert.equal(listed.status, 200);
+  const [open, closed] = listed.data;
+  assert.deepEqual([open?.how, closed?.how], ["join", "ask"]);
+  const joined = await joinWorkspace(open?.id ?? "");
+  assert.equal(joined.status, 201);
+  assert.deepEqual([joined.data.tenant_id, joined.data.role], [open?.id, "reviewer"]);
+  const asked = await askToJoinWorkspace(closed?.id ?? "");
+  assert.equal(asked.status, 201);
+  assert.deepEqual([asked.data.tenant_id, asked.data.status], [closed?.id, "pending"]);
 });
 
 test("setup creates the sample project", async () => {

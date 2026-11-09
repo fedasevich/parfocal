@@ -22,7 +22,7 @@ from parfocal_api.evaluation import (
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import Principal
 from parfocal_api.problems import NotFoundError, ProblemError, TooManyRequestsError
-from parfocal_api.projects import owned
+from parfocal_api.projects import kept_row_of, owned
 from parfocal_api.rate_limits import report_link_wait
 from parfocal_api.review_tasks import readable_task
 from parfocal_api.tables import (
@@ -196,7 +196,12 @@ async def revoke_report_link(
     principal: CurrentPrincipal,
     connection: TenantConnection,
 ) -> Response:
-    task = await owned_task(connection, principal, task_id)
+    task = (
+        await connection.execute(select(review_tasks).where(review_tasks.c.id == task_id))
+    ).one_or_none()
+    if task is None:
+        raise NotFoundError("Review task not found")
+    await kept_row_of(connection, principal, task.project_id)
     found = await connection.scalar(
         select(report_links.c.revoked_at.is_(None)).where(
             report_links.c.id == link_id, report_links.c.task_id == task.id
