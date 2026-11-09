@@ -4884,7 +4884,7 @@ Admin is its own page with its own sidebar and the app's top bar, never a page i
   Depends on SHELL-001, IAM-024. Refs mock: admin.
   Size: M.
 
-- [ ] ADMIN-002 · Overview
+- [x] ADMIN-002 · Overview
   Stat tiles and a short summary per section. Storage shows the same split bar as ADMIN-006 in a compact size.
   Done when component tests render seeded data.
   Depends on ADMIN-001.
