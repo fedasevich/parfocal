@@ -10,6 +10,7 @@ import { useOverlay } from "./overlays.ts";
 import { type PaletteGroup, paletteEntries, paletteGroups } from "./palette-commands.ts";
 import { matchCommand, matchText } from "./palette-match.ts";
 import { useGoTo } from "./router-link.tsx";
+import { searchHandoff } from "./search-handoff.ts";
 import { hitHref, hitIcons } from "./search-hits.ts";
 
 type Row = PaletteCommand & { group: PaletteGroup; score: number };
@@ -132,7 +133,8 @@ function PaletteBody({ initial, close }: { initial: string; close: () => void })
             score: 0,
             run: () => {
               close();
-              void goTo(destinations.search(trimmed));
+              const { href, state } = searchHandoff(trimmed);
+              void router.navigate({ href, state: state as never });
             },
           },
         ]
