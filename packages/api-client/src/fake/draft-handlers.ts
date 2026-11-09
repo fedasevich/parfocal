@@ -8,7 +8,7 @@ import { clinicalDraftOperations } from "./clinical-handlers.ts";
 import { connectModelDraftOperations } from "./connect-model-handlers.ts";
 import { jobDraftOperations } from "./job-handlers.ts";
 import { projectDraftOperations } from "./project-handlers.ts";
-import { reviewDraftOperations } from "./review-handlers.ts";
+import { postedObjectThreads, reviewDraftOperations } from "./review-handlers.ts";
 import { checklist, reviewTasks, sampleProject, slideByIndex, threads } from "./scenario.ts";
 import { signUpDraftOperations } from "./sign-up-handlers.ts";
 import { taskDraftOperations } from "./task-handlers.ts";
@@ -113,8 +113,8 @@ export const toChecklist = (): Checklist =>
     },
   });
 
-export const toSlideThreads = (slideId: string): SlideThread[] =>
-  threads
+export const toSlideThreads = (slideId: string): SlideThread[] => [
+  ...threads
     .filter((item) => slideByIndex(item.slide).id === slideId)
     .map((item) =>
       slideThreadSchema.parse({
@@ -125,7 +125,9 @@ export const toSlideThreads = (slideId: string): SlideThread[] =>
         replies: item.replies,
         resolved: !item.open,
       }),
-    );
+    ),
+  ...postedObjectThreads(slideId).map((item) => slideThreadSchema.parse(item)),
+];
 
 export const getGetMyChecklistMockHandler = (overrideResponse?: Checklist) =>
   http.get("*/api/me/checklist", () => HttpResponse.json(overrideResponse ?? toChecklist()));

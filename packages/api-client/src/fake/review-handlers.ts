@@ -140,14 +140,37 @@ export const toTaskDisplay = (taskId: string): TaskDisplay => {
   });
 };
 
-const postedThreads: Thread[] = [];
-const postedComments: ThreadComment[] = [];
+const postedKey = "parfocal.fake.posted-threads";
+
+type PostedStore = { threads: Thread[]; comments: ThreadComment[] };
+
+const postedSession = (): Storage | null =>
+  typeof sessionStorage === "undefined" ? null : sessionStorage;
+
+const readPosted = (): PostedStore => {
+  const stored = postedSession()?.getItem(postedKey);
+  return stored === null || stored === undefined
+    ? { threads: [], comments: [] }
+    : (JSON.parse(stored) as PostedStore);
+};
+
+const kept = readPosted();
+const postedThreads: Thread[] = kept.threads;
+const postedComments: ThreadComment[] = kept.comments;
+
+const keepPosted = () =>
+  postedSession()?.setItem(
+    postedKey,
+    JSON.stringify({ threads: postedThreads, comments: postedComments }),
+  );
+
 const resolution = new Map<string, { at: string; by: string } | null>();
 const removedThreads = new Set<string>();
 
 export const resetFakeThreads = () => {
   postedThreads.length = 0;
   postedComments.length = 0;
+  postedSession()?.removeItem(postedKey);
   resolution.clear();
   removedThreads.clear();
 };
@@ -173,6 +196,27 @@ export const toThreadComments = (threadId: string): ThreadComment[] => {
     );
   return [...seeded, ...posted];
 };
+
+export const postedObjectThreads = (slideId: string) =>
+  postedThreads
+    .filter((item) => item.slide_id === slideId && !removedThreads.has(item.id))
+    .flatMap((item) => {
+      const object = item.anchor.object_id;
+      if (object === null || object === undefined) return [];
+      return [
+        {
+          id: item.id,
+          slide_id: slideId,
+          task_id: item.task_id,
+          anchor: object,
+          replies: Math.max(
+            0,
+            postedComments.filter((comment) => comment.thread_id === item.id).length - 1,
+          ),
+          resolved: withResolution(item).resolved_at !== null,
+        },
+      ];
+    });
 
 const withResolution = (thread: Thread): Thread => {
   const changed = resolution.get(thread.id);
@@ -249,6 +293,7 @@ const postThread = (
       created_at: at,
     }),
   );
+  keepPosted();
   return { ...thread, messages: [message] };
 };
 
@@ -263,12 +308,14 @@ const postReply = (threadId: string, body: MessageCreate): Message => {
     created_at: new Date().toISOString(),
   });
   postedComments.push(comment);
+  keepPosted();
   return toMessage(comment);
 };
 
 const movePosted = (threadId: string, body: PinMove) => {
   const posted = postedThreads.find((item) => item.id === threadId);
   if (posted !== undefined) posted.anchor = { ...posted.anchor, geometry: body.geometry };
+  keepPosted();
 };
 
 export const toTasklessThreads = (

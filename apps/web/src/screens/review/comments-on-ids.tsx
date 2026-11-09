@@ -183,6 +183,8 @@ function CommentsBody({
           </div>
           <ObjectThread
             key={anchor}
+            taskId={session.taskId}
+            slideId={session.slideId}
             object={anchor}
             thread={session.threads.find((item) => item.anchor === anchor)}
             meId={session.meId}

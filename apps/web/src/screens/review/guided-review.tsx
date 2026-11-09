@@ -855,6 +855,8 @@ function GuidedBody({
       />
     ) : (
       <ObjectComments
+        taskId={session.taskId}
+        slideId={session.slideId}
         object={currentId}
         threads={session.threads}
         meId={session.meId}
