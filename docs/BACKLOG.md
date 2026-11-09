@@ -2974,7 +2974,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Depends on CASE-002. Refs [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md).
   Size: M.
 
-- [ ] CMP-008 · Keep an aligned compare offset per slide pair
+- [x] CMP-008 · Keep an aligned compare offset per slide pair
   The owner chose 77a on 2026-11-09. When a person shifts one pane to line the tissue up, the offset, rotation and scale are saved per slide pair as a private setting of that person, restored the next time the pair opens, and cleared when either slide is replaced. A reset puts the panes back to the automatic alignment.
   Done when an API test saves, reads and clears an offset on a replaced slide, and a browser test aligns a pair, closes compare, reopens it and finds the same offset.
   Depends on CMP-006.
