@@ -19,7 +19,13 @@ test("a polygon with a hole and an island inside the hole matches its golden ima
   await assertSwiftShader(page);
   const report = await page.evaluate(() => window.holesHarness.render());
   expect(report.triangles).toBe(10);
-  const frame = await captureWebglCanvas(page, "#scene");
+  let frame = await captureWebglCanvas(page, "#scene");
+  await expect
+    .poll(async () => {
+      frame = await captureWebglCanvas(page, "#scene");
+      return frame.width > 0 && frame.data.length === frame.width * frame.height * 4;
+    })
+    .toBe(true);
   const middle = frame.width / 2;
   const hollow = pixel(frame, Math.round(middle * 0.7), middle);
   expect(hollow[3]).toBe(0);
