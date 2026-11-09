@@ -4090,7 +4090,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when a visual diff blocks a pull request until approved.
   Size: M.
 
-- [ ] TEST-009 · Accessibility testing
+- [x] TEST-009 · Accessibility testing
   axe on every story and E2E page, keyboard-only E2E flows for review and sign-out.
   Done when an a11y violation fails CI.
   Size: M.
