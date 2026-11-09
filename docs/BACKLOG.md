@@ -4062,7 +4062,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Depends on FOUND-016.
   Size: M.
 
-- [ ] TEST-013 · Workflow and job tests
+- [x] TEST-013 · Workflow and job tests
   The Postgres job runner tested with a fake clock and forced worker kills ([ADR 0003](adr/0003-pilot-platform-architecture.md)).
   Done when ingest and pre-read workflows have restart tests.
   Size: M.
