@@ -77,12 +77,32 @@ SET_SCOPE = text(
 )
 
 
+ROLE_BYPASSES_ROW_SECURITY = text(
+    "SELECT rolname, rolsuper OR rolbypassrls FROM pg_roles WHERE rolname = current_user"
+)
+
+
+class UnsafeDatabaseRoleError(RuntimeError):
+    def __init__(self, role: str) -> None:
+        super().__init__(
+            f"The database role {role} can bypass row-level security, "
+            "so it would read and change every workspace's rows"
+        )
+
+
 def async_database_url(url: str) -> str:
     return url.replace("postgresql://", "postgresql+asyncpg://", 1)
 
 
 def create_engine(url: str) -> AsyncEngine:
     return create_async_engine(async_database_url(url))
+
+
+async def require_row_security(engine: AsyncEngine) -> None:
+    async with engine.connect() as connection:
+        role, bypasses = (await connection.execute(ROLE_BYPASSES_ROW_SECURITY)).one()
+    if bypasses:
+        raise UnsafeDatabaseRoleError(role)
 
 
 @asynccontextmanager
