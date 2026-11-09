@@ -1820,7 +1820,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Done when routing tests cover deep links and the initial home bundle stays under the budget set in TEST-006.
   Size: M.
 
-- [ ] SHELL-002 · Global top bar and sidebar
+- [x] SHELL-002 · Global top bar and sidebar
   One top bar outside a slide, with the Parfocal logo and the workspace's name and logo with its switcher (IAM-008), search that opens the palette and accepts object IDs, New project, Upload as a normal button, the jobs ring (JOBS-003), the bell (NOTIF-002) and the account menu (SHELL-012). The sidebar holds Home, My work with its count, the projects with their slide counts, New project and, for admins, Admin under Workspace. Mentions live only behind the bell. Settings and theme are reached through the account menu and Cmd+comma.
   Replace the hand-written `apps/web/src/shell/shell-store.ts` (SHELL-012, built on useSyncExternalStore) with the Zustand shell store ADR 0182 asks for.
   Done when component and E2E tests cover each control, every control is reachable by keyboard, and a test confirms the sidebar has no Mentions entry.
