@@ -1,4 +1,4 @@
-# XXXX. Realtime events are ids and kinds posted to project, slide, task and user rooms, and every screen refetches
+# 0269. Realtime events are ids and kinds posted to project, slide, task and user rooms, and every screen refetches
 
 - Date: 2026-11-09
 - Status: Accepted

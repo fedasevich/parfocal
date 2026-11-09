@@ -232,3 +232,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0266](0266-admin-sections-and-their-permissions.md) | The admin page has ten sections, each behind one permission | Accepted | 2026-11-09 |
 | [0267](0267-sign-up-and-setup-flow.md) | The sign-up and setup flow on top of the Zitadel login and invitations | Accepted | 2026-11-09 |
 | [0268](0268-how-display-state-reaches-the-overlay-system.md) | The Display panel's state reaches the overlay system through one pure draw function per feature and a controller, and the live slide wiring is still to build | Accepted | 2026-11-09 |
+| [0269](0269-realtime-event-model-by-room-and-kind.md) | Realtime events are ids and kinds posted to project, slide, task and user rooms, and every screen refetches | Accepted | 2026-11-09 |
