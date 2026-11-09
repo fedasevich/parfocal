@@ -413,6 +413,7 @@ export interface Anchor {
   object_id?: string | null;
   geometry?: Geometry | null;
   offset?: Position | null;
+  result_set_id?: string | null;
 }
 
 export interface ExpertCheck {
