@@ -1,7 +1,7 @@
 import { HttpResponse, http, type RequestHandler } from "msw";
 import { type LayoutBlock, type LayoutFormat, reportPages } from "../draft/report-layout.ts";
 import { toEvaluationReport } from "./adjudication-handlers.ts";
-import { toStudyTemplates } from "./task-handlers.ts";
+import { listedStudyTemplates } from "./task-handlers.ts";
 
 const sizes: Record<string, [number, number]> = { a4: [595, 842], letter: [612, 792] };
 const emptyPdf = "%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n";
@@ -60,7 +60,7 @@ export function reportPreviewHandlers(): RequestHandler[] {
       );
     }),
     http.get("*/api/study-templates/:templateId/preview", ({ params }) => {
-      const template = toStudyTemplates().find((item) => item.id === params.templateId);
+      const template = listedStudyTemplates().find((item) => item.id === params.templateId);
       if (!template) return HttpResponse.json({ status: 404, title: "Not found" }, { status: 404 });
       return HttpResponse.json({
         ...previewOf(

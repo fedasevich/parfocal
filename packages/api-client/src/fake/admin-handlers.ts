@@ -12,7 +12,6 @@ import {
   getAskToJoinWorkspaceMockHandler,
   getChangeMemberRoleMockHandler,
   getCreateInvitationMockHandler,
-  getCreateStudyTemplateMockHandler,
   getExportAuditEventsMockHandler,
   getGetCurrentTenantMockHandler,
   getGetSessionPolicyMockHandler,
@@ -38,8 +37,6 @@ import type {
   NamedAuditEvent,
   ServiceAccount,
   SessionPolicy,
-  StudyTemplate,
-  StudyTemplateDraft,
   TaskInvitationDraft,
   Tenant,
   Workspace,
@@ -88,6 +85,7 @@ import {
   workspaceBrands,
   workspaceTotals,
 } from "./scenario-admin.ts";
+import { resetStudyTemplates } from "./study-template-store.ts";
 import { resetWorkspaceJoin } from "./workspace-join-handlers.ts";
 
 const created: Invitation[] = [];
@@ -99,6 +97,7 @@ export const resetAdminActions = () => {
   created.length = 0;
   withdrawn.clear();
   recordedAudit.length = 0;
+  resetStudyTemplates();
   resetWorkspaceJoin();
 };
 
@@ -583,16 +582,6 @@ const joinedWorkspace = (): AcceptedInvitation => {
   };
 };
 
-const createdTemplate = (draft: StudyTemplateDraft): StudyTemplate => ({
-  ...draft,
-  id: "00000000-0000-4000-8069-000000000001",
-  version: 1,
-  built_in: null,
-  retired_at: null,
-  created_at: scenarioNow,
-  version_created_at: scenarioNow,
-});
-
 export function adminHandlers(): RequestHandler[] {
   return [
     getListInvitationsMockHandler(() => toInvitations()),
@@ -673,9 +662,6 @@ export function adminHandlers(): RequestHandler[] {
       created.push(invitation);
       return invitation;
     }),
-    getCreateStudyTemplateMockHandler(async ({ request }) =>
-      createdTemplate((await request.json()) as StudyTemplateDraft),
-    ),
   ];
 }
 

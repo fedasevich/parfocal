@@ -22,7 +22,9 @@ import { OverviewSection } from "./overview.tsx";
 import { PeopleSection } from "./people.tsx";
 import { ApiSection, ModelsSection, ProjectsSection, SecuritySection } from "./sections.tsx";
 import { StorageSection } from "./storage.tsx";
-import { editorTitle, type TemplateDraft, TemplateEditor, TemplatesSection } from "./templates.tsx";
+import { TemplateEditor } from "./template-editor.tsx";
+import { editorHead, type TemplateSource } from "./template-model.ts";
+import { TemplatesSection } from "./templates.tsx";
 import { WorkspaceSettingsSection } from "./workspace-settings.tsx";
 
 type Props = {
@@ -43,7 +45,7 @@ export function AdminScreen({ section, scene, modal, request, change }: Props) {
   const renderLink = useRouterLink();
   const goTo = useGoTo();
   const [notice, notify] = useNotice();
-  const [source, setSource] = useState<StudyTemplateSummary | TemplateDraft | null>(null);
+  const [source, setSource] = useState<TemplateSource | null>(null);
   const [auditFilter, setAuditFilter] = useState<AuditFilter>(defaultAuditFilter);
   const workspaceName =
     me?.workspaces.find((item) => item.tenant_id === me.active_tenant_id)?.name ?? "The workspace";
@@ -83,7 +85,9 @@ export function AdminScreen({ section, scene, modal, request, change }: Props) {
   }
 
   if (scene === "tpledit") {
-    const head = editorTitle(source, templates);
+    const head = editorHead(
+      source ?? templates.find((item) => item.built_in === null) ?? templates[0],
+    );
     return (
       <AdminShell section="templates" folded>
         <div className="grid h-full min-h-0 grid-rows-[auto_minmax(0,1fr)] bg-surf-panel">
@@ -100,7 +104,7 @@ export function AdminScreen({ section, scene, modal, request, change }: Props) {
             <p className="m-0 text-body-sm text-fg-dim">{head.sub}</p>
           </header>
           <TemplateEditor
-            key={source && "id" in source ? source.id : (source?.name ?? "default")}
+            key={source ? ("id" in source ? source.id : source.name) : "default"}
             source={source}
             notify={notify}
             onBack={() => {

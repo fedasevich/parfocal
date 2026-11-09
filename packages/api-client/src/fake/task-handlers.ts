@@ -50,6 +50,7 @@ import {
   taskToday,
   unsureZones,
 } from "./scenario-task.ts";
+import { mergedStudyTemplates, studyTemplateHandlers } from "./study-template-store.ts";
 import { toReviewTaskDetail } from "./work-handlers.ts";
 
 const isTaskProject = (projectId: string) =>
@@ -109,25 +110,60 @@ export const toReviewerWorkload = (): ReviewerWorkload[] =>
     reviewerWorkloadSchema.parse({ user_id: people[item.key].id, open_tasks: item.openTasks }),
   );
 
-export const toStudyTemplateReviewDefaults = (): StudyTemplateReviewDefaults =>
-  studyTemplateReviewDefaultsSchema.parse({
-    templates: studyTemplates.map((template) => ({
+const scopeKeysOf = (kind: string) =>
+  kind === "all-regions"
+    ? ["regions"]
+    : kind === "random-cells"
+      ? ["cells"]
+      : kind === "cells-below-score"
+        ? ["low"]
+        : kind === "unsure-zones"
+          ? ["unsure"]
+          : ["roi"];
+
+const reviewDefaultsOfAdded = () =>
+  listedStudyTemplates()
+    .filter((template) => !studyTemplates.some((item) => item.id === template.id))
+    .map((template) => ({
       template_id: template.id,
-      scope_kinds: template.scope,
+      scope_kinds: scopeKeysOf(template.presets.objects_to_check.kind),
       scope_options: {
         cells: 50,
         low: 0.6,
         rois: ["R1", "R2", "R3", "R4"],
         unsure_zones: ["Z1", "Z2", "Z3"],
       },
-      decision: { kind: template.decision, agree_from: 4, disagree_to: 2 },
-      display: {
-        ...displayDefault,
-        sets: { ...displayDefault.sets },
-        ...template.display,
+      decision: {
+        kind: template.presets.decision?.style === "certainty" ? "certainty5" : "agree",
+        agree_from: 4,
+        disagree_to: 2,
       },
-      opinion_form: template.form,
-    })),
+      display: { ...displayDefault, sets: { ...displayDefault.sets } },
+      opinion_form: "default",
+    }));
+
+export const toStudyTemplateReviewDefaults = (): StudyTemplateReviewDefaults =>
+  studyTemplateReviewDefaultsSchema.parse({
+    templates: [
+      ...studyTemplates.map((template) => ({
+        template_id: template.id,
+        scope_kinds: template.scope,
+        scope_options: {
+          cells: 50,
+          low: 0.6,
+          rois: ["R1", "R2", "R3", "R4"],
+          unsure_zones: ["Z1", "Z2", "Z3"],
+        },
+        decision: { kind: template.decision, agree_from: 4, disagree_to: 2 },
+        display: {
+          ...displayDefault,
+          sets: { ...displayDefault.sets },
+          ...template.display,
+        },
+        opinion_form: template.form,
+      })),
+      ...reviewDefaultsOfAdded(),
+    ],
     opinion_forms: opinionForms,
   });
 
@@ -168,6 +204,8 @@ export const toStudyTemplates = (): StudyTemplateSummary[] =>
     version_created_at: "2026-10-01T09:00:00+02:00",
     task_count: template.used,
   }));
+
+export const listedStudyTemplates = () => mergedStudyTemplates(toStudyTemplates());
 
 export const toAvailability = (): MemberAvailability[] =>
   away.map((item) => ({
@@ -306,7 +344,8 @@ const changeTask = http.patch<{ taskId: string }>(
 export function taskHandlers(): RequestHandler[] {
   return [
     changeTask,
-    getListStudyTemplatesMockHandler(toStudyTemplates()),
+    getListStudyTemplatesMockHandler(() => listedStudyTemplates()),
+    ...studyTemplateHandlers(toStudyTemplates),
     getListAvailabilityMockHandler(toAvailability()),
     getCreateReviewTaskMockHandler(async ({ request, params }) =>
       toCreatedTask(String(params["projectId"]), (await request.json()) as TaskDraft),

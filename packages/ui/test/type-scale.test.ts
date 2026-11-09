@@ -14,6 +14,7 @@ const allowed: Record<string, string> = {
   "packages/ui/src/components/evaluation-report.tsx": printedPage,
   "packages/ui/src/components/clinical-report.tsx": printedPage,
   "packages/ui/src/components/report-templates.tsx": printedPage,
+  "packages/ui/src/components/report-editor-pages.tsx": printedPage,
   "apps/web/src/screens/evaluation/report-pages.tsx": printedPage,
   "packages/ui/src/components/person.tsx": mark,
   "packages/ui/src/components/auth.tsx": mark,
