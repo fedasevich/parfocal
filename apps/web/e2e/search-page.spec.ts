@@ -7,6 +7,7 @@ test("the sidebar opens Search and an object ID opens the slide at the object", 
   await page.getByRole("link", { name: "Search", exact: true }).click();
   await expect(page).toHaveURL(/\/search$/);
   await page.getByRole("textbox", { name: "Search everything" }).fill("T2·C145");
+  await expect(page).not.toHaveURL(/[?&]q=/);
   const row = page.getByRole("button", { name: /T2·C145 on A1/ });
   await expect(row).toBeVisible();
   await expect(page.getByRole("region", { name: "Object IDs" })).toBeVisible();
@@ -15,7 +16,8 @@ test("the sidebar opens Search and an object ID opens the slide at the object", 
 });
 
 test("part of a full path finds the object and the scopes narrow the groups", async ({ page }) => {
-  await page.goto("/search?q=s26-04812%20c145");
+  await page.goto("/search");
+  await page.getByRole("textbox", { name: "Search everything" }).fill("s26-04812 c145");
   await expect(page.getByRole("region", { name: "Object IDs" })).toBeVisible();
   await page.getByRole("radio", { name: "Projects" }).click();
   await expect(page).toHaveURL(/scope=projects/);
@@ -37,12 +39,15 @@ test("the palette All results row carries the query to the search page", async (
   }).toPass();
   await palette.getByRole("combobox").fill("c145");
   await palette.getByRole("option", { name: /All results for "c145"/ }).click();
-  await expect(page).toHaveURL(/\/search\?q=c145/);
+  await expect(page).toHaveURL(/\/search$/);
   await expect(page.getByRole("textbox", { name: "Search everything" })).toHaveValue("c145");
   await expect(page.getByRole("region", { name: "Object IDs" })).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole("textbox", { name: "Search everything" })).toHaveValue("");
 });
 
 test("the Actions scope lists matching actions", async ({ page }) => {
-  await page.goto("/search?q=upload&scope=actions");
+  await page.goto("/search?scope=actions");
+  await page.getByRole("textbox", { name: "Search everything" }).fill("upload");
   await expect(page.getByRole("button", { name: /Upload slides and results/ })).toBeVisible();
 });
