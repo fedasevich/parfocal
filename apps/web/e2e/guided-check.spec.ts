@@ -82,9 +82,9 @@ test("a row click keeps the guided object and a fast second key does not touch a
 
   await page.keyboard.press("d");
   await page.keyboard.press("Shift+X");
-  await expect(guide).toHaveAttribute("data-current", "C5");
+  await expect(guide).toHaveAttribute("data-current", "C2");
   await expect(row(page, "C1")).toHaveAttribute("data-origin", "ai-confirmed");
-  await expect(row(page, "C5")).toHaveAttribute("data-origin", "ai");
+  await expect(row(page, "C2")).toHaveAttribute("data-origin", "ai");
 });
 
 test("the guide key does nothing while the AI result is hidden", async ({ page }) => {
