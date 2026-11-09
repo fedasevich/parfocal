@@ -287,6 +287,21 @@
       "adr": "docs/adr/0154-performance-budget-file-and-regression-rule.md",
       "result": "docs/results/2026-11-08-bulk-annotation-budget.md",
       "todo": "Take the request time from a few green hosted runs and tighten the baseline to it."
+    },
+    {
+      "id": "annotate.hit-test-1m-ms",
+      "measures": "95th percentile of one hover hit test over 1,000,000 nuclei with two of eight groups hidden or locked, fastest of three passes",
+      "kind": "ms",
+      "unit": "ms",
+      "baseline": 0.0009,
+      "limit": 0.0027,
+      "headroom": 3,
+      "headroomReason": "The work is a few hundred array reads, so a slower or loaded hosted CPU scales it linearly. Three times covers that while the product bound of 1 ms stays asserted in the same test.",
+      "rttMs": 0,
+      "environment": "Node test runner",
+      "check": "apps/web/test/hit-test-scale.test.ts",
+      "adr": "docs/adr/0154-performance-budget-file-and-regression-rule.md",
+      "result": "docs/results/2026-11-09-hit-testing-at-scale.md"
     }
   ]
 }
