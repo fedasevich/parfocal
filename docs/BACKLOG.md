@@ -1026,12 +1026,12 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when edge tests show the ninth socket of one person in one room refused, both routes in a limit class, and an oversized or unsigned internal call refused unread.
   Size: M.
 
-- [ ] SEC-038 · Tile and room keys of at least 32 bytes
+- [x] SEC-038 · Tile and room keys of at least 32 bytes
   The API signs tile tokens with an empty key when `TILE_TOKEN_KEY` is empty or a placeholder, because only the room issuer refuses an empty value and the decode drops characters outside the alphabet, and the Worker accepts a key of any length ([edge token review](results/2026-11-09-edge-token-review.md), finding C3).
   Done when an empty, placeholder or short key answers 503 for tile and room access in the API tests and the Worker's `signingKey` refuses a key under 32 bytes.
   Size: S.
 
-- [ ] SEC-039 · Every edge response carries the security headers, also after a throw
+- [x] SEC-039 · Every edge response carries the security headers, also after a throw
   `GET /rt/%zz` makes `decodeURIComponent` throw, and nothing catches it, so Cloudflare serves its own error page without the headers of ADR 0156 (security headers in the edge Worker). A missing binding takes the same path ([edge token review](results/2026-11-09-edge-token-review.md), finding C4).
   Done when an edge test shows a malformed room path answered as a 404 problem and any throw answered as a 500 problem, both with the headers.
   Size: S.
@@ -1450,12 +1450,12 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Done when a unit test shows no zero in the last row of a short backing level for both routes, a tile column with an empty window reads, and the golden images still pass.
   Size: S.
 
-- [ ] VIEW-060 · A decode worker that fails to start is an error, not a hang
+- [x] VIEW-060 · A decode worker that fails to start is an error, not a hang
   A worker script that fails to load fires `error` and never posts, and the reader listens only for `message`, so its slot, its tiles and the stage hang on "Loading the slide" with no error ([viewer engine review](results/2026-11-09-viewer-engine-review.md), finding 2). The patch worker client has the same gap. A worker whose overview levels file fails once at open also keeps fewer levels than the page for the whole session (suspicion 1).
   Done when a unit test shows `ready` and every read sent to a failed worker rejecting, the pool idle afterwards, the same for the patch worker client, and a failed overview levels open failing the worker's open.
   Size: S.
 
-- [ ] VIEW-061 · A slide the route cannot draw leaves no decode workers behind
+- [x] VIEW-061 · A slide the route cannot draw leaves no decode workers behind
   `showSlide` spawns the decode workers and then builds the levels, which throw for a slide the RGB route cannot draw, so each attempt and each "Try again" leaks six workers ([viewer engine review](results/2026-11-09-viewer-engine-review.md), finding 3).
   Done when a test with a counting worker factory shows every spawned worker terminated after `showSlide` throws.
   Size: S.
@@ -1466,7 +1466,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on VIEW-061.
   Size: S.
 
-- [ ] VIEW-063 · Sharded OME-Zarr through the byte cache and the worker relay
+- [x] VIEW-063 · Sharded OME-Zarr through the byte cache and the worker relay
   zarrita reads a shard index with a HEAD request unless the store uses suffix requests, and the page byte cache and the worker relay forward only the URL and the Range header, so the HEAD becomes a full download and the next range is invalid ([viewer engine review](results/2026-11-09-viewer-engine-review.md), finding 4).
   Done when the sharded fixture opens through `cachedFetch` with the expected pixels and no request without a Range header for a shard file.
   Size: S.
@@ -1476,7 +1476,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Done when a unit test shows a failed channel tile listed in `failures()` and gone after a retry, and a disposed pool answering with the abort sentinel.
   Size: S.
 
-- [ ] VIEW-065 · The range cache refuses a short 206 reply
+- [x] VIEW-065 · The range cache refuses a short 206 reply
   A 206 reply with fewer bytes than asked for, not at the end of the file, is cached as complete and padded with zeros ([viewer engine review](results/2026-11-09-viewer-engine-review.md), finding 6).
   Done when a unit test shows the read rejecting and nothing cached.
   Size: S.
@@ -1486,7 +1486,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Done when each has a test that shows the fault or a note in the result file that says why it cannot happen.
   Size: S.
 
-- [ ] VIEW-067 · A range far past the file cannot freeze the byte cache
+- [x] VIEW-067 · A range far past the file cannot freeze the byte cache
   The range cache walks every block of a range before it knows the file's size, so a range with a huge end, which a corrupt offset in a slide file or a shard index produces, blocks the page or the decode worker for good. Found while reproducing VIEW-063 (sharded OME-Zarr through the byte cache), where it turned a wrong shard index into a hang.
   Done when a unit test shows a range longer than the cache can hold answered straight from the network, without one block entry made for it.
   Size: S.
