@@ -150,3 +150,30 @@ def test_a_link_to_a_deleted_project_is_gone(api: ApiAs, database: str) -> None:
     assert "project_name" not in gone.text
     logged = events(database, link["id"])
     assert json.loads(str(logged[-1][2]))["refused"] is True
+
+
+def test_an_owner_revokes_a_link_of_a_deleted_project(api: ApiAs, database: str) -> None:
+    r = scenario(api, database)
+    link = created(api, r)
+    name = str(
+        query(
+            with_database(OWNER_URL, database),
+            f"SELECT name FROM projects WHERE id = '{r.project}'",
+        )[0][0]
+    )
+    lead = r.people["owner"]
+    deleted = api(lead).request("DELETE", f"/api/projects/{r.project}", json={"name": name})
+    assert deleted.status_code == 204
+    assert opened(api, link["token"]).status_code == 410
+    for who in ("first", "viewer"):
+        assert api(r.people[who]).delete(f"{links(r)}/{link['id']}").status_code == 403
+    assert api(lead).delete(f"{links(r)}/{uuid.uuid4()}").status_code == 404
+    assert api(lead).delete(f"{links(r)}/{link['id']}").status_code == 204
+    assert api(lead).delete(f"{links(r)}/{link['id']}").status_code == 204
+    revoked = query(
+        with_database(OWNER_URL, database),
+        f"SELECT revoked_at IS NOT NULL FROM report_links WHERE id = '{link['id']}'",
+    )
+    assert revoked[0][0] is True
+    assert api(lead).post(f"/api/projects/{r.project}/undelete").status_code == 200
+    assert opened(api, link["token"]).status_code == 410

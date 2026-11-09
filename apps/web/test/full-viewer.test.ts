@@ -8,6 +8,8 @@ import {
   isCompareScene,
   isLayersScene,
   isNavigatorScene,
+  layerViews,
+  mapViews,
   viewerSetup,
 } from "../src/screens/viewer/viewer-scenes.ts";
 
@@ -80,4 +82,13 @@ test("a preset needs a name that is not taken", () => {
     "You already have a preset called Dots, no IDs.",
   );
   assert.equal(presetProblem("Fill by score", ["Dots, no IDs"]), null);
+});
+
+test("the Confidence map is a Visualize scene with its own view and counts as a map", () => {
+  assert.equal(viewerSetup("confidence").view, "confidence");
+  assert.equal(viewerSetup("confidence").tab, "display");
+  assert.ok(isLayersScene("confidence"));
+  assert.ok(layerViews.some((item) => item.value === "confidence"));
+  for (const view of ["heat", "density", "confidence"] as const) assert.ok(mapViews.has(view));
+  assert.ok(!mapViews.has("diff"));
 });

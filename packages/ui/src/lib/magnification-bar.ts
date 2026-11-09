@@ -2,7 +2,7 @@ export const magnificationPresets = [1.25, 2.5, 5, 10, 20, 40] as const;
 
 export type MagnificationPreset = (typeof magnificationPresets)[number];
 
-export type MagnificationLabel = "objective" | "zoom-percent";
+export type MagnificationLabel = "objective" | "zoom-percent" | "microns-per-pixel";
 
 export const zoomHoldMs = 2000;
 

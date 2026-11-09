@@ -35,7 +35,9 @@ export type RowKey =
   | "theme"
   | "brightness"
   | "density"
+  | "patientNames"
   | "lengths"
+  | "magnificationLabel"
   | "language"
   | "presetKeys"
   | "presets"
@@ -95,7 +97,19 @@ export const sectionRows: Record<Exclude<SettingsSection, "shortcuts">, SettingR
       "Changes the slide only, never the interface or the monitor. ⌥↑ and ⌥↓ do the same on the slide.",
     ),
     row("density", "Density", "personal", "Compact fits more rows on a laptop screen."),
+    row(
+      "patientNames",
+      "Patient names",
+      "personal",
+      "Full name or initials in the clinical viewer. Your lab can set this for everyone.",
+    ),
     row("lengths", "Lengths", "personal", "How sizes read on the slide and in reports."),
+    row(
+      "magnificationLabel",
+      "Magnification label",
+      "personal",
+      "What the bar on the slide shows first. The objective is 20× or 40×, the other is the scale in µm per pixel.",
+    ),
     row(
       "language",
       "Language",

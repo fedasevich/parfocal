@@ -3604,12 +3604,12 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Depends on SET-010.
   Size: S.
 
-- [ ] SET-003 · Display section
+- [x] SET-003 · Display section
   Theme, slide brightness, density, patient names, lengths, magnification label, language (English only, shown disabled). Theme and initials only can also be changed from the account menu (SHELL-012).
   Done when tests confirm each setting changes the UI live.
   Size: M.
 
-- [ ] SET-004 · Layout section
+- [x] SET-004 · Layout section
   Tools rail or dock with previews, side panel width and hide, panel while moving, minimap mode, pinned slide strip (off by default, CASE-002).
   Done when tests cover each setting.
   Size: M.
@@ -4040,7 +4040,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when scenarios run against staging on demand.
   Size: M.
 
-- [ ] TEST-011 · Contract tests for the API client
+- [x] TEST-011 · Contract tests for the API client
   Done when the generated client is tested against recorded API responses and schema drift fails CI.
   Size: M.
 
@@ -4211,7 +4211,7 @@ A project holds slides, AI results and review tasks. Cases inside it are optiona
   Depends on PROJ-003, ONB-005.
   Size: M.
 
-- [ ] PROJ-011 · Restore a deleted project and revoke its links
+- [x] PROJ-011 · Restore a deleted project and revoke its links
   PROJ-010 soft-deletes a project and restores it only through `POST /api/projects/{id}/undelete`, and a shared report link to a deleted project answers 410 but its owner cannot revoke it, because the revoke route 404s on a deleted project. Add a Deleted projects list in Admin with Restore for owners, and let the owner revoke a deleted project's report links.
   Done when a browser test deletes a project, finds it in Deleted projects, restores it and sees it back in every list, and an API test revokes a deleted project's report link.
   Depends on PROJ-010.
@@ -4940,13 +4940,13 @@ Admin is its own page with its own sidebar and the app's top bar, never a page i
   Depends on VIZ-001, VIEW-027, TASK-011. Refs mock: layers/display, mock: guided/display, doc 44.
   Size: M.
 
-- [ ] VIZ-008 · How objects draw on the live slide
+- [x] VIZ-008 · How objects draw on the live slide
   VIZ-002 added the drawing styles, the score cutoff and the confidence tint to the engine's `drawObjectOverlays` and drives the still preview with them, but the live slide renderer does not use them. Wire the Display panel's How objects draw group, the cutoff and the confidence choice into the live Viv overlays.
   Done when the live renderer's golden tests match the still preview's for each style, width, opacity and the cutoff.
   Depends on VIZ-002.
   Size: M.
 
-- [ ] VIZ-009 · Confidence map in the View group
+- [x] VIZ-009 · Confidence map in the View group
   VIZ-003 added the confidence map to the engine but not to the Display panel's View group, because the screens have no mock scene for it. Add the entry with its threshold beside the heatmap and density map, with a mock scene, and lock it with the other maps when a task locks the display.
   Done when a browser test turns the confidence map on and off from the View group and a golden matches the engine's confidence golden.
   Depends on VIZ-003.

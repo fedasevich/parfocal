@@ -51,6 +51,7 @@ import {
   TextLink,
   tableClass,
 } from "./common.tsx";
+import { DeletedProjectsZone } from "./deleted-projects.tsx";
 import { signInRows, TWO_FACTOR_KEY, twoFactorChange } from "./security-model.ts";
 import { durationText } from "./workspace-settings-model.ts";
 
@@ -140,6 +141,7 @@ export function ProjectsSection({ notify }: { notify: Notify }) {
           </TableBody>
         </Table>
       </Zone>
+      <DeletedProjectsZone notify={notify} />
       <Zone title="New projects">
         <div className="grid grid-cols-[180px_minmax(0,1fr)] items-start gap-x-4 gap-y-4 text-body-sm">
           <span className="pt-1 text-fg-dim">Privacy</span>
