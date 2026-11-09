@@ -1,9 +1,14 @@
 import { Button } from "@parfocal/ui/components/button";
 import { useEffect, useState, useSyncExternalStore } from "react";
-import { surveyPrompter } from "../telemetry/app-events.ts";
 import { seqPoints } from "../telemetry/survey-items.ts";
 import { seqEnds, seqQuestion, susItems, susScale } from "../telemetry/survey-text.ts";
-import type { SurveyOffer } from "../telemetry/surveys.ts";
+import type { SurveyOffer, SurveyPrompter } from "../telemetry/surveys.ts";
+
+let surveyPrompter: SurveyPrompter;
+
+export function bindSurveyPrompter(prompter: SurveyPrompter): void {
+  surveyPrompter = prompter;
+}
 
 const recheckMs = 15_000;
 let sessionCounted = false;
