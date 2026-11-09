@@ -158,11 +158,11 @@ export function boxDownsampleToInterleaved(
     const plane = planes[channel];
     if (plane === undefined) throw new UnsupportedVivSourceError(`plane ${channel} is missing`);
     for (let y = 0; y < height; y++) {
-      const top = y * residual;
-      const bottom = Math.min(top + residual, sourceHeight);
+      const top = Math.min(y * residual, sourceHeight - 1);
+      const bottom = Math.max(top + 1, Math.min((y + 1) * residual, sourceHeight));
       for (let x = 0; x < width; x++) {
-        const left = x * residual;
-        const right = Math.min(left + residual, sourceWidth);
+        const left = Math.min(x * residual, sourceWidth - 1);
+        const right = Math.max(left + 1, Math.min((x + 1) * residual, sourceWidth));
         let sum = 0;
         for (let row = top; row < bottom; row++) {
           const start = row * sourceWidth;
@@ -222,6 +222,22 @@ export async function readVivRegion(
   return toTile(result, region);
 }
 
+export function backingWindow(
+  region: readonly [number, number, number, number],
+  residual: number,
+  backing: Pick<PixelLevel, "width" | "height">,
+): PixelWindow {
+  const [x0, y0, x1, y1] = region;
+  const left = Math.min(x0 * residual, backing.width - 1);
+  const top = Math.min(y0 * residual, backing.height - 1);
+  return [
+    left,
+    top,
+    Math.max(left + 1, Math.min(x1 * residual, backing.width)),
+    Math.max(top + 1, Math.min(y1 * residual, backing.height)),
+  ];
+}
+
 export function regionKey(region: VivRegion): string {
   const channel = region.channel === undefined ? "" : `/c${region.channel}`;
   return `${region.backing}/${region.residual}/${region.window.join(",")}${channel}`;
@@ -248,12 +264,7 @@ export function createVivLevels(source: PixelSource, options: VivLevelOptions = 
       region: {
         backing: virtual.backing,
         residual,
-        window: [
-          x0 * residual,
-          y0 * residual,
-          Math.min(x1 * residual, backing.width),
-          Math.min(y1 * residual, backing.height),
-        ],
+        window: backingWindow(region, residual, backing),
         width: x1 - x0,
         height: y1 - y0,
       },

@@ -85,6 +85,54 @@ describe("Viv levels over a multichannel PixelSource", () => {
     assert.deepEqual(Array.from(out), [1, 16_385, 8, 9]);
   });
 
+  it("repeats the edge sample when the source is a row or a column short of the output", () => {
+    const short = new Uint16Array(4 * 2).fill(4_000);
+    const out = boxDownsamplePlane(short, "Uint16", 4, 2, 2, 3, 2);
+    assert.deepEqual(Array.from(out), new Array(3 * 2).fill(4_000));
+  });
+
+  it("draws no black edge on a level whose backing level is stored a pixel short", async () => {
+    const source = await open("synthetic-channels-uint8.ome.tiff");
+    const tile = { tileWidth: 256, tileHeight: 256 };
+    const levels = [
+      { downsample: 1, width: 46_000, height: 32_914, ...tile },
+      { downsample: 4, width: 11_500, height: 8_228, ...tile },
+    ];
+    const viv = createVivChannelLevels(
+      { ...source, levels },
+      {
+        read: (region) => {
+          const [x0, y0, x1, y1] = region.window;
+          assert.ok(x1 > x0 && y1 > y0, `the window ${region.window.join(",")} is empty`);
+          const plane = new Uint8Array((x1 - x0) * (y1 - y0)).fill(200);
+          return Promise.resolve({
+            data: boxDownsamplePlane(
+              plane,
+              "Uint8",
+              x1 - x0,
+              y1 - y0,
+              region.residual,
+              region.width,
+              region.height,
+            ),
+            width: region.width,
+            height: region.height,
+          });
+        },
+      },
+    );
+    const size = viv.levels[2]?.tileSize ?? 0;
+    const bottom = await viv.levels[2]?.getTile({
+      x: 0,
+      y: Math.ceil(8_229 / size) - 1,
+      selection: { c: 0 },
+    });
+    assert.ok(bottom);
+    assert.equal(bottom.height, 8_229 % size || size);
+    assert.equal(bottom.data.indexOf(0), -1);
+    source.close();
+  });
+
   it("rejects a channel, a tile or an aborted request that the slide cannot serve", async () => {
     const source = await open("synthetic-channels-uint16.ome.tiff");
     const viv = createVivChannelLevels(source);

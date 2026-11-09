@@ -6,6 +6,7 @@ import type {
   PixelSource,
 } from "../pixel-source/types.ts";
 import {
+  backingWindow,
   type RegionCentre,
   UnsupportedVivSourceError,
   type VirtualLevel,
@@ -111,11 +112,11 @@ export function boxDownsamplePlane(
 ): VivChannelArray {
   const out = dtype === "Uint8" ? new Uint8Array(width * height) : new Uint16Array(width * height);
   for (let y = 0; y < height; y++) {
-    const top = y * residual;
-    const bottom = Math.min(top + residual, sourceHeight);
+    const top = Math.min(y * residual, sourceHeight - 1);
+    const bottom = Math.max(top + 1, Math.min((y + 1) * residual, sourceHeight));
     for (let x = 0; x < width; x++) {
-      const left = x * residual;
-      const right = Math.min(left + residual, sourceWidth);
+      const left = Math.min(x * residual, sourceWidth - 1);
+      const right = Math.max(left + 1, Math.min((x + 1) * residual, sourceWidth));
       let sum = 0;
       for (let row = top; row < bottom; row++) {
         const start = row * sourceWidth;
@@ -203,12 +204,7 @@ export function createVivChannelLevels(
     const planned: VivChannelRegion = {
       backing: virtual.backing,
       residual,
-      window: [
-        x0 * residual,
-        y0 * residual,
-        Math.min(x1 * residual, backing.width),
-        Math.min(y1 * residual, backing.height),
-      ],
+      window: backingWindow(region, residual, backing),
       width: x1 - x0,
       height: y1 - y0,
       channel,
