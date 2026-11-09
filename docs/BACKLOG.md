@@ -4769,7 +4769,7 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Depends on EVAL-008, STACK-035. Refs mock: evaluation/pdf, mock: admin/templates, doc 43.
   Size: L.
 
-- [ ] EVAL-017 · Page and cache long PDF previews
+- [x] EVAL-017 · Page and cache long PDF previews
   Review of EVAL-010 (PDF preview) found a long task report returns every SVG page in one response and compiles the same Typst source again for Download and Print. Return the first pages and fetch the rest as the viewer scrolls, and cache the compiled report by the task version checksum.
   Done when an API test pages a long seeded report, a second preview and a download reuse the cache, and the preview browser spec still passes.
   Depends on EVAL-010.
