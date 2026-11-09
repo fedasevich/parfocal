@@ -14,8 +14,8 @@ def write_adr(adr_dir: Path, name: str, status_line: str | None) -> None:
     (adr_dir / name).write_text("\n".join(lines) + "\n")
 
 
-def write_index(adr_dir: Path, numbers: list[str]) -> None:
-    rows = "".join(f"| [{n}]({n}-x.md) | x | Accepted | 2026-10-06 |\n" for n in numbers)
+def write_index(adr_dir: Path, names: list[str]) -> None:
+    rows = "".join(f"| [{n[:4]}]({n}) | x | Accepted | 2026-10-06 |\n" for n in names)
     (adr_dir / "README.md").write_text(INDEX_HEADER + rows)
 
 
@@ -30,12 +30,12 @@ class CheckAdrsTest(unittest.TestCase):
     def test_valid_records_pass(self) -> None:
         write_adr(self.adr_dir, "0001-first.md", "- Status: Superseded by 0002")
         write_adr(self.adr_dir, "0002-second.md", "- Status: Accepted")
-        write_index(self.adr_dir, ["0001", "0002"])
+        write_index(self.adr_dir, ["0001-first.md", "0002-second.md"])
         self.assertEqual(check(self.adr_dir), [])
 
     def test_missing_status_fails(self) -> None:
         write_adr(self.adr_dir, "0001-first.md", None)
-        write_index(self.adr_dir, ["0001"])
+        write_index(self.adr_dir, ["0001-first.md"])
         self.assertEqual(
             check(self.adr_dir),
             ["0001-first.md: expected one '- Status:' line, found 0"],
@@ -43,12 +43,12 @@ class CheckAdrsTest(unittest.TestCase):
 
     def test_unknown_status_fails(self) -> None:
         write_adr(self.adr_dir, "0001-first.md", "- Status: Maybe")
-        write_index(self.adr_dir, ["0001"])
+        write_index(self.adr_dir, ["0001-first.md"])
         self.assertEqual(check(self.adr_dir), ["0001-first.md: unknown status 'Maybe'"])
 
     def test_superseded_by_missing_record_fails(self) -> None:
         write_adr(self.adr_dir, "0001-first.md", "- Status: Superseded by 0009")
-        write_index(self.adr_dir, ["0001"])
+        write_index(self.adr_dir, ["0001-first.md"])
         self.assertEqual(
             check(self.adr_dir),
             ["0001-first.md: superseded by missing record 0009"],
@@ -57,6 +57,23 @@ class CheckAdrsTest(unittest.TestCase):
     def test_record_missing_from_index_fails(self) -> None:
         write_adr(self.adr_dir, "0001-first.md", "- Status: Accepted")
         write_index(self.adr_dir, [])
+        self.assertEqual(
+            check(self.adr_dir),
+            ["README.md: ADR 0001 is not listed in the index"],
+        )
+
+    def test_two_records_with_one_number_fail(self) -> None:
+        write_adr(self.adr_dir, "0001-first.md", "- Status: Accepted")
+        write_adr(self.adr_dir, "0001-other.md", "- Status: Accepted")
+        write_index(self.adr_dir, ["0001-first.md", "0001-other.md"])
+        self.assertEqual(
+            check(self.adr_dir),
+            ["ADR 0001 is used by 2 records: 0001-first.md, 0001-other.md"],
+        )
+
+    def test_index_row_that_links_another_file_fails(self) -> None:
+        write_adr(self.adr_dir, "0001-first.md", "- Status: Accepted")
+        write_index(self.adr_dir, ["0001-renamed.md"])
         self.assertEqual(
             check(self.adr_dir),
             ["README.md: ADR 0001 is not listed in the index"],

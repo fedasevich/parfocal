@@ -573,7 +573,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Done when two pushes in a row to main each end with a finished run, a failing docs check fails `ci-ok`, and the lead's check reports any failed workflow of the head commit.
   Size: M.
 
-- [ ] FOUND-034 · Guard against duplicate decision record numbers
+- [x] FOUND-034 · Guard against duplicate decision record numbers
   Three records carry the number 0278 (blind first on annotate tasks, load tests run on Locust, and a decision note stays on the decision), because parallel merges numbered them at once, and `scripts/check_adrs.py` does not look for duplicates ([project review](results/2026-11-09-project-review.md)). Give two of them free numbers with their links and index rows, and make the check and `scripts/lead/number_adrs.py` refuse a number that is taken.
   Done when a test shows `check_adrs.py` failing on a duplicate number, every record has its own number and the check passes.
   Size: S.

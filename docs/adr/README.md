@@ -248,3 +248,5 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0282](0282-guided-review-and-the-full-viewer-draw-the-slide-through-the-engine-behind-the-still.md) | Guided review and the full viewer draw the slide through the engine behind the still, and the still stays as the fallback | Accepted | 2026-11-09 |
 | [0283](0283-mentions-in-decision-notes.md) | A mention in a decision note is a `mention` on a decision target, held until its author may be seen | Accepted | 2026-11-09 |
 | [0284](0284-review-objects-carry-their-outline-in-slide-pixels.md) | Review objects carry their outline in slide pixels, and the engine's bounds limit the still's camera | Accepted | 2026-11-09 |
+| [0285](0285-a-decision-note-stays-on-the-decision-and-shows-in-the-comments-tab.md) | A decision note stays on the decision and shows in the Comments tab as an entry above the thread | Accepted | 2026-11-09 |
+| [0286](0286-load-tests-run-on-locust.md) | Load tests run on Locust from the uv workspace and refuse any target that is not local or staging | Accepted | 2026-11-09 |
