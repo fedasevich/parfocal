@@ -1,4 +1,4 @@
-import { createRootRoute, Link, Outlet, useMatches } from "@tanstack/react-router";
+import { createRootRoute, Outlet, useMatches } from "@tanstack/react-router";
 import { FeedbackHost } from "../feedback/feedback-host.tsx";
 import { KeyBindingsProvider } from "../keys/keycap-bindings.tsx";
 import { LabKey } from "../lab/lab-key.tsx";
@@ -6,6 +6,7 @@ import { SessionLock } from "../session/session-lock.tsx";
 import { CommandPalette } from "../shell/command-palette.tsx";
 import { useAppliedDensity } from "../shell/density.ts";
 import { GlobalShell } from "../shell/global-shell.tsx";
+import { NotFoundPage, ServerErrorPage } from "../shell/issue-pages.tsx";
 import { useAppliedLengthUnits } from "../shell/length-units-setting.ts";
 import { useAppliedOutlineMode } from "../shell/outline-mode-setting.ts";
 import { overlaySearch } from "../shell/overlays.ts";
@@ -18,7 +19,8 @@ import { useAnalyticsConsentSync } from "../telemetry/consent-sync.ts";
 export const Route = createRootRoute({
   validateSearch: overlaySearch,
   component: Root,
-  notFoundComponent: NotFound,
+  notFoundComponent: NotFoundPage,
+  errorComponent: ServerErrorPage,
 });
 
 function Root() {
@@ -47,16 +49,5 @@ function Root() {
         <FeedbackHost />
       </KeyBindingsProvider>
     </SessionLock>
-  );
-}
-
-function NotFound() {
-  return (
-    <main className="mx-auto flex max-w-3xl flex-col gap-2 p-8">
-      <h1 className="font-semibold text-page-title text-fg">Page not found</h1>
-      <Link to="/" className="text-accent underline">
-        Go home
-      </Link>
-    </main>
   );
 }

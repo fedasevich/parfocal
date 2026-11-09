@@ -17,6 +17,7 @@ import { okData } from "../screens/placeholder.tsx";
 import { loadSurveyPrompter } from "../telemetry/app-events.ts";
 import { AccountMenu } from "./account-menu.tsx";
 import { Bell } from "./bell.tsx";
+import { ConnectionBanner } from "./connection-banner.tsx";
 import { destinations } from "./destinations.ts";
 import { JobsTrayProvider, ShellJobs } from "./jobs-tray.tsx";
 import { useOverlay } from "./overlays.ts";
@@ -121,19 +122,22 @@ export function GlobalShell({ children }: { children: ReactNode }) {
       <AppShell
         className="h-dvh"
         top={
-          <TopBar
-            user={person}
-            workspace={workspaceBrand(me)}
-            workspaceSlot={<ShellWorkspaceSwitcher me={me} />}
-            homeHref={destinations.home()}
-            renderLink={renderLink}
-            jobsSlot={<ShellJobs />}
-            onSearch={() => void overlay.set("palette")}
-            onNewProject={() => void goTo(destinations.newProject())}
-            onUpload={() => void goTo(destinations.upload(firstProject))}
-            bellSlot={<Bell />}
-            accountSlot={<AccountMenu me={me} person={person} />}
-          />
+          <div>
+            <TopBar
+              user={person}
+              workspace={workspaceBrand(me)}
+              workspaceSlot={<ShellWorkspaceSwitcher me={me} />}
+              homeHref={destinations.home()}
+              renderLink={renderLink}
+              jobsSlot={<ShellJobs />}
+              onSearch={() => void overlay.set("palette")}
+              onNewProject={() => void goTo(destinations.newProject())}
+              onUpload={() => void goTo(destinations.upload(firstProject))}
+              bellSlot={<Bell />}
+              accountSlot={<AccountMenu me={me} person={person} />}
+            />
+            <ConnectionBanner />
+          </div>
         }
         side={
           showSide ? <Sidebar sections={sections} active={active} renderLink={renderLink} /> : null
