@@ -3732,7 +3732,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
 
 ## 29 DEV · Input devices and tablet layout
 
-- [ ] DEV-000 · Research check
+- [x] DEV-000 · Research check
   Check Gamepad API and WebHID support across target browsers and the SpaceMouse HID report format.
   Done when an ADR lists support and fallbacks.
   Size: S.

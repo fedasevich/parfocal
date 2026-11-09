@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-09
 
+- An ADR lists input device support and fallbacks for mouse, trackpad, touch, pen, keyboard, footswitch, gamepad and SpaceMouse over WebHID. Browser support and the SpaceMouse report layout are marked TODO to confirm in DEV-004 with recorded reports.
 - SHELL-010 Correction, the review follow-up is SHELL-015 (one connection banner and issue pages everywhere), not SHELL-016.
 - TASK-010 Correction, the review follow-ups are TASK-016 (mock API blinds like the real one) and TASK-017 (first read notice in the full viewer and paged screen), not TASK-019 and TASK-020.
 - Guided check follows the task's stored review order and scope with the client sort as fallback, covered by unit tests and a scoped browser spec. Objects a model run adds wait for the order to be recomputed.
