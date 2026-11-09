@@ -3201,7 +3201,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Done when tests confirm metering records and a usage report per tenant.
   Size: M.
 
-- [ ] AIP-015 · Model serving health in the UI
+- [x] AIP-015 · Model serving health in the UI
   Never show an AI provider as active when it is offline. Show a clear state instead.
   Done when tests simulate a worker outage and the UI shows unavailable states.
   Refs doc 25.
