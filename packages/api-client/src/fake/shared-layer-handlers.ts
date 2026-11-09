@@ -8,6 +8,7 @@ import type {
   CheckProgress,
   CheckState,
   LayerObject,
+  OrderedObject,
   ProjectClass,
   SharedAiObject,
   SharedAiObjects,
@@ -75,6 +76,15 @@ export const toSharedAiObjects = (taskId: string, slideId: string): SharedAiObje
   offset: 0,
   objects: resultSetOf(slideId) === null ? [] : aiCells,
 });
+
+const scopedScoreBelow = 0.9;
+
+export const annotateStoredOrder = (taskId: string, slideId: string): OrderedObject[] | null =>
+  taskId === annotateStubTaskId && resultSetOf(slideId) !== null
+    ? aiCells
+        .filter((cell) => (cell.score ?? 1) < scopedScoreBelow)
+        .map(({ object, kind, number }) => ({ object, kind, number }))
+    : null;
 
 type Check = { checked_at: string | null; nothing_to_mark: boolean };
 

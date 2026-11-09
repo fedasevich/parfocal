@@ -1,4 +1,4 @@
-import { ApiError, type ProjectClass, useGetMe } from "@parfocal/api-client";
+import { ApiError, type ProjectClass, useGetMe, useGetReviewOrder } from "@parfocal/api-client";
 import {
   AiResultToggle,
   CheckedCard,
@@ -130,6 +130,17 @@ export function AnnotateTaskPanel({
     [refresh],
   );
 
+  const orderQuery = useGetReviewOrder(
+    taskId,
+    slideId,
+    { limit: 1000 },
+    { query: { enabled: guided && task.resultSetId !== null } },
+  );
+  const stored = okData(orderQuery.data);
+  const storedOrder =
+    stored === undefined || stored.objects.length === 0
+      ? null
+      : stored.objects.map((item) => item.object);
   const view = aiResultViewOf(task.resultSetId, aiList?.result_name ?? null, aiHidden);
   const ai = aiWithChecks(aiList?.objects ?? [], layer);
   const shownAi = view.shown ? ai : [];
@@ -288,17 +299,24 @@ export function AnnotateTaskPanel({
         </ul>
         {view.shown && ai.length > 0 && !locked ? (
           guided ? (
-            <GuidedCheck
-              engine={engine}
-              objects={ai}
-              locked={locked}
-              canReclass={classes.length > 1}
-              onCurrent={setSelected}
-              onConfirm={confirmSelected}
-              onDelete={deleteSelected}
-              onReclass={reclassSelected}
-              onLeave={toggleGuide}
-            />
+            orderQuery.isPending ? (
+              <p className="m-0 text-body-sm text-fg-dim" data-testid="guided-loading">
+                Loading the check order.
+              </p>
+            ) : (
+              <GuidedCheck
+                engine={engine}
+                objects={ai}
+                storedOrder={storedOrder}
+                locked={locked}
+                canReclass={classes.length > 1}
+                onCurrent={setSelected}
+                onConfirm={confirmSelected}
+                onDelete={deleteSelected}
+                onReclass={reclassSelected}
+                onLeave={toggleGuide}
+              />
+            )
           ) : (
             <Button size="sm" onClick={toggleGuide}>
               Guided check <Keycap action={guideAction} keys="⇧G" size="sm" />
