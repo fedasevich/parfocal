@@ -46404,6 +46404,78 @@
         ],
         "title": "OrganisationDraft"
       },
+      "Origin": {
+        "properties": {
+          "route": {
+            "$ref": "#/components/schemas/OriginRoute"
+          },
+          "project_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Id"
+          },
+          "case_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Case Id"
+          },
+          "task_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Task Id"
+          },
+          "slide_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slide Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "route"
+        ],
+        "title": "Origin"
+      },
+      "OriginRoute": {
+        "type": "string",
+        "enum": [
+          "home",
+          "my-work",
+          "project",
+          "case",
+          "task",
+          "search"
+        ],
+        "title": "OriginRoute"
+      },
       "OtherSets": {
         "properties": {
           "reviewed_layer": {
@@ -50949,6 +51021,12 @@
               }
             ],
             "title": "Task Id"
+          },
+          "origin": {
+            "$ref": "#/components/schemas/Origin",
+            "default": {
+              "route": "search"
+            }
           }
         },
         "type": "object",
@@ -54123,12 +54201,39 @@
               }
             ],
             "title": "Thread Id"
+          },
+          "case_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Case Id"
+          },
+          "resolved_from": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolved From"
+          },
+          "origin": {
+            "$ref": "#/components/schemas/Origin"
           }
         },
         "type": "object",
         "required": [
           "kind",
-          "project_id"
+          "project_id",
+          "origin"
         ],
         "title": "Target"
       },
