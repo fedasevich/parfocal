@@ -1455,6 +1455,9 @@ GET_ROUTES = {
     "listWorkspaceAccessRequests": Route(
         Exposure.TENANT, lambda _: "/api/tenant/access-requests", admin_rights=True
     ),
+    "getJoinSettings": Route(
+        Exposure.TENANT, lambda _: "/api/tenant/join-settings", admin_rights=True
+    ),
     "getOpinionForm": Route(
         Exposure.TENANT, lambda a: f"/api/projects/{a.ids['project']}/opinion-form"
     ),
@@ -1695,6 +1698,7 @@ async def seed_tenant(connection: AsyncConnection, label: str) -> Seeded:
             kind="diagnostic",
             region="eu",
             plan="pilot",
+            email_domain=f"{slug}.example.test",
         )
         .returning(tenants.c.id)
     )
@@ -1720,7 +1724,15 @@ async def seed_tenant(connection: AsyncConnection, label: str) -> Seeded:
         tenant_id=tenant_id,
         subject=f"subject-{slug}",
         ids={"organisation": organisation_id, "tenant": tenant_id, "user": user_id},
-        markers={str(organisation_id), str(tenant_id), str(user_id), slug, name, member_name},
+        markers={
+            str(organisation_id),
+            str(tenant_id),
+            str(user_id),
+            slug,
+            name,
+            member_name,
+            f"{slug}.example.test",
+        },
     )
     for seeder in SEEDERS.values():
         await seeder(connection, seeded)

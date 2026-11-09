@@ -439,3 +439,50 @@ test("the security contact is changed, removed and restored from workspace setti
   await page.getByRole("button", { name: "Undo" }).click();
   await expect(contact).toHaveValue("breach@hospital.example");
 });
+
+test("an admin opens an ask from the bell, approves another and declines the first", async ({
+  page,
+}) => {
+  await page.goto("/?as=DH");
+  await page.getByRole("button", { name: "Notifications, 2 unread" }).click();
+  const panel = page.getByRole("dialog", { name: "Notifications" });
+  await panel
+    .getByTestId("notification")
+    .filter({ hasText: "Eva Nováková asked to join" })
+    .getByRole("button", { name: "Answer the ask" })
+    .click();
+  await expect(page).toHaveURL(/\/admin\?section=people&request=[0-9a-f-]+$/);
+  const asks = page.getByRole("table", { name: "Join requests" });
+  await expect(asks.getByRole("row", { name: /Eva Nováková/ })).toHaveAttribute(
+    "aria-current",
+    "true",
+  );
+  await asks.getByRole("button", { name: "Approve Petr Svoboda" }).click();
+  await expect(page.getByText("Petr Svoboda joined as a reviewer.")).toBeVisible();
+  await expect(asks.getByRole("row", { name: /Petr Svoboda/ })).toHaveCount(0);
+  await asks.getByRole("button", { name: "Decline Eva Nováková" }).click();
+  await expect(page.getByText("You declined Eva Nováková's ask to join.")).toBeVisible();
+  await expect(page.getByText("No one else is waiting.")).toBeVisible();
+});
+
+test("the join domain refuses a public mail domain and saves the policy and logo", async ({
+  page,
+}) => {
+  await page.goto("/admin?section=settings");
+  const domain = page.getByRole("textbox", { name: "Email domain" });
+  const apply = page.getByRole("button", { name: "Apply" });
+  await expect(domain).toHaveValue("fnvltava.example");
+  await expect(apply).toBeDisabled();
+  await domain.fill("gmail.com");
+  await expect(page.getByText("A public mail domain would open the workspace")).toBeVisible();
+  await expect(apply).toBeDisabled();
+  await domain.fill(" Path.FNVltava.example ");
+  await page.getByRole("radio", { name: "Join at once" }).click();
+  await page.getByRole("textbox", { name: "Logo letters" }).fill("pv");
+  await apply.click();
+  await expect(
+    page.getByText("People with an @path.fnvltava.example email can join at once."),
+  ).toBeVisible();
+  await expect(domain).toHaveValue("path.fnvltava.example");
+  await expect(page.getByRole("textbox", { name: "Logo letters" })).toHaveValue("PV");
+});

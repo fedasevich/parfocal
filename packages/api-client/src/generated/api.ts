@@ -1830,6 +1830,11 @@ export const EmailDigest = {
   daily: "daily",
 } as const;
 
+/**
+ * @maxLength 253
+ */
+export type EmailDomain = string;
+
 export interface EmailSchedule {
   digest?: EmailDigest;
   quiet_from?: string | null;
@@ -2542,6 +2547,30 @@ export const JoinPolicy = {
   ask: "ask",
 } as const;
 
+export interface JoinSettings {
+  email_domain: string | null;
+  join_policy: JoinPolicy;
+  logo: string;
+  logo_colour: string;
+}
+
+/**
+ * @pattern ^[A-Z0-9]{1,3}$
+ */
+export type LogoMark = string;
+
+/**
+ * @pattern ^#[0-9a-f]{6}$
+ */
+export type LogoColour = string;
+
+export interface JoinSettingsChange {
+  email_domain: EmailDomain | null;
+  join_policy: JoinPolicy;
+  logo?: LogoMark | null;
+  logo_colour?: LogoColour | null;
+}
+
 export interface JoinableWorkspace {
   id: string;
   name: string;
@@ -2861,16 +2890,6 @@ export const Locale = {
   en: "en",
   "en-XA": "en-XA",
 } as const;
-
-/**
- * @pattern ^#[0-9a-f]{6}$
- */
-export type LogoColour = string;
-
-/**
- * @pattern ^[A-Z0-9]{1,3}$
- */
-export type LogoMark = string;
 
 export interface MappingChange {
   /**
@@ -51915,6 +51934,503 @@ export const useApproveWorkspaceAccessRequest = <TError = Problem, TContext = un
   TContext
 > => {
   return useMutation(getApproveWorkspaceAccessRequestMutationOptions(options), queryClient);
+};
+
+export type declineWorkspaceAccessRequestResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type declineWorkspaceAccessRequestResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type declineWorkspaceAccessRequestResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type declineWorkspaceAccessRequestResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type declineWorkspaceAccessRequestResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type declineWorkspaceAccessRequestResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type declineWorkspaceAccessRequestResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type declineWorkspaceAccessRequestResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type declineWorkspaceAccessRequestResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type declineWorkspaceAccessRequestResponseSuccess =
+  declineWorkspaceAccessRequestResponse204 & {
+    headers: Headers;
+  };
+export type declineWorkspaceAccessRequestResponseError = (
+  | declineWorkspaceAccessRequestResponse400
+  | declineWorkspaceAccessRequestResponse401
+  | declineWorkspaceAccessRequestResponse403
+  | declineWorkspaceAccessRequestResponse404
+  | declineWorkspaceAccessRequestResponse409
+  | declineWorkspaceAccessRequestResponse422
+  | declineWorkspaceAccessRequestResponse429
+  | declineWorkspaceAccessRequestResponse500
+) & {
+  headers: Headers;
+};
+
+export type declineWorkspaceAccessRequestResponse =
+  | declineWorkspaceAccessRequestResponseSuccess
+  | declineWorkspaceAccessRequestResponseError;
+
+export const getDeclineWorkspaceAccessRequestUrl = (requestId: string) => {
+  return `/api/tenant/access-requests/${requestId}`;
+};
+
+/**
+ * @summary Decline Workspace Access Request
+ */
+export const declineWorkspaceAccessRequest = async (
+  requestId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<declineWorkspaceAccessRequestResponse> => {
+  return apiFetch<declineWorkspaceAccessRequestResponse>(
+    getDeclineWorkspaceAccessRequestUrl(requestId),
+    {
+      ...options,
+      method: "DELETE",
+    },
+  );
+};
+
+export const getDeclineWorkspaceAccessRequestMutationKey = () =>
+  ["declineWorkspaceAccessRequest"] as const;
+
+export const getDeclineWorkspaceAccessRequestMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof declineWorkspaceAccessRequest>>,
+    TError,
+    DeclineWorkspaceAccessRequestMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof declineWorkspaceAccessRequest>>,
+  TError,
+  DeclineWorkspaceAccessRequestMutationVariables,
+  TContext
+> => {
+  const mutationKey = getDeclineWorkspaceAccessRequestMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof declineWorkspaceAccessRequest>>,
+    DeclineWorkspaceAccessRequestMutationVariables
+  > = (props) => {
+    const { requestId } = props ?? {};
+
+    return declineWorkspaceAccessRequest(requestId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeclineWorkspaceAccessRequestMutationResult = NonNullable<
+  Awaited<ReturnType<typeof declineWorkspaceAccessRequest>>
+>;
+
+export type DeclineWorkspaceAccessRequestMutationError = Problem;
+export type DeclineWorkspaceAccessRequestMutationVariables = { requestId: string };
+
+/**
+ * @summary Decline Workspace Access Request
+ */
+export const useDeclineWorkspaceAccessRequest = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof declineWorkspaceAccessRequest>>,
+      TError,
+      DeclineWorkspaceAccessRequestMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof declineWorkspaceAccessRequest>>,
+  TError,
+  DeclineWorkspaceAccessRequestMutationVariables,
+  TContext
+> => {
+  return useMutation(getDeclineWorkspaceAccessRequestMutationOptions(options), queryClient);
+};
+
+export type getJoinSettingsResponse200 = {
+  data: JoinSettings;
+  status: 200;
+};
+
+export type getJoinSettingsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getJoinSettingsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getJoinSettingsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getJoinSettingsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getJoinSettingsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getJoinSettingsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getJoinSettingsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getJoinSettingsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getJoinSettingsResponseSuccess = getJoinSettingsResponse200 & {
+  headers: Headers;
+};
+export type getJoinSettingsResponseError = (
+  | getJoinSettingsResponse400
+  | getJoinSettingsResponse401
+  | getJoinSettingsResponse403
+  | getJoinSettingsResponse404
+  | getJoinSettingsResponse409
+  | getJoinSettingsResponse422
+  | getJoinSettingsResponse429
+  | getJoinSettingsResponse500
+) & {
+  headers: Headers;
+};
+
+export type getJoinSettingsResponse = getJoinSettingsResponseSuccess | getJoinSettingsResponseError;
+
+export const getGetJoinSettingsUrl = () => {
+  return `/api/tenant/join-settings`;
+};
+
+/**
+ * @summary Get Join Settings
+ */
+export const getJoinSettings = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getJoinSettingsResponse> => {
+  return apiFetch<getJoinSettingsResponse>(getGetJoinSettingsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetJoinSettingsQueryKey = () => {
+  return [`/api/tenant/join-settings`] as const;
+};
+
+export const getGetJoinSettingsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getJoinSettings>>,
+  TError = Problem,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getJoinSettings>>, TError, TData>>;
+  request?: SecondParameter<typeof apiFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetJoinSettingsQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getJoinSettings>>> = ({ signal }) =>
+    getJoinSettings({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getJoinSettings>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetJoinSettingsQueryResult = NonNullable<Awaited<ReturnType<typeof getJoinSettings>>>;
+export type GetJoinSettingsQueryError = Problem;
+
+export function useGetJoinSettings<
+  TData = Awaited<ReturnType<typeof getJoinSettings>>,
+  TError = Problem,
+>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getJoinSettings>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getJoinSettings>>,
+          TError,
+          Awaited<ReturnType<typeof getJoinSettings>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetJoinSettings<
+  TData = Awaited<ReturnType<typeof getJoinSettings>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getJoinSettings>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getJoinSettings>>,
+          TError,
+          Awaited<ReturnType<typeof getJoinSettings>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetJoinSettings<
+  TData = Awaited<ReturnType<typeof getJoinSettings>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getJoinSettings>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Join Settings
+ */
+
+export function useGetJoinSettings<
+  TData = Awaited<ReturnType<typeof getJoinSettings>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getJoinSettings>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetJoinSettingsQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type setJoinSettingsResponse200 = {
+  data: JoinSettings;
+  status: 200;
+};
+
+export type setJoinSettingsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type setJoinSettingsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type setJoinSettingsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type setJoinSettingsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type setJoinSettingsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type setJoinSettingsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type setJoinSettingsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type setJoinSettingsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type setJoinSettingsResponseSuccess = setJoinSettingsResponse200 & {
+  headers: Headers;
+};
+export type setJoinSettingsResponseError = (
+  | setJoinSettingsResponse400
+  | setJoinSettingsResponse401
+  | setJoinSettingsResponse403
+  | setJoinSettingsResponse404
+  | setJoinSettingsResponse409
+  | setJoinSettingsResponse422
+  | setJoinSettingsResponse429
+  | setJoinSettingsResponse500
+) & {
+  headers: Headers;
+};
+
+export type setJoinSettingsResponse = setJoinSettingsResponseSuccess | setJoinSettingsResponseError;
+
+export const getSetJoinSettingsUrl = () => {
+  return `/api/tenant/join-settings`;
+};
+
+/**
+ * @summary Set Join Settings
+ */
+export const setJoinSettings = async (
+  joinSettingsChange: JoinSettingsChange,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<setJoinSettingsResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<setJoinSettingsResponse>(getSetJoinSettingsUrl(), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(joinSettingsChange),
+  });
+};
+
+export const getSetJoinSettingsMutationKey = () => ["setJoinSettings"] as const;
+
+export const getSetJoinSettingsMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof setJoinSettings>>,
+    TError,
+    SetJoinSettingsMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof setJoinSettings>>,
+  TError,
+  SetJoinSettingsMutationVariables,
+  TContext
+> => {
+  const mutationKey = getSetJoinSettingsMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof setJoinSettings>>,
+    SetJoinSettingsMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return setJoinSettings(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SetJoinSettingsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof setJoinSettings>>
+>;
+export type SetJoinSettingsMutationBody = JoinSettingsChange;
+export type SetJoinSettingsMutationError = Problem;
+export type SetJoinSettingsMutationVariables = { data: JoinSettingsChange };
+
+/**
+ * @summary Set Join Settings
+ */
+export const useSetJoinSettings = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof setJoinSettings>>,
+      TError,
+      SetJoinSettingsMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof setJoinSettings>>,
+  TError,
+  SetJoinSettingsMutationVariables,
+  TContext
+> => {
+  return useMutation(getSetJoinSettingsMutationOptions(options), queryClient);
 };
 
 export type listTenantMembersResponse200 = {

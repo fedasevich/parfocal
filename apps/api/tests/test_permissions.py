@@ -628,6 +628,10 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
         "PUT", "/api/tenant/settings", {"values": {"lock_after_minutes": 20}}
     ),
     "getSecurityContact": lambda _: Call("GET", "/api/tenant/security-contact"),
+    "getJoinSettings": lambda _: Call("GET", "/api/tenant/join-settings"),
+    "setJoinSettings": lambda _: Call(
+        "PUT", "/api/tenant/join-settings", {"email_domain": "lab.example", "join_policy": "ask"}
+    ),
     "setSecurityContact": lambda _: Call(
         "PUT", "/api/tenant/security-contact", {"email": "security@example.test"}
     ),
@@ -1107,6 +1111,9 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "listWorkspaceAccessRequests": lambda _: Call("GET", "/api/tenant/access-requests"),
     "approveWorkspaceAccessRequest": lambda w: Call(
         "POST", f"/api/tenant/access-requests/{seeded(w, 'access-request')}/approval"
+    ),
+    "declineWorkspaceAccessRequest": lambda w: Call(
+        "DELETE", f"/api/tenant/access-requests/{seeded(w, 'declined-access-request')}"
     ),
 }
 PLACEHOLDER = Workspace(
@@ -1941,6 +1948,13 @@ async def seed(database: str, lead: Seat = RESEARCHER, presets_for: Seat = RESEA
                     id=uuid.uuid5(tenant_id, "access-request"),
                     tenant_id=tenant_id,
                     user_id=colleague,
+                )
+            )
+            await connection.execute(
+                insert(workspace_access_requests).values(
+                    id=uuid.uuid5(tenant_id, "declined-access-request"),
+                    tenant_id=tenant_id,
+                    user_id=adjudicator,
                 )
             )
             await connection.execute(

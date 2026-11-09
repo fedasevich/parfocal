@@ -12,6 +12,7 @@ const adminSearch = z.object({
   section: z.enum(adminSections).optional(),
   scene: z.enum(onboardingScenes.admin).optional(),
   modal: z.enum(adminModals).optional(),
+  request: z.string().max(64).optional(),
 });
 
 export const Route = createFileRoute("/admin")({
@@ -27,6 +28,7 @@ function Admin() {
       section={sectionOf(search.section, search.scene)}
       scene={search.scene}
       modal={search.modal}
+      request={search.request}
       change={(next) =>
         void navigate({
           search: (previous) => {

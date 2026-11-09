@@ -162,6 +162,9 @@ const appLink = (item: ScenarioNotification): string => {
   }
   if (item.kind === "task-signed-off") return `/tasks/${taskIdOf("RT-09")}/evaluation`;
   if (item.kind === "task-assigned") return `/tasks/${taskIdOf("RT-14")}/guided?slide=${a1.id}`;
+  if (item.kind === "workspace-access-asked") {
+    return `/admin?section=people&request=${item.requestId ?? ""}`;
+  }
   return `/projects/${p07.id}?tab=slides`;
 };
 
@@ -172,6 +175,9 @@ const targetOf = (item: ScenarioNotification): Pick<InboxItem, "target_kind" | "
   if (item.kind === "task-assigned") return { target_kind: "task", target_id: taskIdOf("RT-14") };
   if (item.kind === "task-signed-off") {
     return { target_kind: "evaluation", target_id: taskIdOf("RT-09") };
+  }
+  if (item.kind === "workspace-access-asked") {
+    return { target_kind: "access-request", target_id: item.requestId ?? item.id };
   }
   return { target_kind: "job", target_id: item.id };
 };
@@ -185,6 +191,7 @@ const notificationKinds = [
   "upload-refused",
   "task-signed-off",
   "task-assigned",
+  "workspace-access-asked",
 ] as const satisfies readonly NotificationKind[];
 
 const scopeOf = (task: ScenarioReviewTask): ReviewTaskDetail["scope"] => {
@@ -326,8 +333,12 @@ export function createInbox() {
       slide_label: item.slideLabel ?? null,
       action: item.action,
     },
-    project_id: projectByCode("P07").id,
-    task_id: item.kind === "task-signed-off" ? taskIdOf("RT-09") : taskIdOf("RT-14"),
+    ...(item.kind === "workspace-access-asked"
+      ? { project_id: null, task_id: null }
+      : {
+          project_id: projectByCode("P07").id,
+          task_id: item.kind === "task-signed-off" ? taskIdOf("RT-09") : taskIdOf("RT-14"),
+        }),
     case_id: null,
     muted: false,
     read: read.has(item.id),

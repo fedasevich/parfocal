@@ -88,6 +88,7 @@ import {
   workspaceBrands,
   workspaceTotals,
 } from "./scenario-admin.ts";
+import { resetWorkspaceJoin } from "./workspace-join-handlers.ts";
 
 const created: Invitation[] = [];
 const withdrawn = new Set<string>();
@@ -98,6 +99,7 @@ export const resetAdminActions = () => {
   created.length = 0;
   withdrawn.clear();
   recordedAudit.length = 0;
+  resetWorkspaceJoin();
 };
 
 const recordAudit = (action: string, targetType: string, targetId: string, subject: string) => {

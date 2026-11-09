@@ -211,3 +211,147 @@ def test_joining_directly_closes_an_open_ask_and_audits_the_request(
     status = browser.sql(f"SELECT status FROM workspace_access_requests WHERE id = '{request_id}'")
     assert status == [("approved",)]
     assert browser.client.get("/api/tenant/access-requests").json() == []
+
+
+def test_an_admin_declines_an_ask_and_the_person_may_ask_again(
+    browser: Browser, colleague: Browser, domain: str
+) -> None:
+    tenant_id = create_workspace(browser, domain)
+    browser.sql(f"UPDATE tenants SET join_policy = 'ask' WHERE id = '{tenant_id}'")
+    sign_in(colleague, f"asker@{domain}")
+    asked = colleague.client.post(f"/api/me/joinable-workspaces/{tenant_id}/access-requests")
+    request_id = asked.json()["id"]
+
+    declined = browser.client.delete(f"/api/tenant/access-requests/{request_id}")
+    assert declined.status_code == 204
+    assert browser.client.get("/api/tenant/access-requests").json() == []
+    twice = browser.client.delete(f"/api/tenant/access-requests/{request_id}")
+    assert (twice.status_code, twice.json()["code"]) == (404, "access-request-not-found")
+    too_late = browser.client.post(f"/api/tenant/access-requests/{request_id}/approval")
+    assert too_late.status_code == 404
+    assert colleague.client.get("/api/me").json()["workspaces"] == []
+    audited = browser.sql(
+        "SELECT target_id::text FROM audit_events "
+        f"WHERE action = 'workspace.access-declined' AND tenant_id = '{tenant_id}'"
+    )
+    assert audited == [(request_id,)]
+    assert colleague.client.get("/api/me/joinable-workspaces").json()[0]["asked"] is False
+    again = colleague.client.post(f"/api/me/joinable-workspaces/{tenant_id}/access-requests")
+    assert again.status_code == 201
+    assert again.json()["id"] != request_id
+
+
+def test_a_reviewer_cannot_decline_an_ask(
+    browser: Browser, colleague: Browser, domain: str
+) -> None:
+    tenant_id = create_workspace(browser, domain)
+    sign_in(colleague, f"reader@{domain}")
+    colleague.client.post(f"/api/me/joinable-workspaces/{tenant_id}/membership")
+    refused = colleague.client.delete(f"/api/tenant/access-requests/{tenant_id}")
+    assert refused.status_code == 403
+
+
+def test_an_admin_sets_the_join_domain_policy_and_logo(
+    browser: Browser, colleague: Browser, domain: str
+) -> None:
+    tenant_id = create_workspace(browser, domain)
+    colour = browser.client.get("/api/me").json()["workspaces"][0]["logo_colour"]
+    assert browser.client.get("/api/tenant/join-settings").json() == {
+        "email_domain": domain,
+        "join_policy": "join",
+        "logo": "SL",
+        "logo_colour": colour,
+    }
+    moved = f"path.{domain}"
+    changed = browser.client.put(
+        "/api/tenant/join-settings",
+        json={
+            "email_domain": f" {moved.upper()} ",
+            "join_policy": "ask",
+            "logo": "PX",
+            "logo_colour": "#0f766e",
+        },
+    )
+    assert changed.status_code == 200
+    expected = {
+        "email_domain": moved,
+        "join_policy": "ask",
+        "logo": "PX",
+        "logo_colour": "#0f766e",
+    }
+    assert changed.json() == expected
+    assert browser.client.get("/api/tenant/join-settings").json() == expected
+    audited = browser.sql(
+        "SELECT details::jsonb->>'join_policy', details::jsonb->>'domain_changed' "
+        "FROM audit_events "
+        f"WHERE action = 'tenant.join-settings-changed' AND tenant_id = '{tenant_id}'"
+    )
+    assert audited == [("ask", "true")]
+
+    sign_in(colleague, f"asker@{moved}")
+    joinable = colleague.client.get("/api/me/joinable-workspaces").json()
+    assert [(item["id"], item["how"], item["logo"]) for item in joinable] == [
+        (tenant_id, "ask", "PX")
+    ]
+
+
+@pytest.mark.parametrize("public", ["gmail.com", "Seznam.cz", "outlook.de", "yahoo.co.uk"])
+def test_a_public_mail_domain_is_refused_as_the_join_domain(
+    browser: Browser, domain: str, public: str
+) -> None:
+    create_workspace(browser, domain)
+    refused = browser.client.put(
+        "/api/tenant/join-settings", json={"email_domain": public, "join_policy": "join"}
+    )
+    assert (refused.status_code, refused.json()["code"]) == (400, "public-email-domain")
+    assert browser.client.get("/api/tenant/join-settings").json()["email_domain"] == domain
+
+
+@pytest.mark.parametrize("bad", ["not a domain", "lab", "-lab.cz", "lab..cz", "@lab.cz"])
+def test_a_join_domain_that_is_not_a_domain_is_refused(
+    browser: Browser, domain: str, bad: str
+) -> None:
+    create_workspace(browser, domain)
+    refused = browser.client.put(
+        "/api/tenant/join-settings", json={"email_domain": bad, "join_policy": "join"}
+    )
+    assert refused.status_code == 422
+
+
+def test_clearing_the_join_domain_hides_the_workspace(
+    browser: Browser, colleague: Browser, domain: str
+) -> None:
+    create_workspace(browser, domain)
+    cleared = browser.client.put(
+        "/api/tenant/join-settings", json={"email_domain": None, "join_policy": "join"}
+    )
+    assert cleared.json()["email_domain"] is None
+    assert cleared.json()["logo"] == "SL"
+    sign_in(colleague, f"reader@{domain}")
+    assert colleague.client.get("/api/me/joinable-workspaces").json() == []
+
+
+def test_a_reviewer_cannot_change_the_join_settings(
+    browser: Browser, colleague: Browser, domain: str
+) -> None:
+    tenant_id = create_workspace(browser, domain)
+    sign_in(colleague, f"reader@{domain}")
+    colleague.client.post(f"/api/me/joinable-workspaces/{tenant_id}/membership")
+    refused = colleague.client.put(
+        "/api/tenant/join-settings", json={"email_domain": None, "join_policy": "join"}
+    )
+    assert refused.status_code == 403
+
+
+def test_an_ask_notification_links_to_the_join_requests_in_admin(
+    browser: Browser, colleague: Browser, domain: str
+) -> None:
+    tenant_id = create_workspace(browser, domain)
+    browser.sql(f"UPDATE tenants SET join_policy = 'ask' WHERE id = '{tenant_id}'")
+    sign_in(colleague, f"asker@{domain}")
+    asked = colleague.client.post(f"/api/me/joinable-workspaces/{tenant_id}/access-requests")
+    request_id = asked.json()["id"]
+    inbox = browser.client.get("/api/me/notifications").json()["notifications"]
+    assert [item["link"] for item in inbox if item["kind"] == "workspace-access-asked"] == [
+        f"/admin?section=people&request={request_id}"
+    ]

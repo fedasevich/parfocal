@@ -581,8 +581,10 @@ export type ScenarioNotification = {
     | "upload-done"
     | "upload-refused"
     | "task-signed-off"
-    | "task-assigned";
+    | "task-assigned"
+    | "workspace-access-asked";
   actor: PersonKey | null;
+  requestId?: string;
   title: string;
   detail: string;
   quote?: string;
@@ -676,6 +678,53 @@ export const notifications: ScenarioNotification[] = [
     action: "Continue",
     createdAt: "2026-10-09T10:00:00+02:00",
     read: true,
+  },
+  {
+    to: "DH",
+    id: uuid(12, 8),
+    kind: "workspace-access-asked",
+    actor: null,
+    requestId: uuid(77, 1),
+    title: "Eva Nováková asked to join",
+    detail: "eva.novakova@fnvltava.example asked to join Fakultní nemocnice Vltava",
+    action: "Answer the ask",
+    createdAt: "2026-10-15T10:40:00+02:00",
+    read: false,
+  },
+  {
+    to: "DH",
+    id: uuid(12, 9),
+    kind: "workspace-access-asked",
+    actor: null,
+    requestId: uuid(77, 2),
+    title: "Petr Svoboda asked to join",
+    detail: "petr.svoboda@fnvltava.example asked to join Fakultní nemocnice Vltava",
+    action: "Answer the ask",
+    createdAt: "2026-10-15T09:55:00+02:00",
+    read: false,
+  },
+];
+
+export const workspaceAsks = [
+  {
+    id: uuid(77, 1),
+    user_id: uuid(77, 11),
+    display_name: "Eva Nováková",
+    initials: "EN",
+    avatar_colour: 3,
+    title: "Resident · breast",
+    email: "eva.novakova@fnvltava.example",
+    asked_at: "2026-10-15T10:40:00+02:00",
+  },
+  {
+    id: uuid(77, 2),
+    user_id: uuid(77, 12),
+    display_name: "Petr Svoboda",
+    initials: "PS",
+    avatar_colour: 5,
+    title: "Pathologist · GI",
+    email: "petr.svoboda@fnvltava.example",
+    asked_at: "2026-10-15T09:55:00+02:00",
   },
 ];
 

@@ -63,6 +63,7 @@ import type {
   IssuedToken,
   Job,
   JoinableWorkspace,
+  JoinSettings,
   LabModel,
   LabModelTest,
   LabSettings,
@@ -12911,6 +12912,32 @@ export const getApproveWorkspaceAccessRequestResponseMock = (
   ...overrideResponse,
 });
 
+export const getGetJoinSettingsResponseMock = (
+  overrideResponse: Partial<Extract<JoinSettings, object>> = {},
+): JoinSettings => ({
+  email_domain: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  join_policy: faker.helpers.arrayElement(Object.values(JoinPolicy)),
+  logo: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  logo_colour: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  ...overrideResponse,
+});
+
+export const getSetJoinSettingsResponseMock = (
+  overrideResponse: Partial<Extract<JoinSettings, object>> = {},
+): JoinSettings => ({
+  email_domain: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  join_policy: faker.helpers.arrayElement(Object.values(JoinPolicy)),
+  logo: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  logo_colour: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  ...overrideResponse,
+});
+
 export const getListTenantMembersResponseMock = (): Member[] =>
   Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
     user_id: faker.string.uuid(),
@@ -19287,6 +19314,73 @@ export const getApproveWorkspaceAccessRequestMockHandler = (
   );
 };
 
+export const getDeclineWorkspaceAccessRequestMockHandler = (
+  overrideResponse?:
+    | void
+    | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void),
+  options?: RequestHandlerOptions,
+) => {
+  return http.delete(
+    "*/api/tenant/access-requests/:requestId",
+    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info);
+      }
+
+      return new HttpResponse(null, { status: 204 });
+    },
+    options,
+  );
+};
+
+export const getGetJoinSettingsMockHandler = (
+  overrideResponse?:
+    | JoinSettings
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<JoinSettings> | JoinSettings),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/tenant/join-settings",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetJoinSettingsResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getSetJoinSettingsMockHandler = (
+  overrideResponse?:
+    | JoinSettings
+    | ((
+        info: Parameters<Parameters<typeof http.put>[1]>[0],
+      ) => Promise<JoinSettings> | JoinSettings),
+  options?: RequestHandlerOptions,
+) => {
+  return http.put(
+    "*/api/tenant/join-settings",
+    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getSetJoinSettingsResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getListTenantMembersMockHandler = (
   overrideResponse?:
     | Member[]
@@ -20231,6 +20325,9 @@ export const getParfocalAPIMock = () => [
   getAskToJoinWorkspaceMockHandler(),
   getListWorkspaceAccessRequestsMockHandler(),
   getApproveWorkspaceAccessRequestMockHandler(),
+  getDeclineWorkspaceAccessRequestMockHandler(),
+  getGetJoinSettingsMockHandler(),
+  getSetJoinSettingsMockHandler(),
   getListTenantMembersMockHandler(),
   getListMemberActivityMockHandler(),
   getChangeMemberRoleMockHandler(),
