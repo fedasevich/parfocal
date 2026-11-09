@@ -3152,7 +3152,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Refs mock §2.14, kit decision D5.
   Size: M.
 
-- [ ] AIP-004 · Model tier picker
+- [x] AIP-004 · Model tier picker
   The picker dialog in Annotate and the tier chip in Review.
   Done when component tests cover the choices and behaviour of mock 11 "choosing a model".
   Size: M.
