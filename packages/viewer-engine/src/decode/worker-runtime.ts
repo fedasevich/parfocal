@@ -28,7 +28,14 @@ export function startDecodeWorker(
   scope.addEventListener("message", (event) => {
     const message = event.data;
     if (message.type === "open") {
-      opened = registry.open({ ...message.request, fetch: relayFetch(message.bytes) });
+      const { levels, ...request } = message.request;
+      opened = registry.open({ ...request, fetch: relayFetch(message.bytes) }).then((source) => {
+        if (levels === undefined || source.levels.length >= levels) return source;
+        source.close();
+        throw new Error(
+          `The decode worker opened ${source.levels.length} levels where the page has ${levels}`,
+        );
+      });
       opened
         .then((source) => (source.decodeReport ? source.decodeReport() : null))
         .then(

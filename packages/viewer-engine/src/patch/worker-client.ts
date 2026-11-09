@@ -1,5 +1,5 @@
 import { type BytePort, serveBytes } from "../decode/byte-relay.ts";
-import type { MessageTarget, WorkerOpenRequest } from "../decode/protocol.ts";
+import { onWorkerFailure, type WorkerHandle, type WorkerOpenRequest } from "../decode/protocol.ts";
 import { createRangeCache, type RangeCache } from "../decode/range-cache.ts";
 import {
   type PatchCacheStats,
@@ -11,9 +11,7 @@ import {
 } from "./patch-reader.ts";
 import type { PatchReply, PatchRequest } from "./protocol.ts";
 
-export interface PatchWorker extends MessageTarget<PatchRequest, PatchReply> {
-  terminate(): void;
-}
+export type PatchWorker = WorkerHandle<PatchRequest, PatchReply>;
 
 export interface PatchBytePorts {
   readonly local: BytePort;
@@ -63,6 +61,7 @@ export function createWorkerPatchReader(options: WorkerPatchReaderOptions): Patc
   const waiting = new Map<number, Waiting>();
   let nextId = 0;
   let closed = false;
+  let failure: PatchWorkerError | null = null;
   let hits = 0;
   let misses = 0;
   let size = 0;
@@ -70,6 +69,13 @@ export function createWorkerPatchReader(options: WorkerPatchReaderOptions): Patc
   serveBytes(bytes.local, cache);
 
   const ready = new Promise<PatchSourceInfo>((resolve, reject) => {
+    onWorkerFailure(worker, "patch", (reason) => {
+      if (failure !== null) return;
+      failure = new PatchWorkerError(reason);
+      reject(failure);
+      for (const waiter of waiting.values()) waiter.reject(failure);
+      waiting.clear();
+    });
     worker.addEventListener("message", (event) => {
       const reply = event.data;
       if (reply.type === "opened") {
@@ -111,6 +117,10 @@ export function createWorkerPatchReader(options: WorkerPatchReaderOptions): Patc
       return ready.then(
         () =>
           new Promise<PatchRead>((resolve, reject) => {
+            if (failure !== null) {
+              reject(failure);
+              return;
+            }
             if (signal?.aborted === true) {
               reject(abortError(signal));
               return;

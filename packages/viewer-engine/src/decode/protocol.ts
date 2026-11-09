@@ -6,6 +6,7 @@ export interface WorkerOpenRequest {
   readonly url: string;
   readonly index?: SlideIndex;
   readonly nativeJpeg?: "off" | "unvalidated";
+  readonly levels?: number;
 }
 
 export type DecodeRequest =
@@ -41,6 +42,35 @@ export type ByteReply =
 export interface MessageTarget<Outgoing, Incoming> {
   postMessage(message: Outgoing, transfer: Transferable[]): void;
   addEventListener(type: "message", listener: (event: MessageEvent<Incoming>) => void): void;
+}
+
+export interface WorkerHandle<Outgoing, Incoming> {
+  postMessage(message: Outgoing, transfer: Transferable[]): void;
+  addEventListener(type: "message", listener: (event: MessageEvent<Incoming>) => void): void;
+  addEventListener(type: "error" | "messageerror", listener: (event: Event) => void): void;
+  terminate(): void;
+}
+
+export interface WorkerFailureEvents {
+  addEventListener(type: "error" | "messageerror", listener: (event: Event) => void): void;
+}
+
+export function onWorkerFailure(
+  worker: WorkerFailureEvents,
+  name: string,
+  listener: (reason: string) => void,
+): void {
+  worker.addEventListener("error", (event) => {
+    const detail = "message" in event && typeof event.message === "string" ? event.message : "";
+    listener(
+      detail === ""
+        ? `The ${name} worker failed to start or stopped`
+        : `The ${name} worker stopped: ${detail}`,
+    );
+  });
+  worker.addEventListener("messageerror", () => {
+    listener(`A message from the ${name} worker could not be read`);
+  });
 }
 
 export function errorMessage(error: unknown): string {

@@ -254,21 +254,27 @@ export function createVivRoute(
   const readerFor = (slide: PixelSlide): WorkerRegionReader | null => {
     const opened = slide.opened;
     if (opened === null || workerCount < 1) return null;
+    const reported = new Set<unknown>();
+    const reportOnce = (error: unknown) => {
+      if (reported.has(error)) return;
+      reported.add(error);
+      reportError(error instanceof Error ? error : new Error(String(error)));
+    };
     const reader = createWorkerRegionReader({
       request: {
         formatId: opened.formatId,
         url: absoluteUrl(opened.url, opened.baseUrl).href,
         ...(opened.index === undefined ? {} : { index: opened.index }),
         ...(typeof opened.nativeJpeg === "string" ? { nativeJpeg: opened.nativeJpeg } : {}),
+        levels: slide.source.levels.length,
       },
       size: workerCount,
+      onFailure: reportOnce,
       cache:
         slide.bytes ?? createRangeCache(opened.fetch === undefined ? {} : { fetch: opened.fetch }),
       ...(options.spawnDecodeWorker ? { spawn: options.spawnDecodeWorker } : {}),
     });
-    reader.ready.catch((error: unknown) => {
-      reportError(error instanceof Error ? error : new Error(String(error)));
-    });
+    reader.ready.catch(reportOnce);
     reader.setFocus({ x: camera.x, y: camera.y });
     return reader;
   };

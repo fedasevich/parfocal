@@ -10,12 +10,16 @@ import {
   type PoolPoint,
   type PrefetchStats,
 } from "./decode-pool.ts";
-import type { DecodeReply, DecodeRequest, MessageTarget, WorkerOpenRequest } from "./protocol.ts";
+import {
+  type DecodeReply,
+  type DecodeRequest,
+  onWorkerFailure,
+  type WorkerHandle,
+  type WorkerOpenRequest,
+} from "./protocol.ts";
 import { createRangeCache, type RangeCache, type RangeCacheStats } from "./range-cache.ts";
 
-export interface DecodeWorker extends MessageTarget<DecodeRequest, DecodeReply> {
-  terminate(): void;
-}
+export type DecodeWorker = WorkerHandle<DecodeRequest, DecodeReply>;
 
 export interface BytePorts {
   readonly local: BytePort;
@@ -29,6 +33,7 @@ export interface WorkerReaderOptions {
   readonly spawn?: (index: number) => DecodeWorker;
   readonly channel?: () => BytePorts;
   readonly cache?: RangeCache;
+  readonly onFailure?: (error: DecodeWorkerError) => void;
 }
 
 export interface DecodeStats extends DecodePoolStats {
@@ -80,13 +85,28 @@ export function createWorkerRegionReader(options: WorkerReaderOptions): WorkerRe
   const waiting = new Map<number, Waiting>();
   const workers: DecodeWorker[] = [];
   const ports: BytePort[] = [];
+  const opening: ((error: DecodeWorkerError) => void)[] = [];
   let nextId = 0;
+  let failure: DecodeWorkerError | null = null;
+
+  const fail = (reason: string) => {
+    if (failure !== null) return;
+    failure = new DecodeWorkerError(reason);
+    for (const reject of opening) reject(failure);
+    for (const waiter of waiting.values()) waiter.reject(failure);
+    waiting.clear();
+    options.onFailure?.(failure);
+  };
 
   const pool = createDecodePool<VivRegion, VivTile | VivChannelTile>({
     ...(options.size === undefined ? {} : { size: options.size }),
     retain: options.retain ?? defaultRetainedResults,
     run: (slot, region) =>
       new Promise<VivTile | VivChannelTile>((resolve, reject) => {
+        if (failure !== null) {
+          reject(failure);
+          return;
+        }
         const worker = workers[slot];
         if (worker === undefined) {
           reject(new DecodeWorkerError(`Decode worker ${slot} is missing`));
@@ -107,6 +127,8 @@ export function createWorkerRegionReader(options: WorkerReaderOptions): WorkerRe
     ports.push(bytes.local);
     readies.push(
       new Promise<void>((resolve, reject) => {
+        opening.push(reject);
+        onWorkerFailure(worker, "decode", fail);
         worker.addEventListener("message", (event) => {
           const reply = event.data;
           if (reply.type === "opened") {
