@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-09
 
+- An ADR confirms STACK-012 (frontend testing stack) and gives six test levels an owning place and CI job each, with file counts measured by git ls-files.
 - An ADR lists input device support and fallbacks for mouse, trackpad, touch, pen, keyboard, footswitch, gamepad and SpaceMouse over WebHID. Browser support and the SpaceMouse report layout are marked TODO to confirm in DEV-004 with recorded reports.
 - SHELL-010 Correction, the review follow-up is SHELL-015 (one connection banner and issue pages everywhere), not SHELL-016.
 - TASK-010 Correction, the review follow-ups are TASK-016 (mock API blinds like the real one) and TASK-017 (first read notice in the full viewer and paged screen), not TASK-019 and TASK-020.

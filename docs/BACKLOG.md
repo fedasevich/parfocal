@@ -4010,7 +4010,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
 
 ## 35 TEST · Test infrastructure
 
-- [ ] TEST-000 · Research check
+- [x] TEST-000 · Research check
   Done when STACK-012 is confirmed and the test pyramid with ownership per level is written as an ADR.
   Size: S.
 
