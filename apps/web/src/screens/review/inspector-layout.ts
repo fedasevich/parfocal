@@ -4,7 +4,7 @@ import {
   useSetMySettingLayers,
 } from "@parfocal/api-client";
 import { useQueryClient } from "@tanstack/react-query";
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import { useResolvedSettings } from "../../shell/resolved-settings.ts";
 
 export const inspectorDefaultWidth = 340;
@@ -52,7 +52,11 @@ export function settingsOfLayoutPatch(patch: Partial<InspectorLayout>): Partial<
   };
 }
 
-export function useInspectorLayout(): [InspectorLayout, (patch: Partial<InspectorLayout>) => void] {
+export type InspectorLayoutChange =
+  | Partial<InspectorLayout>
+  | ((current: InspectorLayout) => Partial<InspectorLayout>);
+
+export function useInspectorLayout(): [InspectorLayout, (change: InspectorLayoutChange) => void] {
   const settings = useResolvedSettings();
   const queryClient = useQueryClient();
   const { mutate } = useSetMySettingLayers({
@@ -65,8 +69,12 @@ export function useInspectorLayout(): [InspectorLayout, (patch: Partial<Inspecto
     () => (settings === undefined ? defaultInspectorLayout : layoutOfSettings(settings)),
     [settings],
   );
+  const latest = useRef(layout);
+  latest.current = layout;
   const update = useCallback(
-    (patch: Partial<InspectorLayout>) => {
+    (change: InspectorLayoutChange) => {
+      const patch = typeof change === "function" ? change(latest.current) : change;
+      latest.current = { ...latest.current, ...patch };
       const values = settingsOfLayoutPatch(patch);
       queryClient.setQueryData(getGetMySettingLayersQueryKey(), (old: unknown) => {
         const response = old as { status: number; data: { personal: object } } | undefined;

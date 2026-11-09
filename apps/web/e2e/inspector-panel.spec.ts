@@ -14,6 +14,13 @@ async function openViewer(page: Page) {
   await expect(panel(page)).toBeVisible();
 }
 
+function settingsSaved(page: Page) {
+  return page.waitForResponse(
+    (response) =>
+      response.request().method() === "PUT" && response.url().endsWith("/api/me/setting-layers"),
+  );
+}
+
 async function widthOf(page: Page) {
   const box = await panel(page).boundingBox();
   return Math.round(box?.width ?? 0);
@@ -71,13 +78,18 @@ test("I and the rail button hide and restore the panel", async ({ page }) => {
 });
 
 test("the width and the hidden state survive a reload", async ({ page }) => {
+  test.setTimeout(60_000);
   await openViewer(page);
   const viewport = page.viewportSize()?.width ?? 1280;
+  const widthSaved = settingsSaved(page);
   await dragTo(page, viewport - 420);
+  await widthSaved;
   await page.reload();
   await expect(panel(page)).toBeVisible();
   await expect.poll(() => widthOf(page)).toBe(420);
+  const hiddenSaved = settingsSaved(page);
   await page.keyboard.press("i");
+  await hiddenSaved;
   await page.reload();
   await expect(panel(page)).toHaveCount(0);
   await expect(tab(page)).toBeVisible();

@@ -6,6 +6,7 @@ import { type KeyboardEvent, type PointerEvent, type ReactNode, useRef, useState
 import {
   dragInspector,
   type InspectorLayout,
+  type InspectorLayoutChange,
   inspectorMaxWidth,
   inspectorMinWidth,
 } from "./inspector-layout.ts";
@@ -13,7 +14,7 @@ import { useCoarsePointer } from "./use-coarse-pointer.ts";
 
 type InspectorDockProps = {
   layout: InspectorLayout;
-  onLayout: (patch: Partial<InspectorLayout>) => void;
+  onLayout: (change: InspectorLayoutChange) => void;
   panning: boolean;
   tabLabel: string;
   tabCount: number | undefined;
@@ -105,7 +106,7 @@ export function InspectorDock({
     const sign = event.key === "ArrowLeft" ? 1 : event.key === "ArrowRight" ? -1 : 0;
     if (sign === 0) return;
     event.preventDefault();
-    onLayout(dragInspector(layout.width + sign * keyStep));
+    onLayout((current) => dragInspector(current.width + sign * keyStep));
   };
 
   return (

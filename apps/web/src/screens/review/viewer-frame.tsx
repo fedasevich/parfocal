@@ -122,7 +122,7 @@ export function ViewerFrame({
   const [panning, setPanning] = useState(false);
   const panelBindings = useBindings(["viewer"], ["panel"]);
   useHotkeys(panelBindings, (fired) => {
-    if (fired.phase === "press") setLayout({ hidden: !layout.hidden });
+    if (fired.phase === "press") setLayout((current) => ({ hidden: !current.hidden }));
   });
   useEffect(() => {
     if (!panning) return;
@@ -192,7 +192,7 @@ export function ViewerFrame({
                 label={layout.hidden ? "Show the side panel" : "Hide the side panel"}
                 tipSide={tipSide}
                 pressed={!layout.hidden}
-                onPressedChange={() => setLayout({ hidden: !layout.hidden })}
+                onPressedChange={() => setLayout((current) => ({ hidden: !current.hidden }))}
                 {...(panelKey === null ? {} : { keyHint: panelKey })}
               />
             </ToolRailGroup>
@@ -237,7 +237,7 @@ export function ViewerFrame({
                     label={layout.hidden ? "Show the side panel" : "Hide the side panel"}
                     tipSide={tipSide}
                     pressed={!layout.hidden}
-                    onPressedChange={() => setLayout({ hidden: !layout.hidden })}
+                    onPressedChange={() => setLayout((current) => ({ hidden: !current.hidden }))}
                     {...(panelKey === null ? {} : { keyHint: panelKey })}
                   />
                 </ToolRailGroup>

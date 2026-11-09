@@ -99,7 +99,7 @@ export function ReviewTop({
         {...(mode === "full" || mode === "annotate"
           ? {
               panelHidden: layout.hidden,
-              onTogglePanel: () => setLayout({ hidden: !layout.hidden }),
+              onTogglePanel: () => setLayout((current) => ({ hidden: !current.hidden })),
             }
           : {})}
         backHref={destinations.myWork()}
