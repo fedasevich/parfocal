@@ -12,6 +12,7 @@ import type {
   AcceptedInvitation,
   AdjudicatedObject,
   AiChanges,
+  AiUsage,
   AnnotateSlideStatus,
   Annotation,
   AnnotationRef,
@@ -9471,6 +9472,48 @@ export const getGetTaskAiChangesResponseMock = (
   ...overrideResponse,
 });
 
+export const getGetAiUsageResponseMock = (
+  overrideResponse: Partial<Extract<AiUsage, object>> = {},
+): AiUsage => ({
+  since: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + "Z", null]),
+  until: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + "Z", null]),
+  gpu_seconds: faker.number.float({ fractionDigits: 2 }),
+  jobs: faker.number.int(),
+  models: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      model: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      model_version: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      gpu_seconds: faker.number.float({ fractionDigits: 2 }),
+      jobs: faker.number.int(),
+    }),
+  ),
+  recent_jobs: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      job_id: faker.string.uuid(),
+      kind: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      project_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      slide_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      model: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      model_version: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      gpu_seconds: faker.number.float({ fractionDigits: 2 }),
+      last_recorded_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+    }),
+  ),
+  ...overrideResponse,
+});
+
 export const getStartEvaluationVersionResponseMock = (
   overrideResponse: Partial<Extract<EvaluationVersionStarted, object>> = {},
 ): EvaluationVersionStarted => ({
@@ -18225,6 +18268,28 @@ export const getGetTaskAiChangesMockHandler = (
   );
 };
 
+export const getGetAiUsageMockHandler = (
+  overrideResponse?:
+    | AiUsage
+    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<AiUsage> | AiUsage),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/tenant/ai-usage",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetAiUsageResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getStartEvaluationVersionMockHandler = (
   overrideResponse?:
     | EvaluationVersionStarted
@@ -20122,6 +20187,7 @@ export const getParfocalAPIMock = () => [
   getExportTaskEvaluationMockHandler(),
   getExportTrainingDatasetMockHandler(),
   getGetTaskAiChangesMockHandler(),
+  getGetAiUsageMockHandler(),
   getStartEvaluationVersionMockHandler(),
   getListEvaluationChangesMockHandler(),
   getGetSignOffSummaryMockHandler(),

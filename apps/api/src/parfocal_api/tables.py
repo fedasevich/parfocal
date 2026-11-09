@@ -31,6 +31,7 @@ from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 
 from parfocal_common.data_classes import OPERATIONAL, PERSONAL, PHI, SECRET
 from parfocal_common.db import metadata
+from parfocal_common.gpu_usage import gpu_usage as gpu_usage
 from parfocal_common.jobs import job_steps as job_steps
 from parfocal_common.jobs import job_units as job_units
 from parfocal_common.jobs import jobs as jobs
