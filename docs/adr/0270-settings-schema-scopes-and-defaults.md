@@ -1,4 +1,4 @@
-# XXXX. The settings schema: every setting has one scope, a default, and a place that stores it, and the mock rows with no key yet are planned
+# 0270. The settings schema: every setting has one scope, a default, and a place that stores it, and the mock rows with no key yet are planned
 
 - Date: 2026-11-09
 - Status: Accepted
