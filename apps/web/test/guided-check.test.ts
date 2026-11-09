@@ -72,6 +72,7 @@ test("the next class cycles through the task's classes", () => {
   assert.equal(nextClassOf(["a", "b", "c"], "c"), "a");
   assert.equal(nextClassOf(["a", "b"], null), "a");
   assert.equal(nextClassOf([], "a"), null);
+  assert.equal(nextClassOf(["a"], "a"), null);
 });
 
 test("the camera area is around the object and never smaller than the smallest view", () => {

@@ -66,7 +66,8 @@ export function skippedState(queue: readonly string[], state: GuidedState): Guid
 export function nextClassOf(classIds: readonly string[], current: string | null): string | null {
   if (classIds.length === 0) return null;
   const at = current === null ? -1 : classIds.indexOf(current);
-  return classIds[(at + 1) % classIds.length] ?? null;
+  const next = classIds[(at + 1) % classIds.length] ?? null;
+  return next === current ? null : next;
 }
 
 export type Area = { x: number; y: number; width: number; height: number };
