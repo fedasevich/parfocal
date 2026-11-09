@@ -1,5 +1,6 @@
 import { Person } from "@parfocal/ui/components/person";
 import { StatusTag } from "@parfocal/ui/components/tag";
+import { scrollRegionProps } from "@parfocal/ui/lib/scroll-region";
 import {
   type Cell,
   createColumnHelper,
@@ -153,7 +154,8 @@ export function WorklistSpike({ data, mode }: { data: WorklistRow[]; mode: Workl
       </p>
       <div
         ref={scrollRef}
-        className="relative min-h-0 flex-1 overflow-auto rounded-md border border-line"
+        {...scrollRegionProps("Worklist rows")}
+        className="relative min-h-0 flex-1 overflow-auto rounded-md border border-line focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent focus-visible:outline-solid"
       >
         <table
           aria-label="Worklist"
