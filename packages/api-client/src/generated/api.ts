@@ -4204,6 +4204,16 @@ export interface ReportLink {
   last_opened_at: string | null;
 }
 
+export interface ReportPreview {
+  title: string;
+  file_name: string;
+  paper: string;
+  orientation: string;
+  page_count: number;
+  sample: boolean;
+  pages: string[];
+}
+
 export interface Resolved {
   source_name: string;
   class_id: string | null;
@@ -5188,6 +5198,12 @@ export interface Template {
   classes: TemplateClass[];
 }
 
+export interface TemplatePreviewDraft {
+  name: string;
+  blocks: ReportBlocks;
+  format?: ReportFormat;
+}
+
 export interface Tenant {
   id: string;
   organisation_id: string;
@@ -5769,6 +5785,26 @@ export type ListAdjudicationObjectsParams = {
 };
 
 export type ExportTaskEvaluationParams = {
+  locale?: Locale;
+};
+
+export type PreviewTaskEvaluationParams = {
+  locale?: Locale;
+};
+
+export type PreviewStudyTemplateParams = {
+  locale?: Locale;
+};
+
+export type DownloadStudyTemplatePreviewParams = {
+  locale?: Locale;
+};
+
+export type PreviewSavedStudyTemplateParams = {
+  locale?: Locale;
+};
+
+export type DownloadSavedStudyTemplatePreviewParams = {
   locale?: Locale;
 };
 
@@ -45633,6 +45669,1077 @@ export function useExportTaskEvaluation<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getExportTaskEvaluationQueryOptions(taskId, kind, params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type previewTaskEvaluationResponse200 = {
+  data: ReportPreview;
+  status: 200;
+};
+
+export type previewTaskEvaluationResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type previewTaskEvaluationResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type previewTaskEvaluationResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type previewTaskEvaluationResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type previewTaskEvaluationResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type previewTaskEvaluationResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type previewTaskEvaluationResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type previewTaskEvaluationResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type previewTaskEvaluationResponseSuccess = previewTaskEvaluationResponse200 & {
+  headers: Headers;
+};
+export type previewTaskEvaluationResponseError = (
+  | previewTaskEvaluationResponse400
+  | previewTaskEvaluationResponse401
+  | previewTaskEvaluationResponse403
+  | previewTaskEvaluationResponse404
+  | previewTaskEvaluationResponse409
+  | previewTaskEvaluationResponse422
+  | previewTaskEvaluationResponse429
+  | previewTaskEvaluationResponse500
+) & {
+  headers: Headers;
+};
+
+export type previewTaskEvaluationResponse =
+  | previewTaskEvaluationResponseSuccess
+  | previewTaskEvaluationResponseError;
+
+export const getPreviewTaskEvaluationUrl = (
+  taskId: string,
+  params?: PreviewTaskEvaluationParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/review-tasks/${taskId}/evaluation/preview?${stringifiedParams}`
+    : `/api/review-tasks/${taskId}/evaluation/preview`;
+};
+
+/**
+ * @summary Preview Task Evaluation
+ */
+export const previewTaskEvaluation = async (
+  taskId: string,
+  params?: PreviewTaskEvaluationParams,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<previewTaskEvaluationResponse> => {
+  return apiFetch<previewTaskEvaluationResponse>(getPreviewTaskEvaluationUrl(taskId, params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getPreviewTaskEvaluationQueryKey = (
+  taskId: string,
+  params?: PreviewTaskEvaluationParams,
+) => {
+  return [`/api/review-tasks/${taskId}/evaluation/preview`, ...(params ? [params] : [])] as const;
+};
+
+export const getPreviewTaskEvaluationQueryOptions = <
+  TData = Awaited<ReturnType<typeof previewTaskEvaluation>>,
+  TError = Problem,
+>(
+  taskId: string,
+  params?: PreviewTaskEvaluationParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof previewTaskEvaluation>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getPreviewTaskEvaluationQueryKey(taskId, params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof previewTaskEvaluation>>> = ({ signal }) =>
+    previewTaskEvaluation(taskId, params, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: taskId !== null && taskId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof previewTaskEvaluation>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type PreviewTaskEvaluationQueryResult = NonNullable<
+  Awaited<ReturnType<typeof previewTaskEvaluation>>
+>;
+export type PreviewTaskEvaluationQueryError = Problem;
+
+export function usePreviewTaskEvaluation<
+  TData = Awaited<ReturnType<typeof previewTaskEvaluation>>,
+  TError = Problem,
+>(
+  taskId: string,
+  params: undefined | PreviewTaskEvaluationParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof previewTaskEvaluation>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof previewTaskEvaluation>>,
+          TError,
+          Awaited<ReturnType<typeof previewTaskEvaluation>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function usePreviewTaskEvaluation<
+  TData = Awaited<ReturnType<typeof previewTaskEvaluation>>,
+  TError = Problem,
+>(
+  taskId: string,
+  params?: PreviewTaskEvaluationParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof previewTaskEvaluation>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof previewTaskEvaluation>>,
+          TError,
+          Awaited<ReturnType<typeof previewTaskEvaluation>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function usePreviewTaskEvaluation<
+  TData = Awaited<ReturnType<typeof previewTaskEvaluation>>,
+  TError = Problem,
+>(
+  taskId: string,
+  params?: PreviewTaskEvaluationParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof previewTaskEvaluation>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Preview Task Evaluation
+ */
+
+export function usePreviewTaskEvaluation<
+  TData = Awaited<ReturnType<typeof previewTaskEvaluation>>,
+  TError = Problem,
+>(
+  taskId: string,
+  params?: PreviewTaskEvaluationParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof previewTaskEvaluation>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getPreviewTaskEvaluationQueryOptions(taskId, params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type previewStudyTemplateResponse200 = {
+  data: ReportPreview;
+  status: 200;
+};
+
+export type previewStudyTemplateResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type previewStudyTemplateResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type previewStudyTemplateResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type previewStudyTemplateResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type previewStudyTemplateResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type previewStudyTemplateResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type previewStudyTemplateResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type previewStudyTemplateResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type previewStudyTemplateResponseSuccess = previewStudyTemplateResponse200 & {
+  headers: Headers;
+};
+export type previewStudyTemplateResponseError = (
+  | previewStudyTemplateResponse400
+  | previewStudyTemplateResponse401
+  | previewStudyTemplateResponse403
+  | previewStudyTemplateResponse404
+  | previewStudyTemplateResponse409
+  | previewStudyTemplateResponse422
+  | previewStudyTemplateResponse429
+  | previewStudyTemplateResponse500
+) & {
+  headers: Headers;
+};
+
+export type previewStudyTemplateResponse =
+  | previewStudyTemplateResponseSuccess
+  | previewStudyTemplateResponseError;
+
+export const getPreviewStudyTemplateUrl = (params?: PreviewStudyTemplateParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/study-templates/preview?${stringifiedParams}`
+    : `/api/study-templates/preview`;
+};
+
+/**
+ * @summary Preview Study Template
+ */
+export const previewStudyTemplate = async (
+  templatePreviewDraft: TemplatePreviewDraft,
+  params?: PreviewStudyTemplateParams,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<previewStudyTemplateResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<previewStudyTemplateResponse>(getPreviewStudyTemplateUrl(params), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(templatePreviewDraft),
+  });
+};
+
+export const getPreviewStudyTemplateMutationKey = () => ["previewStudyTemplate"] as const;
+
+export const getPreviewStudyTemplateMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof previewStudyTemplate>>,
+    TError,
+    PreviewStudyTemplateMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof previewStudyTemplate>>,
+  TError,
+  PreviewStudyTemplateMutationVariables,
+  TContext
+> => {
+  const mutationKey = getPreviewStudyTemplateMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof previewStudyTemplate>>,
+    PreviewStudyTemplateMutationVariables
+  > = (props) => {
+    const { data, params } = props ?? {};
+
+    return previewStudyTemplate(data, params, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type PreviewStudyTemplateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof previewStudyTemplate>>
+>;
+export type PreviewStudyTemplateMutationBody = TemplatePreviewDraft;
+export type PreviewStudyTemplateMutationError = Problem;
+export type PreviewStudyTemplateMutationVariables = {
+  data: TemplatePreviewDraft;
+  params?: PreviewStudyTemplateParams;
+};
+
+/**
+ * @summary Preview Study Template
+ */
+export const usePreviewStudyTemplate = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof previewStudyTemplate>>,
+      TError,
+      PreviewStudyTemplateMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof previewStudyTemplate>>,
+  TError,
+  PreviewStudyTemplateMutationVariables,
+  TContext
+> => {
+  return useMutation(getPreviewStudyTemplateMutationOptions(options), queryClient);
+};
+
+export type downloadStudyTemplatePreviewResponse200 = {
+  data: void;
+  status: 200;
+};
+
+export type downloadStudyTemplatePreviewResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type downloadStudyTemplatePreviewResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type downloadStudyTemplatePreviewResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type downloadStudyTemplatePreviewResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type downloadStudyTemplatePreviewResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type downloadStudyTemplatePreviewResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type downloadStudyTemplatePreviewResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type downloadStudyTemplatePreviewResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type downloadStudyTemplatePreviewResponseSuccess =
+  downloadStudyTemplatePreviewResponse200 & {
+    headers: Headers;
+  };
+export type downloadStudyTemplatePreviewResponseError = (
+  | downloadStudyTemplatePreviewResponse400
+  | downloadStudyTemplatePreviewResponse401
+  | downloadStudyTemplatePreviewResponse403
+  | downloadStudyTemplatePreviewResponse404
+  | downloadStudyTemplatePreviewResponse409
+  | downloadStudyTemplatePreviewResponse422
+  | downloadStudyTemplatePreviewResponse429
+  | downloadStudyTemplatePreviewResponse500
+) & {
+  headers: Headers;
+};
+
+export type downloadStudyTemplatePreviewResponse =
+  | downloadStudyTemplatePreviewResponseSuccess
+  | downloadStudyTemplatePreviewResponseError;
+
+export const getDownloadStudyTemplatePreviewUrl = (params?: DownloadStudyTemplatePreviewParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/study-templates/preview/pdf?${stringifiedParams}`
+    : `/api/study-templates/preview/pdf`;
+};
+
+/**
+ * @summary Download Study Template Preview
+ */
+export const downloadStudyTemplatePreview = async (
+  templatePreviewDraft: TemplatePreviewDraft,
+  params?: DownloadStudyTemplatePreviewParams,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<downloadStudyTemplatePreviewResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<downloadStudyTemplatePreviewResponse>(
+    getDownloadStudyTemplatePreviewUrl(params),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+      body: JSON.stringify(templatePreviewDraft),
+    },
+  );
+};
+
+export const getDownloadStudyTemplatePreviewMutationKey = () =>
+  ["downloadStudyTemplatePreview"] as const;
+
+export const getDownloadStudyTemplatePreviewMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof downloadStudyTemplatePreview>>,
+    TError,
+    DownloadStudyTemplatePreviewMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof downloadStudyTemplatePreview>>,
+  TError,
+  DownloadStudyTemplatePreviewMutationVariables,
+  TContext
+> => {
+  const mutationKey = getDownloadStudyTemplatePreviewMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof downloadStudyTemplatePreview>>,
+    DownloadStudyTemplatePreviewMutationVariables
+  > = (props) => {
+    const { data, params } = props ?? {};
+
+    return downloadStudyTemplatePreview(data, params, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DownloadStudyTemplatePreviewMutationResult = NonNullable<
+  Awaited<ReturnType<typeof downloadStudyTemplatePreview>>
+>;
+export type DownloadStudyTemplatePreviewMutationBody = TemplatePreviewDraft;
+export type DownloadStudyTemplatePreviewMutationError = Problem;
+export type DownloadStudyTemplatePreviewMutationVariables = {
+  data: TemplatePreviewDraft;
+  params?: DownloadStudyTemplatePreviewParams;
+};
+
+/**
+ * @summary Download Study Template Preview
+ */
+export const useDownloadStudyTemplatePreview = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof downloadStudyTemplatePreview>>,
+      TError,
+      DownloadStudyTemplatePreviewMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof downloadStudyTemplatePreview>>,
+  TError,
+  DownloadStudyTemplatePreviewMutationVariables,
+  TContext
+> => {
+  return useMutation(getDownloadStudyTemplatePreviewMutationOptions(options), queryClient);
+};
+
+export type previewSavedStudyTemplateResponse200 = {
+  data: ReportPreview;
+  status: 200;
+};
+
+export type previewSavedStudyTemplateResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type previewSavedStudyTemplateResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type previewSavedStudyTemplateResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type previewSavedStudyTemplateResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type previewSavedStudyTemplateResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type previewSavedStudyTemplateResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type previewSavedStudyTemplateResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type previewSavedStudyTemplateResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type previewSavedStudyTemplateResponseSuccess = previewSavedStudyTemplateResponse200 & {
+  headers: Headers;
+};
+export type previewSavedStudyTemplateResponseError = (
+  | previewSavedStudyTemplateResponse400
+  | previewSavedStudyTemplateResponse401
+  | previewSavedStudyTemplateResponse403
+  | previewSavedStudyTemplateResponse404
+  | previewSavedStudyTemplateResponse409
+  | previewSavedStudyTemplateResponse422
+  | previewSavedStudyTemplateResponse429
+  | previewSavedStudyTemplateResponse500
+) & {
+  headers: Headers;
+};
+
+export type previewSavedStudyTemplateResponse =
+  | previewSavedStudyTemplateResponseSuccess
+  | previewSavedStudyTemplateResponseError;
+
+export const getPreviewSavedStudyTemplateUrl = (
+  templateId: string,
+  params?: PreviewSavedStudyTemplateParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/study-templates/${templateId}/preview?${stringifiedParams}`
+    : `/api/study-templates/${templateId}/preview`;
+};
+
+/**
+ * @summary Preview Saved Study Template
+ */
+export const previewSavedStudyTemplate = async (
+  templateId: string,
+  params?: PreviewSavedStudyTemplateParams,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<previewSavedStudyTemplateResponse> => {
+  return apiFetch<previewSavedStudyTemplateResponse>(
+    getPreviewSavedStudyTemplateUrl(templateId, params),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getPreviewSavedStudyTemplateQueryKey = (
+  templateId: string,
+  params?: PreviewSavedStudyTemplateParams,
+) => {
+  return [`/api/study-templates/${templateId}/preview`, ...(params ? [params] : [])] as const;
+};
+
+export const getPreviewSavedStudyTemplateQueryOptions = <
+  TData = Awaited<ReturnType<typeof previewSavedStudyTemplate>>,
+  TError = Problem,
+>(
+  templateId: string,
+  params?: PreviewSavedStudyTemplateParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof previewSavedStudyTemplate>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getPreviewSavedStudyTemplateQueryKey(templateId, params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof previewSavedStudyTemplate>>> = ({
+    signal,
+  }) => previewSavedStudyTemplate(templateId, params, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: templateId !== null && templateId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof previewSavedStudyTemplate>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type PreviewSavedStudyTemplateQueryResult = NonNullable<
+  Awaited<ReturnType<typeof previewSavedStudyTemplate>>
+>;
+export type PreviewSavedStudyTemplateQueryError = Problem;
+
+export function usePreviewSavedStudyTemplate<
+  TData = Awaited<ReturnType<typeof previewSavedStudyTemplate>>,
+  TError = Problem,
+>(
+  templateId: string,
+  params: undefined | PreviewSavedStudyTemplateParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof previewSavedStudyTemplate>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof previewSavedStudyTemplate>>,
+          TError,
+          Awaited<ReturnType<typeof previewSavedStudyTemplate>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function usePreviewSavedStudyTemplate<
+  TData = Awaited<ReturnType<typeof previewSavedStudyTemplate>>,
+  TError = Problem,
+>(
+  templateId: string,
+  params?: PreviewSavedStudyTemplateParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof previewSavedStudyTemplate>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof previewSavedStudyTemplate>>,
+          TError,
+          Awaited<ReturnType<typeof previewSavedStudyTemplate>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function usePreviewSavedStudyTemplate<
+  TData = Awaited<ReturnType<typeof previewSavedStudyTemplate>>,
+  TError = Problem,
+>(
+  templateId: string,
+  params?: PreviewSavedStudyTemplateParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof previewSavedStudyTemplate>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Preview Saved Study Template
+ */
+
+export function usePreviewSavedStudyTemplate<
+  TData = Awaited<ReturnType<typeof previewSavedStudyTemplate>>,
+  TError = Problem,
+>(
+  templateId: string,
+  params?: PreviewSavedStudyTemplateParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof previewSavedStudyTemplate>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getPreviewSavedStudyTemplateQueryOptions(templateId, params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type downloadSavedStudyTemplatePreviewResponse200 = {
+  data: void;
+  status: 200;
+};
+
+export type downloadSavedStudyTemplatePreviewResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type downloadSavedStudyTemplatePreviewResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type downloadSavedStudyTemplatePreviewResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type downloadSavedStudyTemplatePreviewResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type downloadSavedStudyTemplatePreviewResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type downloadSavedStudyTemplatePreviewResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type downloadSavedStudyTemplatePreviewResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type downloadSavedStudyTemplatePreviewResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type downloadSavedStudyTemplatePreviewResponseSuccess =
+  downloadSavedStudyTemplatePreviewResponse200 & {
+    headers: Headers;
+  };
+export type downloadSavedStudyTemplatePreviewResponseError = (
+  | downloadSavedStudyTemplatePreviewResponse400
+  | downloadSavedStudyTemplatePreviewResponse401
+  | downloadSavedStudyTemplatePreviewResponse403
+  | downloadSavedStudyTemplatePreviewResponse404
+  | downloadSavedStudyTemplatePreviewResponse409
+  | downloadSavedStudyTemplatePreviewResponse422
+  | downloadSavedStudyTemplatePreviewResponse429
+  | downloadSavedStudyTemplatePreviewResponse500
+) & {
+  headers: Headers;
+};
+
+export type downloadSavedStudyTemplatePreviewResponse =
+  | downloadSavedStudyTemplatePreviewResponseSuccess
+  | downloadSavedStudyTemplatePreviewResponseError;
+
+export const getDownloadSavedStudyTemplatePreviewUrl = (
+  templateId: string,
+  params?: DownloadSavedStudyTemplatePreviewParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/study-templates/${templateId}/preview/pdf?${stringifiedParams}`
+    : `/api/study-templates/${templateId}/preview/pdf`;
+};
+
+/**
+ * @summary Download Saved Study Template Preview
+ */
+export const downloadSavedStudyTemplatePreview = async (
+  templateId: string,
+  params?: DownloadSavedStudyTemplatePreviewParams,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<downloadSavedStudyTemplatePreviewResponse> => {
+  return apiFetch<downloadSavedStudyTemplatePreviewResponse>(
+    getDownloadSavedStudyTemplatePreviewUrl(templateId, params),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getDownloadSavedStudyTemplatePreviewQueryKey = (
+  templateId: string,
+  params?: DownloadSavedStudyTemplatePreviewParams,
+) => {
+  return [`/api/study-templates/${templateId}/preview/pdf`, ...(params ? [params] : [])] as const;
+};
+
+export const getDownloadSavedStudyTemplatePreviewQueryOptions = <
+  TData = Awaited<ReturnType<typeof downloadSavedStudyTemplatePreview>>,
+  TError = Problem,
+>(
+  templateId: string,
+  params?: DownloadSavedStudyTemplatePreviewParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof downloadSavedStudyTemplatePreview>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getDownloadSavedStudyTemplatePreviewQueryKey(templateId, params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof downloadSavedStudyTemplatePreview>>> = ({
+    signal,
+  }) => downloadSavedStudyTemplatePreview(templateId, params, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: templateId !== null && templateId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof downloadSavedStudyTemplatePreview>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type DownloadSavedStudyTemplatePreviewQueryResult = NonNullable<
+  Awaited<ReturnType<typeof downloadSavedStudyTemplatePreview>>
+>;
+export type DownloadSavedStudyTemplatePreviewQueryError = Problem;
+
+export function useDownloadSavedStudyTemplatePreview<
+  TData = Awaited<ReturnType<typeof downloadSavedStudyTemplatePreview>>,
+  TError = Problem,
+>(
+  templateId: string,
+  params: undefined | DownloadSavedStudyTemplatePreviewParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof downloadSavedStudyTemplatePreview>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof downloadSavedStudyTemplatePreview>>,
+          TError,
+          Awaited<ReturnType<typeof downloadSavedStudyTemplatePreview>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useDownloadSavedStudyTemplatePreview<
+  TData = Awaited<ReturnType<typeof downloadSavedStudyTemplatePreview>>,
+  TError = Problem,
+>(
+  templateId: string,
+  params?: DownloadSavedStudyTemplatePreviewParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof downloadSavedStudyTemplatePreview>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof downloadSavedStudyTemplatePreview>>,
+          TError,
+          Awaited<ReturnType<typeof downloadSavedStudyTemplatePreview>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useDownloadSavedStudyTemplatePreview<
+  TData = Awaited<ReturnType<typeof downloadSavedStudyTemplatePreview>>,
+  TError = Problem,
+>(
+  templateId: string,
+  params?: DownloadSavedStudyTemplatePreviewParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof downloadSavedStudyTemplatePreview>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Download Saved Study Template Preview
+ */
+
+export function useDownloadSavedStudyTemplatePreview<
+  TData = Awaited<ReturnType<typeof downloadSavedStudyTemplatePreview>>,
+  TError = Problem,
+>(
+  templateId: string,
+  params?: DownloadSavedStudyTemplatePreviewParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof downloadSavedStudyTemplatePreview>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getDownloadSavedStudyTemplatePreviewQueryOptions(
+    templateId,
+    params,
+    options,
+  );
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;

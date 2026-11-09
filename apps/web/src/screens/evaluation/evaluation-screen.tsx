@@ -13,11 +13,7 @@ import { Banner, InlineError } from "@parfocal/ui/components/banner";
 import { Button } from "@parfocal/ui/components/button";
 import { Breadcrumbs } from "@parfocal/ui/components/flow-page";
 import { Icon } from "@parfocal/ui/components/icon";
-import {
-  BlockCatalogue,
-  BlockSettings,
-  PdfPreview,
-} from "@parfocal/ui/components/report-templates";
+import { BlockCatalogue, BlockSettings } from "@parfocal/ui/components/report-templates";
 import {
   Select,
   SelectContent,
@@ -36,6 +32,7 @@ import { blockCopy } from "../admin/templates.tsx";
 import { usePeople } from "../people.ts";
 import { okData } from "../placeholder.tsx";
 import { useMockToast } from "../project/mock-toast.tsx";
+import { LazyTaskPdf } from "./pdf-overlay-lazy.tsx";
 import { type PageBlock, planOf, ReportPage } from "./report-pages.tsx";
 import { ShareLinks } from "./share-links.tsx";
 
@@ -96,7 +93,6 @@ function EvaluationBody({
   const [version, setVersion] = useState(report.template.version);
   const [fileKind, setFileKind] = useState(report.formats[0]?.key ?? "pdf");
   const [failed, setFailed] = useState(scene === "exportfail");
-  const [page, setPage] = useState(1);
   const arranging = scene === "arrange";
   const retired = report.template.retired_on !== null && version === report.template.version;
   const current = blocks.find((block) => block.id === selected) ?? null;
@@ -552,29 +548,7 @@ function EvaluationBody({
           </aside>
         </div>
       )}
-      {scene === "pdf" ? (
-        <div
-          className="fixed inset-x-0 top-12 bottom-0 z-40 bg-page"
-          role="dialog"
-          aria-label="PDF preview"
-        >
-          <PdfPreview
-            className="h-full rounded-none border-0"
-            title={file}
-            meta={`${format.paper === "letter" ? "Letter" : "A4"} · ${format.orientation} · ${pageCount} pages`}
-            pages={pageCount}
-            current={page}
-            onCurrentChange={setPage}
-            renderPage={(number) => {
-              const layout = plan[number - 1];
-              return layout ? <ReportPage page={number} plan={layout} {...pageProps} /> : null;
-            }}
-            onPrint={() => toast.show(`Opens the print dialog for ${file}.pdf`)}
-            onDownload={() => toast.show(`${file}.pdf saved to Downloads`)}
-            onClose={() => onScene("report")}
-          />
-        </div>
-      ) : null}
+      {scene === "pdf" ? <LazyTaskPdf taskId={taskId} onClose={() => onScene("report")} /> : null}
       {toast.node}
     </main>
   );

@@ -192,6 +192,9 @@ for (const scene of ["report", "arrange", "pdf", "retiredtpl", "exportfail"]) {
   test(`the ${scene} scene passes axe`, async ({ page }) => {
     await page.goto(url(scene));
     await expect(page.getByRole("article").first()).toBeVisible();
+    if (scene === "pdf") {
+      await expect(page.getByRole("img", { name: "Page 1 of the report" })).toBeVisible();
+    }
     await page.evaluate(() =>
       Promise.race([
         Promise.allSettled(document.getAnimations().map((animation) => animation.finished)),

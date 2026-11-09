@@ -112,6 +112,7 @@ import type {
   Reassignment,
   RegionMetrics,
   ReportLink,
+  ReportPreview,
   Resolved,
   ResultSet,
   ResultSetDeletion,
@@ -10092,6 +10093,51 @@ export const getGetTaskEvaluationResponseMock = (
   ...overrideResponse,
 });
 
+export const getPreviewTaskEvaluationResponseMock = (
+  overrideResponse: Partial<Extract<ReportPreview, object>> = {},
+): ReportPreview => ({
+  title: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  file_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  paper: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  orientation: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  page_count: faker.number.int(),
+  sample: faker.datatype.boolean(),
+  pages: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+  ),
+  ...overrideResponse,
+});
+
+export const getPreviewStudyTemplateResponseMock = (
+  overrideResponse: Partial<Extract<ReportPreview, object>> = {},
+): ReportPreview => ({
+  title: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  file_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  paper: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  orientation: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  page_count: faker.number.int(),
+  sample: faker.datatype.boolean(),
+  pages: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+  ),
+  ...overrideResponse,
+});
+
+export const getPreviewSavedStudyTemplateResponseMock = (
+  overrideResponse: Partial<Extract<ReportPreview, object>> = {},
+): ReportPreview => ({
+  title: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  file_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  paper: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  orientation: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  page_count: faker.number.int(),
+  sample: faker.datatype.boolean(),
+  pages: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+  ),
+  ...overrideResponse,
+});
+
 export const getExportTrainingDatasetResponseMock = (): Blob =>
   new Blob([new Uint8Array(faker.number.int({ min: 1, max: 64 }))]);
 
@@ -19172,6 +19218,116 @@ export const getExportTaskEvaluationMockHandler = (
   );
 };
 
+export const getPreviewTaskEvaluationMockHandler = (
+  overrideResponse?:
+    | ReportPreview
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<ReportPreview> | ReportPreview),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/review-tasks/:taskId/evaluation/preview",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getPreviewTaskEvaluationResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getPreviewStudyTemplateMockHandler = (
+  overrideResponse?:
+    | ReportPreview
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<ReportPreview> | ReportPreview),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/study-templates/preview",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getPreviewStudyTemplateResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getDownloadStudyTemplatePreviewMockHandler = (
+  overrideResponse?:
+    | void
+    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<void> | void),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/study-templates/preview/pdf",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info);
+      }
+
+      return new HttpResponse(null, { status: 200 });
+    },
+    options,
+  );
+};
+
+export const getPreviewSavedStudyTemplateMockHandler = (
+  overrideResponse?:
+    | ReportPreview
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<ReportPreview> | ReportPreview),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/study-templates/:templateId/preview",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getPreviewSavedStudyTemplateResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getDownloadSavedStudyTemplatePreviewMockHandler = (
+  overrideResponse?:
+    | void
+    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<void> | void),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/study-templates/:templateId/preview/pdf",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info);
+      }
+
+      return new HttpResponse(null, { status: 200 });
+    },
+    options,
+  );
+};
+
 export const getExportTrainingDatasetMockHandler = (
   overrideResponse?:
     | Blob
@@ -21211,6 +21367,11 @@ export const getParfocalAPIMock = () => [
   getListMyAdjudicationsMockHandler(),
   getGetTaskEvaluationMockHandler(),
   getExportTaskEvaluationMockHandler(),
+  getPreviewTaskEvaluationMockHandler(),
+  getPreviewStudyTemplateMockHandler(),
+  getDownloadStudyTemplatePreviewMockHandler(),
+  getPreviewSavedStudyTemplateMockHandler(),
+  getDownloadSavedStudyTemplatePreviewMockHandler(),
   getExportTrainingDatasetMockHandler(),
   getGetTaskAiChangesMockHandler(),
   getGetAiUsageMockHandler(),

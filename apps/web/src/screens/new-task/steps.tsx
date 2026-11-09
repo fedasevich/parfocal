@@ -29,7 +29,8 @@ import { Textarea } from "@parfocal/ui/components/textarea";
 import { TokenField, type TokenItem } from "@parfocal/ui/components/token-field";
 import { Zone } from "@parfocal/ui/components/zone";
 import { cn } from "@parfocal/ui/lib/utils";
-import type { ReactNode } from "react";
+import { type ReactNode, useState } from "react";
+import { LazySavedTemplatePdf } from "../evaluation/pdf-overlay-lazy.tsx";
 import {
   andJoin,
   annotateSlideLine,
@@ -161,6 +162,7 @@ export function KindStep({ draft, update }: StepProps) {
 }
 
 export function SlidesStep({ draft, data, update, errors, onTemplate, openModal }: StepProps) {
+  const [previewing, setPreviewing] = useState(false);
   const sum = summary(draft, data);
   const all = pickedSlides(draft, data);
   const short = rsShort(data, draft.resultSetId);
@@ -223,7 +225,13 @@ export function SlidesStep({ draft, data, update, errors, onTemplate, openModal 
                   ))}
                 </SelectContent>
               </Select>
-              <TextLink>Preview the report</TextLink>
+              <TextLink onClick={() => setPreviewing(true)}>Preview the report</TextLink>
+              {previewing && template ? (
+                <LazySavedTemplatePdf
+                  templateId={template.id}
+                  onClose={() => setPreviewing(false)}
+                />
+              ) : null}
             </div>
             <FieldNote
               error={errors.get("tpl")}

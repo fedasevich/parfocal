@@ -14,6 +14,7 @@ import { draftHandlers } from "./draft-handlers.ts";
 import { jobHandlers } from "./job-handlers.ts";
 import { projectHandlers } from "./project-handlers.ts";
 import { reportLinkHandlers } from "./report-link-handlers.ts";
+import { reportPreviewHandlers } from "./report-preview-handlers.ts";
 import { resumeHandlers } from "./resume-handlers.ts";
 import { reviewHandlers } from "./review-handlers.ts";
 import { scenarioHandlers } from "./scenario-handlers.ts";
@@ -46,6 +47,7 @@ export function fakeApiHandlers(scope: FakeApiScope): RequestHandler[] {
     ...workspaceJoinHandlers(),
     ...connectModelHandlers(),
     ...adjudicationHandlers(),
+    ...reportPreviewHandlers(),
     ...caseHandlers(),
     ...caseReportHandlers(),
     ...cosignRequestHandlers(),

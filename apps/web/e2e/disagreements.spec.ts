@@ -78,7 +78,7 @@ const scenes: { path: string; persona: string; sees: string; dialog?: string }[]
   {
     path: "evaluation?scene=pdf",
     persona: "Daniel Hruška",
-    sees: "RT-14_evaluation_v1.pdf",
+    sees: "evaluation_v1_report.pdf",
     dialog: "PDF preview",
   },
   {

@@ -554,21 +554,50 @@ async def annotate_report(
     return render_report(data, locale), version
 
 
-def pdf_of(report: RenderedReport, version: Version) -> bytes:
+async def task_report(
+    connection: AsyncConnection,
+    principal: Any,
+    task: Any,
+    results: Results,
+    locale: Locale,
+) -> tuple[RenderedReport, Version]:
+    if task.kind == TaskKind.ANNOTATE:
+        return await annotate_report(connection, task, results, locale)
+    evaluation = await evaluate(connection, task)
+    version = await version_of(connection, task, evaluation)
+    return await rendered_report(connection, principal, task, evaluation, version, locale), version
+
+
+def typst_options(report: RenderedReport, version: Version) -> dict[str, Any]:
+    stamp = (
+        int(version.signed_at.astimezone(UTC).timestamp()) if version.signed_at else DRAFT_TIMESTAMP
+    )
+    return {
+        "sys_inputs": report.inputs,
+        "ignore_system_fonts": True,
+        "timestamp": stamp,
+    }
+
+
+def typst_module() -> Any:
     try:
         import typst
     except ImportError as missing:
         raise PdfUnavailableError from missing
-    stamp = (
-        int(version.signed_at.astimezone(UTC).timestamp()) if version.signed_at else DRAFT_TIMESTAMP
+    return typst
+
+
+def pdf_of(report: RenderedReport, version: Version) -> bytes:
+    return typst_module().compile(
+        report.source.encode(), format="pdf", **typst_options(report, version)
     )
-    return typst.compile(
-        report.source.encode(),
-        format="pdf",
-        sys_inputs=report.inputs,
-        ignore_system_fonts=True,
-        timestamp=stamp,
+
+
+def svg_pages_of(report: RenderedReport, version: Version) -> list[str]:
+    pages = typst_module().compile(
+        report.source.encode(), format="svg", **typst_options(report, version)
     )
+    return [page.decode() for page in pages]
 
 
 @router.get(
@@ -590,16 +619,13 @@ async def export_task_evaluation(
         review_only(task.kind)
     if not whole:
         raise EvaluationHiddenError
-    if task.kind == TaskKind.ANNOTATE:
-        report, version = await annotate_report(connection, task, results, locale)
+    if kind is ExportKind.PDF:
+        report, version = await task_report(connection, principal, task, results, locale)
         return attachment(kind, pdf_of(report, version), version)
     evaluation = await evaluate(connection, task)
     version = await version_of(connection, task, evaluation)
     content: str | bytes
     match kind:
-        case ExportKind.PDF:
-            report = await rendered_report(connection, principal, task, evaluation, version, locale)
-            content = pdf_of(report, version)
         case ExportKind.DECISIONS:
             content = csv_text(DECISION_COLUMNS, await decision_rows(connection, task, version))
         case ExportKind.OBJECTS:

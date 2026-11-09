@@ -311,6 +311,7 @@ class RenderedReport:
     source: str
     inputs: dict[str, str]
     pages: tuple[ReportPage, ...] = ()
+    format: ReportFormat = field(default_factory=ReportFormat)
 
 
 def headline_of(evaluation: Evaluation) -> dict[str, float | None]:
@@ -805,4 +806,5 @@ def render_report(data: ReportData, locale: Locale = DEFAULT_LOCALE) -> Rendered
         source="\n".join(lines),
         inputs={"locale": str(locale), "messages": json.dumps(dict(messages), ensure_ascii=False)},
         pages=pages,
+        format=data.format,
     )

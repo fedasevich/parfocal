@@ -1529,6 +1529,15 @@ GET_ROUTES = {
     "listEvaluationChanges": Route(
         Exposure.TENANT, lambda a: f"/api/review-tasks/{a.ids['task']}/evaluation-changes"
     ),
+    "previewSavedStudyTemplate": Route(
+        Exposure.TENANT, lambda a: f"/api/study-templates/{a.ids['study_template']}/preview"
+    ),
+    "downloadSavedStudyTemplatePreview": Route(
+        Exposure.TENANT, lambda a: f"/api/study-templates/{a.ids['study_template']}/preview/pdf"
+    ),
+    "previewTaskEvaluation": Route(
+        Exposure.TENANT, lambda a: f"/api/review-tasks/{a.ids['task']}/evaluation/preview"
+    ),
     "exportTaskEvaluation": Route(
         Exposure.TENANT,
         lambda a: f"/api/review-tasks/{a.ids['task']}/evaluation/exports/objects.csv",

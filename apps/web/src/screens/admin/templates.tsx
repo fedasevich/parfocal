@@ -7,13 +7,6 @@ import {
 import { NameCell } from "@parfocal/ui/components/admin";
 import { Button } from "@parfocal/ui/components/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@parfocal/ui/components/dialog";
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -51,6 +44,7 @@ import { CategoryTag, StatusTag } from "@parfocal/ui/components/tag";
 import { Zone } from "@parfocal/ui/components/zone";
 import { cn } from "@parfocal/ui/lib/utils";
 import { useState } from "react";
+import { LazySavedTemplatePdf, LazyTemplatePdf } from "../evaluation/pdf-overlay-lazy.tsx";
 import { okData } from "../placeholder.tsx";
 import { decisionSettings, toReviewStyle } from "../review/decision-style.ts";
 import { InfoLine, type Notify, tableClass } from "./common.tsx";
@@ -132,13 +126,6 @@ export const presetsText = (template: StudyTemplateSummary) => {
   return `${scope[0]?.toUpperCase() ?? ""}${scope.slice(1)}, ${read}, ${start}, ${splitText[presets.split ?? "everyone"]}`;
 };
 
-const toPageBlocks = (template: Pick<StudyTemplateSummary, "blocks">): PageBlock[] =>
-  template.blocks.map((block, index) => ({
-    id: `${block.kind}-${index}`,
-    name: block.title,
-    shows: blockCopy[block.kind].shows,
-  }));
-
 export type TemplateDraft = {
   name: string;
   kind: StudyTemplateSummary["study_kind"];
@@ -153,24 +140,8 @@ function PdfDialog({
   template: StudyTemplateSummary | null;
   onClose: () => void;
 }) {
-  return (
-    <Dialog open={template !== null} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-160">
-        <DialogHeader>
-          <DialogTitle>{template?.name} · sample PDF</DialogTitle>
-          <DialogDescription>
-            The exact file a task made from this template downloads, filled with the sample
-            project's numbers.
-          </DialogDescription>
-        </DialogHeader>
-        {template ? (
-          <div className="grid place-items-center bg-canvas p-4">
-            <ReportPagePreview title={template.name} blocks={toPageBlocks(template)} />
-          </div>
-        ) : null}
-      </DialogContent>
-    </Dialog>
-  );
+  if (template === null) return null;
+  return <LazySavedTemplatePdf key={template.id} templateId={template.id} onClose={onClose} />;
 }
 
 export function TemplatesSection({
@@ -547,18 +518,19 @@ export function TemplateEditor({
     : isDraft
       ? "Saving adds it to the library as v1. Researchers can pick it in a new review task."
       : "Saving adds the copy to the library as v1.";
+  const bodyBlocks = shownBlocks.map(
+    (block) =>
+      (base?.blocks.find((item) => item.kind === block.kind) ?? {
+        kind: block.kind,
+        title: block.title,
+      }) as StudyTemplateSummary["blocks"][number],
+  );
   const save = () => {
     const presets = base?.presets ?? { objects_to_check: { kind: "all-regions" as const } };
     const body = {
       name: shownName.trim() || "Untitled template",
       study_kind: isDraft ? chosen.kind : (base?.study_kind ?? "other"),
-      blocks: shownBlocks.map(
-        (block) =>
-          (base?.blocks.find((item) => item.kind === block.kind) ?? {
-            kind: block.kind,
-            title: block.title,
-          }) as StudyTemplateSummary["blocks"][number],
-      ),
+      blocks: bodyBlocks,
       presets: {
         ...presets,
         blinding: blind,
@@ -708,16 +680,20 @@ export function TemplateEditor({
           {own ? `Save as v${nextVersion}` : "Save template"}
         </Button>
       </div>
-      <Dialog open={showPdf} onOpenChange={setShowPdf}>
-        <DialogContent className="max-w-160">
-          <DialogHeader>
-            <DialogTitle>{shownName || "Untitled template"} · sample PDF</DialogTitle>
-          </DialogHeader>
-          <div className="grid place-items-center bg-canvas p-4">
-            <ReportPagePreview title={shownName || "Untitled template"} blocks={pageBlocks} />
-          </div>
-        </DialogContent>
-      </Dialog>
+      {showPdf ? (
+        <LazyTemplatePdf
+          draft={{
+            name: shownName || "Untitled template",
+            blocks: bodyBlocks,
+            format: {
+              paper: paper === "letter" ? "letter" : "a4",
+              draft_watermark: watermark,
+              signature,
+            },
+          }}
+          onClose={() => setShowPdf(false)}
+        />
+      ) : null}
     </div>
   );
 }

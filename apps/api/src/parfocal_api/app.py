@@ -52,6 +52,7 @@ from parfocal_api import (
     project_jobs,
     projects,
     report_links,
+    report_preview,
     restricted_images,
     result_formats,
     result_pairing,
@@ -257,6 +258,7 @@ def create_app(
     app.include_router(adjudications.router)
     app.include_router(evaluation.router)
     app.include_router(evaluation_exports.router)
+    app.include_router(report_preview.router)
     app.include_router(training_exports.router)
     app.include_router(ai_changes.router)
     app.include_router(ai_usage.router)

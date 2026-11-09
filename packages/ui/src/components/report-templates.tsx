@@ -143,21 +143,27 @@ type PdfPreviewProps = React.ComponentProps<"div"> & {
   pages: number;
   current?: number;
   failed?: boolean;
+  loading?: boolean;
   meta?: React.ReactNode;
   renderPage?: (page: number) => React.ReactNode;
+  renderThumbnail?: (page: number) => React.ReactNode;
   onCurrentChange?: (page: number) => void;
   onPrint?: () => void;
   onDownload?: () => void;
   onClose?: () => void;
 };
 
+const READING_LINE = 120;
+
 function PdfPreview({
   title,
   pages,
   current = 1,
   failed = false,
+  loading = false,
   meta,
   renderPage,
+  renderThumbnail,
   onCurrentChange,
   onPrint,
   onDownload,
@@ -166,7 +172,36 @@ function PdfPreview({
   ...props
 }: PdfPreviewProps) {
   const [zoom, setZoom] = React.useState(100);
+  const [inner, setInner] = React.useState(current);
+  const holder = React.useRef<HTMLDivElement>(null);
+  const scroller = () =>
+    holder.current?.querySelector<HTMLElement>('[data-slot="scroll-area-viewport"]') ?? null;
   const numbers = Array.from({ length: pages }, (_, index) => index + 1);
+  const shown = onCurrentChange ? current : inner;
+  const pageNodes = () =>
+    Array.from(scroller()?.querySelectorAll<HTMLElement>("[data-pdf-page]") ?? []);
+  const follow = () => {
+    const box = scroller();
+    if (!box) return;
+    const top = box.getBoundingClientRect().top;
+    let reading = 1;
+    pageNodes().forEach((node, index) => {
+      if (node.getBoundingClientRect().top - top < READING_LINE) reading = index + 1;
+    });
+    if (reading === shown) return;
+    setInner(reading);
+    onCurrentChange?.(reading);
+  };
+  const jumpTo = (page: number) => {
+    const box = scroller();
+    const node = pageNodes()[page - 1];
+    if (box && node) {
+      box.scrollTop += node.getBoundingClientRect().top - box.getBoundingClientRect().top - 16;
+    }
+    setInner(page);
+    onCurrentChange?.(page);
+  };
+  const thumbnail = renderThumbnail ?? renderPage;
   return (
     <div
       data-slot="pdf-preview"
@@ -180,9 +215,12 @@ function PdfPreview({
         <Icon name="file" />
         <b className="min-w-0 truncate font-medium">{title}.pdf</b>
         {meta ? <span className="min-w-0 flex-1 truncate text-fg-dim">{meta}</span> : null}
-        <span className={cn("font-mono text-caption text-fg-dim", meta ? "" : "ml-auto")}>
-          {current} / {pages}
-        </span>
+        <output
+          aria-label="Current page"
+          className={cn("font-mono text-caption text-fg-dim", meta ? "" : "ml-auto")}
+        >
+          {shown} / {pages}
+        </output>
         <Button
           size="sm"
           variant="ghost"
@@ -191,7 +229,9 @@ function PdfPreview({
         >
           <Icon name="minus" />
         </Button>
-        <span className="w-10 text-center font-mono text-caption">{zoom}%</span>
+        <output aria-label="Zoom" className="w-10 text-center font-mono text-caption">
+          {zoom}%
+        </output>
         <Button
           size="sm"
           variant="ghost"
@@ -200,10 +240,10 @@ function PdfPreview({
         >
           <Icon name="plus" />
         </Button>
-        <Button size="sm" onClick={onPrint}>
+        <Button size="sm" disabled={failed || loading} onClick={onPrint}>
           Print
         </Button>
-        <Button size="sm" variant="primary" disabled={failed} onClick={onDownload}>
+        <Button size="sm" variant="primary" disabled={failed || loading} onClick={onDownload}>
           <Icon name="download" />
           Download
         </Button>
@@ -214,48 +254,68 @@ function PdfPreview({
         ) : null}
       </div>
       <div className="grid min-h-0 grid-cols-[124px_minmax(0,1fr)]">
-        <div className="grid content-start gap-3 overflow-auto border-r border-line bg-chrome p-3">
+        <div
+          role="group"
+          aria-label="Pages"
+          className="grid content-start gap-3 overflow-auto border-r border-line bg-chrome p-3"
+        >
           {numbers.map((page) => (
             <button
               key={page}
               type="button"
-              aria-current={page === current ? "page" : undefined}
-              onClick={() => onCurrentChange?.(page)}
+              aria-label={`Page ${page}`}
+              aria-current={page === shown ? "page" : undefined}
+              onClick={() => jumpTo(page)}
               className="group grid cursor-pointer justify-items-center gap-1 border-0 bg-transparent p-0 text-caption text-fg-dim"
             >
               <span className="relative block aspect-[210/297] w-full overflow-hidden border-2 border-transparent bg-white group-aria-[current=page]:border-accent">
-                {renderPage ? (
+                {thumbnail ? (
                   <span
                     aria-hidden="true"
                     inert
-                    className="pointer-events-none absolute top-0 left-0 block origin-top-left scale-[0.15]"
+                    className={cn(
+                      "pointer-events-none block",
+                      renderThumbnail
+                        ? "h-full w-full"
+                        : "absolute top-0 left-0 origin-top-left scale-[0.15]",
+                    )}
                   >
-                    {renderPage(page)}
+                    {thumbnail(page)}
                   </span>
                 ) : null}
               </span>
-              <span>
-                <span className="sr-only">Page </span>
-                {page}
-              </span>
+              <span aria-hidden="true">{page}</span>
             </button>
           ))}
         </div>
-        <ScrollArea className="min-h-0">
-          <div className="grid justify-items-center p-6">
-            {failed ? (
-              <div className="grid max-w-80 justify-items-center gap-2 self-center text-center text-body-sm">
-                <Icon name="warn" size="xl" className="text-warn" />
-                <b>The PDF could not be made</b>
-                <span className="text-fg-dim">The CSV files still download.</span>
-              </div>
-            ) : renderPage ? (
-              <div style={{ zoom: zoom / 100 }}>{renderPage(current)}</div>
-            ) : (
-              <div className="aspect-[210/297] w-full max-w-90 bg-white shadow-pop" />
-            )}
-          </div>
-        </ScrollArea>
+        <div ref={holder} onScrollCapture={follow} className="min-h-0">
+          <ScrollArea
+            className="h-full"
+            viewportProps={{ tabIndex: 0, "aria-label": "Pages of the report" }}
+          >
+            <div className="grid justify-items-center gap-6 p-6">
+              {failed ? (
+                <div className="grid max-w-80 justify-items-center gap-2 self-center text-center text-body-sm">
+                  <Icon name="warn" size="xl" className="text-warn" />
+                  <b>The PDF could not be made</b>
+                  <span className="text-fg-dim">The CSV files still download.</span>
+                </div>
+              ) : loading ? (
+                <span role="status" className="self-center text-body-sm text-fg-dim">
+                  Making the preview
+                </span>
+              ) : renderPage ? (
+                numbers.map((page) => (
+                  <div key={page} data-pdf-page={page} style={{ zoom: zoom / 100 }}>
+                    {renderPage(page)}
+                  </div>
+                ))
+              ) : (
+                <div className="aspect-[210/297] w-full max-w-90 bg-white shadow-pop" />
+              )}
+            </div>
+          </ScrollArea>
+        </div>
       </div>
     </div>
   );

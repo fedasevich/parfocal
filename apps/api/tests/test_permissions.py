@@ -885,6 +885,21 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "listEvaluationChanges": lambda w: Call(
         "GET", f"/api/review-tasks/{w.task}/evaluation-changes"
     ),
+    "previewTaskEvaluation": lambda w: Call(
+        "GET", f"/api/review-tasks/{w.task}/evaluation/preview"
+    ),
+    "previewStudyTemplate": lambda _: Call(
+        "POST", "/api/study-templates/preview", {"name": "Matrix", "blocks": []}
+    ),
+    "previewSavedStudyTemplate": lambda w: Call(
+        "GET", f"/api/study-templates/{w.study_template}/preview"
+    ),
+    "downloadSavedStudyTemplatePreview": lambda w: Call(
+        "GET", f"/api/study-templates/{w.study_template}/preview/pdf"
+    ),
+    "downloadStudyTemplatePreview": lambda _: Call(
+        "POST", "/api/study-templates/preview/pdf", {"name": "Matrix", "blocks": []}
+    ),
     "exportTaskEvaluation": lambda w: Call(
         "GET", f"/api/review-tasks/{w.task}/evaluation/exports/objects.csv"
     ),
