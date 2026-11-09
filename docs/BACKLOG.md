@@ -4763,7 +4763,7 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Depends on EVAL-007, EVAL-006, STACK-035.
   Size: L.
 
-- [ ] EVAL-009 · Arrange one report
+- [x] EVAL-009 · Arrange one report
   On the report page, Arrange turns the pages into the editor of ADMIN-008 with the Block and Page and format tabs: blocks are dragged onto the pages or clicked in, selected on the page with a toolbar to move, duplicate and remove, and set in the side panel. Changes belong to this task, never to the template, and Save as template sends the arrangement to the library for someone with admin rights to accept. After sign-off a layout change is logged like any change.
   Done when component tests cover adding, moving, removing and setting a block, and E2E arranges a report, exports the PDF in the new order and saves it as a template.
   Depends on EVAL-008, EVAL-002, ADJ-005. Refs mock: evaluation/arrange, doc 43.
