@@ -3596,7 +3596,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
 
 Scopes: personal (follows the user), this device (stays with the computer), set by the lab (shown, locked). The full list is in mock §2.15 and the kit settings table.
 
-- [ ] SET-000 · Research check
+- [x] SET-000 · Research check
   Done when the settings schema with scopes and defaults is written as an ADR from mock §2.15.
   Size: S.
 

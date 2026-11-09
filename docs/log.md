@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-09
 
+- An ADR records the settings schema with every catalogue key, its scope and default, the stores outside the catalogue and the planned device keys. Notification rows stay in the preferences table.
 - Guided review in a hide-the-AI task opens a first-read step with the AI hidden, records it through submitFirstRead and then reveals the AI, with an E2E showing the first read unchanged after decisions and submit. Fable review asked for one fix, Record my first read now waits for the last answer and added object to save. Follow-ups TASK-019 and TASK-020.
 - Confirmed STACK-024 (realtime transport) and recorded the event model as an ADR, ids and kinds posted to project, slide, task and user rooms scoped by tenant. The API to edge hop stays unmeasured until a staging API.
 - VIZ-000 Correction, the mounting follow-up is VIZ-010 (mount the engine overlay draws on the live slide), not VIZ-020. VIZ-007 (Display panel) should read getMyDisplay (ADR 0233) instead of the draft getTaskDisplay.
