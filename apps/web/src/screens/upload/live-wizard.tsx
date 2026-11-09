@@ -903,6 +903,10 @@ function UploadStep({
       (entry.uploadId === undefined ? undefined : states[entry.uploadId])?.status === "ready" &&
       model.resultsOf(slideOf(entry)).every((result) => result.item.size === 0 || result.left),
   );
+  const bareSlideIds = bare.flatMap((entry) => {
+    const id = entry.uploadId === undefined ? undefined : states[entry.uploadId]?.slide_id;
+    return id ? [id] : [];
+  });
   return (
     <>
       <Zone title="Everything" data-testid="upload-overall">
@@ -1027,7 +1031,13 @@ function UploadStep({
           <div className="mt-1 flex flex-wrap items-center gap-2">
             <Button
               nativeButton={false}
-              render={<Link to="/projects/$projectId/run-model" params={{ projectId }} />}
+              render={
+                <Link
+                  to="/projects/$projectId/run-model"
+                  params={{ projectId }}
+                  search={{ slides: bareSlideIds }}
+                />
+              }
             >
               <Icon name="smart" />
               Run a model

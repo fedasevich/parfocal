@@ -1067,7 +1067,9 @@ function ViewerBody({
                 icon: "smart" as const,
                 label: set.source === "run" ? "Run again" : "Run a model on this slide",
                 onSelect: (): void =>
-                  void router.navigate({ href: destinations.runModel(projectId) }),
+                  void router.navigate({
+                    href: `${destinations.runModel(projectId)}?slides=${encodeURIComponent(JSON.stringify([slideId]))}`,
+                  }),
               },
               {
                 icon: "upload" as const,
