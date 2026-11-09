@@ -4211,6 +4211,7 @@ export interface ReportPreview {
   orientation: string;
   page_count: number;
   sample: boolean;
+  offset?: number;
   pages: string[];
 }
 
@@ -5793,6 +5794,15 @@ export type ExportTaskEvaluationParams = {
 
 export type PreviewTaskEvaluationParams = {
   locale?: Locale;
+  /**
+   * @minimum 0
+   */
+  offset?: number;
+  /**
+   * @minimum 1
+   * @maximum 20
+   */
+  limit?: number;
 };
 
 export type PreviewStudyTemplateParams = {

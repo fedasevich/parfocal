@@ -4,6 +4,7 @@ import { toEvaluationReport } from "./adjudication-handlers.ts";
 import { toStudyTemplates } from "./task-handlers.ts";
 
 const sizes: Record<string, [number, number]> = { a4: [595, 842], letter: [612, 792] };
+const PREVIEW_PAGES = 4;
 const emptyPdf = "%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n";
 
 type PreviewDraft = { name: string; blocks: LayoutBlock[]; format?: LayoutFormat };
@@ -48,17 +49,26 @@ const safeStem = (name: string) =>
 
 export function reportPreviewHandlers(): RequestHandler[] {
   return [
-    http.get<{ taskId: string }>("*/api/review-tasks/:taskId/evaluation/preview", ({ params }) => {
-      const report = toEvaluationReport(params.taskId);
-      return HttpResponse.json(
-        previewOf(
+    http.get<{ taskId: string }>(
+      "*/api/review-tasks/:taskId/evaluation/preview",
+      ({ params, request }) => {
+        const report = toEvaluationReport(params.taskId);
+        const search = new URL(request.url).searchParams;
+        const offset = Number(search.get("offset") ?? 0);
+        const limit = Number(search.get("limit") ?? PREVIEW_PAGES);
+        const whole = previewOf(
           `evaluation_v${report.version}_report.pdf`,
           `${report.task_code} evaluation`,
           report.template.blocks,
           report.template.format,
-        ),
-      );
-    }),
+        );
+        return HttpResponse.json({
+          ...whole,
+          offset,
+          pages: whole.pages.slice(offset, offset + limit),
+        });
+      },
+    ),
     http.get("*/api/study-templates/:templateId/preview", ({ params }) => {
       const template = toStudyTemplates().find((item) => item.id === params.templateId);
       if (!template) return HttpResponse.json({ status: 404, title: "Not found" }, { status: 404 });

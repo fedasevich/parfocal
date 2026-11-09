@@ -2,6 +2,7 @@ import {
   getDownloadSavedStudyTemplatePreviewUrl,
   getDownloadStudyTemplatePreviewUrl,
   getExportTaskEvaluationUrl,
+  previewTaskEvaluation,
   type ReportPreview,
   type TemplatePreviewDraft,
   usePreviewSavedStudyTemplate,
@@ -9,7 +10,7 @@ import {
   usePreviewTaskEvaluation,
 } from "@parfocal/api-client";
 import { PdfPreview } from "@parfocal/ui/components/report-templates";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { okData } from "../placeholder.tsx";
 import { fetchPdf, paperLabel, printFile, saveFile, svgSource } from "./pdf-file.ts";
 
@@ -18,16 +19,54 @@ type ViewerProps = {
   loading: boolean;
   failed: boolean;
   loadPdf: () => Promise<Blob>;
+  loadPages?: (offset: number) => Promise<string[]>;
   onClose: () => void;
 };
 
-function PdfViewer({ preview, loading, failed, loadPdf, onClose }: ViewerProps) {
+const PAGES_AHEAD = 2;
+
+function useLaterPages(
+  preview: ReportPreview | undefined,
+  reading: number,
+  loadPages: ViewerProps["loadPages"],
+) {
+  const [later, setLater] = useState<string[]>([]);
+  const [asking, setAsking] = useState(false);
+  const [stuck, setStuck] = useState(false);
+  const pages = [...(preview?.pages ?? []), ...later];
+  const wanted = Math.min(preview?.page_count ?? 0, reading + PAGES_AHEAD);
+  const have = pages.length;
+  useEffect(() => {
+    if (!loadPages || asking || stuck || have >= wanted) return;
+    setAsking(true);
+    loadPages(have).then(
+      (more) => {
+        if (more.length) setLater((known) => [...known, ...more]);
+        else setStuck(true);
+        setAsking(false);
+      },
+      () => {
+        setStuck(true);
+        setAsking(false);
+      },
+    );
+  }, [loadPages, asking, stuck, have, wanted]);
+  return pages;
+}
+
+function PdfViewer({ preview, loading, failed, loadPdf, loadPages, onClose }: ViewerProps) {
   const [page, setPage] = useState(1);
   const [fileFailed, setFileFailed] = useState(false);
-  const pages = preview?.pages ?? [];
+  const file = useRef<Promise<Blob> | null>(null);
+  const pages = useLaterPages(preview, page, loadPages);
   const name = preview?.file_name ?? "report.pdf";
+  const landscape = preview?.orientation === "landscape";
   const act = (use: (blob: Blob) => void) => () => {
-    loadPdf().then(use, () => setFileFailed(true));
+    file.current ??= loadPdf();
+    file.current.then(use, () => {
+      file.current = null;
+      setFileFailed(true);
+    });
   };
   return (
     <div
@@ -48,20 +87,29 @@ function PdfViewer({ preview, loading, failed, loadPdf, onClose }: ViewerProps) 
         onCurrentChange={setPage}
         loading={loading}
         failed={failed || fileFailed}
-        renderPage={(number) => (
-          <img
-            src={svgSource(pages[number - 1] ?? "")}
-            alt={`Page ${number} of the report`}
-            className="block bg-white shadow-pop"
-          />
-        )}
-        renderThumbnail={(number) => (
-          <img
-            src={svgSource(pages[number - 1] ?? "")}
-            alt=""
-            className="h-full w-full object-contain"
-          />
-        )}
+        renderPage={(number) => {
+          const svg = pages[number - 1];
+          return svg === undefined ? (
+            <div
+              aria-busy="true"
+              className={`block max-w-full bg-white shadow-pop ${landscape ? "aspect-[297/210] w-[1123px]" : "aspect-[210/297] w-[794px]"}`}
+            >
+              <span className="sr-only">Page {number} is loading</span>
+            </div>
+          ) : (
+            <img
+              src={svgSource(svg)}
+              alt={`Page ${number} of the report`}
+              className="block bg-white shadow-pop"
+            />
+          );
+        }}
+        renderThumbnail={(number) => {
+          const svg = pages[number - 1];
+          return svg === undefined ? null : (
+            <img src={svgSource(svg)} alt="" className="h-full w-full object-contain" />
+          );
+        }}
         onPrint={act(printFile)}
         onDownload={act((blob) => saveFile(blob, name))}
         onClose={onClose}
@@ -70,16 +118,24 @@ function PdfViewer({ preview, loading, failed, loadPdf, onClose }: ViewerProps) 
   );
 }
 
+const laterPagesOf = (taskId: string) => async (offset: number) => {
+  const found = okData(await previewTaskEvaluation(taskId, { offset }));
+  if (!found) throw new Error("The pages could not be loaded");
+  return found.pages;
+};
+
 export function TaskPdfOverlay({ taskId, onClose }: { taskId: string; onClose: () => void }) {
   const query = usePreviewTaskEvaluation(taskId, undefined);
   const preview = okData(query.data);
   const url = getExportTaskEvaluationUrl(taskId, "report.pdf");
+  const [loadPages] = useState(() => laterPagesOf(taskId));
   return (
     <PdfViewer
       preview={preview}
       loading={query.isPending}
       failed={query.isError || (query.data !== undefined && preview === undefined)}
       loadPdf={() => fetchPdf(() => fetch(url, { credentials: "same-origin" }))}
+      loadPages={loadPages}
       onClose={onClose}
     />
   );

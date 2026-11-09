@@ -10107,6 +10107,7 @@ export const getPreviewTaskEvaluationResponseMock = (
   orientation: faker.string.alpha({ length: { min: 10, max: 20 } }),
   page_count: faker.number.int(),
   sample: faker.datatype.boolean(),
+  offset: faker.number.int(),
   pages: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
     faker.string.alpha({ length: { min: 10, max: 20 } }),
   ),
@@ -10122,6 +10123,7 @@ export const getPreviewStudyTemplateResponseMock = (
   orientation: faker.string.alpha({ length: { min: 10, max: 20 } }),
   page_count: faker.number.int(),
   sample: faker.datatype.boolean(),
+  offset: faker.number.int(),
   pages: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
     faker.string.alpha({ length: { min: 10, max: 20 } }),
   ),
@@ -10137,6 +10139,7 @@ export const getPreviewSavedStudyTemplateResponseMock = (
   orientation: faker.string.alpha({ length: { min: 10, max: 20 } }),
   page_count: faker.number.int(),
   sample: faker.datatype.boolean(),
+  offset: faker.number.int(),
   pages: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
     faker.string.alpha({ length: { min: 10, max: 20 } }),
   ),

@@ -29966,6 +29966,29 @@
               "$ref": "#/components/schemas/Locale",
               "default": "en"
             }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 20,
+              "minimum": 1,
+              "default": 4,
+              "title": "Limit"
+            }
           }
         ],
         "responses": {
@@ -52388,6 +52411,11 @@
           "sample": {
             "type": "boolean",
             "title": "Sample"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset",
+            "default": 0
           },
           "pages": {
             "items": {
