@@ -3620,7 +3620,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when tests cover each setting.
   Size: M.
 
-- [ ] SET-005 · AI and confidence section
+- [x] SET-005 · AI and confidence section
   Wording with a live example, outline mode, model tiers per task, cutoff (lab, locked), inspector blocks (warnings, track record, calibration details).
   Done when tests cover each setting and the locked cutoff cannot be edited by a pathologist.
   Size: M.
