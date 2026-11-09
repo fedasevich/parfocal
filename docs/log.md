@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-09
 
+- EVAL-018: Arrange comparison blocks get a Compare with task picker. A researcher without admin rights can offer an arranged report to the admins through new template-offer routes guarded by the report-templates permission (migration 0109, new template-offered notification), and admins accept or decline offers on the templates page. The admin accept and decline screen has no browser test yet.
 - Owner answered decisions 76 to 80 on 2026-11-09: 76a, 79a kept as built (guided check keys already rebindable in Settings, Shortcuts), 77a added CMP-008 (compare offset per slide pair), 78a added COLLAB-020 (slide threads hidden during blinded review), 80a kept with COLLAB-021 (blind first can be turned off mid-task) since the owner asked it to be easy to reverse.
 - GUIDE-023: Picked mentions in decision notes and pin thread messages now save as @[user-id] tokens and show as names everywhere they are read. Old plain-name text stays readable, the note limit counts the token form, and an API test shows text saved the web client's way notifies the person. The object thread composer in guided review still only shows comments locally and never posts.
 - DEV-013: Wired two-finger click and Safari pinch DOM listeners into the slide stage with node and browser tests, added a two-finger click step and trackpad fixture download to the recorder, real Mac and Windows traces still TODO (docs/results/2026-11-09-trackpad-listeners.md).

@@ -4816,7 +4816,7 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Depends on EVAL-008, EVAL-002, ADJ-005. Refs mock: evaluation/arrange, doc 43.
   Size: L.
 
-- [ ] EVAL-018 · Compare with picker in Arrange
+- [x] EVAL-018 · Compare with picker in Arrange
   EVAL-009 (arrange one report) rebuilt Arrange on the shared report editor without the Compare with task picker for comparison blocks, and removed its old browser test. Add the picker to the editor's comparison block settings, and let a researcher without the template permission offer Save as template to an admin instead of seeing only a notice.
   Done when a browser test sets a comparison block's task and finds it in the PDF, and a test shows the offer reaching an admin.
   Depends on EVAL-009.
