@@ -1,4 +1,4 @@
-# 0280. Guided review and the full viewer draw the slide through the engine behind the still, and the still stays as the fallback
+# 0282. Guided review and the full viewer draw the slide through the engine behind the still, and the still stays as the fallback
 
 - Date: 2026-11-09
 - Status: Accepted
