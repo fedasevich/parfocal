@@ -30,7 +30,9 @@
     "data-map:doc": "uv run --package parfocal-api python -m parfocal_api.data_map",
     "api:dev": "uv run --package parfocal-api --env-file .env uvicorn parfocal_api.app:create_app --factory --port 8000",
     "test:e2e": "pnpm --filter @parfocal/e2e test:e2e",
-    "test:db": "docker compose up -d --wait && uv run pytest -m db"
+    "test:db": "docker compose up -d --wait && uv run pytest -m db",
+    "load": "PYTHONPATH=scripts uv run --group load locust -f scripts/load/locustfile.py",
+    "load:token": "PYTHONPATH=scripts uv run --package parfocal-api --env-file .env python scripts/load/local_token.py"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",
