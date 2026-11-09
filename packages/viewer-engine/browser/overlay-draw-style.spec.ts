@@ -63,6 +63,39 @@ for (const scene of scenes) {
   });
 }
 
+type LiveChoices = Parameters<typeof window.drawStyleHarness.renderLive>[0];
+
+const liveScenes: Array<{ name: string; choices: LiveChoices }> = [
+  { name: "outline-width-1", choices: { draw: "outline", width: "1", cutoff: 0 } },
+  { name: "outline-width-2", choices: { draw: "outline", width: "2", cutoff: 0 } },
+  { name: "outline-width-3", choices: { draw: "outline", width: "3", cutoff: 0 } },
+  { name: "fill", choices: { draw: "fill", width: "2", cutoff: 0 } },
+  { name: "dots", choices: { draw: "dots", width: "2", cutoff: 0 } },
+  { name: "opacity-40", choices: { draw: "outline", width: "2", opacity: 40, cutoff: 0 } },
+  { name: "colour-score", choices: { colorBy: "score", cutoff: 0 } },
+  { name: "colour-decision", choices: { colorBy: "decision", cutoff: 0 } },
+  { name: "cutoff-dimmed", choices: { draw: "fill", cutoff: 0.5 } },
+];
+
+for (const scene of liveScenes) {
+  test(`how objects draw live: ${scene.name} matches the still preview golden image`, async ({
+    page,
+  }, testInfo) => {
+    await open(page);
+    await page.evaluate((choices) => window.drawStyleHarness.renderLive(choices), scene.choices);
+    const frame = await captureWebglCanvas(page, "#scene");
+    expect(inked(frame)).toBeGreaterThan(200);
+    const outcome = checkGolden(frame, {
+      name: `overlay-draw-${scene.name}`,
+      format: "synthetic",
+      goldenDirectory,
+      outputDirectory: testInfo.outputDir,
+      content: { minDistinctColours: 3, maxDominantColourFraction: 0.97, minLumaStdDev: 1 },
+    });
+    if (outcome.status === "mismatched") throw new Error(outcome.message);
+  });
+}
+
 test("the styles differ from each other and the cutoff dims without removing objects", async ({
   page,
 }) => {
