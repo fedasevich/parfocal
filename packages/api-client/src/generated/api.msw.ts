@@ -611,6 +611,49 @@ export const getRestoreProjectResponseMock = (
   ...overrideResponse,
 });
 
+export const getUndeleteProjectResponseMock = (
+  overrideResponse: Partial<Extract<Project, object>> = {},
+): Project => ({
+  id: faker.string.uuid(),
+  code: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  number: faker.number.int(),
+  name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  colour: faker.number.int(),
+  privacy_mode: faker.helpers.arrayElement(Object.values(PrivacyMode)),
+  template: faker.helpers.arrayElement(Object.values(AnalysisTemplate)),
+  viewer_parts: faker.helpers.arrayElements(Object.values(ViewerPart)),
+  blinded: faker.datatype.boolean(),
+  ai_hidden_first_read: faker.datatype.boolean(),
+  study_template_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  clinical_template: faker.helpers.arrayElement([
+    faker.helpers.arrayElement(Object.values(ClinicalTemplate)),
+    null,
+  ]),
+  match_iou: faker.number.float({ fractionDigits: 2 }),
+  match_distance_um: faker.number.float({ fractionDigits: 2 }),
+  archived_at: faker.helpers.arrayElement([
+    faker.date.past().toISOString().slice(0, 19) + "Z",
+    null,
+  ]),
+  created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  sample: faker.datatype.boolean(),
+  my_role: faker.helpers.arrayElement([
+    faker.helpers.arrayElement(Object.values(ProjectRole)),
+    null,
+  ]),
+  members: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      user_id: faker.string.uuid(),
+      role: faker.helpers.arrayElement(Object.values(ProjectRole)),
+      sign_out: faker.helpers.arrayElement([
+        faker.helpers.arrayElement(Object.values(SignOutRight)),
+        null,
+      ]),
+    }),
+  ),
+  ...overrideResponse,
+});
+
 export const getSetProjectMemberResponseMock = (
   overrideResponse: Partial<Extract<Project, object>> = {},
 ): Project => ({
@@ -13458,6 +13501,28 @@ export const getRestoreProjectMockHandler = (
   );
 };
 
+export const getUndeleteProjectMockHandler = (
+  overrideResponse?:
+    | Project
+    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<Project> | Project),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/projects/:projectId/undelete",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getUndeleteProjectResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getSetProjectMemberMockHandler = (
   overrideResponse?:
     | Project
@@ -19551,6 +19616,7 @@ export const getParfocalAPIMock = () => [
   getChangeProjectPrivacyMockHandler(),
   getArchiveProjectMockHandler(),
   getRestoreProjectMockHandler(),
+  getUndeleteProjectMockHandler(),
   getSetProjectMemberMockHandler(),
   getRemoveProjectMemberMockHandler(),
   getCreateSampleProjectMockHandler(),

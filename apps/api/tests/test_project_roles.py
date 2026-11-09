@@ -33,6 +33,7 @@ class Setup:
     project: uuid.UUID
     case: str
     slide: uuid.UUID
+    name: str
 
 
 def make_setup(
@@ -64,6 +65,7 @@ def make_setup(
         project,
         case.json()["id"],
         slide,
+        str(owner(database, f"SELECT name FROM projects WHERE id = '{project}'")[0][0]),
     )
 
 
@@ -167,6 +169,13 @@ OPERATIONS: dict[str, Operation] = {
     ),
     "restoreProject": Operation(
         lambda c, s: c.post(f"/api/projects/{s.project}/restore"), owner_changes
+    ),
+    "deleteProject": Operation(
+        lambda c, s: c.request("DELETE", f"/api/projects/{s.project}", json={"name": s.name}),
+        owner_removes,
+    ),
+    "undeleteProject": Operation(
+        lambda c, s: c.post(f"/api/projects/{s.project}/undelete"), owner_changes
     ),
     "setProjectMember": Operation(
         lambda c, s: c.put(

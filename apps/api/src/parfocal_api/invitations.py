@@ -411,6 +411,7 @@ async def join_task(
                 review_tasks.c.archived_at.is_(None),
                 review_tasks.c.signed_off_at.is_(None),
                 projects.c.archived_at.is_(None),
+                projects.c.deleted_at.is_(None),
             )
         )
     ).one_or_none()

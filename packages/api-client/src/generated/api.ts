@@ -3629,6 +3629,11 @@ export interface ProjectClass {
   colour: string;
 }
 
+export interface ProjectDeletion {
+  /** @maxLength 120 */
+  name: string;
+}
+
 export interface ProjectDraft {
   name: ProjectName;
   colour?: ParfocalApiProjectsColour;
@@ -7273,11 +7278,33 @@ export const getDeleteProjectUrl = (projectId: string) => {
  */
 export const deleteProject = async (
   projectId: string,
+  projectDeletion: ProjectDeletion,
   options?: Parameters<typeof apiFetch>[1],
 ): Promise<deleteProjectResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
   return apiFetch<deleteProjectResponse>(getDeleteProjectUrl(projectId), {
     ...options,
     method: "DELETE",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(projectDeletion),
   });
 };
 
@@ -7308,18 +7335,18 @@ export const getDeleteProjectMutationOptions = <TError = Problem, TContext = unk
     Awaited<ReturnType<typeof deleteProject>>,
     DeleteProjectMutationVariables
   > = (props) => {
-    const { projectId } = props ?? {};
+    const { projectId, data } = props ?? {};
 
-    return deleteProject(projectId, requestOptions);
+    return deleteProject(projectId, data, requestOptions);
   };
 
   return { mutationFn, ...mutationOptions };
 };
 
 export type DeleteProjectMutationResult = NonNullable<Awaited<ReturnType<typeof deleteProject>>>;
-
+export type DeleteProjectMutationBody = ProjectDeletion;
 export type DeleteProjectMutationError = Problem;
-export type DeleteProjectMutationVariables = { projectId: string };
+export type DeleteProjectMutationVariables = { projectId: string; data: ProjectDeletion };
 
 /**
  * @summary Delete Project
@@ -7800,6 +7827,151 @@ export const useRestoreProject = <TError = Problem, TContext = unknown>(
   TContext
 > => {
   return useMutation(getRestoreProjectMutationOptions(options), queryClient);
+};
+
+export type undeleteProjectResponse200 = {
+  data: Project;
+  status: 200;
+};
+
+export type undeleteProjectResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type undeleteProjectResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type undeleteProjectResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type undeleteProjectResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type undeleteProjectResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type undeleteProjectResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type undeleteProjectResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type undeleteProjectResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type undeleteProjectResponseSuccess = undeleteProjectResponse200 & {
+  headers: Headers;
+};
+export type undeleteProjectResponseError = (
+  | undeleteProjectResponse400
+  | undeleteProjectResponse401
+  | undeleteProjectResponse403
+  | undeleteProjectResponse404
+  | undeleteProjectResponse409
+  | undeleteProjectResponse422
+  | undeleteProjectResponse429
+  | undeleteProjectResponse500
+) & {
+  headers: Headers;
+};
+
+export type undeleteProjectResponse = undeleteProjectResponseSuccess | undeleteProjectResponseError;
+
+export const getUndeleteProjectUrl = (projectId: string) => {
+  return `/api/projects/${projectId}/undelete`;
+};
+
+/**
+ * @summary Undelete Project
+ */
+export const undeleteProject = async (
+  projectId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<undeleteProjectResponse> => {
+  return apiFetch<undeleteProjectResponse>(getUndeleteProjectUrl(projectId), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getUndeleteProjectMutationKey = () => ["undeleteProject"] as const;
+
+export const getUndeleteProjectMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof undeleteProject>>,
+    TError,
+    UndeleteProjectMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof undeleteProject>>,
+  TError,
+  UndeleteProjectMutationVariables,
+  TContext
+> => {
+  const mutationKey = getUndeleteProjectMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof undeleteProject>>,
+    UndeleteProjectMutationVariables
+  > = (props) => {
+    const { projectId } = props ?? {};
+
+    return undeleteProject(projectId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UndeleteProjectMutationResult = NonNullable<
+  Awaited<ReturnType<typeof undeleteProject>>
+>;
+
+export type UndeleteProjectMutationError = Problem;
+export type UndeleteProjectMutationVariables = { projectId: string };
+
+/**
+ * @summary Undelete Project
+ */
+export const useUndeleteProject = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof undeleteProject>>,
+      TError,
+      UndeleteProjectMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof undeleteProject>>,
+  TError,
+  UndeleteProjectMutationVariables,
+  TContext
+> => {
+  return useMutation(getUndeleteProjectMutationOptions(options), queryClient);
 };
 
 export type setProjectMemberResponse200 = {

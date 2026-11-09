@@ -130,6 +130,15 @@ class ProjectHoldsPatientsError(ConflictError):
     title = "A project with patient data cannot become de-identified"
 
 
+class ProjectDeletion(BaseModel):
+    name: Annotated[str, StringConstraints(strip_whitespace=True, max_length=120)]
+
+
+class ProjectNameMismatchError(BadRequestError):
+    code = "project-name-mismatch"
+    title = "Type the project name exactly to delete it"
+
+
 class LastOwnerError(ConflictError):
     code = "last-owner"
     title = "A project keeps at least one owner"
@@ -470,6 +479,61 @@ async def restore_project(
     project_id: uuid.UUID, principal: CurrentPrincipal, connection: TenantConnection
 ) -> Project:
     return await set_archived(connection, principal, project_id, archive=False)
+
+
+async def kept_row_of(
+    connection: AsyncConnection, principal: Principal, project_id: uuid.UUID
+) -> Any:
+    row = (
+        await connection.execute(
+            select(projects).where(projects.c.id == project_id, IN_THIS_TENANT)
+        )
+    ).one_or_none()
+    role = await role_in(connection, principal, project_id, deleted_too=True)
+    if row is None or role is None:
+        raise NotFoundError("Project not found")
+    if role is not ProjectRole.OWNER:
+        raise OwnersOnlyError
+    return row
+
+
+@router.delete(
+    "/{project_id}",
+    operation_id="deleteProject",
+    status_code=204,
+    response_class=Response,
+    **require(Permission.CREATE_CASES, write=True),
+)
+async def delete_project(
+    project_id: uuid.UUID,
+    deletion: ProjectDeletion,
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
+) -> None:
+    row = await owned(connection, principal, project_id)
+    if deletion.name != row.name.strip():
+        raise ProjectNameMismatchError
+    await connection.execute(
+        update(projects).where(projects.c.id == project_id).values(deleted_at=func.now())
+    )
+    await audit(connection, principal, AuditAction.PROJECT_DELETED, project_id, {})
+
+
+@router.post(
+    "/{project_id}/undelete",
+    operation_id="undeleteProject",
+    **require(Permission.CREATE_CASES, write=True),
+)
+async def undelete_project(
+    project_id: uuid.UUID, principal: CurrentPrincipal, connection: TenantConnection
+) -> Project:
+    row = await kept_row_of(connection, principal, project_id)
+    if row.deleted_at is not None:
+        await connection.execute(
+            update(projects).where(projects.c.id == project_id).values(deleted_at=None)
+        )
+        await audit(connection, principal, AuditAction.PROJECT_UNDELETED, project_id, {})
+    return await project_of(connection, principal, project_id)
 
 
 async def workspace_member(connection: AsyncConnection, user_id: uuid.UUID) -> Any:

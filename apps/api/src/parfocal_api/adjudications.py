@@ -519,6 +519,7 @@ async def list_my_adjudications(
             adjudications.c.adjudicator_user_id == user_id,
             adjudications.c.declined_at.is_(None),
             review_tasks.c.archived_at.is_(None),
+            projects.c.deleted_at.is_(None),
         )
         .order_by(adjudications.c.sent_at, adjudications.c.id)
     )

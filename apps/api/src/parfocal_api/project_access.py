@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import ColumnElement, Select, exists, func, or_, select, true
+from sqlalchemy import ColumnElement, Select, and_, exists, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.permissions import (
@@ -18,6 +18,7 @@ from parfocal_api.tables import (
     ProjectRole,
     emergency_grants,
     project_members,
+    projects,
     review_assignments,
     review_tasks,
 )
@@ -36,18 +37,34 @@ class EmergencyAccessNeededError(ForbiddenError):
     title = "Give a reason to open this clinical project"
 
 
+LIVE_PROJECTS = select(projects.c.id).where(projects.c.deleted_at.is_(None))
+
+
 async def role_in(
-    connection: AsyncConnection, principal: Principal, project_id: uuid.UUID
+    connection: AsyncConnection,
+    principal: Principal,
+    project_id: uuid.UUID,
+    *,
+    deleted_too: bool = False,
 ) -> ProjectRole | None:
     if not isinstance(principal, MemberPrincipal):
         return None
-    role = await connection.scalar(
-        select(project_members.c.role).where(
-            project_members.c.project_id == project_id,
-            project_members.c.user_id == principal.user_id,
+    statement = select(project_members.c.role).where(
+        project_members.c.project_id == project_id,
+        project_members.c.user_id == principal.user_id,
+    )
+    if not deleted_too:
+        statement = statement.where(project_members.c.project_id.in_(LIVE_PROJECTS))
+    role = await connection.scalar(statement)
+    return ProjectRole(role) if role else None
+
+
+async def is_live(connection: AsyncConnection, project_id: uuid.UUID) -> bool:
+    return bool(
+        await connection.scalar(
+            select(exists().where(projects.c.id == project_id, projects.c.deleted_at.is_(None)))
         )
     )
-    return ProjectRole(role) if role else None
 
 
 def open_grants(principal: MemberPrincipal) -> ColumnElement[bool]:
@@ -84,7 +101,7 @@ async def project_grant(
 ) -> Grant:
     workspace = grant_of(principal, permission)
     if isinstance(principal, ServicePrincipal):
-        return workspace
+        return workspace if await is_live(connection, project_id) else Grant.NONE
     grant = in_project(workspace, permission, await role_in(connection, principal, project_id))
     if (
         grant is Grant.NONE
@@ -116,17 +133,21 @@ async def require_reading(
 
 
 def readable(principal: Principal, project_column: ColumnElement[uuid.UUID]) -> ColumnElement[bool]:
+    live = project_column.in_(LIVE_PROJECTS)
     if isinstance(principal, ServicePrincipal):
-        return true()
+        return live
     assert isinstance(principal, MemberPrincipal)
-    return or_(
-        project_column.in_(
-            select(project_members.c.project_id).where(
-                project_members.c.user_id == principal.user_id,
-                project_members.c.role.in_(READERS),
-            )
+    return and_(
+        live,
+        or_(
+            project_column.in_(
+                select(project_members.c.project_id).where(
+                    project_members.c.user_id == principal.user_id,
+                    project_members.c.role.in_(READERS),
+                )
+            ),
+            project_column.in_(select(emergency_grants.c.project_id).where(open_grants(principal))),
         ),
-        project_column.in_(select(emergency_grants.c.project_id).where(open_grants(principal))),
     )
 
 
@@ -191,5 +212,8 @@ def readable_slide(
     slide_column: ColumnElement[uuid.UUID],
 ) -> ColumnElement[bool]:
     if isinstance(principal, ServicePrincipal):
-        return true()
-    return or_(readable(principal, project_column), slide_column.in_(assigned_slides(principal)))
+        return readable(principal, project_column)
+    return and_(
+        project_column.in_(LIVE_PROJECTS),
+        or_(readable(principal, project_column), slide_column.in_(assigned_slides(principal))),
+    )

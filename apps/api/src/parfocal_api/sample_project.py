@@ -10,7 +10,6 @@ from parfocal_api.class_templates import TaxonomyTemplate
 from parfocal_api.context import CurrentPrincipal, Store, TenantConnection
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import MemberPrincipal
-from parfocal_api.problems import ConflictError
 from parfocal_api.projects import (
     IN_THIS_TENANT,
     LIVE,
@@ -19,7 +18,6 @@ from parfocal_api.projects import (
     ProjectDraft,
     audit,
     create_project,
-    owned,
     project_of,
 )
 from parfocal_api.realtime import NoRealtime
@@ -41,8 +39,6 @@ from parfocal_api.tables import (
     TaskScope,
     TaskSplit,
     projects,
-    result_sets,
-    review_tasks,
     slides,
 )
 from parfocal_common.object_store import ObjectStore
@@ -66,11 +62,6 @@ SAMPLE_MODELS = (
     SampleModel("PathoSAM + HoVer-NeXt", "v1.2", False, 400),
 )
 REGIONS_PER_SLIDE = 3
-
-
-class NotASampleError(ConflictError):
-    code = "not-a-sample"
-    title = "Only the sample project can be deleted"
 
 
 router = APIRouter(prefix="/api/projects", tags=["projects"])
@@ -227,31 +218,3 @@ async def create_sample_project(
     return await project_of(
         connection, principal, await seed(connection, store, principal, results)
     )
-
-
-@router.delete(
-    "/{project_id}",
-    operation_id="deleteProject",
-    status_code=204,
-    **require(Permission.CREATE_CASES, write=True),
-)
-async def delete_project(
-    project_id: uuid.UUID, principal: CurrentPrincipal, connection: TenantConnection
-) -> None:
-    row = await owned(connection, principal, project_id)
-    if not row.sample:
-        raise NotASampleError
-    gone = func.now()
-    await connection.execute(
-        update(review_tasks)
-        .where(review_tasks.c.project_id == project_id, review_tasks.c.archived_at.is_(None))
-        .values(archived_at=gone)
-    )
-    for table in (result_sets, slides, projects):
-        key = table.c.id if table is projects else table.c.project_id
-        await connection.execute(
-            update(table)
-            .where(key == project_id, table.c.deleted_at.is_(None))
-            .values(deleted_at=gone)
-        )
-    await audit(connection, principal, AuditAction.PROJECT_DELETED, project_id, {"sample": True})

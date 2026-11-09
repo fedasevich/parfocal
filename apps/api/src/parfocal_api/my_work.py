@@ -172,6 +172,7 @@ async def my_review_tasks(connection: AsyncConnection, me: uuid.UUID) -> list[My
             .join(projects, projects.c.id == review_tasks.c.project_id)
             .where(
                 review_tasks.c.archived_at.is_(None),
+                projects.c.deleted_at.is_(None),
                 review_tasks.c.id.in_(
                     select(review_assignments.c.task_id).where(
                         review_assignments.c.user_id == me,
@@ -248,7 +249,11 @@ async def list_tasks_assigned_by_me(
         await connection.execute(
             select(*TASK_COLUMNS)
             .join(projects, projects.c.id == review_tasks.c.project_id)
-            .where(review_tasks.c.archived_at.is_(None), review_tasks.c.created_by_user_id == me)
+            .where(
+                review_tasks.c.archived_at.is_(None),
+                projects.c.deleted_at.is_(None),
+                review_tasks.c.created_by_user_id == me,
+            )
             .order_by(review_tasks.c.created_at.desc())
         )
     ).all()

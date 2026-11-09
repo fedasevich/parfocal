@@ -6,6 +6,7 @@ import {
   useGetProjectOverview,
   useListClassMappings,
   useListProjectClasses,
+  useListReviewTasks,
   useListStudyTemplates,
 } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
@@ -21,6 +22,7 @@ import { okData } from "../placeholder.tsx";
 import { AddClassModal } from "./add-class-modal.tsx";
 import type { NewClass } from "./model.ts";
 import { usePeople } from "./people.ts";
+import { ProjectDeleteDialog } from "./project-delete-dialog.tsx";
 import {
   ClinicalMembersZone,
   IdMatchingZone,
@@ -99,6 +101,8 @@ export function SettingsTab({
   const imports = useGetProjectImports(project.id).data?.data;
   const { value, change } = useProjectChange(project, toast);
   const [extra, setExtra] = useState<NewClass[]>([]);
+  const [deleting, setDeleting] = useState(false);
+  const tasks = okData(useListReviewTasks(project.id).data) ?? [];
   const chosen = value.study_template_id ?? overview?.study_template_id ?? templates[0]?.id ?? "";
   const clinical = project.privacy_mode === "clinical";
   const taxonomy = project.template === "cell-review" ? "PanNuke" : "Sentinel node";
@@ -287,7 +291,35 @@ export function SettingsTab({
             </div>
           </Zone>
         )}
+        {project.my_role === "owner" ? (
+          <Zone
+            title="Danger zone"
+            sub="Deleting hides the project from every list and link. Nothing is erased, and an owner can restore it."
+          >
+            <div className="flex items-center justify-between gap-4">
+              <span className="text-body-sm text-fg-dim">
+                Asks you to type the project name first.
+              </span>
+              <Button size="sm" variant="destructive" onClick={() => setDeleting(true)}>
+                Delete project
+              </Button>
+            </div>
+          </Zone>
+        ) : null}
       </Zones>
+      {deleting ? (
+        <ProjectDeleteDialog
+          project={project}
+          counts={{
+            cases: overview?.cases ?? 0,
+            slides: overview?.slides ?? 0,
+            resultSets: overview?.result_sets ?? 0,
+            tasks: tasks.length,
+          }}
+          toast={toast}
+          onClose={() => setDeleting(false)}
+        />
+      ) : null}
       <AddClassModal
         open={addClass}
         projectCode={project.code}

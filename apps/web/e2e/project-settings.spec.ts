@@ -71,3 +71,32 @@ test("Can sign out shows a viewer as Never and warns when nobody could sign out"
   await groups.first().getByRole("radio", { name: "Any case" }).click();
   await expect(warning).toHaveCount(0);
 });
+
+test("an owner deletes a project only after typing its name", async ({ page }) => {
+  const deletions: Record<string, unknown>[] = [];
+  page.on("request", (request) => {
+    if (request.method() === "DELETE" && request.url().endsWith(`/api/projects/${p07}`))
+      deletions.push(request.postDataJSON() as Record<string, unknown>);
+  });
+  await page.goto(`/projects/${p07}?tab=settings&as=SM`);
+  const settings = page.getByTestId("project-settings");
+  await expect(settings.getByRole("switch", { name: "Blind review" })).toBeVisible();
+  await expect(settings.getByRole("button", { name: "Delete project" })).toHaveCount(0);
+
+  await page.goto(`/projects/${p07}?tab=settings&as=DH`);
+  await settings.getByRole("button", { name: "Delete project" }).click();
+  const dialog = page.getByRole("dialog", { name: "Delete P07?" });
+  await expect(dialog.getByTestId("project-delete-goes")).toContainText("61 slides");
+  await expect(dialog).toContainText("an owner can restore the project");
+  await dialog.getByRole("button", { name: "Delete project" }).click();
+  await expect(dialog).toContainText("Type Sentinel node AI evaluation to confirm.");
+  await dialog.getByRole("textbox").fill("Sentinel node");
+  await expect(dialog.getByRole("button", { name: "Delete project" })).toBeDisabled();
+  await expect(dialog).toContainText("The name does not match.");
+  expect(deletions).toHaveLength(0);
+  await dialog.getByRole("textbox").fill("Sentinel node AI evaluation");
+  await dialog.getByRole("button", { name: "Delete project" }).click();
+  await expect(dialog).toHaveCount(0);
+  expect(deletions).toEqual([{ name: "Sentinel node AI evaluation" }]);
+  await expect(page).not.toHaveURL(/\/projects\//);
+});

@@ -72,23 +72,22 @@ def test_a_workspace_gets_one_sample_with_four_slides_two_sets_and_a_task(
     assert api(r.people["first"]).post("/api/projects/sample").status_code == 403
 
 
-def test_the_sample_deletes_and_only_the_sample_does(api: ApiAs, database: str) -> None:
+def test_the_sample_deletes_like_any_project_and_a_fresh_one_follows(
+    api: ApiAs, database: str
+) -> None:
     r = review(api, database)
     person = r.people["owner"]
-    project = create_sample(api, person)["id"]
-    real = api(person).delete(f"/api/projects/{r.project}")
-    assert (real.status_code, real.json()["code"]) == (409, "not-a-sample")
-    assert api(person).delete(f"/api/projects/{project}").status_code == 204
+    sample = create_sample(api, person)
+    project = sample["id"]
+    gone = api(person).request("DELETE", f"/api/projects/{project}", json={"name": sample["name"]})
+    assert gone.status_code == 204
     assert api(person).get(f"/api/projects/{project}").status_code == 404
     listed = [item["id"] for item in api(person).get("/api/projects").json()]
     assert project not in listed
     home = api(person).get("/api/me/home").json()
     assert project not in [item["id"] for item in home["projects"]]
-    live = owner(
-        database,
-        f"SELECT count(*) FROM slides WHERE project_id = '{project}' AND deleted_at IS NULL",
-    )
-    assert live[0][0] == 0
+    kept = owner(database, f"SELECT count(*) FROM slides WHERE project_id = '{project}'")
+    assert kept[0][0] == 4
     fresh = create_sample(api, person)
     assert fresh["id"] != project
 

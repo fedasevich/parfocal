@@ -136,8 +136,25 @@ export const toProject = (project: ScenarioProject): Project => ({
   }),
 });
 
+const deletedProjects = new Set<string>();
+
 const projectNamed = (projectId: string) =>
-  projects.find((candidate) => candidate.id === projectId || candidate.code === projectId);
+  projects.find(
+    (candidate) =>
+      !deletedProjects.has(candidate.id) &&
+      (candidate.id === projectId || candidate.code === projectId),
+  );
+
+const nameMismatch = () =>
+  HttpResponse.json(
+    {
+      type: "about:blank",
+      title: "Type the project name exactly to delete it",
+      status: 400,
+      code: "project-name-mismatch",
+    },
+    { status: 400, headers: { "content-type": "application/problem+json" } },
+  );
 
 export const toProjectRef = (
   project: Pick<ScenarioProject, "id" | "code" | "name">,
@@ -392,7 +409,11 @@ export function scenarioHandlers(): RequestHandler[] {
       inScenarioWorkspace() ? toHome() : emptyWorkspaceHome(toHome()),
     ),
     getListMyReviewTasksMockHandler(() => myTasks()),
-    getListProjectsMockHandler(() => (inScenarioWorkspace() ? projects.map(toProject) : [])),
+    getListProjectsMockHandler(() =>
+      inScenarioWorkspace()
+        ? projects.filter((project) => !deletedProjects.has(project.id)).map(toProject)
+        : [],
+    ),
     http.put("*/api/me/workspace", async ({ request }) => {
       const { tenant_id } = (await request.json()) as { tenant_id: string };
       const outcome = switchFakeWorkspace(tenant_id);
@@ -410,6 +431,14 @@ export function scenarioHandlers(): RequestHandler[] {
       if (project === undefined) return projectNotFound();
       changeProjectDefaults(project, (await request.json()) as ProjectChange);
       return HttpResponse.json(toProject(project));
+    }),
+    http.delete<{ projectId: string }>("*/api/projects/:projectId", async ({ params, request }) => {
+      const project = projectNamed(params.projectId);
+      if (project === undefined) return projectNotFound();
+      const { name } = (await request.json()) as { name: string };
+      if (name.trim() !== project.name.trim()) return nameMismatch();
+      deletedProjects.add(project.id);
+      return new HttpResponse(null, { status: 204 });
     }),
     http.put<{ projectId: string; userId: string }>(
       "*/api/projects/:projectId/members/:userId/sign-out",

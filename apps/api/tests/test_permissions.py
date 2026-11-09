@@ -254,6 +254,7 @@ class Call:
     body: dict[str, Any] | None = None
 
 
+SAMPLE_NAME = "Matrix sample"
 SQUARE = {"type": "Polygon", "coordinates": [[[0, 0], [9, 0], [9, 9], [0, 9], [0, 0]]]}
 NEEDS_A_TASK = frozenset(
     {
@@ -659,7 +660,10 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "archiveProject": lambda w: Call("POST", f"/api/projects/{w.spare_project}/archive"),
     "restoreProject": lambda w: Call("POST", f"/api/projects/{w.spare_project}/restore"),
     "createSampleProject": lambda _: Call("POST", "/api/projects/sample"),
-    "deleteProject": lambda w: Call("DELETE", f"/api/projects/{w.sample_project}"),
+    "deleteProject": lambda w: Call(
+        "DELETE", f"/api/projects/{w.sample_project}", {"name": SAMPLE_NAME}
+    ),
+    "undeleteProject": lambda w: Call("POST", f"/api/projects/{w.sample_project}/undelete"),
     "setProjectMember": lambda w: Call(
         "PUT", f"/api/projects/{w.project}/members/{w.colleague}", {"role": "viewer"}
     ),
@@ -1579,7 +1583,9 @@ async def seed(database: str, lead: Seat = RESEARCHER, presets_for: Seat = RESEA
             )
             sample_project = await seed_project(connection, tenant_id)
             await connection.execute(
-                update(projects).where(projects.c.id == sample_project).values(sample=True)
+                update(projects)
+                .where(projects.c.id == sample_project)
+                .values(sample=True, name=SAMPLE_NAME)
             )
             outside_project = await seed_project(connection, tenant_id)
             project_class = await connection.scalar(
