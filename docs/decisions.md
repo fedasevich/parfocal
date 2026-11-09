@@ -79,6 +79,15 @@ A workspace may now claim only its admin's own verified email domain, so nobody 
 
 Your choice:
 
+## 80. Whether the task owner is blind too on a blind first annotate task, from COLLAB-017 (blind first switch on annotate tasks)
+
+The blind first switch keeps an expert's new objects from colleagues until that expert marks the slide checked. As built, the researcher who owns the task is blind too, so they cannot follow progress object by object until each expert checks. Only hand-drawn objects hide, unchecking hides them again and the switch is set when the task is made. Those three need no answer.
+
+- a. The owner is blind too, so nobody can relay an expert's work early. (recommended)
+- b. The owner sees every object at once and only the experts are blind to each other.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 Nothing else in review needs you. Nine tasks that only waited for green CI were ticked on 2026-11-02.
