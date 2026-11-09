@@ -5148,6 +5148,7 @@ export interface TaskChange {
   decision?: DecisionSettings | null;
   display?: TaskDisplaySettings | null;
   check?: CheckChange | null;
+  blind_first?: boolean | null;
 }
 
 export interface TaskDraft {

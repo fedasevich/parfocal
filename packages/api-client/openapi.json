@@ -59086,6 +59086,17 @@
                 "type": "null"
               }
             ]
+          },
+          "blind_first": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Blind First"
           }
         },
         "type": "object",

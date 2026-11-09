@@ -1750,6 +1750,7 @@ review_tasks = Table(
     Column("display", JSONB, nullable=False, server_default=text("'{}'::jsonb"), info=OPERATIONAL),
     Column("check_options", JSONB(none_as_null=True), nullable=True, info=OPERATIONAL),
     Column("blind_first", Boolean, nullable=False, server_default=text("false"), info=OPERATIONAL),
+    Column("blind_first_since", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
     Column("report_layout", JSONB(none_as_null=True), nullable=True, info=OPERATIONAL),
     *timestamps(),
     UniqueConstraint("project_id", "number"),

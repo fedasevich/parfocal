@@ -112,7 +112,7 @@ test("P07's review tasks, classes, mappings and opinion form come from the scena
   const tasks = await listReviewTasks(p07.id);
   assert.deepEqual(
     (tasks.status === 200 ? tasks.data : []).map((task) => task.code),
-    ["RT-14", "RT-15", "RT-09", "RT-13"],
+    ["RT-14", "RT-15", "RT-09", "RT-13", "AT-21"],
   );
   const classes = await listProjectClasses(p07.id);
   const names = (classes.status === 200 ? classes.data : []).map((item) => item.name);

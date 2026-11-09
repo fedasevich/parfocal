@@ -9,6 +9,7 @@ import {
   useGetReviewTaskStates,
   useGetTaskEvaluation,
 } from "@parfocal/api-client";
+import { BlindFirstSwitch } from "@parfocal/ui/components/annotate-task";
 import { Button } from "@parfocal/ui/components/button";
 import { CountsAsLine } from "@parfocal/ui/components/counts-as";
 import { DrawerPanel } from "@parfocal/ui/components/drawer-panel";
@@ -56,6 +57,31 @@ export function TaskSettingsDrawer({
   const dirty = !sameRange(range, storedRange);
   const answers = evaluation?.decisions.answers ?? {};
   const recount = recountOf(answers, storedRange, range);
+
+  const annotate = detail.kind === "annotate";
+
+  const switchBlindFirst = (blindFirst: boolean) => {
+    setFailure(null);
+    change.mutate(
+      { taskId: task.id, data: { blind_first: blindFirst } },
+      {
+        onSuccess: () => {
+          void Promise.all([
+            queryClient.invalidateQueries({ queryKey: getGetReviewTaskQueryKey(task.id) }),
+            queryClient.invalidateQueries({
+              queryKey: getListReviewTasksQueryKey(task.project_id),
+            }),
+          ]);
+          toast(
+            blindFirst
+              ? `Blind first is on for ${task.code}. Objects already shown stay shown.`
+              : `Blind first is off for ${task.code}. Every expert's objects are shown.`,
+          );
+        },
+        onError: () => setFailure("The change was not saved. Try again."),
+      },
+    );
+  };
 
   const save = () => {
     setFailure(null);
@@ -108,47 +134,68 @@ export function TaskSettingsDrawer({
       testId="task-settings"
       onClose={onClose}
       footer={
-        <>
-          <Hint>
-            {editable
-              ? "Reviewers' raw answers never change."
-              : signedOff
-                ? "Counts as is locked at sign-off."
-                : "Counts as is fixed by the style."}
-          </Hint>
-          <span className="flex-1" />
-          <Button onClick={onClose}>Close</Button>
-          <Button
-            variant="primary"
-            disabled={!editable || !dirty}
-            onClick={() => setConfirming(true)}
-          >
-            Save Counts as
-          </Button>
-        </>
+        annotate ? (
+          <>
+            <Hint>{failure ?? "Each switch is written to the audit log."}</Hint>
+            <span className="flex-1" />
+            <Button onClick={onClose}>Close</Button>
+          </>
+        ) : (
+          <>
+            <Hint>
+              {editable
+                ? "Reviewers' raw answers never change."
+                : signedOff
+                  ? "Counts as is locked at sign-off."
+                  : "Counts as is fixed by the style."}
+            </Hint>
+            <span className="flex-1" />
+            <Button onClick={onClose}>Close</Button>
+            <Button
+              variant="primary"
+              disabled={!editable || !dirty}
+              onClick={() => setConfirming(true)}
+            >
+              Save Counts as
+            </Button>
+          </>
+        )
       }
     >
-      <Zone title={task.name} sub="Pinned when the task was sent.">
-        <Fact label="Decision style">{styleName[stored.kind]}</Fact>
-        {stored.question ? <Fact label="Question">{stored.question}</Fact> : null}
-        <Hint>The style cannot change once a decision exists.</Hint>
-      </Zone>
-      <Zone
-        title="Counts as"
-        sub="How each answer counts toward agree, not sure and disagree in the evaluation."
-      >
-        <CountsAsLine
-          decisionStyle={stored.kind}
-          agreeFrom={range.agreeFrom}
-          disagreeTo={range.disagreeTo}
-          split={splitOf(answers, range)}
-          {...(editable ? { onRangeChange: setPicked } : {})}
-        />
-        {signedOff ? <Hint>This task is signed off, so the mapping is locked.</Hint> : null}
-        {!signedOff && !editable ? (
-          <Hint>This style counts each answer by its own rule, so there is nothing to map.</Hint>
-        ) : null}
-      </Zone>
+      {annotate ? (
+        <Zone title="How it runs" sub="You can change this at any time.">
+          <BlindFirstSwitch
+            checked={detail.blind_first ?? false}
+            onCheckedChange={switchBlindFirst}
+          />
+        </Zone>
+      ) : (
+        <>
+          <Zone title={task.name} sub="Pinned when the task was sent.">
+            <Fact label="Decision style">{styleName[stored.kind]}</Fact>
+            {stored.question ? <Fact label="Question">{stored.question}</Fact> : null}
+            <Hint>The style cannot change once a decision exists.</Hint>
+          </Zone>
+          <Zone
+            title="Counts as"
+            sub="How each answer counts toward agree, not sure and disagree in the evaluation."
+          >
+            <CountsAsLine
+              decisionStyle={stored.kind}
+              agreeFrom={range.agreeFrom}
+              disagreeTo={range.disagreeTo}
+              split={splitOf(answers, range)}
+              {...(editable ? { onRangeChange: setPicked } : {})}
+            />
+            {signedOff ? <Hint>This task is signed off, so the mapping is locked.</Hint> : null}
+            {!signedOff && !editable ? (
+              <Hint>
+                This style counts each answer by its own rule, so there is nothing to map.
+              </Hint>
+            ) : null}
+          </Zone>
+        </>
+      )}
       <SmallModal
         open={confirming}
         onOpenChange={(next) => {
