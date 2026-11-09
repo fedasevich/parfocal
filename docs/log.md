@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-09
 
+- COLLAB-021: The annotate task owner can switch blind first off and on again from task settings. PATCH blind_first with a new blind_first_since (migration 0110) keeps already shown objects shown and hides only later unchecked ones, and each change is audited as task.blind-first-changed without PHI. Tested by API and browser specs.
 - TEST-014: the dependency-scan job passed on the ci runs of 2026-11-09.
 - TEST-021: three ci runs in a row on 2026-11-09 (42651763689, 42661057859, 42666737479) finished the three web browser shards in 19 to 30 minutes, under the 45 minute target.
 - COLLAB-019: Object comments in guided review, the full viewer and the pinned-ID popover now post through the threads API (create on an object anchor, reply after) and read through the task thread routes, the fake keeps them across reload, with browser, API mention and api-client tests. Replies in an object thread display flat because the real message has no reply-to field.

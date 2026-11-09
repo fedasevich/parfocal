@@ -2910,7 +2910,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Depends on COLLAB-015.
   Size: S.
 
-- [ ] COLLAB-021 · Turn blind first off on a running annotate task
+- [x] COLLAB-021 · Turn blind first off on a running annotate task
   The owner chose 80a on 2026-11-09, so the owner is blind too, and asked that the switch be easy to reverse and never invasive. The task owner can turn blind first off at any time in the task settings, which shows every expert's objects at once and is written to the audit log. Turning it back on hides again only objects not yet seen by others, and the stepper says plainly what each choice does.
   Done when API tests turn the switch off mid-task and see every object, turn it on again and see only unchecked new objects hidden, and a browser test toggles it from the task settings.
   Depends on COLLAB-017.
