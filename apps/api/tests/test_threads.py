@@ -285,6 +285,15 @@ def test_replies_notify_followers_who_may_see_them(api: ApiAs, database: str) ->
         "object_id": None,
         "job_id": None,
         "thread_id": thread["id"],
+        "case_id": None,
+        "resolved_from": None,
+        "origin": {
+            "route": "task",
+            "project_id": str(s.project),
+            "case_id": None,
+            "task_id": str(s.task),
+            "slide_id": None,
+        },
     }
     assert api(s.people["owner"]).delete(f"{path}?confirm=true").status_code == 204
     gone = api(s.people["owner"]).get(f"/api/me/notifications/{notification}/target")

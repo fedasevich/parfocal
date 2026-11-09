@@ -300,6 +300,7 @@ def test_the_decision_cutoff_is_the_labs_and_a_pathologist_cannot_change_it(
     assert api(people["reviewer"]).get(ME).json()["lab"]["values"] == {"decision_cutoff": 65}
 
 
+@pytest.mark.db
 def test_an_admin_requires_two_factors_and_reads_it_back(api: ApiAs, database: str) -> None:
     workspace = make_workspace(database, PEOPLE, admins={"admin"})
     people = workspace.people
