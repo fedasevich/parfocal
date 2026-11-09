@@ -1,4 +1,4 @@
-# XXXX. Linked compare panes keep a per-pane offset in slide pixels, log2 zoom and degrees
+# 0271. Linked compare panes keep a per-pane offset in slide pixels, log2 zoom and degrees
 
 - Date: 2026-11-09
 - Status: Accepted
