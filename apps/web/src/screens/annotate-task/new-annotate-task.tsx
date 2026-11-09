@@ -14,6 +14,7 @@ import { FlowBar, FlowPage, type FlowStep, SummaryRows } from "@parfocal/ui/comp
 import { PersonAvatar } from "@parfocal/ui/components/person";
 import { StatusTag } from "@parfocal/ui/components/tag";
 import { Zone } from "@parfocal/ui/components/zone";
+import { defaultSampleSize } from "@parfocal/ui/lib/sample-size";
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { SidebarToggle } from "../../shell/sidebar-toggle.tsx";
@@ -41,7 +42,7 @@ const slideRows = [
 const scopeNames = {
   none: "Nothing, experts only draw",
   all: "Every AI cell",
-  sample: "A random sample of about 50 AI cells",
+  sample: "A random sample of AI cells",
   regions: "AI cells inside the areas you draw",
 } as const;
 
@@ -59,6 +60,7 @@ const presetOptions = (key: PresetKey): CheckOptionValues =>
     rule: "warn",
     exportUnchecked: false,
     hasResult: false,
+    sampleSize: defaultSampleSize,
   };
 
 export function NewAnnotateTask({ projectId, step, preset, onStep }: NewAnnotateTaskProps) {
