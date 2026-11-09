@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-09
 
+- Fake result set detail and cell summary answer 403 ai-hidden, and RT-17 objects stay empty until the first read. Guided review treats only a 404 from getFirstRead as not recorded and shows a retry panel with the AI hidden on other errors. Blinding the slide and project result set lists moves to TASK-017 because it breaks the A1 specs.
 - Guided check key safety: key actions are ignored while a save runs, Shift G works only with the AI shown on an unlocked slide, and row clicks keep the guided selection, with unit and browser tests.
 - An ADR confirms PostHog Cloud for STACK-033 and records the ids-only analytics event taxonomy. EXP-001 still needs the production client, the identity hook, the exposure event and the workspace as a PostHog group.
 - An ADR confirms STACK-012 (frontend testing stack) and gives six test levels an owning place and CI job each, with file counts measured by git ls-files.

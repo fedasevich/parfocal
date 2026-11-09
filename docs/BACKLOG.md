@@ -4432,7 +4432,7 @@ A researcher hands slides to reviewers as a review task ([ADR 0053](adr/0053-ai-
   Depends on TASK-004, GUIDE-002, GUIDE-007. Split from TASK-004 ([ADR 0118](adr/0118-blinding-and-a-kept-first-read.md)).
   Size: M.
 
-- [ ] TASK-016 · Mock API blinds like the real one
+- [x] TASK-016 · Mock API blinds like the real one
   Review of TASK-010 (reveal the AI after a first read) found the fake API still serves AI result sets while a first read is open. Answer 403 `ai-hidden` on the result set routes and return no AI objects on every slide of a hide-the-AI task until its first read is recorded, as the real API does, and treat only a 404 from `getFirstRead` as not recorded so a passing server error never shows the first-read step again.
   Done when fake API tests cover the 403 and the empty objects before and after a first read, and a component or browser test shows a 500 from the first read keeps the AI step.
   Depends on TASK-010.
