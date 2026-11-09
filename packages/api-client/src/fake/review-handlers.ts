@@ -53,6 +53,7 @@ import type {
   ThreadDetail,
   VerdictDraft,
 } from "../generated/api.ts";
+import { annotateBlindFirst } from "./annotate-task-listing.ts";
 import { countedAs, decisionSettingsFor } from "./decision-settings.ts";
 import { displayChoiceHandlers, presetInForce } from "./display-choices.ts";
 import type { DraftOperation } from "./draft-handlers.ts";
@@ -546,6 +547,7 @@ export function reviewHandlers(): RequestHandler[] {
           classes: annotateTaskClasses,
           slide_count: 2,
           reviewer_count: 1,
+          blind_first: annotateBlindFirst(),
           slides: [annotateTaskSlides.withResults, annotateTaskSlides.byHand].map((slideId) => ({
             slide_id: slideId,
             result_set_id: toSharedAiObjects(annotateStubTaskId, slideId).result_set_id,

@@ -67,3 +67,24 @@ test("a signed-off task shows Counts as locked", async ({ page }) => {
   ).toBeVisible();
   await expect(drawer.getByRole("button", { name: "Save Counts as" })).toBeDisabled();
 });
+
+test("blind first is switched off and on again from the settings of an annotate task", async ({
+  page,
+}) => {
+  await page.goto(tasks);
+  await row(page, "AT-21").getByRole("button", { name: "Settings for AT-21" }).click();
+  const drawer = page.getByRole("dialog", { name: "Settings for AT-21" });
+  const blindFirst = drawer.getByRole("switch", { name: "Blind first" });
+  await expect(blindFirst).toBeChecked();
+  await expect(drawer.getByText(/Turning it off later shows everything at once/)).toBeVisible();
+  await expect(drawer.getByRole("button", { name: "Save Counts as" })).toHaveCount(0);
+
+  await blindFirst.click();
+  await expect(blindFirst).not.toBeChecked();
+  await expect(page.getByText(/Blind first is off for AT-21/)).toBeVisible();
+  await expect(drawer.getByText(/what is already shown stays shown/)).toBeVisible();
+
+  await blindFirst.click();
+  await expect(blindFirst).toBeChecked();
+  await expect(page.getByText(/Blind first is on for AT-21/)).toBeVisible();
+});

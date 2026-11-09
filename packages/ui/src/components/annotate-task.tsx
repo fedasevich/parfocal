@@ -790,8 +790,8 @@ function BlindFirstSwitch({
         </b>
         <small id={`${id}-sub`} className="text-body-sm text-fg-dim">
           {checked
-            ? "Each expert's new objects stay hidden from colleagues until that expert marks the slide checked."
-            : "Experts see each other's work from the start. Turn this on to keep first opinions independent."}
+            ? "Each expert's new objects stay hidden from colleagues until that expert marks the slide checked. Turning it off later shows everything at once."
+            : "Experts see each other's work from the start. Turn this on to keep first opinions independent. Turning it on later hides only objects drawn after that, and what is already shown stays shown."}
         </small>
       </span>
       <Switch

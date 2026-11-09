@@ -2,7 +2,7 @@ import uuid
 from typing import Any
 
 from fastapi import BackgroundTasks
-from sqlalchemy import ColumnElement, and_, exists, not_, select
+from sqlalchemy import ColumnElement, and_, exists, not_, or_, select
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.annotations import LETTERS
@@ -37,8 +37,18 @@ def author_unchecked() -> ColumnElement[bool]:
     )
 
 
+def hiding_since() -> ColumnElement[bool]:
+    since = (
+        select(review_tasks.c.blind_first_since)
+        .where(review_tasks.c.id == annotations.c.task_id)
+        .scalar_subquery()
+    )
+    return or_(since.is_(None), annotations.c.created_at >= since)
+
+
 def hidden_from(viewer: uuid.UUID | None) -> ColumnElement[bool]:
     return and_(
+        hiding_since(),
         annotations.c.origin == AnnotationOrigin.HUMAN,
         annotations.c.created_by_user_id.is_distinct_from(viewer),
         author_unchecked(),
