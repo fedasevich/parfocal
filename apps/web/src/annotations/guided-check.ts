@@ -39,8 +39,23 @@ function leastSure(left: Queued, right: Queued) {
   return left.number - right.number;
 }
 
-export function checkQueueOf(objects: readonly Queued[], skipped: readonly string[]): string[] {
-  const open = objects.filter((object) => object.check === "unchecked").sort(leastSure);
+function inStoredOrder(open: readonly Queued[], stored: readonly string[]) {
+  const places = new Map(stored.map((id, place) => [id, place]));
+  return open
+    .filter((object) => places.has(object.object))
+    .sort((left, right) => (places.get(left.object) ?? 0) - (places.get(right.object) ?? 0));
+}
+
+export function checkQueueOf(
+  objects: readonly Queued[],
+  skipped: readonly string[],
+  stored: readonly string[] | null = null,
+): string[] {
+  const unchecked = objects.filter((object) => object.check === "unchecked");
+  const open =
+    stored === null || stored.length === 0
+      ? unchecked.sort(leastSure)
+      : inStoredOrder(unchecked, stored);
   const later = new Set(skipped);
   return [
     ...open.filter((object) => !later.has(object.object)),

@@ -17,6 +17,7 @@ import {
   rt16,
   rt17,
 } from "./scenario-review.ts";
+import { annotateStoredOrder } from "./shared-layer-handlers.ts";
 import { fakeView } from "./view.ts";
 
 export const reviewedSlide = slideByIndex(1);
@@ -104,6 +105,16 @@ export const objectsOn = (taskId: string, slideId: string) => {
 };
 
 export const reviewOrderFor = (taskId: string, slideId: string): ReviewOrder => {
+  const annotated = annotateStoredOrder(taskId, slideId);
+  if (annotated !== null) {
+    return {
+      task_id: taskId,
+      slide_id: slideId,
+      total: annotated.length,
+      offset: 0,
+      objects: annotated,
+    };
+  }
   const objects = objectsOn(taskId, slideId);
   return {
     task_id: taskId,

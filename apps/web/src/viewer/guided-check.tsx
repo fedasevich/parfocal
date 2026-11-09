@@ -22,6 +22,7 @@ import type { ViewerEngine } from "./viewer-engine.ts";
 type GuidedCheckProps = {
   engine: ViewerEngine;
   objects: readonly CheckedAiObject[];
+  storedOrder: readonly string[] | null;
   locked: boolean;
   canReclass: boolean;
   onCurrent: (object: string | null) => void;
@@ -34,6 +35,7 @@ type GuidedCheckProps = {
 export function GuidedCheck({
   engine,
   objects,
+  storedOrder,
   locked,
   canReclass,
   onCurrent,
@@ -43,7 +45,10 @@ export function GuidedCheck({
   onLeave,
 }: GuidedCheckProps) {
   const [state, setState] = useState(startState);
-  const queue = useMemo(() => checkQueueOf(objects, state.skipped), [objects, state.skipped]);
+  const queue = useMemo(
+    () => checkQueueOf(objects, state.skipped, storedOrder),
+    [objects, state.skipped, storedOrder],
+  );
   const current = currentOf(queue, state);
   const object = objects.find((item) => item.object === current);
 
