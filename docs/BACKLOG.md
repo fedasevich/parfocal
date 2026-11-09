@@ -4890,7 +4890,7 @@ Admin is its own page with its own sidebar and the app's top bar, never a page i
   Depends on ADMIN-001.
   Size: S.
 
-- [ ] ADMIN-003 · People and roles
+- [x] ADMIN-003 · People and roles
   People with a role dropdown (researcher or reviewer), an admin rights switch on researchers, projects, last active and status, with invite, resend and search (IAM-014). Above the list, a table states what each role and admin rights are responsible for, in the words of ADR 0096.
   Done when E2E changes a role, gives and removes admin rights and resends an invite, each audited, and a component test shows the switch disabled for the last holder and absent on reviewers.
   Depends on ADMIN-001, IAM-014.
