@@ -61,6 +61,7 @@ import { AnnotateTaskPanel } from "./annotate-task-panel.tsx";
 import { followLabPrefetch, labRouteOptions } from "./lab-route.ts";
 import { loadViewerEngine } from "./load-engine.ts";
 import { MagnificationControl, type ViewerModule } from "./magnification-control.tsx";
+import { ObjectDrawLayer } from "./object-draw-layer.tsx";
 import { describeOpenFailure, type OpenFailure } from "./open-failure.ts";
 import { OutlineLayer } from "./outline-layer.tsx";
 import { type OutlineModeChoice, outlineModeChoices, outlineModeLabels } from "./outline-mode.ts";
@@ -807,6 +808,14 @@ function OpenedSlide({
               mode={outlineMode}
               tissue={coverage?.tissue ?? null}
             />
+            {taskId === undefined ? null : (
+              <ObjectDrawLayer
+                engine={session.engine}
+                module={session.module}
+                taskId={taskId}
+                tissue={coverage?.tissue ?? null}
+              />
+            )}
             <div className="absolute top-16 left-1/2 -translate-x-1/2 rounded-ctl border border-line bg-chrome p-1">
               <SegmentedControl
                 aria-label="Outline display"
