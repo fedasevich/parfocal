@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-09
 
+- Tile resampling moved into the outline worker as a transferable buffer, and each tile's document write runs as a React transition. With the CPU slowed four times the region pass has no long task over 50 ms, down from 8 with the longest at 152 ms, and a unit test shows identical outlines.
 - Locust load scenarios for the API, tiles and realtime with a guard that refuses any target but localhost or staging, run with pnpm load. API and tile smoke runs passed locally with no failures. Realtime needs an edge Worker and a member session.
 - EVAL-010 The PDF preview shows SVG pages from the same Typst report builder as the export, from the report page, the template list, the editor and the new-task template step, with API tests showing the page count matches the PDF and E2E for each entry. Fable review found the SVG safe as img data and permissions sound, and the merge with COLLAB-017 keeps the reader's blinding in the annotate preview. Follow-up EVAL-016 pages and caches long previews.
 - Two-finger click maps to a negativePoint intent in Annotate and a Safari pinch step to an unanimated zoom, with four synthetic Mac and Windows trackpad traces replayed in tests and marked to record on real hardware. DOM listeners for the new intents are DEV-010.

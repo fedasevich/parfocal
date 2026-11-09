@@ -3363,7 +3363,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Depends on AISEG-010.
   Size: S.
 
-- [ ] AISEG-019 · Resample auto region tiles off the main thread
+- [x] AISEG-019 · Resample auto region tiles off the main thread
   The auto region pass resamples each tile's pixels with `samPixels` in `packages/viewer-engine/src/sam/smart-prompt.ts` on the main thread, which took 221 ms of main thread time with the CPU slowed four times, so the aiseg.region-main-thread-task-ms budget can still fail on a slow hosted runner. Move the resampling into the segmentation worker and pass the tile as a transferable buffer.
   Done when the browser budget test reads no long task over 50 ms with the CPU slowed four times, and the region pass gives the same outlines as before.
   Depends on AISEG-017.
