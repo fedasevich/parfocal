@@ -1972,6 +1972,12 @@ The launchpad is everyone's home ([ADR 0021](adr/0021-chosen-home-worklist-statu
   Done when API tests cover create, list, ending early and expiry, with permission and tenant isolation tests.
   Depends on IAM-004. Split from HOME-009 by [ADR 0085](adr/0085-home-aggregate-api.md).
 
+- [ ] HOME-012 · Search text out of the page URL
+  Decision 72a (search text kept out of URLs). The search page keeps the typed text in page state instead of `/search?q=...`, so names and identifiers never reach the address bar, history, logs or analytics. The scope may stay in the URL. The palette's all results row opens the page with the text carried in router state, and a reload starts with an empty box. Sharing a search waits for saved searches with their own ids.
+  Done when component tests show the text never enters the URL, the palette hand-off carries the text, and the search browser spec passes with no `q` parameter.
+  Depends on HOME-008.
+  Size: S.
+
 ---
 
 ## 11 WL · My work

@@ -1,6 +1,6 @@
 # Decisions waiting for the owner
 
-Last updated: 2026-11-08
+Last updated: 2026-11-09
 
 Each decision lists its options, with the recommended one marked. Write your letter after "Your choice:", or leave it empty to take the recommended option. A short note is welcome where you pick "Other".
 
@@ -35,42 +35,12 @@ Every other answer kept what was built: 37a (darker primary hover), 39a (Alt+Lef
 | 68b, pins in the select tool | ANN-037 (comment pins in the select tool) builds it, with a confirmation that names how many threads a delete removes |
 | 71a, duplicate in a link import | INGEST-031 (skipped status for a duplicate in a link import) builds the neutral "Skipped, already in this project" status |
 
-## 72. Search text in the URL after the industry check, from decision 66 (typed search text in the search page URL)
+## What your answers of 2026-11-09 changed
 
-You kept the typed text in `/search?q=...` and asked for the industry standard. It is to keep identifiers out of URLs. OWASP lists sensitive data in query strings as a weakness (CWE-598, information exposure through query strings), the US health regulator's guidance on tracking warns that full URLs with patient details reach analytics and logs, and Google Analytics forbids personal data in page URLs. Apps that keep search in the address, such as Gmail, hold no patient data. A shared search link would still work through a saved search with its own id.
-
-- a. Move the text into page state, and share searches later through saved searches with ids. (recommended)
-- b. Keep the text in the URL as built.
-
-Your choice:
-
-## 73. Who may create a workspace, from ONB-004 (first-run setup)
-
-ADR 0024 (workspaces are tenants) says only platform operators create workspaces. First-run setup lets a new person create one with a name and a privacy default, and becomes its researcher with admin rights. As built, anyone signed in may create one workspace, a person who already holds admin rights on a workspace is refused, and a new workspace defaults to the EU region.
-
-- a. Keep self-service creation, one workspace per person, as built. (recommended)
-- b. Only platform operators create workspaces, and setup offers join or ask only.
-- c. Self-service with no limit.
-
-Your choice:
-
-## 74. Wheel zoom measured as main-thread time, from VIEW-031 (wheel zoom regression check)
-
-The task asks for no frame over 50 ms during wheel zoom on the Huron fixture. CI and headless runs draw with software WebGL, where frames are 66 to 233 ms apart from drawing alone, so the check now measures the longest main-thread task instead, about 26 ms against a 50 ms limit. Real GPU frame time stays a manual budget measured by hand.
-
-- a. Accept main-thread task time in CI and keep frame time as the manual check. (recommended)
-- b. Also add a frame time check on your Mac with a real GPU before ticking.
-
-Your choice:
-
-## 75. Joining a workspace by email domain, from ONB-010 (join or ask for a workspace)
-
-Setup now offers a workspace whose verified email domain matches the person's, as ADR 0265 (join by verified email domain) records. A workspace's join policy defaults to join, so a person with a matching lab address becomes a reviewer at once, as the design shows. Public mail domains such as gmail.com never match. Admins cannot change the policy on a screen yet, which ONB-011 (answer asks and set the join domain in Admin) adds.
-
-- a. Join at once by default, and admins can switch a workspace to ask. (recommended)
-- b. Ask by default, so every join waits for an admin.
-
-Your choice:
+| Answer | What changed |
+|---|---|
+| 72a, search text out of the URL | HOME-012 (search text out of the page URL) moves the typed text into page state. Sharing a search waits for saved searches with ids |
+| 73a, 74a and 75a | Kept as built. Anyone signed in may create one workspace, the wheel zoom check measures main-thread task time in CI with frame time as a manual budget, and a matching email domain joins at once by default |
 
 ## The review column, what each task waits for
 
