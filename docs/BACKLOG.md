@@ -4902,7 +4902,7 @@ Admin is its own page with its own sidebar and the app's top bar, never a page i
   Depends on ADMIN-001, IAM-014.
   Size: M.
 
-- [ ] ADMIN-004 · Projects
+- [x] ADMIN-004 · Projects
   Every project with its privacy mode, owner, size and status, with archive.
   Done when component and API tests cover archiving.
   Depends on ADMIN-001, PROJ-001.
