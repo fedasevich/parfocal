@@ -6,7 +6,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./viv": "./src/viv/index.ts",
-    "./draw-constants": "./src/overlay/draw-constants.ts"
+    "./draw-constants": "./src/overlay/draw-constants.ts",
+    "./sam-prompt": "./src/sam/smart-prompt.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.src.json && tsc --noEmit -p tsconfig.worker.json && tsc --noEmit -p tsconfig.test.json && tsc --noEmit -p tsconfig.browser.json",

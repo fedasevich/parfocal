@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { startTransition, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { type AisOutliner, createAisOutliner } from "../aiseg/ais-outliner.ts";
 import {
   clickTile,
@@ -101,7 +101,7 @@ export function AutoLayer({
         : addRun(current.doc, runOf(id, classKey, found.current));
     if (next === current.doc) return;
     current.doc = next;
-    current.onDocumentChange(next);
+    startTransition(() => current.onDocumentChange(next));
   };
   const writeRunNow = useRef(writeRun);
   writeRunNow.current = writeRun;
@@ -163,6 +163,7 @@ export function AutoLayer({
         sam: loaded.sam,
         signal: abort.signal,
         outline: outliner.current.outline,
+        pixels: outliner.current.pixels,
         onProgress: (progress) => setStatus({ progress, message: null }),
         onTile: (nuclei) => {
           found.current = [...found.current, ...nuclei];

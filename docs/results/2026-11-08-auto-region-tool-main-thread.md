@@ -32,3 +32,13 @@ The longest main thread gap was 33.8 ms over five runs and the browser reported 
 ## Follow-ups
 
 - TODO: repeat the check with the real WebGPU graphs on a slide in Chrome, which needs the models cache and a free machine.
+
+## Update 2026-11-09: tile resampling in the worker (AISEG-019)
+
+- Question: with the CPU slowed four times, does the pass still hold a long task over 50 ms?
+- Method: the new spec "no long task passes 50 ms with the CPU slowed four times" sets `Emulation.setCPUThrottlingRate` to 4 through the Chrome DevTools Protocol and runs one four tile pass. Same machine and data as above. The measurement of the cause used the Chrome profiler at the same throttle.
+- Before: `samPixels` took 342 ms of self time in the profile over four tiles (221 ms of main thread time in the earlier check), and the throttled pass had 8 long tasks with the longest at 152 ms.
+- After moving the resampling into the outline worker (the tile goes over as a transferable buffer): 3 to 4 long tasks of 56 to 68 ms remained, each starting right after a tile's document write. They were React rendering of the stage in the dev build.
+- After also writing each tile's run to the document inside a React transition (rendering is time sliced): 0 long tasks and a longest entry of 0 ms in three throttled runs. Largest 4 ms timer gap in the throttled run was 60 to 90 ms, and 11.5 to 16.3 ms unthrottled (before: 28.5 to 33.8 ms).
+- The region pass gives the same outlines: a unit test runs the pass with and without the worker resampling hook and compares every nucleus with a deep equality.
+- Not measured: the real graphs, and a hosted runner.
