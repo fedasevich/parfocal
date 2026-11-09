@@ -3,6 +3,7 @@ import { test } from "node:test";
 import {
   classifyWheel,
   createGestureInterpreter,
+  createMagnificationToggle,
   defaultCameraProfile,
   freshWheelClassifier,
   type GestureHooks,
@@ -314,4 +315,47 @@ test("every wheel event is consumed so the page never scrolls or zooms", () => {
   for (const event of [wheel(100), wheel(2.5), wheel(-1.2, { ctrlKey: true }), wheel(0)]) {
     assert.equal(input.handle(event)[0]?.kind, "preventDefault");
   }
+});
+
+test("the toggle double-click behaviour asks for the last two magnifications and Alt still zooms out", () => {
+  const input = createGestureInterpreter({ doubleClick: () => "toggle" });
+  const at = { clientX: 120, clientY: 80 };
+  const toggled = input.handle({ kind: "dblclick", ...at, button: 0, ...noModifiers });
+  assert.deepEqual(toggled.at(-1), { kind: "toggleMagnification", at });
+  const zoomOut = input.handle({
+    kind: "dblclick",
+    ...at,
+    button: 0,
+    ...noModifiers,
+    altKey: true,
+  });
+  assert.deepEqual(zoomOut.at(-1), { kind: "zoom", octaves: -1, at, animate: true });
+});
+
+test("the zoom double-click behaviour is the default", () => {
+  const input = createGestureInterpreter({ doubleClick: () => "zoom" });
+  const at = { clientX: 5, clientY: 6 };
+  const actions = input.handle({ kind: "dblclick", ...at, button: 0, ...noModifiers });
+  assert.deepEqual(actions.at(-1), { kind: "zoom", octaves: 1, at, animate: true });
+});
+
+test("toggling magnification alternates between the last two zoom levels", () => {
+  let zoom = 3;
+  const calls: string[] = [];
+  const at = { clientX: 1, clientY: 2 };
+  const toggle = createMagnificationToggle({
+    getCamera: () => ({ zoom }),
+    zoomBy: (octaves) => {
+      calls.push(`by ${octaves}`);
+      zoom += octaves;
+    },
+    zoomTo: (goal) => {
+      calls.push(`to ${goal}`);
+      zoom = goal;
+    },
+  });
+  toggle(at);
+  toggle(at);
+  toggle(at);
+  assert.deepEqual(calls, ["by 1", "to 3", "to 4"]);
 });

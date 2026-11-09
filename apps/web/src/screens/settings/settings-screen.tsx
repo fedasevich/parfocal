@@ -46,6 +46,13 @@ import {
   readCalibration,
   writeCalibration,
 } from "../../devices/calibration.ts";
+import {
+  chooseFeel,
+  type Navigation,
+  readNavigation,
+  type WheelChoice,
+  writeNavigation,
+} from "../../devices/navigation.ts";
 import { settingValuesOfShortcuts, shortcutsOfSettings } from "../../keys/shortcut-settings.ts";
 import { setLengthUnits } from "../../measure/length-units.ts";
 import { applyDensity } from "../../shell/density.ts";
@@ -64,6 +71,7 @@ import { setSlideBrightness, useSlideBrightness } from "../../viewer/slide-brigh
 import { andJoin } from "../format.ts";
 import { type HomeLayoutChoice, homeLayoutOptions } from "../home/home-layout.ts";
 import { okData } from "../placeholder.tsx";
+import { FeelPreview } from "./feel-preview.tsx";
 import { lockAfterText, patientBannerText } from "./privacy.ts";
 import {
   matchCount,
@@ -91,19 +99,15 @@ import { wordingNow, wordingPairs } from "./wording-row.ts";
 
 type Device = {
   device: string;
-  wheel: string;
   speed: number;
   deadZone: number;
-  invertZoom: boolean;
   spaceMouseRotation: boolean;
 };
 
 const deviceDefaults: Device = {
   device: "mouse",
-  wheel: "zoom",
   speed: calibrationDefaults.speed,
   deadZone: calibrationDefaults.deadZone,
-  invertZoom: false,
   spaceMouseRotation: false,
 };
 
@@ -246,6 +250,11 @@ function LoadedSettings({
     const main = typeof chosen === "string" ? chosen : deviceDefaults.device;
     return { ...deviceDefaults, device: main, ...readCalibration(main) };
   });
+  const [navigation, setNavigation] = useState(() => readNavigation());
+  const changeNavigation = (change: Partial<Navigation>) => {
+    writeNavigation(change);
+    setNavigation(readNavigation());
+  };
   const [pinnedStrip, setPinnedStrip] = usePinnedStrip();
   const [, setOutlineMode] = useOutlineMode();
   const [theme, setTheme] = useState<ThemeChoice>(() => readTheme());
@@ -309,8 +318,10 @@ function LoadedSettings({
   const others = sessions.filter((session) => !session.current);
   const setD = <Key extends keyof Device>(key: Key, value: Device[Key]) =>
     setDevice((previous) => ({ ...previous, [key]: value }));
-  const changeCalibration = (change: Partial<Calibration>) =>
+  const changeCalibration = (change: Partial<Calibration>) => {
     setDevice((previous) => ({ ...previous, ...writeCalibration(previous.device, change) }));
+    writeNavigation({});
+  };
   const channel = (key: RowKey): Channel =>
     channels[key] ??
     (key === "noticeSubmit"
@@ -607,6 +618,7 @@ function LoadedSettings({
         ]}
         onChange={(value) => {
           writeDeviceSetting("device", value);
+          writeNavigation({});
           setDevice((previous) => ({ ...previous, device: value, ...readCalibration(value) }));
         }}
       />
@@ -614,13 +626,13 @@ function LoadedSettings({
     wheel: () => (
       <Segments
         label="Mouse wheel"
-        value={device.wheel}
+        value={navigation.wheel}
         pairs={[
           ["zoom", "Zoom"],
           ["pan", "Pan"],
           ["detect", "Detect device"],
         ]}
-        onChange={(value) => setD("wheel", value)}
+        onChange={(value) => changeNavigation({ wheel: value as WheelChoice })}
       />
     ),
     doubleClick: () => (
@@ -651,11 +663,50 @@ function LoadedSettings({
       />
     ),
     invertZoom: () =>
-      toggle("Invert zoom direction", device.invertZoom, (value) => setD("invertZoom", value)),
+      toggle("Invert zoom direction", navigation.invertZoom, (value) =>
+        changeNavigation({ invertZoom: value }),
+      ),
     spaceMouseRotation: () =>
       toggle("SpaceMouse rotation", device.spaceMouseRotation, (value) =>
         setD("spaceMouseRotation", value),
       ),
+    feel: () => (
+      <Segments
+        label="Camera feel"
+        value={navigation.feel}
+        pairs={[
+          ["smooth", "Smooth"],
+          ["precise", "Precise"],
+          ["instant", "Instant"],
+        ]}
+        onChange={(value) => {
+          chooseFeel(value as Navigation["feel"]);
+          setNavigation(readNavigation());
+        }}
+      />
+    ),
+    coasting: () =>
+      toggle("Coasting", navigation.coasting, (value) => changeNavigation({ coasting: value })),
+    animatedJumps: () =>
+      toggle("Animated jumps", navigation.animatedJumps, (value) =>
+        changeNavigation({ animatedJumps: value }),
+      ),
+    zoomAnchor: () => (
+      <Segments
+        label="Zoom anchor"
+        value={navigation.zoomAnchor}
+        pairs={[
+          ["cursor", "Cursor"],
+          ["centre", "View centre"],
+        ]}
+        onChange={(value) => changeNavigation({ zoomAnchor: value as Navigation["zoomAnchor"] })}
+      />
+    ),
+    objectiveDetents: () =>
+      toggle("Objective detents", navigation.objectiveDetents, (value) =>
+        changeNavigation({ objectiveDetents: value }),
+      ),
+    feelPreview: () => <FeelPreview navigation={navigation} />,
     noticeTask: () => notice("noticeTask", "A task is given to me"),
     noticeMention: () => notice("noticeMention", "Someone mentions me"),
     noticeReply: () => notice("noticeReply", "Someone replies to me"),

@@ -42,6 +42,7 @@ import { useProposals } from "../annotations/use-proposals.ts";
 import { useSavedAnnotations } from "../annotations/use-saved-annotations.ts";
 import { legendDeviceOf } from "../devices/device-legend.ts";
 import { DeviceLegend } from "../devices/device-legend.tsx";
+import { engineWheelMode, navigationEvent, readNavigation } from "../devices/navigation.ts";
 import { applyMainCalibration } from "../devices/stage-calibration.ts";
 import { EscProvider, useEscOwner, useNewEscRegistry } from "../keys/esc-owner.tsx";
 import { useBindings } from "../keys/personal-keys.ts";
@@ -53,6 +54,7 @@ import { annotateRail } from "../screens/viewer-tools/rails.ts";
 import { useDeveloperMode } from "../shell/developer-mode.ts";
 import { readDeviceSettings } from "../shell/device-settings.ts";
 import { useMagnificationLabel } from "../shell/magnification-label-setting.ts";
+import { useResolvedSettings } from "../shell/resolved-settings.ts";
 import { useToolsLayout } from "../shell/tools-layout.ts";
 import { AnnotateTaskPanel } from "./annotate-task-panel.tsx";
 import { followLabPrefetch, labRouteOptions } from "./lab-route.ts";
@@ -289,6 +291,8 @@ function OpenedSlide({
   onRetry: () => void;
 }) {
   const host = useRef<HTMLDivElement | null>(null);
+  const doubleClick = useRef<"zoom" | "toggle">("zoom");
+  doubleClick.current = useResolvedSettings()?.double_click ?? "zoom";
   const [hostNode, setHostNode] = useState<HTMLDivElement | null>(null);
   const pinRegistry = useMemo(createPinRegistry, []);
   const sharedServices = useMemo(() => shareServices(loadSmartServices), []);
@@ -488,11 +492,21 @@ function OpenedSlide({
         container,
         slideId,
         route: { onError: fail, onTileError: () => {}, ...labRouteOptions() },
+        input: {
+          wheelMode: engineWheelMode(readNavigation().wheel),
+          doubleClick: () => doubleClick.current,
+        },
         resolve: open,
       });
       applyMainCalibration(viewport.engine);
+      const followNavigation = () => {
+        applyMainCalibration(viewport.engine);
+        viewport.input.setWheelMode(engineWheelMode(readNavigation().wheel));
+      };
+      window.addEventListener(navigationEvent, followNavigation);
       let unfollow = () => {};
       dispose = () => {
+        window.removeEventListener(navigationEvent, followNavigation);
         unfollow();
         viewport.dispose();
       };

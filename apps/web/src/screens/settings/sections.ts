@@ -64,6 +64,12 @@ export type RowKey =
   | "deadZone"
   | "invertZoom"
   | "spaceMouseRotation"
+  | "feel"
+  | "coasting"
+  | "animatedJumps"
+  | "zoomAnchor"
+  | "objectiveDetents"
+  | "feelPreview"
   | "noticeTask"
   | "noticeMention"
   | "noticeReply"
@@ -237,6 +243,37 @@ export const sectionRows: Record<Exclude<SettingsSection, "shortcuts">, SettingR
       "SpaceMouse rotation",
       "device",
       "Off by default. Twisting the cap moved slides by accident in the 38-pathologist study.",
+    ),
+    row(
+      "feel",
+      "Camera feel",
+      "device",
+      "Smooth coasts and eases. Precise stops where you let go. Instant cuts straight to the view. Reduced motion in your system always uses Instant.",
+    ),
+    row("coasting", "Coasting", "device", "The slide keeps gliding after you let go of a drag."),
+    row(
+      "animatedJumps",
+      "Animated jumps",
+      "device",
+      "Fit, go to and next area fly to the new view instead of cutting.",
+    ),
+    row(
+      "zoomAnchor",
+      "Zoom anchor",
+      "device",
+      "Where the wheel and the keys zoom toward. Cursor keeps the point under your pointer still.",
+    ),
+    row(
+      "objectiveDetents",
+      "Objective detents",
+      "device",
+      "Wheel zoom holds briefly at 5×, 10×, 20× and 40×. Off by default.",
+    ),
+    row(
+      "feelPreview",
+      "Try it",
+      "device",
+      "Scroll on the grid, drag it and jump to feel the setting.",
     ),
   ],
   notifications: [

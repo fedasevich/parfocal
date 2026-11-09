@@ -256,6 +256,7 @@ export type {
 } from "./engine/types.ts";
 export {
   bindViewerInput,
+  createMagnificationToggle,
   defaultCursors,
   type InputTarget,
   type ViewerInputBinding,
@@ -264,6 +265,7 @@ export {
 export {
   type CursorState,
   createGestureInterpreter,
+  type DoubleClickBehaviour,
   type DoubleClickInput,
   doubleClickOctaves,
   type GestureHooks,

@@ -173,6 +173,7 @@ export function createReplayRig(
         controller.zoomBy(action.octaves, offset(action.at), { animate: action.animate });
         return;
       case "magnify":
+      case "toggleMagnification":
       case "fitSlide":
       case "capture":
       case "release":

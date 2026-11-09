@@ -164,9 +164,9 @@ test("searching for zoom keeps the zoom rows and the shortcuts", () => {
   );
   assert.deepEqual(
     matchingRows("navigation", "zoom").map((row) => row.key),
-    ["wheel", "speed", "invertZoom"],
+    ["wheel", "speed", "invertZoom", "zoomAnchor", "objectiveDetents"],
   );
-  assert.equal(matchCount("navigation", "zoom"), 3);
+  assert.equal(matchCount("navigation", "zoom"), 5);
   assert.equal(shownSection("display", "zoom")?.key, "layout");
   assert.equal(shownSection("navigation", "zoom")?.key, "navigation");
   assert.equal(shownSection("display", "nothing like this"), undefined);

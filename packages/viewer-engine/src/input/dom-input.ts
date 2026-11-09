@@ -37,6 +37,12 @@ export interface InputTarget {
   readonly flyToFit?: () => Promise<unknown>;
   readonly fitToSlide?: () => void;
   readonly getCameraProfile?: () => CameraProfile;
+  readonly getCamera?: () => { readonly zoom: number };
+  readonly zoomTo?: (
+    zoom: number,
+    at?: ClientPoint,
+    options?: { readonly animate?: boolean },
+  ) => void;
   readonly interaction?: InteractionSignal;
 }
 
@@ -100,6 +106,23 @@ function pointerInput(kind: PointerInputKind, event: PointerEvent): PointerInput
   return kind === "move" ? { ...base, samples: coalescedSamples(event) } : base;
 }
 
+export function createMagnificationToggle(
+  target: Pick<InputTarget, "zoomBy" | "getCamera" | "zoomTo">,
+): (at: ClientPoint) => void {
+  let previousZoom: number | null = null;
+  return (at) => {
+    const current = target.getCamera?.().zoom;
+    if (current === undefined || !target.zoomTo) {
+      target.zoomBy(doubleClickOctaves, at, { animate: true });
+      return;
+    }
+    const goal = previousZoom !== null && previousZoom !== current ? previousZoom : null;
+    previousZoom = current;
+    if (goal === null) target.zoomBy(doubleClickOctaves, at, { animate: true });
+    else target.zoomTo(goal, at, { animate: true });
+  };
+}
+
 export function bindViewerInput(
   element: HTMLElement,
   target: InputTarget,
@@ -116,6 +139,7 @@ export function bindViewerInput(
   let cursor: CursorState = "idle";
   const interaction = options.interaction ?? target.interaction;
   let releaseGesture: Cancel | null = null;
+  const toggleMagnification = createMagnificationToggle(target);
   let lastTouchMs = Number.NEGATIVE_INFINITY;
   const guardMs = (options.touchTuning ?? touchTuning).syntheticDoubleClickGuardMs;
 
@@ -155,6 +179,9 @@ export function bindViewerInput(
         if (!target.zoomToMagnification?.(action.magnification, action.at, { animate: true })) {
           target.zoomBy(doubleClickOctaves, action.at, { animate: true });
         }
+        return;
+      case "toggleMagnification":
+        toggleMagnification(action.at);
         return;
       case "fitSlide":
         if (target.flyToFit) void target.flyToFit();
