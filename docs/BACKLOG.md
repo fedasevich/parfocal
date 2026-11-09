@@ -5015,7 +5015,7 @@ Admin is its own page with its own sidebar and the app's top bar, never a page i
   Depends on ADMIN-000.
   Size: M.
 
-- [ ] ADMIN-011 · Last mock controls in Admin
+- [x] ADMIN-011 · Last mock controls in Admin
   ADMIN-010 (wire the class lists, retention and session lock controls) left the log-slides, watermark and EU switches in Security and the privacy and who-can-create controls in Projects as mock only. Wire each to a real setting or hide it until its feature exists, delete the unused `lock_after_minutes` setting since the lock reads the session policy, and make the retention route check the permission ADR 0266 (admin sections and their permissions) gives Storage, or correct the ADR.
   Done when every control in Admin saves and reads back or is hidden, a test shows `lock_after_minutes` is gone, and the permission matrix covers the retention route under one permission.
   Depends on ADMIN-010.

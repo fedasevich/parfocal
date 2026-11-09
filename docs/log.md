@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-09
 
+- Privacy of new projects saves to the workspace default, the mock who-can-create, log-slides, watermark and EU switches are hidden until their features exist, the unused lock_after_minutes catalogue setting is gone with no migration, and ADR 0266 now says retention checks workspace-settings.
 - The task PDF preview sends 4 pages at a time and loads more on scroll, and compiled pages and PDFs sit in an in-process LRU of 16 entries and 48 MB keyed by tenant, task, checksum, locale, the blind-first reader and a source digest. Tests cover paging, reuse and two blind readers getting their own entries.
 - The template step marks what each section got from the study template, flags a changed preset while keeping the template pinned for the report, and publishes the template's opinion form as the next version before creating the task. The E2E checks the template's blocks in the report preview, since the fake API keeps no per-task template.
 - The class list select, retention zone and session lock time in Admin now save through the existing workspace settings, retention and session policy APIs, with API, unit and browser tests and no migration. Remaining mock switches, the unused lock_after_minutes setting and the retention permission mismatch go to ADMIN-011.
