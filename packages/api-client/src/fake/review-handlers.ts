@@ -197,27 +197,6 @@ export const toThreadComments = (threadId: string): ThreadComment[] => {
   return [...seeded, ...posted];
 };
 
-export const postedObjectThreads = (slideId: string) =>
-  postedThreads
-    .filter((item) => item.slide_id === slideId && !removedThreads.has(item.id))
-    .flatMap((item) => {
-      const object = item.anchor.object_id;
-      if (object === null || object === undefined) return [];
-      return [
-        {
-          id: item.id,
-          slide_id: slideId,
-          task_id: item.task_id,
-          anchor: object,
-          replies: Math.max(
-            0,
-            postedComments.filter((comment) => comment.thread_id === item.id).length - 1,
-          ),
-          resolved: withResolution(item).resolved_at !== null,
-        },
-      ];
-    });
-
 const withResolution = (thread: Thread): Thread => {
   const changed = resolution.get(thread.id);
   if (changed === undefined) return thread;
@@ -386,9 +365,12 @@ export const toThreads = (taskId: string, slideId: string, resolved: boolean | n
   const task = taskById(taskId);
   if (task === undefined) return [];
   const project = projectByCode(task.project);
-  const posted = postedThreads.filter(
-    (item) => item.task_id === task.id && item.slide_id === slideId,
-  );
+  const posted = postedThreads
+    .filter((item) => item.task_id === task.id && item.slide_id === slideId)
+    .map((item) => ({
+      ...item,
+      message_count: postedComments.filter((comment) => comment.thread_id === item.id).length,
+    }));
   const seeded: Thread[] = threads
     .filter((item) => item.task === task.code && slideByIndex(item.slide).id === slideId)
     .map((item) => ({

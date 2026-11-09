@@ -1,11 +1,10 @@
 import {
-  getListSlideThreadsQueryKey,
-  getListThreadCommentsQueryKey,
+  getGetThreadQueryKey,
   getListThreadsQueryKey,
-  type SlideThread,
-  type ThreadComment,
+  type Message,
   useCreateThread,
-  useListThreadComments,
+  useGetReviewTask,
+  useGetThread,
   useReplyToThread,
 } from "@parfocal/api-client";
 import {
@@ -19,6 +18,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { type ReactNode, useState } from "react";
 import { commentDraftId, useKeptDraft } from "../../session/kept-drafts.ts";
 import { usePeople } from "../people.ts";
+import { okData } from "../placeholder.tsx";
 import { pinTitle } from "./comment-pin.ts";
 import {
   fromMentionTokens,
@@ -27,6 +27,7 @@ import {
   toMentionTokens,
   withMention,
 } from "./mention-picking.ts";
+import type { SlideThread } from "./review-data.ts";
 import { useMentionable } from "./use-mentionable.ts";
 
 const stamp = new Intl.DateTimeFormat("en-GB", {
@@ -38,21 +39,28 @@ const stamp = new Intl.DateTimeFormat("en-GB", {
 
 export const formatStamp = (at: string) => stamp.format(new Date(at)).replace(",", "");
 
-export function useThreadMessages(thread: SlideThread | undefined, meId: string | undefined) {
+export function useThreadMessages(
+  taskId: string,
+  slideId: string,
+  thread: SlideThread | undefined,
+  meId: string | undefined,
+) {
   const person = usePeople();
-  const comments = useListThreadComments(thread?.id ?? "", {
-    query: { enabled: thread !== undefined },
-  }).data?.data;
-  const toMessage = (comment: ThreadComment): CommentMessage => ({
-    id: comment.id,
-    author: person(comment.author_id) ?? { name: "Someone", initials: "?", color: "#64748b" },
-    you: comment.author_id === meId,
-    researcher: comment.author_is_researcher,
-    at: formatStamp(comment.created_at),
-    text: fromMentionTokens(comment.text, (userId) => person(userId)?.name),
-    replyTo: comment.reply_to,
+  const researcher = okData(useGetReviewTask(taskId).data)?.created_by_user_id;
+  const messages = okData(
+    useGetThread(taskId, slideId, thread?.id ?? "", { query: { enabled: thread !== undefined } })
+      .data,
+  )?.messages;
+  const toMessage = (message: Message): CommentMessage => ({
+    id: message.id,
+    author: person(message.author_id) ?? { name: "Someone", initials: "?", color: "#64748b" },
+    you: message.author_id === meId,
+    researcher: message.author_id === researcher,
+    at: formatStamp(message.created_at),
+    text: fromMentionTokens(message.body, (userId) => person(userId)?.name),
+    replyTo: null,
   });
-  return thread ? (comments ?? []).map(toMessage) : [];
+  return thread ? (messages ?? []).map(toMessage) : [];
 }
 
 type ThreadBodyProps = {
@@ -80,7 +88,7 @@ export function ObjectThread({
   offReason,
   onSent,
 }: ThreadBodyProps) {
-  const loaded = useThreadMessages(thread, meId);
+  const loaded = useThreadMessages(taskId, slideId, thread, meId);
   const members = useMentionable();
   const queryClient = useQueryClient();
   const [draft, setDraft] = useKeptDraft(
@@ -99,10 +107,11 @@ export function ObjectThread({
     if (name) setDraft(withMention(draft, name));
   };
   const posted = (text: string) => {
-    void queryClient.invalidateQueries({ queryKey: getListSlideThreadsQueryKey(slideId) });
     void queryClient.invalidateQueries({ queryKey: getListThreadsQueryKey(taskId, slideId) });
     if (thread) {
-      void queryClient.invalidateQueries({ queryKey: getListThreadCommentsQueryKey(thread.id) });
+      void queryClient.invalidateQueries({
+        queryKey: getGetThreadQueryKey(taskId, slideId, thread.id),
+      });
     }
     setDraft("");
     setReplyTo(null);
