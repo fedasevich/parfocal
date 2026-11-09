@@ -86,7 +86,10 @@ async def lab_of(connection: AsyncConnection) -> LabSettings:
     ).one_or_none()
     if row is None:
         return LabSettings(values={}, locked=[])
-    return LabSettings(values=dict(row[0]), locked=list(row.locked))
+    return LabSettings(
+        values={key: value for key, value in row[0].items() if key in BY_KEY},
+        locked=[key for key in row.locked if key in BY_KEY],
+    )
 
 
 async def personal_of(connection: AsyncConnection, user_id: Any) -> dict[str, Any]:

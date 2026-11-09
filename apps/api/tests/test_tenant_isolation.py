@@ -363,7 +363,7 @@ async def seed_notifications(connection: AsyncConnection, seeded: Seeded) -> Non
     await connection.execute(
         insert(workspace_settings).values(
             tenant_id=seeded.tenant_id,
-            values={"lock_after_minutes": 5},
+            values={"decision_cutoff": 60},
             locked=[],
             security_contact=f"security-{target}@example.test",
         )

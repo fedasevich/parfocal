@@ -68,8 +68,13 @@ import {
   projectStatusLabel,
   projectsCountLabel,
 } from "./projects-model.ts";
-import { IDLE_LOCK_KEY, signInRows, TWO_FACTOR_KEY, twoFactorChange } from "./security-model.ts";
-import { ClassListChoice, IdleLockChoice, useSessionPolicy } from "./shared-settings.tsx";
+import { signInRows, TWO_FACTOR_KEY, twoFactorChange } from "./security-model.ts";
+import {
+  ClassListChoice,
+  IdleLockChoice,
+  PrivacyChoice,
+  useSessionPolicy,
+} from "./shared-settings.tsx";
 
 const right = "text-right";
 
@@ -98,8 +103,6 @@ export function ProjectsSection({ notify }: { notify: Notify }) {
   const lab = okData(useGetMySettingLayers().data)?.lab;
   const personOf = usePeople();
   const goTo = useGoTo();
-  const [privacy, setPrivacy] = useState("deid");
-  const [who, setWho] = useState("res");
   const spaceOf = (id: string) => usage?.by_project.find((row) => row.project.id === id);
   return (
     <>
@@ -210,30 +213,14 @@ export function ProjectsSection({ notify }: { notify: Notify }) {
       <Zone title="New projects">
         <div className="grid grid-cols-[180px_minmax(0,1fr)] items-start gap-x-4 gap-y-4 text-body-sm">
           <span className="pt-1 text-fg-dim">Privacy</span>
-          <div className="grid gap-1.5">
-            <SegmentedControl
-              aria-label="Privacy of new projects"
-              value={privacy}
-              onValueChange={(value) => setPrivacy(String(value))}
-              options={[
-                { value: "deid", label: "De-identified" },
-                { value: "clin", label: "Clinical" },
-              ]}
-            />
+          <div className="grid justify-items-start gap-1.5">
+            {lab ? (
+              <PrivacyChoice lab={lab} notify={notify} label="Privacy of new projects" />
+            ) : null}
             <small className="text-caption text-fg-dim">
-              Owners can switch a project later. Clinical projects log every slide opened.
+              Owners can switch a project later. Clinical projects need a security contact.
             </small>
           </div>
-          <span className="pt-1 text-fg-dim">Who can create one</span>
-          <SegmentedControl
-            aria-label="Who can create a project"
-            value={who}
-            onValueChange={(value) => setWho(String(value))}
-            options={[
-              { value: "res", label: "Every researcher" },
-              { value: "adm", label: "Researchers with admin rights" },
-            ]}
-          />
           <span className="text-fg-dim">Class lists</span>
           <div className="grid justify-items-start gap-1.5">
             {lab ? (
@@ -631,9 +618,7 @@ export function SecuritySection({ notify }: { notify: Notify }) {
   const settings = useGetSecuritySettings().data?.data;
   const lab = okData(useGetMySettingLayers().data)?.lab;
   const save = useSetWorkspaceSettings();
-  const [values, setValues] = useState<Record<string, boolean>>({});
   if (settings === undefined && lab === undefined) return null;
-  const sessionRows = (settings?.data ?? []).filter((item) => item.key !== IDLE_LOCK_KEY);
   const saveTwoFactor = (current: LabSettings, on: boolean) =>
     save.mutate(
       { data: twoFactorChange(current, on) },
@@ -654,15 +639,10 @@ export function SecuritySection({ notify }: { notify: Notify }) {
       key={item.key}
       label={item.label}
       detail={item.detail}
-      on={item.key === TWO_FACTOR_KEY ? item.on : (values[item.key] ?? item.on)}
+      on={item.on}
       locked={item.locked}
       onChange={(on) => {
-        if (item.key === TWO_FACTOR_KEY && lab) {
-          saveTwoFactor(lab, on);
-          return;
-        }
-        setValues({ ...values, [item.key]: on });
-        notify(`${item.label} ${on ? "turned on" : "turned off"} (mock)`);
+        if (item.key === TWO_FACTOR_KEY && lab) saveTwoFactor(lab, on);
       }}
     />
   );
@@ -681,7 +661,6 @@ export function SecuritySection({ notify }: { notify: Notify }) {
       <Zone title="Sessions and data">
         <div>
           <IdleLockRow notify={notify} />
-          {sessionRows.map(row)}
         </div>
       </Zone>
     </div>

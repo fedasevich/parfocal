@@ -3,7 +3,7 @@
 - Date: 2026-11-09
 - Status: Accepted
 - Deciders: Yurii Fedas (research check done by an agent from the code, the mock and ADR 0096)
-- Backlog: ADMIN-000 (research check), ADMIN-001, ADMIN-002, ADMIN-003, ADMIN-004, ADMIN-005, ADMIN-006, ADMIN-007, ADMIN-008, ADMIN-009
+- Backlog: ADMIN-000 (research check), ADMIN-001, ADMIN-002, ADMIN-003, ADMIN-004, ADMIN-005, ADMIN-006, ADMIN-007, ADMIN-008, ADMIN-009, ADMIN-011 (last mock controls in Admin)
 
 ## Context
 
@@ -17,13 +17,13 @@ Only a researcher with admin rights opens the page. A reviewer and a researcher 
 |---|---|---|---|
 | Overview | Workspace at a glance: people, projects, models, space and recent audit events | The permission of each figure it reads | Built (ADMIN-002, overview) |
 | People and roles | Invite people, set role and admin rights, deactivate, pending invitations. The last holder of admin rights cannot lose it | `manage-people` | Built (ADMIN-003, people and roles) |
-| Projects | Active and archived projects, archive and restore, privacy mode of new projects, who may create a project, deleted projects kept for 30 days | `workspace-settings` for the rules. Archive follows the project right | Built (ADMIN-004, projects). Class lists are still a placeholder |
+| Projects | Active and archived projects, archive and restore, privacy mode and class list of new projects, deleted projects kept for 30 days | `workspace-settings` for the rules. Archive follows the project right | Built (ADMIN-004, projects). Privacy and class list save through workspace settings (ADMIN-010 and ADMIN-011, wiring the mock controls). The mock's who-may-create choice is hidden, because creating a project follows the `create-cases` permission and no setting changes it |
 | AI models | Show or hide Parfocal models, connect, test and run the lab's own models, active runs | `workspace-settings` to show or hide. `integrations` to connect and test | Built (ADMIN-005, AI models) |
 | Report templates | The template library: built-in and the lab's own, preview, duplicate, edit, use for new projects, retire | `report-templates`. Using a template needs only the researcher's view. Editing needs admin rights | List and API built. The editor is ADMIN-008 (report templates), ready |
-| Storage and sources | Space by kind and by project, connected sources and their state, retention | `integrations` | Waiting on ADMIN-006 (storage, sources, API and webhooks). Today a mock |
+| Storage and sources | Space by kind and by project, connected sources and their state, retention | `integrations` for space and sources. Retention and legal holds check `workspace-settings` for reading and saving, because they are data rules of the workspace and not connections | Retention saves (ADMIN-010). Space and sources wait on ADMIN-006 (storage, sources, API and webhooks) |
 | API and webhooks | Service accounts, API tokens, incoming and outgoing webhooks | `integrations` | Service accounts built. Tokens and webhooks wait on ADMIN-006 and are mock buttons today |
 | Audit log | Search and signed export of audit events, with member names resolved in the view only | `audit-log` | Built (ADMIN-007, audit log and security, and ADMIN-009, named actors) |
-| Security | Sign-in method, two factors, session lock, security contact | `workspace-settings` | Built, with the sign-in and two-factor switches wired by ADMIN-009. Session lock is still a mock switch |
+| Security | Sign-in method, two factors, session lock, security contact | `workspace-settings` | Built, with the two-factor switch wired by ADMIN-009 and the lock time by ADMIN-010. Other sign-in methods show read-only. The mock's log-slides, watermark and EU switches are hidden (ADMIN-011): every slide opened is already logged with no switch, export watermarks do not exist, and the EU region waits on SEC-005 (data residency enforcement) |
 | Workspace settings | Name, join domain, announcements, site validations | `workspace-settings` | Built (ONB-011, join domain, is in progress) |
 
 A researcher without admin rights keeps the view-only access that ADR 0096 gives for `workspace-settings`, `integrations` and `report-templates`, but reaches it through the screens that use those things, such as the model list and the template picker. They never see the admin page.
@@ -32,4 +32,4 @@ A researcher without admin rights keeps the view-only access that ADR 0096 gives
 
 - The remaining ADMIN work is ADMIN-006 (tokens, webhooks, space and sources) and ADMIN-008 (the template editor). Both reuse the permissions above and add none.
 - New admin sections need an existing permission or a change to the matrix in `permissions.py` and ADR 0096. The generated [permission page](../reference/permissions.md) stays the single list.
-- The placeholders marked mock in the table are the only admin controls that do not save anything, and each has a named task or is noted here for a later backlog pass: class lists in Projects, retention in Storage and session lock in Security.
+- After ADMIN-010 (class lists, retention and session lock) and ADMIN-011 (last mock controls in Admin), every switch in Projects and Security saves and reads back or is hidden until its feature exists. The tokens, webhooks and space mocks belong to ADMIN-006.

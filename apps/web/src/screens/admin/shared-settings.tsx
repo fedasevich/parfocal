@@ -7,6 +7,7 @@ import {
   useSetWorkspaceSettings,
   useUpdateSessionPolicy,
 } from "@parfocal/api-client";
+import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
 import {
   Select,
   SelectContent,
@@ -19,10 +20,12 @@ import { okData } from "../placeholder.tsx";
 import type { Notify } from "./common.tsx";
 import {
   classOptions,
+  type DefaultKey,
   defaultChange,
   defaultsOf,
   durationText,
   idleLockChoices,
+  privacyOptions,
   withCurrent,
 } from "./workspace-settings-model.ts";
 
@@ -112,6 +115,51 @@ export function IdleLockChoice({
   );
 }
 
+function useDefaultSave(lab: LabSettings, notify: Notify, key: DefaultKey) {
+  const queryClient = useQueryClient();
+  const save = useSetWorkspaceSettings();
+  return (value: string, said: string, undo?: () => void) =>
+    save.mutate(
+      { data: defaultChange(lab, key, value) },
+      {
+        onSuccess: () => {
+          void queryClient.invalidateQueries({ queryKey: getGetMySettingLayersQueryKey() });
+          notify(said, undo);
+        },
+        onError: (error) => notify(failure(error)),
+      },
+    );
+}
+
+export function PrivacyChoice({
+  lab,
+  notify,
+  label,
+}: {
+  lab: LabSettings;
+  notify: Notify;
+  label: string;
+}) {
+  const current = defaultsOf(lab).privacy;
+  const apply = useDefaultSave(lab, notify, "default_privacy_mode");
+  return (
+    <SegmentedControl
+      aria-label={label}
+      value={current}
+      onValueChange={(value) => {
+        const next = String(value);
+        if (next === current) return;
+        apply(
+          next,
+          `New projects start ${next === "clinical" ? "clinical" : "de-identified"}.`,
+          () => apply(current, "Default restored."),
+        );
+      }}
+      options={privacyOptions.map((option) => ({ ...option }))}
+    />
+  );
+}
+
 export function ClassListChoice({
   lab,
   notify,
@@ -121,20 +169,8 @@ export function ClassListChoice({
   notify: Notify;
   label: string;
 }) {
-  const queryClient = useQueryClient();
-  const save = useSetWorkspaceSettings();
   const current = defaultsOf(lab).classes;
-  const apply = (value: string, said: string, undo?: () => void) =>
-    save.mutate(
-      { data: defaultChange(lab, "default_classes", value) },
-      {
-        onSuccess: () => {
-          void queryClient.invalidateQueries({ queryKey: getGetMySettingLayersQueryKey() });
-          notify(said, undo);
-        },
-        onError: (error) => notify(failure(error)),
-      },
-    );
+  const apply = useDefaultSave(lab, notify, "default_classes");
   return (
     <Select
       value={current}

@@ -68,7 +68,6 @@ Resolution order is unchanged from ADR 0138. A locked workspace value wins, then
 | patient_names | workspace or personal | full | Patient names, full or initials |
 | decision_cutoff | workspace, 0 to 100 | 50 | Decision cutoff |
 | analytics_policy | workspace | person | Analytics |
-| lock_after_minutes | workspace, 1 to 240 | 15 | Lock after |
 | two_factor_required | workspace | off | Security |
 | patient_banner | workspace | on | Patient banner |
 | default_privacy_mode | workspace | de-identified | Privacy mode |
@@ -107,3 +106,4 @@ Section 2.15 shows notifications as five rows (a task given, a mention, a slide 
 - The four planned device keys are small follow-ups to the Navigation and devices section (SET-006). They stay on the computer, so they need no migration and no API change.
 - SET-012 (idea: home and worklist choice) would add `worklist_view` and `case_preview_on_select` as personal keys, with an experiment pin as a task lock. It stays an idea.
 - The scope badges in the mock (device, you, lab) map to device, personal and workspace. A task lock has no badge row in the settings screen because it shows inside the Display panel.
+- ADMIN-011 (last mock controls in Admin) removed `lock_after_minutes`, because the screen lock reads `idle_lock_minutes` from the session policy. A removed key needs no migration: reads drop stored values and locks whose key is no longer in the catalogue, and the next save writes the row without them.

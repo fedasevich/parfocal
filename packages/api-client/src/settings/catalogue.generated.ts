@@ -28,7 +28,6 @@ export type SettingValues = {
   initials_while_sharing: boolean;
   analytics_policy: "person" | "on" | "off";
   analytics_opt_out: boolean;
-  lock_after_minutes: number;
   two_factor_required: boolean;
   patient_banner: boolean;
   default_privacy_mode: "de-identified" | "clinical";
@@ -333,15 +332,6 @@ export const catalogue: Record<SettingKey, SettingEntry> = {
     "layers": [
       "personal"
     ]
-  },
-  "lock_after_minutes": {
-    "kind": "whole",
-    "default": 15,
-    "layers": [
-      "lab"
-    ],
-    "minimum": 1,
-    "maximum": 240
   },
   "two_factor_required": {
     "kind": "switch",
