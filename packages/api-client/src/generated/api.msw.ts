@@ -63,6 +63,7 @@ import type {
   IssuedToken,
   Job,
   JoinableWorkspace,
+  JoinSettings,
   LabModel,
   LabModelTest,
   LabSettings,
@@ -7841,7 +7842,7 @@ export const getListThreadsResponseMock = (): Thread[] =>
   Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
     id: faker.string.uuid(),
     project_id: faker.string.uuid(),
-    task_id: faker.string.uuid(),
+    task_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
     slide_id: faker.string.uuid(),
     title: faker.string.alpha({ length: { min: 10, max: 20 } }),
     anchor: {
@@ -7945,7 +7946,7 @@ export const getCreateThreadResponseMock = (
 ): ThreadDetail => ({
   id: faker.string.uuid(),
   project_id: faker.string.uuid(),
-  task_id: faker.string.uuid(),
+  task_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   slide_id: faker.string.uuid(),
   title: faker.string.alpha({ length: { min: 10, max: 20 } }),
   anchor: {
@@ -8069,7 +8070,7 @@ export const getGetThreadResponseMock = (
 ): ThreadDetail => ({
   id: faker.string.uuid(),
   project_id: faker.string.uuid(),
-  task_id: faker.string.uuid(),
+  task_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   slide_id: faker.string.uuid(),
   title: faker.string.alpha({ length: { min: 10, max: 20 } }),
   anchor: {
@@ -8198,7 +8199,7 @@ export const getResolveThreadResponseMock = (
 ): ThreadDetail => ({
   id: faker.string.uuid(),
   project_id: faker.string.uuid(),
-  task_id: faker.string.uuid(),
+  task_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   slide_id: faker.string.uuid(),
   title: faker.string.alpha({ length: { min: 10, max: 20 } }),
   anchor: {
@@ -8314,7 +8315,7 @@ export const getReopenThreadResponseMock = (
 ): ThreadDetail => ({
   id: faker.string.uuid(),
   project_id: faker.string.uuid(),
-  task_id: faker.string.uuid(),
+  task_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   slide_id: faker.string.uuid(),
   title: faker.string.alpha({ length: { min: 10, max: 20 } }),
   anchor: {
@@ -8430,7 +8431,7 @@ export const getMoveThreadResponseMock = (
 ): ThreadDetail => ({
   id: faker.string.uuid(),
   project_id: faker.string.uuid(),
-  task_id: faker.string.uuid(),
+  task_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   slide_id: faker.string.uuid(),
   title: faker.string.alpha({ length: { min: 10, max: 20 } }),
   anchor: {
@@ -8445,6 +8446,710 @@ export const getMoveThreadResponseMock = (
         { ...getMoveThreadResponseLineStringGeometryMock() },
         { ...getMoveThreadResponsePolygonGeometryMock() },
         { ...getMoveThreadResponseMultiPolygonGeometryMock() },
+      ]),
+      null,
+    ]),
+    offset: faker.helpers.arrayElement([
+      [
+        faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+        faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+      ],
+      null,
+    ]),
+  },
+  created_by: faker.string.uuid(),
+  created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  resolved_at: faker.helpers.arrayElement([
+    faker.date.past().toISOString().slice(0, 19) + "Z",
+    null,
+  ]),
+  resolved_by: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  message_count: faker.number.int(),
+  last_message_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  messages: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      id: faker.string.uuid(),
+      author_id: faker.string.uuid(),
+      body: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      mentions: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () => faker.string.uuid(),
+      ),
+      created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+    }),
+  ),
+  ...overrideResponse,
+});
+
+export const getListThreadsOnSlideResponsePointGeometryMock = (
+  overrideResponse: Partial<PointGeometry> = {},
+): PointGeometry => ({
+  ...{
+    type: faker.helpers.arrayElement(["Point"] as const),
+    coordinates: [
+      faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+      faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+    ],
+  },
+  ...overrideResponse,
+});
+
+export const getListThreadsOnSlideResponseLineStringGeometryMock = (
+  overrideResponse: Partial<LineStringGeometry> = {},
+): LineStringGeometry => ({
+  ...{
+    type: faker.helpers.arrayElement(["LineString"] as const),
+    coordinates: Array.from({ length: faker.number.int({ min: 2, max: 10 }) }, (_, i) => i + 1).map(
+      () => [
+        faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+        faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+      ],
+    ),
+  },
+  ...overrideResponse,
+});
+
+export const getListThreadsOnSlideResponsePolygonGeometryMock = (
+  overrideResponse: Partial<PolygonGeometry> = {},
+): PolygonGeometry => ({
+  ...{
+    type: faker.helpers.arrayElement(["Polygon"] as const),
+    coordinates: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () =>
+        Array.from({ length: faker.number.int({ min: 4, max: 10 }) }, (_, i) => i + 1).map(() => [
+          faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+          faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+        ]),
+    ),
+  },
+  ...overrideResponse,
+});
+
+export const getListThreadsOnSlideResponseMultiPolygonGeometryMock = (
+  overrideResponse: Partial<MultiPolygonGeometry> = {},
+): MultiPolygonGeometry => ({
+  ...{
+    type: faker.helpers.arrayElement(["MultiPolygon"] as const),
+    coordinates: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () =>
+        Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
+          Array.from({ length: faker.number.int({ min: 4, max: 10 }) }, (_, i) => i + 1).map(() => [
+            faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+            faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+          ]),
+        ),
+    ),
+  },
+  ...overrideResponse,
+});
+
+export const getListThreadsOnSlideResponseMock = (): Thread[] =>
+  Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    id: faker.string.uuid(),
+    project_id: faker.string.uuid(),
+    task_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    slide_id: faker.string.uuid(),
+    title: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    anchor: {
+      kind: faker.helpers.arrayElement(Object.values(AnchorKind)),
+      object_id: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      geometry: faker.helpers.arrayElement([
+        faker.helpers.arrayElement([
+          { ...getListThreadsOnSlideResponsePointGeometryMock() },
+          { ...getListThreadsOnSlideResponseLineStringGeometryMock() },
+          { ...getListThreadsOnSlideResponsePolygonGeometryMock() },
+          { ...getListThreadsOnSlideResponseMultiPolygonGeometryMock() },
+        ]),
+        null,
+      ]),
+      offset: faker.helpers.arrayElement([
+        [
+          faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+          faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+        ],
+        null,
+      ]),
+    },
+    created_by: faker.string.uuid(),
+    created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+    resolved_at: faker.helpers.arrayElement([
+      faker.date.past().toISOString().slice(0, 19) + "Z",
+      null,
+    ]),
+    resolved_by: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    message_count: faker.number.int(),
+    last_message_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  }));
+
+export const getCreateThreadOnSlideResponsePointGeometryMock = (
+  overrideResponse: Partial<PointGeometry> = {},
+): PointGeometry => ({
+  ...{
+    type: faker.helpers.arrayElement(["Point"] as const),
+    coordinates: [
+      faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+      faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+    ],
+  },
+  ...overrideResponse,
+});
+
+export const getCreateThreadOnSlideResponseLineStringGeometryMock = (
+  overrideResponse: Partial<LineStringGeometry> = {},
+): LineStringGeometry => ({
+  ...{
+    type: faker.helpers.arrayElement(["LineString"] as const),
+    coordinates: Array.from({ length: faker.number.int({ min: 2, max: 10 }) }, (_, i) => i + 1).map(
+      () => [
+        faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+        faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+      ],
+    ),
+  },
+  ...overrideResponse,
+});
+
+export const getCreateThreadOnSlideResponsePolygonGeometryMock = (
+  overrideResponse: Partial<PolygonGeometry> = {},
+): PolygonGeometry => ({
+  ...{
+    type: faker.helpers.arrayElement(["Polygon"] as const),
+    coordinates: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () =>
+        Array.from({ length: faker.number.int({ min: 4, max: 10 }) }, (_, i) => i + 1).map(() => [
+          faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+          faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+        ]),
+    ),
+  },
+  ...overrideResponse,
+});
+
+export const getCreateThreadOnSlideResponseMultiPolygonGeometryMock = (
+  overrideResponse: Partial<MultiPolygonGeometry> = {},
+): MultiPolygonGeometry => ({
+  ...{
+    type: faker.helpers.arrayElement(["MultiPolygon"] as const),
+    coordinates: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () =>
+        Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
+          Array.from({ length: faker.number.int({ min: 4, max: 10 }) }, (_, i) => i + 1).map(() => [
+            faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+            faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+          ]),
+        ),
+    ),
+  },
+  ...overrideResponse,
+});
+
+export const getCreateThreadOnSlideResponseMock = (
+  overrideResponse: Partial<Extract<ThreadDetail, object>> = {},
+): ThreadDetail => ({
+  id: faker.string.uuid(),
+  project_id: faker.string.uuid(),
+  task_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  slide_id: faker.string.uuid(),
+  title: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  anchor: {
+    kind: faker.helpers.arrayElement(Object.values(AnchorKind)),
+    object_id: faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    geometry: faker.helpers.arrayElement([
+      faker.helpers.arrayElement([
+        { ...getCreateThreadOnSlideResponsePointGeometryMock() },
+        { ...getCreateThreadOnSlideResponseLineStringGeometryMock() },
+        { ...getCreateThreadOnSlideResponsePolygonGeometryMock() },
+        { ...getCreateThreadOnSlideResponseMultiPolygonGeometryMock() },
+      ]),
+      null,
+    ]),
+    offset: faker.helpers.arrayElement([
+      [
+        faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+        faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+      ],
+      null,
+    ]),
+  },
+  created_by: faker.string.uuid(),
+  created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  resolved_at: faker.helpers.arrayElement([
+    faker.date.past().toISOString().slice(0, 19) + "Z",
+    null,
+  ]),
+  resolved_by: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  message_count: faker.number.int(),
+  last_message_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  messages: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      id: faker.string.uuid(),
+      author_id: faker.string.uuid(),
+      body: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      mentions: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () => faker.string.uuid(),
+      ),
+      created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+    }),
+  ),
+  ...overrideResponse,
+});
+
+export const getListMentionableMembersOnSlideResponseMock = (): Mentionable[] =>
+  Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    user_id: faker.string.uuid(),
+    display_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    initials: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    avatar_colour: faker.number.int(),
+  }));
+
+export const getGetThreadOnSlideResponsePointGeometryMock = (
+  overrideResponse: Partial<PointGeometry> = {},
+): PointGeometry => ({
+  ...{
+    type: faker.helpers.arrayElement(["Point"] as const),
+    coordinates: [
+      faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+      faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+    ],
+  },
+  ...overrideResponse,
+});
+
+export const getGetThreadOnSlideResponseLineStringGeometryMock = (
+  overrideResponse: Partial<LineStringGeometry> = {},
+): LineStringGeometry => ({
+  ...{
+    type: faker.helpers.arrayElement(["LineString"] as const),
+    coordinates: Array.from({ length: faker.number.int({ min: 2, max: 10 }) }, (_, i) => i + 1).map(
+      () => [
+        faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+        faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+      ],
+    ),
+  },
+  ...overrideResponse,
+});
+
+export const getGetThreadOnSlideResponsePolygonGeometryMock = (
+  overrideResponse: Partial<PolygonGeometry> = {},
+): PolygonGeometry => ({
+  ...{
+    type: faker.helpers.arrayElement(["Polygon"] as const),
+    coordinates: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () =>
+        Array.from({ length: faker.number.int({ min: 4, max: 10 }) }, (_, i) => i + 1).map(() => [
+          faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+          faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+        ]),
+    ),
+  },
+  ...overrideResponse,
+});
+
+export const getGetThreadOnSlideResponseMultiPolygonGeometryMock = (
+  overrideResponse: Partial<MultiPolygonGeometry> = {},
+): MultiPolygonGeometry => ({
+  ...{
+    type: faker.helpers.arrayElement(["MultiPolygon"] as const),
+    coordinates: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () =>
+        Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
+          Array.from({ length: faker.number.int({ min: 4, max: 10 }) }, (_, i) => i + 1).map(() => [
+            faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+            faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+          ]),
+        ),
+    ),
+  },
+  ...overrideResponse,
+});
+
+export const getGetThreadOnSlideResponseMock = (
+  overrideResponse: Partial<Extract<ThreadDetail, object>> = {},
+): ThreadDetail => ({
+  id: faker.string.uuid(),
+  project_id: faker.string.uuid(),
+  task_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  slide_id: faker.string.uuid(),
+  title: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  anchor: {
+    kind: faker.helpers.arrayElement(Object.values(AnchorKind)),
+    object_id: faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    geometry: faker.helpers.arrayElement([
+      faker.helpers.arrayElement([
+        { ...getGetThreadOnSlideResponsePointGeometryMock() },
+        { ...getGetThreadOnSlideResponseLineStringGeometryMock() },
+        { ...getGetThreadOnSlideResponsePolygonGeometryMock() },
+        { ...getGetThreadOnSlideResponseMultiPolygonGeometryMock() },
+      ]),
+      null,
+    ]),
+    offset: faker.helpers.arrayElement([
+      [
+        faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+        faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+      ],
+      null,
+    ]),
+  },
+  created_by: faker.string.uuid(),
+  created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  resolved_at: faker.helpers.arrayElement([
+    faker.date.past().toISOString().slice(0, 19) + "Z",
+    null,
+  ]),
+  resolved_by: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  message_count: faker.number.int(),
+  last_message_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  messages: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      id: faker.string.uuid(),
+      author_id: faker.string.uuid(),
+      body: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      mentions: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () => faker.string.uuid(),
+      ),
+      created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+    }),
+  ),
+  ...overrideResponse,
+});
+
+export const getReplyToThreadOnSlideResponseMock = (
+  overrideResponse: Partial<Extract<Message, object>> = {},
+): Message => ({
+  id: faker.string.uuid(),
+  author_id: faker.string.uuid(),
+  body: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  mentions: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
+    faker.string.uuid(),
+  ),
+  created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  ...overrideResponse,
+});
+
+export const getResolveThreadOnSlideResponsePointGeometryMock = (
+  overrideResponse: Partial<PointGeometry> = {},
+): PointGeometry => ({
+  ...{
+    type: faker.helpers.arrayElement(["Point"] as const),
+    coordinates: [
+      faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+      faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+    ],
+  },
+  ...overrideResponse,
+});
+
+export const getResolveThreadOnSlideResponseLineStringGeometryMock = (
+  overrideResponse: Partial<LineStringGeometry> = {},
+): LineStringGeometry => ({
+  ...{
+    type: faker.helpers.arrayElement(["LineString"] as const),
+    coordinates: Array.from({ length: faker.number.int({ min: 2, max: 10 }) }, (_, i) => i + 1).map(
+      () => [
+        faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+        faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+      ],
+    ),
+  },
+  ...overrideResponse,
+});
+
+export const getResolveThreadOnSlideResponsePolygonGeometryMock = (
+  overrideResponse: Partial<PolygonGeometry> = {},
+): PolygonGeometry => ({
+  ...{
+    type: faker.helpers.arrayElement(["Polygon"] as const),
+    coordinates: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () =>
+        Array.from({ length: faker.number.int({ min: 4, max: 10 }) }, (_, i) => i + 1).map(() => [
+          faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+          faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+        ]),
+    ),
+  },
+  ...overrideResponse,
+});
+
+export const getResolveThreadOnSlideResponseMultiPolygonGeometryMock = (
+  overrideResponse: Partial<MultiPolygonGeometry> = {},
+): MultiPolygonGeometry => ({
+  ...{
+    type: faker.helpers.arrayElement(["MultiPolygon"] as const),
+    coordinates: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () =>
+        Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
+          Array.from({ length: faker.number.int({ min: 4, max: 10 }) }, (_, i) => i + 1).map(() => [
+            faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+            faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+          ]),
+        ),
+    ),
+  },
+  ...overrideResponse,
+});
+
+export const getResolveThreadOnSlideResponseMock = (
+  overrideResponse: Partial<Extract<ThreadDetail, object>> = {},
+): ThreadDetail => ({
+  id: faker.string.uuid(),
+  project_id: faker.string.uuid(),
+  task_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  slide_id: faker.string.uuid(),
+  title: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  anchor: {
+    kind: faker.helpers.arrayElement(Object.values(AnchorKind)),
+    object_id: faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    geometry: faker.helpers.arrayElement([
+      faker.helpers.arrayElement([
+        { ...getResolveThreadOnSlideResponsePointGeometryMock() },
+        { ...getResolveThreadOnSlideResponseLineStringGeometryMock() },
+        { ...getResolveThreadOnSlideResponsePolygonGeometryMock() },
+        { ...getResolveThreadOnSlideResponseMultiPolygonGeometryMock() },
+      ]),
+      null,
+    ]),
+    offset: faker.helpers.arrayElement([
+      [
+        faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+        faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+      ],
+      null,
+    ]),
+  },
+  created_by: faker.string.uuid(),
+  created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  resolved_at: faker.helpers.arrayElement([
+    faker.date.past().toISOString().slice(0, 19) + "Z",
+    null,
+  ]),
+  resolved_by: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  message_count: faker.number.int(),
+  last_message_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  messages: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      id: faker.string.uuid(),
+      author_id: faker.string.uuid(),
+      body: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      mentions: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () => faker.string.uuid(),
+      ),
+      created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+    }),
+  ),
+  ...overrideResponse,
+});
+
+export const getReopenThreadOnSlideResponsePointGeometryMock = (
+  overrideResponse: Partial<PointGeometry> = {},
+): PointGeometry => ({
+  ...{
+    type: faker.helpers.arrayElement(["Point"] as const),
+    coordinates: [
+      faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+      faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+    ],
+  },
+  ...overrideResponse,
+});
+
+export const getReopenThreadOnSlideResponseLineStringGeometryMock = (
+  overrideResponse: Partial<LineStringGeometry> = {},
+): LineStringGeometry => ({
+  ...{
+    type: faker.helpers.arrayElement(["LineString"] as const),
+    coordinates: Array.from({ length: faker.number.int({ min: 2, max: 10 }) }, (_, i) => i + 1).map(
+      () => [
+        faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+        faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+      ],
+    ),
+  },
+  ...overrideResponse,
+});
+
+export const getReopenThreadOnSlideResponsePolygonGeometryMock = (
+  overrideResponse: Partial<PolygonGeometry> = {},
+): PolygonGeometry => ({
+  ...{
+    type: faker.helpers.arrayElement(["Polygon"] as const),
+    coordinates: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () =>
+        Array.from({ length: faker.number.int({ min: 4, max: 10 }) }, (_, i) => i + 1).map(() => [
+          faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+          faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+        ]),
+    ),
+  },
+  ...overrideResponse,
+});
+
+export const getReopenThreadOnSlideResponseMultiPolygonGeometryMock = (
+  overrideResponse: Partial<MultiPolygonGeometry> = {},
+): MultiPolygonGeometry => ({
+  ...{
+    type: faker.helpers.arrayElement(["MultiPolygon"] as const),
+    coordinates: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () =>
+        Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
+          Array.from({ length: faker.number.int({ min: 4, max: 10 }) }, (_, i) => i + 1).map(() => [
+            faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+            faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+          ]),
+        ),
+    ),
+  },
+  ...overrideResponse,
+});
+
+export const getReopenThreadOnSlideResponseMock = (
+  overrideResponse: Partial<Extract<ThreadDetail, object>> = {},
+): ThreadDetail => ({
+  id: faker.string.uuid(),
+  project_id: faker.string.uuid(),
+  task_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  slide_id: faker.string.uuid(),
+  title: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  anchor: {
+    kind: faker.helpers.arrayElement(Object.values(AnchorKind)),
+    object_id: faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    geometry: faker.helpers.arrayElement([
+      faker.helpers.arrayElement([
+        { ...getReopenThreadOnSlideResponsePointGeometryMock() },
+        { ...getReopenThreadOnSlideResponseLineStringGeometryMock() },
+        { ...getReopenThreadOnSlideResponsePolygonGeometryMock() },
+        { ...getReopenThreadOnSlideResponseMultiPolygonGeometryMock() },
+      ]),
+      null,
+    ]),
+    offset: faker.helpers.arrayElement([
+      [
+        faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+        faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+      ],
+      null,
+    ]),
+  },
+  created_by: faker.string.uuid(),
+  created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  resolved_at: faker.helpers.arrayElement([
+    faker.date.past().toISOString().slice(0, 19) + "Z",
+    null,
+  ]),
+  resolved_by: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  message_count: faker.number.int(),
+  last_message_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  messages: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      id: faker.string.uuid(),
+      author_id: faker.string.uuid(),
+      body: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      mentions: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () => faker.string.uuid(),
+      ),
+      created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+    }),
+  ),
+  ...overrideResponse,
+});
+
+export const getMoveThreadOnSlideResponsePointGeometryMock = (
+  overrideResponse: Partial<PointGeometry> = {},
+): PointGeometry => ({
+  ...{
+    type: faker.helpers.arrayElement(["Point"] as const),
+    coordinates: [
+      faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+      faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+    ],
+  },
+  ...overrideResponse,
+});
+
+export const getMoveThreadOnSlideResponseLineStringGeometryMock = (
+  overrideResponse: Partial<LineStringGeometry> = {},
+): LineStringGeometry => ({
+  ...{
+    type: faker.helpers.arrayElement(["LineString"] as const),
+    coordinates: Array.from({ length: faker.number.int({ min: 2, max: 10 }) }, (_, i) => i + 1).map(
+      () => [
+        faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+        faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+      ],
+    ),
+  },
+  ...overrideResponse,
+});
+
+export const getMoveThreadOnSlideResponsePolygonGeometryMock = (
+  overrideResponse: Partial<PolygonGeometry> = {},
+): PolygonGeometry => ({
+  ...{
+    type: faker.helpers.arrayElement(["Polygon"] as const),
+    coordinates: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () =>
+        Array.from({ length: faker.number.int({ min: 4, max: 10 }) }, (_, i) => i + 1).map(() => [
+          faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+          faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+        ]),
+    ),
+  },
+  ...overrideResponse,
+});
+
+export const getMoveThreadOnSlideResponseMultiPolygonGeometryMock = (
+  overrideResponse: Partial<MultiPolygonGeometry> = {},
+): MultiPolygonGeometry => ({
+  ...{
+    type: faker.helpers.arrayElement(["MultiPolygon"] as const),
+    coordinates: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () =>
+        Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
+          Array.from({ length: faker.number.int({ min: 4, max: 10 }) }, (_, i) => i + 1).map(() => [
+            faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+            faker.number.float({ min: -10000000, max: 10000000, fractionDigits: 2 }),
+          ]),
+        ),
+    ),
+  },
+  ...overrideResponse,
+});
+
+export const getMoveThreadOnSlideResponseMock = (
+  overrideResponse: Partial<Extract<ThreadDetail, object>> = {},
+): ThreadDetail => ({
+  id: faker.string.uuid(),
+  project_id: faker.string.uuid(),
+  task_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  slide_id: faker.string.uuid(),
+  title: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  anchor: {
+    kind: faker.helpers.arrayElement(Object.values(AnchorKind)),
+    object_id: faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    geometry: faker.helpers.arrayElement([
+      faker.helpers.arrayElement([
+        { ...getMoveThreadOnSlideResponsePointGeometryMock() },
+        { ...getMoveThreadOnSlideResponseLineStringGeometryMock() },
+        { ...getMoveThreadOnSlideResponsePolygonGeometryMock() },
+        { ...getMoveThreadOnSlideResponseMultiPolygonGeometryMock() },
       ]),
       null,
     ]),
@@ -12908,6 +13613,32 @@ export const getApproveWorkspaceAccessRequestResponseMock = (
   title: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
   role: faker.helpers.arrayElement(Object.values(Role)),
   admin_rights: faker.datatype.boolean(),
+  ...overrideResponse,
+});
+
+export const getGetJoinSettingsResponseMock = (
+  overrideResponse: Partial<Extract<JoinSettings, object>> = {},
+): JoinSettings => ({
+  email_domain: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  join_policy: faker.helpers.arrayElement(Object.values(JoinPolicy)),
+  logo: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  logo_colour: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  ...overrideResponse,
+});
+
+export const getSetJoinSettingsResponseMock = (
+  overrideResponse: Partial<Extract<JoinSettings, object>> = {},
+): JoinSettings => ({
+  email_domain: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  join_policy: faker.helpers.arrayElement(Object.values(JoinPolicy)),
+  logo: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  logo_colour: faker.string.alpha({ length: { min: 10, max: 20 } }),
   ...overrideResponse,
 });
 
@@ -17817,6 +18548,213 @@ export const getMoveThreadMockHandler = (
   );
 };
 
+export const getListThreadsOnSlideMockHandler = (
+  overrideResponse?:
+    | Thread[]
+    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<Thread[]> | Thread[]),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/projects/:projectId/slides/:slideId/threads",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getListThreadsOnSlideResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getCreateThreadOnSlideMockHandler = (
+  overrideResponse?:
+    | ThreadDetail
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<ThreadDetail> | ThreadDetail),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/projects/:projectId/slides/:slideId/threads",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getCreateThreadOnSlideResponseMock(),
+        { status: 201 },
+      );
+    },
+    options,
+  );
+};
+
+export const getListMentionableMembersOnSlideMockHandler = (
+  overrideResponse?:
+    | Mentionable[]
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<Mentionable[]> | Mentionable[]),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/projects/:projectId/slides/:slideId/threads/mentionable",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getListMentionableMembersOnSlideResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getGetThreadOnSlideMockHandler = (
+  overrideResponse?:
+    | ThreadDetail
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<ThreadDetail> | ThreadDetail),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/projects/:projectId/slides/:slideId/threads/:threadId",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetThreadOnSlideResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getDeleteThreadOnSlideMockHandler = (
+  overrideResponse?:
+    | void
+    | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void),
+  options?: RequestHandlerOptions,
+) => {
+  return http.delete(
+    "*/api/projects/:projectId/slides/:slideId/threads/:threadId",
+    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info);
+      }
+
+      return new HttpResponse(null, { status: 204 });
+    },
+    options,
+  );
+};
+
+export const getReplyToThreadOnSlideMockHandler = (
+  overrideResponse?:
+    | Message
+    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<Message> | Message),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/projects/:projectId/slides/:slideId/threads/:threadId/messages",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getReplyToThreadOnSlideResponseMock(),
+        { status: 201 },
+      );
+    },
+    options,
+  );
+};
+
+export const getResolveThreadOnSlideMockHandler = (
+  overrideResponse?:
+    | ThreadDetail
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<ThreadDetail> | ThreadDetail),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/projects/:projectId/slides/:slideId/threads/:threadId/resolve",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getResolveThreadOnSlideResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getReopenThreadOnSlideMockHandler = (
+  overrideResponse?:
+    | ThreadDetail
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<ThreadDetail> | ThreadDetail),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/projects/:projectId/slides/:slideId/threads/:threadId/reopen",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getReopenThreadOnSlideResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getMoveThreadOnSlideMockHandler = (
+  overrideResponse?:
+    | ThreadDetail
+    | ((
+        info: Parameters<Parameters<typeof http.patch>[1]>[0],
+      ) => Promise<ThreadDetail> | ThreadDetail),
+  options?: RequestHandlerOptions,
+) => {
+  return http.patch(
+    "*/api/projects/:projectId/slides/:slideId/threads/:threadId/anchor",
+    async (info: Parameters<Parameters<typeof http.patch>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getMoveThreadOnSlideResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getSaveOpinionMockHandler = (
   overrideResponse?:
     | Opinion
@@ -19287,6 +20225,73 @@ export const getApproveWorkspaceAccessRequestMockHandler = (
   );
 };
 
+export const getDeclineWorkspaceAccessRequestMockHandler = (
+  overrideResponse?:
+    | void
+    | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void),
+  options?: RequestHandlerOptions,
+) => {
+  return http.delete(
+    "*/api/tenant/access-requests/:requestId",
+    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info);
+      }
+
+      return new HttpResponse(null, { status: 204 });
+    },
+    options,
+  );
+};
+
+export const getGetJoinSettingsMockHandler = (
+  overrideResponse?:
+    | JoinSettings
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<JoinSettings> | JoinSettings),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/tenant/join-settings",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetJoinSettingsResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getSetJoinSettingsMockHandler = (
+  overrideResponse?:
+    | JoinSettings
+    | ((
+        info: Parameters<Parameters<typeof http.put>[1]>[0],
+      ) => Promise<JoinSettings> | JoinSettings),
+  options?: RequestHandlerOptions,
+) => {
+  return http.put(
+    "*/api/tenant/join-settings",
+    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getSetJoinSettingsResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getListTenantMembersMockHandler = (
   overrideResponse?:
     | Member[]
@@ -20167,6 +21172,15 @@ export const getParfocalAPIMock = () => [
   getResolveThreadMockHandler(),
   getReopenThreadMockHandler(),
   getMoveThreadMockHandler(),
+  getListThreadsOnSlideMockHandler(),
+  getCreateThreadOnSlideMockHandler(),
+  getListMentionableMembersOnSlideMockHandler(),
+  getGetThreadOnSlideMockHandler(),
+  getDeleteThreadOnSlideMockHandler(),
+  getReplyToThreadOnSlideMockHandler(),
+  getResolveThreadOnSlideMockHandler(),
+  getReopenThreadOnSlideMockHandler(),
+  getMoveThreadOnSlideMockHandler(),
   getSaveOpinionMockHandler(),
   getGetOpinionMockHandler(),
   getSubmitFirstReadMockHandler(),
@@ -20231,6 +21245,9 @@ export const getParfocalAPIMock = () => [
   getAskToJoinWorkspaceMockHandler(),
   getListWorkspaceAccessRequestsMockHandler(),
   getApproveWorkspaceAccessRequestMockHandler(),
+  getDeclineWorkspaceAccessRequestMockHandler(),
+  getGetJoinSettingsMockHandler(),
+  getSetJoinSettingsMockHandler(),
   getListTenantMembersMockHandler(),
   getListMemberActivityMockHandler(),
   getChangeMemberRoleMockHandler(),

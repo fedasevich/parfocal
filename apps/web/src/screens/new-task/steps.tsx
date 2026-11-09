@@ -1,3 +1,11 @@
+import {
+  annotatePresets,
+  BlindFirstSwitch,
+  CheckOptions,
+  ChoiceCards,
+  checkSummary,
+  PresetPicker,
+} from "@parfocal/ui/components/annotate-task";
 import { Button } from "@parfocal/ui/components/button";
 import { CountsAsLine } from "@parfocal/ui/components/counts-as";
 import { DatePicker } from "@parfocal/ui/components/date-picker";
@@ -24,6 +32,7 @@ import { cn } from "@parfocal/ui/lib/utils";
 import type { ReactNode } from "react";
 import {
   andJoin,
+  annotateSlideLine,
   type DecisionKindKey,
   type Display,
   type Draft,
@@ -32,6 +41,7 @@ import {
   dueText,
   estimateText,
   hoursText,
+  isAnnotate,
   isRetired,
   type LockKey,
   lockKeys,
@@ -50,6 +60,7 @@ import {
   scopeRows,
   slideLine,
   slidesInTask,
+  slidesWithResult,
   splitText,
   stepNames,
   summary,
@@ -103,12 +114,60 @@ function TextLink({ children, onClick }: { children: ReactNode; onClick?: () => 
   );
 }
 
+export function KindStep({ draft, update }: StepProps) {
+  return (
+    <>
+      <Zone title="Kind">
+        <ChoiceCards
+          legend="What the experts do"
+          value={draft.kind}
+          onValueChange={(kind) =>
+            update((current) => ({ ...current, kind: kind as Draft["kind"] }))
+          }
+          choices={[
+            {
+              value: "review",
+              title: "Review AI results",
+              text: "Reviewers decide whether the AI result is right, without drawing.",
+            },
+            {
+              value: "annotate",
+              title: "Annotate",
+              text: "Experts draw cells and fix what the AI found. The output is training data.",
+            },
+          ]}
+        />
+      </Zone>
+      {isAnnotate(draft) ? (
+        <Zone
+          title="Starting point"
+          sub="A suggestion only. It fills in the next steps, and you can change every setting there."
+        >
+          <PresetPicker
+            value={draft.preset}
+            onValueChange={(preset) => {
+              const options = annotatePresets.find((item) => item.key === preset)?.options;
+              update((current) => ({
+                ...current,
+                preset,
+                check: options ? { ...options } : current.check,
+              }));
+            }}
+          />
+        </Zone>
+      ) : null}
+    </>
+  );
+}
+
 export function SlidesStep({ draft, data, update, errors, onTemplate, openModal }: StepProps) {
   const sum = summary(draft, data);
   const all = pickedSlides(draft, data);
   const short = rsShort(data, draft.resultSetId);
   const byId = new Map(data.slides.map((slide) => [slide.id, slide]));
   const template = data.templates.find((candidate) => candidate.id === draft.templateId);
+  const annotate = isAnnotate(draft);
+  const withResult = slidesWithResult(draft, data).length;
   const leftOut = data.groups
     .filter((group) => draft.groups[group.key])
     .map((group) => ({
@@ -118,56 +177,65 @@ export function SlidesStep({ draft, data, update, errors, onTemplate, openModal 
     .filter((item) => item.count > 0);
   return (
     <>
-      <Zone title="Study template">
-        <div className="grid gap-1.5">
-          <div className="flex items-center gap-4">
-            <Select
-              value={draft.templateId}
-              onValueChange={(value) => {
-                const next = data.templates.find((candidate) => candidate.id === value);
-                if (next) onTemplate(next);
-              }}
-            >
-              <SelectTrigger
-                id={fieldId("tpl")}
-                aria-label="Study template"
-                aria-invalid={errors.get("tpl") ? true : undefined}
-                className="h-9.5 w-102 font-semibold"
+      {annotate ? null : (
+        <Zone title="Study template">
+          <div className="grid gap-1.5">
+            <div className="flex items-center gap-4">
+              <Select
+                value={draft.templateId}
+                onValueChange={(value) => {
+                  const next = data.templates.find((candidate) => candidate.id === value);
+                  if (next) onTemplate(next);
+                }}
               >
-                <SelectValue>
-                  {template
-                    ? `${template.name} ${template.version}${isRetired(draft, template) ? " · retired" : ""}`
-                    : "Pick a template"}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                {data.templates.map((choice) => (
-                  <SelectItem key={choice.id} value={choice.id} disabled={isRetired(draft, choice)}>
-                    <span className="grid">
-                      <span>
-                        {choice.name} {choice.version}
-                        {isRetired(draft, choice) ? " · retired" : ""}
+                <SelectTrigger
+                  id={fieldId("tpl")}
+                  aria-label="Study template"
+                  aria-invalid={errors.get("tpl") ? true : undefined}
+                  className="h-9.5 w-102 font-semibold"
+                >
+                  <SelectValue>
+                    {template
+                      ? `${template.name} ${template.version}${isRetired(draft, template) ? " · retired" : ""}`
+                      : "Pick a template"}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {data.templates.map((choice) => (
+                    <SelectItem
+                      key={choice.id}
+                      value={choice.id}
+                      disabled={isRetired(draft, choice)}
+                    >
+                      <span className="grid">
+                        <span>
+                          {choice.name} {choice.version}
+                          {isRetired(draft, choice) ? " · retired" : ""}
+                        </span>
+                        <small className="text-caption text-fg-dim">
+                          {isRetired(draft, choice) ? "Retired" : choice.kind}
+                        </small>
                       </span>
-                      <small className="text-caption text-fg-dim">
-                        {isRetired(draft, choice) ? "Retired" : choice.kind}
-                      </small>
-                    </span>
-                    {choice.id === data.defaultTemplateId ? (
-                      <StatusTag>Project default</StatusTag>
-                    ) : null}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <TextLink>Preview the report</TextLink>
+                      {choice.id === data.defaultTemplateId ? (
+                        <StatusTag>Project default</StatusTag>
+                      ) : null}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <TextLink>Preview the report</TextLink>
+            </div>
+            <FieldNote
+              error={errors.get("tpl")}
+              help="It fills in what to check, how it runs and the display defaults. You can still change each of them."
+            />
           </div>
-          <FieldNote
-            error={errors.get("tpl")}
-            help="It fills in what to check, how it runs and the display defaults. You can still change each of them."
-          />
-        </div>
-      </Zone>
-      <Zone title="Slides" sub={slideLine(sum, short)}>
+        </Zone>
+      )}
+      <Zone
+        title="Slides"
+        sub={annotate ? annotateSlideLine(sum, withResult, short) : slideLine(sum, short)}
+      >
         <div id={fieldId("groups")} tabIndex={-1} className="grid gap-0.5 outline-none">
           {data.groups.map((group) => (
             <CheckRow
@@ -230,50 +298,52 @@ export function SlidesStep({ draft, data, update, errors, onTemplate, openModal 
         </div>
         <FieldNote error={errors.get("groups")} />
       </Zone>
-      <Zone title="AI result to check">
-        <div className="grid gap-1.5">
-          <RadioRows
-            id={fieldId("rset")}
-            label="AI result to check"
-            value={draft.resultSetId}
-            onChange={(value) =>
-              update((current) => ({
-                ...current,
-                resultSetId: value,
-                name: current.nameSet ? current.name : (data.names[value] ?? current.name),
-                touched: { ...current.touched, rset: true },
-              }))
-            }
-            options={data.resultSets.map((set) => ({
-              value: set.id,
-              title: set.label,
-              sub: set.detail,
-              end: `on ${all.filter((slide) => slide.sets.includes(set.id)).length} of ${sum.all}`,
-            }))}
-          />
-          <FieldNote error={errors.get("rset")} />
-          {!sum.ns && all.length ? (
-            <Warn icon="smart">
-              <a href="#run-model" className="text-accent">
-                Run a model
-              </a>{" "}
-              on the picked slides, or pick another result set.
-            </Warn>
-          ) : null}
-          {sum.ns
-            ? leftOut.map(({ group, count }) => (
-                <Warn key={group.key}>
-                  {count} slide{count > 1 ? "s" : ""} in {group.title} {count > 1 ? "have" : "has"}{" "}
-                  no {short} and {count > 1 ? "are" : "is"} left out.{" "}
-                  <a href="#run-model" className="text-accent">
-                    Run a model
-                  </a>{" "}
-                  to include {count > 1 ? "them" : "it"}.
-                </Warn>
-              ))
-            : null}
-        </div>
-      </Zone>
+      {annotate && !draft.check.hasResult ? null : (
+        <Zone title={annotate ? "AI result to start from" : "AI result to check"}>
+          <div className="grid gap-1.5">
+            <RadioRows
+              id={fieldId("rset")}
+              label="AI result to check"
+              value={draft.resultSetId}
+              onChange={(value) =>
+                update((current) => ({
+                  ...current,
+                  resultSetId: value,
+                  name: current.nameSet ? current.name : (data.names[value] ?? current.name),
+                  touched: { ...current.touched, rset: true },
+                }))
+              }
+              options={data.resultSets.map((set) => ({
+                value: set.id,
+                title: set.label,
+                sub: set.detail,
+                end: `on ${all.filter((slide) => slide.sets.includes(set.id)).length} of ${sum.all}`,
+              }))}
+            />
+            <FieldNote error={errors.get("rset")} />
+            {!annotate && !sum.ns && all.length ? (
+              <Warn icon="smart">
+                <a href="#run-model" className="text-accent">
+                  Run a model
+                </a>{" "}
+                on the picked slides, or pick another result set.
+              </Warn>
+            ) : null}
+            {sum.ns && !annotate
+              ? leftOut.map(({ group, count }) => (
+                  <Warn key={group.key}>
+                    {count} slide{count > 1 ? "s" : ""} in {group.title}{" "}
+                    {count > 1 ? "have" : "has"} no {short} and {count > 1 ? "are" : "is"} left out.{" "}
+                    <a href="#run-model" className="text-accent">
+                      Run a model
+                    </a>{" "}
+                    to include {count > 1 ? "them" : "it"}.
+                  </Warn>
+                ))
+              : null}
+          </div>
+        </Zone>
+      )}
       <Zone title="Task name">
         <div className="grid gap-1.5">
           <Input
@@ -366,12 +436,12 @@ export function ReviewersStep({ draft, data, update, errors }: StepProps) {
   return (
     <>
       <Zone
-        title="Who reviews"
+        title={isAnnotate(draft) ? "Who annotates" : "Who reviews"}
         end={<span className="text-body-sm text-fg-dim">{sum.n} picked</span>}
       >
         <div className="grid gap-1.5" id={fieldId("revs")}>
           <TokenField
-            label="Who reviews"
+            label={isAnnotate(draft) ? "Who annotates" : "Who reviews"}
             items={personItems(draft, data)}
             picked={whoReviews(draft)}
             invalid={Boolean(errors.get("revs"))}
@@ -417,7 +487,11 @@ export function ReviewersStep({ draft, data, update, errors }: StepProps) {
       </Zone>
       <Zone
         title="How the work is split"
-        sub={`${plural(sum.ns, "slide")} with ${short} in this task.`}
+        sub={
+          isAnnotate(draft)
+            ? `${plural(sum.ns, "slide")} in this task.`
+            : `${plural(sum.ns, "slide")} with ${short} in this task.`
+        }
       >
         <div className="grid gap-1.5" id={fieldId("split")}>
           <RadioRows
@@ -728,7 +802,36 @@ function ScopeRow({
   );
 }
 
-export function CheckStep({ draft, data, update, errors, openModal }: StepProps) {
+function AnnotateCheckStep({ draft, data, update }: StepProps) {
+  return (
+    <Zone
+      title="What to check"
+      sub={
+        draft.check.hasResult
+          ? `${checkSummary(draft.check)} The preset filled these in, change any of them.`
+          : "The preset Annotate by hand has no result set, so there is nothing to check."
+      }
+    >
+      <CheckOptions
+        values={draft.check}
+        onValuesChange={(check) => update((current) => ({ ...current, check }))}
+      />
+      <p className="m-0 mt-1 text-body-sm leading-[1.45] text-fg-dim">
+        {estimateText(draft, data)}
+      </p>
+    </Zone>
+  );
+}
+
+export function CheckStep(props: StepProps) {
+  return isAnnotate(props.draft) ? (
+    <AnnotateCheckStep {...props} />
+  ) : (
+    <ReviewCheckStep {...props} />
+  );
+}
+
+function ReviewCheckStep({ draft, data, update, errors, openModal }: StepProps) {
   const template = data.templates.find((candidate) => candidate.id === draft.templateId);
   const form = data.forms.find((candidate) => candidate.key === draft.form);
   const shared = { draft, data, update, errors };
@@ -1129,7 +1232,73 @@ function DisplayZone({ draft, data, update, errors }: StepProps) {
   );
 }
 
+function WhenZone({ draft, data, update, errors }: StepProps) {
+  return (
+    <Zone title="When">
+      <div className="grid grid-cols-2 gap-4">
+        <FormField id={fieldId("due")} labelId="due-label" label="Due" error={errors.get("due")}>
+          <DatePicker
+            aria-labelledby="due-label"
+            value={draft.due}
+            today={data.today}
+            invalid={errors.has("due")}
+            onValueChange={(due) => {
+              update((current) => ({
+                ...current,
+                due,
+                touched: { ...current.touched, due: true },
+              }));
+            }}
+          />
+        </FormField>
+        <div className="grid content-start gap-1.5">
+          <span className="text-body-sm font-semibold text-fg">Reminders</span>
+          <Select
+            value={draft.reminders}
+            onValueChange={(value) =>
+              update((current) => ({ ...current, reminders: value as Draft["reminders"] }))
+            }
+          >
+            <SelectTrigger aria-label="Reminders" className="w-full">
+              <SelectValue>
+                {reminderChoices.find((choice) => choice.key === draft.reminders)?.name}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              {reminderChoices.map((choice) => (
+                <SelectItem key={choice.key} value={choice.key}>
+                  {choice.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+    </Zone>
+  );
+}
+
+function AnnotateHowStep(props: StepProps) {
+  return (
+    <>
+      <Zone
+        title="How it runs"
+        sub="The blind first switch is not available yet. Experts see each other's work from the start."
+      >
+        <div inert aria-disabled="true" className="opacity-60">
+          <BlindFirstSwitch checked={false} onCheckedChange={() => undefined} />
+        </div>
+      </Zone>
+      <WhenZone {...props} />
+    </>
+  );
+}
+
 export function HowStep(props: StepProps) {
+  return isAnnotate(props.draft) ? <AnnotateHowStep {...props} /> : <ReviewHowStep {...props} />;
+}
+
+function ReviewHowStep(props: StepProps) {
   const { draft, data, update, errors } = props;
   const claimShown =
     draft.hide && (draft.decision.kind === "certainty5" || draft.decision.kind === "agree");
@@ -1182,47 +1351,7 @@ export function HowStep(props: StepProps) {
         </div>
       </Zone>
       <DisplayZone {...props} />
-      <Zone title="When">
-        <div className="grid grid-cols-2 gap-4">
-          <FormField id={fieldId("due")} labelId="due-label" label="Due" error={errors.get("due")}>
-            <DatePicker
-              aria-labelledby="due-label"
-              value={draft.due}
-              today={data.today}
-              invalid={errors.has("due")}
-              onValueChange={(due) => {
-                update((current) => ({
-                  ...current,
-                  due,
-                  touched: { ...current.touched, due: true },
-                }));
-              }}
-            />
-          </FormField>
-          <div className="grid content-start gap-1.5">
-            <span className="text-body-sm font-semibold text-fg">Reminders</span>
-            <Select
-              value={draft.reminders}
-              onValueChange={(value) =>
-                update((current) => ({ ...current, reminders: value as Draft["reminders"] }))
-              }
-            >
-              <SelectTrigger aria-label="Reminders" className="w-full">
-                <SelectValue>
-                  {reminderChoices.find((choice) => choice.key === draft.reminders)?.name}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                {reminderChoices.map((choice) => (
-                  <SelectItem key={choice.key} value={choice.key}>
-                    {choice.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      </Zone>
+      <WhenZone {...props} />
     </>
   );
 }
@@ -1263,7 +1392,57 @@ export function SendStep({ draft, data, update, goTo }: StepProps) {
       ))}
     </span>
   ) : null;
-  const groups: [StepKey, ReviewRow[]][] = [
+  const annotateGroups: [StepKey, ReviewRow[]][] = [
+    [
+      "kind",
+      [
+        ["flag", "Kind", "Annotate"],
+        [
+          "target",
+          "Starting point",
+          annotatePresets.find((item) => item.key === draft.preset)?.title ?? "",
+        ],
+      ],
+    ],
+    [
+      "slides",
+      [
+        [
+          "slides",
+          "Slides",
+          sum.all ? `${sum.all} slides, ${slidesWithResult(draft, data).length} with ${short}` : "",
+        ],
+        ["text", "Task name", draft.name.trim()],
+      ],
+    ],
+    [
+      "reviewers",
+      [
+        ["users", "Experts", people],
+        ["list", "Split", splitText(sum, nameOf)],
+      ],
+    ],
+    [
+      "check",
+      [
+        ["target", "Experts check", checkSummary(draft.check)],
+        ["sliders", "Estimate", estimateText(draft, data)],
+      ],
+    ],
+    [
+      "how",
+      [
+        ["eye", "Blind first", "Off"],
+        ["calendar", "Due", draft.due ? dueText(draft.due) : ""],
+        [
+          "bell",
+          "Reminders",
+          reminderChoices.find((choice) => choice.key === draft.reminders)?.name ?? "",
+        ],
+      ],
+    ],
+  ];
+  const reviewGroups: [StepKey, ReviewRow[]][] = [
     [
       "slides",
       [
@@ -1325,6 +1504,7 @@ export function SendStep({ draft, data, update, goTo }: StepProps) {
       ],
     ],
   ];
+  const groups = isAnnotate(draft) ? annotateGroups : reviewGroups;
   return (
     <>
       <Zone title="Check before you send">

@@ -1,17 +1,23 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
+import { checkChangeOf, checkPresetOf } from "../src/screens/new-task/annotate-draft.ts";
 import {
+  annotateSlideLine,
   applyTemplate,
   blockersFor,
   displaySummary,
   estimateText,
+  initialDraft,
   issues,
+  mappingOk,
   mappingText,
   type Preset,
   sceneDraft,
   scopePhrase,
   sendLabel,
   slideLine,
+  slidesWithResult,
+  stepKeys,
   stepState,
   summary,
   type TaskData,
@@ -253,4 +259,106 @@ test("a template fills scope, decision and display", () => {
 test("every mock scene builds a draft", () => {
   assert.equal(taskScenes.length, 14);
   for (const scene of taskScenes) assert.ok(sceneDraft(data, scene));
+});
+
+const annotating = (more: Partial<ReturnType<typeof initialDraft>> = {}) => ({
+  ...sceneDraft(data, "slides"),
+  kind: "annotate" as const,
+  ...more,
+});
+
+test("the stepper starts with the kind and a new draft is a review task", () => {
+  assert.equal(stepKeys[0], "kind");
+  assert.equal(initialDraft(data).kind, "review");
+  assert.deepEqual(initialDraft(data).seen, ["kind"]);
+});
+
+test("an annotate task keeps slides with no result set and blocks nothing on them", () => {
+  const draft = annotating();
+  const sum = summary(draft, data);
+  assert.equal(sum.ns, 12);
+  assert.equal(slidesWithResult(draft, data).length, 9);
+  assert.equal(
+    annotateSlideLine(sum, 9, "CAMELYON v1.0"),
+    "12 picked. 9 have CAMELYON v1.0, 3 have no result set and are annotated by hand.",
+  );
+  assert.deepEqual(issues(draft, data), []);
+  const unmatched = annotating({ resultSetId: "sam", check: { ...draft.check, hasResult: true } });
+  assert.deepEqual(issues(unmatched, data), []);
+});
+
+test("an annotate task needs no scope or decision mapping", () => {
+  const draft = annotating({
+    scope: { ...initialDraft(data).scope },
+    decision: { kind: "certainty5", agreeFrom: 6, disagreeTo: 2 },
+  });
+  assert.deepEqual(issues(draft, data), []);
+});
+
+test("the annotate estimate follows the preset, the slides and the experts", () => {
+  const run = annotating();
+  assert.equal(
+    estimateText(run, data),
+    "About 35 AI objects per slide to check and roughly 3.5 hours for each expert, with 6 minutes of drawing per slide.",
+  );
+  const hand = annotating({
+    preset: "hand",
+    check: {
+      scope: "none",
+      order: "position",
+      rule: "warn",
+      exportUnchecked: false,
+      hasResult: false,
+    },
+  });
+  assert.equal(
+    estimateText(hand, data),
+    "Roughly 1 hour for each expert, with 6 minutes of drawing per slide.",
+  );
+  const sample = annotating({ check: { ...run.check, scope: "sample" } });
+  assert.equal(summary(sample, data).objects, 38);
+});
+
+test("a changed preset sends only what differs from it", () => {
+  const run = annotating().check;
+  assert.equal(checkPresetOf.run, "check-whole-slide-run");
+  assert.equal(checkChangeOf(run, run), undefined);
+  assert.deepEqual(
+    checkChangeOf({ ...run, scope: "regions", rule: "warn", exportUnchecked: true }, run),
+    {
+      scope: [{ kind: "inside-rois" }],
+      sign_off: "warn",
+      unchecked_export: "include",
+    },
+  );
+  assert.deepEqual(checkChangeOf({ ...run, scope: "none", order: "position" }, run), {
+    scope: [],
+    order: "position",
+  });
+});
+
+test("a mapping with no agree or no disagree answer is refused on a review task", () => {
+  const base = sceneDraft(data, "decision");
+  for (const decision of [
+    { kind: "certainty5" as const, agreeFrom: 6, disagreeTo: 2 },
+    { kind: "certainty5" as const, agreeFrom: 4, disagreeTo: 0 },
+    { kind: "certainty5" as const, agreeFrom: 3, disagreeTo: 3 },
+  ]) {
+    assert.equal(mappingOk(decision), false);
+    const found = issues({ ...base, decision }, data).filter((issue) => issue.field === "decision");
+    assert.equal(found.length, 1);
+    assert.equal(found[0]?.step, "check");
+  }
+  assert.equal(mappingOk({ kind: "certainty5", agreeFrom: 5, disagreeTo: 1 }), true);
+});
+
+test("the other decision styles need no mapping", () => {
+  const base = sceneDraft(data, "decision");
+  for (const kind of ["agree", "yesno", "blind"] as const) {
+    const decision = { kind, agreeFrom: 6, disagreeTo: 0 };
+    assert.deepEqual(
+      issues({ ...base, decision }, data).filter((issue) => issue.field === "decision"),
+      [],
+    );
+  }
 });

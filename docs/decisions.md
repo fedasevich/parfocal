@@ -52,6 +52,33 @@ The guided check steps through AI objects with D to confirm, Shift Y to fix, Shi
 
 Your choice:
 
+## 77. Saving an aligned compare offset, from CMP-000 (compare research check)
+
+When two slides are compared side by side, a person can shift one pane to line the tissue up. That offset is lost when the compare view closes.
+
+- a. Save the offset per slide pair as a private setting of that person, cleared when either slide is replaced. (recommended)
+- b. Keep it for the visit only, as built.
+
+Your choice:
+
+## 78. Slide threads during a blinded review, from COLLAB-015 (threads on any slide)
+
+Threads can now live on any slide, as you chose in 31b. A thread without a task follows only the first-read rule. So a reviewer in a blinded task that does not hide the AI can read another reviewer's slide thread on the same slide before submitting, which weakens the blinding of ADR 0118 (blinding and a kept first read).
+
+- a. Hide other people's slide threads from a reviewer of a blinded task on that slide until they submit, as task threads are hidden. (recommended)
+- b. Keep slide threads visible to every reader, as built.
+
+Your choice:
+
+## 79. Two workspaces with the same email domain, from ONB-011 (answer workspace asks and set the join domain in Admin)
+
+A workspace may now claim only its admin's own verified email domain, so nobody can capture another institution's people. Two workspaces of the same institution can still claim the same domain, and setup then offers both to a person with that address.
+
+- a. Allow it and offer every matching workspace in setup, as built. (recommended)
+- b. Allow one workspace per domain, and refuse a second claim with a message naming who to ask.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 Nothing else in review needs you. Nine tasks that only waited for green CI were ticked on 2026-11-02.

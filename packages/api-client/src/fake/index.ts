@@ -25,6 +25,7 @@ import { tileAccessHandlers } from "./tile-access-handlers.ts";
 import { uploadHandlers } from "./upload-handlers.ts";
 import { viewerToolsHandlers } from "./viewer-tools-handlers.ts";
 import { workHandlers } from "./work-handlers.ts";
+import { workspaceJoinHandlers } from "./workspace-join-handlers.ts";
 
 export type FakeApiScope = "all" | "drafts";
 
@@ -42,6 +43,7 @@ export function fakeApiHandlers(scope: FakeApiScope): RequestHandler[] {
     ...taskHandlers(),
     ...jobHandlers(),
     ...adminHandlers(),
+    ...workspaceJoinHandlers(),
     ...connectModelHandlers(),
     ...adjudicationHandlers(),
     ...caseHandlers(),

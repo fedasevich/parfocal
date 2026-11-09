@@ -1830,6 +1830,11 @@ export const EmailDigest = {
   daily: "daily",
 } as const;
 
+/**
+ * @maxLength 253
+ */
+export type EmailDomain = string;
+
 export interface EmailSchedule {
   digest?: EmailDigest;
   quiet_from?: string | null;
@@ -2542,6 +2547,30 @@ export const JoinPolicy = {
   ask: "ask",
 } as const;
 
+export interface JoinSettings {
+  email_domain: string | null;
+  join_policy: JoinPolicy;
+  logo: string;
+  logo_colour: string;
+}
+
+/**
+ * @pattern ^[A-Z0-9]{1,3}$
+ */
+export type LogoMark = string;
+
+/**
+ * @pattern ^#[0-9a-f]{6}$
+ */
+export type LogoColour = string;
+
+export interface JoinSettingsChange {
+  email_domain: EmailDomain | null;
+  join_policy: JoinPolicy;
+  logo?: LogoMark | null;
+  logo_colour?: LogoColour | null;
+}
+
 export interface JoinableWorkspace {
   id: string;
   name: string;
@@ -2861,16 +2890,6 @@ export const Locale = {
   en: "en",
   "en-XA": "en-XA",
 } as const;
-
-/**
- * @pattern ^#[0-9a-f]{6}$
- */
-export type LogoColour = string;
-
-/**
- * @pattern ^[A-Z0-9]{1,3}$
- */
-export type LogoMark = string;
 
 export interface MappingChange {
   /**
@@ -4897,6 +4916,19 @@ export interface SlideState {
   reviewers: ReviewerState[];
 }
 
+/**
+ * @minLength 1
+ * @maxLength 120
+ */
+export type ParfocalApiThreadsTitle = string;
+
+export interface SlideThreadCreate {
+  title: ParfocalApiThreadsTitle;
+  body: Body;
+  anchor: Anchor;
+  task_id?: string | null;
+}
+
 export interface SlideTissue {
   slide_id: string;
   grid: CoverageGrid;
@@ -5181,7 +5213,7 @@ export interface TenantDraft {
 export interface Thread {
   id: string;
   project_id: string;
-  task_id: string;
+  task_id: string | null;
   slide_id: string;
   title: string;
   anchor: Anchor;
@@ -5193,12 +5225,6 @@ export interface Thread {
   last_message_at: string;
 }
 
-/**
- * @minLength 1
- * @maxLength 120
- */
-export type ParfocalApiThreadsTitle = string;
-
 export interface ThreadCreate {
   title: ParfocalApiThreadsTitle;
   body: Body;
@@ -5208,7 +5234,7 @@ export interface ThreadCreate {
 export interface ThreadDetail {
   id: string;
   project_id: string;
-  task_id: string;
+  task_id: string | null;
   slide_id: string;
   title: string;
   anchor: Anchor;
@@ -5718,6 +5744,14 @@ export type ListThreadsParams = {
 };
 
 export type DeleteThreadParams = {
+  confirm?: boolean;
+};
+
+export type ListThreadsOnSlideParams = {
+  resolved?: boolean | null;
+};
+
+export type DeleteThreadOnSlideParams = {
   confirm?: boolean;
 };
 
@@ -40560,6 +40594,1710 @@ export const useMoveThread = <TError = Problem, TContext = unknown>(
   return useMutation(getMoveThreadMutationOptions(options), queryClient);
 };
 
+export type listThreadsOnSlideResponse200 = {
+  data: Thread[];
+  status: 200;
+};
+
+export type listThreadsOnSlideResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listThreadsOnSlideResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listThreadsOnSlideResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listThreadsOnSlideResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listThreadsOnSlideResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listThreadsOnSlideResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listThreadsOnSlideResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type listThreadsOnSlideResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listThreadsOnSlideResponseSuccess = listThreadsOnSlideResponse200 & {
+  headers: Headers;
+};
+export type listThreadsOnSlideResponseError = (
+  | listThreadsOnSlideResponse400
+  | listThreadsOnSlideResponse401
+  | listThreadsOnSlideResponse403
+  | listThreadsOnSlideResponse404
+  | listThreadsOnSlideResponse409
+  | listThreadsOnSlideResponse422
+  | listThreadsOnSlideResponse429
+  | listThreadsOnSlideResponse500
+) & {
+  headers: Headers;
+};
+
+export type listThreadsOnSlideResponse =
+  | listThreadsOnSlideResponseSuccess
+  | listThreadsOnSlideResponseError;
+
+export const getListThreadsOnSlideUrl = (
+  projectId: string,
+  slideId: string,
+  params?: ListThreadsOnSlideParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/projects/${projectId}/slides/${slideId}/threads?${stringifiedParams}`
+    : `/api/projects/${projectId}/slides/${slideId}/threads`;
+};
+
+/**
+ * @summary List Threads On Slide
+ */
+export const listThreadsOnSlide = async (
+  projectId: string,
+  slideId: string,
+  params?: ListThreadsOnSlideParams,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listThreadsOnSlideResponse> => {
+  return apiFetch<listThreadsOnSlideResponse>(
+    getListThreadsOnSlideUrl(projectId, slideId, params),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getListThreadsOnSlideQueryKey = (
+  projectId: string,
+  slideId: string,
+  params?: ListThreadsOnSlideParams,
+) => {
+  return [
+    `/api/projects/${projectId}/slides/${slideId}/threads`,
+    ...(params ? [params] : []),
+  ] as const;
+};
+
+export const getListThreadsOnSlideQueryOptions = <
+  TData = Awaited<ReturnType<typeof listThreadsOnSlide>>,
+  TError = Problem,
+>(
+  projectId: string,
+  slideId: string,
+  params?: ListThreadsOnSlideParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listThreadsOnSlide>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getListThreadsOnSlideQueryKey(projectId, slideId, params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listThreadsOnSlide>>> = ({ signal }) =>
+    listThreadsOnSlide(projectId, slideId, params, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled:
+      projectId !== null && projectId !== undefined && slideId !== null && slideId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof listThreadsOnSlide>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type ListThreadsOnSlideQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listThreadsOnSlide>>
+>;
+export type ListThreadsOnSlideQueryError = Problem;
+
+export function useListThreadsOnSlide<
+  TData = Awaited<ReturnType<typeof listThreadsOnSlide>>,
+  TError = Problem,
+>(
+  projectId: string,
+  slideId: string,
+  params: undefined | ListThreadsOnSlideParams,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listThreadsOnSlide>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listThreadsOnSlide>>,
+          TError,
+          Awaited<ReturnType<typeof listThreadsOnSlide>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListThreadsOnSlide<
+  TData = Awaited<ReturnType<typeof listThreadsOnSlide>>,
+  TError = Problem,
+>(
+  projectId: string,
+  slideId: string,
+  params?: ListThreadsOnSlideParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listThreadsOnSlide>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listThreadsOnSlide>>,
+          TError,
+          Awaited<ReturnType<typeof listThreadsOnSlide>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListThreadsOnSlide<
+  TData = Awaited<ReturnType<typeof listThreadsOnSlide>>,
+  TError = Problem,
+>(
+  projectId: string,
+  slideId: string,
+  params?: ListThreadsOnSlideParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listThreadsOnSlide>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Threads On Slide
+ */
+
+export function useListThreadsOnSlide<
+  TData = Awaited<ReturnType<typeof listThreadsOnSlide>>,
+  TError = Problem,
+>(
+  projectId: string,
+  slideId: string,
+  params?: ListThreadsOnSlideParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listThreadsOnSlide>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListThreadsOnSlideQueryOptions(projectId, slideId, params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type createThreadOnSlideResponse201 = {
+  data: ThreadDetail;
+  status: 201;
+};
+
+export type createThreadOnSlideResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type createThreadOnSlideResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type createThreadOnSlideResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type createThreadOnSlideResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type createThreadOnSlideResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type createThreadOnSlideResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type createThreadOnSlideResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type createThreadOnSlideResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type createThreadOnSlideResponseSuccess = createThreadOnSlideResponse201 & {
+  headers: Headers;
+};
+export type createThreadOnSlideResponseError = (
+  | createThreadOnSlideResponse400
+  | createThreadOnSlideResponse401
+  | createThreadOnSlideResponse403
+  | createThreadOnSlideResponse404
+  | createThreadOnSlideResponse409
+  | createThreadOnSlideResponse422
+  | createThreadOnSlideResponse429
+  | createThreadOnSlideResponse500
+) & {
+  headers: Headers;
+};
+
+export type createThreadOnSlideResponse =
+  | createThreadOnSlideResponseSuccess
+  | createThreadOnSlideResponseError;
+
+export const getCreateThreadOnSlideUrl = (projectId: string, slideId: string) => {
+  return `/api/projects/${projectId}/slides/${slideId}/threads`;
+};
+
+/**
+ * @summary Create Thread On Slide
+ */
+export const createThreadOnSlide = async (
+  projectId: string,
+  slideId: string,
+  slideThreadCreate: SlideThreadCreate,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<createThreadOnSlideResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<createThreadOnSlideResponse>(getCreateThreadOnSlideUrl(projectId, slideId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(slideThreadCreate),
+  });
+};
+
+export const getCreateThreadOnSlideMutationKey = () => ["createThreadOnSlide"] as const;
+
+export const getCreateThreadOnSlideMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createThreadOnSlide>>,
+    TError,
+    CreateThreadOnSlideMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createThreadOnSlide>>,
+  TError,
+  CreateThreadOnSlideMutationVariables,
+  TContext
+> => {
+  const mutationKey = getCreateThreadOnSlideMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createThreadOnSlide>>,
+    CreateThreadOnSlideMutationVariables
+  > = (props) => {
+    const { projectId, slideId, data } = props ?? {};
+
+    return createThreadOnSlide(projectId, slideId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateThreadOnSlideMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createThreadOnSlide>>
+>;
+export type CreateThreadOnSlideMutationBody = SlideThreadCreate;
+export type CreateThreadOnSlideMutationError = Problem;
+export type CreateThreadOnSlideMutationVariables = {
+  projectId: string;
+  slideId: string;
+  data: SlideThreadCreate;
+};
+
+/**
+ * @summary Create Thread On Slide
+ */
+export const useCreateThreadOnSlide = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof createThreadOnSlide>>,
+      TError,
+      CreateThreadOnSlideMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof createThreadOnSlide>>,
+  TError,
+  CreateThreadOnSlideMutationVariables,
+  TContext
+> => {
+  return useMutation(getCreateThreadOnSlideMutationOptions(options), queryClient);
+};
+
+export type listMentionableMembersOnSlideResponse200 = {
+  data: Mentionable[];
+  status: 200;
+};
+
+export type listMentionableMembersOnSlideResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listMentionableMembersOnSlideResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listMentionableMembersOnSlideResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listMentionableMembersOnSlideResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listMentionableMembersOnSlideResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listMentionableMembersOnSlideResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listMentionableMembersOnSlideResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type listMentionableMembersOnSlideResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listMentionableMembersOnSlideResponseSuccess =
+  listMentionableMembersOnSlideResponse200 & {
+    headers: Headers;
+  };
+export type listMentionableMembersOnSlideResponseError = (
+  | listMentionableMembersOnSlideResponse400
+  | listMentionableMembersOnSlideResponse401
+  | listMentionableMembersOnSlideResponse403
+  | listMentionableMembersOnSlideResponse404
+  | listMentionableMembersOnSlideResponse409
+  | listMentionableMembersOnSlideResponse422
+  | listMentionableMembersOnSlideResponse429
+  | listMentionableMembersOnSlideResponse500
+) & {
+  headers: Headers;
+};
+
+export type listMentionableMembersOnSlideResponse =
+  | listMentionableMembersOnSlideResponseSuccess
+  | listMentionableMembersOnSlideResponseError;
+
+export const getListMentionableMembersOnSlideUrl = (projectId: string, slideId: string) => {
+  return `/api/projects/${projectId}/slides/${slideId}/threads/mentionable`;
+};
+
+/**
+ * @summary List Mentionable On Slide
+ */
+export const listMentionableMembersOnSlide = async (
+  projectId: string,
+  slideId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listMentionableMembersOnSlideResponse> => {
+  return apiFetch<listMentionableMembersOnSlideResponse>(
+    getListMentionableMembersOnSlideUrl(projectId, slideId),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getListMentionableMembersOnSlideQueryKey = (projectId: string, slideId: string) => {
+  return [`/api/projects/${projectId}/slides/${slideId}/threads/mentionable`] as const;
+};
+
+export const getListMentionableMembersOnSlideQueryOptions = <
+  TData = Awaited<ReturnType<typeof listMentionableMembersOnSlide>>,
+  TError = Problem,
+>(
+  projectId: string,
+  slideId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listMentionableMembersOnSlide>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getListMentionableMembersOnSlideQueryKey(projectId, slideId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listMentionableMembersOnSlide>>> = ({
+    signal,
+  }) => listMentionableMembersOnSlide(projectId, slideId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled:
+      projectId !== null && projectId !== undefined && slideId !== null && slideId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof listMentionableMembersOnSlide>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type ListMentionableMembersOnSlideQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listMentionableMembersOnSlide>>
+>;
+export type ListMentionableMembersOnSlideQueryError = Problem;
+
+export function useListMentionableMembersOnSlide<
+  TData = Awaited<ReturnType<typeof listMentionableMembersOnSlide>>,
+  TError = Problem,
+>(
+  projectId: string,
+  slideId: string,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listMentionableMembersOnSlide>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listMentionableMembersOnSlide>>,
+          TError,
+          Awaited<ReturnType<typeof listMentionableMembersOnSlide>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListMentionableMembersOnSlide<
+  TData = Awaited<ReturnType<typeof listMentionableMembersOnSlide>>,
+  TError = Problem,
+>(
+  projectId: string,
+  slideId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listMentionableMembersOnSlide>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listMentionableMembersOnSlide>>,
+          TError,
+          Awaited<ReturnType<typeof listMentionableMembersOnSlide>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListMentionableMembersOnSlide<
+  TData = Awaited<ReturnType<typeof listMentionableMembersOnSlide>>,
+  TError = Problem,
+>(
+  projectId: string,
+  slideId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listMentionableMembersOnSlide>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Mentionable On Slide
+ */
+
+export function useListMentionableMembersOnSlide<
+  TData = Awaited<ReturnType<typeof listMentionableMembersOnSlide>>,
+  TError = Problem,
+>(
+  projectId: string,
+  slideId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listMentionableMembersOnSlide>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListMentionableMembersOnSlideQueryOptions(projectId, slideId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type getThreadOnSlideResponse200 = {
+  data: ThreadDetail;
+  status: 200;
+};
+
+export type getThreadOnSlideResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getThreadOnSlideResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getThreadOnSlideResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getThreadOnSlideResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getThreadOnSlideResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getThreadOnSlideResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getThreadOnSlideResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getThreadOnSlideResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getThreadOnSlideResponseSuccess = getThreadOnSlideResponse200 & {
+  headers: Headers;
+};
+export type getThreadOnSlideResponseError = (
+  | getThreadOnSlideResponse400
+  | getThreadOnSlideResponse401
+  | getThreadOnSlideResponse403
+  | getThreadOnSlideResponse404
+  | getThreadOnSlideResponse409
+  | getThreadOnSlideResponse422
+  | getThreadOnSlideResponse429
+  | getThreadOnSlideResponse500
+) & {
+  headers: Headers;
+};
+
+export type getThreadOnSlideResponse =
+  | getThreadOnSlideResponseSuccess
+  | getThreadOnSlideResponseError;
+
+export const getGetThreadOnSlideUrl = (projectId: string, slideId: string, threadId: string) => {
+  return `/api/projects/${projectId}/slides/${slideId}/threads/${threadId}`;
+};
+
+/**
+ * @summary Get Thread On Slide
+ */
+export const getThreadOnSlide = async (
+  projectId: string,
+  slideId: string,
+  threadId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getThreadOnSlideResponse> => {
+  return apiFetch<getThreadOnSlideResponse>(getGetThreadOnSlideUrl(projectId, slideId, threadId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetThreadOnSlideQueryKey = (
+  projectId: string,
+  slideId: string,
+  threadId: string,
+) => {
+  return [`/api/projects/${projectId}/slides/${slideId}/threads/${threadId}`] as const;
+};
+
+export const getGetThreadOnSlideQueryOptions = <
+  TData = Awaited<ReturnType<typeof getThreadOnSlide>>,
+  TError = Problem,
+>(
+  projectId: string,
+  slideId: string,
+  threadId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getThreadOnSlide>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetThreadOnSlideQueryKey(projectId, slideId, threadId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getThreadOnSlide>>> = ({ signal }) =>
+    getThreadOnSlide(projectId, slideId, threadId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled:
+      projectId !== null &&
+      projectId !== undefined &&
+      slideId !== null &&
+      slideId !== undefined &&
+      threadId !== null &&
+      threadId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getThreadOnSlide>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetThreadOnSlideQueryResult = NonNullable<Awaited<ReturnType<typeof getThreadOnSlide>>>;
+export type GetThreadOnSlideQueryError = Problem;
+
+export function useGetThreadOnSlide<
+  TData = Awaited<ReturnType<typeof getThreadOnSlide>>,
+  TError = Problem,
+>(
+  projectId: string,
+  slideId: string,
+  threadId: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getThreadOnSlide>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getThreadOnSlide>>,
+          TError,
+          Awaited<ReturnType<typeof getThreadOnSlide>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetThreadOnSlide<
+  TData = Awaited<ReturnType<typeof getThreadOnSlide>>,
+  TError = Problem,
+>(
+  projectId: string,
+  slideId: string,
+  threadId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getThreadOnSlide>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getThreadOnSlide>>,
+          TError,
+          Awaited<ReturnType<typeof getThreadOnSlide>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetThreadOnSlide<
+  TData = Awaited<ReturnType<typeof getThreadOnSlide>>,
+  TError = Problem,
+>(
+  projectId: string,
+  slideId: string,
+  threadId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getThreadOnSlide>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Thread On Slide
+ */
+
+export function useGetThreadOnSlide<
+  TData = Awaited<ReturnType<typeof getThreadOnSlide>>,
+  TError = Problem,
+>(
+  projectId: string,
+  slideId: string,
+  threadId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getThreadOnSlide>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetThreadOnSlideQueryOptions(projectId, slideId, threadId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type deleteThreadOnSlideResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type deleteThreadOnSlideResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type deleteThreadOnSlideResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type deleteThreadOnSlideResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type deleteThreadOnSlideResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type deleteThreadOnSlideResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type deleteThreadOnSlideResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type deleteThreadOnSlideResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type deleteThreadOnSlideResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type deleteThreadOnSlideResponseSuccess = deleteThreadOnSlideResponse204 & {
+  headers: Headers;
+};
+export type deleteThreadOnSlideResponseError = (
+  | deleteThreadOnSlideResponse400
+  | deleteThreadOnSlideResponse401
+  | deleteThreadOnSlideResponse403
+  | deleteThreadOnSlideResponse404
+  | deleteThreadOnSlideResponse409
+  | deleteThreadOnSlideResponse422
+  | deleteThreadOnSlideResponse429
+  | deleteThreadOnSlideResponse500
+) & {
+  headers: Headers;
+};
+
+export type deleteThreadOnSlideResponse =
+  | deleteThreadOnSlideResponseSuccess
+  | deleteThreadOnSlideResponseError;
+
+export const getDeleteThreadOnSlideUrl = (
+  projectId: string,
+  slideId: string,
+  threadId: string,
+  params?: DeleteThreadOnSlideParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/projects/${projectId}/slides/${slideId}/threads/${threadId}?${stringifiedParams}`
+    : `/api/projects/${projectId}/slides/${slideId}/threads/${threadId}`;
+};
+
+/**
+ * @summary Delete Thread On Slide
+ */
+export const deleteThreadOnSlide = async (
+  projectId: string,
+  slideId: string,
+  threadId: string,
+  params?: DeleteThreadOnSlideParams,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<deleteThreadOnSlideResponse> => {
+  return apiFetch<deleteThreadOnSlideResponse>(
+    getDeleteThreadOnSlideUrl(projectId, slideId, threadId, params),
+    {
+      ...options,
+      method: "DELETE",
+    },
+  );
+};
+
+export const getDeleteThreadOnSlideMutationKey = () => ["deleteThreadOnSlide"] as const;
+
+export const getDeleteThreadOnSlideMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteThreadOnSlide>>,
+    TError,
+    DeleteThreadOnSlideMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteThreadOnSlide>>,
+  TError,
+  DeleteThreadOnSlideMutationVariables,
+  TContext
+> => {
+  const mutationKey = getDeleteThreadOnSlideMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteThreadOnSlide>>,
+    DeleteThreadOnSlideMutationVariables
+  > = (props) => {
+    const { projectId, slideId, threadId, params } = props ?? {};
+
+    return deleteThreadOnSlide(projectId, slideId, threadId, params, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteThreadOnSlideMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteThreadOnSlide>>
+>;
+
+export type DeleteThreadOnSlideMutationError = Problem;
+export type DeleteThreadOnSlideMutationVariables = {
+  projectId: string;
+  slideId: string;
+  threadId: string;
+  params?: DeleteThreadOnSlideParams;
+};
+
+/**
+ * @summary Delete Thread On Slide
+ */
+export const useDeleteThreadOnSlide = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof deleteThreadOnSlide>>,
+      TError,
+      DeleteThreadOnSlideMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof deleteThreadOnSlide>>,
+  TError,
+  DeleteThreadOnSlideMutationVariables,
+  TContext
+> => {
+  return useMutation(getDeleteThreadOnSlideMutationOptions(options), queryClient);
+};
+
+export type replyToThreadOnSlideResponse201 = {
+  data: Message;
+  status: 201;
+};
+
+export type replyToThreadOnSlideResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type replyToThreadOnSlideResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type replyToThreadOnSlideResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type replyToThreadOnSlideResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type replyToThreadOnSlideResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type replyToThreadOnSlideResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type replyToThreadOnSlideResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type replyToThreadOnSlideResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type replyToThreadOnSlideResponseSuccess = replyToThreadOnSlideResponse201 & {
+  headers: Headers;
+};
+export type replyToThreadOnSlideResponseError = (
+  | replyToThreadOnSlideResponse400
+  | replyToThreadOnSlideResponse401
+  | replyToThreadOnSlideResponse403
+  | replyToThreadOnSlideResponse404
+  | replyToThreadOnSlideResponse409
+  | replyToThreadOnSlideResponse422
+  | replyToThreadOnSlideResponse429
+  | replyToThreadOnSlideResponse500
+) & {
+  headers: Headers;
+};
+
+export type replyToThreadOnSlideResponse =
+  | replyToThreadOnSlideResponseSuccess
+  | replyToThreadOnSlideResponseError;
+
+export const getReplyToThreadOnSlideUrl = (
+  projectId: string,
+  slideId: string,
+  threadId: string,
+) => {
+  return `/api/projects/${projectId}/slides/${slideId}/threads/${threadId}/messages`;
+};
+
+/**
+ * @summary Reply To Thread On Slide
+ */
+export const replyToThreadOnSlide = async (
+  projectId: string,
+  slideId: string,
+  threadId: string,
+  messageCreate: MessageCreate,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<replyToThreadOnSlideResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<replyToThreadOnSlideResponse>(
+    getReplyToThreadOnSlideUrl(projectId, slideId, threadId),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+      body: JSON.stringify(messageCreate),
+    },
+  );
+};
+
+export const getReplyToThreadOnSlideMutationKey = () => ["replyToThreadOnSlide"] as const;
+
+export const getReplyToThreadOnSlideMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof replyToThreadOnSlide>>,
+    TError,
+    ReplyToThreadOnSlideMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof replyToThreadOnSlide>>,
+  TError,
+  ReplyToThreadOnSlideMutationVariables,
+  TContext
+> => {
+  const mutationKey = getReplyToThreadOnSlideMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof replyToThreadOnSlide>>,
+    ReplyToThreadOnSlideMutationVariables
+  > = (props) => {
+    const { projectId, slideId, threadId, data } = props ?? {};
+
+    return replyToThreadOnSlide(projectId, slideId, threadId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ReplyToThreadOnSlideMutationResult = NonNullable<
+  Awaited<ReturnType<typeof replyToThreadOnSlide>>
+>;
+export type ReplyToThreadOnSlideMutationBody = MessageCreate;
+export type ReplyToThreadOnSlideMutationError = Problem;
+export type ReplyToThreadOnSlideMutationVariables = {
+  projectId: string;
+  slideId: string;
+  threadId: string;
+  data: MessageCreate;
+};
+
+/**
+ * @summary Reply To Thread On Slide
+ */
+export const useReplyToThreadOnSlide = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof replyToThreadOnSlide>>,
+      TError,
+      ReplyToThreadOnSlideMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof replyToThreadOnSlide>>,
+  TError,
+  ReplyToThreadOnSlideMutationVariables,
+  TContext
+> => {
+  return useMutation(getReplyToThreadOnSlideMutationOptions(options), queryClient);
+};
+
+export type resolveThreadOnSlideResponse200 = {
+  data: ThreadDetail;
+  status: 200;
+};
+
+export type resolveThreadOnSlideResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type resolveThreadOnSlideResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type resolveThreadOnSlideResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type resolveThreadOnSlideResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type resolveThreadOnSlideResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type resolveThreadOnSlideResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type resolveThreadOnSlideResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type resolveThreadOnSlideResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type resolveThreadOnSlideResponseSuccess = resolveThreadOnSlideResponse200 & {
+  headers: Headers;
+};
+export type resolveThreadOnSlideResponseError = (
+  | resolveThreadOnSlideResponse400
+  | resolveThreadOnSlideResponse401
+  | resolveThreadOnSlideResponse403
+  | resolveThreadOnSlideResponse404
+  | resolveThreadOnSlideResponse409
+  | resolveThreadOnSlideResponse422
+  | resolveThreadOnSlideResponse429
+  | resolveThreadOnSlideResponse500
+) & {
+  headers: Headers;
+};
+
+export type resolveThreadOnSlideResponse =
+  | resolveThreadOnSlideResponseSuccess
+  | resolveThreadOnSlideResponseError;
+
+export const getResolveThreadOnSlideUrl = (
+  projectId: string,
+  slideId: string,
+  threadId: string,
+) => {
+  return `/api/projects/${projectId}/slides/${slideId}/threads/${threadId}/resolve`;
+};
+
+/**
+ * @summary Resolve Thread On Slide
+ */
+export const resolveThreadOnSlide = async (
+  projectId: string,
+  slideId: string,
+  threadId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<resolveThreadOnSlideResponse> => {
+  return apiFetch<resolveThreadOnSlideResponse>(
+    getResolveThreadOnSlideUrl(projectId, slideId, threadId),
+    {
+      ...options,
+      method: "POST",
+    },
+  );
+};
+
+export const getResolveThreadOnSlideMutationKey = () => ["resolveThreadOnSlide"] as const;
+
+export const getResolveThreadOnSlideMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof resolveThreadOnSlide>>,
+    TError,
+    ResolveThreadOnSlideMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof resolveThreadOnSlide>>,
+  TError,
+  ResolveThreadOnSlideMutationVariables,
+  TContext
+> => {
+  const mutationKey = getResolveThreadOnSlideMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof resolveThreadOnSlide>>,
+    ResolveThreadOnSlideMutationVariables
+  > = (props) => {
+    const { projectId, slideId, threadId } = props ?? {};
+
+    return resolveThreadOnSlide(projectId, slideId, threadId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ResolveThreadOnSlideMutationResult = NonNullable<
+  Awaited<ReturnType<typeof resolveThreadOnSlide>>
+>;
+
+export type ResolveThreadOnSlideMutationError = Problem;
+export type ResolveThreadOnSlideMutationVariables = {
+  projectId: string;
+  slideId: string;
+  threadId: string;
+};
+
+/**
+ * @summary Resolve Thread On Slide
+ */
+export const useResolveThreadOnSlide = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof resolveThreadOnSlide>>,
+      TError,
+      ResolveThreadOnSlideMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof resolveThreadOnSlide>>,
+  TError,
+  ResolveThreadOnSlideMutationVariables,
+  TContext
+> => {
+  return useMutation(getResolveThreadOnSlideMutationOptions(options), queryClient);
+};
+
+export type reopenThreadOnSlideResponse200 = {
+  data: ThreadDetail;
+  status: 200;
+};
+
+export type reopenThreadOnSlideResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type reopenThreadOnSlideResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type reopenThreadOnSlideResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type reopenThreadOnSlideResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type reopenThreadOnSlideResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type reopenThreadOnSlideResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type reopenThreadOnSlideResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type reopenThreadOnSlideResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type reopenThreadOnSlideResponseSuccess = reopenThreadOnSlideResponse200 & {
+  headers: Headers;
+};
+export type reopenThreadOnSlideResponseError = (
+  | reopenThreadOnSlideResponse400
+  | reopenThreadOnSlideResponse401
+  | reopenThreadOnSlideResponse403
+  | reopenThreadOnSlideResponse404
+  | reopenThreadOnSlideResponse409
+  | reopenThreadOnSlideResponse422
+  | reopenThreadOnSlideResponse429
+  | reopenThreadOnSlideResponse500
+) & {
+  headers: Headers;
+};
+
+export type reopenThreadOnSlideResponse =
+  | reopenThreadOnSlideResponseSuccess
+  | reopenThreadOnSlideResponseError;
+
+export const getReopenThreadOnSlideUrl = (projectId: string, slideId: string, threadId: string) => {
+  return `/api/projects/${projectId}/slides/${slideId}/threads/${threadId}/reopen`;
+};
+
+/**
+ * @summary Reopen Thread On Slide
+ */
+export const reopenThreadOnSlide = async (
+  projectId: string,
+  slideId: string,
+  threadId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<reopenThreadOnSlideResponse> => {
+  return apiFetch<reopenThreadOnSlideResponse>(
+    getReopenThreadOnSlideUrl(projectId, slideId, threadId),
+    {
+      ...options,
+      method: "POST",
+    },
+  );
+};
+
+export const getReopenThreadOnSlideMutationKey = () => ["reopenThreadOnSlide"] as const;
+
+export const getReopenThreadOnSlideMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof reopenThreadOnSlide>>,
+    TError,
+    ReopenThreadOnSlideMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof reopenThreadOnSlide>>,
+  TError,
+  ReopenThreadOnSlideMutationVariables,
+  TContext
+> => {
+  const mutationKey = getReopenThreadOnSlideMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof reopenThreadOnSlide>>,
+    ReopenThreadOnSlideMutationVariables
+  > = (props) => {
+    const { projectId, slideId, threadId } = props ?? {};
+
+    return reopenThreadOnSlide(projectId, slideId, threadId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ReopenThreadOnSlideMutationResult = NonNullable<
+  Awaited<ReturnType<typeof reopenThreadOnSlide>>
+>;
+
+export type ReopenThreadOnSlideMutationError = Problem;
+export type ReopenThreadOnSlideMutationVariables = {
+  projectId: string;
+  slideId: string;
+  threadId: string;
+};
+
+/**
+ * @summary Reopen Thread On Slide
+ */
+export const useReopenThreadOnSlide = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof reopenThreadOnSlide>>,
+      TError,
+      ReopenThreadOnSlideMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof reopenThreadOnSlide>>,
+  TError,
+  ReopenThreadOnSlideMutationVariables,
+  TContext
+> => {
+  return useMutation(getReopenThreadOnSlideMutationOptions(options), queryClient);
+};
+
+export type moveThreadOnSlideResponse200 = {
+  data: ThreadDetail;
+  status: 200;
+};
+
+export type moveThreadOnSlideResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type moveThreadOnSlideResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type moveThreadOnSlideResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type moveThreadOnSlideResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type moveThreadOnSlideResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type moveThreadOnSlideResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type moveThreadOnSlideResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type moveThreadOnSlideResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type moveThreadOnSlideResponseSuccess = moveThreadOnSlideResponse200 & {
+  headers: Headers;
+};
+export type moveThreadOnSlideResponseError = (
+  | moveThreadOnSlideResponse400
+  | moveThreadOnSlideResponse401
+  | moveThreadOnSlideResponse403
+  | moveThreadOnSlideResponse404
+  | moveThreadOnSlideResponse409
+  | moveThreadOnSlideResponse422
+  | moveThreadOnSlideResponse429
+  | moveThreadOnSlideResponse500
+) & {
+  headers: Headers;
+};
+
+export type moveThreadOnSlideResponse =
+  | moveThreadOnSlideResponseSuccess
+  | moveThreadOnSlideResponseError;
+
+export const getMoveThreadOnSlideUrl = (projectId: string, slideId: string, threadId: string) => {
+  return `/api/projects/${projectId}/slides/${slideId}/threads/${threadId}/anchor`;
+};
+
+/**
+ * @summary Move Thread On Slide
+ */
+export const moveThreadOnSlide = async (
+  projectId: string,
+  slideId: string,
+  threadId: string,
+  pinMove: PinMove,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<moveThreadOnSlideResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<moveThreadOnSlideResponse>(
+    getMoveThreadOnSlideUrl(projectId, slideId, threadId),
+    {
+      ...options,
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+      body: JSON.stringify(pinMove),
+    },
+  );
+};
+
+export const getMoveThreadOnSlideMutationKey = () => ["moveThreadOnSlide"] as const;
+
+export const getMoveThreadOnSlideMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof moveThreadOnSlide>>,
+    TError,
+    MoveThreadOnSlideMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof moveThreadOnSlide>>,
+  TError,
+  MoveThreadOnSlideMutationVariables,
+  TContext
+> => {
+  const mutationKey = getMoveThreadOnSlideMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof moveThreadOnSlide>>,
+    MoveThreadOnSlideMutationVariables
+  > = (props) => {
+    const { projectId, slideId, threadId, data } = props ?? {};
+
+    return moveThreadOnSlide(projectId, slideId, threadId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type MoveThreadOnSlideMutationResult = NonNullable<
+  Awaited<ReturnType<typeof moveThreadOnSlide>>
+>;
+export type MoveThreadOnSlideMutationBody = PinMove;
+export type MoveThreadOnSlideMutationError = Problem;
+export type MoveThreadOnSlideMutationVariables = {
+  projectId: string;
+  slideId: string;
+  threadId: string;
+  data: PinMove;
+};
+
+/**
+ * @summary Move Thread On Slide
+ */
+export const useMoveThreadOnSlide = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof moveThreadOnSlide>>,
+      TError,
+      MoveThreadOnSlideMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof moveThreadOnSlide>>,
+  TError,
+  MoveThreadOnSlideMutationVariables,
+  TContext
+> => {
+  return useMutation(getMoveThreadOnSlideMutationOptions(options), queryClient);
+};
+
 export type saveOpinionResponse200 = {
   data: Opinion;
   status: 200;
@@ -51915,6 +53653,503 @@ export const useApproveWorkspaceAccessRequest = <TError = Problem, TContext = un
   TContext
 > => {
   return useMutation(getApproveWorkspaceAccessRequestMutationOptions(options), queryClient);
+};
+
+export type declineWorkspaceAccessRequestResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type declineWorkspaceAccessRequestResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type declineWorkspaceAccessRequestResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type declineWorkspaceAccessRequestResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type declineWorkspaceAccessRequestResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type declineWorkspaceAccessRequestResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type declineWorkspaceAccessRequestResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type declineWorkspaceAccessRequestResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type declineWorkspaceAccessRequestResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type declineWorkspaceAccessRequestResponseSuccess =
+  declineWorkspaceAccessRequestResponse204 & {
+    headers: Headers;
+  };
+export type declineWorkspaceAccessRequestResponseError = (
+  | declineWorkspaceAccessRequestResponse400
+  | declineWorkspaceAccessRequestResponse401
+  | declineWorkspaceAccessRequestResponse403
+  | declineWorkspaceAccessRequestResponse404
+  | declineWorkspaceAccessRequestResponse409
+  | declineWorkspaceAccessRequestResponse422
+  | declineWorkspaceAccessRequestResponse429
+  | declineWorkspaceAccessRequestResponse500
+) & {
+  headers: Headers;
+};
+
+export type declineWorkspaceAccessRequestResponse =
+  | declineWorkspaceAccessRequestResponseSuccess
+  | declineWorkspaceAccessRequestResponseError;
+
+export const getDeclineWorkspaceAccessRequestUrl = (requestId: string) => {
+  return `/api/tenant/access-requests/${requestId}`;
+};
+
+/**
+ * @summary Decline Workspace Access Request
+ */
+export const declineWorkspaceAccessRequest = async (
+  requestId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<declineWorkspaceAccessRequestResponse> => {
+  return apiFetch<declineWorkspaceAccessRequestResponse>(
+    getDeclineWorkspaceAccessRequestUrl(requestId),
+    {
+      ...options,
+      method: "DELETE",
+    },
+  );
+};
+
+export const getDeclineWorkspaceAccessRequestMutationKey = () =>
+  ["declineWorkspaceAccessRequest"] as const;
+
+export const getDeclineWorkspaceAccessRequestMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof declineWorkspaceAccessRequest>>,
+    TError,
+    DeclineWorkspaceAccessRequestMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof declineWorkspaceAccessRequest>>,
+  TError,
+  DeclineWorkspaceAccessRequestMutationVariables,
+  TContext
+> => {
+  const mutationKey = getDeclineWorkspaceAccessRequestMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof declineWorkspaceAccessRequest>>,
+    DeclineWorkspaceAccessRequestMutationVariables
+  > = (props) => {
+    const { requestId } = props ?? {};
+
+    return declineWorkspaceAccessRequest(requestId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeclineWorkspaceAccessRequestMutationResult = NonNullable<
+  Awaited<ReturnType<typeof declineWorkspaceAccessRequest>>
+>;
+
+export type DeclineWorkspaceAccessRequestMutationError = Problem;
+export type DeclineWorkspaceAccessRequestMutationVariables = { requestId: string };
+
+/**
+ * @summary Decline Workspace Access Request
+ */
+export const useDeclineWorkspaceAccessRequest = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof declineWorkspaceAccessRequest>>,
+      TError,
+      DeclineWorkspaceAccessRequestMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof declineWorkspaceAccessRequest>>,
+  TError,
+  DeclineWorkspaceAccessRequestMutationVariables,
+  TContext
+> => {
+  return useMutation(getDeclineWorkspaceAccessRequestMutationOptions(options), queryClient);
+};
+
+export type getJoinSettingsResponse200 = {
+  data: JoinSettings;
+  status: 200;
+};
+
+export type getJoinSettingsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getJoinSettingsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getJoinSettingsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getJoinSettingsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getJoinSettingsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getJoinSettingsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getJoinSettingsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getJoinSettingsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getJoinSettingsResponseSuccess = getJoinSettingsResponse200 & {
+  headers: Headers;
+};
+export type getJoinSettingsResponseError = (
+  | getJoinSettingsResponse400
+  | getJoinSettingsResponse401
+  | getJoinSettingsResponse403
+  | getJoinSettingsResponse404
+  | getJoinSettingsResponse409
+  | getJoinSettingsResponse422
+  | getJoinSettingsResponse429
+  | getJoinSettingsResponse500
+) & {
+  headers: Headers;
+};
+
+export type getJoinSettingsResponse = getJoinSettingsResponseSuccess | getJoinSettingsResponseError;
+
+export const getGetJoinSettingsUrl = () => {
+  return `/api/tenant/join-settings`;
+};
+
+/**
+ * @summary Get Join Settings
+ */
+export const getJoinSettings = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getJoinSettingsResponse> => {
+  return apiFetch<getJoinSettingsResponse>(getGetJoinSettingsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetJoinSettingsQueryKey = () => {
+  return [`/api/tenant/join-settings`] as const;
+};
+
+export const getGetJoinSettingsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getJoinSettings>>,
+  TError = Problem,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getJoinSettings>>, TError, TData>>;
+  request?: SecondParameter<typeof apiFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetJoinSettingsQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getJoinSettings>>> = ({ signal }) =>
+    getJoinSettings({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getJoinSettings>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetJoinSettingsQueryResult = NonNullable<Awaited<ReturnType<typeof getJoinSettings>>>;
+export type GetJoinSettingsQueryError = Problem;
+
+export function useGetJoinSettings<
+  TData = Awaited<ReturnType<typeof getJoinSettings>>,
+  TError = Problem,
+>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getJoinSettings>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getJoinSettings>>,
+          TError,
+          Awaited<ReturnType<typeof getJoinSettings>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetJoinSettings<
+  TData = Awaited<ReturnType<typeof getJoinSettings>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getJoinSettings>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getJoinSettings>>,
+          TError,
+          Awaited<ReturnType<typeof getJoinSettings>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetJoinSettings<
+  TData = Awaited<ReturnType<typeof getJoinSettings>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getJoinSettings>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Join Settings
+ */
+
+export function useGetJoinSettings<
+  TData = Awaited<ReturnType<typeof getJoinSettings>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getJoinSettings>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetJoinSettingsQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type setJoinSettingsResponse200 = {
+  data: JoinSettings;
+  status: 200;
+};
+
+export type setJoinSettingsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type setJoinSettingsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type setJoinSettingsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type setJoinSettingsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type setJoinSettingsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type setJoinSettingsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type setJoinSettingsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type setJoinSettingsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type setJoinSettingsResponseSuccess = setJoinSettingsResponse200 & {
+  headers: Headers;
+};
+export type setJoinSettingsResponseError = (
+  | setJoinSettingsResponse400
+  | setJoinSettingsResponse401
+  | setJoinSettingsResponse403
+  | setJoinSettingsResponse404
+  | setJoinSettingsResponse409
+  | setJoinSettingsResponse422
+  | setJoinSettingsResponse429
+  | setJoinSettingsResponse500
+) & {
+  headers: Headers;
+};
+
+export type setJoinSettingsResponse = setJoinSettingsResponseSuccess | setJoinSettingsResponseError;
+
+export const getSetJoinSettingsUrl = () => {
+  return `/api/tenant/join-settings`;
+};
+
+/**
+ * @summary Set Join Settings
+ */
+export const setJoinSettings = async (
+  joinSettingsChange: JoinSettingsChange,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<setJoinSettingsResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<setJoinSettingsResponse>(getSetJoinSettingsUrl(), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(joinSettingsChange),
+  });
+};
+
+export const getSetJoinSettingsMutationKey = () => ["setJoinSettings"] as const;
+
+export const getSetJoinSettingsMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof setJoinSettings>>,
+    TError,
+    SetJoinSettingsMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof setJoinSettings>>,
+  TError,
+  SetJoinSettingsMutationVariables,
+  TContext
+> => {
+  const mutationKey = getSetJoinSettingsMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof setJoinSettings>>,
+    SetJoinSettingsMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return setJoinSettings(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SetJoinSettingsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof setJoinSettings>>
+>;
+export type SetJoinSettingsMutationBody = JoinSettingsChange;
+export type SetJoinSettingsMutationError = Problem;
+export type SetJoinSettingsMutationVariables = { data: JoinSettingsChange };
+
+/**
+ * @summary Set Join Settings
+ */
+export const useSetJoinSettings = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof setJoinSettings>>,
+      TError,
+      SetJoinSettingsMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof setJoinSettings>>,
+  TError,
+  SetJoinSettingsMutationVariables,
+  TContext
+> => {
+  return useMutation(getSetJoinSettingsMutationOptions(options), queryClient);
 };
 
 export type listTenantMembersResponse200 = {

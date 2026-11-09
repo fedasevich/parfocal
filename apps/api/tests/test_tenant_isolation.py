@@ -1087,9 +1087,13 @@ async def seed_lab_models(connection: AsyncConnection, seeded: Seeded) -> None:
 
 async def seed_workspace_access_requests(connection: AsyncConnection, seeded: Seeded) -> None:
     user = seeded.ids["user"]
-    await connection.execute(
-        insert(workspace_access_requests).values(tenant_id=seeded.tenant_id, user_id=user)
+    request_id = await connection.scalar(
+        insert(workspace_access_requests)
+        .values(tenant_id=seeded.tenant_id, user_id=user)
+        .returning(workspace_access_requests.c.id)
     )
+    assert isinstance(request_id, uuid.UUID)
+    seeded.ids["access_request"] = request_id
     seeded.markers.add(str(user))
 
 
@@ -1455,6 +1459,9 @@ GET_ROUTES = {
     "listWorkspaceAccessRequests": Route(
         Exposure.TENANT, lambda _: "/api/tenant/access-requests", admin_rights=True
     ),
+    "getJoinSettings": Route(
+        Exposure.TENANT, lambda _: "/api/tenant/join-settings", admin_rights=True
+    ),
     "getOpinionForm": Route(
         Exposure.TENANT, lambda a: f"/api/projects/{a.ids['project']}/opinion-form"
     ),
@@ -1695,6 +1702,7 @@ async def seed_tenant(connection: AsyncConnection, label: str) -> Seeded:
             kind="diagnostic",
             region="eu",
             plan="pilot",
+            email_domain=f"{slug}.example.test",
         )
         .returning(tenants.c.id)
     )
@@ -1720,7 +1728,15 @@ async def seed_tenant(connection: AsyncConnection, label: str) -> Seeded:
         tenant_id=tenant_id,
         subject=f"subject-{slug}",
         ids={"organisation": organisation_id, "tenant": tenant_id, "user": user_id},
-        markers={str(organisation_id), str(tenant_id), str(user_id), slug, name, member_name},
+        markers={
+            str(organisation_id),
+            str(tenant_id),
+            str(user_id),
+            slug,
+            name,
+            member_name,
+            f"{slug}.example.test",
+        },
     )
     for seeder in SEEDERS.values():
         await seeder(connection, seeded)
@@ -1867,3 +1883,15 @@ def test_an_annotate_task_and_its_class_snapshot_stay_in_their_workspace(
     ):
         assert attempt.status_code == 404, attempt.text
         assert shared not in attempt.text
+
+
+def test_another_workspace_cannot_answer_an_ask(api: ApiAs, seeded: tuple[Seeded, Seeded]) -> None:
+    a, b = seeded
+    path = f"/api/tenant/access-requests/{a.ids['access_request']}"
+    for attempt in (
+        api(b.member(admin_rights=True)).delete(path),
+        api(b.member(admin_rights=True)).post(f"{path}/approval"),
+    ):
+        assert attempt.status_code == 404, attempt.text
+    pending = api(a.member(admin_rights=True)).get("/api/tenant/access-requests").json()
+    assert str(a.ids["access_request"]) in [item["id"] for item in pending]

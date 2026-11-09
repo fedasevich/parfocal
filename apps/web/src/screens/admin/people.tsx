@@ -42,6 +42,7 @@ import { useState } from "react";
 import { toPersonInfo } from "../people.ts";
 import { okData } from "../placeholder.tsx";
 import { lastActive, MoreButton, type Notify, tableClass } from "./common.tsx";
+import { JoinRequestsZone } from "./join-requests.tsx";
 import { adminSwitchOf, type PeopleFilter, shownInvitations, takenEmails } from "./people-rules.ts";
 
 type Filter = PeopleFilter;
@@ -79,10 +80,12 @@ const roleDefinitions = [
 
 export function PeopleSection({
   notify,
+  request,
   inviting,
   setInviting,
 }: {
   notify: Notify;
+  request?: string | undefined;
   inviting: boolean;
   setInviting: (open: boolean) => void;
 }) {
@@ -190,6 +193,7 @@ export function PeopleSection({
   };
   return (
     <>
+      <JoinRequestsZone notify={notify} opened={request} />
       <Zone
         title="People"
         end={<span className="text-body-sm text-fg-dim">{waiting} invites waiting</span>}

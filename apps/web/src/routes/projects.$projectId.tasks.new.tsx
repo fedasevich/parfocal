@@ -5,7 +5,7 @@ import { mockScenes } from "../screens/scenes.ts";
 
 const newTaskSearch = z.object({
   scene: z.enum(mockScenes.task).optional(),
-  step: z.enum(["slides", "reviewers", "check", "how", "send", "sent"]).optional(),
+  step: z.enum(["kind", "slides", "reviewers", "check", "how", "send", "sent"]).optional(),
   modal: z.enum(["addslides", "dpreview"]).optional(),
 });
 

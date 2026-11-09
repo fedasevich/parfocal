@@ -111,13 +111,20 @@ def mine(me: MemberPrincipal) -> ColumnElement[bool]:
     return (notifications.c.user_id == me.user_id) & notifications.c.in_app & live
 
 
+def link_of(row: Any, target: TargetKind) -> str:
+    if target is TargetKind.ACCESS_REQUEST:
+        return f"/admin?section=people&request={row.target_id}"
+    return link_to("", row.id)
+
+
 def item_of(row: Any) -> InboxItem:
     kind = NotificationKind(row.kind)
+    target = CATALOGUE[kind].target
     return InboxItem(
         id=row.id,
         kind=kind,
-        link=link_to("", row.id),
-        target_kind=CATALOGUE[kind].target,
+        link=link_of(row, target),
+        target_kind=target,
         target_id=row.target_id,
         payload=dict(row.payload),
         project_id=row.project_id,

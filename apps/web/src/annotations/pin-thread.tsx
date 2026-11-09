@@ -1,20 +1,19 @@
-import {
-  getGetThreadQueryKey,
-  getListThreadsQueryKey,
-  type Thread,
-  useGetMe,
-  useGetThread,
-  useReopenThread,
-  useReplyToThread,
-  useResolveThread,
-} from "@parfocal/api-client";
+import { type Thread, useGetMe } from "@parfocal/api-client";
 import { ThreadPopover } from "@parfocal/ui/components/thread-popover";
-import { useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { now } from "../clock.ts";
 import { usePeople } from "../screens/people.ts";
 import { okData } from "../screens/placeholder.tsx";
 import type { AnnotationDocument } from "./document.ts";
+import {
+  homeOf,
+  markResolved,
+  readThread,
+  replyInThread,
+  threadKey,
+  threadListKey,
+} from "./thread-home.ts";
 import { type PopoverSpot, threadMeasurement, threadMessages } from "./thread-popover.ts";
 
 type PinThreadProps = {
@@ -32,11 +31,15 @@ export function PinThread({
   spot,
   onClose,
 }: PinThreadProps) {
-  const { task_id: taskId, slide_id: slideId, id: threadId } = thread;
+  const threadId = thread.id;
+  const home = homeOf(thread);
   const queryClient = useQueryClient();
   const person = usePeople();
   const me = okData(useGetMe().data);
-  const detail = okData(useGetThread(taskId, slideId, threadId).data);
+  const detail = okData(
+    useQuery({ queryKey: threadKey(home, threadId), queryFn: () => readThread(home, threadId) })
+      .data,
+  );
   const [reply, setReply] = useState("");
   const section = useRef<HTMLDivElement | null>(null);
 
@@ -57,35 +60,30 @@ export function PinThread({
   }, [onClose]);
 
   const refresh = () => {
-    void queryClient.invalidateQueries({
-      queryKey: getGetThreadQueryKey(taskId, slideId, threadId),
-    });
-    void queryClient.invalidateQueries({ queryKey: getListThreadsQueryKey(taskId, slideId) });
+    void queryClient.invalidateQueries({ queryKey: threadKey(home, threadId) });
+    void queryClient.invalidateQueries({ queryKey: threadListKey(home) });
   };
-  const replying = useReplyToThread({
-    mutation: {
-      onSuccess: (response) => {
-        if (response.status >= 300) return;
-        setReply("");
-        refresh();
-      },
+  const replying = useMutation({
+    mutationFn: (body: string) => replyInThread(home, threadId, { body }),
+    onSuccess: (response) => {
+      if (response.status >= 300) return;
+      setReply("");
+      refresh();
     },
   });
-  const resolving = useResolveThread({
-    mutation: {
-      onSuccess: (response) => {
-        if (response.status >= 300) return;
-        refresh();
-        onClose();
-      },
+  const resolving = useMutation({
+    mutationFn: () => markResolved(home, threadId, true),
+    onSuccess: (response) => {
+      if (response.status >= 300) return;
+      refresh();
+      onClose();
     },
   });
-  const reopening = useReopenThread({
-    mutation: {
-      onSuccess: (response) => {
-        if (response.status >= 300) return;
-        refresh();
-      },
+  const reopening = useMutation({
+    mutationFn: () => markResolved(home, threadId, false),
+    onSuccess: (response) => {
+      if (response.status >= 300) return;
+      refresh();
     },
   });
 
@@ -93,7 +91,7 @@ export function PinThread({
   const send = () => {
     const body = reply.trim();
     if (body === "" || replying.isPending) return;
-    replying.mutate({ taskId, slideId, threadId, data: { body } });
+    replying.mutate(body);
   };
   const failed = [replying, resolving, reopening].some(
     (mutation) => mutation.isError || (mutation.data !== undefined && mutation.data.status >= 300),
@@ -119,8 +117,8 @@ export function PinThread({
         busy={replying.isPending}
         failed={failed}
         onToggleResolved={() => {
-          if (resolved) reopening.mutate({ taskId, slideId, threadId });
-          else resolving.mutate({ taskId, slideId, threadId });
+          if (resolved) reopening.mutate();
+          else resolving.mutate();
         }}
         onClose={onClose}
       />

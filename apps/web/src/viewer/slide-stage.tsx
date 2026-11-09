@@ -650,6 +650,7 @@ function OpenedSlide({
               selecting={tool === "select"}
               registry={pinRegistry}
               document={annotations}
+              projectId={projectId}
               taskId={taskId}
               slideId={slideId}
               micronsPerPixel={session.engine.getSlide()?.micronsPerPixel ?? null}

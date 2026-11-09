@@ -18,7 +18,7 @@ from parfocal_api.annotations import (
     Position,
 )
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
-from parfocal_api.blinding import ai_hidden_on, require_ai_shown, sees_reviewer
+from parfocal_api.blinding import ai_hidden_on, require_ai_shown, sees_reviewer, user_of
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.mentions import MAX_MENTIONS, mentioned_in
 from parfocal_api.notification_catalogue import TargetKind
@@ -26,7 +26,13 @@ from parfocal_api.notifications import deliver_after_commit, notify
 from parfocal_api.permissions import Grant, Permission, member_of, require
 from parfocal_api.principals import MemberPrincipal, Principal
 from parfocal_api.problems import BadRequestError, ConflictError, ForbiddenError, NotFoundError
-from parfocal_api.project_access import project_grant, reads_whole, reviews_slide, role_in
+from parfocal_api.project_access import (
+    project_grant,
+    reads_whole,
+    require_slide_reading,
+    reviews_slide,
+    role_in,
+)
 from parfocal_api.projects import ProjectArchivedError
 from parfocal_api.reviewed_layer import (
     NotAssignedError,
@@ -39,11 +45,16 @@ from parfocal_api.tables import (
     AnchorKind,
     AnnotationKind,
     NotificationKind,
+    PrivacyMode,
     ProjectRole,
     Role,
     annotations,
     memberships,
+    projects,
+    result_objects,
+    result_sets,
     review_assignments,
+    slides,
     thread_messages,
     threads,
     users,
@@ -93,6 +104,10 @@ class ThreadCreate(BaseModel):
     anchor: Anchor
 
 
+class SlideThreadCreate(ThreadCreate):
+    task_id: uuid.UUID | None = None
+
+
 class PinMove(BaseModel):
     geometry: PointGeometry
 
@@ -119,7 +134,7 @@ class Mentionable(BaseModel):
 class Thread(BaseModel):
     id: uuid.UUID
     project_id: uuid.UUID
-    task_id: uuid.UUID
+    task_id: uuid.UUID | None
     slide_id: uuid.UUID
     title: str
     anchor: Anchor
@@ -165,9 +180,67 @@ class NotThreadAuthorError(ForbiddenError):
     title = "Only the person who started the thread or a project owner deletes it"
 
 
+class TaskNotOnSlideError(BadRequestError):
+    code = "task-not-on-slide"
+    title = "This task does not hold this slide in this project"
+
+
 router = APIRouter(
     prefix="/api/review-tasks/{task_id}/slides/{slide_id}/threads", tags=["review-tasks"]
 )
+slide_router = APIRouter(
+    prefix="/api/projects/{project_id}/slides/{slide_id}/threads", tags=["slides"]
+)
+
+
+@dataclass(frozen=True)
+class SlidePlace:
+    tenant_id: uuid.UUID
+    project_id: uuid.UUID
+    slide_id: uuid.UUID
+    case_id: uuid.UUID | None
+    archived_at: datetime | None
+    task_id: None = None
+    signed_off_at: None = None
+    result_set_id: None = None
+
+
+async def slide_place(
+    connection: AsyncConnection, principal: Principal, project_id: uuid.UUID, slide_id: uuid.UUID
+) -> SlidePlace:
+    row = (
+        await connection.execute(
+            select(
+                slides.c.tenant_id,
+                slides.c.case_id,
+                projects.c.privacy_mode,
+                projects.c.archived_at,
+            )
+            .join(projects, projects.c.id == slides.c.project_id)
+            .where(
+                slides.c.id == slide_id,
+                slides.c.project_id == project_id,
+                slides.c.deleted_at.is_(None),
+            )
+        )
+    ).one_or_none()
+    if row is None:
+        raise NotFoundError("Slide not found")
+    await require_slide_reading(
+        connection,
+        principal,
+        project_id,
+        PrivacyMode(row.privacy_mode),
+        slide_id,
+        "Slide not found",
+    )
+    return SlidePlace(row.tenant_id, project_id, slide_id, row.case_id, row.archived_at)
+
+
+async def place_of(connection: AsyncConnection, principal: Principal, row: Any) -> Any:
+    if row.task_id is None:
+        return await slide_place(connection, principal, row.project_id, row.slide_id)
+    return await task_slide(connection, principal, row.task_id, row.slide_id)
 
 
 @dataclass
@@ -191,15 +264,24 @@ class Sight:
 
     async def sees(self, author: uuid.UUID) -> bool:
         if author not in self.seen:
-            self.seen[author] = await self.reads_whole(author) or await sees_reviewer(
-                self.connection,
-                self.reader,
-                self.place.project_id,
-                self.place.task_id,
-                self.place.slide_id,
-                author,
-            )
+            self.seen[author] = await self.judge(author, self.place.task_id)
         return self.seen[author]
+
+    async def judge(self, author: uuid.UUID, task_id: uuid.UUID | None) -> bool:
+        if task_id is None:
+            return (
+                author == user_of(self.reader)
+                or not await self.ai_hidden()
+                or await self.reads_whole(author)
+            )
+        return await self.reads_whole(author) or await sees_reviewer(
+            self.connection,
+            self.reader,
+            self.place.project_id,
+            task_id,
+            self.place.slide_id,
+            author,
+        )
 
     async def ai_hidden(self) -> bool:
         if self.hidden is None:
@@ -251,10 +333,7 @@ async def check_anchor(
         raise BadAnchorError("An ROI anchor names an ROI, and an object anchor names no ROI")
     if is_ai(found):
         await require_ai_shown(connection, principal, place.project_id, place.slide_id)
-        try:
-            await check_exists(connection, place, found)
-        except UnknownObjectError as error:
-            raise BadAnchorError(str(error)) from error
+        await check_ai_object(connection, place, found)
         return found.text(ascii=True)
     kind = PERSON_KINDS.get(found.letter)
     drawn = select(annotations.c.id).where(
@@ -268,24 +347,57 @@ async def check_anchor(
     return found.text(ascii=True)
 
 
+async def check_ai_object(connection: AsyncConnection, place: Any, found: ObjectId) -> None:
+    if place.task_id is not None or found.letter is not Letter.REGION:
+        try:
+            await check_exists(connection, place, found)
+        except UnknownObjectError as error:
+            raise BadAnchorError(str(error)) from error
+        return
+    present = (
+        select(result_objects.c.result_set_id)
+        .join(result_sets, result_sets.c.id == result_objects.c.result_set_id)
+        .where(
+            result_sets.c.slide_id == place.slide_id,
+            result_objects.c.kind == "region",
+            result_objects.c.number == found.number,
+        )
+    )
+    if not await connection.scalar(select(present.exists())):
+        raise BadAnchorError(f"{found.text(ascii=True)} is not on this slide")
+
+
 async def writable_place(
     connection: AsyncConnection, principal: Principal, task_id: uuid.UUID, slide_id: uuid.UUID
 ) -> Any:
+    return await writable(
+        connection, principal, await task_slide(connection, principal, task_id, slide_id)
+    )
+
+
+async def writable_slide(
+    connection: AsyncConnection, principal: Principal, project_id: uuid.UUID, slide_id: uuid.UUID
+) -> SlidePlace:
+    return await writable(
+        connection, principal, await slide_place(connection, principal, project_id, slide_id)
+    )
+
+
+async def writable(connection: AsyncConnection, principal: Principal, place: Any) -> Any:
     member = member_of(principal)
-    place = await task_slide(connection, principal, task_id, slide_id)
     if place.archived_at is not None:
         raise ProjectArchivedError
-    grant = await reviews_slide(connection, principal, place.project_id, slide_id)
-    if grant is Grant.ASSIGNED:
+    grant = await reviews_slide(connection, principal, place.project_id, place.slide_id)
+    if grant is Grant.ASSIGNED and place.task_id is not None:
         assigned = select(review_assignments).where(
-            review_assignments.c.task_id == task_id,
-            review_assignments.c.slide_id == slide_id,
+            review_assignments.c.task_id == place.task_id,
+            review_assignments.c.slide_id == place.slide_id,
             review_assignments.c.user_id == member.user_id,
             review_assignments.c.released_at.is_(None),
         )
         if not await connection.scalar(select(assigned.exists())):
             raise NotAssignedError
-    elif grant is not Grant.ALL:
+    elif grant not in {Grant.ALL, Grant.ASSIGNED}:
         raise ForbiddenError
     return place
 
@@ -353,8 +465,11 @@ async def thread_row(
         await connection.execute(
             select(threads).where(
                 threads.c.id == thread_id,
-                threads.c.task_id == place.task_id,
+                threads.c.project_id == place.project_id,
                 threads.c.slide_id == place.slide_id,
+                threads.c.task_id.is_(None)
+                if place.task_id is None
+                else threads.c.task_id == place.task_id,
             )
         )
     ).one_or_none()
@@ -375,7 +490,7 @@ async def visible_thread(
     if row is None:
         return None
     try:
-        place = await task_slide(connection, principal, row.task_id, row.slide_id)
+        place = await place_of(connection, principal, row)
     except NotFoundError, ForbiddenError:
         return None
     if not await Sight(connection, principal, place).sees_thread(row):
@@ -397,7 +512,11 @@ async def audit(
         AuditTarget.THREAD,
         row.id,
         tenant_id=row.tenant_id,
-        details={"task_id": str(row.task_id), "slide_id": str(row.slide_id), **details},
+        details={
+            "task_id": str(row.task_id) if row.task_id else None,
+            "slide_id": str(row.slide_id),
+            **details,
+        },
     )
 
 
@@ -406,7 +525,7 @@ async def reader_sight(connection: AsyncConnection, place: Any, person: uuid.UUI
     if reader is None:
         return None
     try:
-        seen = await task_slide(connection, reader, place.task_id, place.slide_id)
+        seen = await place_of(connection, reader, place)
     except NotFoundError, ForbiddenError:
         return None
     return Sight(connection, reader, seen)
@@ -455,7 +574,9 @@ async def tell_followers(
     )
     followers.discard(poster)
     followers.difference_update(mentioned)
-    payload = {"task_id": str(place.task_id), "slide_id": str(place.slide_id)}
+    payload = {"slide_id": str(place.slide_id)}
+    if place.task_id is not None:
+        payload["task_id"] = str(place.task_id)
     await notify(
         connection,
         place.tenant_id,
@@ -476,17 +597,17 @@ async def tell_followers(
     )
 
 
-@router.get("", operation_id="listThreads", **require(Permission.SEE_SLIDES, emergency=True))
-async def list_threads(
-    task_id: uuid.UUID,
-    slide_id: uuid.UUID,
-    principal: CurrentPrincipal,
-    connection: TenantConnection,
-    resolved: bool | None = None,
+async def list_in(
+    connection: AsyncConnection, principal: Principal, place: Any, resolved: bool | None
 ) -> list[Thread]:
-    place = await task_slide(connection, principal, task_id, slide_id)
     sight = Sight(connection, principal, place)
-    query = select(threads).where(threads.c.task_id == task_id, threads.c.slide_id == slide_id)
+    query = select(threads).where(
+        threads.c.project_id == place.project_id,
+        threads.c.slide_id == place.slide_id,
+        threads.c.task_id.is_(None)
+        if place.task_id is None
+        else threads.c.task_id == place.task_id,
+    )
     if resolved is not None:
         query = query.where(
             threads.c.resolved_at.is_not(None) if resolved else threads.c.resolved_at.is_(None)
@@ -506,14 +627,9 @@ async def list_threads(
     return found
 
 
-@router.get("/mentionable", operation_id="listMentionableMembers", **require(Permission.SEE_SLIDES))
-async def list_mentionable(
-    task_id: uuid.UUID,
-    slide_id: uuid.UUID,
-    principal: CurrentPrincipal,
-    connection: TenantConnection,
+async def mentionable_in(
+    connection: AsyncConnection, principal: Principal, place: Any
 ) -> list[Mentionable]:
-    place = await task_slide(connection, principal, task_id, slide_id)
     me = member_of(principal).user_id
     own = Sight(connection, principal, place)
     rows = await connection.execute(
@@ -537,22 +653,14 @@ async def list_mentionable(
     return found
 
 
-@router.post(
-    "",
-    operation_id="createThread",
-    status_code=201,
-    **require(Permission.REVIEW, write=True),
-)
-async def create_thread(
-    task_id: uuid.UUID,
-    slide_id: uuid.UUID,
+async def start_in(
+    connection: AsyncConnection,
+    principal: Principal,
+    place: Any,
     draft: ThreadCreate,
-    principal: CurrentPrincipal,
-    connection: TenantConnection,
     http: Request,
     background: BackgroundTasks,
 ) -> ThreadDetail:
-    place = await writable_place(connection, principal, task_id, slide_id)
     if place.signed_off_at is not None:
         raise TaskSignedOffError
     object_id = await check_anchor(connection, principal, place, draft.anchor)
@@ -565,8 +673,8 @@ async def create_thread(
             .values(
                 tenant_id=place.tenant_id,
                 project_id=place.project_id,
-                task_id=task_id,
-                slide_id=slide_id,
+                task_id=place.task_id,
+                slide_id=place.slide_id,
                 title=draft.title,
                 anchor_kind=draft.anchor.kind,
                 object_id=object_id,
@@ -603,38 +711,22 @@ async def create_thread(
     return await detail(Sight(connection, principal, place), row)
 
 
-@router.get(
-    "/{thread_id}", operation_id="getThread", **require(Permission.SEE_SLIDES, emergency=True)
-)
-async def get_thread(
-    task_id: uuid.UUID,
-    slide_id: uuid.UUID,
-    thread_id: uuid.UUID,
-    principal: CurrentPrincipal,
-    connection: TenantConnection,
+async def get_in(
+    connection: AsyncConnection, principal: Principal, place: Any, thread_id: uuid.UUID
 ) -> ThreadDetail:
-    place = await task_slide(connection, principal, task_id, slide_id)
     sight = Sight(connection, principal, place)
     return await detail(sight, await thread_row(connection, place, thread_id, sight))
 
 
-@router.post(
-    "/{thread_id}/messages",
-    operation_id="replyToThread",
-    status_code=201,
-    **require(Permission.REVIEW, write=True),
-)
-async def reply_to_thread(
-    task_id: uuid.UUID,
-    slide_id: uuid.UUID,
+async def reply_in(
+    connection: AsyncConnection,
+    principal: Principal,
+    place: Any,
     thread_id: uuid.UUID,
     draft: MessageCreate,
-    principal: CurrentPrincipal,
-    connection: TenantConnection,
     http: Request,
     background: BackgroundTasks,
 ) -> Message:
-    place = await writable_place(connection, principal, task_id, slide_id)
     row = await thread_row(connection, place, thread_id, Sight(connection, principal, place))
     me = member_of(principal).user_id
     message = (
@@ -662,16 +754,14 @@ async def reply_to_thread(
     return message_of(message)
 
 
-async def set_resolved(
-    task_id: uuid.UUID,
-    slide_id: uuid.UUID,
-    thread_id: uuid.UUID,
-    principal: Principal,
+async def resolve_in(
     connection: AsyncConnection,
+    principal: Principal,
+    place: Any,
+    thread_id: uuid.UUID,
     *,
     resolved: bool,
 ) -> ThreadDetail:
-    place = await writable_place(connection, principal, task_id, slide_id)
     sight = Sight(connection, principal, place)
     row = await thread_row(connection, place, thread_id, sight)
     if (row.resolved_at is not None) != resolved:
@@ -691,6 +781,138 @@ async def set_resolved(
     return await detail(sight, row)
 
 
+async def require_author_or_owner(
+    connection: AsyncConnection, principal: Principal, place: Any, row: Any
+) -> None:
+    if (
+        row.created_by_user_id != member_of(principal).user_id
+        and await role_in(connection, principal, place.project_id) is not ProjectRole.OWNER
+    ):
+        raise NotThreadAuthorError
+
+
+async def move_in(
+    connection: AsyncConnection,
+    principal: Principal,
+    place: Any,
+    thread_id: uuid.UUID,
+    move: PinMove,
+) -> ThreadDetail:
+    if place.signed_off_at is not None:
+        raise TaskSignedOffError
+    sight = Sight(connection, principal, place)
+    row = await thread_row(connection, place, thread_id, sight)
+    if AnchorKind(row.anchor_kind) is not AnchorKind.POINT:
+        raise NotAPinError
+    await require_author_or_owner(connection, principal, place, row)
+    row = (
+        await connection.execute(
+            update(threads)
+            .where(threads.c.id == thread_id)
+            .values(geometry=move.geometry.model_dump())
+            .returning(*threads.c)
+        )
+    ).one()
+    await audit(connection, principal, AuditAction.THREAD_MOVED, row, {})
+    return await detail(sight, row)
+
+
+async def delete_in(
+    connection: AsyncConnection,
+    principal: Principal,
+    place: Any,
+    thread_id: uuid.UUID,
+    confirm: bool,
+) -> Response:
+    row = await thread_row(connection, place, thread_id, Sight(connection, principal, place))
+    await require_author_or_owner(connection, principal, place, row)
+    count = await connection.scalar(
+        select(func.count()).where(thread_messages.c.thread_id == thread_id)
+    )
+    replies = max(int(count or 0) - 1, 0)
+    if replies and not confirm:
+        raise ThreadHasRepliesError(f"The thread has {replies} replies")
+    await connection.execute(delete(threads).where(threads.c.id == thread_id))
+    await audit(connection, principal, AuditAction.THREAD_DELETED, row, {"replies": replies})
+    return Response(status_code=204)
+
+
+@router.get("", operation_id="listThreads", **require(Permission.SEE_SLIDES, emergency=True))
+async def list_threads(
+    task_id: uuid.UUID,
+    slide_id: uuid.UUID,
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
+    resolved: bool | None = None,
+) -> list[Thread]:
+    place = await task_slide(connection, principal, task_id, slide_id)
+    return await list_in(connection, principal, place, resolved)
+
+
+@router.get("/mentionable", operation_id="listMentionableMembers", **require(Permission.SEE_SLIDES))
+async def list_mentionable(
+    task_id: uuid.UUID,
+    slide_id: uuid.UUID,
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
+) -> list[Mentionable]:
+    place = await task_slide(connection, principal, task_id, slide_id)
+    return await mentionable_in(connection, principal, place)
+
+
+@router.post(
+    "",
+    operation_id="createThread",
+    status_code=201,
+    **require(Permission.REVIEW, write=True),
+)
+async def create_thread(
+    task_id: uuid.UUID,
+    slide_id: uuid.UUID,
+    draft: ThreadCreate,
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
+    http: Request,
+    background: BackgroundTasks,
+) -> ThreadDetail:
+    place = await writable_place(connection, principal, task_id, slide_id)
+    return await start_in(connection, principal, place, draft, http, background)
+
+
+@router.get(
+    "/{thread_id}", operation_id="getThread", **require(Permission.SEE_SLIDES, emergency=True)
+)
+async def get_thread(
+    task_id: uuid.UUID,
+    slide_id: uuid.UUID,
+    thread_id: uuid.UUID,
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
+) -> ThreadDetail:
+    place = await task_slide(connection, principal, task_id, slide_id)
+    return await get_in(connection, principal, place, thread_id)
+
+
+@router.post(
+    "/{thread_id}/messages",
+    operation_id="replyToThread",
+    status_code=201,
+    **require(Permission.REVIEW, write=True),
+)
+async def reply_to_thread(
+    task_id: uuid.UUID,
+    slide_id: uuid.UUID,
+    thread_id: uuid.UUID,
+    draft: MessageCreate,
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
+    http: Request,
+    background: BackgroundTasks,
+) -> Message:
+    place = await writable_place(connection, principal, task_id, slide_id)
+    return await reply_in(connection, principal, place, thread_id, draft, http, background)
+
+
 @router.post(
     "/{thread_id}/resolve",
     operation_id="resolveThread",
@@ -703,7 +925,8 @@ async def resolve_thread(
     principal: CurrentPrincipal,
     connection: TenantConnection,
 ) -> ThreadDetail:
-    return await set_resolved(task_id, slide_id, thread_id, principal, connection, resolved=True)
+    place = await writable_place(connection, principal, task_id, slide_id)
+    return await resolve_in(connection, principal, place, thread_id, resolved=True)
 
 
 @router.post(
@@ -718,7 +941,8 @@ async def reopen_thread(
     principal: CurrentPrincipal,
     connection: TenantConnection,
 ) -> ThreadDetail:
-    return await set_resolved(task_id, slide_id, thread_id, principal, connection, resolved=False)
+    place = await writable_place(connection, principal, task_id, slide_id)
+    return await resolve_in(connection, principal, place, thread_id, resolved=False)
 
 
 @router.patch(
@@ -735,28 +959,7 @@ async def move_thread(
     connection: TenantConnection,
 ) -> ThreadDetail:
     place = await writable_place(connection, principal, task_id, slide_id)
-    if place.signed_off_at is not None:
-        raise TaskSignedOffError
-    sight = Sight(connection, principal, place)
-    row = await thread_row(connection, place, thread_id, sight)
-    if AnchorKind(row.anchor_kind) is not AnchorKind.POINT:
-        raise NotAPinError
-    me = member_of(principal).user_id
-    if (
-        row.created_by_user_id != me
-        and await role_in(connection, principal, place.project_id) is not ProjectRole.OWNER
-    ):
-        raise NotThreadAuthorError
-    row = (
-        await connection.execute(
-            update(threads)
-            .where(threads.c.id == thread_id)
-            .values(geometry=move.geometry.model_dump())
-            .returning(*threads.c)
-        )
-    ).one()
-    await audit(connection, principal, AuditAction.THREAD_MOVED, row, {})
-    return await detail(sight, row)
+    return await move_in(connection, principal, place, thread_id, move)
 
 
 @router.delete(
@@ -774,19 +977,160 @@ async def delete_thread(
     confirm: bool = False,
 ) -> Response:
     place = await writable_place(connection, principal, task_id, slide_id)
-    row = await thread_row(connection, place, thread_id, Sight(connection, principal, place))
-    me = member_of(principal).user_id
-    if (
-        row.created_by_user_id != me
-        and await role_in(connection, principal, place.project_id) is not ProjectRole.OWNER
-    ):
-        raise NotThreadAuthorError
-    count = await connection.scalar(
-        select(func.count()).where(thread_messages.c.thread_id == thread_id)
-    )
-    replies = max(int(count or 0) - 1, 0)
-    if replies and not confirm:
-        raise ThreadHasRepliesError(f"The thread has {replies} replies")
-    await connection.execute(delete(threads).where(threads.c.id == thread_id))
-    await audit(connection, principal, AuditAction.THREAD_DELETED, row, {"replies": replies})
-    return Response(status_code=204)
+    return await delete_in(connection, principal, place, thread_id, confirm)
+
+
+@slide_router.get(
+    "", operation_id="listThreadsOnSlide", **require(Permission.SEE_SLIDES, emergency=True)
+)
+async def list_threads_on_slide(
+    project_id: uuid.UUID,
+    slide_id: uuid.UUID,
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
+    resolved: bool | None = None,
+) -> list[Thread]:
+    place = await slide_place(connection, principal, project_id, slide_id)
+    return await list_in(connection, principal, place, resolved)
+
+
+@slide_router.get(
+    "/mentionable",
+    operation_id="listMentionableMembersOnSlide",
+    **require(Permission.SEE_SLIDES),
+)
+async def list_mentionable_on_slide(
+    project_id: uuid.UUID,
+    slide_id: uuid.UUID,
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
+) -> list[Mentionable]:
+    place = await slide_place(connection, principal, project_id, slide_id)
+    return await mentionable_in(connection, principal, place)
+
+
+@slide_router.post(
+    "",
+    operation_id="createThreadOnSlide",
+    status_code=201,
+    **require(Permission.REVIEW, write=True),
+)
+async def create_thread_on_slide(
+    project_id: uuid.UUID,
+    slide_id: uuid.UUID,
+    draft: SlideThreadCreate,
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
+    http: Request,
+    background: BackgroundTasks,
+) -> ThreadDetail:
+    if draft.task_id is None:
+        place = await writable_slide(connection, principal, project_id, slide_id)
+    else:
+        place = await writable_place(connection, principal, draft.task_id, slide_id)
+        if place.project_id != project_id:
+            raise TaskNotOnSlideError
+    return await start_in(connection, principal, place, draft, http, background)
+
+
+@slide_router.get(
+    "/{thread_id}",
+    operation_id="getThreadOnSlide",
+    **require(Permission.SEE_SLIDES, emergency=True),
+)
+async def get_thread_on_slide(
+    project_id: uuid.UUID,
+    slide_id: uuid.UUID,
+    thread_id: uuid.UUID,
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
+) -> ThreadDetail:
+    place = await slide_place(connection, principal, project_id, slide_id)
+    return await get_in(connection, principal, place, thread_id)
+
+
+@slide_router.post(
+    "/{thread_id}/messages",
+    operation_id="replyToThreadOnSlide",
+    status_code=201,
+    **require(Permission.REVIEW, write=True),
+)
+async def reply_to_thread_on_slide(
+    project_id: uuid.UUID,
+    slide_id: uuid.UUID,
+    thread_id: uuid.UUID,
+    draft: MessageCreate,
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
+    http: Request,
+    background: BackgroundTasks,
+) -> Message:
+    place = await writable_slide(connection, principal, project_id, slide_id)
+    return await reply_in(connection, principal, place, thread_id, draft, http, background)
+
+
+@slide_router.post(
+    "/{thread_id}/resolve",
+    operation_id="resolveThreadOnSlide",
+    **require(Permission.REVIEW, write=True),
+)
+async def resolve_thread_on_slide(
+    project_id: uuid.UUID,
+    slide_id: uuid.UUID,
+    thread_id: uuid.UUID,
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
+) -> ThreadDetail:
+    place = await writable_slide(connection, principal, project_id, slide_id)
+    return await resolve_in(connection, principal, place, thread_id, resolved=True)
+
+
+@slide_router.post(
+    "/{thread_id}/reopen",
+    operation_id="reopenThreadOnSlide",
+    **require(Permission.REVIEW, write=True),
+)
+async def reopen_thread_on_slide(
+    project_id: uuid.UUID,
+    slide_id: uuid.UUID,
+    thread_id: uuid.UUID,
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
+) -> ThreadDetail:
+    place = await writable_slide(connection, principal, project_id, slide_id)
+    return await resolve_in(connection, principal, place, thread_id, resolved=False)
+
+
+@slide_router.patch(
+    "/{thread_id}/anchor",
+    operation_id="moveThreadOnSlide",
+    **require(Permission.REVIEW, write=True),
+)
+async def move_thread_on_slide(
+    project_id: uuid.UUID,
+    slide_id: uuid.UUID,
+    thread_id: uuid.UUID,
+    move: PinMove,
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
+) -> ThreadDetail:
+    place = await writable_slide(connection, principal, project_id, slide_id)
+    return await move_in(connection, principal, place, thread_id, move)
+
+
+@slide_router.delete(
+    "/{thread_id}",
+    operation_id="deleteThreadOnSlide",
+    status_code=204,
+    **require(Permission.REVIEW, write=True),
+)
+async def delete_thread_on_slide(
+    project_id: uuid.UUID,
+    slide_id: uuid.UUID,
+    thread_id: uuid.UUID,
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
+    confirm: bool = False,
+) -> Response:
+    place = await writable_slide(connection, principal, project_id, slide_id)
+    return await delete_in(connection, principal, place, thread_id, confirm)

@@ -185,6 +185,9 @@ async def get_notification_target(
                 if thread.slide_id is not None
                 else (thread.object_id, None)
             )
+            case_id = await connection.scalar(
+                select(slides.c.case_id).where(slides.c.id == thread.slide_id)
+            )
             return Target(
                 kind=TargetKind.THREAD,
                 project_id=thread.project_id,
@@ -193,7 +196,8 @@ async def get_notification_target(
                 object_id=object_id,
                 resolved_from=resolved_from,
                 thread_id=thread.id,
-                origin=origin_of(thread.project_id, task_id=thread.task_id),
+                case_id=case_id,
+                origin=origin_of(thread.project_id, task_id=thread.task_id, case_id=case_id),
             )
         case TargetKind.DELIVERY | TargetKind.ACCESS_REQUEST:
             raise TargetNotAvailableError

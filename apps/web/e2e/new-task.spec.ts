@@ -106,3 +106,90 @@ test("Next on a blocked step keeps the step and focuses the field", async ({ pag
   await expect(flow(page).locator('[aria-current="step"]')).toHaveText(/Reviewers/);
   await expect(flow(page).getByRole("combobox", { name: "Who reviews" })).toBeFocused();
 });
+
+const projectId = "00000000-0000-4000-8003-000000000007";
+
+const decisionRows: { row: string; rule: RegExp }[] = [
+  { row: "5-point certainty", rule: /counts? as agree with the AI/ },
+  { row: "Agree with the AI", rule: /Each answer counts as it reads/ },
+  { row: "Yes or no", rule: /matches the AI.s claim counts as agree/ },
+  { row: "Pick the class blind", rule: /same class as the AI.s counts as agree/ },
+];
+
+test("each decision style shows its Counts as line under the picked row", async ({ page }) => {
+  await page.goto(`${newTask}?scene=decision`);
+  for (const { row, rule } of decisionRows) {
+    await flow(page).getByText(row, { exact: true }).click();
+    await expect(flow(page).locator("[data-counts-as-line]")).toHaveCount(1);
+    await expect(flow(page).locator("[data-counts-as-line]")).toContainText(rule);
+  }
+});
+
+test("the project page starts a task on the Kind step", async ({ page }) => {
+  await page.goto(`/projects/${projectId}`);
+  await expect(page.getByTestId("project-page")).toBeVisible();
+  await page.locator('a[href$="/tasks/new"]').first().click();
+  await expect(flow(page).locator('[aria-current="step"]')).toHaveText(/Kind/);
+  await expect(flow(page).getByRole("radio", { name: /^Review AI results/ })).toBeChecked();
+});
+
+test("the end of an upload offers a task that starts on the Kind step", async ({ page }) => {
+  await page.goto(`/projects/${projectId}/upload?scene=done`);
+  await page.getByRole("button", { name: "Create a review task" }).click();
+  await expect(flow(page).locator('[aria-current="step"]')).toHaveText(/Kind/);
+});
+
+test("an annotate task is created from the Kind step with a preset and a disabled blind switch", async ({
+  page,
+}) => {
+  await page.goto(`/projects/${projectId}/tasks/new`);
+  const body = flow(page);
+  const step = body.locator('[aria-current="step"]');
+  await body.getByRole("radio", { name: /^Annotate/ }).click();
+  await expect(body.getByRole("heading", { name: "New annotate task" })).toBeVisible();
+  await body.getByRole("radio", { name: /^Annotate by hand/ }).click();
+  await body.getByRole("button", { name: "Next" }).click();
+  await expect(step).toHaveText(/Slides/);
+  await expect(body.getByText("3 have no result set and are annotated by hand.")).toBeVisible();
+  await expect(body.getByText("Study template")).toHaveCount(0);
+  await body.getByRole("button", { name: "Next" }).click();
+  await expect(step).toHaveText(/Reviewers/);
+  await body.getByRole("button", { name: "Next" }).click();
+  await expect(step).toHaveText(/What to check/);
+  await expect(body.getByText("has no result set, so there is nothing to check")).toBeVisible();
+  await expect(body.getByText(/Roughly .* for each expert/)).toBeVisible();
+  await body.getByRole("button", { name: "Next" }).click();
+  await expect(step).toHaveText(/How it runs/);
+  await expect(body.locator('[data-slot="blind-first-switch"]')).toBeVisible();
+  await body.getByRole("button", { name: "Next" }).click();
+  await expect(step).toHaveText(/Send/);
+  await expect(body.getByText("Annotate by hand")).toBeVisible();
+  const created = page.waitForRequest(
+    (request) => request.method() === "POST" && /\/review-tasks$/.test(request.url()),
+  );
+  await body.getByRole("button", { name: /^Create and notify/ }).click();
+  const draft: unknown = (await created).postDataJSON();
+  expect(draft).toMatchObject({ kind: "annotate", preset: "annotate-by-hand", result_sets: [] });
+  await expect(page.getByRole("heading", { name: "RT-16 is out" })).toBeVisible();
+});
+
+test("picking another preset fills the check options and the estimate follows", async ({
+  page,
+}) => {
+  await page.goto(`/projects/${projectId}/tasks/new`);
+  const body = flow(page);
+  const checks = body.getByText(/About \d+ AI objects per slide to check/);
+  await body.getByRole("radio", { name: /^Annotate/ }).click();
+  await body.getByRole("radio", { name: /^Check a sample/ }).click();
+  for (let index = 0; index < 3; index += 1) {
+    await body.getByRole("button", { name: "Next" }).click();
+  }
+  await expect(checks).toBeVisible();
+  await body.getByRole("button", { name: /^Kind/ }).first().click();
+  await body.getByRole("radio", { name: /^Annotate by hand/ }).click();
+  await body
+    .getByRole("button", { name: /^What to check/ })
+    .first()
+    .click();
+  await expect(checks).toHaveCount(0);
+});

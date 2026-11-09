@@ -1870,11 +1870,17 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Refs doc 35.
   Size: M.
 
-- [ ] SHELL-010 · Error and issue states in every flow
+- [x] SHELL-010 · Error and issue states in every flow
   One banner style and one inline error style serve every issue state in the app, and each state lives in its own flow. Every state says what happened, what still works and the one action that fixes it, and never loses anything typed. Parfocal has no offline mode, so a lost connection shows "Connection lost" under the top bar and retries by itself with a "Retry now" in the banner. The actions that would save are disabled with the reason, the current object, the chosen answer and any typed note stay on screen, and a toast confirms the pending save when the connection is back. The shell also covers session expired (IAM-021), no access, which names the project's owner and offers "Ask for access", not found and server error. The flows' own states use the same styles and are built by their flow's task: upload (a duplicate slide, storage full, a result with no slide, a source that stops answering), the New review task flow (no result set, a due date in the past, a reviewer away, a retired template, nobody picked), review (a slide that fails to load, no results, connection lost, a withdrawn task, read-only after sign-off), submit, the disagreement queue, sign-off, the evaluation report (a retired template, a failed export), the clinical report, Team, the shortcuts in Settings and connecting a model.
   Done when component tests cover the banner and the inline error, Connection lost with its retry and a kept note, session expired, no access with its request, not found and server error, and axe passes on each.
   Refs mock: states, mock: guided/connlost, mock: case/connlost, mock: signin/expired, mock: signin/noaccess, kit: issue states, doc 44.
   Size: L.
+
+- [ ] SHELL-015 · One connection banner and issue pages everywhere
+  Review of SHELL-010 (error and issue states) found the shell banner only inside the global shell. Show it in guided review and the full viewer by reading `useConnection` in place of their prototype scene banners, make `holdSaveUntilBack` run the held saves on reconnect or remove it with its toast text, route the real expired and no-access cases of sign-in to the shared issue pages and retire the copies in the sign-in screens, fold the `/issue-pages` preview into the `/issue-states` dev index, and make `issue-states.spec.ts` fail when the root server error page renders.
+  Done when browser tests show the banner in guided review and the full viewer, a held save runs on reconnect, sign-in shows the shared pages, and the issue states spec catches a crashed scene.
+  Depends on SHELL-010.
+  Size: M.
 
 - [ ] SHELL-011 · Second-monitor pop-out windows
   The minimap and the inspector can pop out into a second window that stays in sync (BroadcastChannel), using the Window Management API where available.
@@ -2880,11 +2886,17 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Depends on IAM-019, REPORT-015. Refs kit W57.
   Size: M.
 
-- [ ] COLLAB-015 · Threads on any slide
+- [x] COLLAB-015 · Threads on any slide
   A thread can be started on any slide a person can read, with the task optional, as the owner chose on 2026-11-04 ([threads on any slide with an optional task](adr/0230-threads-on-any-slide-with-an-optional-task.md)). A migration makes `threads.task_id` nullable. A thread with a task keeps every rule of [ADR 0152](adr/0152-threads-on-task-slides.md) (threads on task slides), including the sign-off rule. A taskless thread is seen by everyone who can read the slide, except that a reader with an open first read on that slide sees only their own and the researcher's. Its notifications carry the project and the case so mutes catch them, and the target opens the slide with no task. The comment tool works on a slide opened outside a task, and the Comments tab marks each thread "Slide" or with its task.
   Done when API tests cover creating, listing, replying and deleting taskless threads with tenant isolation, audit and the first read rule, a notification test resolves a taskless target and a project mute catches it, and a component test shows a taskless thread in the Comments tab.
   Depends on COLLAB-002, COLLAB-005.
   Size: M.
+
+- [ ] COLLAB-018 · Result set on a taskless region anchor
+  Review of COLLAB-015 (threads on any slide) found that a taskless thread anchored to an AI object stores only the object number, while a slide may hold several result sets, so the pin, the Comments tab label and the current object cannot tell which set it means. Store the result set on taskless object anchors, or refuse an object anchor without a task.
+  Done when API tests create a taskless object anchor on a slide with two result sets and read back the right set, and the Comments tab names it.
+  Depends on COLLAB-015.
+  Size: S.
 
 ---
 
@@ -3726,7 +3738,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
 
 ## 29 DEV · Input devices and tablet layout
 
-- [ ] DEV-000 · Research check
+- [x] DEV-000 · Research check
   Check Gamepad API and WebHID support across target browsers and the SpaceMouse HID report format.
   Done when an ADR lists support and fallbacks.
   Size: S.
@@ -3846,7 +3858,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
 
 ## 32 EXP · Experiments, analytics and surveys
 
-- [ ] EXP-000 · Research check
+- [x] EXP-000 · Research check
   Done when STACK-033 is confirmed and the event taxonomy is written as an ADR.
   Size: S.
 
@@ -4004,7 +4016,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
 
 ## 35 TEST · Test infrastructure
 
-- [ ] TEST-000 · Research check
+- [x] TEST-000 · Research check
   Done when STACK-012 is confirmed and the test pyramid with ownership per level is written as an ADR.
   Size: S.
 
@@ -4389,7 +4401,7 @@ A researcher hands slides to reviewers as a review task ([ADR 0053](adr/0053-ai-
   Split on 2026-10-31: the E2E that reveals the AI after a first read moved to TASK-010, because it needs the review screens.
   Display locks, such as confidence hidden for a round, also keep a reviewer blind to part of the AI. They are TASK-011 (display defaults, locks and presets, [ADR 0132](adr/0132-display-settings-presets-and-task-locks.md), display settings, presets and task locks).
 
-- [ ] TASK-005 · New review task stepper
+- [x] TASK-005 · New review task stepper
   A flow page that starts with the kind, review AI results or annotate, then Slides, Reviewers, What to check (review tasks only), How it runs, and Send. For an annotate task, the first step offers the presets of TASK-015, Slides may include slides with no result set, What to check holds the check options, and How it runs holds the blind first switch (COLLAB-017), where every visited step can be clicked. Reviewers are picked in the token field (DS-020). The estimate follows every choice. What to check holds the decision question: the four decision styles as plain radio rows, and under the picked one the Counts as line with its preview bar and a Preview of the question card, with the mapping steppers for 5-point certainty (GUIDE-015, [ADR 0131](adr/0131-decision-styles-raw-answers-and-submit-gating.md), decision styles, raw answers and submit gating). Send is the one place that sums the task up, with a Change link per row and an optional note to the reviewers. It shows no preview of the email.
   Done when component tests cover each step, the estimate, each decision style with its Counts as line and a refused mapping with no agree or no disagree answer, and E2E creates a task from the project page and from the end of an upload.
   Depends on TASK-001, TASK-013, TASK-015, DS-020, DS-022, GUIDE-015, PROTO-020. Refs mock: task/check, mock: task/decision, mock: task/send, doc 39, doc 44.
@@ -4425,6 +4437,24 @@ A researcher hands slides to reviewers as a review task ([ADR 0053](adr/0053-ai-
   Done when E2E walks that flow and checks that the AI is absent before the first read and present after it, and that the first read is unchanged after the decisions and the submit.
   Depends on TASK-004, GUIDE-002, GUIDE-007. Split from TASK-004 ([ADR 0118](adr/0118-blinding-and-a-kept-first-read.md)).
   Size: M.
+
+- [x] TASK-016 · Mock API blinds like the real one
+  Review of TASK-010 (reveal the AI after a first read) found the fake API still serves AI result sets while a first read is open. Answer 403 `ai-hidden` on the result set routes and return no AI objects on every slide of a hide-the-AI task until its first read is recorded, as the real API does, and treat only a 404 from `getFirstRead` as not recorded so a passing server error never shows the first-read step again.
+  Done when fake API tests cover the 403 and the empty objects before and after a first read, and a component or browser test shows a 500 from the first read keeps the AI step.
+  Depends on TASK-010.
+  Size: S.
+
+- [ ] TASK-017 · First read notice in the full viewer and paged screen
+  While a first read is open, the full viewer and the paged screen show a blank slide because the API hides the AI. Show a notice there that sends the reviewer to guided review to record the first read, and guard the `scene` search parameter so it never skips the first-read gate outside the prototype.
+  Done when a browser test opens the full viewer and the paged screen of a hide-the-AI task before the first read and finds the notice and its link, and a test shows `scene` is ignored on a real task.
+  Depends on TASK-010.
+  Size: S.
+
+- [ ] TASK-018 · Sample size in the annotate task stepper
+  Review of TASK-005 (new review task stepper) found the sample check option says "about 50" while the preset sends 200, as ADR 0238 (check options and presets on annotate tasks) sets, so the estimate disagrees with the request. Fix the text and the estimate to use the sent size, add a sample size input to What to check sent as `random-cells.count`, align the UI by-hand preset order with the API preset, and add a component test for the Kind step.
+  Done when model tests show the estimate and the request use the same size, a browser test changes the sample size and finds it in the created task, and a component test covers the Kind step.
+  Depends on TASK-005.
+  Size: S.
 
 - [x] TASK-011 · Display defaults, locks and presets
   A task holds display defaults preset by its study template and changed in the New review task flow: draw as, width, opacity, colour by, ID labels, confidence as a number, a word, a colour or hidden, the heatmap, the score cutoff, the other result sets, the order, the zoom around the object, moving on by itself and where the buttons sit. The task may lock confidence, the heatmap, the score cutoff, the other result sets and the order, each with a reason of 5 to 120 characters, and the API refuses a reviewer's change to a locked value. A reviewer saves presets with a name of 1 to 40 characters, unique among their presets, for one task or for all their tasks. Every decision stores the preset in force, the task default or a preset's name, and the evaluation returns who used which preset on how many objects for the report's Methods block and its Preset column ([ADR 0132](adr/0132-display-settings-presets-and-task-locks.md), display settings, presets and task locks).
@@ -4579,13 +4609,13 @@ Doctors judge AI objects in a simple guided mode, or in the full viewer with the
   Depends on ANN-032, ANN-031, GUIDE-002. Refs [ADR 0238](adr/0238-check-options-and-presets-on-annotate-tasks.md).
   Size: M.
 
-- [ ] GUIDE-020 · Guided check follows the task's check scope and order
+- [x] GUIDE-020 · Guided check follows the task's check scope and order
   GUIDE-019 walks every unchecked AI object least sure first. Read the stored review order (`getReviewOrder`, as `slide-progress.ts` does) so the queue keeps to the task's check scope (below a score, a sample, regions) and its by-position order, with the client sort as fallback.
   Done when unit tests cover each scope and order and the guided check browser spec walks a scoped task in its stored order.
   Depends on GUIDE-019.
   Size: S.
 
-- [ ] GUIDE-021 · Guided check key safety
+- [x] GUIDE-021 · Guided check key safety
   Review of GUIDE-019 found three gaps. A fast D then Shift X can delete the object just confirmed because there is no optimistic check state, Shift G turns guided mode on even when the panel cannot show it (locked, AI hidden or no AI), and clicking a list row moves the selection off the guided object so D and Shift X act on another object than the one shown. Ignore guided keys while a save runs or advance the queue at once, gate Shift G, and keep the selection on the guided object.
   Done when unit or interaction tests cover each of the three cases.
   Depends on GUIDE-019.
@@ -4874,7 +4904,7 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Depends on ONB-004.
   Size: M.
 
-- [ ] ONB-011 · Answer workspace asks and set the join domain in Admin
+- [x] ONB-011 · Answer workspace asks and set the join domain in Admin
   ONB-010 lets a person ask to join a workspace and notifies its admins, but admins can only approve through the API, cannot decline, and cannot set the workspace's email domain, its join policy or an image logo. Add a Join requests list in Admin People with Approve and Decline, open it from the admin's notification, and add the email domain, join policy and logo upload to the workspace settings, with the domain refused when it is a public mail domain.
   Done when API tests cover decline and the domain and policy change with a public domain refused, and a browser test opens an ask from the notification and approves another.
   Depends on ONB-010.

@@ -242,6 +242,12 @@ class Workspace:
     signed_annotate_task: uuid.UUID = field(default_factory=uuid.uuid4)
     layer_object: uuid.UUID = field(default_factory=uuid.uuid4)
     doomed_layer_object: uuid.UUID = field(default_factory=uuid.uuid4)
+    slide_thread: uuid.UUID = field(default_factory=uuid.uuid4)
+    doomed_slide_thread: uuid.UUID = field(default_factory=uuid.uuid4)
+
+    @property
+    def slide_threads(self) -> str:
+        return f"/api/projects/{self.project}/slides/{self.slide}/threads"
 
     @property
     def shared_layer(self) -> str:
@@ -298,6 +304,12 @@ NEEDS_A_TASK = frozenset(
         "reopenThread",
         "moveThread",
         "deleteThread",
+        "createThreadOnSlide",
+        "replyToThreadOnSlide",
+        "resolveThreadOnSlide",
+        "reopenThreadOnSlide",
+        "moveThreadOnSlide",
+        "deleteThreadOnSlide",
         "createSharedObject",
         "importSharedObjects",
         "changeAiObject",
@@ -628,6 +640,10 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
         "PUT", "/api/tenant/settings", {"values": {"lock_after_minutes": 20}}
     ),
     "getSecurityContact": lambda _: Call("GET", "/api/tenant/security-contact"),
+    "getJoinSettings": lambda _: Call("GET", "/api/tenant/join-settings"),
+    "setJoinSettings": lambda _: Call(
+        "PUT", "/api/tenant/join-settings", {"email_domain": None, "join_policy": "ask"}
+    ),
     "setSecurityContact": lambda _: Call(
         "PUT", "/api/tenant/security-contact", {"email": "security@example.test"}
     ),
@@ -1004,6 +1020,29 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "deleteThread": lambda w: Call(
         "DELETE", f"/api/review-tasks/{w.task}/slides/{w.slide}/threads/{w.doomed_thread}"
     ),
+    "listThreadsOnSlide": lambda w: Call("GET", w.slide_threads),
+    "listMentionableMembersOnSlide": lambda w: Call("GET", f"{w.slide_threads}/mentionable"),
+    "getThreadOnSlide": lambda w: Call("GET", f"{w.slide_threads}/{w.slide_thread}"),
+    "createThreadOnSlide": lambda w: Call(
+        "POST",
+        w.slide_threads,
+        {
+            "title": "Matrix",
+            "body": "Matrix",
+            "anchor": {"kind": "point", "geometry": {"type": "Point", "coordinates": [1, 2]}},
+        },
+    ),
+    "replyToThreadOnSlide": lambda w: Call(
+        "POST", f"{w.slide_threads}/{w.slide_thread}/messages", {"body": "Matrix reply"}
+    ),
+    "resolveThreadOnSlide": lambda w: Call("POST", f"{w.slide_threads}/{w.slide_thread}/resolve"),
+    "reopenThreadOnSlide": lambda w: Call("POST", f"{w.slide_threads}/{w.slide_thread}/reopen"),
+    "moveThreadOnSlide": lambda w: Call(
+        "PATCH",
+        f"{w.slide_threads}/{w.slide_thread}/anchor",
+        {"geometry": {"type": "Point", "coordinates": [3, 4]}},
+    ),
+    "deleteThreadOnSlide": lambda w: Call("DELETE", f"{w.slide_threads}/{w.doomed_slide_thread}"),
     "submitSlideReview": lambda w: Call(
         "POST", f"/api/review-tasks/{w.task}/slides/{w.slide}/submit"
     ),
@@ -1107,6 +1146,9 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "listWorkspaceAccessRequests": lambda _: Call("GET", "/api/tenant/access-requests"),
     "approveWorkspaceAccessRequest": lambda w: Call(
         "POST", f"/api/tenant/access-requests/{seeded(w, 'access-request')}/approval"
+    ),
+    "declineWorkspaceAccessRequest": lambda w: Call(
+        "DELETE", f"/api/tenant/access-requests/{seeded(w, 'declined-access-request')}"
     ),
 }
 PLACEHOLDER = Workspace(
@@ -1417,7 +1459,7 @@ async def seed_thread(
     connection: AsyncConnection,
     tenant_id: uuid.UUID,
     project_id: uuid.UUID,
-    task_id: uuid.UUID,
+    task_id: uuid.UUID | None,
     slide_id: uuid.UUID,
     user_id: uuid.UUID,
 ) -> uuid.UUID:
@@ -1807,6 +1849,17 @@ async def seed(database: str, lead: Seat = RESEARCHER, presets_for: Seat = RESEA
                 )
                 for _ in range(2)
             ]
+            slide_thread, doomed_slide_thread = [
+                await seed_thread(
+                    connection,
+                    tenant_id,
+                    case.project_id,
+                    None,
+                    case.loose_slide_id,
+                    people[lead],
+                )
+                for _ in range(2)
+            ]
             kept_preset, doomed_preset = await seed_presets(
                 connection, tenant_id, people[presets_for]
             )
@@ -1941,6 +1994,13 @@ async def seed(database: str, lead: Seat = RESEARCHER, presets_for: Seat = RESEA
                     id=uuid.uuid5(tenant_id, "access-request"),
                     tenant_id=tenant_id,
                     user_id=colleague,
+                )
+            )
+            await connection.execute(
+                insert(workspace_access_requests).values(
+                    id=uuid.uuid5(tenant_id, "declined-access-request"),
+                    tenant_id=tenant_id,
+                    user_id=adjudicator,
                 )
             )
             await connection.execute(
@@ -2080,6 +2140,8 @@ async def seed(database: str, lead: Seat = RESEARCHER, presets_for: Seat = RESEA
             adjudicator=adjudicator,
             report_link=report_link,
             annotate_task=annotate_task,
+            slide_thread=slide_thread,
+            doomed_slide_thread=doomed_slide_thread,
             checked_annotate_task=checked_annotate_task,
             ready_annotate_task=ready_annotate_task,
             signed_annotate_task=signed_annotate_task,

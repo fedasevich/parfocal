@@ -24,6 +24,7 @@ import { Route as SignUpRouteImport } from "./routes/sign-up.tsx";
 import { Route as TeamRouteImport } from "./routes/team.tsx";
 import { Route as FlowMapIndexRouteImport } from "./routes/flow-map.index.tsx";
 import { Route as InvitationsTokenRouteImport } from "./routes/invitations.$token.tsx";
+import { Route as IssuePagesKindRouteImport } from "./routes/issue-pages.$kind.tsx";
 import { Route as ProjectsNewRouteImport } from "./routes/projects.new.tsx";
 import { Route as SettingsIndexRouteImport } from "./routes/settings.index.tsx";
 import { Route as SettingsSectionRouteImport } from "./routes/settings.$section.tsx";
@@ -128,6 +129,11 @@ const FlowMapIndexRoute = FlowMapIndexRouteImport.update({
 const InvitationsTokenRoute = InvitationsTokenRouteImport.update({
   id: "/invitations/$token",
   path: "/invitations/$token",
+  getParentRoute: () => rootRouteImport,
+} as any);
+const IssuePagesKindRoute = IssuePagesKindRouteImport.update({
+  id: "/issue-pages/$kind",
+  path: "/issue-pages/$kind",
   getParentRoute: () => rootRouteImport,
 } as any);
 const ProjectsNewRoute = ProjectsNewRouteImport.update({
@@ -310,6 +316,7 @@ export interface FileRoutesByFullPath {
   "/sign-up": typeof SignUpRoute;
   "/team": typeof TeamRoute;
   "/invitations/$token": typeof InvitationsTokenRoute;
+  "/issue-pages/$kind": typeof IssuePagesKindRoute;
   "/projects/new": typeof ProjectsNewRoute;
   "/settings/$section": typeof SettingsSectionRoute;
   "/shared-reports/$token": typeof SharedReportsTokenRoute;
@@ -357,6 +364,7 @@ export interface FileRoutesByTo {
   "/sign-up": typeof SignUpRoute;
   "/team": typeof TeamRoute;
   "/invitations/$token": typeof InvitationsTokenRoute;
+  "/issue-pages/$kind": typeof IssuePagesKindRoute;
   "/projects/new": typeof ProjectsNewRoute;
   "/settings/$section": typeof SettingsSectionRoute;
   "/shared-reports/$token": typeof SharedReportsTokenRoute;
@@ -405,6 +413,7 @@ export interface FileRoutesById {
   "/sign-up": typeof SignUpRoute;
   "/team": typeof TeamRoute;
   "/invitations/$token": typeof InvitationsTokenRoute;
+  "/issue-pages/$kind": typeof IssuePagesKindRoute;
   "/projects/new": typeof ProjectsNewRoute;
   "/settings/$section": typeof SettingsSectionRoute;
   "/shared-reports/$token": typeof SharedReportsTokenRoute;
@@ -454,6 +463,7 @@ export interface FileRouteTypes {
     | "/sign-up"
     | "/team"
     | "/invitations/$token"
+    | "/issue-pages/$kind"
     | "/projects/new"
     | "/settings/$section"
     | "/shared-reports/$token"
@@ -501,6 +511,7 @@ export interface FileRouteTypes {
     | "/sign-up"
     | "/team"
     | "/invitations/$token"
+    | "/issue-pages/$kind"
     | "/projects/new"
     | "/settings/$section"
     | "/shared-reports/$token"
@@ -548,6 +559,7 @@ export interface FileRouteTypes {
     | "/sign-up"
     | "/team"
     | "/invitations/$token"
+    | "/issue-pages/$kind"
     | "/projects/new"
     | "/settings/$section"
     | "/shared-reports/$token"
@@ -596,6 +608,7 @@ export interface RootRouteChildren {
   SignUpRoute: typeof SignUpRoute;
   TeamRoute: typeof TeamRoute;
   InvitationsTokenRoute: typeof InvitationsTokenRoute;
+  IssuePagesKindRoute: typeof IssuePagesKindRoute;
   ProjectsNewRoute: typeof ProjectsNewRoute;
   SettingsSectionRoute: typeof SettingsSectionRoute;
   SharedReportsTokenRoute: typeof SharedReportsTokenRoute;
@@ -734,6 +747,13 @@ declare module "@tanstack/react-router" {
       path: "/invitations/$token";
       fullPath: "/invitations/$token";
       preLoaderRoute: typeof InvitationsTokenRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/issue-pages/$kind": {
+      id: "/issue-pages/$kind";
+      path: "/issue-pages/$kind";
+      fullPath: "/issue-pages/$kind";
+      preLoaderRoute: typeof IssuePagesKindRouteImport;
       parentRoute: typeof rootRouteImport;
     };
     "/projects/new": {
@@ -964,6 +984,7 @@ const rootRouteChildren: RootRouteChildren = {
   SignUpRoute: SignUpRoute,
   TeamRoute: TeamRoute,
   InvitationsTokenRoute: InvitationsTokenRoute,
+  IssuePagesKindRoute: IssuePagesKindRoute,
   ProjectsNewRoute: ProjectsNewRoute,
   SettingsSectionRoute: SettingsSectionRoute,
   SharedReportsTokenRoute: SharedReportsTokenRoute,

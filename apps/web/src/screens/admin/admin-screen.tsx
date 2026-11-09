@@ -29,6 +29,7 @@ type Props = {
   section: AdminSection;
   scene: AdminScene | undefined;
   modal: AdminModal | undefined;
+  request?: string | undefined;
   change: (next: {
     section?: AdminSection;
     scene?: AdminScene | undefined;
@@ -36,7 +37,7 @@ type Props = {
   }) => void;
 };
 
-export function AdminScreen({ section, scene, modal, change }: Props) {
+export function AdminScreen({ section, scene, modal, request, change }: Props) {
   const me = okData(useGetMe().data);
   const templates = okData(useListStudyTemplates().data) ?? [];
   const renderLink = useRouterLink();
@@ -159,6 +160,7 @@ export function AdminScreen({ section, scene, modal, change }: Props) {
     people: (
       <PeopleSection
         notify={notify}
+        request={request}
         inviting={modal === "invite"}
         setInviting={(on) => change({ modal: on ? "invite" : undefined })}
       />
@@ -180,7 +182,7 @@ export function AdminScreen({ section, scene, modal, change }: Props) {
     api: <ApiSection notify={notify} />,
     audit: <AuditSection filter={auditFilter} onFilter={setAuditFilter} />,
     security: <SecuritySection notify={notify} />,
-    settings: <WorkspaceSettingsSection notify={notify} />,
+    settings: <WorkspaceSettingsSection notify={notify} workspaceName={workspaceName} />,
   };
   return (
     <AdminShell section={section}>

@@ -5,9 +5,12 @@ import {
   checkQueueOf,
   currentOf,
   guideAction,
+  guidedAvailable,
   guidedBindings,
+  guidedToggle,
   nextClassOf,
   type Queued,
+  selectionAfterRowClick,
   skippedState,
   startState,
 } from "../src/annotations/guided-check.ts";
@@ -24,6 +27,43 @@ const first = [cell(1, 0.42), cell(2, 0.61), cell(3, 0.73), cell(4, 0.88), cell(
 test("the queue is the unchecked objects, least sure first, unknown scores last", () => {
   const queue = checkQueueOf([...first, cell(6, null), cell(7, 0.1, "confirmed")], []);
   assert.deepEqual(queue, ["C1", "C5", "C2", "C3", "C4", "C6"]);
+});
+
+const slide = [cell(1, 0.9), cell(2, 0.2), cell(3, 0.5), cell(4, 0.7), cell(5, 0.3), cell(6, 0.6)];
+
+test("a score scope keeps only the stored objects, in the stored order", () => {
+  assert.deepEqual(checkQueueOf(slide, [], ["C5", "C2", "C3"]), ["C5", "C2", "C3"]);
+});
+
+test("a sample scope leaves the rest of the slide out of the queue", () => {
+  assert.deepEqual(checkQueueOf(slide, [], ["C6", "C1"]), ["C6", "C1"]);
+});
+
+test("a region scope keeps objects the stored order lists and drops others", () => {
+  assert.deepEqual(checkQueueOf(slide, [], ["C4", "C99", "C2"]), ["C4", "C2"]);
+});
+
+test("the by-position order is kept even where scores would sort differently", () => {
+  const stored = ["C1", "C2", "C3", "C4", "C5", "C6"];
+  assert.deepEqual(checkQueueOf(slide, [], stored), stored);
+  assert.deepEqual(checkQueueOf(slide, []), ["C2", "C5", "C3", "C6", "C4", "C1"]);
+});
+
+test("the least sure order stored for the task is kept as stored", () => {
+  assert.deepEqual(checkQueueOf(slide, [], ["C2", "C5", "C3"]), ["C2", "C5", "C3"]);
+});
+
+test("checked objects leave a stored queue and skipped ones go last", () => {
+  const checked = slide.map((item) =>
+    item.object === "C2" ? { ...item, check: "confirmed" as const } : item,
+  );
+  assert.deepEqual(checkQueueOf(checked, ["C5"], ["C5", "C2", "C3"]), ["C3", "C5"]);
+});
+
+test("no stored order falls back to the client sort", () => {
+  const fallback = ["C2", "C5", "C3", "C6", "C4", "C1"];
+  assert.deepEqual(checkQueueOf(slide, [], null), fallback);
+  assert.deepEqual(checkQueueOf(slide, [], []), fallback);
 });
 
 test("equal scores follow the object number", () => {
@@ -97,4 +137,23 @@ test("the guided keys are bound on annotate screens", () => {
   const actions = guidedBindings().map((binding) => binding.action);
   assert.ok(actions.includes(guideAction));
   assert.ok(actions.includes("gnext"));
+});
+
+test("the guided check is available only with shown AI objects on an unlocked slide", () => {
+  assert.equal(guidedAvailable(true, 3, false), true);
+  assert.equal(guidedAvailable(false, 3, false), false);
+  assert.equal(guidedAvailable(true, 0, false), false);
+  assert.equal(guidedAvailable(true, 3, true), false);
+});
+
+test("the guide key turns the mode on only when it can be shown and always turns it off", () => {
+  assert.equal(guidedToggle(false, true), true);
+  assert.equal(guidedToggle(false, false), false);
+  assert.equal(guidedToggle(true, false), false);
+  assert.equal(guidedToggle(true, true), false);
+});
+
+test("a list row click keeps the selection on the guided object", () => {
+  assert.equal(selectionAfterRowClick(true, "C1", "C4"), "C1");
+  assert.equal(selectionAfterRowClick(false, "C1", "C4"), "C4");
 });

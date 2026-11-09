@@ -77,3 +77,27 @@ test("the AI is absent before the first read, appears after it, and the first re
 
   expect(await firstReadOf(page)).toEqual(recorded);
 });
+
+test("a server error from the first read neither shows the first-read step nor the AI", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const real = window.fetch.bind(window);
+    window.fetch = (input, init) => {
+      const url = input instanceof Request ? input.url : String(input);
+      if (url.endsWith("/first-read") && (init?.method ?? "GET") === "GET")
+        return Promise.resolve(
+          new Response(
+            JSON.stringify({ type: "about:blank", title: "Failed", status: 500, code: "server" }),
+            { status: 500, headers: { "content-type": "application/problem+json" } },
+          ),
+        );
+      return real(input, init);
+    };
+  });
+  await page.goto(`/tasks/${rt17}/guided?slide=${a1}`);
+  await expect(page.getByTestId("first-read-unavailable")).toBeVisible();
+  await expect(page.getByTestId("first-read-panel")).toHaveCount(0);
+  await expect(page.getByRole("group", { name: "Objects" })).toHaveCount(0);
+  await expect(page.locator('main[data-ai="shown"]')).toHaveCount(0);
+});
