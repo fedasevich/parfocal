@@ -4444,7 +4444,7 @@ A researcher hands slides to reviewers as a review task ([ADR 0053](adr/0053-ai-
   Depends on TASK-010.
   Size: S.
 
-- [ ] TASK-017 · First read notice in the full viewer and paged screen
+- [x] TASK-017 · First read notice in the full viewer and paged screen
   While a first read is open, the full viewer and the paged screen show a blank slide because the API hides the AI. Show a notice there that sends the reviewer to guided review to record the first read, and guard the `scene` search parameter so it never skips the first-read gate outside the prototype.
   Done when a browser test opens the full viewer and the paged screen of a hide-the-AI task before the first read and finds the notice and its link, and a test shows `scene` is ignored on a real task.
   Depends on TASK-010.
