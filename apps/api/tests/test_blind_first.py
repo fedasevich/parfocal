@@ -111,3 +111,27 @@ def test_ai_copies_stay_shared_under_blind_first(api: ApiAs, database: str) -> N
     copied = api(o.people["first"]).put(f"{slide}/shared-layer/ai/T1", json={"deleted": True})
     assert copied.status_code == 201, copied.text
     assert copied.json()["id"] in ids_seen(api, o, "second", slide)
+
+
+def test_a_thread_on_a_hidden_object_stays_hidden_with_it(api: ApiAs, database: str) -> None:
+    o = ordered(database, api)
+    task = two_slides(api, o, blind_first=True, blinded=False)
+    slide = on_slide(o, task, 0)
+    made = drawn(api, o, "first", slide)
+    thread = post(
+        api,
+        o,
+        "first",
+        f"{slide}/threads",
+        title="Margin",
+        body="Is this the margin?",
+        anchor={"kind": "object", "object_id": made["code"]},
+    )
+    assert thread.status_code == 201, thread.text
+    path = f"{slide}/threads/{thread.json()['id']}"
+    assert api(o.people["second"]).get(path).status_code == 404
+    listed = api(o.people["second"]).get(f"{slide}/threads")
+    assert listed.status_code == 200, listed.text
+    assert listed.json() == []
+    assert post(api, o, "first", f"{slide}/check").status_code == 200
+    assert api(o.people["second"]).get(path).status_code == 200

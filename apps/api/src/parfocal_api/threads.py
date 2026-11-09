@@ -18,6 +18,7 @@ from parfocal_api.annotations import (
     Position,
 )
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
+from parfocal_api.blind_first import hidden_objects
 from parfocal_api.blinding import ai_hidden_on, require_ai_shown, sees_reviewer, user_of
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.mentions import MAX_MENTIONS, mentioned_in
@@ -260,6 +261,7 @@ class Sight:
     whole_authors: dict[uuid.UUID, bool] = field(default_factory=dict)
     seen: dict[uuid.UUID, bool] = field(default_factory=dict)
     hidden: bool | None = None
+    blind: set[tuple[Letter, int]] | None = None
 
     async def reads_whole(self, author: uuid.UUID) -> bool:
         if author not in self.whole_authors:
@@ -305,9 +307,23 @@ class Sight:
         mine = isinstance(self.reader, MemberPrincipal) and (
             self.reader.user_id == row.created_by_user_id
         )
-        if not mine and row.object_id is not None and is_ai(parse(row.object_id)):
+        if mine or row.object_id is None:
+            return True
+        found = parse(row.object_id)
+        if is_ai(found):
             return not await self.ai_hidden()
-        return True
+        return (found.letter, found.number) not in await self.blind_objects()
+
+    async def blind_objects(self) -> set[tuple[Letter, int]]:
+        if self.blind is None:
+            self.blind = (
+                set()
+                if self.place.task_id is None
+                else await hidden_objects(
+                    self.connection, self.reader, self.place.task_id, self.place.slide_id
+                )
+            )
+        return self.blind
 
 
 async def principal_of(

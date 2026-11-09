@@ -5,10 +5,18 @@ from fastapi import BackgroundTasks
 from sqlalchemy import ColumnElement, and_, exists, not_, select
 from sqlalchemy.ext.asyncio import AsyncConnection
 
+from parfocal_api.annotations import LETTERS
 from parfocal_api.principals import MemberPrincipal, Principal
 from parfocal_api.realtime import Realtime, RoomEvent
 from parfocal_api.room_access import RoomKind, room_name
-from parfocal_api.tables import AnnotationOrigin, annotations, review_assignments
+from parfocal_api.tables import (
+    AnnotationKind,
+    AnnotationOrigin,
+    annotations,
+    review_assignments,
+    review_tasks,
+)
+from parfocal_common.object_ids import Letter
 
 VISIBILITY_EVENT = "layer.visibility-changed"
 
@@ -65,3 +73,21 @@ def announce_visibility(
         kind=VISIBILITY_EVENT, ids={"task": row.task_id, "slide": row.slide_id, "user": user_id}
     )
     background.add_task(live.publish, row.tenant_id, [room_name(RoomKind.TASK, row.task_id)], event)
+
+
+async def hidden_objects(
+    connection: AsyncConnection, principal: Principal, task_id: uuid.UUID, slide_id: uuid.UUID
+) -> set[tuple[Letter, int]]:
+    blind = await connection.scalar(
+        select(review_tasks.c.blind_first).where(review_tasks.c.id == task_id)
+    )
+    if not blind:
+        return set()
+    rows = await connection.execute(
+        select(annotations.c.kind, annotations.c.number).where(
+            annotations.c.task_id == task_id,
+            annotations.c.slide_id == slide_id,
+            hidden_from(viewer_of(principal)),
+        )
+    )
+    return {(LETTERS[AnnotationKind(row.kind)], row.number) for row in rows}

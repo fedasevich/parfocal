@@ -782,6 +782,23 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
         )
     )
     seeded.markers.update({thread_title, message_body})
+    slide_thread_title = f"Slide thread {uuid.uuid4().hex[:8]}"
+    slide_thread_id = await connection.scalar(
+        insert(threads)
+        .values(
+            tenant_id=seeded.tenant_id,
+            project_id=case.project_id,
+            slide_id=case.loose_slide_id,
+            title=slide_thread_title,
+            anchor_kind="point",
+            geometry={"type": "Point", "coordinates": [3, 4]},
+            created_by_user_id=seeded.ids["user"],
+        )
+        .returning(threads.c.id)
+    )
+    assert isinstance(slide_thread_id, uuid.UUID)
+    seeded.ids["slide_thread"] = slide_thread_id
+    seeded.markers.add(slide_thread_title)
     colleague_name = f"Colleague {uuid.uuid4().hex[:8]}"
     colleague = await connection.scalar(
         insert(users)
@@ -1576,6 +1593,21 @@ GET_ROUTES = {
         Exposure.TENANT,
         lambda a: (
             f"/api/review-tasks/{a.ids['task']}/slides/{a.ids['slide']}/threads/{a.ids['thread']}"
+        ),
+    ),
+    "listThreadsOnSlide": Route(
+        Exposure.TENANT,
+        lambda a: f"/api/projects/{a.ids['project']}/slides/{a.ids['slide']}/threads",
+    ),
+    "listMentionableMembersOnSlide": Route(
+        Exposure.TENANT,
+        lambda a: f"/api/projects/{a.ids['project']}/slides/{a.ids['slide']}/threads/mentionable",
+    ),
+    "getThreadOnSlide": Route(
+        Exposure.TENANT,
+        lambda a: (
+            f"/api/projects/{a.ids['project']}/slides/{a.ids['slide']}/threads/"
+            f"{a.ids['slide_thread']}"
         ),
     ),
     "getReviewOrder": Route(

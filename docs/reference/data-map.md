@@ -15,7 +15,7 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `phi` | 46 |
 | `personal` | 89 |
 | `secret` | 11 |
-| `operational` | 724 |
+| `operational` | 725 |
 | `public` | 0 |
 
 ## adjudication_objects
