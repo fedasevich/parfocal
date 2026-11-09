@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-09
 
+- Guided check key safety: key actions are ignored while a save runs, Shift G works only with the AI shown on an unlocked slide, and row clicks keep the guided selection, with unit and browser tests.
 - An ADR confirms PostHog Cloud for STACK-033 and records the ids-only analytics event taxonomy. EXP-001 still needs the production client, the identity hook, the exposure event and the workspace as a PostHog group.
 - An ADR confirms STACK-012 (frontend testing stack) and gives six test levels an owning place and CI job each, with file counts measured by git ls-files.
 - An ADR lists input device support and fallbacks for mouse, trackpad, touch, pen, keyboard, footswitch, gamepad and SpaceMouse over WebHID. Browser support and the SpaceMouse report layout are marked TODO to confirm in DEV-004 with recorded reports.

@@ -4603,7 +4603,7 @@ Doctors judge AI objects in a simple guided mode, or in the full viewer with the
   Depends on GUIDE-019.
   Size: S.
 
-- [ ] GUIDE-021 · Guided check key safety
+- [x] GUIDE-021 · Guided check key safety
   Review of GUIDE-019 found three gaps. A fast D then Shift X can delete the object just confirmed because there is no optimistic check state, Shift G turns guided mode on even when the panel cannot show it (locked, AI hidden or no AI), and clicking a list row moves the selection off the guided object so D and Shift X act on another object than the one shown. Ignore guided keys while a save runs or advance the queue at once, gate Shift G, and keep the selection on the guided object.
   Done when unit or interaction tests cover each of the three cases.
   Depends on GUIDE-019.
