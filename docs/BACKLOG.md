@@ -4832,7 +4832,7 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Depends on ONB-001. Refs mock: signup.
   Size: M.
 
-- [ ] ONB-003 · Invite landing
+- [x] ONB-003 · Invite landing
   Who invited, the project and task, the work, the due date, blinding and the privacy mode, then join in one step and open the first slide.
   Done when E2E accepts an invite and lands on the first slide.
   Depends on TASK-006. Refs mock: invite.
