@@ -16,6 +16,8 @@ const workspace = (
   kind: "research",
   status: "active",
   organisation_name: "Lab",
+  logo: "L",
+  logo_colour: "#2f6fdf",
 });
 
 const meWith = (...workspaces: Me["workspaces"]): Me => ({
@@ -25,6 +27,7 @@ const meWith = (...workspaces: Me["workspaces"]): Me => ({
   avatar_colour: 0,
   title: "",
   email: "tp@example.org",
+  specialties: [],
   active_tenant_id: "a",
   workspaces,
 });

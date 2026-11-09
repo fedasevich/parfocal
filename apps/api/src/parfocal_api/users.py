@@ -1,6 +1,7 @@
+import re
 import uuid
 from datetime import datetime
-from typing import Annotated, Self
+from typing import Annotated, Any, Self
 
 from fastapi import APIRouter, Request
 from pydantic import BaseModel, Field, StringConstraints, model_validator
@@ -48,6 +49,30 @@ type DisplayName = Annotated[
     str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)
 ]
 type Title = Annotated[str, StringConstraints(strip_whitespace=True, max_length=40)]
+type Specialty = Annotated[
+    str, StringConstraints(strip_whitespace=True, min_length=1, max_length=60)
+]
+
+LOGO_COLOURS = (
+    "#2f6fdf",
+    "#1f9d8b",
+    "#c2410c",
+    "#7c3aed",
+    "#be185d",
+    "#4d7c0f",
+    "#0e7490",
+    "#a16207",
+)
+
+
+def logo_mark_of(name: str) -> str:
+    words = [word for word in re.split(r"[^A-Za-z0-9]+", name) if word]
+    letters = "".join(word[0] for word in words[:2]).upper()
+    return letters or "W"
+
+
+def logo_colour_of(tenant_id: uuid.UUID) -> str:
+    return LOGO_COLOURS[tenant_id.int % len(LOGO_COLOURS)]
 
 
 class Profile(BaseModel):
@@ -79,10 +104,13 @@ class Workspace(BaseModel):
     kind: TenantKind
     status: TenantStatus
     organisation_name: str
+    logo: str
+    logo_colour: str
 
 
 class Me(Profile):
     email: str | None
+    specialties: list[str]
     active_tenant_id: uuid.UUID | None
     workspaces: list[Workspace]
 
@@ -92,6 +120,7 @@ class ProfileChange(BaseModel):
     initials: Initials | None = None
     avatar_colour: Annotated[int, Field(ge=0, lt=AVATAR_COLOURS)] | None = None
     title: Title | None = None
+    specialties: Annotated[list[Specialty], Field(max_length=20)] | None = None
 
 
 class WorkspaceChoice(BaseModel):
@@ -208,25 +237,45 @@ async def own_workspaces(connection: AsyncConnection, user_id: uuid.UUID) -> lis
             tenants.c.kind,
             tenants.c.status,
             organisations.c.name.label("organisation_name"),
+            tenants.c.logo,
+            tenants.c.logo_colour,
         )
         .join(memberships, memberships.c.tenant_id == tenants.c.id)
         .join(organisations, organisations.c.id == tenants.c.organisation_id)
         .where(memberships.c.user_id == user_id)
         .order_by(organisations.c.name, tenants.c.name)
     )
-    return [Workspace.model_validate(row, from_attributes=True) for row in rows]
+    return [workspace_of(row) for row in rows]
+
+
+def workspace_of(row: Any) -> Workspace:
+    return Workspace(
+        tenant_id=row.tenant_id,
+        role=row.role,
+        admin_rights=row.admin_rights,
+        slug=row.slug,
+        name=row.name,
+        kind=row.kind,
+        status=row.status,
+        organisation_name=row.organisation_name,
+        logo=row.logo or logo_mark_of(row.name),
+        logo_colour=row.logo_colour or logo_colour_of(row.tenant_id),
+    )
 
 
 async def me_of(connection: AsyncConnection, principal: SignedInUser | MemberPrincipal) -> Me:
     row = (
         await connection.execute(
-            select(*PROFILE_COLUMNS, users.c.email).where(users.c.id == principal.user_id)
+            select(*PROFILE_COLUMNS, users.c.email, users.c.specialties).where(
+                users.c.id == principal.user_id
+            )
         )
     ).one()
     active = principal.tenant_id if isinstance(principal, MemberPrincipal) else None
     return Me(
         **profile_of(row).model_dump(),
         email=row.email,
+        specialties=list(row.specialties),
         active_tenant_id=active,
         workspaces=await own_workspaces(connection, principal.user_id),
     )
@@ -253,6 +302,8 @@ async def update_me(
     values = change.model_dump(exclude_unset=True)
     if "title" in values and not values["title"]:
         values["title"] = None
+    if "specialties" in values:
+        values["specialties"] = list(dict.fromkeys(values["specialties"] or []))
     if values:
         async with scoped_transaction(auth_state(request).engine, AUTH_SCOPE) as auth:
             await auth.execute(update(users).where(users.c.id == person.user_id).values(values))

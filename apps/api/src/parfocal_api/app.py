@@ -88,6 +88,7 @@ from parfocal_api import (
     uploads,
     users,
     verdicts,
+    workspace_access,
 )
 from parfocal_api.oidc import OidcClient
 from parfocal_api.origin_check import OriginCheck
@@ -271,6 +272,8 @@ def create_app(
     app.include_router(tenants.tenant)
     app.include_router(users.me_router)
     app.include_router(own_workspaces.router)
+    app.include_router(workspace_access.me_router)
+    app.include_router(workspace_access.tenant_router)
     app.include_router(users.tenant_router)
     app.include_router(users.platform_router)
     app.include_router(audit_trail.router)

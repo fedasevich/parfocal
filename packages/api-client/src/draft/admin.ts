@@ -1,4 +1,3 @@
-export * from "./answer-workspace.ts";
 export * from "./confirm-email.ts";
 export * from "./create-account.ts";
 export * from "./get-admin-overview.ts";
@@ -8,7 +7,6 @@ export * from "./get-security-settings.ts";
 export * from "./get-sign-in-options.ts";
 export * from "./get-storage-usage.ts";
 export * from "./list-ai-models.ts";
-export * from "./list-joinable-workspaces.ts";
 export * from "./list-webhooks.ts";
 export * from "./request-password-reset.ts";
 export * from "./request-project-access.ts";

@@ -31,6 +31,8 @@ class AuditAction(StrEnum):
     TENANT_REACTIVATED = "tenant.reactivated"
     WORKSPACE_SETTINGS_CHANGED = "tenant.settings-changed"
     MEMBER_ADDED = "member.added"
+    WORKSPACE_ACCESS_ASKED = "workspace.access-asked"
+    WORKSPACE_ACCESS_APPROVED = "workspace.access-approved"
     MEMBER_ROLE_CHANGED = "member.role-changed"
     MEMBER_ADMIN_RIGHTS_GIVEN = "member.admin-rights-given"
     MEMBER_ADMIN_RIGHTS_REMOVED = "member.admin-rights-removed"
@@ -191,6 +193,7 @@ class AuditTarget(StrEnum):
     CLINICAL_REPORT = "clinical-report"
     LAB_MODEL = "lab-model"
     FEEDBACK = "feedback"
+    ACCESS_REQUEST = "access-request"
 
 
 @dataclass(frozen=True)
