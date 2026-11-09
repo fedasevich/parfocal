@@ -265,8 +265,18 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        package: [ui, viewer-engine, golden-images, web, latency-proxy]
-    name: browser (${{ matrix.package }})
+        package: [ui, viewer-engine, golden-images, latency-proxy]
+        include:
+          - package: web
+            shard: 1
+            shards: 3
+          - package: web
+            shard: 2
+            shards: 3
+          - package: web
+            shard: 3
+            shards: 3
+    name: browser (${{ matrix.package }}${{ matrix.shard && format(' {0}/{1}', matrix.shard, matrix.shards) || '' }})
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-workspace
@@ -283,7 +293,7 @@ jobs:
       - run: df -h "$HOME"
       - run: google-chrome --version
       - if: ${{ github.event_name != 'workflow_dispatch' }}
-        run: pnpm turbo run test:browser --filter=@parfocal/${{ matrix.package }}
+        run: pnpm turbo run test:browser --filter=@parfocal/${{ matrix.package }} ${{ matrix.shard && format('-- --shard={0}/{1}', matrix.shard, matrix.shards) || '' }}
         env:
           PARFOCAL_REQUIRE_FIXTURES: small,viewer
       - if: ${{ always() && github.event_name != 'workflow_dispatch' }}
@@ -298,7 +308,7 @@ jobs:
       - if: ${{ always() && github.event_name != 'workflow_dispatch' }}
         uses: actions/upload-artifact@v7
         with:
-          name: flaky-browser-${{ matrix.package }}
+          name: flaky-browser-${{ matrix.package }}${{ matrix.shard && format('-{0}', matrix.shard) || '' }}
           path: flaky/flaky.json
           retention-days: 14
           if-no-files-found: ignore
