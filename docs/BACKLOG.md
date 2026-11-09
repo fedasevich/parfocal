@@ -1876,7 +1876,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Refs mock: states, mock: guided/connlost, mock: case/connlost, mock: signin/expired, mock: signin/noaccess, kit: issue states, doc 44.
   Size: L.
 
-- [ ] SHELL-015 · One connection banner and issue pages everywhere
+- [x] SHELL-015 · One connection banner and issue pages everywhere
   Review of SHELL-010 (error and issue states) found the shell banner only inside the global shell. Show it in guided review and the full viewer by reading `useConnection` in place of their prototype scene banners, make `holdSaveUntilBack` run the held saves on reconnect or remove it with its toast text, route the real expired and no-access cases of sign-in to the shared issue pages and retire the copies in the sign-in screens, fold the `/issue-pages` preview into the `/issue-states` dev index, and make `issue-states.spec.ts` fail when the root server error page renders.
   Done when browser tests show the banner in guided review and the full viewer, a held save runs on reconnect, sign-in shows the shared pages, and the issue states spec catches a crashed scene.
   Depends on SHELL-010.
