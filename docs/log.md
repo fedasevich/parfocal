@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-09
 
+- COLLAB-019: Object comments in guided review, the full viewer and the pinned-ID popover now post through the threads API (create on an object anchor, reply after) and read through the task thread routes, the fake keeps them across reload, with browser, API mention and api-client tests. Replies in an object thread display flat because the real message has no reply-to field.
 - CMP-008: Compare offset, rotation and scale per slide pair are saved in the personal compare_alignments setting, stamped with both slides' upload and sha256, restored when the pair reopens, dropped when either slide is replaced or deleted, and reset by Clear. No new table or route.
 - VIZ-011: Order, zoom, move on and button place now drive guided review. Save as no longer leaves an orphan preset, rapid Shift presses queue so the last one wins, the other sets choice is saved in my display, and the adjudicator view reads getMyDisplay. Saving the other sets choice has no browser test of its own.
 - EVAL-018: Arrange comparison blocks get a Compare with task picker. A researcher without admin rights can offer an arranged report to the admins through new template-offer routes guarded by the report-templates permission (migration 0109, new template-offered notification), and admins accept or decline offers on the templates page. The admin accept and decline screen has no browser test yet.

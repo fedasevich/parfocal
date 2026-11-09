@@ -2898,7 +2898,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Depends on COLLAB-015.
   Size: S.
 
-- [ ] COLLAB-019 · Object threads in guided review post to the threads API
+- [x] COLLAB-019 · Object threads in guided review post to the threads API
   GUIDE-023 (mentions saved as user tokens) found that the object thread composer in guided review only shows a comment locally and never posts it, so a comment written there is lost on reload and nobody mentioned is told. Post it through the threads API on the object's anchor, the way pin threads do, and show the stored thread in the Comments tab.
   Done when a browser test writes a comment on an object in guided review, reloads and finds it in the thread and the Comments tab, and an API test shows a mention in it notifies the person.
   Depends on COLLAB-015, GUIDE-023.
