@@ -235,5 +235,5 @@ async def get_notification_target(
             )
         case TargetKind.DECISION:
             return await decision_target(connection, principal, row, payload)
-        case TargetKind.DELIVERY | TargetKind.ACCESS_REQUEST:
+        case TargetKind.DELIVERY | TargetKind.ACCESS_REQUEST | TargetKind.TEMPLATE_OFFER:
             raise TargetNotAvailableError

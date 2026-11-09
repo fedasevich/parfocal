@@ -695,6 +695,7 @@ export const AuditTarget = {
   "model-run": "model-run",
   "review-task": "review-task",
   "study-template": "study-template",
+  "template-offer": "template-offer",
   "service-account": "service-account",
   invitation: "invitation",
   announcement: "announcement",
@@ -2403,6 +2404,7 @@ export const NotificationKind = {
   "adjudication-requested": "adjudication-requested",
   "slide-moved": "slide-moved",
   "workspace-access-asked": "workspace-access-asked",
+  "template-offered": "template-offered",
 } as const;
 
 export interface KindCount {
@@ -2433,6 +2435,7 @@ export const TargetKind = {
   delivery: "delivery",
   project: "project",
   "access-request": "access-request",
+  "template-offer": "template-offer",
 } as const;
 
 export interface InboxItem {
@@ -5223,6 +5226,28 @@ export interface TemplateClass {
 export interface Template {
   template: TaxonomyTemplate;
   classes: TemplateClass[];
+}
+
+export type TemplateOfferStatus = (typeof TemplateOfferStatus)[keyof typeof TemplateOfferStatus];
+
+export const TemplateOfferStatus = {
+  pending: "pending",
+  accepted: "accepted",
+  declined: "declined",
+} as const;
+
+export interface TemplateOffer {
+  name: TemplateName;
+  study_kind: StudyKind;
+  blocks: ReportBlocks;
+  format?: ReportFormat;
+  presets: Presets;
+  id: string;
+  offered_by_user_id: string;
+  status: TemplateOfferStatus;
+  template_id: string | null;
+  created_at: string;
+  decided_at: string | null;
 }
 
 export interface TemplatePreviewDraft {
@@ -50588,6 +50613,659 @@ export const useRestoreStudyTemplate = <TError = Problem, TContext = unknown>(
   TContext
 > => {
   return useMutation(getRestoreStudyTemplateMutationOptions(options), queryClient);
+};
+
+export type listTemplateOffersResponse200 = {
+  data: TemplateOffer[];
+  status: 200;
+};
+
+export type listTemplateOffersResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listTemplateOffersResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listTemplateOffersResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listTemplateOffersResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listTemplateOffersResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listTemplateOffersResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listTemplateOffersResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type listTemplateOffersResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listTemplateOffersResponseSuccess = listTemplateOffersResponse200 & {
+  headers: Headers;
+};
+export type listTemplateOffersResponseError = (
+  | listTemplateOffersResponse400
+  | listTemplateOffersResponse401
+  | listTemplateOffersResponse403
+  | listTemplateOffersResponse404
+  | listTemplateOffersResponse409
+  | listTemplateOffersResponse422
+  | listTemplateOffersResponse429
+  | listTemplateOffersResponse500
+) & {
+  headers: Headers;
+};
+
+export type listTemplateOffersResponse =
+  | listTemplateOffersResponseSuccess
+  | listTemplateOffersResponseError;
+
+export const getListTemplateOffersUrl = () => {
+  return `/api/template-offers`;
+};
+
+/**
+ * @summary List Template Offers
+ */
+export const listTemplateOffers = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listTemplateOffersResponse> => {
+  return apiFetch<listTemplateOffersResponse>(getListTemplateOffersUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListTemplateOffersQueryKey = () => {
+  return [`/api/template-offers`] as const;
+};
+
+export const getListTemplateOffersQueryOptions = <
+  TData = Awaited<ReturnType<typeof listTemplateOffers>>,
+  TError = Problem,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listTemplateOffers>>, TError, TData>>;
+  request?: SecondParameter<typeof apiFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListTemplateOffersQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listTemplateOffers>>> = ({ signal }) =>
+    listTemplateOffers({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listTemplateOffers>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ListTemplateOffersQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listTemplateOffers>>
+>;
+export type ListTemplateOffersQueryError = Problem;
+
+export function useListTemplateOffers<
+  TData = Awaited<ReturnType<typeof listTemplateOffers>>,
+  TError = Problem,
+>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listTemplateOffers>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listTemplateOffers>>,
+          TError,
+          Awaited<ReturnType<typeof listTemplateOffers>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListTemplateOffers<
+  TData = Awaited<ReturnType<typeof listTemplateOffers>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listTemplateOffers>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listTemplateOffers>>,
+          TError,
+          Awaited<ReturnType<typeof listTemplateOffers>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListTemplateOffers<
+  TData = Awaited<ReturnType<typeof listTemplateOffers>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listTemplateOffers>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Template Offers
+ */
+
+export function useListTemplateOffers<
+  TData = Awaited<ReturnType<typeof listTemplateOffers>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listTemplateOffers>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListTemplateOffersQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type offerStudyTemplateResponse201 = {
+  data: TemplateOffer;
+  status: 201;
+};
+
+export type offerStudyTemplateResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type offerStudyTemplateResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type offerStudyTemplateResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type offerStudyTemplateResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type offerStudyTemplateResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type offerStudyTemplateResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type offerStudyTemplateResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type offerStudyTemplateResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type offerStudyTemplateResponseSuccess = offerStudyTemplateResponse201 & {
+  headers: Headers;
+};
+export type offerStudyTemplateResponseError = (
+  | offerStudyTemplateResponse400
+  | offerStudyTemplateResponse401
+  | offerStudyTemplateResponse403
+  | offerStudyTemplateResponse404
+  | offerStudyTemplateResponse409
+  | offerStudyTemplateResponse422
+  | offerStudyTemplateResponse429
+  | offerStudyTemplateResponse500
+) & {
+  headers: Headers;
+};
+
+export type offerStudyTemplateResponse =
+  | offerStudyTemplateResponseSuccess
+  | offerStudyTemplateResponseError;
+
+export const getOfferStudyTemplateUrl = () => {
+  return `/api/template-offers`;
+};
+
+/**
+ * @summary Offer Study Template
+ */
+export const offerStudyTemplate = async (
+  studyTemplateDraft: StudyTemplateDraft,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<offerStudyTemplateResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<offerStudyTemplateResponse>(getOfferStudyTemplateUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(studyTemplateDraft),
+  });
+};
+
+export const getOfferStudyTemplateMutationKey = () => ["offerStudyTemplate"] as const;
+
+export const getOfferStudyTemplateMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof offerStudyTemplate>>,
+    TError,
+    OfferStudyTemplateMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof offerStudyTemplate>>,
+  TError,
+  OfferStudyTemplateMutationVariables,
+  TContext
+> => {
+  const mutationKey = getOfferStudyTemplateMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof offerStudyTemplate>>,
+    OfferStudyTemplateMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return offerStudyTemplate(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type OfferStudyTemplateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof offerStudyTemplate>>
+>;
+export type OfferStudyTemplateMutationBody = StudyTemplateDraft;
+export type OfferStudyTemplateMutationError = Problem;
+export type OfferStudyTemplateMutationVariables = { data: StudyTemplateDraft };
+
+/**
+ * @summary Offer Study Template
+ */
+export const useOfferStudyTemplate = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof offerStudyTemplate>>,
+      TError,
+      OfferStudyTemplateMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof offerStudyTemplate>>,
+  TError,
+  OfferStudyTemplateMutationVariables,
+  TContext
+> => {
+  return useMutation(getOfferStudyTemplateMutationOptions(options), queryClient);
+};
+
+export type acceptTemplateOfferResponse200 = {
+  data: StudyTemplate;
+  status: 200;
+};
+
+export type acceptTemplateOfferResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type acceptTemplateOfferResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type acceptTemplateOfferResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type acceptTemplateOfferResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type acceptTemplateOfferResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type acceptTemplateOfferResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type acceptTemplateOfferResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type acceptTemplateOfferResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type acceptTemplateOfferResponseSuccess = acceptTemplateOfferResponse200 & {
+  headers: Headers;
+};
+export type acceptTemplateOfferResponseError = (
+  | acceptTemplateOfferResponse400
+  | acceptTemplateOfferResponse401
+  | acceptTemplateOfferResponse403
+  | acceptTemplateOfferResponse404
+  | acceptTemplateOfferResponse409
+  | acceptTemplateOfferResponse422
+  | acceptTemplateOfferResponse429
+  | acceptTemplateOfferResponse500
+) & {
+  headers: Headers;
+};
+
+export type acceptTemplateOfferResponse =
+  | acceptTemplateOfferResponseSuccess
+  | acceptTemplateOfferResponseError;
+
+export const getAcceptTemplateOfferUrl = (offerId: string) => {
+  return `/api/template-offers/${offerId}/acceptance`;
+};
+
+/**
+ * @summary Accept Template Offer
+ */
+export const acceptTemplateOffer = async (
+  offerId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<acceptTemplateOfferResponse> => {
+  return apiFetch<acceptTemplateOfferResponse>(getAcceptTemplateOfferUrl(offerId), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getAcceptTemplateOfferMutationKey = () => ["acceptTemplateOffer"] as const;
+
+export const getAcceptTemplateOfferMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof acceptTemplateOffer>>,
+    TError,
+    AcceptTemplateOfferMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof acceptTemplateOffer>>,
+  TError,
+  AcceptTemplateOfferMutationVariables,
+  TContext
+> => {
+  const mutationKey = getAcceptTemplateOfferMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof acceptTemplateOffer>>,
+    AcceptTemplateOfferMutationVariables
+  > = (props) => {
+    const { offerId } = props ?? {};
+
+    return acceptTemplateOffer(offerId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AcceptTemplateOfferMutationResult = NonNullable<
+  Awaited<ReturnType<typeof acceptTemplateOffer>>
+>;
+
+export type AcceptTemplateOfferMutationError = Problem;
+export type AcceptTemplateOfferMutationVariables = { offerId: string };
+
+/**
+ * @summary Accept Template Offer
+ */
+export const useAcceptTemplateOffer = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof acceptTemplateOffer>>,
+      TError,
+      AcceptTemplateOfferMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof acceptTemplateOffer>>,
+  TError,
+  AcceptTemplateOfferMutationVariables,
+  TContext
+> => {
+  return useMutation(getAcceptTemplateOfferMutationOptions(options), queryClient);
+};
+
+export type declineTemplateOfferResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type declineTemplateOfferResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type declineTemplateOfferResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type declineTemplateOfferResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type declineTemplateOfferResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type declineTemplateOfferResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type declineTemplateOfferResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type declineTemplateOfferResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type declineTemplateOfferResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type declineTemplateOfferResponseSuccess = declineTemplateOfferResponse204 & {
+  headers: Headers;
+};
+export type declineTemplateOfferResponseError = (
+  | declineTemplateOfferResponse400
+  | declineTemplateOfferResponse401
+  | declineTemplateOfferResponse403
+  | declineTemplateOfferResponse404
+  | declineTemplateOfferResponse409
+  | declineTemplateOfferResponse422
+  | declineTemplateOfferResponse429
+  | declineTemplateOfferResponse500
+) & {
+  headers: Headers;
+};
+
+export type declineTemplateOfferResponse =
+  | declineTemplateOfferResponseSuccess
+  | declineTemplateOfferResponseError;
+
+export const getDeclineTemplateOfferUrl = (offerId: string) => {
+  return `/api/template-offers/${offerId}/decline`;
+};
+
+/**
+ * @summary Decline Template Offer
+ */
+export const declineTemplateOffer = async (
+  offerId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<declineTemplateOfferResponse> => {
+  return apiFetch<declineTemplateOfferResponse>(getDeclineTemplateOfferUrl(offerId), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getDeclineTemplateOfferMutationKey = () => ["declineTemplateOffer"] as const;
+
+export const getDeclineTemplateOfferMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof declineTemplateOffer>>,
+    TError,
+    DeclineTemplateOfferMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof declineTemplateOffer>>,
+  TError,
+  DeclineTemplateOfferMutationVariables,
+  TContext
+> => {
+  const mutationKey = getDeclineTemplateOfferMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof declineTemplateOffer>>,
+    DeclineTemplateOfferMutationVariables
+  > = (props) => {
+    const { offerId } = props ?? {};
+
+    return declineTemplateOffer(offerId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeclineTemplateOfferMutationResult = NonNullable<
+  Awaited<ReturnType<typeof declineTemplateOffer>>
+>;
+
+export type DeclineTemplateOfferMutationError = Problem;
+export type DeclineTemplateOfferMutationVariables = { offerId: string };
+
+/**
+ * @summary Decline Template Offer
+ */
+export const useDeclineTemplateOffer = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof declineTemplateOffer>>,
+      TError,
+      DeclineTemplateOfferMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof declineTemplateOffer>>,
+  TError,
+  DeclineTemplateOfferMutationVariables,
+  TContext
+> => {
+  return useMutation(getDeclineTemplateOfferMutationOptions(options), queryClient);
 };
 
 export type listMyReviewTasksResponse200 = {

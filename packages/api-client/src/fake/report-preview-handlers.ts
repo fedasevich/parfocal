@@ -1,6 +1,7 @@
 import { HttpResponse, http, type RequestHandler } from "msw";
 import { type LayoutBlock, type LayoutFormat, reportPages } from "../draft/report-layout.ts";
 import { toEvaluationReport } from "./adjudication-handlers.ts";
+import { toProjectReviewTasks } from "./project-handlers.ts";
 import { listedStudyTemplates } from "./task-handlers.ts";
 
 const sizes: Record<string, [number, number]> = { a4: [595, 842], letter: [612, 792] };
@@ -9,7 +10,22 @@ const emptyPdf = "%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n";
 
 type PreviewDraft = { name: string; blocks: LayoutBlock[]; format?: LayoutFormat };
 
-const svgPage = (title: string, page: number, pages: number, format: LayoutFormat) => {
+const comparedWith = (projectId: string, blocks: LayoutBlock[]) => {
+  const tasks = toProjectReviewTasks(projectId);
+  return blocks.flatMap((block) => {
+    const taskId = (block as { task_id?: string | null }).task_id;
+    const task = block.kind === "comparison" ? tasks.find((item) => item.id === taskId) : undefined;
+    return task ? [`Compared with ${task.code}`] : [];
+  });
+};
+
+const svgPage = (
+  title: string,
+  page: number,
+  pages: number,
+  format: LayoutFormat,
+  lines: string[],
+) => {
   const [short, long] = sizes[format.paper ?? "a4"] ?? [595, 842];
   const landscape = format.orientation === "landscape";
   const width = landscape ? long : short;
@@ -18,6 +34,10 @@ const svgPage = (title: string, page: number, pages: number, format: LayoutForma
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">`,
     `<rect width="${width}" height="${height}" fill="#ffffff"/>`,
     `<text x="57" y="80" font-size="22" font-family="sans-serif">${title}</text>`,
+    ...lines.map(
+      (line, index) =>
+        `<text x="57" y="${112 + index * 18}" font-size="12" font-family="sans-serif">${line}</text>`,
+    ),
     `<text x="57" y="${height - 40}" font-size="10" font-family="sans-serif">${page} / ${pages}</text>`,
     "</svg>",
   ].join("");
@@ -28,6 +48,7 @@ const previewOf = (
   title: string,
   blocks: LayoutBlock[],
   format: LayoutFormat,
+  lines: string[] = [],
 ) => {
   const count = Math.max(1, reportPages(blocks, format).length);
   return {
@@ -37,7 +58,9 @@ const previewOf = (
     orientation: format.orientation ?? "portrait",
     page_count: count,
     sample: false,
-    pages: Array.from({ length: count }, (_, index) => svgPage(title, index + 1, count, format)),
+    pages: Array.from({ length: count }, (_, index) =>
+      svgPage(title, index + 1, count, format, index === 0 ? lines : []),
+    ),
   };
 };
 
@@ -81,6 +104,7 @@ export function reportPreviewHandlers(): RequestHandler[] {
           `${report.task_code} evaluation`,
           layoutOf(params.taskId).blocks,
           layoutOf(params.taskId).format,
+          comparedWith(report.project.id, layoutOf(params.taskId).blocks),
         );
         return HttpResponse.json({
           ...whole,

@@ -147,7 +147,11 @@ def told(database: str, r: Review, who: str, kind: NotificationKind, about: obje
     )
 
 
-WITHOUT_A_SCREEN_TO_OPEN = {TargetKind.DELIVERY, TargetKind.ACCESS_REQUEST}
+WITHOUT_A_SCREEN_TO_OPEN = {
+    TargetKind.DELIVERY,
+    TargetKind.ACCESS_REQUEST,
+    TargetKind.TEMPLATE_OFFER,
+}
 
 
 def linked_object(r: Review) -> dict[str, str]:

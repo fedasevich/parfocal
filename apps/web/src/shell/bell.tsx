@@ -44,6 +44,7 @@ const kindIcons: Record<string, IconName> = {
   "task-signed-off": "check",
   "task-assigned": "users",
   "workspace-access-asked": "users",
+  "template-offered": "file",
 };
 
 export const payloadText = (item: InboxItem, key: string): string | undefined => {

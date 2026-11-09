@@ -92,6 +92,7 @@ from parfocal_api.tables import (
     study_templates,
     task_nudges,
     task_reassignments,
+    template_offers,
     tenants,
     thread_messages,
     threads,
@@ -1114,6 +1115,19 @@ async def seed_lab_models(connection: AsyncConnection, seeded: Seeded) -> None:
     seeded.markers.add(marker)
 
 
+async def seed_template_offers(connection: AsyncConnection, seeded: Seeded) -> None:
+    name = f"Offer {uuid.uuid4().hex[:12]}"
+    draft = BUILT_INS[next(iter(BUILT_INS))].model_copy(update={"name": name})
+    await connection.execute(
+        insert(template_offers).values(
+            tenant_id=seeded.tenant_id,
+            offered_by_user_id=seeded.ids["user"],
+            **content(draft),
+        )
+    )
+    seeded.markers.add(name)
+
+
 async def seed_workspace_access_requests(connection: AsyncConnection, seeded: Seeded) -> None:
     user = seeded.ids["user"]
     request_id = await connection.scalar(
@@ -1361,6 +1375,7 @@ SEEDERS: dict[str, Seeder] = {
     "lab_models": seed_lab_models,
     "lab_model_projects": seed_lab_model_projects,
     "workspace_access_requests": seed_workspace_access_requests,
+    "template_offers": seed_template_offers,
     "slide_coverage": seed_slide_coverage,
     "display_presets": seed_display_presets,
     "display_choices": seed_display_choices,
@@ -1485,6 +1500,9 @@ GET_ROUTES = {
     ),
     "getMySettingLayers": Route(Exposure.PUBLIC, lambda _: "/api/me/setting-layers"),
     "listJoinableWorkspaces": Route(Exposure.PUBLIC, lambda _: "/api/me/joinable-workspaces"),
+    "listTemplateOffers": Route(
+        Exposure.TENANT, lambda _: "/api/template-offers", admin_rights=True
+    ),
     "listWorkspaceAccessRequests": Route(
         Exposure.TENANT, lambda _: "/api/tenant/access-requests", admin_rights=True
     ),

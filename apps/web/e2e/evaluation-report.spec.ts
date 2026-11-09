@@ -164,12 +164,42 @@ test("arranging adds, moves, removes and sets blocks, then the report and PDF fo
   await expect(page.getByRole("img", { name: "Page 1 of the report" })).toBeVisible();
 });
 
+test("a comparison block is set to another task and the PDF names it", async ({ page }) => {
+  await page.goto(url("arrange"));
+  await catalogueButton(page, "Compare two result sets").click();
+  await page.getByRole("combobox", { name: "Compare with task" }).click();
+  const option = page.getByRole("option").nth(1);
+  const label = (await option.textContent()) ?? "";
+  const code = label.split(",")[0]?.trim() ?? "";
+  expect(code).not.toBe("");
+  await option.click();
+  await page.getByRole("button", { name: "Save for this task" }).click();
+  await expect(
+    page.getByRole("status").filter({ hasText: "Arranged for this task" }),
+  ).toBeVisible();
+  const preview = page.waitForResponse((response) =>
+    response.url().includes("/evaluation/preview"),
+  );
+  await page.getByRole("button", { name: "Preview the PDF" }).click();
+  const body = (await (await preview).json()) as { pages: string[] };
+  expect(body.pages.join("")).toContain(`Compared with ${code}`);
+});
+
 test("an arrangement is offered to the library as a new template", async ({ page }) => {
   await page.goto(url("arrange"));
   await page.getByRole("tab", { name: "Page and format" }).click();
   await page.getByRole("textbox", { name: "Name if saved as a template" }).fill("Lab layout");
   await page.getByRole("button", { name: "Save as template" }).click();
   await expect(page.getByText("Offered to the library as Lab layout")).toBeVisible();
+});
+
+test("a researcher without admin rights offers the arrangement to an admin", async ({ page }) => {
+  await page.goto(`${url("arrange")}&as=AK`);
+  await page.getByRole("tab", { name: "Page and format" }).click();
+  await expect(page.getByRole("button", { name: "Save as template" })).toHaveCount(0);
+  await page.getByRole("textbox", { name: "Name if saved as a template" }).fill("Lab layout");
+  await page.getByRole("button", { name: "Offer to an admin" }).click();
+  await expect(page.getByText("Offered Lab layout to the admins")).toBeVisible();
 });
 
 for (const scene of ["report", "arrange", "pdf", "retiredtpl", "exportfail"]) {

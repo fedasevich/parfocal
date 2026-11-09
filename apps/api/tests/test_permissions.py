@@ -67,6 +67,7 @@ from parfocal_api.tables import (
     slides,
     task_nudges,
     task_reassignments,
+    template_offers,
     tenants,
     thread_messages,
     threads,
@@ -244,6 +245,8 @@ class Workspace:
     doomed_layer_object: uuid.UUID = field(default_factory=uuid.uuid4)
     slide_thread: uuid.UUID = field(default_factory=uuid.uuid4)
     doomed_slide_thread: uuid.UUID = field(default_factory=uuid.uuid4)
+    accepted_offer: uuid.UUID = field(default_factory=uuid.uuid4)
+    declined_offer: uuid.UUID = field(default_factory=uuid.uuid4)
 
     @property
     def slide_threads(self) -> str:
@@ -519,6 +522,14 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "createStudyTemplate": lambda _: Call("POST", "/api/study-templates", template_body()),
     "editStudyTemplate": lambda w: Call(
         "PUT", f"/api/study-templates/{w.study_template}", template_body()
+    ),
+    "offerStudyTemplate": lambda _: Call("POST", "/api/template-offers", template_body()),
+    "listTemplateOffers": lambda _: Call("GET", "/api/template-offers"),
+    "acceptTemplateOffer": lambda w: Call(
+        "POST", f"/api/template-offers/{w.accepted_offer}/acceptance"
+    ),
+    "declineTemplateOffer": lambda w: Call(
+        "POST", f"/api/template-offers/{w.declined_offer}/decline"
     ),
     "retireStudyTemplate": lambda w: Call(
         "POST", f"/api/study-templates/{w.spare_template}/retire"
@@ -1287,7 +1298,7 @@ WRITES = {
     name
     for name, call in GUARDED_CALLS.items()
     if call(replace(PLACEHOLDER, invitations=[uuid.uuid4()])).method != "GET"
-}
+} - {"offerStudyTemplate"} | {"listTemplateOffers"}
 
 
 def writes() -> set[str]:
@@ -1574,6 +1585,29 @@ async def seed_task(
         )
     )
     return task_id
+
+
+async def seed_offers(
+    connection: AsyncConnection, tenant_id: uuid.UUID, user_id: uuid.UUID
+) -> tuple[uuid.UUID, uuid.UUID]:
+    made = [
+        await connection.scalar(
+            insert(template_offers)
+            .values(
+                tenant_id=tenant_id,
+                offered_by_user_id=user_id,
+                name=f"Matrix offer {number}",
+                study_kind="regions",
+                blocks=[{"kind": "text", "title": "Methods"}],
+                format={},
+                presets={"objects_to_check": {"kind": "all-regions"}},
+            )
+            .returning(template_offers.c.id)
+        )
+        for number in (1, 2)
+    ]
+    accepted, declined = [uuid.UUID(str(made_id)) for made_id in made]
+    return accepted, declined
 
 
 async def seed_presets(
@@ -1898,6 +1932,7 @@ async def seed(database: str, lead: Seat = RESEARCHER, presets_for: Seat = RESEA
             kept_preset, doomed_preset = await seed_presets(
                 connection, tenant_id, people[presets_for]
             )
+            accepted_offer, declined_offer = await seed_offers(connection, tenant_id, people[lead])
             report_link = await connection.scalar(
                 insert(report_links)
                 .values(
@@ -2170,6 +2205,8 @@ async def seed(database: str, lead: Seat = RESEARCHER, presets_for: Seat = RESEA
             doomed_thread,
             *uploads_made,
             display_preset=kept_preset,
+            accepted_offer=accepted_offer,
+            declined_offer=declined_offer,
             doomed_preset=doomed_preset,
             declinable=declinable,
             adjudicator=adjudicator,

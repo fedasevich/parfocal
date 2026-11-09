@@ -84,6 +84,7 @@ from parfocal_api import (
     task_report_layout,
     task_runs,
     taxonomy,
+    template_offers,
     tenants,
     threads,
     tile_access,
@@ -270,6 +271,7 @@ def create_app(
     app.include_router(report_links.router)
     app.include_router(report_links.public_router)
     app.include_router(study_templates.router)
+    app.include_router(template_offers.router)
     app.include_router(my_work.router)
     app.include_router(track_record.router)
     app.include_router(case_creation.router)
