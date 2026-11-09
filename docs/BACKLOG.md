@@ -4971,7 +4971,7 @@ Admin is its own page with its own sidebar and the app's top bar, never a page i
 
 ## 51 VIZ · Layers and visualization
 
-- [ ] VIZ-000 · Research check
+- [x] VIZ-000 · Research check
   Done when an ADR records how result sets, styles and maps are drawn on the overlay system (VIEW-026), and how the Display panel's state with its task locks ([ADR 0132](adr/0132-display-settings-presets-and-task-locks.md), display settings, presets and task locks) reaches it.
   Size: S.
 
