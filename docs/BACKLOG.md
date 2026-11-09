@@ -3748,7 +3748,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when unit tests cover the intent mapping for every device in the kit device matrix.
   Size: M.
 
-- [ ] DEV-002 · Trackpad detection and gestures
+- [x] DEV-002 · Trackpad detection and gestures
   Two-finger pan, pinch zoom, two-finger click for negative point, no drag-to-pan requirement.
   Done when replayed traces from macOS and Windows trackpads produce the right intents.
   Size: M.

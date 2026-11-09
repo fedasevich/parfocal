@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-09
 
+- Two-finger click maps to a negativePoint intent in Annotate and a Safari pinch step to an unanimated zoom, with four synthetic Mac and Windows trackpad traces replayed in tests and marked to record on real hardware. DOM listeners for the new intents are DEV-010.
 - Decision notes save with the decision and its quick reasons, take Enter, Esc and mentions, and show in guided review, the full viewer, the cell gallery, the Comments tab and the adjudicator view, with unit, browser and axe tests. It found notes and quick reasons were never sent to the API before. Mentions in notes notify nobody yet, GUIDE-022 adds it.
 - Migration 0107 adds review_tasks.blind_first. An expert's hand-drawn objects stay hidden from colleagues and the owner until that expert checks the slide, in the layer, history, edits, nothing to mark, AI changes, the annotate PDF report, threads and realtime events, and the stepper switch is enabled. Fable review found the PDF report and thread anchor leaks, both fixed, and the isolation suite now covers the slide thread routes. Decision 80 asks whether the owner is blind too.
 - The shell store moved from a hand-written useSyncExternalStore to Zustand 5.1.0 with navOpen, and an E2E spec covers each top bar and sidebar control, keyboard reach and no Mentions entry. Every control already existed. The first page is 350856 gzip bytes.
