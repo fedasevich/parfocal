@@ -2,6 +2,8 @@ import { expect, type Page, test } from "@playwright/test";
 
 const rt17 = "00000000-0000-4000-8007-000000000017";
 const a1 = "00000000-0000-4000-8005-000000000001";
+const p07 = "00000000-0000-4000-8003-000000000007";
+const camName = "CAMELYON";
 
 test.use({ viewport: { width: 1440, height: 1000 } });
 
@@ -100,4 +102,55 @@ test("a server error from the first read neither shows the first-read step nor t
   await expect(page.getByTestId("first-read-panel")).toHaveCount(0);
   await expect(page.getByRole("group", { name: "Objects" })).toHaveCount(0);
   await expect(page.locator('main[data-ai="shown"]')).toHaveCount(0);
+});
+
+const setsOf = (page: Page, path: string) =>
+  page.evaluate(async (url) => {
+    const response = await fetch(url);
+    const body = (await response.json()) as { name: string }[];
+    return body.map((set) => set.name);
+  }, path);
+
+for (const [name, extra] of [
+  ["full viewer", ""],
+  ["paged screen", "&pagedCells=2000"],
+] as const) {
+  test(`the ${name} of a hide-the-AI task shows the first read notice and its link before the first read`, async ({
+    page,
+  }) => {
+    await page.goto(`/projects/${p07}/slides/${a1}?task=${rt17}${extra}`);
+    const notice = page.getByTestId("first-read-notice");
+    await expect(notice).toBeVisible({ timeout: 60_000 });
+    await expect(notice).toContainText("The AI stays hidden until your first read");
+    await expect(page.getByRole("group", { name: "Objects" })).toHaveCount(0);
+    const link = page.getByTestId("first-read-link");
+    await expect(link).toHaveAttribute("href", new RegExp(`/tasks/${rt17}/guided\\?slide=${a1}`));
+    await link.click();
+    await expect(page.getByTestId("first-read-panel")).toBeVisible();
+  });
+}
+
+test("the scene search parameter never skips the first read gate on a hide-the-AI task", async ({
+  page,
+}) => {
+  await page.goto(`/tasks/${rt17}/guided?slide=${a1}&scene=region`);
+  await expect(page.locator('main[data-ai="hidden"]')).toBeVisible();
+  await expect(page.getByTestId("first-read-panel")).toBeVisible();
+  await expect(page.getByRole("group", { name: "Objects" })).toHaveCount(0);
+});
+
+test("the slide and project result set lists hide the AI result of an open first read only on the task page", async ({
+  page,
+}) => {
+  await page.goto(`/tasks/${rt17}/guided?slide=${a1}`);
+  await expect(page.getByTestId("first-read-panel")).toBeVisible();
+  const slideList = `/api/slides/${a1}/result-sets`;
+  const projectList = `/api/projects/${p07}/result-sets`;
+  expect((await setsOf(page, slideList)).some((name) => name.includes(camName))).toBe(false);
+  expect((await setsOf(page, projectList)).some((name) => name.includes(camName))).toBe(false);
+
+  await page.goto(`/projects/${p07}/slides/${a1}`);
+  await expect(page.getByRole("main").first()).toBeVisible();
+  expect((await setsOf(page, slideList)).some((name) => name.includes(camName))).toBe(true);
+  expect((await setsOf(page, projectList)).some((name) => name.includes(camName))).toBe(true);
 });

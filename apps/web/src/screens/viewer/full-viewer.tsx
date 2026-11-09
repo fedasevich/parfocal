@@ -75,6 +75,8 @@ import {
   displaySettings,
   withOverrides,
 } from "../review/display-tab.tsx";
+import { useFirstReadGate } from "../review/first-read-gate.ts";
+import { FirstReadNotice } from "../review/first-read-notice.tsx";
 import { CanvasNotice } from "../review/guided-review.tsx";
 import { finishingAnswers } from "../review/guided-scenes.ts";
 import { useNoteKey } from "../review/note-key.ts";
@@ -294,9 +296,12 @@ function ViewerBody({
   const paged = usePagedReview(session.classes.map((item) => item.name));
   const fixtureObjects =
     setup.issue === "noresults" || setup.issue === "withdrawn" ? [] : session.objects;
-  const objects = paged
-    ? [...fixtureObjects.filter((item) => item.kind !== "cell"), ...paged.cells]
-    : fixtureObjects;
+  const firstReadGate = useFirstReadGate(session);
+  const firstReadOpen = firstReadGate === "open";
+  const objects =
+    paged && !firstReadOpen
+      ? [...fixtureObjects.filter((item) => item.kind !== "cell"), ...paged.cells]
+      : fixtureObjects;
   const decisions = useDecisionSaves({ ...session, objects }, style);
   const regions = objects.filter((item) => item.kind === "region");
   const cells = objects.filter((item) => item.kind === "cell");
@@ -913,19 +918,24 @@ function ViewerBody({
   };
 
   const noTask = search.task === undefined && session.objects.length === 0;
-  const nothing = noTask || setup.issue === "noresults" || setup.issue === "withdrawn";
+  const nothing =
+    firstReadOpen || noTask || setup.issue === "noresults" || setup.issue === "withdrawn";
   const objectsBody: ReactNode =
     running && progress ? (
       <RunningObjects progress={progress} objects={objects} />
     ) : nothing ? (
       <Zone title={`Objects on ${slideLabel}`} data-phi="">
-        <p className="m-0 text-body-sm leading-[1.5] text-fg-dim">
-          {noTask
-            ? `No review task asks about ${slideLabel}. Look at it here, and write what you find in the clinical report.`
-            : setup.issue === "noresults"
-              ? `Nothing to decide here yet. ${slideLabel} has no ${setName} result in ${session.task?.code ?? "this task"}.`
-              : `${session.task?.code ?? "The task"} was withdrawn on 16 Oct. There is nothing left to decide.`}
-        </p>
+        {firstReadOpen ? (
+          <FirstReadNotice taskId={session.taskId} slideId={session.slideId} />
+        ) : (
+          <p className="m-0 text-body-sm leading-[1.5] text-fg-dim">
+            {noTask
+              ? `No review task asks about ${slideLabel}. Look at it here, and write what you find in the clinical report.`
+              : setup.issue === "noresults"
+                ? `Nothing to decide here yet. ${slideLabel} has no ${setName} result in ${session.task?.code ?? "this task"}.`
+                : `${session.task?.code ?? "The task"} was withdrawn on 16 Oct. There is nothing left to decide.`}
+          </p>
+        )}
       </Zone>
     ) : (
       <>
