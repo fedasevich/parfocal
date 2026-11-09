@@ -52,6 +52,8 @@ import { ConnectionBanner } from "../../shell/connection-banner.tsx";
 import { destinations } from "../../shell/destinations.ts";
 import { useLabDecisionCutoff, useResolvedSettings } from "../../shell/resolved-settings.ts";
 import { useCellTiming, useChromeSampling, useTaskRun } from "../../telemetry/use-task-timing.ts";
+import { stillBackdrop } from "../../viewer/still-backdrop.tsx";
+import { useStillObjects } from "../../viewer/use-still-objects.ts";
 import { formatDayMonth } from "../format.ts";
 import { useRememberResume } from "../home/remember-resume.ts";
 import { usePeople } from "../people.ts";
@@ -943,6 +945,23 @@ function ViewerBody({
   const noTask = search.task === undefined && session.objects.length === 0;
   const nothing =
     firstReadOpen || noTask || setup.issue === "noresults" || setup.issue === "withdrawn";
+  const plainObjects = (view === "panel" || view === "table") && !nothing && !running;
+  const still = useStillObjects(
+    objects,
+    (object) => answer(object)?.value,
+    stillView.kind === "region" ? stillView.object : null,
+  );
+  const backdrop = stillBackdrop({
+    enabled:
+      stillView.kind !== "cell" &&
+      setup.tiles === "sharp" &&
+      setup.issue !== "slidefail" &&
+      drawing.second === undefined,
+    slideId,
+    objects: plainObjects && showsClaim(style) ? still.objects : null,
+    choices: settings,
+    hiddenClasses,
+  });
   const objectsBody: ReactNode =
     running && progress ? (
       <RunningObjects progress={progress} objects={objects} />
@@ -1518,6 +1537,8 @@ function ViewerBody({
               view={stillView}
               camera={shownCamera}
               onCameraChange={setCamera}
+              backdrop={backdrop}
+              engineDrawn={plainObjects && showsClaim(style) ? still.ids : undefined}
               regionDecisions={regionDecisions}
               cellDecisions={cellDecisions}
               ringedCells={

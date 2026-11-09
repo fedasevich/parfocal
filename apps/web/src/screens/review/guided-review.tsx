@@ -36,6 +36,8 @@ import { ConnectionBanner } from "../../shell/connection-banner.tsx";
 import { useLabDecisionCutoff } from "../../shell/resolved-settings.ts";
 import { showUndoToast } from "../../shell/undo-toasts.tsx";
 import { useCellTiming, useTaskRun } from "../../telemetry/use-task-timing.ts";
+import { stillBackdrop } from "../../viewer/still-backdrop.tsx";
+import { useStillObjects } from "../../viewer/use-still-objects.ts";
 import { markTried } from "../home/getting-started.ts";
 import { useRememberResume } from "../home/remember-resume.ts";
 import { usePeople } from "../people.ts";
@@ -579,6 +581,18 @@ function GuidedBody({
       : current?.kind === "cell"
         ? { kind: "cell", object: currentId }
         : { kind: "region", object: currentId };
+  const claimShown = showsClaim(style);
+  const still = useStillObjects(
+    regions,
+    (object) => answer(object)?.value,
+    view.kind === "region" ? currentId : null,
+  );
+  const backdrop = stillBackdrop({
+    enabled: view.kind !== "cell" && !tileFail && !noResults,
+    slideId: session.slideId,
+    objects: claimShown ? still.objects : null,
+    choices: settings,
+  });
   const submitReason =
     counts.open > 0
       ? `${counts.open} object${counts.open === 1 ? " is" : "s are"} still open.`
@@ -927,6 +941,8 @@ function GuidedBody({
           view={view}
           camera={camera}
           onCameraChange={setCamera}
+          backdrop={backdrop}
+          engineDrawn={claimShown ? still.ids : undefined}
           regionDecisions={regionDecisions}
           cellDecisions={cellDecisions}
           ringedCells={confirmRest ? openCells.map((cell) => cell.object) : []}

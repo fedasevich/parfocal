@@ -9,8 +9,28 @@ async function displayScene(page: Page) {
   await expect(page.getByTestId("full-viewer")).toBeVisible();
 }
 
-const regionPaths = (page: Page) =>
-  page.locator('[data-slot="slide-still"] svg > g > path:not([data-double-line])');
+const engine = (page: Page) => page.getByTestId("still-engine");
+
+type DrawnStyle = {
+  part: string;
+  width: number;
+  fill: number;
+  dashed: boolean;
+  opacity: number;
+};
+
+async function drawn(page: Page) {
+  const layer = engine(page);
+  await expect(layer).toHaveAttribute("data-state", "ready", { timeout: 20_000 });
+  const styles = JSON.parse((await layer.getAttribute("data-styles")) ?? "[]") as DrawnStyle[];
+  const colours = JSON.parse((await layer.getAttribute("data-colours")) ?? "{}") as Record<
+    string,
+    number[]
+  >;
+  return { styles, colours, main: styles.find((style) => style.part === "main") };
+}
+
+const firstColour = async (page: Page) => Object.values((await drawn(page)).colours)[0]?.join(",");
 
 const row = (page: Page, label: string) =>
   page.locator('[data-slot="control-row"]').filter({ hasText: label });
@@ -21,41 +41,39 @@ async function pick(page: Page, label: string, option: string) {
 
 test("draw as, width and colour change how the regions draw", async ({ page }) => {
   await displayScene(page);
-  const first = regionPaths(page).first();
-  await expect(first).toHaveAttribute("fill", "none");
+  await expect.poll(async () => (await drawn(page)).main?.fill).toBe(0);
   await pick(page, "Draw as", "Fill");
-  await expect(first).not.toHaveAttribute("fill", "none");
+  await expect.poll(async () => (await drawn(page)).main?.fill).toBeGreaterThan(0);
   await pick(page, "Draw as", "Outline");
-  await expect(first).toHaveAttribute("fill", "none");
+  await expect.poll(async () => (await drawn(page)).main?.fill).toBe(0);
   await pick(page, "Width", "3 px");
-  await expect(first).toHaveAttribute("stroke-width", "3");
+  await expect.poll(async () => (await drawn(page)).main?.width).toBe(3);
   await pick(page, "Width", "1 px");
-  await expect(first).toHaveAttribute("stroke-width", "1");
-  const byClass = await first.getAttribute("stroke");
+  await expect.poll(async () => (await drawn(page)).main?.width).toBe(1);
+  const byClass = await firstColour(page);
   await pick(page, "Color by", "Score");
-  await expect(first).not.toHaveAttribute("stroke", byClass ?? "");
-  await expect(first).toHaveAttribute("stroke", /^rgb\(/);
+  await expect.poll(() => firstColour(page)).not.toBe(byClass);
+  const byScore = await firstColour(page);
   await pick(page, "Color by", "Decision");
-  await expect(first).not.toHaveAttribute("stroke", /^rgb\(\d+ \d+ \d+\)$/);
+  await expect.poll(() => firstColour(page)).not.toBe(byScore);
 });
 
 test("opacity fades the objects", async ({ page }) => {
   await displayScene(page);
-  const first = regionPaths(page).first();
   const slider = page.getByRole("slider", { name: "Opacity" });
   await slider.focus();
   await page.keyboard.press("Home");
-  await expect(first).toHaveAttribute("stroke-opacity", "0.2");
+  await expect.poll(async () => (await drawn(page)).main?.opacity).toBe(0.2);
   await page.keyboard.press("End");
-  await expect(first).toHaveAttribute("stroke-opacity", "1");
+  await expect.poll(async () => (await drawn(page)).main?.opacity).toBe(1);
 });
 
 test("the score cutoff draws low objects dashed and faint without changing what is in scope", async ({
   page,
 }) => {
   await displayScene(page);
-  const regions = regionPaths(page);
-  const before = await regions.count();
+  await expect(engine(page)).not.toHaveAttribute("data-scope", "0");
+  const scope = await engine(page).getAttribute("data-scope");
   const rows = page.getByRole("complementary", { name: "Side panel" });
   await page.getByRole("tab", { name: /Objects/ }).click();
   const listed = await rows.getByText(/^T\d/).count();
@@ -63,11 +81,14 @@ test("the score cutoff draws low objects dashed and faint without changing what 
   const slider = page.getByRole("slider", { name: "Score cutoff" });
   await slider.focus();
   await page.keyboard.press("Home");
-  await expect(regions.first()).not.toHaveAttribute("stroke-dasharray", /.+/);
+  await expect
+    .poll(async () => (await drawn(page)).styles.some((s) => s.part === "below"))
+    .toBe(false);
   await page.keyboard.press("End");
-  await expect(regions.first()).toHaveAttribute("stroke-dasharray", "5 3");
-  await expect(regions.first()).toHaveAttribute("stroke-opacity", "0.5");
-  await expect(regions).toHaveCount(before);
+  await expect
+    .poll(async () => (await drawn(page)).styles.find((style) => style.part === "below")?.dashed)
+    .toBe(true);
+  await expect(engine(page)).toHaveAttribute("data-scope", scope ?? "");
   await page.getByRole("tab", { name: /Objects/ }).click();
   await expect(rows.getByText(/^T\d/)).toHaveCount(listed);
 });
@@ -77,15 +98,15 @@ test("a class can be hidden with its switch or its key and shows its count", asy
   const classes = page.locator('[data-slot="class-visibility"]');
   const tumor = classes.locator('[data-class="Tumor"]');
   await expect(tumor).toContainText(/\d/);
-  const before = await regionPaths(page).count();
+  await expect(engine(page)).toHaveAttribute("data-hidden", "0");
   const toggle = classes.getByRole("switch", { name: "Show Tumor" });
   await toggle.click();
   await expect(toggle).not.toBeChecked();
-  await expect.poll(() => regionPaths(page).count()).toBeLessThan(before);
+  await expect(engine(page)).not.toHaveAttribute("data-hidden", "0");
   await toggle.focus();
   await page.keyboard.press("1");
   await expect(toggle).toBeChecked();
-  await expect(regionPaths(page)).toHaveCount(before);
+  await expect(engine(page)).toHaveAttribute("data-hidden", "0");
 });
 
 test("confidence shows as a number, a word, a colour or nothing", async ({ page }) => {

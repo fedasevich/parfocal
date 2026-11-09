@@ -1,4 +1,4 @@
-import { getTileAccess, listProjectClasses, type ProjectClass } from "@parfocal/api-client";
+import { listProjectClasses, type ProjectClass } from "@parfocal/api-client";
 import { AreaList } from "@parfocal/ui/components/analysis-cards";
 import { InlineState } from "@parfocal/ui/components/banner";
 import { Button } from "@parfocal/ui/components/button";
@@ -69,6 +69,7 @@ import type { SlideAreaEntry } from "./slide-areas.ts";
 import { useSlideBrightness } from "./slide-brightness.ts";
 import { useSlideCoverage } from "./slide-coverage.ts";
 import { stageToolOf } from "./stage-tools.ts";
+import { grantFor } from "./tile-grant.ts";
 import { FailedTilePlaceholders, SlideChecker, TileHintChip } from "./tile-loading.tsx";
 import type { ScanTissue } from "./tissue-scan.ts";
 import { TravelMinimap } from "./travel-minimap.tsx";
@@ -104,30 +105,6 @@ type Session = {
   readonly open: SmartServicesContext["open"];
   readonly route: VivRoute | null;
 };
-
-type Grant = {
-  readonly token: string;
-  readonly lifetimeSeconds: number;
-  readonly basePath: string;
-  readonly original: string;
-  readonly format: string | null;
-};
-
-async function grantFor(slideId: string, previous: string | null): Promise<Grant> {
-  const response = await getTileAccess(
-    slideId,
-    previous === null ? undefined : { headers: { "Previous-Tile-Token": previous } },
-  );
-  if (response.status !== 200) throw new Error(`tile-access answered ${response.status}`);
-  const access = response.data;
-  return {
-    token: access.token,
-    lifetimeSeconds: access.lifetime_seconds,
-    basePath: access.base_path,
-    original: access.original,
-    format: access.format,
-  };
-}
 
 function ViewerKeys({ session }: { session: Session }) {
   useViewerKeys(session.engine, session.module);
