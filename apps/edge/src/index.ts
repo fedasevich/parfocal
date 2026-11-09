@@ -27,12 +27,29 @@ export type EdgeEnv = TileEnv & RoomEnv & AppEnv & LimitEnv;
 
 export default {
   async fetch(request: Request, env: EdgeEnv, context: ExecutionContext): Promise<Response> {
-    const response = (await guard(request, env)) ?? (await route(request, env, context));
-    return withSecurityHeaders(request, response, {
+    return withSecurityHeaders(request, await answer(request, env, context), {
       uploadOrigin: env.UPLOAD_ORIGIN,
     });
   },
 } satisfies ExportedHandler<EdgeEnv>;
+
+async function answer(
+  request: Request,
+  env: EdgeEnv,
+  context: ExecutionContext,
+): Promise<Response> {
+  try {
+    return (await guard(request, env)) ?? (await route(request, env, context));
+  } catch (error) {
+    console.error(
+      JSON.stringify({
+        unhandled: error instanceof Error ? error.name : typeof error,
+        message: error instanceof Error ? error.message : String(error),
+      }),
+    );
+    return problem(500, "internal-error", "The request could not be served");
+  }
+}
 
 function route(
   request: Request,

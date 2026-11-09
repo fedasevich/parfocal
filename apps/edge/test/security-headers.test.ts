@@ -135,3 +135,38 @@ test("a wrong upload origin breaks documents only, never tile bytes", async () =
     /https/,
   );
 });
+
+test("a room path that cannot be decoded is a 404 problem with the isolation headers", async () => {
+  const response = await get("/rt/%zz");
+  assert.equal(response.status, 404);
+  assert.equal((await response.json<{ code: string }>()).code, "room-not-found");
+  assert.deepEqual(headerProblems(response.headers, "resource"), []);
+});
+
+test("a handler that throws or rejects is a 500 problem with the isolation headers", async () => {
+  const logged: unknown[][] = [];
+  const original = console.error;
+  console.error = (...parts: unknown[]) => {
+    logged.push(parts);
+  };
+  try {
+    for (const fetch of [
+      () => {
+        throw new Error("the assets binding is missing");
+      },
+      () => Promise.reject(new Error("the assets binding failed")),
+    ]) {
+      const response = await worker.fetch(
+        new Request("https://parfocal.example/"),
+        { ...env, ASSETS: { fetch } as unknown as Fetcher },
+        context,
+      );
+      assert.equal(response.status, 500);
+      assert.equal((await response.json<{ code: string }>()).code, "internal-error");
+      assert.deepEqual(headerProblems(response.headers, "resource"), []);
+    }
+    assert.equal(logged.length, 2);
+  } finally {
+    console.error = original;
+  }
+});
