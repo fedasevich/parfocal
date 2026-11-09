@@ -4579,7 +4579,7 @@ Doctors judge AI objects in a simple guided mode, or in the full viewer with the
   Depends on ANN-032, ANN-031, GUIDE-002. Refs [ADR 0238](adr/0238-check-options-and-presets-on-annotate-tasks.md).
   Size: M.
 
-- [ ] GUIDE-020 · Guided check follows the task's check scope and order
+- [x] GUIDE-020 · Guided check follows the task's check scope and order
   GUIDE-019 walks every unchecked AI object least sure first. Read the stored review order (`getReviewOrder`, as `slide-progress.ts` does) so the queue keeps to the task's check scope (below a score, a sample, regions) and its by-position order, with the client sort as fallback.
   Done when unit tests cover each scope and order and the guided check browser spec walks a scoped task in its stored order.
   Depends on GUIDE-019.
