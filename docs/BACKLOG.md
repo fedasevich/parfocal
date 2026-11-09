@@ -4103,6 +4103,11 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Depends on TEST-006, RSET-005, JOBS-001, GUIDE-002.
   Size: L.
 
+- [ ] TEST-021 · Find why the web browser suite slowed on CI
+  Across four ci runs on 2026-11-09 the web browser job grew from 38 to 66 minutes, issue-states parts from about 32 to 56 seconds and freehand drawing from 8.8 to 15.6 seconds, while the same specs run in about 22 seconds on the Mac. Longer test limits now absorb it. Compare per-spec times from the runs' reports against the last fast run, find whether the runner, a shared fixture, the fake API store, a dev server rebuild or a few new heavy specs cause it, and fix the cause or shard the job.
+  Done when a result file records the per-spec times before and after, and the web browser job runs under 45 minutes on three runs in a row.
+  Size: M.
+
 ---
 
 ## 36 PILOT · Documentation and pilot readiness
