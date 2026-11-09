@@ -54,6 +54,18 @@ export interface WorkerRegionReader {
   dispose(): void;
 }
 
+export function disposingOnThrow<Built>(
+  reader: Pick<WorkerRegionReader, "dispose"> | null,
+  build: () => Built,
+): Built {
+  try {
+    return build();
+  } catch (error) {
+    reader?.dispose();
+    throw error;
+  }
+}
+
 export class DecodeWorkerError extends Error {
   constructor(message: string) {
     super(message);

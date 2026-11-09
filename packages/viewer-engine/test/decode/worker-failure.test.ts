@@ -7,10 +7,14 @@ import { startDecodeWorker } from "../../src/decode/worker-runtime.ts";
 import { readTileIndex } from "../../src/index.ts";
 import type { PatchReply } from "../../src/patch/protocol.ts";
 import { createWorkerPatchReader, PatchWorkerError } from "../../src/patch/worker-client.ts";
+import type { PixelSource } from "../../src/pixel-source/index.ts";
 import {
+  createVivLevels,
   createWorkerRegionReader,
   type DecodeWorker,
   DecodeWorkerError,
+  disposingOnThrow,
+  UnsupportedVivSourceError,
   type VivRegion,
 } from "../../src/viv/index.ts";
 import { serve } from "../pixel-source/serve.ts";
@@ -105,6 +109,56 @@ describe("a decode worker that fails", () => {
       for (const read of reads) assert.ok((await settled(read)) instanceof DecodeWorkerError);
       assert.equal(reader.idle(), true);
       assert.equal(failures.length, 1);
+    } finally {
+      reader.dispose();
+    }
+  });
+});
+
+describe("a slide the route cannot draw", () => {
+  const grey: PixelSource = {
+    formatId: "ome-tiff",
+    levels: [{ downsample: 1, width: 512, height: 512, tileWidth: 256, tileHeight: 256 }],
+    tileSize: { width: 256, height: 256 },
+    micronsPerPixel: null,
+    photometric: "grey",
+    dtype: "uint16",
+    channels: [{ name: "grey", color: null, window: null }],
+    getTile: () => Promise.resolve({ absent: true, width: 256, height: 256 }),
+    getRaster: () => Promise.resolve({ absent: true, width: 1, height: 1 }),
+    close: () => undefined,
+  };
+
+  it("leaves no decode worker behind when building its levels throws", () => {
+    const workers = Array.from({ length: 6 }, () => scriptedWorker<DecodeReply>());
+    const reader = createWorkerRegionReader({
+      request,
+      size: workers.length,
+      spawn: (index) => workers[index]?.worker as DecodeWorker,
+    });
+    assert.throws(
+      () => disposingOnThrow(reader, () => createVivLevels(grey, { read: reader.read })),
+      UnsupportedVivSourceError,
+    );
+    assert.deepEqual(
+      workers.map((worker) => worker.terminated()),
+      workers.map(() => true),
+    );
+  });
+
+  it("keeps the workers of a slide whose levels build", () => {
+    const workers = [scriptedWorker<DecodeReply>()];
+    const reader = createWorkerRegionReader({
+      request,
+      size: 1,
+      spawn: (index) => workers[index]?.worker as DecodeWorker,
+    });
+    try {
+      assert.equal(
+        disposingOnThrow(reader, () => "built"),
+        "built",
+      );
+      assert.equal(workers[0]?.terminated(), false);
     } finally {
       reader.dispose();
     }

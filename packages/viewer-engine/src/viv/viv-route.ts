@@ -9,6 +9,7 @@ import {
   createWorkerRegionReader,
   type DecodeStats,
   type DecodeWorker,
+  disposingOnThrow,
   type WorkerRegionReader,
 } from "../decode/worker-reader.ts";
 import { slideTint } from "../engine/brightness.ts";
@@ -345,20 +346,7 @@ export function createVivRoute(
     return { ...base, layer: slideLayer(base) };
   };
 
-  const showSlide = (slide: PixelSlide | null) => {
-    if (failure !== null || slide === shown?.slide) return;
-    release();
-    if (slide === null) {
-      applyLayers();
-      return;
-    }
-    const reader = readerFor(slide);
-    channelDisplay = [];
-    if (slide.source.photometric === "channels") {
-      shown = channelShown(slide, reader);
-      applyLayers();
-      return;
-    }
+  const rgbShown = (slide: PixelSlide, reader: WorkerRegionReader | null): Shown => {
     const levels = createVivLevels(slide.source, {
       onTileError: options.onTileError ?? reportError,
       onReadSettled: () => sleep?.wake("read"),
@@ -377,7 +365,23 @@ export function createVivRoute(
         })
       : null;
     const base = { slide, levels, rgb: levels, channelLevels: null, reader, prefetcher };
-    shown = { ...base, layer: slideLayer(base) };
+    return { ...base, layer: slideLayer(base) };
+  };
+
+  const showSlide = (slide: PixelSlide | null) => {
+    if (failure !== null || slide === shown?.slide) return;
+    release();
+    if (slide === null) {
+      applyLayers();
+      return;
+    }
+    const reader = readerFor(slide);
+    channelDisplay = [];
+    shown = disposingOnThrow(reader, () =>
+      slide.source.photometric === "channels"
+        ? channelShown(slide, reader)
+        : rgbShown(slide, reader),
+    );
     applyLayers();
   };
 
