@@ -2904,7 +2904,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Depends on COLLAB-015, GUIDE-023.
   Size: S.
 
-- [ ] COLLAB-020 · Slide threads stay hidden during a blinded review
+- [x] COLLAB-020 · Slide threads stay hidden during a blinded review
   The owner chose 78a on 2026-11-09. A reviewer of a blinded task on a slide does not see other people's slide threads on that slide until they submit, the same way task threads are hidden under ADR 0118 (blinding and a kept first read). Their own slide threads stay visible, and the Comments tab and pins agree with the API.
   Done when API tests hide another person's slide thread from a blinded reviewer before submit and show it after, and a browser test finds no foreign pin on that slide before submit.
   Depends on COLLAB-015.

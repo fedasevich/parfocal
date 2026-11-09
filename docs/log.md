@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-09
 
+- COLLAB-020: A blinded reviewer with an unsubmitted slide no longer sees other people's slide threads or messages on it until they submit. Threads of project owners and viewers stay visible, a reopen hides the others again, and a hidden thread by id answers 404. The fake API and a browser spec match, and ADR 0118 notes the rule.
 - TEST-025: the four specs pass 3 of 3 locally with axe on after the earlier fix 38a071d8 (a fast second key is ignored while saving), and passed in ci run 42666737479 with enforcement on. No code change.
 - TEST-009: ci run 42666737479 on 2026-11-09 passed all three web browser shards with axe enforcement on, so the allowlist holds. TEST-022, TEST-023 and TEST-024 now empty it.
 - COLLAB-021: The annotate task owner can switch blind first off and on again from task settings. PATCH blind_first with a new blind_first_since (migration 0110) keeps already shown objects shown and hides only later unchecked ones, and each change is audited as task.blind-first-changed without PHI. Tested by API and browser specs.
