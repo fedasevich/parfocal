@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-09
 
+- Added the Kind step and annotate path to the new task stepper with presets, optional result sets, check options and a disabled blind first switch until COLLAB-017, with model tests and E2E from the project page and after an upload. Fable review passed with 27 browser tests. Follow-up TASK-018.
 - COLLAB-015 Correction from the review, the draft GET /api/slides/{slide_id}/threads route is not in main's openapi or code, so the project-scoped path is a plain choice, not forced by a clash.
 - Migration 0105 makes threads.task_id nullable, a project-scoped slide thread route shares code with the task route, slide threads follow the first-read rule, and the pin layer and Comments tab show them. Fable review passed with 1067 permission matrix cases and found the migration safe for production. Follow-ups are COLLAB-018 and decision 78.
 - Fake result set detail and cell summary answer 403 ai-hidden, and RT-17 objects stay empty until the first read. Guided review treats only a 404 from getFirstRead as not recorded and shows a retry panel with the AI hidden on other errors. Blinding the slide and project result set lists moves to TASK-017 because it breaks the A1 specs.
