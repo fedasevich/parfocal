@@ -3396,6 +3396,25 @@ export interface OrganisationDraft {
   name: ParfocalApiTenantsName;
 }
 
+export type OriginRoute = (typeof OriginRoute)[keyof typeof OriginRoute];
+
+export const OriginRoute = {
+  home: "home",
+  "my-work": "my-work",
+  project: "project",
+  case: "case",
+  task: "task",
+  search: "search",
+} as const;
+
+export interface Origin {
+  route: OriginRoute;
+  project_id?: string | null;
+  case_id?: string | null;
+  task_id?: string | null;
+  slide_id?: string | null;
+}
+
 export type Outcome = (typeof Outcome)[keyof typeof Outcome];
 
 export const Outcome = {
@@ -4470,6 +4489,7 @@ export interface SearchHit {
   object_id?: string | null;
   resolved_from?: string | null;
   task_id?: string | null;
+  origin?: Origin;
 }
 
 export interface SearchResults {
@@ -5009,6 +5029,9 @@ export interface Target {
   object_id?: string | null;
   job_id?: string | null;
   thread_id?: string | null;
+  case_id?: string | null;
+  resolved_from?: string | null;
+  origin: Origin;
 }
 
 /**

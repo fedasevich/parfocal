@@ -236,6 +236,7 @@ import {
   NotificationKind,
   ObjectOrder,
   Ordering,
+  OriginRoute,
   Outcome,
   Plan,
   PrivacyMode,
@@ -7197,6 +7198,18 @@ export const getGetNotificationTargetResponseMock = (
   ]),
   job_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   thread_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  case_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  resolved_from: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  origin: {
+    route: faker.helpers.arrayElement(Object.values(OriginRoute)),
+    project_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    case_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    task_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    slide_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  },
   ...overrideResponse,
 });
 
@@ -7262,6 +7275,13 @@ export const getSearchResponseMock = (
       null,
     ]),
     task_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    origin: {
+      route: faker.helpers.arrayElement(Object.values(OriginRoute)),
+      project_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      case_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      task_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      slide_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    },
   })),
   ...overrideResponse,
 });
