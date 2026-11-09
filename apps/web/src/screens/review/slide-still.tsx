@@ -146,6 +146,10 @@ type SlideStillProps = {
   rotation?: number;
   underlay?: ((state: { camera: Camera; size: Size }) => ReactNode) | undefined;
   overlay?: (state: { camera: Camera; size: Size; home: Camera; moved: boolean }) => ReactNode;
+  backdrop?:
+    | ((state: { camera: Camera; size: Size; onReady: (up: boolean) => void }) => ReactNode)
+    | undefined;
+  engineDrawn?: ReadonlySet<string> | undefined;
   onPointPick?: ((point: Pin) => void) | undefined;
   onCellPick?: ((object: string) => void) | undefined;
 };
@@ -177,10 +181,14 @@ export function SlideStill({
   rotation = 0,
   underlay,
   overlay,
+  backdrop,
+  engineDrawn,
   onPointPick,
   onCellPick,
 }: SlideStillProps) {
   const ref = useRef<HTMLDivElement>(null);
+  const [engineUp, setEngineUp] = useState(false);
+  const viaEngine = backdrop !== undefined && engineUp;
   const size = useElementSize(ref);
   const home = homeOf ? homeOf(size) : homeCamera(view, size);
   const shown = camera ?? home;
@@ -278,6 +286,7 @@ export function SlideStill({
         onCameraChange({ ...shown, scale: shown.scale * factor });
       }}
     >
+      {backdrop?.({ camera: shown, size, onReady: setEngineUp })}
       <svg
         role="img"
         aria-label={target ? `The slide around ${target}` : "The whole slide"}
@@ -287,7 +296,7 @@ export function SlideStill({
         data-rotation={rotation}
         style={rotation === 0 ? undefined : { transform: `rotate(${rotation}deg)` }}
       >
-        {tiles === "unloaded" ? null : (
+        {tiles === "unloaded" || viaEngine ? null : (
           <image
             href={lookUrl(image)}
             width={full.width}
@@ -305,6 +314,7 @@ export function SlideStill({
                 ? currentTint
                 : (custom?.stroke ?? (claimHidden ? "rgb(255 255 255 / 0.75)" : "var(--c-tumor)"));
               if (custom?.stroke === "none") return null;
+              if (viaEngine && !current && engineDrawn?.has(objectOfShape(id))) return null;
               const doubled = !current && custom?.double === true;
               return (
                 <g key={id}>
