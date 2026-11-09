@@ -1,4 +1,5 @@
 import { createRootRoute, Outlet, useMatches } from "@tanstack/react-router";
+import { lazy, Suspense } from "react";
 import { FeedbackHost } from "../feedback/feedback-host.tsx";
 import { KeyBindingsProvider } from "../keys/keycap-bindings.tsx";
 import { LabKey } from "../lab/lab-key.tsx";
@@ -15,6 +16,8 @@ import { SettingsKey } from "../shell/settings-key.tsx";
 import { inGlobalShell } from "../shell/shell-routes.ts";
 import { ShortcutsKey } from "../shell/shortcuts-key.tsx";
 import { useAnalyticsConsentSync } from "../telemetry/consent-sync.ts";
+
+const TourHost = lazy(() => import("../help/tour-host.tsx"));
 
 export const Route = createRootRoute({
   validateSearch: overlaySearch,
@@ -47,6 +50,9 @@ function Root() {
         <SettingsKey />
         <LabKey />
         <FeedbackHost />
+        <Suspense fallback={null}>
+          <TourHost />
+        </Suspense>
       </KeyBindingsProvider>
     </SessionLock>
   );

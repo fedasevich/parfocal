@@ -23,6 +23,8 @@ import { useGoTo } from "./router-link.tsx";
 import { shellStore, useShell } from "./shell-store.ts";
 import { readTheme, chooseTheme as storeTheme, type ThemeChoice } from "./theme.ts";
 
+const openHelp = () => window.dispatchEvent(new Event("help"));
+
 export const logOutUrl = "/api/auth/logout";
 
 const entries = [
@@ -41,12 +43,12 @@ const entries = [
     disabledReason: "Locks after a quiet spell for now",
   },
   { icon: "comment", label: "Send feedback", action: "feedback" },
-  { icon: "help", label: "Help and what's new", disabledReason: "Not written yet" },
+  { icon: "help", label: "Help and tour", action: "help" },
 ] satisfies {
   icon: IconName;
   label: string;
   href?: string;
-  action?: "feedback";
+  action?: "feedback" | "help";
   keys?: string;
   disabledReason?: string;
 }[];
@@ -122,6 +124,7 @@ export function AccountMenu({ me, person }: { me: Me | undefined; person: Person
         ...entry,
         ...(href ? { onSelect: () => void goTo(href) } : {}),
         ...(action === "feedback" ? { onSelect: openFeedback } : {}),
+        ...(action === "help" ? { onSelect: openHelp } : {}),
       }))}
       extra={import.meta.env.DEV ? <ViewAs current={me?.initials} /> : null}
       onLogOut={() => window.location.assign(logOutUrl)}
