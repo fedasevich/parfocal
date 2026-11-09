@@ -1,4 +1,5 @@
 import {
+  ApiError,
   resolveSetting,
   useGetFirstRead,
   useGetMySettingLayers,
@@ -107,7 +108,29 @@ export function GuidedReview(props: GuidedReviewProps) {
       <main className="grid h-dvh place-items-center bg-page text-fg-dim">Loading the review…</main>
     );
   }
-  if (hidesAi && firstRead.isError) return <FirstReadStep session={session} />;
+  if (hidesAi && firstRead.isError) {
+    const notRecorded = firstRead.error instanceof ApiError && firstRead.error.status === 404;
+    if (notRecorded) return <FirstReadStep session={session} />;
+    return (
+      <main
+        className="grid h-dvh place-items-center bg-page p-6 text-fg"
+        data-ai="hidden"
+        data-testid="first-read-unavailable"
+      >
+        <InlineState
+          icon="warn"
+          title="Your first read could not be checked"
+          action={
+            <Button variant="ghost" onClick={() => void firstRead.refetch()}>
+              Try again
+            </Button>
+          }
+        >
+          The AI stays hidden until your first read is confirmed. Try again in a moment.
+        </InlineState>
+      </main>
+    );
+  }
   return (
     <GuidedBody key={`${props.scene ?? "region"}-${props.slideId}`} session={session} {...props} />
   );
