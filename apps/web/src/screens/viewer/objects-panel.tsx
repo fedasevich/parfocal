@@ -15,6 +15,7 @@ import { formatMillimetres, useLengthUnits } from "../../measure/length-units.ts
 import { ConfidenceByColour } from "../review/confidence-chip.tsx";
 import type { CardText, ReviewStyle } from "../review/decision-style.ts";
 import { noteAction } from "../review/note-key.ts";
+import { toggleReason } from "../review/note-model.ts";
 import { answerLabel, NoteEditor, noteReasonsFor, SavedNote } from "../review/object-card.tsx";
 import type { Answer } from "../review/review-state.ts";
 
@@ -122,7 +123,70 @@ export function TellMeWhenReady({
   );
 }
 
-type NoteState = { open: boolean; reasons: string[]; text: string };
+export type NoteState = { open: boolean; reasons: string[]; text: string };
+
+type NoteBlockProps = {
+  object: ReviewObject;
+  style: ReviewStyle;
+  classes: ProjectClass[];
+  answer: Answer | undefined;
+  author: PersonInfo | undefined;
+  note: NoteState;
+  saveOffReason: string | undefined;
+  onNote: (note: NoteState) => void;
+  onSaveNote: () => void;
+};
+
+export function NoteBlock({
+  object,
+  style,
+  classes,
+  answer,
+  author,
+  note,
+  saveOffReason,
+  onNote,
+  onSaveNote,
+}: NoteBlockProps) {
+  let noteBlock: ReactNode = null;
+  if (note.open) {
+    noteBlock = (
+      <NoteEditor
+        object={object.object}
+        reasons={noteReasonsFor(object, answer?.value, classes)}
+        chosen={note.reasons}
+        text={note.text}
+        offReason={saveOffReason}
+        onReason={(reason) => onNote({ ...note, ...toggleReason(note, reason) })}
+        onText={(value) => onNote({ ...note, text: value })}
+        onSave={onSaveNote}
+        onCancel={() => onNote({ ...note, open: false })}
+      />
+    );
+  } else if (answer && (answer.note || answer.reasons.length)) {
+    noteBlock = (
+      <SavedNote
+        answer={answer}
+        label={answerLabel(style, answer, classes)}
+        author={author}
+        onEdit={() => onNote({ open: true, reasons: answer.reasons, text: answer.note ?? "" })}
+      />
+    );
+  } else if (answer) {
+    noteBlock = (
+      <button
+        type="button"
+        onClick={() => onNote({ open: true, reasons: answer.reasons, text: "" })}
+        className="inline-flex w-fit cursor-pointer items-center gap-1.5 border-0 bg-transparent p-0 text-body-sm font-medium text-fg-dim hover:text-fg"
+      >
+        <Icon name="comment" />
+        Add a note
+        <Keycap action={noteAction} size="sm" />
+      </button>
+    );
+  }
+  return noteBlock;
+}
 
 type ObjectFootProps = {
   object: ReviewObject;
@@ -160,50 +224,19 @@ export function ObjectFoot({
     object.kind === "cell"
       ? "Cell in your sample"
       : `Tumor region · ${object.size_mm == null ? "" : format.size(object.size_mm)}`;
-  let noteBlock: ReactNode = null;
-  if (note.open) {
-    noteBlock = (
-      <NoteEditor
-        object={object.object}
-        reasons={noteReasonsFor(object, answer?.value, classes)}
-        chosen={note.reasons}
-        text={note.text}
-        offReason={saveOffReason}
-        onReason={(reason) =>
-          onNote({
-            ...note,
-            reasons: note.reasons.includes(reason)
-              ? note.reasons.filter((item) => item !== reason)
-              : [...note.reasons, reason],
-          })
-        }
-        onText={(value) => onNote({ ...note, text: value })}
-        onSave={onSaveNote}
-        onCancel={() => onNote({ ...note, open: false })}
-      />
-    );
-  } else if (answer && (answer.note || answer.reasons.length)) {
-    noteBlock = (
-      <SavedNote
-        answer={answer}
-        label={answerLabel(style, answer, classes)}
-        author={author}
-        onEdit={() => onNote({ open: true, reasons: answer.reasons, text: answer.note ?? "" })}
-      />
-    );
-  } else if (answer) {
-    noteBlock = (
-      <button
-        type="button"
-        onClick={() => onNote({ open: true, reasons: answer.reasons, text: "" })}
-        className="inline-flex w-fit cursor-pointer items-center gap-1.5 border-0 bg-transparent p-0 text-body-sm font-medium text-fg-dim hover:text-fg"
-      >
-        <Icon name="comment" />
-        Add a note
-        <Keycap action={noteAction} size="sm" />
-      </button>
-    );
-  }
+  const noteBlock = (
+    <NoteBlock
+      object={object}
+      style={style}
+      classes={classes}
+      answer={answer}
+      author={author}
+      note={note}
+      saveOffReason={saveOffReason}
+      onNote={onNote}
+      onSaveNote={onSaveNote}
+    />
+  );
   return (
     <div className="grid gap-2.5" data-slot="object-foot">
       <div className="flex items-center gap-2">

@@ -1,0 +1,64 @@
+{
+  "origin": "synthetic",
+  "todo": "TODO: synthetic, modelled on documented browser behaviour. Replace with a trace recorded on the real device through the input traces page.",
+  "label": "Windows Chrome mouse wheel",
+  "wheelDevice": "mouse",
+  "basis": "A notched wheel sends deltaY of 100 in pixel mode, and Firefox sends the same notch as 3 lines in line mode. Both zoom in auto mode and neither is mistaken for a trackpad.",
+  "steps": [
+    {
+      "type": "wheel",
+      "deltaX": 0,
+      "deltaY": 100,
+      "deltaMode": 0,
+      "ctrlKey": false,
+      "metaKey": false,
+      "shiftKey": false,
+      "expect": "zoom",
+      "zoomSign": -1,
+      "animate": true
+    },
+    {
+      "type": "wheel",
+      "deltaX": 0,
+      "deltaY": -100,
+      "deltaMode": 0,
+      "ctrlKey": false,
+      "metaKey": false,
+      "shiftKey": false,
+      "expect": "zoom",
+      "zoomSign": 1,
+      "animate": true
+    },
+    {
+      "type": "wheel",
+      "deltaX": 0,
+      "deltaY": 3,
+      "deltaMode": 1,
+      "ctrlKey": false,
+      "metaKey": false,
+      "shiftKey": false,
+      "expect": "zoom",
+      "zoomSign": -1,
+      "animate": true
+    },
+    {
+      "type": "wheel",
+      "deltaX": 0,
+      "deltaY": -3,
+      "deltaMode": 1,
+      "ctrlKey": false,
+      "metaKey": false,
+      "shiftKey": false,
+      "expect": "zoom",
+      "zoomSign": 1,
+      "animate": true
+    },
+    {
+      "type": "pointer",
+      "button": 2,
+      "ctrlKey": false,
+      "pointerType": "mouse",
+      "expect": "negativePoint"
+    }
+  ]
+}

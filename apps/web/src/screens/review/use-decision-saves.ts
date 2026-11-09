@@ -26,6 +26,7 @@ export function useDecisionSaves(session: ReviewSession, style: ReviewStyle) {
     raw: string,
     value: Count,
     reasons?: Pick<VerdictDraft, "reasons" | "reason_class_id">,
+    note?: string | null,
   ) => {
     if (objects.find((item) => item.object === objectId)?.kind === "cell") {
       taskTimer.cellDecided(slideId);
@@ -41,6 +42,7 @@ export function useDecisionSaves(session: ReviewSession, style: ReviewStyle) {
           classes,
         ),
         ...reasons,
+        ...(note ? { note } : {}),
       },
     });
   };

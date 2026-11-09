@@ -7,7 +7,7 @@ from typing import Annotated, Any, Literal
 
 from fastapi import APIRouter, BackgroundTasks, Query, Response
 from pydantic import BaseModel, Field, model_validator
-from sqlalchemy import func, select, text, update
+from sqlalchemy import ColumnElement, func, select, text, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncConnection
 
@@ -29,6 +29,7 @@ from parfocal_api.annotations import (
     words_for,
 )
 from parfocal_api.audit import AuditAction, AuditTarget
+from parfocal_api.blind_first import held_by, seen_by
 from parfocal_api.blinding import require_ai_shown
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.numbering import reserve
@@ -249,11 +250,17 @@ def in_layer(task_id: uuid.UUID, slide_id: uuid.UUID) -> list[Any]:
 
 
 async def layer_object(
-    connection: AsyncConnection, task_id: uuid.UUID, slide_id: uuid.UUID, annotation_id: uuid.UUID
+    connection: AsyncConnection,
+    task_id: uuid.UUID,
+    slide_id: uuid.UUID,
+    annotation_id: uuid.UUID,
+    seen: Sequence[ColumnElement[bool]] = (),
 ) -> LayerObject:
     row = (
         await connection.execute(
-            select(*COLUMNS).where(*in_layer(task_id, slide_id), annotations.c.id == annotation_id)
+            select(*COLUMNS).where(
+                *in_layer(task_id, slide_id), annotations.c.id == annotation_id, *seen
+            )
         )
     ).one_or_none()
     if row is None:
@@ -309,14 +316,24 @@ async def imported_from(connection: AsyncConnection, annotation_id: uuid.UUID) -
     return name if isinstance(name, str) else None
 
 
-def announce(
-    background: BackgroundTasks, live: Realtime, row: Any, annotation_id: uuid.UUID
+async def announce(
+    connection: AsyncConnection,
+    background: BackgroundTasks,
+    live: Realtime,
+    row: Any,
+    annotation_id: uuid.UUID,
 ) -> None:
     event = RoomEvent(
         kind=CHANGED_EVENT,
         ids={"task": row.task_id, "slide": row.slide_id, "annotation": annotation_id},
     )
-    background.add_task(live.publish, row.tenant_id, [room_name(RoomKind.TASK, row.task_id)], event)
+    author = await held_by(connection, row, annotation_id)
+    room = (
+        room_name(RoomKind.TASK, row.task_id)
+        if author is None
+        else room_name(RoomKind.USER, author)
+    )
+    background.add_task(live.publish, row.tenant_id, [room], event)
 
 
 @router.get("", operation_id="getSharedLayer", **require(Permission.SEE_SLIDES, emergency=True))
@@ -333,6 +350,7 @@ async def get_shared_layer(
             *in_layer(task_id, slide_id),
             annotations.c.deleted_at.is_(None)
             | (annotations.c.origin == AnnotationOrigin.AI_EDITED),
+            *seen_by(row.blind_first, principal),
         )
         .order_by(annotations.c.kind, annotations.c.number)
     )
@@ -363,7 +381,7 @@ async def create_shared_object(
     row = await editable_layer(connection, principal, task_id, slide_id, reason)
     slide = SimpleNamespace(id=slide_id, project_id=row.project_id)
     (made,) = await add(connection, principal, slide, [draft], task_id=task_id)
-    announce(background, live, row, made.id)
+    await announce(connection, background, live, row, made.id)
     result = await layer_object(connection, task_id, slide_id, made.id)
     await logged(connection, principal, row, result.code, LayerChange.ADDED, reason)
     return result
@@ -525,7 +543,7 @@ async def change_ai_object(
         if existing is None
         else await revive(connection, principal, existing, values, change)
     )
-    announce(background, live, row, made)
+    await announce(connection, background, live, row, made)
     logged_as = LayerChange.DELETED if draft.deleted else LayerChange.EDITED
     await logged(connection, principal, row, found.text(ascii=True), logged_as, reason)
     return await layer_object(connection, task_id, slide_id, made)
@@ -568,7 +586,7 @@ async def confirm_ai_object(
         if existing is None
         else await revive(connection, principal, existing, values, AnnotationChange.RESTORED)
     )
-    announce(background, live, row, made)
+    await announce(connection, background, live, row, made)
     await logged(connection, principal, row, found.text(ascii=True), LayerChange.EDITED, reason)
     return await layer_object(connection, task_id, slide_id, made)
 
@@ -604,7 +622,7 @@ async def undo_ai_confirm(
         {"deleted_at": func.now()},
         AnnotationChange.DELETED,
     )
-    announce(background, live, row, existing.id)
+    await announce(connection, background, live, row, existing.id)
     await logged(connection, principal, row, found.text(ascii=True), LayerChange.EDITED, reason)
     return Response(status_code=204)
 
@@ -618,7 +636,8 @@ async def save(
     values: dict[str, Any],
     change: AnnotationChange,
 ) -> LayerObject:
-    current = await layer_object(connection, row.task_id, row.slide_id, annotation_id)
+    seen = seen_by(row.blind_first, principal)
+    current = await layer_object(connection, row.task_id, row.slide_id, annotation_id, seen)
     changed = await connection.scalar(
         update(annotations)
         .where(
@@ -653,7 +672,9 @@ async def change_shared_object(
     reason: Annotated[str | None, Query(max_length=500)] = None,
 ) -> LayerObject:
     row = await editable_layer(connection, principal, task_id, slide_id, reason)
-    current = await layer_object(connection, task_id, slide_id, annotation_id)
+    current = await layer_object(
+        connection, task_id, slide_id, annotation_id, seen_by(row.blind_first, principal)
+    )
     values: dict[str, Any] = {}
     if edit.geometry is not None:
         values["geometry"] = await outline(connection, current.kind, edit.geometry)
@@ -668,7 +689,7 @@ async def change_shared_object(
     saved = await save(
         connection, principal, row, annotation_id, edit.version, values, AnnotationChange.EDITED
     )
-    announce(background, live, row, annotation_id)
+    await announce(connection, background, live, row, annotation_id)
     await logged(connection, principal, row, saved.code, LayerChange.EDITED, reason)
     return saved
 
@@ -691,14 +712,16 @@ async def delete_shared_object(
     reason: Annotated[str | None, Query(max_length=500)] = None,
 ) -> Response:
     row = await editable_layer(connection, principal, task_id, slide_id, reason)
-    current = await layer_object(connection, task_id, slide_id, annotation_id)
+    current = await layer_object(
+        connection, task_id, slide_id, annotation_id, seen_by(row.blind_first, principal)
+    )
     values: dict[str, Any] = {"deleted_at": func.now()}
     if current.origin is AnnotationOrigin.AI_CONFIRMED:
         values["origin"] = AnnotationOrigin.AI_EDITED
     gone = await save(
         connection, principal, row, annotation_id, version, values, AnnotationChange.DELETED
     )
-    announce(background, live, row, annotation_id)
+    await announce(connection, background, live, row, annotation_id)
     await logged(connection, principal, row, gone.code, LayerChange.DELETED, reason)
     return Response(status_code=204)
 
@@ -715,8 +738,10 @@ async def list_shared_object_history(
     principal: CurrentPrincipal,
     connection: TenantConnection,
 ) -> list[AnnotationVersion]:
-    await readable_layer(connection, principal, task_id, slide_id)
-    await layer_object(connection, task_id, slide_id, annotation_id)
+    row = await readable_layer(connection, principal, task_id, slide_id)
+    await layer_object(
+        connection, task_id, slide_id, annotation_id, seen_by(row.blind_first, principal)
+    )
     rows = await connection.execute(
         select(
             annotation_versions.c.version,

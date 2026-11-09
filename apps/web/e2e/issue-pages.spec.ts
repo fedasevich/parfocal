@@ -84,3 +84,50 @@ test("a lost connection shows the banner, keeps what was typed, retries and conf
   await expect(page.getByRole("status").filter({ hasText: "Connection is back." })).toBeVisible();
   await expect(box).toHaveValue("kept note");
 });
+
+const rt14 = "00000000-0000-4000-8007-000000000014";
+const a1 = "00000000-0000-4000-8005-000000000001";
+
+test("guided review shows the shared banner for a real lost connection and for the scene", async ({
+  page,
+  context,
+}) => {
+  await page.goto(`/tasks/${rt14}/guided?slide=${a1}&scene=region`);
+  const banner = page.getByTestId("connection-banner");
+  await expect(page.getByText("The AI says T5 is tumor, 52% sure.")).toBeVisible();
+  await expect(banner).toHaveCount(0);
+  await context.setOffline(true);
+  await expect(banner).toContainText("Connection lost.");
+  await expect(
+    page.getByRole("tabpanel").getByRole("button", { name: /Agree/ }).first(),
+  ).toBeDisabled();
+  await context.setOffline(false);
+  await expect(banner).toHaveCount(0);
+  await expect(page.getByRole("status").filter({ hasText: "Connection is back." })).toBeVisible();
+  await page.goto(`/tasks/${rt14}/guided?slide=${a1}&scene=connlost`);
+  await expect(banner).toContainText("Connection lost.");
+  await banner.getByRole("button", { name: "Retry now" }).click();
+  await expect(page.getByText("Still offline")).toBeVisible();
+});
+
+test("the full viewer shows the shared banner for the scene and a real lost connection", async ({
+  page,
+  context,
+}) => {
+  await page.goto("/prototype");
+  await page.getByRole("link", { name: "Full viewer · Issue · connection lost" }).click();
+  const banner = page.getByTestId("connection-banner");
+  await expect(banner).toContainText("Connection lost.");
+  await page.goBack();
+  const objectsHref = await page
+    .getByRole("list", { name: "Screens" })
+    .getByRole("link", { name: "Full viewer · Objects tab", exact: true })
+    .getAttribute("href");
+  await page.goto(objectsHref ?? "");
+  await expect(page.getByRole("tab", { name: /Objects/ }).first()).toBeVisible();
+  await expect(banner).toHaveCount(0);
+  await context.setOffline(true);
+  await expect(banner).toContainText("Connection lost.");
+  await context.setOffline(false);
+  await expect(banner).toHaveCount(0);
+});

@@ -10,7 +10,7 @@ import { AppShell, Sidebar, type SidebarSection, TopBar } from "@parfocal/ui/com
 import type { PersonInfo } from "@parfocal/ui/components/person";
 import { personFromProfile } from "@parfocal/ui/lib/avatar-colours";
 import { useMatches, useParams } from "@tanstack/react-router";
-import { lazy, type ReactNode, Suspense, useState } from "react";
+import { lazy, type ReactNode, Suspense } from "react";
 import { canOpenAdmin } from "../screens/admin/admin-access.ts";
 import { projectColour } from "../screens/palette.ts";
 import { okData } from "../screens/placeholder.tsx";
@@ -23,6 +23,7 @@ import { JobsTrayProvider, ShellJobs } from "./jobs-tray.tsx";
 import { useOverlay } from "./overlays.ts";
 import { useGoTo, useRouterLink } from "./router-link.tsx";
 import { foldedShellRouteIds } from "./shell-routes.ts";
+import { shellStore, useShell } from "./shell-store.ts";
 import { ShellSidebarContext } from "./sidebar-toggle.tsx";
 import { ShellWorkspaceSwitcher, workspaceBrand } from "./workspace-switcher.tsx";
 
@@ -67,7 +68,7 @@ export function GlobalShell({ children }: { children: ReactNode }) {
   const folded = useMatches({
     select: (matches) => matches.some((match) => foldedShellRouteIds.has(match.routeId)),
   });
-  const [navOpen, setNavOpen] = useState(false);
+  const navOpen = useShell((state) => state.navOpen);
   const showSide = !folded || navOpen;
   const firstProject = projects[0]?.id ?? "";
   const slidesIn = (id: string) => homeProjects.find((project) => project.id === id)?.slides;
@@ -143,7 +144,13 @@ export function GlobalShell({ children }: { children: ReactNode }) {
           showSide ? <Sidebar sections={sections} active={active} renderLink={renderLink} /> : null
         }
       >
-        <ShellSidebarContext value={{ folded, open: showSide, toggle: () => setNavOpen(!navOpen) }}>
+        <ShellSidebarContext
+          value={{
+            folded,
+            open: showSide,
+            toggle: () => shellStore.setState({ navOpen: !navOpen }),
+          }}
+        >
           {children}
         </ShellSidebarContext>
         <Suspense fallback={null}>

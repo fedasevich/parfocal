@@ -31,6 +31,8 @@ import { useNavigate } from "@tanstack/react-router";
 import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { polygonToGeoJson } from "../../annotations/geojson.ts";
 import { closeDraft, type Point, type PolygonDraft } from "../../annotations/polygon-draft.ts";
+import { useConnection } from "../../shell/connection.ts";
+import { ConnectionBanner } from "../../shell/connection-banner.tsx";
 import { useLabDecisionCutoff } from "../../shell/resolved-settings.ts";
 import { showUndoToast } from "../../shell/undo-toasts.tsx";
 import { useCellTiming, useTaskRun } from "../../telemetry/use-task-timing.ts";
@@ -66,6 +68,7 @@ import {
   guidedSetup,
 } from "./guided-scenes.ts";
 import { noteAction, useNoteKey } from "./note-key.ts";
+import { draftFrom, reasonBody, toggleReason as toggledDraft, withNote } from "./note-model.ts";
 import {
   answerLabel,
   type LockLine,
@@ -151,7 +154,9 @@ function GuidedBody({
   tab,
   onTabChange,
 }: BodyProps) {
-  const setup = guidedSetup(scene);
+  const { online } = useConnection();
+  const sceneSetup = guidedSetup(scene);
+  const setup = { ...sceneSetup, connLost: sceneSetup.connLost || !online };
   const navigate = useNavigate();
   const person = usePeople();
   const submitReview = useSubmitSlideReview({
@@ -360,7 +365,13 @@ function GuidedBody({
       reasons: kept?.value === value ? kept.reasons : [],
       note: kept?.note ?? null,
     });
-    decisions.save(currentId, raw, value);
+    decisions.save(
+      currentId,
+      raw,
+      value,
+      kept?.value === value ? reasonBody(kept.reasons, value, current, session.classes) : undefined,
+      kept?.note,
+    );
     const label = rawLabel(style, raw, session.classes);
     showUndoToast({
       message:
@@ -446,6 +457,7 @@ function GuidedBody({
         kept.raw,
         kept.value,
         reasonDraft(reasons, disagreeOptions(current.kind, current.class_name, session.classes)),
+        kept.note,
       );
     }
   };
@@ -482,17 +494,23 @@ function GuidedBody({
   const saveNote = () => {
     const kept = answer(currentId);
     if (kept) {
-      put(currentId, {
-        ...kept,
-        reasons: noteDraft.reasons.length ? noteDraft.reasons : kept.reasons,
-        note: noteDraft.text.trim() || null,
-      });
+      const next = withNote(kept, noteDraft);
+      put(currentId, next);
+      if (current !== undefined) {
+        decisions.save(
+          currentId,
+          next.raw,
+          next.value,
+          reasonBody(next.reasons, next.value, current, session.classes),
+          next.note,
+        );
+      }
     }
     setNoteFor(null);
   };
   const openNote = () => {
     const kept = answer(currentId);
-    setNoteDraft({ reasons: kept?.reasons ?? [], text: kept?.note ?? "" });
+    setNoteDraft(draftFrom(kept));
     setNoteFor("current");
   };
   const toSubmitted = () =>
@@ -638,14 +656,8 @@ function GuidedBody({
         chosen={noteDraft.reasons}
         text={noteDraft.text}
         offReason={setup.connLost ? netOff : undefined}
-        onReason={(reason) =>
-          setNoteDraft({
-            ...noteDraft,
-            reasons: noteDraft.reasons.includes(reason)
-              ? noteDraft.reasons.filter((item) => item !== reason)
-              : [...noteDraft.reasons, reason],
-          })
-        }
+        onReason={(reason) => setNoteDraft(toggledDraft(noteDraft, reason))}
+        meId={session.meId}
         onText={(text) => setNoteDraft({ ...noteDraft, text })}
         onSave={saveNote}
         onCancel={() => setNoteFor(null)}
@@ -845,16 +857,7 @@ function GuidedBody({
     );
 
   const banner = setup.connLost ? (
-    <Banner
-      tone="warn"
-      actions={
-        <Button size="sm" onClick={() => showUndoToast({ message: "Still offline" })}>
-          Retry now
-        </Button>
-      }
-    >
-      <b>Connection lost.</b> Decisions can't be saved right now. Nothing is lost. Retrying...
-    </Banner>
+    <ConnectionBanner pinned />
   ) : setup.readOnly ? (
     <Banner
       tone="info"

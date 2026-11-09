@@ -10,11 +10,10 @@ import {
   useListProjectSlides,
   useStartModelRuns,
 } from "@parfocal/api-client";
-import type { Blocker } from "@parfocal/ui/components/before-you-list";
 import { Icon } from "@parfocal/ui/components/icon";
-import { type ModelGroup, ModelPicker, OutcomeRow } from "@parfocal/ui/components/model-picker";
+import { ModelPicker, OutcomeRow } from "@parfocal/ui/components/model-picker";
 import { SmallModal, SmallModalZone } from "@parfocal/ui/components/small-modal";
-import { TokenField, type TokenItem } from "@parfocal/ui/components/token-field";
+import { TokenField } from "@parfocal/ui/components/token-field";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
@@ -22,61 +21,26 @@ import { now } from "../../clock.ts";
 import { formatDayMonth } from "../format.ts";
 import { okData } from "../placeholder.tsx";
 import { lookUrl } from "../thumbnails.ts";
-import { makesLabel, runEstimate } from "./model.ts";
+import { runEstimate } from "./model.ts";
+import { modelGroups, runBlockers, slideItems, startingSlides } from "./run-model-parts.ts";
 
 export type RunModelScene = "pick" | "menu" | "lab";
 
 type RunModelWindowProps = {
   projectId: string;
   scene: RunModelScene;
+  slideIds?: string[] | undefined;
   onClose: () => void;
   onStarted: () => void;
 };
 
-const slideName = (slide: ProjectSlide) =>
-  slide.case === null ? slide.label : `${slide.label} · ${slide.stain}`;
-
-function slideItems(
-  slides: ProjectSlide[],
-  setNames: Map<string, string>,
-  model: ProjectModel | undefined,
-): TokenItem[] {
-  return slides.map((slide) => {
-    const names = slide.result_set_ids.map((id) => setNames.get(id) ?? "");
-    const has = model !== undefined && names.includes(model.title);
-    return {
-      id: slide.id,
-      name: slideName(slide),
-      thumbnail: lookUrl("overview"),
-      find: slide.case?.label ?? "Loose",
-      sub: `${slide.case ? `Case ${slide.case.label}` : "Loose"} · ${names.length ? names.join(", ") : "no results yet"}`,
-      ...(has ? { end: "has this set", endTone: "warn" as const } : {}),
-    };
-  });
-}
-
-function modelGroups(models: ProjectModel[]): ModelGroup[] {
-  const option = (model: ProjectModel) => ({
-    id: model.id,
-    title: model.title,
-    description: model.description,
-    makes: model.makes.map((item) => makesLabel[item]),
-    perSlide: `${model.minutes_per_slide} min a slide`,
-    offline: model.serving === "offline",
-  });
-  return [
-    {
-      title: "Parfocal models",
-      options: models.filter((model) => model.host === "parfocal").map(option),
-    },
-    {
-      title: "Your lab's models",
-      options: models.filter((model) => model.host === "lab").map(option),
-    },
-  ];
-}
-
-export function RunModelWindow({ projectId, scene, onClose, onStarted }: RunModelWindowProps) {
+export function RunModelWindow({
+  projectId,
+  scene,
+  slideIds,
+  onClose,
+  onStarted,
+}: RunModelWindowProps) {
   const project = okData(useGetProject(projectId).data);
   const slides = useListProjectSlides(projectId).data?.data;
   const models = okData(useListProjectModels(projectId).data);
@@ -92,7 +56,7 @@ export function RunModelWindow({ projectId, scene, onClose, onStarted }: RunMode
       slides={slides}
       models={models}
       setNames={new Map(sets.map((set) => [set.id, set.name]))}
-      initialSlides={defaults.slide_ids}
+      initialSlides={startingSlides(slideIds, defaults.slide_ids, slides)}
       initialModel={scene === "lab" && labModel ? labModel.id : defaults.model_id}
       menuOpen={scene === "menu"}
       onClose={onClose}
@@ -132,21 +96,9 @@ function RunModelForm({
   const queryClient = useQueryClient();
   const start = useStartModelRuns();
   const model = models.find((item) => item.id === modelId);
-  const items = slideItems(slides, setNames, model);
+  const items = slideItems(slides, setNames, model, lookUrl("overview"));
   const again = picked.some((id) => items.find((item) => item.id === id)?.end);
-  const blockers: Blocker[] = [
-    ...(picked.length ? [] : [{ id: "slides", text: "Pick at least one slide.", goTo: "Slides" }]),
-    ...(model ? [] : [{ id: "model", text: "Pick a model.", goTo: "Model" }]),
-    ...(model?.serving === "offline"
-      ? [
-          {
-            id: "offline",
-            text: `${model.title} is offline. Pick another model or try again later.`,
-            goTo: "Model",
-          },
-        ]
-      : []),
-  ];
+  const blockers = runBlockers(picked.length, model);
   const estimate = model ? runEstimate(model, picked.length, now()) : null;
   const run = async () => {
     if (!model || model.serving === "offline" || picked.length === 0) return;

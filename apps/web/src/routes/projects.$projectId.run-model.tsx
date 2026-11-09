@@ -7,6 +7,7 @@ import { useJobsTray, useOpenJobsTray } from "../shell/jobs-tray.tsx";
 
 const runModelSearch = z.object({
   scene: z.enum(mockScenes.runmodel).optional(),
+  slides: z.array(z.string()).optional(),
 });
 
 export const Route = createFileRoute("/projects/$projectId/run-model")({
@@ -16,7 +17,8 @@ export const Route = createFileRoute("/projects/$projectId/run-model")({
 
 function RunAModel() {
   const { projectId } = Route.useParams();
-  const scene = Route.useSearch().scene ?? "pick";
+  const search = Route.useSearch();
+  const scene = search.scene ?? "pick";
   const navigate = useNavigate();
   const tray = useJobsTray();
   useOpenJobsTray(scene === "started");
@@ -27,6 +29,7 @@ function RunAModel() {
         <RunModelWindow
           projectId={projectId}
           scene={scene}
+          slideIds={search.slides}
           onClose={() => void toProject()}
           onStarted={() => {
             void toProject().then(() => tray.setOpen(true));

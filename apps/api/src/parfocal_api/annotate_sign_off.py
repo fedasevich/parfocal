@@ -3,13 +3,14 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Any
 
-from fastapi import APIRouter
+from fastapi import APIRouter, BackgroundTasks
 from pydantic import BaseModel
 from sqlalchemy import func, select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
+from parfocal_api.blind_first import announce_visibility, seen_by
 from parfocal_api.check_options import requires_all_checked
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.permissions import Permission, require
@@ -17,6 +18,7 @@ from parfocal_api.principals import MemberPrincipal, Principal
 from parfocal_api.problems import BadRequestError, ConflictError, ForbiddenError
 from parfocal_api.project_access import role_in
 from parfocal_api.projects import ProjectArchivedError
+from parfocal_api.realtime import RealtimeClient
 from parfocal_api.review_order import CheckState, check_counts, unchecked_objects
 from parfocal_api.reviewed_layer import task_slide
 from parfocal_api.tables import (
@@ -244,11 +246,12 @@ async def my_check(connection: AsyncConnection, principal: Principal, row: Any) 
     return found
 
 
-async def layer_has_objects(connection: AsyncConnection, row: Any) -> bool:
+async def layer_has_objects(connection: AsyncConnection, principal: Principal, row: Any) -> bool:
     live = select(annotations.c.id).where(
         annotations.c.task_id == row.task_id,
         annotations.c.slide_id == row.slide_id,
         annotations.c.deleted_at.is_(None),
+        *seen_by(row.blind_first, principal),
     )
     return bool(await connection.scalar(select(live.exists())))
 
@@ -304,6 +307,8 @@ async def check_annotate_slide(
     slide_id: uuid.UUID,
     principal: CurrentPrincipal,
     connection: TenantConnection,
+    background: BackgroundTasks,
+    live: RealtimeClient,
     draft: CheckDraft | None = None,
 ) -> AnnotateSlideStatus:
     row = await annotate_slide(connection, principal, task_id, slide_id)
@@ -311,9 +316,10 @@ async def check_annotate_slide(
     if current.submitted_at is not None:
         raise AlreadyCheckedError
     nothing_to_mark = (draft or CheckDraft()).nothing_to_mark
-    if nothing_to_mark and await layer_has_objects(connection, row):
+    if nothing_to_mark and await layer_has_objects(connection, principal, row):
         raise LayerNotEmptyError
     await mark(connection, principal, row, True, nothing_to_mark)
+    announce_visibility(background, live, row, user_of(principal))
     return await status_of(connection, task_id, slide_id)
 
 
@@ -325,12 +331,15 @@ async def uncheck_annotate_slide(
     slide_id: uuid.UUID,
     principal: CurrentPrincipal,
     connection: TenantConnection,
+    background: BackgroundTasks,
+    live: RealtimeClient,
 ) -> AnnotateSlideStatus:
     row = await annotate_slide(connection, principal, task_id, slide_id)
     current = await my_check(connection, principal, row)
     if current.submitted_at is None:
         raise NotCheckedError
     await mark(connection, principal, row, False)
+    announce_visibility(background, live, row, user_of(principal))
     return await status_of(connection, task_id, slide_id)
 
 

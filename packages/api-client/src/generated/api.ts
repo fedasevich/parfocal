@@ -4406,6 +4406,7 @@ export interface ReviewTask {
   decision: DecisionSettings;
   display: TaskDisplaySettings;
   check?: CheckOptions | null;
+  blind_first?: boolean;
   counts_as_changes: CountsAsChange[];
   created_by_user_id: string | null;
   created_at: string;
@@ -4443,6 +4444,7 @@ export interface ReviewTaskDetail {
   decision: DecisionSettings;
   display: TaskDisplaySettings;
   check?: CheckOptions | null;
+  blind_first?: boolean;
   counts_as_changes: CountsAsChange[];
   created_by_user_id: string | null;
   created_at: string;
@@ -5164,6 +5166,7 @@ export interface TaskDraft {
   display?: TaskDisplaySettings | null;
   preset?: CheckPreset | null;
   check?: CheckChange | null;
+  blind_first?: boolean;
 }
 
 export interface TaskInvitationDraft {

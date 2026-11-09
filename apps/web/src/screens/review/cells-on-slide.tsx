@@ -9,11 +9,16 @@ import { flushSync } from "react-dom";
 import { viewTransitions } from "../../shell/view-transitions.ts";
 import { taskTimer } from "../../telemetry/app-events.ts";
 import { useCellTiming } from "../../telemetry/use-task-timing.ts";
+import { usePeople } from "../people.ts";
 import { okData } from "../placeholder.tsx";
 import type { SceneOf } from "../scenes.ts";
+import { NoteBlock, type NoteState } from "../viewer/objects-panel.tsx";
 import { CellsGrid } from "./cells-grid.tsx";
 import { answersOf, cardText, countsAs, rawFor, showsClaim } from "./decision-style.ts";
 import { DisplayTab } from "./display-tab.tsx";
+import { useNoteKey } from "./note-key.ts";
+import { hasNote, withNote } from "./note-model.ts";
+import { answerLabel, SavedNote } from "./object-card.tsx";
 import { ObjectComments } from "./object-comments.tsx";
 import { type ReviewSession, useReviewSession } from "./review-data.ts";
 import { type Answers, answerOf, baseAnswers, countAnswers } from "./review-state.ts";
@@ -95,7 +100,21 @@ function CellsBody({
       setCurrent(after.object);
       setCamera(null);
     }
+    setNote({ open: false, reasons: [], text: "" });
   };
+  const [note, setNote] = useState<NoteState>({ open: false, reasons: [], text: "" });
+  const person = usePeople();
+  const saveNote = () => {
+    const kept = object ? answer(object.object) : undefined;
+    if (object && kept) setOverrides(new Map(overrides).set(object.object, withNote(kept, note)));
+    setNote({ ...note, open: false });
+  };
+  useNoteKey(() => {
+    const kept = object ? answer(object.object) : undefined;
+    if (kept && tab === "objects")
+      setNote({ open: true, reasons: kept.reasons, text: kept.note ?? "" });
+  });
+  const keptNote = object && hasNote(answer(object.object)) ? answer(object.object) : undefined;
   const slideLabel = session.slideName.split(" ")[0] ?? "";
   const decisionFoot = object ? (
     <div className="grid gap-2.5">
@@ -126,6 +145,17 @@ function CellsBody({
         classes={session.classes}
         aiClass={object.class_name}
         label={`Your answer on ${object.object}`}
+      />
+      <NoteBlock
+        object={object}
+        style={style}
+        classes={session.classes}
+        answer={answer(object.object)}
+        author={person(session.meId)}
+        note={note}
+        saveOffReason={undefined}
+        onNote={setNote}
+        onSaveNote={saveNote}
       />
     </div>
   ) : null;
@@ -172,6 +202,19 @@ function CellsBody({
           body: (
             <ObjectComments
               object={current}
+              decisionNotes={
+                keptNote ? (
+                  <SavedNote
+                    answer={keptNote}
+                    label={answerLabel(style, keptNote, session.classes)}
+                    author={person(session.meId)}
+                    onEdit={() => {
+                      setNote({ open: true, reasons: keptNote.reasons, text: keptNote.note ?? "" });
+                      setTab("objects");
+                    }}
+                  />
+                ) : null
+              }
               threads={session.threads}
               meId={session.meId}
               blind={session.task?.blinded ?? false}

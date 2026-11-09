@@ -1,18 +1,21 @@
 import { Banner } from "@parfocal/ui/components/banner";
 import { Button } from "@parfocal/ui/components/button";
-import { useEffect } from "react";
-import { retryNow, useConnection, watchConnection } from "./connection.ts";
+import { retryNow, useConnection } from "./connection.ts";
+import { showUndoToast } from "./undo-toasts.tsx";
 
-export function ConnectionBanner() {
+export function ConnectionBanner({ pinned = false }: { pinned?: boolean }) {
   const { online, retrying } = useConnection();
-  useEffect(() => watchConnection(window), []);
-  if (online) return null;
+  if (online && !pinned) return null;
   return (
     <Banner
       tone="warn"
       data-testid="connection-banner"
       actions={
-        <Button size="sm" disabled={retrying} onClick={() => void retryNow()}>
+        <Button
+          size="sm"
+          disabled={retrying}
+          onClick={() => (online ? showUndoToast({ message: "Still offline" }) : void retryNow())}
+        >
           Retry now
         </Button>
       }

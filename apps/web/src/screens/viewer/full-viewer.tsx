@@ -47,6 +47,8 @@ import { type ReactNode, useEffect, useRef, useState } from "react";
 import { provideDebug } from "../../debug-handle.ts";
 import { useFormat } from "../../format.ts";
 import { escLayer } from "../../keys/esc-ladder.ts";
+import { useConnection } from "../../shell/connection.ts";
+import { ConnectionBanner } from "../../shell/connection-banner.tsx";
 import { destinations } from "../../shell/destinations.ts";
 import { useLabDecisionCutoff, useResolvedSettings } from "../../shell/resolved-settings.ts";
 import { useCellTiming, useChromeSampling, useTaskRun } from "../../telemetry/use-task-timing.ts";
@@ -80,6 +82,8 @@ import { FirstReadNotice } from "../review/first-read-notice.tsx";
 import { CanvasNotice } from "../review/guided-review.tsx";
 import { finishingAnswers } from "../review/guided-scenes.ts";
 import { useNoteKey } from "../review/note-key.ts";
+import { hasNote, reasonBody, withNote } from "../review/note-model.ts";
+import { answerLabel, SavedNote } from "../review/object-card.tsx";
 import { ObjectComments } from "../review/object-comments.tsx";
 import { useObjectKeys } from "../review/object-keys.ts";
 import { PagedProbeMarker } from "../review/paged-probe.tsx";
@@ -263,6 +267,7 @@ function ViewerBody({
   )?.id;
   const scene = search.scene;
   const setup = viewerSetup(scene);
+  const { online } = useConnection();
   const navigator = isNavigatorScene(scene) ? scene : null;
   const measuring = search.tool === "ruler";
   const personalSettings = useResolvedSettings();
@@ -461,7 +466,16 @@ function ViewerBody({
       reasons: choice?.reasons ?? (kept?.value === value ? kept.reasons : []),
       note: kept?.note ?? null,
     });
-    decisions.save(current.object, raw, value, choice?.draft);
+    decisions.save(
+      current.object,
+      raw,
+      value,
+      choice?.draft ??
+        (kept?.value === value
+          ? reasonBody(kept.reasons, value, current, session.classes)
+          : undefined),
+      kept?.note,
+    );
     setToast({
       id: Date.now(),
       text: `${current.object}: ${value === "unsure" ? "not sure" : value}`,
@@ -509,8 +523,17 @@ function ViewerBody({
   const saveNote = () => {
     if (current === undefined) return;
     const kept = answer(current.object);
-    if (kept)
-      put(current.object, { ...kept, reasons: note.reasons, note: note.text.trim() || null });
+    if (kept) {
+      const next = withNote(kept, note);
+      put(current.object, next);
+      decisions.save(
+        current.object,
+        next.raw,
+        next.value,
+        reasonBody(next.reasons, next.value, current, session.classes),
+        next.note,
+      );
+    }
     setNote({ ...note, open: false });
   };
 
@@ -1067,7 +1090,9 @@ function ViewerBody({
                 icon: "smart" as const,
                 label: set.source === "run" ? "Run again" : "Run a model on this slide",
                 onSelect: (): void =>
-                  void router.navigate({ href: destinations.runModel(projectId) }),
+                  void router.navigate({
+                    href: `${destinations.runModel(projectId)}?slides=${encodeURIComponent(JSON.stringify([slideId]))}`,
+                  }),
               },
               {
                 icon: "upload" as const,
@@ -1157,6 +1182,22 @@ function ViewerBody({
       />
     );
 
+  const decisionNotesOf = (object: string) => {
+    const kept = answer(object);
+    if (!kept || !hasNote(kept)) return null;
+    return (
+      <SavedNote
+        answer={kept}
+        label={answerLabel(style, kept, session.classes)}
+        author={person(session.meId)}
+        onEdit={() => {
+          setNote({ open: true, reasons: kept.reasons, text: kept.note ?? "" });
+          onSearch({ tab: "objects" });
+        }}
+      />
+    );
+  };
+
   const commentsBody = shownPin ? (
     <PinnedThread
       key={`${shownPin.x},${shownPin.y}`}
@@ -1173,6 +1214,7 @@ function ViewerBody({
   ) : selected ? (
     <ObjectComments
       object={selected}
+      decisionNotes={decisionNotesOf(selected)}
       threads={session.threads}
       meId={session.meId}
       blind={session.task?.blinded ?? false}
@@ -1207,48 +1249,42 @@ function ViewerBody({
     />
   );
 
-  const banner = setup.connLost ? (
-    <Banner
-      tone="warn"
-      actions={
-        <Button size="sm" onClick={() => setToast({ id: Date.now(), text: "Still offline" })}>
-          Retry now
-        </Button>
-      }
-    >
-      <b>Connection lost.</b> Decisions can't be saved right now. Nothing is lost. Retrying...
-    </Banner>
-  ) : readOnly ? (
-    <Banner
-      tone="info"
-      icon="lock"
-      actions={
-        <Button size="sm">
-          Ask {person(session.task?.created_by_user_id)?.name.split(" ")[0] ?? "the researcher"} to
-          amend
-        </Button>
-      }
-    >
-      <b>Signed off 15 Oct.</b> Changes need an amendment.
-    </Banner>
-  ) : setup.sourceOff ? (
-    <Banner
-      tone="warn"
-      icon="link"
-      actions={
-        <Button
-          size="sm"
-          onClick={() => void router.navigate({ href: `${destinations.admin()}?section=storage` })}
-        >
-          Source status
-        </Button>
-      }
-    >
-      <b>Scanner archive is not answering since 10:40.</b> {slideLabel} is read in place from there,
-      so it opens from the 7-day tile cache. Places never viewed show a quiet checker until the
-      source is back.
-    </Banner>
-  ) : null;
+  const banner =
+    setup.connLost || !online ? (
+      <ConnectionBanner pinned={setup.connLost} />
+    ) : readOnly ? (
+      <Banner
+        tone="info"
+        icon="lock"
+        actions={
+          <Button size="sm">
+            Ask {person(session.task?.created_by_user_id)?.name.split(" ")[0] ?? "the researcher"}{" "}
+            to amend
+          </Button>
+        }
+      >
+        <b>Signed off 15 Oct.</b> Changes need an amendment.
+      </Banner>
+    ) : setup.sourceOff ? (
+      <Banner
+        tone="warn"
+        icon="link"
+        actions={
+          <Button
+            size="sm"
+            onClick={() =>
+              void router.navigate({ href: `${destinations.admin()}?section=storage` })
+            }
+          >
+            Source status
+          </Button>
+        }
+      >
+        <b>Scanner archive is not answering since 10:40.</b> {slideLabel} is read in place from
+        there, so it opens from the 7-day tile cache. Places never viewed show a quiet checker until
+        the source is back.
+      </Banner>
+    ) : null;
 
   const canvasNotice =
     setup.issue === "slidefail" ? (

@@ -131,4 +131,5 @@ export const reasonText: Record<string, string> = {
   need_ihc: "Need IHC",
   border_unclear: "Border unclear",
   out_of_focus: "Out of focus",
+  need_second_look: "Need a second look",
 };

@@ -1,4 +1,11 @@
 import { pointBatchFromPoints, polygonBatchFromRings } from "./batches.ts";
+import {
+  belowCutoffAlpha,
+  belowCutoffDash,
+  filledAlpha,
+  scoreRampHigh,
+  scoreRampLow,
+} from "./draw-constants.ts";
 import { type ConfidenceBand, confidenceBand } from "./outline-modes.ts";
 import { type ClassName, classColors, nearBlack, white } from "./outline-style.ts";
 import { createVectorOverlay, withOverlayState } from "./overlay.ts";
@@ -18,15 +25,11 @@ export type ColourMode = (typeof colourModes)[number];
 
 export type DecisionName = "agree" | "disagree" | "unsure";
 
+export { belowCutoffAlpha, belowCutoffDash, filledAlpha };
+
 export const minDrawOpacity = 20;
 
 export const maxDrawOpacity = 100;
-
-export const belowCutoffAlpha = 0.5;
-
-export const belowCutoffDash = [5, 3] as const;
-
-export const filledAlpha = 0.55;
 
 export const decisionColours: Readonly<Record<DecisionName | "open", Rgba>> = {
   agree: [74, 222, 128, 255],
@@ -42,9 +45,9 @@ export const confidenceTints: Readonly<Record<ConfidenceBand, Rgba>> = {
   doubtful: [248, 113, 113, 255],
 };
 
-const scoreLow: Rgba = [67, 56, 202, 255];
+const scoreLow: Rgba = [...scoreRampLow, 255];
 
-const scoreHigh: Rgba = [250, 204, 21, 255];
+const scoreHigh: Rgba = [...scoreRampHigh, 255];
 
 export interface DrawnObject {
   readonly id: string;

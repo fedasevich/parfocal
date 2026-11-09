@@ -30,13 +30,13 @@ const scenes: { path: string; heading: string; shows: string }[] = [
   { path: "/sign-in?scene=lockkey", heading: "", shows: "Use your passkey for parfocal.eu" },
   {
     path: "/sign-in?scene=expired",
-    heading: "Sign in to Parfocal",
+    heading: "Your session ended",
     shows: "Your session ended after 8 hours",
   },
   {
     path: "/sign-in?scene=noaccess",
     heading: "No access to Lymph nodes 2026",
-    shows: "Ask Lenka Malá, its owner",
+    shows: "Its owner is Lenka Malá",
   },
   { path: "/sign-up", heading: "Create your Parfocal account", shows: "Review AI results" },
   { path: "/sign-up?scene=verify", heading: "Confirm your email", shows: "Resend the code" },
@@ -114,7 +114,7 @@ test("the lock unlocks to the same slide and no access asks the owner", async ({
   await expect(badge(page)).toContainText("viewing as Anna Kopecká");
   await page.getByRole("button", { name: "Ask for access" }).click();
   await expect(page.getByText("Asked Lenka Malá to add you to Lymph nodes 2026")).toBeVisible();
-  await expect(page.getByRole("button", { name: /Asked, 11:02/ })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Asked Lenka Malá" })).toBeDisabled();
 });
 
 test("the invite joins in one step and opens the first slide", async ({ page }) => {

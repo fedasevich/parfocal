@@ -241,3 +241,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0275](0275-decline-a-workspace-ask-and-set-the-join-domain.md) | Decline a workspace ask by removing it, and set the join domain in Admin | Accepted | 2026-11-09 |
 | [0276](0276-model-artifacts-are-write-once-objects-with-a-manifest.md) | Model artifacts are write-once objects under a per-version manifest in object storage | Accepted | 2026-11-09 |
 | [0277](0277-guided-tour-and-help.md) | The guided tour is ten steps from the mock's chapters and its progress is one personal setting | Accepted | 2026-11-09 |
+| [0278](0278-blind-first-on-annotate-tasks.md) | Blind first on annotate tasks | Accepted | 2026-11-09 |

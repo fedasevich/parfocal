@@ -1820,7 +1820,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Done when routing tests cover deep links and the initial home bundle stays under the budget set in TEST-006.
   Size: M.
 
-- [ ] SHELL-002 · Global top bar and sidebar
+- [x] SHELL-002 · Global top bar and sidebar
   One top bar outside a slide, with the Parfocal logo and the workspace's name and logo with its switcher (IAM-008), search that opens the palette and accepts object IDs, New project, Upload as a normal button, the jobs ring (JOBS-003), the bell (NOTIF-002) and the account menu (SHELL-012). The sidebar holds Home, My work with its count, the projects with their slide counts, New project and, for admins, Admin under Workspace. Mentions live only behind the bell. Settings and theme are reached through the account menu and Cmd+comma.
   Replace the hand-written `apps/web/src/shell/shell-store.ts` (SHELL-012, built on useSyncExternalStore) with the Zustand shell store ADR 0182 asks for.
   Done when component and E2E tests cover each control, every control is reachable by keyboard, and a test confirms the sidebar has no Mentions entry.
@@ -1876,7 +1876,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Refs mock: states, mock: guided/connlost, mock: case/connlost, mock: signin/expired, mock: signin/noaccess, kit: issue states, doc 44.
   Size: L.
 
-- [ ] SHELL-015 · One connection banner and issue pages everywhere
+- [x] SHELL-015 · One connection banner and issue pages everywhere
   Review of SHELL-010 (error and issue states) found the shell banner only inside the global shell. Show it in guided review and the full viewer by reading `useConnection` in place of their prototype scene banners, make `holdSaveUntilBack` run the held saves on reconnect or remove it with its toast text, route the real expired and no-access cases of sign-in to the shared issue pages and retire the copies in the sign-in screens, fold the `/issue-pages` preview into the `/issue-states` dev index, and make `issue-states.spec.ts` fail when the root server error page renders.
   Done when browser tests show the banner in guided review and the full viewer, a held save runs on reconnect, sign-in shows the shared pages, and the issue states spec catches a crashed scene.
   Depends on SHELL-010.
@@ -2616,7 +2616,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Result sets and their styles are the top of the Layers tab (VIZ-001).
   Size: M.
 
-- [ ] ANN-016 · Grouping rules
+- [x] ANN-016 · Grouping rules
   Class, cluster (radius in µm), containment, provenance.
   Done when unit tests cover each rule.
   Refs [`poc/src/annotations/grouping.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/annotations/grouping.ts).
@@ -2628,7 +2628,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Refs doc 25.
   Size: S.
 
-- [ ] ANN-018 · Hit testing at scale
+- [x] ANN-018 · Hit testing at scale
   Spatial index for shapes and runs, ignoring hidden and locked groups.
   Done when a perf test keeps hover hit tests under 1 ms with 1M nuclei.
   Size: M.
@@ -2906,7 +2906,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Depends on ANN-030, ANN-031, COLLAB-007. Refs [ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md).
   Size: M.
 
-- [ ] COLLAB-017 · Blind first switch on annotate tasks
+- [x] COLLAB-017 · Blind first switch on annotate tasks
   A task switch, off by default, keeps an expert's new objects from colleagues until that expert marks the slide checked, so first opinions stay independent.
   Done when API tests hide and then show another expert's objects around the check, and component tests cover the switch in the task stepper.
   Depends on ANN-030, TASK-014, PROTO-020. Refs [ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md).
@@ -3152,7 +3152,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Refs mock §2.14, kit decision D5.
   Size: M.
 
-- [ ] AIP-004 · Model tier picker
+- [x] AIP-004 · Model tier picker
   The picker dialog in Annotate and the tier chip in Review.
   Done when component tests cover the choices and behaviour of mock 11 "choosing a model".
   Size: M.
@@ -3748,7 +3748,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when unit tests cover the intent mapping for every device in the kit device matrix.
   Size: M.
 
-- [ ] DEV-002 · Trackpad detection and gestures
+- [x] DEV-002 · Trackpad detection and gestures
   Two-finger pan, pinch zoom, two-finger click for negative point, no drag-to-pan requirement.
   Done when replayed traces from macOS and Windows trackpads produce the right intents.
   Size: M.
@@ -4554,7 +4554,7 @@ Doctors judge AI objects in a simple guided mode, or in the full viewer with the
   Depends on GUIDE-006, TASK-002. Split out of GUIDE-007 so the screen has no backend work.
   Required questions block the submit of a slide until they are answered, which TASK-008 (submit a slide review) checks ([ADR 0131](adr/0131-decision-styles-raw-answers-and-submit-gating.md), decision styles, raw answers and submit gating).
 
-- [ ] GUIDE-010 · Notes on decisions
+- [x] GUIDE-010 · Notes on decisions
   After any decision, in guided review, the full viewer and the cell view, an "Add a note" link and the ⇧N key (N is No in the yes or no style, DS-030) open a short field with Save on Enter and Cancel on Esc. Disagree and Unsure offer their quick reasons as toggles before the text, and none is required. A saved note shows the reviewer as avatar and name, the decision, the reasons and the text with Edit, can mention people as comments do, and never blocks moving on. Notes show as a thread on the object in the Comments tab, and under each reviewer's decision in the disagreement queue and the adjudicator view, blinded there ([ADR 0095](adr/0095-ux-round-5-upload-by-slide-and-decision-notes.md)).
   Done when component tests cover writing, editing and cancelling a note with each decision, E2E adds a note with a mention in guided review and finds it in the full viewer's Comments tab and in the adjudicator view, and an axe check passes on the open field.
   Depends on GUIDE-011, GUIDE-002, GUIDE-005, COLLAB-005, COLLAB-006. Refs mock: guided/note, mock: case, doc 42.
@@ -4796,7 +4796,7 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Done when API tests cover a run, its result sets and the estimate.
   Depends on AIP-008, RSET-001.
 
-- [ ] JOBS-002 · Run a model window
+- [x] JOBS-002 · Run a model window
   A small window in three parts: the slides as a token field with the slides without results picked, one model dropdown grouped into Parfocal's models and the lab's models with what each makes and its time per slide, and what happens (the result set name, the time with the expected finish and a notification). No version picker. It opens from the project, a slide's menu and the end of an upload.
   Done when component tests cover each part and the estimate, and E2E runs a model from the upload's end.
   Depends on JOBS-001, DS-020. Refs mock: runmodel, doc 39.
@@ -5061,7 +5061,7 @@ Admin is its own page with its own sidebar and the app's top bar, never a page i
   Depends on VIZ-001, VIZ-002, VIZ-003, TASK-011, GUIDE-002. Refs mock: layers/display, mock: layers/locked, mock: layers/preset, mock: guided/display, mock: guided/locked, mock: guided/preset, kit: Display, doc 44.
   Size: L.
 
-- [ ] VIZ-010 · Mount the engine overlay draws on the live slide
+- [x] VIZ-010 · Mount the engine overlay draws on the live slide
   VIZ-000 (visualisation research check) found that VIZ-008 (how objects draw on the live slide) added the engine adapter but no screen uses it, so the full viewer and guided review still draw SVG stills with their own copy of the style rules. Mount the engine draws in `slide-stage.tsx` through `createObjectDrawing`, and share one set of style constants between the stills and the engine. VIZ-007 (Display panel) does not wait for it.
   Done when the overlay golden tests pass with the shared constants and a browser test finds the engine layer drawing objects on the live slide in the full viewer and in guided review.
   Depends on VIZ-000.
@@ -5072,6 +5072,12 @@ Admin is its own page with its own sidebar and the app's top bar, never a page i
   Done when browser tests show each of order, zoom, move on and button place changing guided review, and unit tests cover the Save as failure and the racing presses.
   Depends on VIZ-007.
   Size: M.
+
+- [ ] VIZ-012 · Guided review and the full viewer on the live slide
+  VIZ-010 (mount the engine overlay draws on the live slide) found that only the separate `live` route mounts the Viv slide stage. Guided review, the full viewer, the first-read step, Annotate tasks, the cell view, the focus view and the adjudicator view all draw the SVG `SlideStill`, so a reviewer never sees the real pixels there. Mount the live slide stage with the engine object layer in guided review and the full viewer first, keeping each screen's camera, keys and Display settings, and keep the still only as the fallback where WebGL is missing.
+  Done when browser tests open guided review and the full viewer on a fixture slide and find the Viv canvas and the engine object layer drawing, the golden image tests pass, and the viewer performance budgets hold.
+  Depends on VIZ-010.
+  Size: L.
 
 ---
 

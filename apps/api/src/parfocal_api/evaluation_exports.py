@@ -15,6 +15,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.ai_changes import ai_changes, report_changes
+from parfocal_api.blind_first import seen_by
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.evaluation import (
     UNCLASSIFIED,
@@ -27,6 +28,7 @@ from parfocal_api.evaluation import (
 )
 from parfocal_api.locales import DEFAULT_LOCALE, Locale
 from parfocal_api.permissions import Permission, require
+from parfocal_api.principals import Principal
 from parfocal_api.problems import ProblemError
 from parfocal_api.report_template import (
     RenderedReport,
@@ -523,9 +525,13 @@ def annotate_layout(
 
 
 async def annotate_report(
-    connection: AsyncConnection, task: Any, results: Results, locale: Locale
+    connection: AsyncConnection,
+    principal: Principal,
+    task: Any,
+    results: Results,
+    locale: Locale,
 ) -> tuple[RenderedReport, Version]:
-    found = await ai_changes(connection, task, results)
+    found = await ai_changes(connection, task, results, seen_by(task.blind_first, principal))
     version = Version(number=1, checksum=checksum_of(found), signed_at=task.signed_off_at)
     project = (
         await connection.execute(
@@ -562,7 +568,7 @@ async def task_report(
     locale: Locale,
 ) -> tuple[RenderedReport, Version]:
     if task.kind == TaskKind.ANNOTATE:
-        return await annotate_report(connection, task, results, locale)
+        return await annotate_report(connection, principal, task, results, locale)
     evaluation = await evaluate(connection, task)
     version = await version_of(connection, task, evaluation)
     return await rendered_report(connection, principal, task, evaluation, version, locale), version

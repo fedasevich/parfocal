@@ -65,7 +65,7 @@ test("the score cutoff draws low objects dashed and faint without changing what 
   await page.keyboard.press("Home");
   await expect(regions.first()).not.toHaveAttribute("stroke-dasharray", /.+/);
   await page.keyboard.press("End");
-  await expect(regions.first()).toHaveAttribute("stroke-dasharray", "6 4");
+  await expect(regions.first()).toHaveAttribute("stroke-dasharray", "5 3");
   await expect(regions.first()).toHaveAttribute("stroke-opacity", "0.5");
   await expect(regions).toHaveCount(before);
   await page.getByRole("tab", { name: /Objects/ }).click();
