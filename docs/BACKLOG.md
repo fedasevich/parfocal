@@ -1491,6 +1491,11 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Done when a unit test shows a range longer than the cache can hold answered straight from the network, without one block entry made for it.
   Size: S.
 
+- [ ] VIEW-068 · An inference worker that stops is an error, not a hang
+  `createSamClient` in `packages/viewer-engine/src/sam/worker-client.ts` listened only for `message`, so a worker script that failed to load, a worker that crashed or a reply that could not be read left `ready` and every request pending for ever. Found while fixing VIEW-060 (a decode worker that fails to start), which had the same fault. The client now uses the shared `onWorkerFailure` and rejects `ready`, the waiting requests and every later one.
+  Done when unit tests show `ready`, a waiting request and a later request rejected after the worker fires `error` or `messageerror`.
+  Size: S.
+
 - [x] VIEW-022 · Keyboard navigation
   Arrows pan, Shift for 3×, plus and minus zoom by 1.35×, 0 fits, Alt+1 to Alt+6 objective presets. A held arrow pans smoothly, easing up to speed and easing out on release, instead of repeating steps at the key repeat rate.
   Done when tests cover each binding through the key registry (CMD-001).
@@ -3540,6 +3545,11 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   The auto region pass resamples each tile's pixels with `samPixels` in `packages/viewer-engine/src/sam/smart-prompt.ts` on the main thread, which took 221 ms of main thread time with the CPU slowed four times, so the aiseg.region-main-thread-task-ms budget can still fail on a slow hosted runner. Move the resampling into the segmentation worker and pass the tile as a transferable buffer.
   Done when the browser budget test reads no long task over 50 ms with the CPU slowed four times, and the region pass gives the same outlines as before.
   Depends on AISEG-017.
+  Size: S.
+
+- [ ] AISEG-020 · The outline worker is replaced after it stops
+  `createAisOutliner` in `apps/web/src/aiseg/ais-outliner.ts` rejects the waiting requests when its worker fires `error`, but keeps the dead worker, so every later request is posted to it and never answered. It also has no `messageerror` listener. Found while fixing VIEW-068 (an inference worker that stops).
+  Done when a unit test shows a request made after the worker stopped answered by a fresh worker, and a request waiting at a `messageerror` rejected.
   Size: S.
 
 ## 23 AINUC · Whole-slide nuclei, typing and confidence

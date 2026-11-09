@@ -1,4 +1,4 @@
-import type { MessageTarget } from "../decode/protocol.ts";
+import { onWorkerFailure, type WorkerHandle } from "../decode/protocol.ts";
 import type {
   SamEncoded,
   SamOutputs,
@@ -9,9 +9,7 @@ import type {
 import type { SamReply, SamRequest } from "./protocol.ts";
 import type { SamGraph } from "./variants.ts";
 
-export interface SamWorker extends MessageTarget<SamRequest, SamReply> {
-  terminate(): void;
-}
+export type SamWorker = WorkerHandle<SamRequest, SamReply>;
 
 export interface SamClientOptions {
   readonly modelsUrl: string;
@@ -59,8 +57,20 @@ export function createSamClient(options: SamClientOptions): SamClient {
   const waiting = new Map<number, Waiting>();
   let nextRequestId = 0;
   let closed = false;
+  let failure: SamWorkerError | null = null;
 
   const ready = new Promise<SamReady>((resolve, reject) => {
+    onWorkerFailure(worker, "inference", (reason) => {
+      if (failure !== null || closed) {
+        return;
+      }
+      failure = new SamWorkerError(reason);
+      reject(failure);
+      for (const waiter of waiting.values()) {
+        waiter.reject(failure);
+      }
+      waiting.clear();
+    });
     worker.addEventListener("message", (event) => {
       const reply = event.data;
       if (reply.type === "stage") {
@@ -100,6 +110,9 @@ export function createSamClient(options: SamClientOptions): SamClient {
   ): Promise<SamReply> {
     if (closed) {
       return Promise.reject(new SamClientClosedError());
+    }
+    if (failure !== null) {
+      return Promise.reject(failure);
     }
     return new Promise<SamReply>((resolve, reject) => {
       const requestId = nextRequestId++;
