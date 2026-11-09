@@ -1703,6 +1703,7 @@ review_tasks = Table(
     Column("question", String(200), nullable=True, info=OPERATIONAL),
     Column("display", JSONB, nullable=False, server_default=text("'{}'::jsonb"), info=OPERATIONAL),
     Column("check_options", JSONB(none_as_null=True), nullable=True, info=OPERATIONAL),
+    Column("blind_first", Boolean, nullable=False, server_default=text("false"), info=OPERATIONAL),
     *timestamps(),
     UniqueConstraint("project_id", "number"),
     UniqueConstraint("id", "project_id"),
@@ -1730,6 +1731,7 @@ review_tasks = Table(
     CheckConstraint("(kind = 'annotate') = (class_snapshot IS NOT NULL)", name="class_snapshot"),
     CheckConstraint("(kind = 'annotate') = (scope = 'whole-slide')", name="whole_slide"),
     CheckConstraint("kind = 'annotate' OR check_options IS NULL", name="check_options"),
+    CheckConstraint("kind = 'annotate' OR NOT blind_first", name="blind_first"),
     one_of("start_mode", StartMode),
     one_of("decision_style", DecisionStyle),
     CheckConstraint(

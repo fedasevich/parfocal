@@ -52796,6 +52796,11 @@
               }
             ]
           },
+          "blind_first": {
+            "type": "boolean",
+            "title": "Blind First",
+            "default": false
+          },
           "counts_as_changes": {
             "items": {
               "$ref": "#/components/schemas/CountsAsChange"
@@ -52989,6 +52994,11 @@
                 "type": "null"
               }
             ]
+          },
+          "blind_first": {
+            "type": "boolean",
+            "title": "Blind First",
+            "default": false
           },
           "counts_as_changes": {
             "items": {
@@ -57655,6 +57665,11 @@
                 "type": "null"
               }
             ]
+          },
+          "blind_first": {
+            "type": "boolean",
+            "title": "Blind First",
+            "default": false
           }
         },
         "type": "object",

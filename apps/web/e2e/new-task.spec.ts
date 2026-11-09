@@ -139,7 +139,7 @@ test("the end of an upload offers a task that starts on the Kind step", async ({
   await expect(flow(page).locator('[aria-current="step"]')).toHaveText(/Kind/);
 });
 
-test("an annotate task is created from the Kind step with a preset and a disabled blind switch", async ({
+test("an annotate task is created from the Kind step with a preset and blind first switched on", async ({
   page,
 }) => {
   await page.goto(`/projects/${projectId}/tasks/new`);
@@ -160,7 +160,11 @@ test("an annotate task is created from the Kind step with a preset and a disable
   await expect(body.getByText(/Roughly .* for each expert/)).toBeVisible();
   await body.getByRole("button", { name: "Next" }).click();
   await expect(step).toHaveText(/How it runs/);
-  await expect(body.locator('[data-slot="blind-first-switch"]')).toBeVisible();
+  const blindFirst = body.locator('[data-slot="blind-first-switch"]').getByRole("switch");
+  await expect(blindFirst).not.toBeChecked();
+  await blindFirst.click();
+  await expect(blindFirst).toBeChecked();
+  await expect(body.getByText(/stay hidden from colleagues until that expert marks/)).toBeVisible();
   await body.getByRole("button", { name: "Next" }).click();
   await expect(step).toHaveText(/Send/);
   await expect(body.getByText("Annotate by hand")).toBeVisible();
@@ -169,7 +173,13 @@ test("an annotate task is created from the Kind step with a preset and a disable
   );
   await body.getByRole("button", { name: /^Create and notify/ }).click();
   const draft: unknown = (await created).postDataJSON();
-  expect(draft).toMatchObject({ kind: "annotate", preset: "annotate-by-hand", result_sets: [] });
+  expect(draft).toMatchObject({
+    kind: "annotate",
+    preset: "annotate-by-hand",
+    result_sets: [],
+    blind_first: true,
+    blinded: false,
+  });
   await expect(page.getByRole("heading", { name: "RT-16 is out" })).toBeVisible();
 });
 

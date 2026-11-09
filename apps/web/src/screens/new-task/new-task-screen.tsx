@@ -122,6 +122,7 @@ function annotateFields(draft: Draft, data: TaskData): Partial<TaskDraft> {
   return {
     kind: "annotate",
     blinded: false,
+    blind_first: draft.blindFirst,
     ai_hidden_first_read: false,
     start_mode: "viewer",
     study_template_id: null,

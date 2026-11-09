@@ -157,6 +157,7 @@ class TaskDraft(BaseModel):
     display: TaskDisplaySettings | None = None
     preset: CheckPreset | None = None
     check: CheckChange | None = None
+    blind_first: bool = False
 
     @model_validator(mode="after")
     def consistent(self) -> TaskDraft:
@@ -170,6 +171,8 @@ class TaskDraft(BaseModel):
         scope_fits(self.kind, self.scope, self.extra_scopes)
         if self.kind is TaskKind.REVIEW and (self.preset is not None or self.check is not None):
             raise ValueError("Only an annotate task has check options")
+        if self.kind is TaskKind.REVIEW and self.blind_first:
+            raise ValueError("Only an annotate task has blind first")
         if len(set(self.reviewer_ids)) != len(self.reviewer_ids):
             raise ValueError("A reviewer appears twice")
         if (self.split is TaskSplit.CHOSEN) != bool(self.pairs):
@@ -241,6 +244,7 @@ class ReviewTask(BaseModel):
     decision: DecisionSettings
     display: TaskDisplaySettings
     check: CheckOptions | None = None
+    blind_first: bool = False
     counts_as_changes: list[CountsAsChange]
     created_by_user_id: uuid.UUID | None
     created_at: datetime
@@ -479,6 +483,7 @@ def task_of(row: Any, slide_count: int, reviewer_count: int) -> ReviewTask:
         decision=decision_of(row),
         display=display_of(row.display),
         check=check_of(row.check_options) if row.kind == TaskKind.ANNOTATE else None,
+        blind_first=row.blind_first,
         counts_as_changes=[CountsAsChange.model_validate(item) for item in row.counts_as_changes],
         created_by_user_id=row.created_by_user_id,
         created_at=row.created_at,
@@ -907,6 +912,7 @@ async def create_review_task(
             **decision_values(decision),
             display=stored_display(display),
             check_options=check,
+            blind_first=draft.blind_first,
             created_by_user_id=(
                 principal.user_id if isinstance(principal, MemberPrincipal) else None
             ),

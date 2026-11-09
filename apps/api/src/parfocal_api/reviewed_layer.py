@@ -194,6 +194,7 @@ async def task_slide(
                 review_task_slides.c.signed_off_at.label("slide_signed_off_at"),
                 review_tasks.c.decision_style,
                 review_tasks.c.counts_as,
+                review_tasks.c.blind_first,
                 projects.c.privacy_mode,
                 projects.c.archived_at,
             )
