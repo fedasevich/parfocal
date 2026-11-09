@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-09
 
+- TEST-021 On 2026-11-09 a red-CI fix gave the auto region budgets runner headroom under ADR 0154, fixed the PDF preview's axe issues and made the pin specs open the slide once. The outline-modes Settings row and workspaces review task specs still sit near the 30 s limit on hosted runners.
 - Migration 0108 adds a nullable review_tasks.report_layout that signing, the PDF and the preview follow, with audited GET and PUT report-layout routes in both permission suites, and Arrange is rebuilt on ReportEditor with Save for this task, Reset to the template and Save as template. The Compare with picker for comparison blocks is EVAL-018.
 - A mention in a decision note becomes a mention notification on a new decision target kind, refused for anyone who cannot open the slide, held until a blinded author submits and sent once, and other reviewers' notes show read-only in the Comments tab, with no migration. The web app still writes mentions as plain names, not user tokens, so the real API notifies nobody yet, GUIDE-023 fixes that.
 - Upgraded certifi, undici, fast-uri, fflate, zod 4, glob, minimatch and image-size, leaving only zod 3 under Viv and deepmerge allowlisted. SLAs by severity (critical 7, high 30, medium and low 90 days) are enforced by the allowlist guard, Trivy scans infra/tofu inside ci-ok, and the weekly security run writes a report to the job summary and an artifact. The container scan waits for FOUND-015.
