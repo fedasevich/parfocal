@@ -40,7 +40,12 @@ import {
 import { countsAsChangesFor, decisionSettingsFor } from "./decision-settings.ts";
 import { taskDisplayFor } from "./display-settings.ts";
 import { queueTaskView } from "./queue-scene.ts";
-import { reviewOrderFor, verdictsFor } from "./review-verdicts.ts";
+import {
+  hidesRt17SetsOnProject,
+  reviewOrderFor,
+  rt17SetId,
+  verdictsFor,
+} from "./review-verdicts.ts";
 import {
   cases,
   myWorkSlideIds,
@@ -509,9 +514,10 @@ export function workHandlers(): RequestHandler[] {
         ? toTaskStates(task)
         : { task_id: String(params.taskId), signed_off_at: null, slides: [], left_open: 0 };
     }),
-    getListProjectResultSetsMockHandler(({ params }) =>
-      projectResultSets(String(params.projectId)),
-    ),
+    getListProjectResultSetsMockHandler(({ params, request }) => {
+      const sets = projectResultSets(String(params.projectId));
+      return hidesRt17SetsOnProject(request) ? sets.filter((set) => set.id !== rt17SetId()) : sets;
+    }),
     getListNotificationsMockHandler(({ request }) => ({
       notifications: inbox.list(new URL(request.url)),
       next_cursor: null,

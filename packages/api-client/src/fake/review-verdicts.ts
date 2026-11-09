@@ -56,6 +56,17 @@ export const aiHiddenOnSlide = (slideId: string) =>
   rt17Slides().some((slide) => slide.id === slideId) &&
   firstReadOpen(rt17.id, slideId);
 
+const inRt17Page = (request: Request) =>
+  request.referrer.includes(rt17.id) || request.headers.get("referer")?.includes(rt17.id) === true;
+
+export const hidesRt17Sets = (request: Request, slideId: string) =>
+  inRt17Page(request) && aiHiddenOnSlide(slideId);
+
+export const hidesRt17SetsOnProject = (request: Request) =>
+  inRt17Page(request) && rt17Slides().some((slide) => aiHiddenOnSlide(slide.id));
+
+export const rt17SetId = () => resultSets.find((set) => set.key === rt17.resultSet)?.id;
+
 export const aiHiddenForResultSet = (resultSetId: string) => {
   const set = resultSets.find((candidate) => candidate.id === resultSetId);
   return (

@@ -26,6 +26,7 @@ import type {
 import { countsAsChangesFor, decisionSettingsFor } from "./decision-settings.ts";
 import { taskDisplayFor } from "./display-settings.ts";
 import type { DraftOperation } from "./draft-handlers.ts";
+import { hidesRt17Sets, rt17SetId } from "./review-verdicts.ts";
 import {
   cases,
   type ProjectCode,
@@ -423,7 +424,12 @@ export function projectHandlers(): RequestHandler[] {
     }),
     getGetOpinionFormMockHandler(({ params }) => toOpinionForm(String(params.projectId))),
     getListReviewTasksMockHandler(({ params }) => toProjectReviewTasks(String(params.projectId))),
-    getListSlideResultSetsMockHandler(({ params }) => toSlideResultSets(String(params.slideId))),
+    getListSlideResultSetsMockHandler(({ params, request }) => {
+      const sets = toSlideResultSets(String(params.slideId));
+      return hidesRt17Sets(request, String(params.slideId))
+        ? sets.filter((set) => set.id !== rt17SetId())
+        : sets;
+    }),
     getListSlideAreasMockHandler(({ params }) => toSlideAreas(String(params.slideId))),
     getListProjectClassesMockHandler(({ params }) => toProjectClasses(String(params.projectId))),
     getListClassMappingsMockHandler(({ params }) => toClassMappings(String(params.projectId))),

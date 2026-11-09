@@ -99,7 +99,7 @@ type GuidedReviewProps = {
 
 export function GuidedReview(props: GuidedReviewProps) {
   const session = useReviewSession(props.taskId, props.slideId);
-  const hidesAi = session.task?.ai_hidden_first_read === true && props.scene === undefined;
+  const hidesAi = session.task?.ai_hidden_first_read === true;
   const firstRead = useGetFirstRead(props.taskId, props.slideId, undefined, {
     query: { enabled: hidesAi, retry: false },
   });
