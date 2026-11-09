@@ -56,6 +56,7 @@ export interface RegionPassOptions {
   readonly reader: SmartReader;
   readonly sam: RegionSam;
   readonly keep?: (centroid: SlidePoint) => boolean;
+  readonly pixels?: (rgb: Uint8Array, frame: SamFrame) => Promise<Float32Array<ArrayBuffer>>;
   readonly signal?: AbortSignal;
   readonly onProgress?: (progress: RegionProgress) => void;
   readonly onTile?: (nuclei: readonly RegionNucleus[]) => void;
@@ -213,7 +214,11 @@ export async function runRegionPass(options: RegionPassOptions): Promise<RegionN
     if (!patch.absent && patch.rgb !== null) {
       const frame = samFrame(patch);
       const id = `region:${pass}:${index}`;
-      await sam.encode(id, samPixels(patch.rgb, frame));
+      const pixels =
+        options.pixels === undefined
+          ? samPixels(patch.rgb, frame)
+          : await options.pixels(patch.rgb, frame);
+      await sam.encode(id, pixels);
       let outputs: SamOutputs;
       try {
         outputs = await sam.segmentAll(id);

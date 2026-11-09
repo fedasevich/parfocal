@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import type { Patch, SamOutputs } from "@parfocal/viewer-engine";
+import { type Patch, type SamOutputs, samPixels } from "@parfocal/viewer-engine";
 import { fakeAisMaps as discMaps } from "../src/aiseg/fake-sam.ts";
 import type { PresetPatchQuery } from "../src/aiseg/patch-reader.ts";
 import {
@@ -106,6 +106,32 @@ describe("region pass", () => {
       const bounds = ringBounds(nucleus.ring);
       assert.ok(Math.abs(bounds.width - radius * 2) < 3);
     }
+  });
+
+  it("gives the same outlines when another thread resamples the tiles", async () => {
+    const region = { x: 4000, y: 4000, width: 800, height: 800 };
+    const direct = fakes();
+    const expected = await runRegionPass({
+      tiles: planRegionTiles(region, plan),
+      preset: "nuclei",
+      reader: direct.reader,
+      sam: direct.sam,
+    });
+    const offloaded = fakes();
+    let resampled = 0;
+    const actual = await runRegionPass({
+      tiles: planRegionTiles(region, plan),
+      preset: "nuclei",
+      reader: offloaded.reader,
+      sam: offloaded.sam,
+      pixels: (rgb, frame) => {
+        resampled += 1;
+        return Promise.resolve(samPixels(rgb.slice(), frame));
+      },
+    });
+    assert.equal(resampled, 9);
+    assert.ok(expected.length > 0);
+    assert.deepEqual(actual, expected);
   });
 
   it("keeps the whole patch under a click", async () => {

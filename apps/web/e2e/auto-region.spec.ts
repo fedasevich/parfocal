@@ -130,3 +130,16 @@ test("no main thread task passes its budget during a multi tile pass", async ({ 
   const fastest = Math.min(...passes.map((pass) => pass.longest));
   await checkBudget("aiseg.region-main-thread-task-ms", fastest);
 });
+
+test("no long task passes 50 ms with the CPU slowed four times", async ({ page }) => {
+  test.setTimeout(90_000);
+  const { centre } = await openAuto(page);
+  const session = await page.context().newCDPSession(page);
+  await session.send("Emulation.setCPUThrottlingRate", { rate: 4 });
+  const watch = await watchedPass(page, centre);
+  await session.send("Emulation.setCPUThrottlingRate", { rate: 1 });
+  expect(watch.tiles).toBeGreaterThanOrEqual(2);
+  expect(watch.longTasks).toBe(0);
+  expect(watch.longest).toBeLessThan(50);
+  console.log(`throttled auto pass: ${JSON.stringify(watch)}`);
+});
