@@ -3609,7 +3609,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when tests confirm each setting changes the UI live.
   Size: M.
 
-- [ ] SET-004 · Layout section
+- [x] SET-004 · Layout section
   Tools rail or dock with previews, side panel width and hide, panel while moving, minimap mode, pinned slide strip (off by default, CASE-002).
   Done when tests cover each setting.
   Size: M.
