@@ -1237,7 +1237,7 @@ function CoachTip({
   return (
     <div
       className={cn(
-        "flex items-start gap-3 rounded-zone bg-[#0ea5e9] px-3.5 py-3 text-body-sm leading-[1.45] text-white shadow-pop",
+        "flex items-start gap-3 rounded-zone bg-[#0369a1] px-3.5 py-3 text-body-sm leading-[1.45] text-white shadow-pop",
         className,
       )}
     >

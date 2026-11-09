@@ -35,6 +35,17 @@ export const test = base.extend<{ accessible: undefined }>({
       const route = routeOf(page.url());
       if (route === null || scannedRoutes.has(route)) return;
       scannedRoutes.add(route);
+      await page.evaluate(() =>
+        Promise.race([
+          Promise.allSettled(
+            document
+              .getAnimations()
+              .filter((animation) => Number.isFinite(animation.effect?.getComputedTiming().endTime))
+              .map((animation) => animation.finished),
+          ),
+          new Promise((resolve) => setTimeout(resolve, 2000)),
+        ]),
+      );
       const results = await new AxeBuilder({ page })
         .withTags(wcagTags)
         .exclude("[data-base-ui-focus-guard]")
