@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-09
 
+- Model artifacts are write-once objects at models/family/version with a SHA-256 manifest, refused on checksum mismatch or overwrite with If-None-Match, and an ADR records it. The table waits for AIP-002 (model registry) and the ML worker still loads weights from its local folder.
 - Migration 0106 adds a nullable threads.result_set_id. Taskless AI object anchors store their result set, inferred when one set holds the region and refused when several do, task threads store the task's set, and the Comments tab reads Slide and the set name.
 - The Display panel reads getMyDisplay and keeps the preset, settings and Save on the server, with Shift 1 to 4 and Undo in guided review and the full viewer, and E2E finds the preset recorded with the next decision. Fable review asked for one fix, each change now keeps the saved other sets so a task locking them no longer refuses every change. Follow-up VIZ-011.
 - Admin People lists join requests with Approve and Decline, the notification opens the ask, and workspace settings set the email domain, join policy and text logo. After the Fable review a workspace may claim only its admin's own verified email domain, a save without a logo keeps it, and another workspace's admin gets 404 on decline. Image logo upload needs a migration and storage, left for later. Decision 79 asks about shared domains.

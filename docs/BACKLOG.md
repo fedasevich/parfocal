@@ -3135,7 +3135,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Done when an ADR lists the v1 model line-up per tier and its licence status.
   Size: M.
 
-- [ ] AIP-001 · Model artifact storage
+- [x] AIP-001 · Model artifact storage
   Versioned, immutable model artifacts (PyTorch, ONNX, quantised variants, calibration files) with checksums.
   Done when tests reject an artifact whose checksum does not match.
   Size: M.
