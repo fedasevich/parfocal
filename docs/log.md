@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-09
 
+- ObjectDrawLayer draws objects through createObjectDrawing on the live review slide next to OutlineLayer, fed by displaySettings, and draw-constants are shared between the engine and the stills through a subpath export, with 20 overlay goldens and a live browser spec. The full viewer and guided review still draw SVG stills and never mount the live slide, so engine draws there wait for VIZ-012.
 - One connection banner in guided review and the full viewer, with listeners inside useConnection, the shared expired and no-access pages in sign-in, a shared pages section in the issue states index, and a scene loop that rejects the server error page. The unused holdSaveUntilBack and its toast were removed instead, since nothing saves while offline.
 - The Annotate model picker built under AIP-003 and AIP-015 now has browser tests for mock 11, the three choices, the selected mark, keyboard choice, Esc and close and an offline tier. The mock has no tier chip in Review, where a result set already names its model, so none was built.
 - The Run a model window preselects slides from the upload's end, a slide row and the viewer menu through a slides route parameter carrying ids only, with unit tests for the parts and estimate and an E2E from the upload's end.

@@ -5061,7 +5061,7 @@ Admin is its own page with its own sidebar and the app's top bar, never a page i
   Depends on VIZ-001, VIZ-002, VIZ-003, TASK-011, GUIDE-002. Refs mock: layers/display, mock: layers/locked, mock: layers/preset, mock: guided/display, mock: guided/locked, mock: guided/preset, kit: Display, doc 44.
   Size: L.
 
-- [ ] VIZ-010 · Mount the engine overlay draws on the live slide
+- [x] VIZ-010 · Mount the engine overlay draws on the live slide
   VIZ-000 (visualisation research check) found that VIZ-008 (how objects draw on the live slide) added the engine adapter but no screen uses it, so the full viewer and guided review still draw SVG stills with their own copy of the style rules. Mount the engine draws in `slide-stage.tsx` through `createObjectDrawing`, and share one set of style constants between the stills and the engine. VIZ-007 (Display panel) does not wait for it.
   Done when the overlay golden tests pass with the shared constants and a browser test finds the engine layer drawing objects on the live slide in the full viewer and in guided review.
   Depends on VIZ-000.
