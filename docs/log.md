@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-09
 
+- The Display panel reads getMyDisplay and keeps the preset, settings and Save on the server, with Shift 1 to 4 and Undo in guided review and the full viewer, and E2E finds the preset recorded with the next decision. Fable review asked for one fix, each change now keeps the saved other sets so a task locking them no longer refuses every change. Follow-up VIZ-011.
 - Admin People lists join requests with Approve and Decline, the notification opens the ask, and workspace settings set the email domain, join policy and text logo. After the Fable review a workspace may claim only its admin's own verified email domain, a save without a logo keeps it, and another workspace's admin gets 404 on decline. Image logo upload needs a migration and storage, left for later. Decision 79 asks about shared domains.
 - Added the Kind step and annotate path to the new task stepper with presets, optional result sets, check options and a disabled blind first switch until COLLAB-017, with model tests and E2E from the project page and after an upload. Fable review passed with 27 browser tests. Follow-up TASK-018.
 - COLLAB-015 Correction from the review, the draft GET /api/slides/{slide_id}/threads route is not in main's openapi or code, so the project-scoped path is a plain choice, not forced by a clash.
