@@ -1491,7 +1491,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Done when a unit test shows a range longer than the cache can hold answered straight from the network, without one block entry made for it.
   Size: S.
 
-- [ ] VIEW-068 · An inference worker that stops is an error, not a hang
+- [x] VIEW-068 · An inference worker that stops is an error, not a hang
   `createSamClient` in `packages/viewer-engine/src/sam/worker-client.ts` listened only for `message`, so a worker script that failed to load, a worker that crashed or a reply that could not be read left `ready` and every request pending for ever. Found while fixing VIEW-060 (a decode worker that fails to start), which had the same fault. The client now uses the shared `onWorkerFailure` and rejects `ready`, the waiting requests and every later one.
   Done when unit tests show `ready`, a waiting request and a later request rejected after the worker fires `error` or `messageerror`.
   Size: S.
