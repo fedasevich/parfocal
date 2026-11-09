@@ -4205,7 +4205,7 @@ A project holds slides, AI results and review tasks. Cases inside it are optiona
   Done when the table-driven permission test gains rows for Own cases on an own and another case, Any case and Never, API tests cover the defaults, a refused change by a non-owner, a refused value for a viewer, the last-member warning and a de-identified project without the right, and the audit entry is checked.
   Depends on PROJ-003, PROJ-002, IAM-024. Refs mock: project/settings, doc 43, doc 44.
 
-- [ ] PROJ-010 · Delete a project
+- [x] PROJ-010 · Delete a project
   Any project owner may delete any project behind a typed confirmation of its name, the owner's answer to decision 20b on 2026-11-02. Delete is a soft delete through the existing `deleted_at`: the project leaves every list and route, and its slides, stored originals, result sets, review tasks, decisions, evaluations and audit entries stay in storage and can be restored. Rows and bytes are erased for real only through the GDPR erasure path of SEC-021 (GDPR documentation), never from this action ([ADR 0064](adr/0064-project-api.md), the project API, gains this rule). The Settings danger zone of PROJ-008 (project settings) gains the action.
   Done when API tests cover delete by an owner, refusal for a viewer and reviewer, the typed confirmation, the audit entry, isolation, hidden routes after delete, a restore, and a check that no row or stored byte was removed, and a component test covers the confirmation dialog.
   Depends on PROJ-003, ONB-005.
