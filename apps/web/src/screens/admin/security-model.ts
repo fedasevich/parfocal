@@ -18,7 +18,8 @@ export function twoFactorRow(lab: LabSettings): SecuritySetting {
   return {
     key: TWO_FACTOR_KEY,
     label: "Two factors for everyone",
-    detail: "Asks every member for a second factor when they sign in",
+    detail:
+      "Saved for the workspace. Sign-in will ask every member for a second factor once that ships",
     on: twoFactorRequired(lab),
     locked: false,
   };

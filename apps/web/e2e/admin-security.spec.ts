@@ -7,7 +7,9 @@ test("an admin requires two factors for everyone and reads the setting back", as
   await expect(page.getByRole("switch", { name: /single sign-on/i })).toBeDisabled();
 
   await twoFactors.click();
-  await expect(page.getByText("Everyone now needs two factors to sign in.")).toBeVisible();
+  await expect(
+    page.getByText("Saved. Sign-in does not ask for a second factor yet."),
+  ).toBeVisible();
   await expect(twoFactors).toBeChecked();
 
   const nav = page.getByRole("navigation", { name: "Admin sections" });
@@ -17,7 +19,9 @@ test("an admin requires two factors for everyone and reads the setting back", as
   await expect(page.getByRole("switch", { name: "Two factors for everyone" })).toBeChecked();
 
   await page.getByRole("switch", { name: "Two factors for everyone" }).click();
-  await expect(page.getByText("Two factors are no longer required for everyone.")).toBeVisible();
+  await expect(
+    page.getByText("Saved. Two factors are no longer required for everyone."),
+  ).toBeVisible();
   await expect(page.getByRole("switch", { name: "Two factors for everyone" })).not.toBeChecked();
 });
 

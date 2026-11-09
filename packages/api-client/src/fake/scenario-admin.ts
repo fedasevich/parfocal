@@ -502,13 +502,6 @@ export const signInMethods = [
     on: true,
     locked: false,
   },
-  {
-    key: "two-factor-admins",
-    label: "Two factors with admin rights",
-    detail: "Always required",
-    on: true,
-    locked: true,
-  },
 ];
 
 export const twoFactor = { people: 22, of: workspaceTotals.people };

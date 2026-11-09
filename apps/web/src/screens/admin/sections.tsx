@@ -530,8 +530,8 @@ export function SecuritySection({ notify }: { notify: Notify }) {
           void queryClient.invalidateQueries({ queryKey: getGetMySettingLayersQueryKey() });
           notify(
             on
-              ? "Everyone now needs two factors to sign in."
-              : "Two factors are no longer required for everyone.",
+              ? "Saved. Sign-in does not ask for a second factor yet."
+              : "Saved. Two factors are no longer required for everyone.",
           );
         },
         onError: () => notify("The two factor setting did not save. Try again."),

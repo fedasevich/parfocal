@@ -182,6 +182,13 @@ export function OverviewSection({ open }: { open: (section: AdminSection) => voi
                         sub={auditLabel(event.action)}
                         className="min-w-0"
                       />
+                    ) : event.actor_name ? (
+                      <span className="grid min-w-0 leading-tight">
+                        <span className="font-medium text-fg">{event.actor_name}</span>
+                        <small className="truncate text-caption text-fg-faint">
+                          {auditLabel(event.action)}
+                        </small>
+                      </span>
                     ) : (
                       <SystemActor size={28} sub={auditLabel(event.action)} />
                     )}
