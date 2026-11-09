@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-09
 
+- Owner answered decisions 76 to 80 on 2026-11-09: 76a, 79a kept as built (guided check keys already rebindable in Settings, Shortcuts), 77a added CMP-008 (compare offset per slide pair), 78a added COLLAB-020 (slide threads hidden during blinded review), 80a kept with COLLAB-021 (blind first can be turned off mid-task) since the owner asked it to be easy to reverse.
 - GUIDE-023: Picked mentions in decision notes and pin thread messages now save as @[user-id] tokens and show as names everywhere they are read. Old plain-name text stays readable, the note limit counts the token form, and an API test shows text saved the web client's way notifies the person. The object thread composer in guided review still only shows comments locally and never posts.
 - DEV-013: Wired two-finger click and Safari pinch DOM listeners into the slide stage with node and browser tests, added a two-finger click step and trackpad fixture download to the recorder, real Mac and Windows traces still TODO (docs/results/2026-11-09-trackpad-listeners.md).
 - TEST-009: the axe allowlist is filled from a full 852-test E2E run with 8 rules over 38 route patterns, each with a TODO. Four specs failed before their axe step and were not investigated: guided-check row click, two guided-review scenes and command-palette Measure. Shard order can surface more routes, which PARFOCAL_A11Y_RECORD logs.

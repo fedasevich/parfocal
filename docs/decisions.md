@@ -41,52 +41,11 @@ Every other answer kept what was built: 37a (darker primary hover), 39a (Alt+Lef
 |---|---|
 | 72a, search text out of the URL | HOME-012 (search text out of the page URL) moves the typed text into page state. Sharing a search waits for saved searches with ids |
 | 73a, 74a and 75a | Kept as built. Anyone signed in may create one workspace, the wheel zoom check measures main-thread task time in CI with frame time as a manual budget, and a matching email domain joins at once by default |
-
-## 76. The fix and skip keys of the guided check in Annotate, from GUIDE-019 (guided check in Annotate)
-
-The guided check steps through AI objects with D to confirm, Shift Y to fix, Shift X to delete and Shift E to skip. Fix gives the object the task's next class and does not edit its outline, since a shape is fixed by confirming and then using the edit tool. Guided review of a slide skips with J, but J already means something in Annotate, so the check uses Shift E.
-
-- a. Keep fix as a class change and Shift E for skip, as built. (recommended)
-- b. Make fix open the outline editor on the object, and keep Shift E.
-- c. Keep fix as built, and move skip to the same key as guided review by giving J up in Annotate.
-
-Your choice:
-
-## 77. Saving an aligned compare offset, from CMP-000 (compare research check)
-
-When two slides are compared side by side, a person can shift one pane to line the tissue up. That offset is lost when the compare view closes.
-
-- a. Save the offset per slide pair as a private setting of that person, cleared when either slide is replaced. (recommended)
-- b. Keep it for the visit only, as built.
-
-Your choice:
-
-## 78. Slide threads during a blinded review, from COLLAB-015 (threads on any slide)
-
-Threads can now live on any slide, as you chose in 31b. A thread without a task follows only the first-read rule. So a reviewer in a blinded task that does not hide the AI can read another reviewer's slide thread on the same slide before submitting, which weakens the blinding of ADR 0118 (blinding and a kept first read).
-
-- a. Hide other people's slide threads from a reviewer of a blinded task on that slide until they submit, as task threads are hidden. (recommended)
-- b. Keep slide threads visible to every reader, as built.
-
-Your choice:
-
-## 79. Two workspaces with the same email domain, from ONB-011 (answer workspace asks and set the join domain in Admin)
-
-A workspace may now claim only its admin's own verified email domain, so nobody can capture another institution's people. Two workspaces of the same institution can still claim the same domain, and setup then offers both to a person with that address.
-
-- a. Allow it and offer every matching workspace in setup, as built. (recommended)
-- b. Allow one workspace per domain, and refuse a second claim with a message naming who to ask.
-
-Your choice:
-
-## 80. Whether the task owner is blind too on a blind first annotate task, from COLLAB-017 (blind first switch on annotate tasks)
-
-The blind first switch keeps an expert's new objects from colleagues until that expert marks the slide checked. As built, the researcher who owns the task is blind too, so they cannot follow progress object by object until each expert checks. Only hand-drawn objects hide, unchecking hides them again and the switch is set when the task is made. Those three need no answer.
-
-- a. The owner is blind too, so nobody can relay an expert's work early. (recommended)
-- b. The owner sees every object at once and only the experts are blind to each other.
-
-Your choice:
+| 76a, guided check keys | Kept as built. Fix, delete, skip and start are already rebindable in Settings, Shortcuts, so each person can move them |
+| 77a, compare offset | CMP-008 (keep an aligned compare offset per slide pair) saves it as a private setting per pair |
+| 78a, slide threads when blinded | COLLAB-020 (slide threads stay hidden during a blinded review) hides them until the reviewer submits |
+| 79a, two workspaces on one domain | Kept as built. Setup offers every matching workspace |
+| 80a, owner blind too | Kept as the default. COLLAB-021 (turn blind first off on a running annotate task) lets the owner switch it off at any time |
 
 ## The review column, what each task waits for
 

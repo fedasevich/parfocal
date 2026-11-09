@@ -2904,6 +2904,18 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Depends on COLLAB-015, GUIDE-023.
   Size: S.
 
+- [ ] COLLAB-020 · Slide threads stay hidden during a blinded review
+  The owner chose 78a on 2026-11-09. A reviewer of a blinded task on a slide does not see other people's slide threads on that slide until they submit, the same way task threads are hidden under ADR 0118 (blinding and a kept first read). Their own slide threads stay visible, and the Comments tab and pins agree with the API.
+  Done when API tests hide another person's slide thread from a blinded reviewer before submit and show it after, and a browser test finds no foreign pin on that slide before submit.
+  Depends on COLLAB-015.
+  Size: S.
+
+- [ ] COLLAB-021 · Turn blind first off on a running annotate task
+  The owner chose 80a on 2026-11-09, so the owner is blind too, and asked that the switch be easy to reverse and never invasive. The task owner can turn blind first off at any time in the task settings, which shows every expert's objects at once and is written to the audit log. Turning it back on hides again only objects not yet seen by others, and the stepper says plainly what each choice does.
+  Done when API tests turn the switch off mid-task and see every object, turn it on again and see only unchecked new objects hidden, and a browser test toggles it from the task settings.
+  Depends on COLLAB-017.
+  Size: S.
+
 ---
 
 - [ ] COLLAB-016 · Calm live updates on a shared layer
@@ -2961,6 +2973,12 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Done when E2E opens a pair from each entry point and a golden test shows an overlay on one side only.
   Depends on CASE-002. Refs [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md).
   Size: M.
+
+- [ ] CMP-008 · Keep an aligned compare offset per slide pair
+  The owner chose 77a on 2026-11-09. When a person shifts one pane to line the tissue up, the offset, rotation and scale are saved per slide pair as a private setting of that person, restored the next time the pair opens, and cleared when either slide is replaced. A reset puts the panes back to the automatic alignment.
+  Done when an API test saves, reads and clears an offset on a replaced slide, and a browser test aligns a pair, closes compare, reopens it and finds the same offset.
+  Depends on CMP-006.
+  Size: S.
 
 ---
 
