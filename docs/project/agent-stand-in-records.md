@@ -2,7 +2,7 @@
 
 No pathologist, counsel or outside reviewer works on Parfocal, and the owner cannot read every record. So in the places below an agent did what a person would normally do. That is fine for building the product. It is not evidence that a person checked anything, and the thesis must not cite it as such. Decision 82 (what the thesis claims about people) in [decisions.md](../decisions.md) decides what the thesis may claim. Risk R20 in [risks.md](risks.md) tracks this page.
 
-Each file listed here says so itself, in a line that starts with "Simulated check" or in the words quoted below. Add a row and a mark in the same change whenever an agent stands in for a person again.
+Each file listed here says so itself, in a line that starts with "Simulated check" or in the words quoted below. Result files are the exception, because results are not edited after the fact. For them the row on this page is the mark. Add a row and a mark in the same change whenever an agent stands in for a person again.
 
 ## A pathologist
 
@@ -38,11 +38,11 @@ Agents wrote every page below from the code and the decision records. None was r
 |---|---|---|
 | [threat-model.md](../security/threat-model.md) | Wrote the STRIDE threat model | SEC-022 (external penetration test), which is on hold |
 | [Tenant isolation review](../results/2026-11-09-tenant-isolation-review.md), [edge token review](../results/2026-11-09-edge-token-review.md) and [viewer engine review](../results/2026-11-09-viewer-engine-review.md) | Read the code and reported findings. Each result says "A read-only review by an agent" | The same external test, and a second reader for the confirmed findings |
-| [Project review](../results/2026-11-09-project-review.md) | Reviewed how the project is built | The owner's and the supervisor's reading of it |
+| [Project review](../results/2026-11-09-project-review.md) | Reviewed how the project is built. The result does not say who did it, and results are not edited after the fact, so this row is its mark | The owner's and the supervisor's reading of it |
 
 ## A user in a measurement
 
-These results are real measurements on public data. What stands in for a person is the input: clicks placed by a rule and a reviewer who never errs. Each file describes its rule in its method section, and results are not edited after the fact, so they carry no extra mark.
+These results are real measurements on public data. What stands in for a person is the input: clicks placed by a rule and a reviewer who never errs. Each result describes its rule in its method section.
 
 | Record | What stands in for the person | What a real check needs |
 |---|---|---|
