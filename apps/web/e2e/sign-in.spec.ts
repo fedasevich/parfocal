@@ -166,3 +166,20 @@ test("a return target that is not a slide still lands, and one outside the site 
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await expect(page).toHaveURL(slideUrl);
 });
+
+test("an expired session shows the shared page, then the sign-in form", async ({ page }) => {
+  await page.goto("/sign-in?scene=expired");
+  const shown = page.getByTestId("issue-session-expired");
+  await expect(shown).toContainText("Your session ended after 8 hours");
+  await shown.getByRole("button", { name: "Sign in to go on" }).click();
+  await expect(page.getByRole("heading", { name: "Sign in to Parfocal" })).toBeVisible();
+  await expect(page.getByTestId("issue-session-expired")).toHaveCount(0);
+});
+
+test("no access shows the shared page and the request turns into Asked", async ({ page }) => {
+  await page.goto("/sign-in?scene=noaccess");
+  const shown = page.getByTestId("issue-no-access");
+  await expect(shown).toContainText("Its owner is Lenka Malá");
+  await shown.getByRole("button", { name: "Ask for access" }).click();
+  await expect(shown.getByRole("button", { name: "Asked Lenka Malá" })).toBeDisabled();
+});

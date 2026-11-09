@@ -124,6 +124,41 @@ function StateRow({ row, ids }: { row: IssueRow; ids: ScenarioIds | undefined })
   );
 }
 
+const sharedPages = [
+  { kind: "not-found", label: "Page not found" },
+  { kind: "server-error", label: "Something went wrong" },
+  { kind: "expired", label: "Session expired" },
+  { kind: "no-access", label: "No access" },
+  { kind: "styles", label: "Banner and inline error styles" },
+] as const;
+
+function SharedPages() {
+  return (
+    <section
+      aria-label="Shared pages"
+      className="mb-5 break-inside-avoid rounded-zone border border-line bg-surf-section px-3.5 pt-3 pb-3"
+    >
+      <h2 className="m-0 mb-1.5 font-semibold text-body text-fg leading-5">Shared pages</h2>
+      <p className="m-0 mb-2 text-body-sm text-fg-dim leading-[18px]">
+        The pages every flow falls back to, shown on their own.
+      </p>
+      <span className="inline-flex flex-wrap gap-1.5">
+        {sharedPages.map((page) => (
+          <Button
+            key={page.kind}
+            size="sm"
+            nativeButton={false}
+            data-page-link={page.kind}
+            render={<Link to="/issue-pages/$kind" params={{ kind: page.kind }} />}
+          >
+            {page.label}
+          </Button>
+        ))}
+      </span>
+    </section>
+  );
+}
+
 function IssueStatesPage() {
   const ids = useScenarioIds();
   useEffect(() => originStore.set(null), []);
@@ -145,6 +180,7 @@ function IssueStatesPage() {
         </Link>
       </header>
       <div className="gap-5 md:columns-2" data-testid="issue-states">
+        <SharedPages />
         {issueGroups.map((group) => (
           <section
             key={group.flow}

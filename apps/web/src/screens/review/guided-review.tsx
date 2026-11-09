@@ -31,6 +31,8 @@ import { useNavigate } from "@tanstack/react-router";
 import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { polygonToGeoJson } from "../../annotations/geojson.ts";
 import { closeDraft, type Point, type PolygonDraft } from "../../annotations/polygon-draft.ts";
+import { useConnection } from "../../shell/connection.ts";
+import { ConnectionBanner } from "../../shell/connection-banner.tsx";
 import { useLabDecisionCutoff } from "../../shell/resolved-settings.ts";
 import { showUndoToast } from "../../shell/undo-toasts.tsx";
 import { useCellTiming, useTaskRun } from "../../telemetry/use-task-timing.ts";
@@ -151,7 +153,9 @@ function GuidedBody({
   tab,
   onTabChange,
 }: BodyProps) {
-  const setup = guidedSetup(scene);
+  const { online } = useConnection();
+  const sceneSetup = guidedSetup(scene);
+  const setup = { ...sceneSetup, connLost: sceneSetup.connLost || !online };
   const navigate = useNavigate();
   const person = usePeople();
   const submitReview = useSubmitSlideReview({
@@ -845,16 +849,7 @@ function GuidedBody({
     );
 
   const banner = setup.connLost ? (
-    <Banner
-      tone="warn"
-      actions={
-        <Button size="sm" onClick={() => showUndoToast({ message: "Still offline" })}>
-          Retry now
-        </Button>
-      }
-    >
-      <b>Connection lost.</b> Decisions can't be saved right now. Nothing is lost. Retrying...
-    </Banner>
+    <ConnectionBanner pinned />
   ) : setup.readOnly ? (
     <Banner
       tone="info"
