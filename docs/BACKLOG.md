@@ -3753,6 +3753,12 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when replayed traces from macOS and Windows trackpads produce the right intents.
   Size: M.
 
+- [ ] DEV-010 · Wire two-finger click and Safari pinch to the viewer
+  DEV-002 (trackpad detection and gestures) added the negativePoint and Safari pinch intents but no DOM listener produces them. Hook `pointerdown` and `contextmenu` for the two-finger click and `gesturestart`, `gesturechange` and `gestureend` for Safari, and record real Mac and Windows trackpad traces to replace the synthetic ones.
+  Done when a browser test drives the listeners into each intent, and the trace fixtures are recorded on real hardware with a result file.
+  Depends on DEV-002.
+  Size: S.
+
 - [ ] DEV-003 · Gamepad support
   Left stick pans with speed by deflection, triggers zoom, shoulder buttons step presets, A keep, B next, X not a cell, D-pad set type, Start next area, hold Select for peek. Dead zones and per-device speed.
   Done when unit tests with a simulated gamepad cover each mapping.
@@ -4621,6 +4627,12 @@ Doctors judge AI objects in a simple guided mode, or in the full viewer with the
   Depends on GUIDE-019.
   Size: S.
 
+- [ ] GUIDE-022 · Mentions in decision notes notify
+  GUIDE-010 (notes on decisions) highlights a mention in a note but notifies nobody. Add a decision target kind to notifications, check the mentioned person may see the slide as ADR 0165 (mentions in thread messages) does, respect blinding and mutes, and show other reviewers' notes in the Comments tab once they may see them.
+  Done when API tests notify a mentioned colleague, refuse one who cannot see the slide and hold a blinded reviewer's note until submit, and a browser test opens the note from the bell.
+  Depends on GUIDE-010.
+  Size: M.
+
 ## 45 ADJ · Disagreements, adjudication and sign-off
 
 - [x] ADJ-000 · Research check
@@ -4756,6 +4768,12 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Done when component tests cover thumbnails, the page indicator while scrolling, zoom and closing, an API test returns the same pages as the PDF export for a seeded task, and E2E opens the preview from the report and from a template.
   Depends on EVAL-008, STACK-035. Refs mock: evaluation/pdf, mock: admin/templates, doc 43.
   Size: L.
+
+- [ ] EVAL-016 · Page and cache long PDF previews
+  Review of EVAL-010 (PDF preview) found a long task report returns every SVG page in one response and compiles the same Typst source again for Download and Print. Return the first pages and fetch the rest as the viewer scrolls, and cache the compiled report by the task version checksum.
+  Done when an API test pages a long seeded report, a second preview and a download reuse the cache, and the preview browser spec still passes.
+  Depends on EVAL-010.
+  Size: S.
 
 
 ---
