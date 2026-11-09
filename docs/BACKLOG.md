@@ -4627,7 +4627,7 @@ Doctors judge AI objects in a simple guided mode, or in the full viewer with the
   Depends on GUIDE-019.
   Size: S.
 
-- [ ] GUIDE-022 · Mentions in decision notes notify
+- [x] GUIDE-022 · Mentions in decision notes notify
   GUIDE-010 (notes on decisions) highlights a mention in a note but notifies nobody. Add a decision target kind to notifications, check the mentioned person may see the slide as ADR 0165 (mentions in thread messages) does, respect blinding and mutes, and show other reviewers' notes in the Comments tab once they may see them.
   Done when API tests notify a mentioned colleague, refuse one who cannot see the slide and hold a blinded reviewer's note until submit, and a browser test opens the note from the bell.
   Depends on GUIDE-010.
