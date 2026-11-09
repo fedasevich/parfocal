@@ -1,34 +1,22 @@
-import { useSyncExternalStore } from "react";
+import { useStore } from "zustand";
+import { createStore } from "zustand/vanilla";
 
 export type ShellState = {
   initialsOnly: boolean;
+  navOpen: boolean;
 };
 
-const initial: ShellState = { initialsOnly: false };
+const initial: ShellState = { initialsOnly: false, navOpen: false };
 
-let state: ShellState = initial;
-const listeners = new Set<() => void>();
+const store = createStore<ShellState>(() => initial);
 
 export const shellStore = {
-  getState: (): ShellState => state,
-  setState: (patch: Partial<ShellState>): void => {
-    state = { ...state, ...patch };
-    for (const listener of listeners) listener();
-  },
-  reset: (): void => {
-    state = initial;
-    for (const listener of listeners) listener();
-  },
-  subscribe: (listener: () => void): (() => void) => {
-    listeners.add(listener);
-    return () => listeners.delete(listener);
-  },
+  getState: store.getState,
+  setState: (patch: Partial<ShellState>): void => store.setState(patch),
+  reset: (): void => store.setState(initial, true),
+  subscribe: (listener: () => void): (() => void) => store.subscribe(() => listener()),
 };
 
 export function useShell<T>(select: (state: ShellState) => T): T {
-  return useSyncExternalStore(
-    shellStore.subscribe,
-    () => select(state),
-    () => select(initial),
-  );
+  return useStore(store, select);
 }
