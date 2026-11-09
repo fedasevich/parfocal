@@ -13,6 +13,7 @@ The procedures [AGENTS.md](../../AGENTS.md) points to. Read a section only when 
 | Find a task | `python3 scripts/board.py find WORDS` or `grep -n` |
 | Recent work | `python3 scripts/board.py recent 10` |
 | Free tasks | `python3 scripts/board.py ready [--epic X]` |
+| Tasks and ticks in total, per milestone gate and per epic | `python3 scripts/board.py counts` |
 | Log a finished task | `python3 scripts/board.py note "ID (name) ..."` |
 | Tick a task | `python3 scripts/board.py tick ID` |
 
@@ -110,6 +111,7 @@ What the lead does with a hand-back:
 - If the "Done when" line is met, tick. If only CI or a deploy is missing, move the task to review or blocked with a note naming the wait.
 - A real product choice goes into `docs/decisions.md` with a recommended option.
 - Watch `main`'s CI between merges with `bash scripts/lead/ci.sh`, which prints every workflow of the pushed head and the last finished `ci` run, and fix a red run before starting more agents. A push to `main` no longer cancels the `ci` run in progress, so each finished run is a result, and the docs checks are a job under `ci-ok`.
+- When the run ends, consolidate the docs memory ([Consolidation](#consolidation)), push and only then report. The README went three weeks without it once, while the board more than tripled its ticks.
 
 ## Tasks in review
 
@@ -168,11 +170,11 @@ Copy `docs/results/_template.md` to `docs/results/YYYY-MM-DD-topic.md`. Record t
 
 ## Consolidation
 
-Do this when a milestone closes, when the owner asks, or about every 15 log entries since "Last consolidated" in `docs/README.md`.
+The lead does this at the end of every parallel run, after the last `push.sh` and before the report. Also do it when a milestone closes or when the owner asks. `/consolidate` runs it.
 
 1. Read the log since the last consolidation with `board.py recent`.
-2. Rewrite "Where we are now" and "Next up" from scratch within the output budget.
+2. Rewrite "In progress", "Where we are now" and "Next up" from scratch within the output budget. Write no task count by hand in `docs/README.md`, the roadmap or the risks. `board.py counts` prints them, and its per-epic lines say which milestone has started.
 3. Move repeated or costly lessons into `docs/knowledge/`, merging into an existing topic file.
 4. Update `docs/project/roadmap.md` and `docs/project/risks.md`.
-5. Check that ticks and log entries match, that every ADR and result is indexed and that no `Proposed` ADR has been overtaken.
+5. Check that ticks and log entries match, that every ADR and result is indexed, that every task, decision and risk the README names still exists and is open, and that no `Proposed` ADR has been overtaken.
 6. Resolve or re-file stale `TODO`s, set "Last consolidated" to today and log it.

@@ -9,6 +9,7 @@ from board import (
     Active,
     add_log_entry,
     check,
+    count_lines,
     find_tasks,
     guess_size,
     load,
@@ -307,6 +308,33 @@ class BoardTest(unittest.TestCase):
         payload = json.loads(page[start : page.index(";\n", start)].replace("<\\/", "</"))
         self.assertEqual(len(payload["board"]["tasks"]), 6)
         self.assertIn("docs/adr/0001-vite.md", payload["files"])
+
+    def test_counts_cover_the_board_each_gate_and_each_epic(self) -> None:
+        backlog = self.root / "docs" / "BACKLOG.md"
+        backlog.write_text(
+            BACKLOG.replace("| Every slot closed | ADRs |", "| Every STACK task closed | ADRs |")
+            .replace("| Log in | E2E |", "| Log in | SKEL done, E2E green |")
+            .replace("- [ ] SKEL-003 · Retro", "- [ ] SKEL-003 · Retro (moved)")
+            .replace(
+                "| M1 Walking skeleton |",
+                "| MA Annotation path | Annotate | Listed tasks |\n| M1 Walking skeleton |",
+            )
+        )
+        self.assertEqual(
+            count_lines(load(self.root)),
+            [
+                "6 tasks in 2 epics, 1 of 6 ticked, 1 of the open ones parked or ideas",
+                "",
+                "Milestones, counted over the epics each gate names:",
+                "  M0 Stack decided  1 of 3 ticked  (STACK)",
+                "  MA Annotation path  its gate names no epic",
+                "  M1 Walking skeleton  0 of 3 ticked, 1 of the open ones parked or ideas  (SKEL)",
+                "",
+                "Epics:",
+                "  STACK  1 of 3 ticked  M0",
+                "  SKEL  0 of 3 ticked, 1 of the open ones parked or ideas  M0 to M1",
+            ],
+        )
 
     def test_repository_board_is_consistent(self) -> None:
         self.assertEqual(check(ROOT), [])
