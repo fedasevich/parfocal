@@ -28,3 +28,6 @@ export const archiveRefusalNotice = (project: Archivable): string =>
 
 export const projectsCountLabel = (count: number, view: ProjectView): string =>
   `${count} ${view === "archived" ? "archived" : "active"} ${count === 1 ? "project" : "projects"}`;
+
+export const classListNames = (lists: readonly { template: string }[]): string =>
+  lists.map((list) => (list.template === "pannuke" ? "PanNuke" : "Sentinel node")).join(", ");

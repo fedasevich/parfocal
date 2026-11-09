@@ -9,7 +9,6 @@ import {
   useCancelModelRun,
   useGetMySettingLayers,
   useGetSecuritySettings,
-  useGetSessionPolicy,
   useGetStorageUsage,
   useHideModel,
   useListAiModels,
@@ -63,14 +62,14 @@ import {
   archiveDoneNotice,
   archiveRefusalNotice,
   canChangeArchive,
+  classListNames,
   isArchived,
   type ProjectView,
   projectStatusLabel,
   projectsCountLabel,
 } from "./projects-model.ts";
-import { signInRows, TWO_FACTOR_KEY, twoFactorChange } from "./security-model.ts";
-
-import { durationText } from "./workspace-settings-model.ts";
+import { IDLE_LOCK_KEY, signInRows, TWO_FACTOR_KEY, twoFactorChange } from "./security-model.ts";
+import { ClassListChoice, IdleLockChoice, useSessionPolicy } from "./shared-settings.tsx";
 
 const right = "text-right";
 
@@ -96,6 +95,7 @@ export function ProjectsSection({ notify }: { notify: Notify }) {
   };
   const usage = useGetStorageUsage().data?.data;
   const taxonomies = okData(useListTaxonomyTemplates().data) ?? [];
+  const lab = okData(useGetMySettingLayers().data)?.lab;
   const personOf = usePeople();
   const goTo = useGoTo();
   const [privacy, setPrivacy] = useState("deid");
@@ -235,16 +235,14 @@ export function ProjectsSection({ notify }: { notify: Notify }) {
             ]}
           />
           <span className="text-fg-dim">Class lists</span>
-          <span className="flex items-center gap-2">
-            {taxonomies
-              .map((item) => (item.template === "pannuke" ? "PanNuke" : "Sentinel node"))
-              .join(" · ")}
-            <TextLink
-              onClick={() => notify("Class lists: names, colors and the order they show in (mock)")}
-            >
-              Edit
-            </TextLink>
-          </span>
+          <div className="grid justify-items-start gap-1.5">
+            {lab ? (
+              <ClassListChoice lab={lab} notify={notify} label="Class list of new projects" />
+            ) : null}
+            <small className="text-caption text-fg-dim">
+              Built-in lists: {classListNames(taxonomies)}. Each project can change its own classes.
+            </small>
+          </div>
         </div>
       </Zone>
     </>
@@ -609,26 +607,33 @@ export function ApiSection({ notify }: { notify: Notify }) {
   );
 }
 
-const idleRow = (minutes: number): SecuritySetting => ({
-  key: "idle-lock",
-  label: "Lock after inactivity",
-  detail: `${durationText(minutes)}. Slides and names hide until you sign in again`,
-  on: true,
-  locked: false,
-});
+function IdleLockRow({ notify }: { notify: Notify }) {
+  const { policy, save } = useSessionPolicy(notify);
+  if (policy === undefined) return null;
+  return (
+    <div
+      data-slot="setting-row"
+      className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 py-(--density-list-row-y) text-body-sm first:pt-0.5 [&+&]:border-t [&+&]:border-line"
+    >
+      <span>
+        <b className="block font-semibold text-fg">Lock after inactivity</b>
+        <small className="mt-0.5 block text-body-sm leading-[1.45] text-fg-dim">
+          Slides and names hide until people sign in again
+        </small>
+      </span>
+      <IdleLockChoice minutes={policy.idle_lock_minutes} save={save} />
+    </div>
+  );
+}
 
 export function SecuritySection({ notify }: { notify: Notify }) {
   const queryClient = useQueryClient();
   const settings = useGetSecuritySettings().data?.data;
-  const policy = okData(useGetSessionPolicy().data);
   const lab = okData(useGetMySettingLayers().data)?.lab;
   const save = useSetWorkspaceSettings();
   const [values, setValues] = useState<Record<string, boolean>>({});
-  if (settings === undefined && policy === undefined && lab === undefined) return null;
-  const sessionRows = [
-    ...(policy ? [idleRow(policy.idle_lock_minutes)] : []),
-    ...(settings?.data ?? []).filter((item) => item.key !== "idle-lock" || policy === undefined),
-  ];
+  if (settings === undefined && lab === undefined) return null;
+  const sessionRows = (settings?.data ?? []).filter((item) => item.key !== IDLE_LOCK_KEY);
   const saveTwoFactor = (current: LabSettings, on: boolean) =>
     save.mutate(
       { data: twoFactorChange(current, on) },
@@ -657,11 +662,7 @@ export function SecuritySection({ notify }: { notify: Notify }) {
           return;
         }
         setValues({ ...values, [item.key]: on });
-        notify(
-          item.key === "idle-lock"
-            ? "Change the lock time in Workspace settings, under Lock times."
-            : `${item.label} ${on ? "turned on" : "turned off"} (mock)`,
-        );
+        notify(`${item.label} ${on ? "turned on" : "turned off"} (mock)`);
       }}
     />
   );
@@ -678,7 +679,10 @@ export function SecuritySection({ notify }: { notify: Notify }) {
         ) : null}
       </Zone>
       <Zone title="Sessions and data">
-        <div>{sessionRows.map(row)}</div>
+        <div>
+          <IdleLockRow notify={notify} />
+          {sessionRows.map(row)}
+        </div>
       </Zone>
     </div>
   );
