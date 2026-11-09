@@ -1,4 +1,4 @@
-# XXXX. The Display panel's state reaches the overlay system through one pure draw function per feature and a controller, and the live slide wiring is still to build
+# 0268. The Display panel's state reaches the overlay system through one pure draw function per feature and a controller, and the live slide wiring is still to build
 
 - Date: 2026-11-09
 - Status: Accepted
