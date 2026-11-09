@@ -4553,7 +4553,7 @@ Doctors judge AI objects in a simple guided mode, or in the full viewer with the
   Depends on GUIDE-015.
   Size: M.
 
-- [ ] GUIDE-017 · Pick the class blind on cells
+- [x] GUIDE-017 · Pick the class blind on cells
   GUIDE-015 (decision styles with the raw answer and Counts as) counts a blind class answer against the AI's class for regions, whose class sits in a database row. A cell's class lives in its result chunk in object storage, so a blind answer on a cell is refused with `blind-cells-unsupported` for now. Look up the cell's class from its chunk, or store it with the review order when the task is scoped, and count the answer the same way.
   Done when API tests count a blind answer on a cell from a chunked result set as agree for the AI's class and disagree for another, and the refusal is gone.
   Depends on GUIDE-015. Refs mock: guided/blind, mock: gallery/blind.
