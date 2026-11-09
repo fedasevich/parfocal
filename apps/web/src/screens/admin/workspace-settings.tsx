@@ -49,6 +49,7 @@ import { useState } from "react";
 import { now } from "../../clock.ts";
 import { okData } from "../placeholder.tsx";
 import { type Notify, tableClass } from "./common.tsx";
+import { JoinSettingsZone } from "./join-settings.tsx";
 import {
   type AnalyticsPolicy,
   type AnnouncementEnd,
@@ -866,10 +867,17 @@ function Announcements({ notify }: { notify: Notify }) {
   );
 }
 
-export function WorkspaceSettingsSection({ notify }: { notify: Notify }) {
+export function WorkspaceSettingsSection({
+  notify,
+  workspaceName,
+}: {
+  notify: Notify;
+  workspaceName: string;
+}) {
   const lab = okData(useGetMySettingLayers().data)?.lab ?? emptyLab;
   return (
     <>
+      <JoinSettingsZone workspaceName={workspaceName} notify={notify} />
       <LockTimes notify={notify} />
       <SecurityContactZone notify={notify} />
       <Defaults lab={lab} notify={notify} />

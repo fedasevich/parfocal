@@ -33,6 +33,8 @@ class AuditAction(StrEnum):
     MEMBER_ADDED = "member.added"
     WORKSPACE_ACCESS_ASKED = "workspace.access-asked"
     WORKSPACE_ACCESS_APPROVED = "workspace.access-approved"
+    WORKSPACE_ACCESS_DECLINED = "workspace.access-declined"
+    WORKSPACE_JOIN_SETTINGS_CHANGED = "tenant.join-settings-changed"
     MEMBER_ROLE_CHANGED = "member.role-changed"
     MEMBER_ADMIN_RIGHTS_GIVEN = "member.admin-rights-given"
     MEMBER_ADMIN_RIGHTS_REMOVED = "member.admin-rights-removed"

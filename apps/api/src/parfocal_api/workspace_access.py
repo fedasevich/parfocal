@@ -1,10 +1,10 @@
 import uuid
 from datetime import datetime
-from typing import Any
+from typing import Annotated, Any
 
-from fastapi import APIRouter, BackgroundTasks, Request
-from pydantic import BaseModel
-from sqlalchemy import exists, func, literal_column, select, update
+from fastapi import APIRouter, BackgroundTasks, Request, Response
+from pydantic import BaseModel, BeforeValidator, StringConstraints
+from sqlalchemy import delete, exists, func, literal_column, select, text, update
 from sqlalchemy.dialects.postgresql import insert as upsert
 from sqlalchemy.ext.asyncio import AsyncConnection
 
@@ -13,9 +13,16 @@ from parfocal_api.auth import SESSION_COOKIE, digest
 from parfocal_api.context import CurrentPrincipal, TenantConnection, engine_of
 from parfocal_api.notifications import deliver_after_commit, notify
 from parfocal_api.permissions import Permission, require
-from parfocal_api.principals import MemberPrincipal, SignedInUser
-from parfocal_api.problems import ConflictError, NotFoundError, UnauthenticatedError
+from parfocal_api.principals import MemberPrincipal, SignedInUser, database_scope
+from parfocal_api.problems import (
+    BadRequestError,
+    ConflictError,
+    NotFoundError,
+    UnauthenticatedError,
+)
 from parfocal_api.tables import (
+    LOGO_COLOUR_PATTERN,
+    LOGO_PATTERN,
     AccessRequestStatus,
     JoinPolicy,
     NotificationKind,
@@ -82,11 +89,18 @@ PUBLIC_EMAIL_PREFIXES = ("hotmail.", "yahoo.", "outlook.", "live.", "gmx.", "web
 JOINED_ROLE = Role.REVIEWER
 
 
+DOMAIN_PATTERN = r"^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]([a-z0-9-]{0,61}[a-z0-9])?$"
+
+
+def is_public_domain(domain: str) -> bool:
+    return domain in PUBLIC_EMAIL_DOMAINS or domain.startswith(PUBLIC_EMAIL_PREFIXES)
+
+
 def email_domain_of(email: str | None) -> str | None:
     if not email or "@" not in email:
         return None
     domain = email.rsplit("@", 1)[1].strip().lower()
-    if not domain or domain in PUBLIC_EMAIL_DOMAINS or domain.startswith(PUBLIC_EMAIL_PREFIXES):
+    if not domain or is_public_domain(domain):
         return None
     return domain
 
@@ -120,6 +134,43 @@ class PendingAccessRequest(BaseModel):
     title: str | None
     email: str | None
     asked_at: datetime
+
+
+def normalised(value: object) -> object:
+    return value.strip().lower() if isinstance(value, str) else value
+
+
+type EmailDomain = Annotated[
+    str,
+    BeforeValidator(normalised),
+    StringConstraints(max_length=253, pattern=DOMAIN_PATTERN),
+]
+type LogoMark = Annotated[str, StringConstraints(pattern=LOGO_PATTERN)]
+type LogoColour = Annotated[str, StringConstraints(pattern=LOGO_COLOUR_PATTERN)]
+
+
+class JoinSettings(BaseModel):
+    email_domain: str | None
+    join_policy: JoinPolicy
+    logo: str
+    logo_colour: str
+
+
+class JoinSettingsChange(BaseModel):
+    email_domain: EmailDomain | None
+    join_policy: JoinPolicy
+    logo: LogoMark | None = None
+    logo_colour: LogoColour | None = None
+
+
+class PublicEmailDomainError(BadRequestError):
+    code = "public-email-domain"
+    title = "A public mail domain cannot let people into a workspace"
+
+
+class DomainNotYoursError(BadRequestError):
+    code = "domain-not-yours"
+    title = "A workspace can claim only the email domain you confirmed yourself"
 
 
 class NotJoinableError(NotFoundError):
@@ -357,7 +408,7 @@ async def ask_to_join_workspace(
                 .values(tenant_id=tenant_id, user_id=person.user_id)
                 .on_conflict_do_nothing(
                     index_elements=["tenant_id", "user_id"],
-                    index_where=workspace_access_requests.c.status == AccessRequestStatus.PENDING,
+                    index_where=text("status = 'pending'"),
                 )
                 .returning(*workspace_access_requests.c)
             )
@@ -486,3 +537,124 @@ async def approve_workspace_access_request(
             details={"role": JOINED_ROLE.value, "admin_rights": False, "through": "access-request"},
         )
     return await tenant_member(connection, asked.user_id)
+
+
+@tenant_router.delete(
+    "/access-requests/{request_id}",
+    operation_id="declineWorkspaceAccessRequest",
+    status_code=204,
+    response_class=Response,
+    **require(Permission.MANAGE_PEOPLE, write=True),
+)
+async def decline_workspace_access_request(
+    request_id: uuid.UUID, principal: CurrentPrincipal, connection: TenantConnection
+) -> None:
+    declined = await connection.scalar(
+        delete(workspace_access_requests)
+        .where(
+            workspace_access_requests.c.id == request_id,
+            workspace_access_requests.c.tenant_id == literal_column(CURRENT_TENANT),
+            workspace_access_requests.c.status == AccessRequestStatus.PENDING,
+        )
+        .returning(workspace_access_requests.c.id)
+    )
+    if declined is None:
+        raise AccessRequestNotFoundError
+    tenant_id = database_scope(principal).tenant_id
+    await record(
+        connection,
+        actor_of(principal),
+        AuditAction.WORKSPACE_ACCESS_DECLINED,
+        AuditTarget.ACCESS_REQUEST,
+        request_id,
+        tenant_id=tenant_id,
+    )
+
+
+def join_settings_of(row: Any) -> JoinSettings:
+    return JoinSettings(
+        email_domain=row.email_domain,
+        join_policy=JoinPolicy(row.join_policy),
+        logo=row.logo or logo_mark_of(row.name),
+        logo_colour=row.logo_colour or logo_colour_of(row.id),
+    )
+
+
+JOIN_SETTINGS_COLUMNS = (
+    tenants.c.id,
+    tenants.c.name,
+    tenants.c.email_domain,
+    tenants.c.join_policy,
+    tenants.c.logo,
+    tenants.c.logo_colour,
+)
+
+
+@tenant_router.get(
+    "/join-settings",
+    operation_id="getJoinSettings",
+    **require(Permission.WORKSPACE_SETTINGS),
+)
+async def get_join_settings(connection: TenantConnection) -> JoinSettings:
+    row = (
+        await connection.execute(
+            select(*JOIN_SETTINGS_COLUMNS).where(tenants.c.id == literal_column(CURRENT_TENANT))
+        )
+    ).one()
+    return join_settings_of(row)
+
+
+@tenant_router.put(
+    "/join-settings",
+    operation_id="setJoinSettings",
+    **require(Permission.WORKSPACE_SETTINGS, write=True),
+)
+async def set_join_settings(
+    change: JoinSettingsChange, request: Request, principal: CurrentPrincipal
+) -> JoinSettings:
+    assert isinstance(principal, MemberPrincipal)
+    if change.email_domain is not None and is_public_domain(change.email_domain):
+        raise PublicEmailDomainError(f"{change.email_domain} is a public mail domain")
+    async with scoped_transaction(
+        engine_of(request), person_scope(principal, principal.tenant_id)
+    ) as connection:
+        if change.email_domain is not None and change.email_domain != await domain_of(
+            connection, principal.user_id
+        ):
+            raise DomainNotYoursError(f"{change.email_domain} is not the domain of your email")
+        before = (
+            await connection.execute(
+                select(*JOIN_SETTINGS_COLUMNS).where(tenants.c.id == principal.tenant_id)
+            )
+        ).one()
+        given = change.model_fields_set
+        logo = change.logo if "logo" in given else before.logo
+        logo_colour = change.logo_colour if "logo_colour" in given else before.logo_colour
+        row = (
+            await connection.execute(
+                update(tenants)
+                .where(tenants.c.id == principal.tenant_id)
+                .values(
+                    email_domain=change.email_domain,
+                    join_policy=change.join_policy,
+                    logo=logo,
+                    logo_colour=logo_colour,
+                )
+                .returning(*JOIN_SETTINGS_COLUMNS)
+            )
+        ).one()
+        await record(
+            connection,
+            actor_of(principal),
+            AuditAction.WORKSPACE_JOIN_SETTINGS_CHANGED,
+            AuditTarget.TENANT,
+            principal.tenant_id,
+            tenant_id=principal.tenant_id,
+            details={
+                "email_domain": change.email_domain,
+                "join_policy": change.join_policy.value,
+                "domain_changed": before.email_domain != change.email_domain,
+                "logo_changed": (before.logo, before.logo_colour) != (logo, logo_colour),
+            },
+        )
+    return join_settings_of(row)

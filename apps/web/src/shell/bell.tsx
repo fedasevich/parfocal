@@ -43,6 +43,7 @@ const kindIcons: Record<string, IconName> = {
   "upload-refused": "warn",
   "task-signed-off": "check",
   "task-assigned": "users",
+  "workspace-access-asked": "users",
 };
 
 export const payloadText = (item: InboxItem, key: string): string | undefined => {
