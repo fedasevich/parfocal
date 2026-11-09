@@ -1,19 +1,15 @@
 import { HttpResponse, http, type RequestHandler } from "msw";
-import { workspaceAnsweredSchema, workspaceAnswerSchema } from "../draft/answer-workspace.ts";
 import { type AdminOverview, adminOverviewSchema } from "../draft/get-admin-overview.ts";
 import { type InvitePreview, invitePreviewSchema } from "../draft/get-invite-preview.ts";
 import { type SecuritySettings, securitySettingsSchema } from "../draft/get-security-settings.ts";
 import { type SignInOptions, signInOptionsSchema } from "../draft/get-sign-in-options.ts";
 import { type StorageUsage, storageUsageSchema } from "../draft/get-storage-usage.ts";
 import { type AiModels, aiModelsSchema } from "../draft/list-ai-models.ts";
-import {
-  type JoinableWorkspace,
-  joinableWorkspaceListSchema,
-} from "../draft/list-joinable-workspaces.ts";
 import { type Webhook, webhookListSchema } from "../draft/list-webhooks.ts";
 import { type AccessRequest, accessRequestSchema } from "../draft/request-project-access.ts";
 import {
   getAcceptInvitationMockHandler,
+  getAskToJoinWorkspaceMockHandler,
   getChangeMemberRoleMockHandler,
   getCreateInvitationMockHandler,
   getCreateStudyTemplateMockHandler,
@@ -21,8 +17,10 @@ import {
   getGetCurrentTenantMockHandler,
   getGetSessionPolicyMockHandler,
   getInviteTaskReviewerMockHandler,
+  getJoinWorkspaceMockHandler,
   getListAuditEventsMockHandler,
   getListInvitationsMockHandler,
+  getListJoinableWorkspacesMockHandler,
   getListMemberActivityMockHandler,
   getListServiceAccountsMockHandler,
   getResendInvitationMockHandler,
@@ -35,6 +33,7 @@ import type {
   AuditExport,
   Invitation,
   InvitationDraft,
+  JoinableWorkspace,
   Member,
   MemberActivity,
   ServiceAccount,
@@ -43,6 +42,8 @@ import type {
   StudyTemplateDraft,
   TaskInvitationDraft,
   Tenant,
+  Workspace,
+  WorkspaceAccessRequest,
 } from "../generated/api.ts";
 import type { DraftOperation } from "./draft-handlers.ts";
 import { isModelHidden } from "./hidden-models.ts";
@@ -307,14 +308,48 @@ export const toSignInOptions = (returnTo: string | null = null): SignInOptions =
   });
 
 export const toJoinableWorkspaces = (): JoinableWorkspace[] =>
-  joinableWorkspaceListSchema.parse(
-    joinableWorkspaces.map((item) => ({
-      ...brandOf(item.workspace),
+  joinableWorkspaces.map((item) => {
+    const { colour, ...brand } = brandOf(item.workspace);
+    return {
+      ...brand,
+      logo_colour: colour,
       members: item.members,
       projects: item.projects,
-      matches_email: item.matchesEmail,
-    })),
+      how: item.how,
+      asked: false,
+    };
+  });
+
+const joinedTo = (tenantId: string): Workspace => {
+  const index = Math.max(
+    0,
+    workspaces.findIndex((item) => item.id === tenantId),
   );
+  const workspace = workspaces[index];
+  const brand = brandOf(index);
+  return {
+    tenant_id: brand.id,
+    role: "reviewer",
+    admin_rights: false,
+    slug: workspace?.slug ?? "",
+    name: brand.name,
+    kind: workspace?.kind ?? "research",
+    status: "active",
+    organisation_name: workspace?.organisation ?? brand.name,
+    logo: brand.logo,
+    logo_colour: brand.colour,
+  };
+};
+
+const askedFor = (tenantId: string): WorkspaceAccessRequest => ({
+  id: "00000000-0000-4000-8069-000000000003",
+  tenant_id: tenantId,
+  user_id: people.LM.id,
+  status: "pending",
+  asked_at: scenarioNow,
+});
+
+const tenantIdFromPath = (url: string) => new URL(url).pathname.split("/").at(-2) ?? "";
 
 const personRef = (key: PersonKey) => ({
   user_id: people[key].id,
@@ -500,6 +535,8 @@ const joinedWorkspace = (): AcceptedInvitation => {
     kind: workspace?.kind ?? "research",
     status: "active",
     organisation_name: workspace?.organisation ?? "",
+    logo: brandOf(0).logo,
+    logo_colour: brandOf(0).colour,
     landing: {
       project_id: preview.project.id,
       task_id: preview.task.id,
@@ -569,6 +606,9 @@ export function adminHandlers(): RequestHandler[] {
       return memberOf(userIdFromPath(request.url), { role: body.role });
     }),
     getAcceptInvitationMockHandler(() => joinedWorkspace()),
+    getListJoinableWorkspacesMockHandler(() => toJoinableWorkspaces()),
+    getJoinWorkspaceMockHandler(({ request }) => joinedTo(tenantIdFromPath(request.url))),
+    getAskToJoinWorkspaceMockHandler(({ request }) => askedFor(tenantIdFromPath(request.url))),
     getInviteTaskReviewerMockHandler(async ({ request, params }) => {
       const body = (await request.json()) as TaskInvitationDraft;
       const invitation: Invitation = {
@@ -620,11 +660,6 @@ export const getGetSignInOptionsMockHandler = (overrideResponse?: SignInOptions)
     ),
   );
 
-export const getListJoinableWorkspacesMockHandler = (overrideResponse?: JoinableWorkspace[]) =>
-  http.get("*/api/me/joinable-workspaces", () =>
-    HttpResponse.json(overrideResponse ?? toJoinableWorkspaces()),
-  );
-
 export const getRequestProjectAccessMockHandler = (overrideResponse?: AccessRequest) =>
   http.post<{ projectId: string }>("*/api/projects/:projectId/access-requests", ({ params }) => {
     const project = projects.find((item) => item.id === params.projectId) ?? projects[0];
@@ -640,24 +675,7 @@ export const getRequestProjectAccessMockHandler = (overrideResponse?: AccessRequ
     );
   });
 
-export const getAnswerWorkspaceMockHandler = () =>
-  http.post("*/api/me/workspace-answers", async ({ request }) => {
-    const answer = workspaceAnswerSchema.parse(await request.json());
-    return HttpResponse.json(
-      workspaceAnsweredSchema.parse({
-        workspace_id: answer.workspace_id,
-        state: answer.how === "join" ? "joined" : "requested",
-      }),
-    );
-  });
-
 export const adminDraftOperations: DraftOperation[] = [
-  {
-    operationId: "answerWorkspace",
-    method: "post",
-    path: "/api/me/workspace-answers",
-    handler: () => getAnswerWorkspaceMockHandler(),
-  },
   {
     operationId: "getAdminOverview",
     method: "get",
@@ -699,12 +717,6 @@ export const adminDraftOperations: DraftOperation[] = [
     method: "get",
     path: "/api/auth/sign-in-options",
     handler: () => getGetSignInOptionsMockHandler(),
-  },
-  {
-    operationId: "listJoinableWorkspaces",
-    method: "get",
-    path: "/api/me/joinable-workspaces",
-    handler: () => getListJoinableWorkspacesMockHandler(),
   },
   {
     operationId: "requestProjectAccess",

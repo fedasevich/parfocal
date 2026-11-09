@@ -12,6 +12,8 @@ from parfocal_api.context import CurrentPrincipal, engine_of
 from parfocal_api.problems import ConflictError, UnauthenticatedError
 from parfocal_api.study_templates import seed_built_ins
 from parfocal_api.tables import (
+    LOGO_COLOUR_PATTERN,
+    LOGO_PATTERN,
     Plan,
     Region,
     Role,
@@ -24,7 +26,8 @@ from parfocal_api.tables import (
     users,
     workspace_settings,
 )
-from parfocal_api.users import Workspace, signed_in
+from parfocal_api.users import Workspace, logo_colour_of, logo_mark_of, signed_in
+from parfocal_api.workspace_access import email_domain_of
 from parfocal_common.db import DatabaseScope, scoped_transaction
 
 
@@ -40,9 +43,15 @@ type WorkspaceName = Annotated[
 ]
 
 
+type LogoMark = Annotated[str, StringConstraints(strip_whitespace=True, pattern=LOGO_PATTERN)]
+type LogoColour = Annotated[str, StringConstraints(pattern=LOGO_COLOUR_PATTERN)]
+
+
 class WorkspaceDraft(BaseModel):
     name: WorkspaceName
     default_privacy_mode: Literal["de-identified", "clinical"] = "de-identified"
+    logo: LogoMark | None = None
+    logo_colour: LogoColour | None = None
 
 
 def slug_of(name: str) -> str:
@@ -71,6 +80,9 @@ async def create_my_workspace(
         )
         if holds_admin_rights:
             raise AlreadyAnAdminError
+        email = await connection.scalar(select(users.c.email).where(users.c.id == person.user_id))
+        logo = draft.logo or logo_mark_of(draft.name)
+        logo_colour = draft.logo_colour or logo_colour_of(tenant_id)
         organisation_id = (
             await connection.execute(
                 insert(organisations)
@@ -87,6 +99,9 @@ async def create_my_workspace(
                 kind=TenantKind.RESEARCH,
                 region=Region.EU,
                 plan=Plan.PILOT,
+                email_domain=email_domain_of(email),
+                logo=logo,
+                logo_colour=logo_colour,
             )
         )
         await seed_built_ins(connection, tenant_id)
@@ -145,4 +160,6 @@ async def create_my_workspace(
         kind=TenantKind.RESEARCH,
         status=TenantStatus.ACTIVE,
         organisation_name=draft.name,
+        logo=logo,
+        logo_colour=logo_colour,
     )

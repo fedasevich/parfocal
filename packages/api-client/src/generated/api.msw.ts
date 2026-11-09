@@ -62,6 +62,7 @@ import type {
   Invitation,
   IssuedToken,
   Job,
+  JoinableWorkspace,
   LabModel,
   LabModelTest,
   LabSettings,
@@ -96,6 +97,7 @@ import type {
   Organisation,
   Pairings,
   PatientData,
+  PendingAccessRequest,
   PersonalData,
   PointGeometry,
   PolygonGeometry,
@@ -171,10 +173,12 @@ import type {
   Verdict,
   ViewScope,
   Workspace,
+  WorkspaceAccessRequest,
   WorstObjects,
   YesNoQuestion,
 } from "./api.ts";
 import {
+  AccessRequestStatus,
   ActorKind,
   AgreementPart,
   AnalysisTemplate,
@@ -216,6 +220,7 @@ import {
   IngestStatus,
   JobControl,
   JobStatus,
+  JoinPolicy,
   LabModelRunners,
   LabModelSignIn,
   Laterality,
@@ -12690,6 +12695,9 @@ export const getGetMeResponseMock = (overrideResponse: Partial<Extract<Me, objec
   avatar_colour: faker.number.int(),
   title: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
   email: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
+  specialties: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => faker.string.alpha({ length: { min: 10, max: 20 } }),
+  ),
   active_tenant_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   workspaces: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
     () => ({
@@ -12701,6 +12709,8 @@ export const getGetMeResponseMock = (overrideResponse: Partial<Extract<Me, objec
       kind: faker.helpers.arrayElement(Object.values(TenantKind)),
       status: faker.helpers.arrayElement(Object.values(TenantStatus)),
       organisation_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      logo: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      logo_colour: faker.string.alpha({ length: { min: 10, max: 20 } }),
     }),
   ),
   ...overrideResponse,
@@ -12715,6 +12725,9 @@ export const getUpdateMeResponseMock = (
   avatar_colour: faker.number.int(),
   title: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
   email: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
+  specialties: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => faker.string.alpha({ length: { min: 10, max: 20 } }),
+  ),
   active_tenant_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   workspaces: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
     () => ({
@@ -12726,6 +12739,8 @@ export const getUpdateMeResponseMock = (
       kind: faker.helpers.arrayElement(Object.values(TenantKind)),
       status: faker.helpers.arrayElement(Object.values(TenantStatus)),
       organisation_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      logo: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      logo_colour: faker.string.alpha({ length: { min: 10, max: 20 } }),
     }),
   ),
   ...overrideResponse,
@@ -12742,6 +12757,8 @@ export const getSwitchWorkspaceResponseMock = (
   kind: faker.helpers.arrayElement(Object.values(TenantKind)),
   status: faker.helpers.arrayElement(Object.values(TenantStatus)),
   organisation_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  logo: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  logo_colour: faker.string.alpha({ length: { min: 10, max: 20 } }),
   ...overrideResponse,
 });
 
@@ -12756,6 +12773,73 @@ export const getCreateMyWorkspaceResponseMock = (
   kind: faker.helpers.arrayElement(Object.values(TenantKind)),
   status: faker.helpers.arrayElement(Object.values(TenantStatus)),
   organisation_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  logo: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  logo_colour: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  ...overrideResponse,
+});
+
+export const getListJoinableWorkspacesResponseMock = (): JoinableWorkspace[] =>
+  Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    id: faker.string.uuid(),
+    name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    logo: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    logo_colour: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    domain: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    members: faker.number.int(),
+    projects: faker.number.int(),
+    how: faker.helpers.arrayElement(Object.values(JoinPolicy)),
+    asked: faker.datatype.boolean(),
+  }));
+
+export const getJoinWorkspaceResponseMock = (
+  overrideResponse: Partial<Extract<Workspace, object>> = {},
+): Workspace => ({
+  tenant_id: faker.string.uuid(),
+  role: faker.helpers.arrayElement(Object.values(Role)),
+  admin_rights: faker.datatype.boolean(),
+  slug: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  kind: faker.helpers.arrayElement(Object.values(TenantKind)),
+  status: faker.helpers.arrayElement(Object.values(TenantStatus)),
+  organisation_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  logo: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  logo_colour: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  ...overrideResponse,
+});
+
+export const getAskToJoinWorkspaceResponseMock = (
+  overrideResponse: Partial<Extract<WorkspaceAccessRequest, object>> = {},
+): WorkspaceAccessRequest => ({
+  id: faker.string.uuid(),
+  tenant_id: faker.string.uuid(),
+  user_id: faker.string.uuid(),
+  status: faker.helpers.arrayElement(Object.values(AccessRequestStatus)),
+  asked_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  ...overrideResponse,
+});
+
+export const getListWorkspaceAccessRequestsResponseMock = (): PendingAccessRequest[] =>
+  Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    id: faker.string.uuid(),
+    user_id: faker.string.uuid(),
+    display_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    initials: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    avatar_colour: faker.number.int(),
+    title: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
+    email: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
+    asked_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  }));
+
+export const getApproveWorkspaceAccessRequestResponseMock = (
+  overrideResponse: Partial<Extract<Member, object>> = {},
+): Member => ({
+  user_id: faker.string.uuid(),
+  display_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  initials: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  avatar_colour: faker.number.int(),
+  title: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
+  role: faker.helpers.arrayElement(Object.values(Role)),
+  admin_rights: faker.datatype.boolean(),
   ...overrideResponse,
 });
 
@@ -13084,6 +13168,8 @@ export const getAcceptInvitationResponseMock = (
   kind: faker.helpers.arrayElement(Object.values(TenantKind)),
   status: faker.helpers.arrayElement(Object.values(TenantStatus)),
   organisation_name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  logo: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  logo_colour: faker.string.alpha({ length: { min: 10, max: 20 } }),
   landing: faker.helpers.arrayElement([
     {
       project_id: faker.string.uuid(),
@@ -18990,6 +19076,122 @@ export const getCreateMyWorkspaceMockHandler = (
   );
 };
 
+export const getListJoinableWorkspacesMockHandler = (
+  overrideResponse?:
+    | JoinableWorkspace[]
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<JoinableWorkspace[]> | JoinableWorkspace[]),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/me/joinable-workspaces",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getListJoinableWorkspacesResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getJoinWorkspaceMockHandler = (
+  overrideResponse?:
+    | Workspace
+    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<Workspace> | Workspace),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/me/joinable-workspaces/:tenantId/membership",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getJoinWorkspaceResponseMock(),
+        { status: 201 },
+      );
+    },
+    options,
+  );
+};
+
+export const getAskToJoinWorkspaceMockHandler = (
+  overrideResponse?:
+    | WorkspaceAccessRequest
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<WorkspaceAccessRequest> | WorkspaceAccessRequest),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/me/joinable-workspaces/:tenantId/access-requests",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getAskToJoinWorkspaceResponseMock(),
+        { status: 201 },
+      );
+    },
+    options,
+  );
+};
+
+export const getListWorkspaceAccessRequestsMockHandler = (
+  overrideResponse?:
+    | PendingAccessRequest[]
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<PendingAccessRequest[]> | PendingAccessRequest[]),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/tenant/access-requests",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getListWorkspaceAccessRequestsResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getApproveWorkspaceAccessRequestMockHandler = (
+  overrideResponse?:
+    | Member
+    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<Member> | Member),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/tenant/access-requests/:requestId/approval",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getApproveWorkspaceAccessRequestResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getListTenantMembersMockHandler = (
   overrideResponse?:
     | Member[]
@@ -19928,6 +20130,11 @@ export const getParfocalAPIMock = () => [
   getUpdateMeMockHandler(),
   getSwitchWorkspaceMockHandler(),
   getCreateMyWorkspaceMockHandler(),
+  getListJoinableWorkspacesMockHandler(),
+  getJoinWorkspaceMockHandler(),
+  getAskToJoinWorkspaceMockHandler(),
+  getListWorkspaceAccessRequestsMockHandler(),
+  getApproveWorkspaceAccessRequestMockHandler(),
   getListTenantMembersMockHandler(),
   getListMemberActivityMockHandler(),
   getChangeMemberRoleMockHandler(),

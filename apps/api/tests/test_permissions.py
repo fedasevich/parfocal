@@ -73,6 +73,7 @@ from parfocal_api.tables import (
     uploads,
     users,
     verdicts,
+    workspace_access_requests,
     workspace_settings,
 )
 from parfocal_common.chunk_store import Cell, build_cells
@@ -93,6 +94,9 @@ OPEN_OPERATIONS = {
     "updateMe": "signed-in",
     "switchWorkspace": "signed-in",
     "createMyWorkspace": "signed-in",
+    "listJoinableWorkspaces": "signed-in",
+    "joinWorkspace": "signed-in",
+    "askToJoinWorkspace": "signed-in",
     "getCurrentTenant": "member",
     "listTaxonomyTemplates": "member",
     "getOpinionFormTemplate": "member",
@@ -1099,6 +1103,10 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "setMemberAdminRights": lambda w: Call(
         "PUT", f"/api/tenant/members/{w.deputy}/admin-rights", {"admin_rights": True}
     ),
+    "listWorkspaceAccessRequests": lambda _: Call("GET", "/api/tenant/access-requests"),
+    "approveWorkspaceAccessRequest": lambda w: Call(
+        "POST", f"/api/tenant/access-requests/{seeded(w, 'access-request')}/approval"
+    ),
 }
 PLACEHOLDER = Workspace(
     uuid.uuid4(),
@@ -1926,6 +1934,13 @@ async def seed(database: str, lead: Seat = RESEARCHER, presets_for: Seat = RESEA
             )
             await seed_case_reports(
                 connection, tenant_id, case.project_id, case.case_id, people[lead], deputy
+            )
+            await connection.execute(
+                insert(workspace_access_requests).values(
+                    id=uuid.uuid5(tenant_id, "access-request"),
+                    tenant_id=tenant_id,
+                    user_id=colleague,
+                )
             )
             await connection.execute(
                 insert(lab_models).values(

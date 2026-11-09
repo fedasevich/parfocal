@@ -52,7 +52,7 @@ import {
   week,
   workspaces,
 } from "./scenario.ts";
-import { adminRightsHolders } from "./scenario-admin.ts";
+import { adminRightsHolders, workspaceBrands } from "./scenario-admin.ts";
 import { fakeView } from "./view.ts";
 import {
   activeFakeWorkspace,
@@ -62,7 +62,7 @@ import {
 
 const me = () => people[fakeView().viewer];
 
-const toWorkspace = (workspace: (typeof workspaces)[number]): Workspace => ({
+const toWorkspace = (workspace: (typeof workspaces)[number], index: number): Workspace => ({
   tenant_id: workspace.id,
   role: me().role,
   admin_rights: adminRightsHolders.includes(me().key),
@@ -71,6 +71,8 @@ const toWorkspace = (workspace: (typeof workspaces)[number]): Workspace => ({
   kind: workspace.kind,
   status: "active",
   organisation_name: workspace.organisation,
+  logo: workspaceBrands[index]?.logo ?? workspace.name.slice(0, 2).toUpperCase(),
+  logo_colour: workspaceBrands[index]?.colour ?? "#2f6fdf",
 });
 
 const scenarioMe = (): Me => ({
@@ -80,6 +82,7 @@ const scenarioMe = (): Me => ({
   avatar_colour: me().colour,
   title: me().title,
   email: me().email,
+  specialties: ["Breast", "Lymph nodes"],
   active_tenant_id: activeFakeWorkspace(),
   workspaces: workspaces.map(toWorkspace),
 });

@@ -673,6 +673,11 @@ export const inviteSeed = {
 };
 
 export const joinableWorkspaces = [
-  { workspace: 0, members: workspaceTotals.people, projects: projects.length, matchesEmail: true },
-  { workspace: 1, members: 11, projects: 3, matchesEmail: false },
+  {
+    workspace: 0,
+    members: workspaceTotals.people,
+    projects: projects.length,
+    how: "join" as const,
+  },
+  { workspace: 1, members: 11, projects: 3, how: "ask" as const },
 ];

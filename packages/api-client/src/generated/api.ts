@@ -73,8 +73,17 @@ export interface AcceptedInvitation {
   kind: TenantKind;
   status: TenantStatus;
   organisation_name: string;
+  logo: string;
+  logo_colour: string;
   landing?: TaskLanding | null;
 }
+
+export type AccessRequestStatus = (typeof AccessRequestStatus)[keyof typeof AccessRequestStatus];
+
+export const AccessRequestStatus = {
+  pending: "pending",
+  approved: "approved",
+} as const;
 
 /**
  * @minLength 1
@@ -689,6 +698,7 @@ export const AuditTarget = {
   "clinical-report": "clinical-report",
   "lab-model": "lab-model",
   feedback: "feedback",
+  "access-request": "access-request",
 } as const;
 
 export type Availability = (typeof Availability)[keyof typeof Availability];
@@ -2365,6 +2375,7 @@ export const NotificationKind = {
   "integration-down": "integration-down",
   "adjudication-requested": "adjudication-requested",
   "slide-moved": "slide-moved",
+  "workspace-access-asked": "workspace-access-asked",
 } as const;
 
 export interface KindCount {
@@ -2393,6 +2404,7 @@ export const TargetKind = {
   job: "job",
   delivery: "delivery",
   project: "project",
+  "access-request": "access-request",
 } as const;
 
 export interface InboxItem {
@@ -2512,6 +2524,25 @@ export const JobControl = {
   resume: "resume",
   retry: "retry",
 } as const;
+
+export type JoinPolicy = (typeof JoinPolicy)[keyof typeof JoinPolicy];
+
+export const JoinPolicy = {
+  join: "join",
+  ask: "ask",
+} as const;
+
+export interface JoinableWorkspace {
+  id: string;
+  name: string;
+  logo: string;
+  logo_colour: string;
+  domain: string;
+  members: number;
+  projects: number;
+  how: JoinPolicy;
+  asked: boolean;
+}
 
 export type LabModelSignIn = (typeof LabModelSignIn)[keyof typeof LabModelSignIn];
 
@@ -2821,6 +2852,16 @@ export const Locale = {
   "en-XA": "en-XA",
 } as const;
 
+/**
+ * @pattern ^#[0-9a-f]{6}$
+ */
+export type LogoColour = string;
+
+/**
+ * @pattern ^[A-Z0-9]{1,3}$
+ */
+export type LogoMark = string;
+
 export interface MappingChange {
   /**
    * @minItems 1
@@ -2864,6 +2905,8 @@ export interface Workspace {
   kind: TenantKind;
   status: TenantStatus;
   organisation_name: string;
+  logo: string;
+  logo_colour: string;
 }
 
 export interface Me {
@@ -2873,6 +2916,7 @@ export interface Me {
   avatar_colour: number;
   title: string | null;
   email: string | null;
+  specialties: string[];
   active_tenant_id: string | null;
   workspaces: Workspace[];
 }
@@ -3439,6 +3483,17 @@ export interface PatientData {
   slides: PatientSlide[];
 }
 
+export interface PendingAccessRequest {
+  id: string;
+  user_id: string;
+  display_name: string;
+  initials: string;
+  avatar_colour: number;
+  title: string | null;
+  email: string | null;
+  asked_at: string;
+}
+
 export interface PersonCount {
   user_id: string;
   count: number;
@@ -3571,11 +3626,18 @@ export interface Problem {
  */
 export type ParfocalApiUsersTitle = string;
 
+/**
+ * @minLength 1
+ * @maxLength 60
+ */
+export type Specialty = string;
+
 export interface ProfileChange {
   display_name?: DisplayName | null;
   initials?: Initials | null;
   avatar_colour?: number | null;
   title?: ParfocalApiUsersTitle | null;
+  specialties?: Specialty[] | null;
 }
 
 export type ViewerPart = (typeof ViewerPart)[keyof typeof ViewerPart];
@@ -5295,6 +5357,14 @@ export interface VersionDraft {
   reason: VersionReason;
 }
 
+export interface WorkspaceAccessRequest {
+  id: string;
+  tenant_id: string;
+  user_id: string;
+  status: AccessRequestStatus;
+  asked_at: string;
+}
+
 export interface WorkspaceChoice {
   tenant_id: string;
 }
@@ -5316,6 +5386,8 @@ export type WorkspaceName = string;
 export interface WorkspaceDraft {
   name: WorkspaceName;
   default_privacy_mode?: WorkspaceDraftDefaultPrivacyMode;
+  logo?: LogoMark | null;
+  logo_colour?: LogoColour | null;
 }
 
 export interface WorkspaceSettingsChange {
@@ -50764,6 +50836,835 @@ export const useCreateMyWorkspace = <TError = Problem, TContext = unknown>(
   TContext
 > => {
   return useMutation(getCreateMyWorkspaceMutationOptions(options), queryClient);
+};
+
+export type listJoinableWorkspacesResponse200 = {
+  data: JoinableWorkspace[];
+  status: 200;
+};
+
+export type listJoinableWorkspacesResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listJoinableWorkspacesResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listJoinableWorkspacesResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listJoinableWorkspacesResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listJoinableWorkspacesResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listJoinableWorkspacesResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listJoinableWorkspacesResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type listJoinableWorkspacesResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listJoinableWorkspacesResponseSuccess = listJoinableWorkspacesResponse200 & {
+  headers: Headers;
+};
+export type listJoinableWorkspacesResponseError = (
+  | listJoinableWorkspacesResponse400
+  | listJoinableWorkspacesResponse401
+  | listJoinableWorkspacesResponse403
+  | listJoinableWorkspacesResponse404
+  | listJoinableWorkspacesResponse409
+  | listJoinableWorkspacesResponse422
+  | listJoinableWorkspacesResponse429
+  | listJoinableWorkspacesResponse500
+) & {
+  headers: Headers;
+};
+
+export type listJoinableWorkspacesResponse =
+  | listJoinableWorkspacesResponseSuccess
+  | listJoinableWorkspacesResponseError;
+
+export const getListJoinableWorkspacesUrl = () => {
+  return `/api/me/joinable-workspaces`;
+};
+
+/**
+ * @summary List Joinable Workspaces
+ */
+export const listJoinableWorkspaces = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listJoinableWorkspacesResponse> => {
+  return apiFetch<listJoinableWorkspacesResponse>(getListJoinableWorkspacesUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListJoinableWorkspacesQueryKey = () => {
+  return [`/api/me/joinable-workspaces`] as const;
+};
+
+export const getListJoinableWorkspacesQueryOptions = <
+  TData = Awaited<ReturnType<typeof listJoinableWorkspaces>>,
+  TError = Problem,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<Awaited<ReturnType<typeof listJoinableWorkspaces>>, TError, TData>
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListJoinableWorkspacesQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listJoinableWorkspaces>>> = ({ signal }) =>
+    listJoinableWorkspaces({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listJoinableWorkspaces>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ListJoinableWorkspacesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listJoinableWorkspaces>>
+>;
+export type ListJoinableWorkspacesQueryError = Problem;
+
+export function useListJoinableWorkspaces<
+  TData = Awaited<ReturnType<typeof listJoinableWorkspaces>>,
+  TError = Problem,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listJoinableWorkspaces>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listJoinableWorkspaces>>,
+          TError,
+          Awaited<ReturnType<typeof listJoinableWorkspaces>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListJoinableWorkspaces<
+  TData = Awaited<ReturnType<typeof listJoinableWorkspaces>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listJoinableWorkspaces>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listJoinableWorkspaces>>,
+          TError,
+          Awaited<ReturnType<typeof listJoinableWorkspaces>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListJoinableWorkspaces<
+  TData = Awaited<ReturnType<typeof listJoinableWorkspaces>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listJoinableWorkspaces>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Joinable Workspaces
+ */
+
+export function useListJoinableWorkspaces<
+  TData = Awaited<ReturnType<typeof listJoinableWorkspaces>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listJoinableWorkspaces>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListJoinableWorkspacesQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type joinWorkspaceResponse201 = {
+  data: Workspace;
+  status: 201;
+};
+
+export type joinWorkspaceResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type joinWorkspaceResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type joinWorkspaceResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type joinWorkspaceResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type joinWorkspaceResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type joinWorkspaceResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type joinWorkspaceResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type joinWorkspaceResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type joinWorkspaceResponseSuccess = joinWorkspaceResponse201 & {
+  headers: Headers;
+};
+export type joinWorkspaceResponseError = (
+  | joinWorkspaceResponse400
+  | joinWorkspaceResponse401
+  | joinWorkspaceResponse403
+  | joinWorkspaceResponse404
+  | joinWorkspaceResponse409
+  | joinWorkspaceResponse422
+  | joinWorkspaceResponse429
+  | joinWorkspaceResponse500
+) & {
+  headers: Headers;
+};
+
+export type joinWorkspaceResponse = joinWorkspaceResponseSuccess | joinWorkspaceResponseError;
+
+export const getJoinWorkspaceUrl = (tenantId: string) => {
+  return `/api/me/joinable-workspaces/${tenantId}/membership`;
+};
+
+/**
+ * @summary Join Workspace
+ */
+export const joinWorkspace = async (
+  tenantId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<joinWorkspaceResponse> => {
+  return apiFetch<joinWorkspaceResponse>(getJoinWorkspaceUrl(tenantId), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getJoinWorkspaceMutationKey = () => ["joinWorkspace"] as const;
+
+export const getJoinWorkspaceMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof joinWorkspace>>,
+    TError,
+    JoinWorkspaceMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof joinWorkspace>>,
+  TError,
+  JoinWorkspaceMutationVariables,
+  TContext
+> => {
+  const mutationKey = getJoinWorkspaceMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof joinWorkspace>>,
+    JoinWorkspaceMutationVariables
+  > = (props) => {
+    const { tenantId } = props ?? {};
+
+    return joinWorkspace(tenantId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type JoinWorkspaceMutationResult = NonNullable<Awaited<ReturnType<typeof joinWorkspace>>>;
+
+export type JoinWorkspaceMutationError = Problem;
+export type JoinWorkspaceMutationVariables = { tenantId: string };
+
+/**
+ * @summary Join Workspace
+ */
+export const useJoinWorkspace = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof joinWorkspace>>,
+      TError,
+      JoinWorkspaceMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof joinWorkspace>>,
+  TError,
+  JoinWorkspaceMutationVariables,
+  TContext
+> => {
+  return useMutation(getJoinWorkspaceMutationOptions(options), queryClient);
+};
+
+export type askToJoinWorkspaceResponse201 = {
+  data: WorkspaceAccessRequest;
+  status: 201;
+};
+
+export type askToJoinWorkspaceResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type askToJoinWorkspaceResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type askToJoinWorkspaceResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type askToJoinWorkspaceResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type askToJoinWorkspaceResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type askToJoinWorkspaceResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type askToJoinWorkspaceResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type askToJoinWorkspaceResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type askToJoinWorkspaceResponseSuccess = askToJoinWorkspaceResponse201 & {
+  headers: Headers;
+};
+export type askToJoinWorkspaceResponseError = (
+  | askToJoinWorkspaceResponse400
+  | askToJoinWorkspaceResponse401
+  | askToJoinWorkspaceResponse403
+  | askToJoinWorkspaceResponse404
+  | askToJoinWorkspaceResponse409
+  | askToJoinWorkspaceResponse422
+  | askToJoinWorkspaceResponse429
+  | askToJoinWorkspaceResponse500
+) & {
+  headers: Headers;
+};
+
+export type askToJoinWorkspaceResponse =
+  | askToJoinWorkspaceResponseSuccess
+  | askToJoinWorkspaceResponseError;
+
+export const getAskToJoinWorkspaceUrl = (tenantId: string) => {
+  return `/api/me/joinable-workspaces/${tenantId}/access-requests`;
+};
+
+/**
+ * @summary Ask To Join Workspace
+ */
+export const askToJoinWorkspace = async (
+  tenantId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<askToJoinWorkspaceResponse> => {
+  return apiFetch<askToJoinWorkspaceResponse>(getAskToJoinWorkspaceUrl(tenantId), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getAskToJoinWorkspaceMutationKey = () => ["askToJoinWorkspace"] as const;
+
+export const getAskToJoinWorkspaceMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof askToJoinWorkspace>>,
+    TError,
+    AskToJoinWorkspaceMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof askToJoinWorkspace>>,
+  TError,
+  AskToJoinWorkspaceMutationVariables,
+  TContext
+> => {
+  const mutationKey = getAskToJoinWorkspaceMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof askToJoinWorkspace>>,
+    AskToJoinWorkspaceMutationVariables
+  > = (props) => {
+    const { tenantId } = props ?? {};
+
+    return askToJoinWorkspace(tenantId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AskToJoinWorkspaceMutationResult = NonNullable<
+  Awaited<ReturnType<typeof askToJoinWorkspace>>
+>;
+
+export type AskToJoinWorkspaceMutationError = Problem;
+export type AskToJoinWorkspaceMutationVariables = { tenantId: string };
+
+/**
+ * @summary Ask To Join Workspace
+ */
+export const useAskToJoinWorkspace = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof askToJoinWorkspace>>,
+      TError,
+      AskToJoinWorkspaceMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof askToJoinWorkspace>>,
+  TError,
+  AskToJoinWorkspaceMutationVariables,
+  TContext
+> => {
+  return useMutation(getAskToJoinWorkspaceMutationOptions(options), queryClient);
+};
+
+export type listWorkspaceAccessRequestsResponse200 = {
+  data: PendingAccessRequest[];
+  status: 200;
+};
+
+export type listWorkspaceAccessRequestsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listWorkspaceAccessRequestsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listWorkspaceAccessRequestsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listWorkspaceAccessRequestsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listWorkspaceAccessRequestsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listWorkspaceAccessRequestsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listWorkspaceAccessRequestsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type listWorkspaceAccessRequestsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listWorkspaceAccessRequestsResponseSuccess = listWorkspaceAccessRequestsResponse200 & {
+  headers: Headers;
+};
+export type listWorkspaceAccessRequestsResponseError = (
+  | listWorkspaceAccessRequestsResponse400
+  | listWorkspaceAccessRequestsResponse401
+  | listWorkspaceAccessRequestsResponse403
+  | listWorkspaceAccessRequestsResponse404
+  | listWorkspaceAccessRequestsResponse409
+  | listWorkspaceAccessRequestsResponse422
+  | listWorkspaceAccessRequestsResponse429
+  | listWorkspaceAccessRequestsResponse500
+) & {
+  headers: Headers;
+};
+
+export type listWorkspaceAccessRequestsResponse =
+  | listWorkspaceAccessRequestsResponseSuccess
+  | listWorkspaceAccessRequestsResponseError;
+
+export const getListWorkspaceAccessRequestsUrl = () => {
+  return `/api/tenant/access-requests`;
+};
+
+/**
+ * @summary List Workspace Access Requests
+ */
+export const listWorkspaceAccessRequests = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listWorkspaceAccessRequestsResponse> => {
+  return apiFetch<listWorkspaceAccessRequestsResponse>(getListWorkspaceAccessRequestsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListWorkspaceAccessRequestsQueryKey = () => {
+  return [`/api/tenant/access-requests`] as const;
+};
+
+export const getListWorkspaceAccessRequestsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listWorkspaceAccessRequests>>,
+  TError = Problem,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<Awaited<ReturnType<typeof listWorkspaceAccessRequests>>, TError, TData>
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListWorkspaceAccessRequestsQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listWorkspaceAccessRequests>>> = ({
+    signal,
+  }) => listWorkspaceAccessRequests({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listWorkspaceAccessRequests>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ListWorkspaceAccessRequestsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listWorkspaceAccessRequests>>
+>;
+export type ListWorkspaceAccessRequestsQueryError = Problem;
+
+export function useListWorkspaceAccessRequests<
+  TData = Awaited<ReturnType<typeof listWorkspaceAccessRequests>>,
+  TError = Problem,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listWorkspaceAccessRequests>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listWorkspaceAccessRequests>>,
+          TError,
+          Awaited<ReturnType<typeof listWorkspaceAccessRequests>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListWorkspaceAccessRequests<
+  TData = Awaited<ReturnType<typeof listWorkspaceAccessRequests>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listWorkspaceAccessRequests>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listWorkspaceAccessRequests>>,
+          TError,
+          Awaited<ReturnType<typeof listWorkspaceAccessRequests>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListWorkspaceAccessRequests<
+  TData = Awaited<ReturnType<typeof listWorkspaceAccessRequests>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listWorkspaceAccessRequests>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Workspace Access Requests
+ */
+
+export function useListWorkspaceAccessRequests<
+  TData = Awaited<ReturnType<typeof listWorkspaceAccessRequests>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listWorkspaceAccessRequests>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListWorkspaceAccessRequestsQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type approveWorkspaceAccessRequestResponse200 = {
+  data: Member;
+  status: 200;
+};
+
+export type approveWorkspaceAccessRequestResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type approveWorkspaceAccessRequestResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type approveWorkspaceAccessRequestResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type approveWorkspaceAccessRequestResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type approveWorkspaceAccessRequestResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type approveWorkspaceAccessRequestResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type approveWorkspaceAccessRequestResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type approveWorkspaceAccessRequestResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type approveWorkspaceAccessRequestResponseSuccess =
+  approveWorkspaceAccessRequestResponse200 & {
+    headers: Headers;
+  };
+export type approveWorkspaceAccessRequestResponseError = (
+  | approveWorkspaceAccessRequestResponse400
+  | approveWorkspaceAccessRequestResponse401
+  | approveWorkspaceAccessRequestResponse403
+  | approveWorkspaceAccessRequestResponse404
+  | approveWorkspaceAccessRequestResponse409
+  | approveWorkspaceAccessRequestResponse422
+  | approveWorkspaceAccessRequestResponse429
+  | approveWorkspaceAccessRequestResponse500
+) & {
+  headers: Headers;
+};
+
+export type approveWorkspaceAccessRequestResponse =
+  | approveWorkspaceAccessRequestResponseSuccess
+  | approveWorkspaceAccessRequestResponseError;
+
+export const getApproveWorkspaceAccessRequestUrl = (requestId: string) => {
+  return `/api/tenant/access-requests/${requestId}/approval`;
+};
+
+/**
+ * @summary Approve Workspace Access Request
+ */
+export const approveWorkspaceAccessRequest = async (
+  requestId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<approveWorkspaceAccessRequestResponse> => {
+  return apiFetch<approveWorkspaceAccessRequestResponse>(
+    getApproveWorkspaceAccessRequestUrl(requestId),
+    {
+      ...options,
+      method: "POST",
+    },
+  );
+};
+
+export const getApproveWorkspaceAccessRequestMutationKey = () =>
+  ["approveWorkspaceAccessRequest"] as const;
+
+export const getApproveWorkspaceAccessRequestMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof approveWorkspaceAccessRequest>>,
+    TError,
+    ApproveWorkspaceAccessRequestMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof approveWorkspaceAccessRequest>>,
+  TError,
+  ApproveWorkspaceAccessRequestMutationVariables,
+  TContext
+> => {
+  const mutationKey = getApproveWorkspaceAccessRequestMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof approveWorkspaceAccessRequest>>,
+    ApproveWorkspaceAccessRequestMutationVariables
+  > = (props) => {
+    const { requestId } = props ?? {};
+
+    return approveWorkspaceAccessRequest(requestId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ApproveWorkspaceAccessRequestMutationResult = NonNullable<
+  Awaited<ReturnType<typeof approveWorkspaceAccessRequest>>
+>;
+
+export type ApproveWorkspaceAccessRequestMutationError = Problem;
+export type ApproveWorkspaceAccessRequestMutationVariables = { requestId: string };
+
+/**
+ * @summary Approve Workspace Access Request
+ */
+export const useApproveWorkspaceAccessRequest = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof approveWorkspaceAccessRequest>>,
+      TError,
+      ApproveWorkspaceAccessRequestMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof approveWorkspaceAccessRequest>>,
+  TError,
+  ApproveWorkspaceAccessRequestMutationVariables,
+  TContext
+> => {
+  return useMutation(getApproveWorkspaceAccessRequestMutationOptions(options), queryClient);
 };
 
 export type listTenantMembersResponse200 = {

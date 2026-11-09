@@ -117,5 +117,5 @@ async def get_notification_target(
                 object_id=thread.object_id,
                 thread_id=thread.id,
             )
-        case TargetKind.DELIVERY:
+        case TargetKind.DELIVERY | TargetKind.ACCESS_REQUEST:
             raise TargetNotAvailableError
