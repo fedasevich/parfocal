@@ -4,6 +4,9 @@ from collections.abc import Iterator
 import pytest
 from idp_support import Browser, signed_in_browser
 
+from parfocal_api import workspace_access
+from parfocal_api.workspace_access import email_domain_of
+
 pytestmark = pytest.mark.db
 
 
@@ -152,3 +155,59 @@ def test_a_workspace_without_a_chosen_logo_gets_its_initials(browser: Browser) -
     assert created["logo_colour"].startswith("#")
     refused = browser.client.post("/api/me/workspaces", json={"name": "Other", "logo": "toolong"})
     assert refused.status_code == 422
+
+
+@pytest.mark.parametrize(
+    "email",
+    ["a@hotmail.co.uk", "a@yahoo.fr", "a@outlook.de", "a@yandex.ru", "a@mail.ru", "a@pm.me"],
+)
+def test_public_mail_domains_are_never_saved(email: str) -> None:
+    assert email_domain_of(email) is None
+
+
+def test_a_lab_domain_is_saved_in_lower_case() -> None:
+    assert email_domain_of("Reader@FN-Vltava.Example") == "fn-vltava.example"
+
+
+def test_a_join_that_loses_a_race_says_you_are_in_already(
+    browser: Browser, colleague: Browser, domain: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    tenant_id = create_workspace(browser, domain)
+    sign_in(colleague, f"reader@{domain}")
+    path = f"/api/me/joinable-workspaces/{tenant_id}/membership"
+    assert colleague.client.post(path).status_code == 201
+
+    async def never(*_: object) -> bool:
+        return False
+
+    monkeypatch.setattr(workspace_access, "is_member", never)
+    raced = colleague.client.post(path)
+    assert (raced.status_code, raced.json()["code"]) == (409, "already-in-workspace")
+    added = browser.sql(
+        "SELECT count(*) FROM audit_events "
+        f"WHERE action = 'member.added' AND tenant_id = '{tenant_id}'"
+    )
+    assert added == [(2,)]
+
+
+def test_joining_directly_closes_an_open_ask_and_audits_the_request(
+    browser: Browser, colleague: Browser, domain: str
+) -> None:
+    tenant_id = create_workspace(browser, domain)
+    browser.sql(f"UPDATE tenants SET join_policy = 'ask' WHERE id = '{tenant_id}'")
+    sign_in(colleague, f"reader@{domain}")
+    asked = colleague.client.post(f"/api/me/joinable-workspaces/{tenant_id}/access-requests")
+    request_id = asked.json()["id"]
+    audited = browser.sql(
+        "SELECT target_id::text FROM audit_events "
+        f"WHERE action = 'workspace.access-asked' AND tenant_id = '{tenant_id}'"
+    )
+    assert audited == [(request_id,)]
+    browser.sql(f"UPDATE tenants SET join_policy = 'join' WHERE id = '{tenant_id}'")
+    assert (
+        colleague.client.post(f"/api/me/joinable-workspaces/{tenant_id}/membership").status_code
+        == 201
+    )
+    status = browser.sql(f"SELECT status FROM workspace_access_requests WHERE id = '{request_id}'")
+    assert status == [("approved",)]
+    assert browser.client.get("/api/tenant/access-requests").json() == []

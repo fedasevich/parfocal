@@ -4,7 +4,7 @@ from typing import Any
 
 from fastapi import APIRouter, BackgroundTasks, Request
 from pydantic import BaseModel
-from sqlalchemy import exists, func, insert, literal_column, select, update
+from sqlalchemy import exists, func, literal_column, select, update
 from sqlalchemy.dialects.postgresql import insert as upsert
 from sqlalchemy.ext.asyncio import AsyncConnection
 
@@ -45,23 +45,24 @@ PUBLIC_EMAIL_DOMAINS = frozenset(
     {
         "gmail.com",
         "googlemail.com",
-        "outlook.com",
-        "hotmail.com",
-        "live.com",
         "msn.com",
-        "yahoo.com",
         "icloud.com",
         "me.com",
         "mac.com",
         "aol.com",
         "proton.me",
         "protonmail.com",
-        "gmx.com",
-        "gmx.de",
-        "gmx.net",
-        "web.de",
+        "pm.me",
+        "tuta.com",
+        "tutanota.com",
+        "posteo.de",
+        "hey.com",
+        "fastmail.com",
+        "zoho.com",
         "mail.com",
-        "yandex.com",
+        "mail.ru",
+        "qq.com",
+        "163.com",
         "seznam.cz",
         "email.cz",
         "centrum.cz",
@@ -76,6 +77,7 @@ PUBLIC_EMAIL_DOMAINS = frozenset(
         "libero.it",
     }
 )
+PUBLIC_EMAIL_PREFIXES = ("hotmail.", "yahoo.", "outlook.", "live.", "gmx.", "web.", "yandex.")
 
 JOINED_ROLE = Role.REVIEWER
 
@@ -84,7 +86,7 @@ def email_domain_of(email: str | None) -> str | None:
     if not email or "@" not in email:
         return None
     domain = email.rsplit("@", 1)[1].strip().lower()
-    if not domain or domain in PUBLIC_EMAIL_DOMAINS:
+    if not domain or domain in PUBLIC_EMAIL_DOMAINS or domain.startswith(PUBLIC_EMAIL_PREFIXES):
         return None
     return domain
 
@@ -271,9 +273,27 @@ async def join_workspace(
         tenant = await joinable_tenant(connection, tenant_id, person.user_id)
         if tenant.join_policy != JoinPolicy.JOIN:
             raise AskToJoinError
-        await connection.execute(
-            insert(memberships).values(
+        added = await connection.scalar(
+            upsert(memberships)
+            .values(
                 tenant_id=tenant_id, user_id=person.user_id, role=JOINED_ROLE, admin_rights=False
+            )
+            .on_conflict_do_nothing(index_elements=["tenant_id", "user_id"])
+            .returning(memberships.c.id)
+        )
+        if added is None:
+            raise AlreadyInWorkspaceError
+        await connection.execute(
+            update(workspace_access_requests)
+            .where(
+                workspace_access_requests.c.tenant_id == tenant_id,
+                workspace_access_requests.c.user_id == person.user_id,
+                workspace_access_requests.c.status == AccessRequestStatus.PENDING,
+            )
+            .values(
+                status=AccessRequestStatus.APPROVED,
+                decided_at=func.now(),
+                decided_by_user_id=person.user_id,
             )
         )
         await record(
@@ -359,7 +379,6 @@ async def ask_to_join_workspace(
             AuditAction.WORKSPACE_ACCESS_ASKED,
             AuditTarget.ACCESS_REQUEST,
             row.id,
-            person=person.subject,
             tenant_id=tenant_id,
         )
         admins = await connection.scalars(
@@ -454,7 +473,6 @@ async def approve_workspace_access_request(
         AuditAction.WORKSPACE_ACCESS_APPROVED,
         AuditTarget.ACCESS_REQUEST,
         request_id,
-        person=asked.subject,
         tenant_id=principal.tenant_id,
     )
     if added is not None:
