@@ -136,3 +136,17 @@ def test_each_link_is_rate_limited_on_its_own(api: ApiAs, database: str) -> None
     assert opened(api, "unknown-token").status_code == 404
     opened_events = [row for row in events(database, first["id"]) if row[0] == "report-link.opened"]
     assert len(opened_events) == 2
+
+
+def test_a_link_to_a_deleted_project_is_gone(api: ApiAs, database: str) -> None:
+    r = scenario(api, database)
+    link = created(api, r)
+    query(
+        with_database(OWNER_URL, database),
+        f"UPDATE projects SET deleted_at = now() WHERE id = '{r.project}'",
+    )
+    gone = opened(api, link["token"])
+    assert (gone.status_code, gone.json()["code"]) == (410, "report-link-gone")
+    assert "project_name" not in gone.text
+    logged = events(database, link["id"])
+    assert json.loads(str(logged[-1][2]))["refused"] is True

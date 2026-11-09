@@ -322,3 +322,13 @@ def test_a_token_shorter_than_eight_characters_is_refused(
     assert acting.post(MODELS, json=draft(site, lab, secret="abc1234")).status_code == 422
     assert acting.post(f"{MODELS}/test", json=server(site, secret="abc1234")).status_code == 422
     assert site.requests == []
+
+
+def test_a_deleted_project_leaves_the_models_project_list(
+    linked: ApiAs, lab: Lab, site: Site, database: str
+) -> None:
+    acting = linked(lab.people["owner"])
+    model = ok(acting.post(MODELS, json=draft(site, lab)))
+    assert model["project_ids"] == [str(lab.project)]
+    owner(database, f"UPDATE projects SET deleted_at = now() WHERE id = '{lab.project}'")
+    assert ok(acting.get(f"{MODELS}/{model['id']}"))["project_ids"] == []

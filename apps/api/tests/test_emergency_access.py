@@ -1,14 +1,19 @@
+import asyncio
 import uuid
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import pytest
-from db_support import ApiAs
+from db_support import APP_URL, ApiAs, with_database
+from sqlalchemy.ext.asyncio import create_async_engine
 from workspace_support import Workspace, join_project, make_project, make_workspace, owner
 
+from parfocal_api.permissions import Grant, Permission
 from parfocal_api.principals import MemberPrincipal
+from parfocal_api.project_access import project_grant
 from parfocal_api.tables import Role
+from parfocal_common.db import DatabaseScope, async_database_url, scoped_transaction
 
 pytestmark = pytest.mark.db
 
@@ -152,3 +157,28 @@ def test_the_workspace_sets_how_long_a_grant_lasts(api: ApiAs, database: str) ->
     assert api(lab.who("admin")).put("/api/tenant/session-policy", json=policy).status_code == 200
     expires = datetime.fromisoformat(ask(api, lab, "admin", lab.clinical).json()["expires_at"])
     assert expires - datetime.now(UTC) <= timedelta(hours=1)
+
+
+def test_an_open_grant_ends_when_the_project_is_deleted(api: ApiAs, database: str) -> None:
+    lab = make_lab(api, database)
+    assert ask(api, lab, "outsider", lab.clinical).status_code == 201
+    assert opens(api, lab, "outsider")[0] == 200
+    assert run(database, lab, "outsider") is Grant.VIEW_ONLY
+    owner(database, f"UPDATE projects SET deleted_at = now() WHERE id = '{lab.clinical}'")
+    assert opens(api, lab, "outsider")[0] == 404
+    assert run(database, lab, "outsider") is Grant.NONE
+
+
+def run(database: str, lab: Lab, who: str) -> Grant:
+    async def go() -> Grant:
+        engine = create_async_engine(async_database_url(with_database(APP_URL, database)))
+        try:
+            scope = DatabaseScope(tenant_id=lab.workspace.tenant_id)
+            async with scoped_transaction(engine, scope) as connection:
+                return await project_grant(
+                    connection, lab.who(who), lab.clinical, Permission.SEE_SLIDES
+                )
+        finally:
+            await engine.dispose()
+
+    return asyncio.run(go())

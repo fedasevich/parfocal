@@ -116,6 +116,13 @@ def uuid_or_none(value: Any) -> uuid.UUID | None:
         return None
 
 
+async def project_deleted(connection: AsyncConnection, project_id: uuid.UUID) -> bool:
+    deleted_at = await connection.scalar(
+        select(projects.c.deleted_at).where(projects.c.id == project_id)
+    )
+    return deleted_at is not None
+
+
 async def context_of(
     connection: AsyncConnection,
     target_type: str,
@@ -143,7 +150,11 @@ async def context_of(
             )
         case TargetKind.PROJECT:
             return Context(
-                await connection.scalar(select(projects.c.id).where(projects.c.id == target_id))
+                await connection.scalar(
+                    select(projects.c.id).where(
+                        projects.c.id == target_id, projects.c.deleted_at.is_(None)
+                    )
+                )
             )
         case TargetKind.THREAD:
             row = (
@@ -189,6 +200,10 @@ async def notify(
 ) -> int:
     details = dict(payload or {})
     context = await context_of(connection, target_type, target_id, details)
+    if target_type == TargetKind.PROJECT and context.project_id is None:
+        return 0
+    if context.project_id is not None and await project_deleted(connection, context.project_id):
+        return 0
     people = list(dict.fromkeys(recipients))
     silenced = await muted(connection, tenant_id, people, kind, context)
     routed = await channels_for(connection, people, kind)

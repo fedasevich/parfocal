@@ -99,9 +99,11 @@ async def project_grant(
     project_id: uuid.UUID,
     permission: Permission,
 ) -> Grant:
+    if not await is_live(connection, project_id):
+        return Grant.NONE
     workspace = grant_of(principal, permission)
     if isinstance(principal, ServicePrincipal):
-        return workspace if await is_live(connection, project_id) else Grant.NONE
+        return workspace
     grant = in_project(workspace, permission, await role_in(connection, principal, project_id))
     if (
         grant is Grant.NONE
@@ -126,6 +128,8 @@ async def require_reading(
 ) -> None:
     if reads_whole(await project_grant(connection, principal, project_id, Permission.SEE_SLIDES)):
         return
+    if not await is_live(connection, project_id):
+        raise NotFoundError(missing)
     outside = await role_in(connection, principal, project_id) is None
     if outside and privacy_mode is PrivacyMode.CLINICAL and may_ask_for_emergency_access(principal):
         raise EmergencyAccessNeededError

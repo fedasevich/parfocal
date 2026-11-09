@@ -44,7 +44,7 @@ router = APIRouter(prefix="/api/me/notifications", tags=["me"])
 
 async def project_of(connection: TenantConnection, project_id: uuid.UUID | None) -> uuid.UUID:
     if project_id is None or not await connection.scalar(
-        select(projects.c.id).where(projects.c.id == project_id)
+        select(projects.c.id).where(projects.c.id == project_id, projects.c.deleted_at.is_(None))
     ):
         raise TargetGoneError
     return project_id

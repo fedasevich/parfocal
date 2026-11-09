@@ -374,7 +374,8 @@ async def check_projects(connection: AsyncConnection, ids: list[uuid.UUID]) -> l
 async def project_ids_of(connection: AsyncConnection, model_id: uuid.UUID) -> list[uuid.UUID]:
     rows = await connection.scalars(
         select(lab_model_projects.c.project_id)
-        .where(lab_model_projects.c.lab_model_id == model_id)
+        .join(projects, projects.c.id == lab_model_projects.c.project_id)
+        .where(lab_model_projects.c.lab_model_id == model_id, projects.c.deleted_at.is_(None))
         .order_by(lab_model_projects.c.project_id)
     )
     return list(rows)

@@ -511,3 +511,21 @@ def test_the_inbox_and_mutes_stay_in_their_workspace(api: ApiAs, database: str) 
 
     assert run(database, theirs.tenant_id, visible) == 0
     assert run(database, mine.tenant_id, visible) == 1
+
+
+def test_a_deleted_project_sends_and_shows_no_notifications(api: ApiAs, database: str) -> None:
+    s = study(database)
+    created = task(api, s, name="Round 1", case_ids=[], reviewer_ids=[s.user("first")])
+    task_id = uuid.UUID(created["id"])
+    first = s.people["first"]
+    nudge = NotificationKind.TASK_NUDGED
+    assert send(database, s.tenant_id, [first], nudge, "task", task_id) == 1
+    shown = api(first).get(INBOX).json()["notifications"]
+    nudged = next(item["id"] for item in shown if item["target_id"] == str(task_id))
+    owner(database, f"UPDATE projects SET deleted_at = now() WHERE id = '{s.project}'")
+    assert api(first).get(f"{INBOX}/{nudged}/target").status_code == 404
+    assert send(database, s.tenant_id, [first], nudge, "task", task_id) == 0
+    assert send(database, s.tenant_id, [first], nudge, "project", s.project) == 0
+    shown = api(first).get(INBOX).json()["notifications"]
+    assert all(item["target_id"] != str(task_id) for item in shown)
+    assert api(first).get(COUNTS).json()["unread"] == 0

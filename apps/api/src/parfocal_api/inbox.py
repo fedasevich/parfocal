@@ -4,7 +4,7 @@ from typing import Annotated, Any, Self
 
 from fastapi import APIRouter, Query
 from pydantic import BaseModel, Field, model_validator
-from sqlalchemy import ColumnElement, delete, func, select, tuple_, update
+from sqlalchemy import ColumnElement, delete, func, or_, select, tuple_, update
 from sqlalchemy.dialects.postgresql import insert as upsert
 from sqlalchemy.ext.asyncio import AsyncConnection
 
@@ -25,6 +25,7 @@ from parfocal_api.tables import (
     cases,
     notification_mutes,
     notifications,
+    projects,
     slides,
 )
 
@@ -101,7 +102,13 @@ router = APIRouter(prefix="/api/me", tags=["me"])
 
 
 def mine(me: MemberPrincipal) -> ColumnElement[bool]:
-    return (notifications.c.user_id == me.user_id) & notifications.c.in_app
+    live = or_(
+        notifications.c.project_id.is_(None),
+        notifications.c.project_id.in_(
+            select(projects.c.id).where(projects.c.deleted_at.is_(None))
+        ),
+    )
+    return (notifications.c.user_id == me.user_id) & notifications.c.in_app & live
 
 
 def item_of(row: Any) -> InboxItem:

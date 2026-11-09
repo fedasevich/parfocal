@@ -298,7 +298,13 @@ async def get_shared_report(token: str, request: Request) -> SharedReport:
         status = await connection.scalar(select(tenants.c.status).where(tenants.c.id == tenant_id))
         if status == TenantStatus.SUSPENDED:
             raise NotFoundError("Report link not found")
-        gone = link.revoked_at is not None or link.expired
+        project_deleted_at = await connection.scalar(
+            select(projects.c.deleted_at)
+            .select_from(review_tasks)
+            .join(projects, projects.c.id == review_tasks.c.project_id)
+            .where(review_tasks.c.id == link.task_id)
+        )
+        gone = link.revoked_at is not None or link.expired or project_deleted_at is not None
         shared = None if gone else await shared_report(connection, link)
         await record(
             connection,
