@@ -1,4 +1,4 @@
-# XXXX. Analytics events are a closed, ids-only list, and PostHog Cloud stays the vendor
+# 0274. Analytics events are a closed, ids-only list, and PostHog Cloud stays the vendor
 
 - Date: 2026-11-09
 - Status: Accepted
