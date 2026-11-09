@@ -1,6 +1,7 @@
 import {
   type Thread,
   useGetReviewTask,
+  useListSlideResultSets,
   useListThreads,
   useListThreadsOnSlide,
 } from "@parfocal/api-client";
@@ -36,8 +37,11 @@ const useTaskAndSlideThreads = (taskId: string, slideId: string) => {
         query: { enabled: projectId !== "" && slideId !== "" },
       }).data,
     ) ?? [];
+  const sets =
+    okData(useListSlideResultSets(slideId, { query: { enabled: slideId !== "" } }).data) ?? [];
   const threads = [...onTask, ...onSlide].sort((a, b) => a.created_at.localeCompare(b.created_at));
-  return { threads, taskName: task?.name };
+  const setName = (id: string) => sets.find((set) => set.id === id)?.name;
+  return { threads, taskName: task?.name, setName };
 };
 
 export const openThreadCount = (threads: Thread[]) =>
@@ -72,7 +76,7 @@ export function ThreadsTab({
   onGoTo,
   onNewComment,
 }: ThreadsTabProps) {
-  const { threads, taskName } = useTaskAndSlideThreads(taskId, slideId);
+  const { threads, taskName, setName } = useTaskAndSlideThreads(taskId, slideId);
   const person = usePeople();
   const shown = hidden ? [] : threads;
   const selectedThread = shown.find((thread) => thread.anchor.object_id === selected);
@@ -82,7 +86,7 @@ export function ThreadsTab({
     id: thread.id,
     anchor: anchorLabel(thread),
     kind: anchorKind(thread),
-    scope: threadScope(thread, taskName),
+    scope: threadScope(thread, taskName, setName),
     title: thread.title,
     author: person(thread.created_by),
     messages: thread.message_count,

@@ -40302,6 +40302,18 @@
                 "type": "null"
               }
             ]
+          },
+          "result_set_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result Set Id"
           }
         },
         "type": "object",
