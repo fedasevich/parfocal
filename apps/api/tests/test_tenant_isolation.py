@@ -103,7 +103,7 @@ from parfocal_api.tables import (
     workspace_settings,
 )
 from parfocal_common.chunk_store import Cell, build_cells, write_cells
-from parfocal_common.db import DatabaseScope, async_database_url, scoped_transaction
+from parfocal_common.db import SET_SCOPE, DatabaseScope, async_database_url, scoped_transaction
 from parfocal_common.ingest import RestrictedImage, slide_prefix
 from parfocal_common.model_runs import RunScopeKind, RunSettings, enqueue_model_run
 from parfocal_common.object_store import ObjectStore, StorageLocation
@@ -1907,6 +1907,46 @@ async def rows_visible_to_a_member(database: str, tenant_id: uuid.UUID) -> dict[
     finally:
         await owner.dispose()
         await app.dispose()
+
+
+TENANT_ID_TABLES = (
+    "SELECT table_name FROM information_schema.columns "
+    "WHERE table_schema = 'public' AND column_name = 'tenant_id' ORDER BY table_name"
+)
+
+
+async def rows_of_a_tenant(
+    url: str, scope: DatabaseScope | None, tables: list[str], tenant_id: uuid.UUID
+) -> dict[str, int]:
+    engine = create_async_engine(async_database_url(url))
+    count = "SELECT count(*) FROM {} WHERE tenant_id = :tenant"
+    try:
+        async with engine.begin() as connection:
+            if scope is not None:
+                await connection.execute(SET_SCOPE, scope.parameters())
+            return {
+                table: int(
+                    await connection.scalar(text(count.format(table)), {"tenant": tenant_id}) or 0
+                )
+                for table in tables
+            }
+    finally:
+        await engine.dispose()
+
+
+def test_no_table_shows_a_workspace_its_neighbour_or_shows_rows_without_a_scope(
+    database: str, seeded: tuple[Seeded, Seeded]
+) -> None:
+    a, b = seeded
+    owner = with_database(OWNER_URL, database)
+    app = with_database(APP_URL, database)
+    tables = [str(row[0]) for row in query(owner, TENANT_ID_TABLES)]
+    stored = asyncio.run(rows_of_a_tenant(owner, None, tables, a.tenant_id))
+    assert [table for table in tables if stored[table] == 0] == []
+    as_neighbour = DatabaseScope(tenant_id=b.tenant_id, user_id=b.ids["user"])
+    for scope in (as_neighbour, DatabaseScope(), DatabaseScope(user_id=b.ids["user"])):
+        seen = asyncio.run(rows_of_a_tenant(app, scope, tables, a.tenant_id))
+        assert {table: rows for table, rows in seen.items() if rows} == {}
 
 
 def test_auth_tables_are_hidden_from_tenant_scopes(

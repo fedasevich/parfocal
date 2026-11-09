@@ -1000,10 +1000,10 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when a db test shows the API, the worker loop and each command raising `UnsafeDatabaseRoleError` for the owner role and passing for `parfocal_app`, and [knowledge/database.md](knowledge/database.md) says how to create the role on Neon.
   Size: S.
 
-- [ ] SEC-033 · Isolation checks that read the policies and probe every table
-  The isolation checks compare policy names and GET routes only ([tenant isolation review](results/2026-11-09-tenant-isolation-review.md), confirmed finding 2). A policy written as `USING (true)`, a second permissive policy, a tenant table with no seeded row and an unscoped write route all pass today, and 172 of 306 operations are not GET. Pin every policy's command, kind and both expressions in a reviewed snapshot file, probe every table with a `tenant_id` column as `parfocal_app` under another workspace's scope and under no scope, and classify every operation so each write route is sent as the other workspace.
-  Done when the snapshot test fails on a changed or added policy, the probe fails for a tenant table that shows a row or has none seeded, and a test fails when an operation of any method is missing from the suite.
-  Size: M.
+- [x] SEC-033 · Isolation checks that read the policies and probe every table
+  The isolation checks compare policy names and GET routes only ([tenant isolation review](results/2026-11-09-tenant-isolation-review.md), confirmed finding 2). A policy written as `USING (true)`, a second permissive policy, a tenant table with no seeded row and an unscoped write route all pass today, and 172 of 306 operations are not GET. Pin every policy's command, kind, roles and both expressions in a reviewed snapshot file, and probe every table with a `tenant_id` column as `parfocal_app` under another workspace's scope and under no scope. SEC-043 (every write route is sent as another workspace) covers the routes.
+  Done when the snapshot test fails on a changed or added policy and the probe fails for a tenant table that shows a row or has none seeded.
+  Size: S.
 
 - [ ] SEC-034 · Narrow three database escape hatches
   Three rules allow more than the code that uses them needs ([tenant isolation review](results/2026-11-09-tenant-isolation-review.md), confirmed finding 4). The auth scope may rewrite any column of any workspace's `api_tokens` row though it only sets `last_used_at`, a signed-in person may change their own `email` and `subject` in `users` though only the email schedule is self-service, and the join routes open a scope with platform and auth both on for a workspace id taken from the URL. None is reachable from a request today. Grant `UPDATE` on `api_tokens` by column, refuse a change of `email` or `subject` outside the auth and platform scopes, and make the join routes check under the platform scope first and then write under the tenant scope, as accepting an invitation does.
@@ -1051,6 +1051,11 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when a Worker test shows `/api/health` forwarded to the API origin, the deployed check shows the API address refusing a request that skipped the Worker, and a missing limit binding answers 503 outside local runs.
   Depends on OPS-002.
   Size: M.
+
+- [ ] SEC-043 · Every write route is sent as another workspace
+  The isolation suite lists and probes only GET operations, 134 of 306, and two hand-written tests cover the rest ([tenant isolation review](results/2026-11-09-tenant-isolation-review.md), confirmed finding 2). Classify every operation of every method, give each write operation a path and body built from one workspace's ids, send it as the other workspace and expect 403 or 404 with unchanged row counts.
+  Done when a test fails when an operation of any method is missing from the suite and every write operation is refused for the other workspace.
+  Size: L.
 
 ---
 

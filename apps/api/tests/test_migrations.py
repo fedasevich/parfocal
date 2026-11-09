@@ -1,5 +1,8 @@
 import asyncio
+import json
+import os
 from collections.abc import Iterator
+from pathlib import Path
 
 import pytest
 from alembic import command
@@ -11,7 +14,11 @@ from sqlalchemy.ext.asyncio import create_async_engine
 
 from parfocal_api import tables
 from parfocal_common.db import async_database_url, metadata
-from parfocal_common.schema_sql import TABLES_WITHOUT_ROW_SECURITY, TENANT_TABLES_WITHOUT_ISOLATION
+from parfocal_common.schema_sql import (
+    POLICIES,
+    TABLES_WITHOUT_ROW_SECURITY,
+    TENANT_TABLES_WITHOUT_ISOLATION,
+)
 
 pytestmark = pytest.mark.db
 
@@ -192,6 +199,53 @@ def test_every_tenant_table_is_isolated_at_head(empty_database: str) -> None:
 def test_every_table_has_forced_row_security_at_head(empty_database: str) -> None:
     command.upgrade(alembic_config(empty_database), "head")
     assert query(empty_database, TABLES_WITHOUT_ROW_SECURITY) == []
+
+
+REVIEWED_POLICIES = Path(__file__).parent / "fixtures" / "policies_at_head.json"
+STANDARD_POLICY: tuple[object, ...] = (
+    "tenant_isolation",
+    "*",
+    True,
+    "(tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)",
+    "(tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)",
+    [],
+)
+
+
+def policies_of(url: str) -> dict[str, list[object]]:
+    rows = query(url, POLICIES)
+    standard = sorted(str(row[0]) for row in rows if row[1:] == STANDARD_POLICY)
+    other = [list(row) for row in rows if row[1:] != STANDARD_POLICY]
+    return {"standard": [*standard], "other": [*other]}
+
+
+def reviewed_policies() -> dict[str, list[object]]:
+    return json.loads(REVIEWED_POLICIES.read_text())
+
+
+def test_the_policies_at_head_are_the_reviewed_ones(empty_database: str) -> None:
+    command.upgrade(alembic_config(empty_database), "head")
+    found = policies_of(empty_database)
+    if os.environ.get("PARFOCAL_WRITE_POLICIES"):
+        REVIEWED_POLICIES.write_text(json.dumps(found, indent=2) + "\n")
+    assert found == reviewed_policies()
+
+
+@pytest.mark.parametrize(
+    "loosened",
+    [
+        "ALTER POLICY tenant_isolation ON cases USING (true)",
+        "CREATE POLICY readers ON cases FOR SELECT USING (true)",
+        "ALTER POLICY tenant_isolation ON cases TO parfocal",
+        "ALTER POLICY tenant_isolation ON cases WITH CHECK (true)",
+    ],
+)
+def test_a_loosened_or_added_policy_differs_from_the_reviewed_ones(
+    empty_database: str, loosened: str
+) -> None:
+    command.upgrade(alembic_config(empty_database), "head")
+    query(empty_database, loosened)
+    assert policies_of(empty_database) != reviewed_policies()
 
 
 async def test_models_match_the_migrations(empty_database: str) -> None:
