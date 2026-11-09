@@ -298,3 +298,26 @@ def test_the_decision_cutoff_is_the_labs_and_a_pathologist_cannot_change_it(
     too_high = api(people["admin"]).put(WORKSPACE, json={"values": {"decision_cutoff": 101}})
     assert too_high.status_code == 400
     assert api(people["reviewer"]).get(ME).json()["lab"]["values"] == {"decision_cutoff": 65}
+
+
+def test_an_admin_requires_two_factors_and_reads_it_back(api: ApiAs, database: str) -> None:
+    workspace = make_workspace(database, PEOPLE, admins={"admin"})
+    people = workspace.people
+    body = {"values": {"two_factor_required": True}}
+    assert api(people["researcher"]).put(WORKSPACE, json=body).status_code == 403
+    wrong = api(people["admin"]).put(WORKSPACE, json={"values": {"two_factor_required": 1}})
+    assert problem(wrong) == (400, "invalid-setting")
+    saved = api(people["admin"]).put(WORKSPACE, json=body)
+    assert saved.status_code == 200, saved.text
+    lab = api(people["reviewer"]).get(ME).json()["lab"]
+    assert lab["values"] == {"two_factor_required": True}
+    off = api(people["admin"]).put(WORKSPACE, json={"values": {"two_factor_required": False}})
+    assert off.status_code == 200, off.text
+    audited = owner(
+        database,
+        "SELECT details FROM audit_events "
+        f"WHERE tenant_id = '{workspace.tenant_id}' AND action = 'tenant.settings-changed' "
+        "ORDER BY seq",
+    )
+    switched = [json.loads(str(row[0])).get("two_factor_required") for row in audited]
+    assert switched == [True, False]

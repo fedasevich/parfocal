@@ -1,9 +1,10 @@
 import {
   getGetMySettingLayersQueryKey,
-  useAnswerWorkspace,
+  useAskToJoinWorkspace,
   useCreateMyWorkspace,
   useCreateSampleProject,
   useGetMe,
+  useJoinWorkspace,
   useListJoinableWorkspaces,
   useSetMySettingLayers,
   useUpdateMe,
@@ -50,9 +51,12 @@ import {
   type SetupDevice as Device,
   type SetupFirst as First,
   firstDestination,
+  logoMarkOf,
+  newWorkspaceColour,
   personalValuesOf,
   recommendedFirst,
   type SetupMode,
+  specialtiesOf,
   wheelModeOf,
   workspaceMoveOf,
 } from "./setup-rules.ts";
@@ -178,6 +182,7 @@ const stepHints = [
 type Choices = {
   role: Role;
   spec: string[];
+  otherSpec: string;
   title: string;
   ws: string;
   mode: SetupMode;
@@ -192,7 +197,7 @@ type Props = { step: SetupStep; change: (step: SetupStep) => void };
 
 export function SetupScreen({ step, change }: Props) {
   const me = okData(useGetMe().data);
-  const joinable = useListJoinableWorkspaces().data?.data ?? [];
+  const joinable = okData(useListJoinableWorkspaces().data) ?? [];
   const updateMe = useUpdateMe();
   const queryClient = useQueryClient();
   const saveLayers = useSetMySettingLayers({
@@ -201,7 +206,8 @@ export function SetupScreen({ step, change }: Props) {
         void queryClient.invalidateQueries({ queryKey: getGetMySettingLayersQueryKey() }),
     },
   });
-  const answerWorkspace = useAnswerWorkspace();
+  const joinWorkspace = useJoinWorkspace();
+  const askToJoin = useAskToJoinWorkspace();
   const createWorkspace = useCreateMyWorkspace();
   const createSample = useCreateSampleProject();
   const goTo = useGoTo();
@@ -214,6 +220,7 @@ export function SetupScreen({ step, change }: Props) {
   const [u, setU] = useState<Choices>({
     role: "rev",
     spec: ["Breast", "Lymph nodes"],
+    otherSpec: "",
     title: "MUDr.",
     ws: "",
     mode: "deid",
@@ -224,8 +231,14 @@ export function SetupScreen({ step, change }: Props) {
     newName: "",
   });
   const set = (next: Partial<Choices>) => setU({ ...u, ...next });
-  const matched = joinable.find((item) => item.matches_email) ?? joinable[0];
-  const other_ = joinable.find((item) => item !== matched);
+  const brand = (item: (typeof joinable)[number]) => ({
+    name: item.name,
+    logo: item.logo,
+    colour: item.logo_colour,
+  });
+  const matched = joinable.find((item) => item.how === "join");
+  const picked = joinable.find((item) => item.id === (u.ws || matched?.id));
+  const asking = picked?.how === "ask";
   const ws = u.ws || matched?.id || "";
   const go = (to: number) => {
     const key = onboardingScenes.setup[to];
@@ -243,7 +256,7 @@ export function SetupScreen({ step, change }: Props) {
   const recommended = recommendedFirst(u.role);
   const summary = [
     `${roles[u.role].title}${u.spec.length ? ` · ${u.spec.slice(0, 2).join(", ")}` : ""}`,
-    ws === "new" ? "New workspace" : ws === other_?.id ? "Request sent" : "Joined",
+    ws === "new" ? "New workspace" : asking ? "Request sent" : "Joined",
     firsts[u.first].title,
     `${device?.label ?? ""} · ${u.theme}`,
     "Getting started",
@@ -294,6 +307,8 @@ export function SetupScreen({ step, change }: Props) {
           <Input
             aria-label="Another specialty"
             placeholder="Type a specialty, for example Neuropathology"
+            value={u.otherSpec}
+            onChange={(event) => set({ otherSpec: event.target.value })}
             className="mt-2 h-9"
           />
         ) : null}
@@ -331,34 +346,37 @@ export function SetupScreen({ step, change }: Props) {
         Projects, people and models live in a workspace. Its name and logo show next to Parfocal.
       </AuthHeading>
       <div role="radiogroup" aria-label="Workspace" className="grid gap-2">
-        {matched ? (
-          <ChoiceOption
-            lead={<WorkspaceLogo workspace={matched} />}
-            title={matched.name}
-            detail={`${matched.domain} matches your email · ${matched.members} members · ${matched.projects} projects`}
-            selected={ws === matched.id}
-            onClick={() => set({ ws: matched.id })}
-            end={<StatusTag tone="ok">{ws === matched.id ? "You join at once" : "Join"}</StatusTag>}
-          />
-        ) : null}
-        {other_ ? (
-          <ChoiceOption
-            lead={<WorkspaceLogo workspace={other_} />}
-            title={other_.name}
-            detail={
-              ws === other_.id
-                ? "Someone with admin rights there gets your request and answers by email, usually within a day"
-                : "Asks someone with admin rights to let you in"
-            }
-            selected={ws === other_.id}
-            onClick={() => set({ ws: other_.id })}
-            end={
-              <span className="text-body-sm text-fg-dim">
-                {ws === other_.id ? "Request" : "Ask"}
-              </span>
-            }
-          />
-        ) : null}
+        {joinable.map((item) =>
+          item.how === "join" ? (
+            <ChoiceOption
+              key={item.id}
+              lead={<WorkspaceLogo workspace={brand(item)} />}
+              title={item.name}
+              detail={`${item.domain} matches your email · ${item.members} members · ${item.projects} projects`}
+              selected={ws === item.id}
+              onClick={() => set({ ws: item.id })}
+              end={<StatusTag tone="ok">{ws === item.id ? "You join at once" : "Join"}</StatusTag>}
+            />
+          ) : (
+            <ChoiceOption
+              key={item.id}
+              lead={<WorkspaceLogo workspace={brand(item)} />}
+              title={item.name}
+              detail={
+                ws === item.id || item.asked
+                  ? "Someone with admin rights there gets your request and answers by email, usually within a day"
+                  : "Asks someone with admin rights to let you in"
+              }
+              selected={ws === item.id}
+              onClick={() => set({ ws: item.id })}
+              end={
+                <span className="text-body-sm text-fg-dim">
+                  {item.asked ? "Asked" : ws === item.id ? "Request" : "Ask"}
+                </span>
+              }
+            />
+          ),
+        )}
         <ChoiceOption
           lead={
             <span className="grid size-7.5 place-items-center rounded-lg border border-dashed border-line-strong text-fg-faint">
@@ -374,8 +392,21 @@ export function SetupScreen({ step, change }: Props) {
       {ws === "new" ? (
         <div className="flex items-start gap-3.5 rounded-xl border border-dashed border-line-strong p-3.5">
           <div className="grid size-16 flex-none place-items-center content-center gap-0.5 rounded-xl border border-dashed border-line-strong text-caption text-fg-faint">
-            <Icon name="upload" />
-            <small>Logo</small>
+            {logoMarkOf(u.newName) === "" ? (
+              <>
+                <Icon name="upload" />
+                <small>Logo</small>
+              </>
+            ) : (
+              <WorkspaceLogo
+                workspace={{
+                  name: u.newName,
+                  logo: logoMarkOf(u.newName),
+                  colour: newWorkspaceColour,
+                }}
+                size={40}
+              />
+            )}
           </div>
           <div className="grid flex-1 gap-2.5">
             <AuthField label="Name">
@@ -409,7 +440,7 @@ export function SetupScreen({ step, change }: Props) {
           </div>
         </div>
       ) : null}
-      {ws === other_?.id ? (
+      {asking ? (
         <Banner inline tone="info">
           While you wait, the sample project is yours to try things in.
         </Banner>
@@ -518,14 +549,14 @@ export function SetupScreen({ step, change }: Props) {
       firstName={firstName}
       role={u.role}
       first={u.first}
-      ws={ws === "new" ? "new" : ws === other_?.id ? "asked" : "joined"}
+      ws={ws === "new" ? "new" : asking ? "asked" : "joined"}
       wsName={wsName ?? ""}
     />,
   ];
 
   const last = index === stepNames.length - 1;
   const nextLabel =
-    index === 1 && ws === other_?.id
+    index === 1 && asking
       ? "Send the request and continue"
       : index === 1 && ws === "new"
         ? "Create it and continue"
@@ -533,8 +564,8 @@ export function SetupScreen({ step, change }: Props) {
   const workspaceMove = () =>
     workspaceMoveOf({
       picked: ws,
-      matchedId: matched?.id,
-      askedId: other_?.id,
+      matchedId: asking ? undefined : picked?.id,
+      askedId: asking ? picked?.id : undefined,
       name: u.newName,
       mode: u.mode,
     });
@@ -542,7 +573,12 @@ export function SetupScreen({ step, change }: Props) {
     setFailed("");
     try {
       if (index === 0) {
-        await updateMe.mutateAsync({ data: { title: u.title === "No title" ? null : u.title } });
+        await updateMe.mutateAsync({
+          data: {
+            title: u.title === "No title" ? null : u.title,
+            specialties: specialtiesOf(u.spec, other ? u.otherSpec : null),
+          },
+        });
       }
       if (index === 1) {
         const move = workspaceMove();
@@ -550,13 +586,19 @@ export function SetupScreen({ step, change }: Props) {
         if (move.kind !== "none" && key !== moved) {
           if (move.kind === "create") {
             await createWorkspace.mutateAsync({
-              data: { name: move.name, default_privacy_mode: move.privacy },
+              data: {
+                name: move.name,
+                default_privacy_mode: move.privacy,
+                logo: logoMarkOf(move.name) || null,
+                logo_colour: newWorkspaceColour,
+              },
             });
             await queryClient.invalidateQueries();
+          } else if (move.kind === "join") {
+            await joinWorkspace.mutateAsync({ tenantId: move.workspaceId });
+            await queryClient.invalidateQueries();
           } else {
-            await answerWorkspace.mutateAsync({
-              data: { workspace_id: move.workspaceId, how: move.kind },
-            });
+            await askToJoin.mutateAsync({ tenantId: move.workspaceId });
           }
           setMoved(key);
         }
@@ -593,7 +635,7 @@ export function SetupScreen({ step, change }: Props) {
           workspace={{
             name: matched?.name ?? "",
             logo: matched?.logo ?? "",
-            colour: matched?.colour ?? "transparent",
+            colour: matched?.logo_colour ?? "transparent",
           }}
           steps={stepNames.map((stepName, at) => ({
             name: stepName,

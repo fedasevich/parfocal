@@ -20,6 +20,7 @@ class TargetKind(StrEnum):
     JOB = "job"
     DELIVERY = "delivery"
     PROJECT = "project"
+    ACCESS_REQUEST = "access-request"
 
 
 @dataclass(frozen=True)
@@ -160,6 +161,13 @@ CATALOGUE: Mapping[NotificationKind, Entry] = {
         "Someone opened your clinical project with emergency access.",
         ALL,
         breaks_mute=True,
+    ),
+    NotificationKind.WORKSPACE_ACCESS_ASKED: Entry(
+        TargetKind.ACCESS_REQUEST,
+        "Someone asked to join your workspace",
+        "A person asked to join a workspace where you hold admin rights.",
+        ALL,
+        breaks_mute=False,
     ),
 }
 DEFAULTS: Mapping[NotificationKind, Channels] = {

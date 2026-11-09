@@ -1,9 +1,12 @@
 import { Deck, OrthographicView } from "@deck.gl/core";
 import {
+  createObjectDrawing,
+  type DisplayDrawChoices,
   type DrawnObject,
   type DrawSettings,
   defaultDrawSettings,
   drawObjectOverlays,
+  type OverlayLayer,
 } from "../../src/index.ts";
 import { createOverlayLayerBuilder } from "../../src/overlay/deck/overlay-layers.ts";
 import { deckDeviceProps } from "../../src/viv/deck-settings.ts";
@@ -13,6 +16,7 @@ export interface DrawStyleHarness {
     settings: Partial<Omit<DrawSettings, "hiddenClasses">>,
     currentTint?: [number, number, number, number],
   ): Promise<{ dimmed: number; scope: number }>;
+  renderLive(choices: DisplayDrawChoices): Promise<{ dimmed: number; scope: number }>;
 }
 
 declare global {
@@ -69,10 +73,7 @@ const objects: DrawnObject[] = [
 
 let deck: Deck<OrthographicView> | null = null;
 
-async function render(
-  change: Partial<Omit<DrawSettings, "hiddenClasses">>,
-  currentTint?: [number, number, number, number],
-): Promise<{ dimmed: number; scope: number }> {
+function freshCanvas(): HTMLCanvasElement {
   deck?.finalize();
   document.body.replaceChildren();
   const canvas = document.createElement("canvas");
@@ -83,15 +84,11 @@ async function render(
   canvas.style.height = `${viewSize}px`;
   canvas.style.display = "block";
   document.body.append(canvas);
+  return canvas;
+}
 
-  const drawn = drawObjectOverlays({
-    id: "objects",
-    objects,
-    settings: { ...defaultDrawSettings, ...change },
-    current: { id: "C6", tint: currentTint ?? null },
-  });
-  const layers = createOverlayLayerBuilder().build(drawn.overlays);
-
+async function paint(canvas: HTMLCanvasElement, overlays: readonly OverlayLayer[]) {
+  const layers = createOverlayLayerBuilder().build(overlays);
   let ready: () => void = () => {};
   const painted = new Promise<void>((resolve) => {
     ready = resolve;
@@ -108,7 +105,46 @@ async function render(
     onAfterRender: () => ready(),
   });
   await painted;
+}
+
+async function render(
+  change: Partial<Omit<DrawSettings, "hiddenClasses">>,
+  currentTint?: [number, number, number, number],
+): Promise<{ dimmed: number; scope: number }> {
+  const canvas = freshCanvas();
+  const drawn = drawObjectOverlays({
+    id: "objects",
+    objects,
+    settings: { ...defaultDrawSettings, ...change },
+    current: { id: "C6", tint: currentTint ?? null },
+  });
+  await paint(canvas, drawn.overlays);
   return { dimmed: drawn.belowCutoff.length, scope: drawn.scope.length };
 }
 
-window.drawStyleHarness = { render };
+async function renderLive(choices: DisplayDrawChoices): Promise<{ dimmed: number; scope: number }> {
+  const canvas = freshCanvas();
+  const registered = new Map<string, OverlayLayer>();
+  const drawing = createObjectDrawing({
+    id: "objects",
+    host: {
+      registerOverlay: (layer) => {
+        registered.set(layer.id, layer);
+        return {
+          update: (next) => registered.set(next.id, next),
+          invalidate: () => {},
+          unregister: () => registered.delete(layer.id),
+        };
+      },
+    },
+  });
+  drawing.setObjects(objects);
+  drawing.setChoices(choices);
+  drawing.setCurrent("C6");
+  const sorted = [...registered.values()].sort((a, b) => a.order - b.order);
+  await paint(canvas, sorted);
+  const result = drawing.result();
+  return { dimmed: result?.belowCutoff.length ?? 0, scope: result?.scope.length ?? 0 };
+}
+
+window.drawStyleHarness = { render, renderLive };

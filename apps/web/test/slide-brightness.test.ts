@@ -41,3 +41,18 @@ test("Alt+Up and Alt+Down reach the brightness actions", () => {
   assert.deepEqual(fire("ArrowUp"), ["brightup"]);
   assert.deepEqual(fire("ArrowDown"), ["brightdown"]);
 });
+
+test("setting the brightness tells every listener and a later read sees it", async () => {
+  const { setSlideBrightness, subscribeToSlideBrightness, readSlideBrightness } = await import(
+    "../src/viewer/slide-brightness.ts"
+  );
+  const seen: number[] = [];
+  const stop = subscribeToSlideBrightness(() => seen.push(readSlideBrightness()));
+  setSlideBrightness(70);
+  setSlideBrightness(100);
+  stop();
+  setSlideBrightness(80);
+  assert.deepEqual(seen, [70, 100]);
+  assert.equal(readSlideBrightness(), 80);
+  setSlideBrightness(100);
+});

@@ -31,16 +31,16 @@ async function dragTo(page: Page, targetX: number) {
 
 test("the panel opens at 340 and a drag resizes it between 280 and 560", async ({ page }) => {
   await openViewer(page);
-  expect(await widthOf(page)).toBe(340);
+  await expect.poll(() => widthOf(page)).toBe(340);
   const viewport = page.viewportSize()?.width ?? 1280;
   await dragTo(page, viewport - 450);
-  expect(await widthOf(page)).toBe(450);
+  await expect.poll(() => widthOf(page)).toBe(450);
   await dragTo(page, viewport - 900);
-  expect(await widthOf(page)).toBe(560);
+  await expect.poll(() => widthOf(page)).toBe(560);
   await dragTo(page, viewport - 250);
-  expect(await widthOf(page)).toBe(280);
+  await expect.poll(() => widthOf(page)).toBe(280);
   await dragTo(page, viewport - 240);
-  expect(await widthOf(page)).toBe(280);
+  await expect.poll(() => widthOf(page)).toBe(280);
 });
 
 test("dragging below 220 hides the panel, a floating tab names the section and brings it back", async ({
@@ -76,7 +76,7 @@ test("the width and the hidden state survive a reload", async ({ page }) => {
   await dragTo(page, viewport - 420);
   await page.reload();
   await expect(panel(page)).toBeVisible();
-  expect(await widthOf(page)).toBe(420);
+  await expect.poll(() => widthOf(page)).toBe(420);
   await page.keyboard.press("i");
   await page.reload();
   await expect(panel(page)).toHaveCount(0);
@@ -87,15 +87,16 @@ test("the arrow keys resize the focused handle", async ({ page }) => {
   await openViewer(page);
   await handle(page).focus();
   await page.keyboard.press("ArrowLeft");
-  expect(await widthOf(page)).toBe(360);
+  await expect.poll(() => widthOf(page)).toBe(360);
   await page.keyboard.press("ArrowRight");
   await page.keyboard.press("ArrowRight");
-  expect(await widthOf(page)).toBe(320);
+  await expect.poll(() => widthOf(page)).toBe(320);
 });
 
 test("hide while panning fades the panel only during a drag on the slide", async ({ page }) => {
   await openViewer(page);
-  await page.getByLabel("Hide while panning").check();
+  await page.getByLabel("Hide while panning").click();
+  await expect(page.getByLabel("Hide while panning")).toBeChecked();
   const dock = page.getByTestId("inspector-dock");
   await expect(dock).not.toHaveAttribute("data-hidden-while-panning", "true");
   const stage = page.locator("[data-vt-target]");

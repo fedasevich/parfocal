@@ -38,6 +38,7 @@ export function withProfileChanges(me: Me): Me {
     initials: change.initials ?? me.initials,
     avatar_colour: change.avatar_colour ?? me.avatar_colour,
     title: change.title === undefined ? me.title : change.title || null,
+    specialties: change.specialties ?? me.specialties,
   };
 }
 

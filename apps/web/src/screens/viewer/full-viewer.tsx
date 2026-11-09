@@ -139,7 +139,8 @@ import { calibrationLines, trackRecordLines } from "./ai-record-lines.ts";
 import { areaOrder, areaRoleText, areaRows } from "./area-nav.ts";
 import { layerDrawing, setColours } from "./layer-views.tsx";
 import { confidenceTintOf, objectStyle } from "./object-draw.ts";
-import { ObjectTablePanel, tableRows } from "./object-table.tsx";
+import { ObjectTablePanel } from "./object-table.tsx";
+import { tableColumns, tableCsv, tableRows } from "./object-table-rows.ts";
 import {
   AddedFoot,
   MeasurementFoot,
@@ -154,6 +155,7 @@ import {
   isNavigatorScene,
   type LayerView,
   layerViews,
+  mapViews,
   type ViewerScene,
   type ViewerTab,
   viewerSetup,
@@ -219,6 +221,15 @@ type BodyProps = FullViewerProps & {
   viewerParts: ViewerPart[];
   template: AnalysisTemplate;
 };
+
+function downloadCsv(text: string, fileName: string) {
+  const url = URL.createObjectURL(new Blob([text], { type: "text/csv" }));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = fileName;
+  link.click();
+  URL.revokeObjectURL(url);
+}
 
 function addedSize(note: string | null) {
   return note?.match(/(\d+(?:\.\d+)?) mm/)?.[0] ?? "";
@@ -792,6 +803,17 @@ function ViewerBody({
     reviewedOn,
   });
   const showScore = confidence !== "hidden";
+  const objectTableRows = tableRows(
+    objects,
+    added.map((item) => ({
+      object: item.object,
+      size: addedSize(item.note),
+      note: item.note,
+    })),
+    answer,
+    format,
+    preset ?? "",
+  );
   const classColour = (name: string) =>
     session.classes.find((item) => item.name === name)?.color ?? "var(--fg-faint)";
   const styleOfObject = (id: string) => {
@@ -1069,9 +1091,22 @@ function ViewerBody({
     />
   );
 
+  const mapsLock = session.display?.locks.find((lock) => lock.setting === "heatmap");
+  const confidenceHidden = extraLocks.find(
+    (lock) => lock.setting === "confidence" && lock.value === "hidden",
+  );
+  const pickableViews = layerViews.map((item) => {
+    const lock =
+      mapsLock && mapViews.has(item.value)
+        ? mapsLock
+        : confidenceHidden && item.value === "confidence"
+          ? confidenceHidden
+          : undefined;
+    return lock ? { ...item, lockedReason: lock.reason } : item;
+  });
   const viewZone = (
     <Zone title="View" end={<span className="text-caption text-fg-dim">Ways to show results</span>}>
-      <ViewPicker views={layerViews} value={view} onValueChange={goView} />
+      <ViewPicker views={pickableViews} value={view} onValueChange={goView} />
     </Zone>
   );
   const thread = session.threads.find((item) => item.anchor === current?.object);
@@ -1389,27 +1424,27 @@ function ViewerBody({
             <ObjectTablePanel
               slideLabel={slideLabel}
               pathOf={pathOfObject}
-              rows={tableRows(
-                objects,
-                added.map((item) => ({
-                  object: item.object,
-                  size: addedSize(item.note),
-                  note: item.note,
-                })),
-                answer,
-                format,
-              )}
+              rows={objectTableRows}
               stats={stats}
               classColour={(name) =>
                 session.classes.find((item) => item.name === name)?.color ?? "var(--fg-faint)"
               }
               showScore={showScore}
+              presetUsed={preset !== null}
               cutoff={settings.cutoff}
               selected={selected}
               onPick={(object) => onSearch({ object })}
-              onCsv={() =>
-                setToast({ id: Date.now(), text: "Downloads the table as CSV with full IDs" })
-              }
+              onCsv={() => {
+                downloadCsv(
+                  tableCsv(
+                    objectTableRows,
+                    tableColumns({ showScore, presetUsed: preset !== null }),
+                    pathOfObject,
+                  ),
+                  `objects-${slideLabel}.csv`,
+                );
+                setToast({ id: Date.now(), text: "Downloaded the table as CSV with full IDs" });
+              }}
             />
           ) : null
         }
