@@ -3625,7 +3625,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when tests cover each setting and the locked cutoff cannot be edited by a pathologist.
   Size: M.
 
-- [ ] SET-006 · Navigation and devices section
+- [x] SET-006 · Navigation and devices section
   Main device, wheel mode, double-click behaviour, speed per device, invert zoom, calibrate device. Camera feel picks a VIEW-045 (camera feel profiles) preset, Smooth, Precise or Instant, with overrides for coasting, animated jumps, zoom anchor at the cursor or the view centre, and objective detents (VIEW-046). A small live preview shows the chosen feel.
   Done when tests cover each setting and per-device speed persistence.
   Size: M.
