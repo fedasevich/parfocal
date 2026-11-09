@@ -3196,7 +3196,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Depends on STACK-021.
   Decided in [ADR 0126](adr/0126-cell-chunks-in-object-storage-with-a-summary-index.md) (cell chunks in object storage with a summary index): `parfocal_common.chunk_store` writes gzip chunks and a summary file whose header indexes every chunk under `t/{tenant}/s/{slide}/results/{set}/`, alternative types are the optional `alt_class` field of version 1, and the API reads chunks from object storage.
 
-- [ ] AIP-014 · AI cost and usage metering
+- [x] AIP-014 · AI cost and usage metering
   GPU seconds per tenant, job and model.
   Done when tests confirm metering records and a usage report per tenant.
   Size: M.
