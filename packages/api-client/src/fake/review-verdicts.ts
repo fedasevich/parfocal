@@ -1,6 +1,7 @@
 import type {
   AddedDraft,
   Annotation,
+  DecisionNote,
   EditDraft,
   FirstRead,
   ReviewEdit,
@@ -8,7 +9,7 @@ import type {
   ReviewOrder,
   Verdict,
 } from "../generated/api.ts";
-import { resultSets, reviewTasks, slideByIndex } from "./scenario.ts";
+import { people, resultSets, reviewTasks, slideByIndex } from "./scenario.ts";
 import {
   lenkaDecisionsInReview,
   nextSlideFacts,
@@ -287,4 +288,23 @@ export const reviewedLayerFor = (taskId: string, slideId: string): ReviewedLayer
       added: 0,
     },
   };
+};
+
+export const decisionNotesOf = (taskId: string, slideId: string): DecisionNote[] => {
+  const task = reviewTasks.find((candidate) => candidate.id === taskId);
+  if (task?.code !== "RT-14" || slideId !== reviewedSlide.id || fakeView().viewer === "LM") {
+    return [];
+  }
+  return [
+    {
+      object: "T5",
+      author_id: people.SM.id,
+      value: "disagree",
+      answer: "disagree",
+      reasons: ["boundary_off"],
+      note: "Runs past the fold, @Daniel Hruška worth a look",
+      mentions: [people.DH.id],
+      updated_at: "2026-10-15T11:05:00+02:00",
+    },
+  ];
 };

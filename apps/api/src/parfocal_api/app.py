@@ -23,6 +23,7 @@ from parfocal_api import (
     case_sorting,
     cases,
     clinical_reports,
+    decision_notes,
     disagreements,
     display,
     emergency,
@@ -246,6 +247,7 @@ def create_app(
     app.include_router(search.router)
     app.include_router(review_states.router)
     app.include_router(verdicts.router)
+    app.include_router(decision_notes.router)
     app.include_router(review_skips.router)
     app.include_router(display.router)
     app.include_router(display.presets_router)

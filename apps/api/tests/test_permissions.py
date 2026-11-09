@@ -975,6 +975,9 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "listMySlides": lambda _: Call("GET", "/api/me/slides"),
     "listDisagreements": lambda w: Call("GET", f"/api/review-tasks/{w.task}/disagreements"),
     "listVerdicts": lambda w: Call("GET", f"/api/review-tasks/{w.task}/slides/{w.slide}/verdicts"),
+    "listDecisionNotes": lambda w: Call(
+        "GET", f"/api/review-tasks/{w.task}/slides/{w.slide}/decision-notes"
+    ),
     "getReviewOrder": lambda w: Call("GET", f"/api/review-tasks/{w.task}/slides/{w.slide}/order"),
     "saveVerdict": lambda w: Call(
         "PUT", f"/api/review-tasks/{w.task}/slides/{w.slide}/verdicts/T1", {"answer": "4"}

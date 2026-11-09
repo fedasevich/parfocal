@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.my_work import MAX_PAGE, PAGE, decode_cursor, encode_cursor
-from parfocal_api.notification_catalogue import BREAKS_MUTES, CATALOGUE, TargetKind
+from parfocal_api.notification_catalogue import BREAKS_MUTES, CATALOGUE, TargetKind, target_kind_of
 from parfocal_api.notifications import link_to, member_of
 from parfocal_api.permissions import Grant, Permission
 from parfocal_api.principals import MemberPrincipal
@@ -119,7 +119,7 @@ def link_of(row: Any, target: TargetKind) -> str:
 
 def item_of(row: Any) -> InboxItem:
     kind = NotificationKind(row.kind)
-    target = CATALOGUE[kind].target
+    target = target_kind_of(row)
     return InboxItem(
         id=row.id,
         kind=kind,

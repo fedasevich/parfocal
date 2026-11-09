@@ -34,6 +34,7 @@ import type {
   CreatedReportLink,
   CreatedServiceAccount,
   CreatedUpload,
+  DecisionNote,
   DeletedProject,
   DisagreementReasons,
   DisplayPreset,
@@ -7494,6 +7495,20 @@ export const getListVerdictsResponseMock = (): Verdict[] =>
     ]),
     ai_class_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
     ai_score: faker.helpers.arrayElement([faker.number.int(), null]),
+  }));
+
+export const getListDecisionNotesResponseMock = (): DecisionNote[] =>
+  Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    object: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    author_id: faker.string.uuid(),
+    value: faker.helpers.arrayElement(Object.values(VerdictValue)),
+    answer: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    reasons: faker.helpers.arrayElements(Object.values(VerdictReason)),
+    note: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    mentions: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () => faker.string.uuid(),
+    ),
+    updated_at: faker.date.past().toISOString().slice(0, 19) + "Z",
   }));
 
 export const getSkipObjectResponseMock = (
@@ -18206,6 +18221,30 @@ export const getListVerdictsMockHandler = (
   );
 };
 
+export const getListDecisionNotesMockHandler = (
+  overrideResponse?:
+    | DecisionNote[]
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<DecisionNote[]> | DecisionNote[]),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/review-tasks/:taskId/slides/:slideId/decision-notes",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getListDecisionNotesResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getSkipObjectMockHandler = (
   overrideResponse?:
     | Skip
@@ -21327,6 +21366,7 @@ export const getParfocalAPIMock = () => [
   getSaveVerdictMockHandler(),
   getClearVerdictMockHandler(),
   getListVerdictsMockHandler(),
+  getListDecisionNotesMockHandler(),
   getSkipObjectMockHandler(),
   getClearSkipMockHandler(),
   getListSkipsMockHandler(),

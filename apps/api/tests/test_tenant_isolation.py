@@ -1586,6 +1586,10 @@ GET_ROUTES = {
         Exposure.TENANT,
         lambda a: f"/api/review-tasks/{a.ids['task']}/slides/{a.ids['slide']}/verdicts",
     ),
+    "listDecisionNotes": Route(
+        Exposure.TENANT,
+        lambda a: f"/api/review-tasks/{a.ids['task']}/slides/{a.ids['slide']}/decision-notes",
+    ),
     "listSkips": Route(
         Exposure.TENANT,
         lambda a: f"/api/review-tasks/{a.ids['task']}/slides/{a.ids['slide']}/skips",

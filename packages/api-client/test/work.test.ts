@@ -14,6 +14,7 @@ import {
   getReviewTask,
   getReviewTaskStates,
   listAnnouncements,
+  listDecisionNotes,
   listMyAdjudications,
   listMyCosignRequests,
   listMyReviewTasks,
@@ -276,4 +277,21 @@ test("a posted announcement whose end time has passed is not listed", async () =
   assert.equal(ids.includes(lapsed.id), false);
   assert.equal(ids.includes(lasting.id), true);
   await endAnnouncement(lasting.id);
+});
+
+test("the researcher reads Simona's note on T5 and opens her mention from the bell", async () => {
+  const task = scenario.reviewTasks.find((item) => item.code === "RT-14");
+  const a1 = scenario.slideByIndex(1);
+  assert.ok(task);
+  assert.deepEqual(body(await listDecisionNotes(task.id, a1.id)), []);
+  setFakeView({ viewer: "DH", firstWeek: false });
+  const notes = body(await listDecisionNotes(task.id, a1.id));
+  assert.deepEqual(
+    notes.map((note) => [note.object, note.author_id]),
+    [["T5", scenario.people.SM.id]],
+  );
+  const mention = body(await listNotifications()).notifications.find(
+    (item) => item.target_kind === "decision",
+  );
+  assert.match(mention?.link ?? "", /\/slides\/.+\?task=.+&object=T5&tab=comments&as=DH$/);
 });

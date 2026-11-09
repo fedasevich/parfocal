@@ -14,6 +14,7 @@ from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
 from parfocal_api.blinding import first_read_open
 from parfocal_api.check_options import requires_all_checked
 from parfocal_api.context import CurrentPrincipal, TenantConnection
+from parfocal_api.decision_notes import tell_mentioned_on_slide
 from parfocal_api.disagreements import left_open_count, open_by_slide, open_count, queue_of
 from parfocal_api.evaluation_versions import (
     SignOffConfirmation,
@@ -29,6 +30,7 @@ from parfocal_api.projects import ProjectArchivedError, visible
 from parfocal_api.realtime import Realtime, RealtimeClient
 from parfocal_api.review_order import unchecked_objects
 from parfocal_api.review_tasks import readable_task
+from parfocal_api.reviewed_layer import task_slide
 from parfocal_api.tables import (
     ProjectRole,
     ResultSource,
@@ -442,6 +444,10 @@ async def review_move(
         )
         .values(submitted_at=func.now() if move is Move.SUBMIT else None)
     )
+    if move is Move.SUBMIT:
+        await tell_mentioned_on_slide(
+            connection, await task_slide(connection, principal, task_id, slide_id)
+        )
     background, live = announced
     announce_worklist(
         background,

@@ -14,6 +14,7 @@ from parfocal_api.annotations import check_classes
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
 from parfocal_api.blinding import require_judging_allowed, require_seeing_reviewer, user_of
 from parfocal_api.context import CurrentPrincipal, TenantConnection
+from parfocal_api.decision_notes import checked_note_mentions, tell_mentioned
 from parfocal_api.decision_styles import answer_in_style, counted
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import Principal
@@ -484,6 +485,7 @@ async def save_verdict(
     if draft.reason_class_id is not None:
         await check_classes(connection, row.project_id, {draft.reason_class_id})
     me = user_of(principal)
+    mentioned = await checked_note_mentions(connection, principal, row, draft.note)
     ai_class_id, ai_score = await ai_call(
         connection, row, kind, found.number, draft.ai_class_id, draft.ai_score
     )
@@ -557,9 +559,11 @@ async def save_verdict(
             "answer": answer,
             "value": value.value,
             "reasons": [reason.value for reason in draft.reasons],
+            "mentions": len(mentioned),
             **ai_details(saved.ai_class_id, saved.ai_score),
         },
     )
+    await tell_mentioned(connection, row, saved)
     return verdict_of(saved)
 
 

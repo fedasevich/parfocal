@@ -1,6 +1,7 @@
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from enum import StrEnum
+from typing import Any
 
 from parfocal_api.tables import NotificationKind
 
@@ -15,6 +16,7 @@ class Channels:
 class TargetKind(StrEnum):
     SLIDE = "slide"
     THREAD = "thread"
+    DECISION = "decision"
     TASK = "task"
     EVALUATION = "evaluation"
     JOB = "job"
@@ -174,3 +176,9 @@ DEFAULTS: Mapping[NotificationKind, Channels] = {
     kind: entry.channels for kind, entry in CATALOGUE.items()
 }
 BREAKS_MUTES = frozenset(kind for kind, entry in CATALOGUE.items() if entry.breaks_mute)
+
+
+def target_kind_of(row: Any) -> TargetKind:
+    if row.target_type == TargetKind.DECISION:
+        return TargetKind.DECISION
+    return CATALOGUE[NotificationKind(row.kind)].target
