@@ -61,6 +61,15 @@ When two slides are compared side by side, a person can shift one pane to line t
 
 Your choice:
 
+## 78. Slide threads during a blinded review, from COLLAB-015 (threads on any slide)
+
+Threads can now live on any slide, as you chose in 31b. A thread without a task follows only the first-read rule. So a reviewer in a blinded task that does not hide the AI can read another reviewer's slide thread on the same slide before submitting, which weakens the blinding of ADR 0118 (blinding and a kept first read).
+
+- a. Hide other people's slide threads from a reviewer of a blinded task on that slide until they submit, as task threads are hidden. (recommended)
+- b. Keep slide threads visible to every reader, as built.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 Nothing else in review needs you. Nine tasks that only waited for green CI were ticked on 2026-11-02.

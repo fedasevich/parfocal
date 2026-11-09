@@ -2892,6 +2892,12 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Depends on COLLAB-002, COLLAB-005.
   Size: M.
 
+- [ ] COLLAB-018 · Result set on a taskless region anchor
+  Review of COLLAB-015 (threads on any slide) found that a taskless thread anchored to an AI object stores only the object number, while a slide may hold several result sets, so the pin, the Comments tab label and the current object cannot tell which set it means. Store the result set on taskless object anchors, or refuse an object anchor without a task.
+  Done when API tests create a taskless object anchor on a slide with two result sets and read back the right set, and the Comments tab names it.
+  Depends on COLLAB-015.
+  Size: S.
+
 ---
 
 - [ ] COLLAB-016 · Calm live updates on a shared layer
