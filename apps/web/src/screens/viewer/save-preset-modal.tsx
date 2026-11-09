@@ -10,7 +10,7 @@ type SavePresetModalProps = {
   taskCode: string;
   taken: string[];
   onClose: () => void;
-  onSave: (name: string, scope: "task" | "all") => void;
+  onSave: (name: string, scope: "task" | "all") => Promise<"saved" | "taken" | "failed">;
 };
 
 export function SavePresetModal({
@@ -24,7 +24,16 @@ export function SavePresetModal({
   const [name, setName] = useState("");
   const [scope, setScope] = useState<"task" | "all">("task");
   const [tried, setTried] = useState(false);
-  const problem = presetProblem(name, taken);
+  const [refused, setRefused] = useState<string | null>(null);
+  const problem = presetProblem(name, taken) ?? refused;
+  const submit = () => {
+    setTried(true);
+    if (problem !== null) return;
+    void onSave(name.trim(), scope).then((status) => {
+      if (status === "taken") setRefused(`You already have a preset called ${name.trim()}.`);
+      else if (status === "failed") setRefused("The preset was not saved. Try again.");
+    });
+  };
   const shiftKey = taken.length + 2;
   return (
     <SmallModal
@@ -36,10 +45,7 @@ export function SavePresetModal({
       subtitle={`The display settings you have now, on ${slideLabel} in ${taskCode}`}
       hint={shiftKey <= 4 ? `Shift+${shiftKey} switches to it.` : "Pick it from the presets menu."}
       primaryLabel="Save"
-      onPrimary={() => {
-        setTried(true);
-        if (problem === null) onSave(name.trim(), scope);
-      }}
+      onPrimary={submit}
     >
       <div className="grid gap-1.5">
         <label htmlFor="preset-name" className="text-caption font-semibold text-fg-dim">
@@ -52,12 +58,12 @@ export function SavePresetModal({
           maxLength={40}
           placeholder="For example, Fill by score"
           aria-invalid={tried && problem !== null ? true : undefined}
-          onChange={(event) => setName(event.target.value)}
+          onChange={(event) => {
+            setName(event.target.value);
+            setRefused(null);
+          }}
           onKeyDown={(event) => {
-            if (event.key === "Enter") {
-              setTried(true);
-              if (problem === null) onSave(name.trim(), scope);
-            }
+            if (event.key === "Enter") submit();
           }}
         />
         {tried && problem ? <small className="text-caption text-bad">{problem}</small> : null}

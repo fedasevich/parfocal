@@ -37,6 +37,7 @@ import { markTried } from "../home/getting-started.ts";
 import { useRememberResume } from "../home/remember-resume.ts";
 import { usePeople } from "../people.ts";
 import { okData } from "../placeholder.tsx";
+import { SavePresetModal } from "../viewer/save-preset-modal.tsx";
 import { type ReviewConfidence, reviewConfidence } from "./ai-wording.ts";
 import { useAnswerKeys } from "./answer-keys.ts";
 import { CellCountChip, useCellCount } from "./cell-count-chip.tsx";
@@ -53,7 +54,7 @@ import {
   showsClaim,
 } from "./decision-style.ts";
 import { disagreeOptions, reasonDraft } from "./disagree-reasons.ts";
-import { type DisplayLock, DisplayTab, displaySettings } from "./display-tab.tsx";
+import { type DisplayLock, DisplayTab, displaySettings, withOverrides } from "./display-tab.tsx";
 import { FirstReadStep } from "./first-read.tsx";
 import { useGuidedCoach } from "./guided-coach.ts";
 import { nextOpenIndex } from "./guided-progress.ts";
@@ -83,6 +84,7 @@ import { ReviewTop } from "./review-top.tsx";
 import { type Camera, readout, SlideStill, type StillView } from "./slide-still.tsx";
 import { ThreadsTab, useOpenThreadsWarning } from "./threads-tab.tsx";
 import { useDecisionSaves } from "./use-decision-saves.ts";
+import { useDisplayChoice, useShiftPresetKeys } from "./use-display-choice.ts";
 import { useOpinionDraft } from "./use-opinion-draft.ts";
 
 type GuidedReviewProps = {
@@ -249,17 +251,24 @@ function GuidedBody({
           device: {},
         }).value
       : null;
-  const sceneSettings = displaySettings(
+  const choice = useDisplayChoice(session, setup.preset);
+  const [savingPreset, setSavingPreset] = useState(false);
+  useShiftPresetKeys(session.display, choice);
+  const sceneSettings = withOverrides(
+    displaySettings(session.display, choice.preset, extraLocks, undefined, labCutoff),
+    choice.overrides,
     session.display,
-    setup.preset,
     extraLocks,
-    undefined,
-    labCutoff,
   );
+  const confidenceLocked = [...(session.display?.locks ?? []), ...extraLocks].some(
+    (lock) => lock.setting === "confidence",
+  );
+  const chosenConfidence = confidenceLocked ? undefined : choice.overrides.confidence;
   const confidence: ReviewConfidence =
     wording === null
       ? (sceneSettings.confidence as Confidence)
-      : reviewConfidence(session.display, setup.preset, extraLocks, wording);
+      : ((chosenConfidence as ReviewConfidence | undefined) ??
+        reviewConfidence(session.display, choice.preset, extraLocks, wording));
   const shownConfidence = confidence === "frequency" ? "word" : confidence;
   const settings = { ...sceneSettings, confidence: shownConfidence };
   const readOnly = setup.readOnly || setup.issue === "withdrawn";
@@ -1079,15 +1088,40 @@ function GuidedBody({
               body: (
                 <DisplayTab
                   display={session.display}
-                  preset={setup.preset}
+                  preset={choice.preset}
                   extraLocks={extraLocks}
                   confidence={shownConfidence}
+                  changed={choice.changed}
+                  saveBlocked={choice.save.reason}
+                  onSave={choice.saveChanges}
+                  onPresetPick={choice.pick}
+                  overrides={choice.overrides}
+                  onSettingChange={choice.change}
+                  onSaveAs={() => setSavingPreset(true)}
                 />
               ),
             },
           ]}
         />
       </div>
+      <SavePresetModal
+        open={savingPreset}
+        slideLabel={session.slideName.split(" ")[0] ?? ""}
+        taskCode={session.task?.code ?? "this task"}
+        taken={(session.display?.presets ?? []).map((item) => item.name)}
+        onClose={() => setSavingPreset(false)}
+        onSave={async (name, scope) => {
+          const result = await choice.saveAs(name, scope);
+          if (result.status === "saved") {
+            setSavingPreset(false);
+            showUndoToast({
+              message: `Preset ${name} saved.`,
+              ...(result.undo ? { undo: result.undo } : {}),
+            });
+          }
+          return result.status;
+        }}
+      />
     </main>
   );
 }

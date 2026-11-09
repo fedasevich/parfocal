@@ -226,9 +226,11 @@ type PresetMenuProps = {
   current: string;
   presets: Preset[];
   changed?: boolean;
+  saveBlocked?: string | undefined;
   lockedCount?: number;
   defaultOpen?: boolean | undefined;
   onPick?: ((name: string) => void) | undefined;
+  onSave?: (() => void) | undefined;
   onSaveAs?: (() => void) | undefined;
   onReset?: (() => void) | undefined;
 };
@@ -237,12 +239,15 @@ function PresetMenu({
   current,
   presets,
   changed = false,
+  saveBlocked,
   lockedCount = 0,
   defaultOpen,
   onPick,
+  onSave,
   onSaveAs,
   onReset,
 }: PresetMenuProps) {
+  const saveReason = saveBlocked ?? (changed ? undefined : "Nothing changed");
   return (
     <div className="grid gap-1.5">
       <span className="text-caption font-semibold text-fg-dim">Preset</span>
@@ -290,10 +295,12 @@ function PresetMenu({
             </DropdownMenuGroup>
           </DropdownMenuRadioGroup>
           <DropdownMenuSeparator />
-          <DropdownMenuItem disabled={!changed}>
+          <DropdownMenuItem disabled={saveReason !== undefined} onClick={onSave}>
             <span className="grid">
               Save
-              {changed ? null : <small className="text-caption text-fg-dim">Nothing changed</small>}
+              {saveReason === undefined ? null : (
+                <small className="text-caption text-fg-dim">{saveReason}</small>
+              )}
             </span>
           </DropdownMenuItem>
           <DropdownMenuItem onClick={onSaveAs}>Save as</DropdownMenuItem>
@@ -414,6 +421,7 @@ function DisplayPanel({
           step={0.05}
           format={(value) => value.toFixed(2)}
           help="Objects under it draw dashed and faint"
+          lock={locks.cutoff}
           onChange={onChange && ((value) => onChange("cutoff", value))}
         />
         {resultSets ? (
@@ -431,23 +439,32 @@ function DisplayPanel({
         {viewer ? (
           <p className="m-0 text-body-sm text-fg-dim">These apply in guided review.</p>
         ) : null}
-        <SegRow label="Order" name="order" value={settings.order} lock={locks.order} />
+        <SegRow
+          label="Order"
+          name="order"
+          value={settings.order}
+          lock={locks.order}
+          onChange={onChange}
+        />
         <SegRow
           label="Zoom around the object"
           name="zoom"
           value={settings.zoom}
           lock={locks.zoom}
+          onChange={onChange}
         />
         <SwitchRow
           label="Move on by itself"
           sub="The next object comes after an answer"
           checked={settings.auto}
+          onChange={onChange && ((on) => onChange("auto", on))}
         />
         <SegRow
           label="Answer buttons"
           name="buttons"
           value={settings.buttons}
           lock={locks.buttons}
+          onChange={onChange}
         />
       </FoldingZone>
       {after}

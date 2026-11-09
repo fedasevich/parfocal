@@ -117,6 +117,7 @@ import {
 } from "../review/type-bar.ts";
 import { cellCentre, TypeBar, useCellArrows } from "../review/type-bar.tsx";
 import { useDecisionSaves } from "../review/use-decision-saves.ts";
+import { useDisplayChoice, useShiftPresetKeys } from "../review/use-display-choice.ts";
 import { useOpinionDraft } from "../review/use-opinion-draft.ts";
 import { usePagedReview } from "../review/use-paged-review.ts";
 import {
@@ -353,12 +354,10 @@ function ViewerBody({
     onSearch({ tool: undefined });
   };
   const [note, setNote] = useState({ open: false, reasons: [] as string[], text: "" });
-  const [preset, setPreset] = useState<string | null>(setup.preset);
-  const [idLabels, setIdLabels] = useState<boolean | null>(null);
-  const [drawOverrides, setDrawOverrides] = useState<Partial<DisplaySettings>>({});
+  const choice = useDisplayChoice(session, setup.preset);
+  const preset = choice.preset;
   const [hiddenClasses, setHiddenClasses] = useState<ReadonlySet<string>>(new Set());
   const [shownSets, setShownSets] = useState<Record<string, boolean>>({ reviewed: true });
-  const [saved, setSaved] = useState<{ name: string; key: string }[]>([]);
   const [failed, setFailed] = useState(setup.submitFail);
   const [tellMe, setTellMe] = useState(false);
   const [toast, setToast] = useState<{ text: string; undo?: () => void; id: number } | null>(null);
@@ -388,20 +387,16 @@ function ViewerBody({
   const extraLocks: DisplayLock[] = setup.confidenceLock
     ? [{ setting: "confidence", value: "hidden", reason: setup.confidenceLock }]
     : [];
-  const display = session.display
-    ? {
-        ...session.display,
-        presets: [...session.display.presets, ...saved.map((item) => ({ ...item, settings: {} }))],
-      }
-    : undefined;
+  const display = session.display;
   const labCutoff = useLabDecisionCutoff();
   const pickedSettings = withOverrides(
     displaySettings(display, preset, extraLocks, undefined, labCutoff),
-    drawOverrides,
+    choice.overrides,
     display,
     extraLocks,
   );
-  const settings = idLabels === null ? pickedSettings : { ...pickedSettings, ids: idLabels };
+  const settings = pickedSettings;
+  useShiftPresetKeys(display, choice);
   const confidence = settings.confidence as Confidence;
   const readOnly = setup.readOnly;
   const buttonsOff = readOnly
@@ -1138,17 +1133,17 @@ function ViewerBody({
         extraLocks={extraLocks}
         viewer
         presetOpen={setup.presetOpen}
-        onPresetPick={(name) => {
-          setDrawOverrides({});
-          setPreset(name);
-        }}
-        overrides={drawOverrides}
-        onSettingChange={(key, value) => setDrawOverrides((now) => ({ ...now, [key]: value }))}
+        changed={choice.changed}
+        saveBlocked={choice.save.reason}
+        onSave={choice.saveChanges}
+        onPresetPick={choice.pick}
+        overrides={choice.overrides}
+        onSettingChange={choice.change}
         classVisibility={classVisibility}
         onSaveAs={() => onSearch({ modal: "preset" })}
         resultSets={resultSetRows}
         after={viewZone}
-        idLabels={{ on: settings.ids, onChange: setIdLabels }}
+        idLabels={{ on: settings.ids, onChange: (on) => choice.change("ids", on) }}
       />
     );
 
@@ -1693,24 +1688,19 @@ function ViewerBody({
         open={search.modal === "preset"}
         slideLabel={slideLabel}
         taskCode={session.task?.code ?? "this task"}
-        taken={[
-          ...(session.display?.presets ?? []).map((item) => item.name),
-          ...saved.map((item) => item.name),
-        ]}
+        taken={(session.display?.presets ?? []).map((item) => item.name)}
         onClose={() => onSearch({ modal: undefined })}
-        onSave={(name) => {
-          const key = `⇧${(session.display?.presets.length ?? 0) + saved.length + 2}`;
-          setSaved([...saved, { name, key }]);
-          setPreset(name);
-          onSearch({ modal: undefined });
-          setToast({
-            id: Date.now(),
-            text: `Preset ${name} saved.`,
-            undo: () => {
-              setSaved(saved);
-              setPreset(preset);
-            },
-          });
+        onSave={async (name, scope) => {
+          const result = await choice.saveAs(name, scope);
+          if (result.status === "saved") {
+            onSearch({ modal: undefined });
+            setToast({
+              id: Date.now(),
+              text: `Preset ${name} saved.`,
+              ...(result.undo ? { undo: result.undo } : {}),
+            });
+          }
+          return result.status;
         }}
       />
     </>

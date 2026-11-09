@@ -1,4 +1,3 @@
-import type { TaskDisplay } from "@parfocal/api-client";
 import {
   DisplayPanel,
   type DisplaySettings,
@@ -6,17 +5,30 @@ import {
 } from "@parfocal/ui/components/display-panel";
 import type { ReactNode } from "react";
 import { useLabDecisionCutoff } from "../../shell/resolved-settings.ts";
+import type { TaskDisplayView } from "./display-model.ts";
 
 const lockedWords: Record<string, Record<string, string>> = {
   order: { ai: "AI order", size: "Largest first", leastsure: "Least sure first", random: "Random" },
   confidence: { number: "Number", word: "Word", color: "Color", hidden: "Hidden" },
 };
 
+const lockedNumbers: Record<string, (value: number) => string> = {
+  heatmap: (value) => (value ? `${value}%` : "Off"),
+  cutoff: (value) => value.toFixed(2),
+};
+
+const lockedText = (setting: string, value: string) => {
+  const number = Number(value);
+  const format = lockedNumbers[setting];
+  if (format && value !== "" && !Number.isNaN(number)) return format(number);
+  return lockedWords[setting]?.[value] ?? value;
+};
+
 const lowerFirst = (text: string) => `${text.charAt(0).toLowerCase()}${text.slice(1)}`;
 
 export type DisplayLock = { setting: string; value: string; reason: string };
 
-export function displayLocks(display: TaskDisplay | undefined, extra: DisplayLock[] = []) {
+export function displayLocks(display: TaskDisplayView | undefined, extra: DisplayLock[] = []) {
   const all = [
     ...(display?.locks ?? []).map((lock) => ({
       setting: lock.setting,
@@ -29,7 +41,7 @@ export function displayLocks(display: TaskDisplay | undefined, extra: DisplayLoc
     all.map((lock) => [
       lock.setting,
       {
-        value: lockedWords[lock.setting]?.[lock.value] ?? lock.value,
+        value: lockedText(lock.setting, lock.value),
         reason: `Locked by ${display?.task_code ?? "the task"}: ${lowerFirst(lock.reason)}`,
       },
     ]),
@@ -37,7 +49,7 @@ export function displayLocks(display: TaskDisplay | undefined, extra: DisplayLoc
 }
 
 export function displaySettings(
-  display: TaskDisplay | undefined,
+  display: TaskDisplayView | undefined,
   preset: string | null,
   locks: DisplayLock[] = [],
   confidence?: string,
@@ -47,6 +59,7 @@ export function displaySettings(
   const locked = Object.fromEntries(locks.map((lock) => [lock.setting, lock.value]));
   return {
     ...defaultDisplaySettings,
+    ...(display?.defaults ?? {}),
     ...(labCutoff === undefined ? {} : { cutoff: labCutoff }),
     ...(confidence === undefined ? {} : { confidence }),
     ...picked,
@@ -57,7 +70,7 @@ export function displaySettings(
 export function withOverrides(
   base: DisplaySettings,
   overrides: Partial<DisplaySettings>,
-  display: TaskDisplay | undefined,
+  display: TaskDisplayView | undefined,
   extra: DisplayLock[] = [],
 ): DisplaySettings {
   const locked = new Set([
@@ -69,7 +82,7 @@ export function withOverrides(
 }
 
 type DisplayTabProps = {
-  display: TaskDisplay | undefined;
+  display: TaskDisplayView | undefined;
   preset: string | null;
   extraLocks: DisplayLock[];
   confidence?: string;
@@ -77,6 +90,9 @@ type DisplayTabProps = {
   resultSets?: ReactNode;
   after?: ReactNode;
   presetOpen?: boolean;
+  changed?: boolean;
+  saveBlocked?: string | undefined;
+  onSave?: () => void;
   onPresetPick?: (name: string | null) => void;
   onSaveAs?: () => void;
   idLabels?: { on: boolean; onChange: (on: boolean) => void };
@@ -94,6 +110,9 @@ export function DisplayTab({
   resultSets,
   after,
   presetOpen,
+  changed = false,
+  saveBlocked,
+  onSave,
   onPresetPick,
   onSaveAs,
   idLabels,
@@ -123,11 +142,18 @@ export function DisplayTab({
         after={after}
         classVisibility={classVisibility}
         {...(onSettingChange ? { onSettingChange } : {})}
-        {...(idLabels ? { onIdsChange: idLabels.onChange } : {})}
+        {...(idLabels
+          ? { onIdsChange: idLabels.onChange }
+          : onSettingChange
+            ? { onIdsChange: (on: boolean) => onSettingChange("ids", on) }
+            : {})}
         preset={{
           current: preset ?? "Task default",
           presets: (display?.presets ?? []).map((item) => ({ name: item.name, key: item.key })),
           defaultOpen: presetOpen,
+          changed,
+          saveBlocked,
+          onSave,
           onPick: (name) => onPresetPick?.(name === "Task default" ? null : name),
           onSaveAs,
           onReset: () => onPresetPick?.(null),

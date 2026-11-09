@@ -1,15 +1,15 @@
 import {
+  type MyDisplay,
   type Neighbours,
   type Opinion,
   type ReviewObject,
   type ReviewTaskDetail,
   type SlideThread,
-  type TaskDisplay,
   useGetMe,
+  useGetMyDisplay,
   useGetOpinion,
   useGetReviewTask,
   useGetSlideNeighbours,
-  useGetTaskDisplay,
   useListProjectClasses,
   useListProjects,
   useListReviewObjects,
@@ -21,6 +21,7 @@ import type { ProjectClass } from "@parfocal/ui/components/decision-buttons";
 import { formatDue } from "../format.ts";
 import { okData } from "../placeholder.tsx";
 import { type ReviewStyle, toReviewStyle } from "./decision-style.ts";
+import { type TaskDisplayView, taskDisplayView } from "./display-model.ts";
 
 export type ReviewSession = {
   taskId: string;
@@ -35,7 +36,8 @@ export type ReviewSession = {
   verdicts: Map<string, Verdict>;
   style: ReviewStyle;
   classes: ProjectClass[];
-  display: TaskDisplay | undefined;
+  display: TaskDisplayView | undefined;
+  myDisplay: MyDisplay | undefined;
   opinion: Opinion | undefined;
   neighbours: Neighbours | undefined;
   threads: SlideThread[];
@@ -50,7 +52,7 @@ export function useReviewSession(taskId: string, slideId: string): ReviewSession
   const objectsQuery = useListReviewObjects(taskId, slideId);
   const reviewObjects = objectsQuery.data?.data;
   const verdicts = okData(useListVerdicts(taskId, slideId).data) ?? [];
-  const display = useGetTaskDisplay(taskId).data?.data;
+  const myDisplay = okData(useGetMyDisplay(taskId).data);
   const opinion = okData(useGetOpinion(taskId, slideId).data);
   const neighbours = okData(useGetSlideNeighbours(slideId, { from: "task", task_id: taskId }).data);
   const classes = okData(
@@ -74,7 +76,8 @@ export function useReviewSession(taskId: string, slideId: string): ReviewSession
     verdicts: new Map(verdicts.map((verdict) => [verdict.object, verdict])),
     style: toReviewStyle(task?.decision),
     classes: (classes ?? []).map((item) => ({ id: item.id, name: item.name, color: item.colour })),
-    display,
+    display: myDisplay ? taskDisplayView(myDisplay, task?.code ?? "") : undefined,
+    myDisplay,
     opinion,
     neighbours,
     threads,

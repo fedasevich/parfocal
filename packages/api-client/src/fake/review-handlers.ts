@@ -44,6 +44,7 @@ import type {
   VerdictDraft,
 } from "../generated/api.ts";
 import { countedAs, decisionSettingsFor } from "./decision-settings.ts";
+import { displayChoiceHandlers, presetInForce } from "./display-choices.ts";
 import type { DraftOperation } from "./draft-handlers.ts";
 import {
   addedOn,
@@ -386,6 +387,7 @@ export const reviewDraftOperations: DraftOperation[] = [
 
 export function reviewHandlers(): RequestHandler[] {
   return [
+    ...displayChoiceHandlers((taskId) => taskById(taskId)?.code ?? ""),
     http.get<{ taskId: string }>("*/api/review-tasks/:taskId", ({ params }) => {
       if (params.taskId === annotateStubTaskId)
         return HttpResponse.json({
@@ -570,6 +572,7 @@ export function reviewHandlers(): RequestHandler[] {
         note: body.note ?? null,
         ai_class_id: body.ai_class_id ?? null,
         ai_score: body.ai_score ?? null,
+        preset: presetInForce(String(params["taskId"])),
         updated_at: "2026-10-15T10:52:00+02:00",
       };
       rememberDecision(String(params["taskId"]), String(params["slideId"]), objectId, saved);
