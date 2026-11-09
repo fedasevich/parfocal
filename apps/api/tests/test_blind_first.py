@@ -1,7 +1,9 @@
+import re
 from typing import Any
 
 import pytest
 from db_support import ApiAs
+from test_ai_changes import report_text
 from test_annotate_sign_off import SQUARE, on_slide, post, two_slides
 from test_review_order import Ordered, ordered
 
@@ -135,3 +137,35 @@ def test_a_thread_on_a_hidden_object_stays_hidden_with_it(api: ApiAs, database: 
     assert listed.json() == []
     assert post(api, o, "first", f"{slide}/check").status_code == 200
     assert api(o.people["second"]).get(path).status_code == 200
+
+
+def added_in_report(api: ApiAs, o: Ordered, task: str) -> int:
+    found = re.search(r"All (\d+) (\d+) (\d+) (\d+) (\d+) (\d+)", report_text(api, o, task))
+    assert found is not None
+    return int(found.group(6))
+
+
+def test_the_report_leaves_out_hidden_objects(api: ApiAs, database: str) -> None:
+    o = ordered(database, api)
+    task = two_slides(api, o, blind_first=True)
+    slide = on_slide(o, task, 0)
+    drawn(api, o, "first", slide)
+    assert added_in_report(api, o, task) == 0
+    assert post(api, o, "first", f"{slide}/check").status_code == 200
+    assert added_in_report(api, o, task) == 1
+
+
+def test_a_colleague_cannot_anchor_a_thread_on_a_hidden_object(api: ApiAs, database: str) -> None:
+    o = ordered(database, api)
+    task = two_slides(api, o, blind_first=True, blinded=False)
+    slide = on_slide(o, task, 0)
+    made = drawn(api, o, "first", slide)
+    anchor = {"kind": "object", "object_id": made["code"]}
+    body = {"title": "Margin", "body": "Is this the margin?", "anchor": anchor}
+    unknown = body | {"anchor": anchor | {"object_id": f"{made['code'][0]}999"}}
+    guessed = post(api, o, "second", f"{slide}/threads", **body)
+    missing = post(api, o, "second", f"{slide}/threads", **unknown)
+    assert guessed.status_code == missing.status_code == 400
+    assert guessed.json()["code"] == missing.json()["code"]
+    assert post(api, o, "first", f"{slide}/check").status_code == 200
+    assert post(api, o, "second", f"{slide}/threads", **body).status_code == 201

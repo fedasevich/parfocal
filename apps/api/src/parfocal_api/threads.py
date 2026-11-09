@@ -369,7 +369,16 @@ async def check_anchor(
         annotations.c.number == found.number,
         annotations.c.deleted_at.is_(None),
     )
-    if kind is None or not await connection.scalar(select(drawn.exists())):
+    hidden: set[tuple[Letter, int]] = (
+        set()
+        if place.task_id is None
+        else await hidden_objects(connection, principal, place.task_id, place.slide_id)
+    )
+    if (
+        kind is None
+        or (found.letter, found.number) in hidden
+        or not await connection.scalar(select(drawn.exists()))
+    ):
         raise BadAnchorError(f"{found.text(ascii=True)} is not on this slide")
     return Anchored(found.text(ascii=True))
 
