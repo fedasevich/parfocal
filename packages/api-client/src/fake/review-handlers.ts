@@ -4,6 +4,7 @@ import { type TaskDisplay, taskDisplaySchema } from "../draft/get-task-display.t
 import { type ReviewObjects, reviewObjectsSchema } from "../draft/list-review-objects.ts";
 import { type ThreadComment, threadCommentSchema } from "../draft/list-thread-comments.ts";
 import {
+  getAddReviewObjectMockHandler,
   getClearReviewEditMockHandler,
   getClearVerdictMockHandler,
   getCreateThreadMockHandler,
@@ -22,9 +23,11 @@ import {
   getSaveOpinionMockHandler,
   getSaveReviewEditMockHandler,
   getSaveVerdictMockHandler,
+  getSubmitFirstReadMockHandler,
   getSubmitSlideReviewMockHandler,
 } from "../generated/api.msw.ts";
 import type {
+  AddedDraft,
   EditDraft,
   Mentionable,
   Message,
@@ -43,7 +46,12 @@ import type {
 import { countedAs, decisionSettingsFor } from "./decision-settings.ts";
 import type { DraftOperation } from "./draft-handlers.ts";
 import {
+  addedOn,
+  addObject,
+  firstReadOf,
+  firstReadOpen,
   objectsOn,
+  recordFirstRead,
   rememberDecision,
   rememberEdit,
   reviewedLayerFor,
@@ -60,6 +68,7 @@ import {
   reviewObjects,
   rt13,
   rt16,
+  rt17,
   sentinelClasses,
   slideOrder,
   taskDisplay,
@@ -73,7 +82,8 @@ import {
 import { fakeView } from "./view.ts";
 import { toReviewTaskDetail, toTaskStates } from "./work-handlers.ts";
 
-const taskById = (taskId: string) => [...reviewTasks, rt16].find((task) => task.id === taskId);
+const taskById = (taskId: string) =>
+  [...reviewTasks, rt16, rt17].find((task) => task.id === taskId);
 
 const slideSummary = (slideId: string) => {
   const slide = slides.find((candidate) => candidate.id === slideId) ?? reviewedSlide;
@@ -96,7 +106,12 @@ export const toReviewObjects = (taskId: string, slideId: string): ReviewObjects 
       detector_score: item.detectorScore,
       foreground: item.foreground,
     })),
-    added: reviewsA1(taskId, slideId) ? addedByLenka : [],
+    added:
+      taskId === rt17.id
+        ? addedOn(taskId, slideId).map((item) => ({ object: item.code, note: null }))
+        : reviewsA1(taskId, slideId)
+          ? addedByLenka
+          : [],
   });
 
 export const toTaskDisplay = (taskId: string): TaskDisplay => {
@@ -129,7 +144,7 @@ export const toThreadComments = (threadId: string): ThreadComment[] => {
   const posted = postedComments.filter((item) => item.thread_id === threadId);
   const thread = threads.find((item) => item.id === threadId);
   if (thread === undefined) return posted;
-  const task = [...reviewTasks, rt16].find((item) => item.code === thread.task);
+  const task = [...reviewTasks, rt16, rt17].find((item) => item.code === thread.task);
   const researcher = projectByCode(task?.project ?? "P07").owner;
   const seeded = visibleComments(fakeView().viewer, task?.blinded ?? false, researcher)
     .filter((item) => item.anchor === thread.anchor)
@@ -242,13 +257,28 @@ export const toSlideAgreement = (taskId: string, slideId: string): SlideAgreemen
 
 const savedOpinions = new Map<string, Record<string, unknown>>();
 
+const firstReadQuestions: Opinion["questions"] = [
+  {
+    key: "findings",
+    label: "What do you see on this slide?",
+    kind: "choice",
+    options: ["Tumor present", "No tumor", "Cannot tell"],
+    required: true,
+    asked: "first-read",
+  },
+  ...opinionQuestions.map((question) => ({ ...question, asked: "aided" as const })),
+];
+
+const problem = (status: number, code: string, title: string) =>
+  HttpResponse.json({ type: "about:blank", title, status, code }, { status });
+
 export const toOpinion = (taskId = "", slideId = ""): Opinion => ({
   reviewer_id: people[fakeView().viewer].id,
   form_version: 1,
-  questions: opinionQuestions,
+  questions: taskId === rt17.id ? firstReadQuestions : opinionQuestions,
   answers: Object.fromEntries(
     Object.entries({
-      ...(fakeView().viewer === "LM" ? lenkaOpinion : {}),
+      ...(fakeView().viewer === "LM" && taskId !== rt17.id ? lenkaOpinion : {}),
       ...savedOpinions.get(`${taskId}/${slideId}`),
     }).filter(([, value]) => value !== null),
   ),
@@ -371,7 +401,7 @@ export function reviewHandlers(): RequestHandler[] {
             reviewer_ids: [people[fakeView().viewer].id],
           })),
         });
-      const extra = [rt13, rt16].find((task) => task.id === params.taskId);
+      const extra = [rt13, rt16, rt17].find((task) => task.id === params.taskId);
       return extra ? HttpResponse.json(toReviewTaskDetail(extra)) : undefined;
     }),
     http.get<{ taskId: string }>("*/api/review-tasks/:taskId/states", ({ params }) =>
@@ -390,6 +420,32 @@ export function reviewHandlers(): RequestHandler[] {
       savedOpinions.set(key, kept);
       return toOpinion(taskId, slideId);
     }),
+    http.get<{ taskId: string; slideId: string }>(
+      "*/api/review-tasks/:taskId/slides/:slideId/first-read",
+      ({ params }) => {
+        const recorded = firstReadOf(params.taskId, params.slideId);
+        return recorded === undefined
+          ? problem(404, "first-read-missing", "No first read is recorded")
+          : HttpResponse.json(recorded);
+      },
+    ),
+    getSubmitFirstReadMockHandler(({ params }) => {
+      const taskId = String(params["taskId"]);
+      const slideId = String(params["slideId"]);
+      return (
+        firstReadOf(taskId, slideId) ??
+        recordFirstRead(taskId, slideId, people[fakeView().viewer].id, {
+          ...savedOpinions.get(`${taskId}/${slideId}`),
+        })
+      );
+    }),
+    getAddReviewObjectMockHandler(async ({ request, params }) =>
+      addObject(
+        String(params["taskId"]),
+        String(params["slideId"]),
+        (await request.json()) as AddedDraft,
+      ),
+    ),
     getListThreadsMockHandler(({ params, request }) => {
       const asked = new URL(request.url).searchParams.get("resolved");
       return toThreads(
@@ -484,6 +540,13 @@ export function reviewHandlers(): RequestHandler[] {
     ),
     getListProjectClassesMockHandler(({ params }) => toProjectClasses(String(params["projectId"]))),
     getGetSlideNeighboursMockHandler(({ params }) => toNeighbours(String(params["slideId"]))),
+    http.put<{ taskId: string; slideId: string }>(
+      "*/api/review-tasks/:taskId/slides/:slideId/verdicts/:objectId",
+      ({ params }) =>
+        firstReadOpen(params.taskId, params.slideId)
+          ? problem(409, "first-read-open", "Record your first read before you judge the AI")
+          : undefined,
+    ),
     getSaveVerdictMockHandler(async ({ request, params }) => {
       const body = (await request.json()) as VerdictDraft;
       const objectId = String(params["objectId"]);
@@ -541,6 +604,13 @@ export function reviewHandlers(): RequestHandler[] {
     }),
     getGetReviewedLayerMockHandler(({ params }) =>
       reviewedLayerFor(String(params["taskId"]), String(params["slideId"])),
+    ),
+    http.post<{ taskId: string; slideId: string }>(
+      "*/api/review-tasks/:taskId/slides/:slideId/submit",
+      ({ params }) =>
+        firstReadOpen(params.taskId, params.slideId)
+          ? problem(409, "first-read-needed", "Record your first read before you submit")
+          : undefined,
     ),
     getSubmitSlideReviewMockHandler(({ params }) =>
       submittedStates(String(params["taskId"]), String(params["slideId"])),

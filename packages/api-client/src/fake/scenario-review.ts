@@ -25,6 +25,15 @@ export const rt16: ScenarioReviewTask = {
   analysisTemplate: "sentinel-node",
 };
 
+export const rt17: ScenarioReviewTask = {
+  ...rt16,
+  code: "RT-17",
+  id: uuid(7, 17),
+  name: "First read without the AI · CAMELYON v1.0",
+  aiHiddenFirstRead: true,
+  analysisTemplate: "none",
+};
+
 export const rt13: ScenarioReviewTask = {
   code: "RT-13",
   id: uuid(7, 13),

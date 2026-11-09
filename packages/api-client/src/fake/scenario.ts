@@ -97,6 +97,7 @@ export type ScenarioReviewTask = {
   split: "all" | "even";
   progress: Partial<Record<PersonKey, number>>;
   blinded: boolean;
+  aiHiddenFirstRead?: boolean;
   status: "review" | "assigned" | "signed";
   analysisTemplate?: ScenarioProject["template"];
   signedOn?: string;

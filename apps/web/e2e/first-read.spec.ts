@@ -1,0 +1,79 @@
+import { expect, type Page, test } from "@playwright/test";
+
+const rt17 = "00000000-0000-4000-8007-000000000017";
+const a1 = "00000000-0000-4000-8005-000000000001";
+
+test.use({ viewport: { width: 1440, height: 1000 } });
+
+const firstReadOf = (page: Page) =>
+  page.evaluate(
+    async ([task, slide]) => {
+      const response = await fetch(`/api/review-tasks/${task}/slides/${slide}/first-read`);
+      return { status: response.status, body: (await response.json()) as unknown };
+    },
+    [rt17, a1] as const,
+  );
+
+test("the AI is absent before the first read, appears after it, and the first read stays as recorded", async ({
+  page,
+}) => {
+  test.setTimeout(120_000);
+  await page.goto(`/tasks/${rt17}/guided?slide=${a1}`);
+  const hidden = page.locator('main[data-ai="hidden"]');
+  await expect(hidden).toBeVisible();
+  await expect(page.getByTestId("first-read-panel")).toContainText("Read the slide without the AI");
+  await expect(page.getByRole("button", { name: "Whole slide" })).toHaveCount(0);
+  await expect(page.getByRole("group", { name: "Objects" })).toHaveCount(0);
+  await expect(page.getByText(/The AI says/)).toHaveCount(0);
+  expect((await firstReadOf(page)).status).toBe(404);
+
+  const record = page.getByRole("button", { name: "Record my first read" });
+  await expect(record).toBeDisabled();
+  await page.getByRole("button", { name: "Tumor present" }).click();
+  await expect(record).toBeEnabled();
+
+  await page.getByRole("button", { name: "Add an object" }).click();
+  const stage = page.locator("[data-slot=slide-still]");
+  const box = (await stage.boundingBox()) ?? { x: 0, y: 0, width: 0, height: 0 };
+  for (const [x, y] of [
+    [0.3, 0.3],
+    [0.6, 0.32],
+    [0.58, 0.6],
+  ] as const) {
+    await page.mouse.click(box.x + box.width * x, box.y + box.height * y);
+  }
+  await expect(page.getByTestId("redraw-vertex")).toHaveCount(3);
+  const added = page.waitForRequest(
+    (request) => request.method() === "POST" && request.url().endsWith("/added"),
+  );
+  await page.getByRole("button", { name: "Finish outline" }).click();
+  await added;
+  await expect(page.getByTestId("first-read-added")).toHaveText("1 added.");
+
+  await record.click();
+  await expect(page.locator('main[data-ai="shown"]')).toBeVisible();
+  await expect(hidden).toHaveCount(0);
+  await expect(page.getByRole("group", { name: "Objects" })).toBeVisible();
+  await expect(page.getByTestId("first-read-panel")).toHaveCount(0);
+
+  const recorded = await firstReadOf(page);
+  expect(recorded.status).toBe(200);
+  const first = recorded.body as { answers: Record<string, unknown>; added: unknown[] };
+  expect(first.answers["findings"]).toBe("Tumor present");
+  expect(first.added).toHaveLength(1);
+
+  const gotIt = page.getByRole("button", { name: "Got it, start" });
+  if (await gotIt.isVisible()) await gotIt.click();
+  const submit = page.getByRole("button", { name: "Submit", exact: true }).first();
+  const agree = page.getByRole("button", { name: /^Agree/ }).first();
+  for (let answered = 0; answered < 80 && (await submit.isDisabled()); answered += 1) {
+    await agree.click();
+  }
+  await submit.click();
+  const card = page.locator('[data-slot="slide-done-card"]');
+  await expect(card).toBeVisible();
+  await card.getByRole("radio", { name: "4" }).click();
+  await expect(card.getByRole("radio", { name: "4" })).toBeChecked();
+
+  expect(await firstReadOf(page)).toEqual(recorded);
+});

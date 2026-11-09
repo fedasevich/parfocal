@@ -215,7 +215,7 @@ export const toReviewTaskDetail = (task: ScenarioReviewTask): ReviewTaskDetail =
     scopes: [scopeOf(task)],
     opinion_form_version: 1,
     blinded: task.blinded,
-    ai_hidden_first_read: false,
+    ai_hidden_first_read: task.aiHiddenFirstRead ?? false,
     start_mode: "guided",
     due_on: task.dueOn,
     reminder_days: [2, 1],

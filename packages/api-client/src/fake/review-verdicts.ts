@@ -1,5 +1,8 @@
 import type {
+  AddedDraft,
+  Annotation,
   EditDraft,
+  FirstRead,
   ReviewEdit,
   ReviewedLayer,
   ReviewOrder,
@@ -12,6 +15,7 @@ import {
   reviewDecisionTimes,
   reviewObjects,
   rt16,
+  rt17,
 } from "./scenario-review.ts";
 import { fakeView } from "./view.ts";
 
@@ -31,7 +35,65 @@ const nextSlide = slideByIndex(2);
 const reviewsNext = (taskId: string, slideId: string) =>
   slideId === nextSlide.id && reviewsA1(taskId, reviewedSlide.id);
 
+const firstReads = new Map<string, FirstRead>();
+const addedObjects = new Map<string, Annotation[]>();
+
+const firstReadKey = (taskId: string, slideId: string) => `${taskId}/${slideId}`;
+
+const readsFirst = (taskId: string, slideId: string) =>
+  taskId === rt17.id && slideId === reviewedSlide.id && fakeView().viewer === "LM";
+
+export const firstReadOpen = (taskId: string, slideId: string) =>
+  taskId === rt17.id && !firstReads.has(firstReadKey(taskId, slideId));
+
+export const firstReadOf = (taskId: string, slideId: string) =>
+  firstReads.get(firstReadKey(taskId, slideId));
+
+export const recordFirstRead = (
+  taskId: string,
+  slideId: string,
+  reviewerId: string,
+  answers: Record<string, unknown>,
+): FirstRead => {
+  const recorded: FirstRead = {
+    reviewer_id: reviewerId,
+    recorded_at: new Date().toISOString(),
+    form_version: 1,
+    answers: structuredClone(answers),
+    added: structuredClone(addedOn(taskId, slideId)),
+  };
+  firstReads.set(firstReadKey(taskId, slideId), recorded);
+  return recorded;
+};
+
+export const addedOn = (taskId: string, slideId: string): Annotation[] =>
+  addedObjects.get(firstReadKey(taskId, slideId)) ?? [];
+
+export const addObject = (taskId: string, slideId: string, draft: AddedDraft): Annotation => {
+  const kept = addedOn(taskId, slideId);
+  const number = kept.length + 1;
+  const now = new Date().toISOString();
+  const added: Annotation = {
+    id: crypto.randomUUID(),
+    slide_id: slideId,
+    kind: draft.kind,
+    number,
+    code: `${draft.kind === "cell" ? "C" : "T"}${number}⁺`,
+    geometry: { ...draft.geometry },
+    class_id: draft.class_id ?? null,
+    task_id: taskId,
+    version: 1,
+    created_by_user_id: null,
+    created_at: now,
+    updated_at: now,
+    deleted_at: null,
+  };
+  addedObjects.set(firstReadKey(taskId, slideId), [...kept, added]);
+  return added;
+};
+
 export const objectsOn = (taskId: string, slideId: string) => {
+  if (readsFirst(taskId, slideId)) return firstReadOpen(taskId, slideId) ? [] : reviewObjects;
   if (reviewsA1(taskId, slideId)) return reviewObjects;
   if (reviewsNext(taskId, slideId)) {
     return reviewObjects.filter(
