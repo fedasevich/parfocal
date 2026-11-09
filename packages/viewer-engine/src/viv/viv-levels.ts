@@ -6,6 +6,7 @@ import type {
   PixelSource,
   PixelWindow,
 } from "../pixel-source/types.ts";
+import { createFailedTiles, type FailedTile } from "./failed-tiles.ts";
 import { createTileWait, type TileLoadState } from "./tile-wait.ts";
 
 export const vivSignalAborted: unknown = "__vivSignalAborted";
@@ -51,17 +52,6 @@ export interface VivLevel {
   getTile(selection: VivTileSelection): Promise<VivTile>;
   getRaster(selection: VivRasterSelection): Promise<VivTile>;
   onTileError(error: Error): void;
-}
-
-export interface FailedTile {
-  readonly key: string;
-  readonly level: number;
-  readonly x: number;
-  readonly y: number;
-  readonly left: number;
-  readonly top: number;
-  readonly width: number;
-  readonly height: number;
 }
 
 export interface VivLevels {
@@ -327,25 +317,7 @@ export function createVivLevels(source: PixelSource, options: VivLevelOptions = 
       console.error(error);
     });
 
-  const failed = new Map<string, FailedTile>();
-  const base = ladder[0];
-
-  const failedTileOf = (level: number, virtual: VirtualLevel, x: number, y: number): FailedTile => {
-    const left = x * tileSize * virtual.downsample;
-    const top = y * tileSize * virtual.downsample;
-    const right = Math.min((x + 1) * tileSize, virtual.width) * virtual.downsample;
-    const bottom = Math.min((y + 1) * tileSize, virtual.height) * virtual.downsample;
-    return {
-      key: `${level}/${x}/${y}`,
-      level,
-      x,
-      y,
-      left,
-      top,
-      width: Math.min(right, base?.width ?? right) - left,
-      height: Math.min(bottom, base?.height ?? bottom) - top,
-    };
-  };
+  const failed = createFailedTiles(tileSize, ladder[0]);
 
   const levels = ladder.map((virtual, level): VivLevel => {
     const columns = Math.ceil(virtual.width / tileSize);
@@ -363,14 +335,14 @@ export function createVivLevels(source: PixelSource, options: VivLevelOptions = 
         if (x >= columns || y >= rows) {
           return Promise.reject(new RangeError(`Tile ${x},${y} is outside the level`));
         }
-        const tile = failedTileOf(level, virtual, x, y);
+        const tile = failed.tileOf(level, virtual, x, y);
         return readRegion(virtual, tileRegion(virtual, x, y), signal).then(
           (result) => {
-            failed.delete(tile.key);
+            failed.read(tile);
             return result;
           },
           (error: unknown) => {
-            if (error !== vivSignalAborted) failed.set(tile.key, tile);
+            if (error !== vivSignalAborted) failed.failed(tile);
             throw error;
           },
         );
@@ -381,10 +353,8 @@ export function createVivLevels(source: PixelSource, options: VivLevelOptions = 
   });
 
   return {
-    failures: () => [...failed.values()],
-    clearFailure: (key) => {
-      failed.delete(key);
-    },
+    failures: failed.list,
+    clearFailure: failed.clear,
     levels,
     ladder,
     tileSize,

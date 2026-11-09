@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { after, describe, it } from "node:test";
 import { syntheticDir } from "@parfocal/test-fixtures";
+import { DecodePoolDisposedError } from "../../src/decode/decode-pool.ts";
 import { openTiffSource, type PixelResult, type Raster } from "../../src/index.ts";
 import {
   boxDownsamplePlane,
@@ -9,6 +10,8 @@ import {
   readVivChannelRegion,
   regionKey,
   UnsupportedVivSourceError,
+  type VivChannelLevel,
+  type VivChannelLevels,
   vivChannelDtype,
   vivChannelLayerProps,
 } from "../../src/viv/index.ts";
@@ -23,6 +26,12 @@ after(async () => {
 
 const open = (file: string, formatId: "generic-tiff" | "ome-tiff" = "ome-tiff") =>
   openTiffSource({ formatId, url: served.url(`/synthetic/${file}`) });
+
+function levelOf(viv: VivChannelLevels, index: number): VivChannelLevel {
+  const level = viv.levels[index];
+  assert.ok(level !== undefined, `expected level ${index}`);
+  return level;
+}
 
 function present(result: PixelResult): Raster {
   assert.ok(!result.absent, "expected a present raster");
@@ -213,6 +222,100 @@ describe("Viv levels over a multichannel PixelSource", () => {
     });
     await viv.levels[0]?.getTile({ x: 0, y: 0, selection: { c: 2 } });
     assert.deepEqual(seen, [2]);
+    source.close();
+  });
+
+  it("lists a tile whose read failed and drops it after a retry that works", async () => {
+    const source = await open("synthetic-channels-uint8.ome.tiff");
+    let failing = true;
+    const viv = createVivChannelLevels(source, {
+      read: (region) =>
+        failing
+          ? Promise.reject(new Error("503 from the tile store"))
+          : readVivChannelRegion(source, region),
+    });
+    assert.deepEqual(viv.failures(), []);
+    await assert.rejects(levelOf(viv, 1).getTile({ x: 1, y: 0, selection: { c: 0 } }), /503/);
+    assert.deepEqual(viv.failures(), [
+      { key: "1/1/0", level: 1, x: 1, y: 0, left: 512, top: 0, width: 512, height: 512 },
+    ]);
+    failing = false;
+    await levelOf(viv, 1).getTile({ x: 1, y: 0, selection: { c: 0 } });
+    assert.deepEqual(viv.failures(), []);
+    source.close();
+  });
+
+  it("keeps a tile listed until every channel that failed has been read", async () => {
+    const source = await open("synthetic-channels-uint8.ome.tiff");
+    const broken = new Set([1, 2]);
+    const viv = createVivChannelLevels(source, {
+      read: (region) =>
+        broken.has(region.channel)
+          ? Promise.reject(new Error(`channel ${region.channel} failed`))
+          : readVivChannelRegion(source, region),
+    });
+    const tile = (c: number) => levelOf(viv, 0).getTile({ x: 0, y: 0, selection: { c } });
+    await assert.rejects(tile(1));
+    await assert.rejects(tile(2));
+    await tile(0);
+    assert.deepEqual(
+      viv.failures().map((failure) => failure.key),
+      ["0/0/0"],
+    );
+    broken.delete(1);
+    await tile(1);
+    assert.equal(viv.failures().length, 1);
+    broken.delete(2);
+    await tile(2);
+    assert.deepEqual(viv.failures(), []);
+    source.close();
+  });
+
+  it("forgets a failed tile when it is cleared for a retry", async () => {
+    const source = await open("synthetic-channels-uint8.ome.tiff");
+    const viv = createVivChannelLevels(source, {
+      read: () => Promise.reject(new Error("dropped connection")),
+    });
+    await assert.rejects(levelOf(viv, 0).getTile({ x: 0, y: 0, selection: { c: 0 } }));
+    viv.clearFailure("0/0/0");
+    assert.deepEqual(viv.failures(), []);
+    source.close();
+  });
+
+  it("answers a disposed decode pool and an aborted read with Viv's abort sentinel", async () => {
+    const source = await open("synthetic-channels-uint8.ome.tiff");
+    const viv = createVivChannelLevels(source, {
+      read: () => Promise.reject(new DecodePoolDisposedError()),
+    });
+    await assert.rejects(
+      levelOf(viv, 0).getTile({ x: 0, y: 0, selection: { c: 0 } }),
+      (error: unknown) => error === vivSignalAborted,
+    );
+    assert.deepEqual(viv.failures(), []);
+    source.close();
+  });
+
+  it("reports how long its reads have been waiting", async () => {
+    const source = await open("synthetic-channels-uint8.ome.tiff");
+    let clock = 1000;
+    let answer: (() => void) | undefined;
+    const viv = createVivChannelLevels(source, {
+      now: () => clock,
+      read: async (region) => {
+        await new Promise<void>((resolve) => {
+          answer = resolve;
+        });
+        return readVivChannelRegion(source, region);
+      },
+    });
+    assert.deepEqual(viv.loadState(), { pending: 0, waitingMs: 0, answerMs: null });
+    const tile = levelOf(viv, 0).getTile({ x: 0, y: 0, selection: { c: 0 } });
+    clock = 4000;
+    assert.deepEqual(viv.loadState(), { pending: 1, waitingMs: 3000, answerMs: 3000 });
+    answer?.();
+    await tile;
+    assert.equal(viv.loadState().pending, 0);
+    assert.equal(viv.pending(), 0);
     source.close();
   });
 });

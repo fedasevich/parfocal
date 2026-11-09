@@ -28,6 +28,7 @@ import { absoluteUrl } from "../pixel-source/url.ts";
 import { observeCanvasSize, observePixelRatio } from "./canvas-observers.ts";
 import { createDeckSleep, type DeckSleep } from "./deck-sleep.ts";
 import { disposeDeck } from "./dispose-deck.ts";
+import type { FailedTile } from "./failed-tiles.ts";
 import {
   createGpuGuard,
   type GpuGuardStats,
@@ -50,7 +51,7 @@ import {
   type VivChannelLevels,
   vivChannelLayerProps,
 } from "./viv-channel-levels.ts";
-import { createVivLevels, type FailedTile, type VivLevels } from "./viv-levels.ts";
+import { createVivLevels, type VivLevels } from "./viv-levels.ts";
 
 const idleLoadState: TileLoadState = { pending: 0, waitingMs: 0, answerMs: null };
 
@@ -336,13 +337,14 @@ export function createVivRoute(
       onReadSettled: () => sleep?.wake("read"),
       ...(reader ? { read: reader.readChannel } : {}),
     });
-    const levels: RouteLevels = {
-      pending: channelLevels.pending,
-      loadState: () => idleLoadState,
-      failures: () => [],
-      clearFailure: () => undefined,
+    const base = {
+      slide,
+      levels: channelLevels,
+      rgb: null,
+      channelLevels,
+      reader,
+      prefetcher: null,
     };
-    const base = { slide, levels, rgb: null, channelLevels, reader, prefetcher: null };
     return { ...base, layer: slideLayer(base) };
   };
 
