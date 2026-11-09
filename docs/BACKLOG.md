@@ -4450,7 +4450,7 @@ A researcher hands slides to reviewers as a review task ([ADR 0053](adr/0053-ai-
   Depends on TASK-010.
   Size: S.
 
-- [ ] TASK-018 · Sample size in the annotate task stepper
+- [x] TASK-018 · Sample size in the annotate task stepper
   Review of TASK-005 (new review task stepper) found the sample check option says "about 50" while the preset sends 200, as ADR 0238 (check options and presets on annotate tasks) sets, so the estimate disagrees with the request. Fix the text and the estimate to use the sent size, add a sample size input to What to check sent as `random-cells.count`, align the UI by-hand preset order with the API preset, and add a component test for the Kind step.
   Done when model tests show the estimate and the request use the same size, a browser test changes the sample size and finds it in the created task, and a component test covers the Kind step.
   Depends on TASK-005.
