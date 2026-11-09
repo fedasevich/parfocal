@@ -4573,7 +4573,7 @@ Doctors judge AI objects in a simple guided mode, or in the full viewer with the
 
 ---
 
-- [ ] GUIDE-019 · Guided check in Annotate
+- [x] GUIDE-019 · Guided check in Annotate
   Steps through the AI objects in an annotate task's check scope in the task's order, least sure first by default, inside the Annotate workspace. Confirm, fix and delete sit on keys, and the drawing and one-click tools stay at hand for what the AI missed. Objects that a running model adds join the queue.
   Done when E2E checks a slide by keyboard only in least sure first order, fixes one object and draws a missed one, and component tests cover the queue growing during a run.
   Depends on ANN-032, ANN-031, GUIDE-002. Refs [ADR 0238](adr/0238-check-options-and-presets-on-annotate-tasks.md).
