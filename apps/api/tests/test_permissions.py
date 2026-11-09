@@ -138,6 +138,7 @@ OPEN_OPERATIONS = {
     "erasePerson": "platform",
     "getMyAvailability": "member",
     "setMyAvailability": "member",
+    "sendFeedback": "member",
     "listMembers": "platform",
 }
 
@@ -1183,6 +1184,9 @@ MEMBER_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "getSessionPolicy": lambda _: Call("GET", "/api/tenant/session-policy"),
     "getMyAvailability": lambda _: Call("GET", "/api/me/availability"),
     "setMyAvailability": lambda _: Call("PUT", "/api/me/availability", {"status": "available"}),
+    "sendFeedback": lambda _: Call(
+        "POST", "/api/feedback", {"text": "Matrix feedback", "route": "/my-work"}
+    ),
 }
 
 

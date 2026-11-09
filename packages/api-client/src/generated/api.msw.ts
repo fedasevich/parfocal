@@ -46,6 +46,7 @@ import type {
   EvaluationVersionStarted,
   ExpertChanges,
   ExportReviewedLayer200,
+  FeedbackSent,
   FirstRead,
   FormVersion,
   GetResultsSchema200,
@@ -6690,6 +6691,14 @@ export const getEndAnnouncementResponseMock = (
   ...overrideResponse,
 });
 
+export const getSendFeedbackResponseMock = (
+  overrideResponse: Partial<Extract<FeedbackSent, object>> = {},
+): FeedbackSent => ({
+  id: faker.string.uuid(),
+  screenshot: faker.datatype.boolean(),
+  ...overrideResponse,
+});
+
 export const getListSiteValidationsResponseMock = (): SiteValidation[] =>
   Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
     id: faker.string.uuid(),
@@ -7233,6 +7242,11 @@ export const getSearchResponseMock = (
       faker.string.alpha({ length: { min: 10, max: 20 } }),
       null,
     ]),
+    resolved_from: faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    task_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
   })),
   ...overrideResponse,
 });
@@ -16392,6 +16406,30 @@ export const getEndAnnouncementMockHandler = (
   );
 };
 
+export const getSendFeedbackMockHandler = (
+  overrideResponse?:
+    | FeedbackSent
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<FeedbackSent> | FeedbackSent),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/feedback",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getSendFeedbackResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getListSiteValidationsMockHandler = (
   overrideResponse?:
     | SiteValidation[]
@@ -19743,6 +19781,7 @@ export const getParfocalAPIMock = () => [
   getListAnnouncementsMockHandler(),
   getCreateAnnouncementMockHandler(),
   getEndAnnouncementMockHandler(),
+  getSendFeedbackMockHandler(),
   getListSiteValidationsMockHandler(),
   getRecordSiteValidationMockHandler(),
   getGetMyHomeMockHandler(),

@@ -3854,7 +3854,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when the experiments are configured and the analysis query exists.
   Size: M.
 
-- [ ] EXP-005 · In-app SUS and SEQ surveys
+- [x] EXP-005 · In-app SUS and SEQ surveys
   SEQ after defined tasks, SUS after a number of sessions, rate-limited and dismissible.
   Done when tests cover triggering and storage without PHI.
   Size: M.
@@ -4134,7 +4134,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   On hold since 2026-11-04. The owner parked compliance, legal, email and pilot paperwork as not worth the time yet. Resume when the owner asks or before the first tenant with real patient data.
   Size: L.
 
-- [ ] PILOT-007 · Feedback channel
+- [x] PILOT-007 · Feedback channel
   In-app feedback with screenshot (PHI-blurred) routed to the team.
   Done when tests confirm screenshots are blurred over slide and patient areas.
   Size: M.
@@ -4182,7 +4182,7 @@ A project holds slides, AI results and review tasks. Cases inside it are optiona
   Depends on PROJ-001. Refs doc 37 "Viewer", mock: case.
   Size: M.
 
-- [ ] PROJ-006 · Project page
+- [x] PROJ-006 · Project page
   A header with the name, privacy tag, members and Upload and New review task, then tabs. Slides lists the slides grouped by case with result sets and reviewers, filters (result set, needs review, no results) and a search, and a row opens the slide with Open shown on hover. Review tasks lists the project's tasks. Settings is PROJ-008. Files dropped anywhere on the page open the upload (INGEST-021).
   Done when component tests cover each tab and filter, and E2E opens a slide from a row and starts an upload by dropping files.
   Depends on PROJ-001, WL-001. Refs mock: project, doc 38 "Project", doc 40 R5.
@@ -4314,7 +4314,7 @@ IDs short enough to say out loud, scoped to the slide ([ADR 0053](adr/0053-ai-re
   Done when unit tests cover each rule and an alias that still resolves.
   Depends on OBJ-001, RSET-007.
 
-- [ ] OBJ-004 · ID resolution and search
+- [x] OBJ-004 · ID resolution and search
   Any part of a full path resolves to the object, including aliases, for links, search (CASES-009) and the palette (CMD-002).
   Done when API tests resolve every form and an alias after a merge.
   Depends on OBJ-003.

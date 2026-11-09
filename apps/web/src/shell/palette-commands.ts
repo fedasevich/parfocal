@@ -1,4 +1,5 @@
 import type { IconName } from "@parfocal/ui/components/icon";
+import { openFeedback } from "../feedback/feedback-state.ts";
 import { developerNav } from "../screens/developer/developer-data.ts";
 import { keyAction } from "../screens/settings/keymap.ts";
 import {
@@ -173,6 +174,14 @@ function actionEntries(ctx: PaletteContext): PaletteEntry[] {
       label: "Notifications",
       keywords: ["bell", "inbox", "mentions"],
       run: ctx.openNotifications,
+    },
+    {
+      id: "feedback",
+      group: "Actions",
+      icon: "comment",
+      label: "Send feedback",
+      keywords: ["bug", "report a problem", "screenshot", "support", "idea"],
+      run: openFeedback,
     },
     {
       id: "open-settings",

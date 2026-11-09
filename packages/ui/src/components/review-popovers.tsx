@@ -93,7 +93,9 @@ function ReviewProgressPopover({
             Task {taskCode}
           </span>
           <b className="block text-body font-semibold leading-snug">{taskName}</b>
-          <small className="block text-caption text-fg-faint">{taskSub}</small>
+          <small className="block text-caption text-fg-faint" data-phi="">
+            {taskSub}
+          </small>
         </div>
       </div>
       <Zone
@@ -368,7 +370,9 @@ function SlidesPopover({
         <div className="grid grid-cols-[16px_minmax(0,1fr)_auto] items-center gap-3 border-b border-surf-edge bg-surf-section px-4 py-3.5">
           <Icon name="folder" className="text-fg-dim" />
           <div className="min-w-0">
-            <b className="block text-body-sm font-semibold">{caseTitle}</b>
+            <b className="block text-body-sm font-semibold" data-phi="">
+              {caseTitle}
+            </b>
             <small className="block truncate text-caption text-fg-faint">{caseSub}</small>
           </div>
           <Button size="sm" onClick={onOpenCase} disabled={!onOpenCase}>

@@ -76,6 +76,7 @@ function GalleryTile({
     <button
       type="button"
       data-slot="gallery-tile"
+      data-phi=""
       data-state={state}
       data-size={size}
       data-decision={decision}

@@ -74,6 +74,7 @@ export function FileRow({
 export function FileList({ className, children }: { className?: string; children: ReactNode }) {
   return (
     <div
+      data-phi=""
       className={cn(
         "grid min-w-0 overflow-hidden rounded-[10px] border border-surf-edge bg-surf-panel",
         className,

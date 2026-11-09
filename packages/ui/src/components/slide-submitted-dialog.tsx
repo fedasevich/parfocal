@@ -54,7 +54,9 @@ function SlideSubmittedDialog({
             />
             <div className="grid gap-1">
               <span className="text-caption font-semibold text-fg-dim">{next.eyebrow}</span>
-              <b className="text-lead font-semibold">{next.name}</b>
+              <b className="text-lead font-semibold" data-phi="">
+                {next.name}
+              </b>
               <span className="text-body-sm text-fg-dim">{next.meta}</span>
             </div>
           </div>

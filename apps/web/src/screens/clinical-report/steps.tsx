@@ -103,10 +103,10 @@ export function FindingsStep({
                 {fact.warn ? (
                   <span className="inline-flex items-center gap-1.5 text-warn">
                     <Icon name="warn" />
-                    <span>{fact.text}</span>
+                    <span data-phi="">{fact.text}</span>
                   </span>
                 ) : (
-                  <span>{fact.text}</span>
+                  <span data-phi="">{fact.text}</span>
                 )}
                 {fact.warn && pending ? (
                   <button type="button" className={linkButton} onClick={onMeasure}>

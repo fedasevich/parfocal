@@ -392,7 +392,7 @@ function SignOffCard({
         <h3 className="m-0 text-lead font-semibold text-fg">
           {signedOff ? "Signed off" : "Sign off this slide"}
         </h3>
-        <p className="m-0 text-body-sm text-fg-dim">
+        <p className="m-0 text-body-sm text-fg-dim" data-phi="">
           {signedOff
             ? `${slideName} is locked. Later changes go to the change log.`
             : `${slideName} locks for everyone once you sign it off.`}

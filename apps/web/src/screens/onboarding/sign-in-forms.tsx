@@ -86,8 +86,14 @@ function DeepLinkLine({ options }: { options: SignInOptions | undefined }) {
           <b>{link.task_code}</b>,{" "}
         </>
       ) : null}
-      slide <b className="font-mono">{link.slide_label}</b> of{" "}
-      <b className="font-mono">{link.case_label}</b>
+      slide{" "}
+      <b className="font-mono" data-phi="">
+        {link.slide_label}
+      </b>{" "}
+      of{" "}
+      <b className="font-mono" data-phi="">
+        {link.case_label}
+      </b>
     </DeepLinkNote>
   );
 }

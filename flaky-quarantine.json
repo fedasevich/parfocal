@@ -1,0 +1,4 @@
+{
+  "rule": "A quarantined test carries the @quarantine tag, a GitHub issue link and an expiry date at most 30 days away. Playwright skips it. An expired entry fails the guard tests until the test is fixed or the entry is renewed with a reason.",
+  "quarantined": []
+}

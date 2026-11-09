@@ -130,6 +130,7 @@ class AuditAction(StrEnum):
     INVITATION_EXPIRED = "invitation.expired"
     ANNOUNCEMENT_POSTED = "announcement.posted"
     ANNOUNCEMENT_ENDED = "announcement.ended"
+    FEEDBACK_SENT = "feedback.sent"
     SITE_VALIDATION_RECORDED = "site-validation.recorded"
     MODEL_TIER_SET = "model-tier.set"
     MODEL_TIER_RESET = "model-tier.reset"
@@ -189,6 +190,7 @@ class AuditTarget(StrEnum):
     REPORT_LINK = "report-link"
     CLINICAL_REPORT = "clinical-report"
     LAB_MODEL = "lab-model"
+    FEEDBACK = "feedback"
 
 
 @dataclass(frozen=True)

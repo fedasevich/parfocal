@@ -139,6 +139,7 @@ export function PreviewPanel({
   return (
     <aside
       aria-label={`Preview of ${title}`}
+      data-phi=""
       className="flex flex-col gap-3.5 rounded-[14px] border border-line bg-chrome px-4 pt-3.5 pb-4"
     >
       <div className="-mb-1.5 flex items-center justify-between">

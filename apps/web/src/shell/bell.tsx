@@ -8,13 +8,10 @@ import {
 } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
 import { Icon, type IconName } from "@parfocal/ui/components/icon";
-import {
-  type NotificationItem,
-  NotificationsPanel,
-} from "@parfocal/ui/components/notifications-panel";
+import type { NotificationItem } from "@parfocal/ui/components/notifications-panel";
 import { Popover, PopoverContent, PopoverTrigger } from "@parfocal/ui/components/popover";
 import { useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { now } from "../clock.ts";
 import { relativeTime } from "../screens/format.ts";
 import { okData } from "../screens/placeholder.tsx";
@@ -24,6 +21,10 @@ import { chimeUnlessHeld, playChime, readStatNotice, shownInBell } from "./notif
 import { useOverlay } from "./overlays.ts";
 import { readingHold } from "./reading-hold.ts";
 import { useGoTo } from "./router-link.tsx";
+
+const NotificationsPanel = lazy(async () => ({
+  default: (await import("@parfocal/ui/components/notifications-panel")).NotificationsPanel,
+}));
 
 type BellTab = "all" | "mentions" | "jobs";
 
@@ -180,7 +181,9 @@ export function Bell() {
         aria-label="Notifications"
         className="w-110 gap-0 overflow-hidden p-0"
       >
-        <InboxPanel onClose={() => void overlay.set(undefined)} />
+        <Suspense fallback={null}>
+          <InboxPanel onClose={() => void overlay.set(undefined)} />
+        </Suspense>
       </PopoverContent>
     </Popover>
   );

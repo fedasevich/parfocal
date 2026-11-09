@@ -58,7 +58,11 @@ export function RowText({ title, sub }: { title: ReactNode; sub?: ReactNode }) {
   return (
     <span className="grid min-w-0">
       <b className="text-body-sm font-medium text-fg">{title}</b>
-      {sub ? <small className="mt-px text-body-sm leading-[1.45] text-fg-dim">{sub}</small> : null}
+      {sub ? (
+        <small className="mt-px text-body-sm leading-[1.45] text-fg-dim" data-phi="">
+          {sub}
+        </small>
+      ) : null}
     </span>
   );
 }

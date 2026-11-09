@@ -1,0 +1,38 @@
+name: flaky-report
+
+on:
+  schedule:
+    - cron: "0 7 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+  issues: write
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+      - name: Download the flaky lists of the last seven days of main
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          since=$(date -u -d "7 days ago" +%Y-%m-%d)
+          mkdir -p reports
+          for run in $(gh run list --workflow ci.yml --branch main --created ">=$since" --limit 200 --json databaseId --jq '.[].databaseId'); do
+            gh run download "$run" --pattern 'flaky-*' --dir "reports/$run" || true
+          done
+      - name: Write the report
+        run: node scripts/flaky.ts report reports 7 | tee report.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Check the quarantine list
+        run: node scripts/flaky.ts check
+      - name: Open the weekly issue
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh issue create --title "Flaky test report $(date -u +%Y-%m-%d)" --body-file report.md

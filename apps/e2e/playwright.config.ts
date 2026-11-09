@@ -17,7 +17,10 @@ export default defineConfig({
   fullyParallel: false,
   workers: 1,
   timeout: 60_000,
-  reporter: [["list"]],
+  grepInvert: /@quarantine/,
+  reporter: process.env.CI
+    ? [["list"], ["json", { outputFile: "test-results/report.json" }]]
+    : [["list"]],
   use: {
     baseURL: "http://localhost:5173",
     channel: "chrome",

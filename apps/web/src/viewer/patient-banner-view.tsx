@@ -10,6 +10,7 @@ export function PatientBannerStrip({ banner }: { banner: PatientBanner }) {
       aria-label="Patient"
       className="flex min-w-0 flex-wrap items-baseline gap-x-4 gap-y-1 border-line border-b bg-chrome-2 px-4 py-1.5 text-body-sm"
       data-testid="patient-banner"
+      data-phi=""
     >
       <span className="truncate font-semibold" data-testid="patient-banner-name">
         {banner.name}

@@ -54,7 +54,9 @@ function QueueRow({
   const content = (
     <>
       <ObjectIdTag>{object}</ObjectIdTag>
-      <span className="min-w-0 truncate text-left">{slide}</span>
+      <span className="min-w-0 truncate text-left" data-phi="">
+        {slide}
+      </span>
     </>
   );
   const grid = "grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-2.5";

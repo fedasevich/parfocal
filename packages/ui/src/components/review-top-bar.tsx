@@ -116,7 +116,9 @@ function ReviewTopBar({
       <span aria-hidden="true" className="h-6 w-px shrink-0 bg-line" />
       <div className="grid min-w-0 leading-tight">
         <b className="truncate text-body-sm font-semibold">{taskName}</b>
-        <small className="truncate text-caption text-fg-dim">{taskSub}</small>
+        <small className="truncate text-caption text-fg-dim" data-phi="">
+          {taskSub}
+        </small>
       </div>
       {mode === "guided" || !slidesPopover ? (
         <span
@@ -124,7 +126,9 @@ function ReviewTopBar({
           title="Submit opens the next slide"
         >
           {thumb}
-          <b className="text-body-sm font-semibold">{slideName}</b>
+          <b className="text-body-sm font-semibold" data-phi="">
+            {slideName}
+          </b>
         </span>
       ) : (
         <Popover open={slidesOpen} onOpenChange={setSlidesOpen}>
@@ -134,9 +138,13 @@ function ReviewTopBar({
             className="inline-flex h-8 shrink-0 cursor-pointer items-center gap-2 rounded-ctl border border-line-strong bg-btn-bg px-2 text-fg outline-none hover:border-fg-faint focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent aria-expanded:border-fg-faint"
           >
             {thumb}
-            <b className="text-body-sm font-semibold">{slideName}</b>
+            <b className="text-body-sm font-semibold" data-phi="">
+              {slideName}
+            </b>
             {slideSummary ? (
-              <small className="hidden text-caption text-fg-dim xl:inline">{slideSummary}</small>
+              <small className="hidden text-caption text-fg-dim xl:inline" data-phi="">
+                {slideSummary}
+              </small>
             ) : null}
             <Icon name="down" className="text-fg-faint" />
           </PopoverTrigger>
