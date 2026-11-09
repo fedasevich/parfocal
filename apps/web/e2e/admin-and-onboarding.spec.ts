@@ -247,6 +247,37 @@ test("Resend sends a pending invite again and keeps one row for it", async ({ pa
   await expect(page.getByText("3 invites waiting")).toBeVisible();
 });
 
+test("role changes, admin rights and resends are audited", async ({ page }) => {
+  await page.goto("/admin?section=people");
+  const daniel = page.getByRole("switch", { name: "Admin rights for Daniel Hruška" });
+  await expect(daniel).toBeDisabled();
+  await page.getByRole("combobox", { name: "Role of Tomáš Beneš" }).click();
+  await page.getByRole("option", { name: "Researcher" }).click();
+  await expect(page.getByText("Tomáš Beneš is a researcher now.")).toBeVisible();
+  const tomas = page.getByRole("switch", { name: "Admin rights for Tomáš Beneš" });
+  await tomas.click();
+  await expect(tomas).toBeChecked();
+  await expect(daniel).toBeEnabled();
+  await tomas.click();
+  await expect(page.getByText("Tomáš Beneš no longer has admin rights")).toBeVisible();
+  await expect(tomas).not.toBeChecked();
+  await expect(daniel).toBeDisabled();
+  await page
+    .getByRole("row", { name: /karel@cuailab.example/ })
+    .getByRole("button", { name: "Resend the invite to karel@cuailab.example" })
+    .click();
+  await expect(page.getByText("Invite sent again to karel@cuailab.example")).toBeVisible();
+  await page
+    .getByRole("navigation", { name: "Admin sections" })
+    .getByRole("link", { name: "Audit log" })
+    .click();
+  const log = page.getByRole("table");
+  await expect(log.getByRole("row", { name: /Changed a role/ })).toHaveCount(1);
+  await expect(log.getByRole("row", { name: /Gave admin rights/ })).toHaveCount(1);
+  await expect(log.getByRole("row", { name: /Removed admin rights/ })).toHaveCount(1);
+  await expect(log.getByRole("row", { name: /Sent an invitation again/ })).toHaveCount(1);
+});
+
 test("a new template opens in the editor and blocks are added by click", async ({ page }) => {
   await page.goto("/admin?section=templates");
   await expect(page.getByRole("row", { name: /Sentinel node AI evaluation/ })).toContainText(

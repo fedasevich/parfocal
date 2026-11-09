@@ -90,9 +90,32 @@ import {
 const created: Invitation[] = [];
 const withdrawn = new Set<string>();
 
+const recordedAudit: AuditEvent[] = [];
+
 export const resetAdminActions = () => {
   created.length = 0;
   withdrawn.clear();
+  recordedAudit.length = 0;
+};
+
+const recordAudit = (action: string, targetType: string, targetId: string, subject: string) => {
+  const actor = people.DH;
+  recordedAudit.unshift({
+    id: `00000000-0000-4000-8070-${String(recordedAudit.length + 1).padStart(12, "0")}`,
+    tenant_id: tenant.id,
+    seq: 2000 + recordedAudit.length,
+    occurred_at: scenarioNow,
+    actor_kind: "member",
+    actor_id: actor.id,
+    actor_subject: actor.name,
+    action,
+    target_type: targetType,
+    target_id: targetId,
+    target_subject: subject,
+    details: subject,
+    prev_hash: `r${recordedAudit.length + 1}`,
+    hash: `r${recordedAudit.length}`,
+  });
 };
 
 const newInvitationId = () =>
@@ -360,7 +383,9 @@ export const toInvitePreview = (): InvitePreview => {
   });
 };
 
-const toAuditEvents = (): AuditEvent[] =>
+const toAuditEvents = (): AuditEvent[] => [...recordedAudit, ...seededAuditEvents()];
+
+const seededAuditEvents = (): AuditEvent[] =>
   auditToday.map((row, index) => {
     const person = row.by === "webhook" ? null : people[row.by];
     return {
@@ -540,6 +565,7 @@ export function adminHandlers(): RequestHandler[] {
       const earlierId = new URL(request.url).pathname.split("/").at(-2) ?? "";
       const earlier = toInvitations().find((invitation) => invitation.id === earlierId);
       if (earlier === undefined) throw new Error(`No pending invitation ${earlierId}`);
+      recordAudit("invitation.resent", "invitation", earlier.id, earlier.email);
       const resent: Invitation = {
         ...earlier,
         id: newInvitationId(),
@@ -562,11 +588,20 @@ export function adminHandlers(): RequestHandler[] {
     getGetCurrentTenantMockHandler(() => toTenant()),
     getSetMemberAdminRightsMockHandler(async ({ request }) => {
       const body = (await request.json()) as { admin_rights: boolean };
-      return memberOf(userIdFromPath(request.url), { admin_rights: body.admin_rights });
+      const member = memberOf(userIdFromPath(request.url), { admin_rights: body.admin_rights });
+      recordAudit(
+        body.admin_rights ? "member.admin-rights-given" : "member.admin-rights-removed",
+        "member",
+        member.user_id,
+        member.display_name,
+      );
+      return member;
     }),
     getChangeMemberRoleMockHandler(async ({ request }) => {
       const body = (await request.json()) as { role: Member["role"] };
-      return memberOf(userIdFromPath(request.url), { role: body.role });
+      const member = memberOf(userIdFromPath(request.url), { role: body.role });
+      recordAudit("member.role-changed", "member", member.user_id, member.display_name);
+      return member;
     }),
     getAcceptInvitationMockHandler(() => joinedWorkspace()),
     getInviteTaskReviewerMockHandler(async ({ request, params }) => {
