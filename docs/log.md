@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-09
 
+- Shell issue pages for not found, server error, session expired and no access, and a real Connection lost banner with Retry now and a restored toast, with 6 browser tests and axe. Fable review asked for one fix, retries now run one at a time with a timeout. Wiring into the review and viewer flows is SHELL-016.
 - An ADR records the linked compare pane model, a per-pane offset in slide pixels, log2 zoom and degrees, relink keeping the manual offset and rigid automatic alignment. Saving an aligned offset per slide pair is decision 77.
 - An ADR records the settings schema with every catalogue key, its scope and default, the stores outside the catalogue and the planned device keys. Notification rows stay in the preferences table.
 - Guided review in a hide-the-AI task opens a first-read step with the AI hidden, records it through submitFirstRead and then reveals the AI, with an E2E showing the first read unchanged after decisions and submit. Fable review asked for one fix, Record my first read now waits for the last answer and added object to save. Follow-ups TASK-019 and TASK-020.
