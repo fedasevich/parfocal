@@ -141,6 +141,7 @@ export function SlidesTab({
   const viewersOf = useProjectViewers(project.id);
   const overview = useGetProjectOverview(project.id).data?.data;
   const sets = okData(useListProjectResultSets(project.id).data) ?? [];
+  const navigate = useNavigate();
   const [shut, setShut] = useState<Record<string, boolean>>({});
   const [editing, setEditing] = useState<{ id: string; label: string } | undefined>();
   const [moving, setMoving] = useState<ProjectSlide | undefined>();
@@ -263,18 +264,35 @@ export function SlidesTab({
                         </button>
                         <span>{group.sub}</span>
                         {owner && group.key !== "loose" && caseIdOf(group.key) ? (
-                          <Button
-                            size="xs"
-                            variant="ghost"
-                            className="ml-auto"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              const id = caseIdOf(group.key);
-                              if (id) setEditing({ id, label: group.key });
-                            }}
-                          >
-                            Edit slides
-                          </Button>
+                          <span className="ml-auto flex gap-1">
+                            <Button
+                              size="xs"
+                              variant="ghost"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                const id = caseIdOf(group.key);
+                                if (id) {
+                                  void navigate({
+                                    to: "/projects/$projectId/cases/$caseId/upload",
+                                    params: { projectId: project.id, caseId: id },
+                                  });
+                                }
+                              }}
+                            >
+                              Upload slides
+                            </Button>
+                            <Button
+                              size="xs"
+                              variant="ghost"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                const id = caseIdOf(group.key);
+                                if (id) setEditing({ id, label: group.key });
+                              }}
+                            >
+                              Edit slides
+                            </Button>
+                          </span>
                         ) : null}
                       </span>
                     </TableCell>
