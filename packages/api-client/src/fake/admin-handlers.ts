@@ -609,8 +609,13 @@ export const getGetSecuritySettingsMockHandler = (overrideResponse?: SecuritySet
   );
 
 export const getGetInvitePreviewMockHandler = (overrideResponse?: InvitePreview) =>
-  http.get("*/api/invitations/:token/preview", () =>
-    HttpResponse.json(overrideResponse ?? toInvitePreview()),
+  http.get("*/api/invitations/:token/preview", ({ params }) =>
+    overrideResponse === undefined && params.token !== inviteSeed.invitation
+      ? HttpResponse.json(
+          { title: "Invitation not found", status: 404, detail: "This invite link does not work." },
+          { status: 404, headers: { "content-type": "application/problem+json" } },
+        )
+      : HttpResponse.json(overrideResponse ?? toInvitePreview()),
   );
 
 export const getGetSignInOptionsMockHandler = (overrideResponse?: SignInOptions) =>

@@ -55,7 +55,8 @@ function Fact({
 }
 
 export function InviteScreen({ token, scene, change }: Props) {
-  const preview = useGetInvitePreview(token).data?.data;
+  const previewQuery = useGetInvitePreview(token, { query: { retry: false } });
+  const preview = previewQuery.data?.data;
   const accept = useAcceptInvitation();
   const goTo = useGoTo();
   const [notice, show] = useNotice();
@@ -67,6 +68,20 @@ export function InviteScreen({ token, scene, change }: Props) {
       className="mb-1"
     />
   );
+  if (previewQuery.isError)
+    return (
+      <PitchLayout>
+        <AuthForm>
+          <AuthHeading title="This invite link does not work">
+            It may have expired, been used or been withdrawn. Ask the person who invited you to send
+            a new one.
+          </AuthHeading>
+          <Button size="lg" block onClick={() => void goTo("/sign-in")}>
+            Go to sign in
+          </Button>
+        </AuthForm>
+      </PitchLayout>
+    );
   if (preview === undefined) return <PitchLayout>{null}</PitchLayout>;
   const join = () =>
     accept.mutate(

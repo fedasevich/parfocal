@@ -135,6 +135,10 @@ test("the invite preview is RT-14 with the scenario's numbers", async () => {
   assert.equal(preview.invited_by.display_name, "Daniel Hruška");
 });
 
+test("the invite preview refuses a token that is not the invitation", async () => {
+  await assert.rejects(getInvitePreview("gone-token"));
+});
+
 test("study templates carry their report blocks in order", async () => {
   const templates = okBody<{ name: string; blocks: { kind: string }[] }[]>(
     await listStudyTemplates(),
