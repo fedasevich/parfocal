@@ -25,6 +25,7 @@ export type Resolved<K extends SettingKey> = {
 const nameLength = 60;
 const mostBindings = 200;
 const mostKeysPerAction = 4;
+const mostAlignments = 200;
 
 const namesFit = (value: unknown, most: number): boolean =>
   Array.isArray(value) &&
@@ -47,6 +48,13 @@ export const fitsSetting = (entry: SettingEntry, value: unknown): boolean => {
       );
     case "names":
       return namesFit(value, entry.maximum ?? 0);
+    case "alignments":
+      return (
+        typeof value === "object" &&
+        value !== null &&
+        !Array.isArray(value) &&
+        Object.keys(value).length <= mostAlignments
+      );
     case "keys":
       return (
         typeof value === "object" &&

@@ -20,6 +20,7 @@ export {
   toApiError,
 } from "./problem.ts";
 export {
+  type CompareAlignment,
   catalogue as settingsCatalogue,
   type Layer as SettingLayer,
   type SettingEntry,

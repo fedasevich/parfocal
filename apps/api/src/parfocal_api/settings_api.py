@@ -9,6 +9,7 @@ from sqlalchemy.dialects.postgresql import insert as upsert
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
+from parfocal_api.compare_alignments import pruned
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.permissions import Permission, member_of, require
 from parfocal_api.principals import database_scope
@@ -111,7 +112,8 @@ async def get_my_settings(
 ) -> MySettingLayers:
     member = member_of(principal)
     return MySettingLayers(
-        lab=await lab_of(connection), personal=await personal_of(connection, member.user_id)
+        lab=await lab_of(connection),
+        personal=await pruned(connection, await personal_of(connection, member.user_id)),
     )
 
 
@@ -125,7 +127,9 @@ async def set_my_settings(
     for key, value in change.values.items():
         if value is not None and key in lab.locked:
             raise SettingLockedError(f"{key} is set by the workspace")
-    values = merged(await personal_of(connection, member.user_id), change.values)
+    values = await pruned(
+        connection, merged(await personal_of(connection, member.user_id), change.values)
+    )
     await connection.execute(
         upsert(personal_settings)
         .values(tenant_id=member.tenant_id, user_id=member.user_id, values=values)

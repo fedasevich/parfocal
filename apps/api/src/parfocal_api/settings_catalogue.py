@@ -1,4 +1,5 @@
 import json
+import math
 import sys
 import uuid
 from collections.abc import Mapping
@@ -30,6 +31,7 @@ class Kind(StrEnum):
     ID = "id"
     NAMES = "names"
     KEYS = "keys"
+    ALIGNMENTS = "alignments"
 
 
 LAB = frozenset({Layer.LAB})
@@ -42,7 +44,7 @@ LAB_OR_PERSONAL = frozenset({Layer.LAB, Layer.PERSONAL})
 class Setting:
     key: str
     kind: Kind
-    default: str | bool | int | tuple[str, ...] | Mapping[str, tuple[str, ...]]
+    default: str | bool | int | tuple[str, ...] | Mapping[str, tuple[str, ...]] | Mapping[str, Any]
     layers: frozenset[Layer]
     options: tuple[str, ...] = ()
     minimum: int | None = None
@@ -81,12 +83,57 @@ class Setting:
                     return f"gives each action at most {MAX_KEYS_PER_ACTION} keys"
                 if not all(names_fit([action], 1) for action in bindings):
                     return "names each action"
+            case Kind.ALIGNMENTS:
+                if not alignments_fit(value):
+                    return f"maps at most {MAX_ALIGNMENTS} slide pairs to a numeric offset"
         return None
 
 
 MAX_NAME = 60
 MAX_BINDINGS = 200
 MAX_KEYS_PER_ACTION = 4
+MAX_ALIGNMENTS = 200
+ALIGNMENT_NUMBERS = ("x", "y", "zoom", "rotation")
+MAX_FINGERPRINT = 140
+
+
+def pair_key_fits(key: object) -> bool:
+    if not isinstance(key, str):
+        return False
+    parts = key.split(":")
+    if len(parts) != 2:
+        return False
+    try:
+        return all(str(uuid.UUID(part)) == part for part in parts)
+    except ValueError:
+        return False
+
+
+def alignment_fits(value: object) -> bool:
+    if not isinstance(value, dict):
+        return False
+    offset = cast(dict[object, object], value)
+    if not set(ALIGNMENT_NUMBERS) <= set(offset) <= {*ALIGNMENT_NUMBERS, "fingerprint"}:
+        return False
+    for name in ALIGNMENT_NUMBERS:
+        number = offset[name]
+        if isinstance(number, bool) or not isinstance(number, int | float):
+            return False
+        if not math.isfinite(number) or abs(number) > 1e7:
+            return False
+    stamp = offset.get("fingerprint", "")
+    return isinstance(stamp, str) and len(stamp) <= MAX_FINGERPRINT
+
+
+def alignments_fit(value: object) -> bool:
+    if not isinstance(value, dict):
+        return False
+    pairs = cast(dict[object, object], value)
+    return (
+        len(pairs) <= MAX_ALIGNMENTS
+        and all(pair_key_fits(key) for key in pairs)
+        and all(alignment_fits(offset) for offset in pairs.values())
+    )
 
 
 def names_fit(value: object, most: int) -> bool:
@@ -120,6 +167,10 @@ def names(key: str, most: int, layers: frozenset[Layer]) -> Setting:
 
 def keys(key: str, layers: frozenset[Layer]) -> Setting:
     return Setting(key, Kind.KEYS, {}, layers)
+
+
+def alignments(key: str, layers: frozenset[Layer]) -> Setting:
+    return Setting(key, Kind.ALIGNMENTS, {}, layers)
 
 
 CATALOGUE: tuple[Setting, ...] = (
@@ -180,6 +231,7 @@ CATALOGUE: tuple[Setting, ...] = (
     keys("shortcut_custom", PERSONAL),
     switch("shortcut_single_letter", True, PERSONAL),
     switch("shortcut_by_position", True, PERSONAL),
+    alignments("compare_alignments", PERSONAL),
     choice("shortcut_whole_slide_key", "both", ("both", "hold", "tap"), PERSONAL),
 )
 
@@ -200,6 +252,8 @@ def ts_type(setting: Setting) -> str:
             return "string[]"
         case Kind.KEYS:
             return "Record<string, string[]>"
+        case Kind.ALIGNMENTS:
+            return "Record<string, CompareAlignment>"
 
 
 def entry(setting: Setting) -> dict[str, Any]:
@@ -223,10 +277,14 @@ def render() -> str:
     entries = json.dumps({setting.key: entry(setting) for setting in CATALOGUE}, indent=2)
     return (
         'export type Layer = "lab" | "personal" | "device";\n\n'
+        "export type CompareAlignment = {\n"
+        "  x: number;\n  y: number;\n  zoom: number;\n  rotation: number;\n"
+        "  fingerprint?: string;\n"
+        "};\n\n"
         f"export type SettingValues = {{\n{fields}\n}};\n\n"
         "export type SettingKey = keyof SettingValues;\n\n"
         "export type SettingEntry = {\n"
-        '  kind: "choice" | "switch" | "whole" | "id" | "names" | "keys";\n'
+        '  kind: "choice" | "switch" | "whole" | "id" | "names" | "keys" | "alignments";\n'
         "  default: string | boolean | number | string[] | Record<string, string[]>;\n"
         "  layers: Layer[];\n"
         "  options?: string[];\n"

@@ -28,6 +28,8 @@ const other = (entry: SettingEntry): unknown => {
       return ["Tumor first"];
     case "keys":
       return { ruler: ["R"] };
+    case "alignments":
+      return { "a:b": { x: 1, y: 2, zoom: 0, rotation: 15 } };
   }
 };
 
