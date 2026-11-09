@@ -40,5 +40,5 @@ export function useOpinionDraft(session: ReviewSession, hidden: string[] = []) {
     const kind = session.opinion?.questions.find((item) => item.key === key)?.kind;
     saver.mutate({ taskId, slideId, data: { answers: { [key]: asAnswer(kind, value) } } });
   };
-  return { answers, change };
+  return { answers, change, saving: saver.isPending };
 }

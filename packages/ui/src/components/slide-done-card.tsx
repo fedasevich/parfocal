@@ -248,6 +248,7 @@ function SlideDoneCard({
 export {
   doneLine,
   type OpinionQuestion,
+  QuestionControl,
   SlideDoneCard,
   type SlideDoneCardProps,
   type SlideDoneCounts,

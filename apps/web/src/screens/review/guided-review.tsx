@@ -1,5 +1,6 @@
 import {
   resolveSetting,
+  useGetFirstRead,
   useGetMySettingLayers,
   useGetReviewedLayer,
   useSubmitSlideReview,
@@ -53,6 +54,7 @@ import {
 } from "./decision-style.ts";
 import { disagreeOptions, reasonDraft } from "./disagree-reasons.ts";
 import { type DisplayLock, DisplayTab, displaySettings } from "./display-tab.tsx";
+import { FirstReadStep } from "./first-read.tsx";
 import { useGuidedCoach } from "./guided-coach.ts";
 import { nextOpenIndex } from "./guided-progress.ts";
 import {
@@ -96,11 +98,16 @@ type GuidedReviewProps = {
 
 export function GuidedReview(props: GuidedReviewProps) {
   const session = useReviewSession(props.taskId, props.slideId);
-  if (!session.ready) {
+  const hidesAi = session.task?.ai_hidden_first_read === true && props.scene === undefined;
+  const firstRead = useGetFirstRead(props.taskId, props.slideId, undefined, {
+    query: { enabled: hidesAi, retry: false },
+  });
+  if (!session.ready || (hidesAi && firstRead.isPending)) {
     return (
       <main className="grid h-dvh place-items-center bg-page text-fg-dim">Loading the review…</main>
     );
   }
+  if (hidesAi && firstRead.isError) return <FirstReadStep session={session} />;
   return (
     <GuidedBody key={`${props.scene ?? "region"}-${props.slideId}`} session={session} {...props} />
   );
@@ -545,24 +552,26 @@ function GuidedBody({
         ]
       : []),
   ];
-  const questions: OpinionQuestion[] = (session.opinion?.questions ?? []).map((question) => {
-    const answerText = opinion[question.key];
-    const missing = question.required === true && !answerText && setup.dropAnswers.length > 0;
-    return {
-      id: question.key,
-      question: question.label,
-      required: question.required ?? false,
-      kind: question.kind,
-      ...(question.kind === "choice" ? { options: question.options } : {}),
-      ...(question.kind === "scale" && question.min_label && question.max_label
-        ? {
-            help: `${question.min ?? 1} ${question.min_label} · ${question.max ?? 5} ${question.max_label}`,
-          }
-        : {}),
-      ...(answerText ? { answer: answerText } : {}),
-      ...(missing ? { missing: true } : {}),
-    };
-  });
+  const questions: OpinionQuestion[] = (session.opinion?.questions ?? [])
+    .filter((question) => !session.task?.ai_hidden_first_read || question.asked !== "first-read")
+    .map((question) => {
+      const answerText = opinion[question.key];
+      const missing = question.required === true && !answerText && setup.dropAnswers.length > 0;
+      return {
+        id: question.key,
+        question: question.label,
+        required: question.required ?? false,
+        kind: question.kind,
+        ...(question.kind === "choice" ? { options: question.options } : {}),
+        ...(question.kind === "scale" && question.min_label && question.max_label
+          ? {
+              help: `${question.min ?? 1} ${question.min_label} · ${question.max ?? 5} ${question.max_label}`,
+            }
+          : {}),
+        ...(answerText ? { answer: answerText } : {}),
+        ...(missing ? { missing: true } : {}),
+      };
+    });
   const missingQuestions = questions
     .map((question, position) => ({ question, position }))
     .filter(({ question }) => question.required && !opinion[question.id]);
@@ -857,7 +866,11 @@ function GuidedBody({
   ) : null;
 
   return (
-    <main className="flex h-dvh min-w-0 flex-col bg-page text-fg" data-scene={scene ?? "region"}>
+    <main
+      className="flex h-dvh min-w-0 flex-col bg-page text-fg"
+      data-scene={scene ?? "region"}
+      data-ai={session.task?.ai_hidden_first_read ? "shown" : undefined}
+    >
       <ReviewTop
         mode="guided"
         onHowItWorks={coach.reopen}
