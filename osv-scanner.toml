@@ -1,94 +1,9 @@
 [[IgnoredVulns]]
-id = "GHSA-2m5v-pch6-74hx"
-ignoreUntil = 2026-12-09T00:00:00Z
-reason = "Present in undici 7.29.1 when TEST-014 added the scan on 2026-11-09. Upgrade or re-triage under SEC-015 before expiry."
-
-[[IgnoredVulns]]
-id = "GHSA-333x-w4r6-6crp"
-ignoreUntil = 2026-12-09T00:00:00Z
-reason = "Present in fast-uri 3.1.8 when TEST-014 added the scan on 2026-11-09. Upgrade or re-triage under SEC-015 before expiry."
-
-[[IgnoredVulns]]
-id = "GHSA-3g3m-2fjr-6pw4"
-ignoreUntil = 2026-12-09T00:00:00Z
-reason = "Present in glob 13.0.6 when TEST-014 added the scan on 2026-11-09. Upgrade or re-triage under SEC-015 before expiry."
-
-[[IgnoredVulns]]
-id = "GHSA-4qv8-2p9j-2685"
-ignoreUntil = 2026-12-09T00:00:00Z
-reason = "Present in undici 7.29.1 when TEST-014 added the scan on 2026-11-09. Upgrade or re-triage under SEC-015 before expiry."
-
-[[IgnoredVulns]]
-id = "GHSA-4w7w-5xrc-9h26"
-ignoreUntil = 2026-12-09T00:00:00Z
-reason = "Present in undici 7.29.1 when TEST-014 added the scan on 2026-11-09. Upgrade or re-triage under SEC-015 before expiry."
-
-[[IgnoredVulns]]
-id = "GHSA-55wc-3pg8-jfw6"
-ignoreUntil = 2026-12-09T00:00:00Z
-reason = "Present in undici 7.29.1 when TEST-014 added the scan on 2026-11-09. Upgrade or re-triage under SEC-015 before expiry."
-
-[[IgnoredVulns]]
-id = "GHSA-6q48-6c7w-9gw2"
-ignoreUntil = 2026-12-09T00:00:00Z
-reason = "Present in certifi 2026.7.22 when TEST-014 added the scan on 2026-11-09. Upgrade or re-triage under SEC-015 before expiry."
-
-[[IgnoredVulns]]
-id = "GHSA-9fm3-97px-rjf6"
-ignoreUntil = 2026-12-09T00:00:00Z
-reason = "Present in undici 7.29.1 when TEST-014 added the scan on 2026-11-09. Upgrade or re-triage under SEC-015 before expiry."
-
-[[IgnoredVulns]]
-id = "GHSA-f72v-6w45-q472"
-ignoreUntil = 2026-12-09T00:00:00Z
-reason = "Present in undici 7.29.1 when TEST-014 added the scan on 2026-11-09. Upgrade or re-triage under SEC-015 before expiry."
-
-[[IgnoredVulns]]
-id = "GHSA-g3hv-75wg-m249"
-ignoreUntil = 2026-12-09T00:00:00Z
-reason = "Present in minimatch 10.2.6 when TEST-014 added the scan on 2026-11-09. Upgrade or re-triage under SEC-015 before expiry."
-
-[[IgnoredVulns]]
 id = "GHSA-gcqx-w48m-w2h4"
-ignoreUntil = 2026-12-09T00:00:00Z
-reason = "Present in deepmerge 4.3.1 when TEST-014 added the scan on 2026-11-09. Upgrade or re-triage under SEC-015 before expiry."
+effectiveUntil = 2027-02-07T00:00:00Z
+reason = "[medium] deepmerge 4.3.1 under the shadcn CLI, which runs only on a developer machine to add components. No fixed release exists. Rated low by GitHub and 5.3 by CVSS, so it takes the medium SLA."
 
 [[IgnoredVulns]]
 id = "GHSA-mrhx-c7xc-m3w5"
-ignoreUntil = 2026-12-09T00:00:00Z
-reason = "Present in zod 3.25.76, zod 4.6.5 when TEST-014 added the scan on 2026-11-09. Upgrade or re-triage under SEC-015 before expiry."
-
-[[IgnoredVulns]]
-id = "GHSA-px8p-9vwx-vf98"
-ignoreUntil = 2026-12-09T00:00:00Z
-reason = "Present in fflate 0.7.4 when TEST-014 added the scan on 2026-11-09. Upgrade or re-triage under SEC-015 before expiry."
-
-[[IgnoredVulns]]
-id = "GHSA-qrxm-fqhp-jwvm"
-ignoreUntil = 2026-12-09T00:00:00Z
-reason = "Present in undici 7.29.1 when TEST-014 added the scan on 2026-11-09. Upgrade or re-triage under SEC-015 before expiry."
-
-[[IgnoredVulns]]
-id = "GHSA-w3rx-r6r6-pgpr"
-ignoreUntil = 2026-12-09T00:00:00Z
-reason = "Present in image-size 0.7.5 when TEST-014 added the scan on 2026-11-09. Upgrade or re-triage under SEC-015 before expiry."
-
-[[IgnoredVulns]]
-id = "GHSA-w74x-v6f9-j3xg"
-ignoreUntil = 2026-12-09T00:00:00Z
-reason = "Present in fast-uri 3.1.8 when TEST-014 added the scan on 2026-11-09. Upgrade or re-triage under SEC-015 before expiry."
-
-[[IgnoredVulns]]
-id = "GHSA-wjr9-j795-jxcr"
-ignoreUntil = 2026-12-09T00:00:00Z
-reason = "Present in fast-uri 3.1.8 when TEST-014 added the scan on 2026-11-09. Upgrade or re-triage under SEC-015 before expiry."
-
-[[IgnoredVulns]]
-id = "GHSA-xhq7-xmqj-769h"
-ignoreUntil = 2026-12-09T00:00:00Z
-reason = "Present in fast-uri 3.1.8 when TEST-014 added the scan on 2026-11-09. Upgrade or re-triage under SEC-015 before expiry."
-
-[[IgnoredVulns]]
-id = "GHSA-xjj6-f33q-929c"
-ignoreUntil = 2026-12-09T00:00:00Z
-reason = "Present in undici 7.29.1 when TEST-014 added the scan on 2026-11-09. Upgrade or re-triage under SEC-015 before expiry."
+effectiveUntil = 2026-12-09T00:00:00Z
+reason = "[high] zod 3.25.76 under @vivjs/loaders 0.23.0, the newest Viv, which needs zod 3. The fix exists only in zod 4.6.6. The worst case is a memory spike in the user's own tab while Viv validates slide metadata. Re-check for a Viv release on zod 4 before expiry."

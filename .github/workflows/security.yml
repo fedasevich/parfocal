@@ -29,8 +29,24 @@ jobs:
         with:
           node-version-file: .node-version
       - uses: ./.github/actions/install-osv-scanner
+      - uses: ./.github/actions/install-trivy
       - run: node scripts/osv-scan.ts self-test
+      - run: node scripts/osv-scan.ts iac-self-test
       - run: node scripts/osv-scan.ts scan
+      - run: node scripts/osv-scan.ts iac
+      - if: always()
+        name: Write the vulnerability report
+        run: node scripts/osv-scan.ts report "$RUNNER_TEMP/vulnerability-report.md"
+      - if: always()
+        name: Publish the report to the job summary
+        run: cat "$RUNNER_TEMP/vulnerability-report.md" >> "$GITHUB_STEP_SUMMARY" || true
+      - if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: vulnerability-report
+          path: ${{ runner.temp }}/vulnerability-report.md
+          retention-days: 90
+          if-no-files-found: ignore
 
   dast-baseline:
     runs-on: ubuntu-latest
