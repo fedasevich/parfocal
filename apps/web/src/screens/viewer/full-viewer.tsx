@@ -149,6 +149,7 @@ import {
   TellMeWhenReady,
 } from "./objects-panel.tsx";
 import { SavePresetModal } from "./save-preset-modal.tsx";
+import { swipeStart } from "./swipe-split.ts";
 import { useAreaNav } from "./use-area-nav.ts";
 import { viewerModelWarnings } from "./viewer-model-warnings.ts";
 import {
@@ -265,6 +266,7 @@ function ViewerBody({
   const minimapSetting = personalSettings?.minimap ?? "useful";
   const peekOpen = search.peek === true;
   const [peekHeld, setPeekHeld] = useState(false);
+  const [swipeAt, setSwipeAt] = useState(swipeStart);
   const navigate = useNavigate();
   const router = useRouter();
   const person = usePeople();
@@ -791,6 +793,8 @@ function ViewerBody({
   }, [camera, cameraImage]);
   const drawing = layerDrawing({
     view,
+    split: swipeAt,
+    onSplit: setSwipeAt,
     objects,
     added: added.map((item) => item.object),
     stats,
@@ -1467,199 +1471,222 @@ function ViewerBody({
         ) : measurement ? (
           <MeasureCanvas measurement={measurement} regionSize={firstRegion?.size_mm ?? 0} />
         ) : (
-          <SlideStill
-            view={stillView}
-            camera={shownCamera}
-            onCameraChange={setCamera}
-            regionDecisions={regionDecisions}
-            cellDecisions={cellDecisions}
-            ringedCells={
-              confirmRest
-                ? openCells.map((cell) => cell.object)
-                : openZoneCells.map((cell) => cell.object)
-            }
-            claimHidden={!showsClaim(style)}
-            drawAs={settings.draw}
-            showIds={settings.ids}
-            failed={setup.issue === "slidefail"}
-            bare={nothing || running}
-            minimap={false}
-            hint={false}
-            tiles={setup.tiles}
-            slideName={session.slideName}
-            regionStyle={(object) => drawing.regionStyle(object) ?? styleOfObject(object)}
-            cellStyle={
-              paged ? (object) => paged.styleOf(object, styleOfObject(object)) : styleOfObject
-            }
-            currentTint={
-              confidence === "color" && current ? confidenceTintOf(current.score) : undefined
-            }
-            tags={running || nothing ? [] : drawing.tags}
-            underlay={
-              running ? () => <RunningHeat reached={readReach(progress)} /> : drawing.underlay
-            }
-            onCellPick={search.tool === undefined ? pick : undefined}
-            onPointPick={(point) => {
-              const placed = pinForClick(search.tool, point);
-              if (placed === null) return;
-              setPin(placed);
-              onSearch({ object: undefined, tab: "comments" });
-            }}
-            overlay={(still) => {
-              stillCamera.current = still.camera;
-              return (
-                <>
-                  {paged ? <PagedProbeMarker probe={paged.probe} /> : null}
-                  {canvasNotice}
-                  {onCell && tab === "objects" && current && !running ? (
-                    <TypeBar
-                      object={current.object}
-                      centre={cellCentre(current.object, still.camera, still.size)}
-                      scale={still.camera.scale}
-                      size={still.size}
-                      chosen={chosenType(style, current, session.classes, answer(current.object))}
-                      disabledReason={buttonsOff}
-                      onChoose={(option) => decideType(option.id)}
-                    />
-                  ) : null}
-                  {shownPin ? (
-                    <PinMark pin={shownPin} camera={still.camera} size={still.size} />
-                  ) : null}
-                  {drawing.legend ? (
-                    <div className="absolute top-4 left-4">{drawing.legend}</div>
-                  ) : null}
-                  {drawing.extra}
-                  {nothing || running || setup.issue === "slidefail" ? null : (
-                    <ViewerMinimap
-                      setting={minimapSetting}
-                      view={stillView}
-                      camera={still.camera}
-                      size={still.size}
-                      areas={areas}
-                      checked={regions
-                        .filter((region) => answer(region.object))
-                        .map((region) => region.object)}
-                      blockLeft={!whole}
-                      blockToast={toast !== null}
-                      cells={cells.map((cell) => ({
-                        object: cell.object,
-                        decided: answer(cell.object) !== undefined,
-                      }))}
-                      pins={shownPin ? [shownPin] : []}
-                      cellsPanel={cellsRect}
-                      onMoveView={setCamera}
-                      onOpen={() => onSearch({ peek: true })}
-                      onPopOut={() =>
-                        setToast({
-                          id: Date.now(),
-                          text: "Opens the whole slide on the second monitor",
-                        })
-                      }
-                    />
-                  )}
-                  {whole && cells.length && !running && view === "panel" ? (
-                    <CellCluster
-                      className="absolute top-[50%] left-[54%]"
-                      split={countAnswers(cells, answer)}
-                      onClick={() => pick(firstOpenCell)}
-                    />
-                  ) : null}
-                  {current?.kind === "cell" ? (
-                    cellsOpen ? (
-                      <MeasuredBlock
-                        className="absolute bottom-18 left-1/2 w-fit -translate-x-1/2"
-                        onRect={setCellsRect}
-                      >
-                        <CellsGrid
-                          cells={cells}
-                          current={current.object}
-                          answer={answer}
-                          answerKeys={answersOf(style, session.classes, current).map(
-                            (item) => item.key,
-                          )}
-                          claimHidden={!showsClaim(style)}
-                          folded={cellsFolded}
-                          confirming={confirmRest}
-                          onPick={(object) => pick(object)}
-                          onNotNucleus={buttonsOff ? undefined : notNucleus}
-                          onAgreeRest={() => setConfirmRest(true)}
-                          onCancelRest={() => setConfirmRest(false)}
-                          onApplyRest={() => {
-                            const next = new Map(overrides);
-                            for (const cell of openCells) {
-                              next.set(cell.object, {
-                                value: "agree",
-                                raw: rawFor(style, "agree", cell),
-                                reasons: [],
-                                note: null,
+          <div className="flex min-h-0 flex-1">
+            <SlideStill
+              className={drawing.second ? "basis-0 border-r border-black" : ""}
+              view={stillView}
+              camera={shownCamera}
+              onCameraChange={setCamera}
+              regionDecisions={regionDecisions}
+              cellDecisions={cellDecisions}
+              ringedCells={
+                confirmRest
+                  ? openCells.map((cell) => cell.object)
+                  : openZoneCells.map((cell) => cell.object)
+              }
+              claimHidden={!showsClaim(style)}
+              drawAs={settings.draw}
+              showIds={settings.ids}
+              failed={setup.issue === "slidefail"}
+              bare={nothing || running}
+              minimap={false}
+              hint={false}
+              tiles={setup.tiles}
+              slideName={session.slideName}
+              regionStyle={(object) => drawing.regionStyle(object) ?? styleOfObject(object)}
+              cellStyle={
+                paged ? (object) => paged.styleOf(object, styleOfObject(object)) : styleOfObject
+              }
+              currentTint={
+                confidence === "color" && current ? confidenceTintOf(current.score) : undefined
+              }
+              tags={running || nothing ? [] : drawing.tags}
+              underlay={
+                running ? () => <RunningHeat reached={readReach(progress)} /> : drawing.underlay
+              }
+              onCellPick={search.tool === undefined ? pick : undefined}
+              onPointPick={(point) => {
+                const placed = pinForClick(search.tool, point);
+                if (placed === null) return;
+                setPin(placed);
+                onSearch({ object: undefined, tab: "comments" });
+              }}
+              overlay={(still) => {
+                stillCamera.current = still.camera;
+                return (
+                  <>
+                    {paged ? <PagedProbeMarker probe={paged.probe} /> : null}
+                    {canvasNotice}
+                    {onCell && tab === "objects" && current && !running ? (
+                      <TypeBar
+                        object={current.object}
+                        centre={cellCentre(current.object, still.camera, still.size)}
+                        scale={still.camera.scale}
+                        size={still.size}
+                        chosen={chosenType(style, current, session.classes, answer(current.object))}
+                        disabledReason={buttonsOff}
+                        onChoose={(option) => decideType(option.id)}
+                      />
+                    ) : null}
+                    {shownPin ? (
+                      <PinMark pin={shownPin} camera={still.camera} size={still.size} />
+                    ) : null}
+                    {drawing.legend ? (
+                      <div className="absolute top-4 left-4">{drawing.legend}</div>
+                    ) : null}
+                    {drawing.extra}
+                    {nothing || running || setup.issue === "slidefail" ? null : (
+                      <ViewerMinimap
+                        setting={minimapSetting}
+                        view={stillView}
+                        camera={still.camera}
+                        size={still.size}
+                        areas={areas}
+                        checked={regions
+                          .filter((region) => answer(region.object))
+                          .map((region) => region.object)}
+                        blockLeft={!whole}
+                        blockToast={toast !== null}
+                        cells={cells.map((cell) => ({
+                          object: cell.object,
+                          decided: answer(cell.object) !== undefined,
+                        }))}
+                        pins={shownPin ? [shownPin] : []}
+                        cellsPanel={cellsRect}
+                        onMoveView={setCamera}
+                        onOpen={() => onSearch({ peek: true })}
+                        onPopOut={() =>
+                          setToast({
+                            id: Date.now(),
+                            text: "Opens the whole slide on the second monitor",
+                          })
+                        }
+                      />
+                    )}
+                    {whole && cells.length && !running && view === "panel" ? (
+                      <CellCluster
+                        className="absolute top-[50%] left-[54%]"
+                        split={countAnswers(cells, answer)}
+                        onClick={() => pick(firstOpenCell)}
+                      />
+                    ) : null}
+                    {current?.kind === "cell" ? (
+                      cellsOpen ? (
+                        <MeasuredBlock
+                          className="absolute bottom-18 left-1/2 w-fit -translate-x-1/2"
+                          onRect={setCellsRect}
+                        >
+                          <CellsGrid
+                            cells={cells}
+                            current={current.object}
+                            answer={answer}
+                            answerKeys={answersOf(style, session.classes, current).map(
+                              (item) => item.key,
+                            )}
+                            claimHidden={!showsClaim(style)}
+                            folded={cellsFolded}
+                            confirming={confirmRest}
+                            onPick={(object) => pick(object)}
+                            onNotNucleus={buttonsOff ? undefined : notNucleus}
+                            onAgreeRest={() => setConfirmRest(true)}
+                            onCancelRest={() => setConfirmRest(false)}
+                            onApplyRest={() => {
+                              const next = new Map(overrides);
+                              for (const cell of openCells) {
+                                next.set(cell.object, {
+                                  value: "agree",
+                                  raw: rawFor(style, "agree", cell),
+                                  reasons: [],
+                                  note: null,
+                                });
+                              }
+                              setOverrides(next);
+                              setConfirmRest(false);
+                              setToast({
+                                id: Date.now(),
+                                text: `${openCells.length} cells marked agree`,
+                                undo: () => setOverrides(overrides),
                               });
-                            }
-                            setOverrides(next);
-                            setConfirmRest(false);
-                            setToast({
-                              id: Date.now(),
-                              text: `${openCells.length} cells marked agree`,
-                              undo: () => setOverrides(overrides),
-                            });
-                          }}
-                          onFoldChange={setCellsFolded}
-                          onClose={() => setCellsOpen(false)}
-                        />
-                      </MeasuredBlock>
-                    ) : (
-                      <MeasuredBlock
-                        className="absolute bottom-18 left-1/2 -translate-x-1/2"
-                        onRect={setCellsRect}
+                            }}
+                            onFoldChange={setCellsFolded}
+                            onClose={() => setCellsOpen(false)}
+                          />
+                        </MeasuredBlock>
+                      ) : (
+                        <MeasuredBlock
+                          className="absolute bottom-18 left-1/2 -translate-x-1/2"
+                          onRect={setCellsRect}
+                        >
+                          <CellsLauncher
+                            decided={cells.length - openCells.length}
+                            total={cells.length}
+                            onClick={() => setCellsOpen(true)}
+                          />
+                        </MeasuredBlock>
+                      )
+                    ) : null}
+                    {whole ? null : (
+                      <Button
+                        size="lg"
+                        className="absolute bottom-4 left-4"
+                        onClick={() => pick(undefined)}
                       >
-                        <CellsLauncher
-                          decided={cells.length - openCells.length}
-                          total={cells.length}
-                          onClick={() => setCellsOpen(true)}
-                        />
-                      </MeasuredBlock>
-                    )
-                  ) : null}
-                  {whole ? null : (
-                    <Button
-                      size="lg"
-                      className="absolute bottom-4 left-4"
-                      onClick={() => pick(undefined)}
-                    >
-                      <Icon name="expand" />
-                      Whole slide
-                    </Button>
-                  )}
-                  <div className="absolute bottom-4 left-1/2 grid -translate-x-1/2 justify-items-center gap-2">
-                    {tileHint}
-                    <MagnificationBar
-                      magnification={
-                        camera
-                          ? magnificationOf(stillView, camera)
-                          : stillView.kind === "cell"
-                            ? 40
-                            : whole
-                              ? 1.25
-                              : 2.5
-                      }
-                      scaleLabel={stillView.kind === "cell" ? "10 µm" : whole ? "5 mm" : "500 µm"}
-                      scalePx={92}
-                      micronsPerPixel={stillView.kind === "cell" ? 0.11 : whole ? 33.87 : 4.43}
-                    />
-                  </div>
-                  {toast ? (
-                    <div className="absolute right-4 bottom-4">
-                      <UndoToast
-                        key={toast.id}
-                        message={toast.text}
-                        {...(toast.undo ? { onUndo: toast.undo } : {})}
-                        onExpire={() => setToast(null)}
+                        <Icon name="expand" />
+                        Whole slide
+                      </Button>
+                    )}
+                    <div className="absolute bottom-4 left-1/2 grid -translate-x-1/2 justify-items-center gap-2">
+                      {tileHint}
+                      <MagnificationBar
+                        magnification={
+                          camera
+                            ? magnificationOf(stillView, camera)
+                            : stillView.kind === "cell"
+                              ? 40
+                              : whole
+                                ? 1.25
+                                : 2.5
+                        }
+                        scaleLabel={stillView.kind === "cell" ? "10 µm" : whole ? "5 mm" : "500 µm"}
+                        scalePx={92}
+                        micronsPerPixel={stillView.kind === "cell" ? 0.11 : whole ? 33.87 : 4.43}
                       />
                     </div>
-                  ) : null}
-                </>
-              );
-            }}
-          />
+                    {toast ? (
+                      <div className="absolute right-4 bottom-4">
+                        <UndoToast
+                          key={toast.id}
+                          message={toast.text}
+                          {...(toast.undo ? { onUndo: toast.undo } : {})}
+                          onExpire={() => setToast(null)}
+                        />
+                      </div>
+                    ) : null}
+                  </>
+                );
+              }}
+            />
+            {drawing.second ? (
+              <SlideStill
+                className="basis-0"
+                view={stillView}
+                camera={shownCamera}
+                onCameraChange={setCamera}
+                regionDecisions={regionDecisions}
+                claimHidden={!showsClaim(style)}
+                drawAs={settings.draw}
+                showIds={settings.ids}
+                minimap={false}
+                hint={false}
+                tiles={setup.tiles}
+                slideName={session.slideName}
+                regionStyle={drawing.second.regionStyle}
+                tags={drawing.second.tags}
+                underlay={drawing.underlay}
+                overlay={() => drawing.second?.extra}
+              />
+            ) : null}
+          </div>
         )}
       </ViewerFrame>
       <SavePresetModal

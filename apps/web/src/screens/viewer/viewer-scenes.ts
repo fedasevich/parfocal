@@ -24,6 +24,7 @@ export type LayerView =
   | "models"
   | "readers"
   | "swipe"
+  | "sidebyside"
   | "table";
 
 export const layerViews: { value: LayerView; label: string }[] = [
@@ -35,6 +36,7 @@ export const layerViews: { value: LayerView; label: string }[] = [
   { value: "models", label: "Model vs model" },
   { value: "readers", label: "Reviewer vs reviewer" },
   { value: "swipe", label: "Swipe between two sets" },
+  { value: "sidebyside", label: "Side by side" },
   { value: "table", label: "Object table and stats" },
 ];
 
@@ -105,6 +107,7 @@ const scenes: Record<ViewerScene, Partial<ViewerSetup>> = {
   models: { ...display, view: "models" },
   readers: { ...display, view: "readers" },
   swipe: { ...display, view: "swipe" },
+  sidebyside: { ...display, view: "sidebyside" },
   table: { ...display, view: "table", object: "T2" },
   display,
   locked: { ...display, confidenceLock: "Confidence hidden this round" },
@@ -133,6 +136,7 @@ const layersSceneSet: Record<LayersScene, true> = {
   models: true,
   readers: true,
   swipe: true,
+  sidebyside: true,
   table: true,
   display: true,
   locked: true,

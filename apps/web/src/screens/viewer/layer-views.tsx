@@ -1,18 +1,14 @@
 import type { ReviewObject, SlideResultStats } from "@parfocal/api-client";
 import { Person, type PersonInfo } from "@parfocal/ui/components/person";
-import {
-  SetChip,
-  SwipeHandle,
-  VizKey,
-  VizLegend,
-  VizRamp,
-} from "@parfocal/ui/components/visualize";
+import { SetChip, VizKey, VizLegend, VizRamp } from "@parfocal/ui/components/visualize";
 import type { ReactNode } from "react";
 import { fieldMapColor, fieldMapStops } from "../../viewer/viewer-engine.ts";
 import type { Confidence } from "../review/decision-style.ts";
 import { overviewSize, regionShapes } from "../review/slide-geometry.ts";
 import { type Camera, type RegionStyle, type SlideTag, shapeKey } from "../review/slide-still.tsx";
 import { lookUrl } from "../thumbnails.ts";
+import { SwipeDivider } from "./swipe-divider.tsx";
+import { swipeStart } from "./swipe-split.ts";
 import type { LayerView } from "./viewer-scenes.ts";
 
 export const setColours = { a: "#f87171", b: "#a3e635", reviewed: "#38bdf8" } as const;
@@ -45,6 +41,8 @@ export type LayerInput = {
   selected: string | null;
   otherSets?: { id: string; color: string }[];
   reviewedOn?: boolean;
+  split?: number;
+  onSplit?: (split: number) => void;
 };
 
 export type LayerDrawing = {
@@ -55,7 +53,14 @@ export type LayerDrawing = {
     | undefined;
   legend: ReactNode;
   extra: ReactNode;
+  second?: {
+    regionStyle: (object: string) => RegionStyle | undefined;
+    tags: SlideTag[];
+    extra: ReactNode;
+  };
 };
+
+const noSplit = (): void => undefined;
 
 const centreOf = (key: string) => {
   const box = regionShapes[key]?.box ?? [0, 0, 0, 0];
@@ -93,6 +98,7 @@ const scaled = (key: string, factor: number, props: Record<string, string | numb
 export function layerDrawing(input: LayerInput): LayerDrawing {
   const { view, objects, added, stats, confidence, selected } = input;
   const reviewedOn = input.reviewedOn ?? true;
+  const split = input.split ?? swipeStart;
   const otherSets = input.otherSets ?? [];
   const regions = objects.filter((item) => item.kind === "region");
   const score = (object: string) => regions.find((item) => item.object === object)?.score;
@@ -381,13 +387,19 @@ export function layerDrawing(input: LayerInput): LayerDrawing {
         added.includes(object) ? { stroke: "none" } : { stroke: setColours.a, width: 2.4 },
       tags: tagsIn(() => setColours.a).filter((tag) => !added.includes(tag.object)),
       underlay: ({ camera, size }) => {
-        const splitX = camera.x + (size.width * 0.52 - size.width / 2) / camera.scale;
+        const splitX = camera.x + (size.width * split - size.width / 2) / camera.scale;
         return (
           <>
             {heatImage(0.3)}
             <defs>
               <clipPath id="swipe-right">
-                <rect x={splitX} y={0} width={overviewSize.width} height={overviewSize.height} />
+                <rect
+                  data-testid="swipe-b-clip"
+                  x={splitX}
+                  y={0}
+                  width={overviewSize.width}
+                  height={overviewSize.height}
+                />
               </clipPath>
             </defs>
             <g clipPath="url(#swipe-right)">
@@ -410,9 +422,35 @@ export function layerDrawing(input: LayerInput): LayerDrawing {
           <SetChip color={setColours.b} className="absolute top-4 right-4">
             B · {input.setB}
           </SetChip>
-          <SwipeHandle style={{ left: "52%" }} />
+          <SwipeDivider split={split} onSplit={input.onSplit ?? noSplit} />
         </>
       ),
+    };
+  }
+  if (view === "sidebyside") {
+    return {
+      regionStyle: (object) =>
+        added.includes(object) ? { stroke: "none" } : { stroke: setColours.a, width: 2.4 },
+      tags: tagsIn(() => setColours.a).filter((tag) => !added.includes(tag.object)),
+      underlay: () => heatImage(0.3),
+      legend: null,
+      extra: (
+        <SetChip color={setColours.a} className="absolute top-4 left-4">
+          A · {input.setA}
+        </SetChip>
+      ),
+      second: {
+        regionStyle: (object) =>
+          added.includes(object)
+            ? { stroke: "none" }
+            : { stroke: setColours.b, fill: `${setColours.b}2e`, width: 2.4 },
+        tags: tagsIn(() => setColours.b).filter((tag) => !added.includes(tag.object)),
+        extra: (
+          <SetChip color={setColours.b} className="absolute top-4 left-4">
+            B · {input.setB}
+          </SetChip>
+        ),
+      },
     };
   }
   if (view === "table") {

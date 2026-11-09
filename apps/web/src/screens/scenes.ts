@@ -122,6 +122,7 @@ export const mockScenes = {
     "models",
     "readers",
     "swipe",
+    "sidebyside",
     "table",
     "display",
     "locked",
