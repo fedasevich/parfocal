@@ -35078,7 +35078,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/AuditEvent"
+                    "$ref": "#/components/schemas/NamedAuditEvent"
                   },
                   "title": "Response Listauditevents"
                 }
@@ -39347,121 +39347,6 @@
           "reviewers"
         ],
         "title": "AssignedTask"
-      },
-      "AuditEvent": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Id"
-          },
-          "tenant_id": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Tenant Id"
-          },
-          "seq": {
-            "type": "integer",
-            "title": "Seq"
-          },
-          "occurred_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Occurred At"
-          },
-          "actor_kind": {
-            "$ref": "#/components/schemas/ActorKind"
-          },
-          "actor_id": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Actor Id"
-          },
-          "action": {
-            "type": "string",
-            "title": "Action"
-          },
-          "target_type": {
-            "type": "string",
-            "title": "Target Type"
-          },
-          "target_id": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Target Id"
-          },
-          "details": {
-            "type": "string",
-            "title": "Details"
-          },
-          "prev_hash": {
-            "type": "string",
-            "title": "Prev Hash"
-          },
-          "hash": {
-            "type": "string",
-            "title": "Hash"
-          },
-          "actor_subject": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Actor Subject"
-          },
-          "target_subject": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Target Subject"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "tenant_id",
-          "seq",
-          "occurred_at",
-          "actor_kind",
-          "actor_id",
-          "action",
-          "target_type",
-          "target_id",
-          "details",
-          "prev_hash",
-          "hash"
-        ],
-        "title": "AuditEvent"
       },
       "AuditExport": {
         "properties": {
@@ -46514,6 +46399,144 @@
           "created_by_user_id"
         ],
         "title": "MyTask"
+      },
+      "NamedAuditEvent": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "tenant_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tenant Id"
+          },
+          "seq": {
+            "type": "integer",
+            "title": "Seq"
+          },
+          "occurred_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Occurred At"
+          },
+          "actor_kind": {
+            "$ref": "#/components/schemas/ActorKind"
+          },
+          "actor_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor Id"
+          },
+          "action": {
+            "type": "string",
+            "title": "Action"
+          },
+          "target_type": {
+            "type": "string",
+            "title": "Target Type"
+          },
+          "target_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Id"
+          },
+          "details": {
+            "type": "string",
+            "title": "Details"
+          },
+          "prev_hash": {
+            "type": "string",
+            "title": "Prev Hash"
+          },
+          "hash": {
+            "type": "string",
+            "title": "Hash"
+          },
+          "actor_subject": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor Subject"
+          },
+          "target_subject": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Subject"
+          },
+          "actor_user_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor User Id"
+          },
+          "actor_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "tenant_id",
+          "seq",
+          "occurred_at",
+          "actor_kind",
+          "actor_id",
+          "action",
+          "target_type",
+          "target_id",
+          "details",
+          "prev_hash",
+          "hash"
+        ],
+        "title": "NamedAuditEvent"
       },
       "Neighbours": {
         "properties": {
@@ -56902,7 +56925,7 @@
       "Values": {
         "additionalProperties": true,
         "type": "object",
-        "maxProperties": 49
+        "maxProperties": 50
       },
       "Verdict": {
         "properties": {
@@ -57518,7 +57541,7 @@
               "type": "string"
             },
             "type": "array",
-            "maxItems": 49,
+            "maxItems": 50,
             "title": "Locked",
             "default": []
           }

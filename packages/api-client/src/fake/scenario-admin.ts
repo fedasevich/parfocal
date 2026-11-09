@@ -153,6 +153,9 @@ export const auditAt = (time: string, day = today) => at(time, day);
 
 export const auditEventId = (index: number) => uuid(61, index + 1);
 
+export const auditPseudonym = (key: PersonKey) =>
+  uuid(62, key.charCodeAt(0) * 256 + key.charCodeAt(1));
+
 export type ServiceAccountSeed = {
   id: string;
   name: string;
@@ -498,13 +501,6 @@ export const signInMethods = [
     detail: "A one-time link and code, valid 15 minutes",
     on: true,
     locked: false,
-  },
-  {
-    key: "two-factor-admins",
-    label: "Two factors with admin rights",
-    detail: "Always required",
-    on: true,
-    locked: true,
   },
 ];
 
