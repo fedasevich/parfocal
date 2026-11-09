@@ -1,10 +1,12 @@
 import {
   type AiModel,
+  type AiModelRun,
   getGetMySettingLayersQueryKey,
   type LabSettings,
   type Project,
   type SecuritySetting,
   useArchiveProject,
+  useCancelModelRun,
   useGetMySettingLayers,
   useGetSecuritySettings,
   useGetSessionPolicy,
@@ -39,7 +41,7 @@ import { CategoryTag, StatusTag } from "@parfocal/ui/components/tag";
 import { Zone } from "@parfocal/ui/components/zone";
 import { cn } from "@parfocal/ui/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { destinations } from "../../shell/destinations.ts";
 import { useGoTo } from "../../shell/router-link.tsx";
 import { percent } from "../format.ts";
@@ -284,11 +286,56 @@ function useModelVisibility(notify: Notify) {
   return { shownOf: (model: AiModel) => shown[model.id] ?? model.shown, change };
 }
 
+const cancelDelayMs = 6000;
+
+function useRunCancellation(notify: Notify) {
+  const queryClient = useQueryClient();
+  const cancel = useCancelModelRun();
+  const [cancelled, setCancelled] = useState<string[]>([]);
+  const pending = useRef(new Map<string, { run: AiModelRun; timer: number }>());
+  const commit = (run: AiModelRun) => {
+    pending.current.delete(run.id);
+    cancel.mutate(
+      { projectId: run.project.id, runId: run.id },
+      {
+        onSuccess: () =>
+          void queryClient.invalidateQueries({ predicate: (query) => modelLists(query.queryKey) }),
+        onError: (error) => {
+          setCancelled((current) => current.filter((id) => id !== run.id));
+          notify(error instanceof Error ? error.message : "That did not cancel. Try again.");
+        },
+      },
+    );
+  };
+  const flush = useRef(commit);
+  flush.current = commit;
+  useEffect(
+    () => () => {
+      for (const { run, timer } of pending.current.values()) {
+        window.clearTimeout(timer);
+        flush.current(run);
+      }
+    },
+    [],
+  );
+  const start = (run: AiModelRun) => {
+    setCancelled((current) => [...current, run.id]);
+    const timer = window.setTimeout(() => commit(run), cancelDelayMs);
+    pending.current.set(run.id, { run, timer });
+    notify(`${run.model} run cancelled. Slides already done keep their results.`, () => {
+      window.clearTimeout(timer);
+      pending.current.delete(run.id);
+      setCancelled((current) => current.filter((id) => id !== run.id));
+    });
+  };
+  return { cancelled, start };
+}
+
 export function ModelsSection({ notify }: { notify: Notify }) {
   const data = useListAiModels().data?.data;
   const personOf = usePeople();
   const visibility = useModelVisibility(notify);
-  const [cancelled, setCancelled] = useState<string[]>([]);
+  const { cancelled, start } = useRunCancellation(notify);
   if (data === undefined) return null;
   const parfocal = data.models.filter((model) => model.source === "parfocal");
   const lab = data.models.filter((model) => model.source === "lab");
@@ -422,13 +469,8 @@ export function ModelsSection({ notify }: { notify: Notify }) {
                   <Button
                     size="sm"
                     variant="ghost"
-                    onClick={() => {
-                      setCancelled([...cancelled, run.id]);
-                      notify(
-                        `${run.model} run cancelled. Slides already done keep their results.`,
-                        () => setCancelled((current) => current.filter((id) => id !== run.id)),
-                      );
-                    }}
+                    aria-label={`Cancel ${run.model} run`}
+                    onClick={() => start(run)}
                   >
                     Cancel
                   </Button>
