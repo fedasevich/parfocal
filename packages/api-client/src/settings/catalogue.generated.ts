@@ -1,5 +1,13 @@
 export type Layer = "lab" | "personal" | "device";
 
+export type CompareAlignment = {
+  x: number;
+  y: number;
+  zoom: number;
+  rotation: number;
+  fingerprint?: string;
+};
+
 export type SettingValues = {
   theme: "system" | "light" | "dark";
   slide_brightness: number;
@@ -53,13 +61,14 @@ export type SettingValues = {
   shortcut_custom: Record<string, string[]>;
   shortcut_single_letter: boolean;
   shortcut_by_position: boolean;
+  compare_alignments: Record<string, CompareAlignment>;
   shortcut_whole_slide_key: "both" | "hold" | "tap";
 };
 
 export type SettingKey = keyof SettingValues;
 
 export type SettingEntry = {
-  kind: "choice" | "switch" | "whole" | "id" | "names" | "keys";
+  kind: "choice" | "switch" | "whole" | "id" | "names" | "keys" | "alignments";
   default: string | boolean | number | string[] | Record<string, string[]>;
   layers: Layer[];
   options?: string[];
@@ -548,6 +557,13 @@ export const catalogue: Record<SettingKey, SettingEntry> = {
   "shortcut_by_position": {
     "kind": "switch",
     "default": true,
+    "layers": [
+      "personal"
+    ]
+  },
+  "compare_alignments": {
+    "kind": "alignments",
+    "default": {},
     "layers": [
       "personal"
     ]

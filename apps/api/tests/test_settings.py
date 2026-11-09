@@ -1,10 +1,11 @@
 import json
+import uuid
 from pathlib import Path
 from typing import Any
 
 import pytest
 from db_support import ApiAs
-from workspace_support import make_workspace, owner
+from workspace_support import make_case, make_project, make_slide, make_workspace, owner
 
 from parfocal_api.settings_catalogue import BY_KEY, TS_PATH, Layer, render
 from parfocal_api.tables import Role
@@ -322,3 +323,66 @@ def test_an_admin_requires_two_factors_and_reads_it_back(api: ApiAs, database: s
     )
     switched = [json.loads(str(row[0])).get("two_factor_required") for row in audited]
     assert switched == [True, False]
+
+
+def aligned(left: uuid.UUID, right: uuid.UUID, **extra: object) -> dict[str, Any]:
+    return {f"{left}:{right}": {"x": 12.5, "y": -3, "zoom": 0.25, "rotation": 15, **extra}}
+
+
+def test_a_compare_alignment_is_a_personal_map_of_slide_pairs_to_a_numeric_offset() -> None:
+    setting = BY_KEY["compare_alignments"]
+    assert setting.layers == {Layer.PERSONAL}
+    left, right = uuid.uuid4(), uuid.uuid4()
+    assert setting.problem(aligned(left, right)) is None
+    assert setting.problem({}) is None
+    assert setting.problem({"one": aligned(left, right)[f"{left}:{right}"]}) is not None
+    assert setting.problem({f"{left}:{right}": {"x": 1, "y": 2, "zoom": 0}}) is not None
+    assert setting.problem(aligned(left, right, x="far")) is not None
+    assert setting.problem(aligned(left, right, x=float("inf"))) is not None
+    assert setting.problem(aligned(left, right, extra=1)) is not None
+    assert setting.problem(aligned(left, right, fingerprint="x" * 141)) is not None
+    many = {
+        f"{uuid.uuid4()}:{uuid.uuid4()}": {"x": 0, "y": 0, "zoom": 0, "rotation": 0}
+        for _ in range(201)
+    }
+    assert setting.problem(many) is not None
+    assert setting.problem(["a"]) is not None
+
+
+@pytest.mark.db
+def test_an_alignment_is_saved_read_and_cleared_when_either_slide_is_replaced(
+    api: ApiAs, database: str
+) -> None:
+    workspace = make_workspace(database, PEOPLE)
+    people = workspace.people
+    project = make_project(database, workspace.tenant_id)
+    case = make_case(database, workspace.tenant_id, project, "S26-09001")
+    he = make_slide(database, workspace.tenant_id, project, "A1", case)
+    ck = make_slide(database, workspace.tenant_id, project, "A2", case)
+    other = make_slide(database, workspace.tenant_id, project, "A3", case)
+
+    saved = api(people["reviewer"]).put(
+        ME, json={"values": {"compare_alignments": {**aligned(he, ck), **aligned(he, other)}}}
+    )
+    assert saved.status_code == 200, saved.text
+    stored = saved.json()["personal"]["compare_alignments"]
+    assert set(stored) == {f"{he}:{ck}", f"{he}:{other}"}
+    assert stored[f"{he}:{ck}"]["rotation"] == 15
+    assert stored[f"{he}:{ck}"]["fingerprint"]
+    assert api(people["reviewer"]).get(ME).json()["personal"]["compare_alignments"] == stored
+    assert api(people["researcher"]).get(ME).json()["personal"] == {}
+
+    owner(database, f"UPDATE slides SET sha256 = repeat('b', 64) WHERE id = '{ck}'")
+    after_replace = api(people["reviewer"]).get(ME).json()["personal"]["compare_alignments"]
+    assert set(after_replace) == {f"{he}:{other}"}
+
+    owner(database, f"UPDATE slides SET deleted_at = now() WHERE id = '{he}'")
+    assert api(people["reviewer"]).get(ME).json()["personal"] == {}
+
+    kept = api(people["reviewer"]).put(
+        ME, json={"values": {"compare_alignments": aligned(ck, other)}}
+    )
+    assert set(kept.json()["personal"]["compare_alignments"]) == {f"{ck}:{other}"}
+    reset = api(people["reviewer"]).put(ME, json={"values": {"compare_alignments": None}})
+    assert reset.json()["personal"] == {}
+    assert api(people["reviewer"]).get(ME).json()["personal"] == {}

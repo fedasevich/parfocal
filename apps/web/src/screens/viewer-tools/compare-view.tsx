@@ -18,6 +18,7 @@ import {
   alignViews,
   alignWithOffset,
   createLinkedViews,
+  isNoOffset,
   type LinkedView,
   registerThumbnails,
   relinkViews,
@@ -61,6 +62,7 @@ import {
 } from "./link-camera.ts";
 import { type PaneSlideIds, pickSlide, swapSlides } from "./pane-slides.ts";
 import { reviewRail } from "./rails.ts";
+import { pairKeyOf, savedOffsetOf, useSavedAlignments } from "./saved-alignments.ts";
 import { grayPixelsOf } from "./thumbnail-pixels.ts";
 import { midEdge } from "./tool-geometry.ts";
 import { coverHome } from "./tool-maths.ts";
@@ -180,6 +182,35 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
     setLink((state) => alignViews(state, linkReference));
     setAlignment("idle");
   };
+
+  const pairKey = pairKeyOf(ids.left, ids.right);
+  const {
+    ready: alignmentsReady,
+    saved: savedAlignments,
+    save: saveAlignment,
+  } = useSavedAlignments();
+  const savedNow = useRef(savedAlignments);
+  savedNow.current = savedAlignments;
+  const [settledPair, setSettledPair] = useState<string | null>(null);
+  useEffect(() => {
+    if (!alignmentsReady || pairKey === null) return;
+    const stored = savedOffsetOf(savedNow.current, pairKey);
+    setLink((state) =>
+      stored !== null
+        ? alignWithOffset(state, linkReference, "right", stored)
+        : isNoOffset(state.offsets.right)
+          ? state
+          : alignViews(state, linkReference),
+    );
+    setAlignment("idle");
+    setSettledPair(pairKey);
+  }, [alignmentsReady, pairKey]);
+  const offsetRight = link.offsets.right;
+  useEffect(() => {
+    if (settledPair === null || settledPair !== pairKey) return;
+    saveAlignment(pairKey, isNoOffset(offsetRight) ? null : offsetRight);
+  }, [settledPair, pairKey, offsetRight, saveAlignment]);
+  const aligned = !isNoOffset(offsetRight);
 
   const bindings = useBindings(["compare"], ["linkviews"]);
   useHotkeys(bindings, ({ action }) => {
@@ -392,7 +423,7 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
             >
               Line up automatically
             </button>
-            {alignment === "done" ? (
+            {alignment === "done" || aligned ? (
               <button
                 type="button"
                 className="rounded-full px-3 py-1 text-body-sm text-fg-dim hover:bg-white/10"
@@ -407,11 +438,13 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
               ? "Comparing the two overviews"
               : alignment === "done"
                 ? "Proposed from the overviews. Drag or rotate a pane to adjust."
-                : alignment === "none"
-                  ? "No clear match between these two. Line them up by hand."
-                  : layout === "four"
-                    ? "Lines the right pane up with the left. The two bottom panes keep their own view."
-                    : "Proposes a starting offset and rotation from the overviews."}
+                : aligned
+                  ? "Your alignment is kept for this pair of slides. Clear puts the panes back."
+                  : alignment === "none"
+                    ? "No clear match between these two. Line them up by hand."
+                    : layout === "four"
+                      ? "Lines the right pane up with the left. The two bottom panes keep their own view."
+                      : "Proposes a starting offset and rotation from the overviews."}
           </p>
         </div>
         <p className="m-0 text-caption text-fg-dim">
