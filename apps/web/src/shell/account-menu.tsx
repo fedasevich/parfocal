@@ -14,6 +14,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { now } from "../clock.ts";
 import { openFeedback } from "../feedback/feedback-state.ts";
+import { openHelp } from "../help/tour-state.ts";
 import { toPersonInfo } from "../screens/people.ts";
 import { okData } from "../screens/placeholder.tsx";
 import { nextAvailability, presenceOf, shownPerson } from "./account-presence.ts";
@@ -41,12 +42,12 @@ const entries = [
     disabledReason: "Locks after a quiet spell for now",
   },
   { icon: "comment", label: "Send feedback", action: "feedback" },
-  { icon: "help", label: "Help and what's new", disabledReason: "Not written yet" },
+  { icon: "help", label: "Help and tour", action: "help" },
 ] satisfies {
   icon: IconName;
   label: string;
   href?: string;
-  action?: "feedback";
+  action?: "feedback" | "help";
   keys?: string;
   disabledReason?: string;
 }[];
@@ -122,6 +123,7 @@ export function AccountMenu({ me, person }: { me: Me | undefined; person: Person
         ...entry,
         ...(href ? { onSelect: () => void goTo(href) } : {}),
         ...(action === "feedback" ? { onSelect: openFeedback } : {}),
+        ...(action === "help" ? { onSelect: openHelp } : {}),
       }))}
       extra={import.meta.env.DEV ? <ViewAs current={me?.initials} /> : null}
       onLogOut={() => window.location.assign(logOutUrl)}

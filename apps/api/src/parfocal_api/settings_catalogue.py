@@ -170,6 +170,7 @@ CATALOGUE: tuple[Setting, ...] = (
     whole("unsure_zone_min_unsure_cells", 4, 1, 1000, LAB),
     choice("home_layout", "role", ("role", "review", "research", "both"), PERSONAL),
     switch("getting_started_hidden", False, PERSONAL),
+    whole("tour_progress", 0, 0, 10, PERSONAL),
     names("presets", 3, PERSONAL),
     whole("default_preset", 0, 0, 3, PERSONAL),
     switch("signature_block", True, PERSONAL),
