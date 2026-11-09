@@ -1,5 +1,6 @@
 import type { Point } from "../measure/ruler-maths.ts";
 import { type AnnotationDocument, isShapeHidden, isShapeLocked } from "./document.ts";
+import { selectableCandidates } from "./shape-index.ts";
 import {
   at,
   type Extent,
@@ -94,7 +95,13 @@ export function pickShape(
   tolerance: number,
   markTolerance = tolerance,
 ): Shape | null {
-  const stack = [...doc.shapes.values()].reverse().filter((shape) => isSelectable(doc, shape));
+  const reachMax = Math.max(tolerance, markTolerance);
+  const stack = selectableCandidates(doc, [
+    p.x - reachMax,
+    p.y - reachMax,
+    p.x + reachMax,
+    p.y + reachMax,
+  ]).reverse();
   const reach = (shape: Shape) => (markKinds.has(shape.kind) ? markTolerance : tolerance);
   const onOutline = stack.find((shape) => distanceToOutline(shape, p) <= reach(shape));
   if (onOutline) return onOutline;
@@ -102,7 +109,5 @@ export function pickShape(
 }
 
 export function shapesInExtent(doc: AnnotationDocument, area: Extent): Shape[] {
-  return [...doc.shapes.values()].filter(
-    (shape) => isSelectable(doc, shape) && extentsIntersect(shape.bounds, area),
-  );
+  return selectableCandidates(doc, area).filter((shape) => extentsIntersect(shape.bounds, area));
 }
