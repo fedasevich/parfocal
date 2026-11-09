@@ -162,11 +162,12 @@ def test_a_resumed_stage_counts_only_the_units_of_its_own_run(
 def test_the_estimate_uses_the_recorded_stage_times(api: ApiAs, database: str, lab: Lab) -> None:
     detector = {"name": "hovernet"}
     runs = started(api, lab, lab.slides, parameters={"detector": detector})
-    for item in runs:
-        execute(database, claim(database, lab, tiled_plan(2)))
+    for _ in runs:
+        claimed = claim(database, lab, tiled_plan(2))
+        execute(database, claimed)
         owner(
             database,
-            f"UPDATE stage_throughput SET seconds = 30 WHERE job_id = '{item['id']}'",
+            f"UPDATE stage_throughput SET seconds = 30 WHERE job_id = '{claimed.job.job_id}'",
         )
     listed = ok(api(lab.people["owner"]).get(f"/api/projects/{lab.project}/models"))
     hovernet = next(model for model in listed if model["name"] == "hovernet")

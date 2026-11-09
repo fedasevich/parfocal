@@ -140,9 +140,13 @@ function TourCard({ index }: { index: number }) {
 }
 
 function TourOffer() {
-  const saved = useSavedTour();
   const onHome = useMatches({ select: (matches) => matches.at(-1)?.routeId === "/" });
-  if (!onHome || !saved.loaded || !offerShows(saved)) return null;
+  return onHome ? <TourOfferCard /> : null;
+}
+
+function TourOfferCard() {
+  const saved = useSavedTour();
+  if (!saved.loaded || !offerShows(saved)) return null;
   return (
     <section
       aria-label="Tour offer"

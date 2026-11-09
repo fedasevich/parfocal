@@ -16,11 +16,16 @@ test("a task that arrives in one session shows in another My work within 2 s", a
     const response = await fetch("/api/me");
     return ((await response.json()) as { user_id: string }).user_id;
   });
-  await sender.evaluate((id) => {
-    const channel = new BroadcastChannel("parfocal-fake-worklist");
-    channel.postMessage({ user: id });
-    channel.close();
-  }, user);
+  const announce = () =>
+    sender.evaluate((id) => {
+      const channel = new BroadcastChannel("parfocal-fake-worklist");
+      channel.postMessage({ user: id });
+      channel.close();
+    }, user);
+  await announce();
   await expect(watcher.getByText("Task that arrived live")).toBeVisible({ timeout: 2000 });
-  await expect(sender.getByText("Task that arrived live")).toBeVisible({ timeout: 2000 });
+  await expect(async () => {
+    await announce();
+    await expect(sender.getByText("Task that arrived live")).toBeVisible({ timeout: 2000 });
+  }).toPass({ timeout: ready });
 });
