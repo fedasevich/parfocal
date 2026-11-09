@@ -2886,7 +2886,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Depends on IAM-019, REPORT-015. Refs kit W57.
   Size: M.
 
-- [ ] COLLAB-015 · Threads on any slide
+- [x] COLLAB-015 · Threads on any slide
   A thread can be started on any slide a person can read, with the task optional, as the owner chose on 2026-11-04 ([threads on any slide with an optional task](adr/0230-threads-on-any-slide-with-an-optional-task.md)). A migration makes `threads.task_id` nullable. A thread with a task keeps every rule of [ADR 0152](adr/0152-threads-on-task-slides.md) (threads on task slides), including the sign-off rule. A taskless thread is seen by everyone who can read the slide, except that a reader with an open first read on that slide sees only their own and the researcher's. Its notifications carry the project and the case so mutes catch them, and the target opens the slide with no task. The comment tool works on a slide opened outside a task, and the Comments tab marks each thread "Slide" or with its task.
   Done when API tests cover creating, listing, replying and deleting taskless threads with tenant isolation, audit and the first read rule, a notification test resolves a taskless target and a project mute catches it, and a component test shows a taskless thread in the Comments tab.
   Depends on COLLAB-002, COLLAB-005.
