@@ -1,3 +1,4 @@
+import { readFile } from "node:fs/promises";
 import { expect, type Page, test } from "@playwright/test";
 
 async function viewerLink(page: Page, name: string) {
@@ -59,4 +60,32 @@ test("the ID tag in the object table copies the full ID of the object", async ({
   const text = await page.evaluate(() => navigator.clipboard.readText());
   expect(text).toMatch(/^[^/]+\/[^/]+\/A1\/T2$/);
   await expect(page).not.toHaveURL(/object=T2/);
+});
+
+test("picking a table row selects the object and a selected object highlights its row", async ({
+  page,
+}) => {
+  await page.goto(await viewerLink(page, "Visualize · Object table and stats"));
+  const table = page.getByRole("region", { name: "Objects on A1" });
+  const row = table.locator("tbody tr", { hasText: "T2" }).first();
+  await expect(row).toBeVisible({ timeout: 25_000 });
+  await row.click();
+  await expect(page).toHaveURL(/object=T2/);
+  await expect(row).toHaveAttribute("data-state", "selected");
+  const other = table.locator("tbody tr").filter({ hasNotText: "T2" }).first();
+  await other.click();
+  await expect(row).not.toHaveAttribute("data-state", "selected");
+});
+
+test("the table downloads a CSV with one line per row", async ({ page }) => {
+  await page.goto(await viewerLink(page, "Visualize · Object table and stats"));
+  const table = page.getByRole("region", { name: "Objects on A1" });
+  const rows = table.locator("tbody tr");
+  await expect(rows.first()).toBeVisible({ timeout: 25_000 });
+  const count = await rows.count();
+  const download = page.waitForEvent("download");
+  await table.getByRole("button", { name: "CSV" }).click();
+  const file = await download;
+  const text = await readFile(await file.path(), "utf8");
+  expect(text.trimEnd().split("\n")).toHaveLength(count + 1);
 });
