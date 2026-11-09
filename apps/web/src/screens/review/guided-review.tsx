@@ -10,6 +10,7 @@ import { Banner, InlineState } from "@parfocal/ui/components/banner";
 import type { Blocker } from "@parfocal/ui/components/before-you-list";
 import { Button } from "@parfocal/ui/components/button";
 import { CellCluster, CellsLauncher } from "@parfocal/ui/components/cells-panel";
+import { DecisionButtons } from "@parfocal/ui/components/decision-buttons";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Keycap } from "@parfocal/ui/components/keycap";
 import { SidePanel } from "@parfocal/ui/components/side-panel";
@@ -62,6 +63,7 @@ import { disagreeOptions, reasonDraft } from "./disagree-reasons.ts";
 import { type DisplayLock, DisplayTab, displaySettings, withOverrides } from "./display-tab.tsx";
 import { FirstReadStep } from "./first-read.tsx";
 import { useGuidedCoach } from "./guided-coach.ts";
+import { orderObjects, zoomedCamera } from "./guided-drive.ts";
 import { nextOpenIndex } from "./guided-progress.ts";
 import {
   finishingAnswers,
@@ -87,7 +89,7 @@ import { RedrawLayer } from "./redraw-layer.tsx";
 import { type ReviewSession, useReviewSession } from "./review-data.ts";
 import { type Answer, type Answers, answerOf, baseAnswers, countAnswers } from "./review-state.ts";
 import { ReviewTop } from "./review-top.tsx";
-import { type Camera, readout, SlideStill, type StillView } from "./slide-still.tsx";
+import { type Camera, homeCamera, readout, SlideStill, type StillView } from "./slide-still.tsx";
 import { ThreadsTab, useOpenThreadsWarning } from "./threads-tab.tsx";
 import { useDecisionSaves } from "./use-decision-saves.ts";
 import { useDisplayChoice, useShiftPresetKeys } from "./use-display-choice.ts";
@@ -167,7 +169,25 @@ function GuidedBody({
   const threadsWarning = useOpenThreadsWarning(session.taskId, session.slideId);
   const style = setup.style ? { ...session.style, kind: setup.style } : session.style;
   const decisions = useDecisionSaves(session, style);
-  const objects = setup.issue === "noresults" ? [] : session.objects;
+  const extraLocks: DisplayLock[] = setup.confidenceLock
+    ? [{ setting: "confidence", value: "hidden", reason: setup.confidenceLock }]
+    : [];
+  const labCutoff = useLabDecisionCutoff();
+  const choice = useDisplayChoice(session, setup.preset);
+  const [savingPreset, setSavingPreset] = useState(false);
+  useShiftPresetKeys(session.display, choice);
+  const sceneSettings = withOverrides(
+    displaySettings(session.display, choice.preset, extraLocks, undefined, labCutoff),
+    choice.overrides,
+    session.display,
+    extraLocks,
+  );
+  const orderedObjects = useMemo(
+    () =>
+      orderObjects(session.objects, sceneSettings.order, `${session.taskId}:${session.slideId}`),
+    [session.objects, sceneSettings.order, session.taskId, session.slideId],
+  );
+  const objects = setup.issue === "noresults" ? [] : orderedObjects;
   const noResults = objects.length === 0;
   const regions = objects.filter((item) => item.kind === "region");
   const cells = objects.filter((item) => item.kind === "cell");
@@ -268,11 +288,7 @@ function GuidedBody({
       : null,
   );
   const counts = countAnswers(objects, answer);
-  const extraLocks: DisplayLock[] = setup.confidenceLock
-    ? [{ setting: "confidence", value: "hidden", reason: setup.confidenceLock }]
-    : [];
   const myLayers = okData(useGetMySettingLayers().data);
-  const labCutoff = useLabDecisionCutoff();
   const wording =
     scene === undefined
       ? resolveSetting("confidence_wording", {
@@ -281,15 +297,6 @@ function GuidedBody({
           device: {},
         }).value
       : null;
-  const choice = useDisplayChoice(session, setup.preset);
-  const [savingPreset, setSavingPreset] = useState(false);
-  useShiftPresetKeys(session.display, choice);
-  const sceneSettings = withOverrides(
-    displaySettings(session.display, choice.preset, extraLocks, undefined, labCutoff),
-    choice.overrides,
-    session.display,
-    extraLocks,
-  );
   const confidenceLocked = [...(session.display?.locks ?? []), ...extraLocks].some(
     (lock) => lock.setting === "confidence",
   );
@@ -660,6 +667,15 @@ function GuidedBody({
 
   const authorOfNotes = person(session.meId);
   const kept = answer(currentId);
+  const underSlideButtons =
+    settings.buttons === "bottom" &&
+    tabNow === "review" &&
+    !showDone &&
+    !noResults &&
+    !disagreeOpen &&
+    redraw === null &&
+    !areaMode &&
+    !setup.issue;
   const note: ReactNode =
     noteFor !== null && current ? (
       <NoteEditor
@@ -783,6 +799,7 @@ function GuidedBody({
         style={style}
         classes={session.classes}
         answer={kept}
+        answersElsewhere={underSlideButtons}
         pending={
           setup.pending && noteFor !== null ? setup.pending : setup.connLost ? setup.pending : null
         }
@@ -937,179 +954,205 @@ function GuidedBody({
       />
       {banner}
       <div data-vt-target="" className="flex min-h-0 flex-1">
-        <SlideStill
-          view={view}
-          camera={camera}
-          onCameraChange={setCamera}
-          backdrop={backdrop}
-          engineDrawn={claimShown ? still.ids : undefined}
-          regionDecisions={regionDecisions}
-          cellDecisions={cellDecisions}
-          ringedCells={confirmRest ? openCells.map((cell) => cell.object) : []}
-          claimHidden={!showsClaim(style)}
-          drawAs={settings.draw}
-          showIds={settings.ids}
-          failed={tileFail}
-          bare={noResults}
-          minimap={!noResults}
-          hint={!showDone && !noResults}
-          slideName={session.slideName}
-          onPointPick={redraw === null ? undefined : pickPoint}
-          overlay={({ camera: shown, size, moved }) => (
-            <>
-              <RedrawLayer
-                camera={shown}
-                size={size}
-                draft={redraw}
-                saved={redrawn[currentId] ?? null}
-                onClose={finishRedraw}
-              />
-              {canvasIssue}
-              {coachOn ? (
-                <>
-                  <CoachTip n={1} className="absolute top-[45%] left-[35%] w-75">
-                    The AI found this. It is outlined in white.
-                  </CoachTip>
-                  <CoachTip n={2} className="absolute bottom-24 left-4 w-85">
-                    Drag to move around. Scroll or use + and − to zoom. Back to {currentId} brings
-                    you back.
-                  </CoachTip>
-                </>
-              ) : null}
-              {view.kind === "whole" && cells.length && !noResults ? (
-                <CellCluster
-                  className="absolute top-[50%] left-[54%]"
-                  split={countAnswers(cells, answer)}
-                  onClick={() => {
-                    setWhole(false);
-                    setShowDone(false);
-                    jump("cells");
-                  }}
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+          <SlideStill
+            view={view}
+            homeOf={(size) =>
+              view.kind === "whole"
+                ? homeCamera(view, size)
+                : zoomedCamera(homeCamera(view, size), settings.zoom)
+            }
+            camera={camera}
+            onCameraChange={setCamera}
+            backdrop={backdrop}
+            engineDrawn={claimShown ? still.ids : undefined}
+            regionDecisions={regionDecisions}
+            cellDecisions={cellDecisions}
+            ringedCells={confirmRest ? openCells.map((cell) => cell.object) : []}
+            claimHidden={!showsClaim(style)}
+            drawAs={settings.draw}
+            showIds={settings.ids}
+            failed={tileFail}
+            bare={noResults}
+            minimap={!noResults}
+            hint={!showDone && !noResults}
+            slideName={session.slideName}
+            onPointPick={redraw === null ? undefined : pickPoint}
+            overlay={({ camera: shown, size, moved }) => (
+              <>
+                <RedrawLayer
+                  camera={shown}
+                  size={size}
+                  draft={redraw}
+                  saved={redrawn[currentId] ?? null}
+                  onClose={finishRedraw}
                 />
-              ) : null}
-              {cellCount && current?.kind === "cell" && !showDone && !noResults ? (
-                <CellCountChip
-                  result={cellCount}
-                  className="absolute top-4 left-1/2 -translate-x-1/2"
-                />
-              ) : null}
-              {current?.kind === "cell" && !showDone && !noResults ? (
-                cellsShut ? (
-                  <CellsLauncher
-                    className="absolute bottom-18 left-1/2 -translate-x-1/2"
-                    decided={cells.length - openCells.length}
-                    total={cells.length}
-                    onClick={() => setCellsShut(false)}
-                  />
-                ) : (
-                  <CellsGrid
-                    className="absolute bottom-18 left-1/2 w-fit -translate-x-1/2"
-                    cells={cells}
-                    current={currentId}
-                    answer={answer}
-                    answerKeys={answersOf(style, session.classes, current).map((item) => item.key)}
-                    claimHidden={!showsClaim(style)}
-                    folded={cellsFolded}
-                    confirming={confirmRest}
-                    onPick={(object) => jump(object)}
-                    onNotNucleus={buttonsOff ? undefined : notNucleus}
-                    onAgreeRest={() => setConfirmRest(true)}
-                    onCancelRest={() => setConfirmRest(false)}
-                    onApplyRest={() => {
-                      const next = new Map(overrides);
-                      const before = overrides;
-                      for (const cell of openCells) {
-                        decisions.save(cell.object, rawFor(style, "agree", cell), "agree");
-                        next.set(cell.object, {
-                          value: "agree",
-                          raw: "agree",
-                          reasons: [],
-                          note: null,
-                        });
-                      }
-                      setOverrides(next);
-                      setConfirmRest(false);
-                      showUndoToast({
-                        message: `${openCells.length} cells marked agree`,
-                        undo: () => {
-                          setOverrides(before);
-                          for (const cell of openCells) decisions.restore(cell.object, undefined);
-                        },
-                      });
+                {canvasIssue}
+                {coachOn ? (
+                  <>
+                    <CoachTip n={1} className="absolute top-[45%] left-[35%] w-75">
+                      The AI found this. It is outlined in white.
+                    </CoachTip>
+                    <CoachTip n={2} className="absolute bottom-24 left-4 w-85">
+                      Drag to move around. Scroll or use + and − to zoom. Back to {currentId} brings
+                      you back.
+                    </CoachTip>
+                  </>
+                ) : null}
+                {view.kind === "whole" && cells.length && !noResults ? (
+                  <CellCluster
+                    className="absolute top-[50%] left-[54%]"
+                    split={countAnswers(cells, answer)}
+                    onClick={() => {
+                      setWhole(false);
+                      setShowDone(false);
+                      jump("cells");
                     }}
-                    onFoldChange={setCellsFolded}
-                    onClose={() => setCellsShut(true)}
                   />
-                )
-              ) : null}
-              {noResults ? null : (
-                <div className="absolute bottom-4 left-4 flex items-center gap-2">
-                  {showDone ? null : (
+                ) : null}
+                {cellCount && current?.kind === "cell" && !showDone && !noResults ? (
+                  <CellCountChip
+                    result={cellCount}
+                    className="absolute top-4 left-1/2 -translate-x-1/2"
+                  />
+                ) : null}
+                {current?.kind === "cell" && !showDone && !noResults ? (
+                  cellsShut ? (
+                    <CellsLauncher
+                      className="absolute bottom-18 left-1/2 -translate-x-1/2"
+                      decided={cells.length - openCells.length}
+                      total={cells.length}
+                      onClick={() => setCellsShut(false)}
+                    />
+                  ) : (
+                    <CellsGrid
+                      className="absolute bottom-18 left-1/2 w-fit -translate-x-1/2"
+                      cells={cells}
+                      current={currentId}
+                      answer={answer}
+                      answerKeys={answersOf(style, session.classes, current).map(
+                        (item) => item.key,
+                      )}
+                      claimHidden={!showsClaim(style)}
+                      folded={cellsFolded}
+                      confirming={confirmRest}
+                      onPick={(object) => jump(object)}
+                      onNotNucleus={buttonsOff ? undefined : notNucleus}
+                      onAgreeRest={() => setConfirmRest(true)}
+                      onCancelRest={() => setConfirmRest(false)}
+                      onApplyRest={() => {
+                        const next = new Map(overrides);
+                        const before = overrides;
+                        for (const cell of openCells) {
+                          decisions.save(cell.object, rawFor(style, "agree", cell), "agree");
+                          next.set(cell.object, {
+                            value: "agree",
+                            raw: "agree",
+                            reasons: [],
+                            note: null,
+                          });
+                        }
+                        setOverrides(next);
+                        setConfirmRest(false);
+                        showUndoToast({
+                          message: `${openCells.length} cells marked agree`,
+                          undo: () => {
+                            setOverrides(before);
+                            for (const cell of openCells) decisions.restore(cell.object, undefined);
+                          },
+                        });
+                      }}
+                      onFoldChange={setCellsFolded}
+                      onClose={() => setCellsShut(true)}
+                    />
+                  )
+                ) : null}
+                {noResults ? null : (
+                  <div className="absolute bottom-4 left-4 flex items-center gap-2">
+                    {showDone ? null : (
+                      <Button
+                        size="lg"
+                        variant={moved && !confirmRest ? "primary" : "secondary"}
+                        title={`Center ${currentId} again`}
+                        onClick={() => {
+                          setCamera(null);
+                          setWhole(false);
+                        }}
+                      >
+                        <Icon name="target" />
+                        Back to {currentId}
+                      </Button>
+                    )}
+                    <fieldset
+                      aria-label="Zoom"
+                      className="m-0 inline-flex h-10 min-w-0 items-center rounded-ctl border border-line-strong bg-btn-bg p-0"
+                    >
+                      <Button
+                        variant="ghost"
+                        size="icon-lg"
+                        aria-label="Zoom out"
+                        title="Zoom out (−)"
+                        onClick={() => setCamera({ ...shown, scale: shown.scale / 1.4 })}
+                      >
+                        <Icon name="minus" />
+                      </Button>
+                      <span
+                        className="min-w-14 text-center font-mono text-body-sm font-semibold"
+                        title="Magnification on screen"
+                      >
+                        {readout(view, shown)}
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="icon-lg"
+                        aria-label="Zoom in"
+                        title="Zoom in (+)"
+                        onClick={() => setCamera({ ...shown, scale: shown.scale * 1.4 })}
+                      >
+                        <Icon name="plus" />
+                      </Button>
+                    </fieldset>
                     <Button
                       size="lg"
-                      variant={moved && !confirmRest ? "primary" : "secondary"}
-                      title={`Center ${currentId} again`}
+                      className={
+                        view.kind === "whole"
+                          ? "border-accent bg-[color-mix(in_srgb,var(--accent)_18%,var(--chrome))]"
+                          : undefined
+                      }
+                      aria-pressed={view.kind === "whole"}
+                      title={view.kind === "whole" ? `Back to ${currentId}` : "See the whole slide"}
                       onClick={() => {
                         setCamera(null);
-                        setWhole(false);
+                        setWhole(view.kind !== "whole");
+                        if (view.kind === "whole") setShowDone(false);
                       }}
                     >
-                      <Icon name="target" />
-                      Back to {currentId}
+                      <Icon name="expand" />
+                      Whole slide
                     </Button>
-                  )}
-                  <fieldset
-                    aria-label="Zoom"
-                    className="m-0 inline-flex h-10 min-w-0 items-center rounded-ctl border border-line-strong bg-btn-bg p-0"
-                  >
-                    <Button
-                      variant="ghost"
-                      size="icon-lg"
-                      aria-label="Zoom out"
-                      title="Zoom out (−)"
-                      onClick={() => setCamera({ ...shown, scale: shown.scale / 1.4 })}
-                    >
-                      <Icon name="minus" />
-                    </Button>
-                    <span
-                      className="min-w-14 text-center font-mono text-body-sm font-semibold"
-                      title="Magnification on screen"
-                    >
-                      {readout(view, shown)}
-                    </span>
-                    <Button
-                      variant="ghost"
-                      size="icon-lg"
-                      aria-label="Zoom in"
-                      title="Zoom in (+)"
-                      onClick={() => setCamera({ ...shown, scale: shown.scale * 1.4 })}
-                    >
-                      <Icon name="plus" />
-                    </Button>
-                  </fieldset>
-                  <Button
-                    size="lg"
-                    className={
-                      view.kind === "whole"
-                        ? "border-accent bg-[color-mix(in_srgb,var(--accent)_18%,var(--chrome))]"
-                        : undefined
-                    }
-                    aria-pressed={view.kind === "whole"}
-                    title={view.kind === "whole" ? `Back to ${currentId}` : "See the whole slide"}
-                    onClick={() => {
-                      setCamera(null);
-                      setWhole(view.kind !== "whole");
-                      if (view.kind === "whole") setShowDone(false);
-                    }}
-                  >
-                    <Icon name="expand" />
-                    Whole slide
-                  </Button>
-                </div>
-              )}
-            </>
-          )}
-        />
+                  </div>
+                )}
+              </>
+            )}
+          />
+          {underSlideButtons && current ? (
+            <div
+              className="flex shrink-0 justify-center border-t border-line bg-chrome p-3"
+              data-testid="under-slide-buttons"
+            >
+              <DecisionButtons
+                decisionStyle={style.kind}
+                value={kept?.raw}
+                onValueChange={answerWith}
+                classes={session.classes}
+                aiClass={current.class_name}
+                range={{ agreeFrom: style.agreeFrom, disagreeTo: style.disagreeTo }}
+                disabled={buttonsOff}
+                label={`Your answer on ${currentId}`}
+              />
+            </div>
+          ) : null}
+        </div>
         <SidePanel
           width={470}
           variant="quiet"

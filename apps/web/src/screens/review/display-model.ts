@@ -1,4 +1,9 @@
-import type { DisplaySettings as ApiSettings, MyDisplay, TaskDisplay } from "@parfocal/api-client";
+import type {
+  DisplaySettings as ApiSettings,
+  MyDisplay,
+  OtherSets,
+  TaskDisplay,
+} from "@parfocal/api-client";
 import type { DisplaySettings } from "@parfocal/ui/components/display-panel";
 
 export type PanelValues = Partial<DisplaySettings>;
@@ -47,6 +52,23 @@ export function fromApi(settings: ApiSettings | undefined): PanelValues {
 
 export function withOtherSets(settings: ApiSettings, kept: ApiSettings | undefined): ApiSettings {
   return kept?.other_sets === undefined ? settings : { ...settings, other_sets: kept.other_sets };
+}
+
+export const reviewedSetKey = "reviewed";
+
+export function shownSetsOf(settings: ApiSettings | undefined): Record<string, boolean> {
+  const kept = settings?.other_sets;
+  return {
+    [reviewedSetKey]: kept?.reviewed_layer ?? true,
+    ...Object.fromEntries((kept?.result_set_ids ?? []).map((id) => [id, true])),
+  };
+}
+
+export function withShownSet(kept: OtherSets | undefined, key: string, on: boolean): OtherSets {
+  const ids = kept?.result_set_ids ?? [];
+  if (key === reviewedSetKey) return { result_set_ids: ids, reviewed_layer: on };
+  const next = on ? [...new Set([...ids, key])].slice(0, 20) : ids.filter((id) => id !== key);
+  return { reviewed_layer: kept?.reviewed_layer ?? true, result_set_ids: next };
 }
 
 export function toApi(values: PanelValues): ApiSettings {

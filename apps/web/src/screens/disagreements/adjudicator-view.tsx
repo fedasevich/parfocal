@@ -4,9 +4,9 @@ import {
   useDecideAdjudication,
   useGetMe,
   useGetMyAdjudication,
+  useGetMyDisplay,
   useGetMySettingLayers,
   useGetReviewTask,
-  useGetTaskDisplay,
   useListProjectClasses,
 } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
@@ -36,6 +36,7 @@ import { okData } from "../placeholder.tsx";
 import { reviewConfidence } from "../review/ai-wording.ts";
 import { toReviewStyle } from "../review/decision-mapping.ts";
 import { answersOf, showsClaim } from "../review/decision-style.ts";
+import { taskDisplayView } from "../review/display-model.ts";
 import { DisplayTab } from "../review/display-tab.tsx";
 import { fromMentionTokens } from "../review/mention-picking.ts";
 import { type Camera, SlideStill } from "../review/slide-still.tsx";
@@ -63,7 +64,8 @@ const dueText = (iso: string | null | undefined) =>
 export function AdjudicatorView({ taskId }: { taskId: string }) {
   const adjudication = okData(useGetMyAdjudication(taskId).data);
   const task = okData(useGetReviewTask(taskId).data);
-  const display = okData(useGetTaskDisplay(taskId).data);
+  const myDisplay = okData(useGetMyDisplay(taskId).data);
+  const display = myDisplay ? taskDisplayView(myDisplay, task?.code ?? "") : undefined;
   const me = okData(useGetMe().data);
   const classList = okData(
     useListProjectClasses(task?.project_id ?? "", { query: { enabled: Boolean(task) } }).data,

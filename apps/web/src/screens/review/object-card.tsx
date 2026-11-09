@@ -279,6 +279,7 @@ type ObjectCardProps = {
   pending: Count | null;
   lockLine: LockLine;
   disabled: boolean;
+  answersElsewhere?: boolean;
   disagreeOpen: boolean;
   note: ReactNode;
   coach?: ReactNode;
@@ -305,6 +306,7 @@ export function ObjectCard({
   pending,
   lockLine,
   disabled,
+  answersElsewhere = false,
   disagreeOpen,
   note,
   coach,
@@ -430,7 +432,7 @@ export function ObjectCard({
             disabled={disabled}
           />
         </div>
-      ) : (
+      ) : answersElsewhere ? null : (
         <DecisionButtons
           decisionStyle={style.kind}
           value={selected}
