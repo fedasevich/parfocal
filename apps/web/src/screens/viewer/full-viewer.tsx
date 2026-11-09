@@ -1249,6 +1249,8 @@ function ViewerBody({
     />
   ) : selected ? (
     <ObjectComments
+      taskId={session.taskId}
+      slideId={session.slideId}
       object={selected}
       decisionNotes={decisionNotesOf(selected)}
       threads={session.threads}

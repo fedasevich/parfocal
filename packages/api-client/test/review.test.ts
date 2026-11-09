@@ -19,6 +19,7 @@ import {
   getSlideAgreement,
   getSlideNeighbours,
   getTaskDisplay,
+  getThread,
   listMentionableMembers,
   listReviewObjects,
   listSlideThreads,
@@ -26,6 +27,7 @@ import {
   listThreads,
   listThreadsOnSlide,
   listVerdicts,
+  replyToThread,
   resolveThreadOnSlide,
   saveVerdict,
 } from "../src/index.ts";
@@ -274,4 +276,24 @@ test("a thread posted on a slide with no task lists apart from the task's thread
   assert.equal(body(await listThreads(rt14.id, a1.id)).length, onTask);
   body(await resolveThreadOnSlide(project, a1.id, created.id));
   assert.deepEqual(body(await listThreadsOnSlide(project, a1.id, { resolved: false })), []);
+});
+
+test("a thread posted on an object is listed with its replies and read back by its path", async () => {
+  assert.ok(rt14);
+  const response = await createThread(rt14.id, a1.id, {
+    title: "Check the fold",
+    body: "Check the fold",
+    anchor: { kind: "object", object_id: "T5", geometry: null, offset: null },
+  });
+  assert.equal(response.status, 201);
+  const created = response.data as { id: string };
+  await replyToThread(rt14.id, a1.id, created.id, { body: "Second look" });
+  const listed = body(await listThreads(rt14.id, a1.id)).find((thread) => thread.id === created.id);
+  assert.equal(listed?.anchor.object_id, "T5");
+  assert.equal(listed?.message_count, 2);
+  const detail = body(await getThread(rt14.id, a1.id, created.id));
+  assert.deepEqual(
+    detail.messages.map((message) => message.body),
+    ["Check the fold", "Second look"],
+  );
 });

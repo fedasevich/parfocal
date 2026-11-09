@@ -1,4 +1,12 @@
-import { type SlideThread, type ThreadComment, useListThreadComments } from "@parfocal/api-client";
+import {
+  getGetThreadQueryKey,
+  getListThreadsQueryKey,
+  type Message,
+  useCreateThread,
+  useGetReviewTask,
+  useGetThread,
+  useReplyToThread,
+} from "@parfocal/api-client";
 import {
   CommentComposer,
   type CommentMessage,
@@ -6,9 +14,12 @@ import {
   MentionPicker,
 } from "@parfocal/ui/components/comment-thread";
 import { ObjectIdTag } from "@parfocal/ui/components/tag";
+import { useQueryClient } from "@tanstack/react-query";
 import { type ReactNode, useState } from "react";
 import { commentDraftId, useKeptDraft } from "../../session/kept-drafts.ts";
 import { usePeople } from "../people.ts";
+import { okData } from "../placeholder.tsx";
+import { pinTitle } from "./comment-pin.ts";
 import {
   fromMentionTokens,
   mentionOptions,
@@ -16,6 +27,7 @@ import {
   toMentionTokens,
   withMention,
 } from "./mention-picking.ts";
+import type { SlideThread } from "./review-data.ts";
 import { useMentionable } from "./use-mentionable.ts";
 
 const stamp = new Intl.DateTimeFormat("en-GB", {
@@ -27,24 +39,33 @@ const stamp = new Intl.DateTimeFormat("en-GB", {
 
 export const formatStamp = (at: string) => stamp.format(new Date(at)).replace(",", "");
 
-export function useThreadMessages(thread: SlideThread | undefined, meId: string | undefined) {
+export function useThreadMessages(
+  taskId: string,
+  slideId: string,
+  thread: SlideThread | undefined,
+  meId: string | undefined,
+) {
   const person = usePeople();
-  const comments = useListThreadComments(thread?.id ?? "", {
-    query: { enabled: thread !== undefined },
-  }).data?.data;
-  const toMessage = (comment: ThreadComment): CommentMessage => ({
-    id: comment.id,
-    author: person(comment.author_id) ?? { name: "Someone", initials: "?", color: "#64748b" },
-    you: comment.author_id === meId,
-    researcher: comment.author_is_researcher,
-    at: formatStamp(comment.created_at),
-    text: fromMentionTokens(comment.text, (userId) => person(userId)?.name),
-    replyTo: comment.reply_to,
+  const researcher = okData(useGetReviewTask(taskId).data)?.created_by_user_id;
+  const messages = okData(
+    useGetThread(taskId, slideId, thread?.id ?? "", { query: { enabled: thread !== undefined } })
+      .data,
+  )?.messages;
+  const toMessage = (message: Message): CommentMessage => ({
+    id: message.id,
+    author: person(message.author_id) ?? { name: "Someone", initials: "?", color: "#64748b" },
+    you: message.author_id === meId,
+    researcher: message.author_id === researcher,
+    at: formatStamp(message.created_at),
+    text: fromMentionTokens(message.body, (userId) => person(userId)?.name),
+    replyTo: null,
   });
-  return thread ? (comments ?? []).map(toMessage) : [];
+  return thread ? (messages ?? []).map(toMessage) : [];
 }
 
 type ThreadBodyProps = {
+  taskId: string;
+  slideId: string;
   object: string;
   thread: SlideThread | undefined;
   meId: string | undefined;
@@ -56,6 +77,8 @@ type ThreadBodyProps = {
 };
 
 export function ObjectThread({
+  taskId,
+  slideId,
   object,
   thread,
   meId,
@@ -65,10 +88,9 @@ export function ObjectThread({
   offReason,
   onSent,
 }: ThreadBodyProps) {
-  const loaded = useThreadMessages(thread, meId);
+  const loaded = useThreadMessages(taskId, slideId, thread, meId);
   const members = useMentionable();
-  const person = usePeople();
-  const [sent, setSent] = useState<CommentMessage[]>([]);
+  const queryClient = useQueryClient();
   const [draft, setDraft] = useKeptDraft(
     meId,
     commentDraftId(thread?.id, object, window.location.pathname),
@@ -76,7 +98,7 @@ export function ObjectThread({
   );
   const [replyTo, setReplyTo] = useState<string | null>(null);
   const [active, setActive] = useState(0);
-  const messages = [...loaded, ...sent];
+  const messages = loaded;
   const query = mentionQuery(draft);
   const options = mentionOptions(draft, members, meId, blind ? blindReviewers : []);
   const pickable = options.filter((option) => !option.disabledReason);
@@ -84,24 +106,38 @@ export function ObjectThread({
     const name = members.find((member) => member.id === id)?.name;
     if (name) setDraft(withMention(draft, name));
   };
-  const send = () => {
-    const text = draft.trim();
-    if (!text || meId === undefined) return;
-    const me = person(meId);
-    setSent([
-      ...sent,
-      {
-        id: `local-${sent.length}`,
-        author: me ?? { name: "You", initials: "?", color: "#2563eb" },
-        you: true,
-        at: "just now",
-        text,
-        replyTo,
-      },
-    ]);
+  const posted = (text: string) => {
+    void queryClient.invalidateQueries({ queryKey: getListThreadsQueryKey(taskId, slideId) });
+    if (thread) {
+      void queryClient.invalidateQueries({
+        queryKey: getGetThreadQueryKey(taskId, slideId, thread.id),
+      });
+    }
     setDraft("");
     setReplyTo(null);
-    onSent?.(toMentionTokens(text, members));
+    onSent?.(text);
+  };
+  const create = useCreateThread({ mutation: { onSuccess: (_, sent) => posted(sent.data.body) } });
+  const reply = useReplyToThread({ mutation: { onSuccess: (_, sent) => posted(sent.data.body) } });
+  const pending = create.isPending || reply.isPending;
+  const failed = create.isError || reply.isError;
+  const send = () => {
+    const text = draft.trim();
+    if (!text || meId === undefined || pending) return;
+    const body = toMentionTokens(text, members);
+    if (thread) {
+      reply.mutate({ taskId, slideId, threadId: thread.id, data: { body } });
+      return;
+    }
+    create.mutate({
+      taskId,
+      slideId,
+      data: {
+        title: pinTitle(text),
+        body,
+        anchor: { kind: "object", object_id: object, geometry: null, offset: null },
+      },
+    });
   };
   const replyingTo = replyTo ? messages.find((message) => message.id === replyTo) : undefined;
   return (
@@ -150,6 +186,11 @@ export function ObjectThread({
           )
         }
       />
+      {failed ? (
+        <p role="alert" className="m-0 text-body-sm text-bad">
+          The comment did not save. Try again.
+        </p>
+      ) : null}
     </div>
   );
 }

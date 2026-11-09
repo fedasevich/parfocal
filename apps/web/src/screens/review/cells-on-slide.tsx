@@ -201,6 +201,8 @@ function CellsBody({
           count: session.threads.length,
           body: (
             <ObjectComments
+              taskId={session.taskId}
+              slideId={session.slideId}
               object={current}
               decisionNotes={
                 keptNote ? (

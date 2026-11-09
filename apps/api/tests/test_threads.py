@@ -351,6 +351,31 @@ def test_a_mention_notifies_the_colleague_and_breaks_a_mute(api: ApiAs, database
     assert "@[" not in json.dumps([details for _, details in rows])
 
 
+def test_a_mention_in_a_comment_on_an_object_notifies_and_the_reply_joins_its_thread(
+    api: ApiAs, database: str
+) -> None:
+    s = study(api, database, blinded=False, hidden=False)
+    on_object = {"kind": "object", "object_id": "T2", "geometry": None, "offset": None}
+    opening = {
+        "title": "Check the fold",
+        "body": f"Check the fold {mention(s, 'second')} before the next slide",
+        "anchor": on_object,
+    }
+    thread = ok(api(s.people["first"]).post(f"{s.base}/threads", json=opening)).json()
+    assert thread["anchor"]["object_id"] == "T2"
+    assert thread["messages"][0]["mentions"] == [s.user("second")]
+    assert mention_rows(database, thread["id"]) == [(s.user("second"), False)]
+    path = f"{s.base}/threads/{thread['id']}"
+    reply = ok(
+        api(s.people["second"]).post(
+            f"{path}/messages", json={"body": f"On it {mention(s, 'first')}"}
+        )
+    ).json()
+    assert reply["mentions"] == [s.user("first")]
+    listed = ok(api(s.people["first"]).get(f"{s.base}/threads")).json()
+    assert [(item["anchor"]["object_id"], item["message_count"]) for item in listed] == [("T2", 2)]
+
+
 def test_only_members_who_see_the_task_slide_can_be_mentioned(api: ApiAs, database: str) -> None:
     s = study(api, database, blinded=False, hidden=False)
     point = {"kind": "point", "geometry": POINT}

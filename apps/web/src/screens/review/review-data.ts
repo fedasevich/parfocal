@@ -4,7 +4,7 @@ import {
   type Opinion,
   type ReviewObject,
   type ReviewTaskDetail,
-  type SlideThread,
+  type Thread,
   useGetMe,
   useGetMyDisplay,
   useGetOpinion,
@@ -13,7 +13,7 @@ import {
   useListProjectClasses,
   useListProjects,
   useListReviewObjects,
-  useListSlideThreads,
+  useListThreads,
   useListVerdicts,
   type Verdict,
 } from "@parfocal/api-client";
@@ -24,6 +24,31 @@ import { okData } from "../placeholder.tsx";
 import { type ReviewStyle, toReviewStyle } from "./decision-style.ts";
 import { type TaskDisplayView, taskDisplayView } from "./display-model.ts";
 import { fromMentionTokensOrNull } from "./mention-picking.ts";
+
+export type SlideThread = {
+  id: string;
+  slide_id: string;
+  task_id: string | null;
+  anchor: string;
+  replies: number;
+  resolved: boolean;
+};
+
+export const toSlideThreads = (threads: Thread[]): SlideThread[] =>
+  threads.flatMap((thread) =>
+    thread.anchor.object_id
+      ? [
+          {
+            id: thread.id,
+            slide_id: thread.slide_id,
+            task_id: thread.task_id,
+            anchor: thread.anchor.object_id,
+            replies: Math.max(0, thread.message_count - 1),
+            resolved: thread.resolved_at !== null,
+          },
+        ]
+      : [],
+  );
 
 export type ReviewSession = {
   taskId: string;
@@ -62,7 +87,7 @@ export function useReviewSession(taskId: string, slideId: string): ReviewSession
   const classes = okData(
     useListProjectClasses(projectId, { query: { enabled: projectId !== "" } }).data,
   );
-  const threads = useListSlideThreads(slideId).data?.data ?? [];
+  const threads = toSlideThreads(okData(useListThreads(taskId, slideId).data) ?? []);
   const me = okData(useGetMe().data);
   const projectName =
     okData(useListProjects().data)?.find((project) => project.id === projectId)?.name ?? "";

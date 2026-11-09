@@ -140,14 +140,37 @@ export const toTaskDisplay = (taskId: string): TaskDisplay => {
   });
 };
 
-const postedThreads: Thread[] = [];
-const postedComments: ThreadComment[] = [];
+const postedKey = "parfocal.fake.posted-threads";
+
+type PostedStore = { threads: Thread[]; comments: ThreadComment[] };
+
+const postedSession = (): Storage | null =>
+  typeof sessionStorage === "undefined" ? null : sessionStorage;
+
+const readPosted = (): PostedStore => {
+  const stored = postedSession()?.getItem(postedKey);
+  return stored === null || stored === undefined
+    ? { threads: [], comments: [] }
+    : (JSON.parse(stored) as PostedStore);
+};
+
+const kept = readPosted();
+const postedThreads: Thread[] = kept.threads;
+const postedComments: ThreadComment[] = kept.comments;
+
+const keepPosted = () =>
+  postedSession()?.setItem(
+    postedKey,
+    JSON.stringify({ threads: postedThreads, comments: postedComments }),
+  );
+
 const resolution = new Map<string, { at: string; by: string } | null>();
 const removedThreads = new Set<string>();
 
 export const resetFakeThreads = () => {
   postedThreads.length = 0;
   postedComments.length = 0;
+  postedSession()?.removeItem(postedKey);
   resolution.clear();
   removedThreads.clear();
 };
@@ -249,6 +272,7 @@ const postThread = (
       created_at: at,
     }),
   );
+  keepPosted();
   return { ...thread, messages: [message] };
 };
 
@@ -263,12 +287,14 @@ const postReply = (threadId: string, body: MessageCreate): Message => {
     created_at: new Date().toISOString(),
   });
   postedComments.push(comment);
+  keepPosted();
   return toMessage(comment);
 };
 
 const movePosted = (threadId: string, body: PinMove) => {
   const posted = postedThreads.find((item) => item.id === threadId);
   if (posted !== undefined) posted.anchor = { ...posted.anchor, geometry: body.geometry };
+  keepPosted();
 };
 
 export const toTasklessThreads = (
@@ -339,9 +365,12 @@ export const toThreads = (taskId: string, slideId: string, resolved: boolean | n
   const task = taskById(taskId);
   if (task === undefined) return [];
   const project = projectByCode(task.project);
-  const posted = postedThreads.filter(
-    (item) => item.task_id === task.id && item.slide_id === slideId,
-  );
+  const posted = postedThreads
+    .filter((item) => item.task_id === task.id && item.slide_id === slideId)
+    .map((item) => ({
+      ...item,
+      message_count: postedComments.filter((comment) => comment.thread_id === item.id).length,
+    }));
   const seeded: Thread[] = threads
     .filter((item) => item.task === task.code && slideByIndex(item.slide).id === slideId)
     .map((item) => ({

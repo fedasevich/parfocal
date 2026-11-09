@@ -325,7 +325,12 @@ function GuidedBody({
   );
   const otherReviewer = person(blindReviewers[0])?.name.split(" ")[0] ?? "the other reviewer";
   const threadOf = (object: string) => session.threads.find((item) => item.anchor === object);
-  const messages = useThreadMessages(threadOf(currentId), session.meId);
+  const messages = useThreadMessages(
+    session.taskId,
+    session.slideId,
+    threadOf(currentId),
+    session.meId,
+  );
   const openThreads = session.threads.filter((item) => !item.resolved).length;
   const setName = useSetName(session);
 
@@ -872,6 +877,8 @@ function GuidedBody({
       />
     ) : (
       <ObjectComments
+        taskId={session.taskId}
+        slideId={session.slideId}
         object={currentId}
         threads={session.threads}
         meId={session.meId}
