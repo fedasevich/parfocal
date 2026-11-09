@@ -602,23 +602,6 @@ export interface AssignedTask {
   reviewers: ReviewerProgress[];
 }
 
-export interface AuditEvent {
-  id: string;
-  tenant_id: string | null;
-  seq: number;
-  occurred_at: string;
-  actor_kind: ActorKind;
-  actor_id: string | null;
-  action: string;
-  target_type: string;
-  target_id: string | null;
-  details: string;
-  prev_hash: string;
-  hash: string;
-  actor_subject?: string | null;
-  target_subject?: string | null;
-}
-
 export type AuditExportFilters = { [key: string]: unknown };
 
 export interface ChainHead {
@@ -3173,6 +3156,25 @@ export interface MySettingLayers {
   personal: MySettingLayersPersonal;
 }
 
+export interface NamedAuditEvent {
+  id: string;
+  tenant_id: string | null;
+  seq: number;
+  occurred_at: string;
+  actor_kind: ActorKind;
+  actor_id: string | null;
+  action: string;
+  target_type: string;
+  target_id: string | null;
+  details: string;
+  prev_hash: string;
+  hash: string;
+  actor_subject?: string | null;
+  target_subject?: string | null;
+  actor_user_id?: string | null;
+  actor_name?: string | null;
+}
+
 export interface SlideRef {
   id: string;
   label: string;
@@ -5312,7 +5314,7 @@ export interface WorkspaceDraft {
 
 export interface WorkspaceSettingsChange {
   values: Values;
-  /** @maxItems 49 */
+  /** @maxItems 50 */
   locked?: string[];
 }
 
@@ -51614,7 +51616,7 @@ export function useListMembers<TData = Awaited<ReturnType<typeof listMembers>>, 
 }
 
 export type listAuditEventsResponse200 = {
-  data: AuditEvent[];
+  data: NamedAuditEvent[];
   status: 200;
 };
 

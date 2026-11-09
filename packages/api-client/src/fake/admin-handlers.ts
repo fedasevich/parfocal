@@ -31,12 +31,12 @@ import {
 } from "../generated/api.msw.ts";
 import type {
   AcceptedInvitation,
-  AuditEvent,
   AuditExport,
   Invitation,
   InvitationDraft,
   Member,
   MemberActivity,
+  NamedAuditEvent,
   ServiceAccount,
   SessionPolicy,
   StudyTemplate,
@@ -63,6 +63,7 @@ import {
   aiModels,
   auditAt,
   auditEventId,
+  auditPseudonym,
   auditToday,
   canSignOut,
   dataRules,
@@ -360,17 +361,18 @@ export const toInvitePreview = (): InvitePreview => {
   });
 };
 
-const toAuditEvents = (): AuditEvent[] =>
+const toAuditEvents = (): NamedAuditEvent[] =>
   auditToday.map((row, index) => {
     const person = row.by === "webhook" ? null : people[row.by];
+    const pseudonym = row.by === "webhook" ? null : auditPseudonym(row.by);
     return {
       id: auditEventId(index),
       tenant_id: tenant.id,
       seq: 1000 - index,
       occurred_at: auditAt(row.time, row.day),
       actor_kind: person ? "member" : "service",
-      actor_id: person?.id ?? null,
-      actor_subject: person?.name ?? "Webhook",
+      actor_id: pseudonym,
+      actor_subject: pseudonym === null ? null : `fake-subject-${pseudonym}`,
       action: row.action,
       target_type: "project",
       target_id: projectByCode(row.project).id,
@@ -378,10 +380,12 @@ const toAuditEvents = (): AuditEvent[] =>
       details: row.details,
       prev_hash: `h${index + 1}`,
       hash: `h${index}`,
+      actor_user_id: person?.id ?? null,
+      actor_name: person?.name ?? null,
     };
   });
 
-const auditMatches = (event: AuditEvent, query: URLSearchParams) => {
+const auditMatches = (event: NamedAuditEvent, query: URLSearchParams) => {
   const person = query.get("person");
   const project = query.get("project_id");
   const actions = query.getAll("action");
@@ -390,7 +394,7 @@ const auditMatches = (event: AuditEvent, query: URLSearchParams) => {
   const until = query.get("until");
   const at = Date.parse(event.occurred_at);
   return (
-    (person === null || event.actor_id === person) &&
+    (person === null || event.actor_user_id === person) &&
     (project === null || (event.target_type === "project" && event.target_id === project)) &&
     (actions.length === 0 || actions.includes(event.action)) &&
     (prefix === null || event.action.startsWith(prefix)) &&
@@ -421,7 +425,11 @@ const toAuditExport = (url: string): AuditExport => {
     generated_at: scenarioNow,
     filters,
     chain_head: head ? { seq: head.seq, hash: head.hash } : null,
-    events: events.map((event) => ({ ...event, emergency: false, reason: null })),
+    events: events.map(({ actor_user_id, actor_name, ...event }) => ({
+      ...event,
+      emergency: false,
+      reason: null,
+    })),
     signature: {
       algorithm: "Ed25519",
       key_id: "fake-master:audit-v1",

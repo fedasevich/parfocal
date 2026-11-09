@@ -25,7 +25,15 @@ from parfocal_api.audit import (
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import database_scope
-from parfocal_api.tables import audit_events, audit_people, cases, patients, slides, users
+from parfocal_api.tables import (
+    audit_events,
+    audit_people,
+    cases,
+    memberships,
+    patients,
+    slides,
+    users,
+)
 from parfocal_common.db import CURRENT_TENANT
 from parfocal_common.envelope import MasterKeyring
 
@@ -75,6 +83,11 @@ def audit_filters(
 
 
 Filters = Annotated[AuditFilters, Depends(audit_filters)]
+
+
+class NamedAuditEvent(AuditEvent):
+    actor_user_id: uuid.UUID | None = None
+    actor_name: str | None = None
 
 
 class ExportedEvent(AuditEvent):
@@ -232,10 +245,39 @@ def exported(event: AuditEvent) -> ExportedEvent:
     return ExportedEvent(**event.model_dump(), emergency=emergency, reason=reason)
 
 
+async def members_by_subject(
+    connection: AsyncConnection, subjects: set[str]
+) -> dict[str, tuple[uuid.UUID, str]]:
+    if not subjects:
+        return {}
+    rows = await connection.execute(
+        select(users.c.subject, users.c.id, users.c.display_name)
+        .join(memberships, memberships.c.user_id == users.c.id)
+        .where(
+            memberships.c.tenant_id == literal_column(CURRENT_TENANT),
+            users.c.subject.in_(subjects),
+        )
+    )
+    return {row.subject: (row.id, row.display_name) for row in rows}
+
+
+def named(event: AuditEvent, members: dict[str, tuple[uuid.UUID, str]]) -> NamedAuditEvent:
+    member = members.get(event.actor_subject or "")
+    if member is None:
+        return NamedAuditEvent(**event.model_dump())
+    user_id, name = member
+    return NamedAuditEvent(**event.model_dump(), actor_user_id=user_id, actor_name=name)
+
+
 @router.get("/audit-events", operation_id="listAuditEvents", **require(Permission.AUDIT_LOG))
-async def list_audit_events(connection: TenantConnection, filters: Filters) -> list[AuditEvent]:
+async def list_audit_events(
+    connection: TenantConnection, filters: Filters
+) -> list[NamedAuditEvent]:
     rows = await connection.execute(await filtered(connection, filters))
-    return [event_of(row) for row in rows]
+    events = [event_of(row) for row in rows]
+    subjects = {event.actor_subject for event in events if event.actor_subject is not None}
+    members = await members_by_subject(connection, subjects)
+    return [named(event, members) for event in events]
 
 
 @router.get(

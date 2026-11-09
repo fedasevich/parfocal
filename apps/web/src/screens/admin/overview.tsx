@@ -172,7 +172,7 @@ export function OverviewSection({ open }: { open: (section: AdminSection) => voi
             {events
               .filter((event) => !quietActions.has(event.action))
               .map((event) => {
-                const person = personOf(event.actor_id);
+                const person = personOf(event.actor_user_id);
                 return (
                   <SummaryRow key={event.id}>
                     {person ? (

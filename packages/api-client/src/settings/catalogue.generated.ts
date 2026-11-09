@@ -26,6 +26,7 @@ export type SettingValues = {
   analytics_policy: "person" | "on" | "off";
   analytics_opt_out: boolean;
   lock_after_minutes: number;
+  two_factor_required: boolean;
   patient_banner: boolean;
   default_privacy_mode: "de-identified" | "clinical";
   default_classes: "none" | "sentinel-node" | "pannuke";
@@ -311,6 +312,13 @@ export const catalogue: Record<SettingKey, SettingEntry> = {
     ],
     "minimum": 1,
     "maximum": 240
+  },
+  "two_factor_required": {
+    "kind": "switch",
+    "default": false,
+    "layers": [
+      "lab"
+    ]
   },
   "patient_banner": {
     "kind": "switch",

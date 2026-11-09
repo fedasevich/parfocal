@@ -18,7 +18,6 @@ import type {
   AnnotationVersion,
   Announcement,
   AssignedTask,
-  AuditEvent,
   AuditExport,
   Candidate,
   CaseDetail,
@@ -85,6 +84,7 @@ import type {
   MyDisplay,
   MySettingLayers,
   MyTask,
+  NamedAuditEvent,
   Neighbours,
   Nudge,
   ObjectResolution,
@@ -12822,7 +12822,7 @@ export const getListMembersResponseMock = (): Member[] =>
     admin_rights: faker.datatype.boolean(),
   }));
 
-export const getListAuditEventsResponseMock = (): AuditEvent[] =>
+export const getListAuditEventsResponseMock = (): NamedAuditEvent[] =>
   Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
     id: faker.string.uuid(),
     tenant_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
@@ -12841,6 +12841,11 @@ export const getListAuditEventsResponseMock = (): AuditEvent[] =>
       null,
     ]),
     target_subject: faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    actor_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    actor_name: faker.helpers.arrayElement([
       faker.string.alpha({ length: { min: 10, max: 20 } }),
       null,
     ]),
@@ -19092,10 +19097,10 @@ export const getListMembersMockHandler = (
 
 export const getListAuditEventsMockHandler = (
   overrideResponse?:
-    | AuditEvent[]
+    | NamedAuditEvent[]
     | ((
         info: Parameters<Parameters<typeof http.get>[1]>[0],
-      ) => Promise<AuditEvent[]> | AuditEvent[]),
+      ) => Promise<NamedAuditEvent[]> | NamedAuditEvent[]),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(

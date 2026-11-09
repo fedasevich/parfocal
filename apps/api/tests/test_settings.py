@@ -273,3 +273,16 @@ def test_every_console_write_needs_admin_rights_and_is_audited(api: ApiAs, datab
         "model-tier.set",
         "announcement.posted",
     }
+
+
+@pytest.mark.db
+def test_an_admin_requires_two_factors_and_reads_it_back(api: ApiAs, database: str) -> None:
+    people = make_workspace(database, PEOPLE, admins={"admin"}).people
+    body = {"values": {"two_factor_required": True}}
+    assert api(people["researcher"]).put(WORKSPACE, json=body).status_code == 403
+    wrong = api(people["admin"]).put(WORKSPACE, json={"values": {"two_factor_required": 1}})
+    assert problem(wrong) == (400, "invalid-setting")
+    saved = api(people["admin"]).put(WORKSPACE, json=body)
+    assert saved.status_code == 200, saved.text
+    lab = api(people["reviewer"]).get(ME).json()["lab"]
+    assert lab["values"] == {"two_factor_required": True}

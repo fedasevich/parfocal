@@ -1,6 +1,9 @@
 import {
   type AiModel,
+  getGetMySettingLayersQueryKey,
+  type LabSettings,
   type SecuritySetting,
+  useGetMySettingLayers,
   useGetSecuritySettings,
   useGetSessionPolicy,
   useGetStorageUsage,
@@ -10,6 +13,7 @@ import {
   useListServiceAccounts,
   useListTaxonomyTemplates,
   useListWebhooks,
+  useSetWorkspaceSettings,
   useShowModel,
 } from "@parfocal/api-client";
 import { NameCell, SettingRow } from "@parfocal/ui/components/admin";
@@ -47,6 +51,7 @@ import {
   TextLink,
   tableClass,
 } from "./common.tsx";
+import { signInRows, TWO_FACTOR_KEY, twoFactorChange } from "./security-model.ts";
 import { durationText } from "./workspace-settings-model.ts";
 
 const right = "text-right";
@@ -506,22 +511,44 @@ const idleRow = (minutes: number): SecuritySetting => ({
 });
 
 export function SecuritySection({ notify }: { notify: Notify }) {
+  const queryClient = useQueryClient();
   const settings = useGetSecuritySettings().data?.data;
   const policy = okData(useGetSessionPolicy().data);
+  const lab = okData(useGetMySettingLayers().data)?.lab;
+  const save = useSetWorkspaceSettings();
   const [values, setValues] = useState<Record<string, boolean>>({});
-  if (settings === undefined && policy === undefined) return null;
+  if (settings === undefined && policy === undefined && lab === undefined) return null;
   const sessionRows = [
     ...(policy ? [idleRow(policy.idle_lock_minutes)] : []),
     ...(settings?.data ?? []).filter((item) => item.key !== "idle-lock" || policy === undefined),
   ];
+  const saveTwoFactor = (current: LabSettings, on: boolean) =>
+    save.mutate(
+      { data: twoFactorChange(current, on) },
+      {
+        onSuccess: () => {
+          void queryClient.invalidateQueries({ queryKey: getGetMySettingLayersQueryKey() });
+          notify(
+            on
+              ? "Everyone now needs two factors to sign in."
+              : "Two factors are no longer required for everyone.",
+          );
+        },
+        onError: () => notify("The two factor setting did not save. Try again."),
+      },
+    );
   const row = (item: SecuritySetting) => (
     <SettingRow
       key={item.key}
       label={item.label}
       detail={item.detail}
-      on={values[item.key] ?? item.on}
+      on={item.key === TWO_FACTOR_KEY ? item.on : (values[item.key] ?? item.on)}
       locked={item.locked}
       onChange={(on) => {
+        if (item.key === TWO_FACTOR_KEY && lab) {
+          saveTwoFactor(lab, on);
+          return;
+        }
         setValues({ ...values, [item.key]: on });
         notify(
           item.key === "idle-lock"
@@ -533,16 +560,16 @@ export function SecuritySection({ notify }: { notify: Notify }) {
   );
   return (
     <div className="grid grid-cols-2 gap-(--space-zone)">
-      {settings ? (
-        <Zone title="Sign-in">
-          <div>{settings.sign_in.map(row)}</div>
+      <Zone title="Sign-in">
+        <div>{signInRows(settings?.sign_in, lab).map(row)}</div>
+        {settings ? (
           <ProgressBar
             value={percent(settings.two_factor.people, settings.two_factor.of)}
             label="People with two factors"
             valueText={`${settings.two_factor.people} of ${settings.two_factor.of}`}
           />
-        </Zone>
-      ) : null}
+        ) : null}
+      </Zone>
       <Zone title="Sessions and data">
         <div>{sessionRows.map(row)}</div>
       </Zone>
