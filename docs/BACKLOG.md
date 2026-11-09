@@ -2797,7 +2797,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
 
 ## 17 COLLAB · Comments, realtime and second opinion
 
-- [ ] COLLAB-000 · Research check
+- [x] COLLAB-000 · Research check
   Done when STACK-024 is confirmed and the event model (topics per tenant, case and user) is written as an ADR.
   Size: S.
 
