@@ -1,7 +1,7 @@
-# XXXX. The PDF preview shows the SVG pages the Typst worker makes, and the template preview fills a sample project's numbers on the server
+# 0279. The PDF preview shows the SVG pages the Typst worker makes, and the template preview fills a sample project's numbers on the server
 
 - Date: 2026-11-09
-- Status: Proposed
+- Status: Accepted
 - Deciders: Yurii Fedas (standing approval), proposed by the agent building EVAL-010 (PDF preview)
 - Backlog: EVAL-010 (PDF preview), builds on EVAL-008 (report from template blocks) and STACK-035 (PDF generation for reports)
 
