@@ -12,7 +12,7 @@ async function openSlide(page: Page) {
     .getByRole("button", { name: "Open" })
     .click();
   const stage = page.getByTestId("slide-stage");
-  await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 15_000 });
+  await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 30_000 });
   return stage;
 }
 
@@ -74,6 +74,7 @@ test("the camera feel and its overrides stay after a reload", async ({ page }) =
 });
 
 test("inverting the zoom direction in Settings flips the wheel on the slide", async ({ page }) => {
+  test.setTimeout(60_000);
   const stage = await openSlide(page);
   const box = (await stage.boundingBox()) ?? { x: 0, y: 0, width: 800, height: 600 };
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);

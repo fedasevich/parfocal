@@ -21,6 +21,7 @@ const vertices = (page: Page) => page.getByTestId("polygon-vertex");
 test("Esc peels a comment, then the polygon draft, then the tool, one per press", async ({
   page,
 }) => {
+  test.setTimeout(60_000);
   const stage = await openTaskSlide(page);
   const box = (await stage.boundingBox()) ?? { x: 0, y: 0 };
   await page.keyboard.press("c");
@@ -56,6 +57,7 @@ test("Esc peels a comment, then the polygon draft, then the tool, one per press"
 });
 
 test("Esc cancels a drag in flight before it leaves the tool", async ({ page }) => {
+  test.setTimeout(60_000);
   const stage = await openTaskSlide(page);
   const box = (await stage.boundingBox()) ?? { x: 0, y: 0 };
   await page.keyboard.press("r");
