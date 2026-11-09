@@ -10,6 +10,12 @@ const guidedUrl = (scene: string) => `/tasks/${rt14}/guided?slide=${a1}&scene=${
 
 const panel = (page: Page) => page.getByRole("tabpanel");
 
+const undoOf = (page: Page, preset: string) =>
+  page
+    .getByRole("status")
+    .filter({ hasText: `Display: ${preset}` })
+    .getByRole("button", { name: "Undo" });
+
 const presetButton = (page: Page) => panel(page).getByRole("button", { name: /Task default|Dots/ });
 
 async function decisionsOf(page: Page) {
@@ -92,9 +98,7 @@ test("Shift+3 switches to the second preset with an Undo and Shift+1 goes back",
 }) => {
   await page.goto(guidedUrl("display"));
   await page.locator("main").press("Shift+3");
-  await expect(page.getByText("Display: Dots, no IDs")).toBeVisible();
-  await expect(panel(page).getByRole("button", { name: /Dots, no IDs/ })).toBeVisible();
-  await page.getByRole("button", { name: "Undo" }).click();
+  await undoOf(page, "Dots, no IDs").click();
   await expect(panel(page).getByRole("button", { name: /Task default/ })).toBeVisible();
   await page.locator("main").press("Shift+2");
   await expect(panel(page).getByRole("button", { name: /Tumor first/ })).toBeVisible();
@@ -143,8 +147,7 @@ test("in the full viewer a preset switches with the keys and is recorded with th
   await page.locator("body").press("Shift+3");
   await expect(side.getByRole("button", { name: /Dots, no IDs/ })).toBeVisible();
   await page.locator("body").press("Shift+2");
-  await expect(side.getByRole("button", { name: /Tumor first/ })).toBeVisible();
-  await page.getByRole("button", { name: "Undo" }).click();
+  await undoOf(page, "Tumor first").click();
   await expect(side.getByRole("button", { name: /Dots, no IDs/ })).toBeVisible();
   await page.getByRole("tab", { name: "Objects" }).click();
   await side.getByRole("button", { name: /^T5 Tumor region/ }).click();
