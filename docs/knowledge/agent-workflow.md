@@ -102,7 +102,7 @@ The agent prompt always says:
 - Do not edit `docs/BACKLOG.md`, `docs/log.md`, `docs/decisions.md`, `docs/board/` or READMEs (except the results index). Do not claim, note, tick or push.
 - Never use the word "verdict", and write no code comments.
 - Use a distinct `PARFOCAL_E2E_PORT` from 5190 to 5199 and stop the dev server before finishing.
-- Run `pnpm -s verify` until it passes, and also run the browser specs the task touched, because `verify` does not run `test:browser`.
+- Run `bash scripts/verify-changed.sh 2>&1 | tail -40` until it passes, and also run the browser specs the task touched. The lead's merge and CI run the full `pnpm -s verify`.
 - Commit as `feat(ID): ...` and hand back in at most 10 lines with a log line.
 
 What the lead does with a hand-back:
@@ -117,7 +117,10 @@ Review is for what only the owner can give. A task "waiting for a green CI run o
 
 ## Checks and output
 
-- Run `pnpm -s verify 2>&1 | tail -40` two or three times per task, not after every edit. While working, run only the test file you touch.
+- While working, run only the test file you touch. Before committing, run `bash scripts/verify-changed.sh 2>&1 | tail -40`, which lints the changed files and runs typecheck and tests only for the changed packages and their dependents. Run it at most three times per task. Leave the full `pnpm -s verify` to the lead's merge and CI.
+- In a worktree agent, use one plain command per Bash call. Put anything with a heredoc, loop, `$(...)`, `;` chain or `sed -i` in a scratchpad script and run it as `bash path`, and change files with Write or Edit, because the harness refuses compound commands there.
+- To wait for background work, use a Bash `until` loop or load Monitor with ToolSearch first. Never `sleep`. The tool name is `Bash`, capitalised.
+- Commit headers are at most 100 characters, or commitlint fails the commit.
 - Pipe long output through `tail`, `head -50` or `grep`. Never print whole generated files, lockfiles or full diffs. Use `git diff --stat` first.
 
 ## Screenshots
@@ -138,7 +141,7 @@ The mock comparison below is temporary. FOUND-022 (remove the mock comparison to
 
 1. `board.py show ID`, check that "Depends on" is ticked, and read only the ADRs, knowledge files and POC refs it lists.
 2. `board.py claim ID --by NAME` and commit the claim file with the first change.
-3. Write the code and the tests the "Done when" line names, then run `pnpm -s verify`.
+3. Write the code and the tests the "Done when" line names, then run `bash scripts/verify-changed.sh`.
 4. `board.py note`, then `board.py tick ID` if "Done when" is fully true, or `board.py move ID review --note "..."` if it waits on the owner.
 5. An ADR if a real choice was made, a result file if something was measured, a knowledge entry if a later session would trip on it. Update README "In progress" only if it changed.
 6. Stage files by name, commit, push.

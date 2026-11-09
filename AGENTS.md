@@ -18,7 +18,7 @@ Never read `docs/BACKLOG.md` or `docs/log.md` whole. Use `scripts/board.py` (`br
 
 1. Start with `/start ID`, or run `python3 scripts/board.py show ID`. Check that its dependencies are ticked, read only the ADRs, knowledge files and POC refs it lists, and claim it.
 2. Build it with the tests its "Done when" line names. Untested work is not done.
-3. Finish with `/finish ID`: run `pnpm -s verify`, add a log entry with `board.py note`, tick the task or move it to `review`, add an ADR, result or knowledge entry if one is due, stage files by name, commit and push.
+3. Finish with `/finish ID`: run `bash scripts/verify-changed.sh` (changed packages only, CI runs everything), add a log entry with `board.py note`, tick the task or move it to `review`, add an ADR, result or knowledge entry if one is due, stage files by name, commit and push.
 
 Write an ADR for every choice between real alternatives that is costly to undo. Write a result file for everything measured, and never invent a number. Put every open question for the owner in `docs/decisions.md`, never only in chat. Formats are in [agent-workflow.md](docs/knowledge/agent-workflow.md).
 
