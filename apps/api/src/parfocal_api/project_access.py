@@ -16,7 +16,9 @@ from parfocal_api.problems import ForbiddenError, NotFoundError
 from parfocal_api.tables import (
     PrivacyMode,
     ProjectRole,
+    Role,
     emergency_grants,
+    memberships,
     project_members,
     projects,
     review_assignments,
@@ -221,3 +223,18 @@ def readable_slide(
         project_column.in_(LIVE_PROJECTS),
         or_(readable(principal, project_column), slide_column.in_(assigned_slides(principal))),
     )
+
+
+async def principal_of(
+    connection: AsyncConnection, tenant_id: uuid.UUID, user_id: uuid.UUID
+) -> MemberPrincipal | None:
+    row = (
+        await connection.execute(
+            select(memberships.c.role, memberships.c.admin_rights).where(
+                memberships.c.tenant_id == tenant_id, memberships.c.user_id == user_id
+            )
+        )
+    ).one_or_none()
+    if row is None:
+        return None
+    return MemberPrincipal("", tenant_id, user_id, Role(row.role), row.admin_rights)

@@ -86,3 +86,23 @@ test("a note written in guided review shows in the Comments tab and the adjudica
   await expect(page.getByText("Reviewer B")).toBeVisible();
   await expect(page.getByText("Reviewers stay anonymous to you")).toBeVisible();
 });
+
+test("a mention in another reviewer's note opens from the bell on the note in the Comments tab", async ({
+  page,
+}) => {
+  await page.goto("/?as=DH");
+  await page.getByRole("button", { name: /^Notifications/ }).click();
+  const panel = page.getByRole("dialog", { name: "Notifications" });
+  await panel
+    .getByTestId("notification")
+    .filter({ hasText: "Simona Marková mentioned you in a note" })
+    .getByRole("button", { name: "Open the note" })
+    .click();
+  await expect(page).toHaveURL(
+    /\/slides\/[0-9a-f-]+\?task=[0-9a-f-]+&object=T5&tab=comments&as=DH$/,
+  );
+  const notes = page.getByRole("region", { name: "Decision notes on T5" });
+  await expect(notes).toContainText("Note on decision: Disagree");
+  await expect(notes).toContainText("Runs past the fold, @Daniel Hruška worth a look");
+  await expect(notes.getByRole("button", { name: "Edit" })).toHaveCount(0);
+});

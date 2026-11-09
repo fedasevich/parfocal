@@ -7,6 +7,7 @@ import {
   getGetReviewTaskMockHandler,
   getGetReviewTaskStatesMockHandler,
   getListAnnouncementsMockHandler,
+  getListDecisionNotesMockHandler,
   getListMySlidesMockHandler,
   getListNotificationsMockHandler,
   getListProjectResultSetsMockHandler,
@@ -41,6 +42,7 @@ import { countsAsChangesFor, decisionSettingsFor } from "./decision-settings.ts"
 import { taskDisplayFor } from "./display-settings.ts";
 import { queueTaskView } from "./queue-scene.ts";
 import {
+  decisionNotesOf,
   hidesRt17SetsOnProject,
   reviewOrderFor,
   rt17SetId,
@@ -161,6 +163,10 @@ const taskIdOf = (code: string) => taskByCode(code).id;
 const appLink = (item: ScenarioNotification): string => {
   const p07 = projectByCode("P07");
   const a1 = slideByIndex(1);
+  if (item.onDecision) {
+    const object = encodeURIComponent(item.objectId ?? "");
+    return `/projects/${p07.id}/slides/${a1.id}?task=${taskIdOf("RT-14")}&object=${object}&tab=comments&as=${item.to}`;
+  }
   if (item.kind === "mention" || item.kind === "reply") {
     const object = encodeURIComponent(item.objectId ?? "");
     return `/tasks/${taskIdOf("RT-14")}/comments?slide=${a1.id}&thread=${object}`;
@@ -174,6 +180,7 @@ const appLink = (item: ScenarioNotification): string => {
 };
 
 const targetOf = (item: ScenarioNotification): Pick<InboxItem, "target_kind" | "target_id"> => {
+  if (item.onDecision) return { target_kind: "decision", target_id: slideByIndex(1).id };
   if (item.kind === "mention" || item.kind === "reply") {
     return { target_kind: "thread", target_id: item.id };
   }
@@ -565,6 +572,9 @@ export function workHandlers(): RequestHandler[] {
     ),
     getListVerdictsMockHandler(({ params }) =>
       verdictsOf(String(params.taskId), String(params.slideId)),
+    ),
+    getListDecisionNotesMockHandler(({ params }) =>
+      decisionNotesOf(String(params.taskId), String(params.slideId)),
     ),
   ];
 }

@@ -1647,6 +1647,17 @@ export interface DecisionDraft {
   reason?: ChangeReason | null;
 }
 
+export interface DecisionNote {
+  object: string;
+  author_id: string;
+  value: VerdictValue;
+  answer: string;
+  reasons: VerdictReason[];
+  note: string;
+  mentions: string[];
+  updated_at: string;
+}
+
 /**
  * @minLength 2
  * @maxLength 200
@@ -2415,6 +2426,7 @@ export type TargetKind = (typeof TargetKind)[keyof typeof TargetKind];
 export const TargetKind = {
   slide: "slide",
   thread: "thread",
+  decision: "decision",
   task: "task",
   evaluation: "evaluation",
   job: "job",
@@ -37506,6 +37518,203 @@ export function useListVerdicts<TData = Awaited<ReturnType<typeof listVerdicts>>
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getListVerdictsQueryOptions(taskId, slideId, params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type listDecisionNotesResponse200 = {
+  data: DecisionNote[];
+  status: 200;
+};
+
+export type listDecisionNotesResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listDecisionNotesResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listDecisionNotesResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listDecisionNotesResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listDecisionNotesResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listDecisionNotesResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listDecisionNotesResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type listDecisionNotesResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listDecisionNotesResponseSuccess = listDecisionNotesResponse200 & {
+  headers: Headers;
+};
+export type listDecisionNotesResponseError = (
+  | listDecisionNotesResponse400
+  | listDecisionNotesResponse401
+  | listDecisionNotesResponse403
+  | listDecisionNotesResponse404
+  | listDecisionNotesResponse409
+  | listDecisionNotesResponse422
+  | listDecisionNotesResponse429
+  | listDecisionNotesResponse500
+) & {
+  headers: Headers;
+};
+
+export type listDecisionNotesResponse =
+  | listDecisionNotesResponseSuccess
+  | listDecisionNotesResponseError;
+
+export const getListDecisionNotesUrl = (taskId: string, slideId: string) => {
+  return `/api/review-tasks/${taskId}/slides/${slideId}/decision-notes`;
+};
+
+/**
+ * @summary List Decision Notes
+ */
+export const listDecisionNotes = async (
+  taskId: string,
+  slideId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listDecisionNotesResponse> => {
+  return apiFetch<listDecisionNotesResponse>(getListDecisionNotesUrl(taskId, slideId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListDecisionNotesQueryKey = (taskId: string, slideId: string) => {
+  return [`/api/review-tasks/${taskId}/slides/${slideId}/decision-notes`] as const;
+};
+
+export const getListDecisionNotesQueryOptions = <
+  TData = Awaited<ReturnType<typeof listDecisionNotes>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listDecisionNotes>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListDecisionNotesQueryKey(taskId, slideId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listDecisionNotes>>> = ({ signal }) =>
+    listDecisionNotes(taskId, slideId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: taskId !== null && taskId !== undefined && slideId !== null && slideId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof listDecisionNotes>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type ListDecisionNotesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listDecisionNotes>>
+>;
+export type ListDecisionNotesQueryError = Problem;
+
+export function useListDecisionNotes<
+  TData = Awaited<ReturnType<typeof listDecisionNotes>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listDecisionNotes>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listDecisionNotes>>,
+          TError,
+          Awaited<ReturnType<typeof listDecisionNotes>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListDecisionNotes<
+  TData = Awaited<ReturnType<typeof listDecisionNotes>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listDecisionNotes>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listDecisionNotes>>,
+          TError,
+          Awaited<ReturnType<typeof listDecisionNotes>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListDecisionNotes<
+  TData = Awaited<ReturnType<typeof listDecisionNotes>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listDecisionNotes>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Decision Notes
+ */
+
+export function useListDecisionNotes<
+  TData = Awaited<ReturnType<typeof listDecisionNotes>>,
+  TError = Problem,
+>(
+  taskId: string,
+  slideId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listDecisionNotes>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListDecisionNotesQueryOptions(taskId, slideId, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;

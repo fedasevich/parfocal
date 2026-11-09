@@ -235,7 +235,7 @@ type SavedNoteProps = {
   answer: Answer;
   label: string;
   author: PersonInfo | undefined;
-  onEdit: () => void;
+  onEdit?: () => void;
 };
 
 export function SavedNote({ answer, label, author, onEdit }: SavedNoteProps) {
@@ -246,9 +246,11 @@ export function SavedNote({ answer, label, author, onEdit }: SavedNoteProps) {
         <span className="flex-1 text-right text-body-sm text-fg-dim">
           Note on decision: {label}
         </span>
-        <Button variant="ghost" size="xs" onClick={onEdit}>
-          Edit
-        </Button>
+        {onEdit ? (
+          <Button variant="ghost" size="xs" onClick={onEdit}>
+            Edit
+          </Button>
+        ) : null}
       </div>
       {answer.reasons.length ? (
         <span className="text-caption text-fg-dim">{answer.reasons.join(", ")}</span>

@@ -88,6 +88,7 @@ import { hasNote, reasonBody, withNote } from "../review/note-model.ts";
 import { answerLabel, SavedNote } from "../review/object-card.tsx";
 import { ObjectComments } from "../review/object-comments.tsx";
 import { useObjectKeys } from "../review/object-keys.ts";
+import { answerOfNote, useOthersNotes } from "../review/others-notes.ts";
 import { PagedProbeMarker } from "../review/paged-probe.tsx";
 import { PinMark, PinnedThread } from "../review/pinned-thread.tsx";
 import { type ReviewSession, useReviewSession } from "../review/review-data.ts";
@@ -282,6 +283,7 @@ function ViewerBody({
   const person = usePeople();
   const submitReview = useSubmitSlideReview();
   const threadsWarning = useOpenThreadsWarning(session.taskId, session.slideId);
+  const othersOn = useOthersNotes(session.taskId, session.slideId, session.meId);
   const progress = okData(
     useGetSlideAiProgress(slideId, {
       query: {
@@ -1203,17 +1205,31 @@ function ViewerBody({
 
   const decisionNotesOf = (object: string) => {
     const kept = answer(object);
-    if (!kept || !hasNote(kept)) return null;
+    const others = othersOn(object);
+    const own = kept && hasNote(kept) ? kept : undefined;
+    if (!own && others.length === 0) return null;
     return (
-      <SavedNote
-        answer={kept}
-        label={answerLabel(style, kept, session.classes)}
-        author={person(session.meId)}
-        onEdit={() => {
-          setNote({ open: true, reasons: kept.reasons, text: kept.note ?? "" });
-          onSearch({ tab: "objects" });
-        }}
-      />
+      <>
+        {own ? (
+          <SavedNote
+            answer={own}
+            label={answerLabel(style, own, session.classes)}
+            author={person(session.meId)}
+            onEdit={() => {
+              setNote({ open: true, reasons: own.reasons, text: own.note ?? "" });
+              onSearch({ tab: "objects" });
+            }}
+          />
+        ) : null}
+        {others.map((item) => (
+          <SavedNote
+            key={item.author_id}
+            answer={answerOfNote(item)}
+            label={answerLabel(style, answerOfNote(item), session.classes)}
+            author={person(item.author_id)}
+          />
+        ))}
+      </>
     );
   };
 

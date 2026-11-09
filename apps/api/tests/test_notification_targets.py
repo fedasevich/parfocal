@@ -22,7 +22,7 @@ def test_every_kind_has_a_target_and_a_template_without_details() -> None:
         assert entry.subject
         assert entry.line.endswith(".")
         assert "{" not in entry.subject + entry.line
-    assert {entry.target for entry in CATALOGUE.values()} == set(TargetKind)
+    assert {entry.target for entry in CATALOGUE.values()} | {TargetKind.DECISION} == set(TargetKind)
 
 
 def test_every_kind_declares_whether_it_breaks_through_a_mute() -> None:
@@ -187,7 +187,7 @@ def test_every_kind_carries_its_origin_as_ids_and_route_names(api: ApiAs, databa
         TargetKind.SLIDE: (r.slide, in_task),
         TargetKind.THREAD: (thread.json()["id"], in_task),
     }
-    assert set(about) == set(TargetKind) - WITHOUT_A_SCREEN_TO_OPEN
+    assert set(about) == set(TargetKind) - WITHOUT_A_SCREEN_TO_OPEN - {TargetKind.DECISION}
     for kind, entry in CATALOGUE.items():
         if entry.target in WITHOUT_A_SCREEN_TO_OPEN:
             link = told(database, r, "owner", kind, r.project)

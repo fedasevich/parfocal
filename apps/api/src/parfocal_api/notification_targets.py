@@ -1,18 +1,21 @@
 import uuid
+from typing import Any
 
 from fastapi import APIRouter
 from pydantic import BaseModel
 from sqlalchemy import select
 
+from parfocal_api.blinding import sees_reviewer
 from parfocal_api.context import CurrentPrincipal, TenantConnection
-from parfocal_api.notification_catalogue import CATALOGUE, TargetKind
-from parfocal_api.notifications import member_of
+from parfocal_api.notification_catalogue import TargetKind, target_kind_of
+from parfocal_api.notifications import member_of, uuid_or_none
 from parfocal_api.origins import Origin, OriginRoute
-from parfocal_api.problems import ConflictError, NotFoundError
+from parfocal_api.problems import ConflictError, ForbiddenError, NotFoundError
 from parfocal_api.project_access import reads_slide, role_in
 from parfocal_api.review_tasks import readable_task
+from parfocal_api.reviewed_layer import review_slide
 from parfocal_api.search import SearchContext, current_ids
-from parfocal_api.tables import NotificationKind, jobs, notifications, projects, slides
+from parfocal_api.tables import jobs, notifications, projects, slides
 from parfocal_api.threads import visible_thread
 from parfocal_common.object_ids import ObjectIdError, parse
 
@@ -89,6 +92,37 @@ async def current_object(
     return resolved[0].text(ascii=True), object_id
 
 
+async def decision_target(
+    connection: TenantConnection, principal: CurrentPrincipal, row: Any, payload: dict[str, Any]
+) -> Target:
+    task_id = uuid_or_none(payload.get("task_id"))
+    author = uuid_or_none(payload.get("actor_user_id"))
+    if task_id is None or author is None:
+        raise TargetGoneError
+    try:
+        place = await review_slide(connection, principal, task_id, row.target_id)
+    except NotFoundError, ForbiddenError:
+        raise TargetGoneError from None
+    if not await sees_reviewer(
+        connection, principal, place.project_id, task_id, row.target_id, author
+    ):
+        raise TargetGoneError
+    object_id, resolved_from = await current_object(
+        connection, principal, place.project_id, row.target_id, task_id, payload.get("object_id")
+    )
+    case_id = await connection.scalar(select(slides.c.case_id).where(slides.c.id == row.target_id))
+    return Target(
+        kind=TargetKind.DECISION,
+        project_id=place.project_id,
+        task_id=task_id,
+        slide_id=row.target_id,
+        object_id=object_id,
+        resolved_from=resolved_from,
+        case_id=case_id,
+        origin=origin_of(place.project_id, task_id=task_id, case_id=case_id),
+    )
+
+
 @router.get("/{notification_id}/target", operation_id="getNotificationTarget")
 async def get_notification_target(
     notification_id: uuid.UUID, principal: CurrentPrincipal, connection: TenantConnection
@@ -104,7 +138,7 @@ async def get_notification_target(
     if row is None:
         raise NotificationNotFoundError
     payload = dict(row.payload)
-    match CATALOGUE[NotificationKind(row.kind)].target:
+    match target_kind_of(row):
         case TargetKind.TASK | TargetKind.EVALUATION as kind:
             try:
                 task, whole = await readable_task(connection, principal, row.target_id)
@@ -199,5 +233,7 @@ async def get_notification_target(
                 case_id=case_id,
                 origin=origin_of(thread.project_id, task_id=thread.task_id, case_id=case_id),
             )
+        case TargetKind.DECISION:
+            return await decision_target(connection, principal, row, payload)
         case TargetKind.DELIVERY | TargetKind.ACCESS_REQUEST:
             raise TargetNotAvailableError

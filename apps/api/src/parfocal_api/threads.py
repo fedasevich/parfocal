@@ -21,13 +21,14 @@ from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
 from parfocal_api.blind_first import hidden_objects
 from parfocal_api.blinding import ai_hidden_on, require_ai_shown, sees_reviewer, user_of
 from parfocal_api.context import CurrentPrincipal, TenantConnection
-from parfocal_api.mentions import MAX_MENTIONS, mentioned_in
+from parfocal_api.mentions import MAX_MENTIONS, BadMentionError, mentioned_in
 from parfocal_api.notification_catalogue import TargetKind
 from parfocal_api.notifications import deliver_after_commit, notify
 from parfocal_api.permissions import Grant, Permission, member_of, require
 from parfocal_api.principals import MemberPrincipal, Principal
 from parfocal_api.problems import BadRequestError, ConflictError, ForbiddenError, NotFoundError
 from parfocal_api.project_access import (
+    principal_of,
     project_grant,
     reads_whole,
     require_slide_reading,
@@ -48,7 +49,6 @@ from parfocal_api.tables import (
     NotificationKind,
     PrivacyMode,
     ProjectRole,
-    Role,
     annotations,
     memberships,
     projects,
@@ -172,11 +172,6 @@ class BadAnchorError(BadRequestError):
 class ThreadHasRepliesError(ConflictError):
     code = "thread-has-replies"
     title = "This thread has replies. Confirm to delete them with it"
-
-
-class BadMentionError(BadRequestError):
-    code = "bad-mention"
-    title = "Only members who can see this thread can be mentioned in it"
 
 
 class NotThreadAuthorError(ForbiddenError):
@@ -324,21 +319,6 @@ class Sight:
                 )
             )
         return self.blind
-
-
-async def principal_of(
-    connection: AsyncConnection, tenant_id: uuid.UUID, user_id: uuid.UUID
-) -> MemberPrincipal | None:
-    row = (
-        await connection.execute(
-            select(memberships.c.role, memberships.c.admin_rights).where(
-                memberships.c.tenant_id == tenant_id, memberships.c.user_id == user_id
-            )
-        )
-    ).one_or_none()
-    if row is None:
-        return None
-    return MemberPrincipal("", tenant_id, user_id, Role(row.role), row.admin_rights)
 
 
 def is_ai(found: ObjectId) -> bool:

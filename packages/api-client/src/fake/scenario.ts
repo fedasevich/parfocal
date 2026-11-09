@@ -586,6 +586,7 @@ export type ScenarioNotification = {
     | "workspace-access-asked";
   actor: PersonKey | null;
   requestId?: string;
+  onDecision?: boolean;
   title: string;
   detail: string;
   quote?: string;
@@ -703,6 +704,21 @@ export const notifications: ScenarioNotification[] = [
     action: "Answer the ask",
     createdAt: "2026-10-15T09:55:00+02:00",
     read: false,
+  },
+  {
+    to: "DH",
+    id: uuid(12, 10),
+    kind: "mention",
+    actor: "SM",
+    onDecision: true,
+    title: "Simona Marková mentioned you in a note",
+    detail: "on her decision on T5 on A1: runs past the fold",
+    quote: "Runs past the fold, worth a look",
+    objectId: "T5",
+    slideLabel: "A1",
+    action: "Open the note",
+    createdAt: "2026-10-15T11:05:00+02:00",
+    read: true,
   },
 ];
 

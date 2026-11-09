@@ -135,7 +135,7 @@ async def context_of(
                 select(review_tasks.c.project_id).where(review_tasks.c.id == target_id)
             )
             return Context(project_id, target_id) if project_id else Context()
-        case TargetKind.SLIDE:
+        case TargetKind.SLIDE | TargetKind.DECISION:
             row = (
                 await connection.execute(
                     select(slides.c.project_id, slides.c.case_id).where(slides.c.id == target_id)
