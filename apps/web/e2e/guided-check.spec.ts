@@ -66,3 +66,31 @@ test("a scoped slide is checked by keyboard in its stored order, leaving objects
   await expect(stage).toHaveAttribute("data-save-state", "saved");
   await expect(page.locator('[data-testid="task-object"][data-origin="human"]')).toHaveCount(1);
 });
+
+test("a row click keeps the guided object and a fast second key does not touch another object", async ({
+  page,
+}) => {
+  await openTaskSlide(page);
+  const guide = page.getByTestId("guided-check");
+  await page.keyboard.press("Shift+G");
+  await expect(guide).toHaveAttribute("data-current", "C1");
+
+  await row(page, "C4").click();
+  await expect(guide).toHaveAttribute("data-current", "C1");
+  await expect(row(page, "C1")).toHaveAttribute("aria-pressed", "true");
+  await expect(row(page, "C4")).toHaveAttribute("aria-pressed", "false");
+
+  await page.keyboard.press("d");
+  await page.keyboard.press("Shift+X");
+  await expect(guide).toHaveAttribute("data-current", "C5");
+  await expect(row(page, "C1")).toHaveAttribute("data-origin", "ai-confirmed");
+  await expect(row(page, "C5")).toHaveAttribute("data-origin", "ai");
+});
+
+test("the guide key does nothing while the AI result is hidden", async ({ page }) => {
+  await openTaskSlide(page);
+  await page.getByRole("switch", { name: "Show the AI result" }).click();
+  await page.keyboard.press("Shift+G");
+  await page.getByRole("switch", { name: "Show the AI result" }).click();
+  await expect(page.getByTestId("guided-check")).toHaveCount(0);
+});

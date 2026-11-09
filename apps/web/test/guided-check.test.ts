@@ -5,9 +5,12 @@ import {
   checkQueueOf,
   currentOf,
   guideAction,
+  guidedAvailable,
   guidedBindings,
+  guidedToggle,
   nextClassOf,
   type Queued,
+  selectionAfterRowClick,
   skippedState,
   startState,
 } from "../src/annotations/guided-check.ts";
@@ -134,4 +137,23 @@ test("the guided keys are bound on annotate screens", () => {
   const actions = guidedBindings().map((binding) => binding.action);
   assert.ok(actions.includes(guideAction));
   assert.ok(actions.includes("gnext"));
+});
+
+test("the guided check is available only with shown AI objects on an unlocked slide", () => {
+  assert.equal(guidedAvailable(true, 3, false), true);
+  assert.equal(guidedAvailable(false, 3, false), false);
+  assert.equal(guidedAvailable(true, 0, false), false);
+  assert.equal(guidedAvailable(true, 3, true), false);
+});
+
+test("the guide key turns the mode on only when it can be shown and always turns it off", () => {
+  assert.equal(guidedToggle(false, true), true);
+  assert.equal(guidedToggle(false, false), false);
+  assert.equal(guidedToggle(true, false), false);
+  assert.equal(guidedToggle(true, true), false);
+});
+
+test("a list row click keeps the selection on the guided object", () => {
+  assert.equal(selectionAfterRowClick(true, "C1", "C4"), "C1");
+  assert.equal(selectionAfterRowClick(false, "C1", "C4"), "C4");
 });

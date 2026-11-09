@@ -37,7 +37,14 @@ import {
   useSharedLayer,
 } from "../annotations/annotate-task-api.ts";
 import { confirmAction, confirmActions, confirms } from "../annotations/check-state.ts";
-import { guideAction, guides, nextClassOf } from "../annotations/guided-check.ts";
+import {
+  guideAction,
+  guidedAvailable,
+  guidedToggle,
+  guides,
+  nextClassOf,
+  selectionAfterRowClick,
+} from "../annotations/guided-check.ts";
 
 import type { SaveState } from "../annotations/use-saved-annotations.ts";
 import { useBindings } from "../keys/personal-keys.ts";
@@ -116,8 +123,11 @@ export function AnnotateTaskPanel({
     ]);
   }, [queryClient, taskId, slideId, task.slideIds]);
 
+  const working = useRef(false);
   const run = useCallback(
     async (action: () => Promise<unknown>) => {
+      if (working.current) return;
+      working.current = true;
       setRefusal(null);
       try {
         await action();
@@ -125,7 +135,11 @@ export function AnnotateTaskPanel({
         const code = problemCode(error);
         setRefusal(refusals[code] ?? `The server refused it (${code}).`);
       }
-      await refresh();
+      try {
+        await refresh();
+      } finally {
+        working.current = false;
+      }
     },
     [refresh],
   );
@@ -172,8 +186,13 @@ export function AnnotateTaskPanel({
   }, []);
   useHotkeys(confirmBindings, onConfirmKey);
 
+  const latestCanGuide = useRef(false);
+  latestCanGuide.current = guidedAvailable(view.shown, ai.length, locked);
   const guideBindings = useBindings(["annotate"], guideActionList);
-  const toggleGuide = useCallback(() => setGuided((on) => !on), []);
+  const toggleGuide = useCallback(
+    () => setGuided((on) => guidedToggle(on, latestCanGuide.current)),
+    [],
+  );
   const onGuideKey = useCallback(
     (fired: Fired) => {
       if (guides(fired)) toggleGuide();
@@ -269,7 +288,9 @@ export function AnnotateTaskPanel({
                 aria-pressed={object.object === selected}
                 data-testid="task-object"
                 data-origin={object.origin}
-                onClick={() => setSelected(object.object)}
+                onClick={() =>
+                  setSelected((now) => selectionAfterRowClick(guided, now, object.object))
+                }
                 className="flex w-full cursor-pointer items-center gap-2 rounded-md border-0 bg-transparent px-1.5 py-1 text-left text-body-sm text-fg hover:bg-chrome-3 aria-pressed:bg-accent-soft"
               >
                 <span className="w-9 shrink-0 font-mono">{object.object}</span>
@@ -297,7 +318,7 @@ export function AnnotateTaskPanel({
             </li>
           ))}
         </ul>
-        {view.shown && ai.length > 0 && !locked ? (
+        {guidedAvailable(view.shown, ai.length, locked) ? (
           guided ? (
             orderQuery.isPending ? (
               <p className="m-0 text-body-sm text-fg-dim" data-testid="guided-loading">
