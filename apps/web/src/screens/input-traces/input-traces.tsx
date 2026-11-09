@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { fixtureFileName, fixtureFromTrace } from "./fixture.ts";
 import {
   buildTrace,
   doubleClickRecord,
@@ -26,14 +27,19 @@ const tickMs = 50;
 const safariGestureTypes = ["gesturestart", "gesturechange", "gestureend"] as const;
 const pointerTypes = ["pointerdown", "pointermove", "pointerup", "pointercancel"] as const;
 
-function download(trace: InputTrace) {
-  const blob = new Blob([traceFileBody(trace)], { type: "application/json" });
+function save(body: string, fileName: string) {
+  const blob = new Blob([body], { type: "application/json" });
   const link = document.createElement("a");
   link.href = URL.createObjectURL(blob);
-  link.download = traceFileName(trace);
+  link.download = fileName;
   link.click();
   URL.revokeObjectURL(link.href);
 }
+
+const download = (trace: InputTrace) => save(traceFileBody(trace), traceFileName(trace));
+
+const downloadFixture = (trace: InputTrace) =>
+  save(`${JSON.stringify(fixtureFromTrace(trace), null, 2)}\n`, fixtureFileName(trace));
 
 function StepList({ profile }: { profile: DeviceProfile }) {
   return (
@@ -265,6 +271,16 @@ export function InputTraces() {
           >
             Download JSON
           </button>
+          {session.profile.device === "trackpad" ? (
+            <button
+              type="button"
+              onClick={() => downloadFixture(trace(session))}
+              disabled={session.gestures.every((gesture) => gesture === null)}
+              className="rounded-md border border-line bg-chrome-2 px-3 py-1"
+            >
+              Download trackpad fixture
+            </button>
+          ) : null}
           <button
             type="button"
             onClick={() => begin(session.profile)}

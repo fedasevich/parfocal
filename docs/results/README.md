@@ -85,3 +85,4 @@ One file per measured run, named `YYYY-MM-DD-short-topic.md`. Copy [_template.md
 | 2026-11-09 | [The performance HUD costs 0.0032 ms per frame of its own update work, under the 0.5 ms budget](2026-11-09-performance-hud-cost.md) | LAB-002 | benchmark |
 | 2026-11-09 | [The web browser suite slows by a steady per-runner factor on CI, up to 1.9 times, so the job is split into three shards](2026-11-09-web-browser-suite-ci-slowdown.md) | TEST-021 | baseline |
 | 2026-11-09 | [A hover hit test over 1,000,000 nuclei takes a 95th percentile of 0.00088 ms, under the 1 ms limit](2026-11-09-hit-testing-at-scale.md) | ANN-018 | benchmark |
+| 2026-11-09 | [The two-finger click and Safari pinch listeners turn dispatched events into the negative point and zoom intents, real hardware traces still to record](2026-11-09-trackpad-listeners.md) | DEV-013 | baseline |

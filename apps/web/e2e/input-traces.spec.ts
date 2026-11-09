@@ -102,8 +102,8 @@ test("the start page lists the steps for a mouse, a Mac trackpad and an optional
   const mac = page.getByRole("region", { name: "Mac trackpad" });
   const windows = page.getByRole("region", { name: "Windows precision touchpad" });
   await expect(mouse.getByRole("listitem")).toHaveCount(9);
-  await expect(mac.getByRole("listitem")).toHaveCount(9);
-  await expect(windows.getByRole("listitem")).toHaveCount(9);
+  await expect(mac.getByRole("listitem")).toHaveCount(10);
+  await expect(windows.getByRole("listitem")).toHaveCount(10);
   await expect(mouse).toContainText("Mouse, scroll down slowly");
   await expect(mac).toContainText("Mac trackpad, pinch in slowly");
   await expect(windows).toContainText("(optional)");
