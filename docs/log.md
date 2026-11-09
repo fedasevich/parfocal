@@ -4,6 +4,8 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-09
 
+- SHELL-010 Correction, the review follow-up is SHELL-015 (one connection banner and issue pages everywhere), not SHELL-016.
+- TASK-010 Correction, the review follow-ups are TASK-016 (mock API blinds like the real one) and TASK-017 (first read notice in the full viewer and paged screen), not TASK-019 and TASK-020.
 - Guided check follows the task's stored review order and scope with the client sort as fallback, covered by unit tests and a scoped browser spec. Objects a model run adds wait for the order to be recomputed.
 - Shell issue pages for not found, server error, session expired and no access, and a real Connection lost banner with Retry now and a restored toast, with 6 browser tests and axe. Fable review asked for one fix, retries now run one at a time with a timeout. Wiring into the review and viewer flows is SHELL-016.
 - An ADR records the linked compare pane model, a per-pane offset in slide pixels, log2 zoom and degrees, relink keeping the manual offset and rigid automatic alignment. Saving an aligned offset per slide pair is decision 77.

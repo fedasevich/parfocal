@@ -52,6 +52,15 @@ The guided check steps through AI objects with D to confirm, Shift Y to fix, Shi
 
 Your choice:
 
+## 77. Saving an aligned compare offset, from CMP-000 (compare research check)
+
+When two slides are compared side by side, a person can shift one pane to line the tissue up. That offset is lost when the compare view closes.
+
+- a. Save the offset per slide pair as a private setting of that person, cleared when either slide is replaced. (recommended)
+- b. Keep it for the visit only, as built.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 Nothing else in review needs you. Nine tasks that only waited for green CI were ticked on 2026-11-02.

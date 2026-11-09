@@ -1876,6 +1876,12 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Refs mock: states, mock: guided/connlost, mock: case/connlost, mock: signin/expired, mock: signin/noaccess, kit: issue states, doc 44.
   Size: L.
 
+- [ ] SHELL-015 · One connection banner and issue pages everywhere
+  Review of SHELL-010 (error and issue states) found the shell banner only inside the global shell. Show it in guided review and the full viewer by reading `useConnection` in place of their prototype scene banners, make `holdSaveUntilBack` run the held saves on reconnect or remove it with its toast text, route the real expired and no-access cases of sign-in to the shared issue pages and retire the copies in the sign-in screens, fold the `/issue-pages` preview into the `/issue-states` dev index, and make `issue-states.spec.ts` fail when the root server error page renders.
+  Done when browser tests show the banner in guided review and the full viewer, a held save runs on reconnect, sign-in shows the shared pages, and the issue states spec catches a crashed scene.
+  Depends on SHELL-010.
+  Size: M.
+
 - [ ] SHELL-011 · Second-monitor pop-out windows
   The minimap and the inspector can pop out into a second window that stays in sync (BroadcastChannel), using the Window Management API where available.
   Done when an E2E test with two pages confirms camera sync both ways.
@@ -4425,6 +4431,18 @@ A researcher hands slides to reviewers as a review task ([ADR 0053](adr/0053-ai-
   Done when E2E walks that flow and checks that the AI is absent before the first read and present after it, and that the first read is unchanged after the decisions and the submit.
   Depends on TASK-004, GUIDE-002, GUIDE-007. Split from TASK-004 ([ADR 0118](adr/0118-blinding-and-a-kept-first-read.md)).
   Size: M.
+
+- [ ] TASK-016 · Mock API blinds like the real one
+  Review of TASK-010 (reveal the AI after a first read) found the fake API still serves AI result sets while a first read is open. Answer 403 `ai-hidden` on the result set routes and return no AI objects on every slide of a hide-the-AI task until its first read is recorded, as the real API does, and treat only a 404 from `getFirstRead` as not recorded so a passing server error never shows the first-read step again.
+  Done when fake API tests cover the 403 and the empty objects before and after a first read, and a component or browser test shows a 500 from the first read keeps the AI step.
+  Depends on TASK-010.
+  Size: S.
+
+- [ ] TASK-017 · First read notice in the full viewer and paged screen
+  While a first read is open, the full viewer and the paged screen show a blank slide because the API hides the AI. Show a notice there that sends the reviewer to guided review to record the first read, and guard the `scene` search parameter so it never skips the first-read gate outside the prototype.
+  Done when a browser test opens the full viewer and the paged screen of a hide-the-AI task before the first read and finds the notice and its link, and a test shows `scene` is ignored on a real task.
+  Depends on TASK-010.
+  Size: S.
 
 - [x] TASK-011 · Display defaults, locks and presets
   A task holds display defaults preset by its study template and changed in the New review task flow: draw as, width, opacity, colour by, ID labels, confidence as a number, a word, a colour or hidden, the heatmap, the score cutoff, the other result sets, the order, the zoom around the object, moving on by itself and where the buttons sit. The task may lock confidence, the heatmap, the score cutoff, the other result sets and the order, each with a reason of 5 to 120 characters, and the API refuses a reviewer's change to a locked value. A reviewer saves presets with a name of 1 to 40 characters, unique among their presets, for one task or for all their tasks. Every decision stores the preset in force, the task default or a preset's name, and the evaluation returns who used which preset on how many objects for the report's Methods block and its Preset column ([ADR 0132](adr/0132-display-settings-presets-and-task-locks.md), display settings, presets and task locks).
