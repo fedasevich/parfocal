@@ -3753,7 +3753,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when replayed traces from macOS and Windows trackpads produce the right intents.
   Size: M.
 
-- [ ] DEV-010 · Wire two-finger click and Safari pinch to the viewer
+- [ ] DEV-013 · Wire two-finger click and Safari pinch to the viewer
   DEV-002 (trackpad detection and gestures) added the negativePoint and Safari pinch intents but no DOM listener produces them. Hook `pointerdown` and `contextmenu` for the two-finger click and `gesturestart`, `gesturechange` and `gestureend` for Safari, and record real Mac and Windows trackpad traces to replace the synthetic ones.
   Done when a browser test drives the listeners into each intent, and the trace fixtures are recorded on real hardware with a result file.
   Depends on DEV-002.
@@ -4769,7 +4769,7 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Depends on EVAL-008, STACK-035. Refs mock: evaluation/pdf, mock: admin/templates, doc 43.
   Size: L.
 
-- [ ] EVAL-016 · Page and cache long PDF previews
+- [ ] EVAL-017 · Page and cache long PDF previews
   Review of EVAL-010 (PDF preview) found a long task report returns every SVG page in one response and compiles the same Typst source again for Download and Print. Return the first pages and fetch the rest as the viewer scrolls, and cache the compiled report by the task version checksum.
   Done when an API test pages a long seeded report, a second preview and a download reuse the cache, and the preview browser spec still passes.
   Depends on EVAL-010.
