@@ -1,5 +1,5 @@
-import { expect, test } from "@playwright/test";
 import type {} from "../src/debug-handle.ts";
+import { expect, test } from "./a11y.ts";
 
 const p07 = "00000000-0000-4000-8003-000000000007";
 const rt14 = "00000000-0000-4000-8007-000000000014";

@@ -1,4 +1,4 @@
-import { expect, type Locator, type Page, test } from "@playwright/test";
+import { expect, type Locator, type Page, test } from "./a11y.ts";
 
 const picked = (rows: Locator) => rows.and(rows.page().locator("[aria-selected='true']"));
 

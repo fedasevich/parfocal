@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { digestFile, writeRandomFile } from "@parfocal/upload-spike/digest";
 import { type StorageStack, startStorageStack } from "@parfocal/upload-spike/harness";
 import { dockerIsUp } from "@parfocal/upload-spike/minio";
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Page, test } from "./a11y.ts";
 
 const MIB = 1024 * 1024;
 const PART_BYTES = 16 * MIB;

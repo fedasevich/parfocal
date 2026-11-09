@@ -1,4 +1,4 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Page, test } from "./a11y.ts";
 
 async function openPalette(page: Page) {
   const palette = page.getByRole("dialog", { name: "Command palette" });

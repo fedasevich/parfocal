@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./a11y.ts";
 import { inPart, parts } from "./parts.ts";
 
 test("the issue states index opens from the prototype index with every flow", async ({ page }) => {

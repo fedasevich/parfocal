@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./a11y.ts";
 import { inPart, parts } from "./parts.ts";
 
 const chapterTitles = [

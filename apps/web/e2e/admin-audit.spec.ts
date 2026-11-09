@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import type { AuditExport } from "@parfocal/api-client";
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Page, test } from "./a11y.ts";
 
 const pick = async (page: Page, chip: RegExp, option: string) => {
   await page.getByRole("button", { name: chip }).click();

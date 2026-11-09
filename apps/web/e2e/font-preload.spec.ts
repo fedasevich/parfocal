@@ -1,8 +1,8 @@
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { expect, test } from "@playwright/test";
 import { build, type PreviewServer, preview } from "vite";
+import { expect, test } from "./a11y.ts";
 
 const port = Number(process.env["PARFOCAL_E2E_PORT"] ?? 5183) + 1;
 const delayMs = 120;

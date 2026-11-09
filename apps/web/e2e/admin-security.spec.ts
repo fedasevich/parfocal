@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./a11y.ts";
 
 test("an admin requires two factors for everyone and reads the setting back", async ({ page }) => {
   await page.goto("/admin?section=security");

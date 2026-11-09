@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./a11y.ts";
 
 test("home opens on the scenario's fake data with the badge", async ({ page }) => {
   await page.goto("/");

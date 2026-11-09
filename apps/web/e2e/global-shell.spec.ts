@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./a11y.ts";
 
 test("the top bar carries each control and the sidebar lists the places to go", async ({
   page,

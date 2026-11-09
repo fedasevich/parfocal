@@ -1,5 +1,5 @@
 import AxeBuilder from "@axe-core/playwright";
-import type { Page } from "@playwright/test";
+import type { Page } from "./a11y.ts";
 import { expect, test } from "./telemetry-capture.ts";
 
 const p03 = "00000000-0000-4000-8003-000000000003";

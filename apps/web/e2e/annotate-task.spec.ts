@@ -1,4 +1,4 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Page, test } from "./a11y.ts";
 import { inPart, parts } from "./parts.ts";
 
 test.use({ viewport: { width: 1440, height: 900 } });

@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./a11y.ts";
 
 test("the overview shows the stat tiles and a short summary per section from seeded data", async ({
   page,

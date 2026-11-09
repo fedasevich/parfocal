@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./a11y.ts";
 
 const settingsScenes: { scene: string; section: string; title: string; shows: string }[] = [
   { scene: "display", section: "display", title: "Display", shows: "Slide brightness" },

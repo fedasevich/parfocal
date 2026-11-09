@@ -1,4 +1,4 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Page, test } from "./a11y.ts";
 
 const tray = (page: Page) => page.getByRole("dialog", { name: "Jobs" });
 
