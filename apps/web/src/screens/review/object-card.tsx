@@ -21,7 +21,7 @@ import {
 } from "./decision-style.ts";
 import { disagreeOptions } from "./disagree-reasons.ts";
 import { dotGlyphOf, dotStateWord } from "./guided-progress.ts";
-import { mentionOptions, mentionQuery, withMention } from "./mention-picking.ts";
+import { mentionOptions, mentionQuery, toMentionTokens, withMention } from "./mention-picking.ts";
 import { noteKeyAction, noteLimit, tooLong } from "./note-model.ts";
 import type { Answer } from "./review-state.ts";
 import { useMentionable } from "./use-mentionable.ts";
@@ -153,7 +153,8 @@ export function NoteEditor({
     const name = members.find((member) => member.id === id)?.name;
     if (name) onText(withMention(text, name));
   };
-  const saveable = !offReason && !tooLong({ reasons: chosen, text });
+  const over = tooLong({ reasons: chosen, text: toMentionTokens(text, members) });
+  const saveable = !offReason && !over;
   const onKey = (event: KeyboardEvent<HTMLTextAreaElement>) => {
     if (
       query !== undefined &&
@@ -218,7 +219,7 @@ export function NoteEditor({
       </div>
       <div className="flex items-center gap-2">
         <span className="flex-1 text-caption text-fg-dim">
-          {tooLong({ reasons: chosen, text }) ? `Up to ${noteLimit} characters` : "Optional"}
+          {over ? `Up to ${noteLimit} characters` : "Optional"}
         </span>
         <Button variant="ghost" size="sm" onClick={onCancel}>
           Cancel <Keycap action="esc" keys="Esc" size="sm" />

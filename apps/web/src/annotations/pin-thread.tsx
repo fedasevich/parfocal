@@ -5,6 +5,8 @@ import { useEffect, useRef, useState } from "react";
 import { now } from "../clock.ts";
 import { usePeople } from "../screens/people.ts";
 import { okData } from "../screens/placeholder.tsx";
+import { toMentionTokens } from "../screens/review/mention-picking.ts";
+import { useMentionable } from "../screens/review/use-mentionable.ts";
 import type { AnnotationDocument } from "./document.ts";
 import {
   homeOf,
@@ -35,6 +37,7 @@ export function PinThread({
   const home = homeOf(thread);
   const queryClient = useQueryClient();
   const person = usePeople();
+  const members = useMentionable();
   const me = okData(useGetMe().data);
   const detail = okData(
     useQuery({ queryKey: threadKey(home, threadId), queryFn: () => readThread(home, threadId) })
@@ -64,7 +67,8 @@ export function PinThread({
     void queryClient.invalidateQueries({ queryKey: threadListKey(home) });
   };
   const replying = useMutation({
-    mutationFn: (body: string) => replyInThread(home, threadId, { body }),
+    mutationFn: (body: string) =>
+      replyInThread(home, threadId, { body: toMentionTokens(body, members) }),
     onSuccess: (response) => {
       if (response.status >= 300) return;
       setReply("");

@@ -7,6 +7,7 @@ import { useState } from "react";
 import { markTried } from "../home/getting-started.ts";
 import { type Pin, pinOnScreen, pinThread } from "./comment-pin.ts";
 import type { Camera } from "./slide-still.tsx";
+import { useMentionable } from "./use-mentionable.ts";
 
 type Size = { width: number; height: number };
 
@@ -42,6 +43,7 @@ export function PinnedThread({
   onCancel,
 }: PinnedThreadProps) {
   const [draft, setDraft] = useState("");
+  const members = useMentionable();
   const queryClient = useQueryClient();
   const create = useCreateThread({
     mutation: {
@@ -53,7 +55,7 @@ export function PinnedThread({
     },
   });
   const send = () => {
-    const data = pinThread(pin, draft);
+    const data = pinThread(pin, draft, members);
     if (data === null || create.isPending) return;
     create.mutate({ taskId, slideId, data });
   };

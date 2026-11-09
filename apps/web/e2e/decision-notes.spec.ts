@@ -4,6 +4,7 @@ import { expect, type Page, test } from "./a11y.ts";
 const rt14 = "00000000-0000-4000-8007-000000000014";
 const p07 = "00000000-0000-4000-8003-000000000007";
 const a1 = "00000000-0000-4000-8005-000000000001";
+const daniel = "00000000-0000-4000-8001-000000000009";
 
 test.use({ viewport: { width: 1280, height: 900 } });
 
@@ -46,7 +47,16 @@ test("a note with a quick reason and a mention saves on Enter, and Esc cancels",
   await page.keyboard.press("Enter");
   await expect(field(page, "T5")).toHaveValue(/Runs past the fold @Daniel Hruška $/);
   await field(page, "T5").pressSequentially("worth a second look");
+  const put = page.waitForRequest(
+    (request) =>
+      request.method() === "PUT" &&
+      request.url().includes("/verdicts/T5") &&
+      (request.postData() ?? "").includes("worth a second look"),
+  );
   await page.keyboard.press("Enter");
+  expect(((await put).postDataJSON() as { note: string }).note).toBe(
+    `Runs past the fold @[${daniel}] worth a second look`,
+  );
   await expect(field(page, "T5")).toHaveCount(0);
   const saved = page.getByText("Note on decision: Disagree");
   await expect(saved).toBeVisible();

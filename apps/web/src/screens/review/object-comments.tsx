@@ -9,7 +9,13 @@ import { ObjectIdTag } from "@parfocal/ui/components/tag";
 import { type ReactNode, useState } from "react";
 import { commentDraftId, useKeptDraft } from "../../session/kept-drafts.ts";
 import { usePeople } from "../people.ts";
-import { mentionOptions, mentionQuery, withMention } from "./mention-picking.ts";
+import {
+  fromMentionTokens,
+  mentionOptions,
+  mentionQuery,
+  toMentionTokens,
+  withMention,
+} from "./mention-picking.ts";
 import { useMentionable } from "./use-mentionable.ts";
 
 const stamp = new Intl.DateTimeFormat("en-GB", {
@@ -32,7 +38,7 @@ export function useThreadMessages(thread: SlideThread | undefined, meId: string 
     you: comment.author_id === meId,
     researcher: comment.author_is_researcher,
     at: formatStamp(comment.created_at),
-    text: comment.text,
+    text: fromMentionTokens(comment.text, (userId) => person(userId)?.name),
     replyTo: comment.reply_to,
   });
   return thread ? (comments ?? []).map(toMessage) : [];
@@ -95,7 +101,7 @@ export function ObjectThread({
     ]);
     setDraft("");
     setReplyTo(null);
-    onSent?.(text);
+    onSent?.(toMentionTokens(text, members));
   };
   const replyingTo = replyTo ? messages.find((message) => message.id === replyTo) : undefined;
   return (

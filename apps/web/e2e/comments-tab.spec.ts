@@ -27,6 +27,9 @@ test("a thread card opens its thread and Go to follows the location", async ({ p
     .click();
   await expect(page).toHaveURL(/thread=T1%C2%B7C145|thread=T1·C145/);
   await expect(page.getByRole("region", { name: "Thread on T1·C145" })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Thread on T1·C145" })).toContainText(
+    "@Lenka Malá agreed",
+  );
   await cards(page).nth(2).getByRole("button", { name: "Go to R2⁺" }).click();
   await expect(page.getByRole("region", { name: "Thread on R2⁺" })).toBeVisible();
 });
