@@ -47,8 +47,28 @@ const safeStem = (name: string) =>
     .replace(/^_+|_+$/g, "")
     .concat("") || "template";
 
+const arranged = new Map<string, { blocks: LayoutBlock[]; format: LayoutFormat }>();
+
+const layoutOf = (taskId: string) => {
+  const own = arranged.get(taskId);
+  if (own) return { ...own, own: true };
+  const template = toEvaluationReport(taskId).template;
+  return { blocks: template.blocks, format: template.format, own: false };
+};
+
 export function reportPreviewHandlers(): RequestHandler[] {
   return [
+    http.get<{ taskId: string }>("*/api/review-tasks/:taskId/report-layout", ({ params }) =>
+      HttpResponse.json(layoutOf(params.taskId)),
+    ),
+    http.put<{ taskId: string }>(
+      "*/api/review-tasks/:taskId/report-layout",
+      async ({ params, request }) => {
+        const body = (await request.json()) as { blocks: LayoutBlock[]; format?: LayoutFormat };
+        arranged.set(params.taskId, { blocks: body.blocks, format: body.format ?? {} });
+        return HttpResponse.json(layoutOf(params.taskId));
+      },
+    ),
     http.get<{ taskId: string }>(
       "*/api/review-tasks/:taskId/evaluation/preview",
       ({ params, request }) => {
@@ -59,8 +79,8 @@ export function reportPreviewHandlers(): RequestHandler[] {
         const whole = previewOf(
           `evaluation_v${report.version}_report.pdf`,
           `${report.task_code} evaluation`,
-          report.template.blocks,
-          report.template.format,
+          layoutOf(params.taskId).blocks,
+          layoutOf(params.taskId).format,
         );
         return HttpResponse.json({
           ...whole,

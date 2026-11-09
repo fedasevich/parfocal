@@ -840,6 +840,18 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
     )
     seeded.ids["task"] = task_id
     seeded.markers.update({str(task_id), task_name})
+    layout_text = f"Layout {uuid.uuid4().hex[:12]}"
+    await connection.execute(
+        update(review_tasks)
+        .where(review_tasks.c.id == task_id)
+        .values(
+            report_layout={
+                "blocks": [{"kind": "text", "title": layout_text, "body": "Arranged"}],
+                "format": {},
+            }
+        )
+    )
+    seeded.markers.add(layout_text)
     snapshot_class = f"Snapshot class {uuid.uuid4().hex[:8]}"
     annotate_id = await connection.scalar(
         insert(review_tasks)
@@ -1554,6 +1566,9 @@ GET_ROUTES = {
     ),
     "previewTaskEvaluation": Route(
         Exposure.TENANT, lambda a: f"/api/review-tasks/{a.ids['task']}/evaluation/preview"
+    ),
+    "getTaskReportLayout": Route(
+        Exposure.TENANT, lambda a: f"/api/review-tasks/{a.ids['task']}/report-layout"
     ),
     "exportTaskEvaluation": Route(
         Exposure.TENANT,

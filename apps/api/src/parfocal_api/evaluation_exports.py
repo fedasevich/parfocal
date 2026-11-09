@@ -234,6 +234,11 @@ async def signed_layout(
 async def task_layout(
     connection: AsyncConnection, task: Any
 ) -> tuple[tuple[ReportBlock, ...], ReportFormat]:
+    if task.report_layout is not None:
+        stored = task.report_layout
+        return tuple(BLOCKS.validate_python(stored["blocks"])), ReportFormat.model_validate(
+            stored["format"]
+        )
     if task.study_template_id is None:
         built_in = BUILT_INS[BuiltInTemplate.DETECTION]
         return tuple(built_in.blocks), built_in.format
