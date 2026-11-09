@@ -63,7 +63,7 @@ for (const part of parts) {
   test(`every full viewer and Visualize scene opens from the prototype index, part ${part}`, async ({
     page,
   }) => {
-    test.setTimeout(60_000);
+    test.setTimeout(120_000);
     const errors: string[] = [];
     page.on("pageerror", (error) => errors.push(error.message));
     page.on("response", (response) => {

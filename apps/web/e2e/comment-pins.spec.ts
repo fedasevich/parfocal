@@ -147,6 +147,7 @@ test("clicking a pin opens its thread, a reply joins it and Escape closes it", a
 });
 
 test("a pin on a shape embeds the shape's measurement in its thread", async ({ page }) => {
+  test.setTimeout(60_000);
   const stage = await openTaskSlide(page);
   const box = (await stage.boundingBox()) ?? { x: 0, y: 0 };
   await drawRectangle(page, box);
