@@ -23,6 +23,7 @@ import {
   shiftPreset,
   type TaskDisplayView,
   toApi,
+  withOtherSets,
 } from "./display-model.ts";
 import type { ReviewSession } from "./review-data.ts";
 
@@ -78,7 +79,8 @@ export function useDisplayChoice(
     }
   };
 
-  const put = (presetId: string | null, values: PanelValues) => putRaw(presetId, toApi(values));
+  const put = (presetId: string | null, values: PanelValues) =>
+    putRaw(presetId, withOtherSets(toApi(values), myDisplay?.settings));
 
   const remember = () => {
     const before = myDisplay;

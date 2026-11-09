@@ -9,6 +9,7 @@ import {
   shiftPreset,
   taskDisplayView,
   toApi,
+  withOtherSets,
 } from "../src/screens/review/display-model.ts";
 
 const id = (n: number) => `00000000-0000-4000-8000-00000000000${n}`;
@@ -138,4 +139,12 @@ test("Save is blocked with a reason on the task default and with no change", () 
   assert.equal(saveState(true, null).enabled, false);
   assert.match(saveState(true, null).reason ?? "", /Save as/);
   assert.deepEqual(saveState(true, "Dots"), { enabled: true, reason: undefined });
+});
+
+test("a display change keeps the saved other sets so a locked other-sets is not refused", () => {
+  const kept = { other_sets: "hidden" } as unknown as Parameters<typeof withOtherSets>[1];
+  const sent = withOtherSets({ opacity: 0.5 }, kept) as Record<string, unknown>;
+  assert.equal(sent["other_sets"], "hidden");
+  assert.equal(sent["opacity"], 0.5);
+  assert.deepEqual(withOtherSets({ opacity: 0.5 }, undefined), { opacity: 0.5 });
 });

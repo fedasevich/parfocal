@@ -45,6 +45,10 @@ export function fromApi(settings: ApiSettings | undefined): PanelValues {
   return values;
 }
 
+export function withOtherSets(settings: ApiSettings, kept: ApiSettings | undefined): ApiSettings {
+  return kept?.other_sets === undefined ? settings : { ...settings, other_sets: kept.other_sets };
+}
+
 export function toApi(values: PanelValues): ApiSettings {
   const settings: Record<string, unknown> = {};
   if (values.draw !== undefined) settings["draw_as"] = values.draw;
