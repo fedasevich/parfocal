@@ -201,6 +201,16 @@ const keymap: [string, KeyContext, Scope, Row[]][] = [
         "new",
         { note: "on annotate tasks. Editing or deleting an AI object also checks it" },
       ],
+      [
+        "gguide",
+        "Start or leave the guided check",
+        ["⇧G"],
+        "new",
+        { note: "steps through the unchecked AI objects, least sure first" },
+      ],
+      ["gnext", "Skip to the next AI object in the guided check", ["⇧E"], "new"],
+      ["gdelete", "Delete the current AI object in the guided check", ["⇧X"], "new"],
+      ["gclass", "Give the current AI object the next class", ["⇧Y"], "new"],
     ],
   ],
   [
