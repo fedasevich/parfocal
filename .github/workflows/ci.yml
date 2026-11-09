@@ -16,7 +16,7 @@ permissions:
 
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 env:
   TURBO_TELEMETRY_DISABLED: "1"
@@ -91,6 +91,18 @@ jobs:
         run: |
           if [ -z "$FROM" ] || [ "$FROM" = "0000000000000000000000000000000000000000" ]; then FROM="$TO~1"; fi
           pnpm commitlint --from "$FROM" --to "$TO" --verbose
+
+  docs:
+    if: github.event_name != 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
+      - run: python -m unittest discover -s scripts -p "test_*.py" -v
+      - run: python scripts/check_adrs.py docs/adr
+      - run: python scripts/board.py check
 
   typecheck:
     if: github.event_name != 'workflow_dispatch'
@@ -369,7 +381,7 @@ jobs:
 
   ci-ok:
     if: always()
-    needs: [changes, lint, typecheck, test, db, formats, e2e, browser, dependency-scan]
+    needs: [changes, lint, docs, typecheck, test, db, formats, e2e, browser, dependency-scan]
     runs-on: ubuntu-latest
     steps:
       - run: test "${{ needs.changes.result == 'success' && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}" = "true"

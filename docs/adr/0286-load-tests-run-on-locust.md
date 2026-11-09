@@ -1,4 +1,4 @@
-# 0278. Load tests run on Locust from the uv workspace and refuse any target that is not local or staging
+# 0286. Load tests run on Locust from the uv workspace and refuse any target that is not local or staging
 
 - Date: 2026-11-09
 - Status: Accepted

@@ -5,7 +5,28 @@ import {
   engineRing,
   overviewFrame,
   ringOfPath,
+  stillCameraOf,
+  stillShapeOf,
 } from "../src/viewer/still-frame.ts";
+
+test("an engine camera maps back to the still camera it came from", () => {
+  const still = { x: 333, y: 1200, scale: 0.7 };
+  const back = stillCameraOf(engineCameraOf(still, frame), frame);
+  assert.ok(Math.abs(back.x - still.x) < 1e-6);
+  assert.ok(Math.abs(back.y - still.y) < 1e-6);
+  assert.ok(Math.abs(back.scale - still.scale) < 1e-9);
+});
+
+test("a slide ring becomes a still path whose box lands back on the slide ring", () => {
+  const shape = stillShapeOf([100, 50, 300, 50, 300, 250], frame);
+  const [x0, y0, x1, y1] = shape.box;
+  assert.ok(Math.abs(x0 * frame.scale + frame.offsetX - 100) < 1e-6);
+  assert.ok(Math.abs(y0 * frame.scale + frame.offsetY - 50) < 1e-6);
+  assert.ok(Math.abs(x1 * frame.scale + frame.offsetX - 300) < 1e-6);
+  assert.ok(Math.abs(y1 * frame.scale + frame.offsetY - 250) < 1e-6);
+  assert.ok(shape.path.startsWith("M") && shape.path.endsWith("Z"));
+  assert.equal(ringOfPath(shape.path).length, 6);
+});
 
 const frame = overviewFrame({ width: 1024, height: 768 });
 

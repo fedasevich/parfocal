@@ -23,6 +23,7 @@ import type {
   SourceListing,
   Template,
 } from "../generated/api.ts";
+import { annotateBlindFirst } from "./annotate-task-listing.ts";
 import { countsAsChangesFor, decisionSettingsFor } from "./decision-settings.ts";
 import { taskDisplayFor } from "./display-settings.ts";
 import type { DraftOperation } from "./draft-handlers.ts";
@@ -61,8 +62,9 @@ import {
   uploadStorage,
   uploadUnscored,
 } from "./scenario-project.ts";
-import { rt13 } from "./scenario-review.ts";
+import { annotateStubTaskId, rt13 } from "./scenario-review.ts";
 import { opinionForms, studyTemplates } from "./scenario-task.ts";
+import { annotateTaskClasses } from "./shared-layer-handlers.ts";
 import { toSlideRow } from "./work-handlers.ts";
 
 const projectOf = (idOrCode: string): ScenarioProject =>
@@ -180,9 +182,25 @@ export const toReviewTask = (task: ScenarioReviewTask): ReviewTask => {
   };
 };
 
+export const toAnnotateReviewTask = (): ReviewTask => ({
+  ...toReviewTask(rt13),
+  id: annotateStubTaskId,
+  code: "AT-21",
+  number: 21,
+  name: "Expert annotation round",
+  kind: "annotate",
+  classes: annotateTaskClasses,
+  slide_count: 2,
+  reviewer_count: 1,
+  blind_first: annotateBlindFirst(),
+});
+
 export const toProjectReviewTasks = (idOrCode: string): ReviewTask[] => {
   const project = projectOf(idOrCode);
-  return [...reviewTasks, rt13].filter((task) => task.project === project.code).map(toReviewTask);
+  const listed = [...reviewTasks, rt13]
+    .filter((task) => task.project === project.code)
+    .map(toReviewTask);
+  return project.code === rt13.project ? [...listed, toAnnotateReviewTask()] : listed;
 };
 
 export const toSlideResultSets = (slideId: string): ResultSet[] => {

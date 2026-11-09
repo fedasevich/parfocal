@@ -30,7 +30,12 @@ from parfocal_api.tables import (
     retention_policies,
     tenants,
 )
-from parfocal_common.db import DatabaseScope, create_engine, scoped_transaction
+from parfocal_common.db import (
+    DatabaseScope,
+    create_engine,
+    require_row_security,
+    scoped_transaction,
+)
 from parfocal_common.jobs import PLATFORM, Step, StepRun, Workflow, enqueue, work
 from parfocal_common.object_store import ObjectStore, StorageLocation
 from parfocal_common.settings import StorageSettings, load_settings
@@ -295,6 +300,7 @@ async def schedule_retention(engine: AsyncEngine) -> list[uuid.UUID]:
 async def run_once(settings: ApiSettings) -> int:
     engine = create_engine(str(settings.database_url))
     try:
+        await require_row_security(engine)
         await schedule_retention(engine)
         workflow = retention_workflow(settings.storage)
         return await work(engine, [workflow], "retention", idle_exit_seconds=1, poll_seconds=0.5)

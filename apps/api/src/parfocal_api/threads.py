@@ -19,7 +19,13 @@ from parfocal_api.annotations import (
 )
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
 from parfocal_api.blind_first import hidden_objects
-from parfocal_api.blinding import ai_hidden_on, require_ai_shown, sees_reviewer, user_of
+from parfocal_api.blinding import (
+    ai_hidden_on,
+    blinded_on,
+    require_ai_shown,
+    sees_reviewer,
+    user_of,
+)
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.mentions import MAX_MENTIONS, BadMentionError, mentioned_in
 from parfocal_api.notification_catalogue import TargetKind
@@ -256,6 +262,7 @@ class Sight:
     whole_authors: dict[uuid.UUID, bool] = field(default_factory=dict)
     seen: dict[uuid.UUID, bool] = field(default_factory=dict)
     hidden: bool | None = None
+    blinded: bool | None = None
     blind: set[tuple[Letter, int]] | None = None
 
     async def reads_whole(self, author: uuid.UUID) -> bool:
@@ -277,7 +284,7 @@ class Sight:
         if task_id is None:
             return (
                 author == user_of(self.reader)
-                or not await self.ai_hidden()
+                or not (await self.ai_hidden() or await self.under_blinding())
                 or await self.reads_whole(author)
             )
         return await self.reads_whole(author) or await sees_reviewer(
@@ -295,6 +302,13 @@ class Sight:
                 self.connection, self.reader, self.place.project_id, self.place.slide_id
             )
         return self.hidden
+
+    async def under_blinding(self) -> bool:
+        if self.blinded is None:
+            self.blinded = await blinded_on(
+                self.connection, self.reader, self.place.project_id, self.place.slide_id
+            )
+        return self.blinded
 
     async def sees_thread(self, row: Any) -> bool:
         if not await self.sees(row.created_by_user_id):

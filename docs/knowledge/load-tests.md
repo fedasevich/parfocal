@@ -1,6 +1,6 @@
 # Load tests
 
-Locust scenarios for the API, tiles and realtime, run on demand ([ADR 0278](../adr/0278-load-tests-run-on-locust.md), load tests on Locust with a target guard). They are level 7 of the test pyramid in [ADR 0273](../adr/0273-test-pyramid-and-ownership.md) and never run on a pull request. Never point them at production or any cloud URL other than staging.
+Locust scenarios for the API, tiles and realtime, run on demand ([ADR 0286](../adr/0286-load-tests-run-on-locust.md), load tests on Locust with a target guard). They are level 7 of the test pyramid in [ADR 0273](../adr/0273-test-pyramid-and-ownership.md) and never run on a pull request. Never point them at production or any cloud URL other than staging.
 
 ## Files
 

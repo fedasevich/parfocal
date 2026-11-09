@@ -25,6 +25,7 @@ import type {
   TaskChange,
   TaskDraft,
 } from "../generated/api.ts";
+import { setAnnotateBlindFirst } from "./annotate-task-listing.ts";
 import {
   changeCountsAs,
   decisionSettingsFor,
@@ -33,9 +34,10 @@ import {
 } from "./decision-settings.ts";
 import { taskDisplayFor } from "./display-settings.ts";
 import type { DraftOperation } from "./draft-handlers.ts";
+import { toAnnotateReviewTask } from "./project-handlers.ts";
 import { people, projectByCode, projects, reviewTasks } from "./scenario.ts";
 import { reportBlocksOf } from "./scenario-admin.ts";
-import { rt13 } from "./scenario-review.ts";
+import { annotateStubTaskId, rt13 } from "./scenario-review.ts";
 import {
   away,
   displayDefault,
@@ -321,6 +323,11 @@ const problem = (status: number, code: string, title: string) =>
 const changeTask = http.patch<{ taskId: string }>(
   "*/api/review-tasks/:taskId",
   async ({ params, request }) => {
+    if (params.taskId === annotateStubTaskId) {
+      const change = (await request.json()) as TaskChange;
+      if (change.blind_first != null) setAnnotateBlindFirst(change.blind_first);
+      return HttpResponse.json({ ...toAnnotateReviewTask(), slides: [] });
+    }
     const task = [...reviewTasks, rt13].find((candidate) => candidate.id === params.taskId);
     if (task === undefined) return undefined;
     const body = (await request.json()) as TaskChange;

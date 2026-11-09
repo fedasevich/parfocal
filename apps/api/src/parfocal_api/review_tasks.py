@@ -197,6 +197,7 @@ class TaskChange(BaseModel):
     decision: DecisionSettings | None = None
     display: TaskDisplaySettings | None = None
     check: CheckChange | None = None
+    blind_first: bool | None = None
 
     @model_validator(mode="after")
     def has_change(self) -> TaskChange:
@@ -314,6 +315,11 @@ class CountsAsSignedOffError(ConflictError):
 class CheckNotForKindError(BadRequestError):
     code = "check-not-for-task-kind"
     title = "Only an annotate task has check options"
+
+
+class BlindFirstNotForKindError(BadRequestError):
+    code = "blind-first-not-for-task-kind"
+    title = "Only an annotate task can be blind first"
 
 
 class StudyTemplateRetiredError(ConflictError):
@@ -1105,6 +1111,15 @@ async def change_review_task(
             [values["check_options"][key] for key in ("scope", "order")]
             != [stored_options(row).get(key) for key in ("scope", "order")]
         )
+    switched = None
+    if change.blind_first is not None:
+        if TaskKind(row.kind) is not TaskKind.ANNOTATE:
+            raise BlindFirstNotForKindError
+        if change.blind_first != row.blind_first:
+            switched = change.blind_first
+            values["blind_first"] = switched
+            if switched:
+                values["blind_first_since"] = func.now()
     if change.extra_scopes is not None:
         values["extra_scopes"] = stored_parts(change.extra_scopes, row.extra_scopes)
     if change.scope is not None:
@@ -1119,9 +1134,10 @@ async def change_review_task(
             else None,
             "scope_score": None if scope.score is None else stored_score(scope.score),
         }
-    await connection.execute(
-        update(review_tasks).where(review_tasks.c.id == task_id).values(**values)
-    )
+    if values:
+        await connection.execute(
+            update(review_tasks).where(review_tasks.c.id == task_id).values(**values)
+        )
     if rescoped:
         changed = await task_row(connection, task_id)
         sets = await task_sets(connection, task_id)
@@ -1158,6 +1174,15 @@ async def change_review_task(
             row.tenant_id,
             task_id,
             display_change,
+        )
+    if switched is not None:
+        await audit(
+            connection,
+            principal,
+            AuditAction.TASK_BLIND_FIRST_CHANGED,
+            row.tenant_id,
+            task_id,
+            {"blind_first": switched},
         )
     if "due_on" in values and values["due_on"] != row.due_on:
         await tell_due_changed(connection, row, values["due_on"])

@@ -6,6 +6,7 @@ from db_support import ApiAs
 from test_ai_changes import report_text
 from test_annotate_sign_off import SQUARE, on_slide, post, two_slides
 from test_review_order import Ordered, ordered
+from workspace_support import owner
 
 from parfocal_api.realtime import RecordedRealtime
 
@@ -169,3 +170,58 @@ def test_a_colleague_cannot_anchor_a_thread_on_a_hidden_object(api: ApiAs, datab
     assert guessed.json()["code"] == missing.json()["code"]
     assert post(api, o, "first", f"{slide}/check").status_code == 200
     assert post(api, o, "second", f"{slide}/threads", **body).status_code == 201
+
+
+def switch(api: ApiAs, o: Ordered, who: str, task: str, on: bool) -> Any:
+    return api(o.people[who]).patch(f"/api/review-tasks/{task}", json={"blind_first": on})
+
+
+def test_turning_blind_first_off_shows_every_object_and_back_on_hides_only_later_ones(
+    api: ApiAs, database: str
+) -> None:
+    o = ordered(database, api)
+    task = two_slides(api, o, blind_first=True)
+    slide = on_slide(o, task, 0)
+    early = drawn(api, o, "first", slide)
+    assert early["id"] not in ids_seen(api, o, "second", slide)
+    off = switch(api, o, "owner", task, False)
+    assert off.status_code == 200, off.text
+    assert off.json()["blind_first"] is False
+    assert early["id"] in ids_seen(api, o, "second", slide)
+    middle = drawn(api, o, "first", slide)
+    assert middle["id"] in ids_seen(api, o, "second", slide)
+    on = switch(api, o, "owner", task, True)
+    assert on.json()["blind_first"] is True
+    assert {early["id"], middle["id"]} <= ids_seen(api, o, "second", slide)
+    later = drawn(api, o, "first", slide)
+    assert later["id"] in ids_seen(api, o, "first", slide)
+    assert later["id"] not in ids_seen(api, o, "second", slide)
+    assert post(api, o, "first", f"{slide}/check").status_code == 200
+    assert later["id"] in ids_seen(api, o, "second", slide)
+
+
+def test_the_switch_is_audited_without_names_and_only_when_it_changes(
+    api: ApiAs, database: str
+) -> None:
+    o = ordered(database, api)
+    task = two_slides(api, o, blind_first=True)
+    assert switch(api, o, "owner", task, True).status_code == 200
+    assert switch(api, o, "owner", task, False).status_code == 200
+    rows = owner(
+        database,
+        f"SELECT details FROM audit_events WHERE target_id = '{task}' "
+        "AND action = 'task.blind-first-changed'",
+    )
+    assert [row[0] for row in rows] == ['{"blind_first":false}']
+
+
+def test_only_the_task_owner_can_switch_and_only_on_an_annotate_task(
+    api: ApiAs, database: str
+) -> None:
+    o = ordered(database, api)
+    task = two_slides(api, o, blind_first=True)
+    assert switch(api, o, "first", task, False).status_code in {403, 404}
+    assert api(o.people["owner"]).get(f"/api/review-tasks/{task}").json()["blind_first"] is True
+    listed = api(o.people["owner"]).get(f"/api/projects/{o.project}/review-tasks").json()
+    review = next(item for item in listed if item["kind"] == "review")
+    assert switch(api, o, "owner", review["id"], True).status_code == 400
