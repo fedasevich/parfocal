@@ -1020,6 +1020,7 @@ class NotificationKind(StrEnum):
     ADJUDICATION_REQUESTED = "adjudication-requested"
     SLIDE_MOVED = "slide-moved"
     WORKSPACE_ACCESS_ASKED = "workspace-access-asked"
+    TEMPLATE_OFFERED = "template-offered"
 
 
 class EmailStatus(StrEnum):
@@ -1586,6 +1587,51 @@ study_template_versions = Table(
     ),
     one_of("study_kind", StudyKind),
     CheckConstraint("version >= 1", name="version"),
+)
+
+
+class TemplateOfferStatus(StrEnum):
+    PENDING = "pending"
+    ACCEPTED = "accepted"
+    DECLINED = "declined"
+
+
+template_offers = Table(
+    "template_offers",
+    metadata,
+    *owned_ids(),
+    Column("name", String(120), nullable=False, info=OPERATIONAL),
+    Column("study_kind", String(20), nullable=False, info=OPERATIONAL),
+    Column("blocks", JSONB, nullable=False, info=OPERATIONAL),
+    Column("format", JSONB, nullable=False, info=OPERATIONAL),
+    Column("presets", JSONB, nullable=False, info=OPERATIONAL),
+    Column(
+        "offered_by_user_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("users.id"),
+        nullable=False,
+        info=PERSONAL,
+    ),
+    Column(
+        "status",
+        String(10),
+        nullable=False,
+        server_default=TemplateOfferStatus.PENDING.value,
+        info=OPERATIONAL,
+    ),
+    Column("template_id", Uuid[uuid.UUID](), nullable=True, info=OPERATIONAL),
+    Column("decided_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
+    Column(
+        "decided_by_user_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("users.id"),
+        nullable=True,
+        info=PERSONAL,
+    ),
+    *timestamps(),
+    one_of("status", TemplateOfferStatus),
+    one_of("study_kind", StudyKind),
+    CheckConstraint("(status = 'pending') = (decided_at IS NULL)", name="decided_at"),
 )
 
 

@@ -55,6 +55,7 @@ import {
   studyKinds,
   type TemplateDraft,
 } from "./template-model.ts";
+import { TemplateOffers } from "./template-offers.tsx";
 
 export { blockCopy, type TemplateDraft };
 
@@ -155,6 +156,7 @@ export function TemplatesSection({
   };
   return (
     <>
+      <TemplateOffers notify={notify} />
       <Zone
         title="Study templates"
         sub="A template lays out the evaluation report as blocks on pages and fills in what a new review task checks, its opinion form and how it runs. Researchers pick one when they create a task, and can still arrange one task's report on its own."

@@ -23,6 +23,7 @@ class TargetKind(StrEnum):
     DELIVERY = "delivery"
     PROJECT = "project"
     ACCESS_REQUEST = "access-request"
+    TEMPLATE_OFFER = "template-offer"
 
 
 @dataclass(frozen=True)
@@ -168,6 +169,13 @@ CATALOGUE: Mapping[NotificationKind, Entry] = {
         TargetKind.ACCESS_REQUEST,
         "Someone asked to join your workspace",
         "A person asked to join a workspace where you hold admin rights.",
+        ALL,
+        breaks_mute=False,
+    ),
+    NotificationKind.TEMPLATE_OFFERED: Entry(
+        TargetKind.TEMPLATE_OFFER,
+        "A report layout was offered as a template",
+        "A researcher offered a report layout to the template library for you to accept.",
         ALL,
         breaks_mute=False,
     ),

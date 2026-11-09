@@ -5,8 +5,11 @@ import {
   type StudyTemplateSummary,
   type TaskReportLayoutDraft,
   useCreateStudyTemplate,
+  useGetMe,
   useGetTaskReportLayout,
+  useListReviewTasks,
   useListStudyTemplates,
+  useOfferStudyTemplate,
   useSetTaskReportLayout,
 } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
@@ -21,6 +24,7 @@ import {
 } from "@parfocal/ui/lib/report-editor-model";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { adminAccessOf } from "../admin/admin-access.ts";
 import { emptyPresets, formatOf, problemTitle, templateBody } from "../admin/template-model.ts";
 import { okData } from "../placeholder.tsx";
 
@@ -74,12 +78,18 @@ function ArrangeBody({
 }) {
   const queryClient = useQueryClient();
   const library = okData(useListStudyTemplates().data) ?? [];
+  const compareChoices = (okData(useListReviewTasks(report.project.id).data) ?? [])
+    .filter((other) => other.id !== taskId)
+    .map((other) => ({ value: other.id, label: `${other.code}, ${other.name}` }));
   const base = library.find((item) => item.id === report.template.id);
   const [blocks, setBlocks] = useState<EditorBlock[]>(start.blocks);
   const [format, setFormat] = useState<FormatSettings>(start.format);
   const [name, setName] = useState(`${report.template.name} for ${report.task_code}`);
   const save = useSetTaskReportLayout();
   const create = useCreateStudyTemplate();
+  const offer = useOfferStudyTemplate();
+  const me = okData(useGetMe().data);
+  const keepsLibrary = me !== undefined && adminAccessOf(me) === "granted";
   const saveForTask = () =>
     save.mutate(
       {
@@ -101,17 +111,17 @@ function ArrangeBody({
         },
       },
     );
+  const asTemplate = () =>
+    templateBody({
+      name,
+      kind: base?.study_kind ?? "other",
+      blocks,
+      format,
+      presets: base?.presets ?? emptyPresets,
+    });
   const saveAsTemplate = () =>
     create.mutate(
-      {
-        data: templateBody({
-          name,
-          kind: base?.study_kind ?? "other",
-          blocks,
-          format,
-          presets: base?.presets ?? emptyPresets,
-        }),
-      },
+      { data: asTemplate() },
       {
         onSuccess: (response) => {
           if (response.status >= 300) {
@@ -120,6 +130,21 @@ function ArrangeBody({
           }
           void queryClient.invalidateQueries({ queryKey: getListStudyTemplatesQueryKey() });
           notify(`Offered to the library as ${name.trim() || "Untitled template"}`);
+        },
+      },
+    );
+  const offerToAdmin = () =>
+    offer.mutate(
+      { data: asTemplate() },
+      {
+        onSuccess: (response) => {
+          if (response.status >= 300) {
+            notify(problemTitle(response.data));
+            return;
+          }
+          notify(
+            `Offered ${name.trim() || "Untitled template"} to the admins. They accept it into the library.`,
+          );
         },
       },
     );
@@ -134,6 +159,7 @@ function ArrangeBody({
       onBlocksChange={setBlocks}
       format={format}
       onFormatChange={setFormat}
+      compareChoices={compareChoices}
       formatHead={
         <FormField label="Name if saved as a template">
           <TextFieldInput
@@ -152,9 +178,15 @@ function ArrangeBody({
           <Button variant="ghost" onClick={reset}>
             Reset to the template
           </Button>
-          <Button onClick={saveAsTemplate} disabled={create.isPending || name.trim() === ""}>
-            Save as template
-          </Button>
+          {keepsLibrary ? (
+            <Button onClick={saveAsTemplate} disabled={create.isPending || name.trim() === ""}>
+              Save as template
+            </Button>
+          ) : (
+            <Button onClick={offerToAdmin} disabled={offer.isPending || name.trim() === ""}>
+              Offer to an admin
+            </Button>
+          )}
           <Button variant="primary" onClick={saveForTask} disabled={save.isPending}>
             Save for this task
           </Button>

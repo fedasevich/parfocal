@@ -13,9 +13,9 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | Class | Columns |
 |---|---|
 | `phi` | 46 |
-| `personal` | 89 |
+| `personal` | 91 |
 | `secret` | 11 |
-| `operational` | 726 |
+| `operational` | 738 |
 | `public` | 0 |
 
 ## adjudication_objects
@@ -1134,6 +1134,25 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `kept_slide_ids` | operational |
 | `created_at` | operational |
 | `undone_at` | operational |
+
+## template_offers
+
+| Column | Class |
+|---|---|
+| `id` | operational |
+| `tenant_id` | operational |
+| `name` | operational |
+| `study_kind` | operational |
+| `blocks` | operational |
+| `format` | operational |
+| `presets` | operational |
+| `offered_by_user_id` | personal |
+| `status` | operational |
+| `template_id` | operational |
+| `decided_at` | operational |
+| `decided_by_user_id` | personal |
+| `created_at` | operational |
+| `updated_at` | operational |
 
 ## tenant_keys
 

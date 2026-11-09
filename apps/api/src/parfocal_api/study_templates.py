@@ -434,14 +434,8 @@ async def get_study_template_version(
     return await template_at(connection, template_id, version)
 
 
-@router.post(
-    "",
-    operation_id="createStudyTemplate",
-    status_code=201,
-    **require(Permission.REPORT_TEMPLATES, write=True),
-)
-async def create_study_template(
-    draft: StudyTemplateDraft, principal: CurrentPrincipal, connection: TenantConnection
+async def create_template(
+    connection: AsyncConnection, principal: Principal, draft: StudyTemplateDraft
 ) -> StudyTemplate:
     await check_name(connection, draft.name)
     tenant_id = await connection.scalar(select(literal_column(CURRENT_TENANT)))
@@ -470,6 +464,18 @@ async def create_study_template(
         {"version": 1, "blocks": len(draft.blocks)},
     )
     return await template_at(connection, template_id)
+
+
+@router.post(
+    "",
+    operation_id="createStudyTemplate",
+    status_code=201,
+    **require(Permission.REPORT_TEMPLATES, write=True),
+)
+async def create_study_template(
+    draft: StudyTemplateDraft, principal: CurrentPrincipal, connection: TenantConnection
+) -> StudyTemplate:
+    return await create_template(connection, principal, draft)
 
 
 async def current_row(connection: AsyncConnection, template_id: uuid.UUID) -> Row[Any]:

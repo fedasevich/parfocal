@@ -24,6 +24,7 @@ import {
   downloadOptions,
   duplicateBlock,
   type EditorBlock,
+  type FieldOption,
   type FormatSettings,
   fieldValueText,
   insertionIndex,
@@ -39,6 +40,8 @@ import {
 } from "@parfocal/ui/lib/report-editor-model";
 import { cn } from "@parfocal/ui/lib/utils";
 import * as React from "react";
+
+const noTaskValue = "none";
 
 const inputClass =
   "min-h-8 w-full rounded-ctl border border-line-strong bg-surf-field px-2.5 text-body-sm text-fg outline-none focus:border-accent focus:shadow-[0_0_0_3px_var(--accent-soft)]";
@@ -157,11 +160,13 @@ function BlockPanel({
   count,
   index,
   onChange,
+  compareChoices,
 }: {
   block: EditorBlock | null;
   count: number;
   index: number;
   onChange: (field: string, value: unknown) => void;
+  compareChoices?: FieldOption[] | undefined;
 }) {
   if (block === null) {
     return (
@@ -178,6 +183,19 @@ function BlockPanel({
           Block {index + 1} of {count}. {blockCopy[block.kind].shows}.
         </small>
       </div>
+      {block.kind === "comparison" && compareChoices ? (
+        <BlockFieldControl
+          field={{
+            kind: "select",
+            key: "task_id",
+            label: "Compare with task",
+            options: [{ value: noTaskValue, label: "Pick a task" }, ...compareChoices],
+            nullAs: noTaskValue,
+          }}
+          block={block}
+          onChange={(value) => onChange("task_id", value)}
+        />
+      ) : null}
       {blockFields[block.kind].map((field) => (
         <BlockFieldControl
           key={`${block.id}-${field.key}`}
@@ -404,6 +422,7 @@ type ReportEditorProps = Omit<React.ComponentProps<"div">, "onChange"> & {
   initialSelected?: string | null;
   initialTab?: "block" | "format" | "presets";
   footer?: React.ReactNode;
+  compareChoices?: FieldOption[] | undefined;
 };
 
 function ReportEditor({
@@ -417,6 +436,7 @@ function ReportEditor({
   initialSelected = null,
   initialTab = "block",
   footer,
+  compareChoices,
   className,
   ...props
 }: ReportEditorProps) {
@@ -497,6 +517,7 @@ function ReportEditor({
             <TabsContent value="block" className="pt-3">
               <BlockPanel
                 block={current}
+                compareChoices={compareChoices}
                 count={blocks.length}
                 index={blocks.findIndex((block) => block.id === selected)}
                 onChange={(field, value) =>
