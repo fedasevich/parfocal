@@ -4579,6 +4579,18 @@ Doctors judge AI objects in a simple guided mode, or in the full viewer with the
   Depends on ANN-032, ANN-031, GUIDE-002. Refs [ADR 0238](adr/0238-check-options-and-presets-on-annotate-tasks.md).
   Size: M.
 
+- [ ] GUIDE-020 · Guided check follows the task's check scope and order
+  GUIDE-019 walks every unchecked AI object least sure first. Read the stored review order (`getReviewOrder`, as `slide-progress.ts` does) so the queue keeps to the task's check scope (below a score, a sample, regions) and its by-position order, with the client sort as fallback.
+  Done when unit tests cover each scope and order and the guided check browser spec walks a scoped task in its stored order.
+  Depends on GUIDE-019.
+  Size: S.
+
+- [ ] GUIDE-021 · Guided check key safety
+  Review of GUIDE-019 found three gaps. A fast D then Shift X can delete the object just confirmed because there is no optimistic check state, Shift G turns guided mode on even when the panel cannot show it (locked, AI hidden or no AI), and clicking a list row moves the selection off the guided object so D and Shift X act on another object than the one shown. Ignore guided keys while a save runs or advance the queue at once, gate Shift G, and keep the selection on the guided object.
+  Done when unit or interaction tests cover each of the three cases.
+  Depends on GUIDE-019.
+  Size: S.
+
 ## 45 ADJ · Disagreements, adjudication and sign-off
 
 - [x] ADJ-000 · Research check
@@ -4947,6 +4959,12 @@ Admin is its own page with its own sidebar and the app's top bar, never a page i
   ADMIN-007 shows "A member" in the audit log's Who column against the real API, because audit events name actors by pseudonym, and the Security page's single sign-on and two factor switches save nothing. Let admins with the audit permission resolve a pseudonym to the member's name in the log view only, never in the export or logs, and wire single sign-on and two factors to the IdP settings that IAM-012 and the session policy already hold.
   Done when an API test resolves actor names for an admin and refuses others, the export still carries pseudonyms only, and a browser test changes the two factor setting and reads it back.
   Depends on ADMIN-007.
+  Size: M.
+
+- [ ] ADMIN-010 · Wire the class lists, retention and session lock controls
+  ADR 0266 (admin sections and their permissions) found three Admin controls that are still mock only: class lists, retention and session lock. Save each through the workspace settings API under its permission, or hide it until its feature exists.
+  Done when API tests save and read back each setting with the permission refused to others, and a browser test changes one and reloads.
+  Depends on ADMIN-000.
   Size: M.
 
 ---
