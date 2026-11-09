@@ -2634,7 +2634,7 @@ threads = Table(
     metadata,
     *owned_ids(),
     Column("project_id", Uuid[uuid.UUID](), nullable=False, info=OPERATIONAL),
-    Column("task_id", Uuid[uuid.UUID](), nullable=False, info=OPERATIONAL),
+    Column("task_id", Uuid[uuid.UUID](), nullable=True, info=OPERATIONAL),
     Column("slide_id", Uuid[uuid.UUID](), nullable=False, info=OPERATIONAL),
     Column("title", String(120), nullable=False, info=PHI),
     Column("anchor_kind", String(10), nullable=False, info=OPERATIONAL),
@@ -2669,6 +2669,12 @@ threads = Table(
         ["task_id", "slide_id"], ["review_task_slides.task_id", "review_task_slides.slide_id"]
     ),
     Index("ix_threads_task_id_slide_id", "task_id", "slide_id"),
+    Index(
+        "ix_threads_project_id_slide_id_taskless",
+        "project_id",
+        "slide_id",
+        postgresql_where=text("task_id IS NULL"),
+    ),
     one_of("anchor_kind", AnchorKind),
     CheckConstraint(
         "(anchor_kind IN ('object', 'roi')) = (object_id IS NOT NULL)", name="object_anchor"

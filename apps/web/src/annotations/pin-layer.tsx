@@ -1,14 +1,7 @@
-import {
-  deleteThread,
-  getListThreadsQueryKey,
-  type Thread,
-  useCreateThread,
-  useListThreads,
-  useMoveThread,
-} from "@parfocal/api-client";
+import { type Thread, useListThreads, useListThreadsOnSlide } from "@parfocal/api-client";
 import { CommentComposer } from "@parfocal/ui/components/comment-thread";
 import { SmallModal } from "@parfocal/ui/components/small-modal";
-import { useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useEscRegistry } from "../keys/esc-owner.tsx";
 import { markTried } from "../screens/home/getting-started.ts";
@@ -25,6 +18,14 @@ import { PinThread } from "./pin-thread.tsx";
 import { dropPin, movePin, pinHitScreenPixels, pinPoint, placePin, pointOfAnchor } from "./pins.ts";
 import type { Point } from "./polygon-draft.ts";
 import { useStageRect } from "./stage-size.ts";
+import {
+  homeOf,
+  moveThreadPin,
+  removeThread,
+  startThread,
+  type ThreadHome,
+  threadListKey,
+} from "./thread-home.ts";
 import { popoverSpot } from "./thread-popover.ts";
 
 type PinLayerProps = {
@@ -34,6 +35,7 @@ type PinLayerProps = {
   selecting?: boolean;
   registry?: PinRegistry;
   document: AnnotationDocument;
+  projectId?: string | undefined;
   taskId: string | undefined;
   slideId: string;
   micronsPerPixel: number | null;
@@ -45,7 +47,7 @@ const onPinOrThread = (event: Event) =>
   event.target instanceof Element &&
   event.target.closest('[data-slot="comment-pin"], [data-testid="pin-thread"]') !== null;
 
-const noTaskReason = "Open the slide from a task to comment on it";
+const noPlaceReason = "Open the slide from its project to comment on it";
 
 type Removal = { threadIds: readonly string[]; proceed: () => void };
 
@@ -111,6 +113,7 @@ export function PinLayer({
   selecting = false,
   registry,
   document: doc,
+  projectId,
   taskId,
   slideId,
   micronsPerPixel,
@@ -124,7 +127,19 @@ export function PinLayer({
   const listed = useListThreads(taskId ?? "", slideId, undefined, {
     query: { enabled: taskId !== undefined },
   });
-  const threads: Thread[] = okData(listed.data) ?? [];
+  const onSlide = useListThreadsOnSlide(projectId ?? "", slideId, undefined, {
+    query: { enabled: projectId !== undefined },
+  });
+  const threads: Thread[] = [
+    ...(taskId === undefined ? [] : (okData(listed.data) ?? [])),
+    ...(projectId === undefined ? [] : (okData(onSlide.data) ?? [])),
+  ];
+  const startHome: ThreadHome | null =
+    taskId !== undefined || projectId !== undefined
+      ? { projectId: projectId ?? "", slideId, taskId: taskId ?? null }
+      : null;
+  const refreshList = (home: ThreadHome) =>
+    void queryClient.invalidateQueries({ queryKey: threadListKey(home) });
   const [draft, setDraft] = useState<Point | null>(null);
   const [drag, setDrag] = useState<Drag | null>(null);
   const [openId, setOpenId] = useState<string | null>(null);
@@ -133,10 +148,19 @@ export function PinLayer({
   const [removal, setRemoval] = useState<Removal | null>(null);
   const [removing, setRemoving] = useState(false);
   const [removalFailed, setRemovalFailed] = useState(false);
-  const move = useMoveThread();
+  const move = useMutation({
+    mutationFn: ({ thread, point }: { thread: Thread; point: Point }) =>
+      moveThreadPin(homeOf(thread), thread.id, {
+        geometry: { type: "Point", coordinates: [point.x, point.y] },
+      }),
+    onSuccess: (_, { thread }) => refreshList(homeOf(thread)),
+  });
   const sentPoints = useRef(new Map<string, string>());
   const closeThread = useCallback(() => setOpenId(null), []);
-  const create = useCreateThread();
+  const create = useMutation({
+    mutationFn: ({ home, data }: { home: ThreadHome; data: Parameters<typeof startThread>[1] }) =>
+      startThread(home, data),
+  });
   const dragStart = useRef<{ from: Point; grab: Point } | null>(null);
 
   useEffect(() => {
@@ -176,9 +200,10 @@ export function PinLayer({
   const send = (text: string) => {
     const point = latest.current.draft;
     const data = point === null ? null : pinThread(point, text);
-    if (point === null || data === null || taskId === undefined) return;
+    if (point === null || data === null || startHome === null) return;
+    const home = startHome;
     create.mutate(
-      { taskId, slideId, data },
+      { home, data },
       {
         onSuccess: (response) => {
           if (response.status !== 201) return;
@@ -187,7 +212,7 @@ export function PinLayer({
           latest.current.onDocumentChange(
             placePin(before, response.data.id, point, toleranceNow()),
           );
-          void queryClient.invalidateQueries({ queryKey: getListThreadsQueryKey(taskId, slideId) });
+          refreshList(home);
           setDraft(null);
         },
       },
@@ -211,13 +236,15 @@ export function PinLayer({
   };
 
   const confirmRemoval = async () => {
-    if (removal === null || taskId === undefined) return;
+    if (removal === null) return;
     setRemoving(true);
     setRemovalFailed(false);
     const gone: string[] = [];
     for (const threadId of removal.threadIds) {
       try {
-        const response = await deleteThread(taskId, slideId, threadId, { confirm: true });
+        const thread = threads.find((item) => item.id === threadId);
+        if (thread === undefined) continue;
+        const response = await removeThread(homeOf(thread), threadId);
         if (response.status === 204) gone.push(threadId);
       } catch {
         break;
@@ -226,7 +253,7 @@ export function PinLayer({
     let next = latest.current.doc;
     for (const threadId of gone) next = dropPin(next, threadId);
     if (next !== latest.current.doc) latest.current.onDocumentChange(next);
-    void queryClient.invalidateQueries({ queryKey: getListThreadsQueryKey(taskId, slideId) });
+    for (const thread of threads) refreshList(homeOf(thread));
     setRemoving(false);
     if (gone.length < removal.threadIds.length) {
       setRemovalFailed(true);
@@ -271,7 +298,7 @@ export function PinLayer({
     .join("|");
   const syncMoves = useRef<() => void>(() => undefined);
   syncMoves.current = () => {
-    if (taskId === undefined || drag !== null) return;
+    if (drag !== null) return;
     for (const [threadId, point] of anchors) {
       const saved = serverPoints.get(threadId);
       if (saved === undefined) continue;
@@ -282,21 +309,8 @@ export function PinLayer({
       }
       if (sentPoints.current.get(threadId) === key) continue;
       sentPoints.current.set(threadId, key);
-      move.mutate(
-        {
-          taskId,
-          slideId,
-          threadId,
-          data: { geometry: { type: "Point", coordinates: [point.x, point.y] } },
-        },
-        {
-          onSuccess: () => {
-            void queryClient.invalidateQueries({
-              queryKey: getListThreadsQueryKey(taskId, slideId),
-            });
-          },
-        },
-      );
+      const thread = threads.find((item) => item.id === threadId);
+      if (thread !== undefined) move.mutate({ thread, point });
     }
   };
   useEffect(() => {
@@ -411,7 +425,7 @@ export function PinLayer({
           <Composer
             key={`${draft.x},${draft.y}`}
             at={draftAt}
-            offReason={taskId === undefined ? noTaskReason : undefined}
+            offReason={startHome === null ? noPlaceReason : undefined}
             failed={create.isError}
             busy={create.isPending}
             onSend={send}

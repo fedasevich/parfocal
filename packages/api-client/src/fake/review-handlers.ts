@@ -7,18 +7,27 @@ import {
   getClearReviewEditMockHandler,
   getClearVerdictMockHandler,
   getCreateThreadMockHandler,
+  getCreateThreadOnSlideMockHandler,
   getDeleteThreadMockHandler,
+  getDeleteThreadOnSlideMockHandler,
   getGetOpinionMockHandler,
   getGetReviewedLayerMockHandler,
   getGetSlideNeighboursMockHandler,
   getGetThreadMockHandler,
+  getGetThreadOnSlideMockHandler,
   getListMentionableMembersMockHandler,
+  getListMentionableMembersOnSlideMockHandler,
   getListProjectClassesMockHandler,
   getListThreadsMockHandler,
+  getListThreadsOnSlideMockHandler,
   getMoveThreadMockHandler,
+  getMoveThreadOnSlideMockHandler,
   getReopenThreadMockHandler,
+  getReopenThreadOnSlideMockHandler,
   getReplyToThreadMockHandler,
+  getReplyToThreadOnSlideMockHandler,
   getResolveThreadMockHandler,
+  getResolveThreadOnSlideMockHandler,
   getSaveOpinionMockHandler,
   getSaveReviewEditMockHandler,
   getSaveVerdictMockHandler,
@@ -34,6 +43,7 @@ import type {
   OpinionChange,
   PinMove,
   ProjectClass,
+  SlideThreadCreate,
   TaskStates,
   Thread,
   ThreadCreate,
@@ -179,6 +189,134 @@ const toThreadDetail = (thread: Thread): ThreadDetail => {
     messages,
   };
 };
+
+const postThread = (
+  projectId: string,
+  taskId: string | null,
+  slideId: string,
+  body: ThreadCreate,
+): ThreadDetail => {
+  const viewer = people[fakeView().viewer];
+  const id = crypto.randomUUID();
+  const at = new Date().toISOString();
+  const message = {
+    id: crypto.randomUUID(),
+    author_id: viewer.id,
+    body: body.body,
+    mentions: [],
+    created_at: at,
+  };
+  const thread: Thread = {
+    id,
+    project_id: projectId,
+    task_id: taskId,
+    slide_id: slideId,
+    title: body.title,
+    anchor: body.anchor,
+    created_by: viewer.id,
+    created_at: at,
+    resolved_at: null,
+    resolved_by: null,
+    message_count: 1,
+    last_message_at: at,
+  };
+  postedThreads.push(thread);
+  postedComments.push(
+    threadCommentSchema.parse({
+      id: message.id,
+      thread_id: id,
+      author_id: viewer.id,
+      author_is_researcher: false,
+      text: body.body,
+      reply_to: null,
+      created_at: at,
+    }),
+  );
+  return { ...thread, messages: [message] };
+};
+
+const postReply = (threadId: string, body: MessageCreate): Message => {
+  const comment = threadCommentSchema.parse({
+    id: crypto.randomUUID(),
+    thread_id: threadId,
+    author_id: people[fakeView().viewer].id,
+    author_is_researcher: false,
+    text: body.body,
+    reply_to: null,
+    created_at: new Date().toISOString(),
+  });
+  postedComments.push(comment);
+  return toMessage(comment);
+};
+
+const movePosted = (threadId: string, body: PinMove) => {
+  const posted = postedThreads.find((item) => item.id === threadId);
+  if (posted !== undefined) posted.anchor = { ...posted.anchor, geometry: body.geometry };
+};
+
+export const toTasklessThreads = (
+  projectId: string,
+  slideId: string,
+  resolved: boolean | null,
+): Thread[] =>
+  postedThreads
+    .filter(
+      (item) => item.task_id === null && item.project_id === projectId && item.slide_id === slideId,
+    )
+    .filter((item) => !removedThreads.has(item.id))
+    .map(withResolution)
+    .filter((item) => resolved === null || (item.resolved_at === null) === !resolved);
+
+const tasklessDetail = (threadId: string): ThreadDetail => {
+  const thread = postedThreads.find((item) => item.id === threadId && item.task_id === null);
+  if (thread === undefined || removedThreads.has(threadId)) {
+    throw new Error(`The fake has no slide thread ${threadId}`);
+  }
+  return toThreadDetail(withResolution(thread));
+};
+
+const tasklessThreadHandlers = () => [
+  getListThreadsOnSlideMockHandler(({ params, request }) => {
+    const asked = new URL(request.url).searchParams.get("resolved");
+    return toTasklessThreads(
+      String(params["projectId"]),
+      String(params["slideId"]),
+      asked === null ? null : asked === "true",
+    );
+  }),
+  getCreateThreadOnSlideMockHandler(async ({ params, request }) => {
+    const body = (await request.json()) as SlideThreadCreate;
+    return postThread(
+      String(params["projectId"]),
+      body.task_id ?? null,
+      String(params["slideId"]),
+      body,
+    );
+  }),
+  getReplyToThreadOnSlideMockHandler(async ({ params, request }) =>
+    postReply(String(params["threadId"]), (await request.json()) as MessageCreate),
+  ),
+  getResolveThreadOnSlideMockHandler(({ params }) => {
+    const threadId = String(params["threadId"]);
+    resolution.set(threadId, { at: new Date().toISOString(), by: people[fakeView().viewer].id });
+    return tasklessDetail(threadId);
+  }),
+  getReopenThreadOnSlideMockHandler(({ params }) => {
+    const threadId = String(params["threadId"]);
+    resolution.set(threadId, null);
+    return tasklessDetail(threadId);
+  }),
+  getMoveThreadOnSlideMockHandler(async ({ params, request }) => {
+    const threadId = String(params["threadId"]);
+    movePosted(threadId, (await request.json()) as PinMove);
+    return tasklessDetail(threadId);
+  }),
+  getDeleteThreadOnSlideMockHandler(({ params }) => {
+    removedThreads.add(String(params["threadId"]));
+  }),
+  getGetThreadOnSlideMockHandler(({ params }) => tasklessDetail(String(params["threadId"]))),
+  getListMentionableMembersOnSlideMockHandler(() => []),
+];
 
 export const toThreads = (taskId: string, slideId: string, resolved: boolean | null): Thread[] => {
   const task = taskById(taskId);
@@ -401,60 +539,16 @@ export function reviewHandlers(): RequestHandler[] {
     getCreateThreadMockHandler(async ({ params, request }) => {
       const body = (await request.json()) as ThreadCreate;
       const task = taskById(String(params["taskId"]));
-      const viewer = people[fakeView().viewer];
-      const id = crypto.randomUUID();
-      const at = new Date().toISOString();
-      const message = {
-        id: crypto.randomUUID(),
-        author_id: viewer.id,
-        body: body.body,
-        mentions: [],
-        created_at: at,
-      };
-      const thread: Thread = {
-        id,
-        project_id: projectByCode(task?.project ?? "P07").id,
-        task_id: String(params["taskId"]),
-        slide_id: String(params["slideId"]),
-        title: body.title,
-        anchor: body.anchor,
-        created_by: viewer.id,
-        created_at: at,
-        resolved_at: null,
-        resolved_by: null,
-        message_count: 1,
-        last_message_at: at,
-      };
-      postedThreads.push(thread);
-      postedComments.push(
-        threadCommentSchema.parse({
-          id: message.id,
-          thread_id: id,
-          author_id: viewer.id,
-          author_is_researcher: false,
-          text: body.body,
-          reply_to: null,
-          created_at: at,
-        }),
+      return postThread(
+        projectByCode(task?.project ?? "P07").id,
+        String(params["taskId"]),
+        String(params["slideId"]),
+        body,
       );
-      return { ...thread, messages: [message] };
     }),
-    getReplyToThreadMockHandler(async ({ params, request }) => {
-      const body = (await request.json()) as MessageCreate;
-      const viewer = people[fakeView().viewer];
-      const threadId = String(params["threadId"]);
-      const comment = threadCommentSchema.parse({
-        id: crypto.randomUUID(),
-        thread_id: threadId,
-        author_id: viewer.id,
-        author_is_researcher: false,
-        text: body.body,
-        reply_to: null,
-        created_at: new Date().toISOString(),
-      });
-      postedComments.push(comment);
-      return toMessage(comment);
-    }),
+    getReplyToThreadMockHandler(async ({ params, request }) =>
+      postReply(String(params["threadId"]), (await request.json()) as MessageCreate),
+    ),
     getResolveThreadMockHandler(({ params }) => {
       const threadId = String(params["threadId"]);
       resolution.set(threadId, {
@@ -469,15 +563,14 @@ export function reviewHandlers(): RequestHandler[] {
       return detailOf(String(params["taskId"]), String(params["slideId"]), threadId);
     }),
     getMoveThreadMockHandler(async ({ params, request }) => {
-      const body = (await request.json()) as PinMove;
       const threadId = String(params["threadId"]);
-      const posted = postedThreads.find((item) => item.id === threadId);
-      if (posted !== undefined) posted.anchor = { ...posted.anchor, geometry: body.geometry };
+      movePosted(threadId, (await request.json()) as PinMove);
       return detailOf(String(params["taskId"]), String(params["slideId"]), threadId);
     }),
     getDeleteThreadMockHandler(({ params }) => {
       removedThreads.add(String(params["threadId"]));
     }),
+    ...tasklessThreadHandlers(),
     getListMentionableMembersMockHandler(({ params }) => toMentionable(String(params["taskId"]))),
     getGetThreadMockHandler(({ params }) =>
       detailOf(String(params["taskId"]), String(params["slideId"]), String(params["threadId"])),

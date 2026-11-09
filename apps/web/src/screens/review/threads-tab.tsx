@@ -1,6 +1,12 @@
-import { type Thread, useListThreads } from "@parfocal/api-client";
+import {
+  type Thread,
+  useGetReviewTask,
+  useListThreads,
+  useListThreadsOnSlide,
+} from "@parfocal/api-client";
 import { CommentsTab, type CommentThreadCard } from "@parfocal/ui/components/comments-tab";
 import type { ThreadFilter } from "@parfocal/ui/lib/comment-threads";
+import { threadScope } from "../../annotations/thread-home.ts";
 import { usePeople } from "../people.ts";
 import { okData } from "../placeholder.tsx";
 import { formatStamp } from "./object-comments.tsx";
@@ -19,6 +25,20 @@ export const anchorKind = (thread: Thread) => {
 export const useSlideThreads = (taskId: string, slideId: string) =>
   okData(useListThreads(taskId, slideId, undefined, { query: { enabled: slideId !== "" } }).data) ??
   [];
+
+const useTaskAndSlideThreads = (taskId: string, slideId: string) => {
+  const task = okData(useGetReviewTask(taskId).data);
+  const projectId = task?.project_id ?? "";
+  const onTask = useSlideThreads(taskId, slideId);
+  const onSlide =
+    okData(
+      useListThreadsOnSlide(projectId, slideId, undefined, {
+        query: { enabled: projectId !== "" && slideId !== "" },
+      }).data,
+    ) ?? [];
+  const threads = [...onTask, ...onSlide].sort((a, b) => a.created_at.localeCompare(b.created_at));
+  return { threads, taskName: task?.name };
+};
 
 export const openThreadCount = (threads: Thread[]) =>
   threads.filter((thread) => thread.resolved_at === null).length;
@@ -52,7 +72,7 @@ export function ThreadsTab({
   onGoTo,
   onNewComment,
 }: ThreadsTabProps) {
-  const threads = useSlideThreads(taskId, slideId);
+  const { threads, taskName } = useTaskAndSlideThreads(taskId, slideId);
   const person = usePeople();
   const shown = hidden ? [] : threads;
   const selectedThread = shown.find((thread) => thread.anchor.object_id === selected);
@@ -62,6 +82,7 @@ export function ThreadsTab({
     id: thread.id,
     anchor: anchorLabel(thread),
     kind: anchorKind(thread),
+    scope: threadScope(thread, taskName),
     title: thread.title,
     author: person(thread.created_by),
     messages: thread.message_count,

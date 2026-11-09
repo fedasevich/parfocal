@@ -12,6 +12,7 @@ import {
 } from "../src/fake/index.ts";
 import {
   createThread,
+  createThreadOnSlide,
   getOpinion,
   getReviewOrder,
   getReviewTask,
@@ -23,7 +24,9 @@ import {
   listSlideThreads,
   listThreadComments,
   listThreads,
+  listThreadsOnSlide,
   listVerdicts,
+  resolveThreadOnSlide,
   saveVerdict,
 } from "../src/index.ts";
 
@@ -243,4 +246,32 @@ test("a thread posted with a point anchor is listed back with its first message"
   assert.ok(open.some((thread) => thread.id === created.id));
   const comments = (await listThreadComments(created.id)).data;
   assert.equal(comments[0]?.text, "Is this fold real?");
+});
+
+test("a thread posted on a slide with no task lists apart from the task's threads", async () => {
+  assert.ok(rt14);
+  const project = body(await getReviewTask(rt14.id)).project_id;
+  const onTask = body(await listThreads(rt14.id, a1.id)).length;
+  assert.deepEqual(body(await listThreadsOnSlide(project, a1.id)), []);
+  const response = await createThreadOnSlide(project, a1.id, {
+    title: "Before any task",
+    body: "Is this fold real?",
+    anchor: {
+      kind: "point",
+      object_id: null,
+      geometry: { type: "Point", coordinates: [10, 20] },
+      offset: null,
+    },
+  });
+  assert.equal(response.status, 201);
+  const created = response.data as { id: string; task_id: string | null };
+  assert.equal(created.task_id, null);
+  const listed = body(await listThreadsOnSlide(project, a1.id));
+  assert.deepEqual(
+    listed.map((thread) => [thread.title, thread.task_id]),
+    [["Before any task", null]],
+  );
+  assert.equal(body(await listThreads(rt14.id, a1.id)).length, onTask);
+  body(await resolveThreadOnSlide(project, a1.id, created.id));
+  assert.deepEqual(body(await listThreadsOnSlide(project, a1.id, { resolved: false })), []);
 });
