@@ -4,9 +4,13 @@ import {
   type ReactNode,
   type RefObject,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
+import type { StillLink } from "../../viewer/still-engine.tsx";
+import { type StillShape, stillShapeOf } from "../../viewer/still-frame.ts";
+import type { SlideOutlines } from "../../viewer/use-still-objects.ts";
 import { type Look, lookUrl } from "../thumbnails.ts";
 import { isClick, type Pin, slidePoint } from "./comment-pin.ts";
 import type { Count } from "./decision-style.ts";
@@ -24,6 +28,17 @@ export type StillView =
 export type Camera = { x: number; y: number; scale: number };
 
 type Size = { width: number; height: number };
+
+type Shapes = Readonly<Record<string, StillShape>>;
+
+const noShapes: Shapes = {};
+
+function shapesOf(outlines: SlideOutlines, link: StillLink | null): Shapes {
+  if (link === null) return noShapes;
+  return Object.fromEntries(
+    [...outlines].map(([object, ring]) => [shapeKey(object), stillShapeOf(ring, link.frame)]),
+  );
+}
 
 const regionMaxScale = 3.3;
 const regionFill = 0.55;
@@ -68,13 +83,13 @@ function cellAt(point: { x: number; y: number }): string | undefined {
   return best;
 }
 
-export function homeCamera(view: StillView, size: Size): Camera {
+export function homeCamera(view: StillView, size: Size, shapes: Shapes = regionShapes): Camera {
   if (view.kind === "cell") {
     const cell = cellShapes[view.object];
     return { x: cell?.x ?? hpfSize.width / 2, y: cell?.y ?? hpfSize.height / 2, scale: cellScale };
   }
   if (view.kind === "region") {
-    const [x0, y0, x1, y1] = regionShapes[shapeKey(view.object)]?.box ?? [0, 0, 1400, 1924];
+    const [x0, y0, x1, y1] = shapes[shapeKey(view.object)]?.box ?? [0, 0, 1400, 1924];
     const fit = Math.min(
       (size.width * regionFill) / Math.max(1, x1 - x0),
       (size.height * regionFill) / Math.max(1, y1 - y0),
@@ -142,14 +157,19 @@ type SlideStillProps = {
   currentTint?: string | undefined;
   tags?: SlideTag[];
   look?: StillLook | undefined;
-  homeOf?: ((size: Size) => Camera) | undefined;
+  homeOf?: ((size: Size, shapes: Shapes) => Camera) | undefined;
   rotation?: number;
   underlay?: ((state: { camera: Camera; size: Size }) => ReactNode) | undefined;
   overlay?: (state: { camera: Camera; size: Size; home: Camera; moved: boolean }) => ReactNode;
   backdrop?:
-    | ((state: { camera: Camera; size: Size; onReady: (up: boolean) => void }) => ReactNode)
+    | ((state: {
+        camera: Camera;
+        size: Size;
+        onReady: (link: StillLink | null) => void;
+      }) => ReactNode)
     | undefined;
   engineDrawn?: ReadonlySet<string> | undefined;
+  outlines?: SlideOutlines | undefined;
   onPointPick?: ((point: Pin) => void) | undefined;
   onCellPick?: ((object: string) => void) | undefined;
 };
@@ -183,15 +203,23 @@ export function SlideStill({
   overlay,
   backdrop,
   engineDrawn,
+  outlines,
   onPointPick,
   onCellPick,
 }: SlideStillProps) {
   const ref = useRef<HTMLDivElement>(null);
-  const [engineUp, setEngineUp] = useState(false);
-  const viaEngine = backdrop !== undefined && engineUp;
+  const [link, setLink] = useState<StillLink | null>(null);
+  const engineLink = backdrop === undefined ? null : link;
+  const viaEngine = engineLink !== null;
+  const shapes = useMemo(
+    () => (outlines === undefined ? regionShapes : shapesOf(outlines, engineLink)),
+    [outlines, engineLink],
+  );
   const size = useElementSize(ref);
-  const home = homeOf ? homeOf(size) : homeCamera(view, size);
-  const shown = camera ?? home;
+  const home = homeOf ? homeOf(size, shapes) : homeCamera(view, size, shapes);
+  const clamp = (next: Camera): Camera => (engineLink === null ? next : engineLink.clamp(next));
+  const shown = clamp(camera ?? home);
+  const moveTo = (next: Camera) => onCameraChange(clamp(next));
   const drag = useRef<{ x: number; y: number; from: Camera } | null>(null);
   const image = look ?? imageOf(view);
   const full = lookSizes[image];
@@ -218,7 +246,7 @@ export function SlideStill({
     const turn = (-rotation * Math.PI) / 180;
     const dx = event.clientX - start.x;
     const dy = event.clientY - start.y;
-    onCameraChange({
+    moveTo({
       ...start.from,
       x: start.from.x - (dx * Math.cos(turn) - dy * Math.sin(turn)) / start.from.scale,
       y: start.from.y - (dx * Math.sin(turn) + dy * Math.cos(turn)) / start.from.scale,
@@ -248,7 +276,7 @@ export function SlideStill({
   const tagAt =
     view.kind === "region"
       ? (() => {
-          const box = regionShapes[shapeKey(view.object)]?.box;
+          const box = shapes[shapeKey(view.object)]?.box;
           return box ? toScreen(box[2], box[1]) : null;
         })()
       : view.kind === "cell"
@@ -262,7 +290,7 @@ export function SlideStill({
       ? placeSlideTags(
           tags,
           (object) => {
-            const box = regionShapes[shapeKey(object)]?.box;
+            const box = shapes[shapeKey(object)]?.box;
             return box === undefined ? null : toScreen(box[2], box[1]);
           },
           size,
@@ -274,6 +302,7 @@ export function SlideStill({
       data-slot="slide-still"
       data-view={view.kind}
       data-scale={shown.scale.toFixed(2)}
+      data-camera={`${shown.x.toFixed(2)},${shown.y.toFixed(2)},${shown.scale.toFixed(5)}`}
       className={cn(
         "relative min-h-0 flex-1 cursor-grab touch-none overflow-hidden bg-[#262626] select-none active:cursor-grabbing",
         className,
@@ -284,10 +313,10 @@ export function SlideStill({
       onPointerCancel={endDrag}
       onWheel={(event) => {
         const factor = event.deltaY < 0 ? 1.15 : 1 / 1.15;
-        onCameraChange({ ...shown, scale: shown.scale * factor });
+        moveTo({ ...shown, scale: shown.scale * factor });
       }}
     >
-      {backdrop?.({ camera: shown, size, onReady: setEngineUp })}
+      {backdrop?.({ camera: shown, size, onReady: setLink })}
       <svg
         role="img"
         aria-label={target ? `The slide around ${target}` : "The whole slide"}
@@ -308,7 +337,7 @@ export function SlideStill({
         {underlay?.({ camera: shown, size })}
         {bare || image !== "overview"
           ? null
-          : Object.entries(regionShapes).map(([id, shape]) => {
+          : Object.entries(shapes).map(([id, shape]) => {
               const current = shapeKey(target ?? "") === id;
               const custom = current ? undefined : regionStyle?.(objectOfShape(id));
               const stroke = current
@@ -462,6 +491,7 @@ export function SlideStill({
           size={size}
           regionDecisions={regionDecisions}
           slideName={slideName}
+          shapes={shapes}
         />
       ) : null}
       {overlay?.({ camera: shown, size, home, moved })}
@@ -475,20 +505,22 @@ function Minimap({
   size,
   regionDecisions,
   slideName,
+  shapes,
 }: {
   view: StillView;
   camera: Camera;
   size: Size;
   regionDecisions: Record<string, Count | undefined>;
   slideName: string;
+  shapes: Shapes;
 }) {
   const width = 136;
   const k = width / overviewSize.width;
   const height = overviewSize.height * k;
   const focus =
     view.kind === "cell"
-      ? (regionShapes.T2?.box ?? [0, 0, 0, 0])
-      : (regionShapes[view.kind === "region" ? shapeKey(view.object) : "T1"]?.box ?? [0, 0, 0, 0]);
+      ? (shapes.T2?.box ?? [0, 0, 0, 0])
+      : (shapes[view.kind === "region" ? shapeKey(view.object) : "T1"]?.box ?? [0, 0, 0, 0]);
   const viewport =
     view.kind === "region"
       ? {
@@ -519,7 +551,7 @@ function Minimap({
             height: Math.min(height, viewport.height),
           }}
         />
-        {Object.entries(regionShapes)
+        {Object.entries(shapes)
           .filter(([id]) => id in regionDecisions || id === "T5")
           .map(([id, shape], index) => {
             const decision = regionDecisions[id];

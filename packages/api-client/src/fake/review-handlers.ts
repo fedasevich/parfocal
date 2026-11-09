@@ -117,6 +117,7 @@ export const toReviewObjects = (taskId: string, slideId: string): ReviewObjects 
       other_class: item.otherClass,
       detector_score: item.detectorScore,
       foreground: item.foreground,
+      outline: item.outline ?? null,
     })),
     added:
       taskId === rt17.id

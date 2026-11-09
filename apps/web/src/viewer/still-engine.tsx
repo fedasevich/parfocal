@@ -1,13 +1,21 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { loadViewerEngine } from "./load-engine.ts";
 import type { ViewerModule } from "./magnification-control.tsx";
-import { engineCameraOf, engineRing, overviewFrame, type StillFrame } from "./still-frame.ts";
+import {
+  engineCameraOf,
+  engineRing,
+  overviewFrame,
+  type StillCamera,
+  type StillFrame,
+  stillCameraOf,
+} from "./still-frame.ts";
 import { grantFor } from "./tile-grant.ts";
 import type { ViewerEngine } from "./viewer-engine.ts";
 
 export type StillObject = {
   readonly id: string;
   readonly ring: ArrayLike<number>;
+  readonly inSlide: boolean;
   readonly className: string;
   readonly score: number;
   readonly decision?: "agree" | "disagree" | "unsure" | null | undefined;
@@ -22,10 +30,18 @@ export type StillDrawChoices = {
   readonly confidence: string;
 };
 
+export type StillLink = {
+  readonly frame: StillFrame;
+  readonly clamp: (camera: StillCamera) => StillCamera;
+};
+
+type ObjectDrawing = ReturnType<ViewerModule["createObjectDrawing"]>;
+
 type Live = {
   readonly engine: ViewerEngine;
   readonly module: ViewerModule;
   readonly frame: StillFrame;
+  readonly drawing: ObjectDrawing;
 };
 
 const classNames = ["tumor", "stroma", "immune", "other"] as const;
@@ -37,6 +53,27 @@ const classOf = (name: string): EngineClass =>
 
 const drawingId = "still-objects";
 
+const sameCamera = (a: StillCamera, b: StillCamera) =>
+  Math.abs(a.x - b.x) < 1e-6 &&
+  Math.abs(a.y - b.y) < 1e-6 &&
+  Math.abs(a.scale / b.scale - 1) < 1e-9;
+
+function linkOf(module: ViewerModule, engine: ViewerEngine, frame: StillFrame): StillLink {
+  return {
+    frame,
+    clamp: (camera) => {
+      const asked = engineCameraOf(camera, frame);
+      const kept = module.clampCamera(asked, {
+        ...engine.getCameraBounds(),
+        maxZoom: Number.POSITIVE_INFINITY,
+      });
+      if (kept === asked) return camera;
+      const back = stillCameraOf(kept, frame);
+      return sameCamera(back, camera) ? camera : back;
+    },
+  };
+}
+
 export function StillEngine({
   slideId,
   camera,
@@ -46,11 +83,11 @@ export function StillEngine({
   onReady,
 }: {
   slideId: string;
-  camera: { x: number; y: number; scale: number };
+  camera: StillCamera;
   objects: readonly StillObject[] | null;
   choices: StillDrawChoices;
   hiddenClasses: ReadonlySet<string>;
-  onReady: (up: boolean) => void;
+  onReady: (link: StillLink | null) => void;
 }) {
   const host = useRef<HTMLDivElement>(null);
   const { x: cameraX, y: cameraY, scale: cameraScale } = camera;
@@ -58,6 +95,8 @@ export function StillEngine({
   report.current = onReady;
   const [live, setLive] = useState<Live | null>(null);
   const [ready, setReady] = useState(false);
+  const [tileFailures, setTileFailures] = useState(0);
+  const [engineCamera, setEngineCamera] = useState("");
   const [drawn, setDrawn] = useState({
     overlays: 0,
     below: 0,
@@ -72,11 +111,12 @@ export function StillEngine({
     if (container === null) return;
     let disposed = false;
     let dispose: (() => void) | null = null;
+    setTileFailures(0);
     const fail = () => {
       if (disposed) return;
       setLive(null);
       setReady(false);
-      report.current(false);
+      report.current(null);
     };
     void loadViewerEngine().then((module) => {
       if (disposed) return;
@@ -84,7 +124,12 @@ export function StillEngine({
       const viewport = module.mountSlideViewport({
         container,
         slideId,
-        route: { onError: fail, onTileError: () => {} },
+        route: {
+          onError: fail,
+          onTileError: () => {
+            if (!disposed) setTileFailures((count) => count + 1);
+          },
+        },
         resolve: async () => {
           const grant = await access.grant();
           return module.signedOpenRequest({
@@ -95,17 +140,26 @@ export function StillEngine({
           });
         },
       });
-      dispose = () => viewport.dispose();
+      let drawing: ObjectDrawing | null = null;
+      dispose = () => {
+        drawing?.clear();
+        drawing = null;
+        viewport.dispose();
+      };
+      let link: StillLink | null = null;
       viewport.ready
         .then((slide) => {
           if (disposed) return;
-          setLive({ engine: viewport.engine, module, frame: overviewFrame(slide) });
+          const frame = overviewFrame(slide);
+          drawing = module.createObjectDrawing({ id: drawingId, host: viewport.engine });
+          link = linkOf(module, viewport.engine, frame);
+          setLive({ engine: viewport.engine, module, frame, drawing });
           return viewport.route()?.whenIdle();
         })
         .then(() => {
-          if (disposed) return;
+          if (disposed || link === null) return;
           setReady(true);
-          report.current(true);
+          report.current(link);
         })
         .catch(fail);
     }, fail);
@@ -113,7 +167,7 @@ export function StillEngine({
       disposed = true;
       setLive(null);
       setReady(false);
-      report.current(false);
+      report.current(null);
       dispose?.();
     };
   }, [slideId]);
@@ -123,14 +177,9 @@ export function StillEngine({
     live.engine.setCamera(
       engineCameraOf({ x: cameraX, y: cameraY, scale: cameraScale }, live.frame),
     );
+    const now = live.engine.getCamera();
+    setEngineCamera(`${now.x.toFixed(2)},${now.y.toFixed(2)},${now.zoom.toFixed(4)}`);
   }, [live, cameraX, cameraY, cameraScale]);
-
-  const drawing = useMemo(
-    () =>
-      live === null ? null : live.module.createObjectDrawing({ id: drawingId, host: live.engine }),
-    [live],
-  );
-  useEffect(() => () => drawing?.clear(), [drawing]);
 
   const placed = useMemo(
     () =>
@@ -139,7 +188,9 @@ export function StillEngine({
         : objects.map((object) => ({
             id: object.id,
             kind: "region" as const,
-            ring: engineRing(object.ring, live.frame),
+            ring: object.inSlide
+              ? Float32Array.from(object.ring)
+              : engineRing(object.ring, live.frame),
             className: classOf(object.className),
             score: object.score,
             decision: object.decision ?? null,
@@ -163,7 +214,8 @@ export function StillEngine({
   );
 
   useEffect(() => {
-    if (drawing === null) return;
+    if (live === null) return;
+    const { drawing, module } = live;
     drawing.setObjects(placed);
     drawing.setHiddenClasses(hidden);
     drawing.setChoices(stable);
@@ -185,31 +237,44 @@ export function StillEngine({
       ),
       colours: JSON.stringify(
         Object.fromEntries(
-          placed.map((object) => [
-            object.id,
-            live === null ? [] : live.module.objectColour(object, colourBy),
-          ]),
+          placed.map((object) => [object.id, module.objectColour(object, colourBy)]),
         ),
       ),
     });
-  }, [drawing, live, placed, hidden, stable]);
+  }, [live, placed, hidden, stable]);
 
   return (
-    <div
-      ref={host}
-      data-testid="still-engine"
-      data-state={ready ? "ready" : live === null ? "loading" : "opening"}
-      data-objects={placed.length}
-      data-overlays={drawn.overlays}
-      data-below-cutoff={drawn.below}
-      data-hidden={drawn.hidden}
-      data-scope={drawn.scope}
-      data-styles={drawn.styles}
-      data-colours={drawn.colours}
-      data-draw={choices.draw}
-      data-width={choices.width}
-      data-color-by={choices.colorBy}
-      className="pointer-events-none absolute inset-0"
-    />
+    <div className="pointer-events-none absolute inset-0">
+      <div
+        ref={host}
+        data-testid="still-engine"
+        data-state={ready ? "ready" : live === null ? "loading" : "opening"}
+        data-objects={placed.length}
+        data-overlays={drawn.overlays}
+        data-below-cutoff={drawn.below}
+        data-hidden={drawn.hidden}
+        data-scope={drawn.scope}
+        data-styles={drawn.styles}
+        data-colours={drawn.colours}
+        data-draw={choices.draw}
+        data-width={choices.width}
+        data-color-by={choices.colorBy}
+        data-camera={engineCamera}
+        data-frame={
+          live === null ? "" : `${live.frame.scale},${live.frame.offsetX},${live.frame.offsetY}`
+        }
+        data-tile-failures={tileFailures}
+        className="absolute inset-0"
+      />
+      {tileFailures > 0 ? (
+        <span
+          role="status"
+          data-testid="still-tile-failures"
+          className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-black/70 px-3 py-1.5 text-body-sm font-medium text-white"
+        >
+          Some tiles did not load. Parts of the slide may look blank.
+        </span>
+      ) : null}
+    </div>
   );
 }

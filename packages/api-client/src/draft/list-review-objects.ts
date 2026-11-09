@@ -13,6 +13,7 @@ export const reviewObjectSchema = z.object({
   other_class: z.string().nullable(),
   detector_score: z.number().min(0).max(1).nullable().optional(),
   foreground: z.number().min(0).max(1).nullable().optional(),
+  outline: z.array(z.number()).min(6).nullable().optional(),
 });
 
 export const reviewObjectsSchema = z.object({

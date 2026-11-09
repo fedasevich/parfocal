@@ -37,7 +37,7 @@ import { ConnectionBanner } from "../../shell/connection-banner.tsx";
 import { useLabDecisionCutoff } from "../../shell/resolved-settings.ts";
 import { showUndoToast } from "../../shell/undo-toasts.tsx";
 import { useCellTiming, useTaskRun } from "../../telemetry/use-task-timing.ts";
-import { stillBackdrop } from "../../viewer/still-backdrop.tsx";
+import { engineBehindStill, useStillBackdrop } from "../../viewer/still-backdrop.tsx";
 import { useStillObjects } from "../../viewer/use-still-objects.ts";
 import { markTried } from "../home/getting-started.ts";
 import { useRememberResume } from "../home/remember-resume.ts";
@@ -594,8 +594,12 @@ function GuidedBody({
     (object) => answer(object)?.value,
     view.kind === "region" ? currentId : null,
   );
-  const backdrop = stillBackdrop({
-    enabled: view.kind !== "cell" && !tileFail && !noResults,
+  const backdrop = useStillBackdrop({
+    enabled: engineBehindStill({
+      cellView: view.kind === "cell",
+      tilesFailed: tileFail,
+      noResults,
+    }),
     slideId: session.slideId,
     objects: claimShown ? still.objects : null,
     choices: settings,
@@ -957,15 +961,16 @@ function GuidedBody({
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">
           <SlideStill
             view={view}
-            homeOf={(size) =>
+            homeOf={(size, shapes) =>
               view.kind === "whole"
-                ? homeCamera(view, size)
-                : zoomedCamera(homeCamera(view, size), settings.zoom)
+                ? homeCamera(view, size, shapes)
+                : zoomedCamera(homeCamera(view, size, shapes), settings.zoom)
             }
             camera={camera}
             onCameraChange={setCamera}
             backdrop={backdrop}
             engineDrawn={claimShown ? still.ids : undefined}
+            outlines={still.outlines}
             regionDecisions={regionDecisions}
             cellDecisions={cellDecisions}
             ringedCells={confirmRest ? openCells.map((cell) => cell.object) : []}
