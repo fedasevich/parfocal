@@ -516,6 +516,15 @@ async def move(connection: AsyncConnection, job_id: uuid.UUID, control: JobContr
     return Move(before, after)
 
 
+async def owns_live(connection: AsyncConnection, job_id: uuid.UUID, worker: str) -> bool:
+    status = await connection.scalar(
+        select(jobs.c.status)
+        .where(jobs.c.id == job_id, jobs.c.claimed_by == worker)
+        .with_for_update()
+    )
+    return status in LIVE
+
+
 async def still_held(engine: AsyncEngine, job: Claimed, worker: str) -> bool:
     async with scoped_transaction(engine, DatabaseScope(tenant_id=job.tenant_id)) as connection:
         return await holds(connection, job.job_id, worker)
@@ -609,6 +618,8 @@ async def run_step(
         await finish(engine, job, worker, JobStatus.CANCELLED, step=(ordinal, StepStatus.PENDING))
         return False
     async with scoped_transaction(engine, scope) as connection:
+        if not await owns_live(connection, job.job_id, worker):
+            return False
         sample = await sample_of(connection, job, ordinal, worker)
         await record_throughput(connection, sample, labels or RunLabels())
         await connection.execute(
