@@ -2,7 +2,8 @@ from typing import Any
 
 import pytest
 from db_support import ApiAs
-from test_blinding import Study, ok, study
+from test_annotations import make_slide
+from test_blinding import Study, make_result_set, ok, study
 from test_threads import POINT, audit_rows, code_of, thread_body
 from workspace_support import make_case, owner
 
@@ -192,3 +193,50 @@ def test_a_reply_on_a_slide_thread_carries_the_case_so_a_project_mute_catches_it
     assert target["origin"]["route"] == "case"
     assert target["origin"]["case_id"] == str(case)
     assert target["origin"]["task_id"] is None
+
+
+def test_a_taskless_object_anchor_keeps_the_result_set_it_names(api: ApiAs, database: str) -> None:
+    s = study(api, database, blinded=False, hidden=False)
+    tenant = s.people["owner"].tenant_id
+    second = make_result_set(database, tenant, s.project, s.slide)
+    on_t1 = {"kind": "object", "object_id": "T1"}
+    unnamed = open_on_slide(api, s, "owner", "Which T1?", on_t1)
+    assert unnamed.status_code == 400
+    assert code_of(unnamed) == "bad-anchor"
+    made = ok(open_on_slide(api, s, "owner", "Second T1", {**on_t1, "result_set_id": second}))
+    assert made.json()["anchor"]["result_set_id"] == second
+    first = ok(
+        open_on_slide(api, s, "owner", "First T1", {**on_t1, "result_set_id": str(s.result_set)})
+    )
+    assert first.json()["anchor"]["result_set_id"] == str(s.result_set)
+    listed = ok(api(s.people["owner"]).get(slide_base(s))).json()
+    assert {item["title"]: item["anchor"]["result_set_id"] for item in listed} == {
+        "Second T1": second,
+        "First T1": str(s.result_set),
+    }
+    read = ok(api(s.people["owner"]).get(f"{slide_base(s)}/{made.json()['id']}")).json()
+    assert read["anchor"]["result_set_id"] == second
+    other_slide = make_slide(database, tenant, s.project)
+    elsewhere = make_result_set(database, tenant, s.project, other_slide)
+    wrong = open_on_slide(api, s, "owner", "Elsewhere", {**on_t1, "result_set_id": elsewhere})
+    assert code_of(wrong) == "bad-anchor"
+    missing = open_on_slide(
+        api, s, "owner", "No T9", {"kind": "object", "object_id": "T9", "result_set_id": second}
+    )
+    assert code_of(missing) == "bad-anchor"
+    on_task = ok(
+        api(s.people["owner"]).post(
+            slide_base(s), json={**thread_body(on_t1, "Task T1"), "task_id": str(s.task)}
+        )
+    ).json()
+    assert on_task["anchor"]["result_set_id"] == str(s.result_set)
+    crossed = api(s.people["owner"]).post(
+        slide_base(s),
+        json={
+            **thread_body({**on_t1, "result_set_id": second}, "Crossed"),
+            "task_id": str(s.task),
+        },
+    )
+    assert code_of(crossed) == "bad-anchor"
+    pinned = open_on_slide(api, s, "owner", "Pin", {**PIN, "result_set_id": second})
+    assert pinned.status_code == 422

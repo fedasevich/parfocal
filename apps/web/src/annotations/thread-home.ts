@@ -93,5 +93,16 @@ export const removeThread = ({ projectId, slideId, taskId }: ThreadHome, threadI
     ? deleteThreadOnSlide(projectId, slideId, threadId, { confirm: true })
     : deleteThread(taskId, slideId, threadId, { confirm: true });
 
-export const threadScope = (thread: Thread, taskName: string | undefined) =>
-  thread.task_id === null ? "Slide" : (taskName ?? "Task");
+export type ResultSetName = (resultSetId: string) => string | undefined;
+
+const slideScope = (thread: Thread, setName: ResultSetName) => {
+  const resultSetId = thread.anchor.result_set_id;
+  const name = resultSetId ? setName(resultSetId) : undefined;
+  return name ? `Slide · ${name}` : "Slide";
+};
+
+export const threadScope = (
+  thread: Thread,
+  taskName: string | undefined,
+  setName: ResultSetName = () => undefined,
+) => (thread.task_id === null ? slideScope(thread, setName) : (taskName ?? "Task"));

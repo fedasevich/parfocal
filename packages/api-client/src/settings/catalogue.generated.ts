@@ -43,6 +43,7 @@ export type SettingValues = {
   unsure_zone_min_unsure_cells: number;
   home_layout: "role" | "review" | "research" | "both";
   getting_started_hidden: boolean;
+  tour_progress: number;
   presets: string[];
   default_preset: number;
   signature_block: boolean;
@@ -464,6 +465,15 @@ export const catalogue: Record<SettingKey, SettingEntry> = {
     "layers": [
       "personal"
     ]
+  },
+  "tour_progress": {
+    "kind": "whole",
+    "default": 0,
+    "layers": [
+      "personal"
+    ],
+    "minimum": 0,
+    "maximum": 10
   },
   "presets": {
     "kind": "names",

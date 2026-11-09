@@ -413,6 +413,7 @@ export interface Anchor {
   object_id?: string | null;
   geometry?: Geometry | null;
   offset?: Position | null;
+  result_set_id?: string | null;
 }
 
 export interface ExpertCheck {
@@ -5482,7 +5483,7 @@ export interface WorkspaceDraft {
 
 export interface WorkspaceSettingsChange {
   values: Values;
-  /** @maxItems 53 */
+  /** @maxItems 54 */
   locked?: string[];
 }
 

@@ -1,11 +1,13 @@
 import { Banner } from "@parfocal/ui/components/banner";
 import { Button } from "@parfocal/ui/components/button";
 import { Icon } from "@parfocal/ui/components/icon";
+import { Input } from "@parfocal/ui/components/input";
 import { PersonAvatar } from "@parfocal/ui/components/person";
 import { ProgressBar } from "@parfocal/ui/components/progress-meter";
 import { RadioGroup, RadioRow } from "@parfocal/ui/components/radio-group";
 import { Switch } from "@parfocal/ui/components/switch";
 import type { PersonInfo } from "@parfocal/ui/lib/avatar-colours";
+import { defaultSampleSize, sampleSizeLimit, validSampleSize } from "@parfocal/ui/lib/sample-size";
 import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
 import { useId } from "react";
@@ -461,6 +463,7 @@ type CheckOptionValues = {
   rule: SignOffRule;
   exportUnchecked: boolean;
   hasResult: boolean;
+  sampleSize: number;
 };
 
 type Preset = { key: PresetKey; title: string; text: string; options: CheckOptionValues };
@@ -472,10 +475,11 @@ const annotatePresets: Preset[] = [
     text: "No result set. Experts draw with the fast tools.",
     options: {
       scope: "none",
-      order: "position",
+      order: "least-sure",
       rule: "warn",
       exportUnchecked: false,
       hasResult: false,
+      sampleSize: defaultSampleSize,
     },
   },
   {
@@ -488,6 +492,7 @@ const annotatePresets: Preset[] = [
       rule: "require",
       exportUnchecked: false,
       hasResult: true,
+      sampleSize: defaultSampleSize,
     },
   },
   {
@@ -500,6 +505,7 @@ const annotatePresets: Preset[] = [
       rule: "require",
       exportUnchecked: false,
       hasResult: true,
+      sampleSize: defaultSampleSize,
     },
   },
   {
@@ -512,6 +518,7 @@ const annotatePresets: Preset[] = [
       rule: "require",
       exportUnchecked: false,
       hasResult: true,
+      sampleSize: defaultSampleSize,
     },
   },
   {
@@ -524,6 +531,7 @@ const annotatePresets: Preset[] = [
       rule: "warn",
       exportUnchecked: false,
       hasResult: true,
+      sampleSize: defaultSampleSize,
     },
   },
 ];
@@ -615,11 +623,11 @@ function ChoiceCards({
   );
 }
 
-const scopePhrases: Record<CheckScopeKind, string> = {
-  none: "",
-  all: "every AI cell",
-  sample: "a random sample of about 50 AI cells",
-  regions: "the AI cells inside the areas you draw",
+const scopePhrase = (values: CheckOptionValues) => {
+  if (values.scope === "all") return "every AI cell";
+  if (values.scope === "sample") return `a random sample of ${values.sampleSize} AI cells`;
+  if (values.scope === "regions") return "the AI cells inside the areas you draw";
+  return "";
 };
 
 function checkSummary(values: CheckOptionValues) {
@@ -635,7 +643,7 @@ function checkSummary(values: CheckOptionValues) {
     values.rule === "require"
       ? "a slide cannot finish until they are all checked"
       : "a slide can finish with some left unchecked";
-  return `Experts check ${scopePhrases[values.scope]}, ${order}, ${finish}, and ${exported}.`;
+  return `Experts check ${scopePhrase(values)}, ${order}, ${finish}, and ${exported}.`;
 }
 
 function CheckOptions({ values, onValuesChange, className, ...props }: CheckOptionsProps) {
@@ -658,7 +666,7 @@ function CheckOptions({ values, onValuesChange, className, ...props }: CheckOpti
           {
             value: "sample",
             title: "Check a random sample",
-            text: "About 50 cells are checked, the rest stays unchecked.",
+            text: "A random sample of cells is checked, the rest stays unchecked.",
             disabled: noResult,
           },
           {
@@ -669,6 +677,27 @@ function CheckOptions({ values, onValuesChange, className, ...props }: CheckOpti
           },
         ]}
       />
+      {values.scope === "sample" ? (
+        <label className="grid gap-1.5 text-body-sm font-semibold text-fg">
+          Sample size
+          <Input
+            type="number"
+            inputMode="numeric"
+            min={1}
+            max={sampleSizeLimit}
+            step={1}
+            value={Number.isFinite(values.sampleSize) ? values.sampleSize : ""}
+            aria-invalid={validSampleSize(values.sampleSize) ? undefined : true}
+            onChange={(event) => set({ sampleSize: Number.parseInt(event.target.value, 10) })}
+            className="w-32"
+          />
+          <small className="font-normal text-fg-dim">
+            {validSampleSize(values.sampleSize)
+              ? "How many AI cells each slide checks. The sample is the same for every expert."
+              : `Use a whole number from 1 to ${sampleSizeLimit}.`}
+          </small>
+        </label>
+      ) : null}
       {values.scope === "none" ? (
         <p className="m-0 text-body-sm text-fg-dim">
           Nothing to check, so the order and the finishing rule do not apply.

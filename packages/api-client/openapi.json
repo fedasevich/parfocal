@@ -40647,6 +40647,18 @@
                 "type": "null"
               }
             ]
+          },
+          "result_set_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result Set Id"
           }
         },
         "type": "object",
@@ -59170,7 +59182,7 @@
       "Values": {
         "additionalProperties": true,
         "type": "object",
-        "maxProperties": 53
+        "maxProperties": 54
       },
       "Verdict": {
         "properties": {
@@ -59786,7 +59798,7 @@
               "type": "string"
             },
             "type": "array",
-            "maxItems": 53,
+            "maxItems": 54,
             "title": "Locked",
             "default": []
           }

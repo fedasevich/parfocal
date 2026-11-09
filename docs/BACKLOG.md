@@ -2892,7 +2892,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Depends on COLLAB-002, COLLAB-005.
   Size: M.
 
-- [ ] COLLAB-018 · Result set on a taskless region anchor
+- [x] COLLAB-018 · Result set on a taskless region anchor
   Review of COLLAB-015 (threads on any slide) found that a taskless thread anchored to an AI object stores only the object number, while a slide may hold several result sets, so the pin, the Comments tab label and the current object cannot tell which set it means. Store the result set on taskless object anchors, or refuse an object anchor without a task.
   Done when API tests create a taskless object anchor on a slide with two result sets and read back the right set, and the Comments tab names it.
   Depends on COLLAB-015.
@@ -3135,7 +3135,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Done when an ADR lists the v1 model line-up per tier and its licence status.
   Size: M.
 
-- [ ] AIP-001 · Model artifact storage
+- [x] AIP-001 · Model artifact storage
   Versioned, immutable model artifacts (PyTorch, ONNX, quantised variants, calibration files) with checksums.
   Done when tests reject an artifact whose checksum does not match.
   Size: M.
@@ -4135,7 +4135,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   On hold since 2026-11-04. The owner parked compliance, legal, email and pilot paperwork as not worth the time yet. Resume when the owner asks or before the first tenant with real patient data.
   Size: S.
 
-- [ ] PILOT-001 · User help and onboarding
+- [x] PILOT-001 · User help and onboarding
   In-app help, a guided first-run walkthrough based on the mock's ten-step tour, the shortcut sheet.
   Done when E2E completes the walkthrough.
   Refs mock guided walkthrough.
@@ -4444,13 +4444,13 @@ A researcher hands slides to reviewers as a review task ([ADR 0053](adr/0053-ai-
   Depends on TASK-010.
   Size: S.
 
-- [ ] TASK-017 · First read notice in the full viewer and paged screen
+- [x] TASK-017 · First read notice in the full viewer and paged screen
   While a first read is open, the full viewer and the paged screen show a blank slide because the API hides the AI. Show a notice there that sends the reviewer to guided review to record the first read, and guard the `scene` search parameter so it never skips the first-read gate outside the prototype.
   Done when a browser test opens the full viewer and the paged screen of a hide-the-AI task before the first read and finds the notice and its link, and a test shows `scene` is ignored on a real task.
   Depends on TASK-010.
   Size: S.
 
-- [ ] TASK-018 · Sample size in the annotate task stepper
+- [x] TASK-018 · Sample size in the annotate task stepper
   Review of TASK-005 (new review task stepper) found the sample check option says "about 50" while the preset sends 200, as ADR 0238 (check options and presets on annotate tasks) sets, so the estimate disagrees with the request. Fix the text and the estimate to use the sent size, add a sample size input to What to check sent as `random-cells.count`, align the UI by-hand preset order with the API preset, and add a component test for the Kind step.
   Done when model tests show the estimate and the request use the same size, a browser test changes the sample size and finds it in the created task, and a component test covers the Kind step.
   Depends on TASK-005.

@@ -1,4 +1,5 @@
 import type { DisplayDefaults } from "@parfocal/api-client";
+import { defaultSampleSize, sampleSizeLimit, validSampleSize } from "@parfocal/ui/lib/sample-size";
 
 export const stepKeys = ["kind", "slides", "reviewers", "check", "how", "send"] as const;
 export type StepKey = (typeof stepKeys)[number];
@@ -56,6 +57,7 @@ export type AnnotateCheck = {
   rule: "require" | "warn";
   exportUnchecked: boolean;
   hasResult: boolean;
+  sampleSize: number;
 };
 
 export const defaultAnnotatePreset: AnnotatePresetKey = "run";
@@ -65,6 +67,7 @@ export const defaultAnnotateCheck: AnnotateCheck = {
   rule: "require",
   exportUnchecked: false,
   hasResult: true,
+  sampleSize: defaultSampleSize,
 };
 
 export type ScopeKind = "regions" | "cells" | "low" | "roi" | "unsure";
@@ -420,7 +423,7 @@ export function slidesWithoutReviewer(draft: Draft, data: TaskData) {
 const finite = (value: number | string) =>
   typeof value === "number" && Number.isFinite(value) ? value : 0;
 
-export const annotateObjectsPerSlide = { all: 46, sample: 50, regions: 12 } as const;
+export const annotateObjectsPerSlide = { all: 46, regions: 12 } as const;
 export const annotateDrawMinutes = 6;
 
 function annotateObjects(draft: Draft, data: TaskData) {
@@ -429,7 +432,9 @@ function annotateObjects(draft: Draft, data: TaskData) {
   const picked = pickedSlides(draft, data).length;
   if (!picked) return 0;
   const share = slidesWithResult(draft, data).length / picked;
-  return Math.round(annotateObjectsPerSlide[scope] * share);
+  const perSlide =
+    scope === "sample" ? finite(draft.check.sampleSize) : annotateObjectsPerSlide[scope];
+  return Math.round(perSlide * share);
 }
 
 export function objectsPerSlide(draft: Draft, data: TaskData) {
@@ -672,7 +677,18 @@ export function issues(draft: Draft, data: TaskData): Issue[] {
     }
   }
   const options = draft.scopeOptions;
-  if (annotate) return [...out, ...whenIssues(draft, data)];
+  if (annotate) {
+    if (
+      draft.check.hasResult &&
+      draft.check.scope === "sample" &&
+      !validSampleSize(draft.check.sampleSize)
+    ) {
+      add("check", "sampleSize", `Use a whole number from 1 to ${sampleSizeLimit}.`, {
+        block: true,
+      });
+    }
+    return [...out, ...whenIssues(draft, data)];
+  }
   if (!scopeKinds(draft).length) {
     add("check", "scope", "Pick at least one kind of object.", { block: true });
   }

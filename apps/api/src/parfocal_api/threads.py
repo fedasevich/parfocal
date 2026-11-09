@@ -1,6 +1,6 @@
 import uuid
 from collections.abc import Iterable
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import datetime
 from typing import Annotated, Any
 
@@ -82,9 +82,12 @@ class Anchor(BaseModel):
     object_id: str | None = None
     geometry: Geometry | None = None
     offset: Position | None = None
+    result_set_id: uuid.UUID | None = None
 
     @model_validator(mode="after")
     def fits_kind(self) -> Anchor:
+        if self.result_set_id is not None and self.kind is not AnchorKind.OBJECT:
+            raise ValueError("Only an object anchor names a result set")
         if (self.kind in OBJECT_ANCHORS) != (self.object_id is not None):
             raise ValueError("An object or ROI anchor names an object ID, and only it does")
         if (self.kind not in OBJECT_ANCHORS) != (self.geometry is not None):
@@ -202,7 +205,13 @@ class SlidePlace:
     archived_at: datetime | None
     task_id: None = None
     signed_off_at: None = None
-    result_set_id: None = None
+    result_set_id: uuid.UUID | None = None
+
+
+@dataclass(frozen=True)
+class Anchored:
+    object_id: str | None = None
+    result_set_id: uuid.UUID | None = None
 
 
 async def slide_place(
@@ -322,9 +331,9 @@ def is_ai(found: ObjectId) -> bool:
 
 async def check_anchor(
     connection: AsyncConnection, principal: Principal, place: Any, anchor: Anchor
-) -> str | None:
+) -> Anchored:
     if anchor.object_id is None:
-        return None
+        return Anchored()
     try:
         found = parse(anchor.object_id)
     except ObjectIdError as error:
@@ -333,8 +342,10 @@ async def check_anchor(
         raise BadAnchorError("An ROI anchor names an ROI, and an object anchor names no ROI")
     if is_ai(found):
         await require_ai_shown(connection, principal, place.project_id, place.slide_id)
-        await check_ai_object(connection, place, found)
-        return found.text(ascii=True)
+        chosen = await check_ai_object(connection, place, found, anchor.result_set_id)
+        return Anchored(found.text(ascii=True), chosen)
+    if anchor.result_set_id is not None:
+        raise BadAnchorError("Only an AI object anchor names a result set")
     kind = PERSON_KINDS.get(found.letter)
     drawn = select(annotations.c.id).where(
         annotations.c.slide_id == place.slide_id,
@@ -344,27 +355,70 @@ async def check_anchor(
     )
     if kind is None or not await connection.scalar(select(drawn.exists())):
         raise BadAnchorError(f"{found.text(ascii=True)} is not on this slide")
-    return found.text(ascii=True)
+    return Anchored(found.text(ascii=True))
 
 
-async def check_ai_object(connection: AsyncConnection, place: Any, found: ObjectId) -> None:
-    if place.task_id is not None or found.letter is not Letter.REGION:
-        try:
-            await check_exists(connection, place, found)
-        except UnknownObjectError as error:
-            raise BadAnchorError(str(error)) from error
-        return
-    present = (
+async def present_in(connection: AsyncConnection, place: Any, found: ObjectId) -> None:
+    try:
+        await check_exists(connection, place, found)
+    except UnknownObjectError as error:
+        raise BadAnchorError(str(error)) from error
+
+
+async def require_set_on_slide(
+    connection: AsyncConnection, place: SlidePlace, result_set_id: uuid.UUID
+) -> None:
+    on_slide = select(result_sets.c.id).where(
+        result_sets.c.id == result_set_id,
+        result_sets.c.slide_id == place.slide_id,
+        result_sets.c.project_id == place.project_id,
+        result_sets.c.deleted_at.is_(None),
+    )
+    if not await connection.scalar(select(on_slide.exists())):
+        raise BadAnchorError("This result set is not on this slide")
+
+
+async def sets_holding(
+    connection: AsyncConnection, place: SlidePlace, found: ObjectId
+) -> list[uuid.UUID]:
+    holding = (
         select(result_objects.c.result_set_id)
         .join(result_sets, result_sets.c.id == result_objects.c.result_set_id)
         .where(
             result_sets.c.slide_id == place.slide_id,
+            result_sets.c.deleted_at.is_(None),
             result_objects.c.kind == "region",
             result_objects.c.number == found.number,
         )
+        .distinct()
     )
-    if not await connection.scalar(select(present.exists())):
+    return list((await connection.scalars(holding)).all())
+
+
+async def check_ai_object(
+    connection: AsyncConnection, place: Any, found: ObjectId, asked: uuid.UUID | None
+) -> uuid.UUID | None:
+    if place.task_id is not None:
+        if asked is not None and asked != place.result_set_id:
+            raise BadAnchorError("This task reviews another result set")
+        await present_in(connection, place, found)
+        return place.result_set_id
+    if asked is not None:
+        await require_set_on_slide(connection, place, asked)
+        await present_in(connection, replace(place, result_set_id=asked), found)
+        return asked
+    if found.letter is not Letter.REGION:
+        await present_in(connection, place, found)
+        return None
+    holding = await sets_holding(connection, place, found)
+    if not holding:
         raise BadAnchorError(f"{found.text(ascii=True)} is not on this slide")
+    if len(holding) > 1:
+        raise BadAnchorError(
+            f"{found.text(ascii=True)} is in {len(holding)} result sets on this slide. "
+            "Name the result set"
+        )
+    return holding[0]
 
 
 async def writable_place(
@@ -410,6 +464,7 @@ def anchor_of(row: Any) -> Anchor:
             "object_id": row.object_id,
             "geometry": row.geometry,
             "offset": offset,
+            "result_set_id": row.result_set_id,
         }
     )
 
@@ -663,7 +718,8 @@ async def start_in(
 ) -> ThreadDetail:
     if place.signed_off_at is not None:
         raise TaskSignedOffError
-    object_id = await check_anchor(connection, principal, place, draft.anchor)
+    anchored = await check_anchor(connection, principal, place, draft.anchor)
+    object_id = anchored.object_id
     me = member_of(principal).user_id
     offset = draft.anchor.offset
     geometry = draft.anchor.geometry
@@ -681,6 +737,7 @@ async def start_in(
                 geometry=geometry.model_dump() if geometry is not None else None,
                 offset_x=offset[0] if offset else None,
                 offset_y=offset[1] if offset else None,
+                result_set_id=anchored.result_set_id,
                 created_by_user_id=me,
             )
             .returning(*threads.c)

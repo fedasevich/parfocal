@@ -1191,6 +1191,7 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `geometry` | operational |
 | `offset_x` | operational |
 | `offset_y` | operational |
+| `result_set_id` | operational |
 | `created_by_user_id` | personal |
 | `created_at` | operational |
 | `resolved_at` | operational |

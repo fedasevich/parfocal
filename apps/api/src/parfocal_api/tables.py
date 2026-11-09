@@ -2644,6 +2644,7 @@ threads = Table(
     Column("geometry", JSONB(none_as_null=True), nullable=True, info=OPERATIONAL),
     Column("offset_x", Float[float](), nullable=True, info=OPERATIONAL),
     Column("offset_y", Float[float](), nullable=True, info=OPERATIONAL),
+    Column("result_set_id", Uuid[uuid.UUID](), nullable=True, info=OPERATIONAL),
     Column(
         "created_by_user_id",
         Uuid[uuid.UUID](),
@@ -2670,6 +2671,7 @@ threads = Table(
     ForeignKeyConstraint(
         ["task_id", "slide_id"], ["review_task_slides.task_id", "review_task_slides.slide_id"]
     ),
+    ForeignKeyConstraint(["result_set_id"], ["result_sets.id"]),
     Index("ix_threads_task_id_slide_id", "task_id", "slide_id"),
     Index(
         "ix_threads_project_id_slide_id_taskless",
