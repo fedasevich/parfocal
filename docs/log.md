@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-09
 
+- VIZ-000 Correction, the mounting follow-up is VIZ-010 (mount the engine overlay draws on the live slide), not VIZ-020. VIZ-007 (Display panel) should read getMyDisplay (ADR 0233) instead of the draft getTaskDisplay.
 - An ADR records how result sets, styles and maps draw on the overlay system and how Display state and locks reach it. The live slide still draws SVG stills, so VIZ-020 now mounts the engine draws.
 - An ADR records the sign-up and setup flow as built on IAM-002 and IAM-007, with an invite winning over a domain match and a domain match over creating a workspace, and names the draft auth calls and ONB-011 as what is left.
 - GUIDE-019 Follow-ups added from the Fable review: GUIDE-020 (guided check follows the task's check scope and order) and GUIDE-021 (guided check key safety).
