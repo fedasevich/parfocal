@@ -20,7 +20,7 @@ const asksInFirstRead = (asked: string | undefined) => asked !== "aided";
 
 export function FirstReadStep({ session }: { session: ReviewSession }) {
   const queryClient = useQueryClient();
-  const { answers, change } = useOpinionDraft(session);
+  const { answers, change, saving } = useOpinionDraft(session);
   const [camera, setCamera] = useState<Camera | null>(null);
   const [draft, setDraft] = useState<PolygonDraft | null>(null);
   const [drawn, setDrawn] = useState<{ id: string; shape: PolygonDraft }[]>([]);
@@ -132,7 +132,9 @@ export function FirstReadStep({ session }: { session: ReviewSession }) {
         <Button
           variant="primary"
           size="lg"
-          disabled={missing.length > 0 || draft !== null || recorder.isPending}
+          disabled={
+            missing.length > 0 || draft !== null || recorder.isPending || saving || adder.isPending
+          }
           onClick={record}
         >
           Record my first read
