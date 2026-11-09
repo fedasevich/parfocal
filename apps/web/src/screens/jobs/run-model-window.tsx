@@ -62,6 +62,7 @@ function modelGroups(models: ProjectModel[]): ModelGroup[] {
     description: model.description,
     makes: model.makes.map((item) => makesLabel[item]),
     perSlide: `${model.minutes_per_slide} min a slide`,
+    offline: model.serving === "offline",
   });
   return [
     {
@@ -136,10 +137,19 @@ function RunModelForm({
   const blockers: Blocker[] = [
     ...(picked.length ? [] : [{ id: "slides", text: "Pick at least one slide.", goTo: "Slides" }]),
     ...(model ? [] : [{ id: "model", text: "Pick a model.", goTo: "Model" }]),
+    ...(model?.serving === "offline"
+      ? [
+          {
+            id: "offline",
+            text: `${model.title} is offline. Pick another model or try again later.`,
+            goTo: "Model",
+          },
+        ]
+      : []),
   ];
   const estimate = model ? runEstimate(model, picked.length, now()) : null;
   const run = async () => {
-    if (!model || picked.length === 0) return;
+    if (!model || model.serving === "offline" || picked.length === 0) return;
     await start.mutateAsync({
       projectId,
       data: {

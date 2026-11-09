@@ -6,6 +6,7 @@ import { type DraftQueryOptions, type DraftRequest, defineDraftQuery } from "./d
 export const AiModelStatus = {
   active: "active",
   answering: "answering",
+  offline: "offline",
   "imports-only": "imports-only",
   hidden: "hidden",
 } as const;

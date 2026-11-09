@@ -238,9 +238,11 @@ export function runEstimate(model: ProjectModel, slides: number, now: Date): Run
   const wait = model.host === "lab" ? 0 : model.queue_minutes;
   const doneAround = formatClock(new Date(now.getTime() + (total + wait) * 60000));
   const perSlide =
-    model.host === "lab"
-      ? `About ${model.minutes_per_slide} min a slide on ${model.server}, which answers now in ${model.latency_ms ?? 0} ms.`
-      : `About ${model.minutes_per_slide} min a slide on the ${model.server}. ${model.runs_ahead === 1 ? "One run is" : `${model.runs_ahead} runs are`} ahead of yours, about ${model.queue_minutes} min.`;
+    model.serving === "offline"
+      ? `${model.server} is not answering right now, so this run cannot start.`
+      : model.host === "lab"
+        ? `About ${model.minutes_per_slide} min a slide on ${model.server}, which answers now in ${model.latency_ms ?? 0} ms.`
+        : `About ${model.minutes_per_slide} min a slide on the ${model.server}. ${model.runs_ahead === 1 ? "One run is" : `${model.runs_ahead} runs are`} ahead of yours, about ${model.queue_minutes} min.`;
   return { total, doneAround, perSlide };
 }
 
