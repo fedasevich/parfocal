@@ -43,3 +43,38 @@ test("the projects section sets the class list of new projects", async ({ page }
   await expect(page.getByText("New projects start with that class list.")).toBeVisible();
   await expect(classes).toContainText("PanNuke");
 });
+
+test("the security section shows no switch that saves nothing", async ({ page }) => {
+  await page.goto("/admin?section=security");
+  await expect(page.getByRole("switch", { name: "Two factors for everyone" })).toBeEnabled();
+  for (const hidden of ["Log every slide opened", "Watermark exports", "Data stays in the EU"]) {
+    await expect(page.getByText(hidden)).toHaveCount(0);
+  }
+  await expect(page.getByRole("switch", { name: "Email and password" })).toBeDisabled();
+  await expect(page.getByRole("switch", { name: "Sign-in links by email" })).toBeDisabled();
+});
+
+test("the privacy of new projects saves to the workspace default", async ({ page }) => {
+  await page.goto("/admin?section=projects");
+  await expect(page.getByRole("radiogroup", { name: "Who can create a project" })).toHaveCount(0);
+  await expect(page.getByText("Who can create one")).toHaveCount(0);
+  const privacy = page.getByRole("radiogroup", { name: "Privacy of new projects" });
+  await expect(privacy.getByRole("radio", { name: "De-identified" })).toBeChecked();
+  await privacy.getByRole("radio", { name: "Clinical" }).click();
+  await expect(page.getByText("New projects start clinical.")).toBeVisible();
+
+  const nav = page.getByRole("navigation", { name: "Admin sections" });
+  await nav.getByRole("link", { name: "Workspace settings", exact: true }).click();
+  await expect(page).toHaveURL(/section=settings/);
+  await expect(
+    page
+      .getByRole("radiogroup", { name: "Privacy of new projects" })
+      .getByRole("radio", { name: "Clinical" }),
+  ).toBeChecked();
+  await nav.getByRole("link", { name: "Projects", exact: true }).click();
+  await expect(
+    page
+      .getByRole("radiogroup", { name: "Privacy of new projects" })
+      .getByRole("radio", { name: "Clinical" }),
+  ).toBeChecked();
+});

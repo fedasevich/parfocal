@@ -199,7 +199,7 @@ def test_a_locked_workspace_value_refuses_a_personal_one_and_is_audited(
 def test_another_workspace_sees_none_of_the_settings(api: ApiAs, database: str) -> None:
     first = make_workspace(database, PEOPLE, admins={"admin"}).people
     second = make_workspace(database, PEOPLE, admins={"admin"}).people
-    api(first["admin"]).put(WORKSPACE, json={"values": {"lock_after_minutes": 5}})
+    api(first["admin"]).put(WORKSPACE, json={"values": {"decision_cutoff": 60}})
     api(first["researcher"]).put(ME, json={"values": {"tools": "dock"}})
     assert api(second["researcher"]).get(ME).json() == {
         "lab": {"values": {}, "locked": []},

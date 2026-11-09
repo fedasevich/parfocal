@@ -155,7 +155,6 @@ CATALOGUE: tuple[Setting, ...] = (
     switch("initials_while_sharing", True, PERSONAL),
     choice("analytics_policy", "person", ("person", "on", "off"), LAB),
     switch("analytics_opt_out", False, PERSONAL),
-    whole("lock_after_minutes", 15, 1, 240, LAB),
     switch("two_factor_required", False, LAB),
     switch("patient_banner", True, LAB),
     choice("default_privacy_mode", "de-identified", ("de-identified", "clinical"), LAB),

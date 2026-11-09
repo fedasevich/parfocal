@@ -61,7 +61,7 @@ const scenes: { path: string; heading: string; shows: string }[] = [
     heading: "People and roles",
     shows: "What each role is responsible for",
   },
-  { path: "/admin?scene=projects", heading: "Projects", shows: "Who can create one" },
+  { path: "/admin?scene=projects", heading: "Projects", shows: "New projects" },
   { path: "/admin?scene=models", heading: "AI models", shows: "Running now" },
   { path: "/admin?scene=templates", heading: "Report templates", shows: "Study templates" },
   { path: "/admin?scene=storage", heading: "Storage and sources", shows: "Rules for sources" },
