@@ -52,7 +52,7 @@ import { ConnectionBanner } from "../../shell/connection-banner.tsx";
 import { destinations } from "../../shell/destinations.ts";
 import { useLabDecisionCutoff, useResolvedSettings } from "../../shell/resolved-settings.ts";
 import { useCellTiming, useChromeSampling, useTaskRun } from "../../telemetry/use-task-timing.ts";
-import { stillBackdrop } from "../../viewer/still-backdrop.tsx";
+import { engineBehindStill, noResultsOn, useStillBackdrop } from "../../viewer/still-backdrop.tsx";
 import { useStillObjects } from "../../viewer/use-still-objects.ts";
 import { formatDayMonth } from "../format.ts";
 import { useRememberResume } from "../home/remember-resume.ts";
@@ -953,13 +953,15 @@ function ViewerBody({
     objects,
     (object) => answer(object)?.value,
     stillView.kind === "region" ? stillView.object : null,
+    session.slideSize,
   );
-  const backdrop = stillBackdrop({
-    enabled:
-      stillView.kind !== "cell" &&
-      setup.tiles === "sharp" &&
-      setup.issue !== "slidefail" &&
-      drawing.second === undefined,
+  const backdrop = useStillBackdrop({
+    enabled: engineBehindStill({
+      cellView: stillView.kind === "cell",
+      tilesFailed: setup.tiles !== "sharp" || setup.issue === "slidefail",
+      noResults: noResultsOn(search.task !== undefined, objects),
+      ownLayers: drawing.second !== undefined,
+    }),
     slideId,
     objects: plainObjects && showsClaim(style) ? still.objects : null,
     choices: settings,
@@ -1558,6 +1560,8 @@ function ViewerBody({
               onCameraChange={setCamera}
               backdrop={backdrop}
               engineDrawn={plainObjects && showsClaim(style) ? still.ids : undefined}
+              outlines={still.outlines}
+              outlineFrame={still.frame}
               regionDecisions={regionDecisions}
               cellDecisions={cellDecisions}
               ringedCells={

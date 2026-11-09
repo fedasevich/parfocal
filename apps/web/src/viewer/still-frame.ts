@@ -25,6 +25,34 @@ export function engineCameraOf(camera: StillCamera, frame: StillFrame) {
   };
 }
 
+export function stillCameraOf(
+  camera: { x: number; y: number; zoom: number },
+  frame: StillFrame,
+): StillCamera {
+  return {
+    x: (camera.x - frame.offsetX) / frame.scale,
+    y: (camera.y - frame.offsetY) / frame.scale,
+    scale: 2 ** camera.zoom * frame.scale,
+  };
+}
+
+export type StillShape = {
+  readonly box: [number, number, number, number];
+  readonly path: string;
+};
+
+export function stillShapeOf(ring: ArrayLike<number>, frame: StillFrame): StillShape {
+  const points: string[] = [];
+  let box: [number, number, number, number] = [Infinity, Infinity, -Infinity, -Infinity];
+  for (let at = 0; at + 1 < ring.length; at += 2) {
+    const x = ((ring[at] ?? 0) - frame.offsetX) / frame.scale;
+    const y = ((ring[at + 1] ?? 0) - frame.offsetY) / frame.scale;
+    points.push(`${x.toFixed(2)},${y.toFixed(2)}`);
+    box = [Math.min(box[0], x), Math.min(box[1], y), Math.max(box[2], x), Math.max(box[3], y)];
+  }
+  return { box, path: `M${points.join("L")}Z` };
+}
+
 export function engineRing(ring: ArrayLike<number>, frame: StillFrame): Float32Array {
   const placed = new Float32Array(ring.length);
   for (let at = 0; at + 1 < ring.length; at += 2) {

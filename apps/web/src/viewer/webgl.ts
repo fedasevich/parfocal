@@ -1,12 +1,28 @@
+import { useEffect, useState } from "react";
+
 let known: boolean | undefined;
 
-export function webglAvailable(): boolean {
-  if (known !== undefined) return known;
+function probe(): boolean {
   try {
     const canvas = document.createElement("canvas");
-    known = (canvas.getContext("webgl2") ?? canvas.getContext("webgl")) !== null;
+    const context = canvas.getContext("webgl2") ?? canvas.getContext("webgl");
+    if (context === null) return false;
+    context.getExtension("WEBGL_lose_context")?.loseContext();
+    return true;
   } catch {
-    known = false;
+    return false;
   }
+}
+
+export function webglAvailable(): boolean {
+  known ??= probe();
   return known;
+}
+
+export function useWebglAvailable(): boolean {
+  const [available, setAvailable] = useState(known ?? false);
+  useEffect(() => {
+    setAvailable(webglAvailable());
+  }, []);
+  return available;
 }

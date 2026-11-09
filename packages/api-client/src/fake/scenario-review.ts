@@ -89,6 +89,7 @@ export type ScenarioReviewObject = {
   otherClass: string | null;
   detectorScore: number | null;
   foreground: number | null;
+  outline?: number[];
 };
 
 const regionScores: [string, number, number][] = [
@@ -333,3 +334,26 @@ export const slideOrder = { position: 8, total: 12, minutesPerSlide: 20 };
 export const agreementWithSimona = { with: "SM" as PersonKey, agree: 51, total: 55 };
 
 export const nextSlideFacts = { regions: 2, cells: 50, minutes: 12 };
+
+const outlinedRegion = (
+  object: string,
+  score: number,
+  sizeMm: number,
+  outline: number[],
+): ScenarioReviewObject => ({
+  object,
+  kind: "region",
+  className: "Tumor",
+  score,
+  sizeMm,
+  otherClass: null,
+  detectorScore: null,
+  foreground: null,
+  outline,
+});
+
+export const outlinedObjects: ScenarioReviewObject[] = [
+  outlinedRegion("R1", 0.94, 2.1, [120, 140, 330, 120, 380, 260, 300, 360, 150, 330]),
+  outlinedRegion("R2", 0.81, 1.4, [560, 180, 760, 200, 790, 340, 600, 380]),
+  outlinedRegion("R3", 0.66, 0.9, [420, 480, 610, 470, 640, 640, 450, 660]),
+];
