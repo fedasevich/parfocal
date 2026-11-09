@@ -4796,7 +4796,7 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Done when API tests cover a run, its result sets and the estimate.
   Depends on AIP-008, RSET-001.
 
-- [ ] JOBS-002 · Run a model window
+- [x] JOBS-002 · Run a model window
   A small window in three parts: the slides as a token field with the slides without results picked, one model dropdown grouped into Parfocal's models and the lab's models with what each makes and its time per slide, and what happens (the result set name, the time with the expected finish and a notification). No version picker. It opens from the project, a slide's menu and the end of an upload.
   Done when component tests cover each part and the estimate, and E2E runs a model from the upload's end.
   Depends on JOBS-001, DS-020. Refs mock: runmodel, doc 39.
