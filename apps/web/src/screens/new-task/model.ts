@@ -1,10 +1,11 @@
 import type { DisplayDefaults } from "@parfocal/api-client";
 
-export const stepKeys = ["slides", "reviewers", "check", "how", "send"] as const;
+export const stepKeys = ["kind", "slides", "reviewers", "check", "how", "send"] as const;
 export type StepKey = (typeof stepKeys)[number];
 export type PageKey = StepKey | "sent";
 
 export const stepNames: Record<StepKey, string> = {
+  kind: "Kind",
   slides: "Slides",
   reviewers: "Reviewers",
   check: "What to check",
@@ -45,6 +46,25 @@ export const sceneStep: Record<TaskScene, PageKey> = {
   away: "reviewers",
   retiredtpl: "slides",
   nobody: "reviewers",
+};
+
+export type TaskKindKey = "review" | "annotate";
+export type AnnotatePresetKey = "hand" | "run" | "sample" | "regions" | "mixed";
+export type AnnotateCheck = {
+  scope: "none" | "all" | "sample" | "regions";
+  order: "least-sure" | "position";
+  rule: "require" | "warn";
+  exportUnchecked: boolean;
+  hasResult: boolean;
+};
+
+export const defaultAnnotatePreset: AnnotatePresetKey = "run";
+export const defaultAnnotateCheck: AnnotateCheck = {
+  scope: "all",
+  order: "least-sure",
+  rule: "require",
+  exportUnchecked: false,
+  hasResult: true,
 };
 
 export type ScopeKind = "regions" | "cells" | "low" | "roi" | "unsure";
@@ -184,6 +204,9 @@ export type TaskData = {
 };
 
 export type Draft = {
+  kind: TaskKindKey;
+  preset: AnnotatePresetKey;
+  check: AnnotateCheck;
   templateId: string;
   retired: string[];
   groups: Record<string, boolean>;
@@ -264,6 +287,9 @@ export function initialDraft(data: TaskData): Draft {
     data.templates.find((candidate) => candidate.id === data.defaultTemplateId) ??
     data.templates[0];
   const base: Draft = {
+    kind: "review",
+    preset: defaultAnnotatePreset,
+    check: { ...defaultAnnotateCheck },
     templateId: data.defaultTemplateId,
     retired: [],
     groups: Object.fromEntries(data.groups.map((group) => [group.key, true])),
@@ -289,7 +315,7 @@ export function initialDraft(data: TaskData): Draft {
     due: data.defaults.due,
     reminders: data.defaults.reminders,
     note: "",
-    seen: ["slides"],
+    seen: ["kind"],
     touched: {},
     sentAt: null,
     findQuery: "",
@@ -360,7 +386,16 @@ export function pickedSlides(draft: Draft, data: TaskData) {
   return [...grouped, ...extra];
 }
 
+export const isAnnotate = (draft: Draft) => draft.kind === "annotate";
+
+export const usesResult = (draft: Draft) => !isAnnotate(draft) || draft.check.hasResult;
+
 export const slidesInTask = (draft: Draft, data: TaskData) =>
+  isAnnotate(draft)
+    ? pickedSlides(draft, data)
+    : pickedSlides(draft, data).filter((slide) => slide.sets.includes(draft.resultSetId));
+
+export const slidesWithResult = (draft: Draft, data: TaskData) =>
   pickedSlides(draft, data).filter((slide) => slide.sets.includes(draft.resultSetId));
 
 export const whoReviews = (draft: Draft) => [...draft.reviewers, ...draft.invites];
@@ -383,7 +418,20 @@ export function slidesWithoutReviewer(draft: Draft, data: TaskData) {
 const finite = (value: number | string) =>
   typeof value === "number" && Number.isFinite(value) ? value : 0;
 
+export const annotateObjectsPerSlide = { all: 46, sample: 50, regions: 12 } as const;
+export const annotateDrawMinutes = 6;
+
+function annotateObjects(draft: Draft, data: TaskData) {
+  const scope = draft.check.scope;
+  if (!draft.check.hasResult || scope === "none") return 0;
+  const picked = pickedSlides(draft, data).length;
+  if (!picked) return 0;
+  const share = slidesWithResult(draft, data).length / picked;
+  return Math.round(annotateObjectsPerSlide[scope] * share);
+}
+
 export function objectsPerSlide(draft: Draft, data: TaskData) {
+  if (isAnnotate(draft)) return annotateObjects(draft, data);
   const options = draft.scopeOptions;
   let count =
     (draft.scope.regions ? 5 : 0) +
@@ -422,7 +470,7 @@ export function summary(draft: Draft, data: TaskData) {
     counts,
     per,
     objects,
-    hours: (per * objects * 20) / 3600,
+    hours: (per * (objects * 20 + (isAnnotate(draft) ? annotateDrawMinutes * 60 : 0))) / 3600,
   };
 }
 
@@ -506,6 +554,12 @@ export function scopePhrase(draft: Draft) {
 }
 
 export function estimateText(draft: Draft, data: TaskData) {
+  if (isAnnotate(draft)) {
+    const sum = summary(draft, data);
+    if (!sum.ns || !sum.n) return "";
+    const checks = sum.objects ? `About ${sum.objects} AI objects per slide to check and ` : "";
+    return `${checks}${checks ? "roughly" : "Roughly"} ${hoursText(sum.hours)} for each expert, with ${annotateDrawMinutes} minutes of drawing per slide.`;
+  }
   if (!scopeKinds(draft).length) return "";
   const sum = summary(draft, data);
   const samples = (["cells", "low", "unsure"] as const).filter((key) => draft.scope[key]).length;
@@ -538,6 +592,12 @@ export function displaySummary(draft: Draft) {
   const locked = Object.keys(draft.locks).length;
   const display = draft.display;
   return `${displayWords.draw[display.draw]} · ${displayWords.conf[display.conf]} · ${displayWords.order[display.order]}${locked ? ` · ${locked} locked` : ""}`;
+}
+
+export function annotateSlideLine(sum: Summary, withResult: number, rsShort: string) {
+  if (!sum.all) return "No slides picked yet.";
+  const none = sum.all - withResult;
+  return `${sum.all} picked. ${withResult} have ${rsShort}, ${none} ${none === 1 ? "has" : "have"} no result set and are annotated by hand.`;
 }
 
 export function slideLine(sum: Summary, rsShort: string) {
@@ -582,7 +642,8 @@ export function issues(draft: Draft, data: TaskData): Issue[] {
   const sum = summary(draft, data);
   const rs = data.resultSets.find((set) => set.id === draft.resultSetId);
   const template = data.templates.find((candidate) => candidate.id === draft.templateId);
-  if (template && isRetired(draft, template)) {
+  const annotate = isAnnotate(draft);
+  if (!annotate && template && isRetired(draft, template)) {
     add("slides", "tpl", "The project's default template was retired. Pick another.", {
       block: true,
       blockText: "Pick a template.",
@@ -590,7 +651,7 @@ export function issues(draft: Draft, data: TaskData): Issue[] {
   }
   if (!pickedSlides(draft, data).length) {
     add("slides", "groups", "Pick at least one slide.", { block: true });
-  } else if (!sum.ns) {
+  } else if (!annotate && !sum.ns) {
     add("slides", "rset", `None of the picked slides has ${rs?.short ?? "this result set"}.`, {
       block: true,
       blockText: "Pick slides with this result set, or run the model first.",
@@ -609,6 +670,7 @@ export function issues(draft: Draft, data: TaskData): Issue[] {
     }
   }
   const options = draft.scopeOptions;
+  if (annotate) return [...out, ...whenIssues(draft, data)];
   if (!scopeKinds(draft).length) {
     add("check", "scope", "Pick at least one kind of object.", { block: true });
   }
@@ -632,15 +694,33 @@ export function issues(draft: Draft, data: TaskData): Issue[] {
       add("how", `locks.${key}`, "Say why. Reviewers see this reason next to the locked setting.");
     else if (text.length < 5) add("how", `locks.${key}`, "Use at least 5 characters.");
   }
+  return [...out, ...whenIssues(draft, data)];
+}
+
+function whenIssues(draft: Draft, data: TaskData): Issue[] {
   if (!draft.due) {
-    add("how", "due", "Pick a due date.", { block: true, blockText: "Fix the due date." });
-  } else if (draft.due <= data.today) {
-    add("how", "due", "The due date is in the past. Pick a later day.", {
-      block: true,
-      blockText: "Fix the due date.",
-    });
+    return [
+      {
+        step: "how",
+        field: "due",
+        text: "Pick a due date.",
+        block: true,
+        blockText: "Fix the due date.",
+      },
+    ];
   }
-  return out;
+  if (draft.due <= data.today) {
+    return [
+      {
+        step: "how",
+        field: "due",
+        text: "The due date is in the past. Pick a later day.",
+        block: true,
+        blockText: "Fix the due date.",
+      },
+    ];
+  }
+  return [];
 }
 
 export function fieldErrors(draft: Draft, data: TaskData) {
