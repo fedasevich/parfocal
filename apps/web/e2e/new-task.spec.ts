@@ -262,3 +262,41 @@ test("the sample size is set on the check step and sent in the created task", as
     check: { scope: [{ kind: "random-cells", count: 80 }] },
   });
 });
+
+test("a task created from another template pins it and marks what the template filled", async ({
+  page,
+}) => {
+  await page.goto(`/projects/${projectId}/tasks/new`);
+  const body = flow(page);
+  const step = body.locator('[aria-current="step"]');
+  await body.getByRole("button", { name: "Next" }).click();
+  await expect(step).toHaveText(/Slides/);
+  await body.getByRole("combobox", { name: "Study template" }).click();
+  await page.getByRole("option", { name: /Detection study/ }).click();
+  await body.getByRole("button", { name: "Preview the report" }).click();
+  const preview = page.getByRole("dialog");
+  await expect(preview.getByRole("img", { name: /Page 1 of the report/ })).toBeVisible();
+  await preview.getByRole("button", { name: "Close the preview" }).click();
+  await body.getByRole("button", { name: "Next" }).click();
+  await body.getByRole("button", { name: "Next" }).click();
+  await expect(step).toHaveText(/What to check/);
+  const mark = body.locator("[data-from-template]");
+  await expect(mark.first()).toHaveAttribute("data-from-template", "kept");
+  await expect(mark.first()).toContainText("Filled in by Detection study");
+  await body.getByText("Yes or no", { exact: true }).click();
+  await expect(body.locator('[data-from-template="changed"]')).toContainText(
+    "Changed from Detection study",
+  );
+  await body.getByRole("button", { name: "Next" }).click();
+  await body.getByRole("button", { name: "Next" }).click();
+  await expect(step).toHaveText(/Send/);
+  await expect(body.getByText("Detection study v1")).toBeVisible();
+  const created = page.waitForRequest(
+    (request) => request.method() === "POST" && /\/review-tasks$/.test(request.url()),
+  );
+  await body.getByRole("button", { name: /^Create and notify/ }).click();
+  expect((await created).postDataJSON()).toMatchObject({
+    study_template_version: 1,
+    decision: { style: "yes-no" },
+  });
+});
