@@ -121,7 +121,7 @@ export function AccountMenu({ me, person }: { me: Me | undefined; person: Person
       entries={entries.map(({ href, action, ...entry }) => ({
         ...entry,
         ...(href ? { onSelect: () => void goTo(href) } : {}),
-        ...(action === "feedback" ? { onSelect: () => void openFeedback() } : {}),
+        ...(action === "feedback" ? { onSelect: openFeedback } : {}),
       }))}
       extra={import.meta.env.DEV ? <ViewAs current={me?.initials} /> : null}
       onLogOut={() => window.location.assign(logOutUrl)}

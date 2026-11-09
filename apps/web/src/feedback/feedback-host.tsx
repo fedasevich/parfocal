@@ -1,16 +1,14 @@
 import { useMatches } from "@tanstack/react-router";
 import { lazy, Suspense } from "react";
-import { feedbackRoute, useFeedback } from "./feedback-state.ts";
+import { closeFeedback, feedbackRoute, useFeedbackOpen } from "./feedback-state.ts";
 
-const FeedbackDialog = lazy(() => import("./feedback-dialog.tsx"));
+const FeedbackFlow = lazy(() => import("./feedback-flow.tsx"));
 
 export function FeedbackHost() {
-  const feedback = useFeedback();
   const route = useMatches({ select: feedbackRoute });
-  if (feedback.step !== "writing") return null;
-  return (
+  return useFeedbackOpen() ? (
     <Suspense fallback={null}>
-      <FeedbackDialog feedback={feedback} route={route} />
+      <FeedbackFlow route={route} onClose={closeFeedback} />
     </Suspense>
-  );
+  ) : null;
 }

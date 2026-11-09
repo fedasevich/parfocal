@@ -1,15 +1,22 @@
 import { useSendFeedback } from "@parfocal/api-client";
-import { CheckboxField, FormField, TextAreaInput } from "@parfocal/ui/components/form-field";
+import { FormField, TextAreaInput } from "@parfocal/ui/components/form-field";
 import { SmallModal } from "@parfocal/ui/components/small-modal";
 import { useState } from "react";
-import { closeFeedback, type FeedbackState } from "./feedback-state.ts";
 
 const maxLength = 4000;
 const pngPrefix = "data:image/png;base64,";
 
-type Writing = Extract<FeedbackState, { step: "writing" }>;
+export type Captured = { screenshot: string | null; viewport: [number, number] };
 
-export default function FeedbackDialog({ feedback, route }: { feedback: Writing; route: string }) {
+export default function FeedbackDialog({
+  feedback,
+  route,
+  onClose,
+}: {
+  feedback: Captured;
+  route: string;
+  onClose: () => void;
+}) {
   const send = useSendFeedback();
   const [text, setText] = useState("");
   const [attach, setAttach] = useState(feedback.screenshot !== null);
@@ -28,7 +35,7 @@ export default function FeedbackDialog({ feedback, route }: { feedback: Writing;
     <SmallModal
       open
       onOpenChange={(next) => {
-        if (!next) closeFeedback();
+        if (!next) onClose();
       }}
       title={sent ? "Thanks, the team has it" : "Send feedback"}
       subtitle={
@@ -50,7 +57,7 @@ export default function FeedbackDialog({ feedback, route }: { feedback: Writing;
       blockersTitle="Before you can send"
       onPrimary={() => {
         if (sent) {
-          closeFeedback();
+          onClose();
           return;
         }
         setTried(true);
@@ -94,11 +101,14 @@ export default function FeedbackDialog({ feedback, route }: { feedback: Writing;
           </FormField>
           {feedback.screenshot ? (
             <>
-              <CheckboxField
-                label="Attach the blurred screenshot"
-                checked={attach}
-                onCheckedChange={(next) => setAttach(next === true)}
-              />
+              <label className="flex cursor-pointer items-center gap-2.5 text-body-sm text-fg">
+                <input
+                  type="checkbox"
+                  checked={attach}
+                  onChange={(event) => setAttach(event.target.checked)}
+                />
+                Attach the blurred screenshot
+              </label>
               {attach ? (
                 <img
                   src={feedback.screenshot}

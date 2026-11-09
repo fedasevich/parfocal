@@ -1,62 +1,23 @@
 import { useSyncExternalStore } from "react";
 
-export type FeedbackState =
-  | { step: "closed" }
-  | { step: "capturing" }
-  | { step: "writing"; screenshot: string | null; viewport: [number, number] };
-
-let state: FeedbackState = { step: "closed" };
+let open = false;
 const listeners = new Set<() => void>();
 
-export const feedbackStore = {
-  getState: (): FeedbackState => state,
-  setState: (next: FeedbackState): void => {
-    state = next;
-    for (const listener of listeners) listener();
-  },
-  subscribe: (listener: () => void): (() => void) => {
-    listeners.add(listener);
-    return () => listeners.delete(listener);
-  },
+function setOpen(next: boolean): void {
+  open = next;
+  for (const listener of listeners) listener();
+}
+
+const subscribe = (listener: () => void) => {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
 };
 
-export function useFeedback(): FeedbackState {
-  return useSyncExternalStore(
-    feedbackStore.subscribe,
-    () => state,
-    () => state,
-  );
-}
-
-const nextFrame = () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
-
-async function redactedScreenshot(): Promise<string | null> {
-  try {
-    const { captureRedacted } = await import("./capture.ts");
-    await nextFrame();
-    await nextFrame();
-    return await captureRedacted(document);
-  } catch {
-    return null;
-  }
-}
+export const openFeedback = () => setOpen(true);
+export const closeFeedback = () => setOpen(false);
+export const useFeedbackOpen = () => useSyncExternalStore(subscribe, () => open);
 
 export function feedbackRoute(matches: readonly { routeId: string }[]): string {
   const routeId = matches.at(-1)?.routeId ?? "__root__";
   return routeId.replace(/[^A-Za-z0-9/_.$-]/g, "").slice(0, 300) || "__root__";
-}
-
-export async function openFeedback(): Promise<void> {
-  if (feedbackStore.getState().step !== "closed") return;
-  feedbackStore.setState({ step: "capturing" });
-  const screenshot = await redactedScreenshot();
-  feedbackStore.setState({
-    step: "writing",
-    screenshot,
-    viewport: [window.innerWidth, window.innerHeight],
-  });
-}
-
-export function closeFeedback(): void {
-  feedbackStore.setState({ step: "closed" });
 }

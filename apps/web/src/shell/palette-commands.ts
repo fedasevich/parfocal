@@ -181,7 +181,7 @@ function actionEntries(ctx: PaletteContext): PaletteEntry[] {
       icon: "comment",
       label: "Send feedback",
       keywords: ["bug", "report a problem", "screenshot", "support", "idea"],
-      run: () => void openFeedback(),
+      run: openFeedback,
     },
     {
       id: "open-settings",
