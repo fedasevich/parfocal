@@ -1,6 +1,8 @@
 import {
   type CameraProfile,
   defaultCameraProfile,
+  isTwoFingerClick,
+  safariPinchOctaves,
   type WheelDevice,
   type WheelMode,
   wheelIntent,
@@ -28,7 +30,8 @@ export type Intent =
   | { kind: "peek"; held: boolean }
   | { kind: "presetStep"; step: 1 | -1 }
   | { kind: "preset"; digit: number }
-  | { kind: "magnification"; value: number };
+  | { kind: "magnification"; value: number }
+  | { kind: "negativePoint" };
 
 export type IntentKind = Intent["kind"];
 
@@ -47,8 +50,19 @@ type WheelEventRaw = { kind: "wheel"; mode: WheelMode; wheelDevice: WheelDevice;
 
 type AxesRaw = { kind: "axes"; x: number; y: number; zoom: number };
 
+type PointerRaw = {
+  kind: "pointer";
+  button: number;
+  ctrlKey: boolean;
+  pointerType: string;
+};
+
+type PinchRaw = { kind: "safariPinch"; previousScale: number; scale: number };
+
 export type RawInput =
   | KeyRaw
+  | PointerRaw
+  | PinchRaw
   | WheelEventRaw
   | AxesRaw
   | { kind: "button"; name: string }
@@ -224,6 +238,21 @@ export function mapInput(
   const calibration = options.calibration ?? calibrationDefaults;
   if (raw.kind === "wheel") {
     return device === "mouse" || device === "trackpad" ? wheelIntents(raw, calibration) : none;
+  }
+  if (raw.kind === "pointer") {
+    const clicks = device === "trackpad" || device === "mouse";
+    return clicks && context === "annotate" && isTwoFingerClick(raw)
+      ? [{ kind: "negativePoint" }]
+      : none;
+  }
+  if (raw.kind === "safariPinch") {
+    if (device !== "trackpad") return none;
+    const octaves = safariPinchOctaves(
+      raw.previousScale,
+      raw.scale,
+      calibratedProfile(defaultCameraProfile, calibration),
+    );
+    return octaves === 0 ? none : [{ kind: "zoom", octaves, animate: false }];
   }
   if (raw.kind === "axes") {
     if (device !== "spacemouse" && device !== "gamepad") return none;
