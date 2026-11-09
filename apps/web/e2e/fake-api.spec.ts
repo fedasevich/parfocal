@@ -18,7 +18,7 @@ test("home opens on the scenario's fake data with the badge", async ({ page }) =
 test("the prototype index links to every screen", async ({ page }) => {
   await page.goto("/prototype");
   const screens = page.getByRole("list", { name: "Screens" });
-  await expect(screens.getByRole("link")).toHaveCount(246);
+  await expect(screens.getByRole("link")).toHaveCount(247);
   await screens.getByRole("link", { name: "Slide · S26-04812 A1" }).click();
   await expect(page.getByTestId("full-viewer")).toBeVisible();
   const url = new URL(page.url());
