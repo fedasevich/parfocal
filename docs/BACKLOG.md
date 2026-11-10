@@ -1021,7 +1021,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when edge tests show a refused rejoin with the token held before the revoke and a revoke that closes the newer socket after an older token joined.
   Size: M.
 
-- [ ] SEC-037 · Caps on room sockets and limits on the room routes
+- [x] SEC-037 · Caps on room sockets and limits on the room routes
   A member can open thousands of sockets to one room with one token and send frames in a loop, the room routes have no limit class, and the internal route reads the whole body before it checks the signature ([edge token review](results/2026-11-09-edge-token-review.md), finding C2). Cap the sockets of one person in one room, count `/rt/` and `/rt-internal/` in the edge limits, and refuse a missing signature header or an oversized body before reading it. Belongs with SEC-027 (edge limits per IP).
   Done when edge tests show the ninth socket of one person in one room refused, both routes in a limit class, and an oversized or unsigned internal call refused unread.
   Size: M.

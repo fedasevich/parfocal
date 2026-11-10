@@ -106,7 +106,7 @@ Durable Object rooms per slide, per task and per user carry ephemeral events, an
 | R2 | E | A socket stays open after its owner leaves the project or the workspace | Medium | Room tokens expire within minutes and a reconnect rechecks the grant, and a removal closes the person's sockets. Built and tested in COLLAB-001 with five-minute tokens renewed through the API and revokes from `removeProjectMember` and `erasePerson` (ADR 0140) | COLLAB-001 |
 | R3 | I | An event carries patient data to everyone in a room | Medium | Events carry ids and kinds only, and clients refetch through the API. Checked by the API model and again at the edge (ADR 0140) | COLLAB-001 |
 | R4 | T | A client sends forged events to a room | Medium | Rooms accept events only from the API through a signed internal call, and client frames are limited to ping and token renewal, never passed on (ADR 0140) | COLLAB-001 |
-| R5 | D | Floods of connections or frames | Low | Per user connection limits and frame size limits | SEC-012 |
+| R5 | D | Floods of connections or frames | Low | Eight sockets per person in a room, frame size limits, and per address limits on room joins and internal room calls. Frames on an open socket have no rate cap yet | SEC-012, SEC-037 |
 
 ## Changes made with this model
 
