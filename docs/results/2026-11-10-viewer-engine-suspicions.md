@@ -3,7 +3,7 @@
 - Date: 2026-11-10
 - Backlog: VIEW-066 (settle three viewer engine suspicions)
 - Kind: check
-- Commit: 562b8550
+- Commit: e4f68f40
 - Environment: the owner's Mac, `node --test` in `packages/viewer-engine`
 - Data: generated OME-Zarr fixtures and a gated fake pixel source, no slide files
 
