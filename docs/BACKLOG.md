@@ -4364,7 +4364,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when a ci failure has shown which stop was wrong, the cause is fixed in the table or the spec, and the test stays out of the `flaky-*` artifacts for a week of main.
   Size: S.
 
-- [ ] TEST-031 · Web specs at their time limit get room for a slow runner
+- [x] TEST-031 · Web specs at their time limit get room for a slow runner
   The ci run on commit 71294ded failed on three web tests that sat at their time limit while every other job passed: the redo test in `apps/web/e2e/undo.spec.ts` (a reload, then the slide not ready inside 30 seconds), the review task test in `apps/web/e2e/workspaces.spec.ts` (15 seconds for the slide to be ready) and the fake data test in `apps/web/e2e/guided-review.spec.ts` that made six page loads in one 30 second test. The web jobs of that run took 33 and 34 minutes against 23 and 25. Give the slide 25 seconds to be ready, give the two slide specs a 60 and 90 second test limit, wait for the slide after each reload, and split the six page loads into three tests. Three more tests failed once and passed their retry in the same run. `polygon.spec.ts` and `saved-marks.spec.ts` open the slide the same way and get the same room. The pinned strip test in `layout-settings.spec.ts` reloaded right after its click, before the switch showed the change, so each click in that spec now waits for its control to be checked before the reload.
   Done when the six specs pass locally with no retries and none of their tests fails or sits in a `flaky-*` artifact of the next three ci runs on main.
   Size: S.
