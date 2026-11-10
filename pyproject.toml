@@ -8,6 +8,7 @@ dev = [
     "pypdf>=6.21,<7",
     "pytest>=9.1,<10",
     "pytest-asyncio>=1.4,<2",
+    "pytest-xdist>=3.8,<4",
     "ruff>=0.16,<0.17",
     "uvicorn>=0.54,<0.55",
 ]

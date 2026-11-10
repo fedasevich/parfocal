@@ -157,7 +157,7 @@ jobs:
           key: fixtures-small-${{ steps.fixtures.outputs.key }}
       - run: pnpm fixtures small
       - run: docker compose up -d --wait
-      - run: uv run pytest -m db --durations=25
+      - run: uv run pytest -m db -n 4 --dist loadfile --durations=25
         env:
           PARFOCAL_REQUIRE_FIXTURES: small
       - if: failure()
