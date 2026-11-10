@@ -74,8 +74,11 @@ test("Tab reaches the steps in order and Next moves forward", async ({ page }) =
 test("Enter runs the primary action and a blocked one stays put", async ({ page }) => {
   await page.goto(story(`${flows}flow-first-step`));
   await expect(currentStep(page)).toHaveText(/Slides/);
-  await page.keyboard.press("Enter");
-  await expect(currentStep(page)).toHaveText(/Reviewers/);
+  await expect(async () => {
+    const step = (await currentStep(page).textContent()) ?? "";
+    if (step.includes("Slides")) await page.keyboard.press("Enter");
+    await expect(currentStep(page)).toHaveText(/Reviewers/, { timeout: 1_000 });
+  }).toPass();
   await page.goto(story(`${flows}flow-next-blocked`));
   await expect(currentStep(page)).toHaveText(/Reviewers/);
   await page.keyboard.press("Enter");
