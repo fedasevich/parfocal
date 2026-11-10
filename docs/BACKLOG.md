@@ -4369,6 +4369,16 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when the six specs pass locally with no retries and none of their tests fails or sits in a `flaky-*` artifact of the next three ci runs on main.
   Size: S.
 
+- [x] TEST-032 · The floating side panel tab is named by what it shows
+  The tab that brings back a hidden side panel had the `aria-label` "Show the side panel, Objects, 312" over the visible text "Objects" and "312", which fails the axe rule `label-content-name-mismatch` that TEST-023 (names, roles and nested controls pass axe) took off the allowlist. The hidden panel test in `apps/web/e2e/layout-settings.spec.ts` failed on it in the ci run on commit 8010c90a and fails every time it runs alone. Name the button from its own content with a visually hidden "Show the side panel, " in front.
+  Done when the hidden panel test passes when run alone and asserts the accessible name of the tab.
+  Size: S.
+
+- [ ] TEST-033 · The axe scan of a route does not depend on test order
+  `apps/web/e2e/a11y.ts` scans each route once per worker, in the state the first test to finish there left it, and the web specs run fully parallel. A violation that shows only in another state of the route, such as the hidden side panel of TEST-032 (the floating side panel tab is named by what it shows), stays unseen until the order changes and then turns an unrelated run red.
+  Done when the scan key holds enough of the page state that the hidden panel is scanned in a full run, or a spec scans the known states on purpose, and a full local run reports the same violations as each spec run alone.
+  Size: M.
+
 ---
 
 ## 36 PILOT · Documentation and pilot readiness
