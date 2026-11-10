@@ -568,7 +568,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Depends on FOUND-030.
   Size: M.
 
-- [ ] FOUND-033 · A result for every push to main
+- [x] FOUND-033 · A result for every push to main
   On 2026-11-09 the `ci` workflow ran 39 times on main with 3 green, 9 failed and 27 cancelled ([project review](results/2026-11-09-project-review.md)). A run takes 20 to 30 minutes, the lead pushes faster, and FOUND-025 (faster and less wasteful CI) cancels a running ci when a newer push arrives, so most pushes never get a result. The `docs` workflow was red for 14 pushes unseen, because `ci-ok` leaves it out and the lead watches only `ci`. Make `scripts/lead/push.sh` wait until the last run on main has finished, or stop cancelling on main, put the docs checks under `ci-ok`, and make the lead's check read every workflow of the head commit. The push of 18:14 UTC (ci run 42672338835) failed in three workflows without starting their jobs and did not come back on the next two pushes, so note it if it does.
   Done when two pushes in a row to main each end with a finished run, a failing docs check fails `ci-ok`, and the lead's check reports any failed workflow of the head commit.
   Size: M.
