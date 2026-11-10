@@ -4394,6 +4394,12 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when each has a named cause, a fix in the spec, the fixture or the component, and neither test sits in a `flaky-*` artifact for a week of main.
   Size: S.
 
+- [ ] TEST-036 · Display panel Undo tests repeat the key gesture when the Undo window is missed
+  "in the full viewer a preset switches with the keys and is recorded with the next decision" in `apps/web/e2e/display-panel.spec.ts` failed both attempts in the ci run on commit c82a417e: the Undo of the "Display: Tumor first" toast was detached before the click landed. The toast lives 4 seconds from the key press and the page is busy right after a preset switch, so a starved runner uses the window up. The same click sits in "Shift+3 switches to the second preset with an Undo and Shift+1 goes back". Both tests press the keys again and click again when the Undo is gone.
+  Done when both tests pass locally with no retries, pass with the first Undo window forced to lapse, and stay out of the failed and retried tests of the next three ci runs on main.
+  Depends on TEST-029.
+  Size: S.
+
 ---
 
 ## 36 PILOT · Documentation and pilot readiness
