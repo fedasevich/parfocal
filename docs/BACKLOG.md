@@ -1460,7 +1460,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Done when a test with a counting worker factory shows every spawned worker terminated after `showSlide` throws.
   Size: S.
 
-- [ ] VIEW-062 · Single-channel grey slides draw through the channel route
+- [x] VIEW-062 · Single-channel grey slides draw through the channel route
   A one-sample BlackIsZero TIFF or a one-channel OME-Zarr is labelled "grey" and sent to the RGB route, which refuses it, though the channel route would draw it ([viewer engine review](results/2026-11-09-viewer-engine-review.md), finding 3).
   Done when a grey fixture opens and draws in a browser spec with a golden image.
   Depends on VIEW-061.
