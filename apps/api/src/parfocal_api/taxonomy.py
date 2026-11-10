@@ -1,10 +1,10 @@
 import itertools
 import uuid
-from typing import Annotated
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Query
 from pydantic import AfterValidator, BaseModel, Field, StringConstraints, model_validator
-from sqlalchemy import delete, insert, select, update
+from sqlalchemy import Column, delete, insert, or_, select, update
 from sqlalchemy.dialects.postgresql import insert as upsert
 from sqlalchemy.ext.asyncio import AsyncConnection
 
@@ -16,7 +16,7 @@ from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import Principal
 from parfocal_api.problems import BadRequestError, ConflictError
 from parfocal_api.projects import ProjectArchivedError, owned, visible
-from parfocal_api.tables import annotations, class_mappings, project_classes
+from parfocal_api.tables import class_mappings, project_classes
 
 MIN_BETWEEN_CLASSES = 15.0
 RESERVED = (
@@ -109,7 +109,7 @@ class UnknownClassError(BadRequestError):
 
 class ClassInUseError(ConflictError):
     code = "class-in-use"
-    title = "Annotations in a task use this class, so it stays"
+    title = "Annotations, results or decisions use this class, so it stays"
 
 
 router = APIRouter(prefix="/api/projects", tags=["projects"])
@@ -143,13 +143,25 @@ async def classes_of(connection: AsyncConnection, project_id: uuid.UUID) -> list
     return [ProjectClass.model_validate(row, from_attributes=True) for row in rows]
 
 
+def class_uses() -> tuple[Column[Any], ...]:
+    return tuple(
+        element.parent
+        for table in project_classes.metadata.tables.values()
+        for constraint in table.foreign_key_constraints
+        if constraint.ondelete != "CASCADE"
+        for element in constraint.elements
+        if element.column is project_classes.c.id
+    )
+
+
+CLASS_USES = class_uses()
+
+
 async def refuse_used(connection: AsyncConnection, removed: set[uuid.UUID]) -> None:
     if not removed:
         return
-    used = select(annotations.c.id).where(
-        annotations.c.class_id.in_(removed), annotations.c.task_id.is_not(None)
-    )
-    if await connection.scalar(select(used.exists())):
+    used = or_(*(select(column).where(column.in_(removed)).exists() for column in CLASS_USES))
+    if await connection.scalar(select(used)):
         raise ClassInUseError
 
 

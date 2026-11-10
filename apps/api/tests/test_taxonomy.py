@@ -9,7 +9,7 @@ from parfocal_api.class_templates import TEMPLATES, TaxonomyTemplate
 from parfocal_api.colours import Vision, separation
 from parfocal_api.principals import MemberPrincipal
 from parfocal_api.tables import Role
-from parfocal_api.taxonomy import RESERVED, ClassDraft, too_close
+from parfocal_api.taxonomy import CLASS_USES, RESERVED, ClassDraft, too_close
 
 PROJECTS = "/api/projects"
 SENTINEL = {"tumor": "#f87171", "stroma": "#6ee7b7", "immune": "#c084fc", "other": "#fbbf24"}
@@ -47,6 +47,19 @@ def test_the_check_names_the_pair_and_the_reserved_marks() -> None:
     white = [ClassDraft(key=1, name="Fat", colour="#f8f8f8")]
     assert "unsure zones on the slide" in (too_close(white) or "")
     assert {mark for _, mark, _ in RESERVED} >= {"AI proposals"}
+
+
+def test_every_column_that_keeps_a_class_alive_is_checked_before_a_class_is_removed() -> None:
+    assert sorted(f"{column.table.name}.{column.name}" for column in CLASS_USES) == [
+        "annotations.class_id",
+        "disagreement_decisions.answer_class_id",
+        "result_set_classes.class_id",
+        "review_edits.class_id",
+        "review_skips.ai_class_id",
+        "verdicts.ai_class_id",
+        "verdicts.answer_class_id",
+        "verdicts.reason_class_id",
+    ]
 
 
 def team(database: str) -> dict[str, MemberPrincipal]:

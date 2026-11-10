@@ -175,6 +175,26 @@ def test_old_tasks_are_listed_as_review(api: ApiAs, database: str) -> None:
     assert stored == [("review", "review")]
 
 
+def test_removing_a_class_that_a_persons_own_annotation_uses_is_refused(
+    api: ApiAs, database: str
+) -> None:
+    s = study(database)
+    classes = set_classes(api, s)
+    owner(
+        database,
+        "INSERT INTO annotations "
+        "(tenant_id, project_id, slide_id, kind, number, geometry, class_id) "
+        f"VALUES ('{s.tenant_id}', '{s.project}', '{s.slides[0]}', 'region', 1, "
+        "ST_GeomFromText('POLYGON((0 0, 9 0, 9 9, 0 9, 0 0))'), "
+        f"'{classes[0]['id']}') RETURNING id",
+    )
+    url = f"/api/projects/{s.project}/classes"
+    kept = [{key: row[key] for key in ("id", "key", "name", "colour")} for row in classes[1:]]
+    refused = api(s.people["owner"]).put(url, json={"classes": kept})
+    assert (refused.status_code, refused.json()["code"]) == (409, "class-in-use")
+    assert len(api(s.people["owner"]).get(url).json()) == len(classes)
+
+
 def test_removing_a_class_that_task_annotations_use_is_refused(api: ApiAs, database: str) -> None:
     s = study(database)
     classes = set_classes(api, s)
