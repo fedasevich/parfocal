@@ -1052,7 +1052,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Depends on OPS-002.
   Size: M.
 
-- [ ] SEC-043 · Every write route is sent as another workspace
+- [x] SEC-043 · Every write route is sent as another workspace
   The isolation suite lists and probes only GET operations, 134 of 306, and two hand-written tests cover the rest ([tenant isolation review](results/2026-11-09-tenant-isolation-review.md), confirmed finding 2). Classify every operation of every method, give each write operation a path and body built from one workspace's ids, send it as the other workspace and expect 403 or 404 with unchanged row counts.
   Done when a test fails when an operation of any method is missing from the suite and every write operation is refused for the other workspace.
   Size: L.

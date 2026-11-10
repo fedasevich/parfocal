@@ -52,7 +52,7 @@ Every request transaction starts with one `SET_SCOPE` statement from `scoped_tra
 
 ## Adding a table means adding it to the isolation suite
 
-`apps/api/tests/test_tenant_isolation.py` fails when a table at head has no seeder in `SEEDERS` or when a GET operation in the OpenAPI schema is missing from `GET_ROUTES`. A new tenant-owned table needs a seeder that inserts rows for the given tenant and adds their ids and a marker string to `Seeded`. A new GET route needs its exposure and a path built from tenant A's ids. The suite then calls every tenant route as tenant A, which must see a marker, and as tenant B, which must see none. Table models in `parfocal_api.tables` must match the migrations, which `test_models_match_the_migrations` checks with Alembic's comparison.
+`apps/api/tests/test_tenant_isolation.py` fails when a table at head has no seeder in `SEEDERS` or when a GET operation in the OpenAPI schema is missing from `GET_ROUTES`. A new tenant-owned table needs a seeder that inserts rows for the given tenant and adds their ids and a marker string to `Seeded`. A new GET route needs its exposure and a path built from tenant A's ids. A new route of any other method needs an entry in `apps/api/tests/test_tenant_isolation_writes.py` ([the API page](api.md) says what an entry holds). The suite then calls every tenant route as tenant A, which must see a marker, and as tenant B, which must see none. Table models in `parfocal_api.tables` must match the migrations, which `test_models_match_the_migrations` checks with Alembic's comparison.
 
 The API tests connect through the pooler to a fresh database per test session, so `infra/local/pgbouncer.ini` has a `*` entry that forwards any database name as `parfocal_app`.
 

@@ -26,7 +26,7 @@ Simulated check, no such person took part. Agents wrote this page where a securi
 
 Controls that every part relies on, and that are done:
 
-- Tenant isolation by row-level security in every transaction, with a suite that seeds two tenants and checks every route and table (IAM-004, `test_tenant_isolation.py`).
+- Tenant isolation by row-level security in every transaction, with a suite that seeds two tenants and checks every route and table (IAM-004, `test_tenant_isolation.py`), and a second suite that sends every write route as the other tenant and expects a refusal (SEC-043, `test_tenant_isolation_writes.py`).
 - Project roles that narrow the workspace grant, with a reviewer seeing only their task slides (IAM-022, PROJ-003).
 - The session is a random id in a `__Host-` cookie, HttpOnly, Secure and SameSite=Strict, stored as a hash, with an idle lock ([ADR 0025](../adr/0025-zitadel-bff-login.md), [ADR 0031](../adr/0031-idle-lock-from-explicit-activity.md)).
 - An append-only, hash-chained audit log with people named by erasable pseudonyms (SEC-003, [ADR 0027](../adr/0027-audit-log-hash-chain-in-postgres.md)).
