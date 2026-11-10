@@ -1057,6 +1057,11 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when a test fails when an operation of any method is missing from the suite and every write operation is refused for the other workspace.
   Size: L.
 
+- [x] SEC-044 · A write on my own path that carries another workspace's id is refused
+  SEC-043 (every write route is sent as another workspace) builds the whole request from the other workspace's ids, so the first lookup on the path refuses it before any id in the body or further down the path is read. Send each write on the caller's own path with the body or query built from the other workspace, and again with only the first path id the caller's own, and expect a 4xx with no row of either workspace changed.
+  Done when both mixes run for every probed write that has an id to mix and none is accepted or changes a row.
+  Size: S.
+
 ---
 
 ## 33 I18N · Internationalisation readiness
@@ -4756,6 +4761,11 @@ A researcher hands slides to reviewers as a review task ([ADR 0053](adr/0053-ai-
   Depends on TASK-013, TASK-012, GUIDE-013. Refs [ADR 0238](adr/0238-check-options-and-presets-on-annotate-tasks.md).
   Size: M.
 ## 44 GUIDE · Decisions, guided review and the opinion form
+
+- [ ] TASK-016 · Adding a run to a signed-off annotate slide can carry its reason
+  `POST /api/review-tasks/{task_id}/slides/{slide_id}/runs` calls `editable_layer` without a reason and takes none, so on a signed-off slide the owner always gets 400 `reason-needed` and can never add the run, while every other shared layer write takes `reason` as a query parameter. The write isolation suite of SEC-043 (every write route is sent as another workspace) found it. Take `reason` like the other routes, log the change in the layer history and ask for the reason in the web app where the run is added.
+  Done when an API test adds a run to a signed-off slide with a reason and finds it in the layer history, and a browser test adds one through the reason dialog.
+  Size: S.
 
 Doctors judge AI objects in a simple guided mode, or in the full viewer with the same keys ([ADR 0053](adr/0053-ai-results-review-direction.md), doc 37 "Doctors first").
 
