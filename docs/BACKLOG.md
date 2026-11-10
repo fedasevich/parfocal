@@ -1016,7 +1016,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Depends on FOUND-035.
   Size: M.
 
-- [ ] SEC-036 · A removed person cannot rejoin a room
+- [x] SEC-036 · A removed person cannot rejoin a room
   After a revoke closes the socket, the same room token joins again until it expires, and an older token that joins later overwrites the index entry so a revoke can miss a newer socket ([edge token review](results/2026-11-09-edge-token-review.md), finding C1). ADR 0140 (realtime rooms and room tokens) says a removed person stops receiving events at once.
   Done when edge tests show a refused rejoin with the token held before the revoke and a revoke that closes the newer socket after an older token joined.
   Size: M.

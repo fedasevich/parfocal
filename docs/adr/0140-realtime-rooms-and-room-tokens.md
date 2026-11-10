@@ -61,3 +61,7 @@ Option 1 in all four.
 - TODO: the number 0140 was free on `origin/main` on 2026-11-02. If another branch takes it first, renumber this record.
 
 - Amended on 2026-11-05 by COLLAB-007 (presence): rooms now send presence events on join and leave, and a `project:` room kind, joinable only by whole-project readers, keeps a short-lived index of who views which slide.
+
+## Update 2026-11-10
+
+SEC-036 (a removed person cannot rejoin a room) closed two gaps the edge token review found. The user room now keeps each revoke for five minutes, and it refuses a join or a renewal whose token was issued at or before the revoke, which it works out as the expiry minus the five-minute lifetime. The edge answers such a join with 403 `room-access-revoked` and closes such a renewal with 4403. The edge now waits for the index write before it opens the socket, so a join whose index write fails is refused instead of being left out of the index. The index keeps one entry per project and room with the latest expiry seen, so an older token that joins later no longer hides a newer socket from a revoke. One gap is left: a revoke that lands between the index write and the socket being accepted misses that socket, which then lives until its token expires, at most five minutes, because its renewal is refused.
