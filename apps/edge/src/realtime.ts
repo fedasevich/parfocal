@@ -10,8 +10,6 @@ const ROOM_PREFIX = "/rt/";
 const INTERNAL_PREFIX = "/rt-internal/";
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
-export type Defer = (work: Promise<unknown>) => void;
-
 export function isRealtimePath(pathname: string): boolean {
   return pathname.startsWith(ROOM_PREFIX) || pathname.startsWith(INTERNAL_PREFIX);
 }
@@ -28,13 +26,12 @@ export async function handleRealtime(
   request: Request,
   env: RoomEnv,
   now: () => number,
-  defer: Defer,
 ): Promise<Response> {
   const { pathname } = new URL(request.url);
   if (pathname.startsWith(INTERNAL_PREFIX)) {
     return handleInternal(request, env, pathname.slice(INTERNAL_PREFIX.length), now());
   }
-  return handleConnect(request, env, roomIn(pathname), now(), defer);
+  return handleConnect(request, env, roomIn(pathname), now());
 }
 
 function roomIn(pathname: string): string | null {
@@ -50,7 +47,6 @@ async function handleConnect(
   env: RoomEnv,
   room: string | null,
   now: number,
-  defer: Defer,
 ): Promise<Response> {
   if (request.method !== "GET") {
     return problem(405, "method-not-allowed", "Rooms are joined with GET");
@@ -75,16 +71,17 @@ async function handleConnect(
   if (grant.room !== room) {
     return problem(403, "room-token-other-room", "The room token is for another room");
   }
+  const index = await roomStub(env, grant.tenant, `user:${grant.user}`).fetch("https://room/join", {
+    method: "POST",
+    body: JSON.stringify({ room: grant.room, project: grant.project, expires: grant.expires }),
+  });
+  if (!index.ok) {
+    return problem(403, "room-access-revoked", "Access to this room was removed");
+  }
   const seat: Seat = grant;
   const headers = new Headers(request.headers);
   headers.set("X-Room-Seat", JSON.stringify(seat));
   headers.set("X-Room-Protocol", ROOM_PROTOCOL);
-  defer(
-    roomStub(env, grant.tenant, `user:${grant.user}`).fetch("https://room/join", {
-      method: "POST",
-      body: JSON.stringify({ room: grant.room, project: grant.project, expires: grant.expires }),
-    }),
-  );
   return roomStub(env, grant.tenant, grant.room).fetch(
     new Request("https://room/connect", { method: "GET", headers }),
   );
@@ -162,7 +159,7 @@ async function revoke(env: RoomEnv, call: Revoke | null): Promise<Response> {
   if (call === null) {
     return problem(400, "revoke-malformed", "The revoke is not valid");
   }
-  const index = await roomStub(env, call.tenant, `user:${call.user}`).fetch("https://room/joined", {
+  const index = await roomStub(env, call.tenant, `user:${call.user}`).fetch("https://room/revoke", {
     method: "POST",
     body: JSON.stringify({ project: call.project }),
   });

@@ -7,6 +7,7 @@ import {
   CLOSE_EXPIRED,
   CLOSE_REMOVED,
   CLOSE_TOO_BIG,
+  ROOM_TOKEN_SECONDS,
   Room,
   type RoomEnv,
   type Seat,
@@ -80,6 +81,7 @@ class FakeState {
   alarm: number | null = null;
 
   readonly storage = {
+    get: (key: string) => Promise.resolve(this.stored.get(key)),
     put: (key: string, value: unknown) => {
       this.stored.set(key, structuredClone(value));
       return Promise.resolve();
@@ -112,7 +114,6 @@ class FakeState {
 
 class Edge {
   readonly rooms = new Map<string, Room>();
-  readonly deferred: Promise<unknown>[] = [];
   now = NOW;
   readonly env: RoomEnv;
 
@@ -178,14 +179,11 @@ class Edge {
     if (protocols !== null) {
       headers.set("Sec-WebSocket-Protocol", protocols);
     }
-    const response = await handleRealtime(
+    return handleRealtime(
       new Request(`https://parfocal.test/rt/${room}`, { headers }),
       this.env,
       () => this.now,
-      (work) => this.deferred.push(work),
     );
-    await Promise.all(this.deferred.splice(0));
-    return response;
   }
 
   async join(grant: Partial<RoomGrant>): Promise<FakeSocket> {
@@ -209,7 +207,6 @@ class Edge {
       }),
       this.env,
       () => this.now,
-      (work) => this.deferred.push(work),
     );
   }
 
@@ -541,5 +538,116 @@ describe("expiry and removal", () => {
       [CLOSE_REMOVED, CLOSE_REMOVED, CLOSE_REMOVED],
     );
     assert.equal(outsider.closed, null);
+  });
+});
+
+describe("rooms after a removal", () => {
+  const frame = (type: string, token: string) => JSON.stringify({ type, token });
+
+  test("a removed person cannot rejoin with the token they still hold", async () => {
+    const edge = new Edge();
+    const held = `${ROOM_PROTOCOL}, ${await edge.token()}`;
+    assert.equal((await edge.connect(SLIDE, held)).status, 200);
+    const ben = await edge.join({ user: BEN });
+    await edge.internal("revoke", { tenant: TENANT, user: ANNA, project: PROJECT });
+    edge.now = NOW + 30;
+    const again = await edge.connect(SLIDE, held);
+    assert.equal(again.status, 403);
+    assert.equal(await problemCode(again), "room-access-revoked");
+    const state = edge.state(`${TENANT}/${SLIDE}`);
+    assert.equal(state.sockets.length, 2);
+    assert.deepEqual(state.getWebSockets(), [ben]);
+    const sent = await edge.publish(TENANT, [SLIDE]);
+    assert.deepEqual(await sent.json(), { rooms: 1 });
+    assert.equal(ben.events().at(-1)?.kind, "slide.changed");
+  });
+
+  test("a token issued after the removal joins again", async () => {
+    const edge = new Edge();
+    await edge.join({});
+    await edge.internal("revoke", { tenant: TENANT, user: ANNA, project: PROJECT });
+    edge.now = NOW + 1;
+    const back = await edge.join({});
+    assert.equal(back.closed, null);
+  });
+
+  test("removal from one project leaves the tokens of other projects and of no project alone", async () => {
+    const edge = new Edge();
+    const other = `${ROOM_PROTOCOL}, ${await edge.token({
+      room: OTHER_SLIDE,
+      project: "88888888-8888-4888-8888-888888888888",
+    })}`;
+    const own = `${ROOM_PROTOCOL}, ${await edge.token({ room: `user:${ANNA}`, project: null })}`;
+    await edge.join({});
+    await edge.internal("revoke", { tenant: TENANT, user: ANNA, project: PROJECT });
+    assert.equal((await edge.connect(OTHER_SLIDE, other)).status, 200);
+    assert.equal((await edge.connect(`user:${ANNA}`, own)).status, 200);
+  });
+
+  test("removal from the workspace refuses every token held before it", async () => {
+    const edge = new Edge();
+    const own = `${ROOM_PROTOCOL}, ${await edge.token({ room: `user:${ANNA}`, project: null })}`;
+    const never = `${ROOM_PROTOCOL}, ${await edge.token({ room: OTHER_SLIDE })}`;
+    await edge.join({});
+    await edge.internal("revoke", { tenant: TENANT, user: ANNA, project: null });
+    assert.equal(await problemCode(await edge.connect(`user:${ANNA}`, own)), "room-access-revoked");
+    assert.equal(await problemCode(await edge.connect(OTHER_SLIDE, never)), "room-access-revoked");
+    const ben = await edge.join({ user: BEN });
+    assert.equal(ben.closed, null);
+  });
+
+  test("an older token joining later does not hide a newer socket from a removal", async () => {
+    const edge = new Edge();
+    const older = `${ROOM_PROTOCOL}, ${await edge.token()}`;
+    const first = await edge.join({});
+    edge.now = NOW + 150;
+    first.sent.length = 0;
+    await edge
+      .room(`${TENANT}/${SLIDE}`)
+      .webSocketMessage(first as unknown as WebSocket, frame("renew", await edge.token()));
+    assert.equal((JSON.parse(first.sent.at(-1) ?? "") as { type: string }).type, "renewed");
+    assert.equal((await edge.connect(SLIDE, older)).status, 200);
+    edge.now = NOW + 310;
+    await edge.internal("revoke", { tenant: TENANT, user: ANNA, project: PROJECT });
+    assert.deepEqual(first.closed, { code: CLOSE_REMOVED, reason: "removed" });
+  });
+
+  test("a renewal with a token held before the removal closes the socket as removed", async () => {
+    const edge = new Edge();
+    const held = await edge.token();
+    await edge.internal("revoke", { tenant: TENANT, user: ANNA, project: PROJECT });
+    const room = edge.room(`${TENANT}/${SLIDE}`);
+    const missed = new FakeSocket();
+    await room.join(missed as unknown as WebSocket, {
+      tenant: TENANT,
+      room: SLIDE,
+      user: ANNA,
+      project: PROJECT,
+      expires: NOW + 300,
+    });
+    edge.now = NOW + 100;
+    await room.webSocketMessage(missed as unknown as WebSocket, frame("renew", held));
+    assert.deepEqual(missed.closed, { code: CLOSE_REMOVED, reason: "removed" });
+    assert.equal(
+      missed.sent.some((text) => text.includes("renewed")),
+      false,
+    );
+  });
+
+  test("a join is refused when the person's room index cannot be written", async () => {
+    const edge = new Edge();
+    const index = edge.room(`${TENANT}/user:${ANNA}`);
+    index.remember = () => Promise.reject(new Error("storage is down"));
+    await assert.rejects(edge.connect(SLIDE, `${ROOM_PROTOCOL}, ${await edge.token()}`));
+    assert.equal(edge.state(`${TENANT}/${SLIDE}`).sockets.length, 0);
+  });
+
+  test("the edge and the API agree on how long a room token lives", () => {
+    const api = readFileSync(
+      `${import.meta.dirname}/../../api/src/parfocal_api/room_access.py`,
+      "utf8",
+    );
+    assert.match(api, /^ROOM_TOKEN_SECONDS = 5 \* 60$/m);
+    assert.equal(ROOM_TOKEN_SECONDS, 300);
   });
 });

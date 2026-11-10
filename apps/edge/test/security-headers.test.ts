@@ -55,10 +55,8 @@ const env = {
   UPLOAD_ORIGIN: `${UPLOAD_ORIGIN}/`,
 } satisfies EdgeEnv;
 
-const context = { waitUntil: () => undefined } as unknown as ExecutionContext;
-
 function get(path: string): Promise<Response> {
-  return worker.fetch(new Request(`https://parfocal.example${path}`), env, context);
+  return worker.fetch(new Request(`https://parfocal.example${path}`), env);
 }
 
 test("a document gets a fresh nonce in both the CSP and every nonce attribute", async () => {
@@ -106,7 +104,6 @@ test("a malformed tile token gets 401 with the same isolation headers", async ()
       headers: { Authorization: "Bearer a.b" },
     }),
     env,
-    context,
   );
   assert.equal(response.status, 401);
   assert.deepEqual(headerProblems(response.headers, "resource"), []);
@@ -126,16 +123,9 @@ test("the header check reports a missing COEP and a cacheable document", () => {
 
 test("a wrong upload origin breaks documents only, never tile bytes", async () => {
   const broken = { ...env, UPLOAD_ORIGIN: "http://r2.example" };
-  const tiles = await worker.fetch(
-    new Request("https://parfocal.example/tiles/x/y"),
-    broken,
-    context,
-  );
+  const tiles = await worker.fetch(new Request("https://parfocal.example/tiles/x/y"), broken);
   assert.equal(tiles.headers.get("Cross-Origin-Embedder-Policy"), "credentialless");
-  await assert.rejects(
-    worker.fetch(new Request("https://parfocal.example/"), broken, context),
-    /https/,
-  );
+  await assert.rejects(worker.fetch(new Request("https://parfocal.example/"), broken), /https/);
 });
 
 test("a room path that cannot be decoded is a 404 problem with the isolation headers", async () => {
@@ -158,11 +148,10 @@ test("a handler that throws or rejects is a 500 problem with the isolation heade
       },
       () => Promise.reject(new Error("the assets binding failed")),
     ]) {
-      const response = await worker.fetch(
-        new Request("https://parfocal.example/"),
-        { ...env, ASSETS: { fetch } as unknown as Fetcher },
-        context,
-      );
+      const response = await worker.fetch(new Request("https://parfocal.example/"), {
+        ...env,
+        ASSETS: { fetch } as unknown as Fetcher,
+      });
       assert.equal(response.status, 500);
       assert.equal((await response.json<{ code: string }>()).code, "internal-error");
       assert.deepEqual(headerProblems(response.headers, "resource"), []);
@@ -196,7 +185,7 @@ test("a Worker with a short key answers 503 for tiles and rooms, with the isolat
         headers: { Upgrade: "websocket", "Sec-WebSocket-Protocol": `${ROOM_PROTOCOL}, a.b` },
       }),
     ]) {
-      const response = await worker.fetch(request, weak, context);
+      const response = await worker.fetch(request, weak);
       assert.equal(response.status, 503);
       assert.equal((await response.json<{ code: string }>()).code, "signing-key-not-configured");
       assert.deepEqual(headerProblems(response.headers, "resource"), []);

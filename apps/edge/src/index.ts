@@ -27,20 +27,16 @@ export type AppEnv = {
 export type EdgeEnv = TileEnv & RoomEnv & AppEnv & LimitEnv;
 
 export default {
-  async fetch(request: Request, env: EdgeEnv, context: ExecutionContext): Promise<Response> {
-    return withSecurityHeaders(request, await answer(request, env, context), {
+  async fetch(request: Request, env: EdgeEnv): Promise<Response> {
+    return withSecurityHeaders(request, await answer(request, env), {
       uploadOrigin: env.UPLOAD_ORIGIN,
     });
   },
 } satisfies ExportedHandler<EdgeEnv>;
 
-async function answer(
-  request: Request,
-  env: EdgeEnv,
-  context: ExecutionContext,
-): Promise<Response> {
+async function answer(request: Request, env: EdgeEnv): Promise<Response> {
   try {
-    return (await guard(request, env)) ?? (await route(request, env, context));
+    return (await guard(request, env)) ?? (await route(request, env));
   } catch (error) {
     console.error(
       JSON.stringify({
@@ -54,17 +50,13 @@ async function answer(
   }
 }
 
-function route(
-  request: Request,
-  env: EdgeEnv,
-  context: ExecutionContext,
-): Promise<Response> | Response {
+function route(request: Request, env: EdgeEnv): Promise<Response> | Response {
   const { pathname } = new URL(request.url);
   if (isTilesPath(pathname)) {
     return handleTiles(request, env, seconds);
   }
   if (isRealtimePath(pathname)) {
-    return handleRealtime(request, env, seconds, (work) => context.waitUntil(work));
+    return handleRealtime(request, env, seconds);
   }
   if (isDataPath(pathname)) {
     return problem(404, "not-found", "No such file");

@@ -11,7 +11,6 @@ import {
 } from "../src/rate-limits.ts";
 
 const ORIGIN = "https://parfocal.test";
-const context = { waitUntil: () => undefined } as unknown as ExecutionContext;
 
 function fakeLimit(limit: number): RateLimit & { readonly keys: string[] } {
   const counts = new Map<string, number>();
@@ -114,14 +113,14 @@ describe("the edge limits", () => {
     const env = { ...limits(2) } as unknown as EdgeEnv;
     const statuses: number[] = [];
     for (let attempt = 0; attempt < 3; attempt += 1) {
-      const response = await edge.fetch(from("203.0.113.1", "/api/auth/login"), env, context);
+      const response = await edge.fetch(from("203.0.113.1", "/api/auth/login"), env);
       statuses.push(response.status);
       if (response.status === 429) {
         assert.equal(response.headers.get("cross-origin-embedder-policy"), "credentialless");
       }
     }
     assert.deepEqual(statuses, [404, 404, 429]);
-    const other = await edge.fetch(from("198.51.100.2", "/api/auth/login"), env, context);
+    const other = await edge.fetch(from("198.51.100.2", "/api/auth/login"), env);
     assert.notEqual(other.status, 429);
   });
 });

@@ -34,11 +34,7 @@ async function token(): Promise<string> {
 }
 
 async function fetchPath(path: string, headers: HeadersInit = {}): Promise<Response> {
-  return worker.fetch(
-    new Request(`https://parfocal.test${path}`, { headers }),
-    env,
-    {} as ExecutionContext,
-  );
+  return worker.fetch(new Request(`https://parfocal.test${path}`, { headers }), env);
 }
 
 async function assertRealNotFound(response: Response, path: string): Promise<void> {

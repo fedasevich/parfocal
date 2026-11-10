@@ -25,12 +25,15 @@ export const CLOSE_EXPIRED = 4401;
 export const CLOSE_REMOVED = 4403;
 export const CLOSE_TOO_BIG = 1009;
 export const MAX_CLIENT_FRAME = 4096;
+export const ROOM_TOKEN_SECONDS = 300;
 
 const KIND = /^[a-z][a-z-]*(\.[a-z][a-z-]*)+$/;
 const ID_NAME = /^[a-z][a-z_]{0,31}$/;
 const ID_VALUE = /^[A-Za-z0-9-]{1,64}$/;
 const MAX_IDS = 8;
 const INDEX_PREFIX = "joined:";
+const REVOKED_PREFIX = "revoked:";
+const EVERY_PROJECT = "*";
 const VIEWING_PREFIX = "viewing:";
 const SLIDE_ROOM = "slide:";
 const PROJECT_ROOM = "project:";
@@ -110,15 +113,15 @@ export class Room {
       return json({ closed: await this.closeUser(user, project) });
     }
     if (pathname === "/join") {
-      await this.remember(body as Joined);
-      return json({ ok: true });
+      const ok = await this.remember(body as Joined);
+      return json({ ok }, ok ? 200 : 403);
     }
     if (pathname === "/viewing") {
       await this.viewing(body as Viewing);
       return json({ ok: true });
     }
-    if (pathname === "/joined") {
-      return json({ rooms: await this.joined((body as { project: string | null }).project) });
+    if (pathname === "/revoke") {
+      return json({ rooms: await this.revoke((body as { project: string | null }).project) });
     }
     return new Response(null, { status: 404 });
   }
@@ -229,8 +232,36 @@ export class Room {
     }
   }
 
-  async remember(joined: Joined): Promise<void> {
-    await this.ctx.storage.put(`${INDEX_PREFIX}${joined.room}`, joined);
+  async remember(joined: Joined): Promise<boolean> {
+    if (await this.revokedSince(joined.expires - ROOM_TOKEN_SECONDS, joined.project)) {
+      return false;
+    }
+    const key = `${INDEX_PREFIX}${joined.project ?? EVERY_PROJECT}/${joined.room}`;
+    const stored = await this.ctx.storage.get<Joined>(key);
+    const expires = Math.max(joined.expires, stored?.expires ?? 0);
+    await this.ctx.storage.put(key, { ...joined, expires });
+    return true;
+  }
+
+  private async revokedSince(issued: number, project: string | null): Promise<boolean> {
+    const revokes = await this.ctx.storage.list<number>({ prefix: REVOKED_PREFIX });
+    const covering = new Set([EVERY_PROJECT, project ?? EVERY_PROJECT]);
+    return [...revokes].some(
+      ([key, at]) => at >= issued && covering.has(key.slice(REVOKED_PREFIX.length)),
+    );
+  }
+
+  async revoke(project: string | null): Promise<string[]> {
+    const now = this.now();
+    const revokes = await this.ctx.storage.list<number>({ prefix: REVOKED_PREFIX });
+    const spent = [...revokes]
+      .filter(([, at]) => at + ROOM_TOKEN_SECONDS <= now)
+      .map(([key]) => key);
+    if (spent.length > 0) {
+      await this.ctx.storage.delete(spent);
+    }
+    await this.ctx.storage.put(`${REVOKED_PREFIX}${project ?? EVERY_PROJECT}`, now);
+    return this.joined(project);
   }
 
   async joined(project: string | null): Promise<string[]> {
@@ -240,9 +271,10 @@ export class Room {
     if (stale.length > 0) {
       await this.ctx.storage.delete(stale);
     }
-    return [...entries.values()]
+    const rooms = [...entries.values()]
       .filter((entry) => entry.expires > now && (project === null || entry.project === project))
       .map((entry) => entry.room);
+    return [...new Set(rooms)];
   }
 
   async webSocketMessage(socket: WebSocket, message: string | ArrayBuffer): Promise<void> {
@@ -286,12 +318,23 @@ export class Room {
       project: verdict.grant.project,
       expires: verdict.grant.expires,
     };
+    const index = await roomStub(this.env, seat.tenant, `user:${seat.user}`).fetch(
+      "https://room/join",
+      {
+        method: "POST",
+        body: JSON.stringify({
+          room: seat.room,
+          project: renewed.project,
+          expires: renewed.expires,
+        }),
+      },
+    );
+    if (!index.ok) {
+      await this.leave([socket], CLOSE_REMOVED, "removed");
+      return;
+    }
     socket.serializeAttachment(renewed);
     socket.send(JSON.stringify({ type: "renewed", expires: renewed.expires }));
-    await roomStub(this.env, seat.tenant, `user:${seat.user}`).fetch("https://room/join", {
-      method: "POST",
-      body: JSON.stringify({ room: seat.room, project: renewed.project, expires: renewed.expires }),
-    });
     await this.scheduleExpiry();
   }
 
