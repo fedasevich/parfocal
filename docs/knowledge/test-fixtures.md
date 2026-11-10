@@ -40,7 +40,7 @@ Chrome requests `/favicon.ico` after loading a page, and through the latency pro
 
 ## The small group feeds the db CI job
 
-The `db` job caches `small` under `fixtures-small-<cache key of small>` and runs `uv run pytest -m db` with `PARFOCAL_REQUIRE_FIXTURES=small`, because `test_slide_ingest.py` uploads `CMU-1-Small-Region.svs` (1.9 MB, a real Aperio slide with a label and a macro) through the upload API and ingests it end to end. The other ingest database tests use the committed `synthetic-jpeg.tiff`, so they run on any machine. Source: INGEST-017 (publish step and slide status).
+The `db` job caches `small` under `fixtures-small-<cache key of small>` and runs `uv run pytest -m db -n 4 --dist loadfile` with `PARFOCAL_REQUIRE_FIXTURES=small`, because `test_slide_ingest.py` uploads `CMU-1-Small-Region.svs` (1.9 MB, a real Aperio slide with a label and a macro) through the upload API and ingests it end to end. The other ingest database tests use the committed `synthetic-jpeg.tiff`, so they run on any machine. Source: INGEST-017 (publish step and slide status).
 
 ## Reader tests load slides through the package and CI caches them by checksum
 
