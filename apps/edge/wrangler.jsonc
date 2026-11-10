@@ -18,6 +18,12 @@
   "ratelimits": [
     { "name": "LOGIN_LIMIT", "namespace_id": "1001", "simple": { "limit": 10, "period": 60 } },
     { "name": "UPLOAD_LIMIT", "namespace_id": "1002", "simple": { "limit": 120, "period": 60 } },
-    { "name": "TILE_LIMIT", "namespace_id": "1003", "simple": { "limit": 1000, "period": 10 } }
+    { "name": "TILE_LIMIT", "namespace_id": "1003", "simple": { "limit": 1000, "period": 10 } },
+    { "name": "ROOM_LIMIT", "namespace_id": "1004", "simple": { "limit": 300, "period": 60 } },
+    {
+      "name": "ROOM_INTERNAL_LIMIT",
+      "namespace_id": "1005",
+      "simple": { "limit": 3000, "period": 60 }
+    }
   ]
 }

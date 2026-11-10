@@ -1,10 +1,17 @@
 import { type RoomEnv, roomEventOf, roomStub, type Seat } from "#room.ts";
 import { ROOM_PROTOCOL } from "#room-client.ts";
-import { isRoomName, roomKey, verifyPublish, verifyRoomToken } from "#room-token.ts";
+import {
+  isPublishSignature,
+  isRoomName,
+  roomKey,
+  verifyPublish,
+  verifyRoomToken,
+} from "#room-token.ts";
 import { problem } from "#tiles.ts";
 
 export const PUBLISH_HEADER = "X-Room-Signature";
 export const MAX_PUBLISH_ROOMS = 100;
+export const MAX_INTERNAL_BODY = 64 * 1024;
 
 const ROOM_PREFIX = "/rt/";
 const INTERNAL_PREFIX = "/rt-internal/";
@@ -112,6 +119,31 @@ function revokeOf(body: unknown): Revoke | null {
   return valid ? { tenant, user, project } : null;
 }
 
+async function boundedText(request: Request, limit: number): Promise<string | null> {
+  const declared = Number(request.headers.get("Content-Length") ?? "0");
+  if (!(declared <= limit)) {
+    return null;
+  }
+  if (request.body === null) {
+    return "";
+  }
+  const reader = (request.body as ReadableStream<Uint8Array>).getReader();
+  const bytes = new Uint8Array(limit);
+  let size = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) {
+      return new TextDecoder().decode(bytes.subarray(0, size));
+    }
+    if (size + value.byteLength > limit) {
+      await reader.cancel();
+      return null;
+    }
+    bytes.set(value, size);
+    size += value.byteLength;
+  }
+}
+
 async function handleInternal(
   request: Request,
   env: RoomEnv,
@@ -121,10 +153,19 @@ async function handleInternal(
   if (request.method !== "POST") {
     return problem(405, "method-not-allowed", "Internal room calls use POST");
   }
-  const text = await request.text();
+  const unsigned = () =>
+    problem(401, "publish-signature-invalid", "The publish signature is not valid");
+  const signature = request.headers.get(PUBLISH_HEADER);
+  if (!isPublishSignature(signature)) {
+    return unsigned();
+  }
+  const text = await boundedText(request, MAX_INTERNAL_BODY);
+  if (text === null) {
+    return problem(413, "publish-too-large", "The body of an internal room call is too large");
+  }
   const key = await roomKey(env.ROOM_TOKEN_KEY);
-  if (!(await verifyPublish(key, request.headers.get(PUBLISH_HEADER), text, now))) {
-    return problem(401, "publish-signature-invalid", "The publish signature is not valid");
+  if (!(await verifyPublish(key, signature, text, now))) {
+    return unsigned();
   }
   let body: unknown;
   try {

@@ -4,11 +4,13 @@ export type LimitEnv = {
   readonly LOGIN_LIMIT?: RateLimit;
   readonly UPLOAD_LIMIT?: RateLimit;
   readonly TILE_LIMIT?: RateLimit;
+  readonly ROOM_LIMIT?: RateLimit;
+  readonly ROOM_INTERNAL_LIMIT?: RateLimit;
   readonly TRUST_TEST_CLIENT_ADDRESS?: string;
   readonly TURNSTILE_SECRET_KEY?: string;
 };
 
-export type LimitClass = "login" | "upload" | "tile";
+export type LimitClass = "login" | "upload" | "tile" | "room" | "room-internal";
 
 export type Siteverify = (body: FormData) => Promise<Response>;
 
@@ -21,12 +23,16 @@ export const PERIOD_SECONDS: Readonly<Record<LimitClass, number>> = {
   login: 60,
   upload: 60,
   tile: 10,
+  room: 60,
+  "room-internal": 60,
 };
 
 const LOGIN_PATHS = new Set(["/api/auth/login", "/api/auth/callback"]);
 const LOGIN_START = "/api/auth/login";
 const UPLOADS_PREFIX = "/api/uploads";
 const TILES_PREFIX = "/tiles/";
+const ROOMS_PREFIX = "/rt/";
+const ROOMS_INTERNAL_PREFIX = "/rt-internal/";
 const READ_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 
 export const siteverify: Siteverify = (body) => fetch(SITEVERIFY_URL, { method: "POST", body });
@@ -34,6 +40,8 @@ export const siteverify: Siteverify = (body) => fetch(SITEVERIFY_URL, { method: 
 export function limitClassOf(method: string, pathname: string): LimitClass | null {
   if (LOGIN_PATHS.has(pathname)) return "login";
   if (pathname.startsWith(TILES_PREFIX)) return "tile";
+  if (pathname.startsWith(ROOMS_PREFIX)) return "room";
+  if (pathname.startsWith(ROOMS_INTERNAL_PREFIX)) return "room-internal";
   const upload = pathname === UPLOADS_PREFIX || pathname.startsWith(`${UPLOADS_PREFIX}/`);
   if (upload && !READ_METHODS.has(method.toUpperCase())) return "upload";
   return null;
@@ -46,9 +54,14 @@ export function clientAddress(request: Request, env: LimitEnv): string {
 }
 
 function binding(env: LimitEnv, kind: LimitClass): RateLimit | undefined {
-  if (kind === "login") return env.LOGIN_LIMIT;
-  if (kind === "upload") return env.UPLOAD_LIMIT;
-  return env.TILE_LIMIT;
+  const bindings: Readonly<Record<LimitClass, RateLimit | undefined>> = {
+    login: env.LOGIN_LIMIT,
+    upload: env.UPLOAD_LIMIT,
+    tile: env.TILE_LIMIT,
+    room: env.ROOM_LIMIT,
+    "room-internal": env.ROOM_INTERNAL_LIMIT,
+  };
+  return bindings[kind];
 }
 
 function tooMany(kind: LimitClass): Response {

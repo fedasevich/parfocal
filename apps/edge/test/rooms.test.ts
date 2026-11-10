@@ -2,11 +2,12 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { describe, test } from "node:test";
 import { signCapability, signingKey } from "../src/capability.ts";
-import { handleRealtime, PUBLISH_HEADER } from "../src/realtime.ts";
+import { handleRealtime, MAX_INTERNAL_BODY, PUBLISH_HEADER } from "../src/realtime.ts";
 import {
   CLOSE_EXPIRED,
   CLOSE_REMOVED,
   CLOSE_TOO_BIG,
+  MAX_SOCKETS_PER_PERSON,
   ROOM_TOKEN_SECONDS,
   Room,
   type RoomEnv,
@@ -148,11 +149,12 @@ class Edge {
   private async call(name: string, request: Request): Promise<Response> {
     const room = this.room(name);
     if (new URL(request.url).pathname === "/connect") {
+      const seat = JSON.parse(request.headers.get("X-Room-Seat") ?? "") as Seat;
+      if (room.isFull(seat)) {
+        return room.fetch(request);
+      }
       const socket = new FakeSocket();
-      await room.join(
-        socket as unknown as WebSocket,
-        JSON.parse(request.headers.get("X-Room-Seat") ?? "") as Seat,
-      );
+      await room.join(socket as unknown as WebSocket, seat);
       return new Response(JSON.stringify({ room: name }), {
         headers: { "Sec-WebSocket-Protocol": request.headers.get("X-Room-Protocol") ?? "" },
       });
@@ -649,5 +651,92 @@ describe("rooms after a removal", () => {
     );
     assert.match(api, /^ROOM_TOKEN_SECONDS = 5 \* 60$/m);
     assert.equal(ROOM_TOKEN_SECONDS, 300);
+  });
+});
+
+describe("room caps", () => {
+  function streamed(chunks: number, size: number) {
+    const pulled = { chunks: 0 };
+    const body = new ReadableStream<Uint8Array>(
+      {
+        pull(controller) {
+          if (pulled.chunks === chunks) {
+            controller.close();
+            return;
+          }
+          pulled.chunks += 1;
+          controller.enqueue(new Uint8Array(size).fill(0x20));
+        },
+      },
+      { highWaterMark: 0 },
+    );
+    return { body, pulled };
+  }
+
+  function internalCall(edge: Edge, body: ReadableStream<Uint8Array>, headers: HeadersInit) {
+    return handleRealtime(
+      new Request("https://parfocal.test/rt-internal/publish", {
+        method: "POST",
+        body,
+        headers,
+        duplex: "half",
+      } as RequestInit),
+      edge.env,
+      () => edge.now,
+    );
+  }
+
+  test("the ninth socket of one person in one room is refused", async () => {
+    const edge = new Edge();
+    const sockets: FakeSocket[] = [];
+    for (let count = 0; count < MAX_SOCKETS_PER_PERSON; count += 1) {
+      sockets.push(await edge.join({}));
+    }
+    assert.equal(MAX_SOCKETS_PER_PERSON, 8);
+    const ninth = await edge.connect(SLIDE, `${ROOM_PROTOCOL}, ${await edge.token()}`);
+    assert.equal(ninth.status, 429);
+    assert.equal(await problemCode(ninth), "room-full");
+    assert.equal(edge.state(`${TENANT}/${SLIDE}`).sockets.length, 8);
+    const ben = await edge.join({ user: BEN });
+    assert.equal(ben.closed, null);
+    const elsewhere = await edge.join({ room: OTHER_SLIDE });
+    assert.equal(elsewhere.closed, null);
+    sockets[0]?.close(1000, "left");
+    const again = await edge.join({});
+    assert.equal(again.closed, null);
+  });
+
+  test("an internal call with no usable signature header is refused before the body is read", async () => {
+    const edge = new Edge();
+    for (const headers of [{}, { [PUBLISH_HEADER]: "not a signature" }]) {
+      const { body, pulled } = streamed(4, 1024);
+      const response = await internalCall(edge, body, headers);
+      assert.equal(response.status, 401);
+      assert.equal(await problemCode(response), "publish-signature-invalid");
+      assert.equal(pulled.chunks, 0);
+    }
+  });
+
+  test("an oversized internal call is refused before the rest of the body is read", async () => {
+    const edge = new Edge();
+    const signature = `${NOW}.${"A".repeat(43)}`;
+    const declared = streamed(4, 1024);
+    const tooLong = await internalCall(edge, declared.body, {
+      [PUBLISH_HEADER]: signature,
+      "Content-Length": String(MAX_INTERNAL_BODY + 1),
+    });
+    assert.equal(tooLong.status, 413);
+    assert.equal(await problemCode(tooLong), "publish-too-large");
+    assert.equal(declared.pulled.chunks, 0);
+
+    const chunk = 16 * 1024;
+    const endless = streamed(1024, chunk);
+    const flooded = await internalCall(edge, endless.body, { [PUBLISH_HEADER]: signature });
+    assert.equal(flooded.status, 413);
+    assert.ok(endless.pulled.chunks * chunk <= MAX_INTERNAL_BODY + 2 * chunk);
+
+    const small = streamed(2, 1024);
+    const unsigned = await internalCall(edge, small.body, { [PUBLISH_HEADER]: signature });
+    assert.equal(unsigned.status, 401);
   });
 });

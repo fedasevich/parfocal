@@ -113,13 +113,19 @@ export async function signPublish(key: CryptoKey, stamp: number, body: string): 
   return `${stamp}.${await publishSignature(key, stamp, body)}`;
 }
 
+const PUBLISH_SIGNATURE = /^(\d{1,12})\.([A-Za-z0-9_-]+)$/;
+
+export function isPublishSignature(header: string | null): header is string {
+  return header !== null && PUBLISH_SIGNATURE.test(header);
+}
+
 export async function verifyPublish(
   key: CryptoKey,
   header: string | null,
   body: string,
   nowSeconds: number,
 ): Promise<boolean> {
-  const match = /^(\d{1,12})\.([A-Za-z0-9_-]+)$/.exec(header ?? "");
+  const match = PUBLISH_SIGNATURE.exec(header ?? "");
   if (match === null) {
     return false;
   }

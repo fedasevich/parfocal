@@ -1,4 +1,5 @@
 import { roomKey, verifyRoomToken } from "#room-token.ts";
+import { problem } from "#tiles.ts";
 
 export type Seat = {
   readonly tenant: string;
@@ -26,6 +27,7 @@ export const CLOSE_REMOVED = 4403;
 export const CLOSE_TOO_BIG = 1009;
 export const MAX_CLIENT_FRAME = 4096;
 export const ROOM_TOKEN_SECONDS = 300;
+export const MAX_SOCKETS_PER_PERSON = 8;
 
 const KIND = /^[a-z][a-z-]*(\.[a-z][a-z-]*)+$/;
 const ID_NAME = /^[a-z][a-z_]{0,31}$/;
@@ -126,8 +128,15 @@ export class Room {
     return new Response(null, { status: 404 });
   }
 
+  isFull(seat: Seat): boolean {
+    return this.ctx.getWebSockets(userTag(seat.user)).length >= MAX_SOCKETS_PER_PERSON;
+  }
+
   private async connect(request: Request): Promise<Response> {
     const seat = JSON.parse(request.headers.get("X-Room-Seat") ?? "null") as Seat;
+    if (this.isFull(seat)) {
+      return problem(429, "room-full", "This person has too many connections to this room");
+    }
     const [client, server] = Object.values(new WebSocketPair()) as [WebSocket, WebSocket];
     await this.join(server, seat);
     return new Response(null, {

@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { describe, test } from "node:test";
 import edge, { type EdgeEnv } from "../src/index.ts";
 import {
@@ -32,11 +33,13 @@ function from(address: string, path: string, init: RequestInit = {}): Request {
   return new Request(`${ORIGIN}${path}`, { ...init, headers });
 }
 
-function limits(login = 3, upload = 3, tile = 3) {
+function limits(login = 3, upload = 3, tile = 3, room = 3, roomInternal = 3) {
   return {
     LOGIN_LIMIT: fakeLimit(login),
     UPLOAD_LIMIT: fakeLimit(upload),
     TILE_LIMIT: fakeLimit(tile),
+    ROOM_LIMIT: fakeLimit(room),
+    ROOM_INTERNAL_LIMIT: fakeLimit(roomInternal),
   };
 }
 
@@ -52,6 +55,27 @@ describe("which requests are limited", () => {
     assert.equal(limitClassOf("GET", "/"), null);
     assert.equal(limitClassOf("POST", "/api/uploadsx"), null);
     assert.equal(limitClassOf("GET", "/api/auth/logout"), null);
+  });
+
+  test("room joins and internal room calls are counted", async () => {
+    const join = "/rt/slide:33333333-3333-4333-8333-333333333333";
+    assert.equal(limitClassOf("GET", join), "room");
+    assert.equal(limitClassOf("POST", "/rt-internal/publish"), "room-internal");
+    assert.equal(limitClassOf("POST", "/rt-internal/revoke"), "room-internal");
+    assert.equal(limitClassOf("GET", "/rtx"), null);
+    const env = limits();
+    const statuses: number[] = [];
+    for (let attempt = 0; attempt < 4; attempt += 1) {
+      statuses.push((await guard(from("203.0.113.1", join), env))?.status ?? 200);
+    }
+    assert.deepEqual(statuses, [200, 200, 200, 429]);
+    const publish = { method: "POST" };
+    assert.equal(await guard(from("203.0.113.1", "/rt-internal/publish", publish), env), null);
+    assert.deepEqual(env.ROOM_LIMIT.keys.at(0), "room:203.0.113.1");
+    assert.deepEqual(env.ROOM_INTERNAL_LIMIT.keys, ["room-internal:203.0.113.1"]);
+    const config = readFileSync(`${import.meta.dirname}/../wrangler.jsonc`, "utf8");
+    assert.match(config, /"name": "ROOM_LIMIT"/);
+    assert.match(config, /"name": "ROOM_INTERNAL_LIMIT"/);
   });
 
   test("the client address comes from CF-Connecting-IP and the test header only when trusted", () => {
