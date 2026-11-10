@@ -25,7 +25,9 @@ test("the side panel width chosen in Settings sets the width on the slide", asyn
 
 test("hiding the panel in Settings leaves the floating tab on the slide", async ({ page }) => {
   await page.goto("/settings/layout");
-  await dialog(page).getByRole("switch", { name: "Hide the panel" }).click();
+  const hide = dialog(page).getByRole("switch", { name: "Hide the panel" });
+  await hide.click();
+  await expect(hide).toBeChecked();
   await page.reload();
   await openViewer(page);
   await expect(panel(page)).toHaveCount(0);
@@ -41,7 +43,9 @@ test("Hide while panning on the slide is the Panel while moving setting", async 
   await expect(
     group(page, "Panel while moving").getByRole("radio", { name: "Hides while panning" }),
   ).toBeChecked();
-  await group(page, "Panel while moving").getByRole("radio", { name: "Stays put" }).click();
+  const stays = group(page, "Panel while moving").getByRole("radio", { name: "Stays put" });
+  await stays.click();
+  await expect(stays).toBeChecked();
   await page.reload();
   await openViewer(page);
   await expect(page.getByRole("checkbox", { name: "Hide while panning" })).not.toBeChecked();
@@ -52,13 +56,16 @@ test("the pinned slide strip is off by default and stays on after a reload", asy
   const strip = dialog(page).getByRole("switch", { name: "Pinned slide strip" });
   await expect(strip).not.toBeChecked();
   await strip.click();
+  await expect(strip).toBeChecked();
   await page.reload();
   await expect(dialog(page).getByRole("switch", { name: "Pinned slide strip" })).toBeChecked();
 });
 
 test("the minimap mode chosen in Settings is still chosen after a reload", async ({ page }) => {
   await page.goto("/settings/layout");
-  await group(page, "Minimap").getByRole("radio", { name: "Never" }).click();
+  const never = group(page, "Minimap").getByRole("radio", { name: "Never" });
+  await never.click();
+  await expect(never).toBeChecked();
   await page.reload();
   await expect(group(page, "Minimap").getByRole("radio", { name: "Never" })).toBeChecked();
 });

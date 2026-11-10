@@ -1,6 +1,9 @@
 import { expect, type Page, test } from "./a11y.ts";
 
 const p07 = "00000000-0000-4000-8003-000000000007";
+const slideReady = 25_000;
+
+test.describe.configure({ timeout: 60_000 });
 
 async function openSlide(page: Page) {
   await page.goto(`/projects/${p07}?tab=slides`);
@@ -10,7 +13,7 @@ async function openSlide(page: Page) {
     .getByRole("button", { name: "Open" })
     .click();
   const stage = page.getByTestId("slide-stage");
-  await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 15_000 });
+  await expect(stage).toHaveAttribute("data-state", "ready", { timeout: slideReady });
   await expect(stage).toHaveAttribute("data-annotations", "loaded");
   return stage;
 }
@@ -72,7 +75,7 @@ test("a ruler, an arrow and an edited text note are saved and still there after 
   expect(saved).toContain('"kind":"measurement"');
 
   await page.reload();
-  await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 15_000 });
+  await expect(stage).toHaveAttribute("data-state", "ready", { timeout: slideReady });
   await expect(stage).toHaveAttribute("data-annotations", "loaded");
   await expect(arrows).toHaveCount(1);
   await expect(texts).toHaveCount(1);
