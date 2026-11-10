@@ -1,5 +1,5 @@
 import { type UploadBatch, useListSourceFiles } from "@parfocal/api-client";
-import { Button } from "@parfocal/ui/components/button";
+import { Button, buttonVariants } from "@parfocal/ui/components/button";
 import { Checkbox } from "@parfocal/ui/components/checkbox";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Input } from "@parfocal/ui/components/input";
@@ -237,10 +237,10 @@ export function FilesStep(props: StepProps) {
             <span>
               Parfocal sorts them by slide. Slides up to 20 GB each, AI results are optional.
             </span>
-            <Button nativeButton={false} render={<span />} className="mt-2">
+            <span className={buttonVariants({ className: "mt-2" })}>
               <Icon name="folder" />
               Choose files or a folder
-            </Button>
+            </span>
           </button>
           <FolderShape
             tree={batch.folder_tree}

@@ -50,7 +50,7 @@ function Scale({
           key={point}
           size="xs"
           variant="secondary"
-          aria-label={labels?.[point - 1] ?? String(point)}
+          aria-label={labels?.[point - 1] ? `${point} ${labels[point - 1]}` : String(point)}
           onClick={() => onPick(point)}
         >
           {point}

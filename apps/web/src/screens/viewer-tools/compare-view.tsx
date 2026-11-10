@@ -320,7 +320,7 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
                   </button>
                   <button
                     type="button"
-                    aria-label={`Reset ${paneName[side]} pane rotation`}
+                    aria-label={`Reset ${paneName[side]} pane rotation to 0°`}
                     className="rounded-full px-2 py-0.5 hover:bg-white/15"
                     onClick={() => rotateOn(side, camera, { to: 0 })}
                   >
