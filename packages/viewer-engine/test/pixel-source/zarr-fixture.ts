@@ -12,6 +12,8 @@ export interface ZarrFixtureOptions {
   readonly levels: number;
   readonly missing?: readonly (readonly [level: number, row: number, column: number])[];
   readonly shard?: number;
+  readonly scales?: boolean;
+  readonly axisOrder?: "yx" | "xy";
 }
 
 export interface ZarrFixture {
@@ -70,7 +72,8 @@ function axes(options: ZarrFixtureOptions) {
     { name: "y", type: "space", unit: "micrometer" },
     { name: "x", type: "space", unit: "micrometer" },
   ];
-  return options.channels === 3 ? [{ name: "c", type: "channel" }, ...space] : space;
+  const ordered = options.axisOrder === "xy" ? space.toReversed() : space;
+  return options.channels === 3 ? [{ name: "c", type: "channel" }, ...ordered] : ordered;
 }
 
 function multiscales(options: ZarrFixtureOptions) {
@@ -81,9 +84,13 @@ function multiscales(options: ZarrFixtureOptions) {
       axes: axes(options),
       datasets: Array.from({ length: options.levels }, (_, level) => ({
         path: String(level),
-        coordinateTransformations: [
-          { type: "scale", scale: [...lead, microns * 2 ** level, microns * 2 ** level] },
-        ],
+        ...(options.scales === false
+          ? {}
+          : {
+              coordinateTransformations: [
+                { type: "scale", scale: [...lead, microns * 2 ** level, microns * 2 ** level] },
+              ],
+            }),
       })),
     },
   ];

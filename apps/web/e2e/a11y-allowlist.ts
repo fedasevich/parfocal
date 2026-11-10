@@ -2,16 +2,6 @@ export type AllowedViolation = { rule: string; routes: readonly string[]; todo: 
 
 export const allowedViolations: readonly AllowedViolation[] = [
   {
-    rule: "aria-progressbar-name",
-    todo: "TODO give the upload progress bar an accessible name",
-    routes: ["/projects/:id/upload*"],
-  },
-  {
-    rule: "aria-required-children",
-    todo: "TODO the listbox or combobox popup renders without required option children while empty or closed",
-    routes: ["/tasks/:id/guided*", "/my-work", "/projects/:id/run-model", "/tasks/:id/evaluation"],
-  },
-  {
     rule: "color-contrast",
     todo: "TODO text or tags below 4.5:1, mostly the red tag at 16 percent mix and muted table text",
     routes: [
@@ -28,20 +18,6 @@ export const allowedViolations: readonly AllowedViolation[] = [
       "/tasks/:id/disagreements",
       "/tasks/:id/guided*",
       "/tasks/:id/sign-off",
-    ],
-  },
-  {
-    rule: "label-content-name-mismatch",
-    todo: "TODO the aria-label of the control does not contain its visible text",
-    routes: [
-      "/projects/:id*",
-      "/projects/:id/slides/:id*",
-      "/projects/:id/slides/:id/annotate*",
-      "/projects/:id/slides/:id/annotate-task*",
-      "/projects/:id/slides/:id/live",
-      "/settings/shortcuts*",
-      "/tasks/:id/cells*",
-      "/tasks/:id/comments",
     ],
   },
   {

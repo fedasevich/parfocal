@@ -55,14 +55,17 @@ test("Tab reaches every row's checkbox and action, and Space picks a row", async
     "Open Slide B2",
   ];
   await page.locator("body").click({ position: { x: 1, y: 1 } });
+  const reached: string[] = [];
   for (const stop of stops) {
     await page.keyboard.press("Tab");
     const name = await page.evaluate(() => {
       const active = document.activeElement as HTMLElement | null;
-      return active?.getAttribute("aria-label") ?? active?.textContent?.trim() ?? "";
+      const text = active?.getAttribute("aria-label") ?? active?.textContent?.trim() ?? "";
+      return `${active?.tagName ?? "none"} ${text.slice(0, 60)}`;
     });
-    expect(name.startsWith(stop)).toBe(true);
+    reached.push(name.split(" ").slice(1).join(" ").startsWith(stop) ? stop : name);
   }
+  expect(reached).toEqual(stops);
   await page.getByRole("checkbox", { name: "Pick Slide B1" }).focus();
   await page.keyboard.press("Space");
   await expect(page.getByRole("checkbox", { name: "Pick Slide B1" })).toBeChecked();

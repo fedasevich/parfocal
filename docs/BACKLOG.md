@@ -1041,7 +1041,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when the chosen rule has an API test and an edge test, and presence is sent only in the room kinds the record lists.
   Size: S.
 
-- [ ] SEC-041 · The closed range check does not trust the size in the token
+- [x] SEC-041 · The closed range check does not trust the size in the token
   The check of restricted byte ranges uses the size in the tile token, so it would be skipped or misaligned if the stored object were ever larger ([edge token review](results/2026-11-09-edge-token-review.md), suspicion S2). The two sizes cannot differ today.
   Done when an edge test with a token whose size is smaller than the object shows no closed range read for the three ranges in the review, and a negative size is refused.
   Size: S.
@@ -1445,7 +1445,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on VIEW-041.
   Size: S.
 
-- [ ] VIEW-059 · No black edge row on virtual levels
+- [x] VIEW-059 · No black edge row on virtual levels
   A virtual level whose backing level is stored one pixel short gets a black last row or column, because the read window is clamped to the backing level and the output size is not, so the last row averages zero samples ([viewer engine review](results/2026-11-09-viewer-engine-review.md), finding 1). `CMU-1.svs` has it at 4x, 8x and 16x. A second form leaves an empty window that throws for a one-pixel tile column. Repeat the edge sample in both downsample functions and keep the window inside the backing level, for RGB and for channels.
   Done when a unit test shows no zero in the last row of a short backing level for both routes, a tile column with an empty window reads, and the golden images still pass.
   Size: S.
@@ -1471,7 +1471,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Done when the sharded fixture opens through `cachedFetch` with the expected pixels and no request without a Range header for a shard file.
   Size: S.
 
-- [ ] VIEW-064 · Failed tiles on multichannel slides show, retry and report
+- [x] VIEW-064 · Failed tiles on multichannel slides show, retry and report
   The channel levels keep no failed tile map, so a tile that fails once on a fluorescence slide stays blank with no placeholder, no retry and no slow-load hint, and a disposed decode pool is not mapped to Viv's abort sentinel there ([viewer engine review](results/2026-11-09-viewer-engine-review.md), finding 5).
   Done when a unit test shows a failed channel tile listed in `failures()` and gone after a retry, and a disposed pool answering with the abort sentinel.
   Size: S.
@@ -1481,9 +1481,9 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Done when a unit test shows the read rejecting and nothing cached.
   Size: S.
 
-- [ ] VIEW-066 · Settle three viewer engine suspicions
+- [x] VIEW-066 · Settle three viewer engine suspicions
   Not proven by reading ([viewer engine review](results/2026-11-09-viewer-engine-review.md), suspicions 2, 3 and 4): an OME-Zarr level with no declared scale gets a downsample that is not snapped to a power of two, the patch reader ties a shared read to the first caller's abort signal, and the ids `hamamatsu-ndpi`, `ventana-bif`, `mirax` and `dicom` have no registered reader though signed slides map file names to them.
-  Done when each has a test that shows the fault or a note in the result file that says why it cannot happen.
+  Done when each has a test that shows the fault or a note in a new result file that says why it cannot happen.
   Size: S.
 
 - [x] VIEW-067 · A range far past the file cannot freeze the byte cache
@@ -3547,7 +3547,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Depends on AISEG-017.
   Size: S.
 
-- [ ] AISEG-020 · The outline worker is replaced after it stops
+- [x] AISEG-020 · The outline worker is replaced after it stops
   `createAisOutliner` in `apps/web/src/aiseg/ais-outliner.ts` rejects the waiting requests when its worker fires `error`, but keeps the dead worker, so every later request is posted to it and never answered. It also has no `messageerror` listener. Found while fixing VIEW-068 (an inference worker that stops).
   Done when a unit test shows a request made after the worker stopped answered by a fresh worker, and a request waiting at a `messageerror` rejected.
   Size: S.
@@ -4321,7 +4321,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Depends on TEST-009.
   Size: M.
 
-- [ ] TEST-023 · Names, roles and nested controls pass axe
+- [x] TEST-023 · Names, roles and nested controls pass axe
   Fixes the allowlisted `nested-interactive`, `label-content-name-mismatch`, `aria-required-children` and progress bar name findings from TEST-009 (accessibility testing). A row or card that holds a button stops being a button itself, every accessible name contains the visible text, a closed or empty listbox or combobox popup has the children its role needs or is not rendered, and the upload progress bar gets a name. Each fixed rule leaves `apps/web/e2e/a11y-allowlist.ts`.
   Done when those four rules are gone from the allowlist and the browser suite passes with enforcement on.
   Depends on TEST-009.
@@ -4352,6 +4352,21 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
 - [ ] TEST-028 · Model accuracy tests that cannot be skipped unseen
   The tests in `workers/ml/tests` that need model weights, exported ONNX graphs or cached datasets are deselected by the `weights` marker or skip when the files are missing, and CI has none of the files, so the accuracy numbers are checked only on the owner's Mac when someone remembers ([project review](results/2026-11-09-project-review.md)). Add one command that runs them all with the files required, as `PARFOCAL_REQUIRE_FIXTURES` does for slides, and make the lead run it before ticking a task that changes `workers/ml` or a model graph, one such run at a time because of the Mac's memory.
   Done when the command fails on a missing weight or dataset instead of skipping, a result file records one full run with its numbers, and `knowledge/agent-workflow.md` names when the lead runs it.
+  Size: S.
+
+- [ ] TEST-029 · Display panel specs click the Undo of the toast they caused
+  Two tests in `apps/web/e2e/display-panel.spec.ts` flaked in three ci runs on 2026-11-09: the Shift+3 preset switch and the preset switch in the full viewer. Each waited for the "Display: ..." toast and then clicked a bare Undo button. The toast lives 4 seconds, so on a slow runner the button was detached between the wait and the click and the click waited out the 90 second test limit. Click the Undo inside the toast that names the preset, in one step, so Playwright retries the whole lookup.
+  Done when both tests pass locally with no retries and neither appears in a `flaky-*` artifact of the next three ci runs on main.
+  Size: S.
+
+- [ ] TEST-030 · Find why the table Tab order test fails on its first ci attempt
+  "Tab reaches every row's checkbox and action, and Space picks a row" in `packages/ui/e2e/table.spec.ts` failed its first attempt and passed its retry in three ci runs on 2026-11-09. It did not fail on the Mac in 10 plain runs, with the CPU slowed 6 and 20 times, or with the story script delayed 400 ms, so the cause is unknown. The test now reports every Tab stop it reached instead of one `false`, so the next failure names the element that took focus.
+  Done when a ci failure has shown which stop was wrong, the cause is fixed in the table or the spec, and the test stays out of the `flaky-*` artifacts for a week of main.
+  Size: S.
+
+- [ ] TEST-031 · Web specs at their time limit get room for a slow runner
+  The ci run on commit 71294ded failed on three web tests that sat at their time limit while every other job passed: the redo test in `apps/web/e2e/undo.spec.ts` (a reload, then the slide not ready inside 30 seconds), the review task test in `apps/web/e2e/workspaces.spec.ts` (15 seconds for the slide to be ready) and the fake data test in `apps/web/e2e/guided-review.spec.ts` that made six page loads in one 30 second test. The web jobs of that run took 33 and 34 minutes against 23 and 25. Give the slide 25 seconds to be ready, give the two slide specs a 60 and 90 second test limit, wait for the slide after each reload, and split the six page loads into three tests. Three more tests failed once and passed their retry in the same run. `polygon.spec.ts` and `saved-marks.spec.ts` open the slide the same way and get the same room. The pinned strip test in `layout-settings.spec.ts` reloaded right after its click, before the switch showed the change, so each click in that spec now waits for its control to be checked before the reload.
+  Done when the six specs pass locally with no retries and none of their tests fails or sits in a `flaky-*` artifact of the next three ci runs on main.
   Size: S.
 
 ---

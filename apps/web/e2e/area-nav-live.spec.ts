@@ -61,12 +61,12 @@ test("the area list picks an area, ] steps on from it and the rows mark visits",
   const rows = nav.locator("[data-area]");
   await expect(rows).toHaveCount(3);
   await expect(rows.first()).toHaveAttribute("data-area", "T1");
-  await nav.getByRole("button", { name: /^T2,/ }).click();
+  await nav.getByRole("button", { name: /^T2 .* area \d+$/ }).click();
   await expect(nav).toHaveAttribute("data-current", "T2");
   await expect(nav).toHaveAttribute("data-visited", "T2");
   await page.keyboard.press("]");
   await expect(nav).toHaveAttribute("data-current", "T3");
-  await expect(nav.getByRole("button", { name: /^T3,.*visited/ })).toHaveAttribute(
+  await expect(nav.getByRole("button", { name: /^T3 .*visited/ })).toHaveAttribute(
     "aria-current",
     "true",
   );

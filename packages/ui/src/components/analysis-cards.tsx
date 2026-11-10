@@ -50,18 +50,7 @@ const clampToScale = (mm: number) => Math.min(scaleMax, Math.max(scaleMin, mm));
 
 const areaWord = (count: number) => `${count} ${count === 1 ? "area" : "areas"}`;
 
-const areaLabel = (
-  area: RankedArea,
-  role: string | undefined,
-  visited: ReadonlySet<string> | undefined,
-) =>
-  [
-    `${area.object}, area ${area.number}`,
-    formatMm(area.shownSize),
-    area.category,
-    ...(role ? [role] : []),
-    ...(visited?.has(area.object) ? ["visited"] : []),
-  ].join(", ");
+const areaLabel = (area: RankedArea) => `area ${area.number}`;
 
 type AreaListProps = {
   current?: string | null | undefined;
@@ -256,7 +245,7 @@ function AreaRows({
           {...(onGoTo
             ? {
                 onSelect: () => onGoTo(area.object),
-                label: areaLabel(area, roleOf?.(area.object), visited),
+                label: areaLabel(area),
               }
             : {})}
         />

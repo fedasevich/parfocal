@@ -144,18 +144,32 @@ function answer(stored: Response, span: Span | null, outcome: string, ms: number
   return new Response(stored.body, { status: 206, headers });
 }
 
-async function serveCached(env: TileEnv, key: string, span: Span | null, cache: RangeCache) {
+function sizeMismatch(): Response {
+  return problem(409, "size-mismatch", "The stored file is not the size the token was signed for");
+}
+
+async function serveCached(
+  env: TileEnv,
+  key: string,
+  span: Span | null,
+  signedSize: number | null,
+  cache: RangeCache,
+) {
   const lookup = cacheKey(key, span);
   if (lookup === null) {
-    return serveFromBucket(env, key, span);
+    return serveFromBucket(env, key, span, signedSize);
   }
   const started = Date.now();
   const hit = await cache.store.match(lookup);
   const looked = Date.now() - started;
   if (hit !== undefined) {
+    if (signedSize !== null && Number(hit.headers.get("X-Object-Size")) !== signedSize) {
+      await hit.body?.cancel();
+      return sizeMismatch();
+    }
     return answer(hit, span, "hit", looked);
   }
-  const fresh = await serveFromBucket(env, key, span, [["cache", looked]]);
+  const fresh = await serveFromBucket(env, key, span, signedSize, [["cache", looked]]);
   if (fresh.status !== 200 && fresh.status !== 206) {
     return fresh;
   }
@@ -185,13 +199,14 @@ async function serve(
   env: TileEnv,
   key: string,
   span: Span | null,
+  signedSize: number | null,
   cache: RangeCache | undefined,
 ) {
   if (request.method === "GET" && cache !== undefined) {
-    return serveCached(env, key, span, cache);
+    return serveCached(env, key, span, signedSize, cache);
   }
   if (request.method === "GET") {
-    return serveFromBucket(env, key, span);
+    return serveFromBucket(env, key, span, signedSize);
   }
   if (request.method === "HEAD") {
     const object = await env.SLIDES.head(key);
@@ -209,6 +224,7 @@ async function serveFromBucket(
   env: TileEnv,
   key: string,
   span: Span | null,
+  signedSize: number | null,
   earlier: readonly (readonly [string, number])[] = [],
 ) {
   const started = Date.now();
@@ -216,6 +232,10 @@ async function serveFromBucket(
   const read = Date.now() - started;
   if (object === null) {
     return problem(404, "not-found", "No such file");
+  }
+  if (signedSize !== null && object.size !== signedSize) {
+    await object.body.cancel();
+    return sizeMismatch();
   }
   const headers = objectHeaders(object);
   headers.set("Server-Timing", timing([...earlier, ["r2", read]]));
@@ -268,12 +288,22 @@ export async function handleTiles(
   if (span === "invalid") {
     return problem(416, "range-not-satisfiable", "Only one byte range is served per request");
   }
-  const wanted =
-    request.method === "GET" && name === capability.original ? bounds(span, capability.size) : null;
-  if (wanted !== null && overlapsRestricted(capability.restricted, wanted[0], wanted[1])) {
+  const key = slideKey(capability, name);
+  if (request.method !== "GET" || name !== capability.original) {
+    return serve(request, env, key, span, null, cache);
+  }
+  const wanted = bounds(span, capability.size);
+  if (wanted === null) {
+    const headers = new Headers(BASE_HEADERS);
+    headers.set("Content-Range", `bytes */${capability.size}`);
+    return new Response(null, { status: 416, headers });
+  }
+  const [start, end] = wanted;
+  if (overlapsRestricted(capability.restricted, start, end)) {
     return problem(403, "range-restricted", "These bytes hold a label or macro image");
   }
-  return serve(request, env, slideKey(capability, name), span, cache);
+  const checked = span === null || end === start ? span : { offset: start, length: end - start };
+  return serve(request, env, key, checked, capability.size, cache);
 }
 
 export function isTilesPath(pathname: string): boolean {

@@ -52,6 +52,28 @@ function fakeSource(absent: (request: RasterRequest) => boolean = () => false): 
   };
 }
 
+function gatedSource() {
+  const inner = fakeSource();
+  const signals: (AbortSignal | undefined)[] = [];
+  let open: () => void = () => undefined;
+  const gate = new Promise<void>((resolve) => {
+    open = resolve;
+  });
+  const source: FakeSource = {
+    ...inner,
+    getRaster(request) {
+      signals.push(request.signal);
+      return new Promise<PixelResult>((resolve, reject) => {
+        request.signal?.addEventListener("abort", () => reject(new Error("the read was stopped")), {
+          once: true,
+        });
+        void gate.then(() => resolve(inner.getRaster(request)));
+      });
+    },
+  };
+  return { source, signals, open: () => open() };
+}
+
 describe("patch window", () => {
   it("centres on the point at the level and clamps to the slide", () => {
     const level = levels[0] as PixelLevel;
@@ -227,6 +249,57 @@ describe("patch reader", () => {
     const [a, b] = await Promise.all([reader.read(query), reader.read(query)]);
     assert.equal(a.patch, b.patch);
     assert.equal(source.requests.length, 1);
+  });
+
+  it("keeps a shared read alive for the caller that did not abort", async () => {
+    const { source, signals, open } = gatedSource();
+    const reader = createPatchReader(source);
+    const first = new AbortController();
+    const gone = reader.read(query, first.signal);
+    const kept = reader.read(query);
+    first.abort(new Error("the first caller left"));
+    await assert.rejects(gone, /the first caller left/);
+    assert.equal(signals[0]?.aborted, false);
+    open();
+    const answer = await kept;
+    assert.equal(answer.patch.absent, false);
+    assert.equal(signals.length, 1);
+  });
+
+  it("stops the slide read once every caller has aborted", async () => {
+    const { source, signals } = gatedSource();
+    const reader = createPatchReader(source);
+    const first = new AbortController();
+    const second = new AbortController();
+    const a = reader.read(query, first.signal);
+    const b = reader.read(query, second.signal);
+    first.abort(new Error("first left"));
+    await assert.rejects(a, /first left/);
+    assert.equal(signals[0]?.aborted, false);
+    second.abort(new Error("second left"));
+    await assert.rejects(b, /second left/);
+    assert.equal(signals[0]?.aborted, true);
+    assert.equal(signals.length, 1);
+  });
+
+  it("starts a fresh read for a caller that asks right after every earlier one aborted", async () => {
+    const { source, signals, open } = gatedSource();
+    const reader = createPatchReader(source);
+    const only = new AbortController();
+    const gone = reader.read(query, only.signal);
+    only.abort(new Error("left"));
+    const next = reader.read(query);
+    await assert.rejects(gone, /left/);
+    open();
+    assert.equal((await next).patch.absent, false);
+    assert.equal(signals.length, 2);
+  });
+
+  it("refuses a caller whose signal was aborted before it asked", async () => {
+    const { source, signals } = gatedSource();
+    const reader = createPatchReader(source);
+    await assert.rejects(reader.read(query, AbortSignal.abort(new Error("too late"))), /too late/);
+    assert.equal(signals.length, 0);
   });
 
   it("refuses a level the slide does not have", async () => {

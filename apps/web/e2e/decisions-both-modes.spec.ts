@@ -6,7 +6,7 @@ test.use({ viewport: { width: 1280, height: 1100 } });
 
 const panel = (page: Page) => page.getByRole("complementary", { name: "Side panel" });
 const row = (page: Page, object: string) =>
-  panel(page).getByRole("button", { name: new RegExp(`^${object} Tumor region`) });
+  panel(page).getByRole("button", { name: new RegExp(`^${object} Tumor region(?!.* area \\d+$)`) });
 const progress = (page: Page) => page.getByRole("button", { name: /% done:/ });
 const counted = async (page: Page) =>
   (await progress(page).getByRole("img").getAttribute("aria-label")) ?? "";

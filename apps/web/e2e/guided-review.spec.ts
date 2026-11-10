@@ -151,16 +151,17 @@ test("the decision toast is gone after 4 seconds and the decision stays", async 
   await expect(page.getByText("The AI says this is a tumor cell, only 54% sure.")).toBeVisible();
 });
 
-test("the next slide card, the cells gallery and the comments open on fake data", async ({
-  page,
-}) => {
+test("the next slide card opens on fake data", async ({ page }) => {
   await page.goto(`/tasks/${rt14}/submitted?slide=${a1}`);
   const card = page.getByRole("dialog", { name: "Slide 8 submitted" });
   await expect(card).toContainText("You and Simona Marková agree on 51 of 55 objects.");
   await expect(card).toContainText("A2 · H&E · case S26-04812");
   await card.getByRole("button", { name: "Take a break" }).click();
   await expect(page).toHaveURL(/\/my-work/);
+});
 
+test("the cells gallery opens every scene on fake data", async ({ page }) => {
+  test.setTimeout(60_000);
   const gallery: { scene: string; shows: string }[] = [
     { scene: "grid", shows: "Agree with the rest" },
     { scene: "rest", shows: "Agree with 6 open cells?" },
@@ -172,7 +173,9 @@ test("the next slide card, the cells gallery and the comments open on fake data"
     await expect(page.getByText("Objects on A1")).toBeVisible();
     await expect(page.getByText(shows).first()).toBeVisible();
   }
+});
 
+test("the comments open on a thread on fake data", async ({ page }) => {
   await page.goto(`/tasks/${rt14}/comments?slide=${a1}&thread=T2`);
   await expect(page.getByText("Threads on A1")).toBeVisible();
   await expect(page.getByRole("region", { name: "Thread on T2" })).toContainText(

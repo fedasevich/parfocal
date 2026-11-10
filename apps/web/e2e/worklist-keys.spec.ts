@@ -1,6 +1,7 @@
 import { expect, type Locator, type Page, test } from "./a11y.ts";
 
-const picked = (rows: Locator) => rows.and(rows.page().locator("[aria-selected='true']"));
+const picked = (rows: Locator) =>
+  rows.and(rows.page().locator("[aria-selected='true'], [aria-pressed='true']"));
 
 async function names(rows: Locator) {
   return (await rows.allInnerTexts()).map((text) => text.split("\n")[0]?.trim() ?? "");
@@ -14,26 +15,26 @@ test("To review moves with the arrows and J and K, Esc clears and Enter opens th
   page,
 }) => {
   await page.goto("/my-work?tab=review");
-  const rows = page.getByRole("listbox", { name: "Your tasks" }).getByRole("option");
+  const rows = page.getByRole("list", { name: "Your tasks" }).locator("[data-list-row]");
   await expect(rows.first()).toBeVisible({ timeout: 20_000 });
   const count = await rows.count();
   await expect(picked(rows)).toHaveCount(0);
   await press(page, "j");
-  await expect(rows.nth(0)).toHaveAttribute("aria-selected", "true");
+  await expect(rows.nth(0)).toHaveAttribute("aria-pressed", "true");
   await expect(page).toHaveURL(/sel=/);
   for (let step = 1; step < count; step++) {
     await press(page, step % 2 ? "ArrowDown" : "J");
-    await expect(rows.nth(step)).toHaveAttribute("aria-selected", "true");
+    await expect(rows.nth(step)).toHaveAttribute("aria-pressed", "true");
   }
   await press(page, "j");
-  await expect(rows.nth(count - 1)).toHaveAttribute("aria-selected", "true");
+  await expect(rows.nth(count - 1)).toHaveAttribute("aria-pressed", "true");
   await press(page, "k");
-  await expect(rows.nth(Math.max(0, count - 2))).toHaveAttribute("aria-selected", "true");
+  await expect(rows.nth(Math.max(0, count - 2))).toHaveAttribute("aria-pressed", "true");
   await press(page, "Escape");
   await expect(picked(rows)).toHaveCount(0);
   await expect(page).not.toHaveURL(/sel=/);
   await press(page, "ArrowUp");
-  await expect(rows.nth(count - 1)).toHaveAttribute("aria-selected", "true");
+  await expect(rows.nth(count - 1)).toHaveAttribute("aria-pressed", "true");
   await press(page, "Enter");
   await expect(page).toHaveURL(/\/tasks\/[^/]+\/guided/);
 });

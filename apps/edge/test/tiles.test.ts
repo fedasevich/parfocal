@@ -43,6 +43,7 @@ function bytesOf(size: number, seed: number): Uint8Array {
 class FakeBucket {
   readonly objects = new Map<string, Uint8Array>();
   readonly reads: string[] = [];
+  readonly served: [start: number, end: number][] = [];
 
   put(key: string, bytes: Uint8Array): void {
     this.objects.set(key, bytes);
@@ -71,6 +72,7 @@ class FakeBucket {
       start = range.offset;
       end = Math.min(bytes.length, start + (range.length ?? bytes.length));
     }
+    this.served.push([start, end]);
     return { ...this.meta(key, bytes), body: new Blob([bytes.slice(start, end)]).stream() };
   }
 
@@ -209,6 +211,15 @@ describe("capability tokens", () => {
     });
   });
 
+  test("a token with a negative size is malformed", async () => {
+    const key = await signingKey(SECRET);
+    assert.deepEqual(await verifyCapability(await tokenFor({ size: -1 }), key, NOW), {
+      ok: false,
+      reason: "malformed",
+    });
+    assert.equal((await verifyCapability(await tokenFor({ size: 0 }), key, NOW)).ok, true);
+  });
+
   test("ranges that only touch a restricted range do not overlap it", () => {
     assert.equal(overlapsRestricted([LABEL], 0, 4000), false);
     assert.equal(overlapsRestricted([LABEL], 5000, 6000), false);
@@ -327,6 +338,55 @@ describe("the tile gateway", () => {
     assert.equal((await request(bucket, ORIGINAL, token, "bytes=0-3999")).status, 206);
     assert.equal((await request(bucket, ORIGINAL, token, "bytes=5000-5999")).status, 206);
     assert.equal((await request(bucket, ORIGINAL, token, "bytes=-5000")).status, 206);
+  });
+
+  test("a token whose size is smaller than the stored object never reads a closed range", async () => {
+    const bucket = lab();
+    const token = await tokenFor({ size: 4000 });
+    for (const range of ["bytes=4500-4600", "bytes=-5500", "bytes=3000-"]) {
+      const response = await request(bucket, ORIGINAL, token, range);
+      assert.ok([409, 416].includes(response.status), `${range} answered ${response.status}`);
+      assert.ok((await response.arrayBuffer()).byteLength < 500, `${range} carried file bytes`);
+    }
+    for (const [start, end] of bucket.served) {
+      assert.equal(overlapsRestricted([LABEL], start, end), false, `read ${start} to ${end}`);
+    }
+    const past = await request(bucket, ORIGINAL, token, "bytes=4500-4600");
+    assert.equal(past.status, 416);
+    assert.equal(past.headers.get("Content-Range"), "bytes */4000");
+  });
+
+  test("refuses a stored object that is not the size the token was signed for", async () => {
+    for (const size of [4000, 12_000]) {
+      const bucket = lab();
+      const token = await tokenFor({ size, restricted: [] });
+      for (const range of [undefined, "bytes=0-99", "bytes=-100", "bytes=100-"]) {
+        const response = await request(bucket, ORIGINAL, token, range);
+        assert.equal(response.status, 409, `${size} ${range}`);
+        assert.equal(await code(response), "size-mismatch");
+      }
+      const other = await request(bucket, `/tiles/${SLIDE}/levels.json`, token);
+      assert.equal(other.status, 200);
+    }
+  });
+
+  test("reads suffix and open ranges of the original at the offsets it checked", async () => {
+    const bucket = lab();
+    const token = await tokenFor();
+    const suffix = await request(bucket, ORIGINAL, token, "bytes=-5000");
+    assert.equal(suffix.status, 206);
+    assert.equal(suffix.headers.get("Content-Range"), "bytes 5000-9999/10000");
+    assert.deepEqual(new Uint8Array(await suffix.arrayBuffer()), bytesOf(SIZE, 1).slice(5000));
+    const open = await request(bucket, ORIGINAL, token, "bytes=9990-");
+    assert.equal(open.status, 206);
+    assert.equal(open.headers.get("Content-Range"), "bytes 9990-9999/10000");
+    assert.deepEqual(bucket.served, [
+      [5000, 10_000],
+      [9990, 10_000],
+    ]);
+    const past = await request(bucket, ORIGINAL, token, "bytes=10000-");
+    assert.equal(past.status, 416);
+    assert.equal(past.headers.get("Content-Range"), "bytes */10000");
   });
 
   test("answers a HEAD request with the size and no bytes", async () => {
@@ -476,15 +536,41 @@ describe("the byte range cache", () => {
     assert.equal(bucket.reads.length, 1);
   });
 
-  test("suffix and open ended ranges skip the cache", async () => {
+  test("suffix and open ended ranges of the original share the entry of the bytes they name", async () => {
     const bucket = lab();
     const cache = new FakeCache();
     const token = await tokenFor();
     const suffix = await cachedRequest(bucket, cache, ORIGINAL, token, "bytes=-100");
     const open = await cachedRequest(bucket, cache, ORIGINAL, token, "bytes=9900-");
-    assert.equal(suffix.status, 206);
-    assert.equal(open.status, 206);
+    const closed = await cachedRequest(bucket, cache, ORIGINAL, token, "bytes=9900-9999");
+    for (const response of [suffix, open, closed]) {
+      assert.equal(response.status, 206);
+      assert.equal(response.headers.get("Content-Range"), "bytes 9900-9999/10000");
+      assert.deepEqual(new Uint8Array(await response.arrayBuffer()), bytesOf(SIZE, 1).slice(9900));
+    }
+    assert.equal(cache.puts.length, 1);
+    assert.equal(bucket.reads.length, 1);
+  });
+
+  test("suffix and open ended ranges of other files skip the cache", async () => {
+    const bucket = lab();
+    const cache = new FakeCache();
+    const token = await tokenFor();
+    const levels = `/tiles/${SLIDE}/levels.json`;
+    assert.equal((await cachedRequest(bucket, cache, levels, token, "bytes=-1")).status, 206);
+    assert.equal((await cachedRequest(bucket, cache, levels, token, "bytes=1-")).status, 206);
     assert.equal(cache.puts.length, 0);
+  });
+
+  test("a cached range is refused for a token signed for another size", async () => {
+    const bucket = lab();
+    const cache = new FakeCache();
+    const first = await cachedRequest(bucket, cache, ORIGINAL, await tokenFor(), "bytes=0-99");
+    assert.equal(first.status, 206);
+    const other = await tokenFor({ size: 4000, restricted: [] });
+    const response = await cachedRequest(bucket, cache, ORIGINAL, other, "bytes=0-99");
+    assert.equal(response.status, 409);
+    assert.equal(bucket.reads.length, 1);
   });
 
   test("a restricted range is refused before the cache is touched", async () => {
