@@ -305,6 +305,6 @@ test("G then n flies to each area, the brackets step through them and each is vi
   await expect.poll(() => objectOf(page)).toBe(order.at(-1));
   await page.keyboard.press("Alt+ArrowLeft");
   await expect.poll(() => objectOf(page)).toBe(order.at(-2));
-  await list.getByRole("button", { name: `${order[0]}, area 1`, exact: false }).click();
+  await list.getByRole("button", { name: new RegExp(`^${order[0]} .* area 1$`) }).click();
   await expect.poll(() => objectOf(page)).toBe(order[0]);
 });

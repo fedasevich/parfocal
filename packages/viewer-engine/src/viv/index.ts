@@ -3,6 +3,7 @@ export {
   type DecodeStats,
   type DecodeWorker,
   DecodeWorkerError,
+  disposingOnThrow,
   spawnDecodeWorker,
   type WorkerReaderOptions,
   type WorkerRegionReader,
@@ -22,6 +23,7 @@ export {
   defaultQuietFrames,
   type WakeSource,
 } from "./deck-sleep.ts";
+export type { FailedTile } from "./failed-tiles.ts";
 export {
   createGpuGuard,
   defaultLossWindowMs,
@@ -103,7 +105,6 @@ export {
 export {
   boxDownsampleToInterleaved,
   createVivLevels,
-  type FailedTile,
   type PlannedRegion,
   readVivRegion,
   regionKey,

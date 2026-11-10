@@ -12,7 +12,7 @@ The design source is the approved prototype pair and the frozen mock in `docs/de
 
 Anything not written in `docs/` is forgotten by the next session. `docs/log.md` is append-only raw memory. `docs/README.md`, `docs/project/` and `docs/knowledge/` are rewritten to stay short and current.
 
-Never read `docs/BACKLOG.md` or `docs/log.md` whole. Use `scripts/board.py` (`brief`, `show ID`, `find`, `recent`, `ready`, `note`, `tick`). A hook blocks whole reads.
+Never read `docs/BACKLOG.md` or `docs/log.md` whole. Use `scripts/board.py` (`brief`, `show ID`, `find`, `recent`, `ready`, `counts`, `note`, `tick`). A hook blocks whole reads.
 
 ## The task loop
 

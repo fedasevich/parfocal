@@ -161,6 +161,16 @@ export function planesToRgb(
   return out;
 }
 
+export function abortError(signal: AbortSignal): Error {
+  return signal.reason instanceof Error ? signal.reason : new DOMException("Aborted", "AbortError");
+}
+
+interface SharedRead {
+  readonly patch: Promise<Patch>;
+  readonly stop: AbortController;
+  waiting: number;
+}
+
 export function createPatchReader(
   source: PatchSource,
   options: { readonly cacheSize?: number } = {},
@@ -170,7 +180,7 @@ export function createPatchReader(
   }
   const cacheSize = Math.max(1, options.cacheSize ?? defaultPatchCacheSize);
   const cache = new Map<string, Patch>();
-  const inFlight = new Map<string, Promise<Patch>>();
+  const inFlight = new Map<string, SharedRead>();
   const anchors = new Map<string, Patch>();
   let hits = 0;
   let misses = 0;
@@ -191,7 +201,7 @@ export function createPatchReader(
     key: string,
     level: number,
     window: PatchWindow,
-    signal: AbortSignal | undefined,
+    signal: AbortSignal,
   ): Promise<Patch> {
     const info = source.levels[level] as PixelLevel;
     const frame: PixelWindow = [
@@ -200,19 +210,48 @@ export function createPatchReader(
       window.x + window.width,
       window.y + window.height,
     ];
-    const raster = await source.getRaster({
-      level,
-      window: frame,
-      ...(signal === undefined ? {} : { signal }),
-    });
+    const raster = await source.getRaster({ level, window: frame, signal });
     reads += 1;
     const base = { key, level, downsample: info.downsample, ...window };
     if (raster.absent) return { ...base, absent: true, rgb: null };
     return { ...base, absent: false, rgb: planesToRgb(raster.planes, window.width, window.height) };
   }
 
+  function shared(key: string, level: number, window: PatchWindow): SharedRead {
+    const running = inFlight.get(key);
+    if (running !== undefined) return running;
+    const stop = new AbortController();
+    const started: SharedRead = {
+      stop,
+      waiting: 0,
+      patch: fetchPatch(key, level, window, stop.signal).finally(() => {
+        if (inFlight.get(key) === started) inFlight.delete(key);
+      }),
+    };
+    inFlight.set(key, started);
+    return started;
+  }
+
+  function joined(key: string, running: SharedRead, signal?: AbortSignal): Promise<Patch> {
+    running.waiting += 1;
+    if (signal === undefined) return running.patch;
+    return new Promise((resolve, reject) => {
+      const leave = () => {
+        running.waiting -= 1;
+        if (running.waiting === 0) {
+          if (inFlight.get(key) === running) inFlight.delete(key);
+          running.stop.abort(abortError(signal));
+        }
+        reject(abortError(signal));
+      };
+      signal.addEventListener("abort", leave, { once: true });
+      running.patch.then(resolve, reject).finally(() => signal.removeEventListener("abort", leave));
+    });
+  }
+
   async function read(query: PatchQuery, signal?: AbortSignal): Promise<PatchRead> {
     if (closed) throw new PatchReaderClosedError();
+    if (signal?.aborted) throw abortError(signal);
     const info = source.levels[query.level];
     if (info === undefined) throw new RangeError(`The slide has no level ${query.level}`);
     const anchorKey = `${query.level}|${query.size}`;
@@ -234,14 +273,7 @@ export function createPatchReader(
       remember(cached);
     } else {
       misses += 1;
-      let pending = inFlight.get(key);
-      if (pending === undefined) {
-        pending = fetchPatch(key, query.level, window, signal).finally(() => {
-          inFlight.delete(key);
-        });
-        inFlight.set(key, pending);
-      }
-      patch = await pending;
+      patch = await joined(key, shared(key, query.level, window), signal);
       if (closed) throw new PatchReaderClosedError();
       remember(patch);
     }

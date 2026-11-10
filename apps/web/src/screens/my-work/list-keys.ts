@@ -11,7 +11,7 @@ export type ListKey = {
 };
 
 export const onListRow = (target: EventTarget | null) =>
-  Boolean((target as HTMLElement | null)?.closest?.("[role='option']"));
+  Boolean((target as HTMLElement | null)?.closest?.("[role='option'], [data-list-row]"));
 
 const down = new Set(["ArrowDown", "j", "J"]);
 const up = new Set(["ArrowUp", "k", "K"]);

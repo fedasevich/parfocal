@@ -85,7 +85,8 @@ describe("range coalescing for sharded OME-Zarr 0.5 over the latency proxy", () 
     assert.equal(unsharded.requests, innerChunks);
     assert.equal(uncoalesced.requests, innerChunks + 2 * shards);
     assert.equal(viaSourcePlain.count.requests, innerChunks);
-    assert.equal(viaSourceSharded.count.requests, 3 * shards);
+    assert.equal(viaSourceSharded.count.requests, 2 * shards);
+    assert.deepEqual(viaSourceSharded.count.methods, { GET: 2 * shards });
     assert.ok(viaSourceSharded.count.requests * 4 <= unsharded.requests);
     assert.equal(viaSourceSharded.value, sharded.value(0, 1, 1500, 777));
   });
@@ -103,6 +104,6 @@ describe("range coalescing for sharded OME-Zarr 0.5 over the latency proxy", () 
     source.close();
     console.log(JSON.stringify({ tiles: innerChunks, count }));
     assert.ok(tiles.every((tile) => !tile.absent));
-    assert.equal(count.requests, 3 * shards);
+    assert.equal(count.requests, 2 * shards);
   });
 });

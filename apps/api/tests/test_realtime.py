@@ -201,9 +201,21 @@ def test_an_unknown_room_is_not_found(lab: Lab) -> None:
 
 
 @pytest.mark.db
-def test_without_a_room_key_live_updates_are_unavailable(lab: Lab) -> None:
+@pytest.mark.parametrize(
+    "key",
+    [
+        None,
+        SecretStr(""),
+        SecretStr("change-me"),
+        SecretStr("<32 random bytes in base64>"),
+        SecretStr(base64.b64encode(bytes(31)).decode()),
+    ],
+)
+def test_without_a_room_key_of_32_bytes_live_updates_are_unavailable(
+    lab: Lab, key: SecretStr | None
+) -> None:
     settings = lab.api.app.settings
-    lab.api.app.settings = settings.model_copy(update={"room_token_key": None})
+    lab.api.app.settings = settings.model_copy(update={"room_token_key": key})
     try:
         response = lab.access("owner", f"slide:{lab.slide}")
     finally:

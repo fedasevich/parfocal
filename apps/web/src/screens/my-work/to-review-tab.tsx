@@ -99,37 +99,34 @@ type RowProps = {
 
 function TaskRow({ selected, colour, title, sub, progress, tags, action, onSelect }: RowProps) {
   return (
-    <div
-      role="option"
-      aria-selected={selected}
-      data-vt-source=""
-      tabIndex={0}
-      onClick={onSelect}
-      onKeyDown={(event) => (event.key === " " ? onSelect() : undefined)}
-      className={`grid cursor-pointer grid-cols-[6px_1fr_auto_auto] items-center gap-3.5 rounded-xl border px-3.5 py-(--density-list-row-y) ${selected ? "border-accent bg-accent-soft" : "border-line bg-chrome hover:border-line-strong"}`}
+    <li
+      className={`m-0 grid list-none grid-cols-[6px_1fr_auto_auto] items-center gap-3.5 rounded-xl border px-3.5 py-(--density-list-row-y) ${selected ? "border-accent bg-accent-soft" : "border-line bg-chrome hover:border-line-strong"}`}
     >
-      <span aria-hidden="true" className="h-10 rounded-[3px]" style={{ background: colour }} />
-      <div className="min-w-0">
-        <b className="text-body font-semibold text-fg">{title}</b>
-        <small className="mt-0.5 mb-1.5 block text-caption text-fg-faint">{sub}</small>
-        <ProgressBar
-          className="max-w-85"
-          value={progress.value}
-          label={progress.label}
-          valueText={`${progress.value}%`}
-        />
-      </div>
-      <span className="flex items-center gap-2">{tags}</span>
-      <Button
-        variant={action.primary ? "primary" : "secondary"}
-        onClick={(event) => {
-          event.stopPropagation();
-          action.run();
-        }}
+      <button
+        type="button"
+        aria-pressed={selected}
+        data-list-row=""
+        data-vt-source=""
+        onClick={onSelect}
+        className="col-span-3 grid cursor-pointer grid-cols-subgrid items-center gap-3.5 border-0 bg-transparent p-0 text-left font-[inherit] text-[inherit]"
       >
+        <span aria-hidden="true" className="h-10 rounded-[3px]" style={{ background: colour }} />
+        <div className="min-w-0">
+          <b className="text-body font-semibold text-fg">{title}</b>
+          <small className="mt-0.5 mb-1.5 block text-caption text-fg-faint">{sub}</small>
+          <ProgressBar
+            className="max-w-85"
+            value={progress.value}
+            label={progress.label}
+            valueText={`${progress.value}%`}
+          />
+        </div>
+        <span className="flex items-center gap-2">{tags}</span>
+      </button>
+      <Button variant={action.primary ? "primary" : "secondary"} onClick={action.run}>
         {action.label}
       </Button>
-    </div>
+    </li>
   );
 }
 
@@ -329,66 +326,69 @@ export function ToReviewTab({
   ) : null;
   return (
     <div className={`grid gap-6 ${preview ? "grid-cols-[1fr_360px]" : "grid-cols-[1fr_340px]"}`}>
-      <div role="listbox" aria-label="Your tasks" className="flex flex-col gap-3">
+      <div className="flex flex-col gap-3">
         {heroTask && resume ? <ContinueHero task={heroTask} resume={resume} /> : null}
         <SectionLabel>Your tasks</SectionLabel>
-        {adjudications.map((item) => {
-          const asker = people(item.asked_by_user_id)?.name ?? "the researcher";
-          const total = item.objects.length;
-          const allDone = item.decided >= total;
-          return (
-            <TaskRow
-              key={item.id}
-              selected={selected === adjudicationKey(item)}
-              colour={colourOf(item.project.id)}
-              title={`Decide ${total} objects on ${item.task_code}`}
-              sub={`${item.project.name} · asked by ${asker} · ${andJoin(item.objects)} on ${item.slide_label}`}
-              progress={{
-                value: percent(item.decided, total),
-                label: `${item.decided} of ${total} objects decided`,
-              }}
-              tags={
-                <StatusTag tone={allDone ? "ok" : "accent"}>
-                  {allDone ? "All decided" : "Adjudication"}
-                </StatusTag>
-              }
-              action={{
-                label: allDone ? "Open" : item.decided > 0 ? "Continue" : "Start",
-                primary: !allDone,
-                run: () => void goTo(destinations.disagreements(item.task_id, "adjudicate")),
-              }}
-              onSelect={() => onSelect(adjudicationKey(item))}
-            />
-          );
-        })}
-        {active.map((task) => {
-          const row = reviewRow(task, people(task.created_by_user_id)?.name, resume);
-          if (!row) return null;
-          return (
-            <TaskRow
-              key={task.id}
-              selected={selected === task.id}
-              colour={colourOf(task.project.id)}
-              title={row.title}
-              sub={row.sub}
-              progress={row.progress}
-              tags={row.tags.map((tag) => (
-                <StatusTag key={tag.label} tone={tag.tone}>
-                  {tag.label}
-                </StatusTag>
-              ))}
-              action={{
-                label: row.action.label,
-                primary: row.action.primary,
-                run: () => void goTo(row.action.path),
-              }}
-              onSelect={() => onSelect(task.id)}
-            />
-          );
-        })}
         {active.length === 0 && adjudications.length === 0 ? (
           <span className="text-body-sm text-fg-dim">Nothing to review. New tasks show here.</span>
-        ) : null}
+        ) : (
+          <ul aria-label="Your tasks" className="m-0 flex list-none flex-col gap-3 p-0">
+            {adjudications.map((item) => {
+              const asker = people(item.asked_by_user_id)?.name ?? "the researcher";
+              const total = item.objects.length;
+              const allDone = item.decided >= total;
+              return (
+                <TaskRow
+                  key={item.id}
+                  selected={selected === adjudicationKey(item)}
+                  colour={colourOf(item.project.id)}
+                  title={`Decide ${total} objects on ${item.task_code}`}
+                  sub={`${item.project.name} · asked by ${asker} · ${andJoin(item.objects)} on ${item.slide_label}`}
+                  progress={{
+                    value: percent(item.decided, total),
+                    label: `${item.decided} of ${total} objects decided`,
+                  }}
+                  tags={
+                    <StatusTag tone={allDone ? "ok" : "accent"}>
+                      {allDone ? "All decided" : "Adjudication"}
+                    </StatusTag>
+                  }
+                  action={{
+                    label: allDone ? "Open" : item.decided > 0 ? "Continue" : "Start",
+                    primary: !allDone,
+                    run: () => void goTo(destinations.disagreements(item.task_id, "adjudicate")),
+                  }}
+                  onSelect={() => onSelect(adjudicationKey(item))}
+                />
+              );
+            })}
+            {active.map((task) => {
+              const row = reviewRow(task, people(task.created_by_user_id)?.name, resume);
+              if (!row) return null;
+              return (
+                <TaskRow
+                  key={task.id}
+                  selected={selected === task.id}
+                  colour={colourOf(task.project.id)}
+                  title={row.title}
+                  sub={row.sub}
+                  progress={row.progress}
+                  tags={row.tags.map((tag) => (
+                    <StatusTag key={tag.label} tone={tag.tone}>
+                      {tag.label}
+                    </StatusTag>
+                  ))}
+                  action={{
+                    label: row.action.label,
+                    primary: row.action.primary,
+                    run: () => void goTo(row.action.path),
+                  }}
+                  onSelect={() => onSelect(task.id)}
+                />
+              );
+            })}
+          </ul>
+        )}
       </div>
       {preview ?? <SideColumn hasAdjudications={adjudications.length > 0} />}
     </div>

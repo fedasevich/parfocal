@@ -103,54 +103,57 @@ function ModelPicker({
           sideOffset={4}
           className="isolate z-60 w-(--anchor-width)"
         >
-          <PopoverPrimitive.Popup
-            role="listbox"
-            aria-label="Models"
-            className="grid gap-px rounded-zone border border-line-strong bg-popover p-1.5 text-body-sm text-fg shadow-[0_18px_48px_rgba(0,0,0,.45)] outline-hidden"
-          >
-            {groups.map((group) => (
-              <div key={group.title} className="grid gap-px">
-                <div className="px-2.5 pt-2 pb-1 text-caption font-semibold text-fg-dim">
-                  {group.title}
-                </div>
-                {group.options.map((option) => {
-                  const on = option.id === value;
-                  return (
-                    <div
-                      key={option.id}
-                      role="option"
-                      tabIndex={0}
-                      aria-selected={on}
-                      aria-disabled={option.offline || undefined}
-                      onClick={() => {
-                        if (option.offline) return;
-                        onValueChange(option.id);
-                        onOpenChange(false);
-                      }}
-                      onKeyDown={(event) => {
-                        if (!option.offline && (event.key === "Enter" || event.key === " ")) {
-                          event.preventDefault();
+          <PopoverPrimitive.Popup className="grid gap-px rounded-zone border border-line-strong bg-popover p-1.5 text-body-sm text-fg shadow-[0_18px_48px_rgba(0,0,0,.45)] outline-hidden">
+            <div role="listbox" aria-label="Models" className="grid gap-px">
+              {groups.map((group) => (
+                <div
+                  key={group.title}
+                  role="group"
+                  aria-label={group.title}
+                  className="grid gap-px"
+                >
+                  <div className="px-2.5 pt-2 pb-1 text-caption font-semibold text-fg-dim">
+                    {group.title}
+                  </div>
+                  {group.options.map((option) => {
+                    const on = option.id === value;
+                    return (
+                      <div
+                        key={option.id}
+                        role="option"
+                        tabIndex={0}
+                        aria-selected={on}
+                        aria-disabled={option.offline || undefined}
+                        onClick={() => {
+                          if (option.offline) return;
                           onValueChange(option.id);
                           onOpenChange(false);
-                        }
-                      }}
-                      className={cn(
-                        "grid cursor-pointer grid-cols-[minmax(0,1fr)_auto_104px_16px] items-center gap-3 rounded-lg px-2.5 py-2 hover:bg-[color-mix(in_srgb,var(--fg)_6%,transparent)] focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent",
-                        on && "bg-surf-hl",
-                        option.offline && "cursor-not-allowed opacity-60",
-                      )}
-                    >
-                      <ModelTitle option={option} />
-                      <ModelChips makes={option.makes} />
-                      <span className="text-right text-caption whitespace-nowrap text-fg-dim">
-                        {option.offline ? "offline" : option.perSlide}
-                      </span>
-                      {on ? <Icon name="check" className="text-accent" /> : <span />}
-                    </div>
-                  );
-                })}
-              </div>
-            ))}
+                        }}
+                        onKeyDown={(event) => {
+                          if (!option.offline && (event.key === "Enter" || event.key === " ")) {
+                            event.preventDefault();
+                            onValueChange(option.id);
+                            onOpenChange(false);
+                          }
+                        }}
+                        className={cn(
+                          "grid cursor-pointer grid-cols-[minmax(0,1fr)_auto_104px_16px] items-center gap-3 rounded-lg px-2.5 py-2 hover:bg-[color-mix(in_srgb,var(--fg)_6%,transparent)] focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent",
+                          on && "bg-surf-hl",
+                          option.offline && "cursor-not-allowed opacity-60",
+                        )}
+                      >
+                        <ModelTitle option={option} />
+                        <ModelChips makes={option.makes} />
+                        <span className="text-right text-caption whitespace-nowrap text-fg-dim">
+                          {option.offline ? "offline" : option.perSlide}
+                        </span>
+                        {on ? <Icon name="check" className="text-accent" /> : <span />}
+                      </div>
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
             {footer ? (
               <div className="mt-1 border-t border-line pt-1 text-body-sm text-accent">
                 {footer}

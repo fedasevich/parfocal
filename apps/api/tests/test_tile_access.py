@@ -177,10 +177,20 @@ def test_a_slide_without_a_stored_file_gets_no_token(lab: Lab) -> None:
     assert response.json()["code"] == "slide-file-not-found"
 
 
+UNUSABLE_KEYS = [
+    None,
+    SecretStr(""),
+    SecretStr("change-me"),
+    SecretStr("<32 random bytes in base64>"),
+    SecretStr(base64.b64encode(bytes(31)).decode()),
+]
+
+
 @pytest.mark.db
-def test_no_token_is_signed_without_a_key(lab: Lab) -> None:
+@pytest.mark.parametrize("key", UNUSABLE_KEYS)
+def test_no_token_is_signed_without_a_key_of_32_bytes(lab: Lab, key: SecretStr | None) -> None:
     configured = lab.api.app.settings
-    lab.api.app.settings = configured.model_copy(update={"tile_token_key": None})
+    lab.api.app.settings = configured.model_copy(update={"tile_token_key": key})
     try:
         response = lab.api(lab.people["owner"]).get(lab.path(lab.slide))
     finally:

@@ -104,7 +104,16 @@ function axisIndex(names: readonly string[]): AxisIndex {
   if (y === -1 || x === -1)
     throw new Error(`OME-Zarr axes must include y and x, got ${names.join(",")}`);
   if (c > y || c > x) throw new Error("OME-Zarr channel axis must come before y and x");
+  if (y > x) throw new Error("OME-Zarr axes must list y before x");
   return { c: c === -1 ? null : c, y, x, count: names.length };
+}
+
+function measuredDownsample(baseWidth: number, width: number): number {
+  const ratio = baseWidth / width;
+  const snapped = 2 ** Math.round(Math.log2(ratio));
+  const rounded =
+    width === Math.floor(baseWidth / snapped) || width === Math.ceil(baseWidth / snapped);
+  return rounded ? snapped : ratio;
 }
 
 function scaleOf(dataset: Dataset | undefined): readonly number[] | undefined {
@@ -239,10 +248,10 @@ export async function openOmeZarrSource(request: OpenRequest): Promise<PixelSour
   const fetcher = request.fetch;
   const store = slideStore(
     zarr.withRangeCoalescing(
-      new zarr.FetchStore(
-        url.href,
-        fetcher === undefined ? {} : { fetch: (inner: Request) => fetcher(inner) },
-      ),
+      new zarr.FetchStore(url.href, {
+        useSuffixRequest: true,
+        ...(fetcher === undefined ? {} : { fetch: (inner: Request) => fetcher(inner) }),
+      }),
     ),
   );
   const root = await openRoot(store, request.index?.zarrVersion);
@@ -272,7 +281,7 @@ export async function openOmeZarrSource(request: OpenRequest): Promise<PixelSour
     return {
       array,
       absentTiles: absence[index],
-      downsample: declared ?? baseWidth / width,
+      downsample: declared ?? measuredDownsample(baseWidth, width),
       width,
       height: array.shape[axes.y] ?? 0,
       tileWidth: array.chunks[axes.x] ?? width,

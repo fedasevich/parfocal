@@ -41,6 +41,17 @@ WHERE c.relkind = 'r'
 ORDER BY c.relname
 """
 
+POLICIES = """
+SELECT c.relname, p.polname, p.polcmd::text, p.polpermissive,
+       pg_get_expr(p.polqual, p.polrelid), pg_get_expr(p.polwithcheck, p.polrelid),
+       ARRAY(SELECT rolname::text FROM pg_roles WHERE oid = ANY(p.polroles) ORDER BY rolname)
+FROM pg_policy p
+JOIN pg_class c ON c.oid = p.polrelid
+JOIN pg_namespace n ON n.oid = c.relnamespace
+WHERE n.nspname = current_schema()
+ORDER BY c.relname, p.polname
+"""
+
 
 def enable_tenant_isolation(table: str) -> list[str]:
     return [

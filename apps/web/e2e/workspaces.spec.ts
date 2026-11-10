@@ -3,18 +3,21 @@ import { expect, type Page, test } from "./a11y.ts";
 const p07 = "00000000-0000-4000-8003-000000000007";
 const rt14 = "00000000-0000-4000-8007-000000000014";
 const annotateTask = "00000000-0000-4000-8007-000000000021";
+const slideReady = 25_000;
+
+test.describe.configure({ timeout: 90_000 });
 
 async function openSlide(page: Page, search = "") {
   await page.goto(`/projects/${p07}?tab=slides`);
   await page.getByTestId("slide-row").filter({ hasText: "tumor_044" }).click();
   await expect(page.getByTestId("slide-stage")).toHaveAttribute("data-state", "ready", {
-    timeout: 15_000,
+    timeout: slideReady,
   });
   if (search === "") return;
   const url = new URL(page.url());
   await page.goto(`${url.pathname}${search}`);
   await expect(page.getByTestId("slide-stage")).toHaveAttribute("data-state", "ready", {
-    timeout: 15_000,
+    timeout: slideReady,
   });
 }
 

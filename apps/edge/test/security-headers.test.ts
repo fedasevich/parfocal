@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
+import { signingKey, WeakSigningKeyError } from "../src/capability.ts";
 import worker, { type EdgeEnv } from "../src/index.ts";
+import { ROOM_PROTOCOL } from "../src/room-client.ts";
 import {
   contentSecurityPolicy,
   headerProblems,
@@ -134,4 +136,73 @@ test("a wrong upload origin breaks documents only, never tile bytes", async () =
     worker.fetch(new Request("https://parfocal.example/"), broken, context),
     /https/,
   );
+});
+
+test("a room path that cannot be decoded is a 404 problem with the isolation headers", async () => {
+  const response = await get("/rt/%zz");
+  assert.equal(response.status, 404);
+  assert.equal((await response.json<{ code: string }>()).code, "room-not-found");
+  assert.deepEqual(headerProblems(response.headers, "resource"), []);
+});
+
+test("a handler that throws or rejects is a 500 problem with the isolation headers", async () => {
+  const logged: unknown[][] = [];
+  const original = console.error;
+  console.error = (...parts: unknown[]) => {
+    logged.push(parts);
+  };
+  try {
+    for (const fetch of [
+      () => {
+        throw new Error("the assets binding is missing");
+      },
+      () => Promise.reject(new Error("the assets binding failed")),
+    ]) {
+      const response = await worker.fetch(
+        new Request("https://parfocal.example/"),
+        { ...env, ASSETS: { fetch } as unknown as Fetcher },
+        context,
+      );
+      assert.equal(response.status, 500);
+      assert.equal((await response.json<{ code: string }>()).code, "internal-error");
+      assert.deepEqual(headerProblems(response.headers, "resource"), []);
+    }
+    assert.equal(logged.length, 2);
+  } finally {
+    console.error = original;
+  }
+});
+
+test("a signing key under 32 bytes is refused", async () => {
+  for (const secret of ["", "change-me", btoa("k".repeat(31))]) {
+    await assert.rejects(signingKey(secret), WeakSigningKeyError);
+  }
+  assert.equal((await signingKey(btoa("k".repeat(32)))).type, "secret");
+});
+
+test("a Worker with a short key answers 503 for tiles and rooms, with the isolation headers", async () => {
+  const weak = { ...env, TILE_TOKEN_KEY: btoa("short"), ROOM_TOKEN_KEY: "" };
+  const logged: unknown[][] = [];
+  const original = console.error;
+  console.error = (...parts: unknown[]) => {
+    logged.push(parts);
+  };
+  try {
+    for (const request of [
+      new Request("https://parfocal.example/tiles/x/original.svs", {
+        headers: { Authorization: "Bearer a.b" },
+      }),
+      new Request(`https://parfocal.example/rt/slide:${crypto.randomUUID()}`, {
+        headers: { Upgrade: "websocket", "Sec-WebSocket-Protocol": `${ROOM_PROTOCOL}, a.b` },
+      }),
+    ]) {
+      const response = await worker.fetch(request, weak, context);
+      assert.equal(response.status, 503);
+      assert.equal((await response.json<{ code: string }>()).code, "signing-key-not-configured");
+      assert.deepEqual(headerProblems(response.headers, "resource"), []);
+    }
+    assert.equal(logged.length, 2);
+  } finally {
+    console.error = original;
+  }
 });

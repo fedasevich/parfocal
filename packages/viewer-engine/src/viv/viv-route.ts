@@ -9,6 +9,7 @@ import {
   createWorkerRegionReader,
   type DecodeStats,
   type DecodeWorker,
+  disposingOnThrow,
   type WorkerRegionReader,
 } from "../decode/worker-reader.ts";
 import { slideTint } from "../engine/brightness.ts";
@@ -27,6 +28,7 @@ import { absoluteUrl } from "../pixel-source/url.ts";
 import { observeCanvasSize, observePixelRatio } from "./canvas-observers.ts";
 import { createDeckSleep, type DeckSleep } from "./deck-sleep.ts";
 import { disposeDeck } from "./dispose-deck.ts";
+import type { FailedTile } from "./failed-tiles.ts";
 import {
   createGpuGuard,
   type GpuGuardStats,
@@ -49,7 +51,7 @@ import {
   type VivChannelLevels,
   vivChannelLayerProps,
 } from "./viv-channel-levels.ts";
-import { createVivLevels, type FailedTile, type VivLevels } from "./viv-levels.ts";
+import { createVivLevels, type VivLevels } from "./viv-levels.ts";
 
 const idleLoadState: TileLoadState = { pending: 0, waitingMs: 0, answerMs: null };
 
@@ -254,21 +256,27 @@ export function createVivRoute(
   const readerFor = (slide: PixelSlide): WorkerRegionReader | null => {
     const opened = slide.opened;
     if (opened === null || workerCount < 1) return null;
+    const reported = new Set<unknown>();
+    const reportOnce = (error: unknown) => {
+      if (reported.has(error)) return;
+      reported.add(error);
+      reportError(error instanceof Error ? error : new Error(String(error)));
+    };
     const reader = createWorkerRegionReader({
       request: {
         formatId: opened.formatId,
         url: absoluteUrl(opened.url, opened.baseUrl).href,
         ...(opened.index === undefined ? {} : { index: opened.index }),
         ...(typeof opened.nativeJpeg === "string" ? { nativeJpeg: opened.nativeJpeg } : {}),
+        levels: slide.source.levels.length,
       },
       size: workerCount,
+      onFailure: reportOnce,
       cache:
         slide.bytes ?? createRangeCache(opened.fetch === undefined ? {} : { fetch: opened.fetch }),
       ...(options.spawnDecodeWorker ? { spawn: options.spawnDecodeWorker } : {}),
     });
-    reader.ready.catch((error: unknown) => {
-      reportError(error instanceof Error ? error : new Error(String(error)));
-    });
+    reader.ready.catch(reportOnce);
     reader.setFocus({ x: camera.x, y: camera.y });
     return reader;
   };
@@ -329,30 +337,18 @@ export function createVivRoute(
       onReadSettled: () => sleep?.wake("read"),
       ...(reader ? { read: reader.readChannel } : {}),
     });
-    const levels: RouteLevels = {
-      pending: channelLevels.pending,
-      loadState: () => idleLoadState,
-      failures: () => [],
-      clearFailure: () => undefined,
+    const base = {
+      slide,
+      levels: channelLevels,
+      rgb: null,
+      channelLevels,
+      reader,
+      prefetcher: null,
     };
-    const base = { slide, levels, rgb: null, channelLevels, reader, prefetcher: null };
     return { ...base, layer: slideLayer(base) };
   };
 
-  const showSlide = (slide: PixelSlide | null) => {
-    if (failure !== null || slide === shown?.slide) return;
-    release();
-    if (slide === null) {
-      applyLayers();
-      return;
-    }
-    const reader = readerFor(slide);
-    channelDisplay = [];
-    if (slide.source.photometric === "channels") {
-      shown = channelShown(slide, reader);
-      applyLayers();
-      return;
-    }
+  const rgbShown = (slide: PixelSlide, reader: WorkerRegionReader | null): Shown => {
     const levels = createVivLevels(slide.source, {
       onTileError: options.onTileError ?? reportError,
       onReadSettled: () => sleep?.wake("read"),
@@ -371,7 +367,23 @@ export function createVivRoute(
         })
       : null;
     const base = { slide, levels, rgb: levels, channelLevels: null, reader, prefetcher };
-    shown = { ...base, layer: slideLayer(base) };
+    return { ...base, layer: slideLayer(base) };
+  };
+
+  const showSlide = (slide: PixelSlide | null) => {
+    if (failure !== null || slide === shown?.slide) return;
+    release();
+    if (slide === null) {
+      applyLayers();
+      return;
+    }
+    const reader = readerFor(slide);
+    channelDisplay = [];
+    shown = disposingOnThrow(reader, () =>
+      slide.source.photometric === "channels"
+        ? channelShown(slide, reader)
+        : rgbShown(slide, reader),
+    );
     applyLayers();
   };
 

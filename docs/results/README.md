@@ -54,18 +54,22 @@ One file per measured run, named `YYYY-MM-DD-short-topic.md`. Copy [_template.md
 | 2026-11-02 | [onnxruntime-web 1.31.1 encodes a PathoSAM field in about 1.1 to 1.3 s and decodes a click in about 30 ms on WebGPU](2026-11-02-browser-ml-runtime.md) | STACK-017 | spike |
 | 2026-11-02 | [A 1 GiB upload over a throttled link survives a reload and finishes with the SHA-256 matching and no part sent twice](2026-11-02-upload-ui-resume.md) | INGEST-002 | e2e |
 | 2026-11-02 | [The upload protocol passes on the R2 dev bucket at 1 GiB, R2 accepts a presigned create and refuses part checksums, and 1 GiB copies in 56 s](2026-11-02-upload-protocol-check-on-r2.md) | INGEST-028 | spike |
-| 2026-11-02 | [The upload protocol passes on the R2 dev bucket at 1 GiB, R2 accepts a presigned create and refuses part checksums, and 1 GiB copies in 56 s](2026-11-02-upload-protocol-check-on-r2.md) | INGEST-028 | spike |
 | 2026-11-02 | [The sidecar tile index opens an 11-directory BigTIFF in 0.38 s instead of 1.39 s at 100 ms RTT](2026-11-02-sidecar-tile-index.md) | INGEST-007 | spike |
 | 2026-11-02 | [Performance budget baselines: first-page bytes, viewer time and requests to the fitted image and to sharp after a jump on CMU-1 per RTT](2026-11-02-performance-budgets.md) | TEST-006 | benchmark |
 | 2026-11-02 | [The tissue box that drops specks under 0.1% of tissue cells is 46.0% to 96.2% of the all-cells box and keeps all annotated tumour](2026-11-02-tissue-box.md) | INGEST-027 | benchmark |
 | 2026-11-02 | [Under the enforced CSP a local production build is cross-origin isolated and runs module workers with shared WASM memory](2026-11-02-security-headers-local-check.md) | SEC-011 | check |
 | 2026-11-02 | [Outlines with casings keep 3:1 contrast on all but 5 to 6% of H&E pixels for tumor and immune and on all pixels for the rest](2026-11-02-outline-casing-contrast.md) | VIEW-027 | benchmark |
+| 2026-11-02 | [Frontend testing stack spike: Viv and WebGPU frames on SwiftShader](2026-11-02-frontend-testing-stack-spike.md) | STACK-012 | spike |
+| 2026-11-02 | [Interactive embeddings beside a whole-slide job on Modal GPUs](2026-11-02-gpu-serving-spike.md) | STACK-027 | spike |
+| 2026-11-02 | [Tile fetch latency through the Worker gateway, with and without a Cache API layer](2026-11-02-tile-gateway-latency.md) | STACK-025 | spike |
+| 2026-11-02 | [10,000 worklist rows with J/K navigation, virtualised against plain](2026-11-02-worklist-virtualisation-spike.md) | STACK-010 | spike |
 | 2026-11-03 | [Search on 100,000 cases drops from a p95 of 48 to 59 ms to 24 to 25 ms with LIKE on stored lowercase labels](2026-11-03-search-latency-lower-labels.md) | CASES-009 | benchmark |
 | 2026-11-03 | [The browser reader agrees with the server reader within 1 to 2 grey levels with seam ratios of 1.1 to 1.7, except BIF, which ignores stitch positions](2026-11-03-reader-seams-and-agreement.md) | INGEST-009 | check |
 | 2026-11-03 | [Derived overview levels bring coarse-zoom tile reads on Aperio slides from 25 to 45 times a full ladder to 0.4 to 0.6 times](2026-11-03-derived-overview-levels.md) | INGEST-013 | benchmark |
 | 2026-11-03 | [Signed slide bytes on the app origin open without a preflight in Chrome in 0.63 s at 100 ms RTT, and another origin preflights every read and doubles the open](2026-11-03-same-origin-slide-bytes.md) | TILES-003 | comparison |
 | 2026-11-03 | [The browser reader places BIF frames like OpenSlide and agrees within 0.6 grey levels, down from 52 to 65](2026-11-03-bif-frame-placement.md) | VIEW-057 | check |
 | 2026-11-03 | [Monorepo, CI and Python tooling still match ADR 0006, ADR 0007 and ADR 0011, with Ruff, uv and Ubuntu runner upgrades due](2026-11-03-tooling-recheck.md) | FOUND-000 | check |
+| 2026-11-03 | [A login flood from one address gets 429 from the edge Worker while another address signs in, checked locally](2026-11-03-edge-rate-limits-local-check.md) | SEC-027 | check |
 | 2026-11-04 | [Range coalescing brings a 64-chunk viewport of a sharded OME-Zarr 0.5 store from 72 requests to 12, as doc 32 went from 194 to 39](2026-11-04-zarr-range-coalescing.md) | TILES-005 | benchmark |
 | 2026-11-04 | [HoVer-NeXt reaches an ECE of 0.022 with one view and 0.019 with 8 views after temperature scaling, and the registry stores those rows](2026-11-04-typer-calibration-registry.md) | AINUC-006 | ML evaluation |
 | 2026-11-04 | [A prefetch that follows a straight pan requests 48 to 96 tiles ahead and uses 14 to 64 of them, but the time to a sharp view stays inside the noise on a loaded machine](2026-11-04-prefetch-time-to-sharp.md) | VIEW-044 | benchmark |
@@ -76,6 +80,7 @@ One file per measured run, named `YYYY-MM-DD-short-topic.md`. Copy [_template.md
 | 2026-11-06 | [Smart select reaches a mean IoU of 0.913 to 0.917 on one realistic click and 0.925 to 0.926 on three clicks over 78 TNBC nuclei in Chrome, above the POC's 0.851 and 0.884 on a looser pixel scorer](2026-11-06-smart-select-accuracy-smoke.md) | AISEG-005 | ML evaluation |
 | 2026-11-06 | [Hover preview shows an outline 48.6 ms median and 56.8 ms at the 95th percentile after the pointer on WebGPU in Chrome on an Apple M4, under the 100 ms budget](2026-11-06-hover-preview-latency.md) | AISEG-006 | benchmark |
 | 2026-11-06 | [The interactive protocol reproduces POC doc 26 on all 3,466 TNBC nuclei within 0.004 mean IoU per prompt (realistic click 0.852, exact box 0.863, loose box 0.817, three clicks 0.881), with NoC@85 3.1 and NoC@90 7.6 clicks](2026-11-06-interactive-protocol-on-tnbc.md) | MLEVAL-003 | ML evaluation |
+| 2026-11-06 | [The GPU worker pool adds containers with queue depth and stops at its cap](2026-11-06-gpu-pool-scaling-staging.md) | AIP-006 | check |
 | 2026-11-08 | [The auto region pass scores PQ 0.828 on all 50 TNBC images, within 0.01 of the POC browser AIS baseline of 0.8235, and a warm four tile pass takes 12.2 s on WebGPU in Chrome on an Apple M4](2026-11-08-auto-region-pass-on-tnbc.md) | AISEG-010 | ML evaluation |
 | 2026-11-08 | [A bulk insert of 10,000 annotations takes 1.37 s on an Apple M4 and 6.49 s on a busy hosted runner, with no slowdown from the text column](2026-11-08-bulk-annotation-budget.md) | TEST-006, ANN-036 | baseline |
 | 2026-11-08 | [A channel contrast change on the 16-bit fixture settles in 2.6 to 16 ms with no tile reads](2026-11-08-channel-contrast-change.md) | VIEW-018 | baseline |
@@ -88,3 +93,6 @@ One file per measured run, named `YYYY-MM-DD-short-topic.md`. Copy [_template.md
 | 2026-11-09 | [The two-finger click and Safari pinch listeners turn dispatched events into the negative point and zoom intents, real hardware traces still to record](2026-11-09-trackpad-listeners.md) | DEV-013 | baseline |
 | 2026-11-09 | [Project review: 664 of 940 tasks ticked with nothing deployed, 3 of 39 ci runs on main green in a day, and 6 real API specs against 165 on the fake](2026-11-09-project-review.md) | FOUND-033 | baseline |
 | 2026-11-09 | [Tenant isolation review: no cross-workspace path found, four confirmed gaps and two suspicions](2026-11-09-tenant-isolation-review.md) | SEC-032 | check |
+| 2026-11-09 | [Viewer engine review: 6 confirmed faults and 4 suspicions, the black edge row on CMU-1.svs first](2026-11-09-viewer-engine-review.md) | VIEW-059 | check |
+| 2026-11-09 | [Edge token review: no way past the token check, 5 low findings around it and 2 suspicions](2026-11-09-edge-token-review.md) | SEC-036 | check |
+| 2026-11-10 | [Viewer engine suspicions: the unsnapped OME-Zarr downsample and the shared patch read tied to one caller are real and fixed, a format with no reader fails loudly](2026-11-10-viewer-engine-suspicions.md) | VIEW-066 | check |

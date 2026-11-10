@@ -2,6 +2,8 @@
 
 This is the record that GDPR Article 30 asks for, written for SEC-021 (GDPR documentation). It describes what the code and the ADRs do on 2026-11-03. The column level detail is the generated [data map](../reference/data-map.md) of [ADR 0028](../adr/0028-data-classes-on-columns.md) (five data classes on every column). Services are in [subprocessors.md](subprocessors.md) and security measures in [controls.md](controls.md).
 
+Simulated check, no such person took part. Agents wrote this page where counsel or a privacy professional would write or review it ([agent-stand-in-records.md](../project/agent-stand-in-records.md)).
+
 ## Who is who
 
 | Role | Who | Note |

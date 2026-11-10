@@ -2,6 +2,8 @@
 
 This is the list of services that process personal data for Parfocal, written for SEC-021 (GDPR documentation) and GDPR Articles 28 and 44 to 46. Every fact comes from [knowledge/platform.md](../knowledge/platform.md) or an ADR, which the source column names. Read on 2026-11-03.
 
+Simulated check, no such person took part. Agents wrote this page where counsel or a privacy professional would write or review it ([agent-stand-in-records.md](../project/agent-stand-in-records.md)).
+
 The pilot holds only public slide datasets with seeded fake patients ([ADR 0003](../adr/0003-pilot-platform-architecture.md), pilot platform architecture). When the first tenant with real patient data arrives, ADR 0003 requires a signed DPA with every processor below, pinned EU regions and SEC-005 (data residency enforcement). This list must be checked again on that day and before every new service.
 
 ## In use

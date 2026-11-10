@@ -2,6 +2,8 @@
 
 This runbook says what to do when something goes wrong with security or with personal data at Parfocal. It is the output of SEC-018 (incident response and breach notification runbook) and the choices behind it are in [ADR 0186](../adr/0186-incident-response-and-breach-notification.md). It was written on 2026-11-03 against the services in [subprocessors.md](subprocessors.md) and [knowledge/platform.md](../knowledge/platform.md).
 
+Simulated check, no such person took part. Agents wrote this page where counsel or a privacy professional would write or review it ([agent-stand-in-records.md](../project/agent-stand-in-records.md)).
+
 The pilot holds only public slide datasets with seeded fake patients ([ADR 0003](../adr/0003-pilot-platform-architecture.md), pilot platform architecture). The runbook still applies in full, because accounts, emails and sign-in events of real users are personal data today. This is a draft until counsel reads it. TODO: counsel review before the first tenant with real patient data.
 
 ## Who is who in an incident

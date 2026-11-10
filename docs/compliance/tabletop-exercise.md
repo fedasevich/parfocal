@@ -107,6 +107,7 @@ Runbook changes made after the exercise:
 
 ### Tabletop 2026-11-04 · Another workspace's slides in a reviewer's task list
 
+- Simulated check, no person took part. One agent session played every role on paper ([agent-stand-in-records.md](../project/agent-stand-in-records.md)).
 - Facilitator: a Parfocal agent session, at the owner's request (decision 42).
 - Participants and their roles: the same agent session played the incident lead, the technical responder and the privacy contact by following the runbook as written. The owner, who holds those roles, was not in the room. There is no deputy and no counsel yet.
 - Duration: one pass through the five injects, on paper.

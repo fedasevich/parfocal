@@ -21,3 +21,5 @@ Option 2. `docs/` is the project memory. `AGENTS.md` is the single agent guide a
 ## Consequences
 
 Every task updates `docs/` in the same change as the code. Consolidation runs at each milestone or about every 15 log entries. External memory tools may keep recall and session history but never hold the only copy of anything durable.
+
+On 2026-11-09 FOUND-037 (docs memory that cannot go stale) changed the trigger. The lead consolidates at the end of every parallel run, and no count is written by hand ([knowledge/agent-workflow.md](../knowledge/agent-workflow.md#consolidation)).

@@ -34,26 +34,28 @@ export async function handleRealtime(
   if (pathname.startsWith(INTERNAL_PREFIX)) {
     return handleInternal(request, env, pathname.slice(INTERNAL_PREFIX.length), now());
   }
-  return handleConnect(
-    request,
-    env,
-    decodeURIComponent(pathname.slice(ROOM_PREFIX.length)),
-    now(),
-    defer,
-  );
+  return handleConnect(request, env, roomIn(pathname), now(), defer);
+}
+
+function roomIn(pathname: string): string | null {
+  try {
+    return decodeURIComponent(pathname.slice(ROOM_PREFIX.length));
+  } catch {
+    return null;
+  }
 }
 
 async function handleConnect(
   request: Request,
   env: RoomEnv,
-  room: string,
+  room: string | null,
   now: number,
   defer: Defer,
 ): Promise<Response> {
   if (request.method !== "GET") {
     return problem(405, "method-not-allowed", "Rooms are joined with GET");
   }
-  if (!isRoomName(room)) {
+  if (room === null || !isRoomName(room)) {
     return problem(404, "room-not-found", "No such room");
   }
   if (request.headers.get("Upgrade")?.toLowerCase() !== "websocket") {

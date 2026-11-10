@@ -19,3 +19,11 @@ The guard tests in `scripts/flaky.test.ts` (run by `pnpm test:guards`) fail when
 ## Causes found so far
 
 Timing and load, never bad logic: a minimap drag read once right after mouse up, an undo spec over its 30 second limit on a runner 1.6 times slower, a latency proxy check, an outline budget and a long-task assertion. Wait on an observable state with `expect.poll` or web-first assertions instead of reading once, and give timing budgets headroom for a slower runner.
+
+A control that goes away on its own needs one step, not two. The undo toast lives 4 seconds, and two display panel tests waited for the toast and then clicked a bare Undo button, which was detached in between on a slow runner (TEST-029, display panel specs click the Undo of the toast they caused). Find the button inside the toast that names what was done and click it in the same locator, so Playwright retries the whole lookup.
+
+Before changing a flaky spec, check that its failing run is older than its last fix. On 2026-11-09 the `worklist-live` test and the `auto-region` long task budget each sat in one `flaky-*` artifact, and both runs came before the commits that had already steadied them (54be52fe and 663ab37f), so neither needed a second change.
+
+A test at its limit turns main red on a slow runner even though nothing regressed. On 2026-11-10 the run on commit 71294ded failed on three web tests while every other job passed, with the web jobs taking 33 and 34 minutes against 23 and 25 (TEST-031, web specs at their time limit get room for a slow runner). A test that opens a slide needs 25 seconds for `data-state="ready"` and a test limit of 60 seconds, or 90 when it opens the slide twice. After `page.reload()` wait for the slide again before any other assertion. A test that loads six pages is three tests. A click whose effect must survive a reload needs an assertion on that effect before `page.reload()`, as the pinned strip test in `layout-settings.spec.ts` showed when it reloaded before the switch had changed.
+
+One cause is still unknown: the table Tab order test in `packages/ui` fails its first ci attempt and never fails on the Mac (TEST-030, find why the table Tab order test fails on its first ci attempt).

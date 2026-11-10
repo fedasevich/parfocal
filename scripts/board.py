@@ -18,7 +18,7 @@ ACTIVE_DIR = Path("docs/board/active")
 TASK_ID = re.compile(r"\b([A-Z][A-Z0-9]*-\d{3})\b")
 EPIC_HEADING = re.compile(r"^## (\d+) ([A-Z][A-Z0-9]*) · (.+)$")
 EPIC_ROW = re.compile(r"^\| (\d+) \| ([A-Z][A-Z0-9]*) \| (.+?) \| (.+?) \|$")
-MILESTONE_ROW = re.compile(r"^\| (M\d) ([^|]+?) \| ([^|]+?) \| ([^|]+?) \|$")
+MILESTONE_ROW = re.compile(r"^\| (M[\dA]) ([^|]+?) \| ([^|]+?) \| ([^|]+?) \|$")
 TASK_LINE = re.compile(r"^- \[( |x)\] ([A-Z][A-Z0-9]*-\d{3}) · (.+)$")
 DEPENDS = re.compile(r"Depends on (.+?)(?:\.(?=\s|$)|$)")
 DEP_FILLER = re.compile(r"^[\s,]*(?:and[\s,]*)*$")
@@ -694,6 +694,48 @@ def command_brief(_: argparse.Namespace) -> int:
     return 0
 
 
+def tally(tasks: list[Task]) -> str:
+    ticked = sum(task.done for task in tasks)
+    parked = sum(
+        not task.done and bool(task.title.startswith("Idea:") or PARKED.search(task.title))
+        for task in tasks
+    )
+    aside = f", {parked} of the open ones parked or ideas" if parked else ""
+    return f"{ticked} of {len(tasks)} ticked{aside}"
+
+
+def gate_epics(milestone: dict[str, str], epics: list[Epic]) -> list[str]:
+    known = {epic.id for epic in epics}
+    for column in ("gate", "meaning"):
+        named = [word for word in re.findall(r"[A-Z][A-Z0-9]+", milestone[column]) if word in known]
+        if named:
+            return unique(named)
+    return []
+
+
+def count_lines(board: Board) -> list[str]:
+    by_epic: dict[str, list[Task]] = {epic.id: [] for epic in board.epics}
+    for task in board.tasks.values():
+        by_epic.setdefault(task.epic, []).append(task)
+    everything = list(board.tasks.values())
+    lines = [f"{len(everything)} tasks in {len(board.epics)} epics, {tally(everything)}", ""]
+    lines.append("Milestones, counted over the epics each gate names:")
+    for milestone in board.milestones:
+        named = gate_epics(milestone, board.epics)
+        tasks = [task for epic in named for task in by_epic[epic]]
+        counted = f"{tally(tasks)}  ({', '.join(named)})" if named else "its gate names no epic"
+        lines.append(f"  {milestone['id']} {milestone['name']}  {counted}")
+    lines += ["", "Epics:"]
+    for epic in board.epics:
+        lines.append(f"  {epic.id}  {tally(by_epic[epic.id])}  {epic.milestone}")
+    return lines
+
+
+def command_counts(_: argparse.Namespace) -> int:
+    print("\n".join(count_lines(load(ROOT))))
+    return 0
+
+
 def command_note(args: argparse.Namespace) -> int:
     path = ROOT / "docs/log.md"
     entry = " ".join(args.text)
@@ -795,6 +837,10 @@ def parser() -> argparse.ArgumentParser:
     tick = commands.add_parser("tick", help="tick a task in the backlog and release its claim")
     tick.add_argument("id")
     tick.set_defaults(run=command_tick)
+
+    commands.add_parser(
+        "counts", help="print tasks and ticks in total, per milestone gate and per epic"
+    ).set_defaults(run=command_counts)
 
     commands.add_parser("check", help="validate the board files").set_defaults(run=command_check)
     commands.add_parser("json", help="print the board as JSON").set_defaults(run=command_json)

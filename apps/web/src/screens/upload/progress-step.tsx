@@ -68,7 +68,11 @@ export function StepList({
                 {slide.running.percent === null ? (
                   <span className="flex-1" />
                 ) : (
-                  <ProgressBar value={slide.running.percent} className="flex-1" />
+                  <ProgressBar
+                    value={slide.running.percent}
+                    aria-label={step.label}
+                    className="flex-1"
+                  />
                 )}
                 <span className="text-caption whitespace-nowrap text-fg-dim">
                   {slide.running.text}

@@ -19,7 +19,7 @@ import {
   virtualLadder,
   vivTileSize,
 } from "../../src/viv/index.ts";
-import { vivSignalAborted } from "../../src/viv/viv-levels.ts";
+import { type VivRegion, type VivTile, vivSignalAborted } from "../../src/viv/viv-levels.ts";
 import { serve } from "../pixel-source/serve.ts";
 import { writeZarrFixture } from "../pixel-source/zarr-fixture.ts";
 
@@ -47,6 +47,28 @@ function level(downsample: number, width: number, height: number): PixelLevel {
 }
 
 const cmu1Levels = [level(1, 46_000, 32_914), level(4, 11_500, 8_228), level(16, 2_875, 2_057)];
+
+function filledWith(sample: number) {
+  return (region: VivRegion): Promise<VivTile> => {
+    const [x0, y0, x1, y1] = region.window;
+    const width = x1 - x0;
+    const height = y1 - y0;
+    assert.ok(width > 0 && height > 0, `the window ${region.window.join(",")} is empty`);
+    const plane = new Uint8Array(width * height).fill(sample);
+    return Promise.resolve({
+      data: boxDownsampleToInterleaved(
+        [plane, plane, plane],
+        width,
+        height,
+        region.residual,
+        region.width,
+        region.height,
+      ),
+      width: region.width,
+      height: region.height,
+    });
+  };
+}
 
 function meanAbsoluteDifference(a: ArrayLike<number>, b: ArrayLike<number>): number {
   assert.equal(a.length, b.length);
@@ -106,6 +128,18 @@ describe("box downsampling into interleaved RGB", () => {
     assert.deepEqual([...out], [3, 1, 255, 15, 1, 0]);
   });
 
+  it("repeats the edge sample when the source is a row or a column short of the output", () => {
+    const short = new Uint8Array(4 * 2).fill(200);
+    const averaged = boxDownsampleToInterleaved([short, short, short], 4, 2, 2, 3, 2);
+    assert.deepEqual([...averaged], new Array(3 * 2 * 3).fill(200));
+    const row = Uint8Array.from([10, 20]);
+    const copied = boxDownsampleToInterleaved([row, row, row], 2, 1, 1, 3, 2);
+    assert.deepEqual(
+      [...copied],
+      [10, 10, 10, 20, 20, 20, 20, 20, 20, 10, 10, 10, 20, 20, 20, 20, 20, 20],
+    );
+  });
+
   it("is a plain interleave at residual 1", () => {
     const planes = [Uint8Array.from([1, 2]), Uint8Array.from([3, 4]), Uint8Array.from([5, 6])];
     assert.deepEqual([...boxDownsampleToInterleaved(planes, 2, 1, 1, 2, 1)], [1, 3, 5, 2, 4, 6]);
@@ -154,6 +188,47 @@ describe("Viv levels over a PixelSource", () => {
       assert.ok(!stored.absent);
       const interleaved = boxDownsampleToInterleaved(stored.planes, 256, 128, 1, 256, 128);
       assert.ok(averaged && meanAbsoluteDifference(averaged.data, interleaved) < 1);
+    } finally {
+      source.close();
+    }
+  });
+
+  it("draws no black edge on a level whose backing level is stored a pixel short (CMU-1.svs sizes)", async () => {
+    const source = await open("synthetic-zlib.ome.tiff", "ome-tiff");
+    try {
+      const custom: PixelSource = { ...source, levels: cmu1Levels };
+      const tileSize = vivTileSize(custom);
+      const { levels, ladder } = createVivLevels(custom, { read: filledWith(200) });
+      for (const index of [2, 3, 4]) {
+        const virtual = ladder[index];
+        assert.ok(virtual);
+        const tile = await levels[index]?.getTile({
+          x: 0,
+          y: Math.ceil(virtual.height / tileSize) - 1,
+        });
+        assert.ok(tile);
+        assert.equal(tile.height, virtual.height % tileSize || tileSize);
+        assert.equal(tile.data.indexOf(0), -1, `level ${index} has a black sample`);
+      }
+    } finally {
+      source.close();
+    }
+  });
+
+  it("reads the one-pixel tile column past a backing level that is stored a pixel short", async () => {
+    const source = await open("synthetic-zlib.ome.tiff", "ome-tiff");
+    try {
+      const tileSize = vivTileSize(source);
+      const custom: PixelSource = {
+        ...source,
+        levels: [level(1, tileSize * 16 + 1, 1_000), level(4, tileSize * 4, 250)],
+      };
+      const { levels, ladder } = createVivLevels(custom, { read: filledWith(200) });
+      assert.equal(ladder[2]?.width, tileSize * 4 + 1);
+      const tile = await levels[2]?.getTile({ x: 4, y: 0 });
+      assert.ok(tile);
+      assert.deepEqual([tile.width, tile.height], [1, 250]);
+      assert.equal(tile.data.indexOf(0), -1);
     } finally {
       source.close();
     }

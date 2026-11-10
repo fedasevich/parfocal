@@ -2,6 +2,8 @@
 
 What Parfocal stores in the browser and why no consent banner is shown, written for SEC-021 (GDPR documentation). The decision is [ADR 0171](../adr/0171-analytics-without-device-storage.md) (analytics without device storage). `apps/web/test/device-storage.test.ts` fails when the code uses a cookie or storage key that this page does not list.
 
+Simulated check, no such person took part. Agents wrote this page where counsel or a privacy professional would write or review it ([agent-stand-in-records.md](../project/agent-stand-in-records.md)).
+
 ## Cookies
 
 Both are set by the API, are HttpOnly and Secure, and cannot be read by scripts. Both are strictly necessary for signing in.

@@ -86,6 +86,13 @@ export function createRangeCache(options: RangeCacheOptions = {}): RangeCache {
       if (response.status !== 206 || startOf(contentRange) !== first * blockSize) {
         throw new Error(`The server answered a range request with status ${response.status}`);
       }
+      const asked = (last + 1 - first) * blockSize;
+      const expected = total === null ? asked : Math.min(asked, total - first * blockSize);
+      if (total !== null && bytes.byteLength < expected) {
+        throw new Error(
+          `The server answered ${bytes.byteLength} of the ${expected} bytes asked for`,
+        );
+      }
       return bytes;
     })();
     const promises: Promise<Block>[] = [];
@@ -128,11 +135,38 @@ export function createRangeCache(options: RangeCacheOptions = {}): RangeCache {
     contentRange: `bytes */${total}`,
   });
 
+  const passThrough = (url: string, range: string | null): Promise<RangeReply> => {
+    const key = `${range ?? ""}@${url}`;
+    const known = plain.get(key);
+    if (known) return known;
+    const reply = (async () => {
+      const { response, bytes } = await download(url, range === null ? {} : { Range: range });
+      return {
+        status: response.status,
+        bytes,
+        contentRange: response.headers.get("content-range"),
+      };
+    })();
+    plain.set(key, reply);
+    void reply
+      .finally(() => {
+        plain.delete(key);
+      })
+      .catch(() => undefined);
+    return reply;
+  };
+
+  const uncached = async (url: string, range: string | null): Promise<RangeReply> => {
+    const reply = await passThrough(url, range);
+    return { ...reply, bytes: reply.bytes.slice() };
+  };
+
   const ranged = async (url: string, start: number, end: number): Promise<RangeReply> => {
     const known = totals.get(url);
     if (known !== undefined && start >= known) return unsatisfiable(known);
     const first = Math.floor(start / blockSize);
     const last = Math.floor((known === undefined ? end : Math.min(end, known - 1)) / blockSize);
+    if (last - first >= maxBlocks) return uncached(url, `bytes=${start}-${end}`);
     const parts: (Promise<Block> | Block)[] = [];
     let missingFrom: number | null = null;
     const flush = (until: number) => {
@@ -169,41 +203,13 @@ export function createRangeCache(options: RangeCacheOptions = {}): RangeCache {
     };
   };
 
-  const passThrough = (url: string, range: string | null): Promise<RangeReply> => {
-    const key = `${range ?? ""}@${url}`;
-    const known = plain.get(key);
-    if (known) return known;
-    const reply = (async () => {
-      const { response, bytes } = await download(url, range === null ? {} : { Range: range });
-      return {
-        status: response.status,
-        bytes,
-        contentRange: response.headers.get("content-range"),
-      };
-    })();
-    plain.set(key, reply);
-    void reply
-      .finally(() => {
-        plain.delete(key);
-      })
-      .catch(() => undefined);
-    return reply;
-  };
-
   return {
     async get(url, range) {
       const match = byteRange.exec(range ?? "");
-      if (match === null) {
-        const reply = await passThrough(url, range);
-        return { ...reply, bytes: reply.bytes.slice() };
-      }
+      if (match === null) return uncached(url, range);
       const start = Number(match[1]);
       const end = Number(match[2]);
-      if (end < start) {
-        const reply = await passThrough(url, range);
-        return { ...reply, bytes: reply.bytes.slice() };
-      }
-      return ranged(url, start, end);
+      return end < start ? uncached(url, range) : ranged(url, start, end);
     },
     stats() {
       return { ...counts, cachedBlocks: blocks.size };

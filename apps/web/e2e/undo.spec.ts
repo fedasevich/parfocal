@@ -1,6 +1,16 @@
 import { expect, type Page, test } from "./a11y.ts";
 
 const p07 = "00000000-0000-4000-8003-000000000007";
+const slideReady = 25_000;
+
+test.describe.configure({ timeout: 60_000 });
+
+async function drawn(page: Page) {
+  const stage = page.getByTestId("slide-stage");
+  await expect(stage).toHaveAttribute("data-state", "ready", { timeout: slideReady });
+  await expect(stage).toHaveAttribute("data-annotations", "loaded");
+  return stage;
+}
 
 async function openSlide(page: Page) {
   await page.goto(`/projects/${p07}?tab=slides`);
@@ -9,10 +19,7 @@ async function openSlide(page: Page) {
     .filter({ hasText: "tumor_044" })
     .getByRole("button", { name: "Open" })
     .click();
-  const stage = page.getByTestId("slide-stage");
-  await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 15_000 });
-  await expect(stage).toHaveAttribute("data-annotations", "loaded");
-  return stage;
+  return drawn(page);
 }
 
 const corners = [
@@ -40,7 +47,7 @@ test("undo takes back a drawn polygon on the server too", async ({ page }) => {
   await expect(shape).toHaveCount(0);
   await expect(stage).toHaveAttribute("data-save-state", "saved");
   await page.reload();
-  await expect(stage).toHaveAttribute("data-annotations", "loaded");
+  await drawn(page);
   await expect(shape).toHaveCount(0);
 });
 
@@ -56,7 +63,7 @@ test("redo puts an undone polygon back on the server too", async ({ page }) => {
   await expect(shape).toHaveCount(1);
   await expect(stage).toHaveAttribute("data-save-state", "saved");
   await page.reload();
-  await expect(stage).toHaveAttribute("data-annotations", "loaded");
+  await drawn(page);
   await expect(shape).toHaveCount(1);
 });
 

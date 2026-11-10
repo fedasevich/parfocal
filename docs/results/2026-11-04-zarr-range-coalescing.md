@@ -42,5 +42,5 @@ The pixel at (1500, 777) in the green plane read back as 152 in every arm, the f
 
 ## Follow-ups
 
-- TODO: the HEAD per shard index goes away with `FetchStore`'s `useSuffixRequest`, which sends one `bytes=-N` range instead. R2 and the edge tile gateway would need to be checked for suffix ranges first, and `serve.ts` does not accept them yet.
+- Done on 2026-11-09 under VIEW-063 (sharded OME-Zarr through the byte cache). The reader now opens `FetchStore` with `useSuffixRequest`, which sends one `bytes=-N` range for each shard index and no HEAD. The same test then counted 8 requests, all GET, for both the `getRaster` arm and the 64 `getTile` arm, which is 2 per shard, with the same 12,583,936 bytes. The edge tile gateway already answers a suffix range with 206 (`apps/edge/test/tiles.test.ts`, "suffix and open ended ranges skip the cache"), and `serve.ts` accepts them now. The HEAD was more than a wasted request: the byte cache and the worker relay forward only the URL and the Range header, so through them it became a GET of the whole shard with no length, the index was read from the wrong bytes, and the tile read never finished.
 - TODO: measure the request count of a real pan in the browser once a sharded OME-Zarr slide is in the fixture set.
