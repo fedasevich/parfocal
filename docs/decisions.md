@@ -97,9 +97,9 @@ Your choice:
 
 ## 86. How fast the database tests must be, from TEST-027 (database tests in parallel)
 
-The ci `db` job now runs on four workers and took 14 min 36 s in its first run, against 27 to 37 minutes before ([result](results/2026-11-10-db-tests-in-parallel.md)). The task asks for under 10 minutes. More workers on one runner were not tried on ci and are assumed to gain little, because Postgres shares the runner's cores. The sure way under 10 is a second runner that takes half of the test files, which costs about 20 lines in the test setup and one more ci job. A ci run still ends when `browser (ui)` ends, at about 37 minutes, so the second runner would not make a run finish sooner today.
+The ci `db` job now runs on four workers and took 14 min 36 s, 17 min 23 s and 18 min 24 s in its first three runs, against 27 to 37 minutes before ([first result](results/2026-11-10-db-tests-in-parallel.md), [next two runs](results/2026-11-10-db-tests-in-parallel-next-two-runs.md)). The task asks for under 10 minutes. More workers on one runner were not tried on ci and are assumed to gain little, because Postgres shares the runner's cores. The sure way under 10 is a second runner that takes half of the test files, which costs about 20 lines in the test setup and one more ci job. A ci run still ends when `browser (ui)` ends, at about 37 minutes, so the second runner would not make a run finish sooner today.
 
-- a. Close TEST-027 at about 15 minutes once two more ci runs confirm it. (recommended, the job is no longer the longest one and a second runner buys nothing until the browser jobs are faster)
+- a. Close TEST-027 at 15 to 18 minutes. (recommended, the job is no longer the longest one and a second runner buys nothing until the browser jobs are faster)
 - b. Add the second runner now to reach under 10 minutes.
 
 Your choice:
@@ -116,7 +116,7 @@ Nothing else in review needs you. Nine tasks that only waited for green CI were 
 | IAM-021 (lock screen) | The expired sign-in returning to the object, not only the slide | The session already working on it |
 | VIEW-021 (wheel and pinch) | VIEW-056 (a guided trace recorder), then two minutes of your scrolling when you have a mouse | An agent builds the page, then you |
 | TILES-003 (same-origin data path) | Open time in Chrome is 0.63 s against INGEST-007's 0.35 s, still under the 1 s budget. Either accept the budget as enough or add a small read cache first | An agent, unless you say the budget is enough |
-| TEST-027 (database tests in parallel) | Two more ci runs near 15 minutes, and decision 86 on whether that is fast enough | An agent reads the runs, you choose |
+| TEST-027 (database tests in parallel) | Decision 86 on whether 15 to 18 minutes is fast enough | You choose |
 | AITUM-003, RSET-005 and TASK-007 | Other tasks, now shown as blocked | Agents, when those tasks land |
 
 ## Notes, no decision needed

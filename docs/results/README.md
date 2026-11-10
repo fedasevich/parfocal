@@ -97,3 +97,4 @@ One file per measured run, named `YYYY-MM-DD-short-topic.md`. Copy [_template.md
 | 2026-11-09 | [Edge token review: no way past the token check, 5 low findings around it and 2 suspicions](2026-11-09-edge-token-review.md) | SEC-036 | check |
 | 2026-11-10 | [Viewer engine suspicions: the unsnapped OME-Zarr downsample and the shared patch read tied to one caller are real and fixed, a format with no reader fails loudly](2026-11-10-viewer-engine-suspicions.md) | VIEW-066 | check |
 | 2026-11-10 | [The database tests run on four workers and the ci job drops from about 30 minutes to 14 min 36 s, not under 10](2026-11-10-db-tests-in-parallel.md) | TEST-027 | baseline |
+| 2026-11-10 | [The next two ci runs of the database tests on four workers take 17 min 23 s and 18 min 24 s, so the job is 15 to 18 minutes](2026-11-10-db-tests-in-parallel-next-two-runs.md) | TEST-027 | baseline |

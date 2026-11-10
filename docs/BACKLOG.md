@@ -4384,7 +4384,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when the scan key holds enough of the page state that the hidden panel is scanned in a full run, or a spec scans the known states on purpose, and a full local run reports the same violations as each spec run alone.
   Size: M.
 
-- [ ] TEST-034 · The flow page Enter test presses until the page listens
+- [x] TEST-034 · The flow page Enter test presses until the page listens
   "Enter runs the primary action and a blocked one stays put" in `packages/ui/e2e/flow-page.spec.ts` failed its first attempt in the ci run on commit fc1723ce: the step stayed on Slides after one Enter. The primary button adds its `keydown` listener in an effect, after the step text is on screen, so a key sent in between is lost and nothing retries it. Press Enter again while the step still says Slides.
   Done when the spec passes locally with no retries and the test stays out of the `flaky-*` artifacts of the next three ci runs on main.
   Size: S.
