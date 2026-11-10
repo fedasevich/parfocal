@@ -116,14 +116,14 @@ describe("a decode worker that fails", () => {
 });
 
 describe("a slide the route cannot draw", () => {
-  const grey: PixelSource = {
+  const deepRgb: PixelSource = {
     formatId: "ome-tiff",
     levels: [{ downsample: 1, width: 512, height: 512, tileWidth: 256, tileHeight: 256 }],
     tileSize: { width: 256, height: 256 },
     micronsPerPixel: null,
-    photometric: "grey",
+    photometric: "rgb",
     dtype: "uint16",
-    channels: [{ name: "grey", color: null, window: null }],
+    channels: ["Red", "Green", "Blue"].map((name) => ({ name, color: null, window: null })),
     getTile: () => Promise.resolve({ absent: true, width: 256, height: 256 }),
     getRaster: () => Promise.resolve({ absent: true, width: 1, height: 1 }),
     close: () => undefined,
@@ -137,7 +137,7 @@ describe("a slide the route cannot draw", () => {
       spawn: (index) => workers[index]?.worker as DecodeWorker,
     });
     assert.throws(
-      () => disposingOnThrow(reader, () => createVivLevels(grey, { read: reader.read })),
+      () => disposingOnThrow(reader, () => createVivLevels(deepRgb, { read: reader.read })),
       UnsupportedVivSourceError,
     );
     assert.deepEqual(
