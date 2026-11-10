@@ -4315,7 +4315,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when a result file records the per-spec times before and after, and the web browser job runs under 45 minutes on three runs in a row.
   Size: M.
 
-- [ ] TEST-022 · Text contrast and links in sentences pass axe
+- [x] TEST-022 · Text contrast and links in sentences pass axe
   TEST-009 (accessibility testing) allowlisted every axe finding instead of fixing it, so a green run only means nothing got worse. This task fixes the `color-contrast` and `link-in-text-block` findings. Muted table text, the red tag at a 16 percent mix and other tags get colours at 4.5:1 or better in both themes, changed in the design tokens rather than per screen, and a link inside a sentence gets an underline. Each fixed rule leaves `apps/web/e2e/a11y-allowlist.ts`.
   Done when both rules are gone from the allowlist, the browser suite passes with enforcement on, and the golden images that change are re-recorded with a note on what moved.
   Depends on TEST-009.
