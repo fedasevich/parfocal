@@ -35,6 +35,7 @@ export const test = base.extend<{ accessible: undefined }>({
       const route = routeOf(page.url());
       if (route === null || scannedRoutes.has(route)) return;
       scannedRoutes.add(route);
+      await page.mouse.move(0, 0);
       await page.evaluate(() =>
         Promise.race([
           Promise.allSettled(

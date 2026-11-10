@@ -975,7 +975,7 @@ function UploadStep({
                     <button
                       type="button"
                       aria-expanded={open}
-                      aria-label={`${open ? "Hide" : "Show"} the processing steps of ${entry.name}`}
+                      aria-label={`${steps.done} of ${steps.rows.length} processing steps of ${entry.name}`}
                       title={`${open ? "Hide" : "Show"} the processing steps`}
                       onClick={() => setOpenRows({ ...openRows, [entry.id]: !open })}
                       className="inline-flex h-6.5 cursor-pointer items-center gap-1.5 rounded-md border border-line bg-transparent px-2 text-caption text-fg-dim hover:border-line-strong hover:text-fg"

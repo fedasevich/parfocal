@@ -342,7 +342,7 @@ export function PinLayer({
             data-thread={thread.id}
             data-linked={doc.pins.get(thread.id)?.shapeId ?? ""}
             data-dragging={drag?.threadId === thread.id}
-            aria-label={`Comment by ${author?.name ?? "someone"}: ${thread.title}`}
+            aria-label={`${author?.initials ?? "?"}, comment by ${author?.name ?? "someone"}: ${thread.title}`}
             title={thread.title}
             className={`${selecting ? "pointer-events-none" : "pointer-events-auto"} absolute grid size-7 -translate-y-full cursor-grab place-items-center rounded-full rounded-bl-none border-0 bg-accent-fill p-0 font-semibold text-caption text-on-accent shadow-md active:cursor-grabbing`}
             style={{ left: at.x, top: at.y }}
