@@ -262,7 +262,7 @@ function Row({
                   : "default"
         }
         disabled={action.fixed ?? false}
-        aria-label={`${action.name}: ${key}`}
+        aria-label={`${action.name}: ${recording ? "Press a key" : key}`}
         title={
           action.fixed
             ? "Kept fixed so there is always a way back"
