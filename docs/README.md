@@ -8,7 +8,7 @@ Last consolidated: 2026-11-09
 
 The annotation path (milestone MA) comes first, in the order [ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md) (annotate tasks on one shared layer) lists. Next to it run the follow-up tasks of the four reviews of 2026-11-09: the [project review](results/2026-11-09-project-review.md), the [tenant isolation review](results/2026-11-09-tenant-isolation-review.md), the [edge token review](results/2026-11-09-edge-token-review.md) and the [viewer engine review](results/2026-11-09-viewer-engine-review.md). `python3 scripts/board.py brief` lists the claimed tasks and the review column.
 
-The owner's open questions in [decisions.md](decisions.md) are decision 81 (staging before more features), decision 82 (what the thesis claims about people), decision 83 (a date for the thesis slice), decision 84 (a new workspace and its mail domain) and decision 85 (presence in a blinded review).
+The owner's open questions in [decisions.md](decisions.md) are decision 81 (staging before more features), decision 82 (what the thesis claims about people), decision 83 (a date for the thesis slice), decision 84 (a new workspace and its mail domain), decision 85 (presence in a blinded review) and decision 86 (how fast the database tests must be).
 
 ## Where we are now
 
