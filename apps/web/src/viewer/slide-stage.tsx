@@ -731,6 +731,9 @@ function OpenedSlide({
                         ai={item.ai ?? false}
                         {...(item.action === undefined ? {} : { action: item.action })}
                         data-tool={item.tool}
+                        className={
+                          toolsLayout === "dock" ? undefined : "[@media(max-height:760px)]:size-7"
+                        }
                         pressed={tool === stageTool}
                         onPressedChange={(on) => setTool(on ? stageTool : restingTool)}
                       />

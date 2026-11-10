@@ -1,6 +1,7 @@
 import { mergeProps } from "@base-ui/react/merge-props";
 import { useRender } from "@base-ui/react/use-render";
 import { Icon } from "@parfocal/ui/components/icon";
+import { scrollRegionProps } from "@parfocal/ui/lib/scroll-region";
 import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
 
@@ -67,7 +68,11 @@ function LaneMap({ width, height, className, children, ...props }: LaneMapProps)
   return (
     <div
       data-slot="lane-map"
-      className={cn("relative overflow-auto bg-surf-page", className)}
+      {...scrollRegionProps("Flow lanes")}
+      className={cn(
+        "relative overflow-auto bg-surf-page focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent focus-visible:outline-solid",
+        className,
+      )}
       {...props}
     >
       <div className="relative" style={{ width, height }}>

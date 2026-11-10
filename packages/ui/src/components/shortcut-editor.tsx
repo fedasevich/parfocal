@@ -240,7 +240,7 @@ function KeyFinder({ listening, found, onClear, className, ...props }: KeyFinder
           onClick={onClear}
           title="Clear"
           aria-label="Clear the key"
-          className="absolute top-1/2 right-2 -translate-y-1/2 cursor-pointer border-0 bg-transparent px-1 text-fg-dim"
+          className="absolute top-1/2 right-1 grid size-6 -translate-y-1/2 cursor-pointer place-items-center border-0 bg-transparent p-0 text-fg-dim"
         >
           ×
         </button>

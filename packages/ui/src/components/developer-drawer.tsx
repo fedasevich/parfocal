@@ -3,6 +3,7 @@ import { Icon } from "@parfocal/ui/components/icon";
 import { Keycap } from "@parfocal/ui/components/keycap";
 import { Switch } from "@parfocal/ui/components/switch";
 import { Zone } from "@parfocal/ui/components/zone";
+import { scrollRegionProps } from "@parfocal/ui/lib/scroll-region";
 import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
 
@@ -51,7 +52,10 @@ function DeveloperDrawer({
       </div>
       <div className="grid min-h-0 grid-cols-[188px_minmax(0,1fr)]">
         {nav}
-        <div className="grid min-h-0 content-start gap-5 overflow-y-auto px-4.5 pt-4.5 pb-6 [scrollbar-gutter:stable]">
+        <div
+          {...scrollRegionProps("Developer section")}
+          className="grid min-h-0 content-start gap-5 overflow-y-auto px-4.5 pt-4.5 pb-6 [scrollbar-gutter:stable] focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent focus-visible:outline-solid"
+        >
           {children}
         </div>
       </div>
