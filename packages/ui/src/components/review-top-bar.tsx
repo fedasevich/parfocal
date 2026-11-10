@@ -202,6 +202,7 @@ function ReviewTopBar({
       {mode === "adjudicate" ? null : (
         <SegmentedControl
           aria-label="How to review"
+          className="shrink-0"
           value={mode}
           onValueChange={(value) => onModeChange?.(value as "guided" | "full" | "annotate")}
           size={big ? "lg" : "md"}
