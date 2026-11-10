@@ -28,4 +28,8 @@ A test at its limit turns main red on a slow runner even though nothing regresse
 
 An accessibility failure can look flaky when it is real. The axe fixture scans a route once per worker, after the first test that ends there, and the specs run fully parallel. The floating side panel tab broke a rule only while the panel was hidden, so the fault showed only when the hidden panel test reached the route first (TEST-032, the floating side panel tab is named by what it shows). Run the failing test alone before calling it flaky. TEST-033 (the axe scan of a route does not depend on test order) is open for the fixture.
 
+A key press is one shot, so a key sent before the page listens is lost. The flow page adds its Enter listener in an effect after the step text is drawn, and the test pressed Enter as soon as it saw the text (TEST-034, the flow page Enter test presses until the page listens). Put the press and the check in `expect(...).toPass()` and press again only while the old state still shows.
+
+Two axe scans fail on a first attempt for causes not yet named: "Axe is already running" on a story page and a colour contrast violation on a button just clicked (TEST-035, find why two axe scans fail on a first attempt).
+
 One cause is still unknown: the table Tab order test in `packages/ui` fails its first ci attempt and never fails on the Mac (TEST-030, find why the table Tab order test fails on its first ci attempt).

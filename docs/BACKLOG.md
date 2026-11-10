@@ -4354,7 +4354,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when the command fails on a missing weight or dataset instead of skipping, a result file records one full run with its numbers, and `knowledge/agent-workflow.md` names when the lead runs it.
   Size: S.
 
-- [ ] TEST-029 · Display panel specs click the Undo of the toast they caused
+- [x] TEST-029 · Display panel specs click the Undo of the toast they caused
   Two tests in `apps/web/e2e/display-panel.spec.ts` flaked in three ci runs on 2026-11-09: the Shift+3 preset switch and the preset switch in the full viewer. Each waited for the "Display: ..." toast and then clicked a bare Undo button. The toast lives 4 seconds, so on a slow runner the button was detached between the wait and the click and the click waited out the 90 second test limit. Click the Undo inside the toast that names the preset, in one step, so Playwright retries the whole lookup.
   Done when both tests pass locally with no retries and neither appears in a `flaky-*` artifact of the next three ci runs on main.
   Size: S.
@@ -4378,6 +4378,16 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   `apps/web/e2e/a11y.ts` scans each route once per worker, in the state the first test to finish there left it, and the web specs run fully parallel. A violation that shows only in another state of the route, such as the hidden side panel of TEST-032 (the floating side panel tab is named by what it shows), stays unseen until the order changes and then turns an unrelated run red.
   Done when the scan key holds enough of the page state that the hidden panel is scanned in a full run, or a spec scans the known states on purpose, and a full local run reports the same violations as each spec run alone.
   Size: M.
+
+- [ ] TEST-034 · The flow page Enter test presses until the page listens
+  "Enter runs the primary action and a blocked one stays put" in `packages/ui/e2e/flow-page.spec.ts` failed its first attempt in the ci run on commit fc1723ce: the step stayed on Slides after one Enter. The primary button adds its `keydown` listener in an effect, after the step text is on screen, so a key sent in between is lost and nothing retries it. Press Enter again while the step still says Slides.
+  Done when the spec passes locally with no retries and the test stays out of the `flaky-*` artifacts of the next three ci runs on main.
+  Size: S.
+
+- [ ] TEST-035 · Find why two axe scans fail on a first attempt
+  Two tests failed once and passed their retry on 2026-11-10. "the open modal passes axe in light" in `packages/ui/e2e/small-modal.spec.ts` threw "Axe is already running" (ci run on commit 1f61523d), so something else on the story page runs axe while the spec does. "an email that already has an account says so" in `apps/web/e2e/sign-up.spec.ts` got a `color-contrast` violation on the primary button of `/sign-up` (ci run on commit fc1723ce), right after the click that submits the form.
+  Done when each has a named cause, a fix in the spec, the fixture or the component, and neither test sits in a `flaky-*` artifact for a week of main.
+  Size: S.
 
 ---
 
