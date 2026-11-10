@@ -53,6 +53,10 @@ export const test = base.extend<{ accessible: undefined }>({
       const found = results.violations.map((violation) => ({
         rule: violation.id,
         targets: violation.nodes.map((node) => node.target.join(" ")).slice(0, 5),
+        nodes: violation.nodes.slice(0, 3).map((node) => ({
+          html: node.html.slice(0, 300),
+          summary: (node.failureSummary ?? "").slice(0, 300),
+        })),
       }));
       const recordFile = process.env["PARFOCAL_A11Y_RECORD"];
       if (recordFile !== undefined && recordFile !== "") {
