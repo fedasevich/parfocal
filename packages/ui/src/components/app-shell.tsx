@@ -4,6 +4,7 @@ import { Keycap } from "@parfocal/ui/components/keycap";
 import { PersonAvatar, type PersonInfo, type Presence } from "@parfocal/ui/components/person";
 import { CategoryTag } from "@parfocal/ui/components/tag";
 import { type WorkspaceBrand, WorkspaceButton } from "@parfocal/ui/components/workspace-switcher";
+import { scrollRegionProps } from "@parfocal/ui/lib/scroll-region";
 import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
 
@@ -284,7 +285,12 @@ function AppShell({ top, side, className, children, ...props }: AppShellProps) {
       {top}
       <div className={cn("grid min-h-0", side ? "grid-cols-[240px_minmax(0,1fr)]" : "")}>
         {side}
-        <div className="min-h-0 overflow-auto">{children}</div>
+        <div
+          {...scrollRegionProps("Page content")}
+          className="min-h-0 overflow-auto focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent focus-visible:outline-solid"
+        >
+          {children}
+        </div>
       </div>
     </div>
   );

@@ -517,7 +517,7 @@ type DecidePanelProps = {
 };
 
 const linkClass =
-  "inline-flex cursor-pointer items-center gap-2 border-0 bg-transparent p-0 text-body-sm text-accent hover:underline";
+  "inline-flex min-h-6 cursor-pointer items-center gap-2 border-0 bg-transparent p-0 text-body-sm text-accent hover:underline";
 
 function DecidePanel({
   row,

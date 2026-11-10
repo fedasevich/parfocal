@@ -14,6 +14,7 @@ import {
 import { Switch } from "@parfocal/ui/components/switch";
 import { StatusTag } from "@parfocal/ui/components/tag";
 import { Hint, Zone } from "@parfocal/ui/components/zone";
+import { scrollRegionProps } from "@parfocal/ui/lib/scroll-region";
 import { type ReactNode, useState } from "react";
 import { FileList } from "./parts.tsx";
 
@@ -250,7 +251,10 @@ export function ImportsModal({
             <Icon name="close" />
           </Button>
         </div>
-        <div className="grid content-start gap-4 overflow-auto p-5">
+        <div
+          {...scrollRegionProps("Automatic imports settings")}
+          className="grid content-start gap-4 overflow-auto p-5 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent focus-visible:outline-solid"
+        >
           <div className="flex">
             <SegmentedControl
               aria-label="Kind of import"

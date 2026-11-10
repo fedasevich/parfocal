@@ -6,6 +6,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@parfocal/ui/components/select";
+import { scrollRegionProps } from "@parfocal/ui/lib/scroll-region";
 import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
 
@@ -13,8 +14,9 @@ function CodeBlock({ className, ...props }: React.ComponentProps<"pre">) {
   return (
     <pre
       data-slot="code-block"
+      {...scrollRegionProps("Code example")}
       className={cn(
-        "m-0 overflow-auto rounded-zone border border-line bg-chrome px-4 py-3.5 font-mono text-caption leading-[1.6] whitespace-pre text-fg-dim",
+        "m-0 overflow-auto rounded-zone border border-line bg-chrome px-4 py-3.5 font-mono text-caption leading-[1.6] whitespace-pre text-fg-dim focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent focus-visible:outline-solid",
         className,
       )}
       {...props}

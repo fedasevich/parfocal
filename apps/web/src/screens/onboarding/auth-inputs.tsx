@@ -48,7 +48,7 @@ export function PasswordInput({
         type="button"
         aria-label={shown ? "Hide what you typed" : "Show what you typed"}
         onClick={() => setShown(!shown)}
-        className="absolute right-2 cursor-pointer border-0 bg-transparent p-0 text-fg-faint"
+        className="absolute right-1 grid size-6 cursor-pointer place-items-center border-0 bg-transparent p-0 text-fg-faint"
       >
         <Icon name={shown ? "eye-off" : "eye"} />
       </button>

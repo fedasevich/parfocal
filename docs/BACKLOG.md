@@ -4327,7 +4327,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Depends on TEST-009.
   Size: M.
 
-- [ ] TEST-024 · Keyboard reachable scroll regions and 24 pixel targets pass axe
+- [x] TEST-024 · Keyboard reachable scroll regions and 24 pixel targets pass axe
   Fixes the allowlisted `scrollable-region-focusable` and `target-size` findings from TEST-009 (accessibility testing). Scrolling regions in Developer, upload and the worklist spike can be reached with the keyboard, and every control is at least 24 by 24 pixels or has the spacing WCAG 2.2 allows. Each fixed rule leaves `apps/web/e2e/a11y-allowlist.ts`.
   Done when both rules are gone from the allowlist, the browser suite passes with enforcement on, and the allowlist is empty or every rule left names why it stays.
   Depends on TEST-009.
@@ -4368,6 +4368,16 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   The ci run on commit 71294ded failed on three web tests that sat at their time limit while every other job passed: the redo test in `apps/web/e2e/undo.spec.ts` (a reload, then the slide not ready inside 30 seconds), the review task test in `apps/web/e2e/workspaces.spec.ts` (15 seconds for the slide to be ready) and the fake data test in `apps/web/e2e/guided-review.spec.ts` that made six page loads in one 30 second test. The web jobs of that run took 33 and 34 minutes against 23 and 25. Give the slide 25 seconds to be ready, give the two slide specs a 60 and 90 second test limit, wait for the slide after each reload, and split the six page loads into three tests. Three more tests failed once and passed their retry in the same run. `polygon.spec.ts` and `saved-marks.spec.ts` open the slide the same way and get the same room. The pinned strip test in `layout-settings.spec.ts` reloaded right after its click, before the switch showed the change, so each click in that spec now waits for its control to be checked before the reload.
   Done when the six specs pass locally with no retries and none of their tests fails or sits in a `flaky-*` artifact of the next three ci runs on main.
   Size: S.
+
+- [x] TEST-032 · The floating side panel tab is named by what it shows
+  The tab that brings back a hidden side panel had the `aria-label` "Show the side panel, Objects, 312" over the visible text "Objects" and "312", which fails the axe rule `label-content-name-mismatch` that TEST-023 (names, roles and nested controls pass axe) took off the allowlist. The hidden panel test in `apps/web/e2e/layout-settings.spec.ts` failed on it in the ci run on commit 8010c90a and fails every time it runs alone. Name the button from its own content with a visually hidden "Show the side panel, " in front.
+  Done when the hidden panel test passes when run alone and asserts the accessible name of the tab.
+  Size: S.
+
+- [ ] TEST-033 · The axe scan of a route does not depend on test order
+  `apps/web/e2e/a11y.ts` scans each route once per worker, in the state the first test to finish there left it, and the web specs run fully parallel. A violation that shows only in another state of the route, such as the hidden side panel of TEST-032 (the floating side panel tab is named by what it shows), stays unseen until the order changes and then turns an unrelated run red.
+  Done when the scan key holds enough of the page state that the hidden panel is scanned in a full run, or a spec scans the known states on purpose, and a full local run reports the same violations as each spec run alone.
+  Size: M.
 
 ---
 
