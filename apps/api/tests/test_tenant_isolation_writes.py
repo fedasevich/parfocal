@@ -18,9 +18,6 @@ from test_tenant_isolation import (
     Seeded,
     link_site_serving,
     seed_both,
-    serve_link_files,
-    slug_of,
-    source_address,
     upload_key,
 )
 
@@ -94,6 +91,8 @@ FORBIDDEN = frozenset({403})
 BAD_REQUEST = frozenset({400})
 NO_BROWSER_SESSION = frozenset({401})
 REASON = "A second look at the slide"
+SHARED_FOLDER = "/shared/"
+SHARED_FILE = "scan.svs"
 POINT = {"type": "Point", "coordinates": [4, 4]}
 LINE = {"type": "LineString", "coordinates": [[0, 0], [5, 5]]}
 BLOCKS = [{"title": "Headline", "kind": "headline-numbers", "metrics": ["sensitivity"]}]
@@ -175,6 +174,11 @@ def fixed(value: str) -> Value:
     return lambda _: value
 
 
+def serve_shared_files() -> None:
+    LINK_SITE.index(SHARED_FOLDER, [SHARED_FILE])
+    LINK_SITE.file(f"{SHARED_FOLDER}{SHARED_FILE}", b"slide-bytes")
+
+
 def constant(value: object) -> Body:
     return lambda _: value
 
@@ -198,9 +202,9 @@ PRESETS = {
 LAYOUT = {"paper": "letter", "decimals": 3, "downloads": ["pdf"]}
 
 
-def template(a: Seeded) -> object:
+def template(_: Seeded) -> object:
     return {
-        "name": f"Template {a.subject}"[:60],
+        "name": "Second template",
         "study_kind": "regions",
         "blocks": BLOCKS,
         "format": LAYOUT,
@@ -326,7 +330,7 @@ WRITE_ROUTES: dict[str, Write] = {
         body=constant({"reason": "An urgent second look"}), owner=CONFLICT
     ),
     "importFromLink": Write(
-        body=lambda a: {"address": source_address(a), "names": [f"{slug_of(a)}.svs"]},
+        body=constant({"address": LINK_SITE.url(SHARED_FOLDER), "names": [SHARED_FILE]}),
         linked=True,
     ),
     "setProjectMember": Write(body=constant({"role": "owner"})),
@@ -702,7 +706,7 @@ def test_a_write_aimed_at_another_workspace_is_refused_and_its_owner_is_not(
     route = WRITE_ROUTES[operation]
     if route.linked:
         link_site_serving()
-        serve_link_files(a)
+        serve_shared_files()
         trusted = api.app.settings.model_copy(update={"link_trusted_origins": [LINK_SITE.origin]})
         monkeypatch.setattr(api.app, "settings", trusted)
     before = rows_of(database, a)
@@ -718,3 +722,57 @@ def test_a_write_aimed_at_another_workspace_is_refused_and_its_owner_is_not(
     )
     if accepted.status_code == refused.status_code:
         assert rows_of(database, a) != before
+
+
+def carried(route: Write, of: Seeded) -> tuple[object, object]:
+    return (route.body(of) if route.body else None, route.query(of) if route.query else None)
+
+
+def tail_of(operation: str, route: Write, a: Seeded, b: Seeded) -> str:
+    kept = operations()[operation].template.split("}", 1)[0].count("/") + 1
+    mine = path_of(operation, route, b).split("/")
+    theirs = path_of(operation, route, a).split("/")
+    return "/".join([*mine[:kept], *theirs[kept:]])
+
+
+MIXES = ("body", "tail")
+
+
+@pytest.mark.parametrize("mix", MIXES)
+@pytest.mark.parametrize("operation", sorted(WRITE_ROUTES))
+def test_a_write_on_my_own_path_that_carries_an_id_of_another_workspace_is_refused(
+    api: ApiAs,
+    database: str,
+    storage: StorageLocation,
+    monkeypatch: pytest.MonkeyPatch,
+    operation: str,
+    mix: str,
+) -> None:
+    assert storage.bucket
+    route = WRITE_ROUTES[operation]
+    template = operations()[operation].template
+    if template.count("{") < (1 if mix == "body" else 2) or route.accepted_because:
+        pytest.skip("has no path of its own to mix")
+    a, b = asyncio.run(seed_both(database))
+    a, b = with_row_ids(database, a), with_row_ids(database, b)
+    if mix == "body" and carried(route, a) == carried(route, b):
+        pytest.skip("carries no id")
+    if route.linked:
+        link_site_serving()
+        serve_shared_files()
+        trusted = api.app.settings.model_copy(update={"link_trusted_origins": [LINK_SITE.origin]})
+        monkeypatch.setattr(api.app, "settings", trusted)
+    before = rows_of(database, a), rows_of(database, b)
+    of_body = a if mix == "body" else b
+    path = path_of(operation, route, b) if mix == "body" else tail_of(operation, route, a, b)
+    answer = api(b.member(route.admin_rights)).request(
+        operations()[operation].method,
+        path,
+        params=route.query(of_body) if route.query else None,
+        json=route.body(of_body) if route.body else None,
+    )
+    changed_a = rows_of(database, a) != before[0]
+    changed_b = rows_of(database, b) != before[1]
+    assert (400 <= answer.status_code < 500, changed_a, changed_b) == (True, False, False), (
+        f"{mix} {answer.status_code} a={changed_a} b={changed_b} {path} {answer.text[:160]}"
+    )
