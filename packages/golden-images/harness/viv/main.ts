@@ -187,7 +187,7 @@ const render = async (request: VivSceneRequest): Promise<VivSceneResult> => {
   const openedSlide = opened as PixelSlide | null;
   if (mountedRoute === null || openedSlide === null) throw new Error("The route never mounted");
   await mountedRoute.whenIdle();
-  const { ladder, tileSize } = createVivLevels(openedSlide.source);
+  const { ladder, tileSize } = mountedRoute.channels() ?? createVivLevels(openedSlide.source);
   const decodeStats = mountedRoute.decodeStats();
   return {
     camera: current.getCamera(),

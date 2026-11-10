@@ -252,6 +252,11 @@
       "file": "synthetic-decoy.scn",
       "sha256": "ede30f9519ee369d62eee86096b8d1e5d003ef7ad621abf638b11e4969a239a3",
       "bytes": 175257
+    },
+    {
+      "file": "synthetic-grey.tiff",
+      "sha256": "aafe4638a6fbfd35e817a53d3e4ba8f62997e7da53cbd40080861b99eef9c527",
+      "bytes": 14838
     }
   ]
 }

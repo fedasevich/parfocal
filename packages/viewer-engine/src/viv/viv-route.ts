@@ -380,9 +380,7 @@ export function createVivRoute(
     const reader = readerFor(slide);
     channelDisplay = [];
     shown = disposingOnThrow(reader, () =>
-      slide.source.photometric === "channels"
-        ? channelShown(slide, reader)
-        : rgbShown(slide, reader),
+      slide.source.photometric === "rgb" ? rgbShown(slide, reader) : channelShown(slide, reader),
     );
     applyLayers();
   };

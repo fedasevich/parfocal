@@ -55,6 +55,7 @@ const tiny = syntheticPath("synthetic-jpeg.tiff");
 | `synthetic-channels-uint8.ome.tiff` | OME-TIFF with three 8-bit channels (DAPI, FITC, TRITC) as separate zlib pages, two SubIFD levels each |
 | `synthetic-channels-uint16.ome.tiff` | The same with 16-bit samples |
 | `synthetic-mxif-uint16-be.ome.tiff` | Big-endian BigTIFF OME with four 16-bit channels named like the Vanderbilt kidney MxIF scan (Hoechst, Laminin, Synaptopodin, THP), two SubIFD levels each in 32 px zlib tiles, so the tile offset arrays lie outside the first directory read. The first three channels equal `synthetic-channels-uint16.ome.tiff` |
+| `synthetic-grey.tiff` | Generic tiled TIFF with one 8-bit BlackIsZero sample, the luma of the same image, three levels in 256 px deflate tiles. Made by `scripts/make_synthetic_grey.py` |
 
 The image has a grid every 128 px, an L-shaped mark in the top left and a block in the bottom right, so flips and rotations show. Each level is the 2 × 2 mean of the level above. Regenerate them with
 
@@ -62,7 +63,7 @@ The image has a grid every 128 px, an L-shaped mark in the top left and a block 
 uv run --no-project --python 3.14 --with tifffile --with numpy --with imagecodecs packages/test-fixtures/scripts/make_synthetic.py
 ```
 
-and the codec and channel files with the same command on `make_synthetic_codecs.py`, which needs the same packages. Either script also rewrites the `synthetic` checksums in `fixtures.json`. The OME-XML holds a random UUID, so every run changes the checksums.
+and the codec and channel files with the same command on `make_synthetic_codecs.py`, which needs the same packages. Either script also rewrites the `synthetic` checksums in `fixtures.json`. The OME-XML holds a random UUID, so every run changes the checksums. `make_synthetic_grey.py` and `make_synthetic_scn.py` each write one file with the same command and add only its checksum. Run `pnpm exec biome format --write packages/test-fixtures/fixtures.json` after any of them, because the scripts write the group lists one name per line.
 
 ## Reference tiles from the server reader
 

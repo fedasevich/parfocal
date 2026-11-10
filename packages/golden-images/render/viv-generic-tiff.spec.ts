@@ -39,6 +39,19 @@ const syntheticSparseFit: VivGoldenScene = {
   view: { kind: "fit" },
 };
 
+const syntheticGreyFit: VivGoldenScene = {
+  name: "viv-synthetic-grey-tiff-fit",
+  fixture: "synthetic-grey.tiff",
+  formatId: "generic-tiff",
+  format: "synthetic",
+  view: { kind: "fit" },
+};
+
+const greyMarks = [
+  { x: 64, y: 64, grey: 42 },
+  { x: 928, y: 672, grey: 94 },
+];
+
 test.describe.configure({ mode: "serial", timeout: 180_000 });
 
 let server: ViteDevServer | null = null;
@@ -104,4 +117,29 @@ test("an absent tile draws as white glass and a damaged JPEG 2000 tile as grey",
   const centreOfSecondTile = { x: 300, y: 100 };
   expect(at(sparse.frame, centreOfSecondTile.x, centreOfSecondTile.y)).toEqual([255, 255, 255]);
   expect(at(damaged.frame, centreOfSecondTile.x, centreOfSecondTile.y)).toEqual([160, 160, 160]);
+});
+
+test("a one-sample grey TIFF draws through the channel route and matches its golden image", async ({
+  page,
+}, testInfo) => {
+  const { result, frame } = await renderVivFrame(page, syntheticGreyFit);
+  expect(result.errors).toEqual([]);
+  expect(result.decoded?.dispatched).toBeGreaterThan(0);
+  const scale = 2 ** result.camera.zoom;
+  for (const mark of greyMarks) {
+    const x = Math.round(frame.width / 2 + (mark.x - result.camera.x) * scale);
+    const y = Math.round(frame.height / 2 + (mark.y - result.camera.y) * scale);
+    const offset = (y * frame.width + x) * 4;
+    const [red, green, blue] = frame.data.slice(offset, offset + 3);
+    expect(red).toBe(green);
+    expect(green).toBe(blue);
+    expect(Math.abs((red ?? 0) - mark.grey)).toBeLessThanOrEqual(1);
+  }
+  const outcome = checkGolden(frame, {
+    name: syntheticGreyFit.name,
+    format: syntheticGreyFit.format,
+    goldenDirectory,
+    outputDirectory: testInfo.outputDir,
+  });
+  if (outcome.status === "mismatched") throw new Error(outcome.message);
 });

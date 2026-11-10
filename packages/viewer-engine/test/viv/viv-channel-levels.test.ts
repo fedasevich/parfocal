@@ -56,6 +56,24 @@ describe("Viv levels over a multichannel PixelSource", () => {
     source.close();
   });
 
+  it("describes a one-sample grey TIFF as one white channel (synthetic-grey.tiff)", async () => {
+    const source = await open("synthetic-grey.tiff", "generic-tiff");
+    assert.equal(source.photometric, "grey");
+    const viv = createVivChannelLevels(source);
+    assert.equal(viv.dtype, "Uint8");
+    assert.deepEqual(
+      viv.channels.map((channel) => channel.name),
+      ["Grey"],
+    );
+    assert.deepEqual(levelOf(viv, 0).shape, [1, 768, 1024]);
+    const props = vivChannelLayerProps(viv);
+    assert.deepEqual(props.colors, [[255, 255, 255]]);
+    assert.deepEqual(props.contrastLimits, [[0, 255]]);
+    const tile = await levelOf(viv, 0).getTile({ x: 0, y: 0, selection: { c: 0 } });
+    assert.equal(tile.data[64 * 256 + 64], 42);
+    source.close();
+  });
+
   it("returns the samples of the selected channel only, at their own bit depth", async () => {
     for (const [file, array] of [
       ["synthetic-channels-uint8.ome.tiff", Uint8Array],
