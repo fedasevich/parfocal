@@ -4327,7 +4327,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Depends on TEST-009.
   Size: M.
 
-- [ ] TEST-024 · Keyboard reachable scroll regions and 24 pixel targets pass axe
+- [x] TEST-024 · Keyboard reachable scroll regions and 24 pixel targets pass axe
   Fixes the allowlisted `scrollable-region-focusable` and `target-size` findings from TEST-009 (accessibility testing). Scrolling regions in Developer, upload and the worklist spike can be reached with the keyboard, and every control is at least 24 by 24 pixels or has the spacing WCAG 2.2 allows. Each fixed rule leaves `apps/web/e2e/a11y-allowlist.ts`.
   Done when both rules are gone from the allowlist, the browser suite passes with enforcement on, and the allowlist is empty or every rule left names why it stays.
   Depends on TEST-009.
