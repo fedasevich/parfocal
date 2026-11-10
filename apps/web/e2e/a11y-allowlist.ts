@@ -25,16 +25,6 @@ export const allowedViolations: readonly AllowedViolation[] = [
     todo: "TODO a link inside a sentence needs an underline or 3:1 contrast against the text",
     routes: ["/projects/:id/tasks/new*"],
   },
-  {
-    rule: "nested-interactive",
-    todo: "TODO a row or card holds a control inside another control",
-    routes: [
-      "/tasks/:id/guided*",
-      "/my-work",
-      "/projects/:id/upload*",
-      "/tasks/:id/disagreements*",
-    ],
-  },
 ];
 
 export function isAllowed(rule: string, route: string): boolean {
