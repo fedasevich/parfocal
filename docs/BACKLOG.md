@@ -4515,7 +4515,7 @@ A project holds slides, AI results and review tasks. Cases inside it are optiona
   Depends on PROJ-010.
   Size: S.
 
-- [ ] PROJ-012 · Removing a class that stored work uses is refused, not a crash
+- [x] PROJ-012 · Removing a class that stored work uses is refused, not a crash
   `PUT /api/projects/{id}/classes` checked only task annotations before it deleted a class, so a class used by a person's own annotation, an imported result set, a review edit, a skip or a decision broke a foreign key and answered 500. The write isolation suite of SEC-043 (every write route is sent as another workspace) found it when the owner of a seeded project replaced its class list. Check every column that points at a class without a cascade.
   Done when an API test removes a class that a person's own annotation uses and gets 409 `class-in-use`, and a test pins the list of columns the check reads.
   Size: S.
