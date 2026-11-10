@@ -54,11 +54,12 @@ export function InspectorDock({
       <button
         type="button"
         data-testid="inspector-tab"
-        aria-label={`Show the side panel, ${tabLabel}${tabCount ? `, ${tabCount}` : ""}`}
         onClick={() => onLayout({ hidden: false })}
         className="absolute top-3 right-0 z-10 flex cursor-pointer items-center gap-1.5 rounded-l-ctl border border-r-0 border-line bg-chrome px-2.5 py-2 text-body-sm font-semibold text-fg shadow-sm hover:bg-chrome-2"
       >
+        <span className="sr-only">Show the side panel, </span>
         <span>{tabLabel}</span>
+        {tabCount ? " " : null}
         {tabCount ? <TabCount>{tabCount}</TabCount> : null}
       </button>
     );

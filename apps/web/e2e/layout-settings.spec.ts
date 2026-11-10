@@ -31,7 +31,9 @@ test("hiding the panel in Settings leaves the floating tab on the slide", async 
   await page.reload();
   await openViewer(page);
   await expect(panel(page)).toHaveCount(0);
-  await expect(page.getByTestId("inspector-tab")).toBeVisible();
+  await expect(page.getByTestId("inspector-tab")).toHaveAccessibleName(
+    /^Show the side panel, Objects( \d+)?$/,
+  );
 });
 
 test("Hide while panning on the slide is the Panel while moving setting", async ({ page }) => {
