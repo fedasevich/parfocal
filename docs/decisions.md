@@ -6,6 +6,17 @@ Each decision lists its options, with the recommended one marked. Write your let
 
 To take every recommendation at once, write "all recommended" here: 
 
+## What you need to do next, in order
+
+1. Sign in to Zitadel in the open Chrome tab.
+2. Copy the values of the Cloudflare and Modal `parfocal-ci-prod` tokens for the infra guide, who puts them into the GitHub environment `production`.
+3. Create a Neon API key, which decision 88 (credentials that the production deploy needs) asks for.
+4. Answer decision 90 (Neon region and Postgres version).
+5. Answer decision 87 (delete the old OpenTofu state file).
+6. Answer decision 89 (the old web host's wildcard DNS record).
+7. Answer decision 91 (delete the GitHub environment `staging` and the staging tokens).
+8. Answer decision 92 (delete the empty buckets `parfocal-prod` and `parfocal-staging`).
+
 ## What your answers of 2026-11-04 changed
 
 | Answer | What changed |
@@ -51,7 +62,7 @@ Every other answer kept what was built: 37a (darker primary hover), 39a (Alt+Lef
 
 | Answer | What changed |
 |---|---|
-| 81a, staging first | The staging slice heads the picking order in `docs/README.md` and `knowledge/agent-workflow.md`: OPS-001 (base infrastructure as code), OPS-002 (deploy definitions), IAM-001 (identity provider setup as code), SKEL-001 (staging environment exists), OPS-005 (continuous deployment) and SKEL-009 (CI deploys main to staging). No other new task starts until the real end-to-end specs pass on staging |
+| 81a, production first | You first chose staging before more features. Later on 2026-11-13 you cut staging, so production is the only cloud environment until the first real user ([ADR 0293](adr/0293-production-only-until-the-first-real-user.md), production only until the first real user). The production slice heads the picking order in `docs/README.md` and `knowledge/agent-workflow.md`: OPS-002 (deploy definitions), SKEL-001 (production environment exists), OPS-005 (continuous deployment) and SKEL-009 (CI deploys main to production). No other new task starts until the real end-to-end specs pass on production. OPS-014 (bring back staging before the first real user) holds the trigger |
 | 82a, thesis claims | The thesis claims only measured results and public dataset ground truth, and `project/agent-stand-in-records.md` says so |
 | 83b, no date | No milestone is gated on a date. The roadmap notes the hand-in around April or May 2027 |
 | 84a, workspace mail domain | IAM-026 (a workspace on a shared mail domain is not open to strangers) builds it: a new workspace saves no domain and an admin turns joining by domain on |
@@ -64,27 +75,27 @@ Every other answer kept what was built: 37a (darker primary hover), 39a (Alt+Lef
 
 The state moved to four files, one per root (ADR 0287, one OpenTofu root per environment). The old file `parfocal.tfstate` in bucket `parfocal-tfstate` is now an unused encrypted copy that still holds all three login app secrets. Deleting is a destructive action, so it needs your yes. The command is `npx wrangler r2 object delete parfocal-tfstate/parfocal.tfstate`, cost $0.
 
-- **A. Delete it once staging has deployed from the new roots (recommended).** It stays as a fallback for the few days OPS-002 (deploy definitions) and SKEL-001 (staging environment exists) take.
+- **A. Delete it once production has deployed from the new roots (recommended).** It stays as a fallback for the few days OPS-002 (deploy definitions) and SKEL-001 (production environment exists) take.
 - B. Delete it now.
 - C. Keep it.
 - Other.
 
 Your choice:
 
-### 88. Credentials that the staging deploy needs
+### 88. Credentials that the production deploy needs
 
-On 2026-11-13 you and the infra guide already made most of them. The GitHub environment `staging` holds the Cloudflare token `parfocal-ci-staging` (Workers Scripts Edit and Account Settings Read on the account, Workers Routes Edit, DNS Edit and Zone Read on `parfocal.eu`, expires 2027-11-13), the account ID as a variable, and a Modal token. Two things are still missing.
+Production is the only cloud environment now (ADR 0293, production only until the first real user), so CI deploys from the GitHub environment `production`. GitHub cannot read a secret back, so the ones made for `staging` on 2026-11-13 are made again for production: a Cloudflare token `parfocal-ci-prod` with the same permissions as `parfocal-ci-staging` (Workers Scripts Edit and Account Settings Read on the account, Workers Routes Edit, DNS Edit and Zone Read on `parfocal.eu`), the account ID as a variable, and a Modal token. The infra guide enters them with you. One thing is still missing after that.
 
-- **A. Create a Neon API key and add R2 read to `parfocal-ci-staging` (recommended).** The Neon key is scoped to project `parfocal` if Neon offers project scope, else a personal key, and goes into the `staging` environment as `NEON_API_KEY` the same clipboard way. R2 read lets the deploy check the staging bucket exists.
-- B. Only the Neon key, and the deploy reads bucket names from `tofu.sh staging output -json` instead.
-- C. Deploy to staging only from your Mac for now, with your own Wrangler and Modal logins.
+- **A. Create a Neon API key and add R2 read to `parfocal-ci-prod` (recommended).** The Neon key is scoped to project `parfocal` if Neon offers project scope, else a personal key, and goes into the `production` environment as `NEON_API_KEY` the same clipboard way. R2 read lets the deploy check the slide bucket exists.
+- B. Only the Neon key, and the deploy reads the bucket name from its config instead.
+- C. Deploy to production only from your Mac for now, with your own Wrangler and Modal logins.
 - Other.
 
 Your choice:
 
 ### 89. The old web host's DNS records on parfocal.eu
 
-The zone still points the apex, `www` and a wildcard `*.parfocal.eu` at the old Endora web host, with Endora mail records. The wildcard means every unknown hostname, such as a mistyped preview name, serves the old host's page through Cloudflare. `staging.parfocal.eu` and `app.parfocal.eu` are not affected, because a Workers Custom Domain makes its own record, which wins over the wildcard. Removing a record is a delete, so it needs your yes.
+The zone still points the apex, `www` and a wildcard `*.parfocal.eu` at the old Endora web host, with Endora mail records. The wildcard means every unknown hostname, such as a mistyped preview name, serves the old host's page through Cloudflare. `app.parfocal.eu` is not affected, because a Workers Custom Domain makes its own record, which wins over the wildcard. Removing a record is a delete, so it needs your yes.
 
 - **A. Remove only the wildcard record now and keep the apex, `www` and mail records until the marketing page and OPS-013 (email routing for support and security) replace them (recommended).**
 - B. Keep everything as it is until launch.
@@ -95,11 +106,35 @@ Your choice:
 
 ### 90. The Neon project is Postgres 18 in US East, while tests run PostGIS on Postgres 17
 
-The Neon project `parfocal` was created through Vercel on 2026-10-06 as Postgres 18 in `aws-us-east-1` and has not been used since. Local development and CI run Postgres 17 with PostGIS, and the region was never measured against Modal (STACK-020, database hosting). A Neon project cannot change its region or go down a major version, so this is cheap only before staging holds data.
+The Neon project `parfocal` was created through Vercel on 2026-10-06 as Postgres 18 in `aws-us-east-1` and has not been used since. Local development and CI run Postgres 17 with PostGIS, and the region was never measured against Modal (STACK-020, database hosting). A Neon project cannot change its region or go down a major version, so this is cheap only now, while production holds nothing but your test data and may be reset (ADR 0293, production only until the first real user).
 
-- **A. Let OPS-002 measure latency from Modal to US East and to an EU region first, then either keep this project or ask you to create a new one in the faster region on Postgres 17 in the Vercel dashboard, the only place this organisation allows it (recommended).** Whether the free plan allows one more project next to your five was not checked.
+- **A. Let OPS-002 measure latency from Modal to US East and to an EU region first, then either keep this project for production or ask you to create a new one in the faster region on Postgres 17 in the Vercel dashboard, the only place this organisation allows it (recommended).** Whether the free plan allows one more project next to your five was not checked.
 - B. Keep the project as it is and move local development and CI to Postgres 18.
 - C. You create a new Postgres 17 project in an EU region now in the Vercel dashboard, without measuring.
+- Other.
+
+Your choice:
+
+## Open decisions from cutting staging (ADR 0293, production only until the first real user)
+
+### 91. Delete the GitHub environment `staging` and the staging tokens
+
+Nothing deploys to staging any more. The GitHub environment `staging` still holds `CLOUDFLARE_API_TOKEN`, `MODAL_TOKEN_ID`, `MODAL_TOKEN_SECRET` and the variable `CLOUDFLARE_ACCOUNT_ID`, and the Cloudflare token `parfocal-ci-staging` and the Modal token behind them are still valid. Deleting is a destructive action, so it needs your yes. The command is `gh api -X DELETE repos/fedasevich/parfocal/environments/staging`, which removes the environment with its secrets and variable, cost $0. The two tokens are then revoked by hand, `parfocal-ci-staging` under API Tokens in the Cloudflare dashboard and the staging token under Settings, API Tokens in the Modal dashboard, cost $0. When staging returns, OPS-014 (bring back staging before the first real user) makes all of it again in a few minutes.
+
+- **A. Delete the environment and revoke both tokens once production has deployed from CI with its own secrets (recommended).** Unused valid tokens are only a risk, and waiting keeps a fallback until the production ones are proven.
+- B. Delete and revoke now.
+- C. Keep them for the day staging returns.
+- Other.
+
+Your choice:
+
+### 92. Delete the empty buckets `parfocal-prod` and `parfocal-staging`
+
+Until the first real user the deployed app keeps its slides in `parfocal-dev`, next to the about 26 GB of fixture slides you uploaded, and shares that bucket with local development (ADR 0293). `parfocal-prod` and `parfocal-staging` are empty and unused. Deleting a bucket is destructive, so it needs your yes. The commands are `npx wrangler r2 bucket delete parfocal-prod` and `npx wrangler r2 bucket delete parfocal-staging`, cost $0. An empty bucket also costs $0 to keep. Both are in the OpenTofu state of the `prod` and `staging` roots with `prevent_destroy`, so after a delete those two roots no longer plan clean until the bucket is taken out of their state as well, and production needs `parfocal-prod` again when staging returns.
+
+- **A. Keep both (recommended).** They cost nothing, the roots stay clean and OPS-014 (bring back staging before the first real user) has nothing to recreate.
+- B. Delete `parfocal-staging` only, and take it out of the `staging` root's state.
+- C. Delete both, and take them out of the state of both roots.
 - Other.
 
 Your choice:
