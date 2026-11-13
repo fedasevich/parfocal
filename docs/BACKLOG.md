@@ -3027,7 +3027,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Done when E2E covers the guest journey and permission tests confirm the limits.
   Size: L.
 
-- [ ] COLLAB-010 · Follow my view
+- [x] COLLAB-010 · Follow my view
   A user can share their live camera and others can follow until they move.
   Done when E2E with two pages shows the follower's camera tracking within 300 ms.
   Size: L.

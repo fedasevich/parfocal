@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-14
 
+- COLLAB-010 (follow my view): a shared camera is a capped client frame the slide room relays and never stores (ADR 0301), followers move within 300 ms on the fake room in two-page Playwright tests. Deployed latency is TODO, the edge was not deployed. Decision 98 asks whether a blinded task hides Share my view.
 - VIEW-028 (overlay level of detail): density texture below 2 px, dots from 2 to 7 px, outlines above 7 px, large shapes always outlined, LOD only from 500 nucleus-sized shapes, with lod and deck-layer unit tests. No GPU measurement yet, no 81k fixture and Playwright uses SwiftShader.
 - TASK-008 (submit a slide review): the API refuses a submit while objects are open or required questions unanswered, the web app retries a failed submit, and card, API and fake-API e2e tests prove it. The full-stack decision-and-submit spec was updated but not run.
 
