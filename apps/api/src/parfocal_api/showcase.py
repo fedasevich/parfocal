@@ -61,6 +61,7 @@ from parfocal_api.tables import (
 from parfocal_common.db import DatabaseScope, create_engine, scoped_transaction
 from parfocal_common.jobs import JobStatus, jobs
 from parfocal_common.object_store import ObjectStore
+from parfocal_common.repository import repository_root
 from parfocal_common.result_store import ObjectResultStore, ResultStore
 from parfocal_common.settings import AppEnv, StorageSettings
 
@@ -69,7 +70,7 @@ SHOWCASE_NAME = "Parfocal showcase"
 PLACEHOLDER_PREFIX = SEEDED_SUBJECT_PREFIX
 INERT_JOB_KIND = "showcase"
 FIXTURE_PREFIX = "fixtures/"
-FIXTURES_MANIFEST = Path(__file__).resolve().parents[4] / "packages/test-fixtures/fixtures.json"
+FIXTURES_MANIFEST = repository_root(__file__) / "packages/test-fixtures/fixtures.json"
 
 
 @dataclass(frozen=True)

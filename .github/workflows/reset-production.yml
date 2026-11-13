@@ -1,0 +1,38 @@
+name: Reset production
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: Type production to empty the app tables and the t/ prefix, migrate and seed
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+env:
+  TURBO_TELEMETRY_DISABLED: "1"
+
+jobs:
+  reset:
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+      NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+      NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
+      R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      SEED_OWNER_EMAIL: ${{ secrets.SEED_OWNER_EMAIL }}
+      RESET_CONFIRM: ${{ inputs.confirm }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-workspace
+        with:
+          cache-key: deploy
+      - run: uv run --package parfocal-deploy python -m parfocal_deploy.reset --env production --confirm "${RESET_CONFIRM}"
