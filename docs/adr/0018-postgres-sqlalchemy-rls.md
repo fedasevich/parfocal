@@ -37,3 +37,10 @@ Evidence is in [results/2026-10-08-postgres-rls-pooler-spike.md](../results/2026
 - Prepared statements depend on the pooler tracking them. If Neon's pooler turns out not to, set asyncpg's `statement_cache_size` to 0 and give SQLAlchemy a `prepared_statement_name_func`, and record that in a new ADR.
 - Model output stays out of Postgres as STACK-021 planned. Only human annotations and summaries go through the staging-table path.
 - STACK-020 stays open until the Neon region is measured. FOUND-013 can start now.
+
+## Amendment 2026-11-13, Postgres 18 locally and in CI
+
+Neon created the production project on PostgreSQL 18.7, and `CREATE EXTENSION postgis` there reported PostGIS 3.6.4 (OPS-002, deploy definitions). Local development and CI move from `imresamu/postgis:17-3.6.1-alpine3.22` to `imresamu/postgis:18-3.6.1-alpine3.22` so that every environment runs the same major version. That tag has arm64 and amd64 builds. No 3.6.4 tag of the image is published yet, and patch releases of PostGIS 3.6 keep the same SQL surface, so 3.6.1 stays until one is.
+
+- The Postgres 18 images keep their data in `/var/lib/postgresql/18/docker` and refuse a volume mounted at `/var/lib/postgresql/data`. The compose volume is now `postgres18-data` mounted at `/var/lib/postgresql`, so an old Postgres 17 volume is left alone instead of being read by the wrong major version. Local data is recreated by migrations and seeds, and the old volume can be removed with `docker volume rm parfocal_postgres-data`.
+- The rest of this ADR still holds. Where it says Postgres 17, read Postgres 18.

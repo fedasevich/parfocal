@@ -2,7 +2,7 @@ name: parfocal
 
 services:
   postgres:
-    image: imresamu/postgis:17-3.6.1-alpine3.22
+    image: imresamu/postgis:18-3.6.1-alpine3.22
     environment:
       POSTGRES_USER: parfocal
       POSTGRES_DB: parfocal
@@ -10,7 +10,7 @@ services:
     ports: ["5432:5432"]
     volumes:
       - ./infra/local/postgres-init.sql:/docker-entrypoint-initdb.d/10-roles.sql:ro
-      - postgres-data:/var/lib/postgresql/data
+      - postgres18-data:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U parfocal -d parfocal"]
       interval: 1s
@@ -41,5 +41,5 @@ services:
       retries: 60
 
 volumes:
-  postgres-data:
+  postgres18-data:
   storage-data:
