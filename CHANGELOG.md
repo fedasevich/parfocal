@@ -2,6 +2,16 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.1.2 (2026-11-13)
+
+### Fixes
+
+- OPS-002: Find the repository without failing so the API starts inside Modal
+
+### Other
+
+- OPS-002: Drop the autocompact override from the Claude settings
+
 ## v0.1.1 (2026-11-13)
 
 ### Fixes
