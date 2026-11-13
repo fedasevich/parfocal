@@ -7,7 +7,7 @@ from pathlib import Path
 from parfocal_deploy.tools import REPOSITORY, Tools
 
 VERSIONS = REPOSITORY / "apps" / "api" / "migrations" / "versions"
-REVISION_TABLE_EXISTS = "SELECT to_regclass('public.alembic_version') IS NOT NULL"
+REVISION_TABLE_EXISTS = "SELECT to_regclass('alembic_version') IS NOT NULL"
 CURRENT_REVISION = "SELECT version_num FROM alembic_version"
 DESTRUCTIVE_OPERATIONS = frozenset({"drop_table", "drop_column", "rename_table"})
 DESTRUCTIVE_COLUMN_CHANGES = frozenset({"type_", "new_column_name"})

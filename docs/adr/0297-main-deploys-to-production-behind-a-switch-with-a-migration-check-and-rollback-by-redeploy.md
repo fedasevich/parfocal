@@ -3,7 +3,7 @@
 - Date: 2026-11-13
 - Status: Accepted
 - Deciders: Yurii Fedas (owner standing approval)
-- Backlog: OPS-005 (continuous deployment). Unblocks SKEL-009 (CI deploys main to production). Fills in the "Staging and production pipeline" part of [ADR 0050](0050-deploy-pipeline-and-previews.md) (deploy pipeline and previews) for the time [ADR 0293](0293-production-only-until-the-first-real-user.md) (production only until the first real user) covers.
+- Backlog: OPS-005 (continuous deployment). Unblocks SKEL-009 (CI deploys main to production). Fills in the "Staging and production pipeline" part of [ADR 0050](0050-deploy-pipeline-and-previews.md) (deploy pipeline and previews) and replaces the vendor rollback that record named, for the time [ADR 0293](0293-production-only-until-the-first-real-user.md) (production only until the first real user) covers.
 
 ## Context
 
@@ -17,7 +17,7 @@ Facts that shape the choices.
 | AGENTS.md lets agents run migrations that only add, and asks the owner before any migration that drops data | [ADR 0151](0151-standing-approval-for-production-within-30-dollars.md) (standing approval within $30 a month) |
 | `alembic upgrade head` from older code fails when the database is at a revision that code does not have | Alembic's `Can't locate revision identified by` error. Not rerun for this record |
 | `modal app rollback` and `wrangler rollback` both exist in the installed CLIs | `--help` of both, read locally on 2026-11-13 |
-| A job-level `if` and the workflow `concurrency` key can read repository variables through `vars`, and cannot read variables scoped to an environment | GitHub Actions contexts reference |
+| A job-level `if` and the workflow `concurrency` key can read repository variables through `vars`, and cannot read variables scoped to an environment | actionlint 1.7 passed `deploy.yml` on 2026-11-13, and it checks which contexts each key may use |
 | After a deploy, warm Modal containers can keep answering with the old code for minutes | [knowledge/platform.md](../knowledge/platform.md) |
 
 ## Options considered
@@ -52,7 +52,7 @@ Option 2 in all three groups.
 - The deploy script gets `--only-head-of main` on this path. When `main` has moved on since CI started, the script says so and stops with success, because the newer commit's own CI run will deploy. This also stops a rerun of an old CI run from putting old code over new.
 - The concurrency group stays `deploy-production`, shared with the reset workflow, with no cancelling of a running deploy. While the switch is off, automatic runs take a group of their own so they cannot cancel a waiting hand-started deploy.
 - `gh workflow run deploy.yml --ref vX.Y.Z -f environment=production` keeps working and ignores the switch.
-- The run title is `deploy <commit>` or `rollback <ref>`, so `gh run list --workflow deploy.yml` reads as the release history.
+- The run title is `deploy <commit>` or `rollback <ref>`, so `gh run list --workflow deploy.yml` reads as the release history. A run that stopped because a newer commit replaced it is also green, and its log says that nothing was run.
 
 Every green push to `main` deploys, including one that only changes documents. A deploy of unchanged code costs GitHub minutes on a public repository and no Modal compute. A path filter is a later step, see the triggers.
 
@@ -66,7 +66,7 @@ Before `alembic upgrade head`, the deploy reads the revision the database is at 
 
 A destructive revision stops the deploy before anything runs, with a message that names the revision and what was found. It runs only when its number is passed in `allow_destructive`, an input that exists only on a deploy started by hand. That input is the owner's yes, and it is kept in the run's record.
 
-Renames and type changes count although they lose no rows, because the previous release stops working on the new schema, and rollback depends on it working. Dropping an index, a constraint or a policy, tightening `nullable` and plain `UPDATE` statements are not flagged. The check is a seatbelt and not a proof: SQL built at run time from parts that hold none of the words above passes it. Review still owns that case.
+Renames and type changes count although they lose no rows, because the previous release stops working on the new schema, and rollback depends on it working. Dropping an index, a constraint or a policy, tightening `nullable` and plain `UPDATE` statements are not flagged. The check is a seatbelt and not a proof. It misses `ALTER TABLE t DROP c` written without the word `COLUMN`, a delete built from a table object such as `op.execute(table.delete())`, and SQL built at run time from parts that hold none of the words above. Review still owns those cases.
 
 A database with no `alembic_version` table has nothing to lose and passes. A database at a revision the code does not have is refused with a message that says to deploy that code only as a rollback. A history with two heads is refused.
 
@@ -74,8 +74,10 @@ A database with no `alembic_version` table has nothing to lose and passes. A dat
 
 Rollback puts back older code and never touches the database: `gh workflow run deploy.yml -f rollback_to=<commit or tag>`. The workflow checks out that ref and runs its deploy script with `--skip-migrations`, which skips the check, the Neon calls and Alembic, then deploys Modal, builds the web app, deploys the Worker and runs the smoke check.
 
-This is safe only because migrations on the automatic path are expand-only, which the check enforces. Three limits follow.
+This is safe only because migrations on the automatic path are expand-only, which the check enforces. Five limits follow.
 
+- A rollback does not hold while `DEPLOY_ON_MAIN` is `true`. The bad commit is still the head of `main`, so the next green push deploys it again, and an automatic run can cancel a rollback that is still waiting. Turn the switch off first and on again only after the fix is on `main`.
+- TODO: redeploying an older ref across a new Durable Object migration tag in `apps/edge/wrangler.jsonc` is untested.
 - Do not roll back to a commit older than a destructive migration that already ran. The old code would meet a schema it cannot use. That case is a restore, which belongs to OPS-008 (backups and disaster recovery).
 - A ref from before this change does not know `--skip-migrations`. Its script stops on the unknown flag before it does anything, so the oldest rollback target is the commit that lands this record.
 - The smoke check proves the app answers, not which version answers. After a rollback, stop leftover Modal containers as [knowledge/platform.md](../knowledge/platform.md) describes.

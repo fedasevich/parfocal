@@ -35,7 +35,8 @@ CI needs the secrets `CLOUDFLARE_API_TOKEN`, `MODAL_TOKEN_ID`, `MODAL_TOKEN_SECR
 - Turn it on: `gh variable set DEPLOY_ON_MAIN --body true`. It must be a repository variable, an environment variable is not seen by the gate.
 - Turn it off: `gh variable set DEPLOY_ON_MAIN --body false`.
 - A deploy by hand works either way: `gh workflow run deploy.yml --ref main -f environment=production`, or `--ref vX.Y.Z` for a tag.
-- `gh run list --workflow deploy.yml --status success` is the release history. Each run is titled `deploy <commit>` or `rollback <ref>`.
+- `gh run list --workflow deploy.yml --status success` is the release history. Each run is titled `deploy <commit>` or `rollback <ref>`. A run that was replaced by a newer commit is green too and deployed nothing. Its log ends with "nothing was run", and a real one ends with "is deployed at".
+- TODO: if the `production` environment has protection rules, such as required reviewers, automatic runs wait for them.
 
 ## Migration safety check
 
@@ -51,8 +52,10 @@ uv run --package parfocal-deploy python -c "from parfocal_deploy import migratio
 
 `gh workflow run deploy.yml --ref main -f rollback_to=<commit or tag>` checks out that ref and deploys its Modal apps, web build and Worker. It runs no migration and makes no database or Neon call, so the schema stays ahead of the code, which expand-only migrations keep safe.
 
+- Turn automatic deploys off first with `gh variable set DEPLOY_ON_MAIN --body false`. Otherwise the next green push to `main` deploys the bad commit again, and its run can cancel a rollback that is still waiting. Turn them on again only after the fix is on `main`.
 - Pick the target from the release history above. The oldest usable target is the commit that added `--skip-migrations`, because an older script stops on the unknown flag.
 - Never roll back past a destructive migration that already ran. That needs a restore, which OPS-008 (backups and disaster recovery) owns.
+- TODO: a rollback across a new Durable Object migration tag in `apps/edge/wrangler.jsonc` is untested.
 - After it finishes, check that the old code answers, and stop leftover Modal containers if not ([platform.md](platform.md), old Modal containers can keep serving after a deploy).
 - Rolling forward again is a normal deploy of `main`.
 
@@ -60,11 +63,12 @@ uv run --package parfocal-deploy python -c "from parfocal_deploy import migratio
 
 OPS-005 (continuous deployment) is done when this succeeds on production. TODO: run it and record the times in the log.
 
-1. Note the two newest successful runs in the release history, `A` (older) and `B` (live). They must differ in something visible, such as a route or a text.
-2. `gh workflow run deploy.yml --ref main -f rollback_to=A`, then `gh run watch`.
-3. Check that the smoke check passed and that the visible difference shows `A`. Stop leftover Modal containers if it still shows `B`.
-4. `gh workflow run deploy.yml --ref main -f environment=production` to go back to `B`, and check again.
-5. Log both production touches with their cost.
+1. `gh variable set DEPLOY_ON_MAIN --body false`, when it is on.
+2. From the release history take two commits whose runs really deployed, `A` (older) and `B` (live). They must differ in something visible, such as a route or a text.
+3. `gh workflow run deploy.yml --ref main -f rollback_to=A`, then `gh run watch`.
+4. Check that the smoke check passed and that the visible difference shows `A`. Stop leftover Modal containers if it still shows `B`.
+5. `gh workflow run deploy.yml --ref main -f environment=production` to go back to `B`, and check again.
+6. Turn `DEPLOY_ON_MAIN` back to what it was, and log both production touches with their cost.
 
 ## What the first production deploy needs
 
