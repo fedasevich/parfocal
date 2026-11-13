@@ -11,7 +11,8 @@ OPS-002 (deploy definitions) put everything a deploy needs in git. Production is
 | Modal apps | `workers/deploy/src/parfocal_deploy/modal_app.py` and `parfocal_ml.modal_pool` | App `parfocal-api` with the functions `web` (the FastAPI app) and `ingest`, whose memory comes from `INGEST_MEMORY_MIB` in `parfocal_ingest.settings`. Both scale to zero |
 | Neon | `workers/deploy/src/parfocal_deploy/neon.py` | Lists branches and creates the environment's branch only when it is missing. It never deletes |
 | Bootstrap | `pnpm --filter @parfocal/deploy bootstrap --env production` | Run once from the owner's Mac. It makes the secrets and the database role |
-| Deploy | `pnpm --filter @parfocal/deploy run deploy --env production` | What CI runs from `.github/workflows/deploy.yml`, started by hand |
+| Deploy | `pnpm --filter @parfocal/deploy run deploy --env production` | What CI runs from `.github/workflows/deploy.yml`, by hand or after a green CI run on `main` once the owner turns that on |
+| Migration check | `workers/deploy/src/parfocal_deploy/migrations.py` | Reads the revisions the database has not run and refuses the ones that drop, rename or rewrite data |
 
 ## Bootstrap, once per environment
 
@@ -26,6 +27,48 @@ A second run writes only the config secret. If the role exists but the keys secr
 ## Deploy, every time
 
 CI needs the secrets `CLOUDFLARE_API_TOKEN`, `MODAL_TOKEN_ID`, `MODAL_TOKEN_SECRET` and `NEON_API_KEY` and the variables `CLOUDFLARE_ACCOUNT_ID` and `NEON_PROJECT_ID` in the GitHub environment `production`. The script stops and names whatever is missing, including Modal secrets that bootstrap has not made yet. Then it runs the migrations as the database owner on the direct connection, deploys both Modal apps, builds the web app, deploys the Worker with the Modal web URL as `API_ORIGIN`, and checks that `/api/health` answers 200 and that `/` carries the isolation headers.
+
+## Main to production
+
+[ADR 0297](../adr/0297-main-deploys-to-production-behind-a-switch-with-a-migration-check-and-rollback-by-redeploy.md) (main deploys behind a switch, migration check, rollback by redeploy) is the record. `deploy.yml` also starts when the `ci` workflow finishes. The job runs only when the repository variable `DEPLOY_ON_MAIN` is `true` and CI passed for a push to `main`. It deploys the commit CI tested, and stops quietly when `main` has a newer commit, whose own run deploys.
+
+- Turn it on: `gh variable set DEPLOY_ON_MAIN --body true`. It must be a repository variable, an environment variable is not seen by the gate.
+- Turn it off: `gh variable set DEPLOY_ON_MAIN --body false`.
+- A deploy by hand works either way: `gh workflow run deploy.yml --ref main -f environment=production`, or `--ref vX.Y.Z` for a tag.
+- `gh run list --workflow deploy.yml --status success` is the release history. Each run is titled `deploy <commit>` or `rollback <ref>`. A run that was replaced by a newer commit is green too and deployed nothing. Its log ends with "nothing was run", and a real one ends with "is deployed at".
+- TODO: if the `production` environment has protection rules, such as required reviewers, automatic runs wait for them.
+
+## Migration safety check
+
+Before Alembic runs, the deploy reads the database's revision and checks every later revision file without running it. A revision that drops or renames a table or column, changes a column type, or holds `TRUNCATE` or `DELETE FROM` outside its `downgrade` stops the deploy before anything is touched. The message names the revision and the finding.
+
+The owner's yes is a deploy by hand that names the revisions: `gh workflow run deploy.yml --ref main -f environment=production -f allow_destructive=0111`. The automatic path can never pass it. Write migrations as expand then contract: add first, ship the code that stops using the old column, and drop in a later release by hand. To see what a new revision would trip before merging:
+
+```sh
+uv run --package parfocal-deploy python -c "from parfocal_deploy import migrations as m; print(m.load(m.VERSIONS)['0111'].findings)"
+```
+
+## Rollback
+
+`gh workflow run deploy.yml --ref main -f rollback_to=<commit or tag>` checks out that ref and deploys its Modal apps, web build and Worker. It runs no migration and makes no database or Neon call, so the schema stays ahead of the code, which expand-only migrations keep safe.
+
+- Turn automatic deploys off first with `gh variable set DEPLOY_ON_MAIN --body false`. Otherwise the next green push to `main` deploys the bad commit again, and its run can cancel a rollback that is still waiting. Turn them on again only after the fix is on `main`.
+- Pick the target from the release history above. The oldest usable target is the commit that added `--skip-migrations`, because an older script stops on the unknown flag.
+- Never roll back past a destructive migration that already ran. That needs a restore, which OPS-008 (backups and disaster recovery) owns.
+- TODO: a rollback across a new Durable Object migration tag in `apps/edge/wrangler.jsonc` is untested.
+- After it finishes, check that the old code answers, and stop leftover Modal containers if not ([platform.md](platform.md), old Modal containers can keep serving after a deploy).
+- Rolling forward again is a normal deploy of `main`.
+
+### The rollback drill, not run yet
+
+OPS-005 (continuous deployment) is done when this succeeds on production. TODO: run it and record the times in the log.
+
+1. `gh variable set DEPLOY_ON_MAIN --body false`, when it is on.
+2. From the release history take two commits whose runs really deployed, `A` (older) and `B` (live). They must differ in something visible, such as a route or a text.
+3. `gh workflow run deploy.yml --ref main -f rollback_to=A`, then `gh run watch`.
+4. Check that the smoke check passed and that the visible difference shows `A`. Stop leftover Modal containers if it still shows `B`.
+5. `gh workflow run deploy.yml --ref main -f environment=production` to go back to `B`, and check again.
+6. Turn `DEPLOY_ON_MAIN` back to what it was, and log both production touches with their cost.
 
 ## What the first production deploy needs
 

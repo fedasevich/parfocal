@@ -6,7 +6,7 @@ from typing import Any
 
 import pytest
 
-from parfocal_deploy import neon
+from parfocal_deploy import migrations, neon
 from parfocal_deploy.bootstrap import (
     CONFIG,
     CREATE_ROLE,
@@ -22,10 +22,12 @@ from parfocal_deploy.deploy import (
     NotBootstrappedError,
     SmokeCheckError,
     deploy,
+    is_head_of,
+    revisions,
 )
 from parfocal_deploy.environments import ENVIRONMENTS, UnknownEnvironmentError, environment
 from parfocal_deploy.modal_app import CONFIG_SECRET, KEYS_SECRET, LOGIN_SECRET
-from parfocal_deploy.tools import MissingSettingsError, Tools
+from parfocal_deploy.tools import REPOSITORY, MissingSettingsError, Read, Tools
 
 PRODUCTION = environment("production")
 OWNER_HOST = "ep-quiet.us-east-1.aws.neon.tech"
@@ -66,6 +68,7 @@ class Cloud:
     neon_writes: list[str] = field(default_factory=list)
     statements: list[str] = field(default_factory=list)
     commands: list[tuple[tuple[str, ...], dict[str, str]]] = field(default_factory=list)
+    revision: str | None = None
     health: int = 200
     headers: dict[str, str] = field(default_factory=lambda: dict(ISOLATION_HEADERS))
 
@@ -84,6 +87,10 @@ class Cloud:
 
     def sql(self, uri: str, statement: str) -> list[Any]:
         assert OWNER_HOST in uri
+        if statement == migrations.REVISION_TABLE_EXISTS:
+            return [(self.revision is not None,)]
+        if statement == migrations.CURRENT_REVISION:
+            return [(self.revision,)]
         if statement == neon.ROLE_EXISTS:
             return [1] if neon.APP_ROLE in self.roles else []
         self.statements.append(statement)
@@ -282,3 +289,109 @@ def test_deploy_fails_when_health_or_the_isolation_headers_are_wrong() -> None:
             LOCAL,
             lambda _: "https://a",
         )
+
+
+READY = {KEYS_SECRET: {}, CONFIG_SECRET: {}, LOGIN_SECRET: {}}
+DROP = """revision: str = "0002"
+down_revision: str | None = "0001"
+
+
+def upgrade() -> None:
+    op.drop_column("slides", "stain")
+"""
+
+
+def versions(directory: Path) -> Path:
+    (directory / "0001_first.py").write_text(
+        'revision: str = "0001"\ndown_revision: str | None = None\n'
+    )
+    (directory / "0002_drop.py").write_text(DROP)
+    return directory
+
+
+def test_deploy_refuses_a_destructive_migration_before_running_anything(tmp_path: Path) -> None:
+    cloud = Cloud(modal_secrets=dict(READY), revision="0001")
+    with pytest.raises(
+        migrations.DestructiveMigrationError, match="0002: drop_column slides stain"
+    ):
+        deploy(PRODUCTION, cloud.tools(), LOCAL, lambda _: "https://a", versions=versions(tmp_path))
+    assert cloud.commands == []
+    assert cloud.statements == []
+
+
+def test_deploy_runs_a_destructive_migration_the_owner_named(tmp_path: Path) -> None:
+    cloud = Cloud(modal_secrets=dict(READY), revision="0001")
+    deploy(
+        PRODUCTION,
+        cloud.tools(),
+        LOCAL,
+        lambda _: "https://a",
+        allow_destructive=revisions(" 0002, "),
+        versions=versions(tmp_path),
+    )
+    assert "alembic" in cloud.commands[0][0]
+    assert len(cloud.commands) == 5
+
+
+def test_a_rollback_ships_the_code_and_never_touches_the_database() -> None:
+    cloud = Cloud(modal_secrets=dict(READY), revision="9999")
+    queries: list[str] = []
+    tools = cloud.tools()
+    watched = Tools(
+        run=tools.run,
+        read=tools.read,
+        sql=lambda uri, statement: queries.append(statement) or [],
+        neon=lambda method, path, body: pytest.fail(f"a rollback called Neon: {method} {path}"),
+        fetch=tools.fetch,
+    )
+    deploy(PRODUCTION, watched, LOCAL, lambda _: "https://a", migrate=False)
+    lines = [" ".join(argv) for argv, _ in cloud.commands]
+    assert not any("alembic" in line for line in lines)
+    assert [line.split(" ")[-1] for line in lines[:2]] == [
+        "parfocal_deploy.modal_app",
+        "parfocal_ml.modal_pool",
+    ]
+    assert "wrangler deploy --env production" in lines[-1]
+    assert queries == []
+
+
+def test_a_rollback_still_fails_when_the_smoke_check_fails() -> None:
+    cloud = Cloud(modal_secrets=dict(READY), health=503)
+    with pytest.raises(SmokeCheckError, match="503"):
+        deploy(PRODUCTION, cloud.tools(), LOCAL, lambda _: "https://a", migrate=False)
+
+
+def test_an_automatic_deploy_runs_only_for_the_newest_commit_of_main() -> None:
+    def git(head: str, remote: str) -> Read:
+        return lambda argv: head if "rev-parse" in argv else remote
+
+    assert is_head_of(git("abc\n", "abc\trefs/heads/main\n"), "main")
+    assert not is_head_of(git("abc\n", "def\trefs/heads/main\n"), "main")
+    assert not is_head_of(git("abc\n", ""), "main")
+
+
+def test_the_workflow_deploys_main_only_behind_the_repository_variable() -> None:
+    workflow = (REPOSITORY / ".github/workflows/deploy.yml").read_text()
+    job = workflow.split("jobs:")[1]
+    gate = job.split("runs-on:")[0]
+    assert "github.event_name == 'workflow_dispatch' ||" in gate
+    assert "vars.DEPLOY_ON_MAIN == 'true' &&" in gate
+    assert "github.event.workflow_run.event == 'push' &&" in gate
+    assert "github.event.workflow_run.head_branch == 'main' &&" in gate
+    assert "github.event.workflow_run.conclusion == 'success'" in gate
+    triggers = workflow.split("on:")[1].split("permissions:")[0]
+    assert "workflows: [ci]" in triggers
+    assert "branches: [main]" in triggers
+    assert "\n  push:" not in triggers
+    assert "environment: ${{ inputs.environment || 'production' }}" in job
+    assert "format('deploy-{0}', inputs.environment || 'production')" in workflow
+    assert "format('deploy-off-{0}', github.run_id)" in workflow
+    assert "cancel-in-progress: false" in workflow
+    assert (
+        "ref: ${{ inputs.rollback_to || github.event.workflow_run.head_sha || github.sha }}" in job
+    )
+    assert 'if [ -n "${ROLLBACK_TO}" ]; then arguments+=(--skip-migrations); fi' in job
+    assert "ALLOW_DESTRUCTIVE: ${{ inputs.allow_destructive }}" in job
+    assert "ONLY_HEAD_OF: ${{ github.event_name == 'workflow_run' && 'main' || '' }}" in job
+    reset = (REPOSITORY / ".github/workflows/reset-production.yml").read_text()
+    assert "group: deploy-production" in reset
