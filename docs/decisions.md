@@ -10,6 +10,7 @@ To take every recommendation at once, write "all recommended" here:
 
 1. Answer decision 94 (how the first production deploy gets past the environment rules).
 2. Answer decision 95 (the Zitadel login service user that turns on the app's own sign-up and sign-in).
+3. Answer decision 96 (turning on deploys from `main`).
 
 ## What your answers of 2026-11-04 changed
 
@@ -112,6 +113,16 @@ IAM-027 (real sign-up and sign-in from the app's own screens) is built and teste
 
 Your choice: a
 
+### 96. Turning on deploys from `main`
+
+OPS-005 (continuous deployment) is built. The `Deploy` workflow now also runs after a green `ci` on `main`, but only when the repository variable `DEPLOY_ON_MAIN` is `true`, and it is unset, so nothing deploys yet. A migration check refuses any revision that drops data unless the run is started with `allow_destructive`, and rollback is `gh workflow run deploy.yml --ref main -f rollback_to=<ref>`, which redeploys the older code without migrations, as [ADR 0297](adr/0297-main-deploys-to-production-behind-a-switch-with-a-migration-check-and-rollback-by-redeploy.md) (main deploys behind a switch, migration check, rollback by redeploy) describes. The rollback drill has not run on production.
+
+- **A. After decision 94 lands the first tagged deploy, you run `gh variable set DEPLOY_ON_MAIN --body true` and the lead runs one rollback drill with you watching (recommended).** Every green `main` then deploys. Each deploy uses a little Modal compute inside the $30.
+- B. Keep deploying only tagged releases with your approval and leave OPS-005 in review.
+- Other.
+
+Your choice: 
+
 ## The review column, what each task waits for
 
 Nothing else in review needs you. Nine tasks that only waited for green CI were ticked on 2026-11-02.
@@ -125,6 +136,8 @@ Nothing else in review needs you. Nine tasks that only waited for green CI were 
 | IAM-021 (lock screen) | The expired sign-in returning to the object, not only the slide | The session already working on it |
 | VIEW-021 (wheel and pinch) | VIEW-056 (a guided trace recorder), then two minutes of your scrolling when you have a mouse | An agent builds the page, then you |
 | TILES-003 (same-origin data path) | Open time in Chrome is 0.63 s against INGEST-007's 0.35 s, still under the 1 s budget. Either accept the budget as enough or add a small read cache first | An agent, unless you say the budget is enough |
+| OPS-005 (deploys from `main`) | Decision 96, the `DEPLOY_ON_MAIN` switch and one rollback drill | You and the lead |
+| OPS-002 (Postgres 18 with PostGIS) | OPS-014 (bring back staging), since CI recreating staging no longer applies under ADR 0293 | Nobody until staging returns |
 | AITUM-003, RSET-005 and TASK-007 | Other tasks, now shown as blocked | Agents, when those tasks land |
 
 ## Notes, no decision needed
