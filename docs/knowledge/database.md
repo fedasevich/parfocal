@@ -16,7 +16,7 @@ Through PgBouncer in transaction mode with `max_prepared_statements = 0`, asyncp
 
 ## The official PostGIS images have no arm64 build
 
-`postgis/postgis:17-*` only ships amd64, and Docker on Apple silicon refuses it with "no matching manifest for linux/arm64/v8". `imresamu/postgis`, published by a docker-postgis maintainer, has arm64 and amd64 builds of the same tags.
+`postgis/postgis:17-*` only ships amd64, and Docker on Apple silicon refuses it with "no matching manifest for linux/arm64/v8". `imresamu/postgis`, published by a docker-postgis maintainer, has arm64 and amd64 builds of the same tags. The Postgres 18 tags keep data in `/var/lib/postgresql/18/docker`, so the volume mounts at `/var/lib/postgresql`, and the entrypoint refuses one mounted at `/var/lib/postgresql/data`.
 
 ## Local database and migrations
 
