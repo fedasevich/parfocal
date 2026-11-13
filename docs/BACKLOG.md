@@ -360,7 +360,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Done when the ADR defines the PHI scrubbing rules and a test proves a patient name in a log line is redacted.
   Decided in [ADR 0040](adr/0040-observability-and-phi-scrubbing.md). The scrubber is `parfocal_common.scrubbing`. FOUND-011 (structured logging) wires it into the API's logging.
 
-- [ ] STACK-033 · Feature flags, experiments and product analytics
+- [x] STACK-033 · Feature flags, experiments and product analytics
   Candidates: GrowthBook, PostHog (self-hosted EU), Unleash, Statsig. Default per [ADR 0003](adr/0003-pilot-platform-architecture.md): PostHog Cloud for flags, experiments, analytics and surveys, with autocapture and session replay off. Only production sends events and evaluates flags in PostHog, and other environments read flag defaults from a local file ([ADR 0005](adr/0005-external-sends-only-in-production.md)). No PHI ever leaves the platform in events.
   Done when a spike assigns users to the arms of an experiment, such as the lab leads' default home, and records an exposure event without identifiers beyond a pseudonymous user id.
   Size: M.
