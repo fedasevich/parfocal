@@ -520,7 +520,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Done when `scripts/test_board.py` covers the size and needs lines, the guess, the written line winning, the unblock count and `check` rejecting unknown values, and `board.py ready --size S --agent-only` lists quick wins.
   Size: M.
 
-- [ ] FOUND-024 · Rename verdict to decision everywhere
+- [x] FOUND-024 · Rename verdict to decision everywhere
   The owner does not want the word "verdict" anywhere in the app (2026-11-02). It still names the `verdicts` table, the `/verdicts` API paths and the `saveVerdict`, `clearVerdict` and `listVerdicts` operations, the generated client, the review screens' state, the `verdict` column of the reviewed export, the `review.verdict-set` and `review.verdict-cleared` audit names, the `--v-*` chart tokens and ADR 0072 and ADR 0144 (charts). Rename them to decision with a migration that renames the table and its constraints, keeps old audit rows readable by mapping the old event names, and regenerates the client. Old migration files keep their names, because migration history is never rewritten. On 2026-11-09 the word had 994 hits in 106 files. Land this before FOUND-035 (squash the migrations into one baseline) and before any production database.
   Done when `git grep -iw verdict` finds nothing outside `apps/api/migrations/versions` files older than the rename, a guard in `pnpm verify` fails on a new use, and `pnpm verify` is green.
   Size: L.
