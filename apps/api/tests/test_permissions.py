@@ -1,6 +1,8 @@
 import asyncio
+import io
 import threading
 import uuid
+import zipfile
 from collections.abc import Callable
 from dataclasses import dataclass, field, replace
 from datetime import UTC, datetime
@@ -21,6 +23,7 @@ from storage_support import TEST_PART_BYTES, TEST_STORAGE, put_restricted_images
 
 from parfocal_api.identifiers import PatientIdentity, add_patient, ensure_keys
 from parfocal_api.openapi import openapi_schema
+from parfocal_api.patch_exports import PATCH_KIND, patch_export_key
 from parfocal_api.permissions import (
     ADMIN_RIGHTS,
     COLUMNS,
@@ -253,6 +256,7 @@ class Workspace:
     checked_annotate_task: uuid.UUID = field(default_factory=uuid.uuid4)
     ready_annotate_task: uuid.UUID = field(default_factory=uuid.uuid4)
     signed_annotate_task: uuid.UUID = field(default_factory=uuid.uuid4)
+    patch_job: uuid.UUID = field(default_factory=uuid.uuid4)
     layer_object: uuid.UUID = field(default_factory=uuid.uuid4)
     doomed_layer_object: uuid.UUID = field(default_factory=uuid.uuid4)
     slide_thread: uuid.UUID = field(default_factory=uuid.uuid4)
@@ -932,6 +936,14 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     ),
     "exportTrainingDataset": lambda w: Call(
         "GET", f"/api/review-tasks/{w.signed_annotate_task}/training-dataset"
+    ),
+    "startPatchExport": lambda w: Call(
+        "POST",
+        f"/api/review-tasks/{w.signed_annotate_task}/patch-exports",
+        {"level": 0, "tile_size": 512},
+    ),
+    "downloadPatchExport": lambda w: Call(
+        "GET", f"/api/review-tasks/{w.signed_annotate_task}/patch-exports/{w.patch_job}"
     ),
     "createReportLink": lambda w: Call("POST", f"/api/review-tasks/{w.task}/evaluation/links"),
     "listReportLinks": lambda w: Call("GET", f"/api/review-tasks/{w.task}/evaluation/links"),
@@ -2135,6 +2147,9 @@ async def seed(database: str, lead: Seat = RESEARCHER, presets_for: Seat = RESEA
                     TissueMask(64, 20, np.ones((16, 32), dtype=bool), None).png(),
                     "image/png",
                 )
+                patch_job = await seed_patch_job(
+                    connection, store, tenant_id, case.project_id, signed_annotate_task
+                )
                 uploads_made = [
                     await seed_upload(
                         connection,
@@ -2233,11 +2248,40 @@ async def seed(database: str, lead: Seat = RESEARCHER, presets_for: Seat = RESEA
             checked_annotate_task=checked_annotate_task,
             ready_annotate_task=ready_annotate_task,
             signed_annotate_task=signed_annotate_task,
+            patch_job=patch_job,
             layer_object=layer_object,
             doomed_layer_object=doomed_layer_object,
         )
     finally:
         await engine.dispose()
+
+
+async def seed_patch_job(
+    connection: AsyncConnection,
+    store: ObjectStore,
+    tenant_id: uuid.UUID,
+    project_id: uuid.UUID,
+    task_id: uuid.UUID,
+) -> uuid.UUID:
+    patch_job = await connection.scalar(
+        insert(jobs)
+        .values(
+            tenant_id=tenant_id,
+            project_id=project_id,
+            kind=PATCH_KIND,
+            status="done",
+            input={"task_id": str(task_id), "level": 0, "tile_size": 512},
+        )
+        .returning(jobs.c.id)
+    )
+    assert isinstance(patch_job, uuid.UUID)
+    patches = io.BytesIO()
+    with zipfile.ZipFile(patches, "w") as archive:
+        archive.writestr("index.csv", "tile,slide_id\n")
+    await store.put_object(
+        patch_export_key(tenant_id, patch_job), patches.getvalue(), "application/zip"
+    )
+    return patch_job
 
 
 async def seed_runs(

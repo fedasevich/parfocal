@@ -52,6 +52,7 @@ from parfocal_api import (
     opinions,
     own_workspaces,
     password_login,
+    patch_exports,
     personal_data,
     project_jobs,
     projects,
@@ -276,6 +277,7 @@ def create_app(
     app.include_router(report_preview.router)
     app.include_router(task_report_layout.router)
     app.include_router(training_exports.router)
+    app.include_router(patch_exports.router)
     app.include_router(ai_changes.router)
     app.include_router(ai_usage.router)
     app.include_router(evaluation_versions.router)

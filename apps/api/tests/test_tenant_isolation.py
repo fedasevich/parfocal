@@ -23,6 +23,7 @@ from storage_support import TEST_PART_BYTES, TEST_STORAGE, put_restricted_images
 
 from parfocal_api.display_settings import DisplaySettings
 from parfocal_api.openapi import openapi_schema
+from parfocal_api.patch_exports import PATCH_KIND, patch_export_key
 from parfocal_api.principals import MemberPrincipal
 from parfocal_api.slide_tissue import TISSUE_FILE
 from parfocal_api.study_templates import BUILT_INS, content, seed_built_ins
@@ -887,6 +888,26 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
         )
     )
     seeded.ids["annotate_task"] = annotate_id
+    patch_job = await connection.scalar(
+        insert(jobs)
+        .values(
+            tenant_id=seeded.tenant_id,
+            project_id=case.project_id,
+            kind=PATCH_KIND,
+            status="done",
+            input={"task_id": str(annotate_id), "level": 0, "tile_size": 512},
+        )
+        .returning(jobs.c.id)
+    )
+    assert isinstance(patch_job, uuid.UUID)
+    seeded.ids["patch_job"] = patch_job
+    patches = io.BytesIO()
+    with zipfile.ZipFile(patches, "w") as archive:
+        archive.writestr("index.csv", f"tile,slide_id\ntiles/a.png,{case.loose_slide_id}\n")
+    async with httpx2.AsyncClient(timeout=30) as http:
+        await ObjectStore(TEST_STORAGE, http).put_object(
+            patch_export_key(seeded.tenant_id, patch_job), patches.getvalue(), "application/zip"
+        )
     shared_id = await connection.scalar(
         insert(annotations)
         .values(
@@ -1597,6 +1618,10 @@ GET_ROUTES = {
     "exportTrainingDataset": Route(
         Exposure.TENANT,
         lambda a: f"/api/review-tasks/{a.ids['annotate_task']}/training-dataset",
+    ),
+    "downloadPatchExport": Route(
+        Exposure.TENANT,
+        lambda a: f"/api/review-tasks/{a.ids['annotate_task']}/patch-exports/{a.ids['patch_job']}",
     ),
     "getTaskAiChanges": Route(
         Exposure.TENANT,
