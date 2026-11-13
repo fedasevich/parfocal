@@ -34,7 +34,7 @@ Task format:
 ### Definition of Done (applies to every task)
 
 1. Code follows the repository conventions and passes lint, format and type checks for both TypeScript and Python.
-2. Tests at the right level are added and green. That means unit tests for logic, API tests for endpoints, component tests for UI, E2E tests for user flows, golden-image tests for rendering and perf/memory budget tests for the viewer hot path (CPU-side in CI, GPU-side as manual result files, [ADR 0011](adr/0011-hosted-ci-only.md)). The "Done when" line names which ones.
+2. Tests at the right level are added and green. That means unit tests for logic, API tests for endpoints, component tests for UI, E2E tests for user flows, golden-image tests for rendering and perf/memory budget tests for the viewer hot path (CPU-side in CI, GPU-side as manual result files, [ADR 0011](adr/0011-hosted-ci-only.md)). The "Done when" line names which ones. A UI task that adds a screen adds at least one `@real` spec for it, which runs on the fake until its area switches to the real API ([ADR 0295](adr/0295-ui-first-on-fakes-then-switch-each-area-to-the-real-api.md), UI first on fakes, then each area switches).
 3. User-facing UI passes axe accessibility checks and has keyboard paths. New strings go through the i18n layer.
 4. Tenant isolation is preserved. Any new table, bucket path, cache key or queue message carries the tenant and is covered by an isolation test.
 5. Any PHI access or state change that matters clinically is written to the audit log.
@@ -4233,10 +4233,10 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   v0.1.4 shipped a home page that showed a broken screen to a signed-out visitor instead of the sign-in, because every check ran on the fake backend and the deploy smoke only fetches URLs. After each production deploy, a headless browser opens app.parfocal.eu signed out and expects the Zitadel sign-in, then signs in as a dedicated smoke account whose password is a GitHub environment secret, opens home, a workspace, a case and the viewer, and fails the run on a console error, a failed `/api` call or a visible error screen. The smoke account and its secret are created only after the owner's yes.
   Done when the deploy workflow runs it, a deliberately broken build fails it in a test run, and its screenshots are kept as run artifacts.
   Depends on OPS-002. Size: M.
-- [ ] OPS-017 · Real backend for the draft screens, in priority order
-  OPS-015 (make draft calls safe in production) lists every draft operation with a priority and turns missing ones into a "not available yet" state. Build the real API for the top of that list in batches, each batch moving its operations from `draft` to the generated client and deleting the fake handler's draft branch, until no screen the showcase seed shows calls a draft.
-  Done when the committed count of TEST-038 (draft call ratchet) drops for each batch, API tests cover each new route, and the seeded production app shows no "not available yet" on the screens the owner walks through.
-  Depends on OPS-015. Size: L.
+- [ ] OPS-017 · Switch each area from the fake to the real API
+  OPS-015 (make draft calls safe in production) lists every draft operation with a priority. Once the UI of an area is finished on the fake, switch that area in one change: build its routes so they return what each draft's Zod schema says, regenerate the client, delete its drafts and fake branches, and run its `@real` specs on the local stack ([ADR 0295](adr/0295-ui-first-on-fakes-then-switch-each-area-to-the-real-api.md), UI first on fakes, then each area switches). Start with review, then annotate, then projects and upload, until no screen the showcase seed shows calls a draft. Split one task per area when the first one starts.
+  Done when, for each area, API tests cover each new route, its `@real` specs pass on the real API, its count in TEST-038 (draft call ratchet) is zero, and the seeded production app shows no "not available yet" on its screens.
+  Depends on OPS-015, TEST-026, TEST-040. Size: L.
 
 ---
 
@@ -4377,8 +4377,8 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Size: S.
 
 - [ ] TEST-026 · Core browser specs against the real API
-  165 browser specs in `apps/web/e2e` run on the fake API, whose hand-written handlers hold about 13,700 lines of behaviour and about 50 files of draft hooks for operations with no backend, while 6 specs in `apps/e2e` reach the real API ([project review](results/2026-11-09-project-review.md)). The generated client ties the fake's types to `openapi.json`, but nothing ties its behaviour to the backend's. Add a Playwright project that runs a named core subset of the existing specs with `PARFOCAL_PUBLIC_FAKE_API=off` against the local API and a seeded database, starting with the review loop and the annotation path. Core specs carry a `@real` tag and run on both the fake and the TEST-040 (API container under the end-to-end suite) stack, and from then on a new screen ships with at least one `@real` spec. The draft count guard moved to TEST-038 (draft call ratchet).
-  Done when the `@real` project runs in CI on the stack and covers login, upload, guided review with a decision, an annotate task and sign-off, every spec that passes on the fake and fails on the real API is logged as a bug in one of the two, and `knowledge/agent-workflow.md` states the one `@real` spec per new screen rule.
+  165 browser specs in `apps/web/e2e` run on the fake API, whose hand-written handlers hold about 13,700 lines of behaviour and about 50 files of draft hooks for operations with no backend, while 6 specs in `apps/e2e` reach the real API ([project review](results/2026-11-09-project-review.md)). The generated client ties the fake's types to `openapi.json`, but nothing ties its behaviour to the backend's. Tag the core flows of each area `@real` now, starting with the review loop and the annotation path, so they run on the fake in the web browser job and assert only what the real API will do. Add a Playwright project that runs the `@real` specs of switched areas with `PARFOCAL_PUBLIC_FAKE_API=off` against the TEST-040 (API container under the end-to-end suite) stack and a seeded database ([ADR 0295](adr/0295-ui-first-on-fakes-then-switch-each-area-to-the-real-api.md), UI first on fakes, then each area switches). The draft count moved to TEST-038 (draft call ratchet).
+  Done when `@real` specs cover login, upload, guided review with a decision, an annotate task and sign-off and pass on the fake, the real-API project runs in CI for the areas already switched (login and upload today), every spec that passes on the fake and fails on the real API is logged as a bug in one of the two, and `knowledge/agent-workflow.md` states the one `@real` spec per new screen rule.
   Depends on TEST-004.
   Size: L.
 
@@ -4440,8 +4440,8 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Size: M.
 
 - [ ] TEST-038 · Draft call ratchet
-  Screens built on draft calls work in every test and are empty in production, because only the fake API answers them (`docs/knowledge/draft-calls.md`). Add a script that counts the operations in `packages/api-client/src/draft`, compares the count with a committed number and runs in `pnpm verify`. Promoting a call lowers the committed number.
-  Done when `pnpm verify` fails on a branch that adds a draft operation and passes on one that promotes one.
+  Screens built on draft calls work in every test and are empty in production, because only the fake API answers them (`docs/knowledge/draft-calls.md`). While the UI is built on fakes the count may grow ([ADR 0295](adr/0295-ui-first-on-fakes-then-switch-each-area-to-the-real-api.md), UI first on fakes, then each area switches), so add a script that counts the operations in `packages/api-client/src/draft` per area and prints the count in `pnpm verify` without failing it. OPS-017 (switch each area to the real API) uses the count of an area to show it is fully switched.
+  Done when `pnpm verify` prints the draft count per area and the total, a test checks the count against a fixture folder, and `knowledge/draft-calls.md` points to the script.
   Size: S.
 
 - [ ] TEST-039 · Local Zitadel for the end-to-end suite
