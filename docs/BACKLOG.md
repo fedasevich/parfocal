@@ -4431,6 +4431,12 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Depends on TEST-029.
   Size: S.
 
+- [ ] TEST-037 · Seeded fixture slides open in the deployed viewer
+  TEST-020 (showcase seed and the Reset production workflow) seeds 12 slides that point at the public fixtures in `parfocal-dev/fixtures/`, but the deployed viewer cannot open them. The edge accepts a shared folder only under `samples/camelyon16/` (`apps/edge/src/capability.ts`), and the fixtures have no derived files beside them. Let the edge sign a read of the fixture folders the seed uses, add their derived files next to `fixtures/` once, and add ome-tiff to the seeded formats.
+  Done when an E2E test on production opens one seeded slide of each format, and the reset test still proves `fixtures/` is untouched.
+  Depends on TEST-020.
+  Size: M.
+
 ---
 
 ## 36 PILOT · Documentation and pilot readiness
