@@ -90,6 +90,7 @@ bench-out/
 /apps/e2e/test-results/
 /apps/e2e/playwright-report/
 .outbox/
+.zitadel/
 /.claude/worktrees/
 /.claude/scheduled_tasks.lock
 /.claude/settings.local.json

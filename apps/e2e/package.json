@@ -1,6 +1,6 @@
 {
   "name": "@parfocal/e2e",
-  "description": "Playwright end-to-end tests against the local stack and the dev Zitadel instance",
+  "description": "Playwright end-to-end tests against the local stack and a local Zitadel in Docker",
   "private": true,
   "type": "module",
   "scripts": {

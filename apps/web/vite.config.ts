@@ -87,7 +87,7 @@ export default defineConfig(({ mode }) => ({
   resolve: { dedupe: ["react", "react-dom", "@tanstack/react-query"] },
   server: {
     headers: crossOriginIsolation,
-    proxy: { "/api": "http://localhost:8000" },
+    proxy: { "/api": `http://localhost:${process.env["PARFOCAL_API_PORT"] ?? "8000"}` },
   },
   preview: { headers: crossOriginIsolation },
   html: { cspNonce: "PARFOCAL_CSP_NONCE" },
