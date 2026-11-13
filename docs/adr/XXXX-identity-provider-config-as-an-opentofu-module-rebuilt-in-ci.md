@@ -25,12 +25,16 @@ IAM-001 is done when the IdP config is code and is recreated from scratch in CI.
 
 ## Evidence
 
-Measured on 2026-11-13 on the owner's Mac with OpenTofu 1.13.9. Two full runs of `run.sh` passed: 9 resources added, "No changes" on the second plan, all checks passed, 9 destroyed, then the same again. A read-only plan of the live root with the module wired in through `moved` blocks showed the three apps and the project moved, 3 policies to add, 1 in-place change (`has_project_check`) and 0 to destroy.
+Measured on 2026-11-13 on the owner's Mac with OpenTofu 1.13.9. Three full runs of the final `run.sh` passed: 9 resources added, "No changes" on the second plan, all checks passed, 9 destroyed, then the same again. A read-only plan of the live root with the module wired in through `moved` blocks showed the three apps and the project moved, 3 policies to add, 1 in-place change (`has_project_check`) and 0 to destroy.
+
+One run failed before the fix it led to. Zitadel refused the test user's password with "must contain symbol", because the user was created before the organisation's password policy and was checked against the instance default. The user now depends on the policy, and the run uses a lowercase hex password, so a wrong order fails every time. The module needs OpenTofu 1.11 or newer, because the test user's password is a write-only attribute.
 
 ## Consequences
 
 - The scratch run proves the code, never the Cloud instance. The image tag is bumped by hand, and a Cloud-only difference shows first in the staging plan.
 - The hosted login pages are not exercised in the scratch run. The login E2E against staging still owns that.
+- `check.py` signs the test user in through the session API, which passes through no app. That a user of the same organisation completes a real login with `has_project_check` on is proven only by the login E2E against staging. Apply to the `Parfocal` organisation after that is green, or pass `restrict_to_own_org = false` until then.
+- Applying the module to `Parfocal` is more than an addition. It changes the project in place and gives the organisation its own three policies in place of the instance defaults, which live users then meet.
 - The workflow has not run on GitHub yet, because this branch was not pushed. The first run after the merge is the proof for "recreated in CI".
 - The workflow is not part of `ci-ok`. Adding it there is the lead's call.
 - OPS-001 calls the module from its roots and deletes `zitadel.tf` only together with the `moved` blocks, or the production app would be destroyed.
