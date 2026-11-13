@@ -2505,7 +2505,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Done when component tests cover each tool and routing.
   Size: S.
 
-- [ ] REVIEW-002 · Findings tab layout
+- [x] REVIEW-002 · Findings tab layout
   Two layouts, chosen by the specimen. Cell findings, the default: the panel shows only what is selected. With nothing selected, one number line (REVIEW-005) for the slide and the zones where the AI is unsure (REVIEW-018), most unsure first, then the scattered unsure cells, a drawn outline and the "Changed after your corrections" zone when they exist. A zone opens to its number line and a gallery of its unsure cells (REVIEW-007). A selected cell shows its crop, the AI call and the zone's cells as small tiles, with the type bar on the slide (REVIEW-019). Extras such as the track record are collapsed rows, and hovering a zone or cell on the slide shows its numbers. Node staging, for sentinel nodes: per area, a header that states the area's role (the largest "sets the category", a smaller one "can't change the category"), the size scale, then three steps in order: 1 is it tumor (REVIEW-016), 2 how big is it (MEAS-006), 3 how many tumor cells, only for a cluster near 0.2 mm (REVIEW-008). Model warning bar on top when needed in both layouts.
   Refs doc 36, mock 6, [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md), [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
   Done when component tests cover what the panel shows and does in every situation of mock 6 (nothing selected, zone, cell, outline, after learning, node staging).
