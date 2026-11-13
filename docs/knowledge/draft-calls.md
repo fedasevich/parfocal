@@ -16,6 +16,8 @@ Three draft paths sit under a real route with a path parameter, so the real API 
 
 `listMyJobs` (the jobs tray, the job window and the admin shell) and `getMyChecklist` (the getting started card on home) are real routes in `apps/api` since OPS-015.
 
+`createAccount`, `confirmEmail`, `resendEmailCode` and `signInWithPassword` (the sign-up and password sign-in screens) are real routes since IAM-027 (the app's own sign-up and sign-in), together with `getPasswordSignIn`, which tells the web app whether to use them or the hosted login.
+
 ## Remaining drafts
 
 High priority sits on the home, project, viewer, review and annotate paths.
@@ -49,5 +51,4 @@ High priority sits on the home, project, viewer, review and annotate paths.
 | getAdminOverview, getStorageUsage, getSecuritySettings, listReviewerWorkload, listWebhooks, listAiModels | admin console | none | low |
 | getLabModelConnection | connect a model | none, path swallowed | low |
 | getInvitePreview | invitation page | partly, invitations | low |
-| getSignInOptions, signInWithPassword, signInWithCode, requestSignInLink, startSso, requestPasswordReset, resetPassword | sign in screens, replaced by Zitadel | Zitadel | low |
-| createAccount, confirmEmail, resendEmailCode | sign up screens, replaced by Zitadel | Zitadel | low |
+| getSignInOptions, signInWithCode, requestSignInLink, startSso, requestPasswordReset, resetPassword | sign in screens, replaced by Zitadel | Zitadel | low |
