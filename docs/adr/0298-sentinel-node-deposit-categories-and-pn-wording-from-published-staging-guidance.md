@@ -1,4 +1,4 @@
-# XXXX. Sentinel node deposit categories and pN wording follow AJCC 8th edition breast and ICCR, checked from published texts
+# 0298. Sentinel node deposit categories and pN wording follow AJCC 8th edition breast and ICCR, checked from published texts
 
 - Date: 2026-11-13
 - Status: Accepted
