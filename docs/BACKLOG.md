@@ -495,7 +495,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
 
 - [ ] FOUND-018 · Contract check and image builds in CI
   Split from FOUND-007. Add the web, API and Modal image builds as jobs that `ci-ok` requires. The API contract test and the generated-client check already run in the `test` job since FOUND-008.
-  The image build job reuses the build of the TEST-040 (one-origin local stack) job instead of building a second time.
+  The image build job reuses the API image build of the TEST-040 (API container under the end-to-end suite) job instead of building a second time.
   Done when a pull request that changes the API schema without regenerating the client fails, and image builds run on every pull request.
   Depends on FOUND-007, FOUND-008, FOUND-015.
   Size: M.
@@ -4235,7 +4235,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Depends on OPS-002. Size: M.
 - [ ] OPS-017 · Real backend for the draft screens, in priority order
   OPS-015 (make draft calls safe in production) lists every draft operation with a priority and turns missing ones into a "not available yet" state. Build the real API for the top of that list in batches, each batch moving its operations from `draft` to the generated client and deleting the fake handler's draft branch, until no screen the showcase seed shows calls a draft.
-  Done when the draft count guard from TEST-026 (core browser specs against the real API) or OPS-015 drops for each batch, API tests cover each new route, and the seeded production app shows no "not available yet" on the screens the owner walks through.
+  Done when the committed count of TEST-038 (draft call ratchet) drops for each batch, API tests cover each new route, and the seeded production app shows no "not available yet" on the screens the owner walks through.
   Depends on OPS-015. Size: L.
 
 ---
@@ -4260,7 +4260,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Depends on IAM-004.
 
 - [ ] TEST-004 · E2E harness
-  Playwright against a seeded stack, with auth helpers, the debug handle, and traces and video on failure. Each run removes the workspace and project it created, since the SKEL-008 test leaves one of each behind per run ([ADR 0169](adr/0169-walking-skeleton-retrospective.md)). The harness targets the TEST-040 (one-origin local stack) stack at `localhost:8787`, not vite dev.
+  Playwright against a seeded stack, with auth helpers, the debug handle, and traces and video on failure. Each run removes the workspace and project it created, since the SKEL-008 test leaves one of each behind per run ([ADR 0169](adr/0169-walking-skeleton-retrospective.md)). The harness targets the TEST-040 (API container under the end-to-end suite) stack.
   Done when the skeleton suite runs locally and in CI on the stack, traces and video are saved on failure from the stack job, and the local database holds no more workspaces after a run than before it.
   Depends on TEST-040.
   Size: M.
@@ -4377,7 +4377,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Size: S.
 
 - [ ] TEST-026 · Core browser specs against the real API
-  165 browser specs in `apps/web/e2e` run on the fake API, whose hand-written handlers hold about 13,700 lines of behaviour and about 50 files of draft hooks for operations with no backend, while 6 specs in `apps/e2e` reach the real API ([project review](results/2026-11-09-project-review.md)). The generated client ties the fake's types to `openapi.json`, but nothing ties its behaviour to the backend's. Add a Playwright project that runs a named core subset of the existing specs with `PARFOCAL_PUBLIC_FAKE_API=off` against the local API and a seeded database, starting with the review loop and the annotation path. Core specs carry a `@real` tag and run on both the fake and the TEST-040 (one-origin local stack) stack, and from then on a new screen ships with at least one `@real` spec. The draft count guard moved to TEST-038 (draft call ratchet).
+  165 browser specs in `apps/web/e2e` run on the fake API, whose hand-written handlers hold about 13,700 lines of behaviour and about 50 files of draft hooks for operations with no backend, while 6 specs in `apps/e2e` reach the real API ([project review](results/2026-11-09-project-review.md)). The generated client ties the fake's types to `openapi.json`, but nothing ties its behaviour to the backend's. Add a Playwright project that runs a named core subset of the existing specs with `PARFOCAL_PUBLIC_FAKE_API=off` against the local API and a seeded database, starting with the review loop and the annotation path. Core specs carry a `@real` tag and run on both the fake and the TEST-040 (API container under the end-to-end suite) stack, and from then on a new screen ships with at least one `@real` spec. The draft count guard moved to TEST-038 (draft call ratchet).
   Done when the `@real` project runs in CI on the stack and covers login, upload, guided review with a decision, an annotate task and sign-off, every spec that passes on the fake and fails on the real API is logged as a bug in one of the two, and `knowledge/agent-workflow.md` states the one `@real` spec per new screen rule.
   Depends on TEST-004.
   Size: L.
@@ -4449,11 +4449,11 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when the `e2e` job passes with no `ZITADEL_*` secret and no request to `zitadel.cloud`, and a sign-up spec creates and removes a user on the local instance.
   Size: M.
 
-- [ ] TEST-040 · One-origin local stack
-  The real-API specs run on vite dev with a proxy, so the built bundle, the edge Worker (security headers, rate limits, `api-proxy.ts`, the tile gateway, realtime) and the deploy image never run together before production. Add a Docker stack behind `pnpm stack:up` at `http://localhost:8787`: the edge under `wrangler dev` serving the built `apps/web/dist`, the API and ingest containers from FOUND-015 (container images), Postgres, PgBouncer, MinIO and the local Zitadel. A local-only entry binds the edge's `SLIDES` R2 binding to a small S3 adapter over MinIO, the one named fake left. Seed with the showcase seed and the small fixtures copied into MinIO, and set `TILE_TOKEN_KEY`, `ROOM_TOKEN_KEY` and `REALTIME_INTERNAL_URL` so tiles and realtime are on. Confirm how an upload starts ingest, since `upload-into-project.spec.ts` now starts it by hand. Nothing in the stack reaches a cloud service. Record the CI time in a result file.
-  Done when the 6 specs in `apps/e2e` pass at `localhost:8787` locally and in one CI job with no secrets, one seeded slide per format opens through the edge with an API-issued token, a realtime event reaches a second browser, and an upload is ingested with no manual ingest call.
+- [ ] TEST-040 · API container under the end-to-end suite
+  The 6 real-API specs in `apps/e2e` run the API with `uv run uvicorn`, so the deploy image, migrations on start and production-like settings never run under a browser before a deploy. Run `apps/e2e` against the API container from FOUND-015 (container images) and the local Zitadel from TEST-039 (local Zitadel for the end-to-end suite), behind one `pnpm stack:up`, with the web app still on vite dev. Seed with the showcase seed and the small fixtures copied into MinIO. Confirm how an upload starts ingest, since `upload-into-project.spec.ts` now starts it by hand. Nothing in the stack reaches a cloud service. The edge Worker stays out until a tile, realtime or header bug escapes to production because it was missing, and then a new task adds it with a local S3 adapter for its `SLIDES` binding.
+  Done when the 6 specs in `apps/e2e` pass against the API container locally and in one CI job with no secrets, and an upload is ingested with no manual ingest call.
   Depends on FOUND-015, TEST-039.
-  Size: L.
+  Size: M.
 
 - [ ] TEST-041 · Settings parity check
   CI writes its `.env` by hand and production reads three Modal secrets, and nothing checks they carry the same keys, so a setting added in code can be missing in one place until a deploy fails.
