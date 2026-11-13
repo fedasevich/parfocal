@@ -2,6 +2,7 @@ import uuid
 
 import pytest
 from db_support import ApiAs
+from submit_support import submitted as finished_submit
 from test_reviewed_layer import Review, review
 from workspace_support import owner
 
@@ -137,13 +138,13 @@ def test_reviewers_submit_and_the_owner_signs_off_and_reopens(api: ApiAs, databa
     assert states(api, r, "owner") == [("assigned", pair("in-review", "assigned"))]
     early = api(r.people["owner"]).post(f"{task}/sign-off")
     assert (early.status_code, early.json()["code"]) == (409, "slides-unsubmitted")
-    assert api(r.people["first"]).post(f"{slide}/submit").status_code == 200
+    assert finished_submit(api(r.people["first"]), f"{slide}").status_code == 200
     again = api(r.people["first"]).post(f"{slide}/submit")
     assert (again.status_code, again.json()["code"]) == (409, "already-submitted")
     viewer = api(r.people["viewer"]).post(f"{slide}/submit")
     assert (viewer.status_code, viewer.json()["code"]) == (403, "not-assigned")
     assert states(api, r, "owner") == [("assigned", pair("submitted", "assigned"))]
-    assert api(r.people["second"]).post(f"{slide}/submit").status_code == 200
+    assert finished_submit(api(r.people["second"]), f"{slide}").status_code == 200
     assert states(api, r, "owner") == [("submitted", pair("submitted", "submitted"))]
     by_reviewer = api(r.people["first"]).post(f"{task}/sign-off")
     assert by_reviewer.status_code == 403
@@ -160,7 +161,9 @@ def test_reviewers_submit_and_the_owner_signs_off_and_reopens(api: ApiAs, databa
     assert reopened.status_code == 200, reopened.text
     assert states(api, r, "owner") == [("in-review", pair("in-review", "submitted"))]
     actions = owner(
-        database, f"SELECT action FROM audit_events WHERE target_id = '{r.task}' ORDER BY seq"
+        database,
+        f"SELECT action FROM audit_events WHERE target_id = '{r.task}' "
+        "AND action NOT IN ('review.object-decided', 'review.opinion-saved') ORDER BY seq",
     )
     assert [row[0] for row in actions] == [
         "task.created",

@@ -2,6 +2,7 @@ from typing import Any
 
 import pytest
 from db_support import ApiAs
+from submit_support import submitted as finished_submit
 from test_reviewed_layer import Review, review
 from workspace_support import owner
 
@@ -30,7 +31,7 @@ def test_answers_merge_as_a_draft_and_lock_on_submit(api: ApiAs, database: str) 
     ]
     merged = save(api, r, "first", {"sign_as_is": True, "acceptable": None}).json()
     assert merged["answers"] == {"main_error": "Boundaries", "sign_as_is": True}
-    assert api(r.people["first"]).post(f"{r.base}/submit").status_code == 200
+    assert finished_submit(api(r.people["first"]), f"{r.base}").status_code == 200
     assert api(r.people["first"]).get(f"{r.base}/opinion").json()["draft"] is False
     locked = save(api, r, "first", {"acceptable": 3})
     assert (locked.status_code, locked.json()["code"]) == (409, "already-submitted")

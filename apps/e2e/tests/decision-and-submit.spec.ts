@@ -25,6 +25,40 @@ test("a reviewer decides on an AI region, submits, and the slide shows as submit
   expect(decided.status, JSON.stringify(decided.json)).toBe(200);
   expect(decided.json).toMatchObject({ object: "T1", answer: "5", value: "agree" });
 
+  const refused = await call(page, "POST", `${slide}/submit`);
+  expect(refused.status, JSON.stringify(refused.json)).toBe(409);
+  expect(refused.json).toMatchObject({ code: "review-not-done" });
+  const left = Reflect.get(refused.json ?? {}, "current") as {
+    open_objects: string[];
+    unanswered_questions: string[];
+  };
+  for (const object of left.open_objects) {
+    const more = await call(page, "PUT", `${slide}/decisions/${object}`, { answer: "5" });
+    expect(more.status, JSON.stringify(more.json)).toBe(200);
+  }
+  const opinion = await call(page, "GET", `${slide}/opinion`);
+  const questions = Reflect.get(opinion.json ?? {}, "questions") as {
+    key: string;
+    kind: string;
+    max?: number;
+    options?: string[];
+  }[];
+  const fitting = (question: (typeof questions)[number]) =>
+    question.kind === "scale"
+      ? question.max
+      : question.kind === "choice"
+        ? question.options?.[0]
+        : question.kind === "yesno"
+          ? true
+          : "Fine";
+  const answers = Object.fromEntries(
+    questions
+      .filter((question) => left.unanswered_questions.includes(question.key))
+      .map((question) => [question.key, fitting(question)]),
+  );
+  const answered = await call(page, "PUT", `${slide}/opinion`, { answers });
+  expect(answered.status, JSON.stringify(answered.json)).toBe(200);
+
   const submitted = await call(page, "POST", `${slide}/submit`);
   expect(submitted.status, JSON.stringify(submitted.json)).toBe(200);
 

@@ -336,7 +336,12 @@ export const SlideDoneBlockers: Story = {
         blockers={[
           { id: "T5", text: "T5 is still open", goTo: "Go to T5" },
           { id: "cells", text: "3 cells in the sample are still open", goTo: "Go to the cells" },
-          { id: "q1", text: "Question 1 is not answered", goTo: "Go to the question" },
+          {
+            id: "q1",
+            text: "Question 1 is not answered",
+            goTo: "Go to the question",
+            target: '[data-question="q1"]',
+          },
         ]}
       />
     </div>

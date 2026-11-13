@@ -81,6 +81,40 @@ test("submitting with open threads warns and still goes through", async ({ page 
   await expect(page).toHaveURL(/\/submitted\?/);
 });
 
+test("a reviewer submits, reopens, submits again and the next slide opens", async ({ page }) => {
+  await page.goto(`/tasks/${rt14}/guided?slide=${a1}&scene=done`);
+  await page.getByRole("button", { name: /Submit and open slide 9/ }).click();
+  await expect(page).toHaveURL(/\/submitted\?/);
+  await expect(page.getByRole("dialog", { name: "Slide 8 submitted" })).toBeVisible();
+  const behind = page.locator('[data-slot="slide-done-card"]').getByRole("button", {
+    name: /Submit and open slide 9/,
+  });
+  await expect(behind).toBeDisabled();
+  await expect(behind).toHaveAccessibleDescription(
+    "Submitted. Your review can be changed until sign-off.",
+  );
+  await page.goto(`/tasks/${rt14}/guided?slide=${a1}&scene=done&submitted=true`);
+  const submit = page.getByRole("button", { name: /Submit and open slide 9/ });
+  await expect(submit).toBeDisabled();
+  await expect(submit).toHaveAccessibleDescription(
+    "You submitted this slide. Reopen your review to change it.",
+  );
+  await page.getByRole("button", { name: "Reopen my review" }).click();
+  await expect(submit).toBeEnabled();
+  await submit.click();
+  await expect(page).toHaveURL(/\/submitted\?/);
+  const card = page.getByRole("dialog", { name: "Slide 8 submitted" });
+  await card.getByRole("button", { name: "Open slide 9" }).click();
+  await expect(page).toHaveURL(new RegExp(`/guided\\?slide=${a2}`));
+});
+
+test("a failed submit says every decision is saved and Try again submits", async ({ page }) => {
+  await page.goto(`/tasks/${rt14}/guided?slide=${a1}&scene=submitfail`);
+  await expect(page.getByText("Nothing was lost, every decision is saved.")).toBeVisible();
+  await page.getByRole("button", { name: /Try again/ }).click();
+  await expect(page).toHaveURL(/\/submitted\?/);
+});
+
 test("a slide with no open threads shows no submit warning", async ({ page }) => {
   await page.goto(`/tasks/${rt14}/guided?slide=${a2}&scene=done`);
   await expect(page.getByText("is done").first()).toBeVisible();

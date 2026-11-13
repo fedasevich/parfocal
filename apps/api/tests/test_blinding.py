@@ -5,6 +5,7 @@ from typing import Any
 
 import pytest
 from db_support import ApiAs
+from submit_support import submitted as finished_submit
 from test_annotations import make_class, make_slide
 from workspace_support import join_project, make_project, make_workspace, owner
 
@@ -112,7 +113,7 @@ def study(api: ApiAs, database: str, *, blinded: bool, hidden: bool) -> Study:
         ok(api(second).post(f"{base}/first-read"))
     ok(api(second).put(f"{base}/decisions/T1", json={"value": "agree"}))
     ok(api(second).put(f"{base}/edits/T2", json={"deleted": True}))
-    ok(api(second).post(f"{base}/submit"))
+    ok(finished_submit(api(second), f"{base}"))
     return Study(
         people,
         project,
@@ -189,7 +190,7 @@ def step_to(api: ApiAs, s: Study, phase: str) -> None:
     if phase == "before-submit" and s.hidden:
         ok(api(first).post(f"{s.base}/first-read"))
     if phase == "after-submit":
-        ok(api(first).post(f"{s.base}/submit"))
+        ok(finished_submit(api(first), f"{s.base}"))
 
 
 @pytest.mark.parametrize("kind", sorted(BLINDING))
@@ -300,7 +301,7 @@ def test_judging_the_ai_waits_for_the_first_read(api: ApiAs, database: str) -> N
     )
     unknown = api(first).put(f"{s.base}/decisions/T9", json={"value": "agree"})
     assert (unknown.status_code, unknown.json()["code"]) == (404, "unknown-object")
-    ok(api(first).post(f"{s.base}/submit"))
+    ok(finished_submit(api(first), f"{s.base}"))
 
 
 def stored_first_read(database: str, s: Study, who: str) -> tuple[object, ...]:
@@ -328,9 +329,9 @@ def test_the_blind_first_read_is_kept_after_the_ai_is_shown(api: ApiAs, database
     )
     assert gone.status_code == 204
     ok(api(first).put(f"{s.base}/decisions/T1", json={"value": "agree"}))
-    ok(api(first).post(f"{s.base}/submit"))
+    ok(finished_submit(api(first), f"{s.base}"))
     ok(api(first).post(f"{s.base}/reopen"))
-    ok(api(first).post(f"{s.base}/submit"))
+    ok(finished_submit(api(first), f"{s.base}"))
     assert stored_first_read(database, s, "first") == kept
     later = ok(api(first).get(f"{s.base}/first-read")).json()
     assert later == recorded

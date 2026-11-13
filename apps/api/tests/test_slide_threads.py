@@ -2,6 +2,7 @@ from typing import Any
 
 import pytest
 from db_support import ApiAs
+from submit_support import submitted as finished_submit
 from test_annotations import make_slide
 from test_blinding import Study, make_result_set, ok, study
 from test_threads import POINT, audit_rows, code_of, thread_body
@@ -160,7 +161,7 @@ def test_a_blinded_reviewer_sees_others_slide_threads_only_after_submitting(
     assert [message["body"] for message in seen["messages"]] == ["Please look at the margin."]
     assert api(s.people["first"]).get(f"{slide_base(s)}/{foreign['id']}").status_code == 404
     ok(api(s.people["first"]).put(f"{s.base}/decisions/T1", json={"value": "agree"}))
-    ok(api(s.people["first"]).post(f"{s.base}/submit"))
+    ok(finished_submit(api(s.people["first"]), f"{s.base}"))
     assert slide_titles(api, s, "first") == everything
     ok(api(s.people["first"]).get(f"{slide_base(s)}/{foreign['id']}"))
     ok(api(s.people["first"]).post(f"{s.base}/reopen"))

@@ -3,6 +3,7 @@ from datetime import date
 
 import pytest
 from db_support import ApiAs
+from submit_support import submitted as finished_submit
 from test_disagreements import queued_review
 from test_evaluation_exports import text_of
 from test_locales import REPORT
@@ -27,7 +28,7 @@ def test_signing_makes_version_one_with_a_checksum_and_tells_the_reviewers(
         "slides": 1,
         "submitted": 2,
         "total": 2,
-        "opinion_forms": 0,
+        "opinion_forms": 2,
         "behind": [],
     }
     api(r.people["owner"]).put(f"{decide}/T1", json={"answer": "agree"})
@@ -139,7 +140,7 @@ def test_reopening_needs_a_reason_and_signing_again_makes_version_two(
     assert states["signed_off_at"] is None
     reopened = api(r.people["first"]).post(f"{r.base}/reopen")
     assert reopened.status_code == 200, reopened.text
-    api(r.people["first"]).post(f"{r.base}/submit")
+    finished_submit(api(r.people["first"]), f"{r.base}")
     assert api(r.people["owner"]).post(f"{task}/sign-off").status_code == 200
 
     summary = api(r.people["owner"]).get(f"{task}/sign-off-summary").json()
