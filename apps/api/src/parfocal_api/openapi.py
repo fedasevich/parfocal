@@ -5,8 +5,9 @@ from typing import Any
 
 from parfocal_api.app import create_app
 from parfocal_api.settings import ApiSettings
+from parfocal_common.repository import repository_root
 
-SCHEMA_PATH = Path(__file__).resolve().parents[4] / "packages" / "api-client" / "openapi.json"
+SCHEMA_PATH = repository_root(__file__) / "packages" / "api-client" / "openapi.json"
 
 PLACEHOLDER_SETTINGS = ApiSettings.model_validate(
     {

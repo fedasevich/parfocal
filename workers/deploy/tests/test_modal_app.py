@@ -1,3 +1,10 @@
+from pathlib import Path
+
+import modal
+import pytest
+
+from parfocal_common.repository import repository_root
+from parfocal_deploy import modal_app
 from parfocal_deploy.modal_app import (
     APP_NAME,
     FUNCTIONS,
@@ -49,3 +56,32 @@ def test_the_image_installs_what_the_packages_declare_and_no_workspace_package()
 
 def test_the_web_function_refuses_requests_without_the_proxy_token() -> None:
     assert WEB_ENDPOINT == {"requires_proxy_auth": True}
+
+
+def test_the_app_module_loads_from_the_shallow_path_modal_copies_it_to(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(modal, "is_local", lambda: False)
+    source = Path(modal_app.__file__).read_text()
+    namespace = {"__file__": "/root/parfocal_deploy/modal_app.py", "__name__": "in_container"}
+    exec(compile(source, "/root/parfocal_deploy/modal_app.py", "exec"), namespace)
+    assert namespace["APP_NAME"] == APP_NAME
+
+
+def test_no_deployed_module_climbs_a_fixed_number_of_folders_at_import() -> None:
+    root = repository_root(__file__, depth=3)
+    deployed = [
+        root / "packages/py-common",
+        root / "apps/api",
+        root / "workers/ingest",
+        root / "workers/deploy",
+        root / "workers/ml",
+    ]
+    assert all((project / "src").is_dir() for project in deployed)
+    offenders = [
+        str(path.relative_to(root))
+        for project in deployed
+        for path in (project / "src").rglob("*.py")
+        if ".parents[" in path.read_text()
+    ]
+    assert offenders == []

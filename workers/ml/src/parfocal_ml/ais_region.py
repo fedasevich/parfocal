@@ -15,13 +15,14 @@ from typing import cast
 import numpy as np
 from numpy.typing import NDArray
 
+from parfocal_common.repository import repository_root
 from parfocal_ml.datasets import Sample, cache_dir, samples
 from parfocal_ml.sam_contract import GRAPHS, onnx_dir, pixel_values
 from parfocal_ml.scoring import ImageScore, Summary, score_image, summarise
 
 BASELINE_PQ = 0.8235
 TOLERANCE = 0.01
-REPOSITORY = Path(__file__).resolve().parents[4]
+REPOSITORY = repository_root(__file__)
 RINGS_SCRIPT = REPOSITORY / "apps" / "web" / "region-bench" / "ais-rings.ts"
 
 

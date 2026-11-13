@@ -8,8 +8,10 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Any, cast
 
+from parfocal_common.repository import repository_root
+
 TS_PATH = (
-    Path(__file__).resolve().parents[4]
+    repository_root(__file__)
     / "packages"
     / "api-client"
     / "src"

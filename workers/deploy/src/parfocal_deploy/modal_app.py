@@ -4,6 +4,7 @@ from typing import Any
 
 import modal
 
+from parfocal_common.repository import repository_root
 from parfocal_ingest.settings import INGEST_MEMORY_LIMIT_MIB, INGEST_MEMORY_MIB
 
 APP_NAME = "parfocal-api"
@@ -12,7 +13,7 @@ INGEST_FUNCTION = "ingest"
 KEYS_SECRET = "parfocal-api-keys"
 CONFIG_SECRET = "parfocal-api-config"
 PYTHON_VERSION = "3.14"
-REPOSITORY = Path(__file__).resolve().parents[4]
+REPOSITORY = repository_root(__file__)
 PROJECTS = ("packages/py-common", "apps/api", "workers/ingest")
 SOURCES = ("parfocal_common", "parfocal_api", "parfocal_ingest", "parfocal_deploy")
 WORKSPACE_PREFIX = "parfocal-"

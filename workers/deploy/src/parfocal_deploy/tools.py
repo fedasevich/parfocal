@@ -5,12 +5,12 @@ import subprocess
 import tempfile
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Any
 
+from parfocal_common.repository import repository_root
 from parfocal_deploy.neon import Transport
 
-REPOSITORY = Path(__file__).resolve().parents[4]
+REPOSITORY = repository_root(__file__)
 MODAL = ("uv", "run", "--package", "parfocal-deploy", "modal")
 WRANGLER = ("pnpm", "--filter", "@parfocal/edge", "exec", "wrangler")
 

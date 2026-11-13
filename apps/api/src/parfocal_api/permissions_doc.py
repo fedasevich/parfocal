@@ -22,8 +22,9 @@ from parfocal_api.permissions import (
     SIGN_OUT_NAMES,
     Grant,
 )
+from parfocal_common.repository import repository_root
 
-DOC_PATH = Path(__file__).resolve().parents[4] / "docs" / "reference" / "permissions.md"
+DOC_PATH = repository_root(__file__) / "docs" / "reference" / "permissions.md"
 
 
 def cell(grant: Grant) -> str:

@@ -5,8 +5,9 @@ from sqlalchemy import Table
 
 from parfocal_api import tables
 from parfocal_common.data_classes import DATA_CLASS_MEANINGS, DataClass, classification_of
+from parfocal_common.repository import repository_root
 
-DOC_PATH = Path(__file__).resolve().parents[4] / "docs" / "reference" / "data-map.md"
+DOC_PATH = repository_root(__file__) / "docs" / "reference" / "data-map.md"
 
 
 def declared_tables() -> list[Table]:
