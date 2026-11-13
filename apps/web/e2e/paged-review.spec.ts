@@ -15,6 +15,14 @@ const tiles = (page: Page) =>
     .getByRole("group", { name: /^Unsure cells in/ })
     .getByRole("button");
 
+async function backToList(page: Page) {
+  const toZone = panel(page).getByRole("button", { name: /^Back to Zone/ });
+  if ((await toZone.count()) > 0) await toZone.click();
+  await panel(page)
+    .getByRole("button", { name: /^Back to the list/ })
+    .click();
+}
+
 async function pagedUrl(page: Page) {
   await page.goto("/prototype");
   const link = page
@@ -114,7 +122,7 @@ test("the zone list covers the slide and a far field keeps its zone and the firs
 
   const before = Number(await probe(page).getAttribute("data-working-set"));
   const fieldsBefore = Number(await probe(page).getAttribute("data-fields"));
-  await panel(page).getByRole("button", { name: "All zones" }).click();
+  await backToList(page);
   await zoneButtons.last().click();
   await tiles(page).first().click();
   await expect(page).toHaveURL(/object=C\d+/);
@@ -131,8 +139,7 @@ test("the zone list covers the slide and a far field keeps its zone and the firs
   await page.keyboard.press("ArrowRight");
   await expect.poll(() => new URL(page.url()).searchParams.get("object")).not.toBe(farObject);
 
-  const allZones = panel(page).getByRole("button", { name: "All zones" });
-  if ((await allZones.count()) > 0) await allZones.click();
+  await backToList(page);
   await zoneButtons.first().click();
   await expect(tiles(page).first()).toBeVisible();
   await expect(
