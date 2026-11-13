@@ -110,7 +110,7 @@ IAM-027 (real sign-up and sign-in from the app's own screens) is built and teste
 - B. Keep the hosted login for now and leave IAM-027 in review.
 - Other.
 
-Your choice: 
+Your choice: a
 
 ## The review column, what each task waits for
 
