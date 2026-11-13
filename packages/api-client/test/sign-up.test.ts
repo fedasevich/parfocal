@@ -41,6 +41,7 @@ const rejection = async (attempt: Promise<unknown>) => {
 
 test("an account is created and a code is sent to the address", async () => {
   const sent = await createAccount(account);
+  if (sent.status !== 200) return assert.fail("expected a code");
   assert.equal(sent.data.email, account.email);
   assert.equal(sent.data.resend_seconds, secrets.resendSeconds);
 });
@@ -66,6 +67,7 @@ test("an address that already has an account is a conflict", async () => {
 
 test("the right code confirms the address and leads to setup, a wrong one does not", async () => {
   const ok = await confirmEmail({ email: account.email, code: secrets.code });
+  if (ok.status !== 200) return assert.fail("expected a landing");
   assert.equal(ok.data.return_to, "/setup?step=role");
   const wrong = await rejection(confirmEmail({ email: account.email, code: "000000" }));
   assert.equal(wrong.kind, "unauthenticated");
@@ -74,6 +76,7 @@ test("the right code confirms the address and leads to setup, a wrong one does n
 
 test("a new code can be asked for", async () => {
   const sent = await resendEmailCode({ email: account.email });
+  if (sent.status !== 200) return assert.fail("expected a code");
   assert.equal(sent.data.email, account.email);
   assert.equal(sent.data.expires_minutes, 30);
 });

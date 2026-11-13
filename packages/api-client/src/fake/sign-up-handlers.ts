@@ -1,11 +1,8 @@
-import { HttpResponse, http } from "msw";
-import { confirmEmailDraftSchema } from "../draft/confirm-email.ts";
-import { createAccountDraftSchema } from "../draft/create-account.ts";
-import { resendEmailCodeDraftSchema } from "../draft/resend-email-code.ts";
-import { type SignInSession, signInSessionSchema } from "../draft/sign-in-session.ts";
-import { type AccountCodeSent, accountCodeSentSchema } from "../draft/sign-up-session.ts";
+import { HttpResponse, http, type RequestHandler } from "msw";
+import { z } from "zod";
+import { getGetPasswordSignInMockHandler } from "../generated/api.msw.ts";
+import type { AccountCodeSent, SignInLanding } from "../generated/api.ts";
 import { passwordIssues } from "./auth-handlers.ts";
-import type { DraftOperation } from "./draft-handlers.ts";
 import { people } from "./scenario.ts";
 import { signInSecrets } from "./scenario-admin.ts";
 
@@ -19,6 +16,18 @@ const problem = (status: number, title: string, code: string, errors?: FieldIssu
 
 const unreadable = () => problem(422, "That request is not complete", "invalid-request");
 
+const newAccountSchema = z.object({
+  name: z.string(),
+  email: z.string(),
+  password: z.string(),
+  role: z.enum(["run", "review"]),
+  accepted_terms: z.boolean(),
+});
+
+const emailConfirmationSchema = z.object({ email: z.string(), code: z.string() });
+
+const emailCodeResendSchema = z.object({ email: z.string() });
+
 export const setupAfterSignUp = "/setup?step=role";
 export const confirmationCodeMinutes = 30;
 
@@ -26,18 +35,16 @@ const looksLikeEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(valu
 
 const existingEmails = () => Object.values(people).map((person) => person.email.toLowerCase());
 
-const codeSent = (email: string): AccountCodeSent =>
-  accountCodeSentSchema.parse({
-    email,
-    expires_minutes: confirmationCodeMinutes,
-    resend_seconds: signInSecrets.resendSeconds,
-  });
+const codeSent = (email: string): AccountCodeSent => ({
+  email,
+  expires_minutes: confirmationCodeMinutes,
+  resend_seconds: signInSecrets.resendSeconds,
+});
 
-export const getCreateAccountMockHandler = (overrideResponse?: AccountCodeSent) =>
+const createAccountHandler = () =>
   http.post("*/api/auth/sign-up", async ({ request }) => {
-    const parsed = createAccountDraftSchema.safeParse(await request.json());
+    const parsed = newAccountSchema.safeParse(await request.json());
     if (!parsed.success) return unreadable();
-    if (overrideResponse) return HttpResponse.json(overrideResponse);
     const { name, email, password, accepted_terms } = parsed.data;
     const issues: FieldIssue[] = [];
     if (name.trim() === "") {
@@ -67,41 +74,27 @@ export const getCreateAccountMockHandler = (overrideResponse?: AccountCodeSent) 
     return HttpResponse.json(codeSent(email.trim()));
   });
 
-export const getConfirmEmailMockHandler = (overrideResponse?: SignInSession) =>
+const confirmEmailHandler = () =>
   http.post("*/api/auth/sign-up/confirm", async ({ request }) => {
-    const parsed = confirmEmailDraftSchema.safeParse(await request.json());
+    const parsed = emailConfirmationSchema.safeParse(await request.json());
     if (!parsed.success) return unreadable();
-    if (overrideResponse) return HttpResponse.json(overrideResponse);
     if (parsed.data.code !== signInSecrets.code) {
       return problem(401, "That code is wrong or has expired", "invalid-code");
     }
-    return HttpResponse.json(signInSessionSchema.parse({ return_to: setupAfterSignUp }));
+    const landing: SignInLanding = { return_to: setupAfterSignUp };
+    return HttpResponse.json(landing);
   });
 
-export const getResendEmailCodeMockHandler = (overrideResponse?: AccountCodeSent) =>
+const resendEmailCodeHandler = () =>
   http.post("*/api/auth/sign-up/resend", async ({ request }) => {
-    const parsed = resendEmailCodeDraftSchema.safeParse(await request.json());
+    const parsed = emailCodeResendSchema.safeParse(await request.json());
     if (!parsed.success) return unreadable();
-    return HttpResponse.json(overrideResponse ?? codeSent(parsed.data.email));
+    return HttpResponse.json(codeSent(parsed.data.email));
   });
 
-export const signUpDraftOperations: DraftOperation[] = [
-  {
-    operationId: "createAccount",
-    method: "post",
-    path: "/api/auth/sign-up",
-    handler: () => getCreateAccountMockHandler(),
-  },
-  {
-    operationId: "confirmEmail",
-    method: "post",
-    path: "/api/auth/sign-up/confirm",
-    handler: () => getConfirmEmailMockHandler(),
-  },
-  {
-    operationId: "resendEmailCode",
-    method: "post",
-    path: "/api/auth/sign-up/resend",
-    handler: () => getResendEmailCodeMockHandler(),
-  },
+export const signUpHandlers = (): RequestHandler[] => [
+  getGetPasswordSignInMockHandler({ available: true }),
+  createAccountHandler(),
+  confirmEmailHandler(),
+  resendEmailCodeHandler(),
 ];

@@ -113,7 +113,9 @@ export function EmailForm({ flow }: { flow: Flow }) {
     signIn.mutate(
       { data: { email, password, keep_signed_in: keep, return_to: flow.returnTo } },
       {
-        onSuccess: (response) => flow.land(response.data),
+        onSuccess: (response) => {
+          if (response.status === 200) flow.land(response.data);
+        },
         onError: (error) => setFailure(problemText(error, "Could not sign in. Try again.")),
       },
     );

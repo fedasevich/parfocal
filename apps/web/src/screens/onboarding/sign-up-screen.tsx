@@ -23,6 +23,7 @@ import { Button } from "@parfocal/ui/components/button";
 import { Checkbox } from "@parfocal/ui/components/checkbox";
 import { Stepper } from "@parfocal/ui/components/flow-page";
 import { Input } from "@parfocal/ui/components/input";
+import { useQueryClient } from "@tanstack/react-query";
 import { type ReactNode, useState } from "react";
 import { useGoTo } from "../../shell/router-link.tsx";
 import { CodeInput, handled, PasswordInput, problemText, useCountdown } from "./auth-inputs.tsx";
@@ -60,6 +61,11 @@ const Failure = ({ children }: { children: ReactNode }) =>
 export function SignUpScreen({ scene, change }: Props) {
   const options = useSignInOptions();
   const goTo = useGoTo();
+  const queryClient = useQueryClient();
+  const land = (path: string) => {
+    void queryClient.invalidateQueries();
+    void goTo(path);
+  };
   const [notice, show] = useNotice();
   const [name, setName] = useState("");
   const [typedEmail, setEmail] = useState("");
@@ -88,7 +94,7 @@ export function SignUpScreen({ scene, change }: Props) {
           restart={setSecondsLeft}
           change={change}
           toast={show}
-          land={(path) => void goTo(path)}
+          land={land}
         />
         {notice}
       </PitchLayout>
@@ -115,7 +121,7 @@ export function SignUpScreen({ scene, change }: Props) {
           setSecondsLeft(resendSeconds);
           change("verify");
         }}
-        land={(path) => void goTo(path)}
+        land={land}
         signIn={() => void goTo("/sign-in")}
       />
     </PitchLayout>
@@ -170,7 +176,9 @@ function FormScreen({ steps, workspace, details, set, onCreated, land, signIn }:
         },
       },
       {
-        onSuccess: (response) => onCreated(response.data.email, response.data.resend_seconds),
+        onSuccess: (response) => {
+          if (response.status === 200) onCreated(response.data.email, response.data.resend_seconds);
+        },
         onError: (error) => setFailure(messageOf(error, "Could not create the account.")),
       },
     );
@@ -182,7 +190,9 @@ function FormScreen({ steps, workspace, details, set, onCreated, land, signIn }:
     sso.mutate(
       { data: { workspace_id: workspaceId, return_to: setupAfterSignUp } },
       {
-        onSuccess: (response) => land(response.data.return_to),
+        onSuccess: (response) => {
+          if (response.status === 200) land(response.data.return_to);
+        },
         onError: (error) => setFailure(problemText(error, "Single sign-on did not answer.")),
       },
     );
@@ -295,7 +305,9 @@ function VerifyForm({ steps, email, secondsLeft, restart, change, toast, land }:
     confirm.mutate(
       { data: { email, code } },
       {
-        onSuccess: (response) => land(response.data.return_to),
+        onSuccess: (response) => {
+          if (response.status === 200) land(response.data.return_to);
+        },
         onError: (error) => {
           setFailure(problemText(error, "Could not check the code."));
           setCode("");
@@ -309,6 +321,7 @@ function VerifyForm({ steps, email, secondsLeft, restart, change, toast, land }:
       { data: { email } },
       {
         onSuccess: (response) => {
+          if (response.status !== 200) return;
           setCode("");
           setFailure(null);
           restart(response.data.resend_seconds);

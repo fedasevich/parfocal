@@ -30,7 +30,7 @@ provideDebug(benchmarkDebug(window));
 export const clients = selectWebClients(config, {});
 connectAppAnalytics(clients.analytics);
 
-const queryClient = createQueryClient(showErrorToast, signedOutRedirect(window, config.fakeApi));
+const queryClient = createQueryClient(showErrorToast, signedOutRedirect(window));
 installNameMask(queryClient);
 watchSensitiveData(queryClient, clients.sensitive);
 

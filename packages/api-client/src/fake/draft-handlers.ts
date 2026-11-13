@@ -11,7 +11,6 @@ import { jobDraftOperations } from "./job-handlers.ts";
 import { projectDraftOperations } from "./project-handlers.ts";
 import { reviewDraftOperations } from "./review-handlers.ts";
 import { checklist, reviewTasks, sampleProject, slideByIndex, threads } from "./scenario.ts";
-import { signUpDraftOperations } from "./sign-up-handlers.ts";
 import { taskDraftOperations } from "./task-handlers.ts";
 import { teamDraftOperations } from "./team-handlers.ts";
 import { fakeView } from "./view.ts";
@@ -40,7 +39,6 @@ export {
   getRequestSignInLinkMockHandler,
   getResetPasswordMockHandler,
   getSignInWithCodeMockHandler,
-  getSignInWithPasswordMockHandler,
   getStartSsoMockHandler,
 } from "./auth-handlers.ts";
 export {
@@ -65,11 +63,6 @@ export {
   getListReviewObjectsMockHandler,
   getListThreadCommentsMockHandler,
 } from "./review-handlers.ts";
-export {
-  getConfirmEmailMockHandler,
-  getCreateAccountMockHandler,
-  getResendEmailCodeMockHandler,
-} from "./sign-up-handlers.ts";
 export {
   getGetProjectScopeOptionsMockHandler,
   getGetReviewTaskDefaultsMockHandler,
@@ -144,7 +137,6 @@ export const draftOperations: DraftOperation[] = [
   ...teamDraftOperations,
   ...adminDraftOperations,
   ...authDraftOperations,
-  ...signUpDraftOperations,
   ...reviewDraftOperations,
   ...clinicalDraftOperations,
   ...connectModelDraftOperations,

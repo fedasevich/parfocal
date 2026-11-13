@@ -4,6 +4,7 @@ import { getParfocalAPIMock } from "../generated/api.msw.ts";
 import { adjudicationHandlers } from "./adjudication-handlers.ts";
 import { adminHandlers } from "./admin-handlers.ts";
 import { annotationHandlers } from "./annotation-handlers.ts";
+import { passwordSignInHandlers } from "./auth-handlers.ts";
 import { caseHandlers } from "./case-handlers.ts";
 import { caseReportHandlers, cosignRequestHandlers } from "./case-report-handlers.ts";
 import { connectModelHandlers } from "./connect-model-handlers.ts";
@@ -20,6 +21,7 @@ import { reviewHandlers } from "./review-handlers.ts";
 import { scenarioHandlers } from "./scenario-handlers.ts";
 import { settingsHandlers } from "./settings-handlers.ts";
 import { sharedLayerHandlers } from "./shared-layer-handlers.ts";
+import { signUpHandlers } from "./sign-up-handlers.ts";
 import { taskHandlers } from "./task-handlers.ts";
 import { teamActionHandlers } from "./team-handlers.ts";
 import { tileAccessHandlers } from "./tile-access-handlers.ts";
@@ -37,6 +39,8 @@ export function fakeApiHandlers(scope: FakeApiScope): RequestHandler[] {
   faker.seed(fakeDataSeed);
   return [
     ...draftHandlers(),
+    ...signUpHandlers(),
+    ...passwordSignInHandlers(),
     ...scenarioHandlers(),
     ...reviewHandlers(),
     ...projectHandlers(),

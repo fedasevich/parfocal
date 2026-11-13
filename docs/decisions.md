@@ -9,6 +9,7 @@ To take every recommendation at once, write "all recommended" here:
 ## What you need to do next, in order
 
 1. Answer decision 94 (how the first production deploy gets past the environment rules).
+2. Answer decision 95 (the Zitadel login service user that turns on the app's own sign-up and sign-in).
 
 ## What your answers of 2026-11-04 changed
 
@@ -101,6 +102,16 @@ Bootstrap ran on 2026-11-13 and the secrets are in place. The first `Deploy` run
 
 Your choice: a
 
+### 95. The Zitadel login service user for the app's own sign-up and sign-in
+
+IAM-027 (real sign-up and sign-in from the app's own screens) is built and tested against a faked Zitadel, as [ADR 0294](adr/0294-native-sign-up-and-sign-in-through-zitadel-session-api.md) (native sign-up and sign-in through Zitadel's session API) describes. Until the API has a login token it keeps sending people to the hosted Zitadel login, so nothing changes in production yet. Turning it on is a production write that creates a credential, so it waits for you.
+
+- **A. You and the lead do it in one session (recommended).** In the Zitadel console you create a machine user named `parfocal-login`, give it the instance role `IAM_LOGIN_CLIENT` and create a personal access token for it. The lead then adds `ZITADEL_LOGIN_CLIENT_ID` (the machine user's id) and `ZITADEL_LOGIN_TOKEN` (the token) to the Modal secret of the API in environment `main`, and optionally `ZITADEL_ORGANIZATION_ID` so new people land in one organisation. In the same session the lead switches the email code generator to digits only, checks the password complexity policy against the app's hint text, checks that Zitadel's own mail sends the code, and tries one real sign-up with a throwaway address. Cost $0.
+- B. Keep the hosted login for now and leave IAM-027 in review.
+- Other.
+
+Your choice: 
+
 ## The review column, what each task waits for
 
 Nothing else in review needs you. Nine tasks that only waited for green CI were ticked on 2026-11-02.
@@ -110,6 +121,7 @@ Nothing else in review needs you. Nine tasks that only waited for green CI were 
 | GUIDE-015 (decision styles in task screens) | The UI half | The next Sonnet agent, first in the queue |
 | INGEST-001 (resumable upload) | INGEST-028 (upload check on the R2 dev bucket), which ADR 0151 now allows | The next Opus agent |
 | CASES-009 (search API) | The latency test, which missed 100 ms only on the shared CI runner | An agent reruns it on your Mac with `PARFOCAL_PERF=1` |
+| IAM-027 (the app's own sign-up and sign-in) | Decision 95, the Zitadel login service user and its Modal secret | You and the lead |
 | IAM-021 (lock screen) | The expired sign-in returning to the object, not only the slide | The session already working on it |
 | VIEW-021 (wheel and pinch) | VIEW-056 (a guided trace recorder), then two minutes of your scrolling when you have a mouse | An agent builds the page, then you |
 | TILES-003 (same-origin data path) | Open time in Chrome is 0.63 s against INGEST-007's 0.35 s, still under the 1 s budget. Either accept the budget as enough or add a small read cache first | An agent, unless you say the budget is enough |

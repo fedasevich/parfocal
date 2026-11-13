@@ -1,4 +1,4 @@
-import { ApiError } from "@parfocal/api-client";
+import { ApiError, getPasswordSignIn } from "@parfocal/api-client";
 import type { FakeApiMode } from "../config.ts";
 import { isSessionLocked, locksAt } from "./lock-rules.ts";
 
@@ -23,10 +23,30 @@ export function usesHostedSignIn(fakeApi: FakeApiMode): boolean {
 
 type Place = { pathname: string; search: string };
 
-export function signedOutTarget(place: Place, fakeApi: FakeApiMode): string | null {
+type AvailabilityCheck = () => Promise<{ status: number; data: unknown }>;
+
+export async function passwordSignInAvailable(
+  fakeApi: FakeApiMode,
+  check: AvailabilityCheck = getPasswordSignIn,
+): Promise<boolean> {
+  if (!usesHostedSignIn(fakeApi)) return true;
+  try {
+    const answer = await check();
+    return (
+      answer.status === 200 &&
+      typeof answer.data === "object" &&
+      answer.data !== null &&
+      "available" in answer.data &&
+      answer.data.available === true
+    );
+  } catch {
+    return false;
+  }
+}
+
+export function signedOutTarget(place: Place): string | null {
   if (!locksAt(place.pathname)) return null;
-  const returnTo = `${place.pathname}${place.search}`;
-  return usesHostedSignIn(fakeApi) ? loginUrl(returnTo) : signInPageUrl(returnTo);
+  return signInPageUrl(`${place.pathname}${place.search}`);
 }
 
 export function redirectAllowed(lastAt: number | null, at: number): boolean {
@@ -38,10 +58,10 @@ type Browser = {
   sessionStorage: Pick<Storage, "getItem" | "setItem">;
 };
 
-export function signedOutRedirect(browser: Browser, fakeApi: FakeApiMode, now = Date.now) {
+export function signedOutRedirect(browser: Browser, now = Date.now) {
   return (error: unknown) => {
     if (!isSignedOut(error)) return;
-    const target = signedOutTarget(browser.location, fakeApi);
+    const target = signedOutTarget(browser.location);
     if (target === null) return;
     const stored = browser.sessionStorage.getItem(lastRedirectKey);
     const at = now();

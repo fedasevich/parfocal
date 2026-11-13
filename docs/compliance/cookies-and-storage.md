@@ -11,6 +11,7 @@ Both are set by the API, are HttpOnly and Secure, and cannot be read by scripts.
 | Name | Purpose | Lifetime | Set by |
 |---|---|---|---|
 | `__Host-parfocal_login` | Binds a sign-in in progress to this browser, SameSite=Lax | 10 minutes | API, [ADR 0025](../adr/0025-zitadel-bff-login.md) |
+| `__Host-parfocal_signup` | Binds a sign-up waiting for its email code to this browser, sealed so it cannot be read, SameSite=Strict | 30 minutes | API, [ADR 0294](../adr/0294-native-sign-up-and-sign-in-through-zitadel-session-api.md) |
 | `__Host-parfocal_session` | The random session id, stored on the server only as a hash, SameSite=Strict | The session, which ends after 12 hours by default and on sign-out | API, [ADR 0025](../adr/0025-zitadel-bff-login.md) |
 
 ## Local and session storage

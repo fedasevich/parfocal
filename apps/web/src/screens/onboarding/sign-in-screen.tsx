@@ -6,6 +6,7 @@ import {
   useRequestProjectAccess,
 } from "@parfocal/api-client";
 import { LockCard, PasskeySheet } from "@parfocal/ui/components/auth";
+import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { destinations } from "../../shell/destinations.ts";
 import { personOf } from "../../shell/global-shell.tsx";
@@ -34,6 +35,7 @@ export function SignInScreen({ scene, change, returnTo }: Props) {
   const options = useSignInOptions(returnTo);
   const me = okData(useGetMe().data);
   const goTo = useGoTo();
+  const queryClient = useQueryClient();
   const [notice, show] = useNotice();
   const workspace = workspaceOf(options);
   const [signingInAgain, setSigningInAgain] = useState(false);
@@ -41,6 +43,7 @@ export function SignInScreen({ scene, change, returnTo }: Props) {
   const email = typedEmail ?? me?.email ?? options?.email ?? "";
   const link = options?.deep_link ?? null;
   const land = (session: SignInSession) => {
+    void queryClient.invalidateQueries();
     if (scene === "expired" && link?.task_id) {
       void goTo(destinations.guided(link.task_id, link.slide_id));
       return;

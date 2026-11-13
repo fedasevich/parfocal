@@ -66,6 +66,7 @@ test("a password signs in and lands on the return target, a wrong one is unauthe
     keep_signed_in: true,
     return_to: target,
   });
+  if (ok.status !== 200) return assert.fail("expected a landing");
   assert.equal(ok.data.return_to, target);
   const unsafe = await signInWithPassword({
     email,
@@ -73,6 +74,7 @@ test("a password signs in and lands on the return target, a wrong one is unauthe
     keep_signed_in: true,
     return_to: "//evil.example",
   });
+  if (unsafe.status !== 200) return assert.fail("expected a landing");
   assert.notEqual(unsafe.data.return_to, "//evil.example");
   const wrong = await rejection(
     signInWithPassword({ email, password: "nope", keep_signed_in: true, return_to: null }),

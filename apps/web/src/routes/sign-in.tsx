@@ -4,7 +4,7 @@ import { readBuildConfig } from "../config.ts";
 import { onboardingScenes } from "../screens/onboarding/scenes.ts";
 import { safeReturnPath } from "../screens/onboarding/sign-in-rules.ts";
 import { SignInScreen } from "../screens/onboarding/sign-in-screen.tsx";
-import { loginUrl, usesHostedSignIn } from "../session/sign-in-redirect.ts";
+import { loginUrl, passwordSignInAvailable } from "../session/sign-in-redirect.ts";
 
 const signInSearch = z.object({
   scene: z.enum(onboardingScenes.signin).optional(),
@@ -13,8 +13,8 @@ const signInSearch = z.object({
 
 export const Route = createFileRoute("/sign-in")({
   validateSearch: signInSearch,
-  beforeLoad: ({ search }) => {
-    if (!usesHostedSignIn(readBuildConfig().fakeApi)) return;
+  beforeLoad: async ({ search }) => {
+    if (await passwordSignInAvailable(readBuildConfig().fakeApi)) return;
     window.location.assign(loginUrl(safeReturnPath(search.return_to) ?? "/"));
   },
   component: SignIn,

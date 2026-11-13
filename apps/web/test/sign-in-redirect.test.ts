@@ -4,6 +4,7 @@ import { ApiError } from "@parfocal/api-client";
 import {
   isSignedOut,
   loginUrl,
+  passwordSignInAvailable,
   redirectPauseMs,
   signedOutRedirect,
   signedOutTarget,
@@ -36,30 +37,36 @@ test("a 401 means signed out unless the session is only locked", () => {
   assert.equal(isSignedOut(new ApiError("forbidden", 403)), false);
 });
 
-test("a signed-out visitor goes to the hosted login with the page to come back to", () => {
+test("a signed-out visitor goes to the app's sign-in page with the page to come back to", () => {
   assert.equal(
-    signedOutTarget({ pathname: "/projects/p1", search: "?tab=slides" }, "off"),
-    loginUrl("/projects/p1?tab=slides"),
+    signedOutTarget({ pathname: "/projects/p1", search: "?tab=slides" }),
+    "/sign-in?return_to=%2Fprojects%2Fp1%3Ftab%3Dslides",
   );
   assert.equal(loginUrl("/"), "/api/auth/login?return_to=%2F");
 });
 
-test("with the fake API the visitor goes to the prototype sign-in page", () => {
-  assert.equal(signedOutTarget({ pathname: "/", search: "" }, "all"), "/sign-in?return_to=%2F");
+test("public pages never redirect", () => {
+  assert.equal(signedOutTarget({ pathname: "/sign-in", search: "" }), null);
+  assert.equal(signedOutTarget({ pathname: "/invite/abc", search: "" }), null);
 });
 
-test("public pages never redirect", () => {
-  assert.equal(signedOutTarget({ pathname: "/sign-in", search: "" }, "off"), null);
-  assert.equal(signedOutTarget({ pathname: "/invite/abc", search: "" }, "off"), null);
+test("native sign-in is used when the API offers it and the hosted login otherwise", async () => {
+  const answering = (status: number, data: unknown) => () => Promise.resolve({ status, data });
+  assert.equal(await passwordSignInAvailable("off", answering(200, { available: true })), true);
+  assert.equal(await passwordSignInAvailable("off", answering(200, { available: false })), false);
+  assert.equal(await passwordSignInAvailable("off", answering(500, {})), false);
+  const failing = () => Promise.reject(new Error("offline"));
+  assert.equal(await passwordSignInAvailable("off", failing), false);
+  assert.equal(await passwordSignInAvailable("all", failing), true);
 });
 
 test("the home page sends a signed-out visitor to login once, not in a loop", () => {
   const browser = fakeBrowser("/");
   let at = 1_000;
-  const redirect = signedOutRedirect(browser, "off", () => at);
+  const redirect = signedOutRedirect(browser, () => at);
   redirect(unauthenticated);
   redirect(unauthenticated);
-  assert.deepEqual(browser.visited, [loginUrl("/")]);
+  assert.deepEqual(browser.visited, ["/sign-in?return_to=%2F"]);
   at += redirectPauseMs;
   redirect(unauthenticated);
   assert.equal(browser.visited.length, 2);
@@ -67,6 +74,6 @@ test("the home page sends a signed-out visitor to login once, not in a loop", ()
 
 test("other failures do not redirect", () => {
   const browser = fakeBrowser("/");
-  signedOutRedirect(browser, "off")(new ApiError("server", 503));
+  signedOutRedirect(browser)(new ApiError("server", 503));
   assert.deepEqual(browser.visited, []);
 });

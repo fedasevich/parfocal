@@ -1,4 +1,5 @@
-import { HttpResponse, http } from "msw";
+import { HttpResponse, http, type RequestHandler } from "msw";
+import { z } from "zod";
 import { requestPasswordResetDraftSchema } from "../draft/request-password-reset.ts";
 import { requestSignInLinkDraftSchema } from "../draft/request-sign-in-link.ts";
 import { resetPasswordDraftSchema } from "../draft/reset-password.ts";
@@ -11,7 +12,6 @@ import {
   signInSessionSchema,
 } from "../draft/sign-in-session.ts";
 import { signInWithCodeDraftSchema } from "../draft/sign-in-with-code.ts";
-import { signInWithPasswordDraftSchema } from "../draft/sign-in-with-password.ts";
 import { startSsoDraftSchema } from "../draft/start-sso.ts";
 import { defaultReturnPath, isSafeReturnPath } from "./admin-handlers.ts";
 import type { DraftOperation } from "./draft-handlers.ts";
@@ -51,16 +51,24 @@ export const passwordIssues = (password: string): FieldIssue[] => {
   return issues;
 };
 
-export const getSignInWithPasswordMockHandler = (overrideResponse?: SignInSession) =>
+const passwordSignInSchema = z.object({
+  email: z.string(),
+  password: z.string(),
+  keep_signed_in: z.boolean().optional(),
+  return_to: z.string().nullable().optional(),
+});
+
+const passwordSignInHandler = () =>
   http.post("*/api/auth/sign-in", async ({ request }) => {
-    const parsed = signInWithPasswordDraftSchema.safeParse(await request.json());
+    const parsed = passwordSignInSchema.safeParse(await request.json());
     if (!parsed.success) return unreadable();
-    if (overrideResponse) return HttpResponse.json(overrideResponse);
     if (parsed.data.password !== signInSecrets.password) {
       return problem(401, "The email or password is wrong", "invalid-credentials");
     }
-    return HttpResponse.json(landing(parsed.data.return_to));
+    return HttpResponse.json(landing(parsed.data.return_to ?? null));
   });
+
+export const passwordSignInHandlers = (): RequestHandler[] => [passwordSignInHandler()];
 
 export const getRequestSignInLinkMockHandler = (overrideResponse?: SignInLinkSent) =>
   http.post("*/api/auth/sign-in-link", async ({ request }) => {
@@ -116,12 +124,6 @@ export const getResetPasswordMockHandler = (overrideResponse?: SignInSession) =>
   });
 
 export const authDraftOperations: DraftOperation[] = [
-  {
-    operationId: "signInWithPassword",
-    method: "post",
-    path: "/api/auth/sign-in",
-    handler: () => getSignInWithPasswordMockHandler(),
-  },
   {
     operationId: "requestSignInLink",
     method: "post",
