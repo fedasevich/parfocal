@@ -9,6 +9,7 @@ import { installDebugHandle, provideDebug } from "./debug-handle.ts";
 import { benchmarkDebug } from "./lab/pan-sweep.ts";
 import { createQueryClient } from "./query-client.ts";
 import { createAppRouter } from "./router.ts";
+import { signedOutRedirect } from "./session/sign-in-redirect.ts";
 import { ErrorToasts, showErrorToast } from "./shell/error-toasts.tsx";
 import { installNameMask } from "./shell/hide-names.ts";
 import { installTheme } from "./shell/theme.ts";
@@ -27,7 +28,7 @@ provideDebug(benchmarkDebug(window));
 export const clients = selectWebClients(config, {});
 connectAppAnalytics(clients.analytics);
 
-const queryClient = createQueryClient(showErrorToast);
+const queryClient = createQueryClient(showErrorToast, signedOutRedirect(window, config.fakeApi));
 installNameMask(queryClient);
 watchSensitiveData(queryClient, clients.sensitive);
 

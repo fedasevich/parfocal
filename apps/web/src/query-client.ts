@@ -1,5 +1,5 @@
 import { ApiError } from "@parfocal/api-client";
-import { MutationCache, QueryClient } from "@tanstack/react-query";
+import { MutationCache, QueryCache, QueryClient } from "@tanstack/react-query";
 import { isSessionLocked } from "./session/lock-rules.ts";
 
 const maxRetries = 3;
@@ -24,10 +24,15 @@ export function toastsMutationError(error: unknown, handledByCaller: boolean): e
   );
 }
 
-export function createQueryClient(onMutationError?: (error: ApiError) => void): QueryClient {
+export function createQueryClient(
+  onMutationError?: (error: ApiError) => void,
+  onAnyError?: (error: unknown) => void,
+): QueryClient {
   return new QueryClient({
+    queryCache: new QueryCache({ onError: (error) => onAnyError?.(error) }),
     mutationCache: new MutationCache({
       onError: (error, _variables, _context, mutation) => {
+        onAnyError?.(error);
         if (toastsMutationError(error, mutation.options.onError !== undefined)) {
           onMutationError?.(error);
         }
