@@ -2,6 +2,10 @@
 
 Newest entries on top. One line per piece of work, naming the backlog ID where there is one and linking the result. This file is append-only.
 
+## 2026-11-13
+
+- Owner answers of 2026-11-13 applied. 81a puts the staging slice (OPS-001 base infrastructure as code, OPS-002 deploy definitions, IAM-001 identity provider setup, SKEL-001 staging environment, OPS-005 continuous deployment, SKEL-009 CI deploys to staging) first and holds new features until real end-to-end specs pass on staging. 82a keeps thesis claims to measured results with simulated checks labelled. 83b sets no date, hand-in around April or May 2027. 84a and 85a are written into IAM-026 (shared mail domain) and SEC-040 (presence when blinded). 86a ticks TEST-027 (database tests in parallel) at 15 to 18 minutes on four workers.
+
 ## 2026-11-10
 
 - TEST-036 (display panel Undo tests repeat the key gesture when the Undo window is missed): the first ci run after the change (42775175065 on 10f9be5a) is green in every job, and both Undo tests passed on the first attempt in web job 1 of 3, with no failed or retried test in any browser job. Two more runs are needed. Correction to the earlier note: the slowed runs on the Mac were 8 at 6 times (one lost the click), 4 at 10 times and one at 20 times, 13 in all and not 12 at 6 times, and the long tasks after the key ran to about 2.0 s at 10 times, not 1.7 s. The db job of this run took 14 min 52 s, a fourth reading for TEST-027 (database tests in parallel) inside the 15 to 18 minute range of decision 86 (how fast the database tests must be) only at its low end.

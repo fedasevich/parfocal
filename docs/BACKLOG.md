@@ -811,7 +811,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Size: M.
 
 - [ ] IAM-026 · A workspace on a shared mail domain is not open to strangers
-  A person who creates a workspace saves their mail domain on it with the join policy `join`, and only a hand-kept list of 32 domains and 7 prefixes keeps consumer mail providers out ([tenant isolation review](results/2026-11-09-tenant-isolation-review.md), confirmed finding 1). On a provider missing from the list, such as `onet.pl`, `btinternet.com` or `comcast.net`, any stranger with a free mailbox sees the workspace's name, logo and counts and joins it as a reviewer. Decision 84 (a new workspace and its mail domain) picks the fix.
+  A person who creates a workspace saves their mail domain on it with the join policy `join`, and only a hand-kept list of 32 domains and 7 prefixes keeps consumer mail providers out ([tenant isolation review](results/2026-11-09-tenant-isolation-review.md), confirmed finding 1). On a provider missing from the list, such as `onet.pl`, `btinternet.com` or `comcast.net`, any stranger with a free mailbox sees the workspace's name, logo and counts and joins it as a reviewer. Decision 84 (a new workspace and its mail domain) chose 84a on 2026-11-13: a new workspace saves no domain, and an admin turns on joining by domain in the join settings, which already check that the domain is the admin's own and not public.
   Done when a test shows a stranger on an unlisted shared provider neither listing nor joining a workspace made there, and the chosen rule is recorded.
   Size: S.
 
@@ -1037,7 +1037,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Size: S.
 
 - [ ] SEC-040 · Presence in a blinded task
-  A reviewer in a blinded task receives `presence.joined` and `presence.left` with the other reviewers' user ids, and presence is also announced in task and user rooms, which ADR 0269 (realtime event model by room and kind) does not list ([edge token review](results/2026-11-09-edge-token-review.md), finding C5). Decision 85 (presence in a blinded review) picks the rule.
+  A reviewer in a blinded task receives `presence.joined` and `presence.left` with the other reviewers' user ids, and presence is also announced in task and user rooms, which ADR 0269 (realtime event model by room and kind) does not list ([edge token review](results/2026-11-09-edge-token-review.md), finding C5). Decision 85 (presence in a blinded review) chose 85a on 2026-11-13: a reviewer who has not submitted in a blinded task neither receives presence nor is announced.
   Done when the chosen rule has an API test and an edge test, and presence is sent only in the room kinds the record lists.
   Size: S.
 
@@ -4349,7 +4349,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Depends on TEST-004.
   Size: L.
 
-- [ ] TEST-027 · Database tests in parallel
+- [x] TEST-027 · Database tests in parallel
   The `db` job runs 2,680 tests one after another in 21 minutes (ci run 42666737479), the longest job in ci ([project review](results/2026-11-09-project-review.md)). Each test already makes its own workspace, so run them with pytest-xdist and one migrated database per worker cloned from a template.
   Done when the db job finishes in under 10 minutes on three ci runs in a row with the same number of tests passing, and a result file records the times before and after.
   Size: M.

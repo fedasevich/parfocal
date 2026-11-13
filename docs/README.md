@@ -6,9 +6,9 @@ Last consolidated: 2026-11-09
 
 ## In progress
 
-The annotation path (milestone MA) comes first, in the order [ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md) (annotate tasks on one shared layer) lists. Next to it run the follow-up tasks of the four reviews of 2026-11-09: the [project review](results/2026-11-09-project-review.md), the [tenant isolation review](results/2026-11-09-tenant-isolation-review.md), the [edge token review](results/2026-11-09-edge-token-review.md) and the [viewer engine review](results/2026-11-09-viewer-engine-review.md). `python3 scripts/board.py brief` lists the claimed tasks and the review column.
+The staging slice comes first and no other new task starts until the real end-to-end specs pass on staging, as decision 81a (staging before more features) chose on 2026-11-13: OPS-001 (base infrastructure as code), OPS-002 (deploy definitions), SKEL-001 (staging environment exists), IAM-001 (identity provider setup as code), OPS-005 (continuous deployment) and SKEL-009 (CI deploys main to staging). After it come the annotation path (milestone MA) in the order [ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md) (annotate tasks on one shared layer) lists and the follow-up tasks of the four reviews of 2026-11-09: the [project review](results/2026-11-09-project-review.md), the [tenant isolation review](results/2026-11-09-tenant-isolation-review.md), the [edge token review](results/2026-11-09-edge-token-review.md) and the [viewer engine review](results/2026-11-09-viewer-engine-review.md). `python3 scripts/board.py brief` lists the claimed tasks and the review column.
 
-The owner's open questions in [decisions.md](decisions.md) are decision 81 (staging before more features), decision 82 (what the thesis claims about people), decision 83 (a date for the thesis slice), decision 84 (a new workspace and its mail domain), decision 85 (presence in a blinded review) and decision 86 (how fast the database tests must be).
+The owner has no open questions in [decisions.md](decisions.md).
 
 ## Where we are now
 
@@ -30,12 +30,12 @@ Tasks in the review column wait for an owner look or a cloud step, and [decision
 
 ## Next up
 
-1. The owner answers the five open decisions, with decision 81 (staging before more features) first.
-2. Staging: OPS-001 (base infrastructure as code), then SKEL-001 (staging environment exists), which every unproven cloud behaviour waits for.
+1. The staging slice of decision 81a: OPS-001 (base infrastructure as code), OPS-002 (deploy definitions), IAM-001 (identity provider setup as code), then SKEL-001 (staging environment exists), OPS-005 (continuous deployment) and SKEL-009 (CI deploys main to staging), until the real end-to-end specs pass on staging.
+2. IAM-026 (a workspace on a shared mail domain is not open to strangers) and SEC-040 (presence in a blinded task), whose rules decisions 84a and 85a chose.
 3. The annotation path (milestone MA) in the order ADR 0237 (annotate tasks on one shared layer) lists.
 4. SEC-031 (hard stops for destructive agent actions), then the open VIEW and SEC tasks from the reviews of 2026-11-09.
 5. FOUND-024 (rename verdict to decision everywhere), then FOUND-035 (squash the migrations into one baseline), both before any shared database.
-6. TEST-027 (database tests in parallel) and TEST-026 (core browser specs against the real API).
+6. TEST-026 (core browser specs against the real API).
 7. The cloud numbers STACK-019 (web framework, Modal cold starts) and STACK-020 (database hosting, the Neon measurement) still wait for.
 8. PILOT-004 (pilot data onboarding) and PROTO-010 (make the React app the design source) for the thesis slice.
 

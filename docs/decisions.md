@@ -1,6 +1,6 @@
 # Decisions waiting for the owner
 
-Last updated: 2026-11-09
+Last updated: 2026-11-13
 
 Each decision lists its options, with the recommended one marked. Write your letter after "Your choice:", or leave it empty to take the recommended option. A short note is welcome where you pick "Other".
 
@@ -47,62 +47,16 @@ Every other answer kept what was built: 37a (darker primary hover), 39a (Alt+Lef
 | 79a, two workspaces on one domain | Kept as built. Setup offers every matching workspace |
 | 80a, owner blind too | Kept as the default. COLLAB-021 (turn blind first off on a running annotate task) lets the owner switch it off at any time |
 
-## 81. Staging before more features, from the [project review](results/2026-11-09-project-review.md)
+## What your answers of 2026-11-13 changed
 
-664 of 940 tasks are ticked and nothing has ever been deployed. The API has no deploy definition, and the picking order never reaches OPS-001 (base infrastructure as code) because it unblocks only one task.
-
-- a. Put the staging slice first in the picking order (OPS-001, OPS-002 deploy definitions, SKEL-001 staging environment, IAM-001 login provider setup, SKEL-009 CI deploys to staging) and start no other new task until the real end-to-end specs pass on staging. (recommended, it is the largest unproven risk, and it should fit the free plans and Modal's included $30)
-- b. Give the staging slice one agent in every parallel run and keep features going beside it.
-- c. Keep the current order.
-
-Your choice:
-
-## 82. What the thesis claims about people, from the project review
-
-No pathologist is available, so an agent reviewed the confidence zone names as the pathologist (decision 44c) and ran the incident tabletop on paper. A thesis reader could take those for real checks.
-
-- a. Claim only measured technical results and public dataset ground truth, with every simulated check labelled as simulated. FOUND-038 (records where an agent stood in for a person) lists them. (recommended, it needs nobody)
-- b. The same, plus a small moderated study with medical students or residents through PILOT-005 (moderated usability study, second round).
-- Other.
-
-Your choice:
-
-## 83. A date for the thesis slice, from the project review
-
-No milestone has closed since 2026-10-06 and the roadmap has no dates, while the backlog grew from about 600 to 940 tasks. With a date, agents can cut by it.
-
-- a. Give the thesis hand-in date. Agents then gate one thesis milestone on staging and move every task outside it to after the thesis. (recommended)
-- b. No date, keep building the whole backlog.
-
-Your choice, with the date:
-
-## 84. A new workspace and its mail domain, from the [tenant isolation review](results/2026-11-09-tenant-isolation-review.md)
-
-Decision 75a (a matching email domain joins at once) is safe only when the domain belongs to one organisation. A new workspace saves its creator's domain by itself, and the list of public mail providers can never be complete, so a stranger with a free mailbox on an unlisted provider can see and join such a workspace. Nothing is deployed, so nobody is exposed yet. IAM-026 (a workspace on a shared mail domain is not open to strangers) builds the answer.
-
-- a. A new workspace saves no domain. An admin turns on joining by domain in the join settings, which already check that the domain is the admin's own and not public. (recommended, safe without any list)
-- b. Keep saving the domain, with the policy "ask", so a stranger can only send a request that an admin approves.
-- c. Keep it as built and grow the list of public providers from a published list.
-
-Your choice:
-
-## 85. Presence in a blinded review, from the [edge token review](results/2026-11-09-edge-token-review.md)
-
-Two reviewers on the same slide of a blinded task each receive a presence event with the other's user id, so each learns that the other is reading that slide now. ADR 0118 (blinding and a kept first read) leaves progress open, meaning who is assigned and who has submitted, and no record covers presence. SEC-040 (presence in a blinded task) builds the answer.
-
-- a. A reviewer who has not submitted in a blinded task neither receives presence nor is announced. (recommended, it matches the idea that a blinded reviewer learns nothing about another reviewer's work)
-- b. Keep presence as built, since who is assigned is already visible.
-
-Your choice:
-
-## 86. How fast the database tests must be, from TEST-027 (database tests in parallel)
-
-The ci `db` job now runs on four workers and took 14 min 36 s, 17 min 23 s and 18 min 24 s in its first three runs, against 27 to 37 minutes before ([first result](results/2026-11-10-db-tests-in-parallel.md), [next two runs](results/2026-11-10-db-tests-in-parallel-next-two-runs.md)). The task asks for under 10 minutes. More workers on one runner were not tried on ci and are assumed to gain little, because Postgres shares the runner's cores. The sure way under 10 is a second runner that takes half of the test files, which costs about 20 lines in the test setup and one more ci job. A ci run still ends when `browser (ui)` ends, at about 37 minutes, so the second runner would not make a run finish sooner today.
-
-- a. Close TEST-027 at 15 to 18 minutes. (recommended, the job is no longer the longest one and a second runner buys nothing until the browser jobs are faster)
-- b. Add the second runner now to reach under 10 minutes.
-
-Your choice:
+| Answer | What changed |
+|---|---|
+| 81a, staging first | The staging slice heads the picking order in `docs/README.md` and `knowledge/agent-workflow.md`: OPS-001 (base infrastructure as code), OPS-002 (deploy definitions), IAM-001 (identity provider setup as code), SKEL-001 (staging environment exists), OPS-005 (continuous deployment) and SKEL-009 (CI deploys main to staging). No other new task starts until the real end-to-end specs pass on staging |
+| 82a, thesis claims | The thesis claims only measured results and public dataset ground truth, and `project/agent-stand-in-records.md` says so |
+| 83b, no date | No milestone is gated on a date. The roadmap notes the hand-in around April or May 2027 |
+| 84a, workspace mail domain | IAM-026 (a workspace on a shared mail domain is not open to strangers) builds it: a new workspace saves no domain and an admin turns joining by domain on |
+| 85a, presence when blinded | SEC-040 (presence in a blinded task) builds it: a reviewer who has not submitted neither receives presence nor is announced |
+| 86a, database test speed | TEST-027 (database tests in parallel) is ticked at 15 to 18 minutes |
 
 ## The review column, what each task waits for
 
@@ -116,7 +70,6 @@ Nothing else in review needs you. Nine tasks that only waited for green CI were 
 | IAM-021 (lock screen) | The expired sign-in returning to the object, not only the slide | The session already working on it |
 | VIEW-021 (wheel and pinch) | VIEW-056 (a guided trace recorder), then two minutes of your scrolling when you have a mouse | An agent builds the page, then you |
 | TILES-003 (same-origin data path) | Open time in Chrome is 0.63 s against INGEST-007's 0.35 s, still under the 1 s budget. Either accept the budget as enough or add a small read cache first | An agent, unless you say the budget is enough |
-| TEST-027 (database tests in parallel) | Decision 86 on whether 15 to 18 minutes is fast enough | You choose |
 | AITUM-003, RSET-005 and TASK-007 | Other tasks, now shown as blocked | Agents, when those tasks land |
 
 ## Notes, no decision needed

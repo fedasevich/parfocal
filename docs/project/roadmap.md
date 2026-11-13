@@ -1,6 +1,6 @@
 # Roadmap
 
-Milestone gates are defined in [BACKLOG.md](../BACKLOG.md#milestones). Status is `Not started`, `In progress` or `Done`. A "Started" date set before 2026-11-09 stands. The ones added that day are the day of the first tick in the epics the gate names, and for MA the day of its record. No milestone has closed and no target date is set, which decision 83 (a date for the thesis slice) in [decisions.md](../decisions.md) asks about. This page holds no count. `python3 scripts/board.py counts` prints tasks and ticks per milestone gate and per epic.
+Milestone gates are defined in [BACKLOG.md](../BACKLOG.md#milestones). Status is `Not started`, `In progress` or `Done`. A "Started" date set before 2026-11-09 stands. The ones added that day are the day of the first tick in the epics the gate names, and for MA the day of its record. No milestone has closed and no target date is set. The owner chose decision 83b (no date, keep building the whole backlog) on 2026-11-13, with the thesis hand-in expected around April or May 2027. This page holds no count. `python3 scripts/board.py counts` prints tasks and ticks per milestone gate and per epic.
 
 | Milestone | Status | Started | Done | Notes |
 |---|---|---|---|---|

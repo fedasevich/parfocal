@@ -58,7 +58,7 @@ The owner's Claude plan has a 5-hour and a weekly limit. The status line records
 
 ## Picking the next task
 
-Advice from Fable on 2026-11-02, accepted by the owner. Take the first ready task that passes, in this order:
+Advice from Fable on 2026-11-02, accepted by the owner. Since decision 81a (staging before more features) of 2026-11-13, the staging slice comes before everything else: OPS-001 (base infrastructure as code), OPS-002 (deploy definitions), SKEL-001 (staging environment exists), IAM-001 (identity provider setup as code), OPS-005 (continuous deployment) and SKEL-009 (CI deploys main to staging). Start no other new task until the real end-to-end specs pass on staging. Tasks already claimed, review follow-ups and fixes to `main` may finish. After that, take the first ready task that passes, in this order:
 
 1. The annotation path (milestone MA), in the order [ADR 0237](../adr/0237-annotate-tasks-on-one-shared-layer.md) (annotate tasks on one shared layer) lists, with TASK-015 (check options) after TASK-013, PROTO-020 (annotate task screens over fake data) before SHELL-004 and ANN-032 (check state) and GUIDE-019 (guided check) after ANN-031 as [ADR 0238](../adr/0238-check-options-and-presets-on-annotate-tasks.md) adds, since 2026-11-04.
 2. The thesis slice: the SKEL walking skeleton tasks, EVAL-002 (evaluation report page), EVAL-003 (exports) and PILOT-004 (pilot data onboarding).

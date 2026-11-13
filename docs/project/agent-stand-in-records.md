@@ -1,6 +1,6 @@
 # Records where an agent stood in for a person
 
-No pathologist, counsel or outside reviewer works on Parfocal, and the owner cannot read every record. So in the places below an agent did what a person would normally do. That is fine for building the product. It is not evidence that a person checked anything, and the thesis must not cite it as such. Decision 82 (what the thesis claims about people) in [decisions.md](../decisions.md) decides what the thesis may claim. Risk R20 in [risks.md](risks.md) tracks this page.
+No pathologist, counsel or outside reviewer works on Parfocal, and the owner cannot read every record. So in the places below an agent did what a person would normally do. That is fine for building the product. It is not evidence that a person checked anything, and the thesis must not cite it as such. The owner chose decision 82a (what the thesis claims about people) on 2026-11-13: the thesis claims only measured technical results and public dataset ground truth, and labels every check listed here as simulated. Risk R20 in [risks.md](risks.md) tracks this page.
 
 Each file listed here says so itself, in a line that starts with "Simulated check" or in the words quoted below. Result files are the exception, because results are not edited after the fact. For them the row on this page is the mark. Add a row and a mark in the same change whenever an agent stands in for a person again.
 
