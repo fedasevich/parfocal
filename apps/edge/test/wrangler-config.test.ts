@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
+import { LIMIT_BINDINGS } from "../src/rate-limits.ts";
 
 type Bindings = {
   name: string;
@@ -16,9 +17,8 @@ type Config = Bindings & {
   env: Record<string, Bindings>;
 };
 
-const config = JSON.parse(
-  readFileSync(fileURLToPath(import.meta.resolve("../wrangler.jsonc")), "utf8"),
-) as Config;
+const source = readFileSync(fileURLToPath(import.meta.resolve("../wrangler.jsonc")), "utf8");
+const config = JSON.parse(source) as Config;
 const deployed = {
   production: { name: "parfocal-edge", hostname: "app.parfocal.eu", bucket: "parfocal-dev" },
   staging: {
@@ -62,4 +62,15 @@ test("no two Workers share a rate limit namespace", () => {
     block.ratelimits.map((limit) => limit.namespace_id),
   );
   assert.equal(new Set(namespaces).size, namespaces.length);
+});
+
+test("every Worker binds every limit the code counts, so none answers 503", () => {
+  const needed = Object.values(LIMIT_BINDINGS).sort();
+  for (const block of [config, ...Object.values(config.env)]) {
+    assert.deepEqual(block.ratelimits.map((limit) => limit.name).sort(), needed, block.name);
+  }
+});
+
+test("no Worker config marks itself a local run or trusts a claimed address", () => {
+  assert.doesNotMatch(source, /LOCAL_RUN|TRUST_TEST_CLIENT_ADDRESS/);
 });

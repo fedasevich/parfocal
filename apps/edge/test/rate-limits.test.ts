@@ -7,6 +7,7 @@ import {
   guard,
   type LimitEnv,
   limitClassOf,
+  normalisePath,
   type Siteverify,
   TEST_ADDRESS_HEADER,
 } from "../src/rate-limits.ts";
@@ -127,10 +128,65 @@ describe("the edge limits", () => {
     assert.deepEqual(env.TILE_LIMIT.keys, ["tile:203.0.113.1"]);
   });
 
-  test("without bindings nothing is limited", async () => {
-    for (let attempt = 0; attempt < 20; attempt += 1) {
-      assert.equal(await guard(from("203.0.113.1", "/api/auth/login"), {}), null);
+  test("a missing limit binding answers 503 outside local runs", async () => {
+    const { LOGIN_LIMIT: _login, ...withoutLogin } = limits();
+    for (const env of [{}, withoutLogin, { LOCAL_RUN: "1" }, { LOCAL_RUN: "false" }]) {
+      const response = await guard(from("203.0.113.1", "/api/auth/login"), env);
+      assert.ok(response);
+      assert.equal(response.status, 503);
+      assert.equal(response.headers.get("Content-Type"), "application/problem+json");
+      const body: { readonly code: string } = await response.json();
+      assert.equal(body.code, "limit-not-configured");
     }
+    assert.equal(await guard(from("203.0.113.1", "/tiles/a"), withoutLogin), null);
+    assert.equal(await guard(from("203.0.113.1", "/assets/a.js"), {}), null);
+  });
+
+  test("the Worker answers a limited path with 503 and secured headers without its binding", async () => {
+    const response = await edge.fetch(from("203.0.113.1", "/tiles/a"), {} as unknown as EdgeEnv);
+    assert.equal(response.status, 503);
+    assert.equal(response.headers.get("cross-origin-embedder-policy"), "credentialless");
+    const uploads = await edge.fetch(from("203.0.113.1", "/api/uploads", { method: "POST" }), {
+      API_ORIGIN: "https://api.parfocal.test",
+    } as unknown as EdgeEnv);
+    assert.equal(uploads.status, 503);
+    const body: { readonly code: string } = await uploads.json();
+    assert.equal(body.code, "limit-not-configured");
+  });
+
+  test("a local run without bindings limits nothing", async () => {
+    for (let attempt = 0; attempt < 20; attempt += 1) {
+      assert.equal(
+        await guard(from("203.0.113.1", "/api/auth/login"), { LOCAL_RUN: "true" }),
+        null,
+      );
+    }
+  });
+
+  test("a trailing slash, an escape, a repeated slash or another case is still counted", async () => {
+    const variants = [
+      "/api/auth/login/",
+      "/api/auth/%6Cogin",
+      "/api/auth/%6cogin//",
+      "/api//auth/login",
+      "/API/Auth/Login",
+      "/api/auth/login%2F",
+      "/api/auth/callback/?code=1",
+    ];
+    for (const path of variants) {
+      assert.equal(limitClassOf("GET", new URL(path, ORIGIN).pathname), "login", path);
+      const env = limits(0);
+      const response = await guard(from("203.0.113.1", path), env);
+      assert.equal(response?.status, 429, path);
+      assert.deepEqual(env.LOGIN_LIMIT.keys, ["login:203.0.113.1"], path);
+    }
+    assert.equal(limitClassOf("POST", "/api/uploads/"), "upload");
+    assert.equal(limitClassOf("PUT", "/api/%75ploads/abc/parts"), "upload");
+    assert.equal(limitClassOf("GET", "/tiles/%zz"), "tile");
+    assert.equal(limitClassOf("GET", "/%zz"), null);
+    assert.equal(limitClassOf("GET", "/api/auth/login%C3%A9"), null);
+    assert.equal(normalisePath("/"), "/");
+    assert.equal(normalisePath("//"), "/");
   });
 
   test("the Worker answers the flood with 429 and secured headers before routing", async () => {
@@ -149,6 +205,17 @@ describe("the edge limits", () => {
   });
 });
 
+describe("the bot check on a login variant", () => {
+  test("a trailing slash or an escape does not skip the check", async () => {
+    const env = { ...limits(100), TURNSTILE_SECRET_KEY: "secret" };
+    const never: Siteverify = () => Promise.reject(new Error("no token to verify"));
+    for (const path of ["/api/auth/login/", "/api/auth/%6Cogin", "/API/auth/login"]) {
+      const response = await guard(from("203.0.113.1", path), env, never);
+      assert.equal(response?.status, 403, path);
+    }
+  });
+});
+
 describe("the bot check on login", () => {
   const sent: FormData[] = [];
   const answering =
@@ -157,10 +224,16 @@ describe("the bot check on login", () => {
       sent.push(body);
       return Promise.resolve(Response.json({ success }, { status }));
     };
-  const env: LimitEnv = { TURNSTILE_SECRET_KEY: "1x0000000000000000000000000000000AA" };
+  const env: LimitEnv = {
+    LOCAL_RUN: "true",
+    TURNSTILE_SECRET_KEY: "1x0000000000000000000000000000000AA",
+  };
 
   test("is off when no secret is set", async () => {
-    assert.equal(await guard(from("203.0.113.1", "/api/auth/login"), {}, answering(false)), null);
+    assert.equal(
+      await guard(from("203.0.113.1", "/api/auth/login"), { LOCAL_RUN: "true" }, answering(false)),
+      null,
+    );
   });
 
   test("refuses a login without a token or with a failing token", async () => {

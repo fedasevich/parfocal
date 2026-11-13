@@ -17,6 +17,7 @@ const env = {
   TILE_TOKEN_KEY: SECRET,
   ROOMS: {} as DurableObjectNamespace,
   ROOM_TOKEN_KEY: SECRET,
+  LOCAL_RUN: "true",
 } satisfies EdgeEnv;
 
 async function token(): Promise<string> {

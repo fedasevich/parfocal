@@ -7,6 +7,7 @@ export type LimitEnv = {
   readonly ROOM_LIMIT?: RateLimit;
   readonly ROOM_INTERNAL_LIMIT?: RateLimit;
   readonly TRUST_TEST_CLIENT_ADDRESS?: string;
+  readonly LOCAL_RUN?: string;
   readonly TURNSTILE_SECRET_KEY?: string;
 };
 
@@ -37,14 +38,37 @@ const READ_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 
 export const siteverify: Siteverify = (body) => fetch(SITEVERIFY_URL, { method: "POST", body });
 
-export function limitClassOf(method: string, pathname: string): LimitClass | null {
-  if (LOGIN_PATHS.has(pathname)) return "login";
-  if (pathname.startsWith(TILES_PREFIX)) return "tile";
-  if (pathname.startsWith(ROOMS_PREFIX)) return "room";
-  if (pathname.startsWith(ROOMS_INTERNAL_PREFIX)) return "room-internal";
-  const upload = pathname === UPLOADS_PREFIX || pathname.startsWith(`${UPLOADS_PREFIX}/`);
+export const LIMIT_BINDINGS: Readonly<Record<LimitClass, keyof LimitEnv>> = {
+  login: "LOGIN_LIMIT",
+  upload: "UPLOAD_LIMIT",
+  tile: "TILE_LIMIT",
+  room: "ROOM_LIMIT",
+  "room-internal": "ROOM_INTERNAL_LIMIT",
+};
+
+const ASCII_ESCAPE = /%([0-7][0-9a-f])/gi;
+
+export function normalisePath(pathname: string): string {
+  const decoded = pathname.replace(ASCII_ESCAPE, (_, hex: string) =>
+    String.fromCharCode(Number.parseInt(hex, 16)),
+  );
+  const trimmed = decoded.replace(/\/+/g, "/").replace(/\/$/, "").toLowerCase();
+  return trimmed === "" ? "/" : trimmed;
+}
+
+function classOf(method: string, normalised: string): LimitClass | null {
+  if (LOGIN_PATHS.has(normalised)) return "login";
+  const withSlash = `${normalised}/`;
+  if (withSlash.startsWith(TILES_PREFIX)) return "tile";
+  if (withSlash.startsWith(ROOMS_PREFIX)) return "room";
+  if (withSlash.startsWith(ROOMS_INTERNAL_PREFIX)) return "room-internal";
+  const upload = withSlash.startsWith(`${UPLOADS_PREFIX}/`);
   if (upload && !READ_METHODS.has(method.toUpperCase())) return "upload";
   return null;
+}
+
+export function limitClassOf(method: string, pathname: string): LimitClass | null {
+  return classOf(method, normalisePath(pathname));
 }
 
 export function clientAddress(request: Request, env: LimitEnv): string {
@@ -54,14 +78,11 @@ export function clientAddress(request: Request, env: LimitEnv): string {
 }
 
 function binding(env: LimitEnv, kind: LimitClass): RateLimit | undefined {
-  const bindings: Readonly<Record<LimitClass, RateLimit | undefined>> = {
-    login: env.LOGIN_LIMIT,
-    upload: env.UPLOAD_LIMIT,
-    tile: env.TILE_LIMIT,
-    room: env.ROOM_LIMIT,
-    "room-internal": env.ROOM_INTERNAL_LIMIT,
-  };
-  return bindings[kind];
+  return env[LIMIT_BINDINGS[kind]] as RateLimit | undefined;
+}
+
+function isLocalRun(env: LimitEnv): boolean {
+  return env.LOCAL_RUN === "true";
 }
 
 function tooMany(kind: LimitClass): Response {
@@ -99,12 +120,16 @@ export async function guard(
   env: LimitEnv,
   verify: Siteverify = siteverify,
 ): Promise<Response | null> {
-  const { pathname } = new URL(request.url);
-  const kind = limitClassOf(request.method, pathname);
+  const pathname = normalisePath(new URL(request.url).pathname);
+  const kind = classOf(request.method, pathname);
   if (kind === null) return null;
   const address = clientAddress(request, env);
   const limiter = binding(env, kind);
-  if (limiter !== undefined) {
+  if (limiter === undefined) {
+    if (!isLocalRun(env)) {
+      return problem(503, "limit-not-configured", "The request limit is not configured");
+    }
+  } else {
     const { success } = await limiter.limit({ key: `${kind}:${address}` });
     if (!success) return tooMany(kind);
   }
