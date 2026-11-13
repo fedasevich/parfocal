@@ -103,6 +103,7 @@ import type {
   Organisation,
   Pairings,
   PasswordSignInAvailability,
+  PatchExportStarted,
   PatientData,
   PendingAccessRequest,
   PersonalData,
@@ -10737,6 +10738,13 @@ export const getSetTaskReportLayoutResponseMock = (
 export const getExportTrainingDatasetResponseMock = (): Blob =>
   new Blob([new Uint8Array(faker.number.int({ min: 1, max: 64 }))]);
 
+export const getStartPatchExportResponseMock = (
+  overrideResponse: Partial<Extract<PatchExportStarted, object>> = {},
+): PatchExportStarted => ({ job_id: faker.string.uuid(), ...overrideResponse });
+
+export const getDownloadPatchExportResponseMock = (): Blob =>
+  new Blob([new Uint8Array(faker.number.int({ min: 1, max: 64 }))]);
+
 export const getGetTaskAiChangesResponseMock = (
   overrideResponse: Partial<Extract<AiChanges, object>> = {},
 ): AiChanges => ({
@@ -21301,6 +21309,54 @@ export const getExportTrainingDatasetMockHandler = (
   );
 };
 
+export const getStartPatchExportMockHandler = (
+  overrideResponse?:
+    | PatchExportStarted
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<PatchExportStarted> | PatchExportStarted),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/review-tasks/:taskId/patch-exports",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getStartPatchExportResponseMock(),
+        { status: 202 },
+      );
+    },
+    options,
+  );
+};
+
+export const getDownloadPatchExportMockHandler = (
+  overrideResponse?:
+    | Blob
+    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<Blob> | Blob),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/review-tasks/:taskId/patch-exports/:jobId",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      const binaryBody =
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getDownloadPatchExportResponseMock();
+      return new HttpResponse(binaryBody, {
+        status: 200,
+        headers: { "Content-Type": "application/octet-stream" },
+      });
+    },
+    options,
+  );
+};
+
 export const getGetTaskAiChangesMockHandler = (
   overrideResponse?:
     | AiChanges
@@ -23423,6 +23479,8 @@ export const getParfocalAPIMock = () => [
   getGetTaskReportLayoutMockHandler(),
   getSetTaskReportLayoutMockHandler(),
   getExportTrainingDatasetMockHandler(),
+  getStartPatchExportMockHandler(),
+  getDownloadPatchExportMockHandler(),
   getGetTaskAiChangesMockHandler(),
   getGetAiUsageMockHandler(),
   getStartEvaluationVersionMockHandler(),
