@@ -55,7 +55,7 @@ Checked in each dashboard on 2026-10-31. A hard cap means the provider stops the
 | Cloudflare zone `parfocal.eu` | Free | Yes | Capped by plan | $0.00 |
 | Neon | Free (`free_v3`), billed through the Vercel Marketplace | No | Hard cap by plan: 1 GB storage and 100 CU-hours per project a month, then the compute stops | $0.00 |
 | Vercel team "fedasevich's projects" | Hobby | No | Capped by plan, and no card means nothing can be charged | $0.00 |
-| Zitadel Cloud | Free, team still named "pathocal" | Not checked | Capped by plan at 100 daily active users | $0.00 |
+| Zitadel Cloud | Free, team still named "pathocal" | No, checked 2026-11-13 | Hard cap by plan: 100 daily active users, 3 identity providers and one instance, and no card means nothing can be charged. At most about 4 daily active users since October | $0.00 |
 | GitHub `fedasevich` | GitHub Pro through education benefits, $0 a month | Not checked | Budgets of $0 that block usage for Actions, Packages, Codespaces and Git LFS, a $5 budget for AI credits, and included usage alerts on. The public repository's Actions minutes are free | $13.66 used, all covered by included usage |
 | Domain `parfocal.eu` at Endora | Yearly renewal | Not checked | A known yearly cost, nothing to alert. TODO: write down the renewal date and price | |
 
