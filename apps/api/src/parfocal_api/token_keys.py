@@ -6,10 +6,14 @@ from pydantic import SecretStr
 MIN_KEY_BYTES = 32
 
 
-def key_bytes(secret: str) -> bytes | None:
+def decoded_key(secret: str) -> bytes:
     text = secret.replace("+", "-").replace("/", "_").rstrip("=")
+    return base64.b64decode(text + "=" * (-len(text) % 4), altchars=b"-_", validate=True)
+
+
+def key_bytes(secret: str) -> bytes | None:
     try:
-        key = base64.b64decode(text + "=" * (-len(text) % 4), altchars=b"-_", validate=True)
+        key = decoded_key(secret)
     except binascii.Error:
         return None
     return key if len(key) >= MIN_KEY_BYTES else None

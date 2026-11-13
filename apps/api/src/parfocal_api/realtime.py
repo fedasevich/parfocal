@@ -15,7 +15,7 @@ from pydantic import AnyHttpUrl, BaseModel, Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from parfocal_api.settings import ApiSettings
-from parfocal_api.token_keys import usable_secret
+from parfocal_api.token_keys import decoded_key, usable_secret
 
 PUBLISH_HEADER = "X-Room-Signature"
 MAX_PUBLISH_ROOMS = 100
@@ -44,7 +44,7 @@ class Realtime(Protocol):
 
 
 def sign_publish(secret: str, stamp: int, body: str) -> str:
-    key = base64.urlsafe_b64decode(secret.replace("+", "-").replace("/", "_"))
+    key = decoded_key(secret)
     digest = hmac.new(key, f"publish.{stamp}.{body}".encode(), hashlib.sha256).digest()
     return f"{stamp}.{base64.urlsafe_b64encode(digest).rstrip(b'=').decode()}"
 

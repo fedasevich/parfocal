@@ -48,6 +48,7 @@ from parfocal_api.tables import (
     sessions,
     users,
 )
+from parfocal_api.token_keys import decoded_key
 from parfocal_common.db import DatabaseScope, scoped_transaction
 
 SESSION_COOKIE = "__Host-parfocal_session"
@@ -74,7 +75,7 @@ class SessionKeyError(ValueError):
 class SessionCipher:
     def __init__(self, key: str) -> None:
         try:
-            raw = base64.urlsafe_b64decode(key.encode())
+            raw = decoded_key(key)
         except ValueError as error:
             raise SessionKeyError from error
         if len(raw) != 32:

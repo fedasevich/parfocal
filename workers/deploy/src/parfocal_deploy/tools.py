@@ -3,6 +3,8 @@ import json
 import os
 import subprocess
 import tempfile
+import urllib.error
+import urllib.request
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
@@ -11,6 +13,7 @@ from parfocal_common.repository import repository_root
 from parfocal_deploy.neon import Transport
 
 REPOSITORY = repository_root(__file__)
+SMOKE_USER_AGENT = "Mozilla/5.0 (compatible; parfocal-deploy-smoke/1)"
 MODAL = ("uv", "run", "--package", "parfocal-deploy", "modal")
 WRANGLER = ("pnpm", "--filter", "@parfocal/edge", "exec", "wrangler")
 
@@ -72,12 +75,14 @@ def sql(uri: str, statement: str) -> list[Any]:
     return asyncio.run(query())
 
 
+def smoke_request(url: str) -> urllib.request.Request:
+    return urllib.request.Request(url, headers={"User-Agent": SMOKE_USER_AGENT})
+
+
 def fetch(url: str) -> tuple[int, Mapping[str, str]]:
-    import urllib.error
-    import urllib.request
 
     try:
-        with urllib.request.urlopen(url, timeout=60) as response:
+        with urllib.request.urlopen(smoke_request(url), timeout=120) as response:
             return response.status, {
                 name.lower(): value for name, value in response.headers.items()
             }

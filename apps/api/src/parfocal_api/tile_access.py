@@ -18,7 +18,7 @@ from parfocal_api.permissions import Permission, require
 from parfocal_api.problems import NotFoundError, ProblemError
 from parfocal_api.project_access import require_slide_reading
 from parfocal_api.tables import PrivacyMode, projects, slides
-from parfocal_api.token_keys import usable_secret
+from parfocal_api.token_keys import decoded_key, usable_secret
 from parfocal_api.uploads import Settings
 from parfocal_common.ingest import RESTRICTED_RANGES_NAME, folder_of, slide_prefix
 from parfocal_common.object_store import ObjectStore, StorageError
@@ -58,7 +58,7 @@ def base64url(data: bytes) -> str:
 
 
 def key_of(secret: str) -> bytes:
-    return base64.urlsafe_b64decode(secret.replace("+", "-").replace("/", "_"))
+    return decoded_key(secret)
 
 
 def sign_capability(secret: str, claims: dict[str, Any]) -> str:
