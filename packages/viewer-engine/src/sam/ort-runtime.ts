@@ -2,6 +2,7 @@ import * as ort from "onnxruntime-web/webgpu";
 import { wasmMjsUrl, wasmUrl } from "./ort-wasm-urls.js";
 import type { SamRuntime, SamSession, SamTensor } from "./runtime.ts";
 import type { SamProvider } from "./variants.ts";
+import { loadWasmBinary } from "./wasm-binary.ts";
 
 function wrapTensor(tensor: ort.Tensor): SamTensor {
   return {
@@ -34,10 +35,13 @@ function wrapSession(session: ort.InferenceSession): SamSession {
 }
 
 export function createOrtRuntime(hardwareConcurrency: number): SamRuntime {
-  ort.env.wasm.wasmPaths = { mjs: wasmMjsUrl, wasm: wasmUrl };
+  ort.env.wasm.wasmPaths = { mjs: wasmMjsUrl };
   ort.env.wasm.numThreads = hardwareConcurrency;
+  let wasmBinary: Promise<ArrayBuffer> | undefined;
   return {
     async createSession(bytes: Uint8Array, provider: SamProvider) {
+      wasmBinary ??= loadWasmBinary(wasmUrl);
+      ort.env.wasm.wasmBinary = await wasmBinary;
       const session = await ort.InferenceSession.create(bytes, {
         executionProviders: [provider],
       });

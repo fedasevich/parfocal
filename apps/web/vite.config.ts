@@ -12,6 +12,7 @@ import { bundleSummaryJson } from "./vite/bundle-summary.ts";
 import { noAppPageForMissingData } from "./vite/data-paths.ts";
 import { fixtureTilesInDevOnly } from "./vite/dev-tiles.ts";
 import { fontPreloadInBuildOnly } from "./vite/font-preload.ts";
+import { assetsWithinWorkersLimit } from "./vite/large-assets.ts";
 import { publicEnvOnly, publicEnvPrefix } from "./vite/public-env.ts";
 
 const crossOriginIsolation = {
@@ -80,6 +81,7 @@ export default defineConfig(({ mode }) => ({
     fontPreloadInBuildOnly(),
     fixtureTilesInDevOnly(),
     noAppPageForMissingData(),
+    assetsWithinWorkersLimit(),
     ...(mode === "analyze" ? bundleReport() : []),
   ],
   resolve: { dedupe: ["react", "react-dom", "@tanstack/react-query"] },
