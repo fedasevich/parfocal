@@ -8,8 +8,7 @@ To take every recommendation at once, write "all recommended" here:
 
 ## What you need to do next, in order
 
-1. Copy the Cloudflare and Modal `parfocal-ci-prod` token values when the infra guide asks, and reply with its keyword.
-2. Create a Neon API key for project `parfocal` (decision 88) and copy it when the infra guide asks.
+1. Create an R2 access key limited to bucket `parfocal-dev` with object read and write (decision 93, what the first production deploy still needs) when the infra guide asks, and copy its two values one at a time.
 
 ## What your answers of 2026-11-04 changed
 
@@ -65,20 +64,8 @@ Every other answer kept what was built: 37a (darker primary hover), 39a (Alt+Lef
 | 89a, wildcard DNS | The record `*.parfocal.eu` (A to the old Endora host) was deleted on 2026-11-13. The apex, `www`, mail and TXT records stay |
 | 90, Neon region | Your note said keep it near Modal. Modal's base plan has no region pin and runs in US East by default, and ADR 0003 (pilot platform architecture) puts Neon next to Modal, so the project stays in `aws-us-east-1`. PostGIS 3.6.4 worked on Neon Postgres 18.7 on a throwaway branch on 2026-11-13, so the project stays and local development and CI move to Postgres 18 in OPS-002 (deploy definitions). Regions get pinned to the EU at the first tenant with real patient data, as ADR 0003 says |
 | 92b, buckets | `parfocal-staging` was deleted on 2026-11-13 and taken out of the `staging` root's state, so that root would create it again when OPS-014 (bring back staging) runs. `parfocal-prod` stays empty for when production gets its own bucket |
+| 88a, deploy credentials | Done on 2026-11-13. The GitHub environment `production` holds `CLOUDFLARE_API_TOKEN` (with R2 read), `MODAL_TOKEN_ID`, `MODAL_TOKEN_SECRET`, `NEON_API_KEY` (scoped to project `parfocal`) and `ZITADEL_SA_JSON`, and the variables `CLOUDFLARE_ACCOUNT_ID`, `ZITADEL_ORG_ID` and `NEON_PROJECT_ID` |
 | 86a, database test speed | TEST-027 (database tests in parallel) is ticked at 15 to 18 minutes |
-
-## Open decisions from OPS-001 (base infrastructure as code)
-
-### 88. Credentials that the production deploy needs
-
-Production is the only cloud environment now (ADR 0293, production only until the first real user), so CI deploys from the GitHub environment `production`. GitHub cannot read a secret back, so the ones made for `staging` on 2026-11-13 are made again for production: a Cloudflare token `parfocal-ci-prod` with the same permissions as `parfocal-ci-staging` (Workers Scripts Edit and Account Settings Read on the account, Workers Routes Edit, DNS Edit and Zone Read on `parfocal.eu`), the account ID as a variable, and a Modal token. The infra guide enters them with you. One thing is still missing after that.
-
-- **A. Create a Neon API key and add R2 read to `parfocal-ci-prod` (recommended).** The Neon key is scoped to project `parfocal` if Neon offers project scope, else a personal key, and goes into the `production` environment as `NEON_API_KEY` the same clipboard way. R2 read lets the deploy check the slide bucket exists.
-- B. Only the Neon key, and the deploy reads the bucket name from its config instead.
-- C. Deploy to production only from your Mac for now, with your own Wrangler and Modal logins.
-- Other.
-
-Your choice: a. You create the Neon API key, step 2 in the list above. The infra guide adds R2 read to the new `parfocal-ci-prod` token.
 
 ## Open decisions from cutting staging (ADR 0293, production only until the first real user)
 
@@ -102,7 +89,7 @@ OPS-002 (deploy definitions) is written and tested locally and deployed nothing.
 - C. Wait with the first deploy until staging returns in OPS-014 (bring back staging).
 - Other.
 
-Your choice:
+Your choice: a
 
 ## The review column, what each task waits for
 
