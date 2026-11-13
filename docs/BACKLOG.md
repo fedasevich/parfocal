@@ -2803,7 +2803,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Done when a perf test keeps hover hit tests under 1 ms with 1M nuclei.
   Size: M.
 
-- [ ] ANN-019 · Overlay drawing performance
+- [x] ANN-019 · Overlay drawing performance
   Paths batched per state, `getBoundingClientRect` cached per frame, one overlay paint per frame, no quadratic `closePath` on batched paths.
   Done when the overlay perf test meets the TEST-006 budget during a drag with 100k shapes.
   Refs doc 24.

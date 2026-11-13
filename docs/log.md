@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-13
 
+- ANN-019 ANN-019 retired as obsolete. The overlay moved to deck.gl on the GPU in packages/viewer-engine/src/overlay, shapes are already batched as typed arrays, there is no canvas closePath, and engine.ts already caches getBoundingClientRect per frame and paints one frame at a time. TEST-006 (performance budgets) has no overlay drag budget, so nothing was measured.
 - COLLAB-016 merged onto main, fake colleague BroadcastChannel now opens only in the browser so node tests exit, verify-changed OK in 59 s, live-layer, annotate and presence specs 18 of 18 pass.
 - PROTO-010 (make the React app the design source): AGENTS.md, BACKLOG header and rules, overview.md and design/README.md now name the React app and its Storybook as the design source and the artifacts as frozen history. Docs only.
 - EVAL-015 (patch and mask export): patch-export ingest job cuts signed-off annotate slides into tiles at a chosen level with RGB PNG, 8-bit centre-inside label mask, per-slide GeoJSON, index.csv and manifest.json in one zip, POST and GET under /api/review-tasks/{id}/patch-exports, ADR on centre-inside masks. Starting an export needs write access, so view-only members get 403.
