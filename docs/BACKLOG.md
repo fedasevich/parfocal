@@ -1965,6 +1965,12 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on DS-023, DS-033.
   Size: S.
 
+- [ ] DS-039 · Animated loaders instead of loading text
+  Screens wait with plain text such as "Loading your home…", which the owner finds poor. Propose five animated loaders that fit the mock's dark, precise look, each either built from a small maintained library (for example a Lottie or CSS loader set) customised to the design tokens, or drawn fresh in CSS or SVG. Show all five side by side in a Storybook story with light, dark, compact and reduced motion variants, plus the bundle size each adds, and put the choice for the owner in `docs/decisions.md`. After the owner picks one, add it to `packages/ui` as one `Loader` component with inline, block and full page sizes, and replace every loading text in `apps/web` with it, keeping an accessible label for screen readers. Reduced motion shows a still state.
+  Done when the five proposals are in Storybook with their sizes and an open decision exists, and after the owner's pick a test finds no loading text left in `apps/web` outside the `Loader` label, the loader honours reduced motion, and the golden images of the main screens show it.
+  Depends on DS-023.
+  Size: M.
+
 ---
 
 ## 09 SHELL · Application shell and layout
