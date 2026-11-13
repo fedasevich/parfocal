@@ -73,11 +73,11 @@ Your choice:
 
 ### 88. Credentials that the staging deploy needs
 
-OPS-001 needed nothing new, but OPS-002 (deploy definitions) and OPS-005 (continuous deployment) cannot deploy from CI without three secrets that only you can create. The existing Cloudflare token `parfocal-tofu` has no Workers permission on purpose, and `.env` holds no Neon API key.
+On 2026-11-13 you and the infra guide already made most of them. The GitHub environment `staging` holds the Cloudflare token `parfocal-ci-staging` (Workers Scripts Edit and Account Settings Read on the account, Workers Routes Edit, DNS Edit and Zone Read on `parfocal.eu`, expires 2027-11-13), the account ID as a variable, and a Modal token. Two things are still missing.
 
-- **A. Create three narrow credentials and store them as GitHub Actions secrets and in `.env` (recommended).** A Cloudflare token `parfocal-deploy` with Workers Scripts Edit, Workers Routes Edit and R2 read on the account and zone, a Neon API key scoped to project `parfocal` if Neon offers project scope and else a personal key, and a Modal token for environment `staging`. The preview project `parfocal-preview` of ADR 0050 (deploy pipeline and previews) is not needed for staging. When previews are built you create it in the Vercel dashboard, because a Vercel-managed Neon organisation allows new projects only there.
-- B. Widen the existing `parfocal-tofu` token to cover Workers too. One token less, but the token that can change buckets could then also deploy.
-- C. Deploy to staging only from your Mac for now, with your own Wrangler and Modal logins, and add CI secrets later.
+- **A. Create a Neon API key and add R2 read to `parfocal-ci-staging` (recommended).** The Neon key is scoped to project `parfocal` if Neon offers project scope, else a personal key, and goes into the `staging` environment as `NEON_API_KEY` the same clipboard way. R2 read lets the deploy check the staging bucket exists.
+- B. Only the Neon key, and the deploy reads bucket names from `tofu.sh staging output -json` instead.
+- C. Deploy to staging only from your Mac for now, with your own Wrangler and Modal logins.
 - Other.
 
 Your choice:
