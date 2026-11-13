@@ -137,7 +137,6 @@ Nothing else in review needs you. Nine tasks that only waited for green CI were 
 | VIEW-021 (wheel and pinch) | VIEW-056 (a guided trace recorder), then two minutes of your scrolling when you have a mouse | An agent builds the page, then you |
 | TILES-003 (same-origin data path) | Open time in Chrome is 0.63 s against INGEST-007's 0.35 s, still under the 1 s budget. Either accept the budget as enough or add a small read cache first | An agent, unless you say the budget is enough |
 | OPS-005 (deploys from `main`) | Decision 96, the `DEPLOY_ON_MAIN` switch and one rollback drill | You and the lead |
-| OPS-002 (Postgres 18 with PostGIS) | OPS-014 (bring back staging), since CI recreating staging no longer applies under ADR 0293 | Nobody until staging returns |
 | AITUM-003, RSET-005 and TASK-007 | Other tasks, now shown as blocked | Agents, when those tasks land |
 
 ## Notes, no decision needed

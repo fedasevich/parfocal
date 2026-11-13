@@ -283,7 +283,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Done when the ADR confirms the scientific stack (torch, openslide, tifffile, zarr) has wheels for the chosen version on Linux x86_64 and aarch64.
   Refs doc 12 (MONAI Label had no 3.14 wheels).
 
-- [ ] STACK-019 · Web framework
+- [x] STACK-019 · Web framework
   Candidates: FastAPI with Pydantic v2, Litestar, Django with Django Ninja. Default: FastAPI with Pydantic v2 for OpenAPI 3.1 generation, async I/O and the ecosystem.
   [ADR 0003](adr/0003-pilot-platform-architecture.md) runs FastAPI on Modal as an ASGI app. The API package must not import Modal, so it can move to another container host.
   Done when a spike serves an authenticated, tenant-scoped endpoint with generated OpenAPI that STACK-008 consumes, and records Modal cold-start time and API latency budgets.
