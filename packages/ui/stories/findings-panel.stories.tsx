@@ -154,8 +154,8 @@ function CellDemo({
 }
 
 const stagingAreas: StagingPanelArea[] = [
-  { id: "T1", size: 6.2, low: 4.8, high: 7.1, call: null },
   { id: "T2", size: 0.18, low: 0.14, high: 0.22, call: null, cells: { low: 150, high: 240 } },
+  { id: "T1", size: 6.2, low: 4.8, high: 7.1, call: null },
 ];
 
 function StagingDemo({ start = "T1", warned = false }: { start?: string; warned?: boolean }) {

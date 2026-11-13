@@ -78,6 +78,8 @@ test("picking a tile shows the cell, the AI call and the zone's tiles with no ty
   const cell = slot(page, "findings-cell");
   await expect(cell).toContainText("Cell C23");
   await expect(cell).toContainText("on the slide");
+  await expect(cell.getByRole("img", { name: "Crop of C23" })).toBeVisible();
+  await expect(cell.locator('[data-slot="ai-call"]')).not.toBeEmpty();
   await expect(cell.getByRole("button")).toHaveCount(0);
   const siblings = slot(page, "findings-siblings").locator('[data-slot="gallery-tile"]');
   await expect(siblings).toHaveCount(8);

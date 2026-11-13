@@ -436,7 +436,8 @@ function NodeStaging({
   onCount,
   warnings = [],
 }: NodeStagingProps) {
-  const callable = areas.map((area) => ({ id: area.id, call: area.call }));
+  const largestFirst = [...areas].sort((a, b) => (b.measured ?? b.size) - (a.measured ?? a.size));
+  const callable = largestFirst.map((area) => ({ id: area.id, call: area.call }));
   return (
     <>
       {warnings.length > 0 ? <Warnings warnings={warnings} /> : null}
@@ -445,7 +446,7 @@ function NodeStaging({
           <Hint>The AI found no tumor area on this slide.</Hint>
         </Zone>
       ) : null}
-      {areas.map((area, position) => {
+      {largestFirst.map((area, position) => {
         const role = areaRole(callable, area.id);
         const open = area.id === current;
         const shown = area.measured ?? area.size;
