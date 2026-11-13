@@ -12,6 +12,8 @@ WEB_FUNCTION = "web"
 INGEST_FUNCTION = "ingest"
 KEYS_SECRET = "parfocal-api-keys"
 CONFIG_SECRET = "parfocal-api-config"
+LOGIN_SECRET = "parfocal-api-login"
+SECRETS = (KEYS_SECRET, CONFIG_SECRET, LOGIN_SECRET)
 PYTHON_VERSION = "3.14"
 REPOSITORY = repository_root(__file__)
 PROJECTS = ("packages/py-common", "apps/api", "workers/ingest")
@@ -88,7 +90,7 @@ def run_ingest() -> None:
 app = modal.App(
     APP_NAME,
     image=app_image(),
-    secrets=[modal.Secret.from_name(KEYS_SECRET), modal.Secret.from_name(CONFIG_SECRET)],
+    secrets=[modal.Secret.from_name(name) for name in SECRETS],
 )
 web = app.function(**WEB_OPTIONS)(modal.asgi_app(**WEB_ENDPOINT)(serve))
 ingest = app.function(**INGEST_OPTIONS)(run_ingest)

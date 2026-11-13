@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from parfocal_deploy import neon
 from parfocal_deploy.bootstrap import storage_endpoint
 from parfocal_deploy.environments import Environment, environment
-from parfocal_deploy.modal_app import APP_NAME, CONFIG_SECRET, KEYS_SECRET, WEB_FUNCTION
+from parfocal_deploy.modal_app import APP_NAME, SECRETS, WEB_FUNCTION
 from parfocal_deploy.tools import (
     MODAL,
     WRANGLER,
@@ -121,7 +121,7 @@ def deploy(
 ) -> None:
     settings = required(local, CI_SETTINGS)
     found = modal_secret_names(tools, target.modal_environment)
-    absent = [name for name in (KEYS_SECRET, CONFIG_SECRET) if name not in found]
+    absent = [name for name in SECRETS if name not in found]
     if absent:
         raise NotBootstrappedError(target, absent)
     project = settings["NEON_PROJECT_ID"]

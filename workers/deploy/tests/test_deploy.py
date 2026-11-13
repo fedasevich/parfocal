@@ -24,7 +24,7 @@ from parfocal_deploy.deploy import (
     deploy,
 )
 from parfocal_deploy.environments import ENVIRONMENTS, UnknownEnvironmentError, environment
-from parfocal_deploy.modal_app import CONFIG_SECRET, KEYS_SECRET
+from parfocal_deploy.modal_app import CONFIG_SECRET, KEYS_SECRET, LOGIN_SECRET
 from parfocal_deploy.tools import MissingSettingsError, Tools
 
 PRODUCTION = environment("production")
@@ -233,8 +233,15 @@ def test_deploy_refuses_an_environment_that_was_never_bootstrapped() -> None:
     assert cloud.commands == []
 
 
-def test_deploy_migrates_then_ships_modal_then_the_worker_and_checks_it() -> None:
+def test_deploy_refuses_an_environment_without_the_login_secret() -> None:
     cloud = Cloud(modal_secrets={KEYS_SECRET: {}, CONFIG_SECRET: {}})
+    with pytest.raises(NotBootstrappedError, match=LOGIN_SECRET):
+        deploy(PRODUCTION, cloud.tools(), LOCAL)
+    assert cloud.commands == []
+
+
+def test_deploy_migrates_then_ships_modal_then_the_worker_and_checks_it() -> None:
+    cloud = Cloud(modal_secrets={KEYS_SECRET: {}, CONFIG_SECRET: {}, LOGIN_SECRET: {}})
     deploy(PRODUCTION, cloud.tools(), LOCAL, web_url=lambda _: "https://api.modal.example")
     lines = [" ".join(argv) for argv, _ in cloud.commands]
     assert [
@@ -257,7 +264,7 @@ def test_deploy_migrates_then_ships_modal_then_the_worker_and_checks_it() -> Non
 
 
 def test_deploy_fails_when_health_or_the_isolation_headers_are_wrong() -> None:
-    ready = {KEYS_SECRET: {}, CONFIG_SECRET: {}}
+    ready = {KEYS_SECRET: {}, CONFIG_SECRET: {}, LOGIN_SECRET: {}}
     with pytest.raises(SmokeCheckError, match="503"):
         deploy(
             PRODUCTION,
