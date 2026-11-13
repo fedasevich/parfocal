@@ -1,6 +1,8 @@
 import type { AnnotationDraft } from "@parfocal/api-client";
 import type { NewShape } from "./document.ts";
 import {
+  brushGeometryOf,
+  brushToGeoJson,
   markerPointOf,
   pointToGeoJson,
   polygonPointsOf,
@@ -42,10 +44,15 @@ export function draftOf(shape: Shape): AnnotationDraft | null {
       return shape.text === null
         ? null
         : { kind: savedTextKind, geometry: spot(shape), text: shape.text };
+    case "brush":
+      return {
+        kind: savedPolygonKind,
+        geometry: brushToGeoJson(shape.points, shape.ringStarts),
+        class_id: shape.classKey,
+      };
     case "freehand":
     case "rectangle":
     case "ellipse":
-    case "brush":
       return null;
   }
 }
@@ -58,6 +65,10 @@ const pointOf = (record: SavedRecord) => {
 export function shapeOf(record: SavedRecord): NewShape | null {
   switch (record.kind) {
     case savedPolygonKind: {
+      const brush = brushGeometryOf(record);
+      if (brush !== null) {
+        return { kind: "brush", ...brush, classKey: record.class_id ?? null };
+      }
       const points = polygonPointsOf(record);
       return points === null
         ? null
@@ -86,5 +97,7 @@ export function shapeOf(record: SavedRecord): NewShape | null {
 export function sameBody(before: Shape, after: Shape): boolean {
   if (before.classKey !== after.classKey || before.text !== after.text) return false;
   if (before.points.length !== after.points.length) return false;
+  if (before.ringStarts.length !== after.ringStarts.length) return false;
+  if (before.ringStarts.some((value, index) => value !== after.ringStarts[index])) return false;
   return before.points.every((value, index) => value === after.points[index]);
 }
