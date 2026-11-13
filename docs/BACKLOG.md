@@ -4829,7 +4829,7 @@ A researcher hands slides to reviewers as a review task ([ADR 0053](adr/0053-ai-
   Size: M.
 ## 44 GUIDE · Decisions, guided review and the opinion form
 
-- [ ] TASK-016 · Adding a run to a signed-off annotate slide can carry its reason
+- [ ] TASK-019 · Adding a run to a signed-off annotate slide can carry its reason
   `POST /api/review-tasks/{task_id}/slides/{slide_id}/runs` calls `editable_layer` without a reason and takes none, so on a signed-off slide the owner always gets 400 `reason-needed` and can never add the run, while every other shared layer write takes `reason` as a query parameter. The write isolation suite of SEC-043 (every write route is sent as another workspace) found it. Take `reason` like the other routes, log the change in the layer history and ask for the reason in the web app where the run is added.
   Done when an API test adds a run to a signed-off slide with a reason and finds it in the layer history, and a browser test adds one through the reason dialog.
   Size: S.
