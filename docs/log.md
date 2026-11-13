@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-14
 
+- VIEW-028 (overlay level of detail): density texture below 2 px, dots from 2 to 7 px, outlines above 7 px, large shapes always outlined, LOD only from 500 nucleus-sized shapes, with lod and deck-layer unit tests. No GPU measurement yet, no 81k fixture and Playwright uses SwiftShader.
 - TASK-008 (submit a slide review): the API refuses a submit while objects are open or required questions unanswered, the web app retries a failed submit, and card, API and fake-API e2e tests prove it. The full-stack decision-and-submit spec was updated but not run.
 
 ## 2026-11-13
