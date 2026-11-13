@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-13
 
+- OPS-002 (deploy definitions): the first Deploy run (Actions run 43489584765) was refused before any step, because the production environment allows only v* tags and needs the owner's approval, and no tag exists. Nothing was deployed, cost 0. Asked the owner as decision 94 (cut v0.1.0 or allow main).
 - OPS-002 (deploy definitions): first production bootstrap run from the owner's Mac, all four steps (worker-secrets, create-role, keys-secret, config-secret). It made the draft Worker parfocal-edge with secrets TILE_TOKEN_KEY, ROOM_TOKEN_KEY, MODAL_PROXY_TOKEN_ID and MODAL_PROXY_TOKEN_SECRET, the Neon role parfocal_app on the main branch, and the Modal secrets parfocal-api-keys and parfocal-api-config in environment main, with email, error, telemetry, analytics and flag backends switched off as decision 93a asked. Cost 0.
 - OPS-002 (deploy definitions): Modal proxy auth token parfocal-edge-prod created in workspace fedasevich, the first there, stored in ~/.config/parfocal/modal-proxy.env (mode 600) for bootstrap to write to the Worker, cost 0.
 - OPS-002 (deploy definitions): second Neon API key parfocal-owner-mac, scoped to the parfocal project, stored in ~/.config/parfocal/neon.env (mode 600) on the owner's Mac for bootstrap, checked with HTTP 200 on the project endpoint, cost 0.

@@ -8,7 +8,7 @@ To take every recommendation at once, write "all recommended" here:
 
 ## What you need to do next, in order
 
-1. Create an R2 access key limited to bucket `parfocal-dev` with object read and write (decision 93, what the first production deploy still needs) when the infra guide asks, and copy its two values one at a time.
+1. Answer decision 94 (how the first production deploy gets past the environment rules).
 
 ## What your answers of 2026-11-04 changed
 
@@ -90,6 +90,16 @@ OPS-002 (deploy definitions) is written and tested locally and deployed nothing.
 - Other.
 
 Your choice: a
+
+### 94. How the first production deploy gets past the environment rules
+
+Bootstrap ran on 2026-11-13 and the secrets are in place. The first `Deploy` run was refused before it started, because the GitHub environment `production` only deploys from tags matching `v*` and needs your approval click. No `v*` tag exists yet. ADR 0014 (Conventional Commits and releases cut locally with git-cliff) makes a release a deliberate step whose first version is `v0.1.0`, and pushing the tag publishes a public GitHub release with a changelog.
+
+- **A. Cut `v0.1.0` with `pnpm release`, push it, start `Deploy` on that tag, and you click Approve in GitHub Actions (recommended).** It keeps the rule that only tagged, approved code reaches production. Cost $0.
+- B. Add `main` to the environment's allowed branches, so `Deploy` runs from `main` and still waits for your approval. A GitHub settings change.
+- Other.
+
+Your choice: TODO
 
 ## The review column, what each task waits for
 
