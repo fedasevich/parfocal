@@ -209,6 +209,7 @@ export function createVivRoute(
   let shown: Shown | null = null;
   let overlays: readonly OverlayLayer[] = [];
   let overlayLayers: Layer[] = [];
+  let overlayLod = "";
   let brightness = 1;
   let channelDisplay: readonly ChannelDisplay[] = [];
   let prefetchOn = options.prefetch ?? true;
@@ -294,7 +295,9 @@ export function createVivRoute(
 
   const applyLayers = () => {
     if (failure !== null) return;
-    overlayLayers = overlayBuilder.build(overlays);
+    const pixelsPerUnit = 2 ** camera.zoom;
+    overlayLod = overlayBuilder.lodKey(overlays, pixelsPerUnit);
+    overlayLayers = overlayBuilder.build(overlays, pixelsPerUnit);
     if (gpuUsable()) deck.setProps({ layers: shown ? [shown.layer, ...overlayLayers] : [] });
     changed();
   };
@@ -390,7 +393,9 @@ export function createVivRoute(
     shown?.reader?.setFocus({ x: camera.x, y: camera.y });
     shown?.prefetcher?.update(camera);
     if (gpuUsable()) deck.setProps({ viewState: vivViewState(camera) });
-    changed();
+    const lodMoved = overlayBuilder.lodKey(overlays, 2 ** camera.zoom) !== overlayLod;
+    if (lodMoved && failure === null) applyLayers();
+    else changed();
   };
 
   let fadeWasActive = false;
