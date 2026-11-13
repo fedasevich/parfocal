@@ -5926,7 +5926,7 @@ The approved prototype moves from the two HTML artifacts into `apps/web` and `pa
   Done when every scene of these screens in the PROTO-001 inventory opens at its route and from the prototype index on fake data, the mock's clicks between its scenes work, a Playwright smoke test opens every route, and the owner has compared the screens with the frozen mock. Visual baselines, axe and behaviour tests come with the DS, SHELL and feature tasks that harden these screens.
   Depends on PROTO-003, PROTO-011. Refs mock: admin, mock: signin, mock: signup, mock: invite, mock: setup.
 
-- [ ] PROTO-010 · Make the React app the design source
+- [x] PROTO-010 · Make the React app the design source
   Applies the consequences of [ADR 0129](adr/0129-the-prototype-moves-into-react-as-the-design-source.md): the design source sentence in `AGENTS.md`, the two artifact bullets at the top of this file, the "Design sources" section of `docs/project/overview.md` and the "How to use" rule that UI tasks wait for screens to settle now point at the app and its Storybook, and the artifacts are described as frozen history.
   Done when every PROTO screen task is ticked, the owner has accepted [ADR 0129](adr/0129-the-prototype-moves-into-react-as-the-design-source.md), and a docs check finds no remaining reference that calls the artifacts the design source.
   Depends on PROTO-003, PROTO-004, PROTO-005, PROTO-006, PROTO-007, PROTO-008, PROTO-009, PROTO-011, PROTO-012, PROTO-013, PROTO-014, PROTO-015, PROTO-016, PROTO-017, PROTO-018, PROTO-019.
