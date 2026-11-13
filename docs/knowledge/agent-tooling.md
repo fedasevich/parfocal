@@ -39,7 +39,7 @@ No secrets here. Secrets live in `.env` locally and in GitHub environments for C
 | Cloudflare | Account `ecd7fda10e3d9ff42ecc86cb43073fcd` | Workers on the free plan for now. R2 subscription active |
 | Cloudflare | Zone `parfocal.eu` | Active since 2026-10-06. Nameservers `hunts.ns.cloudflare.com` and `stella.ns.cloudflare.com`, set at the registrar Endora (admin.endora.cz). An unused `pathocal.eu` zone from a typo can be deleted |
 | Cloudflare R2 | Buckets `parfocal-dev`, `parfocal-staging`, `parfocal-prod` | Managed by `infra/tofu`. Public access off. Token "parfocal-dev local" has Object Read & Write on `parfocal-dev` only |
-| Cloudflare R2 | Bucket `parfocal-tfstate` | Encrypted OpenTofu state. Created by hand |
+| Cloudflare R2 | Bucket `parfocal-tfstate` | Encrypted OpenTofu state, one key per root (`global`, `dev`, `staging`, `prod`), plus the old `parfocal.tfstate` until the owner answers decision 87 (delete the old state file). Created by hand |
 | Cloudflare | Account token `parfocal-tofu` | Used by `infra/tofu`. See [infra.md](infra.md) |
 | Neon | Project `soft-pine-86468744`, database `parfocal` | Created through the Vercel Marketplace (team "fedasevich's projects"), free plan, US East (`iad1`), Neon Auth off. Personal API keys are available in the Neon console |
 | Zitadel Cloud | Instance `parfocal` at `https://parfocal-iqcyh5.eu1.zitadel.cloud`, organisation `Parfocal` (`393969446668073456`) | EU region, free plan. The customer-portal team is still named "pathocal" |

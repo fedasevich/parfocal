@@ -1,9 +1,20 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-cd "$(dirname "$0")"
+here="$(cd "$(dirname "$0")" && pwd)"
+root="${1:?usage: tofu.sh global|dev|staging|prod <tofu arguments>}"
+shift
+
+case "${root}" in
+  global | dev | staging | prod) ;;
+  *)
+    echo "unknown root ${root}, use global, dev, staging or prod" >&2
+    exit 2
+    ;;
+esac
+
 set -a
-source ../../.env
+source "${here}/../../.env"
 set +a
 
 : "${CLOUDFLARE_API_TOKEN:?set CLOUDFLARE_API_TOKEN in .env}"
@@ -17,4 +28,4 @@ token_id="$(curl -fsS -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
 export AWS_ACCESS_KEY_ID="${token_id}"
 export AWS_SECRET_ACCESS_KEY="$(printf '%s' "${CLOUDFLARE_API_TOKEN}" | shasum -a 256 | cut -d' ' -f1)"
 
-exec tofu "$@"
+exec tofu -chdir="${here}/${root}" "$@"

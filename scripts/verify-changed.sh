@@ -17,6 +17,10 @@ run() { echo "== $1"; shift; "$@" || STATUS=1; }
 [ -n "$TS" ] && run oxlint pnpm -s oxlint --type-aware --quiet $TS
 [ -n "$PY" ] && run ruff uv run ruff check -q $PY
 [ -n "$PY" ] && run ruff-format uv run ruff format --check -q $PY
+if echo "$CHANGED" | grep -q '^infra/tofu/'; then
+  run tofu-fmt tofu fmt -check -recursive infra/tofu
+  run tofu-policy bash infra/tofu/policy.sh static
+fi
 echo "$CHANGED" | grep -q '^scripts/.*\.ts$' && run tsc-scripts pnpm -s tsc --noEmit -p scripts
 run turbo pnpm -s turbo run typecheck test --output-logs=errors-only --filter="...[$MERGE_BASE]"
 

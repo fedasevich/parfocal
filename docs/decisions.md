@@ -58,6 +58,52 @@ Every other answer kept what was built: 37a (darker primary hover), 39a (Alt+Lef
 | 85a, presence when blinded | SEC-040 (presence in a blinded task) builds it: a reviewer who has not submitted neither receives presence nor is announced |
 | 86a, database test speed | TEST-027 (database tests in parallel) is ticked at 15 to 18 minutes |
 
+## Open decisions from OPS-001 (base infrastructure as code)
+
+### 87. Delete the old OpenTofu state file
+
+The state moved to four files, one per root (ADR 0287, one OpenTofu root per environment). The old file `parfocal.tfstate` in bucket `parfocal-tfstate` is now an unused encrypted copy that still holds all three login app secrets. Deleting is a destructive action, so it needs your yes. The command is `npx wrangler r2 object delete parfocal-tfstate/parfocal.tfstate`, cost $0.
+
+- **A. Delete it once staging has deployed from the new roots (recommended).** It stays as a fallback for the few days OPS-002 (deploy definitions) and SKEL-001 (staging environment exists) take.
+- B. Delete it now.
+- C. Keep it.
+- Other.
+
+Your choice:
+
+### 88. Credentials that the staging deploy needs
+
+OPS-001 needed nothing new, but OPS-002 (deploy definitions) and OPS-005 (continuous deployment) cannot deploy from CI without three secrets that only you can create. The existing Cloudflare token `parfocal-tofu` has no Workers permission on purpose, and `.env` holds no Neon API key.
+
+- **A. Create three narrow credentials and store them as GitHub Actions secrets and in `.env` (recommended).** A Cloudflare token `parfocal-deploy` with Workers Scripts Edit, Workers Routes Edit and R2 read on the account and zone, a Neon API key scoped to project `parfocal` if Neon offers project scope and else a personal key, and a Modal token for environment `staging`.
+- B. Widen the existing `parfocal-tofu` token to cover Workers too. One token less, but the token that can change buckets could then also deploy.
+- C. Deploy to staging only from your Mac for now, with your own Wrangler and Modal logins, and add CI secrets later.
+- Other.
+
+Your choice:
+
+### 89. The old web host's DNS records on parfocal.eu
+
+The zone still points the apex, `www` and a wildcard `*.parfocal.eu` at the old Endora web host (62.109.151.80), with Endora mail records. The wildcard means every unknown hostname, such as a mistyped preview name, serves the old host's page through Cloudflare. `staging.parfocal.eu` and `app.parfocal.eu` are not affected, because a Workers Custom Domain makes its own record, which wins over the wildcard. Removing a record is a delete, so it needs your yes.
+
+- **A. Remove only the wildcard record now and keep the apex, `www` and mail records until the marketing page and OPS-013 (email routing for support and security) replace them (recommended).**
+- B. Keep everything as it is until launch.
+- C. Remove the wildcard, apex and `www` records now and leave the root domain unresolved.
+- Other.
+
+Your choice:
+
+### 90. The Neon project is Postgres 18 in US East, while tests run PostGIS on Postgres 17
+
+The Neon project `parfocal` was created through Vercel on 2026-10-06 as Postgres 18 in `aws-us-east-1` and has not been used since. Local development and CI run Postgres 17 with PostGIS, and the region was never measured against Modal (STACK-020, database hosting). A Neon project cannot change its region or go down a major version, so this is cheap only before staging holds data.
+
+- **A. Let OPS-002 measure latency from Modal to US East and to an EU region first, then either keep this project or create a new one in the faster region on Postgres 17, and ask you before deleting the old one (recommended).** Free plan either way.
+- B. Keep the project as it is and move local development and CI to Postgres 18.
+- C. Create a new Postgres 17 project in an EU region now without measuring.
+- Other.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 Nothing else in review needs you. Nine tasks that only waited for green CI were ticked on 2026-11-02.

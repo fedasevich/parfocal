@@ -14,7 +14,7 @@ terraform {
 
   backend "s3" {
     bucket                      = "parfocal-tfstate"
-    key                         = "parfocal.tfstate"
+    key                         = "global.tfstate"
     region                      = "auto"
     endpoints                   = { s3 = "https://ecd7fda10e3d9ff42ecc86cb43073fcd.r2.cloudflarestorage.com" }
     use_path_style              = true

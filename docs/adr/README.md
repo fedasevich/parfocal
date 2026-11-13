@@ -250,3 +250,6 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0284](0284-review-objects-carry-their-outline-in-slide-pixels.md) | Review objects carry their outline in slide pixels, and the engine's bounds limit the still's camera | Accepted | 2026-11-09 |
 | [0285](0285-a-decision-note-stays-on-the-decision-and-shows-in-the-comments-tab.md) | A decision note stays on the decision and shows in the Comments tab as an entry above the thread | Accepted | 2026-11-09 |
 | [0286](0286-load-tests-run-on-locust.md) | Load tests run on Locust from the uv workspace and refuse any target that is not local or staging | Accepted | 2026-11-09 |
+| [0287](0287-one-opentofu-root-per-environment-over-a-shared-module.md) | Each environment is its own OpenTofu root over a shared module, with one encrypted state file per root | Accepted | 2026-11-13 |
+| [0288](0288-conftest-checks-the-opentofu-code-and-every-plan.md) | Conftest checks the OpenTofu code in CI and every plan before an apply, and a resource type list guards the cost | Accepted | 2026-11-13 |
+| [0289](0289-opentofu-owns-buckets-zone-settings-and-zitadel-only.md) | OpenTofu owns buckets, zone settings and Zitadel only, and Neon, Modal, Workers and the app hostnames stay with their own tools | Accepted | 2026-11-13 |
