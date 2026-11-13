@@ -581,6 +581,10 @@ WRITE_ROUTES: dict[str, Write] = {
 UNAIMED_WRITES: dict[str, str] = {
     "createProject": "makes a project in the caller's workspace",
     "createSampleProject": "makes the sample project in the caller's workspace",
+    **dict.fromkeys(
+        ("createAccount", "confirmEmail", "resendEmailCode", "signInWithPassword"),
+        "answers the anonymous caller about their own account and names no other row",
+    ),
     "recordActivity": "stamps the caller's own session",
     "endOtherSessions": "ends the caller's own other sessions",
     "sendFeedback": "files feedback under the caller's workspace",
