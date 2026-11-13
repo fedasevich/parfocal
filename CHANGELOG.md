@@ -2,6 +2,12 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.1.5 (2026-11-13)
+
+### Fixes
+
+- OPS-002: Send a signed-out visitor to the Zitadel sign-in
+
 ## v0.1.4 (2026-11-13)
 
 ### Fixes
