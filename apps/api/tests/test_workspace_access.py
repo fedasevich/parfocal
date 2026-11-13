@@ -3,9 +3,11 @@ from collections.abc import Iterator
 
 import pytest
 from idp_support import Browser, signed_in_browser
+from sqlalchemy.ext.asyncio import AsyncEngine
 
 from parfocal_api import workspace_access
 from parfocal_api.workspace_access import email_domain_of
+from parfocal_common.db import DatabaseScope, scoped_transaction
 
 pytestmark = pytest.mark.db
 
@@ -383,3 +385,35 @@ def test_an_ask_notification_links_to_the_join_requests_in_admin(
     assert [item["link"] for item in inbox if item["kind"] == "workspace-access-asked"] == [
         f"/admin?section=people&request={request_id}"
     ]
+
+
+@pytest.mark.parametrize("policy", ["join", "ask"])
+def test_joining_and_asking_write_without_the_platform_scope(
+    browser: Browser,
+    colleague: Browser,
+    domain: str,
+    policy: str,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    tenant_id = create_workspace(browser, domain)
+    browser.sql(f"UPDATE tenants SET join_policy = '{policy}' WHERE id = '{tenant_id}'")
+    sign_in(colleague, f"reader@{domain}")
+    opened: list[DatabaseScope] = []
+
+    def spying(engine: AsyncEngine, scope: DatabaseScope) -> object:
+        opened.append(scope)
+        return scoped_transaction(engine, scope)
+
+    monkeypatch.setattr(workspace_access, "scoped_transaction", spying)
+    route = "membership" if policy == "join" else "access-requests"
+    done = colleague.client.post(f"/api/me/joinable-workspaces/{tenant_id}/{route}")
+    assert done.status_code == 201, done.text
+    assert [(str(scope.tenant_id or ""), scope.platform, scope.auth) for scope in opened] == [
+        ("", True, False),
+        (tenant_id, False, True),
+    ]
+    sign_in(colleague, f"reader@other-{domain}")
+    opened.clear()
+    refused = colleague.client.post(f"/api/me/joinable-workspaces/{tenant_id}/{route}")
+    assert (refused.status_code, refused.json()["code"]) == (404, "workspace-not-joinable")
+    assert [scope.tenant_id for scope in opened] == [None]

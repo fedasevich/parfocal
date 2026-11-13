@@ -358,11 +358,20 @@
     ],
     [
       "users",
+      "users_self",
+      "w",
+      true,
+      "(id = (NULLIF(current_setting('app.user_id'::text, true), ''::text))::uuid)",
+      "(id = (NULLIF(current_setting('app.user_id'::text, true), ''::text))::uuid)",
+      []
+    ],
+    [
+      "users",
       "users_write",
       "*",
       true,
-      "((COALESCE(current_setting('app.platform'::text, true), ''::text) = 'on'::text) OR (COALESCE(current_setting('app.auth'::text, true), ''::text) = 'on'::text) OR (id = (NULLIF(current_setting('app.user_id'::text, true), ''::text))::uuid))",
-      "((COALESCE(current_setting('app.platform'::text, true), ''::text) = 'on'::text) OR (COALESCE(current_setting('app.auth'::text, true), ''::text) = 'on'::text) OR (id = (NULLIF(current_setting('app.user_id'::text, true), ''::text))::uuid))",
+      "((COALESCE(current_setting('app.platform'::text, true), ''::text) = 'on'::text) OR (COALESCE(current_setting('app.auth'::text, true), ''::text) = 'on'::text))",
+      "((COALESCE(current_setting('app.platform'::text, true), ''::text) = 'on'::text) OR (COALESCE(current_setting('app.auth'::text, true), ''::text) = 'on'::text))",
       []
     ]
   ]
