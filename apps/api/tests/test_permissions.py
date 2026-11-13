@@ -90,6 +90,16 @@ from parfocal_ingest.workflow import INGEST
 OPEN_OPERATIONS = {
     "getHealth": "public",
     "getSharedReport": "public",
+    **dict.fromkeys(
+        (
+            "getPasswordSignIn",
+            "createAccount",
+            "confirmEmail",
+            "resendEmailCode",
+            "signInWithPassword",
+        ),
+        "public",
+    ),
     "getSession": "signed-in",
     "getMe": "signed-in",
     "updateMe": "signed-in",
@@ -134,6 +144,8 @@ OPEN_OPERATIONS = {
     "listModelTiers": "member",
     "listModelVisibility": "member",
     "getMyHome": "member",
+    "getMyChecklist": "member",
+    "listMyJobs": "member",
     "setMyResume": "own-assignment",
     "exportMyPersonalData": "signed-in",
     "getNotificationTarget": "own-notification",
