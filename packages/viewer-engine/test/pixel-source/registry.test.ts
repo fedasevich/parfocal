@@ -27,11 +27,12 @@ test("format ids are the ingest worker's ids plus OME-Zarr", async () => {
   assert.deepEqual([...slideFormatIds].sort(), [...ingest, "ome-zarr"].sort());
 });
 
-test("the default registry reads tile-grid TIFFs and OME-Zarr and refuses the rest", () => {
+test("the default registry reads tile-grid TIFFs, NDPI and OME-Zarr and refuses the rest", () => {
   const registry = createDefaultPixelSourceRegistry();
   const supported = slideFormatIds.filter((formatId) => registry.supports(formatId));
   assert.deepEqual(supported, [
     "aperio-svs",
+    "hamamatsu-ndpi",
     "leica-scn",
     "philips-tiff",
     "huron-tiff",
@@ -44,7 +45,7 @@ test("the default registry reads tile-grid TIFFs and OME-Zarr and refuses the re
 
 test("an unregistered format is refused with its id", async () => {
   const registry = createDefaultPixelSourceRegistry();
-  for (const formatId of ["hamamatsu-ndpi", "ventana-bif", "mirax", "dicom"] as const) {
+  for (const formatId of ["ventana-bif", "mirax", "dicom"] as const) {
     await assert.rejects(
       registry.open({ formatId, url: "http://127.0.0.1/slide" }),
       (error: unknown) => error instanceof UnsupportedFormatError && error.formatId === formatId,

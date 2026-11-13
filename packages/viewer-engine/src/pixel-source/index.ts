@@ -1,4 +1,6 @@
 export { recoverLadder, type StoredLevel, tileColumns, tileRows, tileWindow } from "./geometry.ts";
+export { NdpiFormatError } from "./ndpi/directory.ts";
+export { ndpiTileSize, openNdpiSource } from "./ndpi/ndpi-source.ts";
 export {
   OverviewLevelsMismatchError,
   withOverviewLevels,
