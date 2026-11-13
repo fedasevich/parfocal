@@ -1010,7 +1010,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when the snapshot test fails on a changed or added policy and the probe fails for a tenant table that shows a row or has none seeded.
   Size: S.
 
-- [ ] SEC-034 · Narrow three database escape hatches
+- [x] SEC-034 · Narrow three database escape hatches
   Three rules allow more than the code that uses them needs ([tenant isolation review](results/2026-11-09-tenant-isolation-review.md), confirmed finding 4). The auth scope may rewrite any column of any workspace's `api_tokens` row though it only sets `last_used_at`, a signed-in person may change their own `email` and `subject` in `users` though only the email schedule is self-service, and the join routes open a scope with platform and auth both on for a workspace id taken from the URL. None is reachable from a request today. Grant `UPDATE` on `api_tokens` by column, refuse a change of `email` or `subject` outside the auth and platform scopes, and make the join routes check under the platform scope first and then write under the tenant scope, as accepting an invitation does.
   Done when a database probe as `parfocal_app` fails to move or revive an API token under the auth scope and fails to change the person's own email under a member scope, and the join routes pass their tests without the platform flag in the write transaction.
   Size: M.
