@@ -123,6 +123,16 @@ OPS-005 (continuous deployment) is built. The `Deploy` workflow now also runs af
 
 Your choice: 
 
+### 97. Whether a blinded task hides "Share my view"
+
+COLLAB-010 (follow my view) lets anyone on a slide share their camera and lets anyone else on that slide follow it ([ADR 0301](adr/0301-a-shared-camera-is-a-capped-client-frame-relayed-by-the-slide-room.md), a shared camera is a capped client frame relayed by the slide room). In a blinded task, following shows where a colleague looks, which can hint at what they found.
+
+- **A. Hide sharing and following while the reader is blinded on that slide (recommended).** It needs a small follow-up task.
+- B. Leave it as built, because sharing is a deliberate act by the sharer.
+- Other.
+
+Your choice: 
+
 ## The review column, what each task waits for
 
 Nothing else in review needs you. Nine tasks that only waited for green CI were ticked on 2026-11-02.

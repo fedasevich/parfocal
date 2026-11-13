@@ -1,7 +1,9 @@
 import type { SocketLike } from "@parfocal/edge/room-client";
 import { PRESENCE_JOINED, PRESENCE_LEFT } from "./presence-state.ts";
 
-type Signal = { type: "hello" | "here" | "bye"; user: string; room: string };
+type Signal =
+  | { type: "hello" | "here" | "bye"; user: string; room: string }
+  | { type: "view"; user: string; room: string; view: Record<string, unknown> };
 
 const slideRoom = "slide:";
 const taskRoom = "task:";
@@ -19,7 +21,13 @@ export function openFakeRoomSocket(url: string, protocols: string[]): SocketLike
   let open = true;
   const deliver = (kind: string, ids: Record<string, string>) =>
     socket.onmessage?.({ data: JSON.stringify({ type: "event", kind, ids }) });
-  const post = (type: Signal["type"]) => channel.postMessage({ type, user, room } satisfies Signal);
+  const post = (type: "hello" | "here" | "bye") =>
+    channel.postMessage({ type, user, room } satisfies Signal);
+  const relayView = (text: string) => {
+    const { type, ...view } = JSON.parse(text) as Record<string, unknown>;
+    if (!open || type !== "view" || !room.startsWith(slideRoom)) return;
+    channel.postMessage({ type: "view", user, room, view } satisfies Signal);
+  };
   const leave = () => {
     if (!open) return;
     open = false;
@@ -32,7 +40,7 @@ export function openFakeRoomSocket(url: string, protocols: string[]): SocketLike
     onopen: null,
     onmessage: null,
     onclose: null,
-    send: () => undefined,
+    send: relayView,
     close: () => {
       leave();
       socket.onclose?.({ code: 1000 });
@@ -40,6 +48,11 @@ export function openFakeRoomSocket(url: string, protocols: string[]): SocketLike
   };
   channel.onmessage = ({ data }: MessageEvent<Signal>) => {
     if (!open) return;
+    if (data.type === "view") {
+      if (data.room !== room || data.user === user) return;
+      socket.onmessage?.({ data: JSON.stringify({ ...data.view, type: "view", user: data.user }) });
+      return;
+    }
     const kind = data.type === "bye" ? PRESENCE_LEFT : PRESENCE_JOINED;
     if (watchesProject && data.room.startsWith(slideRoom)) {
       deliver(kind, { slide: data.room.slice(slideRoom.length), user: data.user });

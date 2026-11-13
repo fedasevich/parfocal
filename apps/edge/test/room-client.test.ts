@@ -89,6 +89,7 @@ class Harness {
   tickets = 0;
   refetches = 0;
   ended: string[] = [];
+  signals: unknown[] = [];
   readonly client: RoomClient;
 
   constructor() {
@@ -112,6 +113,7 @@ class Harness {
       onEvent: () => {
         this.view = this.serverVersion;
       },
+      onSignal: (signal) => this.signals.push(signal),
       onEnded: (reason) => this.ended.push(reason),
       timers: this.timers,
     });
@@ -201,5 +203,23 @@ describe("room client", () => {
     await harness.timers.advance(MAX_RETRY_MS);
     assert.equal(harness.sockets.length, 1);
     assert.equal(harness.socket.closedWith, 1000);
+  });
+
+  test("a client sends a signal only on an open socket and hears other people's signals", async () => {
+    const harness = new Harness();
+    assert.equal(harness.client.send({ type: "view", x: 1, y: 2, zoom: 3 }), false);
+    harness.client.start();
+    await settle();
+    assert.equal(harness.client.send({ type: "view", x: 1, y: 2, zoom: 3 }), false);
+    harness.socket.onopen?.();
+    assert.equal(harness.client.send({ type: "view", x: 1, y: 2, zoom: 3 }), true);
+    assert.deepEqual(harness.socket.sent, [JSON.stringify({ type: "view", x: 1, y: 2, zoom: 3 })]);
+    const heard = { type: "view", user: "ben", x: 4, y: 5, zoom: 6 };
+    harness.socket.onmessage?.({ data: JSON.stringify(heard) });
+    harness.socket.onmessage?.({ data: JSON.stringify({ type: "pong" }) });
+    harness.socket.onmessage?.({ data: JSON.stringify({ type: "renewed", expires: 1 }) });
+    harness.socket.onmessage?.({ data: "[1]" });
+    harness.socket.event("slide.changed");
+    assert.deepEqual(harness.signals, [heard]);
   });
 });

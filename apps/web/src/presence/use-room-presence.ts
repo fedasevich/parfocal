@@ -2,10 +2,11 @@ import { getRoomAccess } from "@parfocal/api-client";
 import {
   RoomClient,
   type RoomMessage,
+  type RoomSignal,
   type RoomTicket,
   type SocketLike,
 } from "@parfocal/edge/room-client";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { readBuildConfig } from "../config.ts";
 import { openFakeRoomSocket } from "./fake-room-socket.ts";
 import { nextPresence, roomSocketUrl, type Sighting } from "./presence-state.ts";
@@ -28,9 +29,11 @@ export function useRoomEvents(
   me: string | undefined,
   onEvent: (event: RoomMessage) => void,
   onRefetch: () => void = () => undefined,
-): void {
-  const handlers = useRef({ onEvent, onRefetch });
-  handlers.current = { onEvent, onRefetch };
+  onSignal: (signal: RoomSignal) => void = () => undefined,
+): (signal: RoomSignal) => boolean {
+  const handlers = useRef({ onEvent, onRefetch, onSignal });
+  handlers.current = { onEvent, onRefetch, onSignal };
+  const live = useRef<RoomClient | null>(null);
   useEffect(() => {
     if (room === null || me === undefined) return;
     const client = new RoomClient({
@@ -43,10 +46,16 @@ export function useRoomEvents(
         : (url, protocols) => new WebSocket(url, protocols) as unknown as SocketLike,
       refetch: () => handlers.current.onRefetch(),
       onEvent: (event) => handlers.current.onEvent(event),
+      onSignal: (signal) => handlers.current.onSignal(signal),
     });
+    live.current = client;
     client.start();
-    return () => client.stop();
+    return () => {
+      live.current = null;
+      client.stop();
+    };
   }, [room, me]);
+  return useCallback((signal: RoomSignal) => live.current?.send(signal) ?? false, []);
 }
 
 export function useRoomPresence(

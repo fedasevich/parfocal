@@ -58,6 +58,7 @@ import { useBindings } from "../keys/personal-keys.ts";
 import { useHotkeys } from "../keys/use-hotkeys.ts";
 import { MeasurementList } from "../measure/measurement-list.tsx";
 import { RulerLayer } from "../measure/ruler-layer.tsx";
+import { registerStageEngine } from "../presence/stage-engines.ts";
 import { areaRoleText, areaRows } from "../screens/viewer/area-nav.ts";
 import { annotateRail } from "../screens/viewer-tools/rails.ts";
 import { useDeveloperMode } from "../shell/developer-mode.ts";
@@ -527,6 +528,11 @@ function OpenedSlide({
       dispose?.();
     };
   }, [slideId]);
+
+  useEffect(() => {
+    if (session === null) return;
+    return registerStageEngine(slideId, session.engine);
+  }, [session, slideId]);
 
   useEffect(() => {
     if (session === null || hostNode === null) return;

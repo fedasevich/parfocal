@@ -8,6 +8,7 @@ import {
   CLOSE_REMOVED,
   CLOSE_TOO_BIG,
   MAX_SOCKETS_PER_PERSON,
+  MAX_VIEW_FRAMES_PER_SECOND,
   ROOM_TOKEN_SECONDS,
   Room,
   type RoomEnv,
@@ -738,5 +739,84 @@ describe("room caps", () => {
     const small = streamed(2, 1024);
     const unsigned = await internalCall(edge, small.body, { [PUBLISH_HEADER]: signature });
     assert.equal(unsigned.status, 401);
+  });
+});
+
+describe("follow my view", () => {
+  const view = (fields: Record<string, unknown>) => JSON.stringify({ type: "view", ...fields });
+  const camera = { x: 1200.5, y: 800.25, zoom: -2.5 };
+
+  async function pair(grant: Partial<RoomGrant> = {}) {
+    const edge = new Edge();
+    const anna = await edge.join(grant);
+    const ben = await edge.join({ ...grant, user: BEN });
+    const room = edge.room(`${TENANT}/${grant.room ?? SLIDE}`);
+    anna.sent.length = 0;
+    ben.sent.length = 0;
+    const say = (text: string) => room.webSocketMessage(anna as unknown as WebSocket, text);
+    return { edge, anna, ben, room, say };
+  }
+
+  test("a view frame reaches the others in the slide room under the sender's own name", async () => {
+    const { edge, anna, ben, say } = await pair();
+    const secondTab = await edge.join({});
+    secondTab.sent.length = 0;
+    await say(view({ ...camera, user: BEN, note: "text" }));
+    assert.deepEqual(ben.sent, [view({ user: ANNA, ...camera })]);
+    assert.deepEqual(anna.sent, []);
+    assert.deepEqual(secondTab.sent, []);
+    await say(view({ stop: true }));
+    assert.deepEqual(ben.sent.at(-1), view({ user: ANNA, stop: true }));
+  });
+
+  test("a view frame that is not three finite numbers, or is too long, is dropped", async () => {
+    const { anna, ben, say } = await pair();
+    await say(view({ x: 1, y: 2 }));
+    await say(view({ x: "1", y: 2, zoom: 3 }));
+    await say(view({ x: null, y: 2, zoom: 3 }));
+    await say(view({ ...camera, padding: "p".repeat(200) }));
+    assert.deepEqual(ben.sent, []);
+    assert.equal(anna.closed, null);
+  });
+
+  test("a room that is not a slide room passes no view on", async () => {
+    const { ben, say } = await pair({ room: "task:33333333-3333-4333-8333-333333333333" });
+    await say(view(camera));
+    assert.deepEqual(ben.sent, []);
+  });
+
+  test("view frames past the rate for one socket are dropped until the next second", async () => {
+    const { ben, room, say } = await pair();
+    let at = 5000;
+    room.clock = () => at;
+    for (let sent = 0; sent < MAX_VIEW_FRAMES_PER_SECOND + 10; sent += 1) {
+      await say(view(camera));
+    }
+    assert.equal(ben.sent.length, MAX_VIEW_FRAMES_PER_SECOND);
+    at += 1000;
+    await say(view(camera));
+    assert.equal(ben.sent.length, MAX_VIEW_FRAMES_PER_SECOND + 1);
+  });
+
+  test("an expired seat neither sends nor receives a view", async () => {
+    const edge = new Edge();
+    const anna = await edge.join({ expires: NOW + 900 });
+    const ben = await edge.join({ user: BEN });
+    const room = edge.room(`${TENANT}/${SLIDE}`);
+    edge.now = NOW + 400;
+    anna.sent.length = 0;
+    ben.sent.length = 0;
+    await room.webSocketMessage(anna as unknown as WebSocket, view(camera));
+    assert.deepEqual(ben.sent, []);
+    await room.webSocketMessage(ben as unknown as WebSocket, view(camera));
+    assert.deepEqual(anna.sent, []);
+  });
+
+  test("nothing about a view is stored", async () => {
+    const { edge, say } = await pair();
+    const state = edge.state(`${TENANT}/${SLIDE}`);
+    const before = JSON.stringify([...state.stored]);
+    await say(view(camera));
+    assert.equal(JSON.stringify([...state.stored]), before);
   });
 });

@@ -28,6 +28,9 @@ export const CLOSE_TOO_BIG = 1009;
 export const MAX_CLIENT_FRAME = 4096;
 export const ROOM_TOKEN_SECONDS = 300;
 export const MAX_SOCKETS_PER_PERSON = 8;
+export const VIEW_FRAME = "view";
+export const MAX_VIEW_FRAME = 160;
+export const MAX_VIEW_FRAMES_PER_SECOND = 30;
 
 const KIND = /^[a-z][a-z-]*(\.[a-z][a-z-]*)+$/;
 const ID_NAME = /^[a-z][a-z_]{0,31}$/;
@@ -59,6 +62,19 @@ export function roomEventOf(value: unknown): RoomEvent | null {
   return valid ? { kind, ids: Object.fromEntries(entries) } : null;
 }
 
+export type SharedView =
+  | { readonly stop: true }
+  | { readonly x: number; readonly y: number; readonly zoom: number };
+
+export function sharedViewOf(frame: Record<string, unknown>): SharedView | null {
+  if (frame.stop === true) {
+    return { stop: true };
+  }
+  const { x, y, zoom } = frame;
+  const finite = [x, y, zoom].every((value) => typeof value === "number" && Number.isFinite(value));
+  return finite ? { x: x as number, y: y as number, zoom: zoom as number } : null;
+}
+
 export const PRESENCE_JOINED = "presence.joined";
 export const PRESENCE_LEFT = "presence.left";
 
@@ -87,6 +103,8 @@ function json(body: unknown, status = 200): Response {
 
 export class Room {
   now: () => number = () => Math.floor(Date.now() / 1000);
+  clock: () => number = () => Date.now();
+  private readonly viewRates = new WeakMap<WebSocket, { since: number; count: number }>();
   readonly ctx: DurableObjectState;
   readonly env: RoomEnv;
 
@@ -299,11 +317,46 @@ export class Room {
       return;
     }
     const { type, token } = (frame ?? {}) as Record<string, unknown>;
-    if (type === "ping") {
+    if (type === VIEW_FRAME) {
+      this.relayView(socket, frame as Record<string, unknown>, size);
+    } else if (type === "ping") {
       socket.send(JSON.stringify({ type: "pong" }));
     } else if (type === "renew" && typeof token === "string") {
       await this.renew(socket, token);
     }
+  }
+
+  private relayView(socket: WebSocket, frame: Record<string, unknown>, size: number): void {
+    const seat = this.seatOf(socket);
+    const view = sharedViewOf(frame);
+    const refused =
+      view === null ||
+      size > MAX_VIEW_FRAME ||
+      !seat.room.startsWith(SLIDE_ROOM) ||
+      seat.expires <= this.now() ||
+      !this.withinViewRate(socket);
+    if (refused) {
+      return;
+    }
+    const relayed = JSON.stringify({ type: VIEW_FRAME, user: seat.user, ...view });
+    const now = this.now();
+    for (const other of this.ctx.getWebSockets()) {
+      const listener = this.seatOf(other);
+      if (listener.user !== seat.user && listener.expires > now) {
+        other.send(relayed);
+      }
+    }
+  }
+
+  private withinViewRate(socket: WebSocket): boolean {
+    const at = this.clock();
+    const rate = this.viewRates.get(socket);
+    if (rate === undefined || at - rate.since >= 1000) {
+      this.viewRates.set(socket, { since: at, count: 1 });
+      return true;
+    }
+    rate.count += 1;
+    return rate.count <= MAX_VIEW_FRAMES_PER_SECOND;
   }
 
   private async renew(socket: WebSocket, token: string): Promise<void> {
