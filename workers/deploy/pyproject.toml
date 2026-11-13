@@ -1,0 +1,26 @@
+[project]
+name = "parfocal-deploy"
+version = "0.0.0"
+description = "Modal app definitions, Neon branches and the deploy steps CI runs"
+requires-python = ">=3.14,<3.15"
+dependencies = [
+    "modal>=1.6.3",
+    "parfocal-api",
+    "parfocal-common",
+    "parfocal-ingest",
+    "parfocal-ml",
+]
+
+[build-system]
+requires = ["uv_build>=0.12,<0.13"]
+build-backend = "uv_build"
+
+[tool.uv.sources]
+parfocal-api = { workspace = true }
+parfocal-common = { workspace = true }
+parfocal-ingest = { workspace = true }
+parfocal-ml = { workspace = true }
+
+[tool.basedpyright]
+typeCheckingMode = "standard"
+pythonVersion = "3.14"

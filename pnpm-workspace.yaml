@@ -4,6 +4,7 @@ packages:
   - workers/*
 allowBuilds:
   esbuild: false
+  workerd: false
   lefthook: false
   protobufjs: false
 minimumReleaseAgeExclude:

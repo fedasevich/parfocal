@@ -1,0 +1,17 @@
+{
+  "name": "@parfocal/deploy",
+  "description": "Modal app definitions, Neon branches and the deploy steps CI runs",
+  "private": true,
+  "scripts": {
+    "typecheck": "uv run --package parfocal-deploy basedpyright",
+    "test": "uv run --package parfocal-deploy pytest tests -q",
+    "deploy": "uv run --package parfocal-deploy python -m parfocal_deploy.deploy",
+    "bootstrap": "uv run --package parfocal-deploy python -m parfocal_deploy.bootstrap"
+  },
+  "dependencies": {
+    "@parfocal/api": "workspace:*",
+    "@parfocal/ingest": "workspace:*",
+    "@parfocal/ml": "workspace:*",
+    "@parfocal/py-common": "workspace:*"
+  }
+}

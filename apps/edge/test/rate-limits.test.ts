@@ -143,7 +143,7 @@ describe("the edge limits", () => {
         assert.equal(response.headers.get("cross-origin-embedder-policy"), "credentialless");
       }
     }
-    assert.deepEqual(statuses, [404, 404, 429]);
+    assert.deepEqual(statuses, [503, 503, 429]);
     const other = await edge.fetch(from("198.51.100.2", "/api/auth/login"), env);
     assert.notEqual(other.status, 429);
   });
