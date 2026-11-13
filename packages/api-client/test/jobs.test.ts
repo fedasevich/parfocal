@@ -47,8 +47,14 @@ const runsOf = async (batchId: string) => {
   return response.status === 200 ? response.data : [];
 };
 
+const myJobs = async () => {
+  const response = await listMyJobs();
+  assert.equal(response.status, 200);
+  return response.status === 200 ? response.data : [];
+};
+
 const trayRows = async () =>
-  (await listMyJobs()).data.map((job) => `${job.title} ${job.status} ${job.percent}`);
+  (await myJobs()).map((job) => `${job.title} ${job.status} ${job.percent}`);
 
 test("the tray before a run shows the upload and the paused CAMELYON run", async () => {
   assert.deepEqual(await trayRows(), [
@@ -57,7 +63,7 @@ test("the tray before a run shows the upload and the paused CAMELYON run", async
     "Upload into P09 done 100",
     "HoVer-Net v2.1 done 100",
   ]);
-  const paused = (await listMyJobs()).data[1];
+  const paused = (await myJobs())[1];
   assert.equal(paused?.pause?.server, "ml.cuailab.cz");
   assert.deepEqual(
     paused?.slides.map((slide) => slide.file),
@@ -106,7 +112,7 @@ test("starting a run adds it to the tray with one run per slide", async () => {
     ),
     ["running 1", "queued 0"],
   );
-  assert.equal((await listMyJobs()).data[0]?.detail, "tumor_052 and tumor_060 in P07");
+  assert.equal((await myJobs())[0]?.detail, "tumor_052 and tumor_060 in P07");
 });
 
 test("the run-started scene seeds the same run without a click", async () => {
@@ -130,13 +136,13 @@ test("the paused run sits at tile 448 of 1,180 and resumes from there", async ()
   await resumeModelRun(p07, run?.id ?? "");
   const [resumed] = await runsOf(scenarioJobs.pausedRun.id);
   assert.equal(resumed?.status, "running");
-  assert.equal((await listMyJobs()).data[1]?.minutes_left, 6);
+  assert.equal((await myJobs())[1]?.minutes_left, 6);
 });
 
 test("moving the paused run to the Parfocal GPU shortens what is left", async () => {
   const [run] = await runsOf(scenarioJobs.pausedRun.id);
   await moveModelRun(p07, run?.id ?? "", { server: "Parfocal GPU" });
-  const job = (await listMyJobs()).data[1];
+  const job = (await myJobs())[1];
   assert.equal(job?.status, "running");
   assert.equal(job?.minutes_left, 4);
 });

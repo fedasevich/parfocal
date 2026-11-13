@@ -45,7 +45,7 @@ type JobWindowScreenProps = {
 const parfocalGpu = "Parfocal GPU";
 
 export function JobWindowScreen({ projectId, jobId, onClose }: JobWindowScreenProps) {
-  const job = useListMyJobs().data?.data.find((item) => item.id === jobId);
+  const job = okData(useListMyJobs().data)?.find((item) => item.id === jobId);
   const runs = okData(useListModelRuns(projectId, { batch_id: jobId }).data);
   if (!job || !runs) return null;
   return <JobWindowBody job={job} runs={runs} projectId={projectId} onClose={onClose} />;

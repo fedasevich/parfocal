@@ -1458,6 +1458,8 @@ GET_ROUTES = {
     ),
     "listAnnouncements": Route(Exposure.TENANT, lambda _: "/api/announcements"),
     "getMyHome": Route(Exposure.TENANT, lambda _: "/api/me/home"),
+    "listMyJobs": Route(Exposure.TENANT, lambda _: "/api/me/jobs"),
+    "getMyChecklist": Route(Exposure.TENANT, lambda _: "/api/me/checklist"),
     "listNotifications": Route(Exposure.TENANT, lambda _: "/api/me/notifications"),
     "getNotificationCounts": Route(Exposure.PUBLIC, lambda _: "/api/me/notifications/counts"),
     "listNotificationMutes": Route(Exposure.TENANT, lambda _: "/api/me/notification-mutes"),

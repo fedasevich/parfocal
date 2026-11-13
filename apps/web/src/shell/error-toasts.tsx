@@ -1,4 +1,4 @@
-import type { ApiError } from "@parfocal/api-client";
+import { type ApiError, isDraftNotAvailable } from "@parfocal/api-client";
 import { ErrorToast } from "@parfocal/ui/components/error-toast";
 import { describeApiError, type ErrorNotice } from "@parfocal/ui/lib/api-error";
 import { useSyncExternalStore } from "react";
@@ -19,8 +19,19 @@ const publish = (next: Shown[]) => {
 
 const dismiss = (id: number) => publish(shown.filter((item) => item.id !== id));
 
+export const notAvailableNotice: ErrorNotice = {
+  kind: "not-found",
+  tone: "warn",
+  title: "Not available yet",
+  message: "This part of Parfocal is still being built. Nothing was changed.",
+  action: undefined,
+};
+
+export const noticeFor = (error: ApiError): ErrorNotice =>
+  isDraftNotAvailable(error) ? notAvailableNotice : describeApiError(error);
+
 export function showErrorToast(error: ApiError): void {
-  const notice = describeApiError(error);
+  const notice = noticeFor(error);
   const id = nextId++;
   const others = shown.filter(
     (item) => item.notice.title !== notice.title || item.notice.message !== notice.message,

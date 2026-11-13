@@ -19499,6 +19499,228 @@
         }
       }
     },
+    "/api/me/jobs": {
+      "get": {
+        "tags": [
+          "me"
+        ],
+        "summary": "List My Jobs",
+        "operationId": "listMyJobs",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/MyJob"
+                  },
+                  "type": "array",
+                  "title": "Response Listmyjobs"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in to continue",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You do not have access to this",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "This changed since you loaded it",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests, try again shortly",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Something went wrong",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/me/checklist": {
+      "get": {
+        "tags": [
+          "me"
+        ],
+        "summary": "Get My Checklist",
+        "operationId": "getMyChecklist",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Checklist"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in to continue",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You do not have access to this",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "This changed since you loaded it",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests, try again shortly",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Something went wrong",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/tenant/retention": {
       "get": {
         "tags": [
@@ -44643,6 +44865,72 @@
         ],
         "title": "CheckState"
       },
+      "Checklist": {
+        "properties": {
+          "hidden": {
+            "type": "boolean",
+            "title": "Hidden"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/ChecklistStep"
+            },
+            "type": "array",
+            "title": "Steps"
+          },
+          "sample_project": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SampleProject"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "hidden",
+          "steps",
+          "sample_project"
+        ],
+        "title": "Checklist"
+      },
+      "ChecklistStep": {
+        "properties": {
+          "key": {
+            "$ref": "#/components/schemas/ChecklistStepKey"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "done": {
+            "type": "boolean",
+            "title": "Done"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "label",
+          "done"
+        ],
+        "title": "ChecklistStep"
+      },
+      "ChecklistStepKey": {
+        "type": "string",
+        "enum": [
+          "confirm-email",
+          "join-workspace",
+          "open-sample",
+          "guided-review",
+          "comment",
+          "opinion"
+        ],
+        "title": "ChecklistStepKey"
+      },
       "ChoiceQuestion": {
         "properties": {
           "key": {
@@ -47751,6 +48039,85 @@
         ],
         "title": "JobControl"
       },
+      "JobPause": {
+        "properties": {
+          "reason": {
+            "$ref": "#/components/schemas/JobPauseReason"
+          },
+          "server": {
+            "type": "string",
+            "title": "Server"
+          },
+          "since": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Since"
+          }
+        },
+        "type": "object",
+        "required": [
+          "reason",
+          "server",
+          "since"
+        ],
+        "title": "JobPause"
+      },
+      "JobPauseReason": {
+        "type": "string",
+        "enum": [
+          "server-not-answering",
+          "server-busy"
+        ],
+        "title": "JobPauseReason"
+      },
+      "JobProject": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "code",
+          "name"
+        ],
+        "title": "JobProject"
+      },
+      "JobSlide": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "file": {
+            "type": "string",
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "file"
+        ],
+        "title": "JobSlide"
+      },
       "JobStatus": {
         "type": "string",
         "enum": [
@@ -49938,6 +50305,134 @@
           "presets"
         ],
         "title": "MyDisplay"
+      },
+      "MyJob": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/MyJobKind"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "project": {
+            "$ref": "#/components/schemas/JobProject"
+          },
+          "status": {
+            "$ref": "#/components/schemas/JobStatus"
+          },
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          },
+          "percent": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Percent"
+          },
+          "minutes_left": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Minutes Left"
+          },
+          "units_done": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Units Done"
+          },
+          "units_total": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Units Total"
+          },
+          "started_by_user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Started By User Id"
+          },
+          "slides": {
+            "items": {
+              "$ref": "#/components/schemas/JobSlide"
+            },
+            "type": "array",
+            "title": "Slides"
+          },
+          "pause": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/JobPause"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "title",
+          "project",
+          "status",
+          "detail",
+          "percent",
+          "minutes_left",
+          "units_done",
+          "units_total",
+          "started_by_user_id",
+          "slides",
+          "pause",
+          "created_at",
+          "finished_at"
+        ],
+        "title": "MyJob"
+      },
+      "MyJobKind": {
+        "type": "string",
+        "enum": [
+          "upload",
+          "model-run",
+          "import"
+        ],
+        "title": "MyJobKind"
       },
       "MySettingLayers": {
         "properties": {
@@ -55423,6 +55918,36 @@
           "finished_at"
         ],
         "title": "RunStage"
+      },
+      "SampleProject": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "slides": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Slides"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "code",
+          "name",
+          "slides"
+        ],
+        "title": "SampleProject"
       },
       "SampleTile": {
         "properties": {

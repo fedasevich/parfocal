@@ -14,7 +14,7 @@ function SignedInAs() {
       </p>
       <p className="text-fg-dim">{me.data.data.title}</p>
       <p className="text-fg-dim" data-testid="job-count">
-        {jobs.data?.data.length ?? 0} jobs
+        {jobs.data?.status === 200 ? jobs.data.data.length : 0} jobs
       </p>
     </div>
   );

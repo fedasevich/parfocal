@@ -8,7 +8,7 @@ import type { z } from "zod";
 import { type ApiResponse, apiFetch } from "../fetcher.ts";
 import type { Problem } from "../generated/api.ts";
 import type { DraftRequest, DraftResponse } from "./define.ts";
-import { draftMeta } from "./support.ts";
+import { callDraft, draftMeta } from "./support.ts";
 
 export type DraftMutationOptions<Response, Variables, TError, TContext> = {
   mutation?: UseMutationOptions<Response, TError, Variables, TContext>;
@@ -30,13 +30,15 @@ export function defineDraftMutation<Variables, Schema extends z.ZodType>(
 
   const fetcher = async (variables: Variables, options?: DraftRequest): Promise<Response> => {
     const body = shape.body?.(variables);
-    const response = await apiFetch<ApiResponse<unknown>>(shape.url(variables), {
-      ...options,
-      method: shape.method,
-      ...(body === undefined
-        ? {}
-        : { body: JSON.stringify(body), headers: { "Content-Type": "application/json" } }),
-    });
+    const response = await callDraft(operationId, () =>
+      apiFetch<ApiResponse<unknown>>(shape.url(variables), {
+        ...options,
+        method: shape.method,
+        ...(body === undefined
+          ? {}
+          : { body: JSON.stringify(body), headers: { "Content-Type": "application/json" } }),
+      }),
+    );
     return { ...response, status: 200, data: schema.parse(response.data) };
   };
 

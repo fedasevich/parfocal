@@ -119,7 +119,7 @@ test("the first week shows the sample project, the checklist and no resume point
     usual.projects[0]?.strip.map((slide) => slide.reviewed),
     [true, true, false, false],
   );
-  assert.equal((await getMyChecklist()).data.hidden, true);
+  assert.equal(body(await getMyChecklist()).hidden, true);
   setFakeView({ viewer: "LM", firstWeek: true });
   const first = body(await getMyHome());
   assert.equal(first.resume, null);
@@ -128,7 +128,7 @@ test("the first week shows the sample project, the checklist and no resume point
     ["S01", "P07"],
   );
   assert.equal(first.announcements.length, 1);
-  const checklist = (await getMyChecklist()).data;
+  const checklist = body(await getMyChecklist());
   assert.equal(checklist.hidden, false);
   assert.equal(checklist.steps.filter((step) => step.done).length, 3);
 });

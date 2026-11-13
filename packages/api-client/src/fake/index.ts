@@ -10,7 +10,7 @@ import { connectModelHandlers } from "./connect-model-handlers.ts";
 import { consoleHandlers } from "./console-handlers.ts";
 import { coverageHandlers, tissueHandlers } from "./coverage-handlers.ts";
 import { createdRecordHandlers } from "./create-handlers.ts";
-import { draftHandlers } from "./draft-handlers.ts";
+import { checklistHandlers, draftHandlers } from "./draft-handlers.ts";
 import { jobHandlers } from "./job-handlers.ts";
 import { projectHandlers } from "./project-handlers.ts";
 import { reportLinkHandlers } from "./report-link-handlers.ts";
@@ -41,6 +41,7 @@ export function fakeApiHandlers(scope: FakeApiScope): RequestHandler[] {
     ...reviewHandlers(),
     ...projectHandlers(),
     ...workHandlers(),
+    ...checklistHandlers(),
     ...taskHandlers(),
     ...jobHandlers(),
     ...adminHandlers(),

@@ -1239,6 +1239,8 @@ MEMBER_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "listModelTiers": lambda _: Call("GET", "/api/tenant/model-tiers"),
     "listModelVisibility": lambda _: Call("GET", "/api/tenant/hidden-models"),
     "getMyHome": lambda _: Call("GET", "/api/me/home"),
+    "listMyJobs": lambda _: Call("GET", "/api/me/jobs"),
+    "getMyChecklist": lambda _: Call("GET", "/api/me/checklist"),
     "getCurrentTenant": lambda _: Call("GET", "/api/tenant"),
     "listTaxonomyTemplates": lambda _: Call("GET", "/api/taxonomy-templates"),
     "getOpinionFormTemplate": lambda _: Call("GET", "/api/opinion-form-template"),

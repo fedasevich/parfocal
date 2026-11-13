@@ -466,7 +466,7 @@ export function HomeScreen() {
   useWorklistLive(me?.user_id);
   const homeQuery = useGetMyHome();
   const home = okData(homeQuery.data);
-  const checklist = useGetMyChecklist().data?.data;
+  const checklist = okData(useGetMyChecklist().data);
   const counts = okData(useGetNotificationCounts().data);
   const projects = okData(useListProjects().data) ?? [];
   const goTo = useGoTo();

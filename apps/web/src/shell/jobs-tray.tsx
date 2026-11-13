@@ -24,6 +24,7 @@ import {
   trayTone,
   trayValueText,
 } from "../screens/jobs/model.ts";
+import { okData } from "../screens/placeholder.tsx";
 import { formatBytes, type UploadEntry } from "../upload/entries.ts";
 import { useUploads } from "../upload/use-uploads.ts";
 import { showUndoToast } from "./undo-toasts.tsx";
@@ -67,7 +68,7 @@ export function useResumeJob() {
     await queryClient.invalidateQueries({ queryKey: getListMyJobsQueryKey() });
     const fresh = await queryClient.query(getListMyJobsQueryOptions());
     const tile = paused[0]?.stages.find((stage) => stage.status === "running")?.units_done;
-    const left = fresh.data.find((item) => item.id === job.id)?.minutes_left ?? null;
+    const left = okData(fresh)?.find((item) => item.id === job.id)?.minutes_left ?? null;
     return { tile, left };
   };
 }
@@ -128,7 +129,7 @@ function browserUploads(entries: readonly UploadEntry[]): BrowserUpload[] {
 
 export function ShellJobs() {
   const tray = useJobsTray();
-  const jobs = useListMyJobs().data?.data ?? [];
+  const jobs = okData(useListMyJobs().data) ?? [];
   const resume = useResumeJob();
   const goTo = useGoToTarget();
   const navigate = useNavigate();

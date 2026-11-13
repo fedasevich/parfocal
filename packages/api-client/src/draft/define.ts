@@ -6,10 +6,10 @@ import {
   type UseQueryResult,
   useQuery,
 } from "@tanstack/react-query";
-import type { z } from "zod";
+import { z } from "zod";
 import { type ApiResponse, apiFetch } from "../fetcher.ts";
 import type { Problem } from "../generated/api.ts";
-import { draftMeta, withQueryKey } from "./support.ts";
+import { callDraft, DraftNotAvailableError, draftMeta, withQueryKey } from "./support.ts";
 
 export type DraftRequest = Parameters<typeof apiFetch>[1];
 
@@ -28,11 +28,18 @@ export function defineDraftQuery<Args extends readonly unknown[], Schema extends
   type Response = DraftResponse<z.infer<Schema>>;
 
   const fetcher = async (args: Args, options?: DraftRequest): Promise<Response> => {
-    const response = await apiFetch<ApiResponse<unknown>>(url(...args), {
-      ...options,
-      method: "GET",
-    });
-    return { ...response, status: 200, data: schema.parse(response.data) };
+    try {
+      const response = await callDraft(operationId, () =>
+        apiFetch<ApiResponse<unknown>>(url(...args), { ...options, method: "GET" }),
+      );
+      return { ...response, status: 200, data: schema.parse(response.data) };
+    } catch (error) {
+      const empty = emptyOf(schema);
+      if (error instanceof DraftNotAvailableError && empty !== undefined) {
+        return { data: empty.value as z.infer<Schema>, status: 200, headers: new Headers() };
+      }
+      throw error;
+    }
   };
 
   const queryKey = (...args: Args) => [url(...args)] as const;
@@ -62,4 +69,10 @@ export function defineDraftQuery<Args extends readonly unknown[], Schema extends
   };
 
   return { fetcher, queryKey, queryOptions, useDraftQuery };
+}
+
+export function emptyOf(schema: z.ZodType): { value: unknown } | undefined {
+  if (schema instanceof z.ZodArray) return { value: [] };
+  if (schema instanceof z.ZodNullable) return { value: null };
+  return undefined;
 }

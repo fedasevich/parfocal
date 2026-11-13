@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { ApiError } from "@parfocal/api-client";
+import { ApiError, DraftNotAvailableError } from "@parfocal/api-client";
 import {
   createQueryClient,
   retryDelay,
@@ -59,4 +59,11 @@ test("the query client hands an unhandled mutation failure to the toast", async 
     .execute(undefined)
     .catch(() => {});
   assert.deepEqual(seen, ["forbidden"]);
+});
+
+test("a draft route missing in production always toasts and never retries", () => {
+  const missing = new DraftNotAvailableError("listThings", 404);
+  assert.equal(toastsMutationError(missing, true), true);
+  assert.equal(toastsMutationError(missing, false), true);
+  assert.equal(shouldRetry(0, missing), false);
 });

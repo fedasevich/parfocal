@@ -49,7 +49,8 @@ test("all answers generated, seeded and draft operations", async () => {
 });
 
 test("drafts answers only draft operations and lets the rest reach the API", async () => {
-  assert.equal(await answers("drafts", "/api/me/jobs"), true);
+  assert.equal(await answers("drafts", "/api/me/team"), true);
+  assert.equal(await answers("drafts", "/api/me/jobs"), false);
   assert.equal(await answers("drafts", "/api/me"), false);
   assert.equal(await answers("drafts", "/api/health"), false);
   assert.equal(await answers("drafts", "/api/projects"), false);
@@ -113,10 +114,10 @@ test("operations outside the seed still answer with typed generated data", async
   assert.equal(typeof body(await getHealth()).status, "string");
 });
 
-test("a draft hook's fetch function reads its handler through the Zod schema", async () => {
-  const response = await listMyJobs();
+test("the jobs list tells the scenario's jobs", async () => {
+  const jobs = body(await listMyJobs());
   assert.deepEqual(
-    response.data.map((job) => [job.project.code, job.status]),
+    jobs.map((job) => [job.project.code, job.status]),
     [
       ["P07", "running"],
       ["P07", "paused"],

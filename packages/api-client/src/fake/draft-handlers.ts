@@ -1,6 +1,7 @@
 import { HttpResponse, http, type RequestHandler } from "msw";
-import { type Checklist, checklistSchema } from "../draft/get-my-checklist.ts";
 import { type SlideThread, slideThreadSchema } from "../draft/list-slide-threads.ts";
+import { getGetMyChecklistMockHandler } from "../generated/api.msw.ts";
+import type { Checklist } from "../generated/api.ts";
 import { adjudicationDraftOperations } from "./adjudication-handlers.ts";
 import { adminDraftOperations } from "./admin-handlers.ts";
 import { authDraftOperations } from "./auth-handlers.ts";
@@ -51,7 +52,6 @@ export {
 export { getGetLabModelConnectionMockHandler } from "./connect-model-handlers.ts";
 export {
   getGetModelRunDefaultsMockHandler,
-  getListMyJobsMockHandler,
   getMoveModelRunMockHandler,
 } from "./job-handlers.ts";
 export {
@@ -101,17 +101,16 @@ const taskByCode = (code: string) => {
   return task;
 };
 
-export const toChecklist = (): Checklist =>
-  checklistSchema.parse({
-    hidden: !fakeView().firstWeek,
-    steps: checklist.map((step) => ({ ...step, done: fakeView().firstWeek ? step.done : true })),
-    sample_project: {
-      id: sampleProject.id,
-      code: sampleProject.code,
-      name: sampleProject.name,
-      slides: sampleProject.counts.slides,
-    },
-  });
+export const toChecklist = (): Checklist => ({
+  hidden: !fakeView().firstWeek,
+  steps: checklist.map((step) => ({ ...step, done: fakeView().firstWeek ? step.done : true })),
+  sample_project: {
+    id: sampleProject.id,
+    code: sampleProject.code,
+    name: sampleProject.name,
+    slides: sampleProject.counts.slides,
+  },
+});
 
 export const toSlideThreads = (slideId: string): SlideThread[] =>
   threads
@@ -127,21 +126,12 @@ export const toSlideThreads = (slideId: string): SlideThread[] =>
       }),
     );
 
-export const getGetMyChecklistMockHandler = (overrideResponse?: Checklist) =>
-  http.get("*/api/me/checklist", () => HttpResponse.json(overrideResponse ?? toChecklist()));
-
 export const getListSlideThreadsMockHandler = (overrideResponse?: SlideThread[]) =>
   http.get<{ slideId: string }>("*/api/slides/:slideId/threads", ({ params }) =>
     HttpResponse.json(overrideResponse ?? toSlideThreads(params.slideId)),
   );
 
 export const draftOperations: DraftOperation[] = [
-  {
-    operationId: "getMyChecklist",
-    method: "get",
-    path: "/api/me/checklist",
-    handler: () => getGetMyChecklistMockHandler(),
-  },
   {
     operationId: "listSlideThreads",
     method: "get",
@@ -161,6 +151,10 @@ export const draftOperations: DraftOperation[] = [
   ...viewerDraftOperations,
   ...adjudicationDraftOperations,
   ...viewerToolsDraftOperations,
+];
+
+export const checklistHandlers = (): RequestHandler[] => [
+  getGetMyChecklistMockHandler(() => toChecklist()),
 ];
 
 export const draftHandlers = (): RequestHandler[] =>

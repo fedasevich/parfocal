@@ -1,4 +1,5 @@
 import "@parfocal/ui/globals.css";
+import { setDraftsAnswered } from "@parfocal/api-client";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { RouterProvider } from "@tanstack/react-router";
 import { StrictMode } from "react";
@@ -19,6 +20,7 @@ import { connectAppAnalytics } from "./telemetry/app-events.ts";
 import { watchSensitiveData } from "./telemetry/sensitive-data.ts";
 
 const config = readBuildConfig();
+setDraftsAnswered(config.fakeApi !== "off");
 
 installTheme();
 

@@ -1,8 +1,8 @@
 import { HttpResponse, http, type RequestHandler } from "msw";
-import { type MyJob, myJobSchema } from "../draft/list-my-jobs.ts";
 import { type ModelRunDefaults, modelRunDefaultsSchema } from "../draft/model-runs.ts";
 import {
   getListModelRunsMockHandler,
+  getListMyJobsMockHandler,
   getListProjectModelsMockHandler,
   getStartModelRunsMockHandler,
 } from "../generated/api.msw.ts";
@@ -10,6 +10,7 @@ import type {
   JobStatus,
   ModelRun,
   ModelRunDraft,
+  MyJob,
   ProjectModel,
   RunStage,
 } from "../generated/api.ts";
@@ -40,7 +41,7 @@ const projectCodeOf = (projectId: string) =>
 
 export const toMyJob = (job: JobRow): MyJob => {
   const project = projectByCode(job.project);
-  return myJobSchema.parse({
+  return {
     id: job.id,
     kind: job.kind,
     title: job.title,
@@ -56,7 +57,7 @@ export const toMyJob = (job: JobRow): MyJob => {
     pause: job.pause,
     created_at: job.createdAt,
     finished_at: job.finishedAt,
-  });
+  };
 };
 
 export const toMyJobs = (): MyJob[] => jobsFor(fakeJobsState()).map(toMyJob);
@@ -209,16 +210,7 @@ export const getMoveModelRunMockHandler = () =>
     return HttpResponse.json(moved ? toModelRun(moved.batch, moved.slide) : null);
   });
 
-export const getListMyJobsMockHandler = (overrideResponse?: MyJob[]) =>
-  http.get("*/api/me/jobs", () => HttpResponse.json(overrideResponse ?? toMyJobs()));
-
 export const jobDraftOperations: DraftOperation[] = [
-  {
-    operationId: "listMyJobs",
-    method: "get",
-    path: "/api/me/jobs",
-    handler: () => getListMyJobsMockHandler(),
-  },
   {
     operationId: "getModelRunDefaults",
     method: "get",
@@ -242,6 +234,7 @@ const cancelled = (run: ModelRun): ModelRun => ({
 export function jobHandlers(): RequestHandler[] {
   return [
     ...hiddenModelHandlers(),
+    getListMyJobsMockHandler(() => toMyJobs()),
     getListModelRunsMockHandler(({ params, request }) =>
       toModelRuns(String(params.projectId), new URL(request.url).searchParams.get("batch_id")),
     ),

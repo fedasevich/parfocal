@@ -4224,7 +4224,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when the real end-to-end specs pass on staging after a push to `main`, production deploys only from a tag with approval, production holds no test account and no fixture or test data, and `AGENTS.md` no longer carries the reseed yes.
   Size: L.
 
-- [ ] OPS-015 · Make draft calls safe in production
+- [x] OPS-015 · Make draft calls safe in production
   Production went live with v0.1.5, and the web app still calls draft operations from `packages/api-client/src/draft` that only the fake backend answers, so screens 404, toast or hang on Loading. Write an inventory in `knowledge/` of every draft operation, the screen that calls it, whether the real API has an equivalent and a priority. When the fake API is off, a draft call answering 404 or 405 becomes one recognisable "not available yet" error: queries give the screen an empty or notice state without a retry or toast, a mutation shows one "Not available yet" toast, and a shared notice covers screens that are draft only. Build the real `GET /api/me/jobs` and `GET /api/me/checklist` from stored data and move them from draft to the generated client. The other drafts stay listed in the inventory.
   Done when unit tests cover the 404 path, API tests cover both new routes, and the home page in production no longer calls a missing route.
   Size: M.

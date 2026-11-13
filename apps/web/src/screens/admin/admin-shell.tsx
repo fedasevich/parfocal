@@ -82,7 +82,7 @@ export function AdminShell({
 }) {
   const me = okData(useGetMe().data);
   const projects = okData(useListProjects().data) ?? [];
-  const jobs = useListMyJobs().data?.data ?? [];
+  const jobs = okData(useListMyJobs().data) ?? [];
   const overlay = useOverlay();
   const goTo = useGoTo();
   const renderLink = useRouterLink();

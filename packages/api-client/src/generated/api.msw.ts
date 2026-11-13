@@ -25,6 +25,7 @@ import type {
   CaseReport,
   CaseReportVersion,
   CaseSummary,
+  Checklist,
   ChoiceQuestion,
   ClassMapping,
   Comparison,
@@ -87,6 +88,7 @@ import type {
   Mute,
   MyAdjudication,
   MyDisplay,
+  MyJob,
   MySettingLayers,
   MyTask,
   NamedAuditEvent,
@@ -207,6 +209,7 @@ import {
   ChangeGroup,
   ChartStyle,
   CheckKind,
+  ChecklistStepKey,
   CheckOrder,
   CheckPreset,
   CheckState,
@@ -225,6 +228,7 @@ import {
   HitKind,
   IngestStatus,
   JobControl,
+  JobPauseReason,
   JobStatus,
   JoinPolicy,
   LabModelRunners,
@@ -237,6 +241,7 @@ import {
   ModelMakes,
   ModelTier,
   MuteSubject,
+  MyJobKind,
   MyStatus,
   NodeCategory,
   NotificationKind,
@@ -6920,6 +6925,66 @@ export const getSetMyResumeResponseMock = (
     null,
   ]),
   updated_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  ...overrideResponse,
+});
+
+export const getListMyJobsResponseMock = (): MyJob[] =>
+  Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    id: faker.string.uuid(),
+    kind: faker.helpers.arrayElement(Object.values(MyJobKind)),
+    title: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    project: {
+      id: faker.string.uuid(),
+      code: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    },
+    status: faker.helpers.arrayElement(Object.values(JobStatus)),
+    detail: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    percent: faker.number.int({ min: 0, max: 100 }),
+    minutes_left: faker.helpers.arrayElement([faker.number.int({ min: 0 }), null]),
+    units_done: faker.number.int({ min: 0 }),
+    units_total: faker.helpers.arrayElement([faker.number.int({ min: 0 }), null]),
+    started_by_user_id: faker.string.uuid(),
+    slides: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () => ({
+        id: faker.string.uuid(),
+        label: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        file: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      }),
+    ),
+    pause: faker.helpers.arrayElement([
+      {
+        reason: faker.helpers.arrayElement(Object.values(JobPauseReason)),
+        server: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        since: faker.date.past().toISOString().slice(0, 19) + "Z",
+      },
+      null,
+    ]),
+    created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+    finished_at: faker.helpers.arrayElement([
+      faker.date.past().toISOString().slice(0, 19) + "Z",
+      null,
+    ]),
+  }));
+
+export const getGetMyChecklistResponseMock = (
+  overrideResponse: Partial<Extract<Checklist, object>> = {},
+): Checklist => ({
+  hidden: faker.datatype.boolean(),
+  steps: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    key: faker.helpers.arrayElement(Object.values(ChecklistStepKey)),
+    label: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    done: faker.datatype.boolean(),
+  })),
+  sample_project: faker.helpers.arrayElement([
+    {
+      id: faker.string.uuid(),
+      code: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      slides: faker.number.int({ min: 0 }),
+    },
+    null,
+  ]),
   ...overrideResponse,
 });
 
@@ -19113,6 +19178,50 @@ export const getSetMyResumeMockHandler = (
   );
 };
 
+export const getListMyJobsMockHandler = (
+  overrideResponse?:
+    | MyJob[]
+    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<MyJob[]> | MyJob[]),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/me/jobs",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getListMyJobsResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getGetMyChecklistMockHandler = (
+  overrideResponse?:
+    | Checklist
+    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<Checklist> | Checklist),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/me/checklist",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetMyChecklistResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getGetRetentionPolicyMockHandler = (
   overrideResponse?:
     | RetentionPolicy
@@ -23063,6 +23172,8 @@ export const getParfocalAPIMock = () => [
   getRecordSiteValidationMockHandler(),
   getGetMyHomeMockHandler(),
   getSetMyResumeMockHandler(),
+  getListMyJobsMockHandler(),
+  getGetMyChecklistMockHandler(),
   getGetRetentionPolicyMockHandler(),
   getSetRetentionPolicyMockHandler(),
   getListLegalHoldsMockHandler(),

@@ -22,6 +22,7 @@ from parfocal_api import (
     case_imports,
     case_sorting,
     cases,
+    checklist,
     clinical_reports,
     decision_notes,
     disagreements,
@@ -42,6 +43,7 @@ from parfocal_api import (
     model_run_progress,
     model_runs,
     model_tiers,
+    my_jobs,
     my_work,
     neighbours,
     notification_targets,
@@ -49,6 +51,7 @@ from parfocal_api import (
     opinion_forms,
     opinions,
     own_workspaces,
+    password_login,
     personal_data,
     project_jobs,
     projects,
@@ -102,6 +105,7 @@ from parfocal_api.rate_limits import RateLimits
 from parfocal_api.realtime import realtime_for
 from parfocal_api.request_logging import RequestLogging
 from parfocal_api.settings import ApiSettings
+from parfocal_api.zitadel_login import login_client
 from parfocal_common.clients import Clients, ProductionFactories, select_clients
 from parfocal_common.db import create_engine, require_row_security
 from parfocal_common.envelope import MasterKeyring
@@ -171,6 +175,7 @@ class ParfocalApi(FastAPI):
                 settings.rate_limit_tenant_per_minute,
                 settings.rate_limit_report_link_per_minute,
             ),
+            login=login_client(settings, identity.http),
         )
 
 
@@ -193,6 +198,7 @@ def create_app(
         return Health(status="ok")
 
     app.include_router(auth.router)
+    app.include_router(password_login.router)
     app.include_router(sessions_api.router)
     app.include_router(projects.router)
     app.include_router(sample_project.router)
@@ -238,6 +244,8 @@ def create_app(
     app.include_router(feedback.router)
     app.include_router(site_validations.router)
     app.include_router(home.router)
+    app.include_router(my_jobs.router)
+    app.include_router(checklist.router)
     app.include_router(retention.router)
     app.include_router(personal_data.me_router)
     app.include_router(personal_data.project_router)

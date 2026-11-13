@@ -50,8 +50,8 @@ test("each draft operation exports every name Orval would generate for it", () =
 });
 
 test("draft queries carry the draft marker the badge looks for", () => {
-  const options = draft.getListMyJobsQueryOptions();
+  const options = draft.getListTeamWorkloadQueryOptions();
   assert.ok(draft.isDraftMeta(options.meta));
-  assert.deepEqual(options.meta, { draft: "listMyJobs" });
-  assert.deepEqual(options.queryKey, ["/api/me/jobs"]);
+  assert.deepEqual(options.meta, { draft: "listTeamWorkload" });
+  assert.deepEqual(options.queryKey, ["/api/me/team"]);
 });

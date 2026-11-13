@@ -66,7 +66,8 @@ export function jobsPrototypeLinks(ids: JobLinkIds) {
 }
 
 export function useJobsPrototypeLinks(researchProject: string | undefined) {
-  const jobs = useListMyJobs().data?.data ?? [];
+  const response = useListMyJobs().data;
+  const jobs = response?.status === 200 ? response.data : [];
   const paused = jobs.find((job) => job.kind === "model-run" && job.status === "paused");
   const finished = jobs.find((job) => job.kind === "model-run" && job.status === "done");
   if (researchProject === undefined) return [];

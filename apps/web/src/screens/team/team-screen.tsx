@@ -36,6 +36,7 @@ import { UndoToast } from "@parfocal/ui/components/undo-toast";
 import { Zone, Zones } from "@parfocal/ui/components/zone";
 import { useQueryClient } from "@tanstack/react-query";
 import { type ReactNode, useEffect, useState } from "react";
+import { NotAvailableYet, notAvailable } from "../../shell/not-available.tsx";
 import { andJoin, formatDayMonth, formatDue, parseDay } from "../format.ts";
 import { usePeople } from "../people.ts";
 import { okData } from "../placeholder.tsx";
@@ -79,7 +80,8 @@ export function TeamScreen({
   openReport: (taskId: string) => void;
 }) {
   const queryClient = useQueryClient();
-  const team = useListTeamWorkload().data?.data;
+  const teamQuery = useListTeamWorkload();
+  const team = teamQuery.data?.data;
   const state = teamState(search, team);
   const people = usePeople();
   const me = okData(useGetMe().data)?.user_id;
@@ -135,6 +137,7 @@ export function TeamScreen({
   });
 
   if (!team) {
+    if (notAvailable(teamQuery)) return <NotAvailableYet what="Team workload" />;
     return (
       <main className="px-8 pt-5.5 pl-7">
         <p className="text-body-sm text-fg-dim">Loading Team…</p>

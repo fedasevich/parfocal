@@ -1289,6 +1289,37 @@ export const CheckState = {
   deleted: "deleted",
 } as const;
 
+export type ChecklistStepKey = (typeof ChecklistStepKey)[keyof typeof ChecklistStepKey];
+
+export const ChecklistStepKey = {
+  "confirm-email": "confirm-email",
+  "join-workspace": "join-workspace",
+  "open-sample": "open-sample",
+  "guided-review": "guided-review",
+  comment: "comment",
+  opinion: "opinion",
+} as const;
+
+export interface ChecklistStep {
+  key: ChecklistStepKey;
+  label: string;
+  done: boolean;
+}
+
+export interface SampleProject {
+  id: string;
+  code: string;
+  name: string;
+  /** @minimum 0 */
+  slides: number;
+}
+
+export interface Checklist {
+  hidden: boolean;
+  steps: ChecklistStep[];
+  sample_project: SampleProject | null;
+}
+
 export type ChoiceQuestionKind = (typeof ChoiceQuestionKind)[keyof typeof ChoiceQuestionKind];
 
 export const ChoiceQuestionKind = {
@@ -2556,6 +2587,31 @@ export const JobControl = {
   retry: "retry",
 } as const;
 
+export type JobPauseReason = (typeof JobPauseReason)[keyof typeof JobPauseReason];
+
+export const JobPauseReason = {
+  "server-not-answering": "server-not-answering",
+  "server-busy": "server-busy",
+} as const;
+
+export interface JobPause {
+  reason: JobPauseReason;
+  server: string;
+  since: string;
+}
+
+export interface JobProject {
+  id: string;
+  code: string;
+  name: string;
+}
+
+export interface JobSlide {
+  id: string;
+  label: string;
+  file: string;
+}
+
 export type JoinPolicy = (typeof JoinPolicy)[keyof typeof JoinPolicy];
 
 export const JoinPolicy = {
@@ -3261,6 +3317,37 @@ export interface MyDisplay {
   preset: string;
   settings: DisplaySettings;
   presets: DisplayPreset[];
+}
+
+export type MyJobKind = (typeof MyJobKind)[keyof typeof MyJobKind];
+
+export const MyJobKind = {
+  upload: "upload",
+  "model-run": "model-run",
+  import: "import",
+} as const;
+
+export interface MyJob {
+  id: string;
+  kind: MyJobKind;
+  title: string;
+  project: JobProject;
+  status: JobStatus;
+  detail: string;
+  /**
+   * @minimum 0
+   * @maximum 100
+   */
+  percent: number;
+  minutes_left: number | null;
+  /** @minimum 0 */
+  units_done: number;
+  units_total: number | null;
+  started_by_user_id: string;
+  slides: JobSlide[];
+  pause: JobPause | null;
+  created_at: string;
+  finished_at: string | null;
 }
 
 export type MySettingLayersPersonal = { [key: string]: unknown };
@@ -32073,6 +32160,346 @@ export const useSetMyResume = <TError = Problem, TContext = unknown>(
 > => {
   return useMutation(getSetMyResumeMutationOptions(options), queryClient);
 };
+
+export type listMyJobsResponse200 = {
+  data: MyJob[];
+  status: 200;
+};
+
+export type listMyJobsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listMyJobsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listMyJobsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listMyJobsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listMyJobsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listMyJobsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listMyJobsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type listMyJobsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listMyJobsResponseSuccess = listMyJobsResponse200 & {
+  headers: Headers;
+};
+export type listMyJobsResponseError = (
+  | listMyJobsResponse400
+  | listMyJobsResponse401
+  | listMyJobsResponse403
+  | listMyJobsResponse404
+  | listMyJobsResponse409
+  | listMyJobsResponse422
+  | listMyJobsResponse429
+  | listMyJobsResponse500
+) & {
+  headers: Headers;
+};
+
+export type listMyJobsResponse = listMyJobsResponseSuccess | listMyJobsResponseError;
+
+export const getListMyJobsUrl = () => {
+  return `/api/me/jobs`;
+};
+
+/**
+ * @summary List My Jobs
+ */
+export const listMyJobs = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listMyJobsResponse> => {
+  return apiFetch<listMyJobsResponse>(getListMyJobsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListMyJobsQueryKey = () => {
+  return [`/api/me/jobs`] as const;
+};
+
+export const getListMyJobsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listMyJobs>>,
+  TError = Problem,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyJobs>>, TError, TData>>;
+  request?: SecondParameter<typeof apiFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListMyJobsQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listMyJobs>>> = ({ signal }) =>
+    listMyJobs({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listMyJobs>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ListMyJobsQueryResult = NonNullable<Awaited<ReturnType<typeof listMyJobs>>>;
+export type ListMyJobsQueryError = Problem;
+
+export function useListMyJobs<TData = Awaited<ReturnType<typeof listMyJobs>>, TError = Problem>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyJobs>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listMyJobs>>,
+          TError,
+          Awaited<ReturnType<typeof listMyJobs>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListMyJobs<TData = Awaited<ReturnType<typeof listMyJobs>>, TError = Problem>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyJobs>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listMyJobs>>,
+          TError,
+          Awaited<ReturnType<typeof listMyJobs>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListMyJobs<TData = Awaited<ReturnType<typeof listMyJobs>>, TError = Problem>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyJobs>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List My Jobs
+ */
+
+export function useListMyJobs<TData = Awaited<ReturnType<typeof listMyJobs>>, TError = Problem>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listMyJobs>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListMyJobsQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type getMyChecklistResponse200 = {
+  data: Checklist;
+  status: 200;
+};
+
+export type getMyChecklistResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getMyChecklistResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getMyChecklistResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getMyChecklistResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getMyChecklistResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getMyChecklistResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getMyChecklistResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getMyChecklistResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getMyChecklistResponseSuccess = getMyChecklistResponse200 & {
+  headers: Headers;
+};
+export type getMyChecklistResponseError = (
+  | getMyChecklistResponse400
+  | getMyChecklistResponse401
+  | getMyChecklistResponse403
+  | getMyChecklistResponse404
+  | getMyChecklistResponse409
+  | getMyChecklistResponse422
+  | getMyChecklistResponse429
+  | getMyChecklistResponse500
+) & {
+  headers: Headers;
+};
+
+export type getMyChecklistResponse = getMyChecklistResponseSuccess | getMyChecklistResponseError;
+
+export const getGetMyChecklistUrl = () => {
+  return `/api/me/checklist`;
+};
+
+/**
+ * @summary Get My Checklist
+ */
+export const getMyChecklist = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getMyChecklistResponse> => {
+  return apiFetch<getMyChecklistResponse>(getGetMyChecklistUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetMyChecklistQueryKey = () => {
+  return [`/api/me/checklist`] as const;
+};
+
+export const getGetMyChecklistQueryOptions = <
+  TData = Awaited<ReturnType<typeof getMyChecklist>>,
+  TError = Problem,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyChecklist>>, TError, TData>>;
+  request?: SecondParameter<typeof apiFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetMyChecklistQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getMyChecklist>>> = ({ signal }) =>
+    getMyChecklist({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getMyChecklist>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetMyChecklistQueryResult = NonNullable<Awaited<ReturnType<typeof getMyChecklist>>>;
+export type GetMyChecklistQueryError = Problem;
+
+export function useGetMyChecklist<
+  TData = Awaited<ReturnType<typeof getMyChecklist>>,
+  TError = Problem,
+>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyChecklist>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMyChecklist>>,
+          TError,
+          Awaited<ReturnType<typeof getMyChecklist>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetMyChecklist<
+  TData = Awaited<ReturnType<typeof getMyChecklist>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyChecklist>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMyChecklist>>,
+          TError,
+          Awaited<ReturnType<typeof getMyChecklist>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetMyChecklist<
+  TData = Awaited<ReturnType<typeof getMyChecklist>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyChecklist>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get My Checklist
+ */
+
+export function useGetMyChecklist<
+  TData = Awaited<ReturnType<typeof getMyChecklist>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyChecklist>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetMyChecklistQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
 
 export type getRetentionPolicyResponse200 = {
   data: RetentionPolicy;

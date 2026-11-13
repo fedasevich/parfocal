@@ -1,4 +1,4 @@
-import { ApiError } from "@parfocal/api-client";
+import { ApiError, isDraftNotAvailable } from "@parfocal/api-client";
 import { MutationCache, QueryCache, QueryClient } from "@tanstack/react-query";
 import { isSessionLocked } from "./session/lock-rules.ts";
 
@@ -16,6 +16,7 @@ export function retryDelay(attempt: number): number {
 }
 
 export function toastsMutationError(error: unknown, handledByCaller: boolean): error is ApiError {
+  if (isDraftNotAvailable(error)) return true;
   return (
     !handledByCaller &&
     error instanceof ApiError &&
