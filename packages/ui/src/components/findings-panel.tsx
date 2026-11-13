@@ -1,7 +1,7 @@
 import type { Decision } from "@parfocal/tokens";
 import { AreaCallButtons } from "@parfocal/ui/components/area-call";
 import { Button } from "@parfocal/ui/components/button";
-import { GalleryTile } from "@parfocal/ui/components/gallery-tile";
+import { GalleryTile, type GalleryTileAi } from "@parfocal/ui/components/gallery-tile";
 import { Icon } from "@parfocal/ui/components/icon";
 import {
   AiCallLine,
@@ -47,6 +47,9 @@ type FindingsCell = {
   decision?: Decision;
   imagePosition?: string;
   imageSize?: string;
+  ai?: GalleryTileAi;
+  outline?: React.ReactNode;
+  crop?: { position: string; size: string };
 };
 
 type FindingsNumbers = {
@@ -84,6 +87,7 @@ type CellFindingsProps = {
   changed?: FindingsPanelZone | undefined;
   onUndoChanged?: (() => void) | undefined;
   cellCall?: FindingsCellCall | undefined;
+  galleryFoot?: React.ReactNode;
   extras?: readonly FindingsExtra[];
   hovered?: FindingsHover | undefined;
   warnings?: readonly ModelWarning[];
@@ -154,6 +158,8 @@ function Tiles({ label, image, cells, current, onPick }: TilesProps) {
           ringed={!cell.decision}
           imagePosition={cell.imagePosition}
           imageSize={cell.imageSize}
+          ai={cell.ai}
+          outline={cell.outline}
           onClick={() => onPick(cell)}
         />
       ))}
@@ -184,6 +190,7 @@ function CellFindings({
   changed,
   onUndoChanged,
   cellCall,
+  galleryFoot,
   extras = [],
   hovered,
   warnings = [],
@@ -216,6 +223,8 @@ function CellFindings({
       : selection.kind === "outline" && outline
         ? { title: `${outline.id} · ${outline.name}`, numbers: outline }
         : { title: slide.label, numbers: slide };
+  const tilesLabel = (zone: FindingsZone) =>
+    `${zone.id === CHANGED_ZONE_ID ? "Cells" : "Unsure cells"} in ${zoneLabel(zone)}`;
   const pickIn = (zoneId: string | null) => (picked: FindingsCell) =>
     onSelect({ kind: "cell", id: picked.id, zoneId });
 
@@ -302,18 +311,24 @@ function CellFindings({
           sub={zoneNumbers(openZone)}
         >
           <Tiles
-            label={`Cells in ${zoneLabel(openZone)}`}
+            label={tilesLabel(openZone)}
             image={image}
             cells={openZone.tiles}
             onPick={pickIn(openZone.id)}
           />
+          {galleryFoot}
         </Zone>
       ) : null,
     cell: () =>
       selection.kind === "cell" ? (
         <Zone key="cell" data-slot="findings-cell" title={`Cell ${selection.id}`}>
           <div className="flex items-start gap-3">
-            <CellCrop image={image} objectId={selection.id} />
+            <CellCrop
+              image={image}
+              objectId={selection.id}
+              imagePosition={cell?.crop?.position}
+              imageSize={cell?.crop?.size}
+            />
             <div className="grid min-w-0 flex-1 gap-1.5">
               {cellCall ? <AiCallLine {...cellCall} /> : null}
               {cell?.decision ? (
@@ -328,12 +343,13 @@ function CellFindings({
       openZone && selection.kind === "cell" ? (
         <Zone key="siblings" data-slot="findings-siblings" title={zoneLabel(openZone)}>
           <Tiles
-            label={`Cells in ${zoneLabel(openZone)}`}
+            label={tilesLabel(openZone)}
             image={image}
             cells={openZone.tiles}
             current={selection.id}
             onPick={pickIn(openZone.id)}
           />
+          {galleryFoot}
         </Zone>
       ) : null,
     extras: () => (

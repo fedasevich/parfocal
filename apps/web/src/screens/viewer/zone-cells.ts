@@ -11,6 +11,7 @@ export type CellZone = {
   id: string;
   name: string;
   cells: ReviewObject[];
+  total: ReviewObject[];
 };
 
 export function isUnsureCell(cell: ReviewObject): boolean {
@@ -46,17 +47,18 @@ export function zonesOfCells(
     placement ? placement.extent : [0, 0, hpfSize.width, hpfSize.height],
   );
   const byId = new Map(cells.map((cell) => [cell.object, cell]));
+  const found = (ids: readonly string[]) =>
+    ids.flatMap((id) => {
+      const cell = byId.get(id);
+      return cell === undefined ? [] : [cell];
+    });
   return zones.map((zone: UnsureZone) => ({
     id: zone.id,
     name: zone.name,
-    cells: zone.unsureCellIds
-      .flatMap((id) => {
-        const cell = byId.get(id);
-        return cell === undefined ? [] : [cell];
-      })
-      .sort((a, b) =>
-        placement ? a.score - b.score : Math.abs(a.score - 0.5) - Math.abs(b.score - 0.5),
-      ),
+    total: found(zone.cellIds),
+    cells: found(zone.unsureCellIds).sort((a, b) =>
+      placement ? a.score - b.score : Math.abs(a.score - 0.5) - Math.abs(b.score - 0.5),
+    ),
   }));
 }
 

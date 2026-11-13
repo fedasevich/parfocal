@@ -42,7 +42,12 @@ test("zones hold only unsure cells, most contested first", () => {
 });
 
 test("the next unsure cell skips decided cells and wraps round", () => {
-  const zone = { id: "zone-1", name: "Tumor or Immune", cells: cells.slice(0, 4) };
+  const zone = {
+    id: "zone-1",
+    name: "Tumor or Immune",
+    cells: cells.slice(0, 4),
+    total: cells.slice(0, 4),
+  };
   const [a, b, c, d] = zone.cells.map((cell) => cell.object);
   const open = (object: string) => object !== b;
   assert.equal(nextUnsureCell(zone, a, open), c);

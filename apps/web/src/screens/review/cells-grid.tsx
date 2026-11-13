@@ -10,10 +10,10 @@ import { cellShapes, hpfSize } from "./slide-geometry.ts";
 const tile = 40;
 const zoom = 1.4;
 
-export function cropStyle(object: string) {
+export function cropStyle(object: string, size = tile) {
   const cell = cellShapes[object];
-  const x = (cell?.x ?? 0) * zoom - tile / 2;
-  const y = (cell?.y ?? 0) * zoom - tile / 2;
+  const x = (cell?.x ?? 0) * zoom - size / 2;
+  const y = (cell?.y ?? 0) * zoom - size / 2;
   return {
     imagePosition: `${-x}px ${-y}px`,
     imageSize: `${hpfSize.width * zoom}px ${hpfSize.height * zoom}px`,

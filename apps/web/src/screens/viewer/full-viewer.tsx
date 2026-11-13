@@ -1,3 +1,4 @@
+import type { ReviewObject } from "@parfocal/api-client";
 import {
   type AnalysisTemplate,
   type SlideAiProgress,
@@ -17,6 +18,7 @@ import type { Blocker } from "@parfocal/ui/components/before-you-list";
 import { Button } from "@parfocal/ui/components/button";
 import { CellCluster, CellsLauncher } from "@parfocal/ui/components/cells-panel";
 import type { DisplaySettings } from "@parfocal/ui/components/display-panel";
+import { FindingsPanel } from "@parfocal/ui/components/findings-panel";
 import { Icon } from "@parfocal/ui/components/icon";
 import { InspectorPanel } from "@parfocal/ui/components/inspector-panel";
 import { MagnificationBar } from "@parfocal/ui/components/magnification-bar";
@@ -31,6 +33,7 @@ import {
   ViewPicker,
 } from "@parfocal/ui/components/visualize";
 import { Zone } from "@parfocal/ui/components/zone";
+import { type AreaCall, countOf } from "@parfocal/ui/lib/area-call";
 import { inspectorCounts, inspectorTabLabels } from "@parfocal/ui/lib/inspector-tabs";
 import { objectIdPath } from "@parfocal/ui/lib/object-id";
 import {
@@ -58,6 +61,7 @@ import { formatDayMonth } from "../format.ts";
 import { useRememberResume } from "../home/remember-resume.ts";
 import { usePeople } from "../people.ts";
 import { okData } from "../placeholder.tsx";
+import { reviewTyper } from "../review/ai-wording.ts";
 import { useAnswerKeys } from "../review/answer-keys.ts";
 import { type CameraSearch, cameraFromSearch, cameraToSearch } from "../review/camera-search.ts";
 import { type CellSpot, panned, previousOpen } from "../review/cell-jump.ts";
@@ -137,6 +141,7 @@ import {
   ObjectsSummary,
   ViewerFrame,
 } from "../review/viewer-frame.tsx";
+import { lookUrl } from "../thumbnails.ts";
 import { MeasureCanvas, measuredSize } from "../viewer-tools/measure-canvas.tsx";
 import { MeasuredBlock } from "../viewer-tools/measured-block.tsx";
 import type { ScreenRect } from "../viewer-tools/minimap-placement.ts";
@@ -148,6 +153,14 @@ import { ViewerMinimap } from "../viewer-tools/viewer-minimap.tsx";
 import { CalibrationBlock, TrackRecordBlock } from "./ai-record-blocks.tsx";
 import { calibrationLines, trackRecordLines } from "./ai-record-lines.ts";
 import { areaOrder, areaRoleText, areaRows } from "./area-nav.ts";
+import {
+  findingsSelection,
+  findingsZones,
+  numberLineOf,
+  scatteredCells,
+  stagingPanelAreas,
+  viewerFindingsLayout,
+} from "./findings-data.ts";
 import { layerDrawing, setColours } from "./layer-views.tsx";
 import { confidenceTintOf, objectStyle } from "./object-draw.ts";
 import { ObjectTablePanel } from "./object-table.tsx";
@@ -173,7 +186,7 @@ import {
   viewerSetup,
 } from "./viewer-scenes.ts";
 import { nextUnsureCell, zonesOfCells } from "./zone-cells.ts";
-import { useRestKey, ZoneGallery } from "./zone-gallery.tsx";
+import { useRestKey, ZoneFoot, zoneTile } from "./zone-gallery.tsx";
 
 export type ViewerSearch = CameraSearch & {
   task?: string | undefined;
@@ -692,6 +705,32 @@ function ViewerBody({
   };
   useObjectKeys(nextInZone, previousInZone, zoneKeys);
   useRestKey(restLookRight, zoneKeys);
+  const findingsLayout = viewerFindingsLayout(template, zones.length, stagingAreas.length);
+  const decidedObject = (object: string) => answer(object) !== undefined;
+  const classColor = (name: string) =>
+    session.classes.find((item) => item.name === name)?.color ?? "var(--fg-faint)";
+  const tileOf = (cell: ReviewObject) => zoneTile(cell, answer(cell.object));
+  const scattered = paged ? [] : scatteredCells(cells, zones);
+  const unsureIds = new Set(
+    [...zones.flatMap((zone) => zone.cells), ...scattered].map((cell) => cell.object),
+  );
+  const callArea = (id: string, call: AreaCall) => {
+    const region = regions.find((item) => item.object === id);
+    if (region === undefined || buttonsOff) return;
+    const value = countOf(call);
+    const raw = rawFor(style, value, region);
+    const kept = answer(id);
+    const next = put(id, { value, raw, reasons: [], note: kept?.note ?? null });
+    decisions.save(id, raw, value, undefined, kept?.note);
+    setToast({
+      id: Date.now(),
+      text: `${id}: ${value === "unsure" ? "not sure" : value}`,
+      undo: () => {
+        setOverrides(new Map(next).set(id, kept ?? null));
+        decisions.restore(id, kept);
+      },
+    });
+  };
   const stillView: StillView = current
     ? current.kind === "cell"
       ? { kind: "cell", object: current.object }
@@ -967,6 +1006,11 @@ function ViewerBody({
     choices: settings,
     hiddenClasses,
   });
+  const modelWarnings = viewerModelWarnings(
+    typer,
+    objects,
+    personalSettings?.model_warnings ?? true,
+  );
   const objectsBody: ReactNode =
     running && progress ? (
       <RunningObjects progress={progress} objects={objects} />
@@ -991,23 +1035,66 @@ function ViewerBody({
           counts={counts}
           added={added.map((item) => item.object)}
         />
-        {zones.length > 0 ? (
-          <ZoneGallery
-            zones={zones}
-            openId={openZoneId}
-            current={selected ?? undefined}
-            answer={answer}
-            disabledReason={buttonsOff}
-            onOpen={setOpenZoneId}
-            onPick={pick}
-            onNext={nextInZone}
-            onRest={restLookRight}
+        {findingsLayout === "cell-findings" ? (
+          <FindingsPanel
+            layout="cell-findings"
+            image={lookUrl("hpf")}
+            slide={{
+              label: `Cells on ${slideLabel}`,
+              classes: numberLineOf(cells, decidedObject, classColor, (cell) =>
+                unsureIds.has(cell.object),
+              ),
+            }}
+            selection={findingsSelection(zones, openZoneId, selected)}
+            onSelect={(next) => {
+              if (next.kind === "cell") {
+                if (next.zoneId !== null) setOpenZoneId(next.zoneId);
+                pick(next.id);
+              } else if (next.kind === "zone") {
+                setOpenZoneId(next.id);
+                if (current?.kind === "cell") pick(undefined);
+              } else if (next.kind === "none") {
+                setOpenZoneId(null);
+              }
+            }}
+            zones={findingsZones(zones, decidedObject, classColor, tileOf)}
+            scattered={scattered.map(tileOf)}
+            cellCall={
+              current?.kind === "cell"
+                ? {
+                    calls: [
+                      { label: current.class_name.toLowerCase(), probability: current.score },
+                    ],
+                    typer: reviewTyper,
+                    wording: "words",
+                  }
+                : undefined
+            }
+            galleryFoot={
+              <ZoneFoot
+                remaining={openZoneCells.length}
+                disabledReason={buttonsOff}
+                onNext={nextInZone}
+                onRest={restLookRight}
+              />
+            }
+            warnings={modelWarnings}
           />
-        ) : null}
+        ) : findingsLayout === "node-staging" ? (
+          <FindingsPanel
+            layout="node-staging"
+            areas={stagingPanelAreas(stagingAreas)}
+            current={selected ?? null}
+            onPickArea={areaNav.goTo}
+            onCall={callArea}
+            onMeasure={() => onSearch({ tool: "ruler" })}
+            onCount={() => pick(firstOpenCell)}
+            warnings={modelWarnings}
+          />
+        ) : (
+          <ModelWarningsBlock warnings={modelWarnings} />
+        )}
         <AiSays setName={`${setName}, imported 12 Oct`} objects={objects} />
-        <ModelWarningsBlock
-          warnings={viewerModelWarnings(typer, objects, personalSettings?.model_warnings ?? true)}
-        />
         <TrackRecordBlock
           enabled={personalSettings?.inspector_track_record ?? true}
           lines={trackRecordLines(trackRecord, typer?.name ?? "")}

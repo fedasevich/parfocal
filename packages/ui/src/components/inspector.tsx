@@ -500,9 +500,19 @@ type CellCropProps = React.ComponentProps<"div"> & {
   image: string;
   objectId: string;
   size?: number;
+  imagePosition?: string | undefined;
+  imageSize?: string | undefined;
 };
 
-function CellCrop({ image, objectId, size = 72, className, ...props }: CellCropProps) {
+function CellCrop({
+  image,
+  objectId,
+  size = 72,
+  imagePosition,
+  imageSize,
+  className,
+  ...props
+}: CellCropProps) {
   return (
     <div
       data-slot="cell-crop"
@@ -512,7 +522,13 @@ function CellCrop({ image, objectId, size = 72, className, ...props }: CellCropP
         "relative shrink-0 rounded-md bg-[#111] bg-cover bg-center shadow-[inset_0_0_0_1px_var(--line)]",
         className,
       )}
-      style={{ width: size, height: size, backgroundImage: `url(${image})` }}
+      style={{
+        width: size,
+        height: size,
+        backgroundImage: `url(${image})`,
+        ...(imagePosition ? { backgroundPosition: imagePosition } : {}),
+        ...(imageSize ? { backgroundSize: imageSize } : {}),
+      }}
       {...props}
     >
       <span className="absolute top-1/2 left-1/2 size-[42%] -translate-1/2 rounded-full border-[1.5px] border-dashed border-white/85" />
