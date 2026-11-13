@@ -5141,7 +5141,7 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
   Depends on TASK-014, ANN-024, ANN-032. Refs [ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md).
   Size: M.
 
-- [ ] EVAL-015 · Patch and mask export
+- [x] EVAL-015 · Patch and mask export
   As a job, tiles of the signed-off slides at a chosen level with a label mask per tile and an index CSV of tile, slide, position and classes.
   Done when a test exports a small slide and every mask matches the GeoJSON it came from.
   Depends on EVAL-014, AIP-008. Refs [ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md).
