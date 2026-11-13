@@ -2,6 +2,7 @@ import uuid
 
 import pytest
 from db_support import ApiAs
+from submit_support import submitted as finished_submit
 from test_decision_styles import ai_says_tumor, answer, task_of
 from test_reviewed_layer import Review, review
 from workspace_support import owner
@@ -31,7 +32,7 @@ def test_both_kinds_are_queued_once_everyone_has_submitted(api: ApiAs, database:
     task = f"/api/review-tasks/{r.task}"
     assert api(r.people["owner"]).get(f"{task}/disagreements").json() == []
     for who in DECISIONS:
-        assert api(r.people[who]).post(f"{r.base}/submit").status_code == 200
+        assert finished_submit(api(r.people[who]), f"{r.base}").status_code == 200
     queue = api(r.people["owner"]).get(f"{task}/disagreements").json()
     assert [(item["object"], item["why"]) for item in queue] == [
         ("T1", "reviewers-differ"),
@@ -53,7 +54,7 @@ def test_agreeing_reviewers_leave_nothing_to_decide(api: ApiAs, database: str) -
     r = review(api, database)
     for who in ("first", "second"):
         api(r.people[who]).put(f"{r.base}/decisions/T1", json={"value": "agree"})
-        api(r.people[who]).post(f"{r.base}/submit")
+        finished_submit(api(r.people[who]), f"{r.base}")
     task = f"/api/review-tasks/{r.task}"
     assert api(r.people["owner"]).get(f"{task}/disagreements").json() == []
     assert api(r.people["owner"]).post(f"{task}/sign-off").status_code == 200
@@ -64,7 +65,7 @@ def queued_review(api: ApiAs, database: str) -> tuple[Review, str]:
     for who, given in DECISIONS.items():
         for object_id, body in given.items():
             api(r.people[who]).put(f"{r.base}/decisions/{object_id}", json=body)
-        api(r.people[who]).post(f"{r.base}/submit")
+        finished_submit(api(r.people[who]), f"{r.base}")
     return r, f"/api/review-tasks/{r.task}"
 
 
@@ -148,7 +149,9 @@ def test_a_queue_decision_takes_the_task_style_and_stores_what_it_counts_as(
     task = task_of(api, r, decision)
     for who, given in zip(("first", "second"), reviewers, strict=True):
         assert answer(api, r, task, "T1", press(given, classes), who).status_code == 200
-        submitted = api(r.people[who]).post(f"/api/review-tasks/{task}/slides/{r.slide}/submit")
+        submitted = finished_submit(
+            api(r.people[who]), f"/api/review-tasks/{task}/slides/{r.slide}"
+        )
         assert submitted.status_code == 200, submitted.text
     url = f"/api/review-tasks/{task}/disagreements/{r.slide}/T1"
     body = {"answer": pressed["answer"]}
@@ -176,7 +179,7 @@ def test_a_certainty_decision_is_recounted_when_counts_as_changes(
     task = task_of(api, r, {"style": "certainty"})
     for who, given in (("first", "5"), ("second", "1")):
         answer(api, r, task, "T1", {"answer": given}, who)
-        api(r.people[who]).post(f"/api/review-tasks/{task}/slides/{r.slide}/submit")
+        finished_submit(api(r.people[who]), f"/api/review-tasks/{task}/slides/{r.slide}")
     url = f"/api/review-tasks/{task}/disagreements/{r.slide}/T1"
     decided = api(r.people["owner"]).put(url, json={"answer": "2"})
     assert decided.json()["decision"]["value"] == "disagree"
@@ -251,7 +254,7 @@ def test_a_reviewer_asking_for_a_second_look_queues_the_object(api: ApiAs, datab
         body = {"value": "unsure", "reasons": reasons}
         assert api(r.people[who]).put(f"{r.base}/decisions/T1", json=body).status_code == 200
         api(r.people[who]).put(f"{r.base}/decisions/T2", json={"value": "unsure"})
-        api(r.people[who]).post(f"{r.base}/submit")
+        finished_submit(api(r.people[who]), f"{r.base}")
     queue = api(r.people["owner"]).get(f"/api/review-tasks/{r.task}/disagreements").json()
     assert [(item["object"], item["why"]) for item in queue] == [("T1", "second-look")]
 

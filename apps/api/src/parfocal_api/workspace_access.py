@@ -209,6 +209,14 @@ def person_scope(
     return DatabaseScope(tenant_id=tenant_id, user_id=person.user_id, platform=True, auth=True)
 
 
+def checking_scope(person: SignedInUser | MemberPrincipal) -> DatabaseScope:
+    return DatabaseScope(user_id=person.user_id, platform=True)
+
+
+def joining_scope(person: SignedInUser | MemberPrincipal, tenant_id: uuid.UUID) -> DatabaseScope:
+    return DatabaseScope(tenant_id=tenant_id, user_id=person.user_id, auth=True)
+
+
 async def is_member(connection: AsyncConnection, tenant_id: uuid.UUID, user_id: uuid.UUID) -> bool:
     return bool(
         await connection.scalar(
@@ -318,9 +326,10 @@ async def join_workspace(
     session_id = request.cookies.get(SESSION_COOKIE)
     if not session_id:
         raise UnauthenticatedError
-    async with scoped_transaction(
-        engine_of(request), person_scope(person, tenant_id)
-    ) as connection:
+    engine = engine_of(request)
+    async with scoped_transaction(engine, checking_scope(person)) as connection:
+        await joinable_tenant(connection, tenant_id, person.user_id)
+    async with scoped_transaction(engine, joining_scope(person, tenant_id)) as connection:
         tenant = await joinable_tenant(connection, tenant_id, person.user_id)
         if tenant.join_policy != JoinPolicy.JOIN:
             raise AskToJoinError
@@ -398,9 +407,10 @@ async def ask_to_join_workspace(
     principal: CurrentPrincipal,
 ) -> WorkspaceAccessRequest:
     person = signed_in(principal)
-    async with scoped_transaction(
-        engine_of(request), person_scope(person, tenant_id)
-    ) as connection:
+    engine = engine_of(request)
+    async with scoped_transaction(engine, checking_scope(person)) as connection:
+        await joinable_tenant(connection, tenant_id, person.user_id)
+    async with scoped_transaction(engine, joining_scope(person, tenant_id)) as connection:
         await joinable_tenant(connection, tenant_id, person.user_id)
         row = (
             await connection.execute(

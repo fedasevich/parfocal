@@ -475,6 +475,24 @@ export {
   placeLabels,
 } from "./overlay/labels.ts";
 export {
+  chooseLod,
+  densityRaster,
+  fullDetail,
+  type LodChoice,
+  type LodStats,
+  type LodTier,
+  largeShapes,
+  lodDensityBelowPx,
+  lodDotRadiusPx,
+  lodDotsBelowPx,
+  lodKey,
+  lodLargeFactor,
+  lodMinShapes,
+  lodStats,
+  shapeDiagonals,
+  smallShapeCentres,
+} from "./overlay/lod.ts";
+export {
   createObjectDrawing,
   type DisplayDrawChoices,
   drawSettingsFromChoices,

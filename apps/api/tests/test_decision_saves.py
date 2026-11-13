@@ -2,6 +2,7 @@ from typing import Any
 
 import pytest
 from db_support import ApiAs
+from submit_support import submitted as finished_submit
 from test_reviewed_layer import SQUARE, Review, review
 from workspace_support import owner
 
@@ -144,7 +145,7 @@ def test_decisions_lock_at_sign_off_and_open_again_on_reopen(api: ApiAs, databas
     decision(api, r, "first", "T1", {"value": "agree"})
     task = f"/api/review-tasks/{r.task}"
     for who in ("first", "second"):
-        assert api(r.people[who]).post(f"{r.base}/submit").status_code == 200
+        assert finished_submit(api(r.people[who]), f"{r.base}").status_code == 200
     assert api(r.people["owner"]).post(f"{task}/sign-off").status_code == 200
     late = decision(api, r, "first", "T1", {"value": "unsure"})
     assert (late.status_code, late.json()["code"]) == (409, "task-signed-off")

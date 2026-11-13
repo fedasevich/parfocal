@@ -31,6 +31,7 @@ from parfocal_api.realtime import Realtime, RealtimeClient
 from parfocal_api.review_order import unchecked_objects
 from parfocal_api.review_tasks import readable_task
 from parfocal_api.reviewed_layer import task_slide
+from parfocal_api.submit_gate import require_done
 from parfocal_api.tables import (
     ProjectRole,
     ResultSource,
@@ -436,6 +437,14 @@ async def review_move(
         if move is Move.SUBMIT
         else AuditAction.TASK_REVIEW_REOPENED
     )
+    reviewer = user_of(principal)
+    if (
+        move is Move.SUBMIT
+        and task.kind != TaskKind.ANNOTATE
+        and reviewer is not None
+        and check_move(move, facts) is None
+    ):
+        await require_done(connection, task_id, slide_id, reviewer)
     await apply(connection, principal, task, move, facts, action, {"slide_id": str(slide_id)})
     await connection.execute(
         update(review_assignments)

@@ -123,7 +123,16 @@ OPS-005 (continuous deployment) is built. The `Deploy` workflow now also runs af
 
 Your choice: 
 
-### 97. Whether a blinded task hides "Share my view"
+### 97. Whether an AI object the reviewer deleted counts as checked before submit
+
+TASK-008 (submit a slide review) made the API refuse a submit while any object is still open or a required question is unanswered. Today an AI object the reviewer deleted, and an object the reviewer skipped, both stay open, so they block the submit until the reviewer gives them a decision.
+
+- **A. A deleted AI object counts as checked, because deleting it already says the reviewer disagrees with it (recommended).** A skipped object stays open.
+- B. Keep it open until the reviewer gives it a decision as well.
+- Other.
+
+Your choice:
+### 98. Whether a blinded task hides "Share my view"
 
 COLLAB-010 (follow my view) lets anyone on a slide share their camera and lets anyone else on that slide follow it ([ADR 0301](adr/0301-a-shared-camera-is-a-capped-client-frame-relayed-by-the-slide-room.md), a shared camera is a capped client frame relayed by the slide room). In a blinded task, following shows where a colleague looks, which can hint at what they found.
 

@@ -4,6 +4,7 @@ from typing import Any
 
 import pytest
 from db_support import ApiAs
+from submit_support import submitted as finished_submit
 from test_blinding import SQUARE, Study, ok, study
 from workspace_support import owner
 
@@ -180,7 +181,7 @@ def test_a_blinded_reviewer_sees_only_their_own_threads_and_the_researchers(
         "Please look at the margin."
     ]
     assert len(ok(api(s.people["viewer"]).get(path)).json()["messages"]) == 2
-    ok(api(s.people["first"]).post(f"{s.base}/submit"))
+    ok(finished_submit(api(s.people["first"]), f"{s.base}"))
     assert titles(api, s, "first") == ["Owner asks", "Second asks", "First asks"]
 
 

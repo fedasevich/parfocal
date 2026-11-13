@@ -20,6 +20,7 @@ export function SlideSubmitted({ taskId, slideId }: SlideSubmittedProps) {
         slideId={slideId}
         scene="done"
         submitted
+        behind
         tab="review"
         onTabChange={() => undefined}
       />
