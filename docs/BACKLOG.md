@@ -4921,7 +4921,7 @@ Doctors judge AI objects in a simple guided mode, or in the full viewer with the
   Done when API tests create a cell scope task, see the order reported as not ready, run the job and read the same order the inline path gives, and a test shows a failed job retried without a duplicate order.
   Depends on GUIDE-012, INGEST-003.
 
-- [ ] GUIDE-014 · Use "decision" in code identifiers
+- [x] GUIDE-014 · Use "decision" in code identifiers
   The docs call a reviewer's call on an object a decision since 2026-11-01, as the mock and the kit do, and the code still uses the old word. Rename every identifier that carries it to decision: the table and its migration, the API module and its routes, the OpenAPI operation and schema names, the audit event names, the generated client, the Python and TypeScript types, the test files and their fixtures, and the agent guide's product sentence. A new migration renames the table. New audit entries use the new event names, and stored entries keep the old ones because the hash chain covers them. The docs that still quote an old identifier in backticks are updated in the same change.
   Done when the API, database, isolation and client tests pass with the new names, the regenerated client has no old operation names, a test reads an audit entry written under the old event name, and a search of the repository finds the old word only in migration history and stored audit data.
   Depends on GUIDE-001. Refs mock: guided, kit: decision styles.
