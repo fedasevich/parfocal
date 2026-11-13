@@ -33,6 +33,7 @@ import {
   type ProjectCode,
   people,
   projects,
+  type ResultSetKey,
   resultSets,
   reviewTasks,
   type ScenarioProject,
@@ -64,7 +65,7 @@ import {
 } from "./scenario-project.ts";
 import { annotateStubTaskId, rt13 } from "./scenario-review.ts";
 import { opinionForms, studyTemplates } from "./scenario-task.ts";
-import { annotateTaskClasses } from "./shared-layer-handlers.ts";
+import { annotateTaskClasses, annotateTaskSlides } from "./shared-layer-handlers.ts";
 import { toSlideRow } from "./work-handlers.ts";
 
 const projectOf = (idOrCode: string): ScenarioProject =>
@@ -203,12 +204,16 @@ export const toProjectReviewTasks = (idOrCode: string): ReviewTask[] => {
   return project.code === rt13.project ? [...listed, toAnnotateReviewTask()] : listed;
 };
 
-export const toSlideResultSets = (slideId: string): ResultSet[] => {
+export const toSlideResultSets = (
+  slideId: string,
+  extraKeys: readonly ResultSetKey[] = [],
+): ResultSet[] => {
   const slide = slides.find((candidate) => candidate.id === slideId);
   if (slide === undefined) return [];
   const project = projectOf(slide.project);
   const fileBase = slide.file.replace(/\.\w+$/, "");
-  return slide.sets.flatMap((key) => {
+  const keys = [...slide.sets, ...extraKeys.filter((key) => !slide.sets.includes(key))];
+  return keys.flatMap((key) => {
     const set = resultSets.find((candidate) => candidate.key === key);
     if (set === undefined || set.source === "reviewed") return [];
     return [
@@ -433,6 +438,13 @@ export const projectDraftOperations: DraftOperation[] = [
   },
 ];
 
+const runsToAddInAnnotateTask = (request: Request, slideId: string): ResultSetKey[] => {
+  const inTask =
+    request.referrer.includes(annotateStubTaskId) ||
+    request.headers.get("referer")?.includes(annotateStubTaskId) === true;
+  return inTask && slideId === annotateTaskSlides.withResults ? ["cam"] : [];
+};
+
 export function projectHandlers(): RequestHandler[] {
   return [
     http.get("*/api/me/slides", ({ request }) => {
@@ -443,7 +455,8 @@ export function projectHandlers(): RequestHandler[] {
     getGetOpinionFormMockHandler(({ params }) => toOpinionForm(String(params.projectId))),
     getListReviewTasksMockHandler(({ params }) => toProjectReviewTasks(String(params.projectId))),
     getListSlideResultSetsMockHandler(({ params, request }) => {
-      const sets = toSlideResultSets(String(params.slideId));
+      const slideId = String(params.slideId);
+      const sets = toSlideResultSets(slideId, runsToAddInAnnotateTask(request, slideId));
       return hidesRt17Sets(request, String(params.slideId))
         ? sets.filter((set) => set.id !== rt17SetId())
         : sets;
