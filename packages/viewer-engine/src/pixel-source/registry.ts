@@ -1,3 +1,4 @@
+import { openNdpiSource } from "./ndpi/ndpi-source.ts";
 import { withOverviewLevels } from "./overview-levels.ts";
 import { openTiffSource } from "./tiff/tiff-source.ts";
 import {
@@ -78,6 +79,7 @@ export const tiffTileGridFormats = [
 export function createDefaultPixelSourceRegistry(): PixelSourceRegistry {
   const registry = createPixelSourceRegistry();
   registry.register(tiffTileGridFormats, openTiffSource);
+  registry.register(["hamamatsu-ndpi"], openNdpiSource);
   registry.register(["ome-zarr"], openOmeZarrSource);
   return registry;
 }
