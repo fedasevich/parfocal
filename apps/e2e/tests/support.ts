@@ -37,18 +37,74 @@ export function sql(statement: string): string {
 }
 
 export async function signIn(page: Page, deepLink: string): Promise<void> {
-  await page.goto(`/api/auth/login?return_to=${encodeURIComponent(deepLink)}`);
-  await page.getByRole("textbox").first().fill(username);
-  await page.keyboard.press("Enter");
-  await page.locator("input[type=password]").fill(password);
-  await page.keyboard.press("Enter");
-  const skip = page.getByRole("button", { name: /skip/i });
+  await page.goto(`/sign-in?return_to=${encodeURIComponent(deepLink)}`);
+  await page.getByLabel("Work email").fill(username);
+  await page.getByLabel("Password", { exact: true }).fill(password);
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await expect
+    .poll(() => new URL(page.url()).pathname, { timeout: 30_000 })
+    .toBe(deepLink.split("?")[0]);
+}
+
+export const zitadelIssuer = required("ZITADEL_ISSUER").replace(/\/$/, "");
+const mailpit = process.env["MAILPIT_URL"] ?? "http://localhost:8025";
+
+interface MailpitSearch {
+  messages: { ID: string }[];
+}
+
+export async function emailCode(to: string): Promise<string> {
+  let code = "";
   await expect(async () => {
-    if (await skip.isVisible()) {
-      await skip.click();
-    }
-    expect(new URL(page.url()).pathname).toBe(deepLink.split("?")[0]);
+    const search = (await (
+      await fetch(`${mailpit}/api/v1/search?query=${encodeURIComponent(`to:${to}`)}`)
+    ).json()) as MailpitSearch;
+    const latest = search.messages[0];
+    expect(latest).toBeDefined();
+    const message = (await (await fetch(`${mailpit}/api/v1/message/${latest?.ID}`)).json()) as {
+      Text: string;
+    };
+    code = /Code (\d{6})\)/.exec(message.Text)?.[1] ?? "";
+    expect(code).toHaveLength(6);
   }).toPass({ timeout: 30_000 });
+  return code;
+}
+
+function zitadelAdmin(path: string, init: RequestInit = {}): Promise<Response> {
+  return fetch(`${zitadelIssuer}${path}`, {
+    ...init,
+    headers: {
+      authorization: `Bearer ${required("ZITADEL_ADMIN_TOKEN")}`,
+      "content-type": "application/json",
+    },
+  });
+}
+
+export async function zitadelUserIds(email: string): Promise<string[]> {
+  const response = await zitadelAdmin("/v2/users", {
+    method: "POST",
+    body: JSON.stringify({
+      queries: [
+        { emailQuery: { emailAddress: email, method: "TEXT_QUERY_METHOD_EQUALS_IGNORE_CASE" } },
+      ],
+    }),
+  });
+  const found = (await response.json()) as { result?: { userId: string }[] };
+  return (found.result ?? []).map((user) => user.userId);
+}
+
+export async function zitadelUserExists(userId: string): Promise<boolean> {
+  return (await zitadelAdmin(`/v2/users/${userId}`)).status !== 404;
+}
+
+export async function deleteZitadelUser(userId: string): Promise<number> {
+  return (await zitadelAdmin(`/v2/users/${userId}`, { method: "DELETE" })).status;
+}
+
+export async function forgetEmails(to: string): Promise<void> {
+  await fetch(`${mailpit}/api/v1/search?query=${encodeURIComponent(`to:${to}`)}`, {
+    method: "DELETE",
+  });
 }
 
 export interface SessionBody {

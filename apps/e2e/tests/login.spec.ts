@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { readSession, sessionStatus, signIn, sql, username } from "./support.ts";
+import { readSession, sessionStatus, signIn, sql, username, zitadelIssuer } from "./support.ts";
 
 function tokensDigest(subject: string): string {
   return sql(
@@ -40,10 +40,10 @@ test("an expired access token is refreshed on the server without the page notici
 test("logout ends the session here and at Zitadel", async ({ page }) => {
   await signIn(page, "/cases/S26-0003");
   await page.goto("/api/auth/logout");
-  await page.waitForURL("http://localhost:5173/");
+  await expect.poll(() => new URL(page.url()).pathname).toBe("/");
   expect(await sessionStatus(page)).toBe(401);
   await page.goto("/api/auth/login?return_to=/cases/S26-0003");
-  await page.getByRole("button", { name: username }).click();
-  await expect(page.locator("input[type=password]")).toBeVisible();
-  expect(new URL(page.url()).hostname).toContain("zitadel.cloud");
+  expect(new URL(page.url()).origin).toBe(new URL(zitadelIssuer).origin);
+  await expect(page.getByRole("textbox").first()).toBeVisible();
+  await expect(page.locator("input[type=password]")).toHaveCount(0);
 });
