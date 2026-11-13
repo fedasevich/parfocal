@@ -1,6 +1,6 @@
 # Frozen prototype
 
-These are frozen copies of the two prototype artifacts at the end of round 6 of the redesign, taken on 2026-11-01 by PROTO-001 (freeze the redesigned prototype). The PROTO epic ports them into React over fake data, and the screens and components there are compared with these copies ([ADR 0129](../adr/0129-the-prototype-moves-into-react-as-the-design-source.md)). Once PROTO-010 (make the React app the design source) lands, the app and its Storybook are the design source and these copies are frozen history. Nobody edits them.
+These are frozen copies of the two prototype artifacts at the end of round 6 of the redesign, taken on 2026-11-01 by PROTO-001 (freeze the redesigned prototype). The PROTO epic ports them into React over fake data, and the screens and components there were compared with these copies ([ADR 0129](../adr/0129-the-prototype-moves-into-react-as-the-design-source.md)). Since PROTO-010 (make the React app the design source), the app in `apps/web` and its Storybook in `packages/ui` are the design source and these copies are frozen history. Nobody edits them.
 
 | Copy | Artifact | Version id | What it is |
 |---|---|---|---|

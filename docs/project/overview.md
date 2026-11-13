@@ -33,8 +33,10 @@ The web app and edge run on Cloudflare (Pages, Workers, Durable Objects, R2), Py
 
 ## Design sources
 
-- UX kit: https://claude.ai/artifact/WKq3HJJWYL15oY4nXNBweC (offline copy `/Users/yuriifedas/WebstormProjects/poc/docs/ux-kit/index.html`, [GitHub](https://github.com/fedasevich/pathlogy-poc/blob/master/docs/ux-kit/index.html))
-- Hi-fi mock: https://claude.ai/artifact/3axrsHDKG5EqDyxu3nZYoJ (offline copy `/Users/yuriifedas/WebstormProjects/poc/docs/ux-mock/index.html`, [GitHub](https://github.com/fedasevich/pathlogy-poc/blob/master/docs/ux-mock/index.html))
+The design source is the React app in `apps/web` and its Storybook in `packages/ui` ([ADR 0129](../adr/0129-the-prototype-moves-into-react-as-the-design-source.md), the prototype moves into React). The two prototype artifacts below and the frozen mock in [design/](../design/README.md) are frozen history that nobody edits.
+
+- UX kit (frozen history): https://claude.ai/artifact/WKq3HJJWYL15oY4nXNBweC, local copy [design/ux-kit/index.html](../design/ux-kit/index.html)
+- Hi-fi mock (frozen history): https://claude.ai/artifact/3axrsHDKG5EqDyxu3nZYoJ, local copy [design/ux-mock/index.html](../design/ux-mock/index.html)
 
 ## The POC
 

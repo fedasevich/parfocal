@@ -47,7 +47,7 @@ Tasks in the review column wait for an owner look or a cloud step, and [decision
 | [log.md](log.md) | Dated log of what was done |
 | [decisions.md](decisions.md) | Open questions for the owner, each with options, the recommended one and a blank line for the owner's choice |
 | [board/](board/README.md) | The live task board over the backlog, with one claim file per task being worked on (`pnpm board`) |
-| [project/overview.md](project/overview.md) | The product, users, scope, design sources and the POC's role |
+| [project/overview.md](project/overview.md) | The product, users, scope, the React app as the design source and the POC's role |
 | [project/roadmap.md](project/roadmap.md) | The milestones, M0 to M6 with MA (the annotation path), and their status |
 | [project/risks.md](project/risks.md) | Risk register |
 | [project/poc-reference.md](project/poc-reference.md) | Where the POC lives, with full links to every POC doc |

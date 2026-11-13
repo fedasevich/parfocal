@@ -6,7 +6,7 @@ Read by Codex and other agents as `AGENTS.md` and by Claude Code through `CLAUDE
 
 Parfocal (`parfocal.eu`) is a multi-tenant cloud platform where researchers evaluate AI results on whole slides, doctors review them and experts annotate slides to prepare training data ([ADR 0053](docs/adr/0053-ai-results-review-direction.md), the AI results review direction). React with TypeScript in `apps/web`, `apps/edge` and `packages/*`, Python in `apps/api` and `workers/*`, OpenTofu in `infra/tofu`. The [root README](README.md) has the commands. The build follows `docs/BACKLOG.md` through milestones M0 to M6. It is also the practical part of the owner's master's thesis, whose material lives only in the private repository `fedasevich/parfocal-thesis`.
 
-The design source is the approved prototype pair and the frozen mock in `docs/design/`. The archived POC is reference only ([docs/project/poc-reference.md](docs/project/poc-reference.md)). Read it for ideas and tuned constants, write fresh code, never modify it and never copy whole modules.
+The design source is the React app in `apps/web` and its Storybook in `packages/ui` ([ADR 0129](docs/adr/0129-the-prototype-moves-into-react-as-the-design-source.md)). The prototype artifacts and the frozen mock in `docs/design/` are history. The archived POC is reference only ([docs/project/poc-reference.md](docs/project/poc-reference.md)). Read it for ideas and tuned constants, write fresh code, never modify it and never copy whole modules.
 
 ## Memory lives in docs/
 
