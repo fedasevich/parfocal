@@ -13,6 +13,7 @@ import {
 import { type AnnotateTask, taskClassesOf } from "../annotations/annotate-task.ts";
 import { ArrowLayer } from "../annotations/arrow-layer.tsx";
 import { AutoLayer } from "../annotations/auto-layer.tsx";
+import { BrushLayer } from "../annotations/brush-layer.tsx";
 import { useClassKeys } from "../annotations/class-keys.ts";
 import { maxClassKeys } from "../annotations/classes.ts";
 import {
@@ -576,7 +577,7 @@ function OpenedSlide({
         data-coverage-seen={coverage?.share.seen}
         data-coverage-pending={coverage?.pending}
         data-coverage-basis={coverage?.share.basis}
-        className="relative size-full min-h-0 bg-chrome data-[tool=polygon]:**:cursor-crosshair! data-[tool=freehand]:**:cursor-crosshair! data-[tool=rectangle]:**:cursor-crosshair! data-[tool=ellipse]:**:cursor-crosshair! data-[tool=marker]:**:cursor-crosshair! data-[tool=arrow]:**:cursor-crosshair! data-[tool=text]:**:cursor-text! data-[tool=ruler]:**:cursor-crosshair! data-[tool=comment]:**:cursor-crosshair! data-[tool=smart]:**:cursor-crosshair! data-[tool=auto]:**:cursor-crosshair!"
+        className="relative size-full min-h-0 bg-chrome data-[tool=polygon]:**:cursor-crosshair! data-[tool=freehand]:**:cursor-crosshair! data-[tool=brush]:**:cursor-crosshair! data-[tool=rectangle]:**:cursor-crosshair! data-[tool=ellipse]:**:cursor-crosshair! data-[tool=marker]:**:cursor-crosshair! data-[tool=arrow]:**:cursor-crosshair! data-[tool=text]:**:cursor-text! data-[tool=ruler]:**:cursor-crosshair! data-[tool=comment]:**:cursor-crosshair! data-[tool=smart]:**:cursor-crosshair! data-[tool=auto]:**:cursor-crosshair!"
       >
         {opened && hostNode ? <SlideChecker engine={opened.engine} stage={hostNode} /> : null}
         <div ref={hostRef} data-testid="slide-host" className="absolute inset-0" />
@@ -611,6 +612,15 @@ function OpenedSlide({
               stage={hostNode}
               active={tool === "freehand"}
               onClose={closeShape}
+            />
+            <BrushLayer
+              engine={session.engine}
+              stage={hostNode}
+              active={tool === "brush"}
+              document={annotations}
+              classKey={activeClass}
+              colour={colourOf(activeClass)}
+              onApply={saved.apply}
             />
             <DragLayer
               engine={session.engine}

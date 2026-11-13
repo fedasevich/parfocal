@@ -33,6 +33,7 @@
     "@tanstack/react-virtual": "3.14.25",
     "@uppy/aws-s3": "6.3.0",
     "@uppy/core": "6.3.0",
+    "clipper2-ts": "2.0.1-18",
     "react": "19.3.1",
     "react-dom": "19.3.1",
     "zod": "4.6.7",
