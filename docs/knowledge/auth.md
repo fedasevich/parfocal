@@ -36,6 +36,19 @@ The invitation tests sign the test user in, make it a platform operator for one 
 
 The API tests in `apps/api/tests/test_auth.py` use a fake identity provider behind `httpx2.MockTransport`. It signs real RS256 ID tokens, checks PKCE and rotates refresh tokens, so the client's verification runs without Zitadel.
 
+## The identity provider config is a module with a scratch run
+
+`infra/tofu/modules/zitadel-identity` holds the project, one confidential OIDC app per environment, the organisation's login, password and lockout policies and optional test users. It takes an organisation id and has no provider block, so a root calls it once per organisation. The values and their reasons are in the three IAM-001 (identity provider deployment and configuration) ADRs on the module, the separate organisations and the sign-in factors.
+
+`bash infra/tofu/idp-scratch/run.sh` proves the module on an empty Zitadel. It needs Docker and OpenTofu and no credential, takes about two minutes, and removes its containers and local state when it ends. It applies, requires an empty second plan, reads the result back with `check.py`, destroys, and does the same once more. The `idp` workflow runs it on every change to the module or the scratch root.
+
+- Every Zitadel resource in the module carries `org_id`. Without it each plan wants a replacement, which would rotate the client secrets.
+- The test user depends on the password policy. Created before it, Zitadel checks the password against the instance default and refuses one without a symbol. The scratch run uses a lowercase hex password so a wrong order fails every time.
+- A test user's `initial_password` is write-only and never reaches the state. Changing it later means replacing the user.
+- For a bogus authorization code, Zitadel's token endpoint answers `invalid_request` when the client secret is right and `invalid_client` when it is wrong. `check.py` uses that to prove a secret without a browser.
+- The self-hosted image needs `ZITADEL_DEFAULTINSTANCE_FEATURES_LOGINV2_REQUIRED=false` to run without the separate login container.
+- Moving the live apps into the module needs `moved` blocks. Deleting `zitadel.tf` without them destroys the production app.
+
 ## Row-level security skips rows silently
 
 An `UPDATE` that row-level security filters out changes nothing and raises nothing, so a route can answer 200 while nothing was written. Workspace settings that members may change belong in a tenant-owned table such as `session_policies`, never in `tenants`, which only the platform scope writes. Tests should read a change back. Source: IAM-009 log entry.

@@ -1,0 +1,45 @@
+name: parfocal-idp-scratch
+
+services:
+  postgres:
+    image: postgres:17.10-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_HOST_AUTH_METHOD: trust
+      POSTGRES_DB: zitadel
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d zitadel"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
+  zitadel:
+    image: ghcr.io/zitadel/zitadel:v4.20.3
+    user: "0"
+    command: start-from-init --masterkey "ScratchMasterkeyOf32CharactersXX" --tlsMode disabled
+    environment:
+      ZITADEL_PORT: 8080
+      ZITADEL_EXTERNALDOMAIN: localhost
+      ZITADEL_EXTERNALPORT: 8089
+      ZITADEL_EXTERNALSECURE: false
+      ZITADEL_TLS_ENABLED: false
+      ZITADEL_DATABASE_POSTGRES_DSN: postgresql://postgres@postgres:5432/zitadel?sslmode=disable
+      ZITADEL_DEFAULTINSTANCE_FEATURES_LOGINV2_REQUIRED: false
+      ZITADEL_FIRSTINSTANCE_ORG_HUMAN_PASSWORDCHANGEREQUIRED: false
+      ZITADEL_FIRSTINSTANCE_ORG_MACHINE_MACHINE_USERNAME: scratch-tofu
+      ZITADEL_FIRSTINSTANCE_ORG_MACHINE_MACHINE_NAME: Scratch OpenTofu
+      ZITADEL_FIRSTINSTANCE_ORG_MACHINE_PAT_EXPIRATIONDATE: "2099-01-01T00:00:00Z"
+      ZITADEL_FIRSTINSTANCE_PATPATH: /zitadel/bootstrap/admin.pat
+    ports:
+      - "127.0.0.1:8089:8080"
+    volumes:
+      - ./bootstrap:/zitadel/bootstrap:rw
+    healthcheck:
+      test: ["CMD", "/app/zitadel", "ready"]
+      interval: 5s
+      timeout: 30s
+      retries: 36
+      start_period: 10s
+    depends_on:
+      postgres:
+        condition: service_healthy
