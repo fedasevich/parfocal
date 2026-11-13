@@ -2358,7 +2358,7 @@ The case view becomes the slide view ([ADR 0053](adr/0053-ai-results-review-dire
   Done when tests cover the setting and initials mode.
   Size: S.
 
-- [ ] CASE-011 · Case header details
+- [x] CASE-011 · Case header details
   Project, case, specimen, blocks, the task and its researcher, and in clinical projects the clinical note, in the slide picker's details (SHELL-003).
   Done when component tests cover each field and missing data.
   Size: S.
@@ -2460,7 +2460,7 @@ The case view becomes the slide view ([ADR 0053](adr/0053-ai-results-review-dire
   Done when tests confirm a new key press cancels the flight at its current position.
   Size: M.
 
-- [ ] NAV-012 · Zoom to selection
+- [x] NAV-012 · Zoom to selection
   ⇧F zooms to the selected shape or area. Shift+1 to Shift+4 stay the display presets, as the owner kept on 2026-11-04, and people can rebind it (CMD-006).
   Done when a test confirms the selection is fitted with margin.
   Size: S.
