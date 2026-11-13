@@ -1,0 +1,2239 @@
+# Changelog
+
+Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
+
+## v0.1.0 (2026-11-13)
+
+### Features
+
+- FOUND-017: Enforce Conventional Commits and cut releases with git-cliff
+- FOUND-010: Add typed settings and APP_ENV client selection for the API and web app
+- FOUND-012: Return RFC 9457 problem details and map them to typed client errors
+- FOUND-008: Generate the typed API client from the served OpenAPI schema
+- FOUND-013: Add the Alembic baseline, row-level security helpers and a local Postgres stack
+- STACK-028,IAM-002,IAM-003,IAM-004: Add tenants, tenant isolation and Zitadel login
+- IAM-005: Add users, memberships and workspace switching
+- IAM-006: Add roles and the permission matrix from the UX kit
+- SEC-003: Add the hash-chained audit log with erasable pseudonyms
+- SEC-001: Classify every column and generate the data map
+- IAM-011: Add service accounts with scoped, revocable API tokens
+- IAM-007: Add invitations bound to a verified email
+- IAM-009: Add idle lock, session list and per-workspace session limits
+- IAM-018: Add signing rights, supervisors and signatures on file
+- STACK-037: Decide envelope encryption with tenant data keys
+- SEC-004: Encrypt patient identifiers with blind indexes for search
+- STACK-040,CASES-000,CASES-001: Add the case data model with FHIR R4 at the edge
+- CASES-004: Add accession number templates and collision-free allocation
+- CASES-012: Add the case state machine with audited cancel and restore
+- CASES-013: Add the case creation API with drafts and idempotency keys
+- CASES-003: Add folders by service with people, counts and case filing
+- STACK-032: Decide observability and add the PHI scrubber
+- IAM-016: Narrow folder-scoped permissions to each person's folders
+- IAM-017: Open one case outside the folders with a written reason
+- CASES-011: Add case routing by folder, specimen and load, STAT first
+- IAM-015: Add availability status with a back-up for away members
+- FOUND-020: Add a live task board over the backlog
+- FOUND-020: Add a live task board over the backlog
+- IAM-022: Replace the hospital roles with researcher, reviewer and admin
+- ADAPT-004: Put cases and slides in projects
+- ADAPT-011: Keep patients inside their clinical project
+- PROJ-001: Add the project API with numbers, owners and archiving
+- PROJ-003: Apply project roles to cases and keep workspace routes to members
+- ADAPT-010: Open clinical projects with a reason instead of single cases
+- PROJ-004: Add class taxonomies with a colour check and remembered mappings
+- FOUND-011: Add JSON logs with request context and PHI redaction
+- GUIDE-006: Add versioned opinion forms per project
+- SEC-024: Add audit queries and a signed export
+- NOTIF-001: Route notifications by preference with an email outbox
+- INGEST-003: Add the durable job engine and the ingest workflow skeleton
+- INGEST-004: Identify slide formats by content with a fixture corpus test
+- INGEST-006: Validate slide pyramids and record the level table
+- INGEST-010: Render slide thumbnails and overviews with golden colour checks
+- INGEST-011: Extract slide labels and macros
+- INGEST-012: Build a tissue mask checked on CAMELYON16
+- ANN-020: Add the annotation persistence API with versions and history
+- RSET-001: Add immutable result sets with classes, regions and chunk rows
+- OBJ-001: Write, parse and allocate object IDs and paths
+- TASK-001: Add review tasks with splits, scopes and reviewer access to task slides
+- RSET-007: Add the reviewed layer with edits, added objects and a comparison
+- OBJ-002: Keep object IDs across result sets by overlap and distance
+- RSET-003: Read GeoJSON, QuPath exports, CSV, masks and heatmaps into one object form
+- INGEST-005: Refuse truncated slides and damaged archives by structure
+- TASK-002: Derive review states and store submit, reopen and sign-off moves
+- GUIDE-001: Add verdicts with reasons, the wrong class retype and the sign-off lock
+- TASK-003: Pick task scopes and count progress with a shared random sample
+- ADJ-001: Queue objects where reviewers differ or reject the AI and block sign-off
+- WL-001: Add the My work queries for my tasks, tasks I assigned and all slides
+- AINUC-003: Encode and check cell chunks with required probabilities for runs
+- CASES-006: Import cases, patients and slide manifests from CSV with a dry run
+- ADJ-006: Decide queued disagreements and count only undecided ones as open
+- EVAL-001: Compute evaluation metrics from verdicts, decisions and layers
+- GUIDE-009: Save opinion answers as drafts on the pinned form version
+- EVAL-006: Serve a task's evaluation metrics from its verdicts, layers and opinions
+- RSET-002: Publish the Parfocal results schema with a validator that names lines
+- RSET-008: Export reviewed layers and the consensus as GeoJSON and Parfocal JSON
+- HOME-011: Let admins post announcements that every member lists
+- HOME-001: Serve the home blocks from one aggregate endpoint
+- REVIEW-003: Stage a sentinel node from its areas, measurements and cell counts
+- SEC-025: Refuse cookie writes that do not come from the app origin
+- SEC-012: Limit requests per person and per workspace with 429 and Retry-After
+- SEC-006: Purge expired records per workspace policy with legal holds and an audit anchor
+- SEC-007: Export a person's or a patient's data and erase them as the owner chose
+- CASES-020: Give the next and previous slide in the list a slide was opened from
+- NOTIF-006: Give every notification kind a target and a template, resolved per recipient
+- NOTIF-004: Render every email from the reviewed template set with no patient data
+- NOTIF-005: Hold emails in quiet hours and batch them into hourly or daily digests
+- MLEVAL-002: Score nucleus outlines geometrically and match the POC scorer exactly
+- MLEVAL-001: Register the evaluation datasets and load TNBC and NuInsSeg from verified archives
+- MLEVAL-004: Evaluate typing and calibration and reproduce doc 29 for HoVer-NeXt
+- CASES-009: Search projects, cases, slides, object paths, people and patients
+- STACK-016,VIEW-003: Read TIFF and OME-Zarr behind one PixelSource interface
+- STACK-006,VIEW-001: Add the viewer engine API with camera state outside React
+- VIEW-002,VIEW-030: Add the Viv route with goldens and a memory teardown test
+- VIEW-004,VIEW-020: Add the decode worker pool, camera controller and POC camera tasks
+- VIEW-021,VIEW-042,VIEW-043,VIEW-045: Add camera bounds, feel profiles and input binding
+- VIEW-005,VIEW-006,VIEW-048: Add native JPEG validation and tissue fit
+- VIEW-026: Add the overlay layer system with polygon indices
+- VIEW-032,VIEW-033: Add idle sleep and hidden tab loading
+- VIEW-023,VIEW-024,VIEW-035: Add touch navigation, units and the interaction signal
+- VIEW-007,VIEW-034: Add finest level sampling and WebGL context recovery
+- VIEW-010,VIEW-011,VIEW-012: Add JPEG 2000 workers and OME channel pages
+- IAM-024: Turn admin into a right of a researcher
+- STACK-039: Spike resumable S3 multipart uploads with Uppy
+- STACK-039: Count storage requests per upload phase
+- GUIDE-012: Order each reviewer's regions and cells least sure first
+- NOTIF-007: Add the inbox API with read state and mutes
+- TASK-004: Blind reviewers until they submit and keep a first read without the AI
+- EVAL-007: Add study templates built from report blocks
+- INGEST-001: Add the upload API with presigned parts
+- AIP-008: Add model run jobs with scope, progress and controls
+- INGEST-017: Publish ingested slides from storage with a polled upload status
+- SEC-009: Serve label and macro images only to permitted roles
+- RSET-004: Pair result files with slides and import them on publish
+- AIP-013: Store versioned result chunks in object storage
+- RSET-011: Import cells into chunks and inherit their numbers
+- RSET-012: Stream large result files through the import in bounded memory
+- DS-000: Set up Tailwind v4, shadcn/ui on Base UI and Storybook
+- PROTO-000: Serve Orval's MSW handlers in the dev server behind a fake API flag
+- PROTO-001: Freeze the round 6 prototype and list every screen
+- PROTO-002: Add the React app shell over the fake data layer
+- PROTO-011: Refresh the kit tokens and add every kit component in rough form
+- PROTO-011: Add a story for every kit state and a Kit page per kit page
+- PROTO-003: Let the app shell take a workspace, router links and top bar slots
+- PROTO-003: Seed home, My work and the bell with a fake view per persona
+- PROTO-012: Add the flow map, the walkthrough and placeholder routes for every box
+- PROTO-003: Seed task details, result sets and notification recipients
+- PROTO-006: Seed the new review task and add its draft hooks
+- PROTO-006: Add the lockable row and fit Counts as and the token field to the mock
+- PROTO-003: Build the shell, home, My work, the bell and the palette
+- PROTO-007: Seed RT-14's review of A1 and add the guided review draft hooks
+- PROTO-013: Add the Team workload, nudge and reassign drafts over the scenario
+- PROTO-003: Add the as persona param, a folded sidebar and task states per slide
+- PROTO-006: Build the New review task flow page over fake data
+- PROTO-006: Show the new review task in the shell with the sidebar folded
+- PROTO-013: Fit the Team rows to the mock and add the Nudge and Reassign modals
+- PROTO-013: Build Team over fake data with its nine scenes
+- PROTO-007: Build guided review with the decision styles, comments, display and Slide done card
+- PROTO-006: Link every new review task scene from the index and the flow map
+- PROTO-012: Open each box and walkthrough step as its persona through the as param
+- PROTO-007: Add the next slide card, the cells gallery and comments on IDs with their links
+- PROTO-013: Open Team on the clicked task's row from Assigned by me
+- PROTO-006: Link Track it in Team to the sent task
+- PROTO-004: Seed the project page and the upload with draft hooks
+- PROTO-004: Let a flow step stay done but locked once an upload starts
+- PROTO-004: Build the project page, new project and case, and the upload flow page
+- PROTO-014: Seed the clinical reports of P03 with draft hooks for report, sign-out and co-sign
+- PROTO-014: Make the deposit table editable as in the mock and add the report document
+- PROTO-003: Point every New project control at the new project route
+- PROTO-014: Build the clinical report and co-sign flow pages with their scenes
+- PROTO-005: Seed model runs, the models and the jobs tray with draft hooks
+- PROTO-005: Add the jobs tray, job steps, the model picker and the job window to the kit
+- PROTO-005: Build Run a model, the jobs tray and the job window over fake data
+- PROTO-004: Open the jobs tray in the upload tray scene
+- PROTO-009: Seed the admin, sign-in and invite drafts over the scenario
+- PROTO-009: Add the sign-in, setup and admin kit pieces with their stories
+- PROTO-009: Build sign-in, sign-up, invite, setup and admin over fake data
+- PROTO-016: Build settings, shortcuts and developer mode over fake data
+- PROTO-015: Add the code block, sample tile, class map and summary list kit pieces with stories
+- PROTO-015: Build Connect your own model in Admin over fake data
+- PROTO-017: Build the issue states index over fake data
+- PROTO-018: Add the slide result stats and AI progress drafts for the full viewer
+- PROTO-018: Add the visualize kit pieces and result sets in the Display panel with stories
+- PROTO-018: Build the full viewer with Objects, Display and Visualize over fake data
+- PROTO-008: Seed the disagreement queue, sign-off and evaluation report with draft hooks
+- PROTO-008: Add queue, sign-off and evaluation report kit pieces with stories
+- PROTO-008: Build the queue, adjudicator view, sign-off and evaluation report screens
+- PROTO-019: Add the smart minimap, whole-slide peek and viewer tool pieces with stories
+- PROTO-019: Add the annotation layers and model tiers drafts with their seed
+- PROTO-019: Build the minimap, measuring, annotate, compare, focus and peek over fake data
+- FOUND-021: Add a lean agent workflow with board commands, a big-docs guard and a short guide
+- FOUND-021: Limit images per agent and compare screens with mock scenes by number
+- AIP-018: Fail a job for good after three claims whose workers died
+- GUIDE-016: Ask each opinion question in the first read, after the AI or in both
+- RSET-009: Confirm before deleting a result set that review work uses
+- EVAL-011: Preset the reader study and outline quality forms in the built-in templates
+- AINUC-004: Serve a result set's cell summary as stored and gzip-encoded
+- GUIDE-011: Take optional and several reasons on Disagree and reasons on Unsure
+- PROJ-002: Change privacy mode with admin rights and a reason, and audit patient reads
+- TILES-001: Sign capability tokens for slide bytes and close label pages at the edge
+- TASK-012: Let a review task check several kinds of object at once
+- MLEVAL-008: Record site validation reports with sensitivity and specificity and announce them
+- GUIDE-015: Store the raw answer, style and counted value of a decision
+- JOBS-001: Run the latest model version, open a result set per slide and estimate the wait
+- TILES-007: Log tile reads with ids only and audit one slide open per viewing session
+- SET-001: Store personal and workspace settings and resolve them with device ones
+- OBJ-003: Split and merge regions in a review and resolve aliases to the live objects
+- ONB-005: Seed a deletable sample project left out of workspace figures
+- GUIDE-013: Work out the review order of a cell scope in a background job
+- PROJ-009: Hold Can sign out per clinical project member and let the owner set it
+- CASES-024: Sort dropped files into cases and create the cases in one transaction
+- AITUM-003: Find sized tumor areas in the tumor map
+- AIP-011: Stream partial areas of a model run and record throughput per stage
+- COLLAB-001: Add realtime rooms with room tokens, fan-out and removal
+- RSET-005: Check result files and wait for the uploader's choices before import
+- TASK-007: Nudge, reassign and add reviewers with the first reviewer's work kept
+- PROTO-007: Open slides, progress and More popovers from the review top bar
+- PROTO-011: Add DatePicker, quiet token icons, Keycap hints, padded stories
+- PROTO-006: Pick the due date with the kit DatePicker
+- PROTO-011: Extract four overlays into the kit and add state stories
+- PROTO-011: Move the remaining overlays into the kit and fix the top bar axe name
+- STACK-010: Decide tables and virtualisation with a 10,000 row J/K spike
+- STACK-024: Deploy the rooms to workers.dev and measure events reaching two browsers
+- STACK-025: Measure tile latency through the Worker gateway with a per-range cache
+- FOUND-019: Show API errors as kit toasts and inline field errors
+- STACK-014: Add a hotkey registry with chords and hold versus tap
+- IAM-021: Lock idle sessions and unlock to the same slide camera
+- IAM-008: Switch workspace from the top bar and reload the worklist in its scope
+- IAM-014: Wire people and roles to member activity and invite resend
+- IAM-008: Toast failed mutations so a refused workspace switch says why
+- STACK-027: Measure pre-warmed GPU embeddings beside a whole-slide job on Modal
+- FOUND-023: Show task sizes, quick wins and unblock counts on the board
+- IAM-014: Use the workspace switcher in the admin top bar
+- EVAL-002: Add axis titles, sort reasons by size and test the seeded report with axe
+- SHELL-001: Split the viewer engine chunk and test deep links and the first-page budget
+- GUIDE-015: Wire decision styles, Counts as and the Methods sentence into the screens
+- INGEST-002: Add the upload engine and drawer with pause, retry and resume after reload
+- INGEST-028: Run the upload spike against the R2 dev bucket
+- COLLAB-002: Add threads anchored to objects, ROIs, points and shapes
+- DS-022: Small modal starts on the first field and runs the primary on Enter
+- SKEL-006: Open a slide in Viv through signed tile access
+- SKEL-006: Add the live slide route with signed tile access
+- DS-021: Add the shared undo toast with a 4 second window
+- INGEST-007: Write a sidecar tile index in the ingest index step
+- INGEST-007: Open TIFF directories from the sidecar without walking the chain
+- DS-019: Test the ring arcs and stacked parts, expose bar value text, cover every state
+- DS-020: Token field picks by keyboard and opens its list only on a deliberate act
+- TEST-006: Add the performance budget suite with one budget file
+- DS-008: Tag stories for every type and tone in both themes, and tests for tag height and tone
+- CASE-001: Load the case with the slide and open it fitted from My work and the project page
+- INGEST-027: Store a tissue box that ignores specks with the mask
+- CMD-001: Add scoped action registry on the hotkey decoder and move the whole-slide key onto it
+- SEC-011: Add security headers and a nonce CSP at the edge
+- VIEW-027: Draw outlines with casings and proposals as dashes on white
+- AITUM-002: Add heatmap layer with colormaps, threshold and source
+- WL-017: Add the filter popover chips to the All slides tab, kept in the URL
+- AIP-003: Map Best, Good and Fast to an exact model per task and workspace
+- NAV-001: Add the folding magnification bar to the live slide
+- ANN-001: Add the annotation document model with model runs and promotion
+- MEAS-001: Add the ruler tool to the live slide
+- INGEST-008: Add an absence map for sparse OME-Zarr and skip absent chunks in the viewer
+- COLLAB-005: Add the Comments tab with open and resolved threads, go to and new comment
+- CMP-002: Link compare panes with a kept offset and register Shift+L in the compare scope
+- INGEST-009: Check the browser reader against server reader tiles and for seams
+- GUIDE-018: Change Counts as on an existing task from a task settings drawer
+- VIEW-056: Add guided input trace recorder at /spikes/input-traces
+- INGEST-013: Write derived overview levels as a sidecar where a vendor pyramid skips levels
+- CASE-002: Slides popover with Q and E stepping, per-slide camera and pinned strip
+- HOME-009: Post and end announcements from Home
+- TILES-003: Keep signed slide bytes on the app origin and prove no preflight in Chrome
+- TILES-003: Name the sidecar tile index task in full in the result
+- SET-011: Workspace settings console in the admin page
+- SEC-027: Limit login, upload and tile requests per client address at the edge
+- INGEST-018: Classify ingest failures, show retry or support, add upload refused notification
+- REVIEW-017: Tumor share result chip for cellularity cases
+- CMD-002: Fuzzy Cmd+K palette over actions, places and settings with developer-mode lab actions
+- COLLAB-006: Mention colleagues in thread messages and notify them
+- COLLAB-006: Seed a colleague for the mention list in the isolation test
+- NOTIF-002: Bell See all, mention opens its thread, panel tests
+- PROJ-005: Analysis templates decide the viewer parts and the staging cards
+- TASK-006: Invite new reviewers to a task and land them on the first slide
+- PROJ-007: New project and New case forms wired to the API with privacy-aware patient fields
+- I18N-002: Add one locale-aware formatting module
+- I18N-003: Make emails and the report template locale-ready
+- VIEW-022: Add keyboard navigation with eased held-arrow pan
+- CASE-003: Keep each slide's view for the open case and forget it when another case opens
+- DS-006: Finish buttons and icon buttons
+- DS-010: Cover every tool rail button state with stories and tests
+- DS-009: Show the person's own binding on keycaps
+- VIEW-047: Add view history with back and forward keys
+- CASE-011: Show case details in the slide picker
+- DS-016: Add motion tokens, presenting mode and a global reduced motion cut
+- DS-027: Make Go to focus its target and describe the disabled primary
+- DS-013: Finish the gallery tile
+- CASE-010: Add the patient banner to clinical case screens
+- HOME-010: Add role-based default home with a settings override
+- DS-014: Add person stories with avatar colours from the profile
+- DS-030: Read rail badges and the note key from the key registry
+- SHELL-008: Add focus mode entry from annotate and E2E for enter and exit
+- WL-006: Drive the worklist tabs by keyboard
+- NAV-003: Dim the slide layer only with the brightness dial
+- NAV-009: Offer the minimap as when useful, always or never
+- DS-031: Move fixed durations onto the motion tokens
+- REVIEW-006: Add cells to check selection
+- LAB-005: Add the typed window.__parfocal debug handle
+- REVIEW-001: Route the five review rail tools and their keys
+- NAV-012: Add zoom to selection with a screen margin
+- DS-007: Finish segmented control, toggle, slider, stepper and radio rows
+- REVIEW-011: Add AI wording modes over calibrated probabilities
+- LAB-004: Add the pan sweep benchmark and its CSV export
+- NAV-005: Place edge cues from the view geometry
+- DS-017: Add comfortable and compact density modes
+- REVIEW-014: Add model warnings from typer metadata and slide statistics
+- SHELL-012: Wire the account menu to availability, the shell store and log out
+- ANN-011: Add classes with keys 1 to 9 that match the swatch
+- DS-015: Hold space with skeletons while findings stream in
+- DS-018: Add surface levels, zone spacing by density and a three zone modal test
+- DS-024: Add form fields with labels, hints and inline errors
+- DS-025: Cover page, side panel and quiet tabs with counts and keyboard tests
+- DS-026: Add sortable columns, row picking, the empty row and cell kinds to the table
+- NAV-004: Add the area list with go to area, brackets and visits at 10x
+- REVIEW-023: Show model warnings in the inspector block
+- CMD-007: Fire every shortcut on the person's own keys
+- WL-005: Continue from To review at the next open object
+- CASE-004: Show the pre-read ready state with open and settled staging
+- REVIEW-021: Pin a comment thread where the slide is clicked
+- DS-033: Put page gaps and list rows on density variables
+- REVIEW-022: Word the AI call on the inspector and gallery tile through the wording module
+- REVIEW-012: Add fade, mark unsure and bands outline modes
+- WL-019: Virtualise the All slides table and test it with 10,000 rows
+- SHELL-007: Add view transitions between My work, the slide and focus review
+- DS-005: Move theme switching onto the device settings layer
+- CASE-005: Show the still running state with a moving reach line and streaming staging areas
+- DS-003: Self-host IBM Plex and keep every font size on the type scale
+- DS-004: Name every icon and hold icons to the size scale
+- DS-023: Finish the flow page with a shared stepper that remembers visited steps
+- CASE-013: Show the small cluster state with its size and cell count steps
+- NAV-010: Open the whole-slide peek from the ring and go where it is clicked
+- CASE-006: Show the no tumor flagged state with a systematic 10x scan and coverage bar
+- ADMIN-001: Refuse the admin page to reviewers and researchers without admin rights
+- CASE-014: Add the inspector panel with four counted tabs and the template line
+- JOBS-003: Test the jobs tray states and open an upload and a run from it
+- VIEW-049: Deliver the tissue box to the viewer with the slide
+- ANN-004: Add the select tool with marquee, move and reshape
+- ONB-001: Make the sign-in screens work against the fake API
+- ADJ-007: Decide queued objects in the task's style, leave them open and settle redrawn ones
+- SKEL-012: Open the slide with the format ingest identified
+- ONB-002: Make sign-up and email confirmation work against the fake API
+- GUIDE-005: Share decisions between guided and full viewer
+- SKEL-007: Draw a polygon in the live viewer and store it in PostGIS
+- VIEW-015: Open the Leica SCN main pyramid the header names
+- OBJ-005: Place ID labels without overlap, switch them in Display and copy full IDs
+- JOBS-006: Hide and show Parfocal models with Undo
+- TILES-005: Coalesce inner-chunk ranges when reading sharded OME-Zarr
+- AINUC-006: Fit typer temperatures and calibrate the least sure first order
+- INGEST-019: Edit slide stain, block, level and label and order slides within a case
+- CASE-017: Remember a slide's camera across visits
+- CASE-017: Remember a slide's camera across visits
+- EVAL-003: Add evaluation exports with the evaluation checksum
+- DS-036: Preload the two main Plex Sans files
+- INGEST-030: Store the OME-TIFF reader as tifffile
+- INGEST-021: Add the live upload wizard with dropped folders, pairing and jobs tray rows
+- DS-038: Add flow page density gap token
+- DS-035: Test the warn tag contrast on every surface in both themes
+- VIEW-050: Accept polygons with holes in overlay batches
+- SEC-029: Add a security contact to each workspace
+- DS-028: Test decision button keys against the key registry and add four-style stories
+- NAV-014: Step through areas with ] and [ in the engine viewer
+- INGEST-021: Place wizard uploads in their case and link results to slides
+- WL-013: Hide names behind the initials only toggle
+- WL-013: Mask emails and names inside text when hiding names
+- VIEW-051: Triangulate large polygon batches in a worker
+- TASK-011: Add display defaults, locks and presets
+- HOME-008: Add the search page with scopes, grouped results and the palette all results row
+- HOME-008: Use the segmented control for scopes and re-baseline the first page budget
+- REVIEW-005: Add number line with class bars and checked, sure, unsure total
+- DS-037: Keep flow screens' step and draft with useFlowSteps
+- LAB-003: Add sample slide catalogue and labelled synthetic nuclei and fields
+- NAV-006: Add the smart minimap state machine and the full viewer minimap
+- SKEL-004: Add a local bucket helper for the dev stack
+- SKEL-004: Upload an SVS and its GeoJSON into a project end to end
+- CMD-006: Save rebound shortcuts and apply them with set-aware clash checks
+- CMD-006: Test that rebinding J shows on Skip for now
+- GUIDE-002: Finish guided review with tested auto-advance, dot glyphs and mouse and keyboard reviews
+- ADJ-008: Send queued objects to an adjudicator who sees reviewers as A and B
+- VIEW-025: Track 10x coverage per person and slide
+- SHELL-005: Resizable, hideable inspector panel
+- EVAL-008: Render the report page and PDF from template blocks
+- CASE-009: Add the viewed ring in the slide top bar
+- CASE-016: Scan the slide systematically over its stored tissue mask
+- DS-034: Move app tables onto the shared table
+- SEC-010: Scrub web telemetry and scan E2E and API output for seeded patient names
+- VIEW-044: Prefetch tiles where a straight pan is heading
+- HOME-003: Store the resume state and prefer it on Home when newer
+- REVIEW-004: Add staging size scale with zones, area dots, numbered point and cluster count bar
+- NAV-015: Serve area bounds from result regions and show the area list on the live route
+- VIZ-001: Show and hide result sets in the Display panel
+- EVAL-004: Compare two evaluations side by side in the report
+- EVAL-004: Pick the task to compare with from the project's other tasks
+- EVAL-005: Add revocable read-only report links for co-authors
+- GUIDE-007: Save Slide done card answers as a draft shared by guided review and the Opinion tab
+- ANN-014: Add the Esc ladder
+- REVIEW-025: Keep posted threads in the api-client fake
+- CMD-003: Open Shortcuts in Settings with the question mark key
+- MEAS-002: Measure area and perimeter of closed shapes
+- MEAS-003: Add the measurement list
+- RSET-010: Add the What files work help drawer with templates, schema and error codes
+- ANN-005: Snap polygon vertices with Shift and finish a polygon on tool switch
+- ANN-006: Add the freehand tool with coalesced events and simplification
+- REVIEW-027: Show outline modes in the review viewer
+- ADJ-002: Decide queued objects in the task's decision style
+- ANN-007: Add rectangle and ellipse tools
+- ANN-008: Add count marker tool with per-class counts
+- GUIDE-003: Add disagree reasons with classes and redraw the outline from guided review
+- GUIDE-003: Save redrawn outlines in slide coordinates and keep them in the fake API
+- ANN-002: Show the annotate rail with five families on the live stage
+- ANN-013: Add undo and redo for annotation edits
+- EVAL-012: Share a read-only report link from the report page
+- TASK-013: Add the annotate task kind
+- AISEG-012: Add scale presets mapped to model microns per pixel
+- AISEG-011: Trace sub-pixel contours of segmentation masks and logit fields
+- ANN-017: Add proposals lifecycle with accept and discard from any tool
+- ANN-021: Add autosave queue with retry, save state and leave-page guard
+- AINUC-002: Add HoVer-NeXt typer runner with per-slide tissue default
+- COLLAB-003: Add the comment tool and pins on the live slide stage
+- ANN-030: Add the shared layer API for annotate tasks
+- PROTO-020: Draw the annotate task screens over fake data
+- COLLAB-007: Show who else is viewing a slide
+- COLLAB-007: Show who is viewing each slide on the project page
+- COLLAB-007: Show who else is viewing on the live slide view
+- COLLAB-004: Add the thread popover opened from a pin
+- AINUC-008: Flag cells that may not be a nucleus and offer the X action in the gallery
+- COLLAB-012: Warn about open threads at submit and sign-off without blocking
+- SHELL-004: Add Review and Annotate workspaces on the live slide
+- JOBS-004: Cancel every unfinished slide of a run and test the job window states
+- ANN-022: Add version checks on save and a keep mine or keep theirs conflict path
+- ANN-028: Show model, author and history in the origin card
+- ANN-009: Add arrow and text tools with undo
+- TASK-015: Add check options and presets to annotate tasks
+- REVIEW-026: Add the confidence wording row and let guided review follow it
+- FOUND-030: Add bundle analyzer report with CI artifact
+- ANN-026: Clear all and delete shapes as one undoable step with comment pin cleanup
+- ANN-024: Stream slide exports as GeoJSON, FlatGeobuf and Parfocal JSON with runs included
+- ANN-024: Refuse to export a run before its import finishes
+- ANN-029: Give the slide stage one Esc owner that peels one layer per press
+- REVIEW-024: Show model warnings on the full viewer
+- ANN-025: Export reviewed shapes as a model class against final class CSV
+- ANN-034: Snap on Shift without moving and keep typed text on blur or tool switch
+- PROTO-020: Fold the staging card to one line on short screens
+- ANN-035: Add Figma style point editing, multi-shape moves and Space pan
+- AIP-009: Add resumable whole-slide tiling with one chunk per tile
+- AIP-006: Add the GPU worker pool with tested limits per model family
+- AINUC-005: Page nucleus chunks in the client under a vertex budget
+- AISEG-015: Add browser patch reader in microns
+- HOME-002: Test every launchpad home block and the exact-spot Continue
+- ADJ-004: Sign off as a soft lock with stored evaluation versions
+- INGEST-025: Import slides from a link through a checked server-side fetch
+- AISEG-001: Export PathoSAM to ONNX and check the graphs against PyTorch
+- TASK-014: Check and sign off annotate slides with a locked shared layer
+- AINUC-001: Run PathoSAM AIS over stitched 512 px windows and trace outlines per instance
+- AINUC-001: Record the detector runner's reference match and seconds per mm²
+- ONB-007: Serve sample slides from one shared original under the tile token
+- ANN-003: Add the context bar with tool hints, class swatches and proposal accept
+- AISEG-002: Pick PathoSAM graphs per execution provider and bench them in Chrome
+- AISEG-003: Cache PathoSAM graphs in Cache Storage with header check and ETag revalidation
+- REPORT-024: Add the clinical report model and API
+- ANN-023: Import GeoJSON and Parfocal JSON onto an annotate task's shared layer
+- ANN-023: Round-trip annotation documents through GeoJSON and own JSON into an undoable group
+- ANN-023: Refuse to merge a file that holds no shapes
+- AISEG-004: Add the PathoSAM inference worker with sequential sessions
+- PROJ-008: Keep review defaults and matching thresholds on the project
+- PROJ-008: Save project settings and set who can sign out
+- AISEG-005: Add the smart select tool with click, extend, negative, box and refinement prompts
+- AISEG-005: Add the smart select accuracy smoke test, ADR and result
+- AISEG-007: Prewarm the view embedding after 350 ms of camera stillness
+- REPORT-025: Add the mapping from the case-keyed clinical report API to the flow page values
+- REPORT-025: Wire the clinical report flow page to the case-keyed API
+- ADJ-003: Build the adjudicator view in the task's style with reasons and a note
+- ANN-015: Add the Layers panel with groups, lock, colour, group by and a target layer
+- AISEG-006: Preview the outline under the pointer when the view embedding is cached
+- AISEG-006: Record the hover preview latency and the storage key
+- REPORT-008: Confirm sign-out with single sign-on or password and download the signed PDF
+- REPORT-008: Send the sign-out confirmation, download the signed PDF and fake both
+- AINUC-014: Type smart select accepts with the server typer, untyped when offline
+- AINUC-014: Read the latest document when the typer answers
+- GUIDE-004: Undo on the last object reopens the slide at that object
+- ADJ-005: List changes after sign-off and flag them in the report
+- ADJ-005: Flag changes after sign-off on the report page and add Sign v2
+- GUIDE-008: First-time coach in guided review, reopened from How guided review works
+- MLEVAL-003: Add interactive protocol harness reproducing POC doc 26 on TNBC
+- REPORT-019: Record what was sent for co-sign, list co-sign requests and withdraw a request
+- REPORT-019: Move co-sign, My work asks and withdraw to the case-keyed report API
+- ANN-033: Grab point handles from a wider ring than they are drawn
+- CMD-005: Add QuPath-like and Figma-like tool key presets
+- CMP-007: Open a chosen slide side by side and test per-side layers
+- INGEST-031: Show a duplicate in a link import as skipped, not failed
+- CMD-004: Check key conflicts across presets and screens in the web tests
+- MEAS-005: Add the units setting for lengths and areas
+- DEV-006: Show the chosen device's controls on the slide
+- DEV-007: Map a footswitch key to the next cell
+- EXP-002: Add a PHI-free event taxonomy with a schema that rejects free text
+- SET-002: Open Settings with Cmd+comma, add the scope legend and window size tests
+- SET-008: Gate the bell by notification preferences and add STAT rows and sound
+- SET-009: Add the patient banner row and tests for the Privacy section
+- SET-010: Editable name, locked email, role and workspace, and signature preview in Account
+- ANN-032: Confirm, undo and check progress for AI objects on annotate slides
+- ANN-036: Save arrows, text notes and rulers
+- INGEST-020: Add a bulk import command for a folder of slides with a CSV manifest
+- LAB-001: Add the developer drawer controls, permission gate and Ctrl+Shift+D
+- AINUC-007: Store confidence bands per typer from calibration data
+- TEST-012: Cache reader fixtures on runners by group checksums
+- TEST-012: Fail browser reader specs on a missing required slide
+- ANN-027: Promote and prune run pieces with a bulk confirmation
+- CASES-017: Move a slide between cases of a project
+- VIZ-002: Draw objects by style, width, opacity, colour and cutoff with class keys
+- ANN-031: Put an annotate task slide on screen on the shared layer
+- MEAS-007: Apply length units to panels and report, load them at start
+- AISEG-010: Add the AIS region pass with a TNBC PQ gate and region budgets
+- VIZ-003: Add density and confidence maps and the stepped heatmap strength with goldens
+- REVIEW-010: Keep the AI call with each decision and store skips
+- ANN-040: Serve a slide's AI objects for an annotate task
+- EVAL-014: Export signed-off annotate slides as a QuPath GeoJSON dataset with a manifest
+- SET-014: Save the display name from Settings with an audit event
+- EVAL-013: Count how the experts changed the AI per slide and class
+- EVAL-013: Add the ai-changes report block
+- EVAL-013: Register the ai-changes permission and type the class snapshot
+- EVAL-016: Export an annotate task report with the ai-changes block
+- SET-013: Move the settings screen onto the layered settings
+- ANN-039: Accept arrows and notes in threads, reports, imports and slide exports
+- VIZ-004: Draw diff and agreement with dashed and double cues and goldens for each comparison
+- AILEARN-001: Capture reviewed decisions as training examples
+- NOTIF-008: Hold notification sounds while a slide is open
+- ANN-037: Pick, move and delete comment pins in the select tool
+- ANN-037: Drop an unused variable in the select tool
+- CMP-005: Add rotation to compare panes, linked and off for input devices
+- ONB-004: Make first-run setup carry its choices through
+- CMP-006: Propose a starting offset and rotation for compare panes from overview thumbnails
+- CMP-001: Add four-pane and stacked compare layouts with a four-viewer memory test
+- CMP-003: Show one shared cursor point on both compare panes with offset and rotation
+- CMP-004: Extract the pane swap rule and test the pane chip and inspector pickers
+- CMP-001: Merge the shared cursor and pane picker into the four-pane layouts
+- JOBS-005: Connect a lab model with a test call, class map and sealed token
+- DEV-011: Audit touch targets at 24 px on desktop and 44 px on tablet
+- CMP-006: Merge the compare layouts and keep the alignment on the right pane
+- ADMIN-007: Filter and export the signed audit log in Admin
+- CASES-016: Cover loose slides, filing one later and an upload with unmatched files
+- CASES-027: File or move a slide from the project page
+- DEV-005: Store dead zone and speed per input device
+- DEV-001: Map every kit device to semantic viewer and review intents
+- EXP-007: Let users opt out of usage analytics in Settings
+- INGEST-024: Show processing steps per slide in the live upload
+- EXP-011: Add the analytics policy per workspace and per person
+- AINUC-009: Group typed cells into areas where no tumor map exists
+- DEV-012: Drive the slide stage wheel and the review step keys through device intents
+- REVIEW-018: Find zones where the AI is unsure from the whole-slide cells
+- DEV-010: Add bottom sheet drag and swipe gestures
+- DEV-008: Lay out the viewer for tablets with a floating dock and a bottom sheet inspector
+- ONB-006: Tick the Home checklist from real actions and hide it in settings
+- NAV-007: Score minimap corners with named weights and hold the corner while panning
+- LAB-018: Drive the viewer from the developer drawer controls
+- REVIEW-008: Settle the tumor cell count when its range cannot cross 200
+- NAV-008: Fill the minimap with cell dots, travel route, header text and a draggable viewport
+- NAV-011: Fly to an area with a route line and let a key press cancel or skip the flight
+- REVIEW-016: Add the Tumor, Not tumor and Unsure call on an area
+- NAV-016: Feed every scene's minimap hot points and blocks and hold the corner while panning
+- REVIEW-028: Turn node staging on for tasks on a sentinel node project
+- VIEW-041: Show the loading hint, slow source note and checker while a slide loads
+- REVIEW-013: Add the track record by confidence band
+- REVIEW-029: Send the shown AI call with cell decisions
+- VIEW-058: Fade sharper tiles in and retry failed tiles from a grey placeholder
+- SHELL-003: Fill the slide top bar gaps and add keyboard access tests
+- REVIEW-007: Go through an unsure zone's cells as tiles in the findings panel
+- REVIEW-009: Add focus mode for one cell
+- REVIEW-015: Keep calibrated cell probabilities on every page of a paged result
+- CASE-007: Scan the tissue in a serpentine path
+- AISEG-017: Add the auto region tool with a worker for tile post-processing
+- REVIEW-019: Add the type bar beside the selected cell and arrow jumps in findings and focus
+- SHELL-006: Lay out the tools as a left rail or a bottom dock from the setting
+- VIEW-018: Show multichannel slides in the Viv route with worker channel reads
+- REVIEW-030: Read review cells through the paged reader
+- WL-016: Update My work and Home live when the worklist changes
+- WL-020: Announce worklist changes to the user rooms
+- REVIEW-031: Follow the camera and index unsure zones on paged results
+- EXP-006: Add task timing events and a KPI dashboard on seeded data
+- EXP-012: Start and stop the task timer in the review flows
+- PROJ-010: Delete a project behind its typed name and restore it
+- PILOT-007: Add in-app feedback with a screenshot blurred over slide and patient areas
+- PILOT-007: Blur slide rows, search hits and the resume line and record the data-phi rule
+- PROJ-006: Filter the project slides by search, result set, needs review and no results
+- OBJ-004: Resolve any part of an object path, merged IDs and bare IDs in context
+- EXP-005: Add in-app SEQ and SUS surveys
+- EXP-005: Load the survey card lazily and keep its texts out of the first page
+- ADMIN-003: Audit role changes, admin rights and resends in the fake and cover them in e2e
+- VIZ-009: Add the confidence map to the View group with its threshold and task lock
+- PROJ-011: Restore a deleted project from Admin and revoke its report links
+- VIZ-008: Draw objects on the live slide with the Display panel choices
+- SET-003: Finish the Display section with patient names, magnification label, brightness
+- TEST-011: Test the generated client against recorded API responses
+- SET-004: Drive side panel width, hide, panel while moving and slide strip from saved settings
+- ONB-010: Join or ask for a workspace and keep the setup profile
+- ADMIN-009: Name audit actors for admins and save two factors in Security
+- CASES-021: Add back targets to deep links and follow moved slides and merged objects
+- VIZ-006: Download the object table as CSV and show Preset only when a preset was used
+- ADMIN-002: Test the admin overview tiles, summaries and storage bar over seeded data
+- SET-005: Finish the AI and confidence settings section
+- AIP-015: Show model serving health and refuse runs on an offline worker
+- AIP-015: Drop an unused import
+- AILEARN-006: Add a held-out validation split keyed on slide ids
+- SET-007: Test the swap, reserved key and safety rule of the Shortcuts section
+- SET-006: Finish Navigation and devices with camera feel, overrides and a live preview
+- ADMIN-004: Archive and unarchive projects from the admin Projects section
+- ADMIN-004: Merge main and cover archive in the browser
+- GUIDE-017: Count a blind answer on a cell against the class in its chunk
+- ONB-003: Show a clear page for an invite link that does not work
+- VIZ-005: Add a draggable swipe line and a side by side view for two result sets
+- LAB-002: Add the performance HUD with fps, tiles, decode p95 and annotation counts
+- ADMIN-005: Send run cancel to the API after the undo window and cover models in the browser
+- TEST-013: Add job restart tests for ingest and pre-read runs
+- AIP-014: Meter GPU seconds per tenant, job and model with an admin usage report
+- HOME-012: Keep search text out of the page URL
+- CASES-002: Add case upload action and test case creation in both privacy modes
+- GUIDE-019: Add the guided check in Annotate
+- TASK-010: Reveal the AI after a recorded first read in guided review
+- VIZ-007: Keep the reviewer's display on the server with presets, Shift keys and Save
+- SHELL-010: Add the shell issue pages and the connection lost banner with retry
+- GUIDE-020: Follow the task's stored check scope and order in the guided check
+- TASK-016: Blind the mock result set routes and keep the AI hidden on a first read error
+- COLLAB-015: Start comment threads on any slide with the task optional
+- TASK-005: Start the new task stepper with the kind and add the annotate path
+- ONB-011: Answer workspace asks and set the join domain in Admin
+- COLLAB-018: Keep the result set on a taskless AI object anchor
+- AIP-001: Add write-once model artifact storage with checksummed manifests
+- TASK-017: Show a first read notice in the full viewer and paged screen
+- PILOT-001: Add guided tour, help dialog and first-run offer
+- PILOT-001: Keep the help request out of the first page
+- PILOT-001: Lazy-load the tour and keep every tour page non-modal
+- EVAL-010: Preview the PDF as Typst SVG pages from report, templates and new task
+- ANN-016: Add pure grouping rules by class, cluster radius, containment and provenance
+- JOBS-002: Open Run a model on the slides asked for from a slide or the upload's end
+- AIP-004: Test the model tier picker choices and behaviour of mock 11
+- SHELL-015: Show one connection banner and the shared issue pages everywhere
+- VIZ-010: Mount the engine object draws on the live slide and share the style constants
+- ANN-018: Index shapes in a grid so hover hit tests stay fast at 1M nuclei
+- SHELL-002: Move the shell store to Zustand and test each top bar and sidebar control
+- COLLAB-017: Add the blind first switch on annotate tasks
+- GUIDE-010: Add notes on decisions with quick reasons, mentions and Comments tab entries
+- DEV-002: Replay macOS and Windows trackpad traces into pan, pinch and negative point intents
+- TEST-010: Add Locust load scenarios for the API, tiles and realtime with a target guard
+- ADMIN-008: Add the reusable report editor with block, format and preset panels
+- ADMIN-008: Wire the template library and editor to the API
+- ADMIN-010: Wire the class lists, retention and session lock controls
+- TASK-009: Mark template-filled steps and publish the template opinion form first
+- EVAL-017: Page long PDF previews and cache compiled task reports
+- ADMIN-011: Wire or hide the last mock controls in Admin
+- TEST-014: Add osv-scanner dependency scan and ZAP baseline to CI
+- VIZ-012: Draw guided review and the full viewer through the Viv engine behind the still
+- SEC-015: Add severity SLAs, Trivy IaC scan and weekly vulnerability report
+- GUIDE-022: Notify mentions in decision notes and show others' notes in the Comments tab
+- EVAL-009: Arrange one report with the report editor and a per-task layout
+- TEST-009: Run axe once per route in every web E2E test and add keyboard flows
+- DEV-013: Wire two-finger click and Safari pinch listeners to the viewer
+- GUIDE-023: Save picked mentions as user tokens and show them as names
+- EVAL-018: Add the Compare with task picker to Arrange and offer templates to an admin
+- VIZ-011: Make order, zoom, move on and button place drive guided review
+- CMP-008: Keep an aligned compare offset per slide pair as a personal setting
+- COLLAB-019: Post object comments in guided review and the viewer to the threads API
+- COLLAB-021: Turn blind first off and on again on a running annotate task
+- COLLAB-020: Hide other people's slide threads from a blinded reviewer until they submit
+- VIZ-013: Draw real object outlines behind the still on any slide and keep the camera aligned
+- FOUND-037: Print tasks and ticks per milestone gate and epic with board.py counts
+- OPS-001: Split OpenTofu into one root per environment with a conftest policy check
+- IAM-001: Add the Zitadel identity module and a CI run that rebuilds it from nothing
+- OPS-002: Add deploy definitions for the edge Worker, Modal apps and Neon
+- OPS-002: Allow uploads from app.parfocal.eu to the parfocal-dev bucket
+- SEC-042: Require a Modal proxy token so the API answers only through the Worker
+
+### Fixes
+
+- FOUND-008: Deny the esbuild install script so CI installs pass
+- SEC-004: Check only plaintext that cannot appear in hex ciphertext
+- FOUND-013: Wait for Postgres over TCP so first-start restarts are not missed
+- STACK-030: Keep the ADR 0003 status line to the status alone
+- TASK-002: Mark the review state API tests as database tests
+- ADJ-001: Accept any key type in the disagreement rule
+- VIEW-048: Put the tissue fit margin on every edge and keep the native JPEG threshold
+- STACK-039: Expect the upload byte count in the proxy latency test
+- GUIDE-012: Keep the order when a change resends the same scope
+- NOTIF-007: Keep muted notifications and let work for the person through
+- INGEST-017: Run test workers per workspace on the AIP-008 engine
+- PROTO-003: Type each reviewer's state in the seeded task states
+- PROTO-013: Keep the project page links out of the prototype index until their file lands
+- PROTO-013: Expect Team to open as Daniel Hruška in the persona test
+- PROTO-006: Drop the project page links that the index commit brought back
+- PROTO-013: Mark the focused reviewer row with a ring only so the Behind tag keeps its contrast
+- PROTO-006: Keep names out of the index notes and reuse shared slide ids
+- PROTO-006: Take out the route tree and cells grid edits staged by other tasks
+- PROTO-007: Add the comments route to the route tree
+- PROTO-007: Keep only committed routes in the route tree
+- PROTO-007: Give the empty mention picker a status role so axe passes
+- PROTO-007: Read the opinion form from the project handlers instead of a second seed
+- PROTO-006: Read field errors from a map so Biome needs no string keys
+- PROTO-003: Check the local API through the account name and show home without a workspace
+- PROTO-014: Raise accent text and report footer contrast in the light theme
+- PROTO-005: Open a tray row through one button so the row has no nested controls
+- PROTO-005: Keep only committed routes in the route tree
+- PROTO-016: Pass axe in the settings dialog and developer drawer stories
+- FOUND-021: Keep same-day log entries safe and list the new commands
+- SEC-009: Let project reviewers see labels and macros on their task slides
+- INGEST-001: Raise the largest upload to 100 GiB
+- RSET-012: Give the ingest worker a 4 GiB hard memory limit over its 2 GiB request
+- GUIDE-014: Regenerate the data map with the verdicts table name
+- AIP-018: Fail a capped job's running steps under its workspace scope
+- TILES-004: Answer missing data, model and tile files with 404 instead of the app page
+- SET-001: Keep the settings catalogue out of biome and fix lint and types
+- AIP-011: Number the job progress migration after the current head
+- PROTO-014: Format the co-sign time with the shared formatter and test in Prague time
+- PROTO-003: Show palette hints as keycaps and drop the Admin tag
+- PROTO-011: Name the date picker from its form field label
+- IAM-021: Keep the fake idle lock out of Storybook
+- IAM-008: Leave session-locked failures to the lock card instead of a toast
+- FOUND-023: Write a reviewed size on every open task and skip moved tasks in quick wins
+- FOUND-023: Restore the STACK-027 log entry dropped by the size commit
+- INGEST-028: Require a second ListParts page only when the parts exceed one
+- INGEST-007: Refuse a tile index level without a size
+- INGEST-007: Keep the stored-size levels from SKEL-006 beside the indexed pages
+- SEC-011: Check deep links in the deployed header test and keep tiles up on a bad upload origin
+- TILES-008: Refuse a malformed capability token with 401
+- INGEST-009: Commit the reference tiles that the slide extension rules ignored
+- VIEW-057: Place BIF frames on OpenSlide's weighted pitch in the browser reader
+- INGEST-028: Expect the per-method counts in the latency proxy browser test
+- STACK-012: Turn on SwiftShader Vulkan so WebGPU draws on the Linux runner
+- PROTO-007: Keep saved opinion answers that arrive after the Slide done card opens
+- HOME-010: Regenerate the API schema for the home layout setting
+- DS-029: Draw the focus ring on every control
+- NAV-009: Keep zoom in the minimap help so settings search finds it
+- NAV-004: Zoom in steps fast enough for the go to area test
+- WL-006: Let Nudge and Reassign leave the row without selecting it
+- WL-005: Expect the T5 resume point in the scenario ID test
+- DS-005: Darken the light warn colour to pass contrast on the page
+- SHELL-007: Wait for the view transition to start in the open test
+- SHELL-007: Wait for the slide target before checking the open move
+- SHELL-007: Wait for the slide stage to render before naming it
+- SHELL-012: Keep comment drafts across pan and zoom
+- CASE-004: Rank AI areas by the shown size
+- SHELL-012: Refuse an available status with an end or note in the fake like the API
+- CMD-007: Bind P and Shift+A on the review rail
+- CMD-007: Record the plain and shifted plus as one key
+- WL-005: Keep Enter on a focused row from opening the hero task
+- SHELL-012: Hold the status row while an availability change is saving
+- DS-007: Dim every row's text when the whole radio group is disabled
+- DS-023: Run the flow primary action on Enter
+- HOME-010: Refresh the home layout after setup saves the role
+- INGEST-019: Number the slide position migration after the hidden models one
+- JOBS-006: Let Biome format the generated client now that it passed 1 MB
+- CASE-014: Scroll the side panel body in the shared ScrollArea so it is keyboard focusable
+- PROJ-007: Skip progress queries without ids and start Vite without V8 fast API calls
+- OBJ-005: Take the ID label and stack goldens from the Linux CI runner
+- PROJ-007: Give the both-modes decisions spec a tall viewport
+- ci: Fetch the small fixtures in the e2e job
+- ci: Keep the side panel resize handle under the whole-slide peek
+- ci: Allow the first full viewer render the same load wait as the tool specs
+- TASK-011: Cover new routes in the isolation and permission suites and stop test apps leaking
+- TASK-011: Let tests clear the acting principal
+- REVIEW-027: Show the stand-in outlines only with the fake API
+- docs: Keep ADR 0237 status plain for the ADR check
+- ANN-029: Drop an unused import
+- TASK-015: Let researchers set sample size and order by slide position
+- PROTO-020: Keep cells visible under origin marks and rewrite the check form in plain language
+- ANN-034: Keep marker, text, pin, arrow and ruler points under the pointer
+- PROTO-020: Hide origin marks behind a Who made it checkbox, off by default
+- ANN-033: Stop points jumping in the select, polygon, freehand and drag tools
+- PROTO-020: Keep the folded staging row inside the panel with a short chip
+- COLLAB-007: Probe an undeclared package in the typecheck guard test
+- AINUC-008: Give the gallery flag action a 24px target
+- PROTO-020: Show a focus ring on the staging summary and fit the tests to the fold
+- Get CI green again on main (#7)
+- AISEG-005: Use the caption size from the type scale in smart select
+- ADJ-005: Type the signer name check in the sign-off PDF test
+- AISEG-004: Acknowledge the protobufjs build script so CI installs
+- REPORT-025: Name only members who can sign out this case
+- AINUC-005: Set the nuclei paging open budget to hold on hosted runners
+- AISEG-005: Apply smart select proposals with the snapshot so Enter right after is not lost
+- AISEG-006: Widen the latency-proxy timing bounds and close smart sessions per test
+- ANN-033: Keep a select drag alive when the browser drops pointer capture
+- ANN-033: Keep every drawing tool alive when the browser drops pointer capture
+- ANN-033: Let the viewer canvas inherit each tool's cursor
+- ANN-032: Keep the AI geometry when a region is confirmed
+- ANN-038: Let the viewer overlay checkbox take its own click
+- ANN-036: Read first read snapshots saved before the text column
+- ANN-036: Keep the fake annotation edit typed with an optional text
+- CASES-017: Lock the holding tasks so a sign-off cannot slip in during a move
+- ANN-031: Load the right layer, gate nothing to mark and always send polygon classes
+- ANN-031: Keep the annotate task calls behind the lazy slide route
+- AISEG-010: Keep the clamped click patch and use the fastest pass as the budget baseline
+- REVIEW-010: Count skips as started work, audit and pin the AI call, lock each object
+- AISEG-018: Drop the half pixel shift from smart select outlines
+- ONB-004: Create a workspace in one transaction and limit self-service to one admin
+- JOBS-005: Refuse credentials in addresses, deleted projects and short tokens
+- VIZ-004: Find region paths inside their group in the draw style test
+- LAB-001: Ask for the signed-in user only inside the signed-in area
+- VIZ-002: Size the draw style canvas before the first frame
+- VIZ-003: Size the maps canvas before the first frame
+- TEST-006: Move the bulk annotation limit into the budget file with a hosted-runner baseline
+- ONB-006: Regenerate the API client for the getting started setting
+- VIEW-031: Give the wheel zoom budget a headroom that covers its 50 ms limit
+- ANN-013: Split the undo and redo reload test so a slow runner leaves headroom
+- VIEW-041: Make the delayed-source hint test independent of dev server start
+- NAV-008: Wait for the minimap viewport rectangle to move after the drag
+- AISEG-006: Take the fastest of 15 samples and declare 25 ms headroom in the latency proxy test
+- REVIEW-019: Keep comment pins on cells, show the disabled bar, bind arrows through the keymap
+- AISEG-017: Judge the auto region pass by its budget and pick the compare grid by layout alone
+- PILOT-007: Close the feedback PHI leaks found in review
+- PILOT-007: Load the feedback flow lazily from the first page
+- PILOT-007: Load the survey rules and notifications panel lazily
+- PROJ-010: Hide a deleted project from shared links, notifications, grants and lab models
+- ONB-010: Close races and stale asks when joining a workspace
+- ADMIN-009: Say two factors are saved but not yet asked and audit the value
+- ci: Give two-load viewer specs room and measure the auto region budget as ADR 0154 asks
+- ci: Mark the two factors test as a database test and cover new notification targets and origins
+- ci: Count the side by side scene on the prototype index
+- ci: Save the outline display chosen on the slide as the personal setting
+- ci: Build side panel changes on the latest layout and wait for the save before a reload
+- ci: Give the two-load Esc and invert zoom specs room as the coverage spec has
+- ci: Give the issue states, full viewer and shape pin specs room for the slower CI runner
+- TEST-021: Split the web browser job into three shards after a per-runner slowdown
+- GUIDE-019: Make the fix key do nothing on a one-class task
+- TASK-010: Wait for the last answer and added object to save before recording the first read
+- VIZ-007: Keep the saved other sets on each display change
+- SHELL-010: Run one connection retry at a time with a timeout
+- GUIDE-021: Guard guided check keys while saving, gate Shift G and pin the guided selection
+- ONB-011: Let a workspace claim only its admin's own email domain
+- TASK-018: Add a sample size input and use the sent size in the annotate task estimate
+- PILOT-001: Regenerate the API client after the tour setting met the anchor change
+- ANN-018: Satisfy the strict index check in the grid count
+- COLLAB-017: Renumber the migration, hide threads on hidden objects, cover slide thread routes
+- COLLAB-017: Hide blind objects from the annotate report and thread anchors
+- ADMIN-008: Block retiring the default, preselect it, show undo errors, assert axe
+- ci: Match the Comments tab spec to threads ordered by creation
+- ADMIN-008: Merge the template step of a new review task
+- ci: Expect the fast second key to be ignored while the guided object saves
+- ci: Fit the auto region time budgets to ADR 0154 headroom with runner numbers
+- ci: Name report preview page buttons by their text and give the pages viewport a region role
+- ci: Open the task slide once in the pin specs instead of loading it twice
+- ci: Read audit details as JSON text and arrange the report through the report editor
+- TEST-009: Allowlist every violation found by a full E2E run and steady the dialog focus check
+- ci: Type the audit details read in the decision notes test
+- ci: Widen the axe allowlist, gate the tour offer fetch and steady two flaky tests
+- EVAL-018: Declare the template offer routes in the permission matrix test
+- ci: Wait for a full canvas frame in the overlay holes golden test
+- COLLAB-019: Read object threads from the review task thread endpoints
+- TEST-022: Darken the light red token, stop dimming off rows, underline warning links
+- ci: Count template offer notifications in the test's own workspace
+- TEST-010: Run the load target test under unittest so the docs workflow passes
+- VIZ-013: Keep the still's outlines and image right when the engine is off or fails
+- FOUND-034: Fail the record check on a duplicate number and renumber two records
+- SEC-032: Refuse a database role that bypasses row-level security and file the isolation review
+- TEST-021: Give the outline modes Settings row spec the slow test limit
+- SEC-032: Format the code blocks in the isolation review result
+- TEST-022: Pass contrast and link axe rules, drop both allowlist entries
+- SEC-032: Also refuse a member of a role that bypasses row-level security
+- VIEW-059: Repeat the edge sample so a short backing level leaves no black row
+- VIEW-065: Refuse a range reply shorter than the bytes asked for
+- VIEW-063: Ask for a shard index by suffix range so sharded stores read through the cache
+- VIEW-067: Send a range longer than the byte cache can hold straight to the network
+- VIEW-060: Fail the reader when a decode or patch worker fails instead of hanging
+- VIEW-061: Dispose the decode workers when a slide's levels cannot be built
+- SEC-039: Answer a malformed room path and any edge throw as a problem with the headers
+- SEC-038: Count a tile or room key under 32 bytes as missing in the API and the Worker
+- VIEW-068: Fail the inference client when its worker stops
+- TEST-023: Fix names, roles and nested controls and drop four axe allowlist rules
+- TEST-023: Match the new row names in specs and allow the live route's rail target size
+- TEST-029: Click the Undo of the display toast in one step
+- AISEG-020: Replace the outline worker after it stops
+- VIEW-064: Show, retry and report failed tiles on multichannel slides
+- SEC-041: Read only the bytes checked against the closed ranges
+- VIEW-066: Snap unscaled zarr levels and keep a shared patch read alive
+- TEST-023: Make names contain visible labels and fix listbox and nested button axe failures
+- TEST-022: Darken the light warn token so the amber tag passes contrast
+- TEST-032: Name the floating side panel tab from its content
+- TEST-024: Give the password reveal button a 24 pixel hit area
+- TEST-024: Make scroll regions keyboard reachable and give small targets 24 pixels
+- TEST-024: Make scroll regions focusable and shrink the stage rail on short screens
+- TEST-024: Drop the nested-interactive entry main already removed
+- SEC-036: Refuse a room join with a token held before a removal
+- SEC-037: Cap the sockets of one person in a room and limit the room routes
+- VIEW-062: Draw single-channel grey slides through the channel route
+- TEST-024: Show the element html and axe reason when a scan fails
+- PROJ-012: Refuse to remove a class that stored work still uses
+- TEST-024: Name pins and processing steps by their visible text and scan with the pointer parked
+- TEST-024: Keep the review mode switch from shrinking under the next top bar button
+- IAM-001: Require OpenTofu 1.11 for the write-only password and record the ordering fix
+- OPS-002: Hand SQLAlchemy a Neon URL it accepts and keep the task in progress
+
+### Performance
+
+- CASES-009: Match search labels with LIKE on stored lower-cased copies
+- FOUND-029: Load the command palette and lock screen only when opened
+- FOUND-032: Keep the developer data and walkthrough chunks off the first page
+- FOUND-032: Re-baseline the all-code budget after the run's features
+- PILOT-001: Re-baseline the first page budget after the run's features
+- AISEG-019: Resample auto region tiles in the worker and write runs as transitions
+
+### Refactoring
+
+- ADAPT-008: Remove the case routing rules
+- ADAPT-009: Keep away until with a note and drop the back-up
+- ADAPT-003: Remove signing rights and stored signatures
+- ADAPT-007: Remove the case state machine
+- ADAPT-006: Remove accession templates and take typed case IDs
+- ADAPT-002: Remove folders and folder-scoped permissions
+- ADAPT-001: Remove sign-out permissions and the guest scope
+- ADAPT-005: Create a case from a project and an ID only
+- REPORT-019: Drop imports the co-sign move left unused
+
+### Docs
+
+- STACK-001: Propose Vite 8 after a worker and WebAssembly spike
+- STACK-002: Propose a React 19 SPA with React Compiler and StrictMode
+- Accept ADRs 0012 to 0016 and tick FOUND-017, STACK-001 and STACK-002
+- STACK-008: Propose Orval for the API client after a codegen spike
+- FOUND-010: Tick after a green ci run
+- FOUND-012: Tick after a green ci run
+- Update the task count in the risk register
+- Accept ADR 0017 and keep work local until the cloud is fixed
+- FOUND-008: Tick after a green ci run
+- STACK-020: Record local Postgres, row-level security and pooler findings
+- FOUND-013: Tick after a green ci run
+- STACK-023: Decide row-level security with restrictive guest scopes and role permissions
+- Add prototype round 4, the sign-out report and the backend side of the gap review
+- IAM-002,IAM-003,IAM-004: Tick after a green ci run
+- IAM-005: Tick after a green ci run
+- IAM-006: Tick after a green ci run
+- SEC-003,SEC-001,IAM-011: Tick after a green ci run
+- IAM-007: Tick after a green ci run
+- IAM-009: Tick after a green ci run
+- IAM-018: Tick after a green ci run
+- Consolidate the project memory after 43 log entries
+- SEC-004: Tick after a green ci run
+- Name backlog tasks with a short description, not the ID alone
+- CASES-001: Tick after a green ci run
+- CASES-004: Tick after a green ci run
+- CASES-012: Tick after a green ci run
+- CASES-013: Tick after a green ci run
+- STACK-036: Decide email through Resend with no PHI in messages
+- IAM-000: Confirm the identity and authorization decisions
+- SEC-000: Map GDPR, HIPAA and ISO 27001 controls to the backlog
+- CASES-003: Tick after a green ci run
+- STACK-009,STACK-031: Decide forms and propose the model licensing policy
+- STACK-022: Decide background jobs on Postgres tables with leases
+- IAM-016: Tick after a green ci run
+- IAM-017,CASES-011,STACK-031: Tick after a green ci run and shelve licensing
+- STACK-026,STACK-003,STACK-004,STACK-030: Decide slide reading, routing, server state, deploys
+- IAM-015: Tick after a green ci run
+- Drop the ai-memory mention from the agent guide
+- ADAPT-000: Re-plan the backlog for AI results review
+- ADAPT-000: Plan the revert of the built hospital code
+- ADAPT-008,ADAPT-009,ADAPT-003,ADAPT-007,ADAPT-006: Tick after green ci runs
+- ADAPT-002,ADAPT-001: Tick after green ci runs
+- PROJ-000: Decide the project model
+- IAM-022: Tick after a green ci run
+- ADAPT-004,ADAPT-005,ADAPT-011: Tick after green ci runs
+- PROJ-001: Tick after a green ci run
+- PROJ-003: Tick after a green ci run
+- ADAPT-010: Tick after a green ci run
+- Consolidate memory after the ADAPT epic
+- PROJ-004: Tick after a green ci run
+- SKEL-003: Tick, met by the project API
+- TASK-000: Decide the slide pipeline
+- TASK-000: Log the slide pipeline decision
+- RSET-000: Name the result file parsers and draft Parfocal JSON
+- OBJ-000: Fix the object ID grammar, paths and matching
+- FOUND-011: Tick after a green ci run
+- GUIDE-000: Decide the verdict model, reasons and opinion forms
+- GUIDE-006: Tick after a green ci run
+- SEC-024: Tick after a green ci run
+- NOTIF-001: Tick after a green ci run
+- INGEST-003,INGEST-004: Tick after green ci runs
+- INGEST-006: Tick after a green ci run
+- INGEST-010,INGEST-011,INGEST-012: Tick after a green ci run
+- STACK-021: Decide the annotation and AI result storage model
+- ANN-020: Tick after a green ci run and consolidate memory
+- RSET-001: Tick after a green ci run
+- OBJ-001: Tick after a green ci run
+- TASK-001: Tick after a green ci run
+- RSET-007,OBJ-002,RSET-003: Tick after a green ci run
+- INGEST-005: Tick after a green ci run
+- TASK-002: Tick after a green ci run
+- GUIDE-001,TASK-003: Tick after a green ci run
+- WL-000: Decide the My work query API
+- ADJ-001,WL-001,AINUC-003: Tick after a green ci run
+- CASES-006: Restore its log entry
+- STACK-035: Pick Typst for report PDFs after a spike
+- EVAL-000: Define the evaluation metrics and split out the decisions API
+- CASES-006: Tick after a green ci run
+- CASES-006: Fix the task names in two tick entries
+- ADJ-006: Tick after a green ci run
+- EVAL-001,GUIDE-009: Tick after a green ci run
+- EVAL-006: Consolidate memory after the review loop backend
+- EVAL-006,RSET-002: Tick after a green ci run
+- HOME-000: Map the home blocks to one aggregate endpoint
+- RSET-008: Tick after a green ci run
+- HOME-000: Tick after a green ci run
+- HOME-011: Tick after a green ci run
+- SEC-016: Write the STRIDE threat model with a task for each high risk
+- HOME-001,REVIEW-003: Tick after a green ci run
+- SEC-016,SEC-025: Tick after a green ci run
+- SEC-012: Tick after a green ci run
+- SEC-006: Tick after a green ci run
+- SEC-007: Tick after a green ci run
+- CASES-020: Tick after a green ci run
+- NOTIF-006: Consolidate memory after the home, notification and security backends
+- NOTIF-006: Tick after a green ci run
+- NOTIF-004: Tick after a green ci run
+- NOTIF-005: Tick after a green ci run
+- MLEVAL-000: Record the evaluation metrics and each dataset's licence and allowed use
+- MLEVAL-002: Tick after a green ci run
+- MLEVAL-000,MLEVAL-001: Tick after a green ci run
+- MLEVAL-004: Tick after a green ci run
+- STACK-034: Keep search in Postgres under row-level security after a 100k-case spike
+- TEST-002,TEST-003: Tick after a green ci run
+- TEST-016,STACK-034: Tick after a green ci run
+- CASES-009: Link the search ADR and note where the search code was committed
+- CASES-009: Keep the log append-only and record the misplaced search commit
+- GUIDE-010,GUIDE-011,VIEW-041,IAM-023: Bring the backlog in line with prototype round 5
+- IAM-024,EVAL-007: Record supervisor feedback on roles, report templates and thesis
+- STACK-015: Pick Viv 0.23 on deck.gl 9.4 and log the viewer foundation work
+- VIEW-045,VIEW-046,VIEW-047,VIEW-048: Plan camera feel, detents, history and tissue fit
+- AGENTS: Commit and push finished tasks in the same turn
+- VIEW-026: Tick nine viewer tasks after a green ci run
+- VIEW-000: Tick the viewer research tasks and claim the next viewer tasks
+- VIEW-023,VIEW-024,VIEW-035: Tick after a green ci run
+- AGENTS: Expand every ID and number with plain words
+- AGENTS: Record the owner's decisions of 2026-10-31 and open the cloud at the lowest cost
+- AGENTS: Record the Modal spend limit that keeps compute on free credits
+- OPS-009: Cap or alert every billing service and make production writes need the owner
+- OPS-009: Note that wrangler must run outside the repo to use OAuth
+- OPS-009: Record the Neon organisation and the finished CLI sign-ins
+- OPS-009: Accept the production access and spend caps record
+- OPS-009: Renumber the production access record to ADR 0115
+- OPS-009: Warn that parallel sessions share one working tree
+- GUIDE-012,TEST-019: Add tasks the thesis needs and keep thesis docs private
+- GUIDE-012: Claim least sure first order, admin rights and the upload protocol
+- STACK-039: Propose S3 multipart uploads with Uppy and record the spike
+- STACK-039: Say the cut was a reset and how the spike matched the open upload
+- TASK-004: Claim blinding and first read and the inbox API
+- STACK-039: Accept the resumable upload record and tick admin rights
+- GUIDE-012: Record the review order timing on a large slide
+- EVAL-007: Claim the study template model and API
+- INGEST-001: Claim the upload API
+- STACK-039,GUIDE-012: Tick the upload protocol and least sure first order
+- TASK-004: Propose blinding with a kept first read and split out the E2E
+- INGEST-001: Name every ID in the upload notes and how to make the dev bucket
+- TASK-004,NOTIF-007,EVAL-007: Tick blinding, the inbox API and study templates
+- INGEST-017,AIP-008: Claim the publish step and the job model
+- AGENTS: Keep the owner's open decisions in one file with options to pick
+- AGENTS: Commit the owner's decisions file in docs so worktrees keep it
+- INGEST-017: Add the publish step questions to the owner's decisions file
+- SEC-009: Claim slide label and macro image handling
+- AIP-008,INGEST-017: Tick the job model and the publish step
+- RSET-004: Claim pairing results with slides
+- SEC-009: Tick label and macro image handling
+- RSET-004: List the pairing routes and bring the next steps up to date
+- AIP-013: Claim the result chunk store
+- RSET-004: Tick pairing results with slides
+- AIP-013: Tick the result chunk store
+- RSET-011: Claim cells from imported files
+- RSET-011: Record the measured commit in the cell import result
+- RSET-011: Tick cells from imported files
+- RSET-012: Claim large result files in bounded memory
+- RSET-012: Record the measured commit in the bounded cell import result
+- RSET-012: Tick bounded memory imports and shorten the next steps
+- STACK-007: Ask the owner before choosing styling and primitives
+- IAM-024: Add clinical sign-out as a project right with co-sign to ADR 0096
+- PROTO-000: Plan the port of the prototype into React after the redesign
+- PROTO-011: Port every component and screen rough first so the design is clickable early
+- STACK-007: Record shadcn/ui on Base UI with Tailwind v4 as the owner's choice
+- GUIDE-014: Say decision for a reviewer's call across the docs
+- GUIDE-015,TASK-008: Ask in the task's decision style and gate submit on decided objects
+- TASK-011,VIZ-007,ADJ-007,ADJ-008: Add the Display panel and the round 6 queue
+- REPORT-008,REPORT-019,REPORT-024,REPORT-025,PROJ-009: Bring back clinical sign-out
+- TEAM-007,SHELL-010: Add the Team workload view and issue states in every flow
+- GUIDE-015,TASK-011,ADJ-007,REPORT-024: Say what each new ADR citation is
+- DS-000: Tick after a green ci run
+- TEAM-007,REPORT-024: Mark the planned tasks in the REPORT and TEAM index rows
+- PROTO-000: Tick after a green ci run
+- PROTO-011: Log the rough kit components and move the task to review
+- PROTO-011: Count the stories in the axe rerun exactly
+- PROTO-002: Tick after a green ci run
+- PROTO-012: Log the flow map and move the task to review
+- PROTO-004: Claim the project page, new project and upload
+- PROTO-003: Log the shell, home and My work and move the task to review
+- PROTO-003: Name the task in full in the shell knowledge notes
+- PROTO-003: Log the persona param, the folded sidebar and the task states
+- PROTO-006: Log the new review task and move the task to review
+- PROTO-012: Log the persona param on the flow map
+- PROTO-013: Log Team over fake data and move the task to review
+- PROTO-004: Log the project page and upload screens and move the task to review
+- PROTO-007: Log guided review and move the task to review
+- PROTO-007: Log guided review and move the task to review
+- PROTO-005: Log model runs and jobs and move the task to review
+- PROTO-010: Note where the prototype port stopped
+- PROTO-009: Log the admin, sign-in and setup screens and move the task to review
+- PROTO-014: Log the clinical report and co-sign screens and move the task to review
+- PROTO-016: Log settings, shortcuts and developer mode and move the task to review
+- PROTO-016: Note the session policy source and the shared Playwright port
+- PROTO-009: Note that the task waits for the owner's comparison
+- PROTO-015: Log Connect a model and move the task to review
+- PROTO-015: Say which state survives a scene change on Connect a model
+- PROTO-017: Log the issue states index and move the task to review
+- PROTO-018: Log the full viewer and move the task to review
+- PROTO-008: Log the disagreements, sign-off and report screens and move the task to review
+- PROTO-008: Record the CI run of the web suite
+- PROTO-019: Log the viewer tools and move the task to review
+- FOUND-021: Cut the docs README, drop the UI porter agent and the repeated style rules
+- FOUND-022: Plan the removal of the mock comparison tooling
+- AGENTS: Apply the owner's decisions of 2026-11-02 and add their follow-up tasks
+- EVAL-011: Draft the reader study and outline quality forms for the owner
+- INGEST-028: Log the read-only plan for the R2 upload rules
+- AINUC-004: Record the nine-class summary size and that 25 MB is a target
+- INGEST-028: Log the dev bucket rules and the fixture slides uploaded to R2
+- decisions: Add questions from the parallel backend tasks of 2026-11-02
+- PROTO-001: Tick the screen groups the owner accepted against the mock
+- PROTO-008: Log the adjudicator slides popover
+- PROTO-011: Tick the shell, new task, review, kit and viewer groups after the owner's fixes
+- STACK-005: Decide where each kind of client state lives
+- STACK-005: Keep Zustand out of the viewer engine
+- STACK-005: Ask the owner to accept the client state record
+- decisions: Record the owner's answers to decisions 16 to 21 and add PROJ-010
+- decisions: Drop 6a, the dev bucket apply already ran
+- STACK-011: Choose hand-made SVG charts with visx, token colours and text alternatives
+- decisions: Ask the owner to accept ADR 0144 on charts
+- STACK-011: Ask the owner to accept the charts record
+- decisions: Drop the duplicate charts question
+- STACK-010: Name the measured commit in the virtualisation result
+- decisions: Ask the owner to accept ADR 0145 on tables
+- STACK-010: Ask the owner to accept ADR 0145 on tables
+- decisions: Drop the duplicate tables question
+- STACK-012: Decide the frontend testing stack and record the SwiftShader spike
+- decisions: Accept ADRs 0143 to 0146 on the owner's answers
+- board: Release three tasks blocked only on cloud access
+- board: Release four UI tasks on the owner's go-ahead
+- STACK-029: Estimate the pilot's monthly cost and compare clouds for the PHI trigger
+- STACK-017: Choose onnxruntime-web 1.31.1 for browser models and measure PathoSAM on WebGPU
+- STACK-017: Name ADR 0148 and the POC docs in plain words
+- STACK-027: Name the measured commit and add the no-job baseline
+- STACK-027: Keep GPU inference on T4 and L4 class cards
+- OPS-009: Apply owner answers, add standing production approval, clear review
+- OPS-009: Keep ADR statuses plain and move the 0151 notes into the text
+- EVAL-002: Log and tick after merge
+- FOUND-024: Ban the word verdict and add the rename task
+- SHELL-001: Log and tick after merge
+- GUIDE-015: Log and tick after merge
+- GUIDE-018: Add the Counts as change screen left by GUIDE-015
+- INGEST-002: Log and tick after merge
+- INGEST-002: Index the upload resume result
+- VIEW-056: Add the guided trace recorder for decision 30
+- INGEST-028: Record the R2 upload protocol check and revise ADR 0116
+- INGEST-028: Name the fix commit in the R2 result
+- INGEST-028: Log, tick and index the R2 upload result
+- COLLAB-002: Log and tick after merge
+- COLLAB-002: Number ADR 0152 and ask where threads live
+- DS-022: Log and tick after merge
+- SKEL-008: Log and tick after merge
+- SKEL-006: Log and tick after merge
+- TILES-008: Add the malformed token fix found by SKEL-006
+- DS-021: Log and tick after merge
+- INGEST-007: Log, tick and index ADR 0153 and its result
+- DS-019: Log and tick after merge
+- DS-020: Log and tick after merge
+- TEST-006: Number ADR 0154 and index it with its result
+- TEST-006: Log and tick after merge
+- DS-008: Log and tick after merge
+- INGEST-016: Log and tick after merge
+- CASE-001: Log and tick after merge
+- INGEST-027: Correct the edge region counts in the tissue box result
+- INGEST-027: Log and tick after merge
+- INGEST-027: Index the tissue box result
+- CMD-001: Number ADR 0155 and keep the 350 ms hold
+- CMD-001: Log and tick after merge
+- SEC-011: Log and tick after merge
+- SEC-011: Record the edge security headers in ADR 0156
+- VIEW-027: Number ADR 0157 and index its result
+- VIEW-027: Log and tick after merge
+- AITUM-002: Number the ADR from the merge
+- AITUM-002: Log and tick after merge
+- WL-017: Log and tick after merge
+- AIP-003: Number the ADR from the merge
+- AIP-003: Log and tick after merge
+- NAV-001: Log and tick after merge
+- CASES-009: Log and tick after merge
+- CASES-009: Record the lowercase label search in ADR 0160
+- ANN-001: Log and tick after merge
+- TILES-008: Log and tick after merge
+- MEAS-001: Log and tick after merge
+- INGEST-008: Log and tick after merge
+- COLLAB-005: Log and tick after merge
+- CMP-002: Log and tick after merge
+- INGEST-009: Name the measured commit and test the channel swap on a synthetic slide
+- VIEW-057: Index the reader check and add the BIF stitch fix
+- INGEST-009: Log and tick after merge
+- GUIDE-018: Log and tick after merge
+- VIEW-056: Log and tick after merge
+- INGEST-013: Number the ADR from the merge
+- INGEST-013: Log and tick after merge
+- CASE-002: Log and tick after merge
+- HOME-009: Log and tick after merge
+- TILES-003: Log and tick after merge
+- SET-011: Log and tick after merge
+- SEC-027: Log and tick after merge
+- SEC-027: Block on the first staging deploy
+- INGEST-018: Number the ADR from the merge
+- INGEST-018: Log and tick after merge
+- INGEST-018: Ask for the support address and list TILES-003 in review
+- REVIEW-017: Number the ADR from the merge
+- REVIEW-017: Log and tick after merge
+- VIEW-057: Number the ADR from the merge
+- VIEW-057: Log and tick after merge
+- VIEW-057: Ask how the browser places BIF frames
+- CMD-002: Log and tick after merge
+- COLLAB-006: Number the ADR from the merge
+- COLLAB-006: Log and tick after merge
+- NOTIF-002: Log and tick after merge
+- PROJ-005: Number the ADR from the merge
+- PROJ-005: Log and tick after merge
+- TASK-006: Number the ADR from the merge
+- TASK-006: Log and tick after merge
+- PROJ-007: Log and tick after merge
+- I18N-002: Number the ADR from the merge
+- I18N-002: Log and tick after merge
+- STACK-012: Log the WebGPU draw tests failing on the Linux runner
+- STACK-012: Record the WebGPU numbers from the Linux runner
+- SKEL-010: Record the walking skeleton retrospective
+- FOUND-000: Confirm monorepo, CI and Python tooling ADRs against current releases
+- SEC-021: Add GDPR records, DPIA, DPA template, subprocessors and cookie policy
+- I18N-000: Choose Lingui for web app strings in ADR 0173
+- CASE-000: Record the case view state model
+- INGEST-000: Recheck upload protocol and server slide readers
+- SHELL-000: Confirm routing and client state for the shell
+- NAV-000: Record the smart minimap state machine and placement
+- LAB-000: Confirm the developer drawer control list
+- SEC-018: Add incident response and breach notification runbook
+- INGEST-001: Tick after the first green CI run
+- FOUND-025: Log the first run with parallel browser jobs
+- FOUND-025: Tick after the docs-only run skipped the heavy jobs
+- REVIEW-000: Record confidence display rules and their evidence
+- ANN-000: Record the annotate key map check and geometry libraries
+- AIP-000: Record the v1 model line-up per tier
+- SHELL-012: Log the review fixes for the PR stack
+- ADMIN-001: Log and tick after merge
+- CASE-014: Log and tick after merge
+- JOBS-003: Log and tick after merge
+- VIEW-049: Log and tick after merge
+- ANN-004: Log and tick after merge
+- ONB-001: Log and tick after merge
+- ADJ-007: Name the ADR without the word the app avoids
+- ADJ-007: Number the ADR from the merge
+- ADJ-007: Log and tick after merge
+- SKEL-012: Log and tick after merge
+- ONB-002: Log and tick after merge
+- GUIDE-005: Log and tick after merge
+- NAV-010: Tick the tasks that waited for their browser specs in CI
+- SKEL-007: Log and tick after merge
+- VIEW-015: Log and tick after merge
+- VIEW-015: List the synthetic SCN decoy in the fixtures table
+- OBJ-005: Log and tick after merge
+- JOBS-006: Log and tick after merge
+- TILES-005: Log and tick after merge
+- AINUC-006: Log and tick after merge
+- INGEST-019: Log and tick after merge
+- OBJ-005: Log the CI failures left at the end of the night run
+- OBJ-005: Correct the note on the test job
+- JOBS-006: Log the generated client fix
+- FOUND-024: Record the owner's answers of 2026-11-04 as written
+- SEC-021: Apply the owner's answers of 2026-11-04
+- SEC-021: Number the ADR from the merge
+- SEC-021: Log and tick after merge
+- SEC-018: Tick SEC-018 and LAB-000 on the owner's answers
+- OBJ-005: Log the CI fixes and the golden images still open
+- CASE-017: Log and tick after merge
+- EVAL-003: Log and tick after merge
+- DS-036: Log and tick after merge
+- INGEST-030: Log and tick after merge
+- INGEST-021: Number ADR 0232 and index ADRs 0231 and 0232 as proposed
+- INGEST-021: Log and tick after merge
+- DS-038: Log and tick after merge
+- DS-035: Log and tick after merge
+- VIEW-050: Log and tick after merge
+- SEC-029: Ask who sees the security contact and whether de-identified workspaces need one
+- SEC-029: Log and tick after merge
+- DS-028: Log and tick after merge
+- NAV-014: Add NAV-015 for real area bounds on the live route
+- NAV-014: Log and tick after merge
+- INGEST-021: Describe the wired sorting in ADR 0232 and add FOUND-029 for bundle headroom
+- INGEST-021: Log and tick after merge
+- FOUND-029: Log and tick after merge
+- WL-013: Log and tick after merge
+- VIEW-051: Log and tick after merge
+- TASK-011: Index ADR 0233 as proposed
+- TASK-011: Log and tick after merge
+- HOME-008: Log and tick after merge
+- REVIEW-005: Log and tick after merge
+- DS-037: Log and tick after merge
+- LAB-003: Log and tick after merge
+- NAV-006: Log and tick after merge
+- SKEL-004: Log and tick after merge
+- OBJ-005: Log the Linux goldens and web spec fixes
+- CMD-006: Log and tick after merge
+- GUIDE-002: Log and tick after merge
+- ADJ-008: Log and tick after merge
+- VIEW-025: Log and tick after merge
+- SHELL-005: Log and tick after merge
+- EVAL-008: Log and tick after merge
+- CASE-009: Log and tick after merge
+- CASE-016: Log and tick after merge
+- DS-034: Log and tick after merge
+- SEC-010: Ask whether search text may stay in the search page URL
+- SEC-010: Log and tick after merge
+- VIEW-044: Log and tick after merge
+- HOME-003: Log and tick after merge
+- REVIEW-004: Log and tick after merge
+- NAV-015: Log and tick after merge
+- VIZ-001: Log and tick after merge
+- EVAL-004: Log and tick after merge
+- EVAL-005: Index ADR 0236 and add EVAL-012 for the share page
+- EVAL-005: Log and tick after merge
+- GUIDE-007: Log and tick GUIDE-007, ANN-014, REVIEW-025, CMD-003 and MEAS-002
+- MEAS-003: Log the main CI fix and tick MEAS-003, RSET-010 and ANN-005
+- ANN-006: Log and tick after merge
+- REVIEW-027: Log and tick REVIEW-027, ADJ-002 and ANN-007
+- ANN-008: Log and tick after merge
+- TASK-013: Plan annotate tasks on one shared layer
+- TASK-013: Restore the XXXX placeholder in the merge script description
+- GUIDE-003: Log and tick after merge
+- ANN-002: Log and tick ANN-002, ANN-013 and EVAL-012
+- TASK-015: Add check options and presets to annotate tasks
+- TASK-013: Log and tick after merge
+- PROTO-020: Plan the annotate task screens and land imports on the shared layer
+- board: Put compliance, legal, email and pilot paperwork on hold
+- board: Add bundle analyzer and lazy loading audit tasks
+- AISEG-012: Log and tick after merge
+- AISEG-011: Log and tick after merge
+- board: Aim the lazy loading audit below the route level
+- ANN-017: Log and tick after merge
+- ANN-021: Log and tick after merge
+- AINUC-002: Log and tick after merge
+- COLLAB-003: Log and tick after merge
+- ANN-030: Number the ADR from the merge
+- ANN-030: Log and tick after merge
+- PROTO-020: Log and tick after merge
+- COLLAB-007: Log and tick after merge
+- COLLAB-007: Note presence events in ADR 0140
+- COLLAB-004: Log and tick after merge
+- AINUC-008: Log and tick after merge
+- COLLAB-012: Log and tick after merge
+- SHELL-004: Log and tick after merge
+- JOBS-004: Log and tick after merge
+- ANN-022: Log and tick after merge
+- ANN-028: Log and tick after merge
+- ANN-009: Log and tick after merge
+- TASK-015: Log and tick after merge
+- REVIEW-026: Log and tick after merge
+- FOUND-030: Log and tick after merge
+- ANN-026: Log and tick after merge
+- ANN-024: Log and tick after merge
+- ANN-029: Log and tick after merge
+- REVIEW-024: Log and tick after merge
+- ANN-025: Log and tick after merge
+- ANN-033: Add hardening tasks for the annotation tools
+- ANN-033: Correct the test count in the log
+- ANN-035: Add Figma style point editing task
+- PROTO-020: Log the owner's notes folded into the annotate screens
+- ANN-035: Correct the test count in the log
+- ANN-036: Add saving arrows, text and rulers and record annotate questions
+- PILOT-008: Add the owner walkthrough of the whole app
+- TEST-020: Add the showcase seed over every feature and the fixture slides
+- PILOT-008: Cover the UX of every variant in the walkthrough
+- AIP-009: Log and tick after merge
+- AIP-006: Log and tick after merge
+- AINUC-005: Log and tick after merge
+- AINUC-005: Number the run's ADRs 0240 to 0242 and restore the XXXX placeholder
+- AISEG-015: Number the ADR from the merge
+- AISEG-015: Log and tick after merge
+- HOME-002: Log and tick after merge
+- ADJ-004: Number the ADR from the merge
+- ADJ-004: Log and tick after merge
+- INGEST-025: Number the ADR from the merge
+- INGEST-025: Log and tick after merge
+- AISEG-001: Number the ADR from the merge
+- AISEG-001: Log and tick after merge
+- TASK-014: Number the ADR from the merge
+- TASK-014: Log and tick after merge
+- TASK-014: Move its sign-off E2E into ANN-031
+- AINUC-001: Number the ADR from the merge
+- AINUC-001: Log and tick after merge
+- ONB-007: Number the ADR from the merge
+- ONB-007: Log and tick after merge
+- ANN-003: Log and tick after merge
+- AISEG-002: Number the ADR from the merge
+- AISEG-002: Log and tick after merge
+- AISEG-003: Number the ADR from the merge
+- AISEG-003: Log and tick after merge
+- REPORT-024: Mark the clinical report storage ADR proposed
+- REPORT-024: Number the ADR from the merge
+- REPORT-024: Log and tick after merge
+- ANN-023: Log and tick after merge
+- AISEG-004: Number the ADR from the merge
+- AISEG-004: Log and tick after merge
+- PROJ-008: Number the ADR from the merge
+- PROJ-008: Log and tick after merge
+- AISEG-005: Number the ADR from the merge
+- AISEG-005: Log and tick after merge
+- AISEG-007: Number the ADR from the merge
+- AISEG-007: Log and tick after merge
+- REPORT-025: Log and tick after merge
+- ADJ-003: Log and tick after merge
+- ANN-015: Log and tick after merge
+- AISEG-006: Log and tick after merge
+- REPORT-008: Log and tick after merge
+- AINUC-014: Log and tick after merge
+- GUIDE-004: Log and tick after merge
+- ADJ-005: Number the ADR from the merge
+- ADJ-005: Log and tick after merge
+- GUIDE-008: Log and tick after merge
+- MLEVAL-003: Log and tick after merge
+- REPORT-019: Log and tick after merge
+- REPORT-025: Log the signers fix and the CI install fix
+- AISEG-005: Log the smart select key fix and the paging budget rebase
+- AISEG-006: Log where the parallel run stopped and the CI next step
+- AISEG-005: Log the remaining undo spec failure on CI
+- REPORT-024: Add owner questions on nodes, signed checksums and link import duplicates
+- ANN-033: Log the fast vertex drag snap-back bug and next step
+- ANN-033: Correct the snap-back bug note
+- ANN-033: Note the snap-back was seen on the mock annotate page
+- Process the owner's decisions of 2026-11-08
+- CMD-000: Tick the command and operations research checks
+- PROTO-020: Tick after the owner's check
+- CMD-005: Log and tick after merge
+- CMP-007: Log and tick after merge
+- INGEST-031: Log and tick after merge
+- CMD-004: Log and tick after merge
+- MEAS-005: Log and tick after merge
+- MEAS-006: Add the follow-up for length units everywhere
+- DEV-006: Log and tick after merge
+- DEV-007: Log and tick after merge
+- EXP-002: Log and tick after merge
+- SET-002: Log and tick after merge
+- SET-013: Add the follow-up to move settings onto the layered store
+- SET-008: Log and tick after merge
+- SET-009: Log and tick after merge
+- SET-010: Log and tick after merge
+- SET-014: Add the follow-up to save the display name
+- ANN-032: Leave the ADR number to the merge
+- ANN-032: Number the ADR from the merge
+- ANN-032: Log and tick after merge
+- ANN-038: Add the checkbox click bug from ANN-032
+- ANN-038: Log and tick after merge
+- ANN-036: Number the ADR from the merge
+- ANN-036: Log and tick after merge
+- ANN-039: Add the follow-up for arrows and notes beyond the slide
+- INGEST-020: Log and tick after merge
+- LAB-001: Log and tick after merge
+- LAB-018: Add the follow-up for drawer controls driving the viewer
+- AINUC-007: Log and tick after merge
+- TEST-012: Log and tick after merge
+- ANN-027: Log and tick after merge
+- ANN-040: Add the API read of AI objects for annotate tasks
+- CASES-017: Log and tick after merge
+- CASES-017: Log the sign-off lock fix
+- VIZ-002: Log and tick after merge
+- VIZ-008: Add the follow-up to draw objects by style on the live slide
+- ANN-031: Log and tick after merge
+- FOUND-032: Add the task to make room on the first page bundle
+- FOUND-032: Log and tick after merge
+- MEAS-007: Renumber the length units follow-up that clashed with MEAS-006
+- MEAS-007: Log and tick after merge
+- AISEG-017: Add the auto region screen and the smart select offset fix
+- AISEG-010: Number the ADR from the merge
+- AISEG-010: Log and tick after merge
+- VIZ-003: Log and tick after merge
+- VIZ-009: Add the confidence map entry in the View group
+- AISEG-010: Log the manual outline budget
+- REVIEW-010: Log and tick after merge
+- ANN-040: Log and tick after merge
+- EVAL-014: Log and tick after merge
+- AISEG-018: Log and tick after merge
+- SET-014: Log and tick after merge
+- EVAL-013: Log and tick after merge
+- EVAL-016: Add the annotate task report export follow-up
+- EVAL-016: Log and tick after merge
+- SET-013: Log and tick after merge
+- ANN-039: Log and tick after merge
+- ANN-039: Note in ADR 0259 that threads and reports now take arrows and notes
+- EVAL-014: List ADR 0260 and ADR 0262 in the index
+- VIZ-004: Log and tick after merge
+- AILEARN-001: Log and tick after merge
+- NOTIF-008: Log and tick after merge
+- ANN-037: Log and tick after merge
+- ONB-004: Ask the owner who may create a workspace
+- CMP-005: Log and tick after merge
+- ONB-004: Log and tick after merge
+- ONB-010: Add the join, ask and setup profile follow-up
+- CMP-003: Log and tick after merge
+- CMP-004: Log and tick after merge
+- EVAL-013: Log the tenant isolation fix
+- CMP-001: Log and tick after merge
+- JOBS-005: Log and tick after merge
+- DEV-011: Log and tick after merge
+- CMP-006: Log and tick after merge
+- ADMIN-007: Log and tick after merge
+- ADMIN-009: Add named actors and real sign-in settings in Admin
+- CASES-016: Log and tick after merge
+- CASES-027: Add filing and moving a slide from the project page
+- TEST-006: Log the main CI fixes
+- CASES-027: Log and tick after merge
+- DEV-005: Log and tick after merge
+- VIEW-031: Log and tick after merge
+- VIEW-031: Ask the owner about measuring wheel zoom as main-thread time
+- DEV-001: Log and tick after merge
+- DEV-012: Add wiring the device intents into the viewer
+- EXP-007: Log and tick after merge
+- EXP-011: Add the analytics policy per workspace and per person
+- INGEST-024: Log and tick after merge
+- EXP-011: Log and tick after merge
+- AINUC-009: Log and tick after merge
+- TEST-012: Tick after CI proved the fixture caches
+- DEV-012: Log and tick after merge
+- DEV-010: Log and tick after merge
+- DEV-008: Log and tick after merge
+- ONB-006: Log and tick after merge
+- NAV-007: Leave the ADR number to the merge
+- NAV-007: Number the ADR from the merge
+- NAV-007: Log and tick after merge
+- NAV-016: Add minimap weights in every scene
+- REVIEW-018: Log and tick after merge
+- LAB-018: Log and tick after merge
+- REVIEW-008: Log and tick after merge
+- NAV-008: Log and tick after merge
+- ANN-013: Log the undo spec and budget fixes
+- NAV-011: Log and tick after merge
+- REVIEW-016: Log and tick after merge
+- REVIEW-028: Add node staging on for sentinel tasks
+- NAV-016: Log and tick after merge
+- REVIEW-028: Log and tick after merge
+- VIEW-041: Log and tick after merge
+- VIEW-058: Add the tile fade-in and retry follow-up
+- NAV-008: Log the minimap drag and latency proxy flake fixes
+- REVIEW-013: Log and tick after merge
+- REVIEW-029: Add sending the shown AI call with cell decisions
+- REVIEW-029: Log and tick after merge
+- VIEW-058: Log and tick after merge
+- VIEW-054: Log and tick after merge
+- VIEW-054: Name the three viewer fixture slides in the fixtures README
+- VIEW-031: Log that the wheel zoom spec skips in CI
+- SHELL-003: Log and tick after merge
+- REVIEW-007: Log and tick after merge
+- REVIEW-009: Log and tick after merge
+- REVIEW-015: Log and tick after merge
+- REVIEW-015: Record the one million cell paged result
+- CASE-007: Log and tick after merge
+- AISEG-017: Log and tick after merge
+- REVIEW-019: Log and tick after merge
+- REVIEW-030: Add the review screen reading paged results
+- SHELL-006: Log and tick after merge
+- VIEW-018: Log and tick after merge
+- VIEW-018: Record the channel contrast change timings
+- VIEW-054: Tick after CI ran the viewer fixture goldens
+- REVIEW-030: Log and tick after merge
+- REVIEW-031: Add unsure zones following the camera on paged results
+- WL-016: Log and tick after merge
+- WL-020: Add the API announcing worklist changes
+- WL-020: Log and tick after merge
+- REVIEW-031: Log and tick after merge
+- EXP-006: Log and tick after merge
+- EXP-012: Add the task timer in the review flows
+- EXP-012: Log and tick after merge
+- AISEG-017: Log the auto region and compare layout spec fixes
+- PROJ-006: Log and tick after merge
+- OBJ-004: Log and tick after merge
+- TEST-017: Log and tick after merge
+- TEST-017: List the flaky tests note in the knowledge index
+- FOUND-032: Log the all-code budget re-baseline
+- EXP-005: Log and tick after merge
+- PILOT-007: Log and tick after merge
+- PROJ-010: Log and tick after merge
+- PROJ-011: Add restoring a deleted project and revoking its links
+- COLLAB-016: Leave the hung merge in progress with the next step
+- JOBS-005: List ADR 0263 in the index
+- Log where the parallel run of 2026-11-08 ended
+- VIZ-009: Log and tick after merge
+- PROJ-011: Log and tick after merge
+- VIZ-008: Log and tick after merge
+- SET-003: Log and tick after merge
+- TEST-011: Log and tick after merge
+- SET-004: Log and tick after merge
+- ONB-010: Log and tick after merge
+- ONB-010: Index ADR 0265, add decision 75 and the admin follow-up
+- ADMIN-009: Log and tick after merge
+- ADMIN-009: Add the follow-up that enforces two factors at sign-in
+- CASES-021: Log and tick after merge
+- VIZ-006: Log and tick after merge
+- ADMIN-002: Log and tick after merge
+- SET-005: Log and tick after merge
+- ADMIN-003: Log and tick after merge
+- AIP-015: Log and tick after merge
+- AILEARN-006: Log and tick after merge
+- SET-007: Log and tick after merge
+- SET-006: Log and tick after merge
+- ci: Log the red run fix and add the off main thread follow-up
+- ADMIN-004: Log and tick after merge
+- GUIDE-017: Log and tick after merge
+- ONB-003: Log and tick after merge
+- VIZ-005: Log and tick after merge
+- LAB-002: Log and tick after merge
+- ADMIN-005: Log and tick after merge
+- TEST-013: Log and tick after merge
+- AIP-014: Log and tick after merge
+- ci: Log the second red run fix
+- ci: Log the third red run fix
+- ci: Log the fourth red run fix and add the suite slowdown task
+- Process the owner's decisions of 2026-11-09
+- VIEW-031: Tick the wheel zoom check after decision 74a and a green CI run
+- HOME-012: Log and tick after merge
+- TEST-021: Log and tick after merge
+- CASES-002: Log and tick after merge
+- GUIDE-019: Log and tick after merge
+- ADMIN-000: List the admin sections and their permissions
+- ADMIN-000: Log and tick after merge
+- GUIDE-019: Add the review follow-ups and the admin mock controls task
+- GUIDE-019: Ask the owner about the fix and skip keys of the guided check
+- ONB-000: Record the sign-up and setup flow
+- ONB-000: Number the ADR from the merge
+- ONB-000: Log and tick after merge
+- VIZ-000: Record how display state reaches the overlay system
+- VIZ-000: Number the ADR from the merge
+- VIZ-000: Log and tick after merge
+- VIZ-000: Add the task that mounts the engine overlay on the live slide
+- COLLAB-000: Record the realtime event model and confirm the transport
+- COLLAB-000: Number the ADR from the merge
+- COLLAB-000: Log and tick after merge
+- TASK-010: Log and tick after merge
+- SET-000: Record the settings schema with scopes and defaults
+- SET-000: Number the ADR from the merge
+- SET-000: Log and tick after merge
+- CMP-000: Record the linked compare pane model
+- CMP-000: Number the ADR from the merge
+- CMP-000: Log and tick after merge
+- SHELL-010: Log and tick after merge
+- GUIDE-020: Log and tick after merge
+- TASK-010: Add review follow-ups and ask about compare offsets
+- DEV-000: Record input device support and fallbacks
+- DEV-000: Number the ADR from the merge
+- DEV-000: Log and tick after merge
+- TEST-000: Write the test pyramid with an owner per level
+- TEST-000: Number the ADR from the merge
+- TEST-000: Log and tick after merge
+- EXP-000: Confirm PostHog and record the analytics event taxonomy
+- EXP-000: Number the ADR from the merge
+- EXP-000: Log and tick after merge
+- GUIDE-021: Log and tick after merge
+- TASK-016: Log and tick after merge
+- COLLAB-015: Log and tick after merge
+- COLLAB-015: Add the anchor follow-up and ask about threads in blinded reviews
+- TASK-005: Log and tick after merge
+- TASK-005: Add the sample size follow-up
+- ONB-011: Number the ADR from the merge
+- ONB-011: Log and tick after merge
+- ONB-011: Ask about two workspaces sharing an email domain
+- VIZ-007: Log and tick after merge
+- VIZ-007: Add the follow-up that lets display choices drive guided review
+- COLLAB-018: Log and tick after merge
+- AIP-001: Log and tick after merge
+- TASK-017: Log and tick after merge
+- TASK-018: Log and tick after merge
+- PILOT-001: Log and tick after merge and renumber the clashing ADRs
+- ANN-016: Log and tick after merge
+- JOBS-002: Log and tick after merge
+- AIP-004: Log and tick after merge
+- SHELL-015: Log and tick after merge
+- VIZ-010: Log and tick after merge
+- VIZ-010: Add the task that puts guided review and the full viewer on the live slide
+- ANN-018: Log and tick after merge
+- SHELL-002: Log and tick after merge
+- COLLAB-017: Number the ADR from the merge
+- COLLAB-017: Log and tick after merge
+- COLLAB-017: Ask whether the task owner is blind too
+- GUIDE-010: Log and tick after merge
+- DEV-002: Log and tick after merge
+- EVAL-010: Number the ADR from the merge
+- EVAL-010: Log and tick after merge
+- TEST-010: Log and tick after merge
+- AISEG-019: Log and tick after merge
+- GUIDE-010: Add follow-ups for note mentions, preview paging and trackpad listeners
+- DEV-002: Give the two new follow-ups free IDs
+- ADMIN-010: Log and tick after merge
+- ADMIN-010: Add the task for the last mock controls in Admin
+- TASK-009: Log and tick after merge
+- EVAL-017: Log and tick after merge
+- ADMIN-011: Log and tick after merge
+- TEST-014: Log and tick after merge
+- TEST-014: Index ADR 0280
+- ADMIN-008: Log and tick after merge
+- VIZ-012: Log and tick after merge
+- VIZ-012: Add the follow-up for real objects and camera alignment
+- SEC-015: Log and tick after merge
+- VIZ-012: Renumber its ADR to 0282 and index 0281 and 0282
+- GUIDE-022: Log and tick after merge
+- GUIDE-022: Renumber its ADR to 0283 and add the mention token follow-up
+- EVAL-009: Log and tick after merge
+- EVAL-009: Add the Compare with picker follow-up
+- TEST-021: Log the red-CI fix of 2026-11-09
+- TEST-009: Log and move to review after merge
+- TEST-009: Add the accessibility fix follow-ups
+- DEV-013: Log and tick after merge
+- GUIDE-023: Log and tick after merge
+- GUIDE-023: Add the follow-up for object threads in guided review
+- COLLAB-017: Process the owner's answers to decisions 76 to 80
+- EVAL-018: Log and tick after merge
+- VIZ-011: Log and tick after merge
+- CMP-008: Log and tick after merge
+- COLLAB-019: Log and tick after merge
+- TEST-021: Tick the shard and dependency scan tasks after green CI
+- COLLAB-021: Log and tick after merge
+- TEST-009: Tick after a green CI run with enforcement on
+- TEST-025: Tick after the four specs pass locally and on CI
+- COLLAB-020: Log and tick after merge
+- FOUND-033: File the project review as ten tasks, three decisions and a result file
+- VIZ-013: Number the ADR from the merge
+- VIZ-013: Log and tick after merge
+- TEST-022: Log the partial state at the usage pause
+- TEST-023: Log the partial state at the usage pause
+- TEST-024: Log the partial state at the usage pause
+- SEC-032: Log the review session's state at the usage pause
+- VIEW-059: File the viewer engine and edge token reviews as tasks and results
+- VIEW-060: Log and tick the viewer engine and edge fixes of the review
+- FOUND-002: Consolidate the docs
+- FOUND-038: List and mark the records where an agent stood in for a person
+- FOUND-037: Log and tick the docs memory and stand-in record tasks
+- FOUND-038: Correct the consolidated pages and the stand-in marks after review
+- VIEW-068: Log and tick the inference worker fix and the browser runs
+- TEST-023: Log and tick after merge
+- TEST-029: File the two flaky spec tasks and record the causes
+- VIEW-066: Log and tick the review fixes and record the settled suspicions
+- TEST-031: Record the three specs that flaked in the same run
+- TEST-023: Record the axe failures of the ci run on its push
+- TEST-023: Log the CI axe follow-up
+- TEST-032: File, log and tick the side panel tab name and file the axe scan order task
+- TEST-024: Log and tick after merge
+- TEST-022: Log and tick after merge
+- FOUND-033: Log and tick a result for every push to main
+- TEST-034: File the retried tests, tick the display panel specs and write the push pacing rule
+- SEC-036: Log and tick the refused rejoin and update the room record
+- SEC-037: Log and tick the room caps and update the limits page
+- VIEW-062: Log and tick the grey slide route and note it in the slide formats page
+- TEST-031: Tick after three clean ci runs and log the two axe failures on main
+- PROJ-012: Log and tick the class removal refusal
+- SEC-043: Log and tick the write isolation suite and describe it
+- SEC-044: Log and tick the mixed write probes and file the run reason task
+- TEST-027: Log the parallel db job and move the task to review
+- TEST-027: Record the first ci run on four workers and ask how fast is enough
+- TEST-024: Log the CI-only axe fixes
+- TEST-027: Record the next two ci runs of the database tests and tick the flow page test
+- TEST-024: Log the green run with an empty allowlist
+- TEST-036: File and log the display panel Undo retry and move the task to review
+- TEST-036: Log the first green ci run and correct the slowed run counts
+- FOUND-038: Apply the owner's decisions 81 to 86 and put staging first
+- IAM-001: Number the ADR from the merge
+- IAM-001: Log and tick after merge
+- OPS-001: Say that Neon projects are made in the Vercel dashboard and only branches by script
+- OPS-002: Log the staging credentials made with the owner and narrow decision 88
+- FOUND-038: Rewrite the owner's decisions for production only until the first real user
+- FOUND-038: Record production only until the first real user and retarget the plan
+- OPS-001: Delete the old state file on the owner's answer to decision 87
+- OPS-002: Act on the owner's answers on DNS, buckets and the Neon region
+- OPS-002: Log the production CI secrets set with the owner
+- OPS-002: Record the Zitadel free plan with no card
+- OPS-002: Record that PostGIS works on Neon Postgres 18
+- OPS-002: Record the production CI credentials and the owner's answer on the first deploy
+- OPS-002: Log the owner's Mac Neon key
+- OPS-002: Log the Modal proxy token and record that secret bulk makes a draft Worker
+- OPS-002: Log the first production bootstrap
+- OPS-002: Ask how the first production deploy passes the environment rules
+- OPS-002: Record the owner's choice to deploy from v0.1.0
+
+### Tests
+
+- TEST-002: Complete the factories and show every one in a sample test
+- TEST-003: Send every call from another workspace and prove nothing here changes
+- TEST-016: Fail on any patient name in tests that is not a registered synthetic one
+- CASES-009: Run the search latency test on demand after it missed the budget in CI
+- TEST-005,TILES-006: Add golden-image tests on SwiftShader and a latency proxy
+- RSET-012: Give the worker lease test a 1 s lease for slower runners
+- PROTO-005: Expect the four seeded jobs in the catalogue's fake data story
+- PROTO-008: Link every scene from the prototype index and smoke test each route
+- PROTO-008: Expect no pending screens after the full viewer landed
+- SKEL-005: Assert level sizes, microns per pixel and thumbnail checksum after ingest
+- GUIDE-013: Cover the newer routes in the tenant isolation suite
+- STACK-012: Render a WebGPU tile on SwiftShader and compare it to the golden
+- SKEL-008: Add an end-to-end test that decides, submits and checks the list and audit log
+- PROTO-005: Close the slide list before opening the model picker in the Run test
+- INGEST-016: Prove 16-bit big-endian BigTIFF MxIF layout opens exactly
+- IAM-014: List member activity in the tenant isolation suite
+- CASE-002: Wait for the new slide before stepping back and give the page loop tests 90 s
+- NAV-002: Cover the scale bar choice at every zoom and the readout
+- PROTO-008: Split the page loop smoke tests into one test per scene or four parts
+- CASE-015: Cover the top bar progress ring for empty, partial and finished slides
+- DS-032: Run the axe spec with reduced motion
+- SHELL-009: Add screen coverage measurement for chrome share
+- NAV-003: Check the brightness clamp at the top end too
+- SHELL-012: Check the account menu keyboard order, not only its labels
+- DS-031: Poll for the running animation after Move
+- DS-015: Wait for the streamed findings to reach five
+- DS-016: Read only the live tab panel while the old one animates out
+- SKEL-004: Add the unfinished upload into project spec
+- TASK-011: Cover display presets and adjudications in the isolation suite
+- TASK-011: Cover slide tissue in the isolation suite
+- PROTO-020: Count the annotate task links on the prototype index
+- PROTO-020: Open a folded staging card before stepping through the areas
+- TEST-017: Give web browser assertions time for the dev server to load a slide
+- TEST-017: Fix the last three web browser test races
+- ADJ-005: Check the exported PDF lists changes with who made them
+- ANN-033: Match the click press tests to keeping capture
+- AISEG-010: Take the fastest of nine outline runs so a busy machine finds a quiet sample
+- AISEG-010: Check the outline budget by hand and link the numbered ADR
+- ANN-040: Assert the exact refusal for a review task
+- EVAL-013: List the AI changes read in the tenant isolation routes
+- VIEW-031: Add a wheel zoom main-thread budget on the Huron fixture
+- AISEG-017: Give the main thread budget hosted runner headroom
+- SEC-033: Pin every policy in a reviewed file and probe every tenant table
+- TEST-030: Report every Tab stop the table order test reached
+- TEST-031: Give three web specs room for a slow runner
+- TEST-031: Give two more slide specs room and wait before each settings reload
+- TEST-034: Press Enter until the flow page listens
+- VIEW-062: Use a 16-bit RGB slide as the one the route cannot draw
+- SEC-043: Send every write route as another workspace and as its owner
+- SEC-044: Mix my own path with ids of another workspace in every write
+- TEST-036: Repeat the preset keys when the Undo toast is gone before the click
+
+### Build and CI
+
+- FOUND-023: Run the docs checks on Python 3.14 like the rest of the repo
+- FOUND-025: Run browser suites in parallel, skip heavy jobs on docs, cache the permission schema
+- FOUND-025: Let commitlint skip merge commits from pull requests
+- FOUND-025: Type the merge commit check in the commitlint config
+- OBJ-005: Add an opt-in update_goldens run that regenerates goldens on the runner
+- TEST-012: Keep the camelyon job out of the merge gate until its cache exists
+- VIEW-054: Add the JPEG 2000 slide and CMU-1.tiff to the viewer fixture group
+- TEST-017: Track flaky tests and report quarantined ones weekly
+- FOUND-033: Let a run on main finish, put the docs checks under ci-ok and add a lead CI check
+- TEST-027: Run the database tests on four workers
+
+### Other
+
+- FOUND-023: Claim the first five tasks of the parallel run
+- SHELL-001: Claim SHELL-001 for the parallel run
+- SKEL-006: Claim SKEL-006 for the parallel run
+- SKEL-008: Claim SKEL-008 for the parallel run
+- DS-022: Claim DS-022 for the parallel run
+- tooling: Add a plan usage hook that wraps up at 90% and stops at 95%
+- tooling: Let only the owner turn on the usage override
+- DS-021: Claim DS-021 INGEST-007 for the parallel run
+- DS-019: Claim DS-019 for the parallel run
+- TEST-006: Claim TEST-006 for the parallel run
+- DS-020: Claim DS-020 for the parallel run
+- DS-008: Claim DS-008 for the parallel run
+- INGEST-016: Claim INGEST-016 for the parallel run
+- CASE-001: Claim CASE-001 for the parallel run
+- INGEST-027: Claim INGEST-027 for the parallel run
+- CMD-001: Claim CMD-001 for the parallel run
+- SEC-011: Claim SEC-011 for the parallel run
+- VIEW-027: Claim VIEW-027 for the parallel run
+- AIP-003: Claim AIP-003 for the parallel run
+- AITUM-002: Claim AITUM-002 for the parallel run
+- WL-017: Claim WL-017 for the parallel run
+- NAV-001: Claim NAV-001 for the parallel run
+- ANN-001: Claim ANN-001 for the parallel run
+- MEAS-001: Claim MEAS-001 TILES-008 for the parallel run
+- INGEST-008: Claim INGEST-008 for the parallel run
+- COLLAB-005: Claim COLLAB-005 for the parallel run
+- INGEST-009: Claim INGEST-009 for the parallel run
+- CMP-002: Claim CMP-002 for the parallel run
+- GUIDE-018: Claim GUIDE-018 for the parallel run
+- INGEST-013: Claim INGEST-013 for the parallel run
+- VIEW-056: Claim VIEW-056 for the parallel run
+- CASE-002: Claim CASE-002 for the parallel run
+- TILES-003: Claim TILES-003 HOME-009 for the parallel run
+- SET-011: Claim SET-011 for the parallel run
+- SEC-027: Claim SEC-027 for the parallel run
+- INGEST-018: Claim INGEST-018 for the parallel run
+- VIEW-057: Claim VIEW-057 for the parallel run
+- REVIEW-017: Claim REVIEW-017 for the parallel run
+- COLLAB-006: Claim COLLAB-006 for the parallel run
+- CMD-002: Claim CMD-002 for the parallel run
+- PROJ-005: Claim PROJ-005 for the parallel run
+- NOTIF-002: Claim NOTIF-002 for the parallel run
+- TASK-006: Claim TASK-006 for the parallel run
+- PROJ-007: Claim PROJ-007 for the parallel run
+- I18N-002: Claim I18N-002 for the parallel run
+- tooling: Add cloud session setup script
+- board: Claim SKEL-010, FOUND-000, VIEW-022, I18N-003 and SEC-021
+- SKEL-010: Log and tick the skeleton retrospective
+- I18N-003: Log and tick locale-ready backend messages
+- FOUND-000: Log and tick the tooling research check
+- SEC-021: Log SEC-021 and move it to review
+- VIEW-022: Log and tick keyboard navigation
+- board: Claim twenty tasks for parallel agents
+- I18N-000: Log and tick I18N-000
+- CASE-000: Log and tick CASE-000
+- CASE-003: Log and tick CASE-003
+- NAV-002: Log and tick NAV-002
+- DS-006: Log and tick DS-006
+- INGEST-000: Log and tick INGEST-000
+- SHELL-000: Log and tick SHELL-000
+- DS-010: Log and tick DS-010
+- DS-009: Log and tick DS-009
+- NAV-000: Log and tick NAV-000
+- VIEW-047: Log and tick VIEW-047
+- CASE-011: Log and review CASE-011
+- DS-016: Log and tick DS-016
+- LAB-000: Log and review LAB-000
+- DS-027: Log and tick DS-027
+- DS-013: Log and tick DS-013
+- SEC-018: Log and review SEC-018
+- CASE-010: Log and tick CASE-010
+- HOME-010: Log and tick HOME-010
+- DS-014: Log and tick DS-014
+- board: Claim thirty non-crucial tasks for parallel agents
+- REVIEW-000: Log and tick REVIEW-000
+- ANN-000: Log and tick ANN-000
+- DS-030: Log and tick DS-030
+- SHELL-008: Log and tick SHELL-008
+- WL-006: Log and tick WL-006
+- NAV-003: Log and review NAV-003
+- AIP-000: Log and review AIP-000
+- NAV-009: Log and tick NAV-009
+- DS-031: Log and tick DS-031
+- REVIEW-006: Log and tick REVIEW-006
+- DS-029: Log and tick DS-029
+- LAB-005: Log and tick LAB-005
+- REVIEW-001: Log and tick REVIEW-001
+- NAV-012: Log and review NAV-012
+- DS-007: Log and tick DS-007
+- REVIEW-011: Log and tick REVIEW-011
+- LAB-004: Log and review LAB-004
+- NAV-005: Log and review NAV-005
+- CASE-015: Log and tick CASE-015
+- DS-017: Log and tick DS-017
+- board: Release HOME-003 for a migration and claim DS-018
+- REVIEW-014: Log and tick REVIEW-014
+- SHELL-012: Log and review SHELL-012
+- ANN-011: Log and tick ANN-011
+- DS-015: Log and tick DS-015
+- DS-018: Log and tick DS-018
+- DS-024: Log and tick DS-024
+- DS-025: Log and tick DS-025
+- DS-026: Log and tick DS-026
+- NAV-004: Log and review NAV-004
+- board: Release the unstarted DS-028 claim
+- board: Claim twenty more tasks for parallel agents
+- REVIEW-023: Log and tick REVIEW-023
+- DS-032: Log and tick DS-032
+- CMD-007: Log and tick CMD-007
+- WL-005: Log and tick WL-005
+- REVIEW-021: Log and tick REVIEW-021
+- CASE-004: Log and tick CASE-004
+- SHELL-009: Log and tick SHELL-009
+- DS-033: Log and tick DS-033
+- REVIEW-022: Log and tick REVIEW-022
+- REVIEW-012: Log and tick REVIEW-012
+- WL-019: Log and tick WL-019
+- SHELL-007: Log and review SHELL-007
+- DS-005: Log and tick DS-005
+- CASE-005: Log and tick CASE-005
+- DS-003: Log and tick DS-003
+- DS-004: Log and tick DS-004
+- DS-023: Log and tick DS-023
+- CASE-013: Log and tick CASE-013
+- NAV-010: Log and review NAV-010
+- CASE-006: Log and tick CASE-006
+- ADMIN-001: Claim ADMIN-001 ADJ-007 for the parallel run
+- CASE-014: Claim CASE-014 for the parallel run
+- tooling: Write down the parallel run rules and move the lead scripts into scripts/lead
+- tooling: Point AGENTS.md at the parallel run rules
+- ONB-001: Claim ONB-001 ANN-004 JOBS-003 for the parallel run
+- VIEW-049: Claim VIEW-049 for the parallel run
+- OBJ-005: Claim OBJ-005 SKEL-012 for the parallel run
+- JOBS-006: Claim JOBS-006 GUIDE-005 ONB-002 for the parallel run
+- SKEL-007: Claim SKEL-007 for the parallel run
+- INGEST-019: Claim INGEST-019 for the parallel run
+- VIEW-015: Claim VIEW-015 for the parallel run
+- AINUC-006: Claim AINUC-006 for the parallel run
+- TILES-005: Claim TILES-005 for the parallel run
+- SKEL-004: Claim SKEL-004 GUIDE-002 ADJ-008 CMD-006 NAV-006 for the parallel run
+- SKEL-004: Leave next-step notes on the tasks stopped mid-way
+- CMD-006: Leave the next step on the stopped task
+- EVAL-003: Claim EVAL-003 INGEST-021 CASE-017 for the parallel run
+- INGEST-030: Claim INGEST-030 DS-036 for the parallel run
+- SEC-029: Claim SEC-029 DS-035 for the parallel run
+- DS-038: Claim DS-038 for the parallel run
+- VIEW-050: Claim VIEW-050 for the parallel run
+- DS-028: Claim DS-028 WL-013 for the parallel run
+- NAV-014: Claim NAV-014 for the parallel run
+- HOME-008: Claim HOME-008 TASK-011 for the parallel run
+- FOUND-029: Claim FOUND-029 for the parallel run
+- DS-037: Claim DS-037 for the parallel run
+- VIEW-051: Claim VIEW-051 for the parallel run
+- REVIEW-005: Claim REVIEW-005 for the parallel run
+- VIEW-025: Claim VIEW-025 for the parallel run
+- SHELL-005: Claim SHELL-005 LAB-003 EVAL-008 for the parallel run
+- CASE-009: Claim CASE-009 CASE-016 for the parallel run
+- DS-034: Claim DS-034 for the parallel run
+- SEC-010: Claim SEC-010 for the parallel run
+- HOME-003: Claim HOME-003 for the parallel run
+- NAV-015: Claim NAV-015 VIEW-044 for the parallel run
+- REVIEW-004: Claim REVIEW-004 VIZ-001 for the parallel run
+- GUIDE-007: Claim GUIDE-007 for the parallel run
+- EVAL-005: Claim EVAL-005 for the parallel run
+- EVAL-004: Claim EVAL-004 for the parallel run
+- ANN-014: Claim ANN-014 REVIEW-025 CMD-003 for the parallel run
+- MEAS-002: Claim MEAS-002 RSET-010 for the parallel run
+- MEAS-003: Claim MEAS-003 ANN-005 for the parallel run
+- ADJ-002: Claim ADJ-002 GUIDE-003 ANN-006 REVIEW-027 for the parallel run
+- ANN-007: Claim ANN-007 for the parallel run
+- ANN-008: Claim ANN-008 EVAL-012 for the parallel run
+- TASK-013: Claim TASK-013 ANN-002 ANN-013 for the parallel run
+- ANN-030: Claim ANN-030 PROTO-020 ANN-017 AISEG-012 AISEG-011 for the parallel run
+- ANN-021: Claim ANN-021 COLLAB-003 COLLAB-007 for the parallel run
+- AINUC-002: Claim AINUC-002 for the parallel run
+- AINUC-008: Claim AINUC-008 for the parallel run
+- COLLAB-004: Claim COLLAB-004 COLLAB-012 for the parallel run
+- TASK-015: Claim TASK-015 for the parallel run
+- SHELL-004: Claim SHELL-004 ANN-022 for the parallel run
+- ANN-024: Claim ANN-024 for the parallel run
+- JOBS-004: Claim JOBS-004 for the parallel run
+- ANN-028: Claim ANN-028 for the parallel run
+- ANN-009: Claim ANN-009 for the parallel run
+- REVIEW-026: Claim REVIEW-026 for the parallel run
+- REVIEW-024: Claim REVIEW-024 for the parallel run
+- ANN-029: Claim ANN-029 for the parallel run
+- FOUND-030: Claim FOUND-030 for the parallel run
+- ANN-026: Claim ANN-026 for the parallel run
+- ANN-025: Claim ANN-025 for the parallel run
+- ADJ-004: Claim ADJ-004 AISEG-001 AINUC-005 AIP-009 AIP-006 for the parallel run
+- AISEG-015: Claim AISEG-015 for the parallel run
+- AINUC-001: Claim AINUC-001 INGEST-025 for the parallel run
+- HOME-002: Claim HOME-002 for the parallel run
+- TASK-014: Claim TASK-014 for the parallel run
+- ONB-007: Claim ONB-007 for the parallel run
+- AISEG-002: Claim AISEG-002 REPORT-024 ANN-003 for the parallel run
+- ANN-023: Claim ANN-023 for the parallel run
+- AISEG-003: Claim AISEG-003 for the parallel run
+- AISEG-004: Claim AISEG-004 for the parallel run
+- REPORT-025: Claim REPORT-025 for the parallel run
+- PROJ-008: Claim PROJ-008 for the parallel run
+- AISEG-005: Claim AISEG-005 for the parallel run
+- ANN-015: Claim ANN-015 for the parallel run
+- AISEG-007: Claim AISEG-007 for the parallel run
+- AISEG-006: Claim AISEG-006 for the parallel run
+- ADJ-003: Claim ADJ-003 for the parallel run
+- AINUC-014: Claim AINUC-014 REPORT-008 ADJ-005 for the parallel run
+- REPORT-019: Claim REPORT-019 for the parallel run
+- GUIDE-004: Claim GUIDE-004 for the parallel run
+- MLEVAL-003: Claim MLEVAL-003 for the parallel run
+- GUIDE-008: Claim GUIDE-008 for the parallel run
+- AISEG-010: Claim AISEG-010 INGEST-020 CMP-007 for the parallel run
+- INGEST-031: Claim INGEST-031 CMD-005 for the parallel run
+- CMD-004: Claim CMD-004 MEAS-005 for the parallel run
+- DEV-006: Claim DEV-006 for the parallel run
+- DEV-007: Claim DEV-007 for the parallel run
+- EXP-002: Claim EXP-002 for the parallel run
+- SET-002: Claim SET-002 for the parallel run
+- SET-008: Claim SET-008 for the parallel run
+- SET-009: Claim SET-009 for the parallel run
+- SET-010: Claim SET-010 for the parallel run
+- ANN-032: Claim ANN-032 for the parallel run
+- ANN-038: Claim ANN-038 for the parallel run
+- ANN-036: Claim ANN-036 for the parallel run
+- ANN-031: Claim ANN-031 LAB-001 for the parallel run
+- TEST-012: Claim TEST-012 for the parallel run
+- AINUC-007: Claim AINUC-007 for the parallel run
+- CASES-017: Claim CASES-017 for the parallel run
+- ANN-027: Claim ANN-027 for the parallel run
+- VIZ-002: Claim VIZ-002 for the parallel run
+- REVIEW-010: Claim REVIEW-010 for the parallel run
+- FOUND-032: Claim FOUND-032 for the parallel run
+- MEAS-007: Claim MEAS-007 for the parallel run
+- ANN-040: Claim ANN-040 for the parallel run
+- EVAL-014: Claim EVAL-014 for the parallel run
+- VIZ-003: Claim VIZ-003 for the parallel run
+- COLLAB-016: Claim COLLAB-016 EVAL-013 AISEG-018 for the parallel run
+- SET-014: Claim SET-014 for the parallel run
+- SET-013: Claim SET-013 for the parallel run
+- EVAL-016: Claim EVAL-016 for the parallel run
+- ANN-039: Claim ANN-039 for the parallel run
+- VIZ-004: Claim VIZ-004 for the parallel run
+- ANN-037: Claim ANN-037 for the parallel run
+- AILEARN-001: Claim AILEARN-001 for the parallel run
+- NOTIF-008: Claim NOTIF-008 for the parallel run
+- ONB-004: Claim ONB-004 for the parallel run
+- JOBS-005: Claim JOBS-005 for the parallel run
+- CMP-005: Claim CMP-005 for the parallel run
+- CMP-003: Claim CMP-003 for the parallel run
+- CMP-004: Claim CMP-004 for the parallel run
+- CMP-001: Claim CMP-001 for the parallel run
+- DEV-011: Claim DEV-011 for the parallel run
+- CMP-006: Claim CMP-006 for the parallel run
+- ADMIN-007: Claim ADMIN-007 for the parallel run
+- CASES-016: Claim CASES-016 for the parallel run
+- CASES-027: Claim CASES-027 for the parallel run
+- VIEW-031: Claim VIEW-031 DEV-005 for the parallel run
+- DEV-001: Claim DEV-001 for the parallel run
+- INGEST-024: Claim INGEST-024 for the parallel run
+- EXP-007: Claim EXP-007 for the parallel run
+- EXP-011: Claim EXP-011 for the parallel run
+- AINUC-009: Claim AINUC-009 DEV-012 for the parallel run
+- DEV-010: Claim DEV-010 for the parallel run
+- DEV-008: Claim DEV-008 for the parallel run
+- ONB-006: Claim ONB-006 REVIEW-018 for the parallel run
+- NAV-007: Claim NAV-007 for the parallel run
+- LAB-018: Claim LAB-018 REVIEW-008 for the parallel run
+- NAV-008: Claim NAV-008 for the parallel run
+- NAV-011: Claim NAV-011 for the parallel run
+- REVIEW-016: Claim REVIEW-016 for the parallel run
+- NAV-016: Claim NAV-016 for the parallel run
+- REVIEW-028: Claim REVIEW-028 for the parallel run
+- VIEW-041: Claim VIEW-041 for the parallel run
+- REVIEW-013: Claim REVIEW-013 for the parallel run
+- VIEW-058: Claim VIEW-058 for the parallel run
+- REVIEW-029: Claim REVIEW-029 for the parallel run
+- REVIEW-007: Claim REVIEW-007 VIEW-054 for the parallel run
+- SHELL-003: Claim SHELL-003 for the parallel run
+- REVIEW-015: Claim REVIEW-015 for the parallel run
+- REVIEW-009: Claim REVIEW-009 for the parallel run
+- REVIEW-019: Claim REVIEW-019 for the parallel run
+- CASE-007: Claim CASE-007 for the parallel run
+- AISEG-017: Claim AISEG-017 for the parallel run
+- SHELL-006: Claim SHELL-006 for the parallel run
+- REVIEW-030: Claim REVIEW-030 for the parallel run
+- VIEW-018: Claim VIEW-018 for the parallel run
+- WL-016: Claim WL-016 for the parallel run
+- WL-020: Claim WL-020 REVIEW-031 for the parallel run
+- EXP-006: Claim EXP-006 PILOT-007 for the parallel run
+- EXP-012: Claim EXP-012 for the parallel run
+- OBJ-004: Claim OBJ-004 PROJ-006 for the parallel run
+- TEST-017: Claim TEST-017 for the parallel run
+- EXP-005: Claim EXP-005 for the parallel run
+- PROJ-010: Claim PROJ-010 for the parallel run
+- PROJ-011: Claim PROJ-011 VIZ-009 ONB-010 for the parallel run
+- ADMIN-009: Claim ADMIN-009 for the parallel run
+- VIZ-008: Claim VIZ-008 for the parallel run
+- SET-003: Claim SET-003 for the parallel run
+- SET-004: Claim SET-004 for the parallel run
+- TEST-011: Claim TEST-011 for the parallel run
+- SET-005: Claim SET-005 for the parallel run
+- CASES-021: Claim CASES-021 for the parallel run
+- VIZ-006: Claim VIZ-006 for the parallel run
+- ADMIN-002: Claim ADMIN-002 for the parallel run
+- ADMIN-003: Claim ADMIN-003 for the parallel run
+- SET-005: Merge the lead and regenerate the API client
+- SET-006: Claim SET-006 for the parallel run
+- ADMIN-004: Claim ADMIN-004 for the parallel run
+- AIP-015: Claim AIP-015 for the parallel run
+- ADMIN-003: Merge the lead and keep both audit changes
+- AILEARN-006: Claim AILEARN-006 for the parallel run
+- SET-007: Claim SET-007 for the parallel run
+- GUIDE-017: Claim GUIDE-017 for the parallel run
+- ONB-003: Claim ONB-003 for the parallel run
+- AIP-014: Claim AIP-014 VIZ-005 for the parallel run
+- TEST-013: Claim TEST-013 for the parallel run
+- LAB-002: Claim LAB-002 for the parallel run
+- ADMIN-005: Claim ADMIN-005 for the parallel run
+- GUIDE-019: Claim GUIDE-019 TASK-010 HOME-012 COLLAB-015 ONB-011 for the parallel run
+- TEST-021: Claim TEST-021 for the parallel run
+- CASES-002: Claim CASES-002 for the parallel run
+- SHELL-010: Claim SHELL-010 for the parallel run
+- ADMIN-000: Claim ADMIN-000 for the parallel run
+- VIZ-000: Claim VIZ-000 ONB-000 for the parallel run
+- GUIDE-020: Claim GUIDE-020 COLLAB-000 for the parallel run
+- CMP-000: Claim CMP-000 SET-000 for the parallel run
+- GUIDE-021: Claim GUIDE-021 VIZ-007 TEST-000 DEV-000 for the parallel run
+- EXP-000: Claim EXP-000 for the parallel run
+- COLLAB-017: Claim COLLAB-017 for the parallel run
+- TASK-016: Claim TASK-016 for the parallel run
+- TASK-005: Claim TASK-005 PILOT-001 for the parallel run
+- TASK-017: Claim TASK-017 for the parallel run
+- COLLAB-018: Claim COLLAB-018 for the parallel run
+- AIP-001: Claim AIP-001 for the parallel run
+- TASK-018: Claim TASK-018 for the parallel run
+- SHELL-015: Claim SHELL-015 VIZ-010 EVAL-010 ANN-016 for the parallel run
+- JOBS-002: Claim JOBS-002 for the parallel run
+- AIP-004: Claim AIP-004 for the parallel run
+- GUIDE-010: Claim GUIDE-010 for the parallel run
+- SHELL-002: Claim SHELL-002 for the parallel run
+- ANN-018: Claim ANN-018 for the parallel run
+- AISEG-019: Claim AISEG-019 TILES-000 ADMIN-010 for the parallel run
+- TEST-010: Claim TEST-010 and release TILES-000
+- FOUND-027: Claim FOUND-027 for the parallel run
+- VIEW-029: Claim VIEW-029 and hold FOUND-027 for a quiet moment
+- DEV-002: Claim DEV-002 and leave VIEW-029 for a quiet Mac
+- VIZ-012: Claim VIZ-012 ADMIN-008 TASK-009 for the parallel run
+- ADMIN-011: Claim ADMIN-011 for the parallel run
+- EVAL-017: Claim EVAL-017 for the parallel run
+- TEST-009: Claim TEST-009 for the parallel run
+- TEST-014: Claim TEST-014 for the parallel run
+- GUIDE-022: Claim GUIDE-022 for the parallel run
+- SEC-015: Claim SEC-015 for the parallel run
+- EVAL-009: Claim EVAL-009 for the parallel run
+- agents: Check only changed packages before commit and tighten worktree rules
+- agents: Auto-compact sessions at a quarter of the context window
+- GUIDE-023: Claim GUIDE-023 DEV-013 for the parallel run
+- EVAL-018: Claim EVAL-018 for the parallel run
+- VIZ-011: Claim VIZ-011 for the parallel run
+- COLLAB-019: Claim COLLAB-019 for the parallel run
+- CMP-008: Claim CMP-008 for the parallel run
+- VIZ-013: Claim VIZ-013 for the parallel run
+- COLLAB-021: Claim COLLAB-021 for the parallel run
+- COLLAB-020: Claim COLLAB-020 for the parallel run
+- TEST-025: Claim TEST-025 for the parallel run
+- TEST-023: Claim TEST-023 for the parallel run
+- TEST-022: Claim TEST-022 for the parallel run
+- TEST-024: Claim TEST-024 for the parallel run
+- TEST-024: Merge origin/main
+- IAM-001: Claim IAM-001 for the parallel run
+
+### FOUND-001
+
+- Create the pnpm and uv monorepo skeleton
+
+### FOUND-003
+
+- Check ADR status lines and index in CI
+
+### FOUND-004
+
+- Configure TypeScript presets, aliases and a broken-import guard
+- Follow Turborepo's TypeScript guidance
+
+### FOUND-005
+
+- Add py-common and Ruff, basedpyright and pytest from the root
+
+### FOUND-006
+
+- Add lefthook with Biome, Oxlint, Ruff and betterleaks
+
+### FOUND-007
+
+- Split CI into lint, typecheck and test jobs
+
+### FOUND-016
+
+- Add slide fixtures with checksums, local links and a CI cache
+
+### OPS-001
+
+- Manage zone settings, buckets and Zitadel apps with OpenTofu
+
+### STACK-038
+
+- Keep GitHub Actions and add a nightly Mac GPU runner plan
+- Supersede the Mac GPU runner plan with hosted CI only
+
