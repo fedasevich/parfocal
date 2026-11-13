@@ -12,10 +12,9 @@ To take every recommendation at once, write "all recommended" here:
 2. Copy the values of the Cloudflare and Modal `parfocal-ci-prod` tokens for the infra guide, who puts them into the GitHub environment `production`.
 3. Create a Neon API key, which decision 88 (credentials that the production deploy needs) asks for.
 4. Answer decision 90 (Neon region and Postgres version).
-5. Answer decision 87 (delete the old OpenTofu state file).
-6. Answer decision 89 (the old web host's wildcard DNS record).
-7. Answer decision 91 (delete the GitHub environment `staging` and the staging tokens).
-8. Answer decision 92 (delete the empty buckets `parfocal-prod` and `parfocal-staging`).
+5. Answer decision 89 (the old web host's wildcard DNS record).
+6. Answer decision 91 (delete the GitHub environment `staging` and the staging tokens).
+7. Answer decision 92 (delete the empty buckets `parfocal-prod` and `parfocal-staging`).
 
 ## What your answers of 2026-11-04 changed
 
@@ -70,17 +69,6 @@ Every other answer kept what was built: 37a (darker primary hover), 39a (Alt+Lef
 | 86a, database test speed | TEST-027 (database tests in parallel) is ticked at 15 to 18 minutes |
 
 ## Open decisions from OPS-001 (base infrastructure as code)
-
-### 87. Delete the old OpenTofu state file
-
-The state moved to four files, one per root (ADR 0287, one OpenTofu root per environment). The old file `parfocal.tfstate` in bucket `parfocal-tfstate` is now an unused encrypted copy that still holds all three login app secrets. Deleting is a destructive action, so it needs your yes. The command is `npx wrangler r2 object delete parfocal-tfstate/parfocal.tfstate`, cost $0.
-
-- **A. Delete it once production has deployed from the new roots (recommended).** It stays as a fallback for the few days OPS-002 (deploy definitions) and SKEL-001 (production environment exists) take.
-- B. Delete it now.
-- C. Keep it.
-- Other.
-
-Your choice:
 
 ### 88. Credentials that the production deploy needs
 
