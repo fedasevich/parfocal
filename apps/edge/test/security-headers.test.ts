@@ -53,6 +53,7 @@ const env = {
   ROOM_TOKEN_KEY: SECRET,
   ASSETS: assets,
   UPLOAD_ORIGIN: `${UPLOAD_ORIGIN}/`,
+  LOCAL_RUN: "true",
 } satisfies EdgeEnv;
 
 function get(path: string): Promise<Response> {

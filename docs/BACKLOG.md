@@ -2745,7 +2745,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Done when interaction tests cover both.
   Size: S.
 
-- [ ] ANN-010 · Brush tool on heatmaps
+- [x] ANN-010 · Brush tool on heatmaps
   Paint and erase (Shift, or Alt as in QuPath) on a heatmap layer, size 4 to 160 px. Boolean and offset work uses Clipper2 ([ADR 0197](adr/0197-annotate-key-map-check-and-client-geometry-libraries.md), the geometry library choice).
   Done when tests cover painting, erasing and undo, and the painted map persists.
   Size: M.
@@ -2803,7 +2803,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Done when a perf test keeps hover hit tests under 1 ms with 1M nuclei.
   Size: M.
 
-- [ ] ANN-019 · Overlay drawing performance
+- [x] ANN-019 · Overlay drawing performance
   Paths batched per state, `getBoundingClientRect` cached per frame, one overlay paint per frame, no quadratic `closePath` on batched paths.
   Done when the overlay perf test meets the TEST-006 budget during a drag with 100k shapes.
   Refs doc 24.
