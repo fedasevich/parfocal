@@ -3,6 +3,7 @@ from typing import Any, cast
 
 import pytest
 from db_support import ApiAs
+from submit_support import submitted as finished_submit
 from test_decision_styles import answer
 from test_reviewed_layer import Review, review
 from workspace_support import owner
@@ -31,7 +32,7 @@ def queued(api: ApiAs, database: str) -> tuple[Review, str]:
             noted = body | {"note": f"Edge looks off, {len(who)}"} if object_id == "T1" else body
             saved = answer(api, r, str(r.task), object_id, noted, who)
             assert saved.status_code == 200, saved.text
-        assert api(r.people[who]).post(f"{r.base}/submit").status_code == 200
+        assert finished_submit(api(r.people[who]), f"{r.base}").status_code == 200
     return r, f"/api/review-tasks/{r.task}"
 
 

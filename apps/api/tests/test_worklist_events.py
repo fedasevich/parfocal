@@ -4,6 +4,7 @@ from collections.abc import Sequence
 
 import pytest
 from db_support import APP_URL, ApiAs, with_database
+from submit_support import submitted as finished_submit
 from test_review_states import REOPEN
 from test_reviewed_layer import Review, review
 from workspace_support import owner
@@ -68,7 +69,7 @@ def test_an_added_reviewer_hears_about_the_task(api: ApiAs, database: str) -> No
 def test_reviewer_progress_reaches_the_reviewer_and_the_creator(api: ApiAs, database: str) -> None:
     r = review(api, database)
     live = recorded(api)
-    submitted = api(r.people["first"]).post(f"{r.base}/submit")
+    submitted = finished_submit(api(r.people["first"]), f"{r.base}")
     assert submitted.status_code == 200, submitted.text
     reopened = api(r.people["first"]).post(f"{r.base}/reopen")
     assert reopened.status_code == 200, reopened.text
@@ -83,7 +84,7 @@ def test_reviewer_progress_reaches_the_reviewer_and_the_creator(api: ApiAs, data
 def test_a_status_change_reaches_everyone_on_the_task(api: ApiAs, database: str) -> None:
     r = review(api, database)
     for label in ("first", "second"):
-        assert api(r.people[label]).post(f"{r.base}/submit").status_code == 200
+        assert finished_submit(api(r.people[label]), f"{r.base}").status_code == 200
     live = recorded(api)
     task = f"/api/review-tasks/{r.task}"
     signed = api(r.people["owner"]).post(f"{task}/sign-off")
@@ -138,7 +139,7 @@ def test_a_finished_job_reaches_the_people_on_its_task(api: ApiAs, database: str
 def test_a_failed_publish_does_not_fail_the_request(api: ApiAs, database: str) -> None:
     r = review(api, database)
     api.app.state.realtime = BrokenRealtime()
-    submitted = api(r.people["first"]).post(f"{r.base}/submit")
+    submitted = finished_submit(api(r.people["first"]), f"{r.base}")
     assert submitted.status_code == 200, submitted.text
     stored = owner(
         database,

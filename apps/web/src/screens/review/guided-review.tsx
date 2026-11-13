@@ -4,6 +4,7 @@ import {
   useGetFirstRead,
   useGetMySettingLayers,
   useGetReviewedLayer,
+  useReopenSlideReview,
   useSubmitSlideReview,
 } from "@parfocal/api-client";
 import { Banner, InlineState } from "@parfocal/ui/components/banner";
@@ -102,6 +103,7 @@ type GuidedReviewProps = {
   camera?: Camera | undefined;
   scene: GuidedScene | undefined;
   submitted: boolean;
+  behind?: boolean;
   tab: GuidedTab | undefined;
   onTabChange: (tab: GuidedTab) => void;
 };
@@ -154,7 +156,8 @@ function GuidedBody({
   objectId,
   camera: startCamera,
   scene,
-  submitted,
+  submitted: submittedAtOpen,
+  behind = false,
   tab,
   onTabChange,
 }: BodyProps) {
@@ -166,6 +169,9 @@ function GuidedBody({
   const submitReview = useSubmitSlideReview({
     mutation: { onSuccess: () => markTried("guided-review") },
   });
+  const reopenReview = useReopenSlideReview();
+  const [reopened, setReopened] = useState(false);
+  const submitted = submittedAtOpen && !reopened;
   const threadsWarning = useOpenThreadsWarning(session.taskId, session.slideId);
   const style = setup.style ? { ...session.style, kind: setup.style } : session.style;
   const decisions = useDecisionSaves(session, style);
@@ -534,14 +540,23 @@ function GuidedBody({
       search: { slide: session.slideId },
     });
   const submit = () => {
-    if (failed) {
-      setFailed(false);
-      return;
-    }
-    submitReview.mutate({ taskId: session.taskId, slideId: session.slideId });
-    timing.finish();
-    void toSubmitted();
+    setFailed(false);
+    submitReview.mutate(
+      { taskId: session.taskId, slideId: session.slideId },
+      {
+        onSuccess: () => {
+          timing.finish();
+          void toSubmitted();
+        },
+        onError: () => setFailed(true),
+      },
+    );
   };
+  const reopen = () =>
+    reopenReview.mutate(
+      { taskId: session.taskId, slideId: session.slideId },
+      { onSuccess: () => setReopened(true) },
+    );
 
   useNoteKey(() => {
     if (!showDone && !noResults && answer(currentId)) openNote();
@@ -670,10 +685,18 @@ function GuidedBody({
         id: question.id,
         text: `Question ${position + 1} is not answered`,
         goTo: "Answer it",
+        target: `[data-question="${question.id}"]`,
       }));
-  const nextLabel = session.neighbours
-    ? `Submit and open slide ${session.neighbours.position + 1}`
-    : "Submit";
+  const nextLabel = !session.neighbours
+    ? "Submit"
+    : session.neighbours.next === null
+      ? "Submit and finish the task"
+      : `Submit and open slide ${session.neighbours.position + 1}`;
+  const lockedReason = behind
+    ? "Submitted. Your review can be changed until sign-off."
+    : submitted
+      ? "You submitted this slide. Reopen your review to change it."
+      : undefined;
 
   const authorOfNotes = person(session.meId);
   const kept = answer(currentId);
@@ -783,6 +806,7 @@ function GuidedBody({
       blockers={doneBlockers}
       unsure={unsureAreas}
       submitLabel={nextLabel}
+      {...(lockedReason ? { lockedReason } : {})}
       failed={failed}
       warning={threadsWarning}
       onSubmit={submit}
@@ -914,8 +938,15 @@ function GuidedBody({
     >
       <b>Signed off 15 Oct.</b> Changes need an amendment.
     </Banner>
-  ) : submitted && !showDone ? (
-    <Banner tone="info">
+  ) : submitted && !behind ? (
+    <Banner
+      tone="info"
+      actions={
+        <Button size="sm" onClick={reopen}>
+          Reopen my review
+        </Button>
+      }
+    >
       You submitted this slide. Changes are saved and {otherReviewer} is told.
     </Banner>
   ) : null;

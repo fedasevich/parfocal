@@ -54,6 +54,7 @@ from parfocal_api.tables import (
     lab_models,
     legal_holds,
     memberships,
+    opinions,
     organisations,
     project_classes,
     project_members,
@@ -1825,6 +1826,17 @@ async def seed(database: str, lead: Seat = RESEARCHER, presets_for: Seat = RESEA
                     task_id=task,
                     slide_id=case.loose_slide_id,
                     user_id=people[lead],
+                )
+            )
+            await connection.execute(
+                insert(opinions).values(
+                    tenant_id=tenant_id,
+                    project_id=case.project_id,
+                    task_id=task,
+                    slide_id=case.loose_slide_id,
+                    user_id=people[lead],
+                    form_version=1,
+                    answers={"acceptable": 4},
                 )
             )
             assert isinstance(result_set, uuid.UUID)

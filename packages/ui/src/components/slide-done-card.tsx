@@ -200,6 +200,7 @@ function SlideDoneCard({
         {questions.map((question, index) => (
           <div
             key={question.id}
+            data-question={question.id}
             data-missing={question.missing || undefined}
             className="grid gap-2 rounded-ctl"
           >

@@ -2,6 +2,7 @@ from typing import Any
 
 import pytest
 from db_support import ApiAs
+from submit_support import submitted as finished_submit
 from test_decision_styles import answer, task_of
 from test_reviewed_layer import Review, review
 
@@ -45,7 +46,7 @@ def scenario(api: ApiAs, database: str) -> Review:
     put(api, r, "first", "opinion", {"answers": {"acceptable": 4, "main_error": "Boundaries"}})
     put(api, r, "second", "opinion", {"answers": {"acceptable": 2}})
     for who in ("first", "second"):
-        assert api(r.people[who]).post(f"{r.base}/submit").status_code == 200
+        assert finished_submit(api(r.people[who]), f"{r.base}").status_code == 200
     decided = api(r.people["owner"]).put(
         f"/api/review-tasks/{r.task}/disagreements/{r.slide}/C1",
         json={"answer": "disagree"},

@@ -4,6 +4,7 @@ from typing import Any
 
 import pytest
 from db_support import ApiAs
+from submit_support import submitted as finished_submit
 from test_blinding import Study, ok, study
 from workspace_support import owner
 
@@ -116,13 +117,13 @@ def test_a_blinded_reviewers_note_waits_until_they_submit(api: ApiAs, database: 
     assert notes_seen(api, s, "first") == [
         (s.user("first"), f"Margin is off, {mention(s, 'owner')}")
     ]
-    assert len(notes_seen(api, s, "owner")) == 2
+    assert len(notes_seen(api, s, "owner")) == 3
 
-    ok(api(s.people["first"]).post(f"{s.base}/submit"))
+    ok(finished_submit(api(s.people["first"]), f"{s.base}"))
     assert told(database, s) == [s.user("owner")]
-    assert len(notes_seen(api, s, "first")) == 2
+    assert notes_seen(api, s, "first") == notes_seen(api, s, "owner")
     ok(api(s.people["first"]).post(f"{s.base}/reopen"))
-    ok(api(s.people["first"]).post(f"{s.base}/submit"))
+    ok(finished_submit(api(s.people["first"]), f"{s.base}"))
     assert told(database, s) == [s.user("owner")]
 
 

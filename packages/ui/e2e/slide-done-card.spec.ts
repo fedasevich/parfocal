@@ -52,6 +52,33 @@ test("the scale shows its end labels", async ({ page }) => {
   await expect(card(page)).toContainText("1 not at all · 5 very");
 });
 
+test("one open object names itself on the disabled submit", async ({ page }) => {
+  await open(page, "slide-done-one-blocker");
+  const submit = card(page).getByRole("button", { name: /^Submit and open slide 9/ });
+  await expect(submit).toBeDisabled();
+  await expect(submit).toHaveAccessibleDescription(/T5 is still open/);
+});
+
+test("several blockers each get a Go to link and the question one moves focus", async ({
+  page,
+}) => {
+  await open(page, "slide-done-blockers");
+  for (const name of ["Go to T5", "Go to the cells", "Go to the question"]) {
+    await expect(card(page).getByRole("button", { name })).toBeVisible();
+  }
+  await expect(card(page).getByRole("button", { name: /^Submit and open slide 9/ })).toBeDisabled();
+  await card(page).getByRole("button", { name: "Go to the question" }).click();
+  await expect(card(page).locator('[data-question="q1"]')).toBeFocused();
+});
+
+test("a failed submit says nothing was lost and offers Try again", async ({ page }) => {
+  await open(page, "slide-done-failed");
+  await expect(card(page)).toContainText(
+    "The review could not be submitted. Nothing was lost, every decision is saved.",
+  );
+  await expect(card(page).getByRole("button", { name: /^Try again/ })).toBeEnabled();
+});
+
 test("at panel width the card fits without a sideways scroll", async ({ page }) => {
   await open(page, "slide-done-panel-width");
   await expect(card(page)).toHaveAttribute("data-panel", "true");

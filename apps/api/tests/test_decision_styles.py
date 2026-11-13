@@ -5,6 +5,7 @@ from typing import Any
 import pytest
 from chunk_support import CellRow, chunk_bytes, put_chunk
 from db_support import ApiAs
+from submit_support import submitted as finished_submit
 from test_reviewed_layer import Review, review
 from workspace_support import owner
 
@@ -236,7 +237,9 @@ def test_a_queue_decision_on_a_cell_counts_against_its_chunk_class(
     task = task_of(api, r, {"style": "blind"})
     for who, class_id in (("first", r.tumor), ("second", stroma)):
         assert answer(api, r, task, "C2", picked(class_id), who).status_code == 200
-        submitted = api(r.people[who]).post(f"/api/review-tasks/{task}/slides/{r.slide}/submit")
+        submitted = finished_submit(
+            api(r.people[who]), f"/api/review-tasks/{task}/slides/{r.slide}"
+        )
         assert submitted.status_code == 200, submitted.text
     url = f"/api/review-tasks/{task}/disagreements/{r.slide}/C2"
     for class_id, value in ((stroma, "agree"), (r.tumor, "disagree")):

@@ -3,6 +3,7 @@ from typing import Any
 
 import pytest
 from db_support import ApiAs
+from submit_support import submitted as finished_submit
 from test_review_tasks import Study, draft, study
 from workspace_support import owner
 
@@ -18,7 +19,7 @@ def task(api: ApiAs, s: Study, **changes: Any) -> dict[str, Any]:
 
 
 def submit(api: ApiAs, s: Study, who: str, task_id: str, slide: uuid.UUID) -> None:
-    response = api(s.people[who]).post(f"/api/review-tasks/{task_id}/slides/{slide}/submit")
+    response = finished_submit(api(s.people[who]), f"/api/review-tasks/{task_id}/slides/{slide}")
     assert response.status_code == 200, response.text
 
 

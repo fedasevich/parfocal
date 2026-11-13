@@ -6,6 +6,7 @@ from typing import Any
 
 import pytest
 from db_support import ApiAs
+from submit_support import submitted as finished_submit
 from test_reviewed_layer import Review, review
 from workspace_support import owner
 
@@ -175,7 +176,7 @@ def test_skips_lock_at_sign_off(api: ApiAs, database: str) -> None:
     c = called(api, database)
     task = f"/api/review-tasks/{c.r.task}"
     for who in ("first", "second"):
-        assert api(c.r.people[who]).post(f"{c.r.base}/submit").status_code == 200
+        assert finished_submit(api(c.r.people[who]), f"{c.r.base}").status_code == 200
     assert api(c.r.people["owner"]).post(f"{task}/sign-off").status_code == 200
     late = skip(api, c, "T1")
     assert (late.status_code, late.json()["code"]) == (409, "task-signed-off")
