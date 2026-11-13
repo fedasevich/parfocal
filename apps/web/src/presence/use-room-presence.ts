@@ -1,6 +1,11 @@
 import { getRoomAccess } from "@parfocal/api-client";
-import { RoomClient, type RoomTicket, type SocketLike } from "@parfocal/edge/room-client";
-import { useEffect, useState } from "react";
+import {
+  RoomClient,
+  type RoomMessage,
+  type RoomTicket,
+  type SocketLike,
+} from "@parfocal/edge/room-client";
+import { useEffect, useRef, useState } from "react";
 import { readBuildConfig } from "../config.ts";
 import { openFakeRoomSocket } from "./fake-room-socket.ts";
 import { nextPresence, roomSocketUrl, type Sighting } from "./presence-state.ts";
@@ -18,13 +23,15 @@ async function roomTicket(room: string): Promise<RoomTicket | null> {
   throw new Error(`Room access answered ${response.status}`);
 }
 
-export function useRoomPresence(
+export function useRoomEvents(
   room: string | null,
   me: string | undefined,
-): ReadonlyMap<string, Sighting> {
-  const [present, setPresent] = useState<ReadonlyMap<string, Sighting>>(nobody);
+  onEvent: (event: RoomMessage) => void,
+  onRefetch: () => void = () => undefined,
+): void {
+  const handlers = useRef({ onEvent, onRefetch });
+  handlers.current = { onEvent, onRefetch };
   useEffect(() => {
-    setPresent(nobody);
     if (room === null || me === undefined) return;
     const client = new RoomClient({
       url: roomSocketUrl(room, window.location),
@@ -34,11 +41,32 @@ export function useRoomPresence(
       open: fake
         ? openFakeRoomSocket
         : (url, protocols) => new WebSocket(url, protocols) as unknown as SocketLike,
-      refetch: () => setPresent(nobody),
-      onEvent: (event) => setPresent((previous) => nextPresence(previous, event, me)),
+      refetch: () => handlers.current.onRefetch(),
+      onEvent: (event) => handlers.current.onEvent(event),
     });
     client.start();
     return () => client.stop();
   }, [room, me]);
+}
+
+export function useRoomPresence(
+  room: string | null,
+  me: string | undefined,
+): ReadonlyMap<string, Sighting> {
+  const [held, setHeld] = useState<{ room: string | null; map: ReadonlyMap<string, Sighting> }>({
+    room,
+    map: nobody,
+  });
+  useRoomEvents(
+    room,
+    me,
+    (event) =>
+      setHeld((previous) => ({
+        room,
+        map: nextPresence(previous.room === room ? previous.map : nobody, event, me ?? ""),
+      })),
+    () => setHeld({ room, map: nobody }),
+  );
+  const present = held.room === room ? held.map : nobody;
   return present;
 }

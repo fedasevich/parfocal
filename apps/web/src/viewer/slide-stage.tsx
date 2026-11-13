@@ -30,16 +30,23 @@ import { CountPanel } from "../annotations/count-panel.tsx";
 import { DragLayer } from "../annotations/drag-layer.tsx";
 import { FreehandLayer } from "../annotations/freehand-layer.tsx";
 import { LayersPanel } from "../annotations/layers-panel.tsx";
+import { LiveChangesMarker } from "../annotations/live-changes-marker.tsx";
 import { PinLayer } from "../annotations/pin-layer.tsx";
 import { createPinRegistry } from "../annotations/pin-registry.ts";
 import { type DraftControl, PolygonLayer } from "../annotations/polygon-layer.tsx";
 import { ProposalLayer } from "../annotations/proposal-layer.tsx";
 import { SaveStatus } from "../annotations/save-status.tsx";
 import { SelectLayer } from "../annotations/select-layer.tsx";
+import type { ShapeId } from "../annotations/shapes.ts";
 import { SmartLayer } from "../annotations/smart-layer.tsx";
 import { type TextControl, TextLayer } from "../annotations/text-layer.tsx";
+import { useLiveGuardFeed } from "../annotations/use-live-guard.ts";
 import { useProposals } from "../annotations/use-proposals.ts";
-import { useSavedAnnotations } from "../annotations/use-saved-annotations.ts";
+import {
+  idleGuard,
+  type LiveGuard,
+  useSavedAnnotations,
+} from "../annotations/use-saved-annotations.ts";
 import { legendDeviceOf } from "../devices/device-legend.ts";
 import { DeviceLegend } from "../devices/device-legend.tsx";
 import { engineWheelMode, navigationEvent, readNavigation } from "../devices/navigation.ts";
@@ -320,7 +327,22 @@ function OpenedSlide({
   const [outlineMode, setOutlineMode] = useSavedOutlineMode();
   const sharedTaskId = annotateTask?.taskId ?? null;
   const snapshot = annotateTask?.classes ?? null;
-  const saved = useSavedAnnotations(slideId, session !== null && layerKnown, sharedTaskId);
+  const liveGuard = useRef<LiveGuard>(idleGuard);
+  const [selectedIds, setSelectedIds] = useState<readonly ShapeId[]>([]);
+  const saved = useSavedAnnotations(
+    slideId,
+    session !== null && layerKnown,
+    sharedTaskId,
+    liveGuard,
+  );
+  useLiveGuardFeed(liveGuard, {
+    engine: session?.engine ?? null,
+    stage: hostNode,
+    latest: saved.latest,
+    noteActivity: saved.noteActivity,
+    drafting: () => (draftControl.current?.depth() ?? 0) > 0,
+    selected: selectedIds,
+  });
   const annotations = saved.document;
   const proposals = useProposals(saved, slideId);
   const setAnnotations = saved.setDocument;
@@ -636,6 +658,7 @@ function OpenedSlide({
               onDocumentChange={setAnnotations}
               onCommit={saved.commit}
               onEditText={(id) => textControl.current?.edit(id)}
+              onSelectionChange={setSelectedIds}
               pinRegistry={pinRegistry}
             />
             <PinLayer
@@ -859,6 +882,7 @@ function OpenedSlide({
         {phase.state === "loading" ? null : (
           <SaveStatus state={saved.saveState} unsaved={saved.unsaved} />
         )}
+        <LiveChangesMarker changes={saved.incoming} onShow={saved.showIncoming} />
         <ConflictNotice conflicts={saved.conflicts} onResolve={saved.resolveConflict} />
         {phase.state === "failed" ? (
           <div className="absolute top-4 left-1/2 w-[min(760px,calc(100%-2rem))] -translate-x-1/2">

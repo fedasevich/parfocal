@@ -4,6 +4,11 @@ import { PRESENCE_JOINED, PRESENCE_LEFT } from "./presence-state.ts";
 type Signal = { type: "hello" | "here" | "bye"; user: string; room: string };
 
 const slideRoom = "slide:";
+const taskRoom = "task:";
+const layerChannel = "parfocal-fake-layer";
+const layerChanged = "layer.object-changed";
+
+type LayerSignal = { task: string; slide: string; annotation: string; actor: string };
 const projectRoom = "project:";
 
 export function openFakeRoomSocket(url: string, protocols: string[]): SocketLike {
@@ -20,6 +25,7 @@ export function openFakeRoomSocket(url: string, protocols: string[]): SocketLike
     open = false;
     post("bye");
     channel.close();
+    layer?.close();
     window.removeEventListener("pagehide", leave);
   };
   const socket: SocketLike = {
@@ -45,6 +51,16 @@ export function openFakeRoomSocket(url: string, protocols: string[]): SocketLike
     deliver(kind, { user: data.user });
     if (data.type === "hello") post("here");
   };
+  const layer = room.startsWith(taskRoom) ? new BroadcastChannel(layerChannel) : null;
+  if (layer !== null) {
+    layer.onmessage = ({ data }: MessageEvent<LayerSignal>) => {
+      if (!open || data.actor === user || `${taskRoom}${data.task}` !== room) return;
+      setTimeout(() => {
+        if (!open) return;
+        deliver(layerChanged, { task: data.task, slide: data.slide, annotation: data.annotation });
+      }, 0);
+    };
+  }
   window.addEventListener("pagehide", leave);
   setTimeout(() => {
     if (!open) return;
