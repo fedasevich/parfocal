@@ -18,9 +18,8 @@ const tiles = (page: Page) =>
 async function backToList(page: Page) {
   const toZone = panel(page).getByRole("button", { name: /^Back to Zone/ });
   if ((await toZone.count()) > 0) await toZone.click();
-  await panel(page)
-    .getByRole("button", { name: /^Back to the list/ })
-    .click();
+  const toList = panel(page).getByRole("button", { name: /^Back to the list/ });
+  if ((await toList.count()) > 0) await toList.click();
 }
 
 async function pagedUrl(page: Page) {
