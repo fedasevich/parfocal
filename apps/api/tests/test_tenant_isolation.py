@@ -1455,6 +1455,7 @@ GET_ROUTES = {
     "getTenant": Route(Exposure.PLATFORM, lambda a: f"/api/platform/tenants/{a.tenant_id}"),
     "getCurrentTenant": Route(Exposure.TENANT, lambda _: "/api/tenant"),
     "getSession": Route(Exposure.PUBLIC, lambda _: "/api/auth/session"),
+    "getPasswordSignIn": Route(Exposure.PUBLIC, lambda _: "/api/auth/password-sign-in"),
     "getMe": Route(Exposure.TENANT, lambda _: "/api/me"),
     "listTenantMembers": Route(Exposure.TENANT, lambda _: "/api/tenant/members"),
     "listMemberActivity": Route(
