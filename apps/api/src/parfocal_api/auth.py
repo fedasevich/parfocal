@@ -347,10 +347,25 @@ def avatar_colour_of(subject: str) -> int:
     return hashlib.sha256(subject.encode()).digest()[0] % AVATAR_COLOURS
 
 
+SEEDED_SUBJECT_PREFIX = "seed:"
+
+
+async def adopt_seeded_user(connection: AsyncConnection, subject: str, email: str) -> None:
+    known = await connection.scalar(select(users.c.id).where(users.c.subject == subject))
+    if known is None:
+        await connection.execute(
+            update(users)
+            .where(users.c.subject == f"{SEEDED_SUBJECT_PREFIX}{email.lower()}")
+            .values(subject=subject)
+        )
+
+
 async def sign_in_user(connection: AsyncConnection, claims: dict[str, Any]) -> uuid.UUID | None:
     subject = str(claims["sub"])
     email = claims.get("email") if claims.get("email_verified") is True else None
     name = str(claims.get("name") or email or "New user")
+    if email is not None:
+        await adopt_seeded_user(connection, subject, str(email))
     user_id = await connection.scalar(
         upsert(users)
         .values(
