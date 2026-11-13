@@ -43,10 +43,11 @@ The deployed app reads and writes the existing bucket `parfocal-dev`, the only s
 
 ## Postgres version
 
-Neon runs PostgreSQL 18.7. `CREATE EXTENSION postgis` worked on a throwaway branch on 2026-11-13 and reported PostGIS 3.6.4, so the project stays. Local development and CI still run `imresamu/postgis:17-3.6.1-alpine3.22`. TODO: move them to a Postgres 18 image with PostGIS 3.6, which changes the data directory layout and needs every local volume recreated, and amend [ADR 0018](../adr/0018-postgres-sqlalchemy-rls.md) (Postgres with PostGIS and row-level security).
+Neon runs PostgreSQL 18.7. `CREATE EXTENSION postgis` worked on a throwaway branch on 2026-11-13 and reported PostGIS 3.6.4, so the project stays. Local development and CI still run `imresamu/postgis:17-3.6.1-alpine3.22`. TODO: move them to a Postgres 18 image with PostGIS 3.6 and amend [ADR 0018](../adr/0018-postgres-sqlalchemy-rls.md) (Postgres with PostGIS and row-level security). TODO to confirm first: that an arm64 Postgres 18 tag of the image exists, and whether the local volumes survive the major version or have to be recreated.
 
 ## Not checked yet
 
+- Neon connection strings carry `sslmode=require` and `channel_binding=require`, which SQLAlchemy on asyncpg does not take. `neon.engine_uri` turns them into `ssl=require` for `DATABASE_URL` and the migration URL. TODO: not run against Neon yet.
 - TODO: repeat the bounded cell import benchmark ([result](../results/2026-11-01-bounded-cell-import.md)) on Modal once ingest runs there.
 - TODO: nothing starts the `ingest` function yet. The API still has to spawn it or a schedule has to run it.
 - TODO: whether `wrangler secret bulk` creates a Worker that does not exist yet. If it does not, deploy the Worker once before bootstrap.

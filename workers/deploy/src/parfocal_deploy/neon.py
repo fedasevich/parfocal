@@ -4,7 +4,7 @@ import urllib.request
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
-from urllib.parse import quote, urlencode, urlsplit, urlunsplit
+from urllib.parse import parse_qsl, quote, urlencode, urlsplit, urlunsplit
 
 API = "https://console.neon.tech/api/v2"
 APP_ROLE = "parfocal_app"
@@ -106,7 +106,18 @@ def app_uri(pooled_owner_uri: str, password: str) -> str:
     parts = urlsplit(pooled_owner_uri)
     port = "" if parts.port is None else f":{parts.port}"
     netloc = f"{APP_ROLE}:{quote(checked(password), safe='')}@{parts.hostname}{port}"
-    return urlunsplit(parts._replace(netloc=netloc))
+    return engine_uri(urlunsplit(parts._replace(netloc=netloc)))
+
+
+def engine_uri(uri: str) -> str:
+    parts = urlsplit(uri)
+    renamed = {"sslmode": "ssl"}
+    query = [
+        (renamed.get(name, name), value)
+        for name, value in parse_qsl(parts.query)
+        if name != "channel_binding"
+    ]
+    return urlunsplit(parts._replace(query=urlencode(query)))
 
 
 ROLE_EXISTS = f"SELECT 1 FROM pg_roles WHERE rolname = '{APP_ROLE}'"

@@ -128,7 +128,7 @@ def deploy(
     branch = neon.ensure_branch(tools.neon, project, target.neon_branch)
     database = neon.first_database(tools.neon, project, branch)
     direct = neon.owner_uri(tools.neon, project, branch, database, pooled=False)
-    tools.run(MIGRATE, None, {"MIGRATION_DATABASE_URL": direct})
+    tools.run(MIGRATE, None, {"MIGRATION_DATABASE_URL": neon.engine_uri(direct)})
     for command in modal_commands(target):
         tools.run(command.argv, None, command.extra)
     for command in edge_commands(target, settings["CLOUDFLARE_ACCOUNT_ID"], web_url(target)):

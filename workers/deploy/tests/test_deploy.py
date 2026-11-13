@@ -52,7 +52,7 @@ OUTPUTS = json.dumps(
 
 def owner_uri(host: str) -> str:
     login = ":".join(["neondb_owner", "owner-word"])
-    return f"postgresql://{login}@{host}/neondb?sslmode=require"
+    return f"postgresql://{login}@{host}/neondb?sslmode=require&channel_binding=require"
 
 
 @dataclass
@@ -142,9 +142,7 @@ def test_the_app_role_cannot_bypass_row_security_and_its_password_is_checked() -
     with pytest.raises(neon.UnsafePasswordError):
         neon.create_role_statements("neondb", "x'; DROP ROLE neondb_owner; --")
     uri = neon.app_uri(owner_uri("host-pooler.neon.tech"), password)
-    assert (
-        uri == f"postgresql://parfocal_app:{password}@host-pooler.neon.tech/neondb?sslmode=require"
-    )
+    assert uri == f"postgresql://parfocal_app:{password}@host-pooler.neon.tech/neondb?ssl=require"
 
 
 def test_the_first_bootstrap_writes_keys_once_and_the_second_only_the_config() -> None:
@@ -162,6 +160,7 @@ def test_the_first_bootstrap_writes_keys_once_and_the_second_only_the_config() -
     ]
     assert keys["DATABASE_URL"].startswith("postgresql://parfocal_app:")
     assert "-pooler" in keys["DATABASE_URL"]
+    assert keys["DATABASE_URL"].endswith("/neondb?ssl=require")
     assert cloud.worker_secrets == {
         "TILE_TOKEN_KEY": keys["TILE_TOKEN_KEY"],
         "ROOM_TOKEN_KEY": keys["ROOM_TOKEN_KEY"],
@@ -248,6 +247,7 @@ def test_deploy_migrates_then_ships_modal_then_the_worker_and_checks_it() -> Non
     migration = cloud.commands[0][1]["MIGRATION_DATABASE_URL"]
     assert "neondb_owner" in migration
     assert "-pooler" not in migration
+    assert migration.endswith("/neondb?ssl=require")
     assert cloud.commands[3][1] == {"PARFOCAL_PUBLIC_APP_ENV": "prod"}
     assert cloud.neon_writes == []
 
