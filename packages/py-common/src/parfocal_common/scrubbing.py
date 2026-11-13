@@ -13,6 +13,8 @@ ALLOWED_FIELDS = frozenset(
         "tenant_id",
         "user_id",
         "case_id",
+        "flag",
+        "arm",
         "slide_id",
         "study_id",
         "job_id",

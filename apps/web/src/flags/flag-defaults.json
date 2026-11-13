@@ -1,0 +1,7 @@
+{
+  "lab_lead_default_home": {
+    "arms": ["control", "status_board"],
+    "default": "control",
+    "mode": "split"
+  }
+}

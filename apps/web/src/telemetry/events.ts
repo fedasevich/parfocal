@@ -22,6 +22,8 @@ export const tools = [
   "overlay",
 ];
 export const surveys = ["sus", "seq"];
+export const flagKeys = ["lab_lead_default_home"];
+export const flagArms = ["control", "status_board"];
 export const taskKinds = ["review", "annotate", "upload", "report"];
 
 export const eventSchema = {
@@ -56,6 +58,7 @@ export const eventSchema = {
     item_ten: count,
     sus_score_tenths: count,
   },
+  experiment_exposed: { flag: choice(...flagKeys), arm: choice(...flagArms) },
   survey_dismissed: { survey: choice(...surveys) },
   reading_time_compared: {
     task_kind: choice(...taskKinds),
