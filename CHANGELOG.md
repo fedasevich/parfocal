@@ -2,6 +2,16 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.1.4 (2026-11-13)
+
+### Fixes
+
+- OPS-002: Let the web app start in production with its backends switched off
+
+### Docs
+
+- OPS-002: Log the first working production deploy
+
 ## v0.1.3 (2026-11-13)
 
 ### Fixes
