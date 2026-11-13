@@ -2,6 +2,16 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.1.1 (2026-11-13)
+
+### Fixes
+
+- OPS-002: Gzip the ONNX runtime wasm so every asset fits the Workers limit
+
+### Docs
+
+- TEST-020: Let the showcase seed reset production to a checkpoint
+
 ## v0.1.0 (2026-11-13)
 
 ### Features
