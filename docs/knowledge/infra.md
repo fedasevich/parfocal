@@ -8,7 +8,7 @@ How `infra/tofu` works and the traps found while setting it up. It is the result
 |---|---|---|
 | `global` | `global.tfstate` | Zone settings on `parfocal.eu` (HTTPS only, TLS 1.2 minimum, TLS 1.3, strict SSL) and the Zitadel project `Parfocal` |
 | `dev` | `dev.tfstate` | `modules/environment` for `http://localhost:5173`, with Zitadel `dev_mode` on |
-| `staging` | `staging.tfstate` | `modules/environment` for `https://staging.parfocal.eu` |
+| `staging` | `staging.tfstate` | `modules/environment` for `https://staging.parfocal.eu`. Unused and not applied until OPS-014 (bring back staging before the first real user), kept so staging can return cheaply ([ADR 0293](../adr/0293-production-only-until-the-first-real-user.md), production only until the first real user) |
 | `prod` | `prod.tfstate` | `modules/environment` for `https://app.parfocal.eu` |
 | `modules/environment` | none | Bucket `parfocal-<name>` with `prevent_destroy`, its upload CORS rule (the app origin, `PUT`, `Content-Type`, `ETag` exposed, 3600 s), a rule that aborts incomplete multipart uploads under `t/` after 1 day, and the confidential OIDC app `parfocal-api-<name>` |
 | `policy` | none | Rego rules and their tests |
@@ -22,13 +22,13 @@ Not managed here, on purpose: Neon (projects are made by the owner in the Vercel
 Always go through the wrapper, which loads `.env` and turns the Cloudflare token into R2 S3 credentials for the state backend. The first argument is the root.
 
 ```
-infra/tofu/tofu.sh staging init
-infra/tofu/policy.sh plan staging
-infra/tofu/tofu.sh staging plan -out=change.tfplan
-infra/tofu/tofu.sh staging apply change.tfplan
+infra/tofu/tofu.sh prod init
+infra/tofu/policy.sh plan prod
+infra/tofu/tofu.sh prod plan -out=change.tfplan
+infra/tofu/tofu.sh prod apply change.tfplan
 ```
 
-Apply `global` first when a change touches both, then `dev`, `staging` and `prod` in that order.
+Apply `global` first when a change touches both, then `dev` and `prod` in that order. Leave `staging` alone.
 
 It needs three things on the machine:
 
@@ -45,7 +45,7 @@ It needs three things on the machine:
 | `dev`, `staging`, `prod` | `app_origin`, `slide_bucket`, `zitadel_issuer`, `zitadel_client_id` (sensitive), `zitadel_client_secret` (sensitive) |
 | `global` | `zone_id`, `zitadel_issuer`, `zitadel_project_id` |
 
-Read them with `tofu.sh <root> output -json` and pipe the values straight into `.env`, a Modal secret or a Wrangler secret without printing.
+Until staging returns the deployed app keeps its slides in `parfocal-dev`, not in the `slide_bucket` of `prod` (ADR 0293). Read them with `tofu.sh <root> output -json` and pipe the values straight into `.env`, a Modal secret or a Wrangler secret without printing.
 
 ## Policy check
 

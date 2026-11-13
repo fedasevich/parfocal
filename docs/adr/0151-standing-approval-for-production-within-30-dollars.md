@@ -40,3 +40,5 @@ Every production write is logged in `docs/log.md` with what changed, why and wha
 ## Consequences
 
 The rest of ADR 0115 stays: reading production is free, caps and alerts stay on every service, and dev and staging come first. OPS-001, OPS-002, IAM-001 and INGEST-028 no longer wait for the owner. The cost estimate of [ADR 0147](0147-cloud-provider-regions-and-pilot-cost.md) (about $140 a month) describes a full pilot, not this budget, so ingest and AI work in the thesis pilot must fit $30 a month, which means few slides and on-demand runs only. `AGENTS.md`, `docs/knowledge/platform.md` and `docs/knowledge/agent-workflow.md` say so.
+
+On 2026-11-13 [ADR 0293](0293-production-only-until-the-first-real-user.md) (production only until the first real user) added one standing yes: resetting and reseeding production needs no question while it holds only the owner's test data, until staging returns before the first real user. Everything else on the "still asked" list stays asked.

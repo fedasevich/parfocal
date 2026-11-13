@@ -42,6 +42,8 @@ From 2026-10-08 to 2026-10-31 all work stayed local while the owner fixed the cl
 
 The whole project runs on $30 a month, the compute Modal includes ([ADR 0151](../adr/0151-standing-approval-for-production-within-30-dollars.md)). Check spend before any run that costs money and pick the cheapest way.
 
+Production is the only cloud environment until the first real user ([ADR 0293](../adr/0293-production-only-until-the-first-real-user.md), production only until the first real user). Until then the deployed app keeps its slides in the bucket `parfocal-dev`, shared with local development and the fixture slides, the empty buckets `parfocal-prod` and `parfocal-staging` are unused, and production may be reset and reseeded without a question while it holds only the owner's test data.
+
 
 Checked in each dashboard on 2026-10-31. A hard cap means the provider stops the work itself. An alert only sends an email and spending goes on.
 

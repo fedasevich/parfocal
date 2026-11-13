@@ -41,3 +41,5 @@ The state was moved on 2026-11-13 by pulling the old state, pushing it into each
 - Whether Zitadel should have one project or one organisation per environment is left to IAM-001. Moving an app to another project is a replace that rotates its secret, so it is cheap only before staging has users.
 - The old key `parfocal.tfstate` is still in the bucket as an unused copy. Deleting it is the owner's call, decision 87 in `docs/decisions.md`.
 - `docs/knowledge/infra.md` describes the layout and the commands.
+
+On 2026-11-13 [ADR 0293](0293-production-only-until-the-first-real-user.md) (production only until the first real user) cut the staging environment. The `staging` root and its state stay in the repository unused and are not applied until staging returns, so a module change now reaches `dev` and then `prod`.

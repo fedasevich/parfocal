@@ -39,12 +39,13 @@ Write an ADR for every choice between real alternatives that is costly to undo. 
 
 The owner pays for every service personally, and production will hold real data. A wrong command can lose data, leak it or run up a bill, and a revert undoes none of that. The policy is [ADR 0115](docs/adr/0115-production-access-and-spend-caps.md) (production access and spend caps) as changed by ADR 0151. Services, caps and access are in [knowledge/platform.md](docs/knowledge/platform.md) and [knowledge/agent-tooling.md](docs/knowledge/agent-tooling.md).
 
-- Production means Modal environment `main`, the Neon main branch, the R2 buckets `parfocal-prod` and `parfocal-tfstate`, DNS and settings of the `parfocal.eu` zone, the Zitadel instance with its `parfocal-api-prod` app and organisation settings, any `tofu apply`, GitHub repository settings, secrets and rulesets, and every billing, plan or limit setting anywhere.
+- Production means Modal environment `main`, the Neon main branch, the R2 buckets `parfocal-dev` (the deployed app's slides until staging returns), `parfocal-prod` and `parfocal-tfstate`, DNS and settings of the `parfocal.eu` zone, the Zitadel instance with its `parfocal-api-prod` app and organisation settings, any `tofu apply`, GitHub repository settings, secrets and rulesets, and every billing, plan or limit setting anywhere.
 - Reading production is allowed: lists, logs, usage pages and `tofu plan`.
 - The owner gave one standing yes for all sessions and subagents ([ADR 0151](docs/adr/0151-standing-approval-for-production-within-30-dollars.md), standing approval within $30 a month). Additive production writes need no question: `tofu apply` with no destroy or replace, deploys, migrations that only add, and new settings or secrets.
 - Still ask in chat, one action at a time, showing the exact command or plan diff and its cost: anything that deletes, destroys, replaces, purges, rotates or resets, any migration that drops data, raising a limit, a payment method, a plan change, accepting terms, and anything that would take the month past budget.
 - The whole project runs on $30 a month, the compute Modal includes. Nothing runs all the time in production, it scales to zero, and GPU work runs only on demand.
-- Do what you can in dev or staging first, and delete what you created for a test when it ends.
+- Production is the only cloud environment until the first real user, and resetting and reseeding it needs no question while it holds only the owner's test data ([ADR 0293](docs/adr/0293-production-only-until-the-first-real-user.md), production only until the first real user). Every other destructive action is still asked.
+- Do what you can in local dev first, and delete what you created for a test when it ends.
 - Every billing service has a hard cap or an alert, and a new one gets it on its first day with a row in `knowledge/platform.md`.
 - Log every production touch and every cloud run's cost, or `TODO`, in `docs/log.md`.
 - If anything looks wrong, such as an unexpected charge, a resource you did not create or a plan that replaces or destroys something, stop and tell the owner.

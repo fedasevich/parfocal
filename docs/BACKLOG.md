@@ -114,7 +114,7 @@ Task format:
 | Milestone | Meaning | Gate |
 | --- | --- | --- |
 | M0 Stack decided | Every STACK task closed with an ADR | `docs/adr/` holds one ADR per slot |
-| M1 Walking skeleton | Log in, create a project, upload one SVS with a result file, open it in Viv, draw a polygon, give one decision and submit the review, all on staging | SKEL epic done, E2E green on staging |
+| M1 Walking skeleton | Log in, create a project, upload one SVS with a result file, open it in Viv, draw a polygon, give one decision and submit the review, all on production | SKEL epic done, E2E green on production |
 | M2 Viewer parity | Every POC format opens correctly in Viv with POC-level performance, plus alternates behind the interface | VIEW, TILES, INGEST done, perf and golden suites green |
 | MA Annotation path | Experts annotate slides on one shared layer, from scratch or by fixing AI output, with one-click tools, model runs on a selection or the whole slide streamed onto it, threads and calm live updates, then sign-off and a training dataset export ([ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md)). Taken before every unstarted task outside it | The tasks listed in that ADR done, E2E green |
 | M3 Review loop | Projects, upload with AI results, object IDs, review tasks, My work, guided review and the slide view with decisions and the opinion form, navigation aids, measurement, settings, palette, sign-up and setup | ADAPT, PROJ, RSET, OBJ, TASK, GUIDE, WL, CASE, NAV, REVIEW, MEAS, SET, CMD, ONB done |
@@ -579,7 +579,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Size: S.
 
 - [ ] FOUND-035 · Squash the migrations into one baseline
-  There are 91 migration files, numbered up to `0110`, and no shared database yet, so replacing them with one baseline is free now and never again ([project review](results/2026-11-09-project-review.md)). Staging can be dropped and recreated, so this must land before the first production database, not before SKEL-001 (staging environment exists). The baseline also freezes the built-in study templates that `0044` imports from `parfocal_api.study_templates`. Needs an ADR, because [knowledge/database.md](knowledge/database.md) says every change since `0020` is a new migration.
+  There are 91 migration files, numbered up to `0110`, and no shared database yet, so replacing them with one baseline is free now and never again ([project review](results/2026-11-09-project-review.md)). Production may be reset while it holds only the owner's test data ([ADR 0293](adr/0293-production-only-until-the-first-real-user.md), production only until the first real user), so this must land before OPS-014 (bring back staging before the first real user) ends that, not before SKEL-001 (production environment exists). The baseline also freezes the built-in study templates that `0044` imports from `parfocal_api.study_templates`. Needs an ADR, because [knowledge/database.md](knowledge/database.md) says every change since `0020` is a new migration.
   Done when a test proves the baseline and the old chain give the same schema, the seed data imports no application code, the ADR is written and the db tests pass.
   Depends on FOUND-024.
   Size: M.
@@ -605,14 +605,14 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
 
 The thinnest end-to-end slice. Every piece is minimal and later epics deepen it. The point is to prove the stack, the deployment and the test pipeline together before breadth.
 
-- [ ] SKEL-001 · Staging environment exists
-  Minimal infrastructure from OPS-001 to OPS-004 with one tenant.
-  Done when `https://staging.<domain>` serves the web app and `/api/health` over TLS with COOP and COEP headers.
+- [ ] SKEL-001 · Production environment exists
+  Minimal infrastructure from OPS-001 to OPS-004 with one tenant. Production is the only cloud environment until the first real user ([ADR 0293](adr/0293-production-only-until-the-first-real-user.md), production only until the first real user).
+  Done when `https://app.<domain>` serves the web app and `/api/health` over TLS with COOP and COEP headers.
   Depends on OPS-001, OPS-002.
   Size: L.
 
 - [ ] SKEL-002 · Log in through the IdP
-  Done when a Playwright test logs in a seeded pathologist on staging and sees their name in the top bar.
+  Done when a Playwright test logs in a seeded pathologist on production and sees their name in the top bar.
   Depends on IAM-001, IAM-002.
   Size: M.
 
@@ -649,8 +649,8 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Depends on GUIDE-001, SEC-003.
   Size: M.
 
-- [ ] SKEL-009 · CI deploys main to staging
-  Done when merging to main deploys automatically and the skeleton E2E suite runs against staging after deploy.
+- [ ] SKEL-009 · CI deploys main to production
+  Done when merging to main deploys automatically and the skeleton E2E suite runs against production after deploy.
   Depends on OPS-005.
   Size: L.
 
@@ -659,8 +659,8 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Recorded in [ADR 0169](adr/0169-walking-skeleton-retrospective.md), which added SKEL-011 and SKEL-012 and edited TEST-004 and TEST-007.
   Size: S.
 
-- [ ] SKEL-011 · Skeleton numbers from staging and hosted runners
-  Every latency number of the skeleton so far is local ([ADR 0169](adr/0169-walking-skeleton-retrospective.md)). Measure the fitted view and the sharp view after a jump on `CMU-1.svs` against staging, warm tile fetch p95 from the same region over HTTP/2 or HTTP/3 with the gateway's cache layer on, and the performance budget suite on the hosted runner.
+- [ ] SKEL-011 · Skeleton numbers from production and hosted runners
+  Every latency number of the skeleton so far is local ([ADR 0169](adr/0169-walking-skeleton-retrospective.md)). Measure the fitted view and the sharp view after a jump on `CMU-1.svs` against production, warm tile fetch p95 from the same region over HTTP/2 or HTTP/3 with the gateway's cache layer on, and the performance budget suite on the hosted runner.
   Done when a result file records those numbers with the machine, browser and network, and `perf-budgets.json` time limits are set from the hosted-runner numbers instead of twice the local baseline.
   Depends on SKEL-009, TILES-002.
   Size: S.
@@ -899,7 +899,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
 
 - [ ] SEC-011 · Security headers and CSP
   Strict CSP with nonces, COOP same-origin, COEP credentialless, CORP, Referrer-Policy, Permissions-Policy allowing WebHID and gamepad only where needed.
-  Done when a header test runs against staging and the ONNX WASM threads and module workers still work.
+  Done when a header test runs against production and the ONNX WASM threads and module workers still work.
   Refs doc 14.
   Size: M.
 
@@ -4147,7 +4147,8 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Size: L.
 
 - [ ] OPS-003 · Environments
-  Local, a preview per pull request (Workers preview version, Modal environment, Neon branch, bucket prefix) with seeded data, staging from `main` and production from tags, scaling to zero wherever the platform allows ([ADR 0003](adr/0003-pilot-platform-architecture.md)).
+  Local, a preview per pull request (Workers preview version, Modal environment, Neon branch, bucket prefix) with seeded data, and production from `main`, scaling to zero wherever the platform allows ([ADR 0003](adr/0003-pilot-platform-architecture.md)).
+  Staging from `main` with production from tags returns with OPS-014 (bring back staging before the first real user) ([ADR 0293](adr/0293-production-only-until-the-first-real-user.md), production only until the first real user).
   Done when a pull request gets a working preview URL and closing it deletes its branch, environment and prefix.
   Refs [ADR 0050](adr/0050-deploy-pipeline-and-previews.md) for how this task is shaped.
   Size: L.
@@ -4158,13 +4159,13 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Size: L.
 
 - [ ] OPS-005 · Continuous deployment
-  Main to staging automatically, tagged releases to production with approval, database migration safety checks, rollback.
-  Done when a rollback drill on staging succeeds.
+  Main to production automatically, database migration safety checks, rollback. Tagged releases to production with approval return with OPS-014 (bring back staging before the first real user) ([ADR 0293](adr/0293-production-only-until-the-first-real-user.md), production only until the first real user).
+  Done when a rollback drill on production succeeds.
   Refs [ADR 0050](adr/0050-deploy-pipeline-and-previews.md) for how this task is shaped.
   Size: L.
 
 - [ ] OPS-006 · Observability stack
-  Traces, metrics, logs, dashboards for API, workers, GPU, ingest, tiles, realtime, plus frontend real-user monitoring of viewer frame times. Export is on only in production, and staging switches it on through the override for these tests ([ADR 0005](adr/0005-external-sends-only-in-production.md)).
+  Traces, metrics, logs, dashboards for API, workers, GPU, ingest, tiles, realtime, plus frontend real-user monitoring of viewer frame times. Export is on only in production, where these tests run ([ADR 0005](adr/0005-external-sends-only-in-production.md)).
   Done when dashboards exist and a synthetic error appears in alerting.
   Size: L.
 
@@ -4206,6 +4207,12 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Needs: owner.
   On hold since 2026-11-04. The owner parked compliance, legal, email and pilot paperwork as not worth the time yet. Resume when the owner asks or before the first tenant with real patient data.
   Size: S.
+
+- [ ] OPS-014 · Bring back staging before the first real user
+  Production is the only cloud environment while the owner is the only user ([ADR 0293](adr/0293-production-only-until-the-first-real-user.md), production only until the first real user). The trigger is firm: this task is done before the first real user's data enters production, where the first real user is the first pilot user other than the owner. No account is made for such a user until it is ticked.
+  Apply the unused `staging` root of `infra/tofu` again, make the GitHub environment `staging` with its own deploy credentials, a Neon branch, the hostname `staging.parfocal.eu` and the Modal environment, and deploy `main` to staging with tagged releases to production with approval ([ADR 0050](adr/0050-deploy-pipeline-and-previews.md), deploy pipeline and previews). Move production's slides from the shared bucket `parfocal-dev` to a bucket of its own. Take the E2E account with its shared password out of production's user directory or wall it off, and decide again whether staging gets its own Zitadel organisation. End the standing yes to reset production in `AGENTS.md`. Move the tasks whose drills destroy things back to staging: OPS-007 (alerting and on-call), OPS-008 (backups and disaster recovery), OPS-009 (storage lifecycle and cost controls), OPS-010 (tenant provisioning automation), OPS-011 (status page and maintenance mode) and SEC-013 (secrets management in all environments) already say staging.
+  Done when the real end-to-end specs pass on staging after a push to `main`, production deploys only from a tag with approval, production holds no test account and no fixture or test data, and `AGENTS.md` no longer carries the reseed yes.
+  Size: L.
 
 ---
 
@@ -4305,8 +4312,8 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Size: S.
 
 - [ ] TEST-020 · Showcase seed over every feature and the real fixture slides
-  One command that fills a workspace with everything there is to try, so the owner and agents can check the whole app on real slides. Its slide rows point at the 28 public fixture slides already in R2 under `parfocal-dev/fixtures/` (small, formats, viewer, big, huge and CAMELYON16), the way ONB-007 (sample slide files) points at shared originals, so nothing is uploaded or copied twice. If staging cannot read those originals, a one-time copy into `parfocal-staging` is costed and asked first. The seed holds every role with a fake person, projects in each privacy mode with their class lists and templates, every slide format, result sets in each import format, review tasks in every style and state, decisions of each kind with reasons, annotate tasks with each origin mark and checked slides, disagreements, adjudication and sign-off, threads, notifications, model runs and jobs in each state, compare pairs, evaluation reports and exports, settings and shortcut presets, and the empty and error states a user can reach. It uses only fake identities, never PHI. It runs locally, on a preview and on staging, never on production, is safe to run twice, and its reset removes only seed rows and never touches `fixtures/`. Every later feature task adds its own variants to the seed, which the coverage test enforces.
-  Done when an API test seeds a fresh database twice with the same counts, a coverage test fails when any task state, decision kind, role, privacy mode, slide format, result format or job state has no seeded row, an E2E test on staging opens one seeded slide of each format, and a test proves the reset leaves `fixtures/` untouched.
+  One command that fills a workspace with everything there is to try, so the owner and agents can check the whole app on real slides. Its slide rows point at the 28 public fixture slides already in R2 under `parfocal-dev/fixtures/` (small, formats, viewer, big, huge and CAMELYON16), the way ONB-007 (sample slide files) points at shared originals, so nothing is uploaded or copied twice. The deployed app reads them in place, because it keeps its slides in `parfocal-dev` until staging returns ([ADR 0293](adr/0293-production-only-until-the-first-real-user.md), production only until the first real user). The seed holds every role with a fake person, projects in each privacy mode with their class lists and templates, every slide format, result sets in each import format, review tasks in every style and state, decisions of each kind with reasons, annotate tasks with each origin mark and checked slides, disagreements, adjudication and sign-off, threads, notifications, model runs and jobs in each state, compare pairs, evaluation reports and exports, settings and shortcut presets, and the empty and error states a user can reach. It uses only fake identities, never PHI. It runs locally, on a preview and on staging, never on production, is safe to run twice, and its reset removes only seed rows and never touches `fixtures/`. Every later feature task adds its own variants to the seed, which the coverage test enforces.
+  Done when an API test seeds a fresh database twice with the same counts, a coverage test fails when any task state, decision kind, role, privacy mode, slide format, result format or job state has no seeded row, an E2E test on production opens one seeded slide of each format, and a test proves the reset leaves `fixtures/` untouched.
   Depends on ONB-007, TEST-012.
   Size: L.
 
@@ -4450,8 +4457,8 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Size: M.
 
 - [ ] PILOT-008 · Owner walkthrough of the whole app
-  A guided walkthrough for the owner on staging that visits every screen and flow built so far, so the owner can try each one and list fixes and dislikes. The point is to see the UX of everything possible, not only the main paths, so the script covers every variant a user can meet: each role, state, option and setting, the loading, empty and error states, long and short data, keyboard paths, and the edge cases such as a huge slide, a failed job or a refused action. It is a written script in `docs/knowledge/` with one step per screen or flow, in the order a user meets them: sign up and setup, the sample project, Home and My work, upload with AI results, the slide view with decisions and the opinion form, guided review, navigation aids and measurement, Annotate with its tools, model runs on a selection and the whole slide, threads and live updates, compare, notifications, the disagreement queue and sign-off, the evaluation report and exports, settings, the palette and the admin page. Each step names the URL, the seeded account and data to use, what to do and what should happen, and leaves room for the owner's notes. It runs over the TEST-020 showcase seed (every feature over the real fixture slides), which resets staging between runs. Agents run the script first and fix what is plainly broken before handing it over. The owner's notes become backlog tasks, one per fix, grouped by screen.
-  Done when an E2E test walks every step of the script on staging, the showcase seed resets staging to the script's start, and the owner has done one pass whose notes are logged and turned into tasks.
+  A guided walkthrough for the owner on production that visits every screen and flow built so far, so the owner can try each one and list fixes and dislikes. The point is to see the UX of everything possible, not only the main paths, so the script covers every variant a user can meet: each role, state, option and setting, the loading, empty and error states, long and short data, keyboard paths, and the edge cases such as a huge slide, a failed job or a refused action. It is a written script in `docs/knowledge/` with one step per screen or flow, in the order a user meets them: sign up and setup, the sample project, Home and My work, upload with AI results, the slide view with decisions and the opinion form, guided review, navigation aids and measurement, Annotate with its tools, model runs on a selection and the whole slide, threads and live updates, compare, notifications, the disagreement queue and sign-off, the evaluation report and exports, settings, the palette and the admin page. Each step names the URL, the seeded account and data to use, what to do and what should happen, and leaves room for the owner's notes. It runs over the TEST-020 showcase seed (every feature over the real fixture slides), which resets staging between runs. Agents run the script first and fix what is plainly broken before handing it over. The owner's notes become backlog tasks, one per fix, grouped by screen.
+  Done when an E2E test walks every step of the script on production, the showcase seed resets production to the script's start under the reseed yes of [ADR 0293](adr/0293-production-only-until-the-first-real-user.md) (production only until the first real user), and the owner has done one pass whose notes are logged and turned into tasks.
   Depends on TEST-020, ANN-031, TASK-014, AINUC-013, COLLAB-016, JOBS-007, EVAL-014, CMP-007, ONB-006, ADMIN-007, PROTO-010.
   Size: L.
 
