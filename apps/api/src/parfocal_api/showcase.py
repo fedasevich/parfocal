@@ -65,8 +65,8 @@ from parfocal_common.repository import repository_root
 from parfocal_common.result_store import ObjectResultStore, ResultStore
 from parfocal_common.settings import AppEnv, StorageSettings
 
-SHOWCASE_SLUG = "showcase"
-SHOWCASE_NAME = "Parfocal showcase"
+ORGANISATION_SLUG = "cvut"
+ORGANISATION_NAME = "ČVUT"
 PLACEHOLDER_PREFIX = SEEDED_SUBJECT_PREFIX
 INERT_JOB_KIND = "showcase"
 FIXTURE_PREFIX = "fixtures/"
@@ -92,6 +92,19 @@ PEOPLE = (
     FakePerson("rhea", "Rhea Reviewer", "RH", Role.REVIEWER),
     FakePerson("remy", "Remy Reviewer", "RM", Role.REVIEWER),
     FakePerson("vic", "Vic Viewer", "VV", Role.REVIEWER),
+)
+
+
+@dataclass(frozen=True)
+class Workspace:
+    slug: str
+    name: str
+
+
+WORKSPACES = (
+    Workspace("cvut-biomedical", "ČVUT · Biomedical Engineering"),
+    Workspace("cvut-imaging", "ČVUT · Medical Imaging Group"),
+    Workspace("cvut-ml", "ČVUT · Machine Learning Lab"),
 )
 
 
@@ -151,22 +164,32 @@ async def lock(connection: AsyncConnection) -> None:
     )
 
 
-async def existing_tenant(connection: AsyncConnection) -> uuid.UUID | None:
-    return await connection.scalar(select(tenants.c.id).where(tenants.c.slug == SHOWCASE_SLUG))
+async def existing_tenant(connection: AsyncConnection, slug: str) -> uuid.UUID | None:
+    return await connection.scalar(select(tenants.c.id).where(tenants.c.slug == slug))
 
 
-async def new_tenant(connection: AsyncConnection) -> uuid.UUID:
-    organisation_id = await connection.scalar(
+async def organisation(connection: AsyncConnection) -> uuid.UUID:
+    found = await connection.scalar(
+        select(organisations.c.id).where(organisations.c.slug == ORGANISATION_SLUG)
+    )
+    created = found or await connection.scalar(
         insert(organisations)
-        .values(slug=SHOWCASE_SLUG, name=SHOWCASE_NAME)
+        .values(slug=ORGANISATION_SLUG, name=ORGANISATION_NAME)
         .returning(organisations.c.id)
     )
+    assert isinstance(created, uuid.UUID)
+    return created
+
+
+async def new_tenant(
+    connection: AsyncConnection, organisation_id: uuid.UUID, workspace: Workspace
+) -> uuid.UUID:
     tenant_id = await connection.scalar(
         insert(tenants)
         .values(
             organisation_id=organisation_id,
-            slug=SHOWCASE_SLUG,
-            name=SHOWCASE_NAME,
+            slug=workspace.slug,
+            name=workspace.name,
             kind="research",
             region="eu",
             plan="pilot",
@@ -634,8 +657,10 @@ async def seed_gallery(
         await add_slide(connection, seeded, project.id, slide.file, gallery_facts(slide, manifest))
 
 
-async def seed_workspace(connection: AsyncConnection) -> Seeded:
-    tenant_id = await new_tenant(connection)
+async def seed_workspace(
+    connection: AsyncConnection, organisation_id: uuid.UUID, workspace: Workspace
+) -> Seeded:
+    tenant_id = await new_tenant(connection, organisation_id, workspace)
     seeded = Seeded(tenant_id, {})
     for person in PEOPLE:
         seeded.people[person.key] = await add_member(
@@ -695,22 +720,28 @@ async def seed(
     results: ResultStore,
     owner_email: str | None,
     manifest: Mapping[str, Mapping[str, Any]] | None = None,
-) -> uuid.UUID:
+) -> list[uuid.UUID]:
     engine = create_engine(database_url)
     try:
         async with scoped_transaction(
             engine, DatabaseScope(platform=True, auth=True)
         ) as connection:
             await lock(connection)
-            tenant_id = await existing_tenant(connection)
-            fresh = tenant_id is None
-            if fresh:
-                seeded = await seed_workspace(connection)
-                tenant_id = seeded.tenant_id
-            assert tenant_id is not None
+            organisation_id = await organisation(connection)
+            tenant_ids: list[uuid.UUID] = []
+            created: list[uuid.UUID] = []
+            for workspace in WORKSPACES:
+                tenant_id = await existing_tenant(connection, workspace.slug)
+                if tenant_id is None:
+                    tenant_id = (
+                        await seed_workspace(connection, organisation_id, workspace)
+                    ).tenant_id
+                    created.append(tenant_id)
+                tenant_ids.append(tenant_id)
             if owner_email:
-                await add_owner(connection, tenant_id, owner_email)
-        if fresh:
+                for tenant_id in reversed(tenant_ids):
+                    await add_owner(connection, tenant_id, owner_email)
+        for tenant_id in created:
             people = await people_of(engine, tenant_id)
             ada = people["ada"]
             async with scoped_transaction(
@@ -723,7 +754,7 @@ async def seed(
                     results,
                     manifest if manifest is not None else fixture_facts(),
                 )
-        return tenant_id
+        return tenant_ids
     finally:
         await engine.dispose()
 
@@ -742,20 +773,20 @@ async def people_of(engine: Any, tenant_id: uuid.UUID) -> dict[str, uuid.UUID]:
 async def main() -> None:
     parser = argparse.ArgumentParser(
         prog="parfocal_api.showcase",
-        description="Seed the showcase workspace with fake people over every feature",
+        description="Seed the ČVUT workspaces with invented people over every feature",
     )
     parser.parse_args()
     database_url = os.environ["DATABASE_URL"]
     settings = StorageSettings(app_env=AppEnv(os.environ.get("APP_ENV", AppEnv.DEV)))
     async with httpx2.AsyncClient(timeout=60) as http:
         store = ObjectStore(settings.storage(), http)
-        tenant_id = await seed(
+        tenant_ids = await seed(
             database_url,
             store,
             ObjectResultStore(store),
             os.environ.get("SEED_OWNER_EMAIL") or None,
         )
-    print(f"showcase workspace {tenant_id}")
+    print(f"seeded {len(tenant_ids)} ČVUT workspaces")
 
 
 if __name__ == "__main__":

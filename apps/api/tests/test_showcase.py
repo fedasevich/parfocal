@@ -8,7 +8,7 @@ from sqlalchemy import select
 
 from parfocal_api.auth import sign_in_user
 from parfocal_api.review_states import State, states_of, task_of
-from parfocal_api.showcase import FIXTURES_MANIFEST, FORMAT_GALLERY, RESULT_FILES, seed
+from parfocal_api.showcase import FIXTURES_MANIFEST, FORMAT_GALLERY, RESULT_FILES, WORKSPACES, seed
 from parfocal_api.tables import (
     DecisionStyle,
     PrivacyMode,
@@ -64,7 +64,8 @@ def seeded() -> Iterator[str]:
 
 
 async def run_seed(url: str, owner_email: str | None = "owner@example.test") -> uuid.UUID:
-    return await seed(url, EmptyStore(), UnusedResults(), owner_email)  # type: ignore[arg-type]
+    tenant_ids = await seed(url, EmptyStore(), UnusedResults(), owner_email)  # type: ignore[arg-type]
+    return tenant_ids[0]
 
 
 async def counts(url: str) -> dict[str, int]:
@@ -141,7 +142,9 @@ async def test_the_owner_is_an_admin_with_a_placeholder_subject(seeded: str) -> 
         "SELECT u.subject, m.role, m.admin_rights FROM users u "
         "JOIN memberships m ON m.user_id = u.id WHERE u.email = 'owner@example.test'",
     )
-    assert rows == [("seed:owner@example.test", "researcher", True)]
+    assert rows == [("seed:owner@example.test", "researcher", True)] * len(WORKSPACES)
+    names = await values(seeded, "SELECT name FROM organisations")
+    assert names == {"ČVUT"}
 
 
 async def test_seeded_people_are_fake(seeded: str) -> None:
@@ -169,4 +172,19 @@ async def test_the_owner_takes_over_the_seeded_account_on_first_sign_in(seeded: 
         "SELECT u.subject, m.admin_rights FROM users u "
         "JOIN memberships m ON m.user_id = u.id WHERE lower(u.email) = 'adopt@example.test'",
     )
-    assert rows == [("idp-adopt", True)]
+    assert rows == [("idp-adopt", True)] * len(WORKSPACES)
+
+
+async def test_an_unverified_email_does_not_take_over_the_seeded_account(seeded: str) -> None:
+    await run_seed(seeded, "unverified@example.test")
+    claims = {"sub": "idp-unverified", "email": "unverified@example.test", "email_verified": False}
+    engine = create_engine(seeded)
+    try:
+        async with scoped_transaction(engine, DatabaseScope(auth=True)) as connection:
+            await sign_in_user(connection, claims)
+    finally:
+        await engine.dispose()
+    owner = await values(
+        seeded, "SELECT subject FROM users WHERE email = 'unverified@example.test'"
+    )
+    assert owner == {"seed:unverified@example.test"}
