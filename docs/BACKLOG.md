@@ -2757,7 +2757,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Keys follow the project taxonomy, 1 to 9 (PROJ-004).
   Size: S.
 
-- [ ] ANN-012 · Class taxonomy per tenant (moved)
+- [x] ANN-012 · Class taxonomy per tenant (moved)
   Moved to PROJ-004, because classes belong to a project ([ADR 0053](adr/0053-ai-results-review-direction.md)).
   Size: S.
 
