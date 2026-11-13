@@ -1,4 +1,4 @@
-# XXXX. Sign-in factors are offered by the IdP and required per workspace by the API
+# 0291. Sign-in factors are offered by the IdP and required per workspace by the API
 
 - Date: 2026-11-13
 - Status: Accepted

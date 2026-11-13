@@ -1,4 +1,4 @@
-# XXXX. Identity provider config as an OpenTofu module, rebuilt from nothing in CI on a throwaway Zitadel
+# 0290. Identity provider config as an OpenTofu module, rebuilt from nothing in CI on a throwaway Zitadel
 
 - Date: 2026-11-13
 - Status: Accepted

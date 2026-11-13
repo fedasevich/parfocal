@@ -1,7 +1,7 @@
-# XXXX. Staging and production identity in separate Zitadel organisations, client secrets only in the encrypted state
+# 0292. Staging and production identity in separate Zitadel organisations, client secrets only in the encrypted state
 
 - Date: 2026-11-13
-- Status: Proposed, waits for the owner to create the staging organisation
+- Status: Accepted
 - Deciders: Yurii Fedas
 - Backlog: IAM-001 (identity provider deployment and configuration). Feeds OPS-001 (base infrastructure as code), SKEL-001 (staging environment exists) and SKEL-002 (log in through the IdP).
 

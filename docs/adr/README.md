@@ -253,3 +253,6 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0287](0287-one-opentofu-root-per-environment-over-a-shared-module.md) | Each environment is its own OpenTofu root over a shared module, with one encrypted state file per root | Accepted | 2026-11-13 |
 | [0288](0288-conftest-checks-the-opentofu-code-and-every-plan.md) | Conftest checks the OpenTofu code in CI and every plan before an apply, and a resource type list guards the cost | Accepted | 2026-11-13 |
 | [0289](0289-opentofu-owns-buckets-zone-settings-and-zitadel-only.md) | OpenTofu owns buckets, zone settings and Zitadel only, and Neon, Modal, Workers and the app hostnames stay with their own tools | Accepted | 2026-11-13 |
+| [0290](0290-identity-provider-config-as-an-opentofu-module-rebuilt-in-ci.md) | Identity provider config as an OpenTofu module, rebuilt from nothing in CI on a throwaway Zitadel | Accepted | 2026-11-13 |
+| [0291](0291-sign-in-factors-offered-by-the-idp-and-required-by-the-workspace.md) | Sign-in factors are offered by the IdP and required per workspace by the API | Accepted | 2026-11-13 |
+| [0292](0292-staging-and-production-identity-in-separate-organisations.md) | Staging and production identity in separate Zitadel organisations, client secrets only in the encrypted state | Accepted | 2026-11-13 |
