@@ -99,12 +99,33 @@ PEOPLE = (
 class Workspace:
     slug: str
     name: str
+    study: str
+    clinical_study: str
+    gallery: str
 
 
 WORKSPACES = (
-    Workspace("cvut-biomedical", "ČVUT · Biomedical Engineering"),
-    Workspace("cvut-imaging", "ČVUT · Medical Imaging Group"),
-    Workspace("cvut-ml", "ČVUT · Machine Learning Lab"),
+    Workspace(
+        "cvut-biomedical",
+        "ČVUT · Biomedical Engineering",
+        "Sentinel node metastasis study",
+        "Breast surgery sentinel nodes",
+        "Scanner format comparison",
+    ),
+    Workspace(
+        "cvut-imaging",
+        "ČVUT · Medical Imaging Group",
+        "Lymph node segmentation benchmark",
+        "Partner hospital node review",
+        "Whole-slide format survey",
+    ),
+    Workspace(
+        "cvut-ml",
+        "ČVUT · Machine Learning Lab",
+        "Metastasis detector validation",
+        "Detector clinical pilot",
+        "Vendor format robustness",
+    ),
 )
 
 
@@ -341,7 +362,7 @@ async def ready_set(
     job_id: uuid.UUID | None = None,
 ) -> uuid.UUID:
     draft = ResultSetDraft(
-        name="Showcase tumour model",
+        name="Tumour detector v1",
         model_version="v1.0",
         classes=["Tumor"],
         source_file=source_file,
@@ -494,7 +515,7 @@ async def seed_states(
     named: dict[str, uuid.UUID] = {}
     for index, state in enumerate(STATE_SLIDES):
         slide = await add_slide(
-            connection, seeded, project_id, f"Showcase {state}", sample_facts(sample)
+            connection, seeded, project_id, f"Case {state}", sample_facts(sample)
         )
         named[state] = slide.id
         sets[slide.id] = await ready_set(
@@ -508,7 +529,7 @@ async def seed_states(
         principal,
         results,
         project_id,
-        "Showcase · every state",
+        "Every state review",
         sets,
         reviewers,
         DecisionStyle.AGREE,
@@ -551,7 +572,7 @@ async def seed_states(
         principal,
         results,
         project_id,
-        "Showcase · signed off",
+        "Signed-off review",
         {signed_off: signed_set},
         reviewers,
         DecisionStyle.AGREE,
@@ -574,7 +595,7 @@ async def seed_states(
         connection,
         principal.tenant_id,
         await slide_row(connection, named["uploaded"]),
-        ResultSetDraft(name="Showcase broken import", source_file="broken.csv"),
+        ResultSetDraft(name="Broken import", source_file="broken.csv"),
         ResultSource.IMPORT,
         actor_of(principal),
         principal.user_id,
@@ -601,7 +622,7 @@ async def seed_styles(
 ) -> None:
     for style in DecisionStyle:
         slide = await add_slide(
-            connection, seeded, project_id, f"Showcase {style} style", sample_facts(sample)
+            connection, seeded, project_id, f"Case {style} style", sample_facts(sample)
         )
         set_id = await ready_set(connection, principal, slide, "regions.parfocal.json")
         task_id = await review_task(
@@ -609,7 +630,7 @@ async def seed_styles(
             principal,
             results,
             project_id,
-            f"Showcase · {style} decisions",
+            f"{style.capitalize()} decisions review",
             {slide.id: set_id},
             [seeded.people["rhea"]],
             style,
@@ -625,15 +646,13 @@ async def seed_styles(
                 VerdictValue.DISAGREE,
                 [VerdictReason.BOUNDARY_OFF],
             )
-    slide = await add_slide(
-        connection, seeded, project_id, "Showcase annotate", sample_facts(sample)
-    )
+    slide = await add_slide(connection, seeded, project_id, "Case annotate", sample_facts(sample))
     await review_task(
         connection,
         principal,
         results,
         project_id,
-        "Showcase · annotate",
+        "Tumour annotation",
         {slide.id: None},
         [seeded.people["rhea"]],
         DecisionStyle.CERTAINTY,
@@ -646,9 +665,10 @@ async def seed_gallery(
     seeded: Seeded,
     principal: MemberPrincipal,
     manifest: Mapping[str, Mapping[str, Any]],
+    name: str,
 ) -> None:
     project = await create_project(
-        ProjectDraft(name="Showcase · format gallery", privacy_mode=PrivacyMode.DE_IDENTIFIED),
+        ProjectDraft(name=name, privacy_mode=PrivacyMode.DE_IDENTIFIED),
         principal,
         connection,
     )
@@ -677,6 +697,7 @@ async def seed_workspace(
 
 async def seed_projects(
     connection: AsyncConnection,
+    workspace: Workspace,
     seeded: Seeded,
     store: ObjectStore,
     results: ResultStore,
@@ -688,7 +709,7 @@ async def seed_projects(
     for mode in PrivacyMode:
         project = await create_project(
             ProjectDraft(
-                name=f"Showcase · {mode} review",
+                name=workspace.clinical_study if mode is PrivacyMode.CLINICAL else workspace.study,
                 privacy_mode=mode,
                 template=AnalysisTemplate.SENTINEL_NODE,
                 taxonomy=TaxonomyTemplate.SENTINEL_NODE,
@@ -711,7 +732,7 @@ async def seed_projects(
             job_ids = await add_jobs(connection, seeded, project.id)
             await seed_states(connection, seeded, principal, results, project.id, sample, job_ids)
             await seed_styles(connection, seeded, principal, results, project.id, sample)
-    await seed_gallery(connection, seeded, principal, manifest)
+    await seed_gallery(connection, seeded, principal, manifest, workspace.gallery)
 
 
 async def seed(
@@ -729,19 +750,19 @@ async def seed(
             await lock(connection)
             organisation_id = await organisation(connection)
             tenant_ids: list[uuid.UUID] = []
-            created: list[uuid.UUID] = []
+            created: list[tuple[uuid.UUID, Workspace]] = []
             for workspace in WORKSPACES:
                 tenant_id = await existing_tenant(connection, workspace.slug)
                 if tenant_id is None:
                     tenant_id = (
                         await seed_workspace(connection, organisation_id, workspace)
                     ).tenant_id
-                    created.append(tenant_id)
+                    created.append((tenant_id, workspace))
                 tenant_ids.append(tenant_id)
             if owner_email:
                 for tenant_id in reversed(tenant_ids):
                     await add_owner(connection, tenant_id, owner_email)
-        for tenant_id in created:
+        for tenant_id, workspace in created:
             people = await people_of(engine, tenant_id)
             ada = people["ada"]
             async with scoped_transaction(
@@ -749,6 +770,7 @@ async def seed(
             ) as connection:
                 await seed_projects(
                     connection,
+                    workspace,
                     Seeded(tenant_id, people),
                     store,
                     results,

@@ -145,6 +145,9 @@ async def test_the_owner_is_an_admin_with_a_placeholder_subject(seeded: str) -> 
     assert rows == [("seed:owner@example.test", "researcher", True)] * len(WORKSPACES)
     names = await values(seeded, "SELECT name FROM organisations")
     assert names == {"ČVUT"}
+    projects = await values(seeded, "SELECT name FROM projects")
+    assert len(projects) == 3 * len(WORKSPACES)
+    assert not any(name.startswith("Showcase") for name in projects)
 
 
 async def test_seeded_people_are_fake(seeded: str) -> None:
