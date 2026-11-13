@@ -71,7 +71,7 @@ Option 1 for the platform, option 2 for the edge preview, option 3 for the Modal
 | Neon API and CLI | Branches of the preview project, created and deleted by the workflows |
 | GitHub Actions | Orchestration, secrets, the pull request comment and teardown |
 
-Decided in OPS-001 (base infrastructure as code) on 2026-11-13: the Neon projects stay outside OpenTofu and are created through the Neon API by OPS-002 (deploy definitions), see [ADR 0289](0289-opentofu-owns-buckets-zone-settings-and-zitadel-only.md) (what OpenTofu owns).
+Decided in OPS-001 (base infrastructure as code) on 2026-11-13: the Neon projects stay outside OpenTofu. The owner creates them in the Vercel dashboard, the only place a Vercel-managed organisation allows it, and OPS-002 (deploy definitions) manages their branches through the Neon API, see [ADR 0289](0289-opentofu-owns-buckets-zone-settings-and-zitadel-only.md) (what OpenTofu owns).
 
 ### Amendment to ADR 0003: web assets served by the edge Worker
 

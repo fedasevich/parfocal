@@ -15,7 +15,7 @@ How `infra/tofu` works and the traps found while setting it up. It is the result
 
 All four roots are applied and plan clean since 2026-11-13.
 
-Not managed here, on purpose: Neon, Modal, Workers and the hostnames `staging.parfocal.eu` and `app.parfocal.eu` (Workers Custom Domains in Wrangler), all of which belong to OPS-002 (deploy definitions). Also not managed: the old web host's DNS records and the `parfocal-tfstate` bucket itself.
+Not managed here, on purpose: Neon (projects are made by the owner in the Vercel dashboard, branches by OPS-002 through the Neon API), Modal, Workers and the hostnames `staging.parfocal.eu` and `app.parfocal.eu` (Workers Custom Domains in Wrangler), all of which belong to OPS-002 (deploy definitions). Also not managed: the old web host's DNS records and the `parfocal-tfstate` bucket itself.
 
 ## Running it
 

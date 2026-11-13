@@ -40,7 +40,7 @@ The architecture decides the default for each affected STACK slot. Each slot's s
 | Frontend | The backlog defaults of STACK-001 to STACK-014, unchanged | Reviewing each one now was not needed because none depends on the platform choice |
 | Keys and erasure | Application-level envelope encryption. Per-tenant data keys are wrapped by a master key held as a Modal secret, sensitive columns are AES-GCM encrypted in FastAPI, and erasure destroys the tenant key and deletes the tenant's R2 prefix | An external KMS now adds a cloud account for fake data. No column encryption would make a data migration necessary later |
 
-Amended on 2026-11-13 by [ADR 0289](0289-opentofu-owns-buckets-zone-settings-and-zitadel-only.md) (what OpenTofu owns): OpenTofu holds the buckets, the zone settings and Zitadel, while the Neon projects go through the Neon API and the app hostnames are Workers Custom Domains in Wrangler.
+Amended on 2026-11-13 by [ADR 0289](0289-opentofu-owns-buckets-zone-settings-and-zitadel-only.md) (what OpenTofu owns): OpenTofu holds the buckets, the zone settings and Zitadel, while the Neon projects are made in the Vercel dashboard with their branches going through the Neon API, and the app hostnames are Workers Custom Domains in Wrangler.
 
 ## Decision
 

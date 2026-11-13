@@ -4140,7 +4140,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
 
 - [ ] OPS-002 · Deploy definitions
   Wrangler config for the edge Worker and Pages, Modal app definitions for the API, ingest and ML functions, and the deploy scripts CI runs ([ADR 0003](adr/0003-pilot-platform-architecture.md)).
-  It also owns the app hostnames as Workers Custom Domains and an idempotent script that makes sure the Neon project and branches exist, and it reads the bucket, origin and login app of an environment from `infra/tofu/tofu.sh <root> output -json` ([ADR 0289](adr/0289-opentofu-owns-buckets-zone-settings-and-zitadel-only.md), what OpenTofu owns).
+  It also owns the app hostnames as Workers Custom Domains and an idempotent script that makes sure the Neon branches exist in the projects the owner made in the Vercel dashboard, and it reads the bucket, origin and login app of an environment from `infra/tofu/tofu.sh <root> output -json` ([ADR 0289](adr/0289-opentofu-owns-buckets-zone-settings-and-zitadel-only.md), what OpenTofu owns).
   The ingest function takes its memory from `INGEST_MEMORY_MIB` in `parfocal_ingest.settings`, 2 GiB since RSET-012 (large result files in bounded memory) and [ADR 0128](adr/0128-result-files-stream-through-a-byte-scanner-into-cell-columns.md) (result files stream through a byte scanner into cell columns), and the bounded cell import benchmark is repeated on Modal once it runs there.
   Done when CI recreates staging from git alone.
   Refs [ADR 0050](adr/0050-deploy-pipeline-and-previews.md) for how this task is shaped.
