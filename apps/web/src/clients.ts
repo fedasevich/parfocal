@@ -42,29 +42,19 @@ export function scrubbedAnalytics(analytics: Analytics, sensitive: SensitiveValu
   };
 }
 
-function production<Concern extends keyof ProductionClients>(
-  concern: Concern,
-  factories: ProductionFactories,
-  config: WebConfig,
-): ProductionClients[Concern] {
-  const factory = factories[concern];
-  if (factory === undefined) throw new Error(`no production ${concern} client is configured`);
-  return factory(config);
-}
-
 export function selectWebClients(
   config: WebConfig,
   factories: ProductionFactories,
   flagDefaults: Record<string, string> = {},
   sensitive: SensitiveValues = new SensitiveValues(),
 ): WebClients {
-  const local = config.appEnv !== "prod";
-  const errors = local ? consoleErrors : production("errors", factories, config);
-  const analytics = local ? noAnalytics : production("analytics", factories, config);
+  const switchedOn = config.appEnv === "prod" ? factories : {};
+  const errors = switchedOn.errors?.(config) ?? consoleErrors;
+  const analytics = switchedOn.analytics?.(config) ?? noAnalytics;
   return {
     errors: scrubbedErrors(errors, sensitive),
     analytics: consentedAnalytics(scrubbedAnalytics(analytics, sensitive)),
-    flags: local ? fileFlags(flagDefaults) : production("flags", factories, config),
+    flags: switchedOn.flags?.(config) ?? fileFlags(flagDefaults),
     sensitive,
   };
 }

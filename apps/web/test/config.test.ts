@@ -36,11 +36,19 @@ test("no production web client is created outside prod", () => {
   assert.deepEqual(created, ["errors", "analytics", "flags"]);
 });
 
-test("prod fails without production clients", () => {
-  assert.throws(
-    () => selectWebClients({ appEnv: "prod", apiBaseUrl: "/api", fakeApi: "off" }, {}),
-    /no production errors client/,
+test("prod with every backend switched off uses the console, no analytics and the flag defaults", (t) => {
+  const logged = t.mock.method(console, "error", () => {});
+  const clients = selectWebClients(
+    { appEnv: "prod", apiBaseUrl: "/api", fakeApi: "off" },
+    {},
+    {
+      "home-variant": "B",
+    },
   );
+  clients.errors.capture(new Error("boom"));
+  clients.analytics.capture("opened", {});
+  assert.equal(logged.mock.callCount(), 1);
+  assert.equal(clients.flags.variant("home-variant"), "B");
 });
 
 test("the fake API is off unless it is asked for", () => {
