@@ -234,8 +234,11 @@ const layerChannelName = "parfocal-fake-layer";
 
 let outgoing: BroadcastChannel | null = null;
 
+const betweenBrowserTabs = (): boolean =>
+  typeof window !== "undefined" && typeof BroadcastChannel !== "undefined";
+
 function listenForColleagues(): void {
-  if (outgoing !== null || typeof BroadcastChannel === "undefined") return;
+  if (outgoing !== null || !betweenBrowserTabs()) return;
   outgoing = new BroadcastChannel(layerChannelName);
   const incoming = new BroadcastChannel(layerChannelName);
   incoming.onmessage = ({ data }: MessageEvent<LayerSignal>) => {
