@@ -99,3 +99,18 @@ Workers Paid ($5 a month) is needed from day one. Every tile read passes through
 - Neon HIPAA add-on on Business and Enterprise plans: https://neon.tech/docs/changelog/2025-03-14
 - R2 presigned URLs work only on the S3 API domain: https://developers.cloudflare.com/r2/api/s3/presigned-urls/
 - Zitadel Cloud plans: https://zitadel.com/pricing
+
+## Amendment 2026-11-13, API latency budgets and the Neon region
+
+This closes two of the open items in Consequences, from read-only measurements of production as it runs.
+
+The Neon region stays `aws-us-east-1`, next to Modal's US East. A warm API request with four or more round trips to Neon takes 20 to 50 ms inside the container, so Neon is close to where Modal runs the API today. A cross-region comparison was not run, and container placement is not verified because the web function has no region pin. The evidence is in the [Neon region result](../results/2026-11-13-neon-region-from-modal.md) and the decision in the 2026-11-13 amendment of [ADR 0018](0018-postgres-sqlalchemy-rls.md) (Postgres, SQLAlchemy and row-level security). The plan to pin every region to the EU at the first tenant with real patient data is unchanged.
+
+The API budgets below are targets chosen from the [cold start and latency result](../results/2026-11-13-modal-cold-start-and-api-latency.md), not guarantees:
+
+- A read with database work on a warm container takes under 50 ms at p50 and under 250 ms at p95 inside the app.
+- A warm API call seen by a user in Europe takes under 300 ms at p50 and under 800 ms at p95. About 150 ms of that is the path from Europe to Modal's US East ingress.
+- The first request after the API scaled to zero takes under 15 s, and the UI shows a loading state after 1 s. Measured today it takes 6 to 12 s.
+- A bulk write of 10,000 shapes keeps the 5 s bound from the [annotation bulk latency result](../results/2026-10-18-annotation-bulk-latency.md).
+
+Recommendations only, nothing changed: add `@modal.concurrent` to the web function so a burst of requests does not start a cold container per request, and log `MODAL_REGION` at container start so placement becomes a fact. Keeping a warm container would remove the cold start but breaks the rule that nothing runs all the time in production. Pooled-connection behaviour with asyncpg stays open.
