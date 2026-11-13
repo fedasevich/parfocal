@@ -2,6 +2,35 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.2.0 (2026-11-13)
+
+### Features
+
+- TEST-020: Seed a showcase workspace over every state with fake people
+- TEST-020: Add the Reset production workflow that empties tenant data and reseeds
+- TEST-020: Seed three ČVUT workspaces and test that unverified emails never link
+- TEST-020: Name the seeded ČVUT projects like research studies
+- OPS-015: Make draft calls safe in production and add my jobs and checklist
+- IAM-027: Add native sign-up and password sign-in through Zitadel's session API
+- IAM-027: Send signed-out people to the app's own sign-in and use generated sign-up calls
+- IAM-027: Mount the Zitadel login secret in the API app
+
+### Fixes
+
+- OPS-002: Restore draft files removed by mistake in the log commit
+
+### Docs
+
+- OPS-002: Log the v0.1.5 deploy and live sign-in check
+- DS-039: Add the animated loaders task
+- IAM-027: Add the real sign-up and sign-in task
+- OPS-016: Add the post-deploy browser check and draft backend tasks
+- OPS-002: Log the verified email on the owner's Zitadel account
+- TEST-037: Add the task to open seeded fixture slides in the viewer
+- OPS-002: Log Resend as the active Zitadel SMTP provider
+- IAM-027: Move the sign-up and password sign-in calls to promoted draft calls
+- IAM-027: Record the answer to the Zitadel login service user decision
+
 ## v0.1.5 (2026-11-13)
 
 ### Fixes
