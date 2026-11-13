@@ -38,6 +38,8 @@ LOCAL = {
     "MODAL_TOKEN_SECRET": "modal-secret",
     "R2_ACCESS_KEY_ID": "r2-id",
     "R2_SECRET_ACCESS_KEY": "r2-secret",
+    "MODAL_PROXY_TOKEN_ID": "wk-proxy",
+    "MODAL_PROXY_TOKEN_SECRET": "ws-proxy",
 }
 OUTPUTS = json.dumps(
     {
@@ -164,6 +166,8 @@ def test_the_first_bootstrap_writes_keys_once_and_the_second_only_the_config() -
     assert cloud.worker_secrets == {
         "TILE_TOKEN_KEY": keys["TILE_TOKEN_KEY"],
         "ROOM_TOKEN_KEY": keys["ROOM_TOKEN_KEY"],
+        "MODAL_PROXY_TOKEN_ID": "wk-proxy",
+        "MODAL_PROXY_TOKEN_SECRET": "ws-proxy",
     }
     config = cloud.modal_secrets[CONFIG_SECRET]
     assert config["APP_ENV"] == "prod"

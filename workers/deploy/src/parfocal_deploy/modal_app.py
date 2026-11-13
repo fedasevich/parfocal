@@ -19,6 +19,7 @@ WORKSPACE_PREFIX = "parfocal-"
 INGEST_IDLE_EXIT_SECONDS = 30.0
 MAX_DEPLOYED_CRONS = 5
 
+WEB_ENDPOINT: dict[str, Any] = {"requires_proxy_auth": True}
 WEB_OPTIONS: dict[str, Any] = {
     "name": WEB_FUNCTION,
     "memory": (512, 2048),
@@ -88,6 +89,6 @@ app = modal.App(
     image=app_image(),
     secrets=[modal.Secret.from_name(KEYS_SECRET), modal.Secret.from_name(CONFIG_SECRET)],
 )
-web = app.function(**WEB_OPTIONS)(modal.asgi_app()(serve))
+web = app.function(**WEB_OPTIONS)(modal.asgi_app(**WEB_ENDPOINT)(serve))
 ingest = app.function(**INGEST_OPTIONS)(run_ingest)
 FUNCTIONS: dict[str, modal.Function] = {WEB_FUNCTION: web, INGEST_FUNCTION: ingest}

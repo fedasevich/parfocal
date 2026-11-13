@@ -26,7 +26,10 @@ LOCAL_SETTINGS = (
     "CLOUDFLARE_ACCOUNT_ID",
     "R2_ACCESS_KEY_ID",
     "R2_SECRET_ACCESS_KEY",
+    "MODAL_PROXY_TOKEN_ID",
+    "MODAL_PROXY_TOKEN_SECRET",
 )
+PROXY_TOKEN = ("MODAL_PROXY_TOKEN_ID", "MODAL_PROXY_TOKEN_SECRET")
 OUTPUTS = ("zitadel_issuer", "zitadel_client_id", "zitadel_client_secret")
 PASSED_THROUGH = (
     "EMAIL_BACKEND",
@@ -104,6 +107,7 @@ def generated_keys(make: Callable[[], str] = new_key) -> dict[str, str]:
 
 def worker_secrets(keys: Mapping[str, str], local: Mapping[str, str]) -> dict[str, str]:
     shared = {name: keys[name] for name in ("TILE_TOKEN_KEY", "ROOM_TOKEN_KEY")}
+    shared |= {name: local[name] for name in PROXY_TOKEN}
     turnstile = local.get("TURNSTILE_SECRET_KEY")
     return shared | ({"TURNSTILE_SECRET_KEY": turnstile} if turnstile else {})
 

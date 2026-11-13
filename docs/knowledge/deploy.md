@@ -15,7 +15,7 @@ OPS-002 (deploy definitions) put everything a deploy needs in git. Production is
 
 ## Bootstrap, once per environment
 
-It needs `NEON_API_KEY`, `NEON_PROJECT_ID`, `CLOUDFLARE_ACCOUNT_ID`, `R2_ACCESS_KEY_ID` and `R2_SECRET_ACCESS_KEY` in the shell, plus working Wrangler, Modal and OpenTofu logins. It reads the login app from `infra/tofu/tofu.sh prod output -json`.
+It needs `NEON_API_KEY`, `NEON_PROJECT_ID`, `CLOUDFLARE_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `MODAL_PROXY_TOKEN_ID` and `MODAL_PROXY_TOKEN_SECRET` in the shell, plus working Wrangler, Modal and OpenTofu logins. It reads the login app from `infra/tofu/tofu.sh prod output -json`.
 
 1. It makes sure the Neon branch exists.
 2. When the Modal secret `parfocal-api-keys` is missing, it generates the session, master, tile token and room token keys, creates the role `parfocal_app` (it can log in and cannot bypass row-level security, like `infra/local/postgres-init.sql`), writes the two token keys to the Worker and writes the keys with the pooled `DATABASE_URL` to Modal. This secret is never overwritten.
@@ -52,4 +52,4 @@ Neon runs PostgreSQL 18.7. `CREATE EXTENSION postgis` worked on a throwaway bran
 - TODO: nothing starts the `ingest` function yet. The API still has to spawn it or a schedule has to run it.
 - TODO: whether `wrangler secret bulk` creates a Worker that does not exist yet. If it does not, deploy the Worker once before bootstrap.
 - TODO: the field name in `modal secret list --json`. The code accepts `Name` and `name`.
-- The Modal web URL is public. The edge rate limits and the bot check guard only the path through the Worker until SEC-042 (the edge limits and the bot check guard the real API path) closes it.
+- The Modal web function sets `requires_proxy_auth`, so Modal refuses any request without a workspace proxy auth token in the `Modal-Key` and `Modal-Secret` headers before a container starts. The address follows `<workspace>--parfocal-api-web.modal.run` and is easy to guess, so this is what keeps traffic on the path through the Worker's limits and bot check. The token is made by hand in the Modal dashboard under workspace settings, Proxy Auth Tokens, and bootstrap writes it to the Worker as the secrets `MODAL_PROXY_TOKEN_ID` and `MODAL_PROXY_TOKEN_SECRET`. The Worker drops any copy a client sends. SEC-042 (the edge limits and the bot check guard the real API path) still owns failing closed on a missing limit binding, path normalisation and the deployed check.

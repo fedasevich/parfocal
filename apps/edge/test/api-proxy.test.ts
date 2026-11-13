@@ -54,3 +54,26 @@ test("without an API origin the Worker answers a 503 problem instead of the app 
   const body = (await response.json()) as { code: string };
   assert.equal(body.code, "api-not-configured");
 });
+
+test("the Worker sends its Modal proxy token and drops one a client tried to send", async () => {
+  const { send, sent } = recorder(new Response("ok"));
+  const request = new Request("https://app.parfocal.test/api/health", {
+    headers: { "Modal-Key": "client-key", "Modal-Secret": "client-secret" },
+  });
+  const env = { API_ORIGIN, MODAL_PROXY_TOKEN_ID: "wk-1", MODAL_PROXY_TOKEN_SECRET: "ws-1" };
+  await handleApi(request, env, send);
+  const headers = new Headers(sent[0]?.init.headers);
+  assert.equal(headers.get("Modal-Key"), "wk-1");
+  assert.equal(headers.get("Modal-Secret"), "ws-1");
+});
+
+test("without a proxy token no client copy of one reaches the API", async () => {
+  const { send, sent } = recorder(new Response("ok"));
+  const request = new Request("https://app.parfocal.test/api/health", {
+    headers: { "Modal-Key": "client-key", "Modal-Secret": "client-secret" },
+  });
+  await handleApi(request, { API_ORIGIN }, send);
+  const headers = new Headers(sent[0]?.init.headers);
+  assert.equal(headers.get("Modal-Key"), null);
+  assert.equal(headers.get("Modal-Secret"), null);
+});

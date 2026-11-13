@@ -2,7 +2,12 @@ import { problem } from "#tiles.ts";
 
 export type ApiEnv = {
   readonly API_ORIGIN?: string;
+  readonly MODAL_PROXY_TOKEN_ID?: string;
+  readonly MODAL_PROXY_TOKEN_SECRET?: string;
 };
+
+export const PROXY_KEY_HEADER = "Modal-Key";
+export const PROXY_SECRET_HEADER = "Modal-Secret";
 
 export type Send = (input: string, init: RequestInit) => Promise<Response>;
 
@@ -22,6 +27,12 @@ export function handleApi(
   const target = new URL(`${from.pathname}${from.search}`, env.API_ORIGIN);
   const headers = new Headers(request.headers);
   headers.set("X-Forwarded-Host", from.host);
+  headers.delete(PROXY_KEY_HEADER);
+  headers.delete(PROXY_SECRET_HEADER);
+  if (env.MODAL_PROXY_TOKEN_ID && env.MODAL_PROXY_TOKEN_SECRET) {
+    headers.set(PROXY_KEY_HEADER, env.MODAL_PROXY_TOKEN_ID);
+    headers.set(PROXY_SECRET_HEADER, env.MODAL_PROXY_TOKEN_SECRET);
+  }
   const init = {
     method: request.method,
     headers,

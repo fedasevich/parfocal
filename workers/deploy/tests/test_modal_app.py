@@ -4,6 +4,7 @@ from parfocal_deploy.modal_app import (
     INGEST_FUNCTION,
     INGEST_OPTIONS,
     MAX_DEPLOYED_CRONS,
+    WEB_ENDPOINT,
     WEB_FUNCTION,
     WEB_OPTIONS,
     app,
@@ -44,3 +45,7 @@ def test_the_image_installs_what_the_packages_declare_and_no_workspace_package()
     assert any(requirement.startswith("asyncpg") for requirement in found)
     assert any(requirement.startswith("openslide-python") for requirement in found)
     assert not any(requirement.startswith("parfocal-") for requirement in found)
+
+
+def test_the_web_function_refuses_requests_without_the_proxy_token() -> None:
+    assert WEB_ENDPOINT == {"requires_proxy_auth": True}
