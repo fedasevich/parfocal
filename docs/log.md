@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-13
 
+- 2026-11-13 OPS-002 (managed Postgres 18 with PostGIS) ticked. The owner confirmed staging is cut for good, so the Done line about CI recreating staging no longer applies.
 - 2026-11-13 TEST-039 (local Zitadel for e2e): the e2e suite runs against a local Zitadel v4.20.3 with Mailpit seeded by infra/tofu/idp-local, a sign-up spec signs up, confirms by emailed code and deletes the user, CI drops the ZITADEL secrets and cloud issuer. Spike: the default email code alphabet has capital letters, which decision 95 already covers by switching production to digits. No production touch, cost $0.
 - 2026-11-13 OPS-005 (continuous deployment): deploy.yml runs after green CI on main behind DEPLOY_ON_MAIN (off), the migration check refuses destructive revisions without allow_destructive, rollback is a redeploy with --skip-migrations, ADR 0297 (main deploys behind a switch, migration check, rollback by redeploy), no production touch, cost $0, drill not run.
 - 2026-11-13 OPS-002 (managed Postgres 18 with PostGIS): local dev and CI run postgis 18 with PostGIS 3.6 on the volume postgres18-data, ADR 0018 amended, no production touch, cost $0. The Done line about CI recreating staging waits for OPS-014 (bring back staging) under ADR 0293 (production only until the first real user). The lead also declared the sign-up, my jobs and checklist routes as open in the permission test, which failed on main.

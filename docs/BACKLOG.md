@@ -289,7 +289,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Done when a spike serves an authenticated, tenant-scoped endpoint with generated OpenAPI that STACK-008 consumes, and records Modal cold-start time and API latency budgets.
   Size: L.
 
-- [ ] STACK-020 · Database, ORM and migrations
+- [x] STACK-020 · Database, ORM and migrations
   Candidates: PostgreSQL 17 with PostGIS. ORM: SQLAlchemy 2.0 async with Alembic, SQLModel, Piccolo. Default per [ADR 0003](adr/0003-pilot-platform-architecture.md): PostgreSQL 17 plus PostGIS on Neon, SQLAlchemy 2.0 async, Alembic, asyncpg, Neon's built-in PgBouncer pooler in transaction mode with tenant context set by `SET LOCAL` inside each transaction. Docker `postgis/postgis:17` locally and a Neon branch per preview.
   Done when the ADR covers row-level security for tenancy (STACK-023), bulk inserts for AI output through COPY, autovacuum tuning for annotation tables, asyncpg behaviour behind the pooler, and picks the Neon region with the lowest measured latency from Modal's API containers.
   Refs Cytomine and EXACT reports in [`poc/docs/presentation2`](https://github.com/fedasevich/pathlogy-poc/tree/master/docs/presentation2) (PostGIS bloat, bulk insert costs).
@@ -4149,7 +4149,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Refs [ADR 0050](adr/0050-deploy-pipeline-and-previews.md) for how this task is shaped.
   Size: L.
 
-- [ ] OPS-002 · Deploy definitions
+- [x] OPS-002 · Deploy definitions
   Wrangler config for the edge Worker and Pages, Modal app definitions for the API, ingest and ML functions, and the deploy scripts CI runs ([ADR 0003](adr/0003-pilot-platform-architecture.md)).
   It also owns the app hostnames as Workers Custom Domains and an idempotent script that makes sure the Neon branches exist in the projects the owner made in the Vercel dashboard, and it reads the bucket, origin and login app of an environment from `infra/tofu/tofu.sh <root> output -json` ([ADR 0289](adr/0289-opentofu-owns-buckets-zone-settings-and-zitadel-only.md), what OpenTofu owns).
   The ingest function takes its memory from `INGEST_MEMORY_MIB` in `parfocal_ingest.settings`, 2 GiB since RSET-012 (large result files in bounded memory) and [ADR 0128](adr/0128-result-files-stream-through-a-byte-scanner-into-cell-columns.md) (result files stream through a byte scanner into cell columns), and the bounded cell import benchmark is repeated on Modal once it runs there.
