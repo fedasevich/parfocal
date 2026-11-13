@@ -14,9 +14,9 @@ type GalleryTileState = "to-check" | "current" | "done";
 type GalleryTileSize = 40 | 92 | 120;
 
 const dotColors: Record<Decision, string> = {
-  agree: "bg-v-agree",
-  disagree: "bg-v-disagree",
-  unsure: "bg-v-unsure",
+  agree: "bg-decision-agree",
+  disagree: "bg-decision-disagree",
+  unsure: "bg-decision-unsure",
   open: "bg-chrome shadow-[0_0_0_2px_var(--chrome),inset_0_0_0_1.5px_var(--fg-faint)]",
 };
 
@@ -168,7 +168,7 @@ function GalleryTile({
           className="absolute -top-2.25 -right-2.25 z-10 grid size-6 cursor-pointer place-items-center rounded-full border-0 bg-transparent p-0 focus-visible:outline-2 focus-visible:-outline-offset-3 focus-visible:outline-accent focus-visible:outline-solid"
           onClick={onFlagAction}
         >
-          <span className="grid size-3.5 place-items-center rounded-full bg-v-disagree text-white shadow-[0_0_0_2px_var(--chrome)]">
+          <span className="grid size-3.5 place-items-center rounded-full bg-decision-disagree text-white shadow-[0_0_0_2px_var(--chrome)]">
             <Icon name="close" className="size-2" />
           </span>
         </button>
@@ -176,7 +176,7 @@ function GalleryTile({
         <span
           aria-hidden="true"
           data-slot="gallery-tile-flag-mark"
-          className="absolute -top-1 -right-1 size-3.5 rounded-full bg-v-disagree shadow-[0_0_0_2px_var(--chrome)]"
+          className="absolute -top-1 -right-1 size-3.5 rounded-full bg-decision-disagree shadow-[0_0_0_2px_var(--chrome)]"
         />
       )}
     </span>

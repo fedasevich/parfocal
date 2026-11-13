@@ -41,12 +41,12 @@ from parfocal_api.tables import (
     projects,
     result_sets,
     review_assignments,
+    review_decisions,
     review_edits,
     review_skips,
     review_task_slides,
     review_tasks,
     slides,
-    verdicts,
 )
 from parfocal_api.worklist_events import announce_worklist, task_people
 
@@ -277,7 +277,9 @@ async def assignment_rows(connection: AsyncConnection, task_id: uuid.UUID) -> li
             select(annotations.c.slide_id, annotations.c.created_by_user_id).where(
                 annotations.c.task_id == task_id
             ),
-            select(verdicts.c.slide_id, verdicts.c.user_id).where(verdicts.c.task_id == task_id),
+            select(review_decisions.c.slide_id, review_decisions.c.user_id).where(
+                review_decisions.c.task_id == task_id
+            ),
             select(review_skips.c.slide_id, review_skips.c.user_id).where(
                 review_skips.c.task_id == task_id
             ),

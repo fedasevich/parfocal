@@ -18,7 +18,7 @@ from parfocal_api.problems import ForbiddenError
 from parfocal_api.review_tasks import readable_task
 from parfocal_api.tables import (
     DecisionStyle,
-    VerdictValue,
+    DecisionValue,
     annotations,
     disagreement_decisions,
     opinions,
@@ -26,8 +26,8 @@ from parfocal_api.tables import (
     projects,
     result_objects,
     result_set_classes,
+    review_decisions,
     review_task_slides,
-    verdicts,
 )
 from parfocal_api.task_kinds import review_only
 from parfocal_common import evaluation as engine
@@ -72,8 +72,8 @@ class OpinionOut(BaseModel):
 
 class DecisionCounts(BaseModel):
     style: DecisionStyle
-    counts_as: list[VerdictValue]
-    counted: dict[VerdictValue, int]
+    counts_as: list[DecisionValue]
+    counted: dict[DecisionValue, int]
     answers: dict[str, int]
 
 
@@ -172,10 +172,12 @@ async def ai_objects(
             select(disagreement_decisions).where(disagreement_decisions.c.task_id == task_id)
         )
     }
-    grouped: dict[tuple[uuid.UUID, str, int], dict[str, engine.Verdict]] = {}
-    for row in await connection.execute(select(verdicts).where(verdicts.c.task_id == task_id)):
+    grouped: dict[tuple[uuid.UUID, str, int], dict[str, engine.ReviewDecision]] = {}
+    for row in await connection.execute(
+        select(review_decisions).where(review_decisions.c.task_id == task_id)
+    ):
         grouped.setdefault((row.slide_id, row.kind, row.number), {})[str(row.user_id)] = (
-            engine.Verdict(
+            engine.ReviewDecision(
                 row.value,
                 tuple(row.reasons),
                 names.get(row.reason_class_id) if row.reason_class_id else None,
@@ -189,7 +191,7 @@ async def ai_objects(
             class_name=regions.get((slide_id, number), UNCLASSIFIED)
             if kind == "region"
             else UNCLASSIFIED,
-            verdicts=given,
+            decisions=given,
             decision=decisions.get((slide_id, kind, number)),
         )
         for (slide_id, kind, number), given in sorted(
@@ -359,20 +361,27 @@ async def opinion_summaries(connection: AsyncConnection, task_id: uuid.UUID) -> 
 async def decision_counts(
     connection: AsyncConnection, task: Any, names: dict[uuid.UUID, str]
 ) -> DecisionCounts:
-    counted = dict.fromkeys(VerdictValue, 0)
+    counted = dict.fromkeys(DecisionValue, 0)
     answers: dict[str, int] = {}
     rows = await connection.execute(
-        select(verdicts.c.value, verdicts.c.answer, verdicts.c.answer_class_id, func.count())
-        .where(verdicts.c.task_id == task.id)
-        .group_by(verdicts.c.value, verdicts.c.answer, verdicts.c.answer_class_id)
+        select(
+            review_decisions.c.value,
+            review_decisions.c.answer,
+            review_decisions.c.answer_class_id,
+            func.count(),
+        )
+        .where(review_decisions.c.task_id == task.id)
+        .group_by(
+            review_decisions.c.value, review_decisions.c.answer, review_decisions.c.answer_class_id
+        )
     )
     for value, answer, class_id, count in rows:
-        counted[VerdictValue(value)] += count
+        counted[DecisionValue(value)] += count
         key = names.get(class_id, UNCLASSIFIED) if class_id is not None else answer
         answers[key] = answers.get(key, 0) + count
     return DecisionCounts(
         style=DecisionStyle(task.decision_style),
-        counts_as=[VerdictValue(value) for value in task.counts_as],
+        counts_as=[DecisionValue(value) for value in task.counts_as],
         counted=counted,
         answers=dict(sorted(answers.items())),
     )
@@ -380,22 +389,22 @@ async def decision_counts(
 
 async def preset_uses(connection: AsyncConnection, task_id: uuid.UUID) -> list[PresetUse]:
     rows = await connection.execute(
-        select(verdicts.c.user_id, verdicts.c.preset, func.count())
-        .where(verdicts.c.task_id == task_id)
-        .group_by(verdicts.c.user_id, verdicts.c.preset)
+        select(review_decisions.c.user_id, review_decisions.c.preset, func.count())
+        .where(review_decisions.c.task_id == task_id)
+        .group_by(review_decisions.c.user_id, review_decisions.c.preset)
     )
     found = [PresetUse(user_id=user, preset=preset, objects=count) for user, preset, count in rows]
     return sorted(found, key=lambda use: (str(use.user_id), use.preset or ""))
 
 
 def fleiss_of(objects: list[engine.AiObject]) -> float | None:
-    reviewers = {person for item in objects for person in item.verdicts}
+    reviewers = {person for item in objects for person in item.decisions}
     if len(reviewers) < 3:
         return None
-    full = [item for item in objects if set(item.verdicts) == reviewers]
+    full = [item for item in objects if set(item.decisions) == reviewers]
     ratings = [
         {
-            category: sum(v.value == category for v in item.verdicts.values())
+            category: sum(v.value == category for v in item.decisions.values())
             for category in engine.CATEGORIES
         }
         for item in full

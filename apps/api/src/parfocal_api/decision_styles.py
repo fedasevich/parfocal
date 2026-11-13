@@ -6,7 +6,7 @@ from typing import Annotated
 from pydantic import AfterValidator, BaseModel, ConfigDict, Field, StringConstraints
 
 from parfocal_api.problems import BadRequestError
-from parfocal_api.tables import DEFAULT_COUNTS_AS, DecisionStyle, VerdictValue
+from parfocal_api.tables import DEFAULT_COUNTS_AS, DecisionStyle, DecisionValue
 
 ANSWERS: dict[DecisionStyle, frozenset[str]] = {
     DecisionStyle.CERTAINTY: frozenset({"1", "2", "3", "4", "5", "unsure"}),
@@ -14,11 +14,11 @@ ANSWERS: dict[DecisionStyle, frozenset[str]] = {
     DecisionStyle.YES_NO: frozenset({"yes", "no", "unsure"}),
     DecisionStyle.BLIND: frozenset({"class", "unsure"}),
 }
-RANK = {VerdictValue.DISAGREE: 0, VerdictValue.UNSURE: 1, VerdictValue.AGREE: 2}
+RANK = {DecisionValue.DISAGREE: 0, DecisionValue.UNSURE: 1, DecisionValue.AGREE: 2}
 
 
-def counts_both_ways(mapping: list[VerdictValue]) -> list[VerdictValue]:
-    if VerdictValue.AGREE not in mapping or VerdictValue.DISAGREE not in mapping:
+def counts_both_ways(mapping: list[DecisionValue]) -> list[DecisionValue]:
+    if DecisionValue.AGREE not in mapping or DecisionValue.DISAGREE not in mapping:
         raise ValueError("Counts as needs at least one agree and one disagree answer")
     if any(RANK[low] > RANK[high] for low, high in pairwise(mapping)):
         raise ValueError("Counts as runs from disagree through not sure to agree")
@@ -26,7 +26,7 @@ def counts_both_ways(mapping: list[VerdictValue]) -> list[VerdictValue]:
 
 
 type CountsAs = Annotated[
-    list[VerdictValue], Field(min_length=5, max_length=5), AfterValidator(counts_both_ways)
+    list[DecisionValue], Field(min_length=5, max_length=5), AfterValidator(counts_both_ways)
 ]
 type DecisionQuestion = Annotated[
     str, StringConstraints(strip_whitespace=True, min_length=2, max_length=200)
@@ -37,7 +37,7 @@ class DecisionSettings(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     style: DecisionStyle = DecisionStyle.CERTAINTY
-    counts_as: CountsAs = [VerdictValue(value) for value in DEFAULT_COUNTS_AS]
+    counts_as: CountsAs = [DecisionValue(value) for value in DEFAULT_COUNTS_AS]
     question: DecisionQuestion | None = None
 
 
@@ -60,16 +60,16 @@ def counted(
     counts_as: Sequence[str],
     picked: uuid.UUID | None = None,
     ai_class: uuid.UUID | None = None,
-) -> VerdictValue:
+) -> DecisionValue:
     if answer == "unsure":
-        return VerdictValue.UNSURE
+        return DecisionValue.UNSURE
     match style:
         case DecisionStyle.CERTAINTY:
-            return VerdictValue(counts_as[int(answer) - 1])
+            return DecisionValue(counts_as[int(answer) - 1])
         case DecisionStyle.AGREE:
-            return VerdictValue(answer)
+            return DecisionValue(answer)
         case DecisionStyle.YES_NO:
-            return VerdictValue.AGREE if answer == "yes" else VerdictValue.DISAGREE
+            return DecisionValue.AGREE if answer == "yes" else DecisionValue.DISAGREE
         case DecisionStyle.BLIND:
             same = ai_class is not None and picked == ai_class
-            return VerdictValue.AGREE if same else VerdictValue.DISAGREE
+            return DecisionValue.AGREE if same else DecisionValue.DISAGREE

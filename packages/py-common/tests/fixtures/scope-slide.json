@@ -140,7 +140,7 @@
       "inside_zone": false
     }
   ],
-  "verdicts": {
+  "decisions": {
     "first": ["T1", "T2", "T3", "C1", "C2", "C3", "C4", "C5", "C6", "C7", "C8", "C9", "C10"],
     "second": ["T4", "C11", "C12"]
   },

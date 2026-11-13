@@ -73,7 +73,7 @@ function SessionLoader({
   if (!session.ready || project === undefined) return loading;
   const base = baseAnswers(
     session.objects,
-    session.verdicts,
+    session.decisions,
     session.style,
     "review",
     finishingAnswers,

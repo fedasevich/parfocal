@@ -50,6 +50,7 @@
     "resume_states",
     "retention_policies",
     "review_assignments",
+    "review_decisions",
     "review_edits",
     "review_order",
     "review_skips",
@@ -72,7 +73,6 @@
     "thread_messages",
     "threads",
     "uploads",
-    "verdicts",
     "workspace_access_requests",
     "workspace_settings"
   ],

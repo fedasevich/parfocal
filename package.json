@@ -17,7 +17,7 @@
     "board:build": "python3 scripts/board.py build",
     "typecheck": "turbo run typecheck && tsc --noEmit -p scripts",
     "check": "biome check . && oxlint --type-aware && uv run ruff check && uv run ruff format --check",
-    "verify": "biome check --diagnostic-level=warn . && oxlint --type-aware --quiet && uv run ruff check -q && uv run ruff format --check -q && turbo run typecheck test --output-logs=errors-only && tsc --noEmit -p scripts",
+    "verify": "biome check --diagnostic-level=warn . && oxlint --type-aware --quiet && uv run ruff check -q && uv run ruff format --check -q && turbo run typecheck test --output-logs=errors-only && tsc --noEmit -p scripts && python3 scripts/guard_old_word.py",
     "secrets": "betterleaks git . --redact --no-banner",
     "analyze:web": "pnpm --filter @parfocal/web analyze",
     "fixtures": "node --env-file-if-exists=.env packages/test-fixtures/src/cli.ts",

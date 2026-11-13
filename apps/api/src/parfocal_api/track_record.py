@@ -22,10 +22,10 @@ from parfocal_api.model_catalogue import (
 from parfocal_api.permissions import Permission, require
 from parfocal_api.tables import (
     AnnotationKind,
-    VerdictValue,
+    DecisionValue,
     result_sets,
+    review_decisions,
     review_task_slides,
-    verdicts,
 )
 from parfocal_common.model_runs import model_runs
 from parfocal_common.review_order import BYTE
@@ -187,34 +187,34 @@ async def track_record_of(
         model_runs.c.typer_version, model_runs.c.detector_version, result_sets.c.model_version
     )
     views = func.coalesce(model_runs.c.test_time_views, 1)
-    kept = verdicts.c.value == VerdictValue.AGREE
+    kept = review_decisions.c.value == DecisionValue.AGREE
     query = (
         select(
             typer.label("typer"),
             version.label("version"),
             views.label("views"),
-            verdicts.c.ai_score,
+            review_decisions.c.ai_score,
             kept.label("kept"),
             func.count().label("decisions"),
         )
-        .select_from(verdicts)
+        .select_from(review_decisions)
         .join(
             review_task_slides,
-            (review_task_slides.c.task_id == verdicts.c.task_id)
-            & (review_task_slides.c.slide_id == verdicts.c.slide_id),
+            (review_task_slides.c.task_id == review_decisions.c.task_id)
+            & (review_task_slides.c.slide_id == review_decisions.c.slide_id),
         )
         .join(result_sets, result_sets.c.id == review_task_slides.c.result_set_id)
         .outerjoin(model_runs, model_runs.c.job_id == result_sets.c.job_id)
         .where(
-            verdicts.c.user_id == user_id,
-            verdicts.c.kind == AnnotationKind.CELL,
-            verdicts.c.value.in_([VerdictValue.AGREE, VerdictValue.DISAGREE]),
-            verdicts.c.ai_score.is_not(None),
+            review_decisions.c.user_id == user_id,
+            review_decisions.c.kind == AnnotationKind.CELL,
+            review_decisions.c.value.in_([DecisionValue.AGREE, DecisionValue.DISAGREE]),
+            review_decisions.c.ai_score.is_not(None),
         )
-        .group_by(typer, version, views, verdicts.c.ai_score, kept)
+        .group_by(typer, version, views, review_decisions.c.ai_score, kept)
     )
     if project_id is not None:
-        query = query.where(verdicts.c.project_id == project_id)
+        query = query.where(review_decisions.c.project_id == project_id)
     grouped: dict[TyperKey, list[tuple[int, bool, int]]] = defaultdict(list)
     for row in await connection.execute(query):
         key = TyperKey(row.typer, row.version, int(row.views))

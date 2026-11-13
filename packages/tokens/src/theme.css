@@ -66,10 +66,10 @@
   --color-seg-track: var(--seg-track);
   --color-seg-on: var(--seg-on);
   --color-btn-bg: var(--btn-bg);
-  --color-v-agree: var(--v-agree);
-  --color-v-disagree: var(--v-disagree);
-  --color-v-unsure: var(--v-unsure);
-  --color-v-open: var(--v-open);
+  --color-decision-agree: var(--decision-agree);
+  --color-decision-disagree: var(--decision-disagree);
+  --color-decision-unsure: var(--decision-unsure);
+  --color-decision-open: var(--decision-open);
   --color-st-1: var(--st-1);
   --color-st-2: var(--st-2);
   --color-st-3: var(--st-3);

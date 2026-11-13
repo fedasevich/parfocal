@@ -64,7 +64,7 @@ function CellsBody({
   const style = scene === "blind" ? { ...session.style, kind: "blind" as const } : session.style;
   const objects = session.objects;
   const cells = objects.filter((item) => item.kind === "cell");
-  const base = baseAnswers(objects, session.verdicts, style, "review", {}, session.classes);
+  const base = baseAnswers(objects, session.decisions, style, "review", {}, session.classes);
   const [overrides, setOverrides] = useState<Answers>(new Map());
   const answer = (object: string) => answerOf(base, overrides, object);
   const [current, setCurrent] = useState(

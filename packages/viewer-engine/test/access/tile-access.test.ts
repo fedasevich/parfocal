@@ -40,13 +40,13 @@ class Lab {
 
   readonly edge: Fetcher = async (_input, init) => {
     const header = new Headers(init.headers).get("Authorization") ?? "";
-    const verdict = await verifyCapability(
+    const access = await verifyCapability(
       header.replace(/^Bearer /, ""),
       await signingKey(SECRET),
       Math.floor(this.nowMs / 1000),
     );
-    if (!verdict.ok) {
-      this.refusals.push(verdict.reason);
+    if (!access.ok) {
+      this.refusals.push(access.reason);
       return new Response(null, { status: 401 });
     }
     return new Response("tile", { status: 206 });

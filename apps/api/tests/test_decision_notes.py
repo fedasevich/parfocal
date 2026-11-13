@@ -18,7 +18,7 @@ def mention(s: Study, who: str) -> str:
 
 def decide(api: ApiAs, s: Study, who: str, note: str, object_id: str = "T1") -> Any:
     return api(s.people[who]).put(
-        f"{s.base}/verdicts/{object_id}", json={"value": "disagree", "note": note}
+        f"{s.base}/decisions/{object_id}", json={"value": "disagree", "note": note}
     )
 
 
@@ -76,7 +76,7 @@ def test_a_note_mention_tells_each_colleague_once_and_breaks_a_mute(
 
     audits = owner(
         database,
-        "SELECT details FROM audit_events WHERE action = 'review.verdict-set' "
+        "SELECT details FROM audit_events WHERE action = 'review.object-decided' "
         f"AND target_id = '{s.task}' ORDER BY seq",
     )
     details: list[dict[str, Any]] = [
@@ -96,7 +96,7 @@ def test_a_note_cannot_mention_someone_who_cannot_see_the_slide(api: ApiAs, data
         refused = decide(api, s, "first", body)
         assert refused.status_code == 400, body
         assert refused.json()["code"] == "bad-mention"
-    assert ok(api(s.people["first"]).get(f"{s.base}/verdicts")).json() == []
+    assert ok(api(s.people["first"]).get(f"{s.base}/decisions")).json() == []
     assert told(database, s) == []
 
 
@@ -110,7 +110,7 @@ def test_a_blinded_reviewers_note_waits_until_they_submit(api: ApiAs, database: 
     assert told(database, s) == []
     owner(
         database,
-        f"UPDATE verdicts SET note = 'Second agrees' WHERE task_id = '{s.task}' "
+        f"UPDATE review_decisions SET note = 'Second agrees' WHERE task_id = '{s.task}' "
         f"AND user_id = '{s.user('second')}'",
     )
     assert notes_seen(api, s, "first") == [

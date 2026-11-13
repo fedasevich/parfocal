@@ -19,13 +19,13 @@ from parfocal_api.project_access import principal_of, project_grant, reads_whole
 from parfocal_api.reviewed_layer import review_slide, task_slide
 from parfocal_api.tables import (
     AnnotationKind,
+    DecisionReason,
+    DecisionValue,
     NotificationKind,
-    VerdictReason,
-    VerdictValue,
     notifications,
     review_assignments,
+    review_decisions,
     review_tasks,
-    verdicts,
 )
 from parfocal_common.object_ids import Letter, ObjectId
 
@@ -33,9 +33,9 @@ from parfocal_common.object_ids import Letter, ObjectId
 class DecisionNote(BaseModel):
     object: str
     author_id: uuid.UUID
-    value: VerdictValue
+    value: DecisionValue
     answer: str
-    reasons: list[VerdictReason]
+    reasons: list[DecisionReason]
     note: str
     mentions: list[uuid.UUID]
     updated_at: datetime
@@ -55,9 +55,9 @@ def note_of(row: Any) -> DecisionNote:
     return DecisionNote(
         object=object_text(row.kind, row.number),
         author_id=row.user_id,
-        value=VerdictValue(row.value),
+        value=DecisionValue(row.value),
         answer=row.answer,
-        reasons=[VerdictReason(code) for code in row.reasons],
+        reasons=[DecisionReason(code) for code in row.reasons],
         note=row.note,
         mentions=mentioned_in(row.note),
         updated_at=row.updated_at,
@@ -164,10 +164,10 @@ async def tell_mentioned(connection: AsyncConnection, place: Any, row: Any) -> i
 
 async def tell_mentioned_on_slide(connection: AsyncConnection, place: Any) -> int:
     rows = await connection.execute(
-        select(verdicts).where(
-            verdicts.c.task_id == place.task_id,
-            verdicts.c.slide_id == place.slide_id,
-            verdicts.c.note.contains("@["),
+        select(review_decisions).where(
+            review_decisions.c.task_id == place.task_id,
+            review_decisions.c.slide_id == place.slide_id,
+            review_decisions.c.note.contains("@["),
         )
     )
     told = 0
@@ -185,13 +185,13 @@ async def list_decision_notes(
 ) -> list[DecisionNote]:
     place = await review_slide(connection, principal, task_id, slide_id)
     rows = await connection.execute(
-        select(verdicts)
+        select(review_decisions)
         .where(
-            verdicts.c.task_id == task_id,
-            verdicts.c.slide_id == slide_id,
-            verdicts.c.note.is_not(None),
+            review_decisions.c.task_id == task_id,
+            review_decisions.c.slide_id == slide_id,
+            review_decisions.c.note.is_not(None),
         )
-        .order_by(verdicts.c.kind, verdicts.c.number, verdicts.c.updated_at)
+        .order_by(review_decisions.c.kind, review_decisions.c.number, review_decisions.c.updated_at)
     )
     seen: dict[uuid.UUID, bool] = {}
     found: list[DecisionNote] = []

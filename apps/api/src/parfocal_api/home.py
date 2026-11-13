@@ -22,10 +22,10 @@ from parfocal_api.projects import LIVE, NOT_SAMPLE
 from parfocal_api.projects import code_of as project_code
 from parfocal_api.reviewed_export import LETTERS
 from parfocal_api.tables import (
+    DecisionValue,
     PrivacyMode,
     ProjectRole,
     ResumeMode,
-    VerdictValue,
     annotations,
     cases,
     project_members,
@@ -33,11 +33,11 @@ from parfocal_api.tables import (
     result_sets,
     resume_states,
     review_assignments,
+    review_decisions,
     review_edits,
     review_task_slides,
     review_tasks,
     slides,
-    verdicts,
 )
 from parfocal_common.db import CURRENT_TENANT
 from parfocal_common.object_ids import ObjectId
@@ -89,7 +89,7 @@ class ResumeTarget(BaseModel):
     position: int
     slides_assigned: int
     object_id: str | None
-    verdicts_on_slide: int
+    decisions_on_slide: int
     due_on: date | None
     blinded: bool
     mode: ResumeMode
@@ -146,13 +146,13 @@ def open_tasks(tasks: list[MyTask]) -> list[MyTask]:
 async def last_activity(connection: AsyncConnection, me: uuid.UUID) -> Any:
     touched = union_all(
         select(
-            verdicts.c.task_id,
-            verdicts.c.slide_id,
-            verdicts.c.kind,
-            verdicts.c.number,
+            review_decisions.c.task_id,
+            review_decisions.c.slide_id,
+            review_decisions.c.kind,
+            review_decisions.c.number,
             literal(False).label("person"),
-            verdicts.c.updated_at.label("at"),
-        ).where(verdicts.c.user_id == me),
+            review_decisions.c.updated_at.label("at"),
+        ).where(review_decisions.c.user_id == me),
         select(
             review_edits.c.task_id,
             review_edits.c.slide_id,
@@ -268,7 +268,9 @@ async def resume_of(
     ).one()
     counted = await connection.scalar(
         select(func.count()).where(
-            verdicts.c.task_id == task.id, verdicts.c.slide_id == slide_id, verdicts.c.user_id == me
+            review_decisions.c.task_id == task.id,
+            review_decisions.c.slide_id == slide_id,
+            review_decisions.c.user_id == me,
         )
     )
     return ResumeTarget(
@@ -282,7 +284,7 @@ async def resume_of(
         position=mine.index(slide_id) + 1,
         slides_assigned=len(mine),
         object_id=object_id,
-        verdicts_on_slide=int(counted or 0),
+        decisions_on_slide=int(counted or 0),
         due_on=task.due_on,
         blinded=task.blinded,
         mode=mode,
@@ -376,9 +378,13 @@ async def week_of(connection: AsyncConnection, me: uuid.UUID, adjudicated: list[
     since = (await connection.execute(select(func.now() - WEEK))).scalar_one()
     checked, agreed = (
         await connection.execute(
-            select(func.count(), func.count().filter(verdicts.c.value == VerdictValue.AGREE))
-            .join(projects, projects.c.id == verdicts.c.project_id)
-            .where(verdicts.c.user_id == me, verdicts.c.updated_at >= since, NOT_SAMPLE)
+            select(
+                func.count(), func.count().filter(review_decisions.c.value == DecisionValue.AGREE)
+            )
+            .join(projects, projects.c.id == review_decisions.c.project_id)
+            .where(
+                review_decisions.c.user_id == me, review_decisions.c.updated_at >= since, NOT_SAMPLE
+            )
         )
     ).one()
     open_disagreements: int | None = None

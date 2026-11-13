@@ -50,7 +50,7 @@ test("a note with a quick reason and a mention saves on Enter, and Esc cancels",
   const put = page.waitForRequest(
     (request) =>
       request.method() === "PUT" &&
-      request.url().includes("/verdicts/T5") &&
+      request.url().includes("/decisions/T5") &&
       (request.postData() ?? "").includes("worth a second look"),
   );
   await page.keyboard.press("Enter");

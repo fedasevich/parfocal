@@ -20,7 +20,7 @@ const task = (overrides: Partial<MyTask>): MyTask => ({
   start_mode: "guided",
   slides_submitted: 0,
   slides_assigned: 12,
-  verdicts: 0,
+  decisions: 0,
   status: "not-started",
   next_slide_id: "slide-1",
   created_by_user_id: "user-owner",

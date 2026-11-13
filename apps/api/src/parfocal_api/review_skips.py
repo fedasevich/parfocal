@@ -12,9 +12,7 @@ from parfocal_api.blinding import require_judging_allowed, require_seeing_review
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.permissions import Permission, require
 from parfocal_api.problems import BadRequestError, ConflictError
-from parfocal_api.reviewed_layer import KINDS, ai_object, assigned_slide, check_exists, review_slide
-from parfocal_api.tables import AnnotationKind, review_skips, verdicts
-from parfocal_api.verdicts import (
+from parfocal_api.review_decisions import (
     REPORTED_CALL,
     Score,
     ai_call,
@@ -23,6 +21,8 @@ from parfocal_api.verdicts import (
     lock_object,
     same_object,
 )
+from parfocal_api.reviewed_layer import KINDS, ai_object, assigned_slide, check_exists, review_slide
+from parfocal_api.tables import AnnotationKind, review_decisions, review_skips
 from parfocal_common.object_ids import Letter, ObjectId
 
 
@@ -79,8 +79,8 @@ async def skip_object(
     await check_exists(connection, row, found)
     me = user_of(principal)
     await lock_object(connection, task_id, slide_id, me, kind, found.number)
-    decided = select(verdicts).where(
-        *same_object(verdicts, task_id, slide_id, me, kind, found.number)
+    decided = select(review_decisions).where(
+        *same_object(review_decisions, task_id, slide_id, me, kind, found.number)
     )
     if await connection.scalar(select(decided.exists())):
         raise ObjectDecidedError

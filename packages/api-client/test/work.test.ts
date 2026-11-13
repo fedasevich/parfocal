@@ -15,6 +15,7 @@ import {
   getReviewTaskStates,
   listAnnouncements,
   listDecisionNotes,
+  listDecisions,
   listMyAdjudications,
   listMyCosignRequests,
   listMyReviewTasks,
@@ -23,7 +24,6 @@ import {
   listProjectResultSets,
   listSlideThreads,
   listTasksAssignedByMe,
-  listVerdicts,
   markNotificationsRead,
   search,
 } from "../src/index.ts";
@@ -180,9 +180,9 @@ test("the preview of A1 reads its decisions, its object count and its open threa
   const task = scenario.reviewTasks.find((item) => item.code === "RT-14");
   const a1 = scenario.slideByIndex(1);
   assert.ok(task);
-  const verdicts = body(await listVerdicts(task.id, a1.id));
-  assert.equal(verdicts.length, 48);
-  assert.equal(verdicts.filter((verdict) => verdict.value === "disagree").length, 3);
+  const decisions = body(await listDecisions(task.id, a1.id));
+  assert.equal(decisions.length, 48);
+  assert.equal(decisions.filter((decision) => decision.value === "disagree").length, 3);
   assert.equal(body(await getReviewOrder(task.id, a1.id)).total, 55);
   const threads = (await listSlideThreads(a1.id)).data;
   assert.deepEqual(

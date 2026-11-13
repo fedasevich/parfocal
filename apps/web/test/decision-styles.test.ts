@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import type { CountsAsChange, Evaluation, Verdict } from "@parfocal/api-client";
+import type { CountsAsChange, Evaluation, ReviewDecision } from "@parfocal/api-client";
 import { methodsLines } from "../src/screens/evaluation/numbers.ts";
 import { recountOf, recountText, splitOf } from "../src/screens/project/task-settings-model.ts";
 import {
@@ -68,7 +68,7 @@ test("each style saves the answer the API accepts for it", () => {
   assert.deepEqual(decisionBody(blind, "unsure", classes, "unsure"), { answer: "unsure" });
 });
 
-const stored = (patch: Partial<Verdict>): Verdict => ({
+const stored = (patch: Partial<ReviewDecision>): ReviewDecision => ({
   object: "T2",
   kind: "region",
   number: 2,

@@ -41,8 +41,8 @@ import {
   signQueueTask,
   startNextVersion,
 } from "./queue-scene.ts";
+import { savedNoteOf } from "./review-decisions.ts";
 import { toThreads } from "./review-handlers.ts";
-import { savedNoteOf } from "./review-verdicts.ts";
 import {
   adjudications,
   type PersonKey,

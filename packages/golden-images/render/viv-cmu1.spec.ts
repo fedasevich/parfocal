@@ -60,7 +60,7 @@ test.beforeEach(async ({ page }) => {
   await assertSwiftShader(page);
 });
 
-function goldenVerdict(frame: Frame, scene: VivGoldenScene, outputDirectory: string): string {
+function goldenOutcome(frame: Frame, scene: VivGoldenScene, outputDirectory: string): string {
   try {
     return checkGolden(frame, {
       name: scene.name,
@@ -120,7 +120,7 @@ test("a route that hands Viv YCbCr samples as RGB fails every CMU-1.svs golden",
 }, testInfo) => {
   for (const scene of VIV_SCENES) {
     const { frame } = await renderVivFrame(page, scene, "ycbcr-as-rgb");
-    expect(goldenVerdict(frame, scene, testInfo.outputDir), scene.name).toBe("mismatched");
+    expect(goldenOutcome(frame, scene, testInfo.outputDir), scene.name).toBe("mismatched");
   }
 });
 
@@ -137,7 +137,7 @@ test("every decode worker finds that CMU-1.svs decodes wrong natively and falls 
     expect(report?.reason).toBe("disagreed");
     expect(report?.meanAbsoluteError ?? 0).toBeGreaterThan(40);
   }
-  expect(goldenVerdict(frame, scene, testInfo.outputDir)).toBe("matched");
+  expect(goldenOutcome(frame, scene, testInfo.outputDir)).toBe("matched");
 });
 
 test("a route that trusts the native decoder on CMU-1.svs fails every golden", async ({
@@ -149,7 +149,7 @@ test("a route that trusts the native decoder on CMU-1.svs fails every golden", a
       result.jpeg.every((report) => report?.reason === "unvalidated"),
       scene.name,
     ).toBe(true);
-    expect(goldenVerdict(frame, scene, testInfo.outputDir), scene.name).toBe("mismatched");
+    expect(goldenOutcome(frame, scene, testInfo.outputDir), scene.name).toBe("mismatched");
   }
 });
 
@@ -182,7 +182,7 @@ test("a route that reads the 4x level as 2x fails the 10x golden", async ({ page
   const scene = VIV_SCENES.find((candidate) => candidate.name.endsWith("-10x"));
   if (scene === undefined) throw new Error("No 10x scene is defined");
   const { frame } = await renderVivFrame(page, scene, "wrong-level");
-  expect(["mismatched", "empty"]).toContain(goldenVerdict(frame, scene, testInfo.outputDir));
+  expect(["mismatched", "empty"]).toContain(goldenOutcome(frame, scene, testInfo.outputDir));
 });
 
 test("CMU-1.svs opens fitted to a tissue box with a margin on every edge", async ({

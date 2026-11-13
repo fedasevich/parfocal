@@ -273,13 +273,13 @@ export async function handleTiles(
   if (token === null) {
     return problem(401, "tile-token-missing", "A tile request needs a capability token");
   }
-  const verdict = await verifyCapability(token, await keyFor(env.TILE_TOKEN_KEY), now());
-  if (!verdict.ok) {
-    return verdict.reason === "expired"
+  const access = await verifyCapability(token, await keyFor(env.TILE_TOKEN_KEY), now());
+  if (!access.ok) {
+    return access.reason === "expired"
       ? problem(401, "tile-token-expired", "The capability token has expired")
       : problem(401, "tile-token-invalid", "The capability token is not valid");
   }
-  const capability = verdict.capability;
+  const capability = access.capability;
   if (capability.slide !== slide) {
     return problem(403, "tile-token-other-slide", "The capability token is for another slide");
   }

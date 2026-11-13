@@ -21,7 +21,7 @@ test("a reviewer decides on an AI region, submits, and the slide shows as submit
   ).split("|");
   const slide = `/api/review-tasks/${taskId}/slides/${slideId}`;
 
-  const decided = await call(page, "PUT", `${slide}/verdicts/T1`, { answer: "5" });
+  const decided = await call(page, "PUT", `${slide}/decisions/T1`, { answer: "5" });
   expect(decided.status, JSON.stringify(decided.json)).toBe(200);
   expect(decided.json).toMatchObject({ object: "T1", answer: "5", value: "agree" });
 

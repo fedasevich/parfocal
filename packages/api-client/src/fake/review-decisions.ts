@@ -4,10 +4,10 @@ import type {
   DecisionNote,
   EditDraft,
   FirstRead,
+  ReviewDecision,
   ReviewEdit,
   ReviewedLayer,
   ReviewOrder,
-  Verdict,
 } from "../generated/api.ts";
 import { people, resultSets, reviewTasks, slideByIndex } from "./scenario.ts";
 import {
@@ -168,7 +168,7 @@ export const reviewOrderFor = (taskId: string, slideId: string): ReviewOrder => 
   };
 };
 
-const savedDecisions = new Map<string, Map<string, Verdict | null>>();
+const savedDecisions = new Map<string, Map<string, ReviewDecision | null>>();
 
 const savedKey = (taskId: string, slideId: string) => `${taskId}/${slideId}`;
 
@@ -176,10 +176,10 @@ export const rememberDecision = (
   taskId: string,
   slideId: string,
   object: string,
-  decision: Verdict | null,
+  decision: ReviewDecision | null,
 ) => {
   const key = savedKey(taskId, slideId);
-  const kept = savedDecisions.get(key) ?? new Map<string, Verdict | null>();
+  const kept = savedDecisions.get(key) ?? new Map<string, ReviewDecision | null>();
   kept.set(object, decision);
   savedDecisions.set(key, kept);
 };
@@ -187,7 +187,7 @@ export const rememberDecision = (
 export const savedNoteOf = (taskId: string, slideId: string, object: string): string | null =>
   savedDecisions.get(savedKey(taskId, slideId))?.get(object)?.note ?? null;
 
-const startingDecisions = (taskId: string, slideId: string): Verdict[] => {
+const startingDecisions = (taskId: string, slideId: string): ReviewDecision[] => {
   if (!reviewsA1(taskId, slideId)) return [];
   const decided = lenkaDecisionsInReview();
   return reviewObjects.flatMap((item, index) => {
@@ -211,11 +211,11 @@ const startingDecisions = (taskId: string, slideId: string): Verdict[] => {
   });
 };
 
-export const verdictsFor = (taskId: string, slideId: string): Verdict[] => {
+export const decisionsFor = (taskId: string, slideId: string): ReviewDecision[] => {
   const kept = savedDecisions.get(savedKey(taskId, slideId));
   const starting = startingDecisions(taskId, slideId);
   if (kept === undefined) return starting;
-  const merged = new Map<string, Verdict>(starting.map((item) => [item.object, item]));
+  const merged = new Map<string, ReviewDecision>(starting.map((item) => [item.object, item]));
   for (const [object, decision] of kept) {
     if (decision === null) merged.delete(object);
     else merged.set(object, decision);

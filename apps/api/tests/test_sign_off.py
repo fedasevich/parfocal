@@ -84,7 +84,7 @@ def test_the_owner_changes_a_decision_after_sign_off_and_the_change_is_logged(
     api(r.people["owner"]).put(f"{decide}/T2", json={"answer": "disagree"})
     assert api(r.people["owner"]).post(f"{task}/sign-off").status_code == 200
 
-    reviewer = api(r.people["first"]).put(f"{r.base}/verdicts/T1", json={"value": "unsure"})
+    reviewer = api(r.people["first"]).put(f"{r.base}/decisions/T1", json={"value": "unsure"})
     assert (reviewer.status_code, reviewer.json()["code"]) == (409, "task-signed-off")
     bare = api(r.people["owner"]).put(f"{decide}/T2", json={"answer": "agree"})
     assert (bare.status_code, bare.json()["code"]) == (409, "change-reason-needed")

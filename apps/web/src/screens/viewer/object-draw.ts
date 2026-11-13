@@ -27,9 +27,9 @@ export const belowCutoffDash = dashPattern.join(" ");
 export const filledShare = Math.round(filledAlpha * 100);
 
 const decisionCss = {
-  agree: "var(--v-agree)",
-  disagree: "var(--v-disagree)",
-  unsure: "var(--v-unsure)",
+  agree: "var(--decision-agree)",
+  disagree: "var(--decision-disagree)",
+  unsure: "var(--decision-unsure)",
   open: "rgb(190 190 190)",
 } as const;
 

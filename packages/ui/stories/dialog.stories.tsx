@@ -28,7 +28,7 @@ function Example({ open }: { open: boolean }) {
         <DialogHeader>
           <DialogTitle>Sign off this task?</DialogTitle>
           <DialogDescription>
-            Signed-off verdicts are locked and go into the evaluation report.
+            Signed-off decisions are locked and go into the evaluation report.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>

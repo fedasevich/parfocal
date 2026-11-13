@@ -193,7 +193,7 @@ function GuidedBody({
   const cells = objects.filter((item) => item.kind === "cell");
   const base = baseAnswers(
     objects,
-    session.verdicts,
+    session.decisions,
     style,
     setup.stage,
     finishingAnswers,

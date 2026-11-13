@@ -52,7 +52,7 @@ test("outline, fill, width and opacity reach the style", () => {
 test("colour by class, score and decision", () => {
   assert.equal(objectStyle(region, input()).stroke, "var(--Tumor)");
   assert.equal(objectStyle(region, input({ colorBy: "score" })).stroke, scoreCss(0.92));
-  assert.equal(objectStyle(region, input({ colorBy: "decision" })).stroke, "var(--v-agree)");
+  assert.equal(objectStyle(region, input({ colorBy: "decision" })).stroke, "var(--decision-agree)");
   assert.equal(objectStyle(faint, input({ colorBy: "decision" })).stroke, "rgb(190 190 190)");
 });
 

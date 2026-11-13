@@ -270,9 +270,9 @@ export function ViewerFrame({
 }
 
 const legend: { key: Count | "open" | "added"; label: string; dot: string }[] = [
-  { key: "agree", label: "Agree", dot: "bg-v-agree" },
-  { key: "disagree", label: "Disagree", dot: "bg-v-disagree" },
-  { key: "unsure", label: "Not sure", dot: "bg-v-unsure" },
+  { key: "agree", label: "Agree", dot: "bg-decision-agree" },
+  { key: "disagree", label: "Disagree", dot: "bg-decision-disagree" },
+  { key: "unsure", label: "Not sure", dot: "bg-decision-unsure" },
   { key: "open", label: "Still open", dot: "bg-fg-faint" },
   { key: "added", label: "Added", dot: "bg-[#93c5fd]" },
 ];
@@ -340,9 +340,9 @@ export function AiSays({ setName, objects }: { setName: string; objects: ReviewO
 }
 
 const decisionDot: Record<Count, string> = {
-  agree: "bg-v-agree",
-  disagree: "bg-v-disagree",
-  unsure: "bg-v-unsure",
+  agree: "bg-decision-agree",
+  disagree: "bg-decision-disagree",
+  unsure: "bg-decision-unsure",
 };
 
 export type ListFilter = "all" | "open" | Count | "added";

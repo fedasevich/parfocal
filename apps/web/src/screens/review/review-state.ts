@@ -1,4 +1,4 @@
-import type { ReviewObject, Verdict } from "@parfocal/api-client";
+import type { ReviewDecision, ReviewObject } from "@parfocal/api-client";
 import type { ProjectClass } from "@parfocal/ui/components/decision-buttons";
 import {
   type Count,
@@ -18,23 +18,23 @@ export type Answer = {
 
 export type Answers = Map<string, Answer | null>;
 
-export function answerFromVerdict(
-  verdict: Verdict,
+export function answerFromDecision(
+  decision: ReviewDecision,
   style: ReviewStyle,
   object: ReviewObject | undefined,
   classes: ProjectClass[],
 ): Answer {
   return {
-    value: verdict.value,
-    raw: rawOfDecision(style, verdict, classes, object),
-    reasons: verdict.reasons.map((code) => reasonText[code] ?? code),
-    note: verdict.note,
+    value: decision.value,
+    raw: rawOfDecision(style, decision, classes, object),
+    reasons: decision.reasons.map((code) => reasonText[code] ?? code),
+    note: decision.note,
   };
 }
 
 export function baseAnswers(
   objects: ReviewObject[],
-  verdicts: Map<string, Verdict>,
+  decisions: Map<string, ReviewDecision>,
   style: ReviewStyle,
   stage: "empty" | "review" | "done",
   finishing: Record<string, Count>,
@@ -43,9 +43,9 @@ export function baseAnswers(
   const answers = new Map<string, Answer>();
   if (stage === "empty") return answers;
   for (const object of objects) {
-    const verdict = verdicts.get(object.object);
-    if (verdict) {
-      answers.set(object.object, answerFromVerdict(verdict, style, object, classes));
+    const decision = decisions.get(object.object);
+    if (decision) {
+      answers.set(object.object, answerFromDecision(decision, style, object, classes));
     } else if (stage === "done") {
       const value = finishing[object.object] ?? "agree";
       answers.set(object.object, {

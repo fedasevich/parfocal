@@ -152,9 +152,9 @@ describe("capability tokens", () => {
       await signingKey(SECRET),
     );
     assert.equal(signed, vector.token);
-    const verdict = await verifyCapability(vector.token, await signingKey(SECRET), claims.e - 1);
-    assert.ok(verdict.ok);
-    assert.equal(verdict.capability.tenant, claims.t);
+    const decision = await verifyCapability(vector.token, await signingKey(SECRET), claims.e - 1);
+    assert.ok(decision.ok);
+    assert.equal(decision.capability.tenant, claims.t);
   });
 
   test("a token is refused once it expires", async () => {

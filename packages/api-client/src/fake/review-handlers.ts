@@ -5,8 +5,8 @@ import { type ReviewObjects, reviewObjectsSchema } from "../draft/list-review-ob
 import { type ThreadComment, threadCommentSchema } from "../draft/list-thread-comments.ts";
 import {
   getAddReviewObjectMockHandler,
+  getClearDecisionMockHandler,
   getClearReviewEditMockHandler,
-  getClearVerdictMockHandler,
   getCreateThreadMockHandler,
   getCreateThreadOnSlideMockHandler,
   getDeleteThreadMockHandler,
@@ -29,9 +29,9 @@ import {
   getReplyToThreadOnSlideMockHandler,
   getResolveThreadMockHandler,
   getResolveThreadOnSlideMockHandler,
+  getSaveDecisionMockHandler,
   getSaveOpinionMockHandler,
   getSaveReviewEditMockHandler,
-  getSaveVerdictMockHandler,
   getSubmitFirstReadMockHandler,
   getSubmitSlideReviewMockHandler,
 } from "../generated/api.msw.ts";
@@ -46,12 +46,12 @@ import type {
   OpinionChange,
   PinMove,
   ProjectClass,
+  ReviewDecisionDraft,
   SlideThreadCreate,
   TaskStates,
   Thread,
   ThreadCreate,
   ThreadDetail,
-  VerdictDraft,
 } from "../generated/api.ts";
 import { annotateBlindFirst } from "./annotate-task-listing.ts";
 import { countedAs, decisionSettingsFor } from "./decision-settings.ts";
@@ -70,7 +70,7 @@ import {
   reviewedLayerFor,
   reviewedSlide,
   reviewsA1,
-} from "./review-verdicts.ts";
+} from "./review-decisions.ts";
 import {
   people,
   projectByCode,
@@ -731,14 +731,14 @@ export function reviewHandlers(): RequestHandler[] {
     getListProjectClassesMockHandler(({ params }) => toProjectClasses(String(params["projectId"]))),
     getGetSlideNeighboursMockHandler(({ params }) => toNeighbours(String(params["slideId"]))),
     http.put<{ taskId: string; slideId: string }>(
-      "*/api/review-tasks/:taskId/slides/:slideId/verdicts/:objectId",
+      "*/api/review-tasks/:taskId/slides/:slideId/decisions/:objectId",
       ({ params }) =>
         firstReadOpen(params.taskId, params.slideId)
           ? problem(409, "first-read-open", "Record your first read before you judge the AI")
           : undefined,
     ),
-    getSaveVerdictMockHandler(async ({ request, params }) => {
-      const body = (await request.json()) as VerdictDraft;
+    getSaveDecisionMockHandler(async ({ request, params }) => {
+      const body = (await request.json()) as ReviewDecisionDraft;
       const objectId = String(params["objectId"]);
       const index = reviewObjects.findIndex((item) => item.object === objectId);
       const settings = decisionSettingsFor(taskById(String(params["taskId"]))?.code ?? "RT-14");
@@ -766,7 +766,7 @@ export function reviewHandlers(): RequestHandler[] {
       rememberDecision(String(params["taskId"]), String(params["slideId"]), objectId, saved);
       return saved;
     }),
-    getClearVerdictMockHandler(({ params }) => {
+    getClearDecisionMockHandler(({ params }) => {
       rememberDecision(
         String(params["taskId"]),
         String(params["slideId"]),

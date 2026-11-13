@@ -110,7 +110,7 @@ def study(api: ApiAs, database: str, *, blinded: bool, hidden: bool) -> Study:
     added = ok(api(second).post(f"{base}/added", json={"kind": "region", "geometry": SQUARE}))
     if hidden:
         ok(api(second).post(f"{base}/first-read"))
-    ok(api(second).put(f"{base}/verdicts/T1", json={"value": "agree"}))
+    ok(api(second).put(f"{base}/decisions/T1", json={"value": "agree"}))
     ok(api(second).put(f"{base}/edits/T2", json={"deleted": True}))
     ok(api(second).post(f"{base}/submit"))
     return Study(
@@ -127,7 +127,7 @@ def study(api: ApiAs, database: str, *, blinded: bool, hidden: bool) -> Study:
 def others_work(s: Study) -> dict[str, str]:
     reviewer = f"reviewer_id={s.user('second')}"
     routes = {
-        "listVerdicts": f"{s.base}/verdicts?{reviewer}",
+        "listDecisions": f"{s.base}/decisions?{reviewer}",
         "getReviewedLayer": f"{s.base}/layer?{reviewer}",
         "getOpinion": f"{s.base}/opinion?{reviewer}",
         "exportReviewedLayer": f"{s.base}/export?{reviewer}",
@@ -281,11 +281,11 @@ def test_judging_the_ai_waits_for_the_first_read(api: ApiAs, database: str) -> N
     s = study(api, database, blinded=True, hidden=True)
     first = s.people["first"]
     refused = [
-        api(first).put(f"{s.base}/verdicts/T1", json={"value": "agree"}),
-        api(first).delete(f"{s.base}/verdicts/T1"),
+        api(first).put(f"{s.base}/decisions/T1", json={"value": "agree"}),
+        api(first).delete(f"{s.base}/decisions/T1"),
         api(first).put(f"{s.base}/edits/T1", json={"deleted": True}),
         api(first).delete(f"{s.base}/edits/T1"),
-        api(first).put(f"{s.base}/verdicts/T9", json={"value": "agree"}),
+        api(first).put(f"{s.base}/decisions/T9", json={"value": "agree"}),
     ]
     assert [(r.status_code, r.json()["code"]) for r in refused] == [(409, "first-read-open")] * 5
     early = api(first).post(f"{s.base}/submit")
@@ -293,8 +293,12 @@ def test_judging_the_ai_waits_for_the_first_read(api: ApiAs, database: str) -> N
     ok(api(first).post(f"{s.base}/added", json={"kind": "cell", "geometry": SQUARE}))
     ok(api(first).put(f"{s.base}/opinion", json={"answers": {"comment": "Blind"}}))
     ok(api(first).post(f"{s.base}/first-read"))
-    ok(api(first).put(f"{s.base}/verdicts/T1", json={"value": "disagree", "reasons": ["artefact"]}))
-    unknown = api(first).put(f"{s.base}/verdicts/T9", json={"value": "agree"})
+    ok(
+        api(first).put(
+            f"{s.base}/decisions/T1", json={"value": "disagree", "reasons": ["artefact"]}
+        )
+    )
+    unknown = api(first).put(f"{s.base}/decisions/T9", json={"value": "agree"})
     assert (unknown.status_code, unknown.json()["code"]) == (404, "unknown-object")
     ok(api(first).post(f"{s.base}/submit"))
 
@@ -323,7 +327,7 @@ def test_the_blind_first_read_is_kept_after_the_ai_is_shown(api: ApiAs, database
         f"/api/slides/{s.slide}/annotations/{drawn.json()['id']}", params={"version": 1}
     )
     assert gone.status_code == 204
-    ok(api(first).put(f"{s.base}/verdicts/T1", json={"value": "agree"}))
+    ok(api(first).put(f"{s.base}/decisions/T1", json={"value": "agree"}))
     ok(api(first).post(f"{s.base}/submit"))
     ok(api(first).post(f"{s.base}/reopen"))
     ok(api(first).post(f"{s.base}/submit"))
@@ -496,8 +500,8 @@ def test_a_fresh_task_can_switch_the_first_read_on(api: ApiAs, database: str) ->
     assert switched.json()["ai_hidden_first_read"] is True
     first = s.people["first"]
     assert ai_view(api, s, "first") == HIDDEN
-    held = api(first).put(f"{s.base}/verdicts/T1", json={"value": "agree"})
+    held = api(first).put(f"{s.base}/decisions/T1", json={"value": "agree"})
     assert (held.status_code, held.json()["code"]) == (409, "first-read-open")
     ok(api(first).post(f"/api/review-tasks/{other['id']}/slides/{s.slide}/first-read"))
     assert ai_view(api, s, "first") == SHOWN
-    ok(api(first).put(f"{s.base}/verdicts/T1", json={"value": "agree"}))
+    ok(api(first).put(f"{s.base}/decisions/T1", json={"value": "agree"}))

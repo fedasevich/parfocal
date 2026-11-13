@@ -29,7 +29,8 @@ def judge(
     reason = "'{not_class}'" if value == "disagree" else "'{}'"
     owner(
         database,
-        "INSERT INTO verdicts (tenant_id, project_id, task_id, slide_id, user_id, kind, number, "
+        "INSERT INTO review_decisions (tenant_id, project_id, task_id, slide_id, user_id, "
+        "kind, number, "
         f"value, style, answer, reasons, updated_at) VALUES ('{s.tenant_id}', '{s.project}', "
         f"'{task_id}', '{slide}', '{s.people[who].user_id}', 'region', {number}, '{value}', "
         f"'agree', '{value}', {reason}, "
@@ -70,7 +71,7 @@ def test_resume_follows_my_newest_work_on_a_slide_i_have_not_submitted(
     )
     resumed = home(api, s, "first")["resume"]
     assert where(resumed) == ("loose-1", 2, "T2")
-    assert resumed["verdicts_on_slide"] == 1
+    assert resumed["decisions_on_slide"] == 1
     owner(
         database,
         "INSERT INTO annotations (tenant_id, project_id, slide_id, task_id, kind, number, "

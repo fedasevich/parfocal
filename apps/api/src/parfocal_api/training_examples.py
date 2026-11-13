@@ -7,9 +7,9 @@ from typing import Any
 from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncConnection
 
-from parfocal_api.tables import VerdictReason, VerdictValue, review_edits, verdicts
+from parfocal_api.tables import DecisionReason, DecisionValue, review_decisions, review_edits
 
-LEARNED_VALUES = frozenset({VerdictValue.AGREE, VerdictValue.DISAGREE})
+LEARNED_VALUES = frozenset({DecisionValue.AGREE, DecisionValue.DISAGREE})
 
 
 @dataclass(frozen=True)
@@ -61,7 +61,7 @@ class TrainingExample:
     reviewer_id: uuid.UUID
     kind: str
     number: int
-    decision: VerdictValue
+    decision: DecisionValue
     reasons: tuple[str, ...]
     ai_class_id: uuid.UUID | None
     ai_score: int | None
@@ -70,14 +70,14 @@ class TrainingExample:
     rejected: bool
 
 
-def final_class_of(decision: ReviewedDecision, value: VerdictValue) -> uuid.UUID | None:
+def final_class_of(decision: ReviewedDecision, value: DecisionValue) -> uuid.UUID | None:
     if decision.edited_class_id is not None:
         return decision.edited_class_id
-    if value is VerdictValue.AGREE:
+    if value is DecisionValue.AGREE:
         return decision.ai_class_id
     if decision.answer_class_id is not None:
         return decision.answer_class_id
-    if VerdictReason.WRONG_CLASS in decision.reasons:
+    if DecisionReason.WRONG_CLASS in decision.reasons:
         return decision.reason_class_id
     return None
 
@@ -87,7 +87,7 @@ def example_of(event: CorrectionEvent) -> TrainingExample | None:
         return None
     if event.reviewer_id is None or event.reopened or event.value not in LEARNED_VALUES:
         return None
-    value = VerdictValue(event.value)
+    value = DecisionValue(event.value)
     final_class = final_class_of(event, value)
     reshaped = event.edited_geometry is not None
     return TrainingExample(
@@ -104,7 +104,7 @@ def example_of(event: CorrectionEvent) -> TrainingExample | None:
         ai_score=event.ai_score,
         final_class_id=final_class,
         geometry=event.edited_geometry,
-        rejected=value is VerdictValue.DISAGREE
+        rejected=value is DecisionValue.DISAGREE
         and (event.edit_deleted or (final_class is None and not reshaped)),
     )
 
@@ -115,20 +115,20 @@ def examples_of(events: Sequence[CorrectionEvent]) -> list[TrainingExample]:
 
 def decision_columns() -> list[Any]:
     return [
-        verdicts.c.tenant_id,
-        verdicts.c.project_id,
-        verdicts.c.task_id,
-        verdicts.c.slide_id,
-        verdicts.c.user_id,
-        verdicts.c.kind,
-        verdicts.c.number,
-        verdicts.c.value,
-        verdicts.c.reasons,
-        verdicts.c.reason_class_id,
-        verdicts.c.answer_class_id,
-        verdicts.c.ai_class_id,
-        verdicts.c.ai_score,
-        verdicts.c.reopened_at,
+        review_decisions.c.tenant_id,
+        review_decisions.c.project_id,
+        review_decisions.c.task_id,
+        review_decisions.c.slide_id,
+        review_decisions.c.user_id,
+        review_decisions.c.kind,
+        review_decisions.c.number,
+        review_decisions.c.value,
+        review_decisions.c.reasons,
+        review_decisions.c.reason_class_id,
+        review_decisions.c.answer_class_id,
+        review_decisions.c.ai_class_id,
+        review_decisions.c.ai_score,
+        review_decisions.c.reopened_at,
         review_edits.c.class_id.label("edited_class_id"),
         func.ST_AsGeoJSON(review_edits.c.geometry).label("edited_geojson"),
         review_edits.c.deleted.label("edit_deleted"),
@@ -139,21 +139,26 @@ async def reviewed_decisions(
     connection: AsyncConnection, project_id: uuid.UUID, task_id: uuid.UUID | None = None
 ) -> list[ReviewedDecision]:
     edit = and_(
-        review_edits.c.task_id == verdicts.c.task_id,
-        review_edits.c.slide_id == verdicts.c.slide_id,
-        review_edits.c.user_id == verdicts.c.user_id,
-        review_edits.c.kind == verdicts.c.kind,
-        review_edits.c.number == verdicts.c.number,
+        review_edits.c.task_id == review_decisions.c.task_id,
+        review_edits.c.slide_id == review_decisions.c.slide_id,
+        review_edits.c.user_id == review_decisions.c.user_id,
+        review_edits.c.kind == review_decisions.c.kind,
+        review_edits.c.number == review_decisions.c.number,
         review_edits.c.split == "",
     )
     query = (
         select(*decision_columns())
-        .select_from(verdicts.outerjoin(review_edits, edit))
-        .where(verdicts.c.project_id == project_id)
-        .order_by(verdicts.c.task_id, verdicts.c.slide_id, verdicts.c.kind, verdicts.c.number)
+        .select_from(review_decisions.outerjoin(review_edits, edit))
+        .where(review_decisions.c.project_id == project_id)
+        .order_by(
+            review_decisions.c.task_id,
+            review_decisions.c.slide_id,
+            review_decisions.c.kind,
+            review_decisions.c.number,
+        )
     )
     if task_id is not None:
-        query = query.where(verdicts.c.task_id == task_id)
+        query = query.where(review_decisions.c.task_id == task_id)
     rows = (await connection.execute(query)).all()
     return [
         ReviewedDecision(

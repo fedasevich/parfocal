@@ -28,11 +28,11 @@ from parfocal_api.tables import (
     AnnotationKind,
     CaseReportState,
     ClinicalTemplate,
+    DecisionValue,
     Extranodal,
     NodeCategory,
     PrivacyMode,
     ProjectRole,
-    VerdictValue,
     annotations,
     cases,
     clinical_deposits,
@@ -40,9 +40,9 @@ from parfocal_api.tables import (
     clinical_reports,
     project_members,
     projects,
+    review_decisions,
     slides,
     users,
-    verdicts,
 )
 from parfocal_common.node_staging import STAGES, Category, category_of
 from parfocal_common.object_ids import Letter, ObjectId, ObjectIdError, parse
@@ -125,7 +125,7 @@ class CaseReportStaging(BaseModel):
 class CaseReportDecision(BaseModel):
     slide_id: uuid.UUID
     object_id: str
-    decision: VerdictValue
+    decision: DecisionValue
 
 
 class CaseReportMeasurement(BaseModel):
@@ -448,9 +448,19 @@ async def findings_of(connection: AsyncConnection, case_id: uuid.UUID) -> CaseRe
         slides.c.case_id == case_id, slides.c.deleted_at.is_(None)
     )
     decided = await connection.execute(
-        select(verdicts.c.slide_id, verdicts.c.kind, verdicts.c.number, verdicts.c.value)
-        .where(verdicts.c.slide_id.in_(case_slides))
-        .order_by(verdicts.c.slide_id, verdicts.c.kind, verdicts.c.number, verdicts.c.user_id)
+        select(
+            review_decisions.c.slide_id,
+            review_decisions.c.kind,
+            review_decisions.c.number,
+            review_decisions.c.value,
+        )
+        .where(review_decisions.c.slide_id.in_(case_slides))
+        .order_by(
+            review_decisions.c.slide_id,
+            review_decisions.c.kind,
+            review_decisions.c.number,
+            review_decisions.c.user_id,
+        )
     )
     letters = {"region": Letter.REGION, "cell": Letter.CELL}
     length = func.ST_Length(annotations.c.geometry) * slides.c.mpp_x / MICRONS_PER_MM

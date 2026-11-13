@@ -39,10 +39,10 @@ export const colorTokens = [
   "seg-track",
   "seg-on",
   "btn-bg",
-  "v-agree",
-  "v-disagree",
-  "v-unsure",
-  "v-open",
+  "decision-agree",
+  "decision-disagree",
+  "decision-unsure",
+  "decision-open",
   "st-1",
   "st-2",
   "st-3",
@@ -68,7 +68,12 @@ export const proposalColor = { stroke: "#0b0b0b", casing: "#ffffff" } as const;
 
 export const unsureColor = { dark: "#cbd5e1", light: "#475569" } as const;
 
-export const decisionTokens = ["v-agree", "v-disagree", "v-unsure", "v-open"] as const;
+export const decisionTokens = [
+  "decision-agree",
+  "decision-disagree",
+  "decision-unsure",
+  "decision-open",
+] as const;
 
 export type Decision = "agree" | "disagree" | "unsure" | "open";
 

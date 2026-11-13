@@ -228,8 +228,8 @@ async function problemCode(response: Response): Promise<string> {
 
 describe("room tokens", () => {
   test("the edge accepts the token the API signs in the shared vector", async () => {
-    const verdict = await verifyRoomToken(vector.token, await roomKey(SECRET), NOW - 1);
-    assert.deepEqual(verdict, {
+    const decision = await verifyRoomToken(vector.token, await roomKey(SECRET), NOW - 1);
+    assert.deepEqual(decision, {
       ok: true,
       grant: {
         tenant: vector.claims.t,

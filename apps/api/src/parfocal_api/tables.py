@@ -2001,13 +2001,13 @@ review_edits = Table(
 )
 
 
-class VerdictValue(StrEnum):
+class DecisionValue(StrEnum):
     AGREE = "agree"
     DISAGREE = "disagree"
     UNSURE = "unsure"
 
 
-class VerdictReason(StrEnum):
+class DecisionReason(StrEnum):
     NOT_CLASS = "not_class"
     BOUNDARY_OFF = "boundary_off"
     TWO_REGIONS = "two_regions"
@@ -2027,8 +2027,8 @@ AI_CALL = {
     "by the reviewer's client for a cell, unchecked against the cell chunks",
 }
 
-verdicts = Table(
-    "verdicts",
+review_decisions = Table(
+    "review_decisions",
     metadata,
     Column("tenant_id", Uuid[uuid.UUID](), nullable=False, index=True, info=OPERATIONAL),
     Column("project_id", Uuid[uuid.UUID](), nullable=False, info=OPERATIONAL),
@@ -2060,18 +2060,18 @@ verdicts = Table(
     ForeignKeyConstraint(
         ["ai_class_id", "project_id"],
         ["project_classes.id", "project_classes.project_id"],
-        name="fk_verdicts_ai_class_id_project_id_project_classes",
+        name="fk_review_decisions_ai_class_id_project_id_project_classes",
     ),
     CheckConstraint("ai_score BETWEEN 0 AND 255", name="ai_score"),
     ForeignKeyConstraint(
         ["answer_class_id", "project_id"],
         ["project_classes.id", "project_classes.project_id"],
-        name="fk_verdicts_answer_class_id_project_id_project_classes",
+        name="fk_review_decisions_answer_class_id_project_id_project_classes",
     ),
     ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),
     CheckConstraint("kind IN ('region', 'cell')", name="kind"),
     CheckConstraint("number > 0", name="number"),
-    one_of("value", VerdictValue),
+    one_of("value", DecisionValue),
     one_of("style", DecisionStyle),
     CheckConstraint(
         "(style = 'certainty' AND answer IN ('1', '2', '3', '4', '5', 'unsure')) OR "

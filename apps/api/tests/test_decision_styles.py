@@ -45,7 +45,7 @@ def answer(
     api: ApiAs, r: Review, task: str, object_id: str, body: dict[str, Any], who: str = "first"
 ) -> Any:
     return api(r.people[who]).put(
-        f"/api/review-tasks/{task}/slides/{r.slide}/verdicts/{object_id}", json=body
+        f"/api/review-tasks/{task}/slides/{r.slide}/decisions/{object_id}", json=body
     )
 
 
@@ -139,7 +139,7 @@ def test_agree_yes_no_and_blind_answers_count_as_their_style_says(
         == "disagree"
     )
     assert counted(api, r, blind, "T1", {"answer": "unsure"})[2] == "unsure"
-    listed = api(r.people["first"]).get(f"/api/review-tasks/{blind}/slides/{r.slide}/verdicts")
+    listed = api(r.people["first"]).get(f"/api/review-tasks/{blind}/slides/{r.slide}/decisions")
     assert {item["object"]: item["answer_class_id"] for item in listed.json()} == {
         "T1": None,
         "T2": str(r.tumor),
@@ -282,7 +282,7 @@ def test_a_mapping_change_recounts_every_answer_and_logs_who_and_when(
     assert entry["changed_by_user_id"] == str(r.people["owner"].user_id)
     assert (entry["before"], entry["after"]) == (DEFAULT, mapping)
     assert (entry["recounted"], entry["reasons_dropped"]) == (3, 3)
-    listed = api(r.people["first"]).get(f"/api/review-tasks/{task}/slides/{r.slide}/verdicts")
+    listed = api(r.people["first"]).get(f"/api/review-tasks/{task}/slides/{r.slide}/decisions")
     assert [
         (item["object"], item["answer"], item["value"], item["reasons"]) for item in listed.json()
     ] == [

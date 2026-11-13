@@ -27,9 +27,9 @@ import type { Answer } from "./review-state.ts";
 import { useMentionable } from "./use-mentionable.ts";
 
 const dotTone: Record<Count, string> = {
-  agree: "bg-v-agree text-black",
-  disagree: "bg-v-disagree text-black",
-  unsure: "bg-v-unsure text-black",
+  agree: "bg-decision-agree text-black",
+  disagree: "bg-decision-disagree text-black",
+  unsure: "bg-decision-unsure text-black",
 };
 
 type DotsProps = {

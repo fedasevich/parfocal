@@ -34,7 +34,7 @@ async function decisionsOf(page: Page) {
   return page.evaluate(async (url) => {
     const response = await fetch(url);
     return (await response.json()) as { object: string; preset: string | null }[];
-  }, `/api/review-tasks/${rt14}/slides/${a1}/verdicts`);
+  }, `/api/review-tasks/${rt14}/slides/${a1}/decisions`);
 }
 
 test("each group folds to a one-line summary", async ({ page }) => {
@@ -171,7 +171,7 @@ test("in the full viewer a preset switches with the keys and is recorded with th
         const response = await fetch(target);
         const rows = (await response.json()) as { preset: string | null }[];
         return rows.map((row) => row.preset);
-      }, `/api/review-tasks/${task}/slides/${slide}/verdicts`),
+      }, `/api/review-tasks/${task}/slides/${slide}/decisions`),
     )
     .toContain("Dots, no IDs");
 });

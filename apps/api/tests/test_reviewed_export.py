@@ -28,7 +28,7 @@ def first_reviewed(api: ApiAs, database: str) -> Review:
         == 200
     )
     assert first.put(f"{r.base}/edits/T2", json={"deleted": True}).status_code == 200
-    assert first.put(f"{r.base}/verdicts/T1", json={"value": "agree"}).status_code == 200
+    assert first.put(f"{r.base}/decisions/T1", json={"value": "agree"}).status_code == 200
     added = first.post(
         f"{r.base}/added", json={"kind": "region", "geometry": ADDED, "class_id": tumor}
     )
@@ -88,15 +88,15 @@ def test_the_consensus_keeps_agreed_regions_and_merges_added_ones(
 ) -> None:
     r = first_reviewed(api, database)
     second = api(r.people["second"])
-    assert second.put(f"{r.base}/verdicts/T1", json={"value": "agree"}).status_code == 200
+    assert second.put(f"{r.base}/decisions/T1", json={"value": "agree"}).status_code == 200
     assert (
         second.put(
-            f"{r.base}/verdicts/T2", json={"value": "disagree", "reasons": ["artefact"]}
+            f"{r.base}/decisions/T2", json={"value": "disagree", "reasons": ["artefact"]}
         ).status_code
         == 200
     )
     api(r.people["first"]).put(
-        f"{r.base}/verdicts/T2", json={"value": "disagree", "reasons": ["artefact"]}
+        f"{r.base}/decisions/T2", json={"value": "disagree", "reasons": ["artefact"]}
     )
     near = api(r.people["second"]).post(
         f"{r.base}/added", json={"kind": "region", "geometry": NEARLY, "class_id": str(r.tumor)}

@@ -76,6 +76,7 @@ from parfocal_api.tables import (
     resume_states,
     retention_policies,
     review_assignments,
+    review_decisions,
     review_edits,
     review_order,
     review_skips,
@@ -98,7 +99,6 @@ from parfocal_api.tables import (
     threads,
     uploads,
     users,
-    verdicts,
     workspace_access_requests,
     workspace_settings,
 )
@@ -191,7 +191,7 @@ BASE_TABLES = {"organisations", "tenants", "users", "memberships"}
 CASE_TABLES = {
     "opinions",
     "disagreement_decisions",
-    "verdicts",
+    "review_decisions",
     "review_skips",
     "review_edits",
     "review_order",
@@ -682,9 +682,9 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
             deleted=True,
         )
     )
-    verdict_note = f"Verdict note {uuid.uuid4().hex[:8]}"
+    decision_note = f"Decision note {uuid.uuid4().hex[:8]}"
     await connection.execute(
-        insert(verdicts).values(
+        insert(review_decisions).values(
             tenant_id=seeded.tenant_id,
             project_id=case.project_id,
             task_id=task_id,
@@ -696,12 +696,12 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
             style="agree",
             answer="disagree",
             reasons=["not_class"],
-            note=verdict_note,
+            note=decision_note,
         )
     )
-    seeded.markers.add(verdict_note)
+    seeded.markers.add(decision_note)
     await connection.execute(
-        insert(verdicts).values(
+        insert(review_decisions).values(
             tenant_id=seeded.tenant_id,
             project_id=case.project_id,
             task_id=task_id,
@@ -1617,9 +1617,9 @@ GET_ROUTES = {
     "listDisagreements": Route(
         Exposure.TENANT, lambda a: f"/api/review-tasks/{a.ids['task']}/disagreements"
     ),
-    "listVerdicts": Route(
+    "listDecisions": Route(
         Exposure.TENANT,
-        lambda a: f"/api/review-tasks/{a.ids['task']}/slides/{a.ids['slide']}/verdicts",
+        lambda a: f"/api/review-tasks/{a.ids['task']}/slides/{a.ids['slide']}/decisions",
     ),
     "listDecisionNotes": Route(
         Exposure.TENANT,

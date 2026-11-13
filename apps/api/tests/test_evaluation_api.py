@@ -29,14 +29,14 @@ def scenario(api: ApiAs, database: str) -> Review:
         "C1": {"value": "agree"},
         "C2": wrong,
     }.items():
-        put(api, r, "first", f"verdicts/{object_id}", body)
+        put(api, r, "first", f"decisions/{object_id}", body)
     for object_id, body in {
         "T1": {"value": "agree"},
         "T2": {"value": "disagree", "reasons": ["not_class"]},
         "C1": {"value": "disagree", "reasons": ["not_a_cell"]},
         "C2": wrong,
     }.items():
-        put(api, r, "second", f"verdicts/{object_id}", body)
+        put(api, r, "second", f"decisions/{object_id}", body)
     put(api, r, "first", "edits/T1", {"geometry": SMALL_SQUARE})
     added = api(r.people["first"]).post(
         f"{r.base}/added", json={"kind": "region", "geometry": FAR_REGION, "class_id": tumor}

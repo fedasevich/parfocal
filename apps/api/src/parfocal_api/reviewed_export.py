@@ -36,9 +36,9 @@ from parfocal_api.tables import (
     result_objects,
     result_set_classes,
     result_sets,
+    review_decisions,
     review_edits,
     slides,
-    verdicts,
 )
 from parfocal_common import evaluation as engine
 from parfocal_common.object_ids import Letter, ObjectId, ObjectPath
@@ -167,12 +167,12 @@ async def layer_items(
             alias = ObjectId(LETTERS[edit.kind], edit.number, edit.split).text(ascii=True)
             aliases.setdefault(into, []).append(alias)
     given = {
-        (verdict.kind, verdict.number): verdict
-        for verdict in await connection.execute(
-            select(verdicts).where(
-                verdicts.c.task_id == row.task_id,
-                verdicts.c.slide_id == row.slide_id,
-                verdicts.c.user_id == reviewer,
+        (decision.kind, decision.number): decision
+        for decision in await connection.execute(
+            select(review_decisions).where(
+                review_decisions.c.task_id == row.task_id,
+                review_decisions.c.slide_id == row.slide_id,
+                review_decisions.c.user_id == reviewer,
             )
         )
     }
@@ -181,11 +181,11 @@ async def layer_items(
         edit = edits.get(("region", region.number))
         if edit is not None and (edit.deleted or edit.retired):
             continue
-        verdict = given.get(("region", region.number))
+        decision = given.get(("region", region.number))
         ai_class = (
             classes.get((row.slide_id, region.number))
-            if verdict is None
-            else called_class(verdict.ai_class_id, region.source_name, names)
+            if decision is None
+            else called_class(decision.ai_class_id, region.source_name, names)
         )
         changed: list[str] = []
         if edit is not None and edit.class_id is not None:
@@ -202,8 +202,8 @@ async def layer_items(
                 {
                     "ai_class": ai_class,
                     "changed": changed,
-                    "verdict": verdict.value if verdict else None,
-                    "reasons": list(verdict.reasons) if verdict else [],
+                    "decision": decision.value if decision else None,
+                    "reasons": list(decision.reasons) if decision else [],
                     "aliases": aliases.get((region.number, ""), []),
                 },
             )

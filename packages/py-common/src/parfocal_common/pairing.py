@@ -103,7 +103,7 @@ class Match:
 
 
 @dataclass(frozen=True)
-class Verdict:
+class Choice:
     rule: Rule
     certainty: Certainty
     candidates: tuple[str, ...]
@@ -222,7 +222,7 @@ ORDER: dict[PairBy, tuple[Rule, ...]] = {
 }
 
 
-def best_of(rule: Rule, matches: Sequence[Match]) -> Verdict | None:
+def best_of(rule: Rule, matches: Sequence[Match]) -> Choice | None:
     if not matches:
         return None
     certainty = (
@@ -233,26 +233,26 @@ def best_of(rule: Rule, matches: Sequence[Match]) -> Verdict | None:
     kept = [match for match in matches if match.certainty is certainty]
     strongest = max(match.strength for match in kept)
     keys = tuple(dict.fromkeys(m.candidate.key for m in kept if m.strength == strongest))
-    return Verdict(rule, certainty, keys)
+    return Choice(rule, certainty, keys)
 
 
-def pairing_of(verdict: Verdict, path: str) -> Pairing:
-    if len(verdict.candidates) == 1:
-        return Pairing(path, Outcome.PAIRED, verdict.candidates[0], verdict.rule, verdict.certainty)
-    return Pairing(path, Outcome.TIE, None, verdict.rule, verdict.certainty, verdict.candidates)
+def pairing_of(choice: Choice, path: str) -> Pairing:
+    if len(choice.candidates) == 1:
+        return Pairing(path, Outcome.PAIRED, choice.candidates[0], choice.rule, choice.certainty)
+    return Pairing(path, Outcome.TIE, None, choice.rule, choice.certainty, choice.candidates)
 
 
 def pair_one(
     result: ResultFile, slides: Sequence[SlideCandidate], by: PairBy = PairBy.AUTO
 ) -> Pairing:
-    fallback: Verdict | None = None
+    fallback: Choice | None = None
     for rule in ORDER[by]:
-        verdict = best_of(rule, RULES[rule](result, slides))
-        if verdict is None:
+        choice = best_of(rule, RULES[rule](result, slides))
+        if choice is None:
             continue
-        if verdict.certainty is Certainty.SURE:
-            return pairing_of(verdict, result.path)
-        fallback = fallback or verdict
+        if choice.certainty is Certainty.SURE:
+            return pairing_of(choice, result.path)
+        fallback = fallback or choice
     if fallback is not None:
         return pairing_of(fallback, result.path)
     return Pairing(result.path, Outcome.UNMATCHED)

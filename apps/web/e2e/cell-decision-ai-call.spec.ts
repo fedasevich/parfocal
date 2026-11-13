@@ -12,7 +12,8 @@ test("a cell decision sends the class and score the screen showed and the API ke
   await expect(page.getByText("The AI says this is a tumor cell, only 54% sure.")).toBeVisible();
   const saved = page.waitForRequest(
     (request) =>
-      request.method() === "PUT" && /\/verdicts\/T\d·C\d+$/.test(decodeURIComponent(request.url())),
+      request.method() === "PUT" &&
+      /\/decisions\/T\d·C\d+$/.test(decodeURIComponent(request.url())),
   );
   await page
     .getByRole("tabpanel")

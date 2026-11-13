@@ -1,12 +1,12 @@
 import {
   getGetReviewedLayerQueryKey,
-  getListVerdictsQueryKey,
+  getListDecisionsQueryKey,
   type PolygonGeometry,
+  type ReviewDecisionDraft,
+  useClearDecision,
   useClearReviewEdit,
-  useClearVerdict,
+  useSaveDecision,
   useSaveReviewEdit,
-  useSaveVerdict,
-  type VerdictDraft,
 } from "@parfocal/api-client";
 import { useQueryClient } from "@tanstack/react-query";
 import { taskTimer } from "../../telemetry/app-events.ts";
@@ -21,14 +21,14 @@ export function useDecisionSaves(session: ReviewSession, style: ReviewStyle) {
   const members = useMentionable();
   const { taskId, slideId, classes, objects } = session;
   const refresh = () =>
-    void queryClient.invalidateQueries({ queryKey: getListVerdictsQueryKey(taskId, slideId) });
-  const saver = useSaveVerdict({ mutation: { onSuccess: refresh } });
-  const clearer = useClearVerdict({ mutation: { onSuccess: refresh } });
+    void queryClient.invalidateQueries({ queryKey: getListDecisionsQueryKey(taskId, slideId) });
+  const saver = useSaveDecision({ mutation: { onSuccess: refresh } });
+  const clearer = useClearDecision({ mutation: { onSuccess: refresh } });
   const save = (
     objectId: string,
     raw: string,
     value: Count,
-    reasons?: Pick<VerdictDraft, "reasons" | "reason_class_id">,
+    reasons?: Pick<ReviewDecisionDraft, "reasons" | "reason_class_id">,
     note?: string | null,
   ) => {
     if (objects.find((item) => item.object === objectId)?.kind === "cell") {

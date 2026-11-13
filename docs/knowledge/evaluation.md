@@ -4,7 +4,7 @@ How `parfocal_common.evaluation` turns reviewer decisions, decisions on queued o
 
 ## The engine takes plain inputs
 
-The functions take `AiObject` (slide, kind, number, AI class, each reviewer's `Verdict` and the decision on it), `Added` (an object a reviewer added, already deduplicated across reviewers) and `Areas` (per slide and class, the AI area, the consensus area and their overlap). They do no database or geometry work, so the API and the export worker can both call them. Whoever gathers the inputs computes the areas, with PostGIS (`ST_Area(ST_Intersection(...))` over `ST_Union`) or shapely.
+The functions take `AiObject` (slide, kind, number, AI class, each reviewer's `ReviewDecision` and the decision on it), `Added` (an object a reviewer added, already deduplicated across reviewers) and `Areas` (per slide and class, the AI area, the consensus area and their overlap). They do no database or geometry work, so the API and the export worker can both call them. Whoever gathers the inputs computes the areas, with PostGIS (`ST_Area(ST_Intersection(...))` over `ST_Union`) or shapely.
 
 ## Rules worth remembering
 

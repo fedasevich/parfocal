@@ -3,9 +3,9 @@ import { test } from "node:test";
 import type {
   CaseDetail,
   ResultSet,
+  ReviewDecision,
   ReviewTaskDetail,
   SlideRow,
-  Verdict,
 } from "@parfocal/api-client";
 import { shapeCaseLoad } from "../src/viewer/case-load.ts";
 
@@ -37,7 +37,7 @@ const caseDetail = {
 } as unknown as CaseDetail;
 
 const task = { id: "t-1", code: "RT-14", name: "Round 2" } as ReviewTaskDetail;
-const decision = { object: "T5", answer: "agree" } as Verdict;
+const decision = { object: "T5", answer: "agree" } as ReviewDecision;
 const resultSet = { id: "r-1", slide_id: "s-1" } as ResultSet;
 
 const project = (privacy_mode: "clinical" | "de-identified") => ({

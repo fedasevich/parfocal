@@ -228,7 +228,7 @@ function ProjectCard({ project, members }: { project: HomeProject; members: Proj
             style={coverTile(project.code, index)}
           >
             <i
-              className={`absolute right-1.25 bottom-1.25 size-2.25 rounded-full shadow-[0_0_0_2px_rgba(255,255,255,.9)] ${slide.reviewed ? "bg-v-agree" : "bg-[rgba(120,120,120,.85)]"}`}
+              className={`absolute right-1.25 bottom-1.25 size-2.25 rounded-full shadow-[0_0_0_2px_rgba(255,255,255,.9)] ${slide.reviewed ? "bg-decision-agree" : "bg-[rgba(120,120,120,.85)]"}`}
             />
           </span>
         ))}
@@ -344,7 +344,7 @@ function ThisWeek({
           </small>
         </div>
         <div>
-          <b className="block font-mono text-page-title leading-[1.1] font-semibold text-v-agree">
+          <b className="block font-mono text-page-title leading-[1.1] font-semibold text-decision-agree">
             {Math.round((week.agree_share ?? 0) * 100)}%
           </b>
           <small className="mt-1 block text-caption leading-[1.3] text-fg-dim">
@@ -355,7 +355,7 @@ function ThisWeek({
           <button
             type="button"
             onClick={() => (taskId ? void goTo(destinations.disagreements(taskId)) : undefined)}
-            className="block cursor-pointer border-0 bg-transparent p-0 font-mono text-page-title leading-[1.1] font-semibold text-v-disagree"
+            className="block cursor-pointer border-0 bg-transparent p-0 font-mono text-page-title leading-[1.1] font-semibold text-decision-disagree"
           >
             {week.open_disagreements ?? 0}
           </button>

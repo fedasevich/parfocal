@@ -9,7 +9,7 @@
 
 TASK-007 (nudge, reassign and change a task) lets the researcher move a reviewer's slides to someone else, either the slides not started (the default) or every slide. The decisions already given stay with the first reviewer's name and the new reviewer starts fresh. [ADR 0118](0118-blinding-and-a-kept-first-read.md) (blinding and a kept first read) says a reassign must never drop a recorded first read, and its trigger guards updates only.
 
-Verdicts, opinions and reviewed-layer edits all point at the `(task, slide, user)` row in `review_assignments`, so a started row cannot be deleted without deleting the work.
+Decisions, opinions and reviewed-layer edits all point at the `(task, slide, user)` row in `review_assignments`, so a started row cannot be deleted without deleting the work.
 
 ## Options considered
 

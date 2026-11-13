@@ -308,24 +308,20 @@ export class Room {
 
   private async renew(socket: WebSocket, token: string): Promise<void> {
     const seat = this.seatOf(socket);
-    const verdict = await verifyRoomToken(
-      token,
-      await roomKey(this.env.ROOM_TOKEN_KEY),
-      this.now(),
-    );
+    const access = await verifyRoomToken(token, await roomKey(this.env.ROOM_TOKEN_KEY), this.now());
     if (
-      !verdict.ok ||
-      verdict.grant.tenant !== seat.tenant ||
-      verdict.grant.room !== seat.room ||
-      verdict.grant.user !== seat.user
+      !access.ok ||
+      access.grant.tenant !== seat.tenant ||
+      access.grant.room !== seat.room ||
+      access.grant.user !== seat.user
     ) {
       await this.leave([socket], CLOSE_EXPIRED, "token-refused");
       return;
     }
     const renewed: Seat = {
       ...seat,
-      project: verdict.grant.project,
-      expires: verdict.grant.expires,
+      project: access.grant.project,
+      expires: access.grant.expires,
     };
     const index = await roomStub(this.env, seat.tenant, `user:${seat.user}`).fetch(
       "https://room/join",

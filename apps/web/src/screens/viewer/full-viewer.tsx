@@ -318,7 +318,7 @@ function ViewerBody({
   const added = setup.issue ? [] : session.added;
   const base = baseAnswers(
     objects,
-    session.verdicts,
+    session.decisions,
     style,
     setup.submitFail ? "done" : "review",
     finishingAnswers,

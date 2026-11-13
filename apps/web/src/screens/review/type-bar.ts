@@ -1,4 +1,4 @@
-import type { ReviewObject, VerdictReason } from "@parfocal/api-client";
+import type { DecisionReason, ReviewObject } from "@parfocal/api-client";
 import type { DecisionAnswer, ProjectClass } from "@parfocal/ui/lib/decision-answers";
 import { type Count, type ReviewStyle, rawFor } from "./decision-mapping.ts";
 import { classPhrase } from "./disagree-reasons.ts";
@@ -62,7 +62,7 @@ export type TypeChoice = {
   raw: string;
   value: Count;
   reasons: string[];
-  draft: { reasons: VerdictReason[]; reason_class_id: string | null } | undefined;
+  draft: { reasons: DecisionReason[]; reason_class_id: string | null } | undefined;
 };
 
 export function typeChoice(

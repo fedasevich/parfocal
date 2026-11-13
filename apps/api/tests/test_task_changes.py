@@ -20,10 +20,11 @@ def as_owner(api: ApiAs, s: Study) -> Any:
     return api(s.people["owner"])
 
 
-def give_verdict(database: str, s: Study, task_id: str, slide: uuid.UUID, who: str) -> None:
+def give_decision(database: str, s: Study, task_id: str, slide: uuid.UUID, who: str) -> None:
     owner(
         database,
-        "INSERT INTO verdicts (tenant_id, project_id, task_id, slide_id, user_id, kind, number, "
+        "INSERT INTO review_decisions (tenant_id, project_id, task_id, slide_id, user_id, "
+        "kind, number, "
         "value, style, answer) VALUES "
         f"('{s.tenant_id}', '{s.project}', '{task_id}', '{slide}', '{s.user(who)}', "
         "'region', 1, 'agree', 'agree', 'agree')",
@@ -97,7 +98,7 @@ def test_a_reassign_moves_only_slides_not_started_by_default(api: ApiAs, databas
     task = made(api, s, split="even")
     first, third = s.user("first"), s.user("third")
     assert reviewers_of(task) == [[first], [s.user("second")], [third], [first]]
-    give_verdict(database, s, task["id"], s.slides[0], "first")
+    give_decision(database, s, task["id"], s.slides[0], "first")
     moved = reassign(api, s, task["id"], from_user_id=first, to_user_id=third, note="For you")
     assert moved.status_code == 201, moved.text
     body = moved.json()
@@ -132,7 +133,7 @@ def test_reassigning_every_slide_keeps_decisions_and_the_first_read_under_the_fi
     s = study(database)
     task = made(api, s, split="even", ai_hidden_first_read=True)
     first, second = s.user("first"), s.user("second")
-    give_verdict(database, s, task["id"], s.slides[0], "first")
+    give_decision(database, s, task["id"], s.slides[0], "first")
     owner(
         database,
         "UPDATE review_assignments SET first_read_at = now(), first_read = "
@@ -156,7 +157,7 @@ def test_reassigning_every_slide_keeps_decisions_and_the_first_read_under_the_fi
     ]
     decisions = owner(
         database,
-        f"SELECT user_id FROM verdicts WHERE task_id = '{task['id']}' "
+        f"SELECT user_id FROM review_decisions WHERE task_id = '{task['id']}' "
         f"AND slide_id = '{s.slides[0]}'",
     )
     assert [str(row[0]) for row in decisions] == [first]
@@ -245,7 +246,7 @@ def test_a_reassign_is_undone_until_the_new_reviewer_starts(api: ApiAs, database
     s = study(database)
     task = made(api, s, split="even")
     first, third = s.user("first"), s.user("third")
-    give_verdict(database, s, task["id"], s.slides[0], "first")
+    give_decision(database, s, task["id"], s.slides[0], "first")
     moved = reassign(api, s, task["id"], from_user_id=first, to_user_id=third, what="all")
     assert moved.status_code == 201, moved.text
     url = f"/api/review-tasks/{task['id']}/reassignments/{moved.json()['id']}"
@@ -262,7 +263,7 @@ def test_a_reassign_is_undone_until_the_new_reviewer_starts(api: ApiAs, database
     assert (twice.status_code, twice.json()["code"]) == (404, "reassignment-not-found")
     again = reassign(api, s, task["id"], from_user_id=first, to_user_id=third)
     assert again.status_code == 201, again.text
-    give_verdict(database, s, task["id"], s.slides[3], "third")
+    give_decision(database, s, task["id"], s.slides[3], "third")
     started = as_owner(api, s).delete(
         f"/api/review-tasks/{task['id']}/reassignments/{again.json()['id']}"
     )

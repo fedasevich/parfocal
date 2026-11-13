@@ -1,4 +1,9 @@
-import type { DecisionSettings, ReviewObject, Verdict, VerdictDraft } from "@parfocal/api-client";
+import type {
+  DecisionSettings,
+  ReviewDecision,
+  ReviewDecisionDraft,
+  ReviewObject,
+} from "@parfocal/api-client";
 import type {
   ProjectClass,
   DecisionStyle as StyleKind,
@@ -86,7 +91,7 @@ export function decisionBody(
   raw: string,
   classes: ProjectClass[],
   value: Count,
-): VerdictDraft {
+): ReviewDecisionDraft {
   if (style.kind === "agree") return { value };
   if (style.kind !== "blind" || raw === "unsure") return { answer: raw };
   const picked = classes.find((item) => item.name === raw)?.id;
@@ -98,7 +103,7 @@ const scoreByte = 255;
 export function shownCall(
   object: Pick<ReviewObject, "kind" | "class_name" | "score"> | undefined,
   classes: ProjectClass[],
-): Pick<VerdictDraft, "ai_class_id" | "ai_score"> {
+): Pick<ReviewDecisionDraft, "ai_class_id" | "ai_score"> {
   if (object === undefined || object.kind !== "cell") return {};
   const classId = classes.find((item) => item.name === object.class_name)?.id;
   if (classId === undefined) return {};
@@ -107,13 +112,13 @@ export function shownCall(
 
 export function rawOfDecision(
   style: ReviewStyle,
-  verdict: Verdict,
+  decision: ReviewDecision,
   classes: ProjectClass[],
   object: ReviewObject | undefined,
 ): string {
-  if (kindOfApi[verdict.style] !== style.kind) return rawFor(style, verdict.value, object);
-  if (verdict.answer !== "class") return verdict.answer;
-  return classes.find((item) => item.id === verdict.answer_class_id)?.name ?? verdict.answer;
+  if (kindOfApi[decision.style] !== style.kind) return rawFor(style, decision.value, object);
+  if (decision.answer !== "class") return decision.answer;
+  return classes.find((item) => item.id === decision.answer_class_id)?.name ?? decision.answer;
 }
 
 export function countsAs(

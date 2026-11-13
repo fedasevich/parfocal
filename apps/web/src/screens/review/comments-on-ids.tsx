@@ -12,7 +12,7 @@ import { countWord } from "./decision-style.ts";
 import { DisplayTab } from "./display-tab.tsx";
 import { ObjectThread } from "./object-comments.tsx";
 import { type ReviewSession, useReviewSession } from "./review-data.ts";
-import { answerFromVerdict, countAnswers } from "./review-state.ts";
+import { answerFromDecision, countAnswers } from "./review-state.ts";
 import { ThreadsTab } from "./threads-tab.tsx";
 import { AiSays, ObjectsSummary, ViewerFrame } from "./viewer-frame.tsx";
 
@@ -46,10 +46,10 @@ function CommentsBody({
   const openThreads = session.threads.filter((item) => !item.resolved).length;
   const anchor = picked ?? session.threads[0]?.anchor ?? "";
   const answers = (object: string) => {
-    const verdict = session.verdicts.get(object);
-    return verdict
-      ? answerFromVerdict(
-          verdict,
+    const decision = session.decisions.get(object);
+    return decision
+      ? answerFromDecision(
+          decision,
           session.style,
           session.objects.find((item) => item.object === object),
           session.classes,
