@@ -16,7 +16,7 @@ resource "cloudflare_r2_bucket_cors" "uploads" {
   rules = [{
     id = "browser-part-uploads"
     allowed = {
-      origins = [var.origin]
+      origins = concat([var.origin], var.extra_upload_origins)
       methods = ["PUT"]
       headers = ["Content-Type"]
     }

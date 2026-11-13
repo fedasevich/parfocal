@@ -16,6 +16,16 @@ variable "origin" {
   }
 }
 
+variable "extra_upload_origins" {
+  type    = list(string)
+  default = []
+
+  validation {
+    condition     = alltrue([for o in var.extra_upload_origins : startswith(o, "https://")])
+    error_message = "Extra upload origins must use TLS."
+  }
+}
+
 variable "dev_mode" {
   type = bool
 
