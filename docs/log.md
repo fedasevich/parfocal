@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-13
 
+- 2026-11-13 OPS-005 (continuous deployment): deploy.yml runs after green CI on main behind DEPLOY_ON_MAIN (off), the migration check refuses destructive revisions without allow_destructive, rollback is a redeploy with --skip-migrations, ADR 0297 (main deploys behind a switch, migration check, rollback by redeploy), no production touch, cost $0, drill not run.
 - 2026-11-13 OPS-002 (managed Postgres 18 with PostGIS): local dev and CI run postgis 18 with PostGIS 3.6 on the volume postgres18-data, ADR 0018 amended, no production touch, cost $0. The Done line about CI recreating staging waits for OPS-014 (bring back staging) under ADR 0293 (production only until the first real user). The lead also declared the sign-up, my jobs and checklist routes as open in the permission test, which failed on main.
 - CASE-011 Ticked. Decision 40a keeps the clinical note row, apps/web/test/case-details.test.ts covers each field and missing data. Storing the note sealed is CASES-026 (encrypted clinical note per case).
 - NAV-012 Ticked. Decision 48a kept the ⇧F key, and packages/viewer-engine/test/selection-fit.test.ts fits the selection with margin. NAV-013 (feed the selection on the live stage) still waits for a select tool.
