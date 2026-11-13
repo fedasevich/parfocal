@@ -37,3 +37,11 @@ Evidence is in [results/2026-10-08-postgres-rls-pooler-spike.md](../results/2026
 - Prepared statements depend on the pooler tracking them. If Neon's pooler turns out not to, set asyncpg's `statement_cache_size` to 0 and give SQLAlchemy a `prepared_statement_name_func`, and record that in a new ADR.
 - Model output stays out of Postgres as STACK-021 planned. Only human annotations and summaries go through the staging-table path.
 - STACK-020 stays open until the Neon region is measured. FOUND-013 can start now.
+
+## Amendment 2026-11-13, the Neon region stays in US East
+
+Neon stays in `aws-us-east-1`, which the Vercel Marketplace labels `iad1`. This replaces the "Not decided" Neon region row above.
+
+The [Neon region result](../results/2026-11-13-neon-region-from-modal.md) read the API's own request log in production. On warm containers a request with at least four round trips to Neon takes 20 to 50 ms, so one round trip is at most about 5 to 12 ms and those containers ran next to Neon. A Neon region in the EU would add a transatlantic round trip of about 90 to 120 ms to each. The slow requests, 160 ms to 2 s, came with new containers, idle gaps and fresh deploys, which points at new pooled connections and Neon waking from suspend, not at the region. The owner had already chosen to keep Neon next to Modal (decisions.md row 90).
+
+A side-by-side test of two Neon regions was not run, because this measurement allowed no writes to production and no code run inside Modal. The web function has no region pin, so where Modal places a container stays unverified. Recommendation, not done: log `MODAL_REGION` at container start and a database time per request, and if far placements show up, pin the web function to Modal's `us-east` rather than move Neon. Every region still moves to the EU at the first tenant with real patient data, as [ADR 0003](0003-pilot-platform-architecture.md) (pilot platform architecture) says.
