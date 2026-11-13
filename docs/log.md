@@ -2,6 +2,10 @@
 
 Newest entries on top. One line per piece of work, naming the backlog ID where there is one and linking the result. This file is append-only.
 
+## 2026-11-14
+
+- TASK-008 (submit a slide review): the API refuses a submit while objects are open or required questions unanswered, the web app retries a failed submit, and card, API and fake-API e2e tests prove it. The full-stack decision-and-submit spec was updated but not run.
+
 ## 2026-11-13
 
 - SEC-034 merged onto main. Migration 0112 only alters: a trigger keeps a revoked token revoked, a trigger refuses an email or subject change outside the auth and platform scopes, the own-row users policy is UPDATE only, and both join routes check under the platform scope then write under tenant plus auth. test_migrations 16 pass and 82 pass across the escape hatch, workspace access, service account, invitation and email schedule tests.
