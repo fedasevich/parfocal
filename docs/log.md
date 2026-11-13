@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-13
 
+- COLLAB-016 merged onto main, fake colleague BroadcastChannel now opens only in the browser so node tests exit, verify-changed OK in 59 s, live-layer, annotate and presence specs 18 of 18 pass.
 - PROTO-010 (make the React app the design source): AGENTS.md, BACKLOG header and rules, overview.md and design/README.md now name the React app and its Storybook as the design source and the artifacts as frozen history. Docs only.
 - EVAL-015 (patch and mask export): patch-export ingest job cuts signed-off annotate slides into tiles at a chosen level with RGB PNG, 8-bit centre-inside label mask, per-slide GeoJSON, index.csv and manifest.json in one zip, POST and GET under /api/review-tasks/{id}/patch-exports, ADR on centre-inside masks. Starting an export needs write access, so view-only members get 403.
 - GUIDE-014 Met by the FOUND-024 merge (rename verdict to decision): table review_decisions in migration 0111, client regenerated without old operation names, test_audit_old_names.py reads entries stored under old names, guard_old_word.py finds the old word only in migration history and the legacy names module.

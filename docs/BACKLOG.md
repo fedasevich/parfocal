@@ -3088,7 +3088,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
 
 ---
 
-- [ ] COLLAB-016 · Calm live updates on a shared layer
+- [x] COLLAB-016 · Calm live updates on a shared layer
   Colleagues' changes to an annotate slide arrive in batches when the expert pauses for a few seconds, or at once when they click the "changes by" marker that names who changed what. A change never moves the shape under the pointer or the shape being drawn. Presence shows who is on the slide.
   Done when component tests hold a batch while the pointer moves, apply it after the pause and on the marker click, and never touch the shape being edited, and E2E with two browsers sees a colleague's polygon appear.
   Depends on ANN-030, ANN-031, COLLAB-007. Refs [ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md).
