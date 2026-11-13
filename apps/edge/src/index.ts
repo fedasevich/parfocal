@@ -1,3 +1,4 @@
+import { type ApiEnv, handleApi, isApiPath } from "#api-proxy.ts";
 import { WeakSigningKeyError } from "#capability.ts";
 import { guard, type LimitEnv } from "#rate-limits.ts";
 import { handleRealtime, isRealtimePath } from "#realtime.ts";
@@ -24,7 +25,7 @@ export type AppEnv = {
   readonly UPLOAD_ORIGIN?: string;
 };
 
-export type EdgeEnv = TileEnv & RoomEnv & AppEnv & LimitEnv;
+export type EdgeEnv = TileEnv & RoomEnv & AppEnv & LimitEnv & ApiEnv;
 
 export default {
   async fetch(request: Request, env: EdgeEnv): Promise<Response> {
@@ -57,6 +58,9 @@ function route(request: Request, env: EdgeEnv): Promise<Response> | Response {
   }
   if (isRealtimePath(pathname)) {
     return handleRealtime(request, env, seconds);
+  }
+  if (isApiPath(pathname)) {
+    return handleApi(request, env);
   }
   if (isDataPath(pathname)) {
     return problem(404, "not-found", "No such file");

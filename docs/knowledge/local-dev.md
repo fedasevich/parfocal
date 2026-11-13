@@ -4,7 +4,7 @@ How every service in [ADR 0003](../adr/0003-pilot-platform-architecture.md) is r
 
 | Service | Production | Development | Automated tests |
 |---|---|---|---|
-| Web app | Cloudflare Pages | Vite dev server | Vitest and Playwright |
+| Web app | The edge Worker's static assets | Vite dev server | Vitest and Playwright |
 | Router, tile gateway, realtime | Workers and Durable Objects | The Cloudflare Vite plugin runs the Worker and Durable Objects locally under `vite dev`, so the app is one origin like production | Miniflare through the Workers Vitest pool |
 | Slide storage | R2 production bucket | MinIO from `compose.yaml` for the Python API (`STORAGE_*` settings default to it). The Worker's remote binding to the R2 `parfocal-dev` bucket is still planned | Miniflare's in-memory R2 for Worker unit tests. Python tests run against the compose MinIO ([ADR 0121](../adr/0121-s3-client-signed-by-hand-on-httpx2.md), S3 client signed by hand), and INGEST-028 (upload protocol check on the R2 dev bucket) checks the real R2 behaviour on `parfocal-dev` |
 | Database | Neon | Docker Compose with `imresamu/postgis:17-3.6.1-alpine3.22` and PgBouncer in transaction mode (`pnpm db:up`) | The same compose stack, in CI as well |

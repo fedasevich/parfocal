@@ -1,11 +1,12 @@
 version = 1
-revision = 3
+revision = 5
 requires-python = "==3.14.*"
 
 [manifest]
 members = [
     "parfocal-api",
     "parfocal-common",
+    "parfocal-deploy",
     "parfocal-ingest",
     "parfocal-ml",
 ]
@@ -1626,6 +1627,27 @@ requires-dist = [
     { name = "pydantic", specifier = ">=2.13,<3" },
     { name = "pydantic-settings", specifier = ">=2.15,<3" },
     { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.1.4,<2.2" },
+]
+
+[[package]]
+name = "parfocal-deploy"
+version = "0.0.0"
+source = { editable = "workers/deploy" }
+dependencies = [
+    { name = "modal" },
+    { name = "parfocal-api" },
+    { name = "parfocal-common" },
+    { name = "parfocal-ingest" },
+    { name = "parfocal-ml" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "modal", specifier = ">=1.6.3" },
+    { name = "parfocal-api", editable = "apps/api" },
+    { name = "parfocal-common", editable = "packages/py-common" },
+    { name = "parfocal-ingest", editable = "workers/ingest" },
+    { name = "parfocal-ml", editable = "workers/ml" },
 ]
 
 [[package]]

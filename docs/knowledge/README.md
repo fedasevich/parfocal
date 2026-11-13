@@ -27,3 +27,4 @@ The POC lessons already carried into the backlog (doc 24 memory leaks, doc 31 ov
 | Reading imported AI result files and keeping IDs across sets | [results.md](results.md) |
 | Evaluation metrics from verdicts, decisions and reviewed layers | [evaluation.md](evaluation.md) |
 | shadcn components, kit tokens in Tailwind, Storybook and the axe suite | [frontend-ui.md](frontend-ui.md) |
+| Deploy definitions, the one-time bootstrap and what the first production deploy needs | [deploy.md](deploy.md) |
