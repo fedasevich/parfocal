@@ -2,6 +2,12 @@
 
 Every release of Parfocal, generated from Conventional Commits by git-cliff. Run `pnpm release` to cut one.
 
+## v0.1.3 (2026-11-13)
+
+### Fixes
+
+- OPS-002: Accept unpadded keys and name the smoke check for Cloudflare
+
 ## v0.1.2 (2026-11-13)
 
 ### Fixes
