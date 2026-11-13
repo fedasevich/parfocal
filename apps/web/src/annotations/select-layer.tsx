@@ -34,6 +34,7 @@ type SelectLayerProps = {
   onDocumentChange: (next: AnnotationDocument) => void;
   onCommit?: (before: AnnotationDocument, after: AnnotationDocument, label: string) => void;
   onEditText?: (id: ShapeId) => void;
+  onSelectionChange?: (ids: readonly ShapeId[]) => void;
   pinRegistry?: PinRegistry;
 };
 
@@ -150,6 +151,7 @@ export function SelectLayer({
   onDocumentChange,
   onCommit,
   onEditText,
+  onSelectionChange,
   pinRegistry,
 }: SelectLayerProps) {
   const camera = useSyncExternalStore(engine.subscribeCamera, engine.getCamera);
@@ -165,6 +167,10 @@ export function SelectLayer({
   );
   const state = useSyncExternalStore(tool.subscribe, tool.state);
   const escRegistry = useEscRegistry();
+
+  useEffect(() => {
+    onSelectionChange?.(state.ids);
+  }, [state.ids, onSelectionChange]);
 
   useEffect(() => {
     tool.prune(doc);

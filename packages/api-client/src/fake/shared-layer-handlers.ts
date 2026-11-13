@@ -222,10 +222,54 @@ type Params = { taskId: string; slideId: string };
 
 const base = "*/api/review-tasks/:taskId/slides/:slideId";
 
+type LayerSignal = {
+  task: string;
+  slide: string;
+  annotation: string;
+  actor: string;
+  objects: LayerObject[];
+};
+
+const layerChannelName = "parfocal-fake-layer";
+
+let outgoing: BroadcastChannel | null = null;
+
+function listenForColleagues(): void {
+  if (outgoing !== null || typeof BroadcastChannel === "undefined") return;
+  outgoing = new BroadcastChannel(layerChannelName);
+  const incoming = new BroadcastChannel(layerChannelName);
+  incoming.onmessage = ({ data }: MessageEvent<LayerSignal>) => {
+    const store = readStore();
+    const key = keyOf(data.task, data.slide);
+    writeStore({ ...store, layers: { ...store.layers, [key]: data.objects } });
+  };
+}
+
+function announce(params: Params, before: LayerObject[], after: LayerObject[]): void {
+  listenForColleagues();
+  if (outgoing === null) return;
+  const changed = [
+    ...after.filter((item) => !before.includes(item)),
+    ...before.filter((item) => !after.some((kept) => kept.id === item.id)),
+  ];
+  for (const item of changed) {
+    outgoing.postMessage({
+      task: params.taskId,
+      slide: params.slideId,
+      annotation: item.id,
+      actor: viewerId(),
+      objects: after,
+    } satisfies LayerSignal);
+  }
+}
+
 function writeLayer(params: Params, change: (objects: LayerObject[]) => LayerObject[]) {
   const store = readStore();
   const key = keyOf(params.taskId, params.slideId);
-  writeStore({ ...store, layers: { ...store.layers, [key]: change(layerOf(store, key)) } });
+  const before = layerOf(store, key);
+  const after = change(before);
+  writeStore({ ...store, layers: { ...store.layers, [key]: after } });
+  announce(params, before, after);
 }
 
 export const fakeRunSetIds = (taskId: string, slideId: string): string[] =>
@@ -252,7 +296,12 @@ function aiCopy(
   return made;
 }
 
-export const sharedLayerHandlers = (): RequestHandler[] => [
+export const sharedLayerHandlers = (): RequestHandler[] => {
+  listenForColleagues();
+  return layerHandlers();
+};
+
+const layerHandlers = (): RequestHandler[] => [
   http.get<Params>(`${base}/shared-layer/ai`, ({ params, request }) => {
     const query = new URL(request.url).searchParams;
     const offset = Number(query.get("offset") ?? 0);

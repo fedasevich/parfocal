@@ -1,5 +1,15 @@
-import { type AnnotationDraft, listAnnotations } from "@parfocal/api-client";
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { type AnnotationDraft, listAnnotations, useGetMe } from "@parfocal/api-client";
+import {
+  type RefObject,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
+import { useRoomEvents } from "../presence/use-room-presence.ts";
+import { okData } from "../screens/placeholder.tsx";
 import { readSharedLayer } from "./annotate-task-api.ts";
 import { adoptTheirs } from "./conflicts.ts";
 import { deleteMarker, dropMarker } from "./count-markers.ts";
@@ -16,6 +26,8 @@ import {
   undo,
 } from "./history.ts";
 import { intoGroup } from "./layers.ts";
+import { applyLiveChanges } from "./live-apply.ts";
+import { type ChangeSummary, createLiveBatch, type LayerRecord, summarise } from "./live-batch.ts";
 import type { Point } from "./polygon-draft.ts";
 import {
   type Choice,
@@ -25,10 +37,19 @@ import {
   type Remote,
 } from "./save-queue.ts";
 import { annotationTransport, sharedLayerTransport } from "./save-transport.ts";
-import { draftOf, type SavedRecord, sameBody, shapeOf } from "./saved-shapes.ts";
+import { draftOf, sameBody, shapeOf } from "./saved-shapes.ts";
 import type { GroupId, Shape, ShapeId } from "./shapes.ts";
 
 export type SaveState = QueuePhase;
+
+export type LiveGuard = {
+  readonly busy: () => boolean;
+  readonly shapeIds: () => ReadonlySet<ShapeId>;
+};
+
+export const idleGuard: LiveGuard = { busy: () => false, shapeIds: () => new Set() };
+
+export const layerChangedEvent = "layer.object-changed";
 
 export type SaveConflict = Conflict<AnnotationDraft>;
 
@@ -53,9 +74,12 @@ export type SavedAnnotations = {
   readonly unsaved: number;
   readonly conflicts: readonly SaveConflict[];
   readonly resolveConflict: (conflict: SaveConflict, choice: Choice) => void;
+  readonly incoming: readonly ChangeSummary[];
+  readonly showIncoming: () => void;
+  readonly noteActivity: () => void;
 };
 
-type LoadedRecord = SavedRecord & { readonly id: string; readonly version: number };
+type LoadedRecord = LayerRecord;
 
 async function savedRecords(
   slideId: string,
@@ -74,6 +98,7 @@ export function useSavedAnnotations(
   slideId: string,
   enabled: boolean,
   sharedTaskId: string | null = null,
+  guard?: RefObject<LiveGuard>,
 ): SavedAnnotations {
   const [document, setDocumentState] = useState(createDocument);
   const [loaded, setLoaded] = useState(false);
@@ -87,6 +112,8 @@ export function useSavedAnnotations(
   const current = useRef(document);
   const log = useRef(history);
   const remotes = useRef(new Map<ShapeId, Remote>());
+  const deletedHere = useRef(new Set<string>());
+  const me = okData(useGetMe().data)?.user_id;
   const queue = useMemo(
     () =>
       createSaveQueue(
@@ -99,6 +126,62 @@ export function useSavedAnnotations(
   const status = useSyncExternalStore(queue.subscribe, queue.status);
   const conflicts = useSyncExternalStore(queue.subscribe, queue.conflicts);
   const hasUnsaved = status.waiting > 0;
+
+  const batch = useMemo(
+    () =>
+      createLiveBatch({
+        known: () => {
+          const versions = new Map<string, number>();
+          for (const remote of remotes.current.values()) {
+            if (remote.id !== null) versions.set(remote.id, remote.version);
+          }
+          return versions;
+        },
+        me: () => me ?? null,
+        deletedHere: () => deletedHere.current,
+        busy: () => queue.status().waiting > 0 || (guard?.current.busy() ?? false),
+        protectedIds: () => {
+          const held = new Set<string>();
+          for (const shapeId of guard?.current.shapeIds() ?? []) {
+            const id = remotes.current.get(shapeId)?.id;
+            if (id) held.add(id);
+          }
+          return held;
+        },
+        apply: (changes) => {
+          const next = applyLiveChanges(current.current, remotes.current, changes);
+          if (next === current.current) return;
+          current.current = next;
+          setDocumentState(next);
+          log.current = createHistory();
+          setHistoryState(log.current);
+        },
+      }),
+    [queue, me, guard],
+  );
+  const incomingChanges = useSyncExternalStore(batch.subscribe, batch.pending);
+  const incoming = useMemo(() => summarise(incomingChanges), [incomingChanges]);
+
+  useEffect(() => () => batch.dispose(), [batch]);
+
+  const pullLayer = useCallback(() => {
+    if (sharedTaskId === null || !loaded) return;
+    void savedRecords(slideId, sharedTaskId).then(
+      (records) => {
+        if (records !== null) batch.offer(records);
+      },
+      () => undefined,
+    );
+  }, [batch, loaded, slideId, sharedTaskId]);
+
+  useRoomEvents(
+    enabled && sharedTaskId !== null ? `task:${sharedTaskId}` : null,
+    me,
+    (event) => {
+      if (event.kind === layerChangedEvent && event.ids["slide"] === slideId) pullLayer();
+    },
+    pullLayer,
+  );
 
   useEffect(() => {
     const resume = () => queue.flushNow();
@@ -143,6 +226,7 @@ export function useSavedAnnotations(
     (id: ShapeId) => {
       const remote = remotes.current.get(id);
       remotes.current.delete(id);
+      if (remote?.id) deletedHere.current.add(remote.id);
       if (remote !== undefined) queue.enqueueRemove(remote);
     },
     [queue],
@@ -175,6 +259,7 @@ export function useSavedAnnotations(
     if (!enabled) return;
     let cancelled = false;
     remotes.current.clear();
+    deletedHere.current.clear();
     setDocument(createDocument());
     setHistory(createHistory());
     setLoaded(false);
@@ -327,5 +412,8 @@ export function useSavedAnnotations(
     unsaved: status.waiting,
     conflicts,
     resolveConflict,
+    incoming,
+    showIncoming: batch.flushNow,
+    noteActivity: batch.touch,
   };
 }
