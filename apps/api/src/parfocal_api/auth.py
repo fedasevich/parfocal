@@ -49,6 +49,7 @@ from parfocal_api.tables import (
     users,
 )
 from parfocal_api.token_keys import decoded_key
+from parfocal_api.zitadel_login import ZitadelLogin
 from parfocal_common.db import DatabaseScope, scoped_transaction
 
 SESSION_COOKIE = "__Host-parfocal_session"
@@ -98,6 +99,7 @@ class AuthState:
     cipher: SessionCipher
     public_origin: str
     limits: RateLimits
+    login: ZitadelLogin | None = None
 
 
 class Session(BaseModel):
@@ -426,6 +428,39 @@ def hop_to(path: str) -> HTMLResponse:
     )
 
 
+async def open_session(
+    request: Request,
+    auth: AuthState,
+    response: Response,
+    tokens: TokenSet,
+    claims: dict[str, Any],
+) -> None:
+    session_id = secrets.token_urlsafe(32)
+    previous = request.cookies.get(SESSION_COOKIE)
+    async with scoped_transaction(auth.engine, AUTH_SCOPE) as connection:
+        if previous:
+            await connection.execute(
+                delete(sessions).where(
+                    sessions.c.id_hash == digest(previous),
+                    sessions.c.subject == str(claims["sub"]),
+                )
+            )
+        active_tenant_id = await sign_in_user(connection, claims)
+        limits = await session_limits(connection, active_tenant_id)
+        await connection.execute(
+            insert(sessions).values(
+                id_hash=digest(session_id),
+                subject=str(claims["sub"]),
+                tokens=auth.cipher.seal(sealed_tokens(tokens, claims)),
+                access_expires_at=now() + timedelta(seconds=tokens.expires_in),
+                expires_at=now() + limits.lifetime,
+                active_tenant_id=active_tenant_id,
+                user_agent=request.headers.get("user-agent", "")[:USER_AGENT_LENGTH] or None,
+            )
+        )
+    set_cookie(response, SESSION_COOKIE, session_id, int(limits.lifetime.total_seconds()), "strict")
+
+
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 
@@ -484,31 +519,8 @@ async def complete_login(
         claims = await auth.identity.verify_id_token(tokens.id_token, login.nonce)
     except IdentityError as error:
         raise LoginFailedError from error
-    session_id = secrets.token_urlsafe(32)
-    previous = request.cookies.get(SESSION_COOKIE)
-    async with scoped_transaction(auth.engine, AUTH_SCOPE) as connection:
-        if previous:
-            await connection.execute(
-                delete(sessions).where(
-                    sessions.c.id_hash == digest(previous),
-                    sessions.c.subject == str(claims["sub"]),
-                )
-            )
-        active_tenant_id = await sign_in_user(connection, claims)
-        limits = await session_limits(connection, active_tenant_id)
-        await connection.execute(
-            insert(sessions).values(
-                id_hash=digest(session_id),
-                subject=str(claims["sub"]),
-                tokens=auth.cipher.seal(sealed_tokens(tokens, claims)),
-                access_expires_at=now() + timedelta(seconds=tokens.expires_in),
-                expires_at=now() + limits.lifetime,
-                active_tenant_id=active_tenant_id,
-                user_agent=request.headers.get("user-agent", "")[:USER_AGENT_LENGTH] or None,
-            )
-        )
     response = hop_to(login.return_to)
-    set_cookie(response, SESSION_COOKIE, session_id, int(limits.lifetime.total_seconds()), "strict")
+    await open_session(request, auth, response, tokens, claims)
     clear_cookie(response, LOGIN_COOKIE)
     return response
 

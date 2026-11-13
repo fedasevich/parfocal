@@ -26,3 +26,10 @@ paths = [
 ]
 regexTarget = "line"
 regexes = ['''(correct-horse|password1234|qwertyuiop12|spring-meadow|481726|fresh-long-passphrase|different-passphrase|password: "short"|twelve-chars|signInSecrets|secrets\.)''']
+
+[[allowlists]]
+description = "Made-up passwords the faked Zitadel in the native sign-in API tests accepts or rejects"
+condition = "AND"
+paths = ['''^apps/api/tests/test_password_login\.py$''']
+regexTarget = "line"
+regexes = ['''(Correct-Horse-9-battery|Another-pass-123|password="short"|lettersanddigits12)''']

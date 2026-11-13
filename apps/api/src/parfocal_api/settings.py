@@ -30,6 +30,9 @@ class ApiSettings(StorageSettings):
     zitadel_issuer: HttpUrl
     zitadel_client_id: str
     zitadel_client_secret: SecretStr
+    zitadel_login_client_id: str | None = None
+    zitadel_login_token: SecretStr | None = None
+    zitadel_organization_id: str | None = None
     tile_token_key: SecretStr | None = None
     room_token_key: SecretStr | None = None
     realtime_internal_url: AnyHttpUrl | None = None

@@ -85,6 +85,12 @@ export const AccessRequestStatus = {
   approved: "approved",
 } as const;
 
+export interface AccountCodeSent {
+  email: string;
+  expires_minutes: number;
+  resend_seconds: number;
+}
+
 /**
  * @minLength 1
  * @maxLength 100
@@ -1866,6 +1872,18 @@ export interface EditDraft {
  */
 export type Email = string;
 
+export interface EmailCodeResend {
+  /** @maxLength 320 */
+  email: string;
+}
+
+export interface EmailConfirmation {
+  /** @maxLength 320 */
+  email: string;
+  /** @maxLength 32 */
+  code: string;
+}
+
 export type EmailDigest = (typeof EmailDigest)[keyof typeof EmailDigest];
 
 export const EmailDigest = {
@@ -3391,6 +3409,24 @@ export interface Neighbours {
   at_end: boolean;
 }
 
+export type NewAccountRole = (typeof NewAccountRole)[keyof typeof NewAccountRole];
+
+export const NewAccountRole = {
+  run: "run",
+  review: "review",
+} as const;
+
+export interface NewAccount {
+  /** @maxLength 320 */
+  name: string;
+  /** @maxLength 320 */
+  email: string;
+  /** @maxLength 320 */
+  password: string;
+  role: NewAccountRole;
+  accepted_terms: boolean;
+}
+
 export interface NewCaseReportDeposit {
   slide_id: string;
   object_id?: string | null;
@@ -3624,6 +3660,19 @@ export interface Pairings {
   slides: string[];
   results: ResultPairing[];
   others: string[];
+}
+
+export interface PasswordSignIn {
+  /** @maxLength 320 */
+  email: string;
+  /** @maxLength 320 */
+  password: string;
+  keep_signed_in?: boolean;
+  return_to?: string | null;
+}
+
+export interface PasswordSignInAvailability {
+  available: boolean;
 }
 
 export interface PatientCase {
@@ -4839,6 +4888,10 @@ export interface SharedReport {
   task_name: string;
   expires_at: string;
   evaluation: SharedEvaluation;
+}
+
+export interface SignInLanding {
+  return_to: string;
 }
 
 export interface SignOffConfirmation {
@@ -6354,6 +6407,851 @@ export function useGetSession<TData = Awaited<ReturnType<typeof getSession>>, TE
 
   return withQueryKey(query, queryOptions.queryKey);
 }
+
+export type getPasswordSignInResponse200 = {
+  data: PasswordSignInAvailability;
+  status: 200;
+};
+
+export type getPasswordSignInResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getPasswordSignInResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getPasswordSignInResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getPasswordSignInResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getPasswordSignInResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getPasswordSignInResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getPasswordSignInResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getPasswordSignInResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getPasswordSignInResponseSuccess = getPasswordSignInResponse200 & {
+  headers: Headers;
+};
+export type getPasswordSignInResponseError = (
+  | getPasswordSignInResponse400
+  | getPasswordSignInResponse401
+  | getPasswordSignInResponse403
+  | getPasswordSignInResponse404
+  | getPasswordSignInResponse409
+  | getPasswordSignInResponse422
+  | getPasswordSignInResponse429
+  | getPasswordSignInResponse500
+) & {
+  headers: Headers;
+};
+
+export type getPasswordSignInResponse =
+  | getPasswordSignInResponseSuccess
+  | getPasswordSignInResponseError;
+
+export const getGetPasswordSignInUrl = () => {
+  return `/api/auth/password-sign-in`;
+};
+
+/**
+ * @summary Get Password Sign In
+ */
+export const getPasswordSignIn = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getPasswordSignInResponse> => {
+  return apiFetch<getPasswordSignInResponse>(getGetPasswordSignInUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetPasswordSignInQueryKey = () => {
+  return [`/api/auth/password-sign-in`] as const;
+};
+
+export const getGetPasswordSignInQueryOptions = <
+  TData = Awaited<ReturnType<typeof getPasswordSignIn>>,
+  TError = Problem,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getPasswordSignIn>>, TError, TData>>;
+  request?: SecondParameter<typeof apiFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetPasswordSignInQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getPasswordSignIn>>> = ({ signal }) =>
+    getPasswordSignIn({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getPasswordSignIn>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetPasswordSignInQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getPasswordSignIn>>
+>;
+export type GetPasswordSignInQueryError = Problem;
+
+export function useGetPasswordSignIn<
+  TData = Awaited<ReturnType<typeof getPasswordSignIn>>,
+  TError = Problem,
+>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getPasswordSignIn>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPasswordSignIn>>,
+          TError,
+          Awaited<ReturnType<typeof getPasswordSignIn>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetPasswordSignIn<
+  TData = Awaited<ReturnType<typeof getPasswordSignIn>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getPasswordSignIn>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPasswordSignIn>>,
+          TError,
+          Awaited<ReturnType<typeof getPasswordSignIn>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetPasswordSignIn<
+  TData = Awaited<ReturnType<typeof getPasswordSignIn>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getPasswordSignIn>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Password Sign In
+ */
+
+export function useGetPasswordSignIn<
+  TData = Awaited<ReturnType<typeof getPasswordSignIn>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getPasswordSignIn>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetPasswordSignInQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type createAccountResponse200 = {
+  data: AccountCodeSent;
+  status: 200;
+};
+
+export type createAccountResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type createAccountResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type createAccountResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type createAccountResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type createAccountResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type createAccountResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type createAccountResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type createAccountResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type createAccountResponseSuccess = createAccountResponse200 & {
+  headers: Headers;
+};
+export type createAccountResponseError = (
+  | createAccountResponse400
+  | createAccountResponse401
+  | createAccountResponse403
+  | createAccountResponse404
+  | createAccountResponse409
+  | createAccountResponse422
+  | createAccountResponse429
+  | createAccountResponse500
+) & {
+  headers: Headers;
+};
+
+export type createAccountResponse = createAccountResponseSuccess | createAccountResponseError;
+
+export const getCreateAccountUrl = () => {
+  return `/api/auth/sign-up`;
+};
+
+/**
+ * @summary Create Account
+ */
+export const createAccount = async (
+  newAccount: NewAccount,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<createAccountResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<createAccountResponse>(getCreateAccountUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(newAccount),
+  });
+};
+
+export const getCreateAccountMutationKey = () => ["createAccount"] as const;
+
+export const getCreateAccountMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createAccount>>,
+    TError,
+    CreateAccountMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createAccount>>,
+  TError,
+  CreateAccountMutationVariables,
+  TContext
+> => {
+  const mutationKey = getCreateAccountMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createAccount>>,
+    CreateAccountMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createAccount(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateAccountMutationResult = NonNullable<Awaited<ReturnType<typeof createAccount>>>;
+export type CreateAccountMutationBody = NewAccount;
+export type CreateAccountMutationError = Problem;
+export type CreateAccountMutationVariables = { data: NewAccount };
+
+/**
+ * @summary Create Account
+ */
+export const useCreateAccount = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof createAccount>>,
+      TError,
+      CreateAccountMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof createAccount>>,
+  TError,
+  CreateAccountMutationVariables,
+  TContext
+> => {
+  return useMutation(getCreateAccountMutationOptions(options), queryClient);
+};
+
+export type confirmEmailResponse200 = {
+  data: SignInLanding;
+  status: 200;
+};
+
+export type confirmEmailResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type confirmEmailResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type confirmEmailResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type confirmEmailResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type confirmEmailResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type confirmEmailResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type confirmEmailResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type confirmEmailResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type confirmEmailResponseSuccess = confirmEmailResponse200 & {
+  headers: Headers;
+};
+export type confirmEmailResponseError = (
+  | confirmEmailResponse400
+  | confirmEmailResponse401
+  | confirmEmailResponse403
+  | confirmEmailResponse404
+  | confirmEmailResponse409
+  | confirmEmailResponse422
+  | confirmEmailResponse429
+  | confirmEmailResponse500
+) & {
+  headers: Headers;
+};
+
+export type confirmEmailResponse = confirmEmailResponseSuccess | confirmEmailResponseError;
+
+export const getConfirmEmailUrl = () => {
+  return `/api/auth/sign-up/confirm`;
+};
+
+/**
+ * @summary Confirm Email
+ */
+export const confirmEmail = async (
+  emailConfirmation: EmailConfirmation,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<confirmEmailResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<confirmEmailResponse>(getConfirmEmailUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(emailConfirmation),
+  });
+};
+
+export const getConfirmEmailMutationKey = () => ["confirmEmail"] as const;
+
+export const getConfirmEmailMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof confirmEmail>>,
+    TError,
+    ConfirmEmailMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof confirmEmail>>,
+  TError,
+  ConfirmEmailMutationVariables,
+  TContext
+> => {
+  const mutationKey = getConfirmEmailMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof confirmEmail>>,
+    ConfirmEmailMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return confirmEmail(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ConfirmEmailMutationResult = NonNullable<Awaited<ReturnType<typeof confirmEmail>>>;
+export type ConfirmEmailMutationBody = EmailConfirmation;
+export type ConfirmEmailMutationError = Problem;
+export type ConfirmEmailMutationVariables = { data: EmailConfirmation };
+
+/**
+ * @summary Confirm Email
+ */
+export const useConfirmEmail = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof confirmEmail>>,
+      TError,
+      ConfirmEmailMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof confirmEmail>>,
+  TError,
+  ConfirmEmailMutationVariables,
+  TContext
+> => {
+  return useMutation(getConfirmEmailMutationOptions(options), queryClient);
+};
+
+export type resendEmailCodeResponse200 = {
+  data: AccountCodeSent;
+  status: 200;
+};
+
+export type resendEmailCodeResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type resendEmailCodeResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type resendEmailCodeResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type resendEmailCodeResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type resendEmailCodeResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type resendEmailCodeResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type resendEmailCodeResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type resendEmailCodeResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type resendEmailCodeResponseSuccess = resendEmailCodeResponse200 & {
+  headers: Headers;
+};
+export type resendEmailCodeResponseError = (
+  | resendEmailCodeResponse400
+  | resendEmailCodeResponse401
+  | resendEmailCodeResponse403
+  | resendEmailCodeResponse404
+  | resendEmailCodeResponse409
+  | resendEmailCodeResponse422
+  | resendEmailCodeResponse429
+  | resendEmailCodeResponse500
+) & {
+  headers: Headers;
+};
+
+export type resendEmailCodeResponse = resendEmailCodeResponseSuccess | resendEmailCodeResponseError;
+
+export const getResendEmailCodeUrl = () => {
+  return `/api/auth/sign-up/resend`;
+};
+
+/**
+ * @summary Resend Email Code
+ */
+export const resendEmailCode = async (
+  emailCodeResend: EmailCodeResend,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<resendEmailCodeResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<resendEmailCodeResponse>(getResendEmailCodeUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(emailCodeResend),
+  });
+};
+
+export const getResendEmailCodeMutationKey = () => ["resendEmailCode"] as const;
+
+export const getResendEmailCodeMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof resendEmailCode>>,
+    TError,
+    ResendEmailCodeMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof resendEmailCode>>,
+  TError,
+  ResendEmailCodeMutationVariables,
+  TContext
+> => {
+  const mutationKey = getResendEmailCodeMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof resendEmailCode>>,
+    ResendEmailCodeMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return resendEmailCode(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ResendEmailCodeMutationResult = NonNullable<
+  Awaited<ReturnType<typeof resendEmailCode>>
+>;
+export type ResendEmailCodeMutationBody = EmailCodeResend;
+export type ResendEmailCodeMutationError = Problem;
+export type ResendEmailCodeMutationVariables = { data: EmailCodeResend };
+
+/**
+ * @summary Resend Email Code
+ */
+export const useResendEmailCode = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof resendEmailCode>>,
+      TError,
+      ResendEmailCodeMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof resendEmailCode>>,
+  TError,
+  ResendEmailCodeMutationVariables,
+  TContext
+> => {
+  return useMutation(getResendEmailCodeMutationOptions(options), queryClient);
+};
+
+export type signInWithPasswordResponse200 = {
+  data: SignInLanding;
+  status: 200;
+};
+
+export type signInWithPasswordResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type signInWithPasswordResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type signInWithPasswordResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type signInWithPasswordResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type signInWithPasswordResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type signInWithPasswordResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type signInWithPasswordResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type signInWithPasswordResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type signInWithPasswordResponseSuccess = signInWithPasswordResponse200 & {
+  headers: Headers;
+};
+export type signInWithPasswordResponseError = (
+  | signInWithPasswordResponse400
+  | signInWithPasswordResponse401
+  | signInWithPasswordResponse403
+  | signInWithPasswordResponse404
+  | signInWithPasswordResponse409
+  | signInWithPasswordResponse422
+  | signInWithPasswordResponse429
+  | signInWithPasswordResponse500
+) & {
+  headers: Headers;
+};
+
+export type signInWithPasswordResponse =
+  | signInWithPasswordResponseSuccess
+  | signInWithPasswordResponseError;
+
+export const getSignInWithPasswordUrl = () => {
+  return `/api/auth/sign-in`;
+};
+
+/**
+ * @summary Sign In With Password
+ */
+export const signInWithPassword = async (
+  passwordSignIn: PasswordSignIn,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<signInWithPasswordResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<signInWithPasswordResponse>(getSignInWithPasswordUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(passwordSignIn),
+  });
+};
+
+export const getSignInWithPasswordMutationKey = () => ["signInWithPassword"] as const;
+
+export const getSignInWithPasswordMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof signInWithPassword>>,
+    TError,
+    SignInWithPasswordMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof signInWithPassword>>,
+  TError,
+  SignInWithPasswordMutationVariables,
+  TContext
+> => {
+  const mutationKey = getSignInWithPasswordMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof signInWithPassword>>,
+    SignInWithPasswordMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return signInWithPassword(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SignInWithPasswordMutationResult = NonNullable<
+  Awaited<ReturnType<typeof signInWithPassword>>
+>;
+export type SignInWithPasswordMutationBody = PasswordSignIn;
+export type SignInWithPasswordMutationError = Problem;
+export type SignInWithPasswordMutationVariables = { data: PasswordSignIn };
+
+/**
+ * @summary Sign In With Password
+ */
+export const useSignInWithPassword = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof signInWithPassword>>,
+      TError,
+      SignInWithPasswordMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof signInWithPassword>>,
+  TError,
+  SignInWithPasswordMutationVariables,
+  TContext
+> => {
+  return useMutation(getSignInWithPasswordMutationOptions(options), queryClient);
+};
 
 export type listSessionsResponse200 = {
   data: SessionSummary[];

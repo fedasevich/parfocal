@@ -257,3 +257,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0291](0291-sign-in-factors-offered-by-the-idp-and-required-by-the-workspace.md) | Sign-in factors are offered by the IdP and required per workspace by the API | Accepted | 2026-11-13 |
 | [0292](0292-staging-and-production-identity-in-separate-organisations.md) | Staging and production identity in separate Zitadel organisations, client secrets only in the encrypted state | Rejected by 0293 | 2026-11-13 |
 | [0293](0293-production-only-until-the-first-real-user.md) | Production is the only cloud environment until the first real user, and the owner's test data there may be reset | Accepted | 2026-11-13 |
+| [0294](0294-native-sign-up-and-sign-in-through-zitadel-session-api.md) | Native sign-up and password sign-in run on the API through Zitadel's session and OIDC v2 APIs, hosted login stays the fallback | Accepted | 2026-11-13 |

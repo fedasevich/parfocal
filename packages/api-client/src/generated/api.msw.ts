@@ -10,6 +10,7 @@ import { HttpResponse, http } from "msw";
 import type {
   AbortedUpload,
   AcceptedInvitation,
+  AccountCodeSent,
   AdjudicatedObject,
   AiChanges,
   AiUsage,
@@ -101,6 +102,7 @@ import type {
   OpinionForm,
   Organisation,
   Pairings,
+  PasswordSignInAvailability,
   PatientData,
   PendingAccessRequest,
   PersonalData,
@@ -142,6 +144,7 @@ import type {
   SharedLayer,
   SharedReport,
   SignedPart,
+  SignInLanding,
   SigningKey,
   SignOffSummary,
   SignOutSet,
@@ -311,6 +314,42 @@ export const getGetSessionResponseMock = (
   name: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
   email: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
   operator: faker.datatype.boolean(),
+  ...overrideResponse,
+});
+
+export const getGetPasswordSignInResponseMock = (
+  overrideResponse: Partial<Extract<PasswordSignInAvailability, object>> = {},
+): PasswordSignInAvailability => ({ available: faker.datatype.boolean(), ...overrideResponse });
+
+export const getCreateAccountResponseMock = (
+  overrideResponse: Partial<Extract<AccountCodeSent, object>> = {},
+): AccountCodeSent => ({
+  email: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  expires_minutes: faker.number.int(),
+  resend_seconds: faker.number.int(),
+  ...overrideResponse,
+});
+
+export const getConfirmEmailResponseMock = (
+  overrideResponse: Partial<Extract<SignInLanding, object>> = {},
+): SignInLanding => ({
+  return_to: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  ...overrideResponse,
+});
+
+export const getResendEmailCodeResponseMock = (
+  overrideResponse: Partial<Extract<AccountCodeSent, object>> = {},
+): AccountCodeSent => ({
+  email: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  expires_minutes: faker.number.int(),
+  resend_seconds: faker.number.int(),
+  ...overrideResponse,
+});
+
+export const getSignInWithPasswordResponseMock = (
+  overrideResponse: Partial<Extract<SignInLanding, object>> = {},
+): SignInLanding => ({
+  return_to: faker.string.alpha({ length: { min: 10, max: 20 } }),
   ...overrideResponse,
 });
 
@@ -15888,6 +15927,126 @@ export const getGetSessionMockHandler = (
   );
 };
 
+export const getGetPasswordSignInMockHandler = (
+  overrideResponse?:
+    | PasswordSignInAvailability
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<PasswordSignInAvailability> | PasswordSignInAvailability),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/auth/password-sign-in",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetPasswordSignInResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getCreateAccountMockHandler = (
+  overrideResponse?:
+    | AccountCodeSent
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<AccountCodeSent> | AccountCodeSent),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/auth/sign-up",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getCreateAccountResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getConfirmEmailMockHandler = (
+  overrideResponse?:
+    | SignInLanding
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<SignInLanding> | SignInLanding),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/auth/sign-up/confirm",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getConfirmEmailResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getResendEmailCodeMockHandler = (
+  overrideResponse?:
+    | AccountCodeSent
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<AccountCodeSent> | AccountCodeSent),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/auth/sign-up/resend",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getResendEmailCodeResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getSignInWithPasswordMockHandler = (
+  overrideResponse?:
+    | SignInLanding
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<SignInLanding> | SignInLanding),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/auth/sign-in",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getSignInWithPasswordResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getListSessionsMockHandler = (
   overrideResponse?:
     | SessionSummary[]
@@ -23027,6 +23186,11 @@ export const getListSlideAreasMockHandler = (
 export const getParfocalAPIMock = () => [
   getGetHealthMockHandler(),
   getGetSessionMockHandler(),
+  getGetPasswordSignInMockHandler(),
+  getCreateAccountMockHandler(),
+  getConfirmEmailMockHandler(),
+  getResendEmailCodeMockHandler(),
+  getSignInWithPasswordMockHandler(),
   getListSessionsMockHandler(),
   getRecordActivityMockHandler(),
   getEndSessionMockHandler(),

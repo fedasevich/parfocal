@@ -220,6 +220,591 @@
         }
       }
     },
+    "/api/auth/password-sign-in": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Get Password Sign In",
+        "operationId": "getPasswordSignIn",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PasswordSignInAvailability"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in to continue",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You do not have access to this",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "This changed since you loaded it",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests, try again shortly",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Something went wrong",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/sign-up": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Create Account",
+        "operationId": "createAccount",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewAccount"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountCodeSent"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in to continue",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You do not have access to this",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "This changed since you loaded it",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests, try again shortly",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Something went wrong",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/sign-up/confirm": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Confirm Email",
+        "operationId": "confirmEmail",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmailConfirmation"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignInLanding"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in to continue",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You do not have access to this",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "This changed since you loaded it",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests, try again shortly",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Something went wrong",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/sign-up/resend": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Resend Email Code",
+        "operationId": "resendEmailCode",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmailCodeResend"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountCodeSent"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in to continue",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You do not have access to this",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "This changed since you loaded it",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests, try again shortly",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Something went wrong",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/sign-in": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Sign In With Password",
+        "operationId": "signInWithPassword",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordSignIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignInLanding"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in to continue",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You do not have access to this",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "This changed since you loaded it",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests, try again shortly",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Something went wrong",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/auth/sessions": {
       "get": {
         "tags": [
@@ -41773,6 +42358,29 @@
         ],
         "title": "AccessRequestStatus"
       },
+      "AccountCodeSent": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "expires_minutes": {
+            "type": "integer",
+            "title": "Expires Minutes"
+          },
+          "resend_seconds": {
+            "type": "integer",
+            "title": "Resend Seconds"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email",
+          "expires_minutes",
+          "resend_seconds"
+        ],
+        "title": "AccountCodeSent"
+      },
       "AccountName": {
         "type": "string",
         "maxLength": 100,
@@ -46326,6 +46934,40 @@
         "maxLength": 320,
         "pattern": "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$"
       },
+      "EmailCodeResend": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "maxLength": 320,
+            "title": "Email"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email"
+        ],
+        "title": "EmailCodeResend"
+      },
+      "EmailConfirmation": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "maxLength": 320,
+            "title": "Email"
+          },
+          "code": {
+            "type": "string",
+            "maxLength": 32,
+            "title": "Code"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email",
+          "code"
+        ],
+        "title": "EmailConfirmation"
+      },
       "EmailDigest": {
         "type": "string",
         "enum": [
@@ -50748,6 +51390,46 @@
         ],
         "title": "Neighbours"
       },
+      "NewAccount": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 320,
+            "title": "Name"
+          },
+          "email": {
+            "type": "string",
+            "maxLength": 320,
+            "title": "Email"
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 320,
+            "title": "Password"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "run",
+              "review"
+            ],
+            "title": "Role"
+          },
+          "accepted_terms": {
+            "type": "boolean",
+            "title": "Accepted Terms"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "email",
+          "password",
+          "role",
+          "accepted_terms"
+        ],
+        "title": "NewAccount"
+      },
       "NewCaseReportDeposit": {
         "properties": {
           "slide_id": {
@@ -51696,6 +52378,56 @@
           "others"
         ],
         "title": "Pairings"
+      },
+      "PasswordSignIn": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "maxLength": 320,
+            "title": "Email"
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 320,
+            "title": "Password"
+          },
+          "keep_signed_in": {
+            "type": "boolean",
+            "title": "Keep Signed In",
+            "default": false
+          },
+          "return_to": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 320
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Return To"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email",
+          "password"
+        ],
+        "title": "PasswordSignIn"
+      },
+      "PasswordSignInAvailability": {
+        "properties": {
+          "available": {
+            "type": "boolean",
+            "title": "Available"
+          }
+        },
+        "type": "object",
+        "required": [
+          "available"
+        ],
+        "title": "PasswordSignInAvailability"
       },
       "PatientCase": {
         "properties": {
@@ -57105,6 +57837,19 @@
           "evaluation"
         ],
         "title": "SharedReport"
+      },
+      "SignInLanding": {
+        "properties": {
+          "return_to": {
+            "type": "string",
+            "title": "Return To"
+          }
+        },
+        "type": "object",
+        "required": [
+          "return_to"
+        ],
+        "title": "SignInLanding"
       },
       "SignOffConfirmation": {
         "properties": {

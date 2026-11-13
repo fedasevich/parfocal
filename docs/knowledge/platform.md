@@ -57,9 +57,10 @@ Checked in each dashboard on 2026-10-31. A hard cap means the provider stops the
 | Vercel team "fedasevich's projects" | Hobby | No | Capped by plan, and no card means nothing can be charged | $0.00 |
 | Zitadel Cloud | Free, team still named "pathocal" | No, checked 2026-11-13 | Hard cap by plan: 100 daily active users, 3 identity providers and one instance, and no card means nothing can be charged. At most about 4 daily active users since October | $0.00 |
 | GitHub `fedasevich` | GitHub Pro through education benefits, $0 a month | Not checked | Budgets of $0 that block usage for Actions, Packages, Codespaces and Git LFS, a $5 budget for AI credits, and included usage alerts on. The public repository's Actions minutes are free | $13.66 used, all covered by included usage |
+| Resend | Free, created 2026-11-13 | No | Hard cap by plan: 100 emails a day and 3,000 a month, then sending pauses. Sends from `no-reply@mail.parfocal.eu` (region eu-west-1, DNS records in the Cloudflare zone) as the Zitadel SMTP provider | $0.00 |
 | Domain `parfocal.eu` at Endora | Yearly renewal | Not checked | A known yearly cost, nothing to alert. TODO: write down the renewal date and price | |
 
-Sentry, PostHog, Resend and Grafana have no accounts yet. Set a cap or an alert at the lowest amount on the day each is created and add a row here.
+Sentry, PostHog and Grafana have no accounts yet. Set a cap or an alert at the lowest amount on the day each is created and add a row here.
 
 How to check spend quickly: Modal at `modal.com/settings/fedasevich/usage`, Cloudflare at Manage account, Billing, Billable usage, Neon through the Vercel MCP tool `list_integration_configurations` (its `billingData`), Vercel at the team's Settings, Billing, and GitHub at Settings, Billing and licensing.
 
