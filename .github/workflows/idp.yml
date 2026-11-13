@@ -1,0 +1,35 @@
+name: idp
+
+on:
+  pull_request:
+    paths:
+      - "infra/tofu/modules/zitadel-identity/**"
+      - "infra/tofu/idp-scratch/**"
+      - ".github/workflows/idp.yml"
+  push:
+    branches: [main]
+    paths:
+      - "infra/tofu/modules/zitadel-identity/**"
+      - "infra/tofu/idp-scratch/**"
+      - ".github/workflows/idp.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: idp-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  recreate-from-scratch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: opentofu/setup-opentofu@v2
+        with:
+          tofu_version: 1.13.x
+          tofu_wrapper: false
+      - run: tofu fmt -check -recursive infra/tofu/modules/zitadel-identity infra/tofu/idp-scratch
+      - run: bash infra/tofu/idp-scratch/run.sh
