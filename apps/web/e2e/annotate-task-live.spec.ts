@@ -99,6 +99,16 @@ test("an annotate task slide draws on the shared layer, fixes AI, checks two sli
   await expect(page.getByText("Signed off").first()).toBeVisible();
   await expect(page.getByTestId("task-progress")).toHaveText("1 of 2 slides checked, 1 signed off");
 
+  await page.getByRole("button", { name: "Add the run CAMELYON tumor model" }).click();
+  const dialog = page.getByRole("dialog", { name: "Add a run to a signed-off slide" });
+  await dialog.getByLabel("Reason").fill("too short");
+  await dialog.getByRole("button", { name: /^Add the run/ }).click();
+  await expect(dialog).toBeVisible();
+  await dialog.getByLabel("Reason").fill("A second model run finished");
+  await dialog.getByRole("button", { name: /^Add the run/ }).click();
+  await expect(dialog).toHaveCount(0);
+  await expect(page.getByTestId("add-run")).toHaveCount(0);
+
   await page.getByRole("button", { name: "Next slide" }).click();
   await expect(page).toHaveURL(new RegExp(`/slides/${byHand}/live`));
   await expect(stage).toHaveAttribute("data-annotations", "loaded", { timeout: 20_000 });

@@ -9,6 +9,7 @@ import {
   type SharedAiObject,
   type SharedAiObjects,
   type SharedLayer,
+  type TaskSlide,
 } from "@parfocal/api-client";
 import { useQuery } from "@tanstack/react-query";
 
@@ -55,6 +56,13 @@ export const checkSlide = (taskId: string, slideId: string, draft: CheckDraft) =
 
 export const uncheckSlide = (taskId: string, slideId: string) =>
   send<AnnotateSlideStatus>(`${slidePath(taskId, slideId)}/uncheck`, "POST");
+
+export const addRun = (taskId: string, slideId: string, resultSetId: string, reason?: string) =>
+  send<TaskSlide>(
+    `${slidePath(taskId, slideId)}/runs${reason === undefined ? "" : `?reason=${encodeURIComponent(reason)}`}`,
+    "POST",
+    { result_set_id: resultSetId },
+  );
 
 export const signOffSlide = (taskId: string, slideId: string) =>
   send<AnnotateSlideStatus>(`${slidePath(taskId, slideId)}/sign-off`, "POST");

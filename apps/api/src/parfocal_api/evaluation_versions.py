@@ -449,7 +449,12 @@ def as_change(row: Any, labels: dict[uuid.UUID, str]) -> EvaluationChange:
     )
 
 
-CHANGE_TEXTS = {"added": "Added", "edited": "Edited", "deleted": "Deleted"}
+CHANGE_TEXTS = {
+    "added": "Added",
+    "edited": "Edited",
+    "deleted": "Deleted",
+    "added a run": "Added a run",
+}
 
 
 @router.get(

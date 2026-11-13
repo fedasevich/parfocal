@@ -1,4 +1,11 @@
-import { ApiError, type ProjectClass, useGetMe, useGetReviewOrder } from "@parfocal/api-client";
+import {
+  ApiError,
+  getGetReviewTaskQueryKey,
+  type ProjectClass,
+  useGetMe,
+  useGetReviewOrder,
+  useListSlideResultSets,
+} from "@parfocal/api-client";
 import {
   AiResultToggle,
   CheckedCard,
@@ -21,10 +28,12 @@ import {
   classCountsOf,
   nextSlideOf,
   originMarkOf,
+  runsToAddOf,
   slideStepOf,
   taskProgressOf,
 } from "../annotations/annotate-task.ts";
 import {
+  addRun,
   changeAi,
   checkSlide,
   confirmAi,
@@ -50,6 +59,7 @@ import type { SaveState } from "../annotations/use-saved-annotations.ts";
 import { useBindings } from "../keys/personal-keys.ts";
 import type { Fired } from "../keys/registry.ts";
 import { useHotkeys } from "../keys/use-hotkeys.ts";
+import { ReasonModal } from "../screens/clinical-report/modals.tsx";
 import { usePeople } from "../screens/people.ts";
 import { okData } from "../screens/placeholder.tsx";
 import { GuidedCheck } from "./guided-check.tsx";
@@ -73,6 +83,8 @@ const problemCode = (error: unknown) =>
 const refusals: Record<string, string> = {
   "layer-not-empty": "The slide has objects, so it is not empty.",
   "slide-signed-off": "This slide is signed off and its layer is locked.",
+  "reason-needed": "Give a reason to change a signed-off slide.",
+  "no-result-set": "Add only a finished result set of the same slide.",
   "experts-unchecked": "Every assigned expert has to check the slide first.",
   "objects-unchecked": "The task needs every AI object checked before sign-off.",
 };
@@ -104,6 +116,7 @@ export function AnnotateTaskPanel({
   const [selected, setSelected] = useState<string | null>(null);
   const [refusal, setRefusal] = useState<string | null>(null);
   const [guided, setGuided] = useState(false);
+  const [addingRun, setAddingRun] = useState<string | null>(null);
 
   const refetchLayer = layerQuery.refetch;
   const lastSave = useRef(saveState);
@@ -115,6 +128,7 @@ export function AnnotateTaskPanel({
   const refresh = useCallback(async () => {
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: sharedLayerKey(taskId, slideId) }),
+      queryClient.invalidateQueries({ queryKey: getGetReviewTaskQueryKey(taskId) }),
       ...task.slideIds.map((id) =>
         queryClient.invalidateQueries({
           queryKey: slideStatusKey(taskId, id),
@@ -143,6 +157,10 @@ export function AnnotateTaskPanel({
     },
     [refresh],
   );
+
+  const setsQuery = useListSlideResultSets(slideId);
+  const newRuns = runsToAddOf(okData(setsQuery.data) ?? [], task);
+  const addingSet = newRuns.find((set) => set.id === addingRun);
 
   const orderQuery = useGetReviewOrder(
     taskId,
@@ -225,6 +243,9 @@ export function AnnotateTaskPanel({
       }),
     );
   };
+
+  const addRunNow = (resultSetId: string, reason?: string) =>
+    void run(() => addRun(taskId, slideId, resultSetId, reason));
 
   const next = onOpenSlide === undefined ? null : nextSlideOf(task.slideIds, slideId, statuses, me);
   const summary = nothingToMark
@@ -358,6 +379,40 @@ export function AnnotateTaskPanel({
               Delete {selectedAi.object}
             </Button>
           </div>
+        ) : null}
+        {newRuns.length > 0 && (!locked || task.owner) ? (
+          <ul aria-label="Runs to add" className="m-0 grid list-none gap-1 p-0">
+            {newRuns.map((set) => (
+              <li key={set.id}>
+                <Button
+                  size="sm"
+                  data-testid="add-run"
+                  onClick={() => (locked ? setAddingRun(set.id) : addRunNow(set.id))}
+                >
+                  Add the run {set.name}
+                </Button>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+        {addingSet ? (
+          <ReasonModal
+            title="Add a run to a signed-off slide"
+            subtitle="This slide is signed off"
+            whatLabel="What changes"
+            what={`The run ${addingSet.name} joins this slide`}
+            label="Reason"
+            placeholder="For example, a newer model run finished"
+            help="The reason goes into the history of the layer."
+            hint="The change is listed with the evaluation."
+            primary="Add the run"
+            tooShort="Give a reason of at least 10 characters."
+            onClose={() => setAddingRun(null)}
+            onSubmit={(reason) => {
+              setAddingRun(null);
+              addRunNow(addingSet.id, reason);
+            }}
+          />
         ) : null}
         {aiQuery.isError ? (
           <p role="alert" className="m-0 text-body-sm text-danger">

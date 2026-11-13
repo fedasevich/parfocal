@@ -4,6 +4,7 @@ import type {
   AnnotateSlideStatus,
   LayerObject,
   ProjectClass,
+  ResultSet,
   ReviewTaskDetail,
 } from "@parfocal/api-client";
 import {
@@ -16,6 +17,7 @@ import {
   layerKnownOf,
   nextSlideOf,
   originMarkOf,
+  runsToAddOf,
   slideStepOf,
   taskClassesOf,
   taskProgressOf,
@@ -247,4 +249,31 @@ test("annotations wait for the task to settle so they load from the right layer"
   assert.equal(layerKnownOf(undefined, false), true);
   assert.equal(layerKnownOf("t", false), false);
   assert.equal(layerKnownOf("t", true), true);
+});
+
+test("only finished result sets of the slide that the task does not hold are offered as runs", () => {
+  const set = (id: string, status: string) => ({ id, status, name: id }) as ResultSet;
+  const sets = [set("a", "ready"), set("b", "ready"), set("c", "failed"), set("d", "ready")];
+  assert.deepEqual(
+    runsToAddOf(sets, { resultSetId: "a", runSetIds: ["b"] }).map((item) => item.id),
+    ["d"],
+  );
+  assert.deepEqual(
+    runsToAddOf(sets, { resultSetId: null, runSetIds: [] }).map((item) => item.id),
+    ["a", "b", "d"],
+  );
+});
+
+test("the runs of a slide in the task come from its run set ids", () => {
+  const task = annotateTaskOf(
+    {
+      id: "t",
+      kind: "annotate",
+      classes: snapshot,
+      slides: [{ slide_id: "a", result_set_id: "rs1", run_set_ids: ["rs2"], reviewer_ids: [] }],
+    } as unknown as ReviewTaskDetail,
+    "a",
+    true,
+  );
+  assert.deepEqual(task?.runSetIds, ["rs2"]);
 });

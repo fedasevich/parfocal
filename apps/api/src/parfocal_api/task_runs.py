@@ -1,11 +1,13 @@
 import secrets
 import uuid
+from typing import Annotated
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 from pydantic import BaseModel
 from sqlalchemy import select, update
 
-from parfocal_api.annotate_layer import editable_layer
+from parfocal_api.annotate_layer import editable_layer, logged
+from parfocal_api.annotate_sign_off import LayerChange
 from parfocal_api.audit import AuditAction
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.permissions import Permission, require
@@ -41,8 +43,9 @@ async def add_run_to_task_slide(
     principal: CurrentPrincipal,
     connection: TenantConnection,
     results: Results,
+    reason: Annotated[str | None, Query(max_length=500)] = None,
 ) -> TaskSlide:
-    place = await editable_layer(connection, principal, task_id, slide_id)
+    place = await editable_layer(connection, principal, task_id, slide_id, reason)
     ready = await connection.scalar(
         select(result_sets.c.id).where(
             result_sets.c.id == join.result_set_id,
@@ -97,6 +100,7 @@ async def add_run_to_task_slide(
             task_id,
             {"fields": ["run_set_ids"], "slide_id": str(slide_id)},
         )
+        await logged(connection, principal, place, "Run", LayerChange.RUN_ADDED, reason)
     row = (
         await connection.execute(
             select(review_task_slides.c.result_set_id, review_task_slides.c.run_set_ids).where(

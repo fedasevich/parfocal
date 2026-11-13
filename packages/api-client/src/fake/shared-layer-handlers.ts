@@ -94,9 +94,10 @@ type Store = {
   layers: Record<string, LayerObject[]>;
   checks: Record<string, Check>;
   signOffs: Record<string, SignOff>;
+  runs: Record<string, string[]>;
 };
 
-const empty = (): Store => ({ layers: {}, checks: {}, signOffs: {} });
+const empty = (): Store => ({ layers: {}, checks: {}, signOffs: {}, runs: {} });
 
 let memory: Store = empty();
 
@@ -226,6 +227,9 @@ function writeLayer(params: Params, change: (objects: LayerObject[]) => LayerObj
   const key = keyOf(params.taskId, params.slideId);
   writeStore({ ...store, layers: { ...store.layers, [key]: change(layerOf(store, key)) } });
 }
+
+export const fakeRunSetIds = (taskId: string, slideId: string): string[] =>
+  readStore().runs[keyOf(taskId, slideId)] ?? [];
 
 const isSignedOff = (params: Params) =>
   readStore().signOffs[keyOf(params.taskId, params.slideId)] !== undefined;
@@ -417,6 +421,24 @@ export const sharedLayerHandlers = (): RequestHandler[] => [
     const { [keyOf(params.taskId, params.slideId)]: _gone, ...checks } = store.checks;
     writeStore({ ...store, checks });
     return HttpResponse.json(toAnnotateSlideStatus(params.taskId, params.slideId));
+  }),
+  http.post<Params>(`${base}/runs`, async ({ params, request }) => {
+    if (params.taskId !== annotateStubTaskId) return undefined;
+    const reason = new URL(request.url).searchParams.get("reason");
+    if (isSignedOff(params) && (reason === null || reason.trim() === ""))
+      return problem(400, "reason-needed", "Give a reason to change a signed-off slide");
+    const { result_set_id } = (await request.json()) as { result_set_id: string };
+    const key = keyOf(params.taskId, params.slideId);
+    const store = readStore();
+    const known = fakeRunSetIds(params.taskId, params.slideId);
+    if (!known.includes(result_set_id))
+      writeStore({ ...store, runs: { ...store.runs, [key]: [...known, result_set_id] } });
+    return HttpResponse.json({
+      slide_id: params.slideId,
+      result_set_id: resultSetOf(params.slideId),
+      run_set_ids: fakeRunSetIds(params.taskId, params.slideId),
+      reviewer_ids: [viewerId()],
+    });
   }),
   http.post<Params>(`${base}/sign-off`, ({ params }) => {
     if (params.taskId !== annotateStubTaskId) return undefined;
