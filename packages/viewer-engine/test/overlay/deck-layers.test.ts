@@ -3,6 +3,7 @@ import { before, test } from "node:test";
 import {
   createLabelOverlay,
   createPinOverlay,
+  createPolygonBatch,
   createRasterOverlay,
   createVectorOverlay,
   type OverlayDescription,
@@ -266,4 +267,91 @@ test("a label overlay becomes one text layer that offsets each label by its plac
 test("a label overlay with nothing placed draws no layer", () => {
   const builder = createOverlayLayerBuilder();
   assert.deepEqual(builder.build([createLabelOverlay({ id: "id-labels", placed: [] })]), []);
+});
+
+function nuclei(count: number, largeSide = 0) {
+  const total = count + (largeSide > 0 ? 1 : 0);
+  const positions = new Float32Array(total * 8);
+  const starts = new Uint32Array(total + 1);
+  const colors = new Uint8Array(total * 4).fill(255);
+  for (let shape = 0; shape < total; shape++) {
+    const side = shape < count ? 6 : largeSide;
+    const x = (shape % 40) * 20;
+    const y = Math.floor(shape / 40) * 20;
+    positions.set([x, y, x + side, y, x + side, y + side, x, y + side], shape * 8);
+    starts[shape + 1] = (shape + 1) * 4;
+  }
+  return createVectorOverlay({
+    id: "n",
+    kind: "nuclei",
+    shapes: { polygons: createPolygonBatch({ positions, starts, colors }) },
+  });
+}
+
+const nucleusPx = (sizePx: number): number => sizePx / Math.hypot(6, 6);
+
+const detailedIds = ["overlay:n:fills", "overlay:n:outline-casings", "overlay:n:outlines"];
+
+function visibleIds(layers: readonly { id: string }[]): string[] {
+  return ids(layers.filter((layer) => propsOf(layer).visible !== false));
+}
+
+test("many nuclei draw as before without a camera and from 7 px", () => {
+  const builder = createOverlayLayerBuilder();
+  const layer = nuclei(600, 400);
+  assert.deepEqual(ids(builder.build([layer])), detailedIds);
+  assert.deepEqual(ids(builder.build([layer], nucleusPx(7.5))), detailedIds);
+  assert.deepEqual(visibleIds(builder.build([layer], nucleusPx(7.5))), detailedIds);
+});
+
+test("under 500 nuclei never change with the camera", () => {
+  const builder = createOverlayLayerBuilder();
+  const layer = nuclei(499);
+  assert.deepEqual(visibleIds(builder.build([layer], nucleusPx(0.5))), detailedIds);
+  assert.equal(builder.lodKey([layer], nucleusPx(0.5)), builder.lodKey([layer], nucleusPx(50)));
+});
+
+test("between 2 and 7 px nuclei are dots and their fills and outlines are hidden", () => {
+  const builder = createOverlayLayerBuilder();
+  const layers = builder.build([nuclei(600)], nucleusPx(5));
+  assert.deepEqual(visibleIds(layers), ["overlay:n:dots"]);
+  assert.deepEqual(ids(layers), ["overlay:n:dots", ...detailedIds]);
+  const dots = propsOf(layers[0]);
+  assert.equal(dots.getRadius, 1.5);
+  assert.equal(dots.radiusUnits, "pixels");
+  assert.equal((dots.data as { length: number }).length, 600);
+});
+
+test("under 2 px nuclei are one density texture", () => {
+  const builder = createOverlayLayerBuilder();
+  const layers = builder.build([nuclei(600)], nucleusPx(1));
+  assert.deepEqual(visibleIds(layers), ["overlay:n:density"]);
+  const image = propsOf(layers[0]).image as { width: number; height: number };
+  assert.ok(image.width > 2 && image.height > 2);
+});
+
+test("a large shape among the nuclei keeps its fill and outline in every tier", () => {
+  const builder = createOverlayLayerBuilder();
+  const layer = nuclei(600, 400);
+  const large = [
+    "overlay:n:large-fills",
+    "overlay:n:large-outline-casings",
+    "overlay:n:large-outlines",
+  ];
+  assert.deepEqual(visibleIds(builder.build([layer], nucleusPx(5))), ["overlay:n:dots", ...large]);
+  assert.deepEqual(visibleIds(builder.build([layer], nucleusPx(1))), [
+    "overlay:n:density",
+    ...large,
+  ]);
+});
+
+test("changing the tier reuses the data of every layer that stays", () => {
+  const builder = createOverlayLayerBuilder();
+  const layer = nuclei(600);
+  const detailed = builder.build([layer], nucleusPx(9));
+  const dotted = builder.build([layer], nucleusPx(5));
+  const smaller = builder.build([layer], nucleusPx(3));
+  assert.equal(propsOf(dotted[1]).data, propsOf(detailed[0]).data);
+  assert.equal(propsOf(dotted[0]).data, propsOf(smaller[0]).data);
+  assert.notEqual(builder.lodKey([layer], nucleusPx(5)), builder.lodKey([layer], nucleusPx(9)));
 });

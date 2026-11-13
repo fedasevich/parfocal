@@ -9,6 +9,17 @@ import {
   TextLayer,
 } from "@deck.gl/layers";
 import type { OverlayLayer } from "../../engine/types.ts";
+import {
+  chooseLod,
+  densityRaster,
+  fullDetail,
+  type LodChoice,
+  type LodStats,
+  largeShapes,
+  lodKey,
+  lodStats,
+  smallShapeCentres,
+} from "../lod.ts";
 import { nearBlack, white } from "../outline-style.ts";
 import { isLabelOverlay, isOverlayDescription, isPinOverlay, isRasterOverlay } from "../overlay.ts";
 import { createPinAtlas, type PinIconName } from "../pin-icons.ts";
@@ -40,7 +51,8 @@ export const labelFontSizePx = 12;
 export const labelPadding = [6, 3] as const;
 
 export interface OverlayLayerBuilder {
-  readonly build: (overlays: readonly OverlayLayer[]) => Layer[];
+  readonly build: (overlays: readonly OverlayLayer[], pixelsPerUnit?: number) => Layer[];
+  readonly lodKey: (overlays: readonly OverlayLayer[], pixelsPerUnit: number) => string;
   readonly invalidate: (id: string) => void;
 }
 
@@ -53,6 +65,16 @@ interface VectorParts {
   readonly pathGeometry: BinaryData | null;
   readonly pointGeometry: BinaryData | null;
   readonly casingTints: Map<string, BinaryData>;
+  readonly lod: LodParts | null;
+}
+
+interface LodParts {
+  readonly stats: LodStats;
+  readonly dots: BinaryData;
+  readonly dotGeometry: BinaryData;
+  readonly density: RasterParts | null;
+  readonly densityBounds: readonly [number, number, number, number] | null;
+  readonly large: VectorParts | null;
 }
 
 interface PinParts {
@@ -105,7 +127,39 @@ function construct<Instance>(
   return new type(props as never);
 }
 
-function vectorParts(shapes: ShapeData): VectorParts {
+function clampedImage(raster: Pick<RasterOverlay["raster"], "rgba" | "width" | "height">) {
+  const { rgba, width, height } = raster;
+  const view =
+    rgba instanceof Uint8ClampedArray
+      ? rgba
+      : new Uint8ClampedArray(rgba.buffer, rgba.byteOffset, rgba.byteLength);
+  return new ImageData(view, width, height);
+}
+
+function lodParts(polygons: ShapeData["polygons"]): LodParts | null {
+  if (!polygons || polygons.count === 0) return null;
+  const stats = lodStats(polygons);
+  if (!stats.engaged) return null;
+  const centres = smallShapeCentres(polygons, stats);
+  const dots = pointData(centres);
+  const raster = densityRaster(centres, stats.nucleusSize);
+  const large = largeShapes(polygons, stats);
+  return {
+    stats,
+    dots,
+    dotGeometry: withoutColors(dots),
+    density: raster && { image: clampedImage(raster) },
+    densityBounds: raster && [
+      raster.area.x,
+      raster.area.y + raster.area.height,
+      raster.area.x + raster.area.width,
+      raster.area.y,
+    ],
+    large: large && vectorParts({ polygons: large }, false),
+  };
+}
+
+function vectorParts(shapes: ShapeData, withLod = true): VectorParts {
   const { polygons, paths, points } = shapes;
   const outlines = polygons && polygons.count > 0 ? polygonOutlineData(polygons) : null;
   const lines = paths && paths.count > 0 ? pathData(paths) : null;
@@ -119,28 +173,79 @@ function vectorParts(shapes: ShapeData): VectorParts {
     pathGeometry: lines && withoutColors(lines),
     pointGeometry: dots && withoutColors(dots),
     casingTints: new Map(),
+    lod: withLod ? lodParts(polygons) : null,
   };
 }
 
 function rasterImage(overlay: RasterOverlay): ImageData {
-  const { rgba, width, height } = overlay.raster;
-  const view =
-    rgba instanceof Uint8ClampedArray
-      ? rgba
-      : new Uint8ClampedArray(rgba.buffer, rgba.byteOffset, rgba.byteLength);
-  return new ImageData(view, width, height);
+  return clampedImage(overlay.raster);
 }
 
-function vectorLayers(overlay: VectorOverlay, parts: VectorParts, suffix: string): Layer[] {
+function lodChoice(parts: VectorParts, pixelsPerUnit: number | undefined): LodChoice {
+  if (parts.lod === null || pixelsPerUnit === undefined) return fullDetail;
+  return chooseLod(parts.lod.stats, pixelsPerUnit);
+}
+
+function lodLayers(
+  overlay: VectorOverlay,
+  lod: LodParts,
+  choice: LodChoice,
+  suffix: string,
+): Layer[] {
+  const { visible, opacity, style } = overlay;
+  const layers: Layer[] = [];
+  if (choice.tier === "density" && lod.density && lod.densityBounds) {
+    layers.push(
+      construct(BitmapLayer, {
+        id: `overlay:${overlay.id}:density${suffix}`,
+        image: lod.density.image,
+        bounds: lod.densityBounds,
+        opacity,
+        visible,
+        textureParameters: { minFilter: "linear", magFilter: "linear", mipmapFilter: "none" },
+        ...unpickable,
+      }),
+    );
+  }
+  if (choice.tier === "dots") {
+    layers.push(
+      construct(ScatterplotLayer, {
+        id: `overlay:${overlay.id}:dots${suffix}`,
+        data: style.lineColor === null ? lod.dots : lod.dotGeometry,
+        opacity,
+        visible,
+        positionFormat: "XY",
+        radiusUnits: "pixels",
+        getRadius: choice.dotRadiusPx,
+        stroked: false,
+        filled: true,
+        ...(style.lineColor === null ? {} : { getFillColor: style.lineColor }),
+        ...unpickable,
+      }),
+    );
+  }
+  if (lod.large) layers.push(...vectorLayers(overlay, lod.large, suffix, fullDetail, "large-"));
+  return layers;
+}
+
+function vectorLayers(
+  overlay: VectorOverlay,
+  parts: VectorParts,
+  suffix: string,
+  choice: LodChoice = fullDetail,
+  prefix = "",
+): Layer[] {
   const { style, visible, opacity } = overlay;
   const { casing, lineColor, dash } = style;
   const base = { visible, ...unpickable };
+  const detailed = choice.tier === "outlines";
+  const shapeBase = detailed ? base : { ...base, visible: false };
   const layers: Layer[] = [];
-  const id = (part: string) => `overlay:${overlay.id}:${part}${suffix}`;
+  const id = (part: string) => `overlay:${overlay.id}:${prefix}${part}${suffix}`;
   if (parts.fills && style.fillOpacity > 0) {
     layers.push(
       construct(SolidPolygonLayer, {
-        ...base,
+        ...shapeBase,
         id: id("fills"),
         data: parts.fills,
         opacity: opacity * style.fillOpacity,
@@ -160,7 +265,7 @@ function vectorLayers(overlay: VectorOverlay, parts: VectorParts, suffix: string
     dashArray: VectorStyle["dash"],
   ) =>
     construct(PathLayer, {
-      ...base,
+      ...(pathType === "loop" ? shapeBase : base),
       id: id(part),
       data,
       opacity,
@@ -225,6 +330,7 @@ function vectorLayers(overlay: VectorOverlay, parts: VectorParts, suffix: string
       }),
     );
   }
+  if (!detailed && parts.lod) layers.unshift(...lodLayers(overlay, parts.lod, choice, suffix));
   return layers;
 }
 
@@ -347,19 +453,29 @@ export function createOverlayLayerBuilder(): OverlayLayerBuilder {
     return entry;
   };
 
-  const layersFor = (overlay: OverlayDescription): Layer[] => {
+  const layersFor = (overlay: OverlayDescription, pixelsPerUnit: number | undefined): Layer[] => {
     const { parts, generation } = entryFor(overlay);
     const suffix = generation === 0 ? "" : `:${generation}`;
     if (isRasterOverlay(overlay)) return rasterLayers(overlay, parts as RasterParts, suffix);
     if (isPinOverlay(overlay)) return pinLayers(overlay, parts as PinParts, suffix);
     if (isLabelOverlay(overlay)) return labelLayers(overlay, parts as LabelParts, suffix);
-    return vectorLayers(overlay, parts as VectorParts, suffix);
+    const vector = parts as VectorParts;
+    return vectorLayers(overlay, vector, suffix, lodChoice(vector, pixelsPerUnit));
   };
 
+  const isVector = (overlay: OverlayDescription): overlay is VectorOverlay =>
+    !isRasterOverlay(overlay) && !isPinOverlay(overlay) && !isLabelOverlay(overlay);
+
   return {
-    build: (overlays) => {
+    lodKey: (overlays, pixelsPerUnit) =>
+      overlays
+        .filter(isOverlayDescription)
+        .filter(isVector)
+        .map((overlay) => lodKey(lodChoice(entryFor(overlay).parts as VectorParts, pixelsPerUnit)))
+        .join("|"),
+    build: (overlays, pixelsPerUnit) => {
       const described = overlays.filter(isOverlayDescription);
-      const layers = described.flatMap(layersFor);
+      const layers = described.flatMap((overlay) => layersFor(overlay, pixelsPerUnit));
       const alive = new Set(described.map((overlay) => overlay.id));
       for (const id of [...cache.keys()]) if (!alive.has(id)) cache.delete(id);
       for (const id of [...generations.keys()]) if (!alive.has(id)) generations.delete(id);
