@@ -40,16 +40,6 @@ async function inStep(follower: Locator, leader: Locator) {
   return (await settled(leader)) && (await cameraOf(follower)) === (await cameraOf(leader));
 }
 
-async function drag(page: Page, host: Locator, dx: number, dy: number) {
-  const box = (await host.boundingBox()) ?? { x: 0, y: 0, width: 0, height: 0 };
-  const x = box.x + box.width / 2;
-  const y = box.y + box.height / 2;
-  await page.mouse.move(x, y);
-  await page.mouse.down();
-  await page.mouse.move(x + dx, y + dy, { steps: 8 });
-  await page.mouse.up();
-}
-
 test("a follower's camera tracks the shared view within 300 ms until the follower moves", async ({
   context,
 }) => {
@@ -75,7 +65,7 @@ test("a follower's camera tracks the shared view within 300 ms until the followe
   await expect.poll(() => inStep(lenkaHost, annaHost), { timeout: 5000 }).toBe(true);
 
   const before = await cameraOf(annaHost);
-  await drag(anna, annaHost, -220, -140);
+  await anna.mouse.move(520, 380);
   await anna.mouse.wheel(0, -300);
   await expect.poll(() => cameraOf(annaHost)).not.toBe(before);
   await expect.poll(() => inStep(lenkaHost, annaHost), { timeout: 5000 }).toBe(true);

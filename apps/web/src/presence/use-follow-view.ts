@@ -10,7 +10,13 @@ import {
   VIEW_SEND_MS,
   viewFrame,
 } from "./follow-view.ts";
-import { nextPresence, PRESENCE_JOINED, type Sighting, viewersOf } from "./presence-state.ts";
+import {
+  nextPresence,
+  PRESENCE_JOINED,
+  PRESENCE_LEFT,
+  type Sighting,
+  viewersOf,
+} from "./presence-state.ts";
 import { useStageEngine } from "./stage-engines.ts";
 import { useRoomEvents } from "./use-room-presence.ts";
 
@@ -92,7 +98,7 @@ export function useFollowView(slideId: string, me: string | undefined): FollowVi
       setPresent((known) => nextPresence(known, event, me ?? ""));
       const user = event.ids["user"];
       if (event.kind === PRESENCE_JOINED) sendNow();
-      else if (user !== undefined) forget(user);
+      else if (event.kind === PRESENCE_LEFT && user !== undefined) forget(user);
     },
     () => {
       setPresent(nobody);
