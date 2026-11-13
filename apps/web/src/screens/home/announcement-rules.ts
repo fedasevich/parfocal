@@ -19,7 +19,7 @@ export const kinds: { value: AnnouncementKind; label: string; hint: string }[] =
 ];
 
 export const looks: Record<AnnouncementKind, { colour: string; source: string }> = {
-  model: { colour: "var(--v-agree)", source: "Parfocal" },
+  model: { colour: "var(--decision-agree)", source: "Parfocal" },
   slowdown: { colour: "var(--warn)", source: "Lab server" },
   change: { colour: "var(--fg-faint)", source: "Viewer" },
 };

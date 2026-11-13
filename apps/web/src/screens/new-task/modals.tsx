@@ -127,9 +127,9 @@ function countsAsFor(draft: Draft, raw: string) {
 
 const countsWords = { agree: "agree", disagree: "disagree", unsure: "not sure" } as const;
 const countsColours = {
-  agree: "var(--v-agree)",
-  disagree: "var(--v-disagree)",
-  unsure: "var(--v-unsure)",
+  agree: "var(--decision-agree)",
+  disagree: "var(--decision-disagree)",
+  unsure: "var(--decision-unsure)",
 };
 
 const projectClasses = [

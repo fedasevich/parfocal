@@ -214,17 +214,17 @@ export const DecisionStyle = {
   blind: "blind",
 } as const;
 
-export type VerdictValue = (typeof VerdictValue)[keyof typeof VerdictValue];
+export type DecisionValue = (typeof DecisionValue)[keyof typeof DecisionValue];
 
-export const VerdictValue = {
+export const DecisionValue = {
   agree: "agree",
   disagree: "disagree",
   unsure: "unsure",
 } as const;
 
-export type VerdictReason = (typeof VerdictReason)[keyof typeof VerdictReason];
+export type DecisionReason = (typeof DecisionReason)[keyof typeof DecisionReason];
 
-export const VerdictReason = {
+export const DecisionReason = {
   not_class: "not_class",
   boundary_off: "boundary_off",
   two_regions: "two_regions",
@@ -241,15 +241,15 @@ export const VerdictReason = {
 export interface ReviewerDecision {
   reviewer: string;
   answer: string;
-  value: VerdictValue;
-  reasons: VerdictReason[];
+  value: DecisionValue;
+  reasons: DecisionReason[];
   note: string | null;
 }
 
 export interface AdjudicatorDecision {
   answer: string | null;
   answer_class_id: string | null;
-  value: VerdictValue;
+  value: DecisionValue;
   note: string | null;
 }
 
@@ -1033,7 +1033,7 @@ export interface CaseReportStaging {
 export interface CaseReportDecision {
   slide_id: string;
   object_id: string;
-  decision: VerdictValue;
+  decision: DecisionValue;
 }
 
 export interface CaseReportMeasurement {
@@ -1571,7 +1571,7 @@ export interface CosignRequest {
  * @minItems 5
  * @maxItems 5
  */
-export type CountsAs = VerdictValue[];
+export type CountsAs = DecisionValue[];
 
 export interface CountsAsChange {
   changed_at: string;
@@ -1668,8 +1668,8 @@ export type DecisionCountsAnswers = { [key: string]: number };
 
 export interface DecisionCounts {
   style: DecisionStyle;
-  counts_as: VerdictValue[];
-  counted: Partial<Record<VerdictValue, number>>;
+  counts_as: DecisionValue[];
+  counted: Partial<Record<DecisionValue, number>>;
   answers: DecisionCountsAnswers;
 }
 
@@ -1688,9 +1688,9 @@ export interface DecisionDraft {
 export interface DecisionNote {
   object: string;
   author_id: string;
-  value: VerdictValue;
+  value: DecisionValue;
   answer: string;
-  reasons: VerdictReason[];
+  reasons: DecisionReason[];
   note: string;
   mentions: string[];
   updated_at: string;
@@ -2301,7 +2301,7 @@ export interface ResumeTarget {
   position: number;
   slides_assigned: number;
   object_id: string | null;
-  verdicts_on_slide: number;
+  decisions_on_slide: number;
   due_on: string | null;
   blinded: boolean;
   mode: ResumeMode;
@@ -2326,7 +2326,7 @@ export interface MyTask {
   start_mode: StartMode;
   slides_submitted: number;
   slides_assigned: number;
-  verdicts: number;
+  decisions: number;
   status: MyStatus;
   next_slide_id: string | null;
   created_by_user_id: string | null;
@@ -3989,7 +3989,7 @@ export interface QueueDecision {
   style: DecisionStyle | null;
   answer: string | null;
   answer_class_id: string | null;
-  value: VerdictValue;
+  value: DecisionValue;
   choice: Decision | null;
   decided_by_user_id: string | null;
 }
@@ -4003,11 +4003,11 @@ export interface QueueSummary {
   left_open: LeftOpenObject[];
 }
 
-export interface ReviewerVerdict {
+export interface ReviewerAnswer {
   user_id: string;
   answer: string;
-  value: VerdictValue;
-  reasons: VerdictReason[];
+  value: DecisionValue;
+  reasons: DecisionReason[];
   note?: string | null;
   reopened: boolean;
 }
@@ -4018,7 +4018,7 @@ export interface QueuedObject {
   kind: AnnotationKind;
   number: number;
   why: Why;
-  verdicts: ReviewerVerdict[];
+  decisions: ReviewerAnswer[];
   decision?: QueueDecision | null;
   left_open?: boolean;
   note?: string | null;
@@ -4505,6 +4505,51 @@ export const Retired = {
   merged: "merged",
 } as const;
 
+export interface ReviewDecision {
+  object: string;
+  kind: AnnotationKind;
+  number: number;
+  style: DecisionStyle;
+  answer: string;
+  answer_class_id: string | null;
+  value: DecisionValue;
+  reasons: DecisionReason[];
+  reason_class_id: string | null;
+  note: string | null;
+  updated_at: string;
+  reopened_at?: string | null;
+  reopened_note?: string | null;
+  preset?: string | null;
+  /** The AI call when the object was first decided, kept for as long as the decision exists. Reported by the client for cells and read from the result set for regions. */
+  ai_class_id?: string | null;
+  /** The AI call when the object was first decided, kept for as long as the decision exists. Reported by the client for cells and read from the result set for regions. */
+  ai_score?: number | null;
+}
+
+/**
+ * @maxLength 500
+ */
+export type ParfocalApiReviewDecisionsNote = string;
+
+/**
+ * @minimum 0
+ * @maximum 255
+ */
+export type Score = number;
+
+export interface ReviewDecisionDraft {
+  answer?: Answer | null;
+  answer_class_id?: string | null;
+  value?: DecisionValue | null;
+  reasons?: DecisionReason[];
+  reason_class_id?: string | null;
+  note?: ParfocalApiReviewDecisionsNote | null;
+  /** The AI call shown when deciding. For a cell the reviewer's client reports it and the API checks only that the class is one the result set uses, because cell calls live in the result chunks. For a region the API reads it from the result set and ignores this field. */
+  ai_class_id?: string | null;
+  /** The AI call shown when deciding. For a cell the reviewer's client reports it and the API checks only that the class is one the result set uses, because cell calls live in the result chunks. For a region the API reads it from the result set and ignores this field. */
+  ai_score?: Score | null;
+}
+
 export type ReviewEditGeometry = { [key: string]: unknown } | null;
 
 export interface ReviewEdit {
@@ -4691,12 +4736,6 @@ export interface SchemaProblem {
   code: Code;
   message: string;
 }
-
-/**
- * @minimum 0
- * @maximum 255
- */
-export type Score = number;
 
 export interface SearchHit {
   kind: HitKind;
@@ -5600,45 +5639,6 @@ export interface ValidationRun {
   items: ValidationItem[];
 }
 
-export interface Verdict {
-  object: string;
-  kind: AnnotationKind;
-  number: number;
-  style: DecisionStyle;
-  answer: string;
-  answer_class_id: string | null;
-  value: VerdictValue;
-  reasons: VerdictReason[];
-  reason_class_id: string | null;
-  note: string | null;
-  updated_at: string;
-  reopened_at?: string | null;
-  reopened_note?: string | null;
-  preset?: string | null;
-  /** The AI call when the object was first decided, kept for as long as the decision exists. Reported by the client for cells and read from the result set for regions. */
-  ai_class_id?: string | null;
-  /** The AI call when the object was first decided, kept for as long as the decision exists. Reported by the client for cells and read from the result set for regions. */
-  ai_score?: number | null;
-}
-
-/**
- * @maxLength 500
- */
-export type ParfocalApiVerdictsNote = string;
-
-export interface VerdictDraft {
-  answer?: Answer | null;
-  answer_class_id?: string | null;
-  value?: VerdictValue | null;
-  reasons?: VerdictReason[];
-  reason_class_id?: string | null;
-  note?: ParfocalApiVerdictsNote | null;
-  /** The AI call shown when deciding. For a cell the reviewer's client reports it and the API checks only that the class is one the result set uses, because cell calls live in the result chunks. For a region the API reads it from the result set and ignores this field. */
-  ai_class_id?: string | null;
-  /** The AI call shown when deciding. For a cell the reviewer's client reports it and the API checks only that the class is one the result set uses, because cell calls live in the result chunks. For a region the API reads it from the result set and ignores this field. */
-  ai_score?: Score | null;
-}
-
 export interface VersionCheck {
   /** @minimum 1 */
   version: number;
@@ -5937,7 +5937,7 @@ export type SearchParams = {
   task_id?: string | null;
 };
 
-export type ListVerdictsParams = {
+export type ListDecisionsParams = {
   reviewer_id?: string | null;
 };
 
@@ -38361,83 +38361,83 @@ export const useReopenReviewTask = <TError = Problem, TContext = unknown>(
   return useMutation(getReopenReviewTaskMutationOptions(options), queryClient);
 };
 
-export type saveVerdictResponse200 = {
-  data: Verdict;
+export type saveDecisionResponse200 = {
+  data: ReviewDecision;
   status: 200;
 };
 
-export type saveVerdictResponse400 = {
+export type saveDecisionResponse400 = {
   data: Problem;
   status: 400;
 };
 
-export type saveVerdictResponse401 = {
+export type saveDecisionResponse401 = {
   data: Problem;
   status: 401;
 };
 
-export type saveVerdictResponse403 = {
+export type saveDecisionResponse403 = {
   data: Problem;
   status: 403;
 };
 
-export type saveVerdictResponse404 = {
+export type saveDecisionResponse404 = {
   data: Problem;
   status: 404;
 };
 
-export type saveVerdictResponse409 = {
+export type saveDecisionResponse409 = {
   data: Problem;
   status: 409;
 };
 
-export type saveVerdictResponse422 = {
+export type saveDecisionResponse422 = {
   data: Problem;
   status: 422;
 };
 
-export type saveVerdictResponse429 = {
+export type saveDecisionResponse429 = {
   data: Problem;
   status: 429;
 };
 
-export type saveVerdictResponse500 = {
+export type saveDecisionResponse500 = {
   data: Problem;
   status: 500;
 };
 
-export type saveVerdictResponseSuccess = saveVerdictResponse200 & {
+export type saveDecisionResponseSuccess = saveDecisionResponse200 & {
   headers: Headers;
 };
-export type saveVerdictResponseError = (
-  | saveVerdictResponse400
-  | saveVerdictResponse401
-  | saveVerdictResponse403
-  | saveVerdictResponse404
-  | saveVerdictResponse409
-  | saveVerdictResponse422
-  | saveVerdictResponse429
-  | saveVerdictResponse500
+export type saveDecisionResponseError = (
+  | saveDecisionResponse400
+  | saveDecisionResponse401
+  | saveDecisionResponse403
+  | saveDecisionResponse404
+  | saveDecisionResponse409
+  | saveDecisionResponse422
+  | saveDecisionResponse429
+  | saveDecisionResponse500
 ) & {
   headers: Headers;
 };
 
-export type saveVerdictResponse = saveVerdictResponseSuccess | saveVerdictResponseError;
+export type saveDecisionResponse = saveDecisionResponseSuccess | saveDecisionResponseError;
 
-export const getSaveVerdictUrl = (taskId: string, slideId: string, objectId: string) => {
-  return `/api/review-tasks/${taskId}/slides/${slideId}/verdicts/${objectId}`;
+export const getSaveDecisionUrl = (taskId: string, slideId: string, objectId: string) => {
+  return `/api/review-tasks/${taskId}/slides/${slideId}/decisions/${objectId}`;
 };
 
 /**
- * @summary Save Verdict
+ * @summary Save Decision
  */
-export const saveVerdict = async (
+export const saveDecision = async (
   taskId: string,
   slideId: string,
   objectId: string,
-  verdictDraft: VerdictDraft,
+  reviewDecisionDraft: ReviewDecisionDraft,
   options?: Parameters<typeof apiFetch>[1],
-): Promise<saveVerdictResponse> => {
+): Promise<saveDecisionResponse> => {
   const getHeaders = (
     h?: NonNullable<RequestInit["headers"]>,
   ): Record<string, string | readonly string[]> => {
@@ -38457,31 +38457,31 @@ export const saveVerdict = async (
     }
     return headers;
   };
-  return apiFetch<saveVerdictResponse>(getSaveVerdictUrl(taskId, slideId, objectId), {
+  return apiFetch<saveDecisionResponse>(getSaveDecisionUrl(taskId, slideId, objectId), {
     ...options,
     method: "PUT",
     headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
-    body: JSON.stringify(verdictDraft),
+    body: JSON.stringify(reviewDecisionDraft),
   });
 };
 
-export const getSaveVerdictMutationKey = () => ["saveVerdict"] as const;
+export const getSaveDecisionMutationKey = () => ["saveDecision"] as const;
 
-export const getSaveVerdictMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+export const getSaveDecisionMutationOptions = <TError = Problem, TContext = unknown>(options?: {
   mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof saveVerdict>>,
+    Awaited<ReturnType<typeof saveDecision>>,
     TError,
-    SaveVerdictMutationVariables,
+    SaveDecisionMutationVariables,
     TContext
   >;
   request?: SecondParameter<typeof apiFetch>;
 }): UseMutationOptions<
-  Awaited<ReturnType<typeof saveVerdict>>,
+  Awaited<ReturnType<typeof saveDecision>>,
   TError,
-  SaveVerdictMutationVariables,
+  SaveDecisionMutationVariables,
   TContext
 > => {
-  const mutationKey = getSaveVerdictMutationKey();
+  const mutationKey = getSaveDecisionMutationKey();
   const { mutation: mutationOptions, request: requestOptions } = options
     ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
       ? options
@@ -38489,149 +38489,149 @@ export const getSaveVerdictMutationOptions = <TError = Problem, TContext = unkno
     : { mutation: { mutationKey }, request: undefined };
 
   const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof saveVerdict>>,
-    SaveVerdictMutationVariables
+    Awaited<ReturnType<typeof saveDecision>>,
+    SaveDecisionMutationVariables
   > = (props) => {
     const { taskId, slideId, objectId, data } = props ?? {};
 
-    return saveVerdict(taskId, slideId, objectId, data, requestOptions);
+    return saveDecision(taskId, slideId, objectId, data, requestOptions);
   };
 
   return { mutationFn, ...mutationOptions };
 };
 
-export type SaveVerdictMutationResult = NonNullable<Awaited<ReturnType<typeof saveVerdict>>>;
-export type SaveVerdictMutationBody = VerdictDraft;
-export type SaveVerdictMutationError = Problem;
-export type SaveVerdictMutationVariables = {
+export type SaveDecisionMutationResult = NonNullable<Awaited<ReturnType<typeof saveDecision>>>;
+export type SaveDecisionMutationBody = ReviewDecisionDraft;
+export type SaveDecisionMutationError = Problem;
+export type SaveDecisionMutationVariables = {
   taskId: string;
   slideId: string;
   objectId: string;
-  data: VerdictDraft;
+  data: ReviewDecisionDraft;
 };
 
 /**
- * @summary Save Verdict
+ * @summary Save Decision
  */
-export const useSaveVerdict = <TError = Problem, TContext = unknown>(
+export const useSaveDecision = <TError = Problem, TContext = unknown>(
   options?: {
     mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof saveVerdict>>,
+      Awaited<ReturnType<typeof saveDecision>>,
       TError,
-      SaveVerdictMutationVariables,
+      SaveDecisionMutationVariables,
       TContext
     >;
     request?: SecondParameter<typeof apiFetch>;
   },
   queryClient?: QueryClient,
 ): UseMutationResult<
-  Awaited<ReturnType<typeof saveVerdict>>,
+  Awaited<ReturnType<typeof saveDecision>>,
   TError,
-  SaveVerdictMutationVariables,
+  SaveDecisionMutationVariables,
   TContext
 > => {
-  return useMutation(getSaveVerdictMutationOptions(options), queryClient);
+  return useMutation(getSaveDecisionMutationOptions(options), queryClient);
 };
 
-export type clearVerdictResponse204 = {
+export type clearDecisionResponse204 = {
   data: void;
   status: 204;
 };
 
-export type clearVerdictResponse400 = {
+export type clearDecisionResponse400 = {
   data: Problem;
   status: 400;
 };
 
-export type clearVerdictResponse401 = {
+export type clearDecisionResponse401 = {
   data: Problem;
   status: 401;
 };
 
-export type clearVerdictResponse403 = {
+export type clearDecisionResponse403 = {
   data: Problem;
   status: 403;
 };
 
-export type clearVerdictResponse404 = {
+export type clearDecisionResponse404 = {
   data: Problem;
   status: 404;
 };
 
-export type clearVerdictResponse409 = {
+export type clearDecisionResponse409 = {
   data: Problem;
   status: 409;
 };
 
-export type clearVerdictResponse422 = {
+export type clearDecisionResponse422 = {
   data: Problem;
   status: 422;
 };
 
-export type clearVerdictResponse429 = {
+export type clearDecisionResponse429 = {
   data: Problem;
   status: 429;
 };
 
-export type clearVerdictResponse500 = {
+export type clearDecisionResponse500 = {
   data: Problem;
   status: 500;
 };
 
-export type clearVerdictResponseSuccess = clearVerdictResponse204 & {
+export type clearDecisionResponseSuccess = clearDecisionResponse204 & {
   headers: Headers;
 };
-export type clearVerdictResponseError = (
-  | clearVerdictResponse400
-  | clearVerdictResponse401
-  | clearVerdictResponse403
-  | clearVerdictResponse404
-  | clearVerdictResponse409
-  | clearVerdictResponse422
-  | clearVerdictResponse429
-  | clearVerdictResponse500
+export type clearDecisionResponseError = (
+  | clearDecisionResponse400
+  | clearDecisionResponse401
+  | clearDecisionResponse403
+  | clearDecisionResponse404
+  | clearDecisionResponse409
+  | clearDecisionResponse422
+  | clearDecisionResponse429
+  | clearDecisionResponse500
 ) & {
   headers: Headers;
 };
 
-export type clearVerdictResponse = clearVerdictResponseSuccess | clearVerdictResponseError;
+export type clearDecisionResponse = clearDecisionResponseSuccess | clearDecisionResponseError;
 
-export const getClearVerdictUrl = (taskId: string, slideId: string, objectId: string) => {
-  return `/api/review-tasks/${taskId}/slides/${slideId}/verdicts/${objectId}`;
+export const getClearDecisionUrl = (taskId: string, slideId: string, objectId: string) => {
+  return `/api/review-tasks/${taskId}/slides/${slideId}/decisions/${objectId}`;
 };
 
 /**
- * @summary Clear Verdict
+ * @summary Clear Decision
  */
-export const clearVerdict = async (
+export const clearDecision = async (
   taskId: string,
   slideId: string,
   objectId: string,
   options?: Parameters<typeof apiFetch>[1],
-): Promise<clearVerdictResponse> => {
-  return apiFetch<clearVerdictResponse>(getClearVerdictUrl(taskId, slideId, objectId), {
+): Promise<clearDecisionResponse> => {
+  return apiFetch<clearDecisionResponse>(getClearDecisionUrl(taskId, slideId, objectId), {
     ...options,
     method: "DELETE",
   });
 };
 
-export const getClearVerdictMutationKey = () => ["clearVerdict"] as const;
+export const getClearDecisionMutationKey = () => ["clearDecision"] as const;
 
-export const getClearVerdictMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+export const getClearDecisionMutationOptions = <TError = Problem, TContext = unknown>(options?: {
   mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof clearVerdict>>,
+    Awaited<ReturnType<typeof clearDecision>>,
     TError,
-    ClearVerdictMutationVariables,
+    ClearDecisionMutationVariables,
     TContext
   >;
   request?: SecondParameter<typeof apiFetch>;
 }): UseMutationOptions<
-  Awaited<ReturnType<typeof clearVerdict>>,
+  Awaited<ReturnType<typeof clearDecision>>,
   TError,
-  ClearVerdictMutationVariables,
+  ClearDecisionMutationVariables,
   TContext
 > => {
-  const mutationKey = getClearVerdictMutationKey();
+  const mutationKey = getClearDecisionMutationKey();
   const { mutation: mutationOptions, request: requestOptions } = options
     ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
       ? options
@@ -38639,112 +38639,112 @@ export const getClearVerdictMutationOptions = <TError = Problem, TContext = unkn
     : { mutation: { mutationKey }, request: undefined };
 
   const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof clearVerdict>>,
-    ClearVerdictMutationVariables
+    Awaited<ReturnType<typeof clearDecision>>,
+    ClearDecisionMutationVariables
   > = (props) => {
     const { taskId, slideId, objectId } = props ?? {};
 
-    return clearVerdict(taskId, slideId, objectId, requestOptions);
+    return clearDecision(taskId, slideId, objectId, requestOptions);
   };
 
   return { mutationFn, ...mutationOptions };
 };
 
-export type ClearVerdictMutationResult = NonNullable<Awaited<ReturnType<typeof clearVerdict>>>;
+export type ClearDecisionMutationResult = NonNullable<Awaited<ReturnType<typeof clearDecision>>>;
 
-export type ClearVerdictMutationError = Problem;
-export type ClearVerdictMutationVariables = { taskId: string; slideId: string; objectId: string };
+export type ClearDecisionMutationError = Problem;
+export type ClearDecisionMutationVariables = { taskId: string; slideId: string; objectId: string };
 
 /**
- * @summary Clear Verdict
+ * @summary Clear Decision
  */
-export const useClearVerdict = <TError = Problem, TContext = unknown>(
+export const useClearDecision = <TError = Problem, TContext = unknown>(
   options?: {
     mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof clearVerdict>>,
+      Awaited<ReturnType<typeof clearDecision>>,
       TError,
-      ClearVerdictMutationVariables,
+      ClearDecisionMutationVariables,
       TContext
     >;
     request?: SecondParameter<typeof apiFetch>;
   },
   queryClient?: QueryClient,
 ): UseMutationResult<
-  Awaited<ReturnType<typeof clearVerdict>>,
+  Awaited<ReturnType<typeof clearDecision>>,
   TError,
-  ClearVerdictMutationVariables,
+  ClearDecisionMutationVariables,
   TContext
 > => {
-  return useMutation(getClearVerdictMutationOptions(options), queryClient);
+  return useMutation(getClearDecisionMutationOptions(options), queryClient);
 };
 
-export type listVerdictsResponse200 = {
-  data: Verdict[];
+export type listDecisionsResponse200 = {
+  data: ReviewDecision[];
   status: 200;
 };
 
-export type listVerdictsResponse400 = {
+export type listDecisionsResponse400 = {
   data: Problem;
   status: 400;
 };
 
-export type listVerdictsResponse401 = {
+export type listDecisionsResponse401 = {
   data: Problem;
   status: 401;
 };
 
-export type listVerdictsResponse403 = {
+export type listDecisionsResponse403 = {
   data: Problem;
   status: 403;
 };
 
-export type listVerdictsResponse404 = {
+export type listDecisionsResponse404 = {
   data: Problem;
   status: 404;
 };
 
-export type listVerdictsResponse409 = {
+export type listDecisionsResponse409 = {
   data: Problem;
   status: 409;
 };
 
-export type listVerdictsResponse422 = {
+export type listDecisionsResponse422 = {
   data: Problem;
   status: 422;
 };
 
-export type listVerdictsResponse429 = {
+export type listDecisionsResponse429 = {
   data: Problem;
   status: 429;
 };
 
-export type listVerdictsResponse500 = {
+export type listDecisionsResponse500 = {
   data: Problem;
   status: 500;
 };
 
-export type listVerdictsResponseSuccess = listVerdictsResponse200 & {
+export type listDecisionsResponseSuccess = listDecisionsResponse200 & {
   headers: Headers;
 };
-export type listVerdictsResponseError = (
-  | listVerdictsResponse400
-  | listVerdictsResponse401
-  | listVerdictsResponse403
-  | listVerdictsResponse404
-  | listVerdictsResponse409
-  | listVerdictsResponse422
-  | listVerdictsResponse429
-  | listVerdictsResponse500
+export type listDecisionsResponseError = (
+  | listDecisionsResponse400
+  | listDecisionsResponse401
+  | listDecisionsResponse403
+  | listDecisionsResponse404
+  | listDecisionsResponse409
+  | listDecisionsResponse422
+  | listDecisionsResponse429
+  | listDecisionsResponse500
 ) & {
   headers: Headers;
 };
 
-export type listVerdictsResponse = listVerdictsResponseSuccess | listVerdictsResponseError;
+export type listDecisionsResponse = listDecisionsResponseSuccess | listDecisionsResponseError;
 
-export const getListVerdictsUrl = (
+export const getListDecisionsUrl = (
   taskId: string,
   slideId: string,
-  params?: ListVerdictsParams,
+  params?: ListDecisionsParams,
 ) => {
   const normalizedParams = new URLSearchParams();
 
@@ -38757,79 +38757,82 @@ export const getListVerdictsUrl = (
   const stringifiedParams = normalizedParams.toString();
 
   return stringifiedParams.length > 0
-    ? `/api/review-tasks/${taskId}/slides/${slideId}/verdicts?${stringifiedParams}`
-    : `/api/review-tasks/${taskId}/slides/${slideId}/verdicts`;
+    ? `/api/review-tasks/${taskId}/slides/${slideId}/decisions?${stringifiedParams}`
+    : `/api/review-tasks/${taskId}/slides/${slideId}/decisions`;
 };
 
 /**
- * @summary List Verdicts
+ * @summary List Decisions
  */
-export const listVerdicts = async (
+export const listDecisions = async (
   taskId: string,
   slideId: string,
-  params?: ListVerdictsParams,
+  params?: ListDecisionsParams,
   options?: Parameters<typeof apiFetch>[1],
-): Promise<listVerdictsResponse> => {
-  return apiFetch<listVerdictsResponse>(getListVerdictsUrl(taskId, slideId, params), {
+): Promise<listDecisionsResponse> => {
+  return apiFetch<listDecisionsResponse>(getListDecisionsUrl(taskId, slideId, params), {
     ...options,
     method: "GET",
   });
 };
 
-export const getListVerdictsQueryKey = (
+export const getListDecisionsQueryKey = (
   taskId: string,
   slideId: string,
-  params?: ListVerdictsParams,
+  params?: ListDecisionsParams,
 ) => {
   return [
-    `/api/review-tasks/${taskId}/slides/${slideId}/verdicts`,
+    `/api/review-tasks/${taskId}/slides/${slideId}/decisions`,
     ...(params ? [params] : []),
   ] as const;
 };
 
-export const getListVerdictsQueryOptions = <
-  TData = Awaited<ReturnType<typeof listVerdicts>>,
+export const getListDecisionsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listDecisions>>,
   TError = Problem,
 >(
   taskId: string,
   slideId: string,
-  params?: ListVerdictsParams,
+  params?: ListDecisionsParams,
   options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listVerdicts>>, TError, TData>>;
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listDecisions>>, TError, TData>>;
     request?: SecondParameter<typeof apiFetch>;
   },
 ) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getListVerdictsQueryKey(taskId, slideId, params);
+  const queryKey = queryOptions?.queryKey ?? getListDecisionsQueryKey(taskId, slideId, params);
 
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof listVerdicts>>> = ({ signal }) =>
-    listVerdicts(taskId, slideId, params, { signal, ...requestOptions });
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listDecisions>>> = ({ signal }) =>
+    listDecisions(taskId, slideId, params, { signal, ...requestOptions });
 
   return {
     queryKey,
     queryFn,
     enabled: taskId !== null && taskId !== undefined && slideId !== null && slideId !== undefined,
     ...queryOptions,
-  } as UseQueryOptions<Awaited<ReturnType<typeof listVerdicts>>, TError, TData> & {
+  } as UseQueryOptions<Awaited<ReturnType<typeof listDecisions>>, TError, TData> & {
     queryKey: DataTag<QueryKey, TData, TError>;
   };
 };
 
-export type ListVerdictsQueryResult = NonNullable<Awaited<ReturnType<typeof listVerdicts>>>;
-export type ListVerdictsQueryError = Problem;
+export type ListDecisionsQueryResult = NonNullable<Awaited<ReturnType<typeof listDecisions>>>;
+export type ListDecisionsQueryError = Problem;
 
-export function useListVerdicts<TData = Awaited<ReturnType<typeof listVerdicts>>, TError = Problem>(
+export function useListDecisions<
+  TData = Awaited<ReturnType<typeof listDecisions>>,
+  TError = Problem,
+>(
   taskId: string,
   slideId: string,
-  params: undefined | ListVerdictsParams,
+  params: undefined | ListDecisionsParams,
   options: {
-    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listVerdicts>>, TError, TData>> &
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listDecisions>>, TError, TData>> &
       Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof listVerdicts>>,
+          Awaited<ReturnType<typeof listDecisions>>,
           TError,
-          Awaited<ReturnType<typeof listVerdicts>>
+          Awaited<ReturnType<typeof listDecisions>>
         >,
         "initialData"
       >;
@@ -38837,17 +38840,20 @@ export function useListVerdicts<TData = Awaited<ReturnType<typeof listVerdicts>>
   },
   queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useListVerdicts<TData = Awaited<ReturnType<typeof listVerdicts>>, TError = Problem>(
+export function useListDecisions<
+  TData = Awaited<ReturnType<typeof listDecisions>>,
+  TError = Problem,
+>(
   taskId: string,
   slideId: string,
-  params?: ListVerdictsParams,
+  params?: ListDecisionsParams,
   options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listVerdicts>>, TError, TData>> &
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listDecisions>>, TError, TData>> &
       Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof listVerdicts>>,
+          Awaited<ReturnType<typeof listDecisions>>,
           TError,
-          Awaited<ReturnType<typeof listVerdicts>>
+          Awaited<ReturnType<typeof listDecisions>>
         >,
         "initialData"
       >;
@@ -38855,31 +38861,37 @@ export function useListVerdicts<TData = Awaited<ReturnType<typeof listVerdicts>>
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useListVerdicts<TData = Awaited<ReturnType<typeof listVerdicts>>, TError = Problem>(
+export function useListDecisions<
+  TData = Awaited<ReturnType<typeof listDecisions>>,
+  TError = Problem,
+>(
   taskId: string,
   slideId: string,
-  params?: ListVerdictsParams,
+  params?: ListDecisionsParams,
   options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listVerdicts>>, TError, TData>>;
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listDecisions>>, TError, TData>>;
     request?: SecondParameter<typeof apiFetch>;
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
- * @summary List Verdicts
+ * @summary List Decisions
  */
 
-export function useListVerdicts<TData = Awaited<ReturnType<typeof listVerdicts>>, TError = Problem>(
+export function useListDecisions<
+  TData = Awaited<ReturnType<typeof listDecisions>>,
+  TError = Problem,
+>(
   taskId: string,
   slideId: string,
-  params?: ListVerdictsParams,
+  params?: ListDecisionsParams,
   options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listVerdicts>>, TError, TData>>;
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listDecisions>>, TError, TData>>;
     request?: SecondParameter<typeof apiFetch>;
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getListVerdictsQueryOptions(taskId, slideId, params, options);
+  const queryOptions = getListDecisionsQueryOptions(taskId, slideId, params, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;

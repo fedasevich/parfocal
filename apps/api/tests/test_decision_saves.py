@@ -12,13 +12,13 @@ pytestmark = pytest.mark.db
 REOPEN = {"reason": "Measured again on deeper levels"}
 
 
-def verdict(api: ApiAs, r: Review, who: str, object_id: str, body: dict[str, Any]) -> Any:
-    return api(r.people[who]).put(f"{r.base}/verdicts/{object_id}", json=body)
+def decision(api: ApiAs, r: Review, who: str, object_id: str, body: dict[str, Any]) -> Any:
+    return api(r.people[who]).put(f"{r.base}/decisions/{object_id}", json=body)
 
 
 def listed(api: ApiAs, r: Review, who: str, reviewer: MemberPrincipal | None = None) -> Any:
     params = {"reviewer_id": str(reviewer.user_id)} if reviewer else {}
-    return api(r.people[who]).get(f"{r.base}/verdicts", params=params)
+    return api(r.people[who]).get(f"{r.base}/decisions", params=params)
 
 
 def layer_classes(api: ApiAs, r: Review) -> dict[str, Any]:
@@ -26,15 +26,15 @@ def layer_classes(api: ApiAs, r: Review) -> dict[str, Any]:
     return {edit["object"]: (edit["class_id"], edit["geometry"] is not None) for edit in edits}
 
 
-def test_each_verdict_is_saved_listed_and_audited(api: ApiAs, database: str) -> None:
+def test_each_decision_is_saved_listed_and_audited(api: ApiAs, database: str) -> None:
     r = review(api, database)
-    agree = verdict(api, r, "first", "T1", {"value": "agree"})
+    agree = decision(api, r, "first", "T1", {"value": "agree"})
     assert agree.status_code == 200, agree.text
     assert agree.json()["object"] == "T1"
-    unsure = verdict(api, r, "first", "T2", {"value": "unsure", "reasons": ["need_ihc"]})
+    unsure = decision(api, r, "first", "T2", {"value": "unsure", "reasons": ["need_ihc"]})
     assert unsure.json()["reasons"] == ["need_ihc"]
     note = "Looks like a crush artefact near the edge"
-    disagree = verdict(
+    disagree = decision(
         api, r, "first", "C1", {"value": "disagree", "reasons": ["not_a_cell"], "note": note}
     )
     assert disagree.json()["note"] == note
@@ -48,43 +48,43 @@ def test_each_verdict_is_saved_listed_and_audited(api: ApiAs, database: str) -> 
         database,
         f"SELECT action, details FROM audit_events WHERE target_id = '{r.task}' ORDER BY seq",
     )
-    assert [row[0] for row in actions][1:] == ["review.verdict-set"] * 3
+    assert [row[0] for row in actions][1:] == ["review.object-decided"] * 3
     assert note not in str(actions)
 
 
-def test_a_verdict_changes_and_clearing_is_undo(api: ApiAs, database: str) -> None:
+def test_a_decision_changes_and_clearing_is_undo(api: ApiAs, database: str) -> None:
     r = review(api, database)
-    verdict(api, r, "first", "T1", {"value": "agree"})
-    changed = verdict(api, r, "first", "T1", {"value": "disagree", "reasons": ["boundary_off"]})
+    decision(api, r, "first", "T1", {"value": "agree"})
+    changed = decision(api, r, "first", "T1", {"value": "disagree", "reasons": ["boundary_off"]})
     assert (changed.json()["value"], changed.json()["reasons"]) == ("disagree", ["boundary_off"])
     assert len(listed(api, r, "first").json()) == 1
-    assert api(r.people["first"]).delete(f"{r.base}/verdicts/T1").status_code == 204
+    assert api(r.people["first"]).delete(f"{r.base}/decisions/T1").status_code == 204
     assert listed(api, r, "first").json() == []
     actions = owner(
         database, f"SELECT action FROM audit_events WHERE target_id = '{r.task}' ORDER BY seq"
     )
-    assert [row[0] for row in actions][-1] == "review.verdict-cleared"
+    assert [row[0] for row in actions][-1] == "review.object-decision-cleared"
 
 
 def test_wrong_class_retypes_the_cell_in_the_layer_together(api: ApiAs, database: str) -> None:
     r = review(api, database)
     tumor = str(r.tumor)
     wrong = {"value": "disagree", "reasons": ["wrong_class"], "reason_class_id": tumor}
-    assert verdict(api, r, "first", "C2", wrong).status_code == 200
+    assert decision(api, r, "first", "C2", wrong).status_code == 200
     assert layer_classes(api, r) == {"C2": (tumor, False)}
-    assert verdict(api, r, "first", "C2", {"value": "agree"}).status_code == 200
+    assert decision(api, r, "first", "C2", {"value": "agree"}).status_code == 200
     assert layer_classes(api, r) == {}
-    verdict(api, r, "first", "C2", wrong)
+    decision(api, r, "first", "C2", wrong)
     api(r.people["first"]).put(f"{r.base}/edits/C2", json={"class_id": tumor, "geometry": SQUARE})
-    assert api(r.people["first"]).delete(f"{r.base}/verdicts/C2").status_code == 204
+    assert api(r.people["first"]).delete(f"{r.base}/decisions/C2").status_code == 204
     assert layer_classes(api, r) == {"C2": (None, True)}
 
 
 def test_disagree_takes_no_reason_or_several(api: ApiAs, database: str) -> None:
     r = review(api, database)
-    bare = verdict(api, r, "first", "T1", {"value": "disagree"})
+    bare = decision(api, r, "first", "T1", {"value": "disagree"})
     assert (bare.status_code, bare.json()["reasons"]) == (200, []), bare.text
-    several = verdict(
+    several = decision(
         api,
         r,
         "first",
@@ -93,7 +93,7 @@ def test_disagree_takes_no_reason_or_several(api: ApiAs, database: str) -> None:
     )
     assert several.json()["reasons"] == ["boundary_off", "two_regions"]
     tumor = str(r.tumor)
-    retyped = verdict(
+    retyped = decision(
         api,
         r,
         "first",
@@ -105,7 +105,7 @@ def test_disagree_takes_no_reason_or_several(api: ApiAs, database: str) -> None:
     audited = owner(
         database,
         f"SELECT details::jsonb -> 'reasons' FROM audit_events WHERE target_id = '{r.task}' "
-        "AND action = 'review.verdict-set' ORDER BY seq",
+        "AND action = 'review.object-decided' ORDER BY seq",
     )
     assert [row[0] for row in audited] == [
         [],
@@ -131,44 +131,44 @@ def test_disagree_takes_no_reason_or_several(api: ApiAs, database: str) -> None:
         ("T1", {"value": "agree", "note": "x" * 501}, 422, "validation"),
     ],
 )
-def test_bad_verdicts_are_refused(
+def test_bad_decisions_are_refused(
     api: ApiAs, database: str, object_id: str, body: dict[str, Any], status: int, code: str
 ) -> None:
     r = review(api, database)
-    response = verdict(api, r, "first", object_id, body)
+    response = decision(api, r, "first", object_id, body)
     assert (response.status_code, response.json()["code"]) == (status, code), response.text
 
 
-def test_verdicts_lock_at_sign_off_and_open_again_on_reopen(api: ApiAs, database: str) -> None:
+def test_decisions_lock_at_sign_off_and_open_again_on_reopen(api: ApiAs, database: str) -> None:
     r = review(api, database)
-    verdict(api, r, "first", "T1", {"value": "agree"})
+    decision(api, r, "first", "T1", {"value": "agree"})
     task = f"/api/review-tasks/{r.task}"
     for who in ("first", "second"):
         assert api(r.people[who]).post(f"{r.base}/submit").status_code == 200
     assert api(r.people["owner"]).post(f"{task}/sign-off").status_code == 200
-    late = verdict(api, r, "first", "T1", {"value": "unsure"})
+    late = decision(api, r, "first", "T1", {"value": "unsure"})
     assert (late.status_code, late.json()["code"]) == (409, "task-signed-off")
-    assert api(r.people["first"]).delete(f"{r.base}/verdicts/T1").status_code == 409
+    assert api(r.people["first"]).delete(f"{r.base}/decisions/T1").status_code == 409
     assert api(r.people["owner"]).post(f"{task}/reopen", json=REOPEN).status_code == 200
-    assert verdict(api, r, "first", "T1", {"value": "unsure"}).status_code == 200
+    assert decision(api, r, "first", "T1", {"value": "unsure"}).status_code == 200
 
 
-def test_each_reviewer_sees_their_own_verdicts_and_the_owner_sees_all(
+def test_each_reviewer_sees_their_own_decisions_and_the_owner_sees_all(
     api: ApiAs, database: str
 ) -> None:
     r = review(api, database)
-    verdict(api, r, "first", "T1", {"value": "agree"})
+    decision(api, r, "first", "T1", {"value": "agree"})
     assert listed(api, r, "second").json() == []
     peek = listed(api, r, "second", r.people["first"])
     assert (peek.status_code, peek.json()["code"]) == (403, "other-reviewer")
     assert len(listed(api, r, "owner", r.people["first"]).json()) == 1
-    assert verdict(api, r, "viewer", "T1", {"value": "agree"}).json()["code"] == "not-assigned"
-    assert verdict(api, r, "third", "T1", {"value": "agree"}).status_code == 404
+    assert decision(api, r, "viewer", "T1", {"value": "agree"}).json()["code"] == "not-assigned"
+    assert decision(api, r, "third", "T1", {"value": "agree"}).status_code == 404
 
 
-def test_a_verdict_puts_the_reviewer_in_review(api: ApiAs, database: str) -> None:
+def test_a_decision_puts_the_reviewer_in_review(api: ApiAs, database: str) -> None:
     r = review(api, database)
-    verdict(api, r, "second", "T2", {"value": "agree"})
+    decision(api, r, "second", "T2", {"value": "agree"})
     slides = api(r.people["owner"]).get(f"/api/review-tasks/{r.task}/states").json()["slides"]
     by_user = {item["user_id"]: item["state"] for item in slides[0]["reviewers"]}
     assert by_user[str(r.people["second"].user_id)] == "in-review"

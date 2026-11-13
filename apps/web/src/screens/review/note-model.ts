@@ -1,4 +1,4 @@
-import type { ReviewObject, VerdictReason } from "@parfocal/api-client";
+import type { DecisionReason, ReviewObject } from "@parfocal/api-client";
 import type { ProjectClass } from "@parfocal/ui/components/decision-buttons";
 import { reasonText } from "./decision-style.ts";
 import { disagreeOptions, reasonDraft } from "./disagree-reasons.ts";
@@ -53,9 +53,9 @@ const unsureCodes = [
   "border_unclear",
   "out_of_focus",
   "need_second_look",
-] as const satisfies readonly VerdictReason[];
+] as const satisfies readonly DecisionReason[];
 
-export type ReasonBody = { reasons: VerdictReason[]; reason_class_id: string | null };
+export type ReasonBody = { reasons: DecisionReason[]; reason_class_id: string | null };
 
 export function reasonBody(
   labels: string[],

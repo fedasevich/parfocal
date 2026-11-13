@@ -406,8 +406,8 @@ function ResultChip({ result }: { result: TumorShareResult }) {
       className={cn(
         "w-fit rounded-full border px-2 py-0.5 text-caption",
         open
-          ? "border-dashed border-[color-mix(in_srgb,var(--v-unsure)_60%,transparent)] bg-[color-mix(in_srgb,var(--v-unsure)_14%,transparent)] text-fg"
-          : "border-[color-mix(in_srgb,var(--v-agree)_60%,transparent)] bg-[color-mix(in_srgb,var(--v-agree)_14%,transparent)] text-fg",
+          ? "border-dashed border-[color-mix(in_srgb,var(--decision-unsure)_60%,transparent)] bg-[color-mix(in_srgb,var(--decision-unsure)_14%,transparent)] text-fg"
+          : "border-[color-mix(in_srgb,var(--decision-agree)_60%,transparent)] bg-[color-mix(in_srgb,var(--decision-agree)_14%,transparent)] text-fg",
       )}
     >
       {resultChipText(result)}

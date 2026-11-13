@@ -60,10 +60,10 @@ from parfocal_api.tables import (
     evaluation_versions,
     projects,
     result_sets,
+    review_decisions,
     review_task_slides,
     slides,
     users,
-    verdicts,
 )
 from parfocal_api.task_kinds import review_only
 from parfocal_common import evaluation as engine
@@ -292,9 +292,14 @@ async def decision_rows(
     }
     given = (
         await connection.execute(
-            select(verdicts)
-            .where(verdicts.c.task_id == task.id)
-            .order_by(verdicts.c.slide_id, verdicts.c.kind, verdicts.c.number, verdicts.c.user_id)
+            select(review_decisions)
+            .where(review_decisions.c.task_id == task.id)
+            .order_by(
+                review_decisions.c.slide_id,
+                review_decisions.c.kind,
+                review_decisions.c.number,
+                review_decisions.c.user_id,
+            )
         )
     ).all()
     where = await paths_of(connection, sorted({row.slide_id for row in given}))
@@ -353,7 +358,7 @@ async def object_rows(
     rows: list[dict[str, Any]] = []
     for item in objects:
         slide_id = uuid.UUID(item.slide)
-        values = [given.value for given in item.verdicts.values()]
+        values = [given.value for given in item.decisions.values()]
         rows.append(
             {
                 **stamp,

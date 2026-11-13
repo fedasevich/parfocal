@@ -846,10 +846,10 @@ const swatches = [
   ["bad", "Error"],
   ["unsure", "Unsure cells and zones"],
   ["research-fg", "Research output"],
-  ["v-agree", "Agree with the AI"],
-  ["v-disagree", "Disagree"],
-  ["v-unsure", "Not sure"],
-  ["v-open", "Still open"],
+  ["decision-agree", "Agree with the AI"],
+  ["decision-disagree", "Disagree"],
+  ["decision-unsure", "Not sure"],
+  ["decision-open", "Still open"],
 ];
 
 const states = ["Default", "Hover", "Pressed", "Focus", "Disabled"] as const;

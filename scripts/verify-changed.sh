@@ -22,6 +22,7 @@ if echo "$CHANGED" | grep -q '^infra/tofu/'; then
   run tofu-policy bash infra/tofu/policy.sh static
 fi
 echo "$CHANGED" | grep -q '^scripts/.*\.ts$' && run tsc-scripts pnpm -s tsc --noEmit -p scripts
+run old-word python3 scripts/guard_old_word.py
 run turbo pnpm -s turbo run typecheck test --output-logs=errors-only --filter="...[$MERGE_BASE]"
 
 [ $STATUS -eq 0 ] && echo "verify-changed: OK" || echo "verify-changed: FAILED"

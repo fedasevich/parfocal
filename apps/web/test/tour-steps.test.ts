@@ -19,7 +19,7 @@ test("the tour has ten steps with distinct ids and plain text", () => {
   assert.equal(new Set(tourSteps.map((step) => step.id)).size, 10);
   for (const step of tourSteps) {
     assert.ok(step.title.length > 0 && step.text.length > 20, step.id);
-    assert.doesNotMatch(step.text, /verdict|—|–/i, step.id);
+    assert.doesNotMatch(step.text, /decision|—|–/i, step.id);
   }
 });
 

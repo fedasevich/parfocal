@@ -35,11 +35,11 @@ from parfocal_api.review_tasks import readable_task, task_row
 from parfocal_api.reviewed_layer import KINDS, TaskSignedOffError, ai_object
 from parfocal_api.tables import (
     Availability,
+    DecisionReason,
     DecisionStyle,
+    DecisionValue,
     NotificationKind,
     ProjectRole,
-    VerdictReason,
-    VerdictValue,
     adjudication_objects,
     adjudications,
     memberships,
@@ -82,15 +82,15 @@ class Candidate(BaseModel):
 class ReviewerDecision(BaseModel):
     reviewer: str
     answer: str
-    value: VerdictValue
-    reasons: list[VerdictReason]
+    value: DecisionValue
+    reasons: list[DecisionReason]
     note: str | None
 
 
 class AdjudicatorDecision(BaseModel):
     answer: str | None
     answer_class_id: uuid.UUID | None
-    value: VerdictValue
+    value: DecisionValue
     note: str | None
 
 

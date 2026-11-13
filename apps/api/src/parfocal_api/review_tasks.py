@@ -39,6 +39,7 @@ from parfocal_api.problems import BadRequestError, ConflictError, NotFoundError
 from parfocal_api.project_access import project_grant, reads_whole
 from parfocal_api.projects import ProjectArchivedError, owned, visible
 from parfocal_api.realtime import RealtimeClient
+from parfocal_api.review_decisions import recount
 from parfocal_api.review_order import Results, clear_order, store_order, stored_seeds
 from parfocal_api.tables import (
     AnalysisTemplate,
@@ -55,16 +56,15 @@ from parfocal_api.tables import (
     projects,
     result_sets,
     review_assignments,
+    review_decisions,
     review_task_slides,
     review_tasks,
     slides,
     study_template_versions,
     study_templates,
-    verdicts,
 )
 from parfocal_api.task_notices import tell_due_changed
 from parfocal_api.taxonomy import ProjectClass, classes_of
-from parfocal_api.verdicts import recount
 from parfocal_api.worklist_events import announce_worklist, task_people
 from parfocal_common.scope import Scope as SamplingScope
 from parfocal_common.scope import ScopeKind
@@ -747,7 +747,7 @@ def decision_values(decision: DecisionSettings) -> dict[str, Any]:
 
 
 async def has_decisions(connection: AsyncConnection, task_id: uuid.UUID) -> bool:
-    given = select(verdicts.c.task_id).where(verdicts.c.task_id == task_id)
+    given = select(review_decisions.c.task_id).where(review_decisions.c.task_id == task_id)
     return bool(await connection.scalar(select(given.exists())))
 
 

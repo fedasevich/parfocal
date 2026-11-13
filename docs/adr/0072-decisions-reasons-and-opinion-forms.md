@@ -36,7 +36,7 @@ Option 2 in each case.
 
 Decisions:
 
-- `verdicts` holds one row per task, reviewer, slide and object, with `value` (`agree`, `disagree` or `unsure`), `reason` (required on disagree, otherwise empty), `reason_class_id` (only with `wrong_class`), an optional note of up to 500 characters, and the times. Clearing a decision, which is what Undo does when there was none before, deletes the row. Every save, change and clear writes `review.verdict-set` or `review.verdict-cleared` to the audit log.
+- `review_decisions` holds one row per task, reviewer, slide and object, with `value` (`agree`, `disagree` or `unsure`), `reason` (required on disagree, otherwise empty), `reason_class_id` (only with `wrong_class`), an optional note of up to 500 characters, and the times. Clearing a decision, which is what Undo does when there was none before, deletes the row. Every save, change and clear writes `review.object-decided` or `review.object-decision-cleared` to the audit log.
 - Objects are named by their stable object ID from [ADR 0071](0071-object-id-grammar.md), so a decision keeps pointing at T2 when a later result set carries T2.
 - Decisions apply to AI regions (T) and AI cells (C). Unsure zones (Z) are a scope that points at their cells, and regions of interest (R) and measurements (M) are made by people and are not judged.
 - Fixes (a new outline, a new class, a deleted or added object) go into the reviewer's reviewed layer (RSET-007) and never change the AI set. A `wrong_class` reason and a retype in the reviewed layer are saved together.
@@ -65,6 +65,6 @@ The opinion form:
 
 ## Consequences
 
-- GUIDE-001 creates `verdicts`, GUIDE-006 creates `opinion_forms`, and GUIDE-007 creates `opinions`. The form is rendered from its data with TanStack Form, as ADR 0045 does for template data.
+- GUIDE-001 creates `review_decisions`, GUIDE-006 creates `opinion_forms`, and GUIDE-007 creates `opinions`. The form is rendered from its data with TanStack Form, as ADR 0045 does for template data.
 - ADJ-001 and EVAL-001 read current decisions and reason codes directly. EVAL-001 counts reasons with their labels per taxonomy.
 - The "Main error type" options name tumor, so a project with another taxonomy should edit them. TODO: GUIDE-006 decides whether the template should be filled in from the project's classes.

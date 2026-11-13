@@ -3,7 +3,7 @@ import { type ResultSetTyper, resultSetTyperSchema } from "../draft/get-result-s
 import { type SlideAiProgress, slideAiProgressSchema } from "../draft/get-slide-ai-progress.ts";
 import { type SlideResultStats, slideResultStatsSchema } from "../draft/get-slide-result-stats.ts";
 import type { DraftOperation } from "./draft-handlers.ts";
-import { reviewsA1 } from "./review-verdicts.ts";
+import { reviewsA1 } from "./review-decisions.ts";
 import { people, resultSets } from "./scenario.ts";
 import { typers } from "./scenario-typers.ts";
 import {

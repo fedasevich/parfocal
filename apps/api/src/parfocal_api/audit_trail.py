@@ -23,6 +23,7 @@ from parfocal_api.audit import (
     record,
 )
 from parfocal_api.context import CurrentPrincipal, TenantConnection
+from parfocal_api.legacy_names import current_action, stored_actions, stored_under_prefix
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import database_scope
 from parfocal_api.tables import (
@@ -229,9 +230,14 @@ async def filtered(connection: AsyncConnection, filters: AuditFilters) -> Select
             )
         )
     if filters.action:
-        statement = statement.where(audit_events.c.action.in_(filters.action))
+        statement = statement.where(audit_events.c.action.in_(stored_actions(filters.action)))
     if filters.action_prefix:
-        statement = statement.where(audit_events.c.action.startswith(filters.action_prefix))
+        statement = statement.where(
+            or_(
+                audit_events.c.action.startswith(filters.action_prefix),
+                audit_events.c.action.in_(stored_under_prefix(filters.action_prefix)),
+            )
+        )
     if filters.since is not None:
         statement = statement.where(audit_events.c.occurred_at >= filters.since)
     if filters.until is not None:
@@ -262,11 +268,12 @@ async def members_by_subject(
 
 
 def named(event: AuditEvent, members: dict[str, tuple[uuid.UUID, str]]) -> NamedAuditEvent:
+    values = event.model_copy(update={"action": current_action(event.action)}).model_dump()
     member = members.get(event.actor_subject or "")
     if member is None:
-        return NamedAuditEvent(**event.model_dump())
+        return NamedAuditEvent(**values)
     user_id, name = member
-    return NamedAuditEvent(**event.model_dump(), actor_user_id=user_id, actor_name=name)
+    return NamedAuditEvent(**values, actor_user_id=user_id, actor_name=name)
 
 
 @router.get("/audit-events", operation_id="listAuditEvents", **require(Permission.AUDIT_LOG))

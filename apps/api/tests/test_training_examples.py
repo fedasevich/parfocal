@@ -12,7 +12,7 @@ from test_review_decisions import Called, behind_the_triggers, called, decide, s
 from test_reviewed_layer import edit
 from workspace_support import owner
 
-from parfocal_api.tables import VerdictValue
+from parfocal_api.tables import DecisionValue
 from parfocal_api.training_examples import (
     PlainRecolour,
     ReviewedDecision,
@@ -59,7 +59,7 @@ def learned(**changes: Any) -> TrainingExample:
 def test_an_agreed_call_teaches_the_ai_class_with_the_reviewer_and_the_score() -> None:
     example = learned()
     assert (example.decision, example.final_class_id, example.ai_score) == (
-        VerdictValue.AGREE,
+        DecisionValue.AGREE,
         TUMOR,
         180,
     )
@@ -69,7 +69,7 @@ def test_an_agreed_call_teaches_the_ai_class_with_the_reviewer_and_the_score() -
 def test_a_wrong_class_disagreement_teaches_the_reviewers_class() -> None:
     example = learned(value="disagree", reasons=["wrong_class"], reason_class_id=STROMA)
     assert (example.decision, example.ai_class_id, example.final_class_id) == (
-        VerdictValue.DISAGREE,
+        DecisionValue.DISAGREE,
         TUMOR,
         STROMA,
     )
@@ -161,14 +161,15 @@ def test_only_reviewed_decisions_become_training_examples(api: ApiAs, database: 
         200,
     )
     assert (examples[2].decision, examples[2].ai_class_id, examples[2].final_class_id) == (
-        VerdictValue.DISAGREE,
+        DecisionValue.DISAGREE,
         c.r.tumor,
         c.stroma,
     )
 
     behind_the_triggers(
         database,
-        f"UPDATE verdicts SET reopened_at = now() WHERE task_id = '{c.r.task}' AND number = 1;",
+        f"UPDATE review_decisions SET reopened_at = now() WHERE task_id = '{c.r.task}' "
+        "AND number = 1;",
     )
     assert captured(database, c).keys() == {2}
     assert decide(api, c, "T1", {"value": "agree"}).status_code == 200

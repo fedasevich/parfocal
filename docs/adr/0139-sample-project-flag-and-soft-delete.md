@@ -28,7 +28,7 @@ A new workspace should get a sample project with 4 CAMELYON16 slides, two result
 
 ## Decision
 
-Option 1 in each part. `DELETE /api/projects/{id}` deletes only a sample and answers `not-a-sample` for any other project. The task evaluation stays readable on the sample, so the person can try the report, and says `sample: true`. Workspace-wide figures, today the week on Home, leave sample verdicts out.
+Option 1 in each part. `DELETE /api/projects/{id}` deletes only a sample and answers `not-a-sample` for any other project. The task evaluation stays readable on the sample, so the person can try the report, and says `sample: true`. Workspace-wide figures, today the week on Home, leave sample decisions out.
 
 ## Consequences
 

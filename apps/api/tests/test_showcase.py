@@ -11,10 +11,10 @@ from parfocal_api.review_states import State, states_of, task_of
 from parfocal_api.showcase import FIXTURES_MANIFEST, FORMAT_GALLERY, RESULT_FILES, WORKSPACES, seed
 from parfocal_api.tables import (
     DecisionStyle,
+    DecisionValue,
     PrivacyMode,
     ProjectRole,
     Role,
-    VerdictValue,
     review_tasks,
 )
 from parfocal_common.db import DatabaseScope, create_engine, scoped_transaction
@@ -35,7 +35,7 @@ COUNTED = (
     "result_sets",
     "review_tasks",
     "review_assignments",
-    "verdicts",
+    "review_decisions",
     "jobs",
 )
 UNREACHABLE_STATES = {State.IMPORTED, State.EXPORTED}
@@ -111,7 +111,7 @@ async def test_seeding_twice_leaves_the_same_rows(seeded: str) -> None:
 async def test_every_state_and_kind_has_a_seeded_row(seeded: str) -> None:
     tenant_id = await run_seed(seeded)
     assert set(State) - UNREACHABLE_STATES <= await seeded_states(seeded, tenant_id)
-    assert await values(seeded, "SELECT DISTINCT value FROM verdicts") == set(VerdictValue)
+    assert await values(seeded, "SELECT DISTINCT value FROM review_decisions") == set(DecisionValue)
     assert await values(seeded, "SELECT DISTINCT decision_style FROM review_tasks") == set(
         DecisionStyle
     )

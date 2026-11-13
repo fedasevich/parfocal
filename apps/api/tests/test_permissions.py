@@ -59,6 +59,7 @@ from parfocal_api.tables import (
     result_objects,
     result_sets,
     review_assignments,
+    review_decisions,
     review_edits,
     review_task_slides,
     review_tasks,
@@ -73,7 +74,6 @@ from parfocal_api.tables import (
     threads,
     uploads,
     users,
-    verdicts,
     workspace_access_requests,
     workspace_settings,
 )
@@ -293,8 +293,8 @@ NEEDS_A_TASK = frozenset(
         "addReviewObject",
         "submitSlideReview",
         "reopenSlideReview",
-        "saveVerdict",
-        "clearVerdict",
+        "saveDecision",
+        "clearDecision",
         "skipObject",
         "clearSkip",
         "getMyDisplay",
@@ -986,16 +986,18 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "listTasksAssignedByMe": lambda _: Call("GET", "/api/me/assigned-tasks"),
     "listMySlides": lambda _: Call("GET", "/api/me/slides"),
     "listDisagreements": lambda w: Call("GET", f"/api/review-tasks/{w.task}/disagreements"),
-    "listVerdicts": lambda w: Call("GET", f"/api/review-tasks/{w.task}/slides/{w.slide}/verdicts"),
+    "listDecisions": lambda w: Call(
+        "GET", f"/api/review-tasks/{w.task}/slides/{w.slide}/decisions"
+    ),
     "listDecisionNotes": lambda w: Call(
         "GET", f"/api/review-tasks/{w.task}/slides/{w.slide}/decision-notes"
     ),
     "getReviewOrder": lambda w: Call("GET", f"/api/review-tasks/{w.task}/slides/{w.slide}/order"),
-    "saveVerdict": lambda w: Call(
-        "PUT", f"/api/review-tasks/{w.task}/slides/{w.slide}/verdicts/T1", {"answer": "4"}
+    "saveDecision": lambda w: Call(
+        "PUT", f"/api/review-tasks/{w.task}/slides/{w.slide}/decisions/T1", {"answer": "4"}
     ),
-    "clearVerdict": lambda w: Call(
-        "DELETE", f"/api/review-tasks/{w.task}/slides/{w.slide}/verdicts/T1"
+    "clearDecision": lambda w: Call(
+        "DELETE", f"/api/review-tasks/{w.task}/slides/{w.slide}/decisions/T1"
     ),
     "listSkips": lambda w: Call("GET", f"/api/review-tasks/{w.task}/slides/{w.slide}/skips"),
     "skipObject": lambda w: Call(
@@ -1949,7 +1951,7 @@ async def seed(database: str, lead: Seat = RESEARCHER, presets_for: Seat = RESEA
             assert isinstance(reassignment, uuid.UUID)
             assert isinstance(nudge, uuid.UUID)
             await connection.execute(
-                insert(verdicts),
+                insert(review_decisions),
                 [
                     {
                         "tenant_id": tenant_id,

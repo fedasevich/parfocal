@@ -127,12 +127,12 @@ export function signedTileServer(
       log(401, false);
       return problem(response, 401, "tile-token-missing");
     }
-    const verdict = await verifyCapability(token, await key, nowSeconds());
-    if (!verdict.ok) {
+    const access = await verifyCapability(token, await key, nowSeconds());
+    if (!access.ok) {
       log(401, false);
       return problem(response, 401, "tile-token-invalid");
     }
-    if (verdict.capability.slide !== slide) {
+    if (access.capability.slide !== slide) {
       log(403, false);
       return problem(response, 403, "tile-token-other-slide");
     }
@@ -142,7 +142,7 @@ export function signedTileServer(
       response.end(JSON.stringify(file.levelTable));
       return;
     }
-    if (name !== verdict.capability.original) {
+    if (name !== access.capability.original) {
       log(404, true);
       return problem(response, 404, "not-found");
     }

@@ -45,7 +45,7 @@ def scope_for(kind: ScopeKind) -> Scope:
 
 
 def judged(reviewer: str) -> list[tuple[Letter, int]]:
-    return [parse(text).key[:2] for text in FIXTURE["verdicts"][reviewer]]
+    return [parse(text).key[:2] for text in FIXTURE["decisions"][reviewer]]
 
 
 @pytest.mark.parametrize("kind", list(ScopeKind))

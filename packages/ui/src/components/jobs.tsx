@@ -43,7 +43,7 @@ function ValueRing({
             cy="18"
             r={ringRadius}
             fill="none"
-            stroke="var(--v-open)"
+            stroke="var(--decision-open)"
             strokeWidth={width}
           />
           {percent > 0 ? (

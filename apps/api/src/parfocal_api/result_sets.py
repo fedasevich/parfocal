@@ -28,9 +28,9 @@ from parfocal_api.tables import (
     result_objects,
     result_set_classes,
     result_sets,
+    review_decisions,
     review_task_slides,
     slides,
-    verdicts,
 )
 from parfocal_api.taxonomy import resolve_names
 from parfocal_common.chunk_store import ChunkEntry, summary_key
@@ -574,8 +574,8 @@ async def review_use(connection: AsyncConnection, set_id: uuid.UUID) -> ResultSe
     )
     decisions = await connection.scalar(
         select(func.count())
-        .select_from(verdicts)
-        .where(func.row(verdicts.c.task_id, verdicts.c.slide_id).in_(in_tasks))
+        .select_from(review_decisions)
+        .where(func.row(review_decisions.c.task_id, review_decisions.c.slide_id).in_(in_tasks))
     )
     return ResultSetDeletion(tasks=int(tasks or 0), decisions=int(decisions or 0))
 

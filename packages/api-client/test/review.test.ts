@@ -20,16 +20,16 @@ import {
   getSlideNeighbours,
   getTaskDisplay,
   getThread,
+  listDecisions,
   listMentionableMembers,
   listReviewObjects,
   listSlideThreads,
   listThreadComments,
   listThreads,
   listThreadsOnSlide,
-  listVerdicts,
   replyToThread,
   resolveThreadOnSlide,
-  saveVerdict,
+  saveDecision,
 } from "../src/index.ts";
 
 const server = setupServer(...fakeApiHandlers("all"));
@@ -83,19 +83,19 @@ test("RT-14 on A1 has the mock's five regions and 50 sampled cells in order", as
   assert.equal(cell?.other_class, "Immune");
 });
 
-test("the verdicts on A1 add up to the counts Home, My work and the ring read", async () => {
+test("the decisions on A1 add up to the counts Home, My work and the ring read", async () => {
   assert.ok(rt14);
   const counts = scenario.slideDecisions.find((item) => item.task === "RT-14" && item.slide === 1);
   assert.ok(counts);
-  const verdicts = body(await listVerdicts(rt14.id, a1.id));
-  const count = (value: string) => verdicts.filter((verdict) => verdict.value === value).length;
+  const decisions = body(await listDecisions(rt14.id, a1.id));
+  const count = (value: string) => decisions.filter((decision) => decision.value === value).length;
   assert.equal(count("agree"), counts.agree);
   assert.equal(count("disagree"), counts.disagree);
   assert.equal(count("unsure"), counts.unsure);
   const open = scenarioReview.openInReview;
-  assert.equal(counts.total - verdicts.length, open.length);
-  assert.ok(open.every((object) => !verdicts.some((verdict) => verdict.object === object)));
-  const t2 = verdicts.find((verdict) => verdict.object === "T2");
+  assert.equal(counts.total - decisions.length, open.length);
+  assert.ok(open.every((object) => !decisions.some((decision) => decision.object === object)));
+  const t2 = decisions.find((decision) => decision.object === "T2");
   assert.deepEqual(t2?.reasons, ["boundary_off"]);
   assert.match(t2?.note ?? "", /@Daniel Hruška/);
 });
@@ -125,7 +125,7 @@ test("saving a 5-point certainty answer on RT-16 counts it through the task's ma
   const first = scenarioReview.reviewObjects[0];
   assert.ok(first);
   const save = async (answer: string) =>
-    body(await saveVerdict(rt16.id, a1.id, first.object, { answer }));
+    body(await saveDecision(rt16.id, a1.id, first.object, { answer }));
   assert.deepEqual(
     [await save("5"), await save("3"), await save("2")].map((item) => [item.answer, item.value]),
     [
@@ -184,7 +184,7 @@ test("RT-16 is the task the new task flow sends, and slide 9 opens with its obje
   const next = (await listReviewObjects(rt14.id, a2.id)).data;
   assert.equal(next.objects.filter((item) => item.kind === "region").length, 2);
   assert.equal(next.objects.filter((item) => item.kind === "cell").length, 50);
-  assert.equal(body(await listVerdicts(rt14.id, a2.id)).length, 0);
+  assert.equal(body(await listDecisions(rt14.id, a2.id)).length, 0);
   assert.equal(next.slide.label, "A2");
 });
 

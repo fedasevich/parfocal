@@ -109,8 +109,8 @@ def test_review_only_endpoints_refuse_an_annotate_task(api: ApiAs, database: str
     on_slide = f"{base}/slides/{slide}"
     first, boss = api(s.people["first"]), api(s.people["owner"])
     refusals = [
-        first.put(f"{on_slide}/verdicts/T1", json={"value": "agree"}),
-        first.get(f"{on_slide}/verdicts"),
+        first.put(f"{on_slide}/decisions/T1", json={"value": "agree"}),
+        first.get(f"{on_slide}/decisions"),
         first.get(f"{on_slide}/order"),
         first.get(f"{on_slide}/layer"),
         first.put(f"{on_slide}/edits/T1", json={"deleted": True}),

@@ -192,7 +192,7 @@ export const toMyTask = (task: ScenarioReviewTask, viewer = fakeView().viewer): 
     start_mode: "guided",
     slides_submitted: done,
     slides_assigned: assigned,
-    verdicts: done * 24,
+    decisions: done * 24,
     status: myStatus(task, done, assigned),
     next_slide_id: task.status === "signed" ? null : (slides[0]?.id ?? null),
     created_by_user_id: people[project.owner].id,
@@ -300,7 +300,7 @@ const resumeTarget = (task: ScenarioReviewTask): Home["resume"] => {
     position: resumePoint.position,
     slides_assigned: task.slides,
     object_id: resumePoint.object,
-    verdicts_on_slide: 38,
+    decisions_on_slide: 38,
     due_on: task.dueOn,
     blinded: task.blinded,
     mode: "guided",
@@ -326,7 +326,7 @@ const storedTarget = (viewer: PersonKey): Home["resume"] => {
     position: same
       ? derived.position
       : slides.filter((candidate) => candidate.project === task.project).indexOf(slide),
-    verdicts_on_slide: same ? derived.verdicts_on_slide : 0,
+    decisions_on_slide: same ? derived.decisions_on_slide : 0,
     object_id: stored.object_id ?? null,
     mode: stored.mode,
     camera: stored.camera ?? null,

@@ -27,7 +27,7 @@ import { annotateBlindFirst } from "./annotate-task-listing.ts";
 import { countsAsChangesFor, decisionSettingsFor } from "./decision-settings.ts";
 import { taskDisplayFor } from "./display-settings.ts";
 import type { DraftOperation } from "./draft-handlers.ts";
-import { hidesRt17Sets, rt17SetId } from "./review-verdicts.ts";
+import { hidesRt17Sets, rt17SetId } from "./review-decisions.ts";
 import {
   cases,
   type ProjectCode,

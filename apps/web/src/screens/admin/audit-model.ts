@@ -81,6 +81,8 @@ const auditLabels: Record<string, string> = {
   "task.reopened": "Reopened a task",
   "review.decision-set": "Set a decision",
   "review.decision-cleared": "Cleared a decision",
+  "review.object-decided": "Decided on an AI object",
+  "review.object-decision-cleared": "Cleared a decision on an AI object",
   "decision.changed-after-sign-off": "Changed a decision after sign-off",
   "audit.exported": "Exported the audit log",
   "service-account.created": "Created a service account",

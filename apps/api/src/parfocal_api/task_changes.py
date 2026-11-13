@@ -31,13 +31,13 @@ from parfocal_api.tables import (
     notifications,
     opinions,
     review_assignments,
+    review_decisions,
     review_edits,
     review_skips,
     review_task_slides,
     task_nudges,
     task_reassignments,
     users,
-    verdicts,
 )
 from parfocal_api.task_notices import iso, told
 from parfocal_api.worklist_events import announce_worklist, task_people
@@ -173,8 +173,8 @@ async def started_slides(
                 review_assignments.c.first_read_at.is_not(None),
             ),
         ),
-        select(verdicts.c.slide_id).where(
-            verdicts.c.task_id == task_id, verdicts.c.user_id == user_id
+        select(review_decisions.c.slide_id).where(
+            review_decisions.c.task_id == task_id, review_decisions.c.user_id == user_id
         ),
         select(review_edits.c.slide_id).where(
             review_edits.c.task_id == task_id, review_edits.c.user_id == user_id

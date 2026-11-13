@@ -11,7 +11,7 @@ from parfocal_common.evaluation import (
     Consensus,
     Opinion,
     Ratio,
-    Verdict,
+    ReviewDecision,
     cell_agreement,
     confusion,
     consensus,
@@ -28,8 +28,8 @@ FIXTURE = json.loads((Path(__file__).parent / "fixtures" / "evaluation-task.json
 EXPECTED = FIXTURE["expected"]
 
 
-def verdict(given: list[str]) -> Verdict:
-    return Verdict(given[0], tuple(given[1:2]), *given[2:])
+def decision(given: list[str]) -> ReviewDecision:
+    return ReviewDecision(given[0], tuple(given[1:2]), *given[2:])
 
 
 def objects() -> list[AiObject]:
@@ -39,7 +39,7 @@ def objects() -> list[AiObject]:
             item["kind"],
             item["number"],
             item["class"],
-            {"a": verdict(item["a"]), "b": verdict(item["b"])},
+            {"a": decision(item["a"]), "b": decision(item["b"])},
             item.get("decision"),
         )
         for item in FIXTURE["objects"]
@@ -96,7 +96,7 @@ def test_the_consensus_follows_unanimity_then_the_decision() -> None:
 def test_a_queue_decision_counts_as_its_mapped_value(
     decision: str | None, expected: Consensus
 ) -> None:
-    both_against = {"a": Verdict("disagree"), "b": Verdict("disagree")}
+    both_against = {"a": ReviewDecision("disagree"), "b": ReviewDecision("disagree")}
     item = AiObject("s", "region", 1, "Tumor", both_against, decision)
     assert consensus(item) is expected
 
@@ -146,9 +146,11 @@ def test_cell_agreement_and_reasons_match_the_hand_counts() -> None:
 
 
 def test_each_code_of_a_decision_counts_once() -> None:
-    several = Verdict("disagree", ("wrong_class", "boundary_off", "wrong_class"), "lymphocyte")
-    bare = Verdict("disagree")
-    unsure = Verdict("unsure", ("need_ihc",))
+    several = ReviewDecision(
+        "disagree", ("wrong_class", "boundary_off", "wrong_class"), "lymphocyte"
+    )
+    bare = ReviewDecision("disagree")
+    unsure = ReviewDecision("unsure", ("need_ihc",))
     item = AiObject("s", "cell", 1, "tumor", {"a": several, "b": bare, "c": unsure})
     assert reasons([item]) == [("boundary_off", 1), ("wrong_class", 1)]
     assert retyped_to(item) is None

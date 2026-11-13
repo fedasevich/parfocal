@@ -8,11 +8,11 @@ import {
   getGetReviewTaskStatesMockHandler,
   getListAnnouncementsMockHandler,
   getListDecisionNotesMockHandler,
+  getListDecisionsMockHandler,
   getListMySlidesMockHandler,
   getListNotificationsMockHandler,
   getListProjectResultSetsMockHandler,
   getListTasksAssignedByMeMockHandler,
-  getListVerdictsMockHandler,
   getMarkNotificationsReadMockHandler,
   getSearchMockHandler,
 } from "../generated/api.msw.ts";
@@ -43,11 +43,11 @@ import { taskDisplayFor } from "./display-settings.ts";
 import { queueTaskView } from "./queue-scene.ts";
 import {
   decisionNotesOf,
+  decisionsFor,
   hidesRt17SetsOnProject,
   reviewOrderFor,
   rt17SetId,
-  verdictsFor,
-} from "./review-verdicts.ts";
+} from "./review-decisions.ts";
 import {
   cases,
   myWorkSlideIds,
@@ -470,7 +470,7 @@ export const searchScenario = (query: string, scope = "all"): SearchHit[] => {
 
 export const reviewOrderOf = reviewOrderFor;
 
-export const verdictsOf = verdictsFor;
+export const decisionsOf = decisionsFor;
 
 let bulkSlideCount = 0;
 
@@ -570,8 +570,8 @@ export function workHandlers(): RequestHandler[] {
     getGetReviewOrderMockHandler(({ params }) =>
       reviewOrderOf(String(params.taskId), String(params.slideId)),
     ),
-    getListVerdictsMockHandler(({ params }) =>
-      verdictsOf(String(params.taskId), String(params.slideId)),
+    getListDecisionsMockHandler(({ params }) =>
+      decisionsOf(String(params.taskId), String(params.slideId)),
     ),
     getListDecisionNotesMockHandler(({ params }) =>
       decisionNotesOf(String(params.taskId), String(params.slideId)),

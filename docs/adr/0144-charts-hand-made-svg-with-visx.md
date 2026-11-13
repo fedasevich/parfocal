@@ -31,15 +31,15 @@ Option 1. Charts are React components in `packages/ui/src/components/charts/`, d
 ### Theming through tokens
 
 - Every `fill`, `stroke` and text colour is a `var(--token)` string or a `color-mix()` of one, never a hex value and never a `dark:` class. The browser then resolves each mark in whatever theme scope it sits, nested ones included, and a theme switch needs no redraw.
-- Class series use the class tokens `--c-tumor`, `--c-stroma`, `--c-immune` and `--c-other`. Verdict series use `--v-agree`, `--v-disagree`, `--v-unsure` and `--v-open`. A single series uses `--accent-fill`. A cutoff or reference line uses `--line-strong`, grid lines use `--line`, and axis text uses `--fg-dim` at the kit's caption size.
+- Class series use the class tokens `--c-tumor`, `--c-stroma`, `--c-immune` and `--c-other`. Decision series use `--decision-agree`, `--decision-disagree`, `--decision-unsure` and `--decision-open`. A single series uses `--accent-fill`. A cutoff or reference line uses `--line-strong`, grid lines use `--line`, and axis text uses `--fg-dim` at the kit's caption size.
 - An intensity scale, such as the confusion matrix diagonal, is `color-mix(in srgb, var(--accent-fill) N%, transparent)` with N from the value.
-- There is no general categorical palette. TODO: when a chart needs series that are neither classes nor verdicts, add chart series tokens to `themedTokens` in `packages/tokens/src/index.ts`, which `tokens.test.ts` then checks in both themes.
+- There is no general categorical palette. TODO: when a chart needs series that are neither classes nor decisions, add chart series tokens to `themedTokens` in `packages/tokens/src/index.ts`, which `tokens.test.ts` then checks in both themes.
 
 ### Accessibility
 
 - A chart is a `<figure>` with a caption. Either its numbers are a real table with `scope` headers, like `ConfusionMatrix`, or its drawing is `role="img"` with an `aria-label` that states the reading, like `ScoreHistogram`'s "Scores in 10 bins from 0 to 1, cutoff 0.50". Axis ticks and grid lines inside a `role="img"` drawing are `aria-hidden`.
 - A chart with more values than its label can say, such as a trend over weeks, also offers the same numbers as a table, visually hidden or behind a "Show as table" toggle.
-- Colour is never the only carrier. A class or verdict series also has a text label, a position or a pattern, as WCAG 1.4.1 (use of colour) asks, and marks keep 3:1 against their panel in both themes, as WCAG 1.4.11 (non-text contrast) asks.
+- Colour is never the only carrier. A class or decision series also has a text label, a position or a pattern, as WCAG 1.4.1 (use of colour) asks, and marks keep 3:1 against their panel in both themes, as WCAG 1.4.11 (non-text contrast) asks.
 - Charts do not animate. A later transition must stop under `prefers-reduced-motion`.
 - Each chart has a story in both themes that the axe pass over component stories covers, and a component test that checks its accessible name or table against the data it was given.
 

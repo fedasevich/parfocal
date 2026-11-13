@@ -2,6 +2,7 @@ import {
   type MyDisplay,
   type Neighbours,
   type Opinion,
+  type ReviewDecision,
   type ReviewObject,
   type ReviewTaskDetail,
   type Thread,
@@ -10,12 +11,11 @@ import {
   useGetOpinion,
   useGetReviewTask,
   useGetSlideNeighbours,
+  useListDecisions,
   useListProjectClasses,
   useListProjects,
   useListReviewObjects,
   useListThreads,
-  useListVerdicts,
-  type Verdict,
 } from "@parfocal/api-client";
 import type { ProjectClass } from "@parfocal/ui/components/decision-buttons";
 import { formatDue } from "../format.ts";
@@ -60,7 +60,7 @@ export type ReviewSession = {
   caseLabel: string | null;
   objects: ReviewObject[];
   added: { object: string; note: string | null }[];
-  verdicts: Map<string, Verdict>;
+  decisions: Map<string, ReviewDecision>;
   style: ReviewStyle;
   classes: ProjectClass[];
   display: TaskDisplayView | undefined;
@@ -79,7 +79,7 @@ export function useReviewSession(taskId: string, slideId: string): ReviewSession
   const projectId = task?.project_id ?? "";
   const objectsQuery = useListReviewObjects(taskId, slideId);
   const reviewObjects = objectsQuery.data?.data;
-  const verdicts = okData(useListVerdicts(taskId, slideId).data) ?? [];
+  const decisions = okData(useListDecisions(taskId, slideId).data) ?? [];
   const person = usePeople();
   const nameOf = (userId: string) => person(userId)?.name;
   const myDisplay = okData(useGetMyDisplay(taskId).data);
@@ -103,10 +103,10 @@ export function useReviewSession(taskId: string, slideId: string): ReviewSession
     caseLabel: slide?.case_label ?? null,
     objects: reviewObjects?.objects ?? [],
     added: reviewObjects?.added ?? [],
-    verdicts: new Map(
-      verdicts.map((verdict) => [
-        verdict.object,
-        { ...verdict, note: fromMentionTokensOrNull(verdict.note, nameOf) },
+    decisions: new Map(
+      decisions.map((decision) => [
+        decision.object,
+        { ...decision, note: fromMentionTokensOrNull(decision.note, nameOf) },
       ]),
     ),
     style: toReviewStyle(task?.decision),

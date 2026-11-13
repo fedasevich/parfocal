@@ -104,7 +104,7 @@ def test_the_sample_is_left_out_of_every_evaluation(api: ApiAs, database: str) -
     )[0][0]
     for object_id in ("T1", "T2"):
         given = api(person).put(
-            f"/api/review-tasks/{task['id']}/slides/{slide}/verdicts/{object_id}",
+            f"/api/review-tasks/{task['id']}/slides/{slide}/decisions/{object_id}",
             json={"answer": "5"},
         )
         assert given.status_code == 200, given.text
@@ -112,7 +112,7 @@ def test_the_sample_is_left_out_of_every_evaluation(api: ApiAs, database: str) -
     evaluation = api(person).get(f"/api/review-tasks/{task['id']}/evaluation")
     assert evaluation.status_code == 200, evaluation.text
     assert evaluation.json()["sample"] is True
-    real = api(r.people["first"]).put(f"{r.base}/verdicts/T1", json={"value": "agree"})
+    real = api(r.people["first"]).put(f"{r.base}/decisions/T1", json={"value": "agree"})
     assert real.status_code == 200, real.text
     assert week(api, r.people["first"]) == (1, 1)
     assert api(person).get(f"/api/review-tasks/{r.task}/evaluation").json()["sample"] is False

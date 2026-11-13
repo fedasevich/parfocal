@@ -77,10 +77,10 @@ test("the token names DS-001 lists are all there", () => {
     "warn",
     "bad",
     "research-fg",
-    "v-agree",
-    "v-disagree",
-    "v-unsure",
-    "v-open",
+    "decision-agree",
+    "decision-disagree",
+    "decision-unsure",
+    "decision-open",
     "unsure",
   ]) {
     assert.ok((colorTokens as readonly string[]).includes(token), `${token} is missing`);

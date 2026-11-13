@@ -30,18 +30,18 @@ from parfocal_api.reviewed_layer import (
 )
 from parfocal_api.tables import (
     AnnotationKind,
+    DecisionReason,
     DecisionStyle,
-    VerdictReason,
-    VerdictValue,
+    DecisionValue,
     disagreement_decisions,
     display_choices,
     display_presets,
     result_chunks,
     result_objects,
     result_set_classes,
+    review_decisions,
     review_edits,
     review_skips,
-    verdicts,
 )
 from parfocal_common.object_ids import Letter, ObjectId
 from parfocal_common.result_store import ResultStore
@@ -49,29 +49,29 @@ from parfocal_common.result_store import ResultStore
 REASONS = {
     AnnotationKind.REGION: frozenset(
         {
-            VerdictReason.NOT_CLASS,
-            VerdictReason.BOUNDARY_OFF,
-            VerdictReason.TWO_REGIONS,
-            VerdictReason.ARTEFACT,
+            DecisionReason.NOT_CLASS,
+            DecisionReason.BOUNDARY_OFF,
+            DecisionReason.TWO_REGIONS,
+            DecisionReason.ARTEFACT,
         }
     ),
     AnnotationKind.CELL: frozenset(
         {
-            VerdictReason.NOT_A_CELL,
-            VerdictReason.WRONG_CLASS,
-            VerdictReason.BOUNDARY_OFF,
-            VerdictReason.ARTEFACT,
+            DecisionReason.NOT_A_CELL,
+            DecisionReason.WRONG_CLASS,
+            DecisionReason.BOUNDARY_OFF,
+            DecisionReason.ARTEFACT,
         }
     ),
 }
 
 UNSURE_REASONS = frozenset(
     {
-        VerdictReason.NEED_DEEPER_LEVEL,
-        VerdictReason.NEED_IHC,
-        VerdictReason.BORDER_UNCLEAR,
-        VerdictReason.OUT_OF_FOCUS,
-        VerdictReason.NEED_SECOND_LOOK,
+        DecisionReason.NEED_DEEPER_LEVEL,
+        DecisionReason.NEED_IHC,
+        DecisionReason.BORDER_UNCLEAR,
+        DecisionReason.OUT_OF_FOCUS,
+        DecisionReason.NEED_SECOND_LOOK,
     }
 )
 
@@ -93,22 +93,22 @@ SAVED_CALL = (
 )
 
 
-class VerdictDraft(BaseModel):
+class ReviewDecisionDraft(BaseModel):
     answer: Answer | None = None
     answer_class_id: uuid.UUID | None = None
-    value: VerdictValue | None = None
-    reasons: list[VerdictReason] = []
+    value: DecisionValue | None = None
+    reasons: list[DecisionReason] = []
     reason_class_id: uuid.UUID | None = None
     note: Note | None = None
     ai_class_id: uuid.UUID | None = Field(default=None, description=REPORTED_CALL)
     ai_score: Score | None = Field(default=None, description=REPORTED_CALL)
 
     @model_validator(mode="after")
-    def reasons_fit_value(self) -> VerdictDraft:
+    def reasons_fit_value(self) -> ReviewDecisionDraft:
         if (self.answer is None) == (self.value is None):
             raise ValueError("Give the answer as pressed, or a value on an agree task")
         self.reasons = sorted(set(self.reasons))
-        if (VerdictReason.WRONG_CLASS in self.reasons) != (self.reason_class_id is not None):
+        if (DecisionReason.WRONG_CLASS in self.reasons) != (self.reason_class_id is not None):
             raise ValueError("Wrong class names the right class, and only it does")
         return self
 
@@ -117,15 +117,15 @@ class VerdictDraft(BaseModel):
         return self.answer if self.answer is not None else str(self.value)
 
 
-class Verdict(BaseModel):
+class ReviewDecision(BaseModel):
     object: str
     kind: AnnotationKind
     number: int
     style: DecisionStyle
     answer: str
     answer_class_id: uuid.UUID | None
-    value: VerdictValue
-    reasons: list[VerdictReason]
+    value: DecisionValue
+    reasons: list[DecisionReason]
     reason_class_id: uuid.UUID | None
     note: str | None
     updated_at: datetime
@@ -152,22 +152,22 @@ class ReasonNotForKindError(BadRequestError):
 
 
 router = APIRouter(
-    prefix="/api/review-tasks/{task_id}/slides/{slide_id}/verdicts", tags=["review-tasks"]
+    prefix="/api/review-tasks/{task_id}/slides/{slide_id}/decisions", tags=["review-tasks"]
 )
 
 
-def verdict_of(row: Any) -> Verdict:
+def review_decision_of(row: Any) -> ReviewDecision:
     kind = AnnotationKind(row.kind)
     letter = Letter.REGION if kind is AnnotationKind.REGION else Letter.CELL
-    return Verdict(
+    return ReviewDecision(
         object=ObjectId(letter, row.number).text(ascii=True),
         kind=kind,
         number=row.number,
         style=DecisionStyle(row.style),
         answer=row.answer,
         answer_class_id=row.answer_class_id,
-        value=VerdictValue(row.value),
-        reasons=[VerdictReason(code) for code in row.reasons],
+        value=DecisionValue(row.value),
+        reasons=[DecisionReason(code) for code in row.reasons],
         reason_class_id=row.reason_class_id,
         note=row.note,
         updated_at=row.updated_at,
@@ -179,12 +179,14 @@ def verdict_of(row: Any) -> Verdict:
     )
 
 
-def check_reasons(value: VerdictValue, kind: AnnotationKind, reasons: list[VerdictReason]) -> None:
-    if value is VerdictValue.AGREE and reasons:
+def check_reasons(
+    value: DecisionValue, kind: AnnotationKind, reasons: list[DecisionReason]
+) -> None:
+    if value is DecisionValue.AGREE and reasons:
         raise ReasonNotForAnswerError("An answer that counts as agree takes no reason")
-    if value is VerdictValue.UNSURE and not UNSURE_REASONS.issuperset(reasons):
+    if value is DecisionValue.UNSURE and not UNSURE_REASONS.issuperset(reasons):
         raise ReasonNotForAnswerError("An answer that counts as not sure takes only those reasons")
-    if value is VerdictValue.DISAGREE:
+    if value is DecisionValue.DISAGREE:
         for reason in reasons:
             if reason not in REASONS[kind]:
                 raise ReasonNotForKindError(f"{reason} is not a reason for a {kind}")
@@ -385,11 +387,11 @@ async def audit(
     )
 
 
-def fitting(value: VerdictValue, kind: AnnotationKind, reasons: list[str]) -> list[str]:
+def fitting(value: DecisionValue, kind: AnnotationKind, reasons: list[str]) -> list[str]:
     allowed = {
-        VerdictValue.AGREE: frozenset[VerdictReason](),
-        VerdictValue.UNSURE: UNSURE_REASONS,
-        VerdictValue.DISAGREE: REASONS[kind],
+        DecisionValue.AGREE: frozenset[DecisionReason](),
+        DecisionValue.UNSURE: UNSURE_REASONS,
+        DecisionValue.DISAGREE: REASONS[kind],
     }[value]
     return [reason for reason in reasons if reason in allowed]
 
@@ -399,8 +401,9 @@ async def recount(
 ) -> tuple[int, int]:
     rows = (
         await connection.execute(
-            select(verdicts).where(
-                verdicts.c.task_id == task.id, verdicts.c.style == DecisionStyle.CERTAINTY
+            select(review_decisions).where(
+                review_decisions.c.task_id == task.id,
+                review_decisions.c.style == DecisionStyle.CERTAINTY,
             )
         )
     ).all()
@@ -412,11 +415,13 @@ async def recount(
         changed += 1
         kind = AnnotationKind(row.kind)
         reasons = fitting(value, kind, list(row.reasons))
-        class_id = row.reason_class_id if VerdictReason.WRONG_CLASS in reasons else None
+        class_id = row.reason_class_id if DecisionReason.WRONG_CLASS in reasons else None
         dropped += len(row.reasons) - len(reasons)
         await connection.execute(
-            update(verdicts)
-            .where(*same_object(verdicts, task.id, row.slide_id, row.user_id, kind, row.number))
+            update(review_decisions)
+            .where(
+                *same_object(review_decisions, task.id, row.slide_id, row.user_id, kind, row.number)
+            )
             .values(value=value, reasons=reasons, reason_class_id=class_id)
         )
         if row.reason_class_id is not None and class_id is None:
@@ -457,16 +462,16 @@ async def preset_in_force(
     return name if isinstance(name, str) else None
 
 
-@router.put("/{object_id}", operation_id="saveVerdict", **require(Permission.REVIEW, write=True))
-async def save_verdict(
+@router.put("/{object_id}", operation_id="saveDecision", **require(Permission.REVIEW, write=True))
+async def save_decision(
     task_id: uuid.UUID,
     slide_id: uuid.UUID,
     object_id: str,
-    draft: VerdictDraft,
+    draft: ReviewDecisionDraft,
     principal: CurrentPrincipal,
     connection: TenantConnection,
     results: Results,
-) -> Verdict:
+) -> ReviewDecision:
     row = await assigned_slide(connection, principal, task_id, slide_id)
     await require_judging_allowed(connection, principal, row.project_id, task_id, slide_id)
     found = ai_object(object_id)
@@ -491,8 +496,8 @@ async def save_verdict(
     )
     previous = (
         await connection.execute(
-            select(verdicts.c.reason_class_id).where(
-                *same_object(verdicts, task_id, slide_id, me, kind, found.number)
+            select(review_decisions.c.reason_class_id).where(
+                *same_object(review_decisions, task_id, slide_id, me, kind, found.number)
             )
         )
     ).one_or_none()
@@ -508,7 +513,7 @@ async def save_verdict(
         "reopened_note": None,
         "preset": await preset_in_force(connection, task_id, me),
     }
-    saving = upsert(verdicts).values(
+    saving = upsert(review_decisions).values(
         tenant_id=row.tenant_id,
         project_id=row.project_id,
         task_id=task_id,
@@ -523,11 +528,11 @@ async def save_verdict(
     await connection.execute(
         saving.on_conflict_do_update(
             index_elements=[
-                verdicts.c.task_id,
-                verdicts.c.slide_id,
-                verdicts.c.user_id,
-                verdicts.c.kind,
-                verdicts.c.number,
+                review_decisions.c.task_id,
+                review_decisions.c.slide_id,
+                review_decisions.c.user_id,
+                review_decisions.c.kind,
+                review_decisions.c.number,
             ],
             set_=values,
         )
@@ -543,15 +548,15 @@ async def save_verdict(
         await retype(connection, row, me, kind, found.number, draft.reason_class_id)
     saved = (
         await connection.execute(
-            select(verdicts).where(
-                *same_object(verdicts, task_id, slide_id, me, kind, found.number)
+            select(review_decisions).where(
+                *same_object(review_decisions, task_id, slide_id, me, kind, found.number)
             )
         )
     ).one()
     await audit(
         connection,
         principal,
-        AuditAction.REVIEW_VERDICT_SET,
+        AuditAction.REVIEW_OBJECT_DECIDED,
         row,
         {
             "object": found.text(ascii=True),
@@ -564,16 +569,16 @@ async def save_verdict(
         },
     )
     await tell_mentioned(connection, row, saved)
-    return verdict_of(saved)
+    return review_decision_of(saved)
 
 
 @router.delete(
     "/{object_id}",
-    operation_id="clearVerdict",
+    operation_id="clearDecision",
     status_code=204,
     **require(Permission.REVIEW, write=True),
 )
-async def clear_verdict(
+async def clear_decision(
     task_id: uuid.UUID,
     slide_id: uuid.UUID,
     object_id: str,
@@ -588,9 +593,9 @@ async def clear_verdict(
     await lock_object(connection, task_id, slide_id, me, kind, found.number)
     cleared = (
         await connection.execute(
-            delete(verdicts)
-            .where(*same_object(verdicts, task_id, slide_id, me, kind, found.number))
-            .returning(verdicts.c.reason_class_id)
+            delete(review_decisions)
+            .where(*same_object(review_decisions, task_id, slide_id, me, kind, found.number))
+            .returning(review_decisions.c.reason_class_id)
         )
     ).one_or_none()
     if cleared is not None:
@@ -599,21 +604,21 @@ async def clear_verdict(
         await audit(
             connection,
             principal,
-            AuditAction.REVIEW_VERDICT_CLEARED,
+            AuditAction.REVIEW_OBJECT_DECISION_CLEARED,
             row,
             {"object": found.text(ascii=True)},
         )
     return Response(status_code=204)
 
 
-@router.get("", operation_id="listVerdicts", **require(Permission.SEE_SLIDES, emergency=True))
-async def list_verdicts(
+@router.get("", operation_id="listDecisions", **require(Permission.SEE_SLIDES, emergency=True))
+async def list_decisions(
     task_id: uuid.UUID,
     slide_id: uuid.UUID,
     principal: CurrentPrincipal,
     connection: TenantConnection,
     reviewer_id: uuid.UUID | None = None,
-) -> list[Verdict]:
+) -> list[ReviewDecision]:
     row = await review_slide(connection, principal, task_id, slide_id)
     reviewer = reviewer_id or user_of(principal)
     if reviewer is None:
@@ -622,12 +627,12 @@ async def list_verdicts(
         connection, principal, row.project_id, task_id, slide_id, reviewer
     )
     rows = await connection.execute(
-        select(verdicts)
+        select(review_decisions)
         .where(
-            verdicts.c.task_id == task_id,
-            verdicts.c.slide_id == slide_id,
-            verdicts.c.user_id == reviewer,
+            review_decisions.c.task_id == task_id,
+            review_decisions.c.slide_id == slide_id,
+            review_decisions.c.user_id == reviewer,
         )
-        .order_by(verdicts.c.kind, verdicts.c.number)
+        .order_by(review_decisions.c.kind, review_decisions.c.number)
     )
-    return [verdict_of(item) for item in rows]
+    return [review_decision_of(item) for item in rows]

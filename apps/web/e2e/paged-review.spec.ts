@@ -34,7 +34,7 @@ type Saved = {
 async function savedDecisions(page: Page) {
   return page.evaluate(
     async ([task, slide]) => {
-      const response = await fetch(`/api/review-tasks/${task}/slides/${slide}/verdicts`);
+      const response = await fetch(`/api/review-tasks/${task}/slides/${slide}/decisions`);
       const body = (await response.json()) as Saved[] | { items?: Saved[] };
       return Array.isArray(body) ? body : (body.items ?? []);
     },

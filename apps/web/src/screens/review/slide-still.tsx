@@ -132,9 +132,9 @@ function useElementSize(ref: RefObject<HTMLElement | null>): Size {
 }
 
 export const regionColours: Record<Count, string> = {
-  agree: "var(--v-agree)",
-  disagree: "var(--v-disagree)",
-  unsure: "var(--v-unsure)",
+  agree: "var(--decision-agree)",
+  disagree: "var(--decision-disagree)",
+  unsure: "var(--decision-unsure)",
 };
 
 type SlideStillProps = {

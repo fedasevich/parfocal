@@ -17,28 +17,28 @@ from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import MemberPrincipal, Principal
 from parfocal_api.problems import ConflictError, ForbiddenError, NotFoundError
 from parfocal_api.project_access import role_in
+from parfocal_api.review_decisions import ai_class_of
 from parfocal_api.review_order import Results
 from parfocal_api.review_tasks import readable_task
 from parfocal_api.reviewed_layer import KINDS, TaskSignedOffError, ai_object
 from parfocal_api.tables import (
     AnnotationKind,
     Decision,
+    DecisionReason,
     DecisionStyle,
+    DecisionValue,
     ProjectRole,
-    VerdictReason,
-    VerdictValue,
     adjudication_objects,
     adjudications,
     disagreement_decisions,
     evaluation_changes,
     evaluation_versions,
     review_assignments,
+    review_decisions,
     review_edits,
     review_task_slides,
-    verdicts,
 )
 from parfocal_api.task_kinds import review_only
-from parfocal_api.verdicts import ai_class_of
 from parfocal_common.disagreements import Why, why_queued
 from parfocal_common.object_ids import Letter, ObjectId
 from parfocal_common.result_store import ResultStore
@@ -50,11 +50,11 @@ type ChangeReason = Annotated[
 type Answer = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=10)]
 
 
-class ReviewerVerdict(BaseModel):
+class ReviewerAnswer(BaseModel):
     user_id: uuid.UUID
     answer: str
-    value: VerdictValue
-    reasons: list[VerdictReason]
+    value: DecisionValue
+    reasons: list[DecisionReason]
     note: str | None = None
     reopened: bool
 
@@ -63,7 +63,7 @@ class QueueDecision(BaseModel):
     style: DecisionStyle | None
     answer: str | None
     answer_class_id: uuid.UUID | None
-    value: VerdictValue
+    value: DecisionValue
     choice: Decision | None
     decided_by_user_id: uuid.UUID | None
 
@@ -87,7 +87,7 @@ class QueuedObject(BaseModel):
     kind: AnnotationKind
     number: int
     why: Why
-    verdicts: list[ReviewerVerdict]
+    decisions: list[ReviewerAnswer]
     decision: QueueDecision | None = None
     left_open: bool = False
     note: str | None = None
@@ -95,8 +95,8 @@ class QueuedObject(BaseModel):
     looking_again: bool = False
     adjudication: Adjudication | None = None
 
-    def reviewers(self) -> list[ReviewerVerdict]:
-        return self.verdicts
+    def reviewers(self) -> list[ReviewerAnswer]:
+        return self.decisions
 
     def with_adjudicator(self) -> bool:
         return self.adjudication is not None and self.adjudication.active
@@ -203,7 +203,7 @@ def decision_of(row: Any) -> QueueDecision | None:
         style=DecisionStyle(row.style) if row.style else None,
         answer=row.answer,
         answer_class_id=row.answer_class_id,
-        value=VerdictValue(row.value),
+        value=DecisionValue(row.value),
         choice=Decision(row.decision) if row.decision else None,
         decided_by_user_id=row.decided_by_user_id,
     )
@@ -246,9 +246,16 @@ async def queue_of(connection: AsyncConnection, task_id: uuid.UUID) -> list[Queu
         return []
     grouped: dict[Key, list[Any]] = {}
     for row in await connection.execute(
-        select(verdicts)
-        .where(verdicts.c.task_id == task_id, verdicts.c.slide_id.in_(list(complete)))
-        .order_by(verdicts.c.slide_id, verdicts.c.kind, verdicts.c.number, verdicts.c.user_id)
+        select(review_decisions)
+        .where(
+            review_decisions.c.task_id == task_id, review_decisions.c.slide_id.in_(list(complete))
+        )
+        .order_by(
+            review_decisions.c.slide_id,
+            review_decisions.c.kind,
+            review_decisions.c.number,
+            review_decisions.c.user_id,
+        )
     ):
         if row.user_id in complete[row.slide_id][0]:
             grouped.setdefault((row.slide_id, row.kind, row.number), []).append(row)
@@ -266,7 +273,7 @@ async def queue_of(connection: AsyncConnection, task_id: uuid.UUID) -> list[Queu
         second_look = {
             row.user_id
             for row in rows
-            if row.value == VerdictValue.UNSURE and VerdictReason.NEED_SECOND_LOOK in row.reasons
+            if row.value == DecisionValue.UNSURE and DecisionReason.NEED_SECOND_LOOK in row.reasons
         }
         why = why_queued({row.user_id: row.value for row in rows}, second_look)
         if why is None:
@@ -282,12 +289,12 @@ async def queue_of(connection: AsyncConnection, task_id: uuid.UUID) -> list[Queu
                 kind=object_kind,
                 number=number,
                 why=why,
-                verdicts=[
-                    ReviewerVerdict(
+                decisions=[
+                    ReviewerAnswer(
                         user_id=row.user_id,
                         answer=row.answer,
-                        value=VerdictValue(row.value),
-                        reasons=[VerdictReason(code) for code in row.reasons],
+                        value=DecisionValue(row.value),
+                        reasons=[DecisionReason(code) for code in row.reasons],
                         note=row.note,
                         reopened=row.reopened_at is not None,
                     )
@@ -507,7 +514,7 @@ async def counted_value(
     slide_id: uuid.UUID,
     found: ObjectId,
     draft: DecisionDraft,
-) -> VerdictValue:
+) -> DecisionValue:
     style = DecisionStyle(task.decision_style)
     answer_in_style(style, draft.answer, draft.answer_class_id)
     ai_class = None
@@ -682,12 +689,12 @@ async def ask_reviewers_to_look_again(
     )
     kind = KINDS[found.letter]
     reopened = await connection.execute(
-        update(verdicts)
+        update(review_decisions)
         .where(
-            verdicts.c.task_id == task_id,
-            verdicts.c.slide_id == slide_id,
-            verdicts.c.kind == kind,
-            verdicts.c.number == found.number,
+            review_decisions.c.task_id == task_id,
+            review_decisions.c.slide_id == slide_id,
+            review_decisions.c.kind == kind,
+            review_decisions.c.number == found.number,
         )
         .values(reopened_at=func.now(), reopened_note=draft.note or None, updated_at=func.now())
     )

@@ -67,7 +67,9 @@ def test_a_slide_moves_with_its_result_sets_decisions_and_threads(
     )
     assert thread.status_code == 201, thread.text
     before_sets = api(mover).get(f"/api/slides/{r.slide}/result-sets").json()
-    decisions = owner(database, f"SELECT count(*) FROM verdicts WHERE slide_id = '{r.slide}'")
+    decisions = owner(
+        database, f"SELECT count(*) FROM review_decisions WHERE slide_id = '{r.slide}'"
+    )
 
     moved = api(mover).post(
         f"/api/slides/{r.slide}/move", json={"case_id": str(target), "reason": MOVE_REASON}
@@ -83,7 +85,8 @@ def test_a_slide_moves_with_its_result_sets_decisions_and_threads(
     assert [slide["id"] for slide in landed] == [str(r.slide)]
     assert api(mover).get(f"/api/slides/{r.slide}/result-sets").json() == before_sets
     assert (
-        owner(database, f"SELECT count(*) FROM verdicts WHERE slide_id = '{r.slide}'") == decisions
+        owner(database, f"SELECT count(*) FROM review_decisions WHERE slide_id = '{r.slide}'")
+        == decisions
     )
     threads = api(r.people["owner"]).get(f"{r.base}/threads").json()
     assert [item["id"] for item in threads] == [thread.json()["id"]]

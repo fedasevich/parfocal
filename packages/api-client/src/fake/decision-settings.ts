@@ -1,4 +1,4 @@
-import type { CountsAsChange, DecisionSettings, VerdictValue } from "../generated/api.ts";
+import type { CountsAsChange, DecisionSettings, DecisionValue } from "../generated/api.ts";
 import { decisionStyles, type ScenarioDecisionStyle } from "./scenario-review.ts";
 
 const apiStyles = {
@@ -8,7 +8,7 @@ const apiStyles = {
   blind: "blind",
 } as const;
 
-export const countsAsFrom = (agreeFrom: number, disagreeTo: number): VerdictValue[] =>
+export const countsAsFrom = (agreeFrom: number, disagreeTo: number): DecisionValue[] =>
   [1, 2, 3, 4, 5].map((step) =>
     step >= agreeFrom ? "agree" : step <= disagreeTo ? "disagree" : "unsure",
   );
@@ -30,7 +30,7 @@ const certaintyAnswers: Record<string, Record<string, number>> = {
   "RT-13": { "1": 2, "2": 4, "3": 5, "4": 8, "5": 9 },
 };
 
-type CountsAsStore = { countsAs: VerdictValue[]; changes: CountsAsChange[] };
+type CountsAsStore = { countsAs: DecisionValue[]; changes: CountsAsChange[] };
 
 const edited = new Map<string, CountsAsStore>();
 
@@ -46,7 +46,7 @@ export const countsAsChangesFor = (code: string): CountsAsChange[] =>
 export const answersFor = (code: string): Record<string, number> | null =>
   decisionSettingsFor(code).style === "certainty" ? (certaintyAnswers[code] ?? null) : null;
 
-export const countedFromAnswers = (answers: Record<string, number>, countsAs: VerdictValue[]) => {
+export const countedFromAnswers = (answers: Record<string, number>, countsAs: DecisionValue[]) => {
   const counted = { agree: 0, disagree: 0, unsure: 0 };
   for (const [answer, count] of Object.entries(answers)) {
     if (answer === "unsure") counted.unsure += count;
@@ -55,12 +55,12 @@ export const countedFromAnswers = (answers: Record<string, number>, countsAs: Ve
   return counted;
 };
 
-export const keepsAgreeAndDisagree = (countsAs: VerdictValue[]) =>
+export const keepsAgreeAndDisagree = (countsAs: DecisionValue[]) =>
   countsAs.includes("agree") && countsAs.includes("disagree");
 
 export const changeCountsAs = (
   code: string,
-  after: VerdictValue[],
+  after: DecisionValue[],
   changedBy: string,
   changedAt: string,
 ): CountsAsChange => {
@@ -88,7 +88,7 @@ export const countedAs = (
   answer: string,
   pickedClassId: string | null | undefined,
   aiClassKey: number | undefined,
-): VerdictValue => {
+): DecisionValue => {
   if (answer === "unsure") return "unsure";
   if (settings.style === "certainty") return settings.counts_as[Number(answer) - 1] ?? "unsure";
   if (settings.style === "agree") return answer === "disagree" ? "disagree" : "agree";

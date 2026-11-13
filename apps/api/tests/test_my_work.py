@@ -22,11 +22,12 @@ def submit(api: ApiAs, s: Study, who: str, task_id: str, slide: uuid.UUID) -> No
     assert response.status_code == 200, response.text
 
 
-def seed_verdict(database: str, s: Study, task_id: str, who: str, value: str) -> None:
+def seed_decision(database: str, s: Study, task_id: str, who: str, value: str) -> None:
     reason = "'{not_a_cell}'" if value == "disagree" else "'{}'"
     owner(
         database,
-        "INSERT INTO verdicts (tenant_id, project_id, task_id, slide_id, user_id, kind, number, "
+        "INSERT INTO review_decisions (tenant_id, project_id, task_id, slide_id, user_id, "
+        "kind, number, "
         f"value, style, answer, reasons) VALUES ('{s.tenant_id}', '{s.project}', '{task_id}', "
         f"'{s.slides[0]}', '{s.people[who].user_id}', 'cell', 1, '{value}', 'agree', '{value}', "
         f"{reason})",
@@ -41,14 +42,14 @@ def test_to_review_lists_my_tasks_with_progress_and_the_next_slide(
     started = task(api, s, name="Started", case_ids=[], reviewer_ids=pair, due_on="2026-12-01")
     fresh = task(api, s, name="Fresh", split="even", reviewer_ids=pair, due_on="2026-11-01")
     submit(api, s, "first", started["id"], s.slides[0])
-    seed_verdict(database, s, started["id"], "first", "agree")
+    seed_decision(database, s, started["id"], "first", "agree")
     mine = api(s.people["first"]).get("/api/me/review-tasks").json()
     assert [(t["name"], t["status"]) for t in mine] == [
         ("Started", "in-review"),
         ("Fresh", "not-started"),
     ]
     first = mine[0]
-    assert (first["slides_submitted"], first["slides_assigned"], first["verdicts"]) == (1, 2, 1)
+    assert (first["slides_submitted"], first["slides_assigned"], first["decisions"]) == (1, 2, 1)
     assert first["next_slide_id"] == str(s.slides[1])
     assert first["project"]["code"] == "P01"
     assert mine[1]["next_slide_id"] == str(s.slides[0])
@@ -74,10 +75,10 @@ def test_assigned_by_me_shows_each_reviewer_and_the_task_status(api: ApiAs, data
     assert status() == ("in-review", 0, [(0, 1, "not-started"), (1, 1, "submitted")])
     submit(api, s, "second", made["id"], s.slides[0])
     assert status()[:2] == ("ready-to-sign-off", 0)
-    seed_verdict(database, s, made["id"], "first", "agree")
-    seed_verdict(database, s, made["id"], "second", "disagree")
+    seed_decision(database, s, made["id"], "first", "agree")
+    seed_decision(database, s, made["id"], "second", "disagree")
     assert status()[:2] == ("disagreements", 1)
-    owner(database, f"DELETE FROM verdicts WHERE task_id = '{made['id']}'")
+    owner(database, f"DELETE FROM review_decisions WHERE task_id = '{made['id']}'")
     assert (
         api(s.people["owner"]).post(f"/api/review-tasks/{made['id']}/sign-off").status_code == 200
     )

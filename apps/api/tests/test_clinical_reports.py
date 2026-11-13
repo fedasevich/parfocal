@@ -359,7 +359,8 @@ def test_findings_draw_on_the_case_decisions(api: ApiAs, database: str, clinic: 
     )
     owner(
         database,
-        "INSERT INTO verdicts (tenant_id, project_id, task_id, slide_id, user_id, kind, number, "
+        "INSERT INTO review_decisions (tenant_id, project_id, task_id, slide_id, user_id, "
+        "kind, number, "
         f"value, style, answer) VALUES ('{clinic.lead.tenant_id}', '{clinic.project}', "
         f"'{task[0][0]}', '{clinic.first}', '{clinic.junior.user_id}', 'region', 3, "
         "'agree', 'agree', 'agree')",

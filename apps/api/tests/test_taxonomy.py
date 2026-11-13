@@ -54,11 +54,11 @@ def test_every_column_that_keeps_a_class_alive_is_checked_before_a_class_is_remo
         "annotations.class_id",
         "disagreement_decisions.answer_class_id",
         "result_set_classes.class_id",
+        "review_decisions.ai_class_id",
+        "review_decisions.answer_class_id",
+        "review_decisions.reason_class_id",
         "review_edits.class_id",
         "review_skips.ai_class_id",
-        "verdicts.ai_class_id",
-        "verdicts.answer_class_id",
-        "verdicts.reason_class_id",
     ]
 
 

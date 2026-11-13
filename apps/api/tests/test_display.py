@@ -43,7 +43,7 @@ def save(api: ApiAs, r: Review, who: str, name: str, **body: Any) -> Any:
 
 
 def decide(api: ApiAs, r: Review, who: str, object_id: str) -> Any:
-    saved = api(r.people[who]).put(f"{r.base}/verdicts/{object_id}", json={"answer": "agree"})
+    saved = api(r.people[who]).put(f"{r.base}/decisions/{object_id}", json={"answer": "agree"})
     assert saved.status_code == 200, saved.text
     return saved.json()
 
@@ -242,12 +242,12 @@ def test_every_decision_stores_the_preset_in_force(api: ApiAs, database: str) ->
     theirs = save(api, r, "second", "Theirs").json()
     assert choose(api, r, "first", {}, theirs["id"]).status_code == 404
     assert decide(api, r, "second", "T1")["preset"] is None
-    listed = api(r.people["first"]).get(f"{r.base}/verdicts").json()
+    listed = api(r.people["first"]).get(f"{r.base}/decisions").json()
     assert {item["object"]: item["preset"] for item in listed} == {"T1": None, "T2": "Dots"}
     api(r.people["first"]).delete(f"{PRESETS}/{preset['id']}")
     after = api(r.people["first"]).get(display_path(r)).json()
     assert (after["preset"], after["settings"]["draw_as"]) == ("Task default", "dots")
-    assert api(r.people["first"]).get(f"{r.base}/verdicts").json()[1]["preset"] == "Dots"
+    assert api(r.people["first"]).get(f"{r.base}/decisions").json()[1]["preset"] == "Dots"
 
 
 def test_the_evaluation_counts_who_used_which_preset(api: ApiAs, database: str) -> None:

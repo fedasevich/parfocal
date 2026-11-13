@@ -15,7 +15,7 @@ type ProgressTone = "accent" | "ok" | "warn" | "bad" | "tiles";
 const fillTones: Record<ProgressTone, string> = {
   accent: "bg-accent-fill",
   ok: "bg-ok-fill",
-  warn: "bg-v-unsure",
+  warn: "bg-decision-unsure",
   bad: "bg-bad-fill",
   tiles:
     "bg-[repeating-linear-gradient(-45deg,var(--accent-fill)_0_6px,color-mix(in_srgb,var(--accent-fill)_60%,transparent)_6px_12px)]",
@@ -65,10 +65,10 @@ function ProgressBar({
 }
 
 const decisionStroke: Record<Decision, string> = {
-  agree: "var(--v-agree)",
-  disagree: "var(--v-disagree)",
-  unsure: "var(--v-unsure)",
-  open: "var(--v-open)",
+  agree: "var(--decision-agree)",
+  disagree: "var(--decision-disagree)",
+  unsure: "var(--decision-unsure)",
+  open: "var(--decision-open)",
 };
 
 type ProgressRingProps = Omit<React.ComponentProps<"span">, "children"> & {
@@ -105,7 +105,7 @@ function ProgressRing({ split, size = 40, label, className, ...props }: Progress
           cy={size / 2}
           r={radius}
           fill="none"
-          stroke="var(--v-open)"
+          stroke="var(--decision-open)"
           strokeWidth={stroke}
         />
         {arcs.map((arc) => (
@@ -143,7 +143,11 @@ type StackedBarProps = Omit<React.ComponentProps<"div">, "children"> & {
   emptyText?: string;
 };
 
-const stackedFill = { agree: "bg-v-agree", unsure: "bg-v-unsure", disagree: "bg-v-disagree" };
+const stackedFill = {
+  agree: "bg-decision-agree",
+  unsure: "bg-decision-unsure",
+  disagree: "bg-decision-disagree",
+};
 
 const stackedWords = { agree: "agree", unsure: "not sure", disagree: "disagree" };
 

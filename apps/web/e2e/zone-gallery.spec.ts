@@ -17,7 +17,7 @@ async function objectsTabUrl(page: Page) {
 async function savedDecisions(page: Page) {
   return page.evaluate(
     async ([task, slide]) => {
-      const response = await fetch(`/api/review-tasks/${task}/slides/${slide}/verdicts`);
+      const response = await fetch(`/api/review-tasks/${task}/slides/${slide}/decisions`);
       const body = (await response.json()) as { items?: { object: string; value: string }[] };
       return body.items ?? (body as unknown as { object: string; value: string }[]);
     },

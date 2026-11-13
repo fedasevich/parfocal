@@ -32,9 +32,9 @@ type ProgressPopoverProps = {
 };
 
 const legendRows = [
-  { key: "agree", label: "Agree", dot: "bg-v-agree" },
-  { key: "disagree", label: "Disagree", dot: "bg-v-disagree" },
-  { key: "unsure", label: "Not sure", dot: "bg-v-unsure" },
+  { key: "agree", label: "Agree", dot: "bg-decision-agree" },
+  { key: "disagree", label: "Disagree", dot: "bg-decision-disagree" },
+  { key: "unsure", label: "Not sure", dot: "bg-decision-unsure" },
   {
     key: "open",
     label: "Still open",

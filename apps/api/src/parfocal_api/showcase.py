@@ -35,7 +35,9 @@ from parfocal_api.sample_project import SAMPLE_SLIDES, square
 from parfocal_api.study_templates import seed_built_ins
 from parfocal_api.tables import (
     AnalysisTemplate,
+    DecisionReason,
     DecisionStyle,
+    DecisionValue,
     PrivacyMode,
     ProjectRole,
     ResultObjectKind,
@@ -44,18 +46,16 @@ from parfocal_api.tables import (
     TaskKind,
     TaskScope,
     TaskSplit,
-    VerdictReason,
-    VerdictValue,
     memberships,
     organisations,
     project_members,
     review_assignments,
+    review_decisions,
     review_task_slides,
     review_tasks,
     slides,
     tenants,
     users,
-    verdicts,
     workspace_settings,
 )
 from parfocal_common.db import DatabaseScope, create_engine, scoped_transaction
@@ -424,11 +424,11 @@ async def decide(
     task_id: uuid.UUID,
     slide_id: uuid.UUID,
     key: str,
-    value: VerdictValue,
-    reasons: list[VerdictReason] | None = None,
+    value: DecisionValue,
+    reasons: list[DecisionReason] | None = None,
 ) -> None:
     await connection.execute(
-        insert(verdicts).values(
+        insert(review_decisions).values(
             tenant_id=seeded.tenant_id,
             project_id=project_id,
             task_id=task_id,
@@ -460,7 +460,7 @@ async def agree_and_submit(
     slide_id: uuid.UUID,
 ) -> None:
     for key in ("rhea", "remy"):
-        await decide(connection, seeded, project_id, task_id, slide_id, key, VerdictValue.AGREE)
+        await decide(connection, seeded, project_id, task_id, slide_id, key, DecisionValue.AGREE)
     await submit(connection, task_id, slide_id)
 
 
@@ -549,12 +549,12 @@ async def seed_states(
         task_id,
         named["in-review"],
         "rhea",
-        VerdictValue.UNSURE,
-        [VerdictReason.NEED_SECOND_LOOK, VerdictReason.BORDER_UNCLEAR],
+        DecisionValue.UNSURE,
+        [DecisionReason.NEED_SECOND_LOOK, DecisionReason.BORDER_UNCLEAR],
     )
     await agree_and_submit(connection, seeded, project_id, task_id, named["submitted"])
     await decide(
-        connection, seeded, project_id, task_id, named["disagreement"], "rhea", VerdictValue.AGREE
+        connection, seeded, project_id, task_id, named["disagreement"], "rhea", DecisionValue.AGREE
     )
     await decide(
         connection,
@@ -563,8 +563,8 @@ async def seed_states(
         task_id,
         named["disagreement"],
         "remy",
-        VerdictValue.DISAGREE,
-        [VerdictReason.BOUNDARY_OFF],
+        DecisionValue.DISAGREE,
+        [DecisionReason.BOUNDARY_OFF],
     )
     await submit(connection, task_id, named["disagreement"])
     closed_id = await review_task(
@@ -643,8 +643,8 @@ async def seed_styles(
                 task_id,
                 slide.id,
                 "rhea",
-                VerdictValue.DISAGREE,
-                [VerdictReason.BOUNDARY_OFF],
+                DecisionValue.DISAGREE,
+                [DecisionReason.BOUNDARY_OFF],
             )
     slide = await add_slide(connection, seeded, project_id, "Case annotate", sample_facts(sample))
     await review_task(

@@ -23,7 +23,7 @@ class Consensus(StrEnum):
 
 
 @dataclass(frozen=True)
-class Verdict:
+class ReviewDecision:
     value: str
     reasons: tuple[str, ...] = ()
     reason_class: str | None = None
@@ -35,7 +35,7 @@ class AiObject:
     kind: str
     number: int
     class_name: str
-    verdicts: Mapping[str, Verdict]
+    decisions: Mapping[str, ReviewDecision]
     decision: str | None = None
 
 
@@ -109,7 +109,7 @@ def ratio(numerator: int, denominator: int) -> Ratio:
 
 
 def consensus(item: AiObject) -> Consensus:
-    values = {verdict.value for verdict in item.verdicts.values()}
+    values = {decision.value for decision in item.decisions.values()}
     if not values:
         return Consensus.UNDECIDED
     if item.decision in CATEGORIES:
@@ -128,7 +128,7 @@ def consensus(item: AiObject) -> Consensus:
 def retyped_to(item: AiObject) -> str | None:
     if consensus(item) is not Consensus.DISAGREE:
         return None
-    disagreeing = [v for v in item.verdicts.values() if v.value == DISAGREE]
+    disagreeing = [v for v in item.decisions.values() if v.value == DISAGREE]
     classes = {v.reason_class for v in disagreeing if WRONG_CLASS in v.reasons}
     if disagreeing and len(classes) == 1 and all(WRONG_CLASS in v.reasons for v in disagreeing):
         return classes.pop()
@@ -202,13 +202,13 @@ def cohen(first: Sequence[str], second: Sequence[str]) -> float | None:
 
 def pairwise_kappa(objects: Iterable[AiObject]) -> list[Kappa]:
     items = list(objects)
-    reviewers = sorted({person for item in items for person in item.verdicts})
+    reviewers = sorted({person for item in items for person in item.decisions})
     pairs: list[Kappa] = []
     for first, second in combinations(reviewers, 2):
-        shared = [item for item in items if first in item.verdicts and second in item.verdicts]
+        shared = [item for item in items if first in item.decisions and second in item.decisions]
         value = cohen(
-            [item.verdicts[first].value for item in shared],
-            [item.verdicts[second].value for item in shared],
+            [item.decisions[first].value for item in shared],
+            [item.decisions[second].value for item in shared],
         )
         pairs.append(Kappa(first, second, value, len(shared)))
     return pairs
@@ -232,10 +232,10 @@ def fleiss(ratings: Sequence[Mapping[str, int]]) -> float | None:
 
 
 def cell_agreement(objects: Iterable[AiObject]) -> tuple[Ratio, Ratio]:
-    cells = [item for item in objects if item.kind == "cell" and item.verdicts]
+    cells = [item for item in objects if item.kind == "cell" and item.decisions]
     decided = [item for item in cells if consensus(item) is not Consensus.UNDECIDED]
     agreeing = sum(consensus(item) is Consensus.AGREE for item in decided)
-    unanimous = sum(len({v.value for v in item.verdicts.values()}) == 1 for item in cells)
+    unanimous = sum(len({v.value for v in item.decisions.values()}) == 1 for item in cells)
     return ratio(agreeing, len(decided)), ratio(unanimous, len(cells))
 
 
@@ -243,9 +243,9 @@ def reasons(objects: Iterable[AiObject]) -> list[tuple[str, int]]:
     counted = Counter(
         reason
         for item in objects
-        for verdict in item.verdicts.values()
-        if verdict.value == DISAGREE
-        for reason in set(verdict.reasons)
+        for decision in item.decisions.values()
+        if decision.value == DISAGREE
+        for reason in set(decision.reasons)
     )
     return sorted(counted.items(), key=lambda pair: (-pair[1], pair[0]))
 

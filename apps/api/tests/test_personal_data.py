@@ -26,7 +26,8 @@ OPERATOR = PlatformOperator("erasure-operator")
 def judge(database: str, s: Study, task_id: str, who: str, number: int) -> None:
     owner(
         database,
-        "INSERT INTO verdicts (tenant_id, project_id, task_id, slide_id, user_id, kind, number, "
+        "INSERT INTO review_decisions (tenant_id, project_id, task_id, slide_id, user_id, "
+        "kind, number, "
         f"value, style, answer) VALUES ('{s.tenant_id}', '{s.project}', '{task_id}', "
         f"'{s.slides[0]}', '{s.people[who].user_id}', 'region', {number}, 'agree', 'agree', "
         "'agree')",
@@ -47,7 +48,7 @@ def test_every_personal_column_is_exported_or_has_a_reason() -> None:
     }
     handled = set(person_columns()) | {"invitations"} | set(EXPORTED_ELSEWHERE) | set(NOT_EXPORTED)
     assert tables - handled == set()
-    assert {"verdicts", "opinions", "review_edits", "annotations"} <= set(person_columns())
+    assert {"review_decisions", "opinions", "review_edits", "annotations"} <= set(person_columns())
 
 
 @pytest.mark.db
@@ -63,7 +64,7 @@ def test_a_person_exports_their_own_data_and_nobody_elses(api: ApiAs, database: 
     [workspace] = data["workspaces"]
     assert workspace["tenant_id"] == str(s.tenant_id)
     records = workspace["records"]
-    assert [row["number"] for row in records["verdicts"]] == [1]
+    assert [row["number"] for row in records["review_decisions"]] == [1]
     assert {row["user_id"] for row in records["review_assignments"]} == {s.user("first")}
     assert [row["role"] for row in records["project_members"]] == ["reviewer"]
     assert records["memberships"][0]["role"] == "reviewer"
@@ -109,9 +110,9 @@ def test_an_erased_person_keeps_their_work_under_a_former_member(api: ApiAs, dat
     assert owner(
         database, f"SELECT count(*) FROM audit_people WHERE subject = '{first.subject}'"
     ) == [(0,)]
-    assert owner(database, f"SELECT count(*) FROM verdicts WHERE user_id = '{first.user_id}'") == [
-        (1,)
-    ]
+    assert owner(
+        database, f"SELECT count(*) FROM review_decisions WHERE user_id = '{first.user_id}'"
+    ) == [(1,)]
     third = s.people["third"]
     assert (
         api(OPERATOR)

@@ -62,6 +62,7 @@ from parfocal_api import (
     result_pairing,
     result_sets,
     retention,
+    review_decisions,
     review_order,
     review_skips,
     review_states,
@@ -95,7 +96,6 @@ from parfocal_api import (
     training_exports,
     uploads,
     users,
-    verdicts,
     workspace_access,
 )
 from parfocal_api.oidc import OidcClient
@@ -259,7 +259,7 @@ def create_app(
     app.include_router(notifications.schedule_router)
     app.include_router(search.router)
     app.include_router(review_states.router)
-    app.include_router(verdicts.router)
+    app.include_router(review_decisions.router)
     app.include_router(decision_notes.router)
     app.include_router(review_skips.router)
     app.include_router(display.router)

@@ -10,7 +10,7 @@ export type Capability = {
   readonly folder?: string;
 };
 
-export type Verdict =
+export type CapabilityCheck =
   | { readonly ok: true; readonly capability: Capability }
   | { readonly ok: false; readonly reason: "malformed" | "bad-signature" | "expired" };
 
@@ -110,7 +110,7 @@ export async function verifyCapability(
   token: string,
   key: CryptoKey,
   nowSeconds: number,
-): Promise<Verdict> {
+): Promise<CapabilityCheck> {
   const parts = token.split(".");
   if (parts.length !== 2 || parts.some((part) => part === "")) {
     return { ok: false, reason: "malformed" };

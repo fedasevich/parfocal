@@ -35,7 +35,7 @@ function ViewedRing({ percent, size = 36, className, ...props }: ViewedRingProps
           cy={size / 2}
           r={radius}
           fill="none"
-          stroke="var(--v-open)"
+          stroke="var(--decision-open)"
           strokeWidth={stroke}
         />
         <circle

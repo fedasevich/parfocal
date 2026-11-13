@@ -8,7 +8,7 @@ export type RoomGrant = {
   readonly expires: number;
 };
 
-export type RoomVerdict =
+export type RoomTokenCheck =
   | { readonly ok: true; readonly grant: RoomGrant }
   | { readonly ok: false; readonly reason: "malformed" | "signature" | "expired" };
 
@@ -58,7 +58,7 @@ export async function verifyRoomToken(
   token: string,
   key: CryptoKey,
   nowSeconds: number,
-): Promise<RoomVerdict> {
+): Promise<RoomTokenCheck> {
   const parts = token.split(".");
   if (parts.length !== 2) {
     return { ok: false, reason: "malformed" };

@@ -14,7 +14,7 @@ const resume: ResumeTarget = {
   position: 7,
   slides_assigned: 12,
   object_id: "T3",
-  verdicts_on_slide: 2,
+  decisions_on_slide: 2,
   due_on: null,
   blinded: false,
   mode: "guided",

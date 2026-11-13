@@ -3,10 +3,10 @@ import type {
   PatientDetail,
   Project,
   ResultSet,
+  ReviewDecision,
   ReviewTaskDetail,
   SlideRow,
   TaskKind,
-  Verdict,
 } from "@parfocal/api-client";
 
 export type CaseLoadInput = {
@@ -16,7 +16,7 @@ export type CaseLoadInput = {
   readonly caseDetail: CaseDetail | undefined;
   readonly resultSets: readonly ResultSet[];
   readonly task: ReviewTaskDetail | undefined;
-  readonly decisions: readonly Verdict[];
+  readonly decisions: readonly ReviewDecision[];
 };
 
 export type CaseLoad = {
@@ -36,7 +36,7 @@ export type CaseLoad = {
     readonly name: string;
     readonly kind: TaskKind;
   } | null;
-  readonly decisions: readonly Verdict[];
+  readonly decisions: readonly ReviewDecision[];
 };
 
 export function shapeCaseLoad(input: CaseLoadInput): CaseLoad {

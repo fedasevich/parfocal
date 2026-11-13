@@ -28,10 +28,10 @@ from parfocal_api.tables import (
     projects,
     result_sets,
     review_assignments,
+    review_decisions,
     review_task_slides,
     review_tasks,
     slides,
-    verdicts,
 )
 
 PAGE = 50
@@ -74,7 +74,7 @@ class MyTask(BaseModel):
     start_mode: StartMode
     slides_submitted: int
     slides_assigned: int
-    verdicts: int
+    decisions: int
     status: MyStatus
     next_slide_id: uuid.UUID | None
     created_by_user_id: uuid.UUID | None
@@ -185,9 +185,12 @@ async def my_review_tasks(connection: AsyncConnection, me: uuid.UUID) -> list[My
     counted = dict(
         (
             await connection.execute(
-                select(verdicts.c.task_id, func.count())
-                .where(verdicts.c.user_id == me, verdicts.c.task_id.in_([row.id for row in rows]))
-                .group_by(verdicts.c.task_id)
+                select(review_decisions.c.task_id, func.count())
+                .where(
+                    review_decisions.c.user_id == me,
+                    review_decisions.c.task_id.in_([row.id for row in rows]),
+                )
+                .group_by(review_decisions.c.task_id)
             )
         ).all()
     )
@@ -219,7 +222,7 @@ async def my_review_tasks(connection: AsyncConnection, me: uuid.UUID) -> list[My
                 start_mode=StartMode(row.start_mode),
                 slides_submitted=submitted,
                 slides_assigned=len(mine),
-                verdicts=int(counted.get(row.id, 0)),
+                decisions=int(counted.get(row.id, 0)),
                 status=status,
                 next_slide_id=next((slide for slide, done in mine if not done), None),
                 created_by_user_id=row.created_by_user_id,

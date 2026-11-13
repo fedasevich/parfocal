@@ -8,7 +8,7 @@ from workspace_support import owner
 
 pytestmark = pytest.mark.db
 
-VERDICTS = {
+DECISIONS = {
     "first": {
         "T1": {"value": "agree"},
         "T2": {"value": "disagree", "reasons": ["not_class"]},
@@ -24,20 +24,20 @@ VERDICTS = {
 
 def test_both_kinds_are_queued_once_everyone_has_submitted(api: ApiAs, database: str) -> None:
     r = review(api, database)
-    for who, given in VERDICTS.items():
+    for who, given in DECISIONS.items():
         for object_id, body in given.items():
-            saved = api(r.people[who]).put(f"{r.base}/verdicts/{object_id}", json=body)
+            saved = api(r.people[who]).put(f"{r.base}/decisions/{object_id}", json=body)
             assert saved.status_code == 200, saved.text
     task = f"/api/review-tasks/{r.task}"
     assert api(r.people["owner"]).get(f"{task}/disagreements").json() == []
-    for who in VERDICTS:
+    for who in DECISIONS:
         assert api(r.people[who]).post(f"{r.base}/submit").status_code == 200
     queue = api(r.people["owner"]).get(f"{task}/disagreements").json()
     assert [(item["object"], item["why"]) for item in queue] == [
         ("T1", "reviewers-differ"),
         ("T2", "against-the-ai"),
     ]
-    assert sorted(v["value"] for v in queue[0]["verdicts"]) == ["agree", "disagree"]
+    assert sorted(v["value"] for v in queue[0]["decisions"]) == ["agree", "disagree"]
     slides = api(r.people["owner"]).get(f"{task}/states").json()["slides"]
     assert slides[0]["state"] == "disagreement-queue"
     refused = api(r.people["owner"]).post(f"{task}/sign-off")
@@ -52,7 +52,7 @@ def test_both_kinds_are_queued_once_everyone_has_submitted(api: ApiAs, database:
 def test_agreeing_reviewers_leave_nothing_to_decide(api: ApiAs, database: str) -> None:
     r = review(api, database)
     for who in ("first", "second"):
-        api(r.people[who]).put(f"{r.base}/verdicts/T1", json={"value": "agree"})
+        api(r.people[who]).put(f"{r.base}/decisions/T1", json={"value": "agree"})
         api(r.people[who]).post(f"{r.base}/submit")
     task = f"/api/review-tasks/{r.task}"
     assert api(r.people["owner"]).get(f"{task}/disagreements").json() == []
@@ -61,9 +61,9 @@ def test_agreeing_reviewers_leave_nothing_to_decide(api: ApiAs, database: str) -
 
 def queued_review(api: ApiAs, database: str) -> tuple[Review, str]:
     r = review(api, database)
-    for who, given in VERDICTS.items():
+    for who, given in DECISIONS.items():
         for object_id, body in given.items():
-            api(r.people[who]).put(f"{r.base}/verdicts/{object_id}", json=body)
+            api(r.people[who]).put(f"{r.base}/decisions/{object_id}", json=body)
         api(r.people[who]).post(f"{r.base}/submit")
     return r, f"/api/review-tasks/{r.task}"
 
@@ -249,8 +249,8 @@ def test_a_reviewer_asking_for_a_second_look_queues_the_object(api: ApiAs, datab
     r = review(api, database)
     for who, reasons in (("first", ["need_second_look"]), ("second", ["need_ihc"])):
         body = {"value": "unsure", "reasons": reasons}
-        assert api(r.people[who]).put(f"{r.base}/verdicts/T1", json=body).status_code == 200
-        api(r.people[who]).put(f"{r.base}/verdicts/T2", json={"value": "unsure"})
+        assert api(r.people[who]).put(f"{r.base}/decisions/T1", json=body).status_code == 200
+        api(r.people[who]).put(f"{r.base}/decisions/T2", json={"value": "unsure"})
         api(r.people[who]).post(f"{r.base}/submit")
     queue = api(r.people["owner"]).get(f"/api/review-tasks/{r.task}/disagreements").json()
     assert [(item["object"], item["why"]) for item in queue] == [("T1", "second-look")]
@@ -291,14 +291,14 @@ def test_an_object_redrawn_after_decisions_is_kept_or_sent_back(api: ApiAs, data
         False,
         None,
     )
-    assert [verdict["reopened"] for verdict in body["verdicts"]] == [True, True]
+    assert [decision["reopened"] for decision in body["decisions"]] == [True, True]
     notes = owner(
         database,
-        "SELECT DISTINCT reopened_note FROM verdicts "
+        "SELECT DISTINCT reopened_note FROM review_decisions "
         f"WHERE task_id = '{r.task}' AND kind = 'region' AND number = 1",
     )
     assert notes == [("Outline changed",)]
-    listed = api(r.people["second"]).get(f"{r.base}/verdicts").json()
+    listed = api(r.people["second"]).get(f"{r.base}/decisions").json()
     assert [item["reopened_note"] for item in listed if item["object"] == "T1"] == [
         "Outline changed"
     ]
@@ -307,7 +307,7 @@ def test_an_object_redrawn_after_decisions_is_kept_or_sent_back(api: ApiAs, data
     refused = api(researcher).post(f"{task}/sign-off")
     assert (refused.status_code, refused.json()["code"]) == (409, "disagreements-open")
     for who, given in (("first", {"value": "agree"}), ("second", {"value": "disagree"})):
-        assert api(r.people[who]).put(f"{r.base}/verdicts/T1", json=given).status_code == 200
+        assert api(r.people[who]).put(f"{r.base}/decisions/T1", json=given).status_code == 200
     settled = api(researcher).get(f"{task}/disagreements").json()[0]
     assert (settled["looking_again"], settled["edited_after_decisions"]) == (False, False)
     actions = owner(

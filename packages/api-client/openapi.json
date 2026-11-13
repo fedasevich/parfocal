@@ -24025,13 +24025,13 @@
         "x-permission-write": true
       }
     },
-    "/api/review-tasks/{task_id}/slides/{slide_id}/verdicts/{object_id}": {
+    "/api/review-tasks/{task_id}/slides/{slide_id}/decisions/{object_id}": {
       "put": {
         "tags": [
           "review-tasks"
         ],
-        "summary": "Save Verdict",
-        "operationId": "saveVerdict",
+        "summary": "Save Decision",
+        "operationId": "saveDecision",
         "parameters": [
           {
             "name": "task_id",
@@ -24068,7 +24068,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/VerdictDraft"
+                "$ref": "#/components/schemas/ReviewDecisionDraft"
               }
             }
           }
@@ -24079,7 +24079,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Verdict"
+                  "$ref": "#/components/schemas/ReviewDecision"
                 }
               }
             }
@@ -24180,8 +24180,8 @@
         "tags": [
           "review-tasks"
         ],
-        "summary": "Clear Verdict",
-        "operationId": "clearVerdict",
+        "summary": "Clear Decision",
+        "operationId": "clearDecision",
         "parameters": [
           {
             "name": "task_id",
@@ -24310,13 +24310,13 @@
         "x-permission-write": true
       }
     },
-    "/api/review-tasks/{task_id}/slides/{slide_id}/verdicts": {
+    "/api/review-tasks/{task_id}/slides/{slide_id}/decisions": {
       "get": {
         "tags": [
           "review-tasks"
         ],
-        "summary": "List Verdicts",
-        "operationId": "listVerdicts",
+        "summary": "List Decisions",
+        "operationId": "listDecisions",
         "parameters": [
           {
             "name": "task_id",
@@ -24364,9 +24364,9 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/Verdict"
+                    "$ref": "#/components/schemas/ReviewDecision"
                   },
-                  "title": "Response Listverdicts"
+                  "title": "Response Listdecisions"
                 }
               }
             }
@@ -42633,7 +42633,7 @@
             "title": "Answer Class Id"
           },
           "value": {
-            "$ref": "#/components/schemas/VerdictValue"
+            "$ref": "#/components/schemas/DecisionValue"
           },
           "note": {
             "anyOf": [
@@ -44604,7 +44604,7 @@
             "title": "Object Id"
           },
           "decision": {
-            "$ref": "#/components/schemas/VerdictValue"
+            "$ref": "#/components/schemas/DecisionValue"
           }
         },
         "type": "object",
@@ -46133,7 +46133,7 @@
       },
       "CountsAs": {
         "items": {
-          "$ref": "#/components/schemas/VerdictValue"
+          "$ref": "#/components/schemas/DecisionValue"
         },
         "type": "array",
         "maxItems": 5,
@@ -46396,7 +46396,7 @@
           },
           "counts_as": {
             "items": {
-              "$ref": "#/components/schemas/VerdictValue"
+              "$ref": "#/components/schemas/DecisionValue"
             },
             "type": "array",
             "title": "Counts As"
@@ -46406,7 +46406,7 @@
               "type": "integer"
             },
             "propertyNames": {
-              "$ref": "#/components/schemas/VerdictValue"
+              "$ref": "#/components/schemas/DecisionValue"
             },
             "type": "object",
             "title": "Counted"
@@ -46484,7 +46484,7 @@
             "title": "Author Id"
           },
           "value": {
-            "$ref": "#/components/schemas/VerdictValue"
+            "$ref": "#/components/schemas/DecisionValue"
           },
           "answer": {
             "type": "string",
@@ -46492,7 +46492,7 @@
           },
           "reasons": {
             "items": {
-              "$ref": "#/components/schemas/VerdictReason"
+              "$ref": "#/components/schemas/DecisionReason"
             },
             "type": "array",
             "title": "Reasons"
@@ -46532,6 +46532,23 @@
         "type": "string",
         "maxLength": 200,
         "minLength": 2
+      },
+      "DecisionReason": {
+        "type": "string",
+        "enum": [
+          "not_class",
+          "boundary_off",
+          "two_regions",
+          "artefact",
+          "not_a_cell",
+          "wrong_class",
+          "need_deeper_level",
+          "need_ihc",
+          "border_unclear",
+          "out_of_focus",
+          "need_second_look"
+        ],
+        "title": "DecisionReason"
       },
       "DecisionSettings": {
         "properties": {
@@ -46573,6 +46590,15 @@
           "blind"
         ],
         "title": "DecisionStyle"
+      },
+      "DecisionValue": {
+        "type": "string",
+        "enum": [
+          "agree",
+          "disagree",
+          "unsure"
+        ],
+        "title": "DecisionValue"
       },
       "DeclineDraft": {
         "properties": {
@@ -51152,9 +51178,9 @@
             "type": "integer",
             "title": "Slides Assigned"
           },
-          "verdicts": {
+          "decisions": {
             "type": "integer",
-            "title": "Verdicts"
+            "title": "Decisions"
           },
           "status": {
             "$ref": "#/components/schemas/MyStatus"
@@ -51196,7 +51222,7 @@
           "start_mode",
           "slides_submitted",
           "slides_assigned",
-          "verdicts",
+          "decisions",
           "status",
           "next_slide_id",
           "created_by_user_id"
@@ -53866,7 +53892,7 @@
             "title": "Answer Class Id"
           },
           "value": {
-            "$ref": "#/components/schemas/VerdictValue"
+            "$ref": "#/components/schemas/DecisionValue"
           },
           "choice": {
             "anyOf": [
@@ -53970,12 +53996,12 @@
           "why": {
             "$ref": "#/components/schemas/Why"
           },
-          "verdicts": {
+          "decisions": {
             "items": {
-              "$ref": "#/components/schemas/ReviewerVerdict"
+              "$ref": "#/components/schemas/ReviewerAnswer"
             },
             "type": "array",
-            "title": "Verdicts"
+            "title": "Decisions"
           },
           "decision": {
             "anyOf": [
@@ -54031,7 +54057,7 @@
           "kind",
           "number",
           "why",
-          "verdicts"
+          "decisions"
         ],
         "title": "QueuedObject"
       },
@@ -55331,9 +55357,9 @@
             ],
             "title": "Object Id"
           },
-          "verdicts_on_slide": {
+          "decisions_on_slide": {
             "type": "integer",
-            "title": "Verdicts On Slide"
+            "title": "Decisions On Slide"
           },
           "due_on": {
             "anyOf": [
@@ -55377,7 +55403,7 @@
           "position",
           "slides_assigned",
           "object_id",
-          "verdicts_on_slide",
+          "decisions_on_slide",
           "due_on",
           "blinded",
           "mode",
@@ -55422,6 +55448,244 @@
           "merged"
         ],
         "title": "Retired"
+      },
+      "ReviewDecision": {
+        "properties": {
+          "object": {
+            "type": "string",
+            "title": "Object"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/AnnotationKind"
+          },
+          "number": {
+            "type": "integer",
+            "title": "Number"
+          },
+          "style": {
+            "$ref": "#/components/schemas/DecisionStyle"
+          },
+          "answer": {
+            "type": "string",
+            "title": "Answer"
+          },
+          "answer_class_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Answer Class Id"
+          },
+          "value": {
+            "$ref": "#/components/schemas/DecisionValue"
+          },
+          "reasons": {
+            "items": {
+              "$ref": "#/components/schemas/DecisionReason"
+            },
+            "type": "array",
+            "title": "Reasons"
+          },
+          "reason_class_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason Class Id"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          },
+          "reopened_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reopened At"
+          },
+          "reopened_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reopened Note"
+          },
+          "preset": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Preset"
+          },
+          "ai_class_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ai Class Id",
+            "description": "The AI call when the object was first decided, kept for as long as the decision exists. Reported by the client for cells and read from the result set for regions."
+          },
+          "ai_score": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ai Score",
+            "description": "The AI call when the object was first decided, kept for as long as the decision exists. Reported by the client for cells and read from the result set for regions."
+          }
+        },
+        "type": "object",
+        "required": [
+          "object",
+          "kind",
+          "number",
+          "style",
+          "answer",
+          "answer_class_id",
+          "value",
+          "reasons",
+          "reason_class_id",
+          "note",
+          "updated_at"
+        ],
+        "title": "ReviewDecision"
+      },
+      "ReviewDecisionDraft": {
+        "properties": {
+          "answer": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Answer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "answer_class_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Answer Class Id"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DecisionValue"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reasons": {
+            "items": {
+              "$ref": "#/components/schemas/DecisionReason"
+            },
+            "type": "array",
+            "title": "Reasons",
+            "default": []
+          },
+          "reason_class_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason Class Id"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/parfocal_api__review_decisions__Note"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "ai_class_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ai Class Id",
+            "description": "The AI call shown when deciding. For a cell the reviewer's client reports it and the API checks only that the class is one the result set uses, because cell calls live in the result chunks. For a region the API reads it from the result set and ignores this field."
+          },
+          "ai_score": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Score"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The AI call shown when deciding. For a cell the reviewer's client reports it and the API checks only that the class is one the result set uses, because cell calls live in the result chunks. For a region the API reads it from the result set and ignores this field."
+          }
+        },
+        "type": "object",
+        "title": "ReviewDecisionDraft"
       },
       "ReviewEdit": {
         "properties": {
@@ -56054,6 +56318,53 @@
         ],
         "title": "ReviewerAgreement"
       },
+      "ReviewerAnswer": {
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "answer": {
+            "type": "string",
+            "title": "Answer"
+          },
+          "value": {
+            "$ref": "#/components/schemas/DecisionValue"
+          },
+          "reasons": {
+            "items": {
+              "$ref": "#/components/schemas/DecisionReason"
+            },
+            "type": "array",
+            "title": "Reasons"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "reopened": {
+            "type": "boolean",
+            "title": "Reopened"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "answer",
+          "value",
+          "reasons",
+          "reopened"
+        ],
+        "title": "ReviewerAnswer"
+      },
       "ReviewerDecision": {
         "properties": {
           "reviewer": {
@@ -56065,11 +56376,11 @@
             "title": "Answer"
           },
           "value": {
-            "$ref": "#/components/schemas/VerdictValue"
+            "$ref": "#/components/schemas/DecisionValue"
           },
           "reasons": {
             "items": {
-              "$ref": "#/components/schemas/VerdictReason"
+              "$ref": "#/components/schemas/DecisionReason"
             },
             "type": "array",
             "title": "Reasons"
@@ -56173,53 +56484,6 @@
           "submitted_at"
         ],
         "title": "ReviewerState"
-      },
-      "ReviewerVerdict": {
-        "properties": {
-          "user_id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "User Id"
-          },
-          "answer": {
-            "type": "string",
-            "title": "Answer"
-          },
-          "value": {
-            "$ref": "#/components/schemas/VerdictValue"
-          },
-          "reasons": {
-            "items": {
-              "$ref": "#/components/schemas/VerdictReason"
-            },
-            "type": "array",
-            "title": "Reasons"
-          },
-          "note": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Note"
-          },
-          "reopened": {
-            "type": "boolean",
-            "title": "Reopened"
-          }
-        },
-        "type": "object",
-        "required": [
-          "user_id",
-          "answer",
-          "value",
-          "reasons",
-          "reopened"
-        ],
-        "title": "ReviewerVerdict"
       },
       "Reviews": {
         "properties": {
@@ -62348,270 +62612,6 @@
         "type": "object",
         "maxProperties": 54
       },
-      "Verdict": {
-        "properties": {
-          "object": {
-            "type": "string",
-            "title": "Object"
-          },
-          "kind": {
-            "$ref": "#/components/schemas/AnnotationKind"
-          },
-          "number": {
-            "type": "integer",
-            "title": "Number"
-          },
-          "style": {
-            "$ref": "#/components/schemas/DecisionStyle"
-          },
-          "answer": {
-            "type": "string",
-            "title": "Answer"
-          },
-          "answer_class_id": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Answer Class Id"
-          },
-          "value": {
-            "$ref": "#/components/schemas/VerdictValue"
-          },
-          "reasons": {
-            "items": {
-              "$ref": "#/components/schemas/VerdictReason"
-            },
-            "type": "array",
-            "title": "Reasons"
-          },
-          "reason_class_id": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Reason Class Id"
-          },
-          "note": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Note"
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Updated At"
-          },
-          "reopened_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Reopened At"
-          },
-          "reopened_note": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Reopened Note"
-          },
-          "preset": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Preset"
-          },
-          "ai_class_id": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Ai Class Id",
-            "description": "The AI call when the object was first decided, kept for as long as the decision exists. Reported by the client for cells and read from the result set for regions."
-          },
-          "ai_score": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Ai Score",
-            "description": "The AI call when the object was first decided, kept for as long as the decision exists. Reported by the client for cells and read from the result set for regions."
-          }
-        },
-        "type": "object",
-        "required": [
-          "object",
-          "kind",
-          "number",
-          "style",
-          "answer",
-          "answer_class_id",
-          "value",
-          "reasons",
-          "reason_class_id",
-          "note",
-          "updated_at"
-        ],
-        "title": "Verdict"
-      },
-      "VerdictDraft": {
-        "properties": {
-          "answer": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/Answer"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "answer_class_id": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Answer Class Id"
-          },
-          "value": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/VerdictValue"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "reasons": {
-            "items": {
-              "$ref": "#/components/schemas/VerdictReason"
-            },
-            "type": "array",
-            "title": "Reasons",
-            "default": []
-          },
-          "reason_class_id": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Reason Class Id"
-          },
-          "note": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/parfocal_api__verdicts__Note"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "ai_class_id": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Ai Class Id",
-            "description": "The AI call shown when deciding. For a cell the reviewer's client reports it and the API checks only that the class is one the result set uses, because cell calls live in the result chunks. For a region the API reads it from the result set and ignores this field."
-          },
-          "ai_score": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/Score"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "The AI call shown when deciding. For a cell the reviewer's client reports it and the API checks only that the class is one the result set uses, because cell calls live in the result chunks. For a region the API reads it from the result set and ignores this field."
-          }
-        },
-        "type": "object",
-        "title": "VerdictDraft"
-      },
-      "VerdictReason": {
-        "type": "string",
-        "enum": [
-          "not_class",
-          "boundary_off",
-          "two_regions",
-          "artefact",
-          "not_a_cell",
-          "wrong_class",
-          "need_deeper_level",
-          "need_ihc",
-          "border_unclear",
-          "out_of_focus",
-          "need_second_look"
-        ],
-        "title": "VerdictReason"
-      },
-      "VerdictValue": {
-        "type": "string",
-        "enum": [
-          "agree",
-          "disagree",
-          "unsure"
-        ],
-        "title": "VerdictValue"
-      },
       "VersionCheck": {
         "properties": {
           "version": {
@@ -63152,6 +63152,10 @@
         "maxLength": 120,
         "minLength": 1
       },
+      "parfocal_api__review_decisions__Note": {
+        "type": "string",
+        "maxLength": 500
+      },
       "parfocal_api__reviewed_export__ExportFormat": {
         "type": "string",
         "enum": [
@@ -63178,10 +63182,6 @@
       "parfocal_api__users__Title": {
         "type": "string",
         "maxLength": 40
-      },
-      "parfocal_api__verdicts__Note": {
-        "type": "string",
-        "maxLength": 500
       }
     }
   }

@@ -2,9 +2,9 @@ import {
   useGetCase,
   useGetProject,
   useGetReviewTask,
+  useListDecisions,
   useListMySlides,
   useListSlideResultSets,
-  useListVerdicts,
 } from "@parfocal/api-client";
 import { okData } from "../screens/placeholder.tsx";
 import { type CaseLoad, shapeCaseLoad } from "./case-load.ts";
@@ -28,7 +28,7 @@ export function useCaseLoad(
   const caseQuery = useGetCase(caseId ?? "", { query: { enabled: caseId !== undefined } });
   const wantsTask = taskId !== undefined;
   const taskQuery = useGetReviewTask(taskId ?? "", { query: { enabled: wantsTask } });
-  const decisionsQuery = useListVerdicts(taskId ?? "", slideId, undefined, {
+  const decisionsQuery = useListDecisions(taskId ?? "", slideId, undefined, {
     query: { enabled: wantsTask },
   });
   if (projectQuery.isError || slidesQuery.isError) return { state: "failed" };

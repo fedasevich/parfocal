@@ -68,13 +68,13 @@ async function handleConnect(
   if (token === null) {
     return problem(401, "room-token-missing", "A room token is required");
   }
-  const verdict = await verifyRoomToken(token, await roomKey(env.ROOM_TOKEN_KEY), now);
-  if (!verdict.ok) {
-    return verdict.reason === "expired"
+  const access = await verifyRoomToken(token, await roomKey(env.ROOM_TOKEN_KEY), now);
+  if (!access.ok) {
+    return access.reason === "expired"
       ? problem(401, "room-token-expired", "The room token has expired")
       : problem(401, "room-token-invalid", "The room token is not valid");
   }
-  const { grant } = verdict;
+  const { grant } = access;
   if (grant.room !== room) {
     return problem(403, "room-token-other-room", "The room token is for another room");
   }

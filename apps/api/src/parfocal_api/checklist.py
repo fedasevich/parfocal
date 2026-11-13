@@ -18,13 +18,13 @@ from parfocal_api.tables import (
     projects,
     resume_states,
     review_assignments,
+    review_decisions,
     review_tasks,
     slides,
     tenants,
     thread_messages,
     threads,
     users,
-    verdicts,
 )
 
 SAMPLE = projects.c.sample.is_(True)
@@ -97,7 +97,7 @@ async def done_steps(connection: AsyncConnection, person: MemberPrincipal) -> di
     opened = exists().where(
         resume_states.c.user_id == me,
         resume_states.c.slide_id.in_(select(slides.c.id).where(in_sample(slides.c.project_id))),
-    ) | exists().where(verdicts.c.user_id == me, in_sample(verdicts.c.project_id))
+    ) | exists().where(review_decisions.c.user_id == me, in_sample(review_decisions.c.project_id))
     commented = exists().where(
         thread_messages.c.user_id == me,
         thread_messages.c.thread_id == threads.c.id,

@@ -821,6 +821,32 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `released_at` | operational |
 | `nothing_to_mark` | operational |
 
+## review_decisions
+
+| Column | Class |
+|---|---|
+| `tenant_id` | operational |
+| `project_id` | operational |
+| `task_id` | operational |
+| `slide_id` | operational |
+| `user_id` | personal |
+| `kind` | operational |
+| `number` | operational |
+| `value` | operational |
+| `style` | operational |
+| `answer` | operational |
+| `answer_class_id` | operational |
+| `reasons` | operational |
+| `reason_class_id` | operational |
+| `note` | phi |
+| `reopened_at` | operational |
+| `reopened_note` | phi |
+| `preset` | personal |
+| `ai_class_id` | operational. The AI call at decision time, read from the result set for a region and reported by the reviewer's client for a cell, unchecked against the cell chunks |
+| `ai_score` | operational. The AI call at decision time, read from the result set for a region and reported by the reviewer's client for a cell, unchecked against the cell chunks |
+| `created_at` | operational |
+| `updated_at` | operational |
+
 ## review_edits
 
 | Column | Class |
@@ -1269,32 +1295,6 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `quiet_until` | operational |
 | `time_zone` | operational |
 | `last_tenant_id` | operational |
-| `created_at` | operational |
-| `updated_at` | operational |
-
-## verdicts
-
-| Column | Class |
-|---|---|
-| `tenant_id` | operational |
-| `project_id` | operational |
-| `task_id` | operational |
-| `slide_id` | operational |
-| `user_id` | personal |
-| `kind` | operational |
-| `number` | operational |
-| `value` | operational |
-| `style` | operational |
-| `answer` | operational |
-| `answer_class_id` | operational |
-| `reasons` | operational |
-| `reason_class_id` | operational |
-| `note` | phi |
-| `reopened_at` | operational |
-| `reopened_note` | phi |
-| `preset` | personal |
-| `ai_class_id` | operational. The AI call at decision time, read from the result set for a region and reported by the reviewer's client for a cell, unchecked against the cell chunks |
-| `ai_score` | operational. The AI call at decision time, read from the result set for a region and reported by the reviewer's client for a cell, unchecked against the cell chunks |
 | `created_at` | operational |
 | `updated_at` | operational |
 

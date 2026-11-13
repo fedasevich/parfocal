@@ -1,4 +1,4 @@
-import { useGetReviewOrder, useListVerdicts } from "@parfocal/api-client";
+import { useGetReviewOrder, useListDecisions } from "@parfocal/api-client";
 import { okData } from "./placeholder.tsx";
 
 export type SlideProgress = {
@@ -15,15 +15,15 @@ export function useSlideProgress(
   slideId: string | undefined,
 ): SlideProgress | undefined {
   const wanted = Boolean(taskId) && Boolean(slideId);
-  const verdicts = okData(
-    useListVerdicts(taskId ?? "", slideId ?? "", undefined, { query: { enabled: wanted } }).data,
+  const decisions = okData(
+    useListDecisions(taskId ?? "", slideId ?? "", undefined, { query: { enabled: wanted } }).data,
   );
   const order = okData(
     useGetReviewOrder(taskId ?? "", slideId ?? "", undefined, { query: { enabled: wanted } }).data,
   );
-  if (verdicts === undefined || order === undefined || order.total === 0) return undefined;
-  const count = (value: string) => verdicts.filter((verdict) => verdict.value === value).length;
-  const decided = verdicts.length;
+  if (decisions === undefined || order === undefined || order.total === 0) return undefined;
+  const count = (value: string) => decisions.filter((decision) => decision.value === value).length;
+  const decided = decisions.length;
   return {
     decided,
     total: order.total,

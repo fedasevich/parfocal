@@ -1,8 +1,8 @@
-import type { VerdictReason } from "@parfocal/api-client";
+import type { DecisionReason } from "@parfocal/api-client";
 import type { ProjectClass } from "@parfocal/ui/components/decision-buttons";
 
 export type ReasonOption = {
-  code: VerdictReason;
+  code: DecisionReason;
   label: string;
   classId: string | null;
 };
@@ -46,7 +46,7 @@ export function disagreeOptions(
 export function reasonDraft(
   labels: string[],
   options: ReasonOption[],
-): { reasons: VerdictReason[]; reason_class_id: string | null } {
+): { reasons: DecisionReason[]; reason_class_id: string | null } {
   const picked = labels.flatMap((label) => options.filter((option) => option.label === label));
   const reasons = [...new Set(picked.map((option) => option.code))];
   const withClass = picked.find((option) => option.classId !== null);

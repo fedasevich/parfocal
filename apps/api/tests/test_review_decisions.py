@@ -49,7 +49,7 @@ def called(api: ApiAs, database: str) -> Called:
 
 
 def decide(api: ApiAs, c: Called, object_id: str, body: dict[str, Any], who: str = "first") -> Any:
-    return api(c.r.people[who]).put(f"{c.r.base}/verdicts/{object_id}", json=body)
+    return api(c.r.people[who]).put(f"{c.r.base}/decisions/{object_id}", json=body)
 
 
 def skip(api: ApiAs, c: Called, object_id: str, body: dict[str, Any] | None = None) -> Any:
@@ -57,7 +57,7 @@ def skip(api: ApiAs, c: Called, object_id: str, body: dict[str, Any] | None = No
 
 
 def decisions(api: ApiAs, c: Called, who: str = "first", **params: str) -> dict[str, Any]:
-    listed = api(c.r.people[who]).get(f"{c.r.base}/verdicts", params=params).json()
+    listed = api(c.r.people[who]).get(f"{c.r.base}/decisions", params=params).json()
     return {item["object"]: item for item in listed}
 
 
@@ -165,7 +165,7 @@ def test_skip_is_stored_apart_from_decisions_and_gives_way_to_one(
     assert audited(database, c)[1:] == [
         "review.object-skipped",
         "review.object-skipped",
-        "review.verdict-set",
+        "review.object-decided",
         "review.skip-cleared",
         "review.object-skipped",
     ]
@@ -215,7 +215,7 @@ def test_reviewed_shapes_are_never_re_typed_by_a_model_afterwards(
     rows = class_rows(api, c)
     assert rows["T1"] == ("Tumor", "Tumor")
     assert rows["T2"] == ("Stroma", "Stroma")
-    assert api(c.r.people["first"]).delete(f"{c.r.base}/verdicts/T1").status_code == 204
+    assert api(c.r.people["first"]).delete(f"{c.r.base}/decisions/T1").status_code == 204
     fresh = decide(api, c, "T1", {"value": "agree"})
     assert (fresh.json()["ai_class_id"], fresh.json()["ai_score"]) == (str(c.stroma), 30)
 
@@ -250,7 +250,7 @@ def test_the_ai_call_is_audited_with_each_decision_and_skip(api: ApiAs, database
         database,
         "SELECT details::jsonb ->> 'ai_class_id', (details::jsonb ->> 'ai_score')::int "
         f"FROM audit_events WHERE target_id = '{c.r.task}' AND action IN "
-        "('review.object-skipped', 'review.verdict-set') ORDER BY seq",
+        "('review.object-skipped', 'review.object-decided') ORDER BY seq",
     )
     assert [tuple(row) for row in rows] == [(c.tumor, 7), (c.tumor, 99)]
 
@@ -289,13 +289,13 @@ def test_the_three_area_calls_are_stored_with_the_reviewer_and_time_and_audited(
         assert body["value"] == value
         assert body["updated_at"]
         assert decisions(api, c, "owner", reviewer_id=first)["T1"]["value"] == value
-    assert audited(database, c).count("review.verdict-set") == 3
+    assert audited(database, c).count("review.object-decided") == 3
 
 
 def test_toggling_an_area_call_off_clears_it_and_is_audited(api: ApiAs, database: str) -> None:
     c = called(api, database)
     decide(api, c, "T1", {"value": "disagree"})
-    cleared = api(c.r.people["first"]).delete(f"{c.r.base}/verdicts/T1")
+    cleared = api(c.r.people["first"]).delete(f"{c.r.base}/decisions/T1")
     assert cleared.status_code in (200, 204), cleared.text
     assert "T1" not in decisions(api, c)
-    assert audited(database, c)[-1] == "review.verdict-cleared"
+    assert audited(database, c)[-1] == "review.object-decision-cleared"
