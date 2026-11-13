@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { describe, test } from "node:test";
+import { before, describe, test } from "node:test";
 import type { AnnotationDraft } from "@parfocal/api-client";
 import {
   applyToRegion,
@@ -8,6 +8,7 @@ import {
   brushMinSize,
   brushModeOf,
   clampBrushSize,
+  loadClipper,
   mapOf,
   paintStroke,
   stepBrushSize,
@@ -39,6 +40,8 @@ const areaOf = (geometry: Geometry | null): number => {
   }
   return total;
 };
+
+before(loadClipper);
 
 const savedOf = (draft: AnnotationDraft): SavedRecord => ({
   kind: draft.kind,

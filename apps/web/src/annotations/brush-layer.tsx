@@ -6,6 +6,7 @@ import {
   type BrushMode,
   brushDefaultSize,
   brushModeOf,
+  loadClipper,
   mapOf,
   paintStroke,
   stepBrushSize,
@@ -59,6 +60,7 @@ export function BrushLayer({
       setStroke(null);
       return;
     }
+    void loadClipper();
     let drawing: Drawing | null = null;
     const pan = bindSpacePan(stage, {
       engine: () => latest.current.engine,
@@ -96,20 +98,17 @@ export function BrushLayer({
       pan.release();
       releasePointer(stage, event.pointerId);
       setStroke(null);
-      const {
-        engine: current,
-        document: doc,
-        classKey: key,
-        onApply: apply,
-        size: px,
-      } = latest.current;
-      const next = paintStroke(doc, {
-        points: done.points,
-        diameter: px / screenScale(current.getCamera()),
-        mode: done.mode,
-        classKey: key,
+      const diameter = latest.current.size / screenScale(latest.current.engine.getCamera());
+      void loadClipper().then(() => {
+        const { document: doc, classKey: key, onApply: apply } = latest.current;
+        const next = paintStroke(doc, {
+          points: done.points,
+          diameter,
+          mode: done.mode,
+          classKey: key,
+        });
+        apply(next, done.mode === "erase" ? "Erase map" : "Paint map");
       });
-      apply(next, done.mode === "erase" ? "Erase map" : "Paint map");
     };
     const cancel = (event: PointerEvent) => {
       if (drawing === null || event.pointerId !== drawing.id) return;

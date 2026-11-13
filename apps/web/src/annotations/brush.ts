@@ -1,13 +1,4 @@
-import {
-  difference,
-  EndType,
-  FillRule,
-  inflatePaths,
-  JoinType,
-  type Path64,
-  type Paths64,
-  union,
-} from "clipper2-ts";
+import type { Path64, Paths64 } from "clipper2-ts";
 import {
   type AnnotationDocument,
   addShape,
@@ -25,6 +16,19 @@ export const brushSizeStep = 1.25;
 
 const fixedScale = 100;
 const circleSegments = 48;
+
+type Clipper = typeof import("clipper2-ts");
+
+let clipper: Clipper | null = null;
+
+export async function loadClipper(): Promise<void> {
+  clipper ??= await import("clipper2-ts");
+}
+
+function engine(): Clipper {
+  if (clipper === null) throw new Error("Clipper2 is not loaded yet, await loadClipper first");
+  return clipper;
+}
 
 export type BrushMode = "paint" | "erase";
 
@@ -87,6 +91,7 @@ export function strokeRegion(points: readonly Point[], diameter: number): Paths6
   const first = path[0];
   if (first === undefined) return [];
   if (path.length === 1) return [circle(first, radius)];
+  const { EndType, FillRule, inflatePaths, JoinType, union } = engine();
   const swept = inflatePaths([toPath(path)], radius * fixedScale, JoinType.Round, EndType.Round);
   return union(swept, FillRule.NonZero);
 }
@@ -130,6 +135,7 @@ export function applyToRegion(
   region: Geometry | null,
   stroke: Pick<BrushStroke, "points" | "diameter" | "mode">,
 ): Geometry | null {
+  const { difference, FillRule, union } = engine();
   const swept = strokeRegion(stroke.points, stroke.diameter);
   const current = pathsOf(region);
   if (stroke.mode === "erase") {
