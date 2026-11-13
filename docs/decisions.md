@@ -99,7 +99,7 @@ Bootstrap ran on 2026-11-13 and the secrets are in place. The first `Deploy` run
 - B. Add `main` to the environment's allowed branches, so `Deploy` runs from `main` and still waits for your approval. A GitHub settings change.
 - Other.
 
-Your choice: TODO
+Your choice: a
 
 ## The review column, what each task waits for
 
