@@ -97,7 +97,7 @@ def async_database_url(url: str) -> str:
 
 
 def create_engine(url: str) -> AsyncEngine:
-    return create_async_engine(async_database_url(url))
+    return create_async_engine(async_database_url(url), pool_pre_ping=True)
 
 
 async def require_row_security(engine: AsyncEngine) -> None:
