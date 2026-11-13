@@ -1,4 +1,4 @@
-# 0296. Per-object decisions live in `review_decisions`, and old audit names are mapped on read
+# 0300. Per-object decisions live in `review_decisions`, and old audit names are mapped on read
 
 - Date: 2026-11-13
 - Status: Accepted
