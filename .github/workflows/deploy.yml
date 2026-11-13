@@ -1,6 +1,12 @@
 name: deploy
 
+run-name: ${{ inputs.rollback_to && format('rollback {0}', inputs.rollback_to) || format('deploy {0}', github.event.workflow_run.head_sha || github.sha) }}
+
 on:
+  workflow_run:
+    workflows: [ci]
+    types: [completed]
+    branches: [main]
   workflow_dispatch:
     inputs:
       environment:
@@ -8,12 +14,20 @@ on:
         type: choice
         options: [production]
         default: production
+      rollback_to:
+        description: Commit or tag of an earlier release to put back. Its code is deployed and no migration runs
+        type: string
+        default: ""
+      allow_destructive:
+        description: Revisions the owner agreed may drop, rename or rewrite data, such as 0111,0112
+        type: string
+        default: ""
 
 permissions:
   contents: read
 
 concurrency:
-  group: deploy-${{ inputs.environment }}
+  group: ${{ (github.event_name == 'workflow_dispatch' || vars.DEPLOY_ON_MAIN == 'true') && format('deploy-{0}', inputs.environment || 'production') || format('deploy-off-{0}', github.run_id) }}
   cancel-in-progress: false
 
 env:
@@ -21,8 +35,14 @@ env:
 
 jobs:
   deploy:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (vars.DEPLOY_ON_MAIN == 'true' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'main' &&
+      github.event.workflow_run.conclusion == 'success')
     runs-on: ubuntu-latest
-    environment: ${{ inputs.environment }}
+    environment: ${{ inputs.environment || 'production' }}
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
@@ -30,10 +50,20 @@ jobs:
       MODAL_TOKEN_SECRET: ${{ secrets.MODAL_TOKEN_SECRET }}
       NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
       NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
-      DEPLOY_ENVIRONMENT: ${{ inputs.environment }}
+      DEPLOY_ENVIRONMENT: ${{ inputs.environment || 'production' }}
+      ROLLBACK_TO: ${{ inputs.rollback_to }}
+      ALLOW_DESTRUCTIVE: ${{ inputs.allow_destructive }}
+      ONLY_HEAD_OF: ${{ github.event_name == 'workflow_run' && 'main' || '' }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.rollback_to || github.event.workflow_run.head_sha || github.sha }}
       - uses: ./.github/actions/setup-workspace
         with:
           cache-key: deploy
-      - run: pnpm --filter @parfocal/deploy run deploy --env "${DEPLOY_ENVIRONMENT}"
+      - run: |
+          arguments=(--env "${DEPLOY_ENVIRONMENT}")
+          if [ -n "${ROLLBACK_TO}" ]; then arguments+=(--skip-migrations); fi
+          if [ -n "${ALLOW_DESTRUCTIVE}" ]; then arguments+=(--allow-destructive "${ALLOW_DESTRUCTIVE}"); fi
+          if [ -n "${ONLY_HEAD_OF}" ]; then arguments+=(--only-head-of "${ONLY_HEAD_OF}"); fi
+          pnpm --filter @parfocal/deploy run deploy "${arguments[@]}"
