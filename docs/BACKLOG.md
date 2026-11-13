@@ -814,6 +814,10 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   A person who creates a workspace saves their mail domain on it with the join policy `join`, and only a hand-kept list of 32 domains and 7 prefixes keeps consumer mail providers out ([tenant isolation review](results/2026-11-09-tenant-isolation-review.md), confirmed finding 1). On a provider missing from the list, such as `onet.pl`, `btinternet.com` or `comcast.net`, any stranger with a free mailbox sees the workspace's name, logo and counts and joins it as a reviewer. Decision 84 (a new workspace and its mail domain) chose 84a on 2026-11-13: a new workspace saves no domain, and an admin turns on joining by domain in the join settings, which already check that the domain is the admin's own and not public.
   Done when a test shows a stranger on an unlisted shared provider neither listing nor joining a workspace made there, and the chosen rule is recorded.
   Size: S.
+- [ ] IAM-027 · Real sign-up and sign-in from the app's own screens
+  The sign-up and sign-in screens run against draft auth calls that only the fake backend answers, so in production nobody can create an account from the app ([ADR 0267](adr/0267-sign-up-and-setup-flow.md), the sign-up and setup flow, says the screens swap their calls without a redesign). The API creates the person in Zitadel through its user API, Zitadel or the app's mail sends the six-digit code, confirming it verifies the email, and the person lands signed in on the first setup step. Sign-in with a password from the app's own screen goes through Zitadel's session API and finishes the OIDC request, so the BFF cookie stays as [ADR 0025](adr/0025-zitadel-bff-login.md) (Zitadel login through the BFF) built it. The service user and its key for production are created only after the owner's yes.
+  Done when API tests cover create, code check, resend, an existing account and a wrong password against a faked Zitadel, an E2E signs up and reaches setup, and a manual run against the real Zitadel creates an account from app.parfocal.eu.
+  Depends on IAM-002, ONB-002. Size: L.
 
 ---
 
@@ -4219,6 +4223,11 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Apply the unused `staging` root of `infra/tofu` again, make the GitHub environment `staging` with its own deploy credentials, a Neon branch, the hostname `staging.parfocal.eu` and the Modal environment, and deploy `main` to staging with tagged releases to production with approval ([ADR 0050](adr/0050-deploy-pipeline-and-previews.md), deploy pipeline and previews). Move production's slides from the shared bucket `parfocal-dev` to a bucket of its own. Take the E2E account with its shared password out of production's user directory or wall it off, and decide again whether staging gets its own Zitadel organisation. End the standing yes to reset production in `AGENTS.md`. Move the tasks whose drills destroy things back to staging: OPS-007 (alerting and on-call), OPS-008 (backups and disaster recovery), OPS-009 (storage lifecycle and cost controls), OPS-010 (tenant provisioning automation), OPS-011 (status page and maintenance mode) and SEC-013 (secrets management in all environments) already say staging.
   Done when the real end-to-end specs pass on staging after a push to `main`, production deploys only from a tag with approval, production holds no test account and no fixture or test data, and `AGENTS.md` no longer carries the reseed yes.
   Size: L.
+
+- [ ] OPS-015 · Make draft calls safe in production
+  Production went live with v0.1.5, and the web app still calls draft operations from `packages/api-client/src/draft` that only the fake backend answers, so screens 404, toast or hang on Loading. Write an inventory in `knowledge/` of every draft operation, the screen that calls it, whether the real API has an equivalent and a priority. When the fake API is off, a draft call answering 404 or 405 becomes one recognisable "not available yet" error: queries give the screen an empty or notice state without a retry or toast, a mutation shows one "Not available yet" toast, and a shared notice covers screens that are draft only. Build the real `GET /api/me/jobs` and `GET /api/me/checklist` from stored data and move them from draft to the generated client. The other drafts stay listed in the inventory.
+  Done when unit tests cover the 404 path, API tests cover both new routes, and the home page in production no longer calls a missing route.
+  Size: M.
 
 ---
 
