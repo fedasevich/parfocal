@@ -282,7 +282,7 @@ export const slides: ScenarioSlide[] = [
     sets: [],
   }),
   slide(4, "P07", null, "tumor_031", "H&E"),
-  slide(5, "P07", null, "tumor_044", "H&E", { sets: ["sam"] }),
+  slide(5, "P07", null, "tumor_044", "H&E", { sets: ["sam", "cam"] }),
   slide(14, "P07", null, "tumor_052", "H&E", { sets: [] }),
   slide(15, "P07", null, "tumor_090", "H&E", {
     file: "s3://fnvltava-scans/…/tumor_090.tif",

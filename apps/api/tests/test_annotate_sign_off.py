@@ -4,7 +4,7 @@ import pytest
 from db_support import ApiAs
 from order_support import run_orders
 from test_check_options import check_all, made
-from test_review_order import Ordered, ordered
+from test_review_order import Ordered, ordered, result_set
 from workspace_support import owner
 
 pytestmark = [pytest.mark.db, pytest.mark.usefixtures("storage")]
@@ -169,3 +169,32 @@ def test_sign_off_needs_the_check_scope_checked_when_the_rule_asks(
     check_all(api, o, task, [4])
     signed = post(api, o, "owner", f"{slide}/sign-off")
     assert signed.status_code == 200, signed.text
+
+
+def test_a_run_added_to_a_signed_off_slide_needs_the_owner_and_a_reason(
+    api: ApiAs, database: str
+) -> None:
+    o = ordered(database, api)
+    task = two_slides(api, o)
+    slide, other = on_slide(o, task, 1), on_slide(o, task, 0)
+    for who in ("first", "second"):
+        for path in (other, slide):
+            assert post(api, o, who, f"{path}/check").status_code == 200
+    assert post(api, o, "owner", f"{slide}/sign-off").status_code == 200
+    later = result_set(database, o.tenant, o.project, o.slides[1], [(7, None, None, None)])
+    runs, body = f"{slide}/runs", {"result_set_id": str(later)}
+    assert problem(api(o.people["owner"]).post(runs, json=body)) == (400, "reason-needed")
+    assert problem(api(o.people["first"]).post(runs, json=body))[1] == "slide-signed-off"
+    added = api(o.people["owner"]).post(runs, json=body, params={"reason": "A newer run exists"})
+    assert added.status_code == 200, added.text
+    assert added.json()["run_set_ids"] == [str(later)]
+    log = owner(
+        database,
+        "SELECT object_id, change, reason, changed_by_user_id::text FROM evaluation_changes "
+        f"WHERE task_id = '{task}'",
+    )
+    assert log == [("Run", "added a run", "A newer run exists", str(o.people["owner"].user_id))]
+    listed = api(o.people["owner"]).get(f"/api/review-tasks/{task}/evaluation-changes")
+    assert [(item["text"], item["reason"]) for item in listed.json()["changes"]] == [
+        ("Added a run", "A newer run exists")
+    ]

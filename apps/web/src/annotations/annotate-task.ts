@@ -2,6 +2,7 @@ import type {
   AnnotateSlideStatus,
   LayerObject,
   ProjectClass,
+  ResultSet,
   ReviewTaskDetail,
 } from "@parfocal/api-client";
 import type { SharedAiObject } from "./annotate-task-api.ts";
@@ -13,6 +14,7 @@ export type AnnotateTask = {
   readonly taskId: string;
   readonly slideId: string;
   readonly resultSetId: string | null;
+  readonly runSetIds: readonly string[];
   readonly classes: readonly ProjectClass[] | null;
   readonly slideIds: readonly string[];
   readonly owner: boolean;
@@ -30,6 +32,7 @@ export function annotateTaskOf(
     taskId: task.id,
     slideId,
     resultSetId: slide.result_set_id,
+    runSetIds: slide.run_set_ids ?? [],
     classes: task.classes,
     slideIds: task.slides.map((slide) => slide.slide_id),
     owner,
@@ -41,6 +44,14 @@ export function taskClassesOf(
   project: readonly ProjectClass[],
 ): ProjectClass[] {
   return [...(snapshot ?? project)].sort((left, right) => left.key - right.key);
+}
+
+export function runsToAddOf(
+  sets: readonly ResultSet[],
+  task: Pick<AnnotateTask, "resultSetId" | "runSetIds">,
+): ResultSet[] {
+  const known = new Set([task.resultSetId, ...task.runSetIds]);
+  return sets.filter((set) => set.status === "ready" && !known.has(set.id));
 }
 
 export const layerKnownOf = (taskId: string | undefined, taskSettled: boolean): boolean =>

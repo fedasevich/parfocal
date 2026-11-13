@@ -38,6 +38,7 @@ class LayerChange(StrEnum):
     ADDED = "added"
     EDITED = "edited"
     DELETED = "deleted"
+    RUN_ADDED = "added a run"
 
 
 class CheckDraft(BaseModel):

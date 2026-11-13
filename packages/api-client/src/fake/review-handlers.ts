@@ -99,6 +99,7 @@ import {
 import {
   annotateTaskClasses,
   annotateTaskSlides,
+  fakeRunSetIds,
   toSharedAiObjects,
 } from "./shared-layer-handlers.ts";
 import { fakeView } from "./view.ts";
@@ -631,6 +632,7 @@ export function reviewHandlers(): RequestHandler[] {
           slides: [annotateTaskSlides.withResults, annotateTaskSlides.byHand].map((slideId) => ({
             slide_id: slideId,
             result_set_id: toSharedAiObjects(annotateStubTaskId, slideId).result_set_id,
+            run_set_ids: fakeRunSetIds(annotateStubTaskId, slideId),
             reviewer_ids: [people[fakeView().viewer].id],
           })),
         });

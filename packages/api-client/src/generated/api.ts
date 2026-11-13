@@ -5876,6 +5876,10 @@ export type ImportSharedObjectsParams = {
   reason?: string | null;
 };
 
+export type AddRunToTaskSlideParams = {
+  reason?: string | null;
+};
+
 export type GetReviewOrderParams = {
   /**
    * @minimum 0
@@ -30917,8 +30921,24 @@ export type addRunToTaskSlideResponse =
   | addRunToTaskSlideResponseSuccess
   | addRunToTaskSlideResponseError;
 
-export const getAddRunToTaskSlideUrl = (taskId: string, slideId: string) => {
-  return `/api/review-tasks/${taskId}/slides/${slideId}/runs`;
+export const getAddRunToTaskSlideUrl = (
+  taskId: string,
+  slideId: string,
+  params?: AddRunToTaskSlideParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/review-tasks/${taskId}/slides/${slideId}/runs?${stringifiedParams}`
+    : `/api/review-tasks/${taskId}/slides/${slideId}/runs`;
 };
 
 /**
@@ -30928,6 +30948,7 @@ export const addRunToTaskSlide = async (
   taskId: string,
   slideId: string,
   runJoin: RunJoin,
+  params?: AddRunToTaskSlideParams,
   options?: Parameters<typeof apiFetch>[1],
 ): Promise<addRunToTaskSlideResponse> => {
   const getHeaders = (
@@ -30949,7 +30970,7 @@ export const addRunToTaskSlide = async (
     }
     return headers;
   };
-  return apiFetch<addRunToTaskSlideResponse>(getAddRunToTaskSlideUrl(taskId, slideId), {
+  return apiFetch<addRunToTaskSlideResponse>(getAddRunToTaskSlideUrl(taskId, slideId, params), {
     ...options,
     method: "POST",
     headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
@@ -30987,9 +31008,9 @@ export const getAddRunToTaskSlideMutationOptions = <
     Awaited<ReturnType<typeof addRunToTaskSlide>>,
     AddRunToTaskSlideMutationVariables
   > = (props) => {
-    const { taskId, slideId, data } = props ?? {};
+    const { taskId, slideId, data, params } = props ?? {};
 
-    return addRunToTaskSlide(taskId, slideId, data, requestOptions);
+    return addRunToTaskSlide(taskId, slideId, data, params, requestOptions);
   };
 
   return { mutationFn, ...mutationOptions };
@@ -31000,7 +31021,12 @@ export type AddRunToTaskSlideMutationResult = NonNullable<
 >;
 export type AddRunToTaskSlideMutationBody = RunJoin;
 export type AddRunToTaskSlideMutationError = Problem;
-export type AddRunToTaskSlideMutationVariables = { taskId: string; slideId: string; data: RunJoin };
+export type AddRunToTaskSlideMutationVariables = {
+  taskId: string;
+  slideId: string;
+  data: RunJoin;
+  params?: AddRunToTaskSlideParams;
+};
 
 /**
  * @summary Add Run To Task Slide
