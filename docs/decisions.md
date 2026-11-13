@@ -123,6 +123,16 @@ OPS-005 (continuous deployment) is built. The `Deploy` workflow now also runs af
 
 Your choice: 
 
+### 97. Whether an AI object the reviewer deleted counts as checked before submit
+
+TASK-008 (submit a slide review) made the API refuse a submit while any object is still open or a required question is unanswered. Today an AI object the reviewer deleted, and an object the reviewer skipped, both stay open, so they block the submit until the reviewer gives them a decision.
+
+- **A. A deleted AI object counts as checked, because deleting it already says the reviewer disagrees with it (recommended).** A skipped object stays open.
+- B. Keep it open until the reviewer gives it a decision as well.
+- Other.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 Nothing else in review needs you. Nine tasks that only waited for green CI were ticked on 2026-11-02.
