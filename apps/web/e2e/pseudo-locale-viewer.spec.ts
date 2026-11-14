@@ -24,7 +24,7 @@ test("the review screen shows no English in the en-XA pseudo locale", async ({ p
   await expect(main).toBeVisible({ timeout: 20_000 });
   await expect(main).not.toContainText("The AI found this. It is outlined in white.");
   await expect(main).not.toContainText("Whole slide");
-  await expect(main).not.toContainText("Back to");
+  await expect(main).not.toContainText("Drag to move around");
 });
 
 test("the viewer screen shows no English in the en-XA pseudo locale", async ({ page }) => {
@@ -32,7 +32,7 @@ test("the viewer screen shows no English in the en-XA pseudo locale", async ({ p
   const viewer = page.getByTestId("full-viewer");
   await expect(viewer).toBeVisible({ timeout: 20_000 });
   await expect(viewer).not.toContainText("Objects on");
-  await expect(viewer).not.toContainText("Tumor region");
+  await expect(viewer).not.toContainText("Ways to show results");
   await expect(viewer).not.toContainText("Cells in your sample");
 });
 

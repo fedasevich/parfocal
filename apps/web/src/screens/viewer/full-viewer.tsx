@@ -18,7 +18,6 @@ import { Banner } from "@parfocal/ui/components/banner";
 import type { Blocker } from "@parfocal/ui/components/before-you-list";
 import { Button } from "@parfocal/ui/components/button";
 import { CellCluster, CellsLauncher } from "@parfocal/ui/components/cells-panel";
-import type { DisplaySettings } from "@parfocal/ui/components/display-panel";
 import { FindingsPanel } from "@parfocal/ui/components/findings-panel";
 import { Icon } from "@parfocal/ui/components/icon";
 import { InspectorPanel } from "@parfocal/ui/components/inspector-panel";
@@ -1489,13 +1488,9 @@ function ViewerBody({
   const whole = stillView.kind === "whole";
   const tileHint =
     setup.tileHint === "loading" ? (
-      <TileHint percent={40}>
-        <Trans>Loading sharper tiles · 12 left</Trans>
-      </TileHint>
+      <TileHint percent={40}>{t`Loading sharper tiles · 12 left`}</TileHint>
     ) : setup.tileHint === "unloaded" ? (
-      <TileHint percent={6}>
-        <Trans>Loading the slide</Trans>
-      </TileHint>
+      <TileHint percent={6}>{t`Loading the slide`}</TileHint>
     ) : setup.tileHint === "slow" ? (
       <TileHint
         className="w-112"

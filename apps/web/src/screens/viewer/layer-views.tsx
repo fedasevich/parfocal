@@ -317,6 +317,8 @@ export function layerDrawing(input: LayerInput): LayerDrawing {
     const inBoth = regions
       .filter((item) => !onlyA.includes(item.object))
       .map((item) => item.object);
+    const firstBoth = inBoth[0] ?? "";
+    const lastBoth = inBoth.at(-1) ?? "";
     return {
       regionStyle: (object) =>
         added.includes(object) ? { stroke: "none" } : { stroke: setColours.a, width: 2.4 },
@@ -338,8 +340,8 @@ export function layerDrawing(input: LayerInput): LayerDrawing {
           title={t`Two result sets`}
           note={
             stats
-              ? t`Matched by overlap. ${inBoth[0]} to ${inBoth.at(-1)} are in both, ${onlyA.join(", ")} only in A. Dice ${stats.model_vs_model.dice.toFixed(2)}.`
-              : t`Matched by overlap. ${inBoth[0]} to ${inBoth.at(-1)} are in both, ${onlyA.join(", ")} only in A.`
+              ? t`Matched by overlap. ${firstBoth} to ${lastBoth} are in both, ${onlyA.join(", ")} only in A. Dice ${stats.model_vs_model.dice.toFixed(2)}.`
+              : t`Matched by overlap. ${firstBoth} to ${lastBoth} are in both, ${onlyA.join(", ")} only in A.`
           }
         >
           <VizKey color={setColours.a} label={t`A · ${input.setA}`} />
