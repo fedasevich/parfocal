@@ -2,6 +2,10 @@
 
 Newest entries on top. One line per piece of work, naming the backlog ID where there is one and linking the result. This file is append-only.
 
+## 2026-11-15
+
+- I18N-004 (convert the viewer, review and annotate screens to the i18n layer): the viewer, viewer tools including compare, review and annotate task screens plus the viewer and annotation layer files use Lingui messages, 49 files are off the raw-string baseline, the English catalogue is extracted (436 messages after merging the SHELL-011 pop-out) and pseudo-locale-viewer.spec.ts passes 4 of 4 for review, viewer, annotate and compare. Shared UI and top bar strings stay for I18N-005.
+
 ## 2026-11-14
 
 - HOME-007 (activity on the launchpad and in notifications): the launchpad has a filterable Activity card (Everything, Mentions, Jobs, unread marks, each row opens its link) on the existing notifications data, sharing its filters with the bell through shell/activity.ts and a new ActivityFeed in packages/ui, refreshed live by worklist events. activity.test.ts 7 of 7, activity-feed.spec.ts 6 of 6 and home-launchpad.spec.ts 10 of 10 pass.

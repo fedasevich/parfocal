@@ -1082,7 +1082,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Depends on I18N-000.
   Size: M.
 
-- [ ] I18N-004 · Convert the viewer, review and annotate screens to the i18n layer
+- [x] I18N-004 · Convert the viewer, review and annotate screens to the i18n layer
   Move every raw string in the viewer, review, annotate and compare screens of `apps/web` into Lingui messages and drop those files from the I18N-001 baseline list.
   Done when those files are off the baseline, the pseudo-locale test covers one screen of each area and the English catalogue is extracted.
   Depends on I18N-001.
