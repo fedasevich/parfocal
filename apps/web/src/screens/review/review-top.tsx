@@ -130,7 +130,7 @@ export function ReviewTop({
         }}
         accountSlot={
           <>
-            <ViewingNow slideId={session.slideId} />
+            <ViewingNow slideId={session.slideId} taskId={session.taskId} />
             <AccountMenu me={me} person={personOf(me)} />
           </>
         }

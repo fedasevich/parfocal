@@ -13,6 +13,7 @@ from PIL import Image
 from parfocal_ingest.identify import Format, Identified
 from parfocal_ingest.pyramid import Pyramid, main_series, read_pyramid
 from parfocal_ingest.tile_index import (
+    argos_focused_plane,
     bif_stitching,
     frame_cell,
     index_document,
@@ -113,6 +114,25 @@ def test_philips_sparse_tiles_keep_a_zero_byte_count() -> None:
     levels = document["levels"][:3]
     zero = [sum(1 for count in level["tileByteCounts"] if count == 0) for level in levels]
     assert zero == [12710, 3135, 774]
+
+
+def test_argos_metadata_names_the_plane_in_focus() -> None:
+    def metadata(lowest: int, highest: int) -> str:
+        planes = f"<MinZ>{lowest}</MinZ><MaxZ>{highest}</MaxZ>"
+        return f"<Argos.Scan.Metadata>{planes}</Argos.Scan.Metadata>"
+
+    assert argos_focused_plane(metadata(-2, 2)) == 2
+    assert argos_focused_plane(metadata(0, 0)) == 0
+    assert argos_focused_plane(metadata(1, 3)) == 0
+    assert argos_focused_plane("<MinZ>-2</MinZ><MaxZ>2</MaxZ>") == 0
+
+
+def test_a_stacked_argos_slide_is_indexed_at_the_plane_openslide_shows() -> None:
+    _, document = indexed("Argos-1-Stacked.avs")
+    assert [level["page"] for level in document["levels"]] == list(range(16, 24))
+    assert all(level["siblings"] == [] for level in document["levels"])
+    _, single = indexed("Argos-1.avs")
+    assert [level["page"] for level in single["levels"]] == list(range(8))
 
 
 def test_offsets_round_trip_through_gaps() -> None:

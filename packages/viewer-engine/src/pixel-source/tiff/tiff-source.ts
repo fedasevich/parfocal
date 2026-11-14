@@ -20,6 +20,7 @@ import {
   type TileRequest,
 } from "../types.ts";
 import { absoluteUrl } from "../url.ts";
+import { readArgosFocusedPlane } from "./argos.ts";
 import {
   assertDecodable,
   indexedPages,
@@ -190,6 +191,12 @@ async function leicaPyramid(pages: readonly TiffPage[]): Promise<TiffPage[] | nu
   });
 }
 
+async function argosPlane(pages: readonly TiffPage[], request: OpenRequest): Promise<number> {
+  if (request.formatId !== "argos-avs") return 0;
+  const first = pages.find((page) => page.ifd === 0 && page.subIfd === null);
+  return first === undefined ? 0 : readArgosFocusedPlane(first.image);
+}
+
 async function chooseLevels(
   pages: readonly TiffPage[],
   request: OpenRequest,
@@ -203,7 +210,8 @@ async function chooseLevels(
       }),
     );
   }
-  const pyramid = (await leicaPyramid(pages)) ?? largestPyramid(pages);
+  const pyramid =
+    (await leicaPyramid(pages)) ?? largestPyramid(pages, await argosPlane(pages, request));
   if (pyramid.length === 0) throw new Error("The TIFF holds no tiled pyramid");
   const steps = recoverLadder(
     pyramid.map((page) => ({

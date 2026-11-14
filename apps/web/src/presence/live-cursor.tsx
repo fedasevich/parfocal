@@ -2,10 +2,20 @@ import { useEffect, useSyncExternalStore } from "react";
 import { firstName, usePeople } from "../screens/project/people.ts";
 import type { ViewerEngine } from "../viewer/viewer-engine.ts";
 import { screenToSlide, slideToScreen } from "../viewer/viewer-engine.ts";
-import { reportPointer, useShownCursor } from "./cursor-bridge.ts";
+import { reportPointer, useShownCursors } from "./cursor-bridge.ts";
 import { pointOfShare, shareOfPoint } from "./shared-cursor.ts";
 
-export function LiveCursor({ x, y, user }: { x: number; y: number; user: string }) {
+export function LiveCursor({
+  x,
+  y,
+  user,
+  mirrored = false,
+}: {
+  x: number;
+  y: number;
+  user: string;
+  mirrored?: boolean;
+}) {
   const person = usePeople().byId(user);
   return (
     <span
@@ -20,7 +30,11 @@ export function LiveCursor({ x, y, user }: { x: number; y: number; user: string 
         className="absolute -top-1.5 -left-1.5 size-3 rounded-full border-2 border-white shadow-[0_0_2px_#000]"
         style={{ background: person.color }}
       />
-      <span className="absolute top-2 left-2 rounded-full bg-black/70 px-1.5 py-0.5 text-caption whitespace-nowrap text-white">
+      <span
+        data-slot="cursor-name"
+        className="absolute top-2 left-2 rounded-full bg-black/70 px-1.5 py-0.5 text-caption whitespace-nowrap text-white"
+        style={mirrored ? { transform: "scaleX(-1)" } : undefined}
+      >
         {firstName(person)}
       </span>
     </span>
@@ -39,7 +53,7 @@ export function SharedCursorLayer({
   stage: HTMLElement;
 }) {
   const camera = useSyncExternalStore(engine.subscribeCamera, engine.getCamera);
-  const cursor = useShownCursor(slideId);
+  const cursors = useShownCursors(slideId);
 
   useEffect(() => {
     let last: { clientX: number; clientY: number } | null = null;
@@ -71,11 +85,13 @@ export function SharedCursorLayer({
   }, [slideId, engine, stage]);
 
   const slide = engine.getSlide();
-  if (cursor === null || slide === null) return null;
+  if (cursors.length === 0 || slide === null) return null;
   const rect = stage.getBoundingClientRect();
-  const at = slideToScreen(camera, rect, pointOfShare(cursor.at, slide));
-  const x = at.x - rect.left;
-  const y = at.y - rect.top;
-  if (x < 0 || y < 0 || x > rect.width || y > rect.height) return null;
-  return <LiveCursor x={x} y={y} user={cursor.user} />;
+  return cursors.map((cursor) => {
+    const at = slideToScreen(camera, rect, pointOfShare(cursor.at, slide));
+    const x = at.x - rect.left;
+    const y = at.y - rect.top;
+    if (x < 0 || y < 0 || x > rect.width || y > rect.height) return null;
+    return <LiveCursor key={cursor.user} x={x} y={y} user={cursor.user} />;
+  });
 }

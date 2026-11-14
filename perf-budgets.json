@@ -133,6 +133,21 @@
       "result": "docs/results/2026-11-08-wheel-zoom-frame-time.md"
     },
     {
+      "id": "viewer.wheel-zoom-uncompressed-longest-task-ms",
+      "measures": "Longest page task on the renderer main thread while 12 wheel notches zoom Huron-1-Uncompressed.tif and the view settles, fastest of three runs",
+      "kind": "ms",
+      "unit": "ms",
+      "baseline": 36.8,
+      "limit": 50.0,
+      "headroom": 1.36,
+      "headroomReason": "The baseline is the fastest run of three on an Apple M4 while other agents' browser suites ran, and a second run gave 39.6 ms. The 50 ms limit is the same one wheel zoom on the JPEG Huron slide has, a quarter to a half of the 100 to 200 ms per gesture the POC measured on this file, and it stays under three times the baseline.",
+      "rttMs": 0,
+      "environment": "Chrome headless with SwiftShader, 1280 x 720, loopback server, no latency proxy",
+      "check": "packages/viewer-engine/browser/wheel-zoom.spec.ts",
+      "adr": "docs/adr/0099-tiff-and-zarr-readers-in-the-browser.md",
+      "result": "docs/results/2026-11-14-philips-huron-argos-reader-agreement.md"
+    },
+    {
       "id": "viewer.sidecar-open-ms",
       "measures": "Opening an 11-level spread BigTIFF with its tile index sidecar and reading the coarsest tile, fastest of three runs",
       "kind": "ms",

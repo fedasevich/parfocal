@@ -65,4 +65,51 @@ function UndoToast({ message, onUndo, duration = 4000, onExpire, ...props }: Und
   );
 }
 
-export { Toast, type ToastProps, UndoButton, UndoToast, type UndoToastProps };
+const toastDurationMs = 1600;
+
+type TimedToastProps = Omit<ToastProps, "children"> & {
+  message: React.ReactNode;
+  duration?: number;
+  onExpire?: () => void;
+};
+
+function TimedToast({
+  message,
+  duration = toastDurationMs,
+  onExpire,
+  className,
+  ...props
+}: TimedToastProps) {
+  const [shown, setShown] = useState(true);
+  const expire = useRef(onExpire);
+  expire.current = onExpire;
+  useEffect(() => {
+    if (duration <= 0) return;
+    const timer = setTimeout(() => {
+      setShown(false);
+      expire.current?.();
+    }, duration);
+    return () => clearTimeout(timer);
+  }, [duration]);
+  if (!shown) return null;
+  return (
+    <Toast
+      data-timed=""
+      className={cn("max-w-[min(480px,calc(100vw-32px))] whitespace-normal", className)}
+      {...props}
+    >
+      <span>{message}</span>
+    </Toast>
+  );
+}
+
+export {
+  TimedToast,
+  type TimedToastProps,
+  Toast,
+  type ToastProps,
+  toastDurationMs,
+  UndoButton,
+  UndoToast,
+  type UndoToastProps,
+};

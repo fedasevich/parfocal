@@ -100,7 +100,7 @@ function TourCard({ index }: { index: number }) {
       {box ? (
         <div
           aria-hidden="true"
-          className="pointer-events-none fixed z-50 rounded-card border-2 border-accent shadow-pop"
+          className="pointer-events-none fixed z-[60] rounded-card border-2 border-accent shadow-pop"
           style={{
             left: box.left - 4,
             top: box.top - 4,
@@ -112,7 +112,7 @@ function TourCard({ index }: { index: number }) {
       <section
         role="dialog"
         aria-label="Guided tour"
-        className="fixed right-4 bottom-4 z-50 flex w-80 flex-col gap-2 rounded-card border border-line bg-surf-raised p-3 shadow-lg"
+        className="fixed right-4 bottom-4 z-[60] flex w-80 flex-col gap-2 rounded-card border border-line bg-surf-raised p-3 shadow-lg"
       >
         <p className="text-caption text-ink-2">
           Step {index + 1} of {tourLength}

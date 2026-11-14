@@ -20,6 +20,12 @@ FIXTURES = [
     "CMU-1-Small-Region.svs",
     "JP2K-33003-1.svs",
     "CMU-1.svs",
+    "Philips-4.tiff",
+    "Philips-3.tiff",
+    "Huron-1-40x.tif",
+    "Huron-1-Uncompressed.tif",
+    "Argos-1.avs",
+    "Argos-1-Stacked.avs",
     "CMU-1.ndpi",
     "Hamamatsu-1.ndpi",
 ]

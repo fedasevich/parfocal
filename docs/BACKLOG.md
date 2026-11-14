@@ -1409,7 +1409,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Done when the main pyramid opens, not the decoy.
   Size: S.
 
-- [ ] VIEW-016 · Philips TIFF, Huron and ARGOS
+- [x] VIEW-016 · Philips TIFF, Huron and ARGOS
   Done when each fixture passes conformance and golden tests, and the Huron uncompressed file does not block the main thread during zoom (POC: 100 to 200 ms per gesture).
   Refs doc 24.
   Size: M.
@@ -1801,14 +1801,14 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on PROTO-011.
   Size: S.
 
-- [ ] DS-011 · Popover, dialog, menu, tooltip, toast
+- [x] DS-011 · Popover, dialog, menu, tooltip, toast
   Toasts last 1.6 s by default and never cover the slide centre.
   Every overlay of the mock has one kit component with a story for each state it supports: empty, many items, long text, disabled or locked with its reason, open and closed, in dark and light. The layer, result set and template menus are plain Dropdown menus with items, and the passkey sheet is the browser's own window drawn only in the mock, so neither needs a component of its own.
   Done when focus trapping, Esc handling and axe tests pass.
   Depends on PROTO-011.
   Size: L.
 
-- [ ] DS-012 · Inspector primitives
+- [x] DS-012 · Inspector primitives
   Section label, card, warn bar, region row with size and category tag, class bars, staging hero with the log size scale, count bar with the 200 line, step block ("1 · Is it tumor?") and the done state of a step, zone row with its pin, number line with sure and unsure parts, cell crop, the back link with its key, and the fact list of icon, key and value rows (the mock's `kvList`).
   Done when stories render the mock 6 data and a unit test checks the range bar geometry.
   Depends on PROTO-011.

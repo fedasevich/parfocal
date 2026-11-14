@@ -53,6 +53,7 @@ import {
   type WheelChoice,
   writeNavigation,
 } from "../../devices/navigation.ts";
+import { useActiveTourStep } from "../../help/tour-state.ts";
 import { settingValuesOfShortcuts, shortcutsOfSettings } from "../../keys/shortcut-settings.ts";
 import { setLengthUnits } from "../../measure/length-units.ts";
 import { applyDensity } from "../../shell/density.ts";
@@ -223,6 +224,7 @@ function LoadedSettings({
   onClose,
   layers,
 }: SettingsScreenProps & { layers: MySettingLayers }) {
+  const touring = useActiveTourStep() !== null;
   const me = okData(useGetMe().data);
   const sessions = okData(useListSessions().data) ?? [];
   const policy = okData(useGetSessionPolicy().data);
@@ -895,6 +897,7 @@ function LoadedSettings({
 
   return (
     <SettingsDialog
+      modal={!touring}
       title={shown?.title ?? "Settings"}
       hint={query && shown ? `Matching "${typed.trim()}"` : undefined}
       onOpenChange={(open) => {
