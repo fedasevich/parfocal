@@ -51,6 +51,7 @@ import { type ReactNode, useEffect, useRef, useState } from "react";
 import { provideDebug } from "../../debug-handle.ts";
 import { useFormat } from "../../format.ts";
 import { escLayer } from "../../keys/esc-ladder.ts";
+import { useSelectionSync } from "../../popout/popout-channel.ts";
 import { useConnection } from "../../shell/connection.ts";
 import { ConnectionBanner } from "../../shell/connection-banner.tsx";
 import { destinations } from "../../shell/destinations.ts";
@@ -205,6 +206,7 @@ type FullViewerProps = {
   slideId: string;
   search: ViewerSearch;
   onSearch: (change: Partial<ViewerSearch>) => void;
+  panelOnly?: boolean;
 };
 
 const netOff = "The connection is lost. It saves when the connection is back.";
@@ -273,6 +275,7 @@ function ViewerBody({
   projectName,
   viewerParts,
   template,
+  panelOnly = false,
 }: BodyProps) {
   const format = useFormat();
   const projectCases = okData(
@@ -1523,6 +1526,13 @@ function ViewerBody({
     threads: nothing ? [] : session.threads,
     questions: questions.map((question) => ({ answered: Boolean(question.answer) })),
   });
+  useSelectionSync({
+    tab: search.tab,
+    object: search.object,
+    ask: panelOnly,
+    onRemote: (change) =>
+      onSearch({ tab: change.tab as ViewerTab | undefined, object: change.object }),
+  });
   const inspector = (
     <InspectorPanel
       width={340}
@@ -1555,6 +1565,14 @@ function ViewerBody({
       }
     />
   );
+
+  if (panelOnly) {
+    return (
+      <main className="flex h-screen min-h-0 bg-bg [&>aside]:w-full!" data-testid="popout-panel">
+        {inspector}
+      </main>
+    );
+  }
 
   return (
     <>

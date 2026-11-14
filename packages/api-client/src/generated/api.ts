@@ -2269,6 +2269,7 @@ export interface HeatmapGuess {
   level: number | null;
   downsample: number;
   mpp: number | null;
+  tissue_share: number | null;
 }
 
 export type HitKind = (typeof HitKind)[keyof typeof HitKind];
@@ -2396,6 +2397,7 @@ export interface ImportProblem {
   places: string[];
   names: string[];
   guess: HeatmapGuess | null;
+  guesses: HeatmapGuess[];
 }
 
 export interface ImportCheck {

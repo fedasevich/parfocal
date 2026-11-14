@@ -8,7 +8,12 @@ export function useBlindedOn(taskId: string | undefined, slideId: string): boole
   const task = okData(useGetReviewTask(taskId ?? "", { query: { enabled: inTask } }).data);
   const projectId = task?.project_id ?? "";
   const firstRead = useGetFirstRead(taskId ?? "", slideId, undefined, {
-    query: { enabled: inTask && task?.ai_hidden_first_read === true, retry: false },
+    query: {
+      enabled: inTask && task?.ai_hidden_first_read === true,
+      retry: false,
+      retryOnMount: false,
+      refetchOnMount: false,
+    },
   });
   const mySlides = okData(
     useListMySlides(

@@ -1,0 +1,11 @@
+const queued = defineDraftQuery(
+  "getDisagreementQueue",
+  url,
+  schema,
+);
+const update = defineDraftMutation(
+  "updateQueuedObject",
+  url,
+  schema,
+);
+const mystery = defineDraftQuery("somethingNew", url, schema);

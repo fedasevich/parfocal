@@ -53,6 +53,19 @@ class HeatmapGuess(BaseModel):
     level: int | None
     downsample: float
     mpp: float | None
+    tissue_share: float | None
+
+    @classmethod
+    def stored(cls, raw: Any) -> HeatmapGuess | None:
+        if not isinstance(raw, dict):
+            return None
+        found = cast("dict[str, Any]", raw)
+        return cls(
+            level=found.get("level"),
+            downsample=found["downsample"],
+            mpp=found.get("mpp"),
+            tissue_share=found.get("tissue_share"),
+        )
 
 
 class ImportProblem(BaseModel):
@@ -62,6 +75,7 @@ class ImportProblem(BaseModel):
     places: list[str]
     names: list[str]
     guess: HeatmapGuess | None
+    guesses: list[HeatmapGuess]
 
 
 class ImportCheck(BaseModel):
@@ -127,7 +141,12 @@ def problems_of(row: Any) -> ImportCheck:
                 count=item.get("count", 0),
                 places=item.get("places") or [],
                 names=item.get("names") or [],
-                guess=item.get("guess"),
+                guess=HeatmapGuess.stored(item.get("guess")),
+                guesses=[
+                    guess
+                    for raw in cast("list[Any]", item.get("guesses") or [])
+                    if (guess := HeatmapGuess.stored(raw)) is not None
+                ],
             )
             for item in found
         ],

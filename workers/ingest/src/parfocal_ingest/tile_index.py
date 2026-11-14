@@ -7,7 +7,7 @@ from typing import Any
 
 import tifffile
 
-from parfocal_ingest.bif_frames import frame_placement
+from parfocal_ingest.bif_frames import Unplaced, frame_placement
 from parfocal_ingest.identify import Format, Identified
 from parfocal_ingest.pyramid import Pyramid, main_series
 
@@ -150,9 +150,12 @@ def tile_index(path: Path, identified: Identified, found: Pyramid) -> dict[str, 
         if chosen is Format.VENTANA_BIF:
             base = series.levels[found.levels[0].index].keyframe
             assert isinstance(base, tifffile.TiffPage)
-            document["stitching"] = frame_placement(
-                base, (found.levels[0].width, found.levels[0].height)
-            )
+            placement = frame_placement(base, (found.levels[0].width, found.levels[0].height))
+            if isinstance(placement, Unplaced):
+                document["stitching"] = None
+                document["unplaced"] = placement.value
+            else:
+                document["stitching"] = placement
         return document
 
 

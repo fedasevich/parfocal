@@ -5246,9 +5246,24 @@ export const getGetImportProblemsResponseMock = (
           level: faker.helpers.arrayElement([faker.number.int(), null]),
           downsample: faker.number.float({ fractionDigits: 2 }),
           mpp: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+          tissue_share: faker.helpers.arrayElement([
+            faker.number.float({ fractionDigits: 2 }),
+            null,
+          ]),
         },
         null,
       ]),
+      guesses: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () => ({
+          level: faker.helpers.arrayElement([faker.number.int(), null]),
+          downsample: faker.number.float({ fractionDigits: 2 }),
+          mpp: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+          tissue_share: faker.helpers.arrayElement([
+            faker.number.float({ fractionDigits: 2 }),
+            null,
+          ]),
+        }),
+      ),
     }),
   ),
   ...overrideResponse,
