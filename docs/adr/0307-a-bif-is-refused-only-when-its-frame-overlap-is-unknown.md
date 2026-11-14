@@ -12,7 +12,7 @@ ADR 0164 drew a BIF as a plain grid whenever its sidecar had no stitching, so th
 Evidence, from the OpenSlide `main` source of `openslide-vendor-ventana.c` and the public test slides:
 
 - When level 0 has no XMP packet, OpenSlide treats the file as "Ventana TIFF (no AOIs or overlaps)" and draws a simple grid. That is the only grid path it has.
-- When the packet is present, OpenSlide needs one scanned area per `ImageInfo` with its `AoiOrigin`, the frame size equal to the TIFF tile size and `TileJointInfo` elements, or it fails ("Missing or inconsistent region metadata", "Couldn't find tile joint info"). It accepts only the directions `RIGHT` and `UP`.
+- When the packet is present, OpenSlide needs an `AoiOrigin` for every `ImageInfo`, the frame size equal to the TIFF tile size and `TileJointInfo` elements, or it fails. It accepts several scan areas and skips the ones marked unscanned ("Missing or inconsistent region metadata", "Couldn't find tile joint info"). It accepts only the directions `RIGHT` and `UP`.
 - It weights each joint by its `Confidence` and divides by the total weight with no guard, so an axis whose joints all have zero confidence gives no usable advance.
 - `OS-1.bif` has 17209 joints in the directions `RIGHT` and `UP`. 10174 of them have confidence 0 where frames were not joined, and the confident mean overlap is about 113 by 109 pixels. Its even pitch reproduces OpenSlide's level 0 size of 105813 by 93951 exactly.
 - `Ventana-1.bif`, from a Ventana DP 200, is genuine scanner output with 922 joints at confidence 100. Its vertical joints all declare an overlap of 0, and 105 of its horizontal joints declare 24. It uses the direction `LEFT`, so OpenSlide refuses it and ingest refuses it as unreadable before any stitching is read. Its sidecar was never null for want of joints, which corrects the 2026-11-14 result.
@@ -31,7 +31,8 @@ Option 3. `frame_placement` in `workers/ingest/src/parfocal_ingest/bif_frames.py
 
 ## Consequences
 
-- No slide shows repeated tissue through the app, and no BIF that OpenSlide draws correctly is turned away.
+- No slide shows repeated tissue through the app, and no single-area BIF that OpenSlide draws correctly is turned away.
+- A BIF with several scan areas, or with one scanned area beside skipped ones, is refused as unreadable for a second reason: its overlap may be known, but placing several areas is not built. Such files used to ingest and draw as a wrong grid. No fixture has them, and supporting them is a later task with its own reference.
 - Sidecars written before this change with `stitching: null` now ask for re-ingest, even when the grid was right. Production holds only test data, so re-ingesting is the remedy.
 - The `OS-1.bif` sidecar is unchanged, so the goldens and the reader check stand.
 - Tests that open a BIF with no index, such as the plain grid controls in `bif.test.ts` and `viv-bif.spec.ts`, go straight to the registry and still draw the grid on purpose.
