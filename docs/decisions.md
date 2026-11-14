@@ -8,8 +8,9 @@ To take every recommendation at once, write "all recommended" here:
 
 ## What you need to do next, in order
 
-1. The checks on your Mac listed under "The review column" below, when you have a few minutes.
-2. When the app is ready for production, say so, and the lead books the deploy session of decisions 93, 94 and 95.
+1. Decision 105 below (older Ventana archives with several scan areas).
+2. The checks on your Mac listed under "The review column" below, when you have a few minutes.
+3. When the app is ready for production, say so, and the lead books the deploy session of decisions 93, 94 and 95.
 
 ## What your answers of 2026-11-04 changed
 
@@ -124,6 +125,18 @@ IAM-027 (real sign-up and sign-in from the app's own screens) is built and teste
 - Other.
 
 Your choice: a
+
+## Open decisions from the night run of 2026-11-14
+
+### 105. Whether older Ventana iScan archives with several scan areas open
+
+You asked to research before building. VIEW-069 (BIF with several scan areas) found, in [the research result](results/2026-11-14-bif-several-scan-areas.md), that a BIF holds one scan area per tissue piece, so such files are common. Today's DP 200 and DP 600 scanners join frames in a direction OpenSlide itself refuses, so neither OpenSlide nor Parfocal opens their files with or without several areas. Only older iScan files would gain, and Roche says those cannot be rebuilt exactly from their metadata. The refusal now has its own message instead of "unreadable".
+
+- **A. Keep the refusal with its own message, and build area placement later together with support for the DP 200 and DP 600 join direction (recommended).** Building it now helps only older archives that cannot be rebuilt exactly anyway.
+- B. Build area placement now against the public OpenSlide test file `OS-2.bif`.
+- Other.
+
+Your choice:
 
 ## The review column, what each task waits for
 
