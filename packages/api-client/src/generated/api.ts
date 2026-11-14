@@ -1662,6 +1662,21 @@ export interface CreatedUpload {
   part_count: number;
 }
 
+export type LicenceClass = (typeof LicenceClass)[keyof typeof LicenceClass];
+
+export const LicenceClass = {
+  permitted: "permitted",
+  restricted: "restricted",
+  unconfirmed: "unconfirmed",
+  own: "own",
+} as const;
+
+export interface DatasetLicenceOut {
+  dataset: string;
+  licence: string;
+  licence_class: LicenceClass;
+}
+
 export type Decision = (typeof Decision)[keyof typeof Decision];
 
 export const Decision = {
@@ -2931,6 +2946,17 @@ export interface LegalHoldDraft {
   reason: string;
 }
 
+export interface LicenceOut {
+  weights: string;
+  weights_class: LicenceClass;
+  code: string;
+  data: DatasetLicenceOut[];
+  source: string;
+  read_on: string;
+  policy_kinds: TenantKind[];
+  enforced: boolean;
+}
+
 export type UploadKind = (typeof UploadKind)[keyof typeof UploadKind];
 
 export const UploadKind = {
@@ -3307,6 +3333,24 @@ export interface ModelShown {
   shown: boolean;
   hidden_by: string | null;
 }
+
+export type ModelStatus = (typeof ModelStatus)[keyof typeof ModelStatus];
+
+export const ModelStatus = {
+  candidate: "candidate",
+  validated: "validated",
+  retired: "retired",
+} as const;
+
+export type ModelTask = (typeof ModelTask)[keyof typeof ModelTask];
+
+export const ModelTask = {
+  "tumor-map": "tumor-map",
+  detector: "detector",
+  typer: "typer",
+  "interactive-encoder": "interactive-encoder",
+  decoder: "decoder",
+} as const;
 
 export type MuteSubject = (typeof MuteSubject)[keyof typeof MuteSubject];
 
@@ -4128,6 +4172,24 @@ export interface RegionMetrics {
   columns: RegionColumn[];
   sort_by?: RegionColumn;
   rows?: Rows | null;
+}
+
+export type RegistryEntryCalibrationTemperatures = { [key: string]: number };
+
+export interface RegistryEntry {
+  name: string;
+  family: string;
+  version: string;
+  title: string;
+  tasks: ModelTask[];
+  makes: ModelMakes[];
+  host: ModelHost;
+  licence: LicenceOut;
+  allowed_tenant_kinds: TenantKind[];
+  input_mpp: number | null;
+  calibration_temperatures: RegistryEntryCalibrationTemperatures;
+  evaluation_report: string | null;
+  status: ModelStatus;
 }
 
 /**
@@ -16529,6 +16591,393 @@ export const useShowModel = <TError = Problem, TContext = unknown>(
 > => {
   return useMutation(getShowModelMutationOptions(options), queryClient);
 };
+
+export type listRegisteredModelsResponse200 = {
+  data: RegistryEntry[];
+  status: 200;
+};
+
+export type listRegisteredModelsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listRegisteredModelsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listRegisteredModelsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listRegisteredModelsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listRegisteredModelsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listRegisteredModelsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listRegisteredModelsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type listRegisteredModelsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listRegisteredModelsResponseSuccess = listRegisteredModelsResponse200 & {
+  headers: Headers;
+};
+export type listRegisteredModelsResponseError = (
+  | listRegisteredModelsResponse400
+  | listRegisteredModelsResponse401
+  | listRegisteredModelsResponse403
+  | listRegisteredModelsResponse404
+  | listRegisteredModelsResponse409
+  | listRegisteredModelsResponse422
+  | listRegisteredModelsResponse429
+  | listRegisteredModelsResponse500
+) & {
+  headers: Headers;
+};
+
+export type listRegisteredModelsResponse =
+  | listRegisteredModelsResponseSuccess
+  | listRegisteredModelsResponseError;
+
+export const getListRegisteredModelsUrl = () => {
+  return `/api/model-registry`;
+};
+
+/**
+ * @summary List Registered Models
+ */
+export const listRegisteredModels = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listRegisteredModelsResponse> => {
+  return apiFetch<listRegisteredModelsResponse>(getListRegisteredModelsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListRegisteredModelsQueryKey = () => {
+  return [`/api/model-registry`] as const;
+};
+
+export const getListRegisteredModelsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listRegisteredModels>>,
+  TError = Problem,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listRegisteredModels>>, TError, TData>>;
+  request?: SecondParameter<typeof apiFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListRegisteredModelsQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listRegisteredModels>>> = ({ signal }) =>
+    listRegisteredModels({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listRegisteredModels>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ListRegisteredModelsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listRegisteredModels>>
+>;
+export type ListRegisteredModelsQueryError = Problem;
+
+export function useListRegisteredModels<
+  TData = Awaited<ReturnType<typeof listRegisteredModels>>,
+  TError = Problem,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listRegisteredModels>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listRegisteredModels>>,
+          TError,
+          Awaited<ReturnType<typeof listRegisteredModels>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListRegisteredModels<
+  TData = Awaited<ReturnType<typeof listRegisteredModels>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listRegisteredModels>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listRegisteredModels>>,
+          TError,
+          Awaited<ReturnType<typeof listRegisteredModels>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListRegisteredModels<
+  TData = Awaited<ReturnType<typeof listRegisteredModels>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listRegisteredModels>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Registered Models
+ */
+
+export function useListRegisteredModels<
+  TData = Awaited<ReturnType<typeof listRegisteredModels>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listRegisteredModels>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListRegisteredModelsQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type getRegisteredModelResponse200 = {
+  data: RegistryEntry;
+  status: 200;
+};
+
+export type getRegisteredModelResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getRegisteredModelResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getRegisteredModelResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getRegisteredModelResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getRegisteredModelResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getRegisteredModelResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getRegisteredModelResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getRegisteredModelResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getRegisteredModelResponseSuccess = getRegisteredModelResponse200 & {
+  headers: Headers;
+};
+export type getRegisteredModelResponseError = (
+  | getRegisteredModelResponse400
+  | getRegisteredModelResponse401
+  | getRegisteredModelResponse403
+  | getRegisteredModelResponse404
+  | getRegisteredModelResponse409
+  | getRegisteredModelResponse422
+  | getRegisteredModelResponse429
+  | getRegisteredModelResponse500
+) & {
+  headers: Headers;
+};
+
+export type getRegisteredModelResponse =
+  | getRegisteredModelResponseSuccess
+  | getRegisteredModelResponseError;
+
+export const getGetRegisteredModelUrl = (name: string, version: string) => {
+  return `/api/model-registry/${name}/${version}`;
+};
+
+/**
+ * @summary Get Registered Model
+ */
+export const getRegisteredModel = async (
+  name: string,
+  version: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getRegisteredModelResponse> => {
+  return apiFetch<getRegisteredModelResponse>(getGetRegisteredModelUrl(name, version), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetRegisteredModelQueryKey = (name: string, version: string) => {
+  return [`/api/model-registry/${name}/${version}`] as const;
+};
+
+export const getGetRegisteredModelQueryOptions = <
+  TData = Awaited<ReturnType<typeof getRegisteredModel>>,
+  TError = Problem,
+>(
+  name: string,
+  version: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getRegisteredModel>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetRegisteredModelQueryKey(name, version);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getRegisteredModel>>> = ({ signal }) =>
+    getRegisteredModel(name, version, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: name !== null && name !== undefined && version !== null && version !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getRegisteredModel>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetRegisteredModelQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getRegisteredModel>>
+>;
+export type GetRegisteredModelQueryError = Problem;
+
+export function useGetRegisteredModel<
+  TData = Awaited<ReturnType<typeof getRegisteredModel>>,
+  TError = Problem,
+>(
+  name: string,
+  version: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getRegisteredModel>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getRegisteredModel>>,
+          TError,
+          Awaited<ReturnType<typeof getRegisteredModel>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetRegisteredModel<
+  TData = Awaited<ReturnType<typeof getRegisteredModel>>,
+  TError = Problem,
+>(
+  name: string,
+  version: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getRegisteredModel>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getRegisteredModel>>,
+          TError,
+          Awaited<ReturnType<typeof getRegisteredModel>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetRegisteredModel<
+  TData = Awaited<ReturnType<typeof getRegisteredModel>>,
+  TError = Problem,
+>(
+  name: string,
+  version: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getRegisteredModel>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Registered Model
+ */
+
+export function useGetRegisteredModel<
+  TData = Awaited<ReturnType<typeof getRegisteredModel>>,
+  TError = Problem,
+>(
+  name: string,
+  version: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getRegisteredModel>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetRegisteredModelQueryOptions(name, version, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
 
 export type testLabModelResponse200 = {
   data: LabModelTest;
