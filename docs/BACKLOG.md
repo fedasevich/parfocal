@@ -1409,7 +1409,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Done when the main pyramid opens, not the decoy.
   Size: S.
 
-- [ ] VIEW-016 · Philips TIFF, Huron and ARGOS
+- [x] VIEW-016 · Philips TIFF, Huron and ARGOS
   Done when each fixture passes conformance and golden tests, and the Huron uncompressed file does not block the main thread during zoom (POC: 100 to 200 ms per gesture).
   Refs doc 24.
   Size: M.
