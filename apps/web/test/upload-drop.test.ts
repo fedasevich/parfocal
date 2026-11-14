@@ -173,3 +173,40 @@ test("a dropped folder is read through all its levels", async () => {
     ],
   );
 });
+
+test("an MRXS slide with no data folder waits, adding the folder or leaving it out clears it", () => {
+  const files = [at("B/scan.mrxs"), at("B/other.svs"), at("B/scan.csv")];
+  const waiting = createLiveModel(files, freshLiveState());
+  assert.deepEqual(
+    waiting.mrxsWaiting.map((slide) => slide.path),
+    ["B/scan.mrxs"],
+  );
+  assert.equal(waiting.problems, 1);
+  assert.deepEqual(
+    waiting.uploadSlides.map((slide) => slide.path),
+    ["B/other.svs"],
+  );
+  assert.equal(waiting.uploadResults.length, 0);
+  const folderAdded = createLiveModel(
+    [...files, at("B/scan/Data0000.dat"), at("B/scan/Slidedat.ini")],
+    freshLiveState(),
+  );
+  assert.equal(folderAdded.mrxsWaiting.length, 0);
+  assert.equal(folderAdded.problems, 0);
+  assert.equal(folderAdded.uploadSlides.length, 2);
+  assert.equal(folderAdded.uploadResults.length, 1);
+  const left = createLiveModel(files, { ...freshLiveState(), left: { "B/scan.mrxs": true } });
+  assert.equal(left.mrxsWaiting.length, 0);
+  assert.equal(left.mrxsLeftOut.length, 1);
+  assert.equal(left.problems, 0);
+  assert.equal(left.uploadSlides.length, 1);
+});
+
+test("a slide with nothing in it cannot be read and waits until it is removed", () => {
+  const files = [at("B/ok.svs"), { path: "B/bad.svs", size: 0 }];
+  const model = createLiveModel(files, freshLiveState());
+  assert.equal(model.problems, 1);
+  assert.equal(model.uploadSlides.length, 1);
+  const removed = createLiveModel(files, { ...freshLiveState(), removed: { "B/bad.svs": true } });
+  assert.equal(removed.problems, 0);
+});
