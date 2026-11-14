@@ -3317,7 +3317,7 @@ Cases are optional groups of slides inside a project (PROJ-001). Patient fields 
   Depends on CASES-003 and the final UI shell.
   Size: M.
 
-- [ ] CASES-026 · Encrypted clinical note per case
+- [x] CASES-026 · Encrypted clinical note per case
   The slide picker's case details (CASE-011) have a clinical note row in clinical projects, but [ADR 0054](adr/0054-hospital-code-inventory-and-revert-order.md) removed `cases.clinical_note`, so it always reads "No clinical note". The owner chose on 2026-11-04 to store it again. A migration adds the note sealed with the tenant key as patient identifiers are (SEC-004), with the column classed phi in the data map. Project owners write it in clinical projects only, de-identified projects refuse it, and it is never written to logs, audit details, notifications or telemetry. A short ADR records why the note comes back, and a security review of the sealing is written into it.
   Done when API tests cover writing, reading, clearing, tenant isolation, the refusal in de-identified projects and an audit entry without the text, a log capture test proves the text never reaches a log, and the case details show the note.
   Depends on SEC-004, CASE-011.

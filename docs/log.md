@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-15
 
+- CASES-026 (encrypted clinical note per case), decision 40a: migration 0113 adds cases.clinical_note_ciphertext, sealed with the tenant data key and classed phi. Owners set or clear it with PUT /api/cases/{id}/clinical-note in clinical projects only (de-identified projects get a 400), getCase returns it, the audit holds only whether it was cleared, erasing a patient clears their notes, and owners edit it in the Edit slides dialog. test_clinical_note.py 8 of 8 and the permission and cross-tenant tests pass. The security review is in the new ADR. Decision 106 asks who sees the note.
 - I18N-004 (convert the viewer, review and annotate screens to the i18n layer): the viewer, viewer tools including compare, review and annotate task screens plus the viewer and annotation layer files use Lingui messages, 49 files are off the raw-string baseline, the English catalogue is extracted (436 messages after merging the SHELL-011 pop-out) and pseudo-locale-viewer.spec.ts passes 4 of 4 for review, viewer, annotate and compare. Shared UI and top bar strings stay for I18N-005.
 
 ## 2026-11-14
