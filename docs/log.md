@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-14
 
+- RSET-005 (import checks and fixes) closes on its backend: existing fixture tests cover every Done-line case (worker checks 10 of 10, API db tests 9 of 9), and the screens belong to INGEST-022 (per-file problems in the Check step). Heatmap storage, the share on tissue per guess, a clean refusal of an unreadable .png and a quarantine sweep move to the new RSET-013.
 - CI fix for COLLAB-010 (follow my view): follow-view.spec.ts counted leader camera samples from before the follower joined, so slow CI saw seconds of fake lag (2819 ms and 1894 ms). The lag check now measures only samples after the leader's zoom starts, with the 300 ms budget unchanged.
 - DS-039 (animated loaders instead of loading text): after decision 103 Reticle is the one Loader in packages/ui with inline, block and page sizes, a still state for reduced motion and a Feedback/Loader story that passes axe in dark and light, the other four proposals are removed, about 17 loading texts in apps/web use it, and no-loading-text.test.ts guards against new ones. The viewer's tile hint chips stay as progress text.
 - TILES-000 (research check for tile delivery): Cloudflare documentation on the Cache API, R2, Workers limits and HTTP/3 supports STACK-025, with the earlier measured warm hit p95 of 65.5 ms for SVS ranges and 73.3 ms for chunks. The same-region HTTP/2 and HTTP/3 p95, a second colo hit, a versioned cache key and the Free plan CPU limit are left to TILES-002 (CDN in front of slide storage).
