@@ -8,7 +8,7 @@ To take every recommendation at once, write "all recommended" here:
 
 ## What you need to do next, in order
 
-1. Answer decision 100 (whether VIEW-036, the renderer interface, is ticked now).
+1. Answer decisions 100 (whether VIEW-036, the renderer interface, is ticked now), 101 (whether the app refuses a BIF with no frame stitching) and 102 (who sees a cursor shared from compare).
 2. Go through the review checklist in [owner-review.md](owner-review.md) and tick what you agree with.
 3. When the app is ready for production, say so, and the lead books the deploy session of decisions 93, 94 and 95.
 
@@ -136,6 +136,16 @@ VIEW-014 (Ventana BIF with frame stitching) opens a BIF in the app with the fram
 
 - **A. Refuse to open it in the app and say the slide needs re-ingest (recommended).** Nobody reviews a slide with repeated tissue by accident.
 - B. Keep opening it as a plain grid.
+- Other.
+
+Your choice:
+
+### 102. Who on the live slide sees the cursor of a person in compare
+
+Decision 99 added "Share my cursor" to compare. As built, everyone on the live slide who is not blinded sees that cursor, the same as a cursor shared from the live slide ([ADR 0304](adr/0304-a-shared-cursor-is-a-second-capped-frame-in-shares-of-the-slide.md), a shared cursor is a second capped client frame).
+
+- **A. Everyone on the live slide who is not blinded, as built (recommended).** Sharing is already a deliberate act by the sharer.
+- B. Only people who turn on "Show shared cursors" themselves.
 - Other.
 
 Your choice:
