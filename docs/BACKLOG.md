@@ -4457,7 +4457,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Depends on TEST-020.
   Size: M.
 
-- [ ] TEST-038 · Draft call ratchet
+- [x] TEST-038 · Draft call ratchet
   Screens built on draft calls work in every test and are empty in production, because only the fake API answers them (`docs/knowledge/draft-calls.md`). While the UI is built on fakes the count may grow ([ADR 0295](adr/0295-ui-first-on-fakes-then-switch-each-area-to-the-real-api.md), UI first on fakes, then each area switches), so add a script that counts the operations in `packages/api-client/src/draft` per area and prints the count in `pnpm verify` without failing it. OPS-017 (switch each area to the real API) uses the count of an area to show it is fully switched.
   Done when `pnpm verify` prints the draft count per area and the total, a test checks the count against a fixture folder, and `knowledge/draft-calls.md` points to the script.
   Size: S.
