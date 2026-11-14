@@ -9,9 +9,18 @@ import {
   type SortingRequest,
 } from "@parfocal/api-client";
 import type { LiveModel, LiveState } from "../screens/upload/live-model.ts";
-import type { DroppedItem, DropRecord, PairMode } from "./drop.ts";
+import {
+  type DroppedItem,
+  type DropRecord,
+  dirOf,
+  isMirax,
+  miraxFolderOf,
+  type PairMode,
+  uploadNameOf,
+} from "./drop.ts";
 import type { UploadEngine } from "./engine.ts";
 import type { FileIdentity } from "./entries.ts";
+import { zipStored } from "./zip.ts";
 
 const postJson = (body: unknown) => ({
   method: "POST",
@@ -184,7 +193,8 @@ export async function placeAndUpload(
 ): Promise<void> {
   const response = await applyDroppedFiles(sortingRequestOf(input, true));
   const sorting = response.data;
-  const itemOf = (path: string) => items.find((item) => item.path === path);
+  const packed = new Map<string, DroppedItem>();
+  const itemOf = (path: string) => packed.get(path) ?? items.find((item) => item.path === path);
   const caseIds = new Map<string, string | null>();
   const slideItems: DroppedItem[] = [];
   for (const slide of input.slides) {
@@ -195,6 +205,21 @@ export async function placeAndUpload(
     if (input.heldBack.includes(slide.path)) continue;
     caseIds.set(slide.path, sorted?.case?.case_id ?? null);
     slideItems.push(item);
+  }
+  for (const [index, slide] of slideItems.entries()) {
+    if (!isMirax(slide.path)) continue;
+    const folder = miraxFolderOf(slide.path);
+    const base = dirOf(slide.path) === "" ? 0 : dirOf(slide.path).length + 1;
+    const sources = [
+      { name: slide.path.slice(base), file: slide.file },
+      ...items
+        .filter((item) => item.path.startsWith(folder))
+        .map((item) => ({ name: item.path.slice(base), file: item.file })),
+    ];
+    const file = await zipStored(sources, uploadNameOf(slide.path));
+    const zipped = { path: slide.path, size: file.size, file };
+    packed.set(slide.path, zipped);
+    slideItems[index] = zipped;
   }
   const resultItems: { item: DroppedItem; slide: DroppedItem }[] = [];
   for (const result of input.results) {

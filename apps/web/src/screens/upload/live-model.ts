@@ -98,7 +98,13 @@ export function createLiveModel<T extends DropRecord>(items: readonly T[], state
   return {
     slides,
     results,
-    others: sorted.others,
+    others: sorted.others.filter(
+      (item) =>
+        !slides.some(
+          (slide) =>
+            extensionOf(slide.path) === "mrxs" && item.path.startsWith(dataFolderOf(slide)),
+        ),
+    ),
     groups,
     caseOf,
     resultsOf,

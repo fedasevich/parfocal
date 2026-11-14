@@ -21,10 +21,12 @@ import {
   type DroppedItem,
   type DropRecord,
   fromFileList,
+  isMirax,
   kindOf,
   type PairMode,
   readDropped,
   stemOf,
+  uploadNameOf,
 } from "../../upload/drop.ts";
 import { dropStore, useDropStore } from "../../upload/drop-store.ts";
 import { formatBytes, sameFile } from "../../upload/entries.ts";
@@ -970,8 +972,6 @@ function CheckStep({
   );
 }
 
-const baseName = (path: string) => path.slice(path.lastIndexOf("/") + 1);
-
 function UploadStep({
   model,
   entries,
@@ -986,7 +986,9 @@ function UploadStep({
   const [leaveBare, setLeaveBare] = useState(false);
   const slideOf = (entry: (typeof entries)[number]) =>
     model.slides.findIndex(
-      (slide) => baseName(slide.path) === entry.name && slide.size === entry.size,
+      (slide) =>
+        uploadNameOf(slide.path) === entry.name &&
+        (isMirax(slide.path) || slide.size === entry.size),
     );
   const slideEntries = entries.filter((entry) => slideOf(entry) >= 0);
   const states = useSlideStates(
