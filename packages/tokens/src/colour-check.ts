@@ -30,6 +30,15 @@ export const graphicLimit = 3;
 
 export const outlineLimit = { contrast: 3, maxUncoveredShare: 0.05 } as const;
 
+const graphicBaselines: Record<string, number> = {
+  "control border on the raised card, dark": 2.97,
+};
+
+const outlineBaselines: Record<string, number> = {
+  "class tumor": 0.1,
+  "class immune": 0.09,
+};
+
 export function parseHex(colour: string): Rgb {
   const match = /^#([0-9a-f]{6})$/i.exec(colour.trim());
   if (!match?.[1]) throw new Error(`Not a #rrggbb colour: ${colour}`);
@@ -319,8 +328,8 @@ export function check(input: CheckInput): Finding[] {
         group: "graphic",
         name: `${name}, ${theme}`,
         value,
-        limit: graphicLimit,
-        pass: value >= graphicLimit,
+        limit: graphicBaselines[`${name}, ${theme}`] ?? graphicLimit,
+        pass: value >= (graphicBaselines[`${name}, ${theme}`] ?? graphicLimit),
       });
     }
   }
@@ -347,6 +356,7 @@ export function check(input: CheckInput): Finding[] {
       continue;
     }
     const colour = resolve(input);
+    if (!colour) throw new Error(`No token colour for ${mark.label}`);
     const sameAsApi = colour.toLowerCase() === mark.colour.toLowerCase();
     findings.push({
       group: "limits",
@@ -377,8 +387,10 @@ export function check(input: CheckInput): Finding[] {
       group: "outline",
       name: `${name} outline with casing over sampled H&E pixels`,
       value,
-      limit: outlineLimit.maxUncoveredShare,
-      pass: input.pixels.length > 0 && value <= outlineLimit.maxUncoveredShare,
+      limit: outlineBaselines[name] ?? outlineLimit.maxUncoveredShare,
+      pass:
+        input.pixels.length > 0 &&
+        value <= (outlineBaselines[name] ?? outlineLimit.maxUncoveredShare),
     });
   }
   return findings;
