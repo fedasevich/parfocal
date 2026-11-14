@@ -418,7 +418,9 @@ async def erase_patient(
     for slide_id in labelled.all():
         deleted += await delete_restricted_images(store, row.tenant_id, slide_id)
     unlinked = await connection.execute(
-        update(cases).where(cases.c.patient_id == patient_id).values(patient_id=None)
+        update(cases)
+        .where(cases.c.patient_id == patient_id)
+        .values(patient_id=None, clinical_note_ciphertext=None)
     )
     await connection.execute(delete(patients).where(patients.c.id == patient_id))
     await record(

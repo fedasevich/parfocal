@@ -908,6 +908,7 @@ export interface CaseDetail {
   label: string;
   source: CaseSource;
   patient: PatientDetail | null;
+  clinical_note: string | null;
   specimens: SpecimenDetail[];
   slides: SlideDetail[];
 }
