@@ -347,3 +347,55 @@ test("a slide opens from the upload while its results are still being placed", a
   await open.click();
   await expect(page).toHaveURL(/\/slides\//);
 });
+
+test("a mixed set uploads the fixed MRXS slide while the slide left out and the empty one wait", async ({
+  page,
+}) => {
+  const root = await mkdtemp(join(tmpdir(), "parfocal-mrxs-e2e-"));
+  const mixed: Tree = {
+    name: "mixed",
+    children: [
+      { name: "fine.svs", text: "slide-fine" },
+      { name: "scan.mrxs", text: "mirax" },
+      { name: "other.mrxs", text: "mirax-two" },
+      { name: "empty.svs", text: "" },
+    ],
+  };
+  const dataFolder: Tree = {
+    name: "scan",
+    children: [
+      { name: "Slidedat.ini", text: "ini" },
+      { name: "Data0000.dat", text: "dat" },
+    ],
+  };
+  await writeTree(root, mixed);
+  await writeTree(root, dataFolder);
+  const gate = await fakeStorage(page, false);
+  await page.goto(`/projects/${p07}/upload`);
+  await page.getByTestId("folder-input").setInputFiles(join(root, "mixed"));
+  await page.getByTestId("upload-next").click();
+  await expect(page.getByTestId("upload-problem")).toHaveCount(3);
+  await expect(page.getByTestId("check-summary")).toContainText("3 files");
+  await page
+    .getByTestId("upload-problem")
+    .filter({ hasText: "mixed/scan.mrxs" })
+    .getByRole("button", { name: "Add the folder" })
+    .click();
+  await page.getByTestId("data-folder-input").setInputFiles(join(root, "scan"));
+  await expect(page.getByTestId("upload-problem")).toHaveCount(2);
+  await page
+    .getByTestId("upload-problem")
+    .filter({ hasText: "mixed/other.mrxs" })
+    .getByRole("button", { name: "Leave it out" })
+    .click();
+  await expect(page.getByTestId("upload-problem")).toHaveCount(1);
+  await expect(page.getByTestId("upload-problem")).toContainText("This slide cannot be read");
+  await expect(page.getByTestId("start-upload")).toContainText("Upload 2 slides and 0 results");
+  await page.getByTestId("start-upload").click();
+  await expect(page.getByTestId("upload-page")).toHaveAttribute("data-scene", "progress");
+  await expect(page.getByTestId("upload-file-row")).toHaveCount(2);
+  await expect
+    .poll(() => gate.created.map((item) => item.filename).toSorted())
+    .toEqual(["fine.svs", "scan.mrxs"]);
+  await rm(root, { recursive: true, force: true });
+});
