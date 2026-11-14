@@ -1766,7 +1766,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on PROTO-011. Refs kit Design system page, mock token block, [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
   Size: M.
 
-- [ ] DS-002 · Colour measurement scripts in CI
+- [x] DS-002 · Colour measurement scripts in CI
   WCAG 2 contrast and APCA Lc 60 or more for every text pair, CIEDE2000 between classes after protan, deutan and tritan simulation (Machado), outline contrast over sampled real H&E pixels. Start from the POC's `scripts/color-check.mjs`, which already implements all four.
   Done when CI fails if a token change breaks any threshold, with the doc 35 numbers as the baseline (closest class pair 15.1 under deuteranopia, proposals at least 40 from every class, unsure marks at least 13 from every class on the slide and 15 in the panel).
   Depends on PROTO-011. Refs doc 35, kit decision D12, [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md). Use the limits that the API applies to class colours ([ADR 0067](adr/0067-class-taxonomy-and-colour-check.md)) so tokens and taxonomies never disagree.
