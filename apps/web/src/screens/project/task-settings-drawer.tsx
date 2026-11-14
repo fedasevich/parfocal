@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   ApiError,
   getGetReviewTaskQueryKey,
@@ -42,6 +43,8 @@ export function TaskSettingsDrawer({
   onClose: () => void;
   toast: (message: ReactNode) => void;
 }) {
+  const { t } = useLingui();
+
   const queryClient = useQueryClient();
   const detail = okData(useGetReviewTask(task.id).data) ?? task;
   const signedOff = okData(useGetReviewTaskStates(task.id).data)?.signed_off_at != null;
@@ -102,13 +105,13 @@ export function TaskSettingsDrawer({
           ]);
           toast(
             <>
-              Counts as changed on {task.code}. {recountText(recount)}{" "}
+              <Trans>Counts as changed on</Trans> {task.code}. {recountText(recount)}{" "}
               <Link
                 to="/tasks/$taskId/evaluation"
                 params={{ taskId: task.id }}
                 className="font-semibold text-accent underline"
               >
-                See the Methods block
+                <Trans>See the Methods block</Trans>
               </Link>
             </>,
           );
@@ -127,8 +130,8 @@ export function TaskSettingsDrawer({
   return (
     <DrawerPanel
       scrim
-      label={`Settings for ${task.code}`}
-      title="Task settings"
+      label={t`Settings for ${task.code}`}
+      title={t`Task settings`}
       hint={<span className="font-mono">{task.code}</span>}
       width={560}
       testId="task-settings"
@@ -136,34 +139,38 @@ export function TaskSettingsDrawer({
       footer={
         annotate ? (
           <>
-            <Hint>{failure ?? "Each switch is written to the audit log."}</Hint>
+            <Hint>{failure ?? t`Each switch is written to the audit log.`}</Hint>
             <span className="flex-1" />
-            <Button onClick={onClose}>Close</Button>
+            <Button onClick={onClose}>
+              <Trans>Close</Trans>
+            </Button>
           </>
         ) : (
           <>
             <Hint>
               {editable
-                ? "Reviewers' raw answers never change."
+                ? t`Reviewers' raw answers never change.`
                 : signedOff
-                  ? "Counts as is locked at sign-off."
-                  : "Counts as is fixed by the style."}
+                  ? t`Counts as is locked at sign-off.`
+                  : t`Counts as is fixed by the style.`}
             </Hint>
             <span className="flex-1" />
-            <Button onClick={onClose}>Close</Button>
+            <Button onClick={onClose}>
+              <Trans>Close</Trans>
+            </Button>
             <Button
               variant="primary"
               disabled={!editable || !dirty}
               onClick={() => setConfirming(true)}
             >
-              Save Counts as
+              <Trans>Save Counts as</Trans>
             </Button>
           </>
         )
       }
     >
       {annotate ? (
-        <Zone title="How it runs" sub="You can change this at any time.">
+        <Zone title={t`How it runs`} sub="You can change this at any time.">
           <BlindFirstSwitch
             checked={detail.blind_first ?? false}
             onCheckedChange={switchBlindFirst}
@@ -172,12 +179,14 @@ export function TaskSettingsDrawer({
       ) : (
         <>
           <Zone title={task.name} sub="Pinned when the task was sent.">
-            <Fact label="Decision style">{styleName[stored.kind]}</Fact>
-            {stored.question ? <Fact label="Question">{stored.question}</Fact> : null}
-            <Hint>The style cannot change once a decision exists.</Hint>
+            <Fact label={t`Decision style`}>{styleName[stored.kind]}</Fact>
+            {stored.question ? <Fact label={t`Question`}>{stored.question}</Fact> : null}
+            <Hint>
+              <Trans>The style cannot change once a decision exists.</Trans>
+            </Hint>
           </Zone>
           <Zone
-            title="Counts as"
+            title={t`Counts as`}
             sub="How each answer counts toward agree, not sure and disagree in the evaluation."
           >
             <CountsAsLine
@@ -187,10 +196,16 @@ export function TaskSettingsDrawer({
               split={splitOf(answers, range)}
               {...(editable ? { onRangeChange: setPicked } : {})}
             />
-            {signedOff ? <Hint>This task is signed off, so the mapping is locked.</Hint> : null}
+            {signedOff ? (
+              <Hint>
+                <Trans>This task is signed off, so the mapping is locked.</Trans>
+              </Hint>
+            ) : null}
             {!signedOff && !editable ? (
               <Hint>
-                This style counts each answer by its own rule, so there is nothing to map.
+                <Trans>
+                  This style counts each answer by its own rule, so there is nothing to map.
+                </Trans>
               </Hint>
             ) : null}
           </Zone>
@@ -204,7 +219,7 @@ export function TaskSettingsDrawer({
             setFailure(null);
           }
         }}
-        title={`Change Counts as on ${task.code}?`}
+        title={t`Change Counts as on ${task.code}?`}
         subtitle={countsAsRule(stored.kind, range)}
         width={480}
         hint={failure ?? "Written to the audit log and the task's log with your name."}
@@ -216,8 +231,10 @@ export function TaskSettingsDrawer({
           {recountText(recount)}
         </p>
         <p className="m-0 text-body-sm leading-[1.45] text-fg-dim">
-          Every stored decision is counted again from the raw answers. The report's Methods block
-          says that Counts as changed, who changed it and when.
+          <Trans>
+            Every stored decision is counted again from the raw answers. The report's Methods block
+            says that Counts as changed, who changed it and when.
+          </Trans>
         </p>
       </SmallModal>
     </DrawerPanel>

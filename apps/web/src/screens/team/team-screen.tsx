@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   cancelNudge,
   getListTeamWorkloadQueryKey,
@@ -80,6 +81,8 @@ export function TeamScreen({
   change: (next: Change) => void;
   openReport: (taskId: string) => void;
 }) {
+  const { t } = useLingui();
+
   const queryClient = useQueryClient();
   const teamQuery = useListTeamWorkload();
   const team = teamQuery.data?.data;
@@ -141,7 +144,7 @@ export function TeamScreen({
     if (notAvailable(teamQuery)) return <NotAvailableYet what="Team workload" />;
     return (
       <main className="px-8 pt-5.5 pl-7">
-        <Loader label="Loading Team" />
+        <Loader label={t`Loading Team`} />
       </main>
     );
   }
@@ -264,15 +267,17 @@ export function TeamScreen({
     <main className="flex min-h-0 flex-1 flex-col gap-(--density-flow-gap) px-8 pt-5.5 pb-4.5 pl-7">
       <header className="flex items-end justify-between gap-4">
         <div>
-          <h1 className="m-0 text-page-title font-semibold tracking-[-0.01em] text-fg">Team</h1>
+          <h1 className="m-0 text-page-title font-semibold tracking-[-0.01em] text-fg">
+            <Trans>Team</Trans>
+          </h1>
           <p className="mt-0.75 mb-0 text-body-sm leading-[1.45] text-fg-dim">
-            Who is reviewing what · {headerLine(team)}
+            <Trans>Who is reviewing what ·</Trans> {headerLine(team)}
           </p>
         </div>
         <div className="flex items-center gap-2.5">
           {state.tab === "open" ? (
             <ConfirmInButton
-              label="Nudge all behind"
+              label={t`Nudge all behind`}
               question={nudgeAllQuestion(behindNames, behind.length)}
               confirm="Yes, nudge"
               asking={asking}
@@ -281,10 +286,10 @@ export function TeamScreen({
               disabled={behind.length === 0}
               title={
                 behind.length
-                  ? `Nudges ${andJoin(behindNames)}`
+                  ? t`Nudges ${andJoin(behindNames)}`
                   : anyBehind
-                    ? "Everyone behind was nudged"
-                    : "Nobody is behind right now"
+                    ? t`Everyone behind was nudged`
+                    : t`Nobody is behind right now`
               }
             />
           ) : null}
@@ -299,22 +304,24 @@ export function TeamScreen({
       >
         <TabsList variant="page">
           <TabsTrigger value="open">
-            Open tasks<TabCount>{team.open.length}</TabCount>
+            <Trans>Open tasks</Trans>
+            <TabCount>{team.open.length}</TabCount>
           </TabsTrigger>
           <TabsTrigger value="done">
-            Done<TabCount>{team.done.length}</TabCount>
+            <Trans>Done</Trans>
+            <TabCount>{team.done.length}</TabCount>
           </TabsTrigger>
         </TabsList>
       </Tabs>
       <div className="flex items-center gap-2">
         <FilterSelect
-          label="Project"
+          label={t`Project`}
           value={state.project}
           options={projects.map((project) => ({ value: project.id, label: project.name }))}
           onChange={(project) => change({ project })}
         />
         <FilterSelect
-          label="Reviewer"
+          label={t`Reviewer`}
           value={state.reviewer}
           options={reviewerIds.map((userId) => ({ value: userId, label: person(userId).name }))}
           onChange={(reviewer) => change({ reviewer })}
@@ -325,17 +332,18 @@ export function TeamScreen({
             onClick={clear}
             className="ml-1.5 cursor-pointer border-0 bg-transparent p-0 text-body-sm font-medium text-accent hover:underline"
           >
-            Clear filters
+            <Trans>Clear filters</Trans>
           </button>
         ) : null}
       </div>
       <Zones className="min-h-0 flex-1 overflow-auto pb-2">
         {shownTasks.length === 0 ? (
           <TeamNoMatch onClear={clear}>
-            No {state.tab === "done" ? "signed-off" : "open"} task matches these filters.
+            <Trans>No</Trans> {state.tab === "done" ? t`signed-off` : t`open`}{" "}
+            <Trans>task matches these filters.</Trans>
           </TeamNoMatch>
         ) : state.tab === "done" ? (
-          <Zone title="Signed off">
+          <Zone title={t`Signed off`}>
             {shownTasks.map((task) => (
               <DoneTaskRow
                 key={task.id}

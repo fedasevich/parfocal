@@ -1,3 +1,4 @@
+import { useLingui } from "@lingui/react/macro";
 import { defaultFakeView, fakeView, scenario } from "@parfocal/api-client/fake";
 import type { QueryClient } from "@tanstack/react-query";
 import { useSyncExternalStore } from "react";
@@ -15,6 +16,8 @@ function personaNote(): string | null {
 }
 
 function FakeDataBadge({ scope, queryClient }: { scope: FakeScope; queryClient: QueryClient }) {
+  const { t } = useLingui();
+
   const cache = queryClient.getQueryCache();
   const label = useSyncExternalStore(
     (onChange) => subscribeToQueries(cache, onChange),
@@ -28,7 +31,7 @@ function FakeDataBadge({ scope, queryClient }: { scope: FakeScope; queryClient: 
   return (
     <output
       data-testid="fake-data-badge"
-      title="This screen is served by MSW in the dev build. Staging and production never show it."
+      title={t`This screen is served by MSW in the dev build. Staging and production never show it.`}
       className="pointer-events-none fixed right-3 bottom-3 z-50 rounded-full border border-warn bg-chrome px-3 py-1 font-medium text-warn text-caption shadow"
     >
       {label}

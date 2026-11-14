@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   getDownloadSavedStudyTemplatePreviewUrl,
   getDownloadStudyTemplatePreviewUrl,
@@ -55,6 +56,8 @@ function useLaterPages(
 }
 
 function PdfViewer({ preview, loading, failed, loadPdf, loadPages, onClose }: ViewerProps) {
+  const { t } = useLingui();
+
   const [page, setPage] = useState(1);
   const [fileFailed, setFileFailed] = useState(false);
   const file = useRef<Promise<Blob> | null>(null);
@@ -72,7 +75,7 @@ function PdfViewer({ preview, loading, failed, loadPdf, loadPages, onClose }: Vi
     <div
       className="fixed inset-x-0 top-12 bottom-0 z-40 bg-page"
       role="dialog"
-      aria-label="PDF preview"
+      aria-label={t`PDF preview`}
     >
       <PdfPreview
         className="h-full rounded-none border-0"
@@ -94,12 +97,14 @@ function PdfViewer({ preview, loading, failed, loadPdf, loadPages, onClose }: Vi
               aria-busy="true"
               className={`block max-w-full bg-white shadow-pop ${landscape ? "aspect-[297/210] w-[1123px]" : "aspect-[210/297] w-[794px]"}`}
             >
-              <span className="sr-only">Page {number} is loading</span>
+              <span className="sr-only">
+                <Trans>Page {number} is loading</Trans>
+              </span>
             </div>
           ) : (
             <img
               src={svgSource(svg)}
-              alt={`Page ${number} of the report`}
+              alt={t`Page ${number} of the report`}
               className="block bg-white shadow-pop"
             />
           );

@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   getGetProjectQueryKey,
   type Project,
@@ -76,10 +77,12 @@ export function ReportTemplateZone({
   value: Project["clinical_template"];
   onChange: (change: Defaults) => void;
 }) {
+  const { t } = useLingui();
+
   return (
-    <Zone title="Report template" sub="Lays out the clinical report of each case.">
+    <Zone title={t`Report template`} sub="Lays out the clinical report of each case.">
       <RadioGroup
-        aria-label="Report template"
+        aria-label={t`Report template`}
         value={value ?? "sentinel-node"}
         onValueChange={(next) =>
           onChange({ clinical_template: next as NonNullable<Project["clinical_template"]> })
@@ -111,22 +114,28 @@ export function IdMatchingZone({
   distance: number;
   onChange: (change: Defaults) => void;
 }) {
+  const { t } = useLingui();
+
   return (
-    <Zone title="ID matching" sub="A new result set keeps the IDs of the objects it overlaps.">
+    <Zone title={t`ID matching`} sub="A new result set keeps the IDs of the objects it overlaps.">
       <div className="grid gap-2 text-body-sm text-fg" data-testid="id-matching">
         <div className="flex items-center justify-between gap-4">
-          <span>Regions match at an overlap (IoU) of at least</span>
+          <span>
+            <Trans>Regions match at an overlap (IoU) of at least</Trans>
+          </span>
           <NumberStepper
-            label="Region overlap"
+            label={t`Region overlap`}
             value={iou}
             {...matchLimits.iou}
             onValueChange={(next) => next !== null && onChange({ match_iou: next })}
           />
         </div>
         <div className="flex items-center justify-between gap-4">
-          <span>Cells match when their centres are at most this many µm apart</span>
+          <span>
+            <Trans>Cells match when their centres are at most this many µm apart</Trans>
+          </span>
           <NumberStepper
-            label="Cell distance"
+            label={t`Cell distance`}
             value={distance}
             {...matchLimits.distance}
             onValueChange={(next) => next !== null && onChange({ match_distance_um: next })}
@@ -138,6 +147,8 @@ export function IdMatchingZone({
 }
 
 export function ClinicalMembersZone({ project, toast }: { project: Project; toast: Toast }) {
+  const { t } = useLingui();
+
   const people = usePeople();
   const queryClient = useQueryClient();
   const [rows, setRows] = useState(() => signOutRows(project.members));
@@ -166,18 +177,22 @@ export function ClinicalMembersZone({ project, toast }: { project: Project; toas
   };
   return (
     <Zone
-      title="Members"
+      title={t`Members`}
       sub={`Own cases means the cases a member is assigned to. A member who cannot sign out sends the report for co-sign to one who can.${owner ? ` Set by ${people.byId(owner.user_id).name}, the owner.` : ""}`}
       end={
         <Link to="/admin" className="text-body-sm font-medium text-accent hover:underline">
-          Invite people
+          <Trans>Invite people</Trans>
         </Link>
       }
     >
       <div className="grid gap-2.5" data-testid="sign-out-rights">
         <div className="grid grid-cols-[minmax(0,1fr)_auto] text-caption font-semibold text-fg-dim">
-          <span>Member</span>
-          <span>Can sign out</span>
+          <span>
+            <Trans>Member</Trans>
+          </span>
+          <span>
+            <Trans>Can sign out</Trans>
+          </span>
         </div>
         {rows.map((row) => {
           const person = people.byId(row.userId);
@@ -193,11 +208,11 @@ export function ClinicalMembersZone({ project, toast }: { project: Project; toas
                   className="px-3 text-caption font-medium text-fg-faint"
                   title={viewersCannotSignOut}
                 >
-                  Never
+                  <Trans>Never</Trans>
                 </span>
               ) : (
                 <SegmentedControl
-                  aria-label={`Can sign out, ${person.name}`}
+                  aria-label={t`Can sign out, ${person.name}`}
                   value={row.right}
                   options={signOutOptions}
                   onValueChange={(next) => set(row.userId, next as SignOutRight)}

@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { useState } from "react";
 import { type Binding, type Fired, parseKeys } from "../../keys/registry.ts";
 import { useHotkeys } from "../../keys/use-hotkeys.ts";
@@ -26,6 +27,8 @@ function logged(current: Log, fired: Fired): Log {
 }
 
 export function HotkeysSpike() {
+  const { t } = useLingui();
+
   const [log, setLog] = useState<Log>({
     last: "",
     taps: 0,
@@ -38,16 +41,26 @@ export function HotkeysSpike() {
   useHotkeys(bindings, onFire, setPending);
   return (
     <main className="grid max-w-xl gap-4 p-8 text-fg">
-      <h1 className="text-title-sm font-semibold">Hotkeys spike</h1>
+      <h1 className="text-title-sm font-semibold">
+        <Trans>Hotkeys spike</Trans>
+      </h1>
       <p className="text-fg-2">
-        Press G then 2. Tap Z to open the whole slide, press it again to close, or hold it to peek.
+        <Trans>
+          Press G then 2. Tap Z to open the whole slide, press it again to close, or hold it to
+          peek.
+        </Trans>
       </p>
       <label className="grid gap-1">
-        <span>Note</span>
-        <input aria-label="Note" className="rounded-md border border-line bg-chrome-2 px-2 py-1" />
+        <span>
+          <Trans>Note</Trans>
+        </span>
+        <input
+          aria-label={t`Note`}
+          className="rounded-md border border-line bg-chrome-2 px-2 py-1"
+        />
       </label>
       <output
-        aria-label="Hotkey status"
+        aria-label={t`Hotkey status`}
         data-last={log.last}
         data-taps={log.taps}
         data-holds={log.holds}
@@ -55,10 +68,16 @@ export function HotkeysSpike() {
         data-pending={pending?.join(" ") ?? ""}
         className="grid gap-1 font-mono text-body"
       >
-        <span>Last: {log.last || "nothing yet"}</span>
-        <span>Waiting for: {pending ? `${pending.join(" then ")} then …` : "nothing"}</span>
         <span>
-          Taps {log.taps}, holds {log.holds}, whole slide {log.peek ? "open" : "closed"}
+          <Trans>Last:</Trans> {log.last || t`nothing yet`}
+        </span>
+        <span>
+          <Trans>Waiting for:</Trans> {pending ? t`${pending.join(" then ")} then …` : t`nothing`}
+        </span>
+        <span>
+          <Trans>Taps</Trans> {log.taps}
+          <Trans>, holds</Trans> {log.holds}
+          <Trans>, whole slide</Trans> {log.peek ? t`open` : t`closed`}
         </span>
       </output>
     </main>

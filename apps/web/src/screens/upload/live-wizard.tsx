@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import type { Project } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
 import { FlowBar, FlowPage, type FlowStep } from "@parfocal/ui/components/flow-page";
@@ -80,6 +81,8 @@ type Change = (change: Partial<LiveState>) => void;
 const ServerCheck = lazy(() => import("./server-check.tsx"));
 
 export function LiveWizard({ project, scene }: { project: Project; scene: LiveScene }) {
+  const { t } = useLingui();
+
   const navigate = useNavigate();
   const { engine, entries } = useUploads();
   const drop = useDropStore();
@@ -172,12 +175,20 @@ export function LiveWizard({ project, scene }: { project: Project; scene: LiveSc
   });
   const renderLink = useCrumbLink();
   const clinical = project.privacy_mode === "clinical";
-  const back = <Button onClick={() => go("files")}>Back</Button>;
+  const back = (
+    <Button onClick={() => go("files")}>
+      <Trans>Back</Trans>
+    </Button>
+  );
   const uploadLabel = `Upload ${plural(model.uploadSlides.length, "slide")} and ${plural(model.uploadResults.length, "result")}`;
   const bar =
     step === 0 ? (
       <FlowBar
-        back={<Button onClick={toProject}>Cancel</Button>}
+        back={
+          <Button onClick={toProject}>
+            <Trans>Cancel</Trans>
+          </Button>
+        }
         hint={
           items.length === 0
             ? "Add slides, result files or both to go on."
@@ -194,7 +205,7 @@ export function LiveWizard({ project, scene }: { project: Project; scene: LiveSc
             disabled={model.slides.length === 0}
             onClick={() => go("check", {})}
           >
-            Next
+            <Trans>Next</Trans>
           </Button>
         }
       />
@@ -231,7 +242,7 @@ export function LiveWizard({ project, scene }: { project: Project; scene: LiveSc
             data-testid="close-upload"
             onClick={toProject}
           >
-            {finished ? "Done" : "Close"}
+            {finished ? t`Done` : t`Close`}
           </Button>
         }
       />
@@ -253,13 +264,13 @@ export function LiveWizard({ project, scene }: { project: Project; scene: LiveSc
         className="h-full"
         renderLink={renderLink}
         crumbs={[{ label: project.name, href: `/projects/${project.id}` }, { label: "Upload" }]}
-        title="Upload slides and results"
+        title={t`Upload slides and results`}
         subtitle={
           <>
-            Into {project.name} · <span className="font-mono">{project.code}</span> ·{" "}
+            <Trans>Into</Trans> {project.name} · <span className="font-mono">{project.code}</span> ·{" "}
             {clinical
-              ? "Clinical, patient fields are kept and every access is logged"
-              : "De-identified, so labels and patient names are removed on upload"}
+              ? t`Clinical, patient fields are kept and every access is logged`
+              : t`De-identified, so labels and patient names are removed on upload`}
           </>
         }
         steps={steps}
@@ -311,6 +322,8 @@ function Summary({
   model: LiveModel;
   scene: LiveScene;
 }) {
+  const { t } = useLingui();
+
   const clinical = project.privacy_mode === "clinical";
   const where =
     model.caseCount > 0
@@ -319,7 +332,7 @@ function Summary({
         ? "Loose slides, no case"
         : "Not chosen yet";
   return (
-    <Zone title="Where the files go" data-testid="upload-summary">
+    <Zone title={t`Where the files go`} data-testid="upload-summary">
       <FactList
         tight
         rows={[
@@ -361,6 +374,8 @@ function LiveSlidePicker({
   onPick: (slide: DropRecord) => void;
   size?: "sm" | "default";
 }) {
+  const { t } = useLingui();
+
   return (
     <Select
       items={slides.map((slide) => ({ value: slide.path, label: slide.path }))}
@@ -369,8 +384,8 @@ function LiveSlidePicker({
         if (slide) onPick(slide);
       }}
     >
-      <SelectTrigger size={size} aria-label="Choose a slide" className="w-60">
-        <SelectValue placeholder="Choose a slide" />
+      <SelectTrigger size={size} aria-label={t`Choose a slide`} className="w-60">
+        <SelectValue placeholder={t`Choose a slide`} />
       </SelectTrigger>
       <SelectContent>
         {slides.map((slide) => (
@@ -384,6 +399,8 @@ function LiveSlidePicker({
 }
 
 function Pickers({ take, label }: { take: (items: DroppedItem[]) => void; label: string }) {
+  const { t } = useLingui();
+
   const files = useRef<HTMLInputElement>(null);
   const folder = useRef<HTMLInputElement>(null);
   return (
@@ -395,7 +412,7 @@ function Pickers({ take, label }: { take: (items: DroppedItem[]) => void; label:
         </Button>
         <Button onClick={() => folder.current?.click()}>
           <Icon name="folder" />
-          Choose a folder
+          <Trans>Choose a folder</Trans>
         </Button>
       </span>
       <input
@@ -403,7 +420,7 @@ function Pickers({ take, label }: { take: (items: DroppedItem[]) => void; label:
         type="file"
         multiple
         data-testid="file-input"
-        aria-label="Choose slides or result files"
+        aria-label={t`Choose slides or result files`}
         className="sr-only"
         onChange={(event) => {
           take(fromFileList(event.currentTarget.files));
@@ -415,7 +432,7 @@ function Pickers({ take, label }: { take: (items: DroppedItem[]) => void; label:
         type="file"
         multiple
         data-testid="folder-input"
-        aria-label="Choose a folder"
+        aria-label={t`Choose a folder`}
         className="sr-only"
         {...{ webkitdirectory: "" }}
         onChange={(event) => {
@@ -446,6 +463,8 @@ function FilesStep({
   dragging: boolean;
   take: (items: DroppedItem[]) => void;
 }) {
+  const { t } = useLingui();
+
   const navigate = useNavigate();
   const adding = useRef<HTMLInputElement>(null);
   const [addingTo, setAddingTo] = useState<DropRecord | null>(null);
@@ -463,13 +482,13 @@ function FilesStep({
       className="inline-flex min-h-6 cursor-pointer items-center gap-1.5 border-0 bg-transparent p-0 text-body-sm font-medium text-fg-dim hover:text-fg"
     >
       <Icon name="help" />
-      What files work?
+      <Trans>What files work?</Trans>
     </button>
   );
   const sourceSwitch = (
     <div className="flex items-center gap-3">
       <SegmentedControl
-        aria-label="Where the files are"
+        aria-label={t`Where the files are`}
         value={source}
         onValueChange={(value) => setSource(value === "link" ? "link" : "computer")}
         options={[
@@ -503,12 +522,14 @@ function FilesStep({
           >
             <Icon name="upload" size="md" />
             <b className="text-body font-semibold text-fg">
-              Drop slides, results or a whole folder
+              <Trans>Drop slides, results or a whole folder</Trans>
             </b>
             <span>
-              Parfocal sorts them by slide. Slides up to 20 GB each, AI results are optional.
+              <Trans>
+                Parfocal sorts them by slide. Slides up to 20 GB each, AI results are optional.
+              </Trans>
             </span>
-            <Pickers take={take} label="Choose files" />
+            <Pickers take={take} label={t`Choose files`} />
           </div>
           <FolderShape
             tree={shapeTree}
@@ -558,7 +579,7 @@ function FilesStep({
                         set({ placed });
                       }}
                     >
-                      Undo
+                      <Trans>Undo</Trans>
                     </TextLink>
                   ) : (
                     <RemoveButton
@@ -575,7 +596,7 @@ function FilesStep({
               {rows.length === 0 ? (
                 <>
                   <span className="text-body-sm text-fg-dim">
-                    No AI results yet. Fine, you can run a model later.
+                    <Trans>No AI results yet. Fine, you can run a model later.</Trans>
                   </span>
                   <span className="flex-1" />
                 </>
@@ -589,7 +610,7 @@ function FilesStep({
                 }}
               >
                 <Icon name="plus" />
-                Add a result file for {stemOf(slide.path)}
+                <Trans>Add a result file for</Trans> {stemOf(slide.path)}
               </Button>
             </div>
           </>
@@ -601,7 +622,7 @@ function FilesStep({
     <span key={group.label ?? "loose"} className="contents">
       <GroupHead
         icon={group.label === null ? "slides" : "folder"}
-        title={group.label === null ? "Loose slides" : `Case ${group.label}`}
+        title={group.label === null ? t`Loose slides` : t`Case ${group.label}`}
         sub={
           group.label === null
             ? `${plural(group.slides.length, "slide")}, no case number`
@@ -615,11 +636,11 @@ function FilesStep({
     <>
       <div className="flex justify-end">{formats}</div>
       <Zone
-        title="Slides and their results"
+        title={t`Slides and their results`}
         end={
           <Hint>
-            {plural(model.slides.length, "slide")} · {formatBytes(model.bytes)} · {model.matched} of{" "}
-            {plural(model.results.length, "result")} matched
+            {plural(model.slides.length, "slide")} · {formatBytes(model.bytes)} · {model.matched}{" "}
+            <Trans>of</Trans> {plural(model.results.length, "result")} <Trans>matched</Trans>
           </Hint>
         }
       >
@@ -629,10 +650,10 @@ function FilesStep({
         >
           <span>
             {ruleText[state.pair]}.{" "}
-            {state.cases === "names" ? "Cases from folder names" : "All slides kept loose"}.
+            {state.cases === "names" ? t`Cases from folder names` : t`All slides kept loose`}.
           </span>
           <TextLink onClick={() => set({ ruleOpen: !state.ruleOpen })}>
-            {state.ruleOpen ? "Done" : "Change"}
+            {state.ruleOpen ? t`Done` : t`Change`}
           </TextLink>
         </div>
         {state.ruleOpen ? (
@@ -641,18 +662,22 @@ function FilesStep({
             className="grid gap-2.5 rounded-[10px] border border-surf-edge bg-surf-panel px-3.5 py-3 text-body-sm text-fg-dim"
           >
             <div className="flex flex-wrap items-center gap-x-3.5 gap-y-2">
-              <span className="w-30">Pair results by</span>
+              <span className="w-30">
+                <Trans>Pair results by</Trans>
+              </span>
               <SegmentedControl
-                aria-label="Pair results by"
+                aria-label={t`Pair results by`}
                 value={state.pair}
                 onValueChange={(value) => set({ pair: value as PairMode, placed: {} })}
                 options={ruleOptions}
               />
             </div>
             <div className="flex flex-wrap items-center gap-x-3.5 gap-y-2">
-              <span className="w-30">Cases</span>
+              <span className="w-30">
+                <Trans>Cases</Trans>
+              </span>
               <SegmentedControl
-                aria-label="Cases"
+                aria-label={t`Cases`}
                 value={state.cases}
                 onValueChange={(value) => set({ cases: value as LiveState["cases"] })}
                 options={[
@@ -666,7 +691,9 @@ function FilesStep({
         <FileList>
           {model.slides.length === 0 ? (
             <div className="p-3 text-body-sm text-fg-dim">
-              No slides in this upload yet. Drop slides below, or go back to the project.
+              <Trans>
+                No slides in this upload yet. Drop slides below, or go back to the project.
+              </Trans>
             </div>
           ) : (
             list
@@ -677,7 +704,7 @@ function FilesStep({
           type="file"
           className="sr-only"
           data-testid="add-result-input"
-          aria-label="Choose a result file"
+          aria-label={t`Choose a result file`}
           onChange={(event) => {
             const chosen = fromFileList(event.currentTarget.files);
             event.currentTarget.value = "";
@@ -691,7 +718,7 @@ function FilesStep({
       </Zone>
       {model.unplaced.length > 0 ? (
         <Zone
-          title="Not matched yet"
+          title={t`Not matched yet`}
           sub="Pick the slide each file goes with. A file with no slide stays out of this upload."
           end={<Hint>{plural(model.unplaced.length, "file")}</Hint>}
           data-testid="not-matched"
@@ -718,9 +745,10 @@ function FilesStep({
       ) : null}
       {model.others.length > 0 ? (
         <Hint>
-          {plural(model.others.length, "file")} {model.others.length === 1 ? "is" : "are"} not{" "}
-          {model.others.length === 1 ? "a slide or a result" : "slides or results"} and stay out:{" "}
-          {model.others.map((other) => other.path).join(", ")}
+          {plural(model.others.length, "file")} {model.others.length === 1 ? t`is` : t`are`}{" "}
+          <Trans>not</Trans>{" "}
+          {model.others.length === 1 ? t`a slide or a result` : t`slides or results`}{" "}
+          <Trans>and stay out:</Trans> {model.others.map((other) => other.path).join(", ")}
         </Hint>
       ) : null}
       <div className="grid gap-3">
@@ -733,9 +761,9 @@ function FilesStep({
         >
           <span className="inline-flex items-center gap-2">
             <Icon name="upload" />
-            Drop more slides, results or folders here
+            <Trans>Drop more slides, results or folders here</Trans>
           </span>
-          <Pickers take={take} label="Choose files" />
+          <Pickers take={take} label={t`Choose files`} />
         </div>
         <FolderShape
           tree={shapeTree}
@@ -770,6 +798,8 @@ function CheckStep({
   duplicates: readonly Duplicate[];
   onDuplicates: (found: Duplicate[]) => void;
 }) {
+  const { t } = useLingui();
+
   const left = model.leftOut.length;
   const dataFolder = useRef<HTMLInputElement>(null);
   const [addingFolderTo, setAddingFolderTo] = useState<string | null>(null);
@@ -782,7 +812,7 @@ function CheckStep({
   const placedBack = model.results.filter((result) => result.picked);
   return (
     <>
-      <Zone title="In this upload" sub={lead} data-testid="check-summary">
+      <Zone title={t`In this upload`} sub={lead} data-testid="check-summary">
         <FactList
           rows={[
             { icon: "slides", label: "Slides", value: String(model.uploadSlides.length) },
@@ -837,7 +867,7 @@ function CheckStep({
           icon="link"
           tag="No slide yet"
           tone="warn"
-          title="This result file has no slide yet"
+          title={t`This result file has no slide yet`}
           file={result.item.path}
           text="Nothing next to it or in its name says which slide it belongs to. Pick its slide, or leave it out of this upload."
           actions={
@@ -853,7 +883,7 @@ function CheckStep({
                 variant="ghost"
                 onClick={() => set({ left: { ...state.left, [result.item.path]: true } })}
               >
-                Leave it out
+                <Trans>Leave it out</Trans>
               </Button>
             </>
           }
@@ -865,7 +895,7 @@ function CheckStep({
           icon="folder"
           tag="Data folder missing"
           tone="warn"
-          title="This MRXS slide has no data folder"
+          title={t`This MRXS slide has no data folder`}
           file={slide.path}
           text={`An MRXS slide is the .mrxs file plus a folder named ${stemOf(slide.path)} with its data files. Add that folder, or leave the slide out. It waits until you do.`}
           actions={
@@ -877,13 +907,13 @@ function CheckStep({
                 }}
               >
                 <Icon name="folder" />
-                Add the folder
+                <Trans>Add the folder</Trans>
               </Button>
               <Button
                 variant="ghost"
                 onClick={() => set({ left: { ...state.left, [slide.path]: true } })}
               >
-                Leave it out
+                <Trans>Leave it out</Trans>
               </Button>
             </>
           }
@@ -907,7 +937,7 @@ function CheckStep({
         type="file"
         multiple
         data-testid="data-folder-input"
-        aria-label="Choose the data folder"
+        aria-label={t`Choose the data folder`}
         className="sr-only"
         {...{ webkitdirectory: "" }}
         onChange={(event) => {
@@ -931,14 +961,14 @@ function CheckStep({
           tone="bad"
           title={
             kindOf(item.path) === "slide"
-              ? "This slide cannot be read"
-              : "This file has nothing in it"
+              ? t`This slide cannot be read`
+              : t`This file has nothing in it`
           }
           file={item.path}
           text="The file is 0 bytes, so there is nothing to read. It waits until you take it out or choose it again."
           actions={
             <Button onClick={() => set({ removed: { ...state.removed, [item.path]: true } })}>
-              Remove from this upload
+              <Trans>Remove from this upload</Trans>
             </Button>
           }
         />
@@ -981,6 +1011,8 @@ function UploadStep({
   entries: ReturnType<typeof useUploads>["entries"];
   projectId: string;
 }) {
+  const { t } = useLingui();
+
   const [startedAt] = useState(() => Date.now());
   const [openRows, setOpenRows] = useState<Record<string, boolean>>({});
   const [leaveBare, setLeaveBare] = useState(false);
@@ -1035,16 +1067,16 @@ function UploadStep({
   });
   return (
     <>
-      <Zone title="Everything" data-testid="upload-overall">
+      <Zone title={t`Everything`} data-testid="upload-overall">
         <ProgressBar
           value={percent}
           tone={done === entries.length && entries.length > 0 ? "ok" : "accent"}
-          label={`${done} of ${plural(entries.length, "file")} uploaded`}
+          label={t`${done} of ${plural(entries.length, "file")} uploaded`}
           valueText={`${percent}% · ${formatBytes(sent)} of ${formatBytes(total)}${left}`}
         />
       </Zone>
       <Zone
-        title="Each file"
+        title={t`Each file`}
         sub={`${plural(model.uploadSlides.length, "slide")} and ${plural(model.uploadResults.length, "result")}`}
       >
         <FileList>
@@ -1101,13 +1133,15 @@ function UploadStep({
                     <button
                       type="button"
                       aria-expanded={open}
-                      aria-label={`${steps.done} of ${steps.rows.length} processing steps of ${entry.name}`}
-                      title={`${open ? "Hide" : "Show"} the processing steps`}
+                      aria-label={t`${steps.done} of ${steps.rows.length} processing steps of ${entry.name}`}
+                      title={t`${open ? "Hide" : "Show"} the processing steps`}
                       onClick={() => setOpenRows({ ...openRows, [entry.id]: !open })}
                       className="inline-flex h-6.5 cursor-pointer items-center gap-1.5 rounded-md border border-line bg-transparent px-2 text-caption text-fg-dim hover:border-line-strong hover:text-fg"
                     >
                       <span className="font-mono">
-                        {steps.done} of {steps.rows.length}
+                        <Trans>
+                          {steps.done} of {steps.rows.length}
+                        </Trans>
                       </span>
                       <Icon name="down" className={cn(open && "rotate-180")} />
                     </button>
@@ -1140,18 +1174,18 @@ function UploadStep({
       <ResultProblems uploads={resultUploads} projectId={projectId} />
       {bare.length === 0 ? null : leaveBare ? (
         <Zone
-          title={`${plural(bare.length, "slide stays", "slides stay")} without results`}
+          title={t`${plural(bare.length, "slide stays", "slides stay")} without results`}
           sub="Add a result file or run a model on them any time, from the project or from the slide."
           end={
             <Button size="sm" variant="ghost" onClick={() => setLeaveBare(false)}>
-              Undo
+              <Trans>Undo</Trans>
             </Button>
           }
         />
       ) : (
         <Zone
           highlight
-          title={`${plural(bare.length, "slide has", "slides have")} no results`}
+          title={t`${plural(bare.length, "slide has", "slides have")} no results`}
           sub="Run a model on them now, or leave them and add results later."
           data-testid="no-results-zone"
         >
@@ -1167,10 +1201,10 @@ function UploadStep({
               }
             >
               <Icon name="smart" />
-              Run a model
+              <Trans>Run a model</Trans>
             </Button>
             <Button variant="ghost" onClick={() => setLeaveBare(true)}>
-              Leave them
+              <Trans>Leave them</Trans>
             </Button>
           </div>
         </Zone>

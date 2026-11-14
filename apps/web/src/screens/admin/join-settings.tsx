@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   ApiError,
   getGetJoinSettingsQueryKey,
@@ -46,6 +47,8 @@ function JoinForm({
   workspaceName: string;
   notify: Notify;
 }) {
+  const { t } = useLingui();
+
   const queryClient = useQueryClient();
   const save = useSetJoinSettings();
   const [draft, setDraft] = useState<JoinDraft>(draftOf(saved));
@@ -82,7 +85,9 @@ function JoinForm({
         if (canSave(draft, saved) && !refused) submit();
       }}
     >
-      <span className="pt-1.5 text-fg-dim">Logo</span>
+      <span className="pt-1.5 text-fg-dim">
+        <Trans>Logo</Trans>
+      </span>
       <div className="flex flex-wrap items-center gap-2.5">
         <WorkspaceLogo
           workspace={{
@@ -93,18 +98,18 @@ function JoinForm({
           size={32}
         />
         <Input
-          aria-label="Logo letters"
+          aria-label={t`Logo letters`}
           value={draft.logo}
           maxLength={3}
           onChange={(event) => set({ logo: logoOf(event.target.value) })}
           className="w-20 font-mono uppercase"
         />
-        <fieldset className="m-0 flex gap-1.5 border-0 p-0" aria-label="Logo colour">
+        <fieldset className="m-0 flex gap-1.5 border-0 p-0" aria-label={t`Logo colour`}>
           {logoColours.map((colour) => (
             <button
               key={colour}
               type="button"
-              aria-label={`Logo colour ${colour}`}
+              aria-label={t`Logo colour ${colour}`}
               aria-pressed={draft.colour === colour}
               onClick={() => set({ colour })}
               className={cn(
@@ -116,13 +121,15 @@ function JoinForm({
           ))}
         </fieldset>
       </div>
-      <span className="pt-1.5 text-fg-dim">Email domain</span>
+      <span className="pt-1.5 text-fg-dim">
+        <Trans>Email domain</Trans>
+      </span>
       <div className="grid justify-items-start gap-1.5">
         <Input
-          aria-label="Email domain"
+          aria-label={t`Email domain`}
           aria-invalid={wrong}
           aria-describedby="join-domain-help"
-          placeholder="hospital.example"
+          placeholder={t`hospital.example`}
           maxLength={253}
           value={draft.domain}
           onChange={(event) => set({ domain: event.target.value })}
@@ -135,18 +142,20 @@ function JoinForm({
           {refused ? refusal.message : domainHelp[check]}
         </small>
       </div>
-      <span className="pt-1.5 text-fg-dim">People from the domain</span>
+      <span className="pt-1.5 text-fg-dim">
+        <Trans>People from the domain</Trans>
+      </span>
       <div className="grid justify-items-start gap-1.5">
         <SegmentedControl
-          aria-label="People from the domain"
+          aria-label={t`People from the domain`}
           value={draft.policy}
           onValueChange={(value) => set({ policy: String(value) as JoinPolicy })}
           options={joinPolicyOptions.map((option) => ({ ...option }))}
         />
         <small className="text-caption text-fg-dim">
           {draft.policy === "join"
-            ? "They join as reviewers without anyone saying yes."
-            : "They ask, and someone with admin rights answers in Join requests on People."}
+            ? t`They join as reviewers without anyone saying yes.`
+            : t`They ask, and someone with admin rights answers in Join requests on People.`}
         </small>
       </div>
       <span />
@@ -156,7 +165,7 @@ function JoinForm({
           variant="primary"
           disabled={!canSave(draft, saved) || refused || save.isPending}
         >
-          Apply
+          <Trans>Apply</Trans>
         </Button>
       </div>
     </form>
@@ -170,11 +179,13 @@ export function JoinSettingsZone({
   workspaceName: string;
   notify: Notify;
 }) {
+  const { t } = useLingui();
+
   const saved = okData(useGetJoinSettings().data);
   if (saved === undefined) return null;
   return (
     <Zone
-      title="Logo and joining"
+      title={t`Logo and joining`}
       sub="The logo shows next to Parfocal. The email domain decides who can find this workspace when they set up."
     >
       <JoinForm

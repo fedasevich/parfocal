@@ -1,3 +1,4 @@
+import { useLingui } from "@lingui/react/macro";
 import { FormField, TextFieldInput } from "@parfocal/ui/components/form-field";
 import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
 import { SmallModal } from "@parfocal/ui/components/small-modal";
@@ -24,6 +25,8 @@ export function AddClassModal({
   onClose: () => void;
   onAdd: (item: NewClass) => void;
 }) {
+  const { t } = useLingui();
+
   const [name, setName] = useState("");
   const [colour, setColour] = useState(swatches[0]?.colour ?? "#f59e0b");
   const [key, setKey] = useState("");
@@ -48,7 +51,7 @@ export function AddClassModal({
           onClose();
         }
       }}
-      title="Add a class"
+      title={t`Add a class`}
       subtitle={`To ${projectCode}. New imports and tasks can use it.`}
       width={480}
       hint="Classes from imports can map to it later."
@@ -62,17 +65,17 @@ export function AddClassModal({
         reset();
       }}
     >
-      <FormField label="Name" error={tried ? errors.name : undefined}>
+      <FormField label={t`Name`} error={tried ? errors.name : undefined}>
         <TextFieldInput
           value={name}
           maxLength={40}
-          placeholder="For example Necrosis"
+          placeholder={t`For example Necrosis`}
           onChange={(event) => setName(event.currentTarget.value)}
         />
       </FormField>
-      <FormField label="Color">
+      <FormField label={t`Color`}>
         <SegmentedControl
-          aria-label="Color"
+          aria-label={t`Color`}
           value={colour}
           onValueChange={(value) => setColour(String(value))}
           options={swatches.map((swatch) => ({
@@ -87,7 +90,7 @@ export function AddClassModal({
         />
       </FormField>
       <FormField
-        label="Key"
+        label={t`Key`}
         error={tried ? errors.key : undefined}
         help="A number from 1 to 9. Reviewers press it to give a cell this class."
       >

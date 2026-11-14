@@ -1,3 +1,4 @@
+import { useLingui } from "@lingui/react/macro";
 import {
   getGetRetentionPolicyQueryKey,
   type RetentionPolicy,
@@ -72,6 +73,8 @@ const rows: { key: RetentionKey; label: string; help: string }[] = [
 ];
 
 export function RetentionZone({ notify }: { notify: Notify }) {
+  const { t } = useLingui();
+
   const policy = okData(useGetRetentionPolicy().data);
   const queryClient = useQueryClient();
   const update = useSetRetentionPolicy();
@@ -94,7 +97,7 @@ export function RetentionZone({ notify }: { notify: Notify }) {
     );
   };
   return (
-    <Zone title="Retention" sub="Nothing is removed until you choose a period.">
+    <Zone title={t`Retention`} sub="Nothing is removed until you choose a period.">
       <div className="grid grid-cols-[200px_minmax(0,1fr)] items-start gap-x-4 gap-y-4 text-body-sm">
         {rows.map((row) => {
           const days = retentionDays(policy, row.key);

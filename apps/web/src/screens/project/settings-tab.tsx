@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   type Project,
   type ProjectClass,
@@ -89,6 +90,8 @@ export function SettingsTab({
   addClass: boolean;
   toast: (message: ReactNode, onUndo?: () => void) => void;
 }) {
+  const { t } = useLingui();
+
   const navigate = useNavigate();
   const people = usePeople();
   const overview = useGetProjectOverview(project.id).data?.data;
@@ -126,37 +129,46 @@ export function SettingsTab({
       data-testid="project-settings"
     >
       <Zones>
-        <Zone title="Privacy">
+        <Zone title={t`Privacy`}>
           <div className="flex items-start gap-2 text-body-sm text-fg">
             <Icon name="shield" className="mt-0.5 text-fg-dim" />
             <span>
-              <b>{clinical ? "Clinical" : "De-identified"}</b> ·{" "}
+              <b>{clinical ? t`Clinical` : t`De-identified`}</b> ·{" "}
               {clinical
-                ? "Patient fields allowed, all optional. Every access is logged."
-                : "No patient fields anywhere. Names are removed from file metadata and labels on upload."}
+                ? t`Patient fields allowed, all optional. Every access is logged.`
+                : t`No patient fields anywhere. Names are removed from file metadata and labels on upload.`}
             </span>
           </div>
-          <Hint>Set when the project was created.</Hint>
+          <Hint>
+            <Trans>Set when the project was created.</Trans>
+          </Hint>
         </Zone>
-        <Zone title="Review defaults" end={<Hint>each task can change them</Hint>}>
+        <Zone
+          title={t`Review defaults`}
+          end={
+            <Hint>
+              <Trans>each task can change them</Trans>
+            </Hint>
+          }
+        >
           <div className="grid">
             <ToggleRow
-              title="Blind review"
+              title={t`Blind review`}
               detail="Reviewers see each other only after they submit."
               on={value.blinded}
               onChange={(blinded) => change({ blinded })}
             />
             <ToggleRow
-              title="Hide the AI for a first read"
+              title={t`Hide the AI for a first read`}
               detail="Reviewers mark the slide first, then the AI result is shown."
               on={value.ai_hidden_first_read}
               onChange={(hidden) => change({ ai_hidden_first_read: hidden })}
             />
           </div>
         </Zone>
-        <Zone title="Study template" sub="Fills in a new review task and lays out its report.">
+        <Zone title={t`Study template`} sub="Fills in a new review task and lays out its report.">
           <RadioGroup
-            aria-label="Study template"
+            aria-label={t`Study template`}
             value={chosen}
             onValueChange={(next) => change({ study_template_id: String(next) })}
           >
@@ -167,7 +179,8 @@ export function SettingsTab({
               >
                 <RadioGroupItem value={item.id} />
                 <span>
-                  {item.name} v{item.version}
+                  {item.name} <Trans>v</Trans>
+                  {item.version}
                   <small className="ml-2 text-caption text-fg-faint">
                     {studyKindText[item.study_kind] ?? ""}
                   </small>
@@ -178,18 +191,20 @@ export function SettingsTab({
         </Zone>
         {clinical ? <ReportTemplateZone value={value.clinical_template} onChange={change} /> : null}
         <Zone
-          title="Automatic imports"
+          title={t`Automatic imports`}
           sub="Slides and results can arrive from a webhook, the API or a watched folder, with the same checks as an upload."
         >
           <div className="grid grid-cols-[16px_minmax(0,1fr)_auto] items-center gap-3 rounded-ctl border border-line bg-surf-field px-3.5 py-3">
             <Icon name="link" className="text-fg-dim" />
             <span>
               <b className="block text-body-sm">
-                {imports?.webhook.on ? "1 webhook connected" : "Nothing connected"}
+                {imports?.webhook.on ? t`1 webhook connected` : t`Nothing connected`}
               </b>
               {imports?.last_arrival ? (
                 <small className="block text-body-sm leading-[1.45] text-fg-dim">
-                  Last arrival today {imports.last_arrival.at}, {imports.last_arrival.what}
+                  <Trans>
+                    Last arrival today {imports.last_arrival.at}, {imports.last_arrival.what}
+                  </Trans>
                 </small>
               ) : null}
             </span>
@@ -204,7 +219,7 @@ export function SettingsTab({
                 />
               }
             >
-              Manage
+              <Trans>Manage</Trans>
             </Button>
           </div>
         </Zone>
@@ -218,7 +233,8 @@ export function SettingsTab({
         <Zone
           title={
             <>
-              Classes <span className="ml-2 font-normal text-fg-dim">{taxonomy}</span>
+              <Trans>Classes</Trans>{" "}
+              <span className="ml-2 font-normal text-fg-dim">{taxonomy}</span>
             </>
           }
           end={
@@ -228,7 +244,7 @@ export function SettingsTab({
               search={{ tab: "settings", modal: "addcls" }}
               className="text-body-sm font-medium text-accent hover:underline"
             >
-              Add a class
+              <Trans>Add a class</Trans>
             </Link>
           }
         >
@@ -244,14 +260,18 @@ export function SettingsTab({
               <ClassRow key={item.name} item={item} note="C cells · added by you" />
             ))}
           </div>
-          {remembered ? <Hint>Remembered from imports: {remembered}</Hint> : null}
+          {remembered ? (
+            <Hint>
+              <Trans>Remembered from imports: {remembered}</Trans>
+            </Hint>
+          ) : null}
         </Zone>
         <Zone
-          title="Opinion form"
+          title={t`Opinion form`}
           sub="Asked once per slide, after the objects."
           end={
             <Link to="/admin" className="text-body-sm font-medium text-accent hover:underline">
-              Edit the form
+              <Trans>Edit the form</Trans>
             </Link>
           }
         >
@@ -272,10 +292,10 @@ export function SettingsTab({
           <ClinicalMembersZone project={project} toast={toast} />
         ) : (
           <Zone
-            title="Members"
+            title={t`Members`}
             end={
               <Link to="/admin" className="text-body-sm font-medium text-accent hover:underline">
-                Invite people
+                <Trans>Invite people</Trans>
               </Link>
             }
           >
@@ -293,15 +313,15 @@ export function SettingsTab({
         )}
         {project.my_role === "owner" ? (
           <Zone
-            title="Danger zone"
+            title={t`Danger zone`}
             sub="Deleting hides the project from every list and link. Nothing is erased, and an owner can restore it."
           >
             <div className="flex items-center justify-between gap-4">
               <span className="text-body-sm text-fg-dim">
-                Asks you to type the project name first.
+                <Trans>Asks you to type the project name first.</Trans>
               </span>
               <Button size="sm" variant="destructive" onClick={() => setDeleting(true)}>
-                Delete project
+                <Trans>Delete project</Trans>
               </Button>
             </div>
           </Zone>

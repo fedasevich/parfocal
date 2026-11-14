@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   exportAuditEvents,
   type NamedAuditEvent,
@@ -56,12 +57,18 @@ function Actor({ event }: { event: NamedAuditEvent }) {
   if (person) return <Person person={person} size={20} />;
   if (event.actor_name) return <span>{event.actor_name}</span>;
   if (event.actor_kind === "member" || event.actor_kind === "user") {
-    return <span className="text-fg-dim">A member</span>;
+    return (
+      <span className="text-fg-dim">
+        <Trans>A member</Trans>
+      </span>
+    );
   }
   return <SystemActor />;
 }
 
 export function AuditSection({ filter, onFilter }: FilterProps) {
+  const { t } = useLingui();
+
   const today = now();
   const events = okData(useListAuditEvents(auditParams(filter, today)).data) ?? [];
   const members = okData(useListTenantMembers().data) ?? [];
@@ -74,14 +81,14 @@ export function AuditSection({ filter, onFilter }: FilterProps) {
     >
       <div className="flex flex-wrap gap-2.5">
         <FilterChip
-          label="Person"
+          label={t`Person`}
           anyLabel="Everyone"
           options={members.map((member) => ({ value: member.user_id, label: member.display_name }))}
           value={filter.person}
           onValueChange={(person) => onFilter({ ...filter, person })}
         />
         <FilterChip
-          label="Project"
+          label={t`Project`}
           anyLabel="All projects"
           options={projects.map((project) => ({
             value: project.id,
@@ -92,7 +99,7 @@ export function AuditSection({ filter, onFilter }: FilterProps) {
           onValueChange={(project) => onFilter({ ...filter, project })}
         />
         <FilterChip
-          label="Time"
+          label={t`Time`}
           anyLabel="Any time"
           options={auditPeriods.map(({ value, label }) => ({ value, label }))}
           value={filter.period}
@@ -101,7 +108,7 @@ export function AuditSection({ filter, onFilter }: FilterProps) {
           }
         />
         <FilterChip
-          label="Action"
+          label={t`Action`}
           anyLabel="All actions"
           options={auditGroups}
           value={filter.group}
@@ -111,10 +118,18 @@ export function AuditSection({ filter, onFilter }: FilterProps) {
       <Table className={tableClass}>
         <TableHeader>
           <TableRow>
-            <TableHead>When</TableHead>
-            <TableHead>Who</TableHead>
-            <TableHead>What</TableHead>
-            <TableHead>Project</TableHead>
+            <TableHead>
+              <Trans>When</Trans>
+            </TableHead>
+            <TableHead>
+              <Trans>Who</Trans>
+            </TableHead>
+            <TableHead>
+              <Trans>What</Trans>
+            </TableHead>
+            <TableHead>
+              <Trans>Project</Trans>
+            </TableHead>
             <TableHead />
           </TableRow>
         </TableHeader>
@@ -144,7 +159,9 @@ export function AuditSection({ filter, onFilter }: FilterProps) {
         </TableBody>
       </Table>
       {events.length === 0 ? (
-        <p className="m-0 text-body-sm text-fg-dim">No events match these filters.</p>
+        <p className="m-0 text-body-sm text-fg-dim">
+          <Trans>No events match these filters.</Trans>
+        </p>
       ) : null}
     </Zone>
   );
@@ -184,7 +201,7 @@ export function AuditExportButton({ filter, notify }: { filter: AuditFilter; not
   return (
     <Button disabled={busy} onClick={() => void run()}>
       <Icon name="download" />
-      Export signed log
+      <Trans>Export signed log</Trans>
     </Button>
   );
 }

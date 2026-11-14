@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { useGetProject, useGetReviewTask } from "@parfocal/api-client";
 import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
 import { ViewedRing } from "@parfocal/ui/components/viewed-ring";
@@ -47,15 +48,19 @@ function facts(load: CaseLoad): string[] {
 }
 
 function CaseHeader({ load }: { load: CaseLoad }) {
+  const { t } = useLingui();
+
   return (
     <div className="min-w-0" data-testid="case-header" data-phi="">
-      <h1 className="truncate font-semibold text-body">{load.slide?.label ?? "Slide"}</h1>
+      <h1 className="truncate font-semibold text-body">{load.slide?.label ?? t`Slide`}</h1>
       <p className="truncate text-body-sm text-fg-dim">{facts(load).join(" · ")}</p>
     </div>
   );
 }
 
 function LiveSlide() {
+  const { t } = useLingui();
+
   const { projectId, slideId } = Route.useParams();
   const { task, workspace: chosen } = Route.useSearch();
   const navigate = Route.useNavigate();
@@ -92,16 +97,18 @@ function LiveSlide() {
           params={{ projectId }}
           className="text-accent text-body-sm underline"
         >
-          Back to the project
+          <Trans>Back to the project</Trans>
         </Link>
         {loaded.state === "ready" ? (
           <CaseHeader load={loaded.load} />
         ) : (
-          <h1 className="font-semibold text-body">Slide</h1>
+          <h1 className="font-semibold text-body">
+            <Trans>Slide</Trans>
+          </h1>
         )}
         <span className="flex-1" />
         <SegmentedControl
-          aria-label="Workspace"
+          aria-label={t`Workspace`}
           data-testid="workspace-switch"
           value={workspace}
           onValueChange={(next) => switchTo(next as SlideWorkspace)}

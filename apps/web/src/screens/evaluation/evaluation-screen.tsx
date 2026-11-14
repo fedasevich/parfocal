@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   type EvaluationReport,
   reportBlockSchema,
@@ -83,6 +84,8 @@ function EvaluationBody({
   scene: EvaluationScene;
   onScene: (scene: EvaluationScene) => void;
 }) {
+  const { t } = useLingui();
+
   const evaluation = okData(useGetTaskEvaluation(taskId).data);
   const countsAsChanges = okData(useGetReviewTask(taskId).data)?.counts_as_changes;
   const queue = okData(useGetDisagreementQueue(taskId).data)?.rows ?? [];
@@ -211,26 +214,34 @@ function EvaluationBody({
               {report.round_name} · {report.model}
             </h1>
             <p className="m-0 text-body-sm text-fg-dim">
-              {report.project.name} ({report.project.code}) · task {report.task_code} · {pageCount}{" "}
-              pages
+              {report.project.name} ({report.project.code}
+              <Trans>) · task</Trans> {report.task_code} · {pageCount} <Trans>pages</Trans>
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <StatusTag tone="research">Research output</StatusTag>
+            <StatusTag tone="research">
+              <Trans>Research output</Trans>
+            </StatusTag>
             {report.signed_at ? (
               <StatusTag tone="accent">
-                Evaluation v{report.version} · signed {shortDay(report.signed_at)}
+                <Trans>Evaluation v</Trans>
+                {report.version} <Trans>· signed</Trans> {shortDay(report.signed_at)}
               </StatusTag>
             ) : (
-              <StatusTag tone="neutral">Evaluation v{report.version} · draft</StatusTag>
+              <StatusTag tone="neutral">
+                <Trans>Evaluation v{report.version} · draft</Trans>
+              </StatusTag>
             )}
             {changes.length ? (
               <StatusTag tone="warn">
-                Changed after sign-off · {changes.length} change{changes.length === 1 ? "" : "s"}
+                <Trans>Changed after sign-off ·</Trans> {changes.length} <Trans>change</Trans>
+                {changes.length === 1 ? "" : t`s`}
               </StatusTag>
             ) : null}
             {arranging ? (
-              <span className="text-body-sm text-fg-dim">Arranging · {blocks.length} blocks</span>
+              <span className="text-body-sm text-fg-dim">
+                <Trans>Arranging · {blocks.length} blocks</Trans>
+              </span>
             ) : null}
           </div>
         </div>
@@ -258,27 +269,35 @@ function EvaluationBody({
       ) : (
         <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)_300px] gap-4">
           <section
-            aria-label="Report pages"
+            aria-label={t`Report pages`}
             className="min-h-0 overflow-auto rounded-zone bg-canvas"
           >
             {pages}
           </section>
           <aside className="grid content-start gap-3 overflow-auto">
-            <FoldingZone title="Layout" summary={`${templateName} v${version}`} defaultOpen>
-              <span className="text-body-sm font-semibold">Template</span>
+            <FoldingZone title={t`Layout`} summary={`${templateName} v${version}`} defaultOpen>
+              <span className="text-body-sm font-semibold">
+                <Trans>Template</Trans>
+              </span>
               {retired ? (
                 <>
                   <span className="flex items-center gap-2 text-body-sm font-medium text-fg">
-                    {templateName} v{version} <StatusTag>Retired</StatusTag>
+                    {templateName} <Trans>v</Trans>
+                    {version}{" "}
+                    <StatusTag>
+                      <Trans>Retired</Trans>
+                    </StatusTag>
                   </span>
                   <Banner inline tone="info" className="items-start">
                     <span className="grid justify-items-start gap-2">
                       <span>
                         <b>
-                          {templateName} v{version} was retired on{" "}
+                          {templateName} <Trans>v</Trans>
+                          {version} <Trans>was retired on</Trans>{" "}
                           {shortDay(`${report.template.retired_on}T12:00:00`)}.
                         </b>{" "}
-                        This report keeps it. New tasks use v{report.template.latest_version}.
+                        <Trans>This report keeps it. New tasks use v</Trans>
+                        {report.template.latest_version}.
                       </span>
                       <Button
                         size="sm"
@@ -289,7 +308,7 @@ function EvaluationBody({
                           );
                         }}
                       >
-                        Switch to v{report.template.latest_version}
+                        <Trans>Switch to v{report.template.latest_version}</Trans>
                       </Button>
                     </span>
                   </Banner>
@@ -299,7 +318,7 @@ function EvaluationBody({
                   value={templates.find((item) => item.name === templateName)?.id ?? null}
                   onValueChange={switchTemplate}
                 >
-                  <SelectTrigger aria-label="Template" className="w-full">
+                  <SelectTrigger aria-label={t`Template`} className="w-full">
                     <SelectValue>
                       {templateName} v{version}
                     </SelectValue>
@@ -317,27 +336,29 @@ function EvaluationBody({
               )}
               <span className="text-body-sm text-fg-dim">
                 {arranged
-                  ? "Arranged for this task. The template itself has not changed."
-                  : "Blocks and format come from the template."}{" "}
-                {blocks.length} blocks on {pageCount} pages.
+                  ? t`Arranged for this task. The template itself has not changed.`
+                  : t`Blocks and format come from the template.`}{" "}
+                {blocks.length} <Trans>blocks on</Trans> {pageCount} <Trans>pages.</Trans>
               </span>
               <Button variant="primary" onClick={() => onScene("pdf")}>
                 <Icon name="eye" />
-                Preview the PDF
+                <Trans>Preview the PDF</Trans>
               </Button>
               <Button onClick={() => onScene("arrange")}>
                 <Icon name="sliders" />
-                Arrange blocks and format
+                <Trans>Arrange blocks and format</Trans>
               </Button>
             </FoldingZone>
             <FoldingZone
-              title="Download"
+              title={t`Download`}
               summary={report.formats.find((item) => item.key === fileKind)?.label}
               defaultOpen
             >
-              <span className="text-body-sm font-semibold">Format</span>
+              <span className="text-body-sm font-semibold">
+                <Trans>Format</Trans>
+              </span>
               <Select value={fileKind} onValueChange={(value) => setFileKind(String(value))}>
-                <SelectTrigger aria-label="Format" className="w-full">
+                <SelectTrigger aria-label={t`Format`} className="w-full">
                   <SelectValue>
                     {report.formats.find((item) => item.key === fileKind)?.label}
                   </SelectValue>
@@ -352,7 +373,7 @@ function EvaluationBody({
               </Select>
               <Button onClick={download}>
                 <Icon name="download" />
-                Download
+                <Trans>Download</Trans>
               </Button>
               {failed ? (
                 <InlineError
@@ -366,31 +387,33 @@ function EvaluationBody({
                           toast.show(`${file}.pdf saved to Downloads`);
                         }}
                       >
-                        Try again
+                        <Trans>Try again</Trans>
                       </button>
                       <button
                         type="button"
                         className="cursor-pointer border-0 bg-transparent p-0 text-body-sm text-accent hover:underline"
                         onClick={() => toast.show("2 CSV files saved to Downloads")}
                       >
-                        Download CSV only
+                        <Trans>Download CSV only</Trans>
                       </button>
                     </>
                   }
                 >
-                  The PDF could not be made. Try again, or download the CSV files now.
+                  <Trans>
+                    The PDF could not be made. Try again, or download the CSV files now.
+                  </Trans>
                 </InlineError>
               ) : null}
             </FoldingZone>
             <FoldingZone
-              title="Compare and share"
+              title={t`Compare and share`}
               summary={offered ? `${offered.code} or a read-only link` : "A read-only link"}
             >
               <Button onClick={compare} disabled={!offered}>
                 <Icon name="slides" />
                 {offered
-                  ? `Compare with ${offered.code}, ${offered.name}`
-                  : "No other task to compare"}
+                  ? t`Compare with ${offered.code}, ${offered.name}`
+                  : t`No other task to compare`}
               </Button>
               <ShareLinks taskId={taskId} taskCode={report.task_code} />
             </FoldingZone>

@@ -1,3 +1,4 @@
+import { Trans } from "@lingui/react/macro";
 import type { LinkRenderer } from "@parfocal/ui/components/app-shell";
 import { Icon, type IconName } from "@parfocal/ui/components/icon";
 import { Toast } from "@parfocal/ui/components/undo-toast";
@@ -77,7 +78,7 @@ export function useToast() {
               setToast(null);
             }}
           >
-            Undo
+            <Trans>Undo</Trans>
           </button>
         ) : null}
       </Toast>

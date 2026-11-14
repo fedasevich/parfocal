@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { type PointerEvent, useEffect, useRef, useState } from "react";
 import { type Navigation, previewMotion } from "../../devices/navigation.ts";
 
@@ -11,6 +12,8 @@ const reducedMotion = () =>
 type Drag = { x: number; y: number; at: number; vx: number; vy: number };
 
 export function FeelPreview({ navigation }: { navigation: Navigation }) {
+  const { t } = useLingui();
+
   const motion = previewMotion(navigation, reducedMotion());
   const pad = useRef<HTMLDivElement | null>(null);
   const [view, setView] = useState({ x: 0, y: 0, octaves: 0 });
@@ -93,7 +96,7 @@ export function FeelPreview({ navigation }: { navigation: Navigation }) {
       <div
         ref={pad}
         role="img"
-        aria-label="Camera feel preview"
+        aria-label={t`Camera feel preview`}
         data-testid="feel-preview"
         data-zoom-ms={motion.zoomMs}
         data-jump-ms={motion.jumpMs}
@@ -124,7 +127,7 @@ export function FeelPreview({ navigation }: { navigation: Navigation }) {
         </div>
       </div>
       <button type="button" className="text-body-sm text-accent" onClick={jump}>
-        Jump to another spot
+        <Trans>Jump to another spot</Trans>
       </button>
     </div>
   );

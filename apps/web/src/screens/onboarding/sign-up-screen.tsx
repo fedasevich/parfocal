@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   ApiError,
   useConfirmEmail,
@@ -151,6 +152,8 @@ type FormProps = {
 };
 
 function FormScreen({ steps, workspace, details, set, onCreated, land, signIn }: FormProps) {
+  const { t } = useLingui();
+
   const options = useSignInOptions();
   const [failure, setFailure] = useState<string | null>(null);
   const create = useCreateAccount(handled);
@@ -200,30 +203,32 @@ function FormScreen({ steps, workspace, details, set, onCreated, land, signIn }:
   return (
     <AuthForm>
       {steps}
-      <AuthHeading title="Create your Parfocal account">
-        Free for academic research. Your workspace can invite you later.
+      <AuthHeading title={t`Create your Parfocal account`}>
+        <Trans>Free for academic research. Your workspace can invite you later.</Trans>
       </AuthHeading>
       {options?.methods.sso === false ? null : (
         <>
           <SsoButton workspace={ssoWorkspace} onClick={continueWithSso} disabled={sso.isPending}>
-            Sign up with {ssoName} single sign-on
+            <Trans>Sign up with {ssoName} single sign-on</Trans>
           </SsoButton>
-          <OrDivider>or with your email</OrDivider>
+          <OrDivider>
+            <Trans>or with your email</Trans>
+          </OrDivider>
         </>
       )}
       <div className="grid grid-cols-2 gap-3">
-        <AuthField label="Full name">
+        <AuthField label={t`Full name`}>
           <Input
-            aria-label="Full name"
+            aria-label={t`Full name`}
             autoComplete="name"
             value={details.name}
             onChange={(event) => set.setName(event.target.value)}
             className="h-9"
           />
         </AuthField>
-        <AuthField label="Work email">
+        <AuthField label={t`Work email`}>
           <Input
-            aria-label="Work email"
+            aria-label={t`Work email`}
             type="email"
             autoComplete="username"
             value={details.email}
@@ -232,10 +237,10 @@ function FormScreen({ steps, workspace, details, set, onCreated, land, signIn }:
           />
         </AuthField>
       </div>
-      <AuthField label="Password">
+      <AuthField label={t`Password`}>
         <PasswordInput
           id="sign-up-password"
-          label="Password"
+          label={t`Password`}
           fresh
           value={details.password}
           onChange={set.setPassword}
@@ -246,18 +251,18 @@ function FormScreen({ steps, workspace, details, set, onCreated, land, signIn }:
         strength={check.strength}
         label={strengthLine(check.label, details.password)}
       />
-      <AuthField label="I mostly">
-        <div role="radiogroup" aria-label="I mostly" className="grid grid-cols-2 gap-2.5">
+      <AuthField label={t`I mostly`}>
+        <div role="radiogroup" aria-label={t`I mostly`} className="grid grid-cols-2 gap-2.5">
           <ChoiceTile
             icon="flask"
-            title="Run evaluations"
+            title={t`Run evaluations`}
             detail="Upload slides and AI results, assign reviews"
             selected={details.mostly === "run"}
             onClick={() => set.setMostly("run")}
           />
           <ChoiceTile
             icon="check"
-            title="Review AI results"
+            title={t`Review AI results`}
             detail="Check, fix and comment on what the AI found"
             selected={details.mostly === "review"}
             onClick={() => set.setMostly("review")}
@@ -271,15 +276,18 @@ function FormScreen({ steps, workspace, details, set, onCreated, land, signIn }:
           onCheckedChange={(checked) => set.setAcceptedTerms(checked === true)}
         />
         <label htmlFor="sign-up-terms">
-          I agree to the terms and the data processing agreement
+          <Trans>I agree to the terms and the data processing agreement</Trans>
         </label>
       </span>
       <Failure>{failure}</Failure>
       <Button variant="primary" size="lg" block onClick={submit} disabled={create.isPending}>
-        Create account
+        <Trans>Create account</Trans>
       </Button>
       <AuthFoot>
-        Already have an account? <AuthLink onClick={signIn}>Sign in</AuthLink>
+        <Trans>Already have an account?</Trans>{" "}
+        <AuthLink onClick={signIn}>
+          <Trans>Sign in</Trans>
+        </AuthLink>
       </AuthFoot>
     </AuthForm>
   );
@@ -296,6 +304,8 @@ type VerifyProps = {
 };
 
 function VerifyForm({ steps, email, secondsLeft, restart, change, toast, land }: VerifyProps) {
+  const { t } = useLingui();
+
   const [code, setCode] = useState("");
   const [failure, setFailure] = useState<string | null>(null);
   const confirm = useConfirmEmail(handled);
@@ -335,10 +345,11 @@ function VerifyForm({ steps, email, secondsLeft, restart, change, toast, land }:
     <AuthForm center>
       {steps}
       <AuthBadge icon="mail" />
-      <AuthHeading title="Confirm your email">
-        Enter the {codeLength}-digit code we sent to <b>{email}</b>.
+      <AuthHeading title={t`Confirm your email`}>
+        <Trans>Enter the</Trans> {codeLength}
+        <Trans>-digit code we sent to</Trans> <b>{email}</b>.
       </AuthHeading>
-      <CodeInput label="Confirmation code" value={code} onChange={setCode} onSubmit={submit} />
+      <CodeInput label={t`Confirmation code`} value={code} onChange={setCode} onSubmit={submit} />
       <Failure>{failure}</Failure>
       <Button
         variant="primary"
@@ -347,13 +358,16 @@ function VerifyForm({ steps, email, secondsLeft, restart, change, toast, land }:
         onClick={submit}
         disabled={code.length < codeLength || confirm.isPending}
       >
-        Confirm and set up
+        <Trans>Confirm and set up</Trans>
       </Button>
       <AuthFoot>
-        Wrong address? <AuthLink onClick={() => change("form")}>Change it</AuthLink>
+        <Trans>Wrong address?</Trans>{" "}
+        <AuthLink onClick={() => change("form")}>
+          <Trans>Change it</Trans>
+        </AuthLink>
         <DotSeparator />
         <AuthLink onClick={sendAgain}>
-          {secondsLeft > 0 ? `Resend in ${clock(secondsLeft)}` : "Resend the code"}
+          {secondsLeft > 0 ? t`Resend in ${clock(secondsLeft)}` : t`Resend the code`}
         </AuthLink>
       </AuthFoot>
     </AuthForm>

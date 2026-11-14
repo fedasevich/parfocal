@@ -1,3 +1,4 @@
+import { Trans } from "@lingui/react/macro";
 import { CountsAsLine } from "@parfocal/ui/components/counts-as";
 import type { DecisionStyle } from "@parfocal/ui/components/decision-buttons";
 import { RadioGroup, RadioGroupItem } from "@parfocal/ui/components/radio-group";
@@ -37,7 +38,7 @@ export function DecisionPresetPicker({
   return (
     <div className="grid gap-2" data-slot="decision-preset">
       <span id="preset-decision" className="text-body-sm font-semibold">
-        Decision question
+        <Trans>Decision question</Trans>
       </span>
       <RadioGroup
         aria-labelledby="preset-decision"

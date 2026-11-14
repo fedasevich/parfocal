@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   getGetMeQueryKey,
   getGetMySettingLayersQueryKey,
@@ -161,10 +162,12 @@ function Stepper({
   unit: string;
   onChange: (value: number) => void;
 }) {
+  const { t } = useLingui();
+
   const step = (delta: number) => onChange(Math.max(20, Math.min(140, value + delta)));
   return (
     <div className="flex items-center gap-2.5">
-      <Button size="icon-sm" aria-label={`Lower ${label}`} onClick={() => step(-10)}>
+      <Button size="icon-sm" aria-label={t`Lower ${label}`} onClick={() => step(-10)}>
         <Icon name="minus" size="xs" />
       </Button>
       <Slider
@@ -178,7 +181,7 @@ function Stepper({
           onChange(typeof next === "number" ? next : (next[0] ?? value))
         }
       />
-      <Button size="icon-sm" aria-label={`Raise ${label}`} onClick={() => step(10)}>
+      <Button size="icon-sm" aria-label={t`Raise ${label}`} onClick={() => step(10)}>
         <Icon name="plus" size="xs" />
       </Button>
       <span className="min-w-10 font-mono text-body-sm text-fg">
@@ -224,6 +227,8 @@ function LoadedSettings({
   onClose,
   layers,
 }: SettingsScreenProps & { layers: MySettingLayers }) {
+  const { t } = useLingui();
+
   const touring = useActiveTourStep() !== null;
   const me = okData(useGetMe().data);
   const sessions = okData(useListSessions().data) ?? [];
@@ -362,7 +367,7 @@ function LoadedSettings({
   const controls: Record<RowKey, () => ReactNode> = {
     homeLayout: () => (
       <Segments
-        label="Home"
+        label={t`Home`}
         value={values.home_layout}
         pairs={homeLayoutOptions.map((option) => [option.value, option.label])}
         onChange={(value) => {
@@ -376,7 +381,7 @@ function LoadedSettings({
     ),
     theme: () => (
       <Segments
-        label="Theme"
+        label={t`Theme`}
         value={theme}
         pairs={[
           ["dark", "Dark"],
@@ -391,7 +396,7 @@ function LoadedSettings({
     ),
     brightness: () => (
       <Stepper
-        label="Slide brightness"
+        label={t`Slide brightness`}
         value={slideBrightness}
         unit="%"
         onChange={setSlideBrightness}
@@ -399,7 +404,7 @@ function LoadedSettings({
     ),
     density: () => (
       <Segments
-        label="Density"
+        label={t`Density`}
         value={values.density}
         pairs={[
           ["comfortable", "Comfortable"],
@@ -414,7 +419,7 @@ function LoadedSettings({
     ),
     lengths: () => (
       <Segments
-        label="Lengths"
+        label={t`Lengths`}
         value={values.length_unit}
         pairs={[
           ["auto", "µm and mm"],
@@ -430,7 +435,7 @@ function LoadedSettings({
     language: () => (
       <SegmentedControl
         fill
-        aria-label="Language"
+        aria-label={t`Language`}
         value="en"
         onValueChange={() => undefined}
         options={[
@@ -447,7 +452,7 @@ function LoadedSettings({
         )
       ) : (
         <Segments
-          label="Patient names"
+          label={t`Patient names`}
           value={values.patient_names}
           pairs={[
             ["full", "Full name"],
@@ -458,7 +463,7 @@ function LoadedSettings({
       ),
     magnificationLabel: () => (
       <Segments
-        label="Magnification label"
+        label={t`Magnification label`}
         value={values.magnification_label}
         pairs={[
           ["objective", "Objective"],
@@ -480,10 +485,10 @@ function LoadedSettings({
       <Button
         onClick={onEditPresets}
         disabled={onEditPresets === undefined}
-        title={onEditPresets === undefined ? "Open a review task first" : undefined}
+        title={onEditPresets === undefined ? t`Open a review task first` : undefined}
       >
         <Icon name="sliders" />
-        Edit in the Display panel
+        <Trans>Edit in the Display panel</Trans>
       </Button>
     ),
     signature: () =>
@@ -492,7 +497,7 @@ function LoadedSettings({
       ),
     tools: () => (
       <Segments
-        label="Tools"
+        label={t`Tools`}
         value={values.tools}
         pairs={[
           ["rail", "Left rail"],
@@ -503,7 +508,7 @@ function LoadedSettings({
     ),
     panelWidth: () => (
       <Segments
-        label="Side panel width"
+        label={t`Side panel width`}
         value={String(values.side_panel_width)}
         pairs={[
           ["300", "Narrow"],
@@ -517,7 +522,7 @@ function LoadedSettings({
       toggle("Hide the panel", values.hide_side_panel, (value) => save({ hide_side_panel: value })),
     panelMoving: () => (
       <Segments
-        label="Panel while moving"
+        label={t`Panel while moving`}
         value={values.panel_while_moving}
         pairs={[
           ["pinned", "Stays put"],
@@ -530,7 +535,7 @@ function LoadedSettings({
     ),
     minimap: () => (
       <Segments
-        label="Minimap"
+        label={t`Minimap`}
         value={values.minimap}
         pairs={[
           ["useful", "When useful"],
@@ -543,7 +548,7 @@ function LoadedSettings({
     strip: () => toggle("Pinned slide strip", pinnedStrip, setPinnedStrip),
     defaultPreset: () => (
       <Segments
-        label="Default preset"
+        label={t`Default preset`}
         value={String(values.default_preset < presetNames.length ? values.default_preset : 0)}
         pairs={presetNames.map((name, index) => [String(index), presetName(name)])}
         onChange={(value) => {
@@ -557,7 +562,7 @@ function LoadedSettings({
     ),
     outlineMode: () => (
       <Segments
-        label="Outline display"
+        label={t`Outline display`}
         value={values.outline_mode}
         pairs={outlineModeChoices.map((choice) => [choice, outlineModeLabels[choice]])}
         onChange={(value) => {
@@ -573,13 +578,13 @@ function LoadedSettings({
       return (
         <span className="grid gap-1.5">
           <Segments
-            label="Confidence wording"
+            label={t`Confidence wording`}
             value={current}
             pairs={wordingPairs}
             onChange={(value) => save({ confidence_wording: value as WordingSetting })}
           />
           <small className="text-caption text-fg-dim" data-slot="wording-example">
-            Example: {wordingExample(current)}
+            <Trans>Example:</Trans> {wordingExample(current)}
           </small>
         </span>
       );
@@ -587,7 +592,7 @@ function LoadedSettings({
     decisionCutoff: () => lockedValue(`${values.decision_cutoff}%`, "Set by your lab for everyone"),
     tierOutline: () => (
       <Segments
-        label="Outline model tier"
+        label={t`Outline model tier`}
         value={values.tier_outline}
         pairs={[
           ["best", "Best"],
@@ -609,7 +614,7 @@ function LoadedSettings({
       toggle("Model warnings", values.model_warnings, (value) => save({ model_warnings: value })),
     device: () => (
       <Segments
-        label="Main input device"
+        label={t`Main input device`}
         value={device.device}
         pairs={[
           ["mouse", "Mouse"],
@@ -627,7 +632,7 @@ function LoadedSettings({
     ),
     wheel: () => (
       <Segments
-        label="Mouse wheel"
+        label={t`Mouse wheel`}
         value={navigation.wheel}
         pairs={[
           ["zoom", "Zoom"],
@@ -639,7 +644,7 @@ function LoadedSettings({
     ),
     doubleClick: () => (
       <Segments
-        label="Double-click"
+        label={t`Double-click`}
         value={values.double_click}
         pairs={[
           ["zoom", "Zoom in 2×"],
@@ -650,7 +655,7 @@ function LoadedSettings({
     ),
     speed: () => (
       <Stepper
-        label="Pan and zoom speed"
+        label={t`Pan and zoom speed`}
         value={device.speed}
         unit=""
         onChange={(value) => changeCalibration({ speed: value })}
@@ -658,7 +663,7 @@ function LoadedSettings({
     ),
     deadZone: () => (
       <Stepper
-        label="Dead zone"
+        label={t`Dead zone`}
         value={device.deadZone}
         unit="%"
         onChange={(value) => changeCalibration({ deadZone: value })}
@@ -674,7 +679,7 @@ function LoadedSettings({
       ),
     feel: () => (
       <Segments
-        label="Camera feel"
+        label={t`Camera feel`}
         value={navigation.feel}
         pairs={[
           ["smooth", "Smooth"],
@@ -695,7 +700,7 @@ function LoadedSettings({
       ),
     zoomAnchor: () => (
       <Segments
-        label="Zoom anchor"
+        label={t`Zoom anchor`}
         value={navigation.zoomAnchor}
         pairs={[
           ["cursor", "Cursor"],
@@ -738,7 +743,9 @@ function LoadedSettings({
     patientBanner: () => patientBannerText(layers.lab),
     otherDevices: () =>
       others.length === 0 ? (
-        <span className="text-body text-fg">Only this device</span>
+        <span className="text-body text-fg">
+          <Trans>Only this device</Trans>
+        </span>
       ) : (
         <Button
           disabled={endOthers.isPending}
@@ -753,14 +760,14 @@ function LoadedSettings({
             })
           }
         >
-          Sign out on other devices
+          <Trans>Sign out on other devices</Trans>
         </Button>
       ),
     name: () => (
       <span className="inline-flex items-center gap-2">
         <PersonAvatar person={personOf(me)} size={20} />
         <input
-          aria-label="Name"
+          aria-label={t`Name`}
           maxLength={200}
           className="h-7 w-64 rounded-sm border border-line bg-surface px-2 text-body text-fg"
           value={nameDraft ?? shownName}
@@ -810,7 +817,7 @@ function LoadedSettings({
   function lockedValue(value: string, reason: string, className?: string) {
     return (
       <span className="inline-flex items-center gap-2" data-locked>
-        <Icon name="lock" size="xs" label="Locked" className="text-fg-faint" />
+        <Icon name="lock" size="xs" label={t`Locked`} className="text-fg-faint" />
         <span className={className}>{value}</span>
         <small className="text-caption text-fg-faint">{reason}</small>
       </span>
@@ -868,7 +875,7 @@ function LoadedSettings({
           ))}
           <SettingsRows>
             <SettingsRow
-              label="Signature block"
+              label={t`Signature block`}
               help={`Signs reports as ${shownName}${me?.title ? `, ${me.title}` : ""}.`}
               scope="personal"
             >
@@ -898,7 +905,7 @@ function LoadedSettings({
   return (
     <SettingsDialog
       modal={!touring}
-      title={shown?.title ?? "Settings"}
+      title={shown?.title ?? t`Settings`}
       hint={query && shown ? `Matching "${typed.trim()}"` : undefined}
       onOpenChange={(open) => {
         if (open) return;

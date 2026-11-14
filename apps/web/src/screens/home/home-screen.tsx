@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   ApiError,
   type Checklist,
@@ -77,27 +78,31 @@ function ResumeHero({ resume }: { resume: ResumeTarget }) {
           {resume.slide_label} · {resume.case_label} · {resume.project.name}
         </span>
         <span className="flex flex-wrap items-center gap-2 text-body-sm text-fg-dim">
-          Slide {resume.position + 1} of {resume.slides_assigned}
+          <Trans>Slide</Trans> {resume.position + 1} <Trans>of</Trans> {resume.slides_assigned}
           {progress ? (
             <>
               <span className="text-fg-faint">·</span>
-              {progress.decided} of {progress.total} objects decided
+              {progress.decided} <Trans>of</Trans> {progress.total} <Trans>objects decided</Trans>
             </>
           ) : null}
           {resume.due_on ? (
             <>
               <span className="text-fg-faint">·</span>
-              due {formatDue(resume.due_on)}
+              <Trans>due</Trans> {formatDue(resume.due_on)}
             </>
           ) : null}
-          {resume.blinded ? <StatusTag tone="accent">Blind</StatusTag> : null}
+          {resume.blinded ? (
+            <StatusTag tone="accent">
+              <Trans>Blind</Trans>
+            </StatusTag>
+          ) : null}
         </span>
         <div className="mt-1.5 flex gap-2">
           <Button variant="primary" onClick={() => void goTo(continueHref)}>
-            Continue <Keycap keys="↵" />
+            <Trans>Continue</Trans> <Keycap keys="↵" />
           </Button>
           <Button onClick={() => void goTo(openInFullViewer(resume))}>
-            Open in the full viewer
+            <Trans>Open in the full viewer</Trans>
           </Button>
         </div>
       </div>
@@ -122,19 +127,23 @@ function SampleHero({
       />
       <div className="grid content-center gap-2 px-5 py-4.5">
         <div className="flex items-center gap-2.5">
-          <StatusTag tone="accent">Sample</StatusTag>
+          <StatusTag tone="accent">
+            <Trans>Sample</Trans>
+          </StatusTag>
           <b className="text-title-sm font-semibold text-fg">{sample.name}</b>
         </div>
         <span className="text-body text-fg">
-          {sample.slides} slides with AI results, made for trying things out
+          <Trans>{sample.slides} slides with AI results, made for trying things out</Trans>
         </span>
-        <span className="text-body-sm text-fg-dim">Nothing here counts in a real evaluation</span>
+        <span className="text-body-sm text-fg-dim">
+          <Trans>Nothing here counts in a real evaluation</Trans>
+        </span>
         <div className="mt-1.5 flex gap-2">
           <Button variant="primary" onClick={() => void goTo(destinations.guided("sample"))}>
-            Review the first slide <Keycap keys="↵" />
+            <Trans>Review the first slide</Trans> <Keycap keys="↵" />
           </Button>
           <Button onClick={() => void goTo(destinations.project(firstProjectId))}>
-            Open the project
+            <Trans>Open the project</Trans>
           </Button>
         </div>
       </div>
@@ -207,6 +216,8 @@ function QuickActions({
 }
 
 function ProjectCard({ project, members }: { project: HomeProject; members: Project["members"] }) {
+  const { t } = useLingui();
+
   const goTo = useGoTo();
   const people = usePeople();
   const shown = project.strip.slice(0, 4);
@@ -237,7 +248,9 @@ function ProjectCard({ project, members }: { project: HomeProject; members: Proj
         {more > 0 ? (
           <span className="grid aspect-square place-content-center justify-items-center gap-px rounded-lg bg-surf-section text-fg-dim">
             <b className="font-mono text-lead font-semibold text-fg">+{more}</b>
-            <small className="text-caption">slides</small>
+            <small className="text-caption">
+              <Trans>slides</Trans>
+            </small>
           </span>
         ) : null}
       </div>
@@ -251,37 +264,49 @@ function ProjectCard({ project, members }: { project: HomeProject; members: Proj
           <span className="truncate">{project.name}</span>
         </b>
         <small className="font-mono text-caption text-fg-faint">
-          {project.code} · {project.slides} slides · {project.result_sets} result sets
+          <Trans>
+            {project.code} · {project.slides} slides · {project.result_sets} result sets
+          </Trans>
         </small>
         <div className="flex items-center justify-between">
           {project.privacy_mode === "clinical" ? (
-            <StatusTag tone="warn">Clinical</StatusTag>
+            <StatusTag tone="warn">
+              <Trans>Clinical</Trans>
+            </StatusTag>
           ) : (
-            <StatusTag tone="accent">De-identified</StatusTag>
+            <StatusTag tone="accent">
+              <Trans>De-identified</Trans>
+            </StatusTag>
           )}
           {faces.length > 0 ? <AvatarStack people={faces} size={22} max={3} /> : null}
         </div>
-        <ProgressBar value={reviewed} label="Reviewed" valueText={`${reviewed}%`} />
+        <ProgressBar value={reviewed} label={t`Reviewed`} valueText={`${reviewed}%`} />
       </div>
     </button>
   );
 }
 
 function ChecklistCard({ steps, onHide }: { steps: Checklist["steps"]; onHide: () => void }) {
+  const { t } = useLingui();
+
   const goTo = useGoTo();
   const done = steps.filter((step) => step.done).length;
   return (
     <section
-      aria-label="Getting started"
+      aria-label={t`Getting started`}
       className="grid gap-2 rounded-xl border border-accent bg-accent-soft p-3.5"
     >
       <div className="flex items-center justify-between">
-        <b className="text-body font-semibold text-fg">Getting started</b>
+        <b className="text-body font-semibold text-fg">
+          <Trans>Getting started</Trans>
+        </b>
         <span className="font-mono text-caption text-fg-dim">
-          {done} of {steps.length}
+          <Trans>
+            {done} of {steps.length}
+          </Trans>
         </span>
       </div>
-      <ProgressBar value={percent(done, steps.length)} aria-label="Getting started" />
+      <ProgressBar value={percent(done, steps.length)} aria-label={t`Getting started`} />
       {steps.map((step) =>
         step.done ? (
           <div
@@ -311,7 +336,7 @@ function ChecklistCard({ steps, onHide }: { steps: Checklist["steps"]; onHide: (
         ),
       )}
       <Button variant="link" className="justify-self-start" onClick={onHide}>
-        Hide the checklist
+        <Trans>Hide the checklist</Trans>
       </Button>
     </section>
   );
@@ -324,14 +349,16 @@ function ThisWeek({
   week: { objects_checked: number; agree_share: number | null; open_disagreements: number | null };
   taskId: string | undefined;
 }) {
+  const { t } = useLingui();
+
   const goTo = useGoTo();
   return (
     <SideCard
-      title="This week in your projects"
+      title={t`This week in your projects`}
       end={
         taskId ? (
           <Button variant="link" onClick={() => void goTo(destinations.evaluation(taskId))}>
-            Evaluation
+            <Trans>Evaluation</Trans>
           </Button>
         ) : null
       }
@@ -342,7 +369,7 @@ function ThisWeek({
             {week.objects_checked}
           </b>
           <small className="mt-1 block text-caption leading-[1.3] text-fg-dim">
-            objects you checked
+            <Trans>objects you checked</Trans>
           </small>
         </div>
         <div>
@@ -350,7 +377,7 @@ function ThisWeek({
             {Math.round((week.agree_share ?? 0) * 100)}%
           </b>
           <small className="mt-1 block text-caption leading-[1.3] text-fg-dim">
-            agree with the AI
+            <Trans>agree with the AI</Trans>
           </small>
         </div>
         <div>
@@ -362,7 +389,7 @@ function ThisWeek({
             {week.open_disagreements ?? 0}
           </button>
           <small className="mt-1 block text-caption leading-[1.3] text-fg-dim">
-            disagreements open
+            <Trans>disagreements open</Trans>
           </small>
         </div>
       </div>
@@ -371,6 +398,8 @@ function ThisWeek({
 }
 
 function ComingUp({ tasks, projects }: { tasks: MyTask[]; projects: HomeProject[] }) {
+  const { t } = useLingui();
+
   const goTo = useGoTo();
   const people = usePeople();
   const active = tasks.filter(
@@ -380,10 +409,10 @@ function ComingUp({ tasks, projects }: { tasks: MyTask[]; projects: HomeProject[
     projectColour(projects.find((project) => project.id === id)?.colour ?? 0);
   return (
     <SideCard
-      title="Coming up"
+      title={t`Coming up`}
       end={
         <Button variant="link" onClick={() => void goTo(destinations.myWork())}>
-          My work
+          <Trans>My work</Trans>
         </Button>
       }
     >
@@ -403,7 +432,9 @@ function ComingUp({ tasks, projects }: { tasks: MyTask[]; projects: HomeProject[
         );
       })}
       {active.length === 0 ? (
-        <span className="text-body-sm text-fg-dim">Nothing due. New tasks show here.</span>
+        <span className="text-body-sm text-fg-dim">
+          <Trans>Nothing due. New tasks show here.</Trans>
+        </span>
       ) : null}
     </SideCard>
   );
@@ -418,6 +449,8 @@ function HomeWithoutData({
   error: unknown;
   retry: () => void;
 }) {
+  const { t } = useLingui();
+
   const goTo = useGoTo();
   const kind = error instanceof ApiError ? error.kind : undefined;
   return (
@@ -429,33 +462,39 @@ function HomeWithoutData({
         <p className="mt-1 mb-0 text-body-sm leading-[1.45] text-fg-dim">{formatLongDay(now())}</p>
       </header>
       {error === null ? (
-        <Loader label="Loading your home" />
+        <Loader label={t`Loading your home`} />
       ) : kind === "forbidden" ? (
         <section
-          aria-label="No workspace yet"
+          aria-label={t`No workspace yet`}
           className="grid max-w-xl gap-3 rounded-xl border border-line bg-chrome p-4"
         >
-          <b className="text-body font-semibold text-fg">You are not in a workspace yet</b>
+          <b className="text-body font-semibold text-fg">
+            <Trans>You are not in a workspace yet</Trans>
+          </b>
           <span className="text-body-sm text-fg-dim">
-            Your projects, tasks and slides show here once you join one. Open the invitation from
-            your email, or set up a workspace of your own.
+            <Trans>
+              Your projects, tasks and slides show here once you join one. Open the invitation from
+              your email, or set up a workspace of your own.
+            </Trans>
           </span>
           <Button className="justify-self-start" onClick={() => void goTo("/setup")}>
-            Set up a workspace
+            <Trans>Set up a workspace</Trans>
           </Button>
         </section>
       ) : (
         <section
-          aria-label="Home did not load"
+          aria-label={t`Home did not load`}
           role="alert"
           className="grid max-w-xl gap-3 rounded-xl border border-line bg-chrome p-4"
         >
-          <b className="text-body font-semibold text-fg">Your home could not load</b>
+          <b className="text-body font-semibold text-fg">
+            <Trans>Your home could not load</Trans>
+          </b>
           <span className="text-body-sm text-fg-dim">
-            Nothing is lost. Try again, or open My work from the sidebar.
+            <Trans>Nothing is lost. Try again, or open My work from the sidebar.</Trans>
           </span>
           <Button className="justify-self-start" onClick={retry}>
-            Try again
+            <Trans>Try again</Trans>
           </Button>
         </section>
       )}
@@ -464,6 +503,8 @@ function HomeWithoutData({
 }
 
 export function HomeScreen() {
+  const { t } = useLingui();
+
   const me = okData(useGetMe().data);
   useWorklistLive(me?.user_id);
   const homeQuery = useGetMyHome();
@@ -485,7 +526,7 @@ export function HomeScreen() {
   if (me === undefined || layersQuery.isPending) {
     return (
       <div className="p-8">
-        <Loader label="Loading your home" />
+        <Loader label={t`Loading your home`} />
       </div>
     );
   }
@@ -539,17 +580,17 @@ export function HomeScreen() {
   const main: Record<HomeBlock, ReactNode> = {
     continue: (
       <>
-        <Section>{firstWeek ? "Start here" : "Continue where you left off"}</Section>
+        <Section>{firstWeek ? t`Start here` : t`Continue where you left off`}</Section>
         {home.resume ? (
           <ResumeHero resume={home.resume} />
         ) : firstWeek && checklist?.sample_project ? (
           <SampleHero sample={checklist.sample_project} firstProjectId={firstProjectId} />
         ) : (
           <p className="text-body-sm text-fg-dim">
-            Nothing in progress. Start something{" "}
+            <Trans>Nothing in progress. Start something</Trans>{" "}
             {homeBlocks[layout].indexOf("start") > homeBlocks[layout].indexOf("continue")
-              ? "below"
-              : "above"}
+              ? t`below`
+              : t`above`}
             .
           </p>
         )}
@@ -557,7 +598,9 @@ export function HomeScreen() {
     ),
     start: (
       <>
-        <Section>Start something</Section>
+        <Section>
+          <Trans>Start something</Trans>
+        </Section>
         <QuickActions
           slidesWithoutResults={home.slides_without_results}
           projectId={firstProjectId}
@@ -567,9 +610,11 @@ export function HomeScreen() {
     projects: (
       <>
         <div className="flex items-center justify-between">
-          <Section>Projects</Section>
+          <Section>
+            <Trans>Projects</Trans>
+          </Section>
           <Button variant="link" onClick={() => void goTo(destinations.newProject())}>
-            New project
+            <Trans>New project</Trans>
           </Button>
         </div>
         <div className="grid grid-cols-2 gap-3">
@@ -588,7 +633,7 @@ export function HomeScreen() {
     <main className="grid content-start gap-(--density-page-gap) px-8 pt-5.5 pb-4.5 pl-7">
       <header>
         <h1 className="m-0 text-page-title font-semibold text-fg">
-          {firstWeek ? `Welcome to Parfocal, ${firstName}` : `${greeting(today)}, ${firstName}`}
+          {firstWeek ? t`Welcome to Parfocal, ${firstName}` : `${greeting(today)}, ${firstName}`}
         </h1>
         <p className="mt-1 mb-0 text-body-sm leading-[1.45] text-fg-dim">
           {formatLongDay(today)} · {summary}

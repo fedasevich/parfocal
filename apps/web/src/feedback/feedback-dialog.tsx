@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { useSendFeedback } from "@parfocal/api-client";
 import { FormField, TextAreaInput } from "@parfocal/ui/components/form-field";
 import { SmallModal } from "@parfocal/ui/components/small-modal";
@@ -17,6 +18,8 @@ export default function FeedbackDialog({
   route: string;
   onClose: () => void;
 }) {
+  const { t } = useLingui();
+
   const send = useSendFeedback();
   const [text, setText] = useState("");
   const [attach, setAttach] = useState(feedback.screenshot !== null);
@@ -37,7 +40,7 @@ export default function FeedbackDialog({
       onOpenChange={(next) => {
         if (!next) onClose();
       }}
-      title={sent ? "Thanks, the team has it" : "Send feedback"}
+      title={sent ? t`Thanks, the team has it` : t`Send feedback`}
       subtitle={
         sent
           ? "We read every message. Nothing else from this screen was sent."
@@ -88,7 +91,7 @@ export default function FeedbackDialog({
       {sent ? null : (
         <>
           <FormField
-            label="What happened, or what would help?"
+            label={t`What happened, or what would help?`}
             error={tried ? problem : undefined}
             count={`${trimmed.length} of ${maxLength}`}
           >
@@ -96,7 +99,7 @@ export default function FeedbackDialog({
               rows={4}
               value={text}
               onChange={(event) => setText(event.target.value)}
-              placeholder="Leave out patient names and case numbers."
+              placeholder={t`Leave out patient names and case numbers.`}
             />
           </FormField>
           {feedback.screenshot ? (
@@ -107,12 +110,12 @@ export default function FeedbackDialog({
                   checked={attach}
                   onChange={(event) => setAttach(event.target.checked)}
                 />
-                Attach the blurred screenshot
+                <Trans>Attach the blurred screenshot</Trans>
               </label>
               {attach ? (
                 <img
                   src={feedback.screenshot}
-                  alt="The screenshot that will be sent, with slides and patient details blurred"
+                  alt={t`The screenshot that will be sent, with slides and patient details blurred`}
                   data-testid="feedback-screenshot"
                   className="max-h-56 w-full rounded-sm border border-line object-contain"
                 />
@@ -120,7 +123,7 @@ export default function FeedbackDialog({
             </>
           ) : (
             <p className="text-body-sm text-fg-dim">
-              This browser could not take a screenshot, so only your text is sent.
+              <Trans>This browser could not take a screenshot, so only your text is sent.</Trans>
             </p>
           )}
         </>

@@ -1,3 +1,4 @@
+import { useLingui } from "@lingui/react/macro";
 import { useGetMe, useListMyJobs, useListProjects } from "@parfocal/api-client";
 import { AppShell, Sidebar, type SidebarSection, TopBar } from "@parfocal/ui/components/app-shell";
 import type { ReactNode } from "react";
@@ -80,6 +81,8 @@ export function AdminShell({
   folded?: boolean;
   children: ReactNode;
 }) {
+  const { t } = useLingui();
+
   const me = okData(useGetMe().data);
   const projects = okData(useListProjects().data) ?? [];
   const jobs = okData(useListMyJobs().data) ?? [];
@@ -120,7 +123,7 @@ export function AdminShell({
       side={
         folded ? null : (
           <Sidebar
-            aria-label="Admin sections"
+            aria-label={t`Admin sections`}
             sections={sections}
             active={section}
             renderLink={renderLink}

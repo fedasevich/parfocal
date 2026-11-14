@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   getGetResultsSchemaUrl,
   getGetResultsTemplateUrl,
@@ -38,6 +39,8 @@ export default function FormatsDrawer({
   onClose: () => void;
   toast: (message: ReactNode) => void;
 }) {
+  const { t } = useLingui();
+
   const formats = [
     ["Parfocal JSON", "Regions, cells, classes, scores and IDs in one file. The native format."],
     [
@@ -53,23 +56,28 @@ export default function FormatsDrawer({
   return (
     <DrawerPanel
       scrim
-      label="What files work?"
-      title="What files work?"
+      label={t`What files work?`}
+      title={t`What files work?`}
       width={520}
       testId="formats-drawer"
       onClose={onClose}
     >
-      <Zone title="Slides">
+      <Zone title={t`Slides`}>
         <Hint>
-          Whole-slide images as the scanner writes them, up to 20 GB each: Aperio SVS, Hamamatsu
-          NDPI, 3DHISTECH MRXS, pyramidal TIFF and OME-TIFF, Zeiss CZI, Philips iSyntax and DICOM
-          WSI.
+          <Trans>
+            Whole-slide images as the scanner writes them, up to 20 GB each: Aperio SVS, Hamamatsu
+            NDPI, 3DHISTECH MRXS, pyramidal TIFF and OME-TIFF, Zeiss CZI, Philips iSyntax and DICOM
+            WSI.
+          </Trans>
         </Hint>
       </Zone>
       <Zone
         title={
           <>
-            AI results <span className="ml-1.5 font-normal text-fg-dim">optional</span>
+            <Trans>AI results</Trans>{" "}
+            <span className="ml-1.5 font-normal text-fg-dim">
+              <Trans>optional</Trans>
+            </span>
           </>
         }
         sub="A result file goes with the slide that has the same name, or whose ID is inside the file."
@@ -83,7 +91,9 @@ export default function FormatsDrawer({
           ))}
         </FileList>
         <div className="flex flex-wrap items-center gap-2 pt-1">
-          <Hint>Templates</Hint>
+          <Hint>
+            <Trans>Templates</Trans>
+          </Hint>
           <span className="flex-1" />
           <a
             className={buttonVariants()}
@@ -91,23 +101,23 @@ export default function FormatsDrawer({
             download="parfocal-results.template.json"
           >
             <Icon name="download" />
-            Parfocal JSON
+            <Trans>Parfocal JSON</Trans>
           </a>
           <Button onClick={() => toast("Downloads cells.template.csv (mock)")}>
             <Icon name="download" />
-            CSV
+            <Trans>CSV</Trans>
           </Button>
           <a
             className={buttonVariants({ variant: "ghost" })}
             href={getGetResultsSchemaUrl()}
             download="parfocal-results-v1.schema.json"
           >
-            JSON Schema
+            <Trans>JSON Schema</Trans>
           </a>
         </div>
       </Zone>
       <Zone
-        title="If a Parfocal JSON file is rejected"
+        title={t`If a Parfocal JSON file is rejected`}
         sub="Each problem names its line and one of these codes."
       >
         <FileList>
@@ -123,7 +133,7 @@ export default function FormatsDrawer({
           ))}
         </FileList>
       </Zone>
-      <Zone title="Check a file">
+      <Zone title={t`Check a file`}>
         {checking ? (
           <>
             <FileList>
@@ -133,7 +143,7 @@ export default function FormatsDrawer({
                 detail={batch.format_check.detail}
                 end={
                   <Button size="sm" variant="ghost" onClick={onClear}>
-                    Clear
+                    <Trans>Clear</Trans>
                   </Button>
                 }
               />
@@ -153,8 +163,12 @@ export default function FormatsDrawer({
             className="grid cursor-pointer justify-items-center gap-2 rounded-[10px] border-[1.5px] border-dashed border-line-strong bg-surf-panel p-5 text-center text-body-sm text-fg-dim hover:border-accent"
           >
             <Icon name="upload" size="md" />
-            <b className="text-body font-semibold text-fg">Drop a result file</b>
-            <span>See what Parfocal makes of it. Nothing is imported.</span>
+            <b className="text-body font-semibold text-fg">
+              <Trans>Drop a result file</Trans>
+            </b>
+            <span>
+              <Trans>See what Parfocal makes of it. Nothing is imported.</Trans>
+            </span>
           </button>
         )}
       </Zone>

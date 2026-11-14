@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { type StudyTemplateSummary, useGetMe, useListStudyTemplates } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
 import { Breadcrumbs } from "@parfocal/ui/components/flow-page";
@@ -40,6 +41,8 @@ type Props = {
 };
 
 export function AdminScreen({ section, scene, modal, request, change }: Props) {
+  const { t } = useLingui();
+
   const me = okData(useGetMe().data);
   const templates = okData(useListStudyTemplates().data) ?? [];
   const renderLink = useRouterLink();
@@ -55,7 +58,9 @@ export function AdminScreen({ section, scene, modal, request, change }: Props) {
   if (me === undefined) {
     return (
       <AdminShell section={section} folded>
-        <p className="p-8 text-body-sm text-fg-dim">Checking your access…</p>
+        <p className="p-8 text-body-sm text-fg-dim">
+          <Trans>Checking your access…</Trans>
+        </p>
       </AdminShell>
     );
   }
@@ -123,25 +128,25 @@ export function AdminScreen({ section, scene, modal, request, change }: Props) {
     people: (
       <Button variant="primary" onClick={() => change({ modal: "invite" })}>
         <Icon name="mail" />
-        Invite people
+        <Trans>Invite people</Trans>
       </Button>
     ),
     projects: (
       <Button onClick={() => void goTo(destinations.newProject())}>
         <Icon name="folder" />
-        New project
+        <Trans>New project</Trans>
       </Button>
     ),
     models: (
       <Button variant="primary" onClick={() => change({ scene: "addmodel" })}>
         <Icon name="plus" />
-        Connect your own model
+        <Trans>Connect your own model</Trans>
       </Button>
     ),
     templates: (
       <Button variant="primary" onClick={() => change({ scene: "tplnew" })}>
         <Icon name="plus" />
-        New template
+        <Trans>New template</Trans>
       </Button>
     ),
     storage: (
@@ -154,7 +159,7 @@ export function AdminScreen({ section, scene, modal, request, change }: Props) {
         }
       >
         <Icon name="link" />
-        Connect a source
+        <Trans>Connect a source</Trans>
       </Button>
     ),
     audit: <AuditExportButton filter={auditFilter} notify={notify} />,
@@ -195,7 +200,7 @@ export function AdminScreen({ section, scene, modal, request, change }: Props) {
           <div>
             <h1 className="m-0 text-title-sm font-semibold text-fg">{info?.label}</h1>
             <p className="mt-0.75 mb-0 text-body-sm text-fg-dim">
-              {section === "overview" ? `${workspaceName} at a glance` : info?.sub}
+              {section === "overview" ? t`${workspaceName} at a glance` : info?.sub}
             </p>
           </div>
           {actions[section] ? <div className="flex flex-none gap-2">{actions[section]}</div> : null}

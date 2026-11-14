@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   getGetMySettingLayersQueryKey,
   getListStudyTemplatesQueryKey,
@@ -83,6 +84,8 @@ export function TemplatesSection({
   setCreating: (open: boolean) => void;
   onOpen: (template: StudyTemplateSummary | TemplateDraft) => void;
 }) {
+  const { t } = useLingui();
+
   const templates = okData(useListStudyTemplates().data) ?? [];
   const lab = okData(useGetMySettingLayers().data)?.lab ?? emptyLab;
   const queryClient = useQueryClient();
@@ -158,21 +161,30 @@ export function TemplatesSection({
     <>
       <TemplateOffers notify={notify} />
       <Zone
-        title="Study templates"
+        title={t`Study templates`}
         sub="A template lays out the evaluation report as blocks on pages and fills in what a new review task checks, its opinion form and how it runs. Researchers pick one when they create a task, and can still arrange one task's report on its own."
         end={
           <span className="text-body-sm text-fg-dim">
-            {builtIn} come with Parfocal, {templates.length - builtIn} made here
+            {builtIn} <Trans>come with Parfocal,</Trans> {templates.length - builtIn}{" "}
+            <Trans>made here</Trans>
           </span>
         }
       >
         <Table className={tableClass}>
           <TableHeader>
             <TableRow>
-              <TableHead>Template</TableHead>
-              <TableHead>Report blocks, in order</TableHead>
-              <TableHead>Fills in for a new task</TableHead>
-              <TableHead className="text-right">Tasks</TableHead>
+              <TableHead>
+                <Trans>Template</Trans>
+              </TableHead>
+              <TableHead>
+                <Trans>Report blocks, in order</Trans>
+              </TableHead>
+              <TableHead>
+                <Trans>Fills in for a new task</Trans>
+              </TableHead>
+              <TableHead className="text-right">
+                <Trans>Tasks</Trans>
+              </TableHead>
               <TableHead />
             </TableRow>
           </TableHeader>
@@ -194,9 +206,15 @@ export function TemplatesSection({
                         sub={`${kindLabel(template.study_kind)} · ${own ? "made here" : "comes with Parfocal"}`}
                       />
                       {defaultId === template.id ? (
-                        <StatusTag tone="accent">Default</StatusTag>
+                        <StatusTag tone="accent">
+                          <Trans>Default</Trans>
+                        </StatusTag>
                       ) : null}
-                      {off ? <StatusTag>Retired</StatusTag> : null}
+                      {off ? (
+                        <StatusTag>
+                          <Trans>Retired</Trans>
+                        </StatusTag>
+                      ) : null}
                     </span>
                   </TableCell>
                   <TableCell>
@@ -217,18 +235,18 @@ export function TemplatesSection({
                       <Button
                         size="sm"
                         variant="ghost"
-                        aria-label={`Preview ${template.name}`}
+                        aria-label={t`Preview ${template.name}`}
                         onClick={() => setPreview(template)}
                       >
                         <Icon name="eye" />
-                        Preview
+                        <Trans>Preview</Trans>
                       </Button>
                       <Button
                         size="sm"
                         aria-label={`${own ? "Edit" : "Duplicate"} ${template.name}`}
                         onClick={() => onOpen(template)}
                       >
-                        {own ? "Edit" : "Duplicate"}
+                        {own ? t`Edit` : t`Duplicate`}
                       </Button>
                       <DropdownMenu>
                         <DropdownMenuTrigger
@@ -236,7 +254,7 @@ export function TemplatesSection({
                             <Button
                               variant="ghost"
                               size="icon-sm"
-                              aria-label={`More for ${template.name}`}
+                              aria-label={t`More for ${template.name}`}
                             />
                           }
                         >
@@ -244,19 +262,19 @@ export function TemplatesSection({
                         </DropdownMenuTrigger>
                         <DropdownMenuContent>
                           <DropdownMenuItem onClick={() => setPreview(template)}>
-                            Preview the PDF
+                            <Trans>Preview the PDF</Trans>
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => onOpen(template)}>
-                            {own ? "Edit" : "Duplicate and edit"}
+                            {own ? t`Edit` : t`Duplicate and edit`}
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             disabled={off || defaultId === template.id}
                             onClick={() => makeDefault(template)}
                           >
-                            Use for new projects
+                            <Trans>Use for new projects</Trans>
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => retireOrRestore(template)}>
-                            {off ? "Restore" : "Retire"}
+                            {off ? t`Restore` : t`Retire`}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -269,8 +287,10 @@ export function TemplatesSection({
         </Table>
       </Zone>
       <InfoLine>
-        Templates that come with Parfocal stay as they are. Duplicate one to change it. A task keeps
-        the version it was created with, and a signed report keeps its layout.
+        <Trans>
+          Templates that come with Parfocal stay as they are. Duplicate one to change it. A task
+          keeps the version it was created with, and a signed report keeps its layout.
+        </Trans>
       </InfoLine>
       <PdfDialog template={preview} onClose={() => setPreview(null)} />
       <NewTemplateModal
@@ -302,6 +322,8 @@ function NewTemplateModal({
   onClose: () => void;
   onCreate: (draft: TemplateDraft) => void;
 }) {
+  const { t } = useLingui();
+
   const [name, setName] = useState("");
   const [kind, setKind] = useState<StudyKind>("regions-and-cells");
   const [from, setFrom] = useState<"blank" | "tpl">("blank");
@@ -325,7 +347,7 @@ function NewTemplateModal({
           onClose();
         }
       }}
-      title="New study template"
+      title={t`New study template`}
       width={560}
       hint="Opens in the editor."
       primaryLabel="Create and open"
@@ -339,21 +361,23 @@ function NewTemplateModal({
       }}
     >
       <FormField
-        label="Name"
+        label={t`Name`}
         help="Researchers see it when they create a review task."
         error={tried ? error : undefined}
       >
         <TextFieldInput
-          placeholder="For example, Lymph node detection"
+          placeholder={t`For example, Lymph node detection`}
           maxLength={60}
           value={name}
           onChange={(event) => setName(event.target.value)}
         />
       </FormField>
       <div className="grid gap-1.5">
-        <span className="text-body-sm font-semibold">Kind of study</span>
+        <span className="text-body-sm font-semibold">
+          <Trans>Kind of study</Trans>
+        </span>
         <Select value={kind} onValueChange={(value) => setKind(value as StudyKind)}>
-          <SelectTrigger aria-label="Kind of study" className="w-full">
+          <SelectTrigger aria-label={t`Kind of study`} className="w-full">
             <SelectValue>{kindLabel(kind)}</SelectValue>
           </SelectTrigger>
           <SelectContent>
@@ -367,7 +391,7 @@ function NewTemplateModal({
       </div>
       <div className="grid gap-2">
         <span id="template-from" className="text-body-sm font-semibold">
-          Start from
+          <Trans>Start from</Trans>
         </span>
         <RadioGroup
           aria-labelledby="template-from"
@@ -390,7 +414,7 @@ function NewTemplateModal({
         </RadioGroup>
         {from === "tpl" ? (
           <Select value={basis} onValueChange={(value) => setBase(String(value))}>
-            <SelectTrigger aria-label="Template to copy" className="w-full">
+            <SelectTrigger aria-label={t`Template to copy`} className="w-full">
               <SelectValue>
                 {templates.find((item) => item.id === basis)?.name ?? "Pick a template"}
               </SelectValue>
@@ -407,7 +431,7 @@ function NewTemplateModal({
       </div>
       <div className="grid gap-1.5">
         <span id="template-paper" className="text-body-sm font-semibold">
-          Paper
+          <Trans>Paper</Trans>
         </span>
         <SegmentedControl
           aria-labelledby="template-paper"

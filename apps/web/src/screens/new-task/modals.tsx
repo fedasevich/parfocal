@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { DecisionButtons } from "@parfocal/ui/components/decision-buttons";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Input } from "@parfocal/ui/components/input";
@@ -20,6 +21,8 @@ export function AddSlidesModal({
   onClose,
   onAdd,
 }: ModalProps & { onAdd: (ids: string[]) => void }) {
+  const { t } = useLingui();
+
   const [picked, setPicked] = useState<string[]>([]);
   const [query, setQuery] = useState("");
   const needle = query.trim().toLowerCase();
@@ -43,7 +46,7 @@ export function AddSlidesModal({
         if (!open) onClose();
       }}
       width={560}
-      title="Add slides"
+      title={t`Add slides`}
       subtitle={`To ${draft.name.trim() || "the new task"} · from P07`}
       hint={`${count} picked`}
       primaryLabel={count ? `Add ${count} slide${count > 1 ? "s" : ""}` : "Add slides"}
@@ -53,8 +56,8 @@ export function AddSlidesModal({
       <div className="relative">
         <Icon name="search" className="absolute top-2 left-2.5 text-fg-dim" />
         <Input
-          aria-label="Find a slide or case"
-          placeholder="Find a slide or case"
+          aria-label={t`Find a slide or case`}
+          placeholder={t`Find a slide or case`}
           className="pl-8"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
@@ -78,7 +81,9 @@ export function AddSlidesModal({
                 ok ? (
                   <SetTags data={data} ids={slide.sets} />
                 ) : (
-                  <span className="text-body-sm text-fg-dim">no {short}</span>
+                  <span className="text-body-sm text-fg-dim">
+                    <Trans>no {short}</Trans>
+                  </span>
                 )
               }
             >
@@ -89,10 +94,13 @@ export function AddSlidesModal({
         })}
         {!pool.length ? (
           <span className="text-body-sm text-fg-dim">
-            Every slide of the project is in the task.
+            <Trans>Every slide of the project is in the task.</Trans>
           </span>
         ) : !shown.length ? (
-          <span className="text-body-sm text-fg-dim">Nothing matches "{query.trim()}".</span>
+          <span className="text-body-sm text-fg-dim">
+            <Trans>Nothing matches "</Trans>
+            {query.trim()}".
+          </span>
         ) : null}
       </div>
     </SmallModal>
@@ -140,6 +148,8 @@ const projectClasses = [
 ];
 
 export function PreviewQuestionModal({ draft, onClose }: ModalProps) {
+  const { t } = useLingui();
+
   const [raw, setRaw] = useState<string | undefined>(undefined);
   const [reasons, setReasons] = useState<string[]>([]);
   const kind = draft.decision.kind;
@@ -161,7 +171,7 @@ export function PreviewQuestionModal({ draft, onClose }: ModalProps) {
         if (!open) onClose();
       }}
       width={560}
-      title="Preview the question"
+      title={t`Preview the question`}
       subtitle={`T2 on A1 · ${name}`}
       hint="Nothing is saved. Reviewers get this card for every object."
       primaryLabel="Done"
@@ -171,18 +181,25 @@ export function PreviewQuestionModal({ draft, onClose }: ModalProps) {
       <SmallModalZone>
         <div className="grid gap-3.5">
           <div className="flex items-center gap-1 text-body-sm text-fg-dim">
-            <ObjectIdTag>T2</ObjectIdTag>
+            <ObjectIdTag>
+              <Trans>T2</Trans>
+            </ObjectIdTag>
             {kind === "certainty5" ? (
               <span>
-                AI says: <b className="font-semibold text-fg">Tumor, 91% sure</b>
+                <Trans>AI says:</Trans>{" "}
+                <b className="font-semibold text-fg">
+                  <Trans>Tumor, 91% sure</Trans>
+                </b>
               </span>
             ) : kind === "agree" ? null : (
-              <span>The AI's claim is hidden in this style</span>
+              <span>
+                <Trans>The AI's claim is hidden in this style</Trans>
+              </span>
             )}
           </div>
           <p className="m-0 text-lead leading-[1.35] font-semibold text-fg">{question}</p>
           <DecisionButtons
-            label="Answer in the preview"
+            label={t`Answer in the preview`}
             decisionStyle={styleOf[kind]}
             range={{ agreeFrom: draft.decision.agreeFrom, disagreeTo: draft.decision.disagreeTo }}
             classes={projectClasses}
@@ -201,14 +218,14 @@ export function PreviewQuestionModal({ draft, onClose }: ModalProps) {
                 style={{ background: countsColours[counts] }}
               />
               <span>
-                Counts as <b className="text-fg">{countsWords[counts]}</b>
+                <Trans>Counts as</Trans> <b className="text-fg">{countsWords[counts]}</b>
               </span>
             </div>
           ) : null}
           {offered.length ? (
             <div className="grid gap-2">
               <span className="text-body-sm font-semibold text-fg">
-                {counts === "disagree" ? "What is wrong" : "Why not sure"}
+                {counts === "disagree" ? t`What is wrong` : t`Why not sure`}
               </span>
               <div className="flex flex-wrap gap-2">
                 {offered.map((reason) => (

@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import type { Project, UploadBatch } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
 import { FlowBar, FlowPage } from "@parfocal/ui/components/flow-page";
@@ -31,6 +32,8 @@ function ViewerFlowBody({
   onCancel,
   onAdded,
 }: ViewerFlowProps & { owner: string | undefined }) {
+  const { t } = useLingui();
+
   const flow = useKeptFlow({
     owner,
     id: `add-result-set:${project.id}`,
@@ -52,10 +55,10 @@ function ViewerFlowBody({
         { label: `Slide ${batch.result_preview.slide_label}`, href: slideHref },
         { label: "Add a result set" },
       ]}
-      title="Add a result set"
+      title={t`Add a result set`}
       subtitle={
         <>
-          To slide {preview.slide_label} in case{" "}
+          <Trans>To slide</Trans> {preview.slide_label} <Trans>in case</Trans>{" "}
           <span className="font-mono">{preview.case_label}</span>, {project.name}
         </>
       }
@@ -80,19 +83,23 @@ function ViewerFlowBody({
                   onCancel();
                 }}
               >
-                Cancel
+                <Trans>Cancel</Trans>
               </Button>
             }
             hint="Parfocal reads the file and lines it up with A1 before anything is added."
             next={
               <Button variant="primary" onClick={() => go(1)}>
-                Next
+                <Trans>Next</Trans>
               </Button>
             }
           />
         ) : (
           <FlowBar
-            back={<Button onClick={() => go(0)}>Back</Button>}
+            back={
+              <Button onClick={() => go(0)}>
+                <Trans>Back</Trans>
+              </Button>
+            }
             hint="It goes on A1 only. Every result set records its file, model and version."
             next={
               <Button
@@ -103,7 +110,7 @@ function ViewerFlowBody({
                 }}
               >
                 <Icon name="layers" />
-                Add result set
+                <Trans>Add result set</Trans>
               </Button>
             }
           />
@@ -111,7 +118,7 @@ function ViewerFlowBody({
       }
     >
       {step === 0 ? (
-        <Zone title="File">
+        <Zone title={t`File`}>
           <FileList>
             <FileRow lead={<FileIcon />} name={preview.file} detail={preview.detail} />
           </FileList>
@@ -123,7 +130,8 @@ function ViewerFlowBody({
                 label: "Version",
                 value: (
                   <>
-                    <span className="font-mono">{preview.version}</span>, read from the file
+                    <span className="font-mono">{preview.version}</span>
+                    <Trans>, read from the file</Trans>
                   </>
                 ),
               },
@@ -132,7 +140,14 @@ function ViewerFlowBody({
         </Zone>
       ) : (
         <>
-          <Zone title="Preview" end={<Hint>In cyan, not saved yet</Hint>}>
+          <Zone
+            title={t`Preview`}
+            end={
+              <Hint>
+                <Trans>In cyan, not saved yet</Trans>
+              </Hint>
+            }
+          >
             <div className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-5">
               <SlideOverlay kind="regions" height={196} />
               <div className="grid gap-1.5">
@@ -144,7 +159,14 @@ function ViewerFlowBody({
               </div>
             </div>
           </Zone>
-          <Zone title="Alignment" end={<StatusTag tone="ok">Looks right</StatusTag>}>
+          <Zone
+            title={t`Alignment`}
+            end={
+              <StatusTag tone="ok">
+                <Trans>Looks right</Trans>
+              </StatusTag>
+            }
+          >
             <FactList
               rows={[
                 {
@@ -165,17 +187,17 @@ function ViewerFlowBody({
               ]}
             />
           </Zone>
-          <Zone title="After adding">
+          <Zone title={t`After adding`}>
             <label className="flex cursor-pointer items-center justify-between gap-4">
               <span className="grid gap-0.5">
                 <b className="text-body-sm font-semibold">
-                  Show next to {preview.beside} after adding
+                  <Trans>Show next to {preview.beside} after adding</Trans>
                 </b>
                 <small className="text-body-sm text-fg-dim">
-                  Both result sets draw on A1, each in its own color
+                  <Trans>Both result sets draw on A1, each in its own color</Trans>
                 </small>
               </span>
-              <Switch checked={show} onCheckedChange={setShow} aria-label="Show after adding" />
+              <Switch checked={show} onCheckedChange={setShow} aria-label={t`Show after adding`} />
             </label>
           </Zone>
         </>

@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   type LabModelConnection,
   type LabModelTest,
@@ -188,6 +189,8 @@ function SecretField({
 }
 
 function ContractModal({ address, onClose }: { address: string; onClose: () => void }) {
+  const { t } = useLingui();
+
   return (
     <SmallModal
       open
@@ -195,43 +198,67 @@ function ContractModal({ address, onClose }: { address: string; onClose: () => v
         if (!open) onClose();
       }}
       width={560}
-      title="The model contract"
+      title={t`The model contract`}
       subtitle="What Parfocal sends to your server and what it expects back"
       showCancel={false}
       primaryLabel="Close"
       onPrimary={onClose}
       hint="MONAI Label and Triton servers follow it with a small adapter."
     >
-      <SmallModalZone title="Parfocal sends">
+      <SmallModalZone title={t`Parfocal sends`}>
         <CodeBlock>
-          {`POST ${address}\n`}
-          <CodeKey>Authorization</CodeKey>
-          {": Bearer $TOKEN\n{ "}
-          <CodeKey>"tile"</CodeKey>
-          {': "data:image/png;base64,…", '}
-          <CodeKey>"size"</CodeKey>
+          {t`POST ${address}\n`}
+          <CodeKey>
+            <Trans>Authorization</Trans>
+          </CodeKey>
+          {t`: Bearer $TOKEN
+{ `}
+          <CodeKey>
+            <Trans>"tile"</Trans>
+          </CodeKey>
+          {t`: "data:image/png;base64,…", `}
+          <CodeKey>
+            <Trans>"size"</Trans>
+          </CodeKey>
           {": 512,\n  "}
-          <CodeKey>"magnification"</CodeKey>
+          <CodeKey>
+            <Trans>"magnification"</Trans>
+          </CodeKey>
           {": 40, "}
-          <CodeKey>"origin"</CodeKey>
+          <CodeKey>
+            <Trans>"origin"</Trans>
+          </CodeKey>
           {": [18432, 9216] }"}
         </CodeBlock>
-        <Hint>One tile at a time, up to 4 at once. The origin is in level 0 pixels.</Hint>
+        <Hint>
+          <Trans>One tile at a time, up to 4 at once. The origin is in level 0 pixels.</Trans>
+        </Hint>
       </SmallModalZone>
-      <SmallModalZone title="Your server answers">
+      <SmallModalZone title={t`Your server answers`}>
         <CodeBlock>
           {"{ "}
-          <CodeKey>"model"</CodeKey>
-          {': "lab-hovernet", '}
-          <CodeKey>"version"</CodeKey>
+          <CodeKey>
+            <Trans>"model"</Trans>
+          </CodeKey>
+          {t`: "lab-hovernet", `}
+          <CodeKey>
+            <Trans>"version"</Trans>
+          </CodeKey>
           {': "2.1",\n  '}
-          <CodeKey>"objects"</CodeKey>
-          {': [{ "kind": "cell", "class": "neoplastic", "score": 0.91,\n    '}
-          <CodeKey>"geometry"</CodeKey>
-          {': { "type": "Polygon", "coordinates": [[[18440, 9230], …]] } }] }'}
+          <CodeKey>
+            <Trans>"objects"</Trans>
+          </CodeKey>
+          {t`: [{ "kind": "cell", "class": "neoplastic", "score": 0.91,
+    `}
+          <CodeKey>
+            <Trans>"geometry"</Trans>
+          </CodeKey>
+          {t`: { "type": "Polygon", "coordinates": [[[18440, 9230], …]] } }] }`}
         </CodeBlock>
         <Hint>
-          Every object needs a class and a polygon in level 0 pixels. A score is optional.
+          <Trans>
+            Every object needs a class and a polygon in level 0 pixels. A score is optional.
+          </Trans>
         </Hint>
       </SmallModalZone>
     </SmallModal>
@@ -261,6 +288,8 @@ function ConnectModelBody({
   onDone,
   notify,
 }: Props & { owner: string | undefined }) {
+  const { t } = useLingui();
+
   const query = useGetLabModelConnection();
   const [tested, setTested] = useState<LabModelTest | null>(null);
   const secretKey = owner ?? "anonymous";
@@ -305,12 +334,12 @@ function ConnectModelBody({
         className="h-full"
         renderLink={renderLink}
         crumbs={crumbs}
-        title="Connect your own model"
+        title={t`Connect your own model`}
         subtitle={
           query.isError ? (
             "The server's details could not be loaded."
           ) : (
-            <Loader label="Loading the server details" size="inline" />
+            <Loader label={t`Loading the server details`} size="inline" />
           )
         }
         steps={[{ label: "Connect and test" }, { label: "Classes and access" }]}
@@ -350,7 +379,7 @@ function ConnectModelBody({
         className="h-full"
         renderLink={renderLink}
         crumbs={crumbs}
-        title="Connect your own model"
+        title={t`Connect your own model`}
         subtitle={
           page === 1
             ? `Your lab's server · ${host}`
@@ -374,7 +403,11 @@ function ConnectModelBody({
             />
           ) : (
             <FlowBar
-              back={<Button onClick={done}>Cancel</Button>}
+              back={
+                <Button onClick={done}>
+                  <Trans>Cancel</Trans>
+                </Button>
+              }
               hint={
                 passed
                   ? "Connected. Next, match its classes and choose who can run it."
@@ -386,10 +419,10 @@ function ConnectModelBody({
                 <Button
                   variant="primary"
                   disabled={!passed}
-                  title={passed ? undefined : "Test the connection first"}
+                  title={passed ? undefined : t`Test the connection first`}
                   onClick={() => onScene("addmap")}
                 >
-                  Next: classes and access
+                  <Trans>Next: classes and access</Trans>
                 </Button>
               }
             />
@@ -473,6 +506,8 @@ function ConnectStep({
   onTest: () => void;
   onContract: () => void;
 }) {
+  const { t } = useLingui();
+
   const test = data.test;
   const passed = test.outcome === "follows-contract";
   const failed = test.outcome === "not-contract";
@@ -480,8 +515,8 @@ function ConnectStep({
   const colourOf = useClassColours(data, form);
   return (
     <>
-      <Zone title="Where it runs">
-        <FormField label="Address">
+      <Zone title={t`Where it runs`}>
+        <FormField label={t`Address`}>
           <TextFieldInput
             value={form.address}
             onChange={(event) => update({ address: event.currentTarget.value })}
@@ -489,10 +524,10 @@ function ConnectStep({
           />
         </FormField>
         <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-          <Labelled label="Sign-in">
+          <Labelled label={t`Sign-in`}>
             <div>
               <SegmentedControl
-                aria-label="Sign-in"
+                aria-label={t`Sign-in`}
                 value={form.signIn}
                 onValueChange={(value) => update({ signIn: value as SignIn })}
                 options={Object.entries(signInLabels).map(([value, label]) => ({ value, label }))}
@@ -509,39 +544,47 @@ function ConnectStep({
           )}
         </div>
         <InfoLine>
-          Parfocal sends a tile and expects Parfocal JSON back.
-          <TextLink onClick={onContract}>Read the contract</TextLink>
+          <Trans>Parfocal sends a tile and expects Parfocal JSON back.</Trans>
+          <TextLink onClick={onContract}>
+            <Trans>Read the contract</Trans>
+          </TextLink>
         </InfoLine>
       </Zone>
-      <Zone title="What it returns">
-        {passed || failed ? <Hint>Read from the test answer.</Hint> : null}
+      <Zone title={t`What it returns`}>
+        {passed || failed ? (
+          <Hint>
+            <Trans>Read from the test answer.</Trans>
+          </Hint>
+        ) : null}
         {test.returns.length > 0 ? (
           <ModelChips makes={test.returns} />
         ) : (
-          <Hint>The test fills this in.</Hint>
+          <Hint>
+            <Trans>The test fills this in.</Trans>
+          </Hint>
         )}
       </Zone>
-      <Zone title="Tiles it gets">
+      <Zone title={t`Tiles it gets`}>
         <Hint>
           {passed
-            ? `Read from the server's answer. Parfocal sends ${data.tiles_at_once} tiles at a time and slows down when the server does.`
-            : "Defaults that suit most cell models. The test reads the server's own values when it has them."}
+            ? t`Read from the server's answer. Parfocal sends ${data.tiles_at_once} tiles at a time and slows down when the server does.`
+            : t`Defaults that suit most cell models. The test reads the server's own values when it has them.`}
         </Hint>
         <div className="grid grid-cols-2 gap-x-4">
-          <Labelled label="Tile size">
+          <Labelled label={t`Tile size`}>
             <div>
               <SegmentedControl
-                aria-label="Tile size"
+                aria-label={t`Tile size`}
                 value={String(form.tileSize)}
                 onValueChange={(value) => update({ tileSize: Number(value) })}
                 options={tileSizes.map((size) => ({ value: String(size), label: `${size} px` }))}
               />
             </div>
           </Labelled>
-          <Labelled label="Magnification">
+          <Labelled label={t`Magnification`}>
             <div>
               <SegmentedControl
-                aria-label="Magnification"
+                aria-label={t`Magnification`}
                 value={String(form.magnification)}
                 onValueChange={(value) => update({ magnification: Number(value) })}
                 options={magnifications.map((size) => ({ value: String(size), label: `${size}×` }))}
@@ -550,13 +593,15 @@ function ConnectStep({
           </Labelled>
         </div>
       </Zone>
-      <Zone title="Test connection">
-        <Hint>Sends one sample tile from {test.sample_slide} and shows what comes back.</Hint>
+      <Zone title={t`Test connection`}>
+        <Hint>
+          <Trans>Sends one sample tile from {test.sample_slide} and shows what comes back.</Trans>
+        </Hint>
         <div className="grid gap-2">
           <SampleTilePreview
             state={passed ? "ok" : failed ? "fail" : "empty"}
             image="/mock-assets/hpf-40x.jpg"
-            label={sample?.label ?? `Sample tile from ${test.sample_slide}`}
+            label={sample?.label ?? t`Sample tile from ${test.sample_slide}`}
             emptyText="The outlines your server sends back show here, on the sample tile"
             regions={sample?.outline.regions ?? []}
             cells={(sample?.outline.cells ?? []).map((cell) => ({
@@ -574,7 +619,9 @@ function ConnectStep({
           {passed && sample ? (
             <>
               <div className="flex items-center gap-2.5">
-                <StatusTag tone="ok">Follows the contract</StatusTag>
+                <StatusTag tone="ok">
+                  <Trans>Follows the contract</Trans>
+                </StatusTag>
                 <span className="text-body-sm text-fg-dim">{sample.label}</span>
               </div>
               <KeyValueList
@@ -595,14 +642,22 @@ function ConnectStep({
           {failed ? (
             <>
               <div>
-                <StatusTag tone="bad">Not Parfocal JSON yet</StatusTag>
+                <StatusTag tone="bad">
+                  <Trans>Not Parfocal JSON yet</Trans>
+                </StatusTag>
               </div>
               <InlineError>
                 <b>
-                  {test.missing_geometry} cells came back without a <code>geometry</code>.
+                  {test.missing_geometry} <Trans>cells came back without a</Trans>{" "}
+                  <code>
+                    <Trans>geometry</Trans>
+                  </code>
+                  .
                 </b>{" "}
-                Each object needs a polygon in level 0 pixels. The contract has an example for MONAI
-                Label.
+                <Trans>
+                  Each object needs a polygon in level 0 pixels. The contract has an example for
+                  MONAI Label.
+                </Trans>
               </InlineError>
             </>
           ) : null}
@@ -612,11 +667,11 @@ function ConnectStep({
               disabled={testing || form.address.trim() === ""}
               onClick={onTest}
             >
-              {passed || failed ? "Test again" : "Test connection"}
+              {passed || failed ? t`Test again` : t`Test connection`}
             </Button>
             {passed && test.tiles.length > 1 ? (
               <TextLink onClick={() => setTile(tile === 0 ? 1 : 0)}>
-                {tile === 0 ? "Try another tile" : "Back to the first tile"}
+                {tile === 0 ? t`Try another tile` : t`Back to the first tile`}
               </TextLink>
             ) : null}
           </div>
@@ -686,22 +741,26 @@ function MapStep({
   form: Form;
   update: (change: Partial<Form>) => void;
 }) {
+  const { t } = useLingui();
+
   const { taxonomies, options, map } = useClassMap(data, form);
   const projects = okData(useListProjects().data) ?? [];
   const chosenProjects = projects.filter((project) => form.projectIds.includes(project.id));
   const counts = new Map(data.test.classes.map((item) => [item.name, item.cells]));
   return (
     <>
-      <Zone title="Name">
-        <Hint>Read from the server. Result sets it makes carry this name and version.</Hint>
+      <Zone title={t`Name`}>
+        <Hint>
+          <Trans>Read from the server. Result sets it makes carry this name and version.</Trans>
+        </Hint>
         <div className="grid grid-cols-2 gap-x-4">
-          <FormField label="Name">
+          <FormField label={t`Name`}>
             <TextFieldInput
               value={form.name}
               onChange={(event) => update({ name: event.currentTarget.value })}
             />
           </FormField>
-          <FormField label="Version">
+          <FormField label={t`Version`}>
             <TextFieldInput
               value={form.version}
               onChange={(event) => update({ version: event.currentTarget.value })}
@@ -711,13 +770,13 @@ function MapStep({
         </div>
       </Zone>
       <Zone
-        title="Match its classes"
+        title={t`Match its classes`}
         end={
           <Select
             value={form.taxonomy}
             onValueChange={(value) => update({ taxonomy: String(value), classMap: null })}
           >
-            <SelectTrigger size="sm" aria-label="Class list">
+            <SelectTrigger size="sm" aria-label={t`Class list`}>
               <SelectValue>{taxonomyLabel(form.taxonomy)}</SelectValue>
             </SelectTrigger>
             <SelectContent>
@@ -731,8 +790,10 @@ function MapStep({
         }
       >
         <Hint>
-          {matchedText(map)} by name. Parfocal remembers this for the server, so its next runs need
-          nothing.
+          {matchedText(map)}{" "}
+          <Trans>
+            by name. Parfocal remembers this for the server, so its next runs need nothing.
+          </Trans>
         </Hint>
         <ClassMapTable
           rows={data.test.classes.map((item) => ({
@@ -744,12 +805,14 @@ function MapStep({
           onValueChange={(sent, value) => update({ classMap: { ...map, [sent]: value } })}
         />
       </Zone>
-      <Zone title="Who can run it">
-        <Hint>Reviewers see its results. They never start a run.</Hint>
-        <Labelled label="People">
+      <Zone title={t`Who can run it`}>
+        <Hint>
+          <Trans>Reviewers see its results. They never start a run.</Trans>
+        </Hint>
+        <Labelled label={t`People`}>
           <div>
             <SegmentedControl
-              aria-label="People who can run it"
+              aria-label={t`People who can run it`}
               value={form.whoCanRun}
               onValueChange={(value) => update({ whoCanRun: value as WhoCanRun })}
               options={[
@@ -759,7 +822,7 @@ function MapStep({
             />
           </div>
         </Labelled>
-        <Labelled label="In projects">
+        <Labelled label={t`In projects`}>
           <div className="grid">
             {projects.map((project, index) => (
               <label
@@ -784,10 +847,12 @@ function MapStep({
           </div>
         </Labelled>
       </Zone>
-      <Zone title="Summary">
+      <Zone title={t`Summary`}>
         <Hint>
-          Parfocal checks the server every {data.health_check_minutes} minutes. If it stops
-          answering, runs wait and you get an email.
+          <Trans>
+            Parfocal checks the server every {data.health_check_minutes} minutes. If it stops
+            answering, runs wait and you get an email.
+          </Trans>
         </Hint>
         <KeyValueList
           tight
@@ -840,6 +905,8 @@ function MapBar({
   onDone: () => void;
   notify: Notify;
 }) {
+  const { t } = useLingui();
+
   const { map } = useClassMap(data, form);
   const connect = useConnectLabModel();
   const open = Object.entries(map)
@@ -848,20 +915,25 @@ function MapBar({
   const missing = form.name.trim() === "" || form.version.trim() === "";
   return (
     <FlowBar
-      back={<Button onClick={onBack}>Back</Button>}
+      back={
+        <Button onClick={onBack}>
+          <Trans>Back</Trans>
+        </Button>
+      }
       hint={
         missing ? (
           "Give the model a name and a version."
         ) : open.length > 0 ? (
           <>
-            Choose a class for{" "}
+            <Trans>Choose a class for</Trans>{" "}
             {open.map((sent, index) => (
               <span key={sent}>
                 {index > 0 ? ", " : ""}
                 <code>{sent}</code>
               </span>
             ))}
-            , or leave {open.length === 1 ? "it" : "them"} out of results.
+            <Trans>, or leave</Trans> {open.length === 1 ? t`it` : t`them`}{" "}
+            <Trans>out of results.</Trans>
           </>
         ) : (
           "Every class has a match."
@@ -907,7 +979,7 @@ function MapBar({
             )
           }
         >
-          Add model
+          <Trans>Add model</Trans>
         </Button>
       }
     />

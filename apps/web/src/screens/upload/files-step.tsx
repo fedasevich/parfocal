@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { type UploadBatch, useListSourceFiles } from "@parfocal/api-client";
 import { Button, buttonVariants } from "@parfocal/ui/components/button";
 import { Checkbox } from "@parfocal/ui/components/checkbox";
@@ -52,12 +53,14 @@ type StepProps = {
 };
 
 export function RemoveButton({ name, onClick }: { name: string; onClick: () => void }) {
+  const { t } = useLingui();
+
   return (
     <Button
       size="icon-xs"
       variant="ghost"
-      title="Remove from this upload"
-      aria-label={`Remove ${name}`}
+      title={t`Remove from this upload`}
+      aria-label={t`Remove ${name}`}
       onClick={onClick}
     >
       <Icon name="close" />
@@ -137,19 +140,31 @@ export function FolderShape({
   onToggle: () => void;
   openFormats: () => void;
 }) {
+  const { t } = useLingui();
+
   if (!open) {
     return (
       <div className="flex min-w-0 items-center gap-2 text-body-sm text-fg-dim">
         <Icon name="folder" />
-        <span>Folder shape: case folders, results next to slides</span>
-        <TextLink onClick={onToggle}>Show</TextLink>
+        <span>
+          <Trans>Folder shape: case folders, results next to slides</Trans>
+        </span>
+        <TextLink onClick={onToggle}>
+          <Trans>Show</Trans>
+        </TextLink>
       </div>
     );
   }
   return (
     <Zone
-      title="What folder shape works"
-      end={foldable ? <TextLink onClick={onToggle}>Hide</TextLink> : undefined}
+      title={t`What folder shape works`}
+      end={
+        foldable ? (
+          <TextLink onClick={onToggle}>
+            <Trans>Hide</Trans>
+          </TextLink>
+        ) : undefined
+      }
       className="content-start"
     >
       <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,300px),1fr))] items-start gap-x-6 gap-y-3.5">
@@ -164,17 +179,27 @@ export function FolderShape({
           ))}
         </div>
         <ul className="m-0 grid content-start gap-2 pl-4.5 text-body-sm leading-[1.45] text-fg-dim">
-          <li>A folder is a case, and its name becomes the case number.</li>
           <li>
-            A result sits next to its slide with the same name, or in a folder named like the slide.
+            <Trans>A folder is a case, and its name becomes the case number.</Trans>
           </li>
-          <li>Anything else lands in Not matched yet, and you pick its slide.</li>
+          <li>
+            <Trans>
+              A result sits next to its slide with the same name, or in a folder named like the
+              slide.
+            </Trans>
+          </li>
+          <li>
+            <Trans>Anything else lands in Not matched yet, and you pick its slide.</Trans>
+          </li>
         </ul>
       </div>
       <p className="m-0 mt-0.5 flex items-start gap-2 text-body-sm leading-[1.45] text-fg-dim">
         <Icon name="help" className="mt-0.5" />
         <span>
-          For the file formats, see <TextLink onClick={openFormats}>What files work?</TextLink>
+          <Trans>For the file formats, see</Trans>{" "}
+          <TextLink onClick={openFormats}>
+            <Trans>What files work?</Trans>
+          </TextLink>
         </span>
       </p>
     </Zone>
@@ -182,11 +207,13 @@ export function FolderShape({
 }
 
 function SourceSwitch({ scene, go, openFormats }: Pick<StepProps, "scene" | "go" | "openFormats">) {
+  const { t } = useLingui();
+
   const remote = scene === "link" || scene === "remote";
   return (
     <div className="flex min-w-0 items-center gap-4">
       <SegmentedControl
-        aria-label="Where the files come from"
+        aria-label={t`Where the files come from`}
         value={remote ? "link" : "computer"}
         onValueChange={(value) =>
           go(value === "link" ? "link" : scene === "empty" ? "empty" : "files")
@@ -203,13 +230,15 @@ function SourceSwitch({ scene, go, openFormats }: Pick<StepProps, "scene" | "go"
         className="inline-flex min-h-6 cursor-pointer items-center gap-1.5 border-0 bg-transparent p-0 text-body-sm font-medium text-fg-dim hover:text-fg"
       >
         <Icon name="help" />
-        What files work?
+        <Trans>What files work?</Trans>
       </button>
     </div>
   );
 }
 
 export function FilesStep(props: StepProps) {
+  const { t } = useLingui();
+
   const { batch, model, state, set, scene, projectCode, go, openFormats } = props;
   if (scene === "link" || scene === "remote") {
     return (
@@ -232,14 +261,16 @@ export function FilesStep(props: StepProps) {
           >
             <Icon name="upload" size="md" />
             <b className="text-body font-semibold text-fg">
-              Drop slides, results or a whole folder
+              <Trans>Drop slides, results or a whole folder</Trans>
             </b>
             <span>
-              Parfocal sorts them by slide. Slides up to 20 GB each, AI results are optional.
+              <Trans>
+                Parfocal sorts them by slide. Slides up to 20 GB each, AI results are optional.
+              </Trans>
             </span>
             <span className={buttonVariants({ className: "mt-2" })}>
               <Icon name="folder" />
-              Choose files or a folder
+              <Trans>Choose files or a folder</Trans>
             </span>
           </button>
           <FolderShape
@@ -271,9 +302,11 @@ export function FilesStep(props: StepProps) {
               end={
                 duplicate ? (
                   <span className="inline-flex items-center gap-2.5">
-                    <StatusTag tone="warn">already in {projectCode}</StatusTag>
+                    <StatusTag tone="warn">
+                      <Trans>already in {projectCode}</Trans>
+                    </StatusTag>
                     <SegmentedControl
-                      aria-label="Duplicate slide"
+                      aria-label={t`Duplicate slide`}
                       value={state.duplicate}
                       onValueChange={(value) =>
                         set({ duplicate: value as UploadState["duplicate"] })
@@ -296,12 +329,12 @@ export function FilesStep(props: StepProps) {
             />
             {duplicate ? (
               <p className="m-0 pb-2 pl-13 text-body-sm leading-[1.45] text-fg-dim">
-                {slide.name} is already in this project, uploaded{" "}
+                {slide.name} <Trans>is already in this project, uploaded</Trans>{" "}
                 {new Date(batch.duplicate.uploaded_on).toLocaleDateString("en-GB", {
                   day: "numeric",
                   month: "short",
                 })}
-                . Skip it, or replace the existing slide and keep its reviews.
+                <Trans>. Skip it, or replace the existing slide and keep its reviews.</Trans>
               </p>
             ) : null}
           </>
@@ -351,7 +384,7 @@ export function FilesStep(props: StepProps) {
                 {rows.length === 0 ? (
                   <>
                     <span className="text-body-sm text-fg-dim">
-                      No AI results yet. Fine, you can run a model later.
+                      <Trans>No AI results yet. Fine, you can run a model later.</Trans>
                     </span>
                     <span className="flex-1" />
                   </>
@@ -360,11 +393,11 @@ export function FilesStep(props: StepProps) {
                   <Button
                     size="sm"
                     variant="ghost"
-                    title={`Picks ${slide.extra_result.name} from this computer`}
+                    title={t`Picks ${slide.extra_result.name} from this computer`}
                     onClick={() => set({ added: { ...state.added, [slideIndex]: true } })}
                   >
                     <Icon name="plus" />
-                    Add a result file for {short}
+                    <Trans>Add a result file for</Trans> {short}
                   </Button>
                 )}
               </div>
@@ -378,7 +411,7 @@ export function FilesStep(props: StepProps) {
   const list =
     model.slides.length === 0 ? (
       <div className="p-3 text-body-sm text-fg-dim">
-        No slides left in this upload. Drop slides below, or go back to the project.
+        <Trans>No slides left in this upload. Drop slides below, or go back to the project.</Trans>
       </div>
     ) : state.cases === "names" ? (
       <>
@@ -386,7 +419,7 @@ export function FilesStep(props: StepProps) {
           <>
             <GroupHead
               icon="folder"
-              title={`Case ${caseLabel}`}
+              title={t`Case ${caseLabel}`}
               sub={`${plural(model.inCase.length, "slide")} · case number in the folder and file names`}
             />
             {model.inCase.map(block)}
@@ -396,7 +429,7 @@ export function FilesStep(props: StepProps) {
           <>
             <GroupHead
               icon="slides"
-              title="Loose slides"
+              title={t`Loose slides`}
               sub={`${plural(model.loose.length, "slide")}, no case number`}
             />
             {model.loose.map(block)}
@@ -405,7 +438,11 @@ export function FilesStep(props: StepProps) {
       </>
     ) : (
       <>
-        <GroupHead icon="slides" title="Loose slides" sub={plural(model.slides.length, "slide")} />
+        <GroupHead
+          icon="slides"
+          title={t`Loose slides`}
+          sub={plural(model.slides.length, "slide")}
+        />
         {model.slides.map(block)}
       </>
     );
@@ -413,38 +450,42 @@ export function FilesStep(props: StepProps) {
     <>
       <SourceSwitch scene={scene} go={go} openFormats={openFormats} />
       <Zone
-        title="Slides and their results"
+        title={t`Slides and their results`}
         end={
           <Hint>
-            {plural(model.slides.length, "slide")} · {gb(model.sizeGb)} · {model.matched} of{" "}
-            {plural(model.resultCount, "result")} matched
+            {plural(model.slides.length, "slide")} · {gb(model.sizeGb)} · {model.matched}{" "}
+            <Trans>of</Trans> {plural(model.resultCount, "result")} <Trans>matched</Trans>
           </Hint>
         }
       >
         <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1 text-body-sm text-fg-dim">
           <span>
             {ruleText[state.pair]}.{" "}
-            {state.cases === "names" ? "Cases from file names" : "All slides kept loose"}.
+            {state.cases === "names" ? t`Cases from file names` : t`All slides kept loose`}.
           </span>
           <TextLink onClick={() => set({ ruleOpen: !state.ruleOpen })}>
-            {state.ruleOpen ? "Done" : "Change"}
+            {state.ruleOpen ? t`Done` : t`Change`}
           </TextLink>
         </div>
         {state.ruleOpen ? (
           <div className="grid gap-2.5 rounded-[10px] border border-surf-edge bg-surf-panel px-3.5 py-3 text-body-sm text-fg-dim">
             <div className="flex flex-wrap items-center gap-x-3.5 gap-y-2">
-              <span className="w-30">Pair results by</span>
+              <span className="w-30">
+                <Trans>Pair results by</Trans>
+              </span>
               <SegmentedControl
-                aria-label="Pair results by"
+                aria-label={t`Pair results by`}
                 value={state.pair}
                 onValueChange={(value) => set({ pair: value as PairRule, placed: {} })}
                 options={ruleOptions}
               />
             </div>
             <div className="flex flex-wrap items-center gap-x-3.5 gap-y-2">
-              <span className="w-30">Cases</span>
+              <span className="w-30">
+                <Trans>Cases</Trans>
+              </span>
               <SegmentedControl
-                aria-label="Cases"
+                aria-label={t`Cases`}
                 value={state.cases}
                 onValueChange={(value) => set({ cases: value as UploadState["cases"] })}
                 options={[
@@ -459,7 +500,7 @@ export function FilesStep(props: StepProps) {
       </Zone>
       {model.unmatched.length > 0 ? (
         <Zone
-          title="Not matched yet"
+          title={t`Not matched yet`}
           sub="Pick the slide each file goes with. A file with no slide stays out of this upload."
           end={<Hint>{plural(model.unmatched.length, "file")}</Hint>}
           data-testid="not-matched"
@@ -491,7 +532,7 @@ export function FilesStep(props: StepProps) {
         <div className="flex justify-center rounded-[10px] border-[1.5px] border-dashed border-line-strong bg-surf-panel px-3.5 py-2.5 text-body-sm text-fg-dim">
           <span className="inline-flex items-center gap-2">
             <Icon name="upload" />
-            Drop more slides, results or folders here
+            <Trans>Drop more slides, results or folders here</Trans>
           </span>
         </div>
         <FolderShape
@@ -517,6 +558,8 @@ export function SlidePicker({
   onPick: (slide: number) => void;
   size?: "sm" | "default";
 }) {
+  const { t } = useLingui();
+
   return (
     <Select
       items={slides.map((index) => ({
@@ -525,8 +568,8 @@ export function SlidePicker({
       }))}
       onValueChange={(value) => onPick(Number(value))}
     >
-      <SelectTrigger size={size} aria-label="Choose a slide" className="w-50">
-        <SelectValue placeholder="Choose a slide" />
+      <SelectTrigger size={size} aria-label={t`Choose a slide`} className="w-50">
+        <SelectValue placeholder={t`Choose a slide`} />
       </SelectTrigger>
       <SelectContent>
         {slides.map((index) => (
@@ -540,6 +583,8 @@ export function SlidePicker({
 }
 
 function FromStore({ state, set, scene, projectId, projectCode, go }: StepProps) {
+  const { t } = useLingui();
+
   const link = scene === "link";
   const checked = state.checked[link ? "link" : "remote"];
   const address = link
@@ -555,10 +600,10 @@ function FromStore({ state, set, scene, projectId, projectCode, go }: StepProps)
   return (
     <>
       <Zone
-        title="Where are the files?"
+        title={t`Where are the files?`}
         end={
           <Hint>
-            {link ? "HTTPS, S3, Azure, GCS, DICOMweb or SFTP" : "Sources your admin connected"}
+            {link ? t`HTTPS, S3, Azure, GCS, DICOMweb or SFTP` : t`Sources your admin connected`}
           </Hint>
         }
       >
@@ -567,7 +612,7 @@ function FromStore({ state, set, scene, projectId, projectCode, go }: StepProps)
             value={link ? "link" : "s3"}
             onValueChange={(value) => go(value === "link" ? "link" : "remote")}
           >
-            <SelectTrigger aria-label="Source" className="w-full">
+            <SelectTrigger aria-label={t`Source`} className="w-full">
               <SelectValue>
                 {(value: string) => (
                   <span className="inline-flex items-center gap-2">
@@ -582,36 +627,40 @@ function FromStore({ state, set, scene, projectId, projectCode, go }: StepProps)
               <SelectItem value="s3">Scanner archive · S3</SelectItem>
             </SelectContent>
           </Select>
-          <Input aria-label="Address" readOnly value={address} className="font-mono" />
+          <Input aria-label={t`Address`} readOnly value={address} className="font-mono" />
           <Button
             variant={checked ? "secondary" : "primary"}
             onClick={() => set({ checked: { ...state.checked, [link ? "link" : "remote"]: true } })}
           >
-            {checked ? "Check again" : "Check"}
+            {checked ? t`Check again` : t`Check`}
           </Button>
         </div>
         <Hint>
-          The Parfocal server fetches the files, not this computer, so a 20 GB slide never crosses
-          your connection and closing the tab stops nothing.
+          <Trans>
+            The Parfocal server fetches the files, not this computer, so a 20 GB slide never crosses
+            your connection and closing the tab stops nothing.
+          </Trans>
         </Hint>
       </Zone>
       {checked && files.length > 0 ? (
         <Zone
-          title="Found there"
+          title={t`Found there`}
           end={
             <Hint>
-              {chosen.length} of {plural(files.length, "slide")} · {gb(chosenGb)} · {matched}{" "}
-              results matched
+              {chosen.length} <Trans>of</Trans> {plural(files.length, "slide")} · {gb(chosenGb)} ·{" "}
+              {matched} <Trans>results matched</Trans>
             </Hint>
           }
         >
           <div className="text-body-sm text-fg-dim">
-            {ruleText.auto}. No case numbers in these names, so the slides stay loose.
+            <Trans>
+              {ruleText.auto}. No case numbers in these names, so the slides stay loose.
+            </Trans>
           </div>
           <FileList>
             <GroupHead
               icon="slides"
-              title="Loose slides"
+              title={t`Loose slides`}
               sub={`${plural(files.length, "slide")}, no case number`}
             />
             {files.map((file) => (
@@ -623,7 +672,7 @@ function FromStore({ state, set, scene, projectId, projectCode, go }: StepProps)
                       <span className="inline-flex items-center gap-3">
                         <Checkbox
                           defaultChecked={!file.in_project}
-                          aria-label={`Include ${file.name}`}
+                          aria-label={t`Include ${file.name}`}
                         />
                         <Thumb />
                       </span>
@@ -637,13 +686,13 @@ function FromStore({ state, set, scene, projectId, projectCode, go }: StepProps)
                 nested={
                   file.in_project ? (
                     <div className="flex min-h-8.5 items-center rounded-ctl border border-dashed border-line px-3 text-body-sm text-fg-dim">
-                      Skipped, already in this project.
+                      <Trans>Skipped, already in this project.</Trans>
                     </div>
                   ) : file.result ? (
                     <ResultRow
                       lead={
                         <span className="inline-flex items-center gap-3">
-                          <Checkbox defaultChecked aria-label={`Include ${file.result.name}`} />
+                          <Checkbox defaultChecked aria-label={t`Include ${file.result.name}`} />
                           <Icon name="file" className="text-fg-faint" />
                         </span>
                       }
@@ -653,7 +702,9 @@ function FromStore({ state, set, scene, projectId, projectCode, go }: StepProps)
                     />
                   ) : (
                     <div className="flex min-h-8.5 items-center rounded-ctl border border-dashed border-line px-3 text-body-sm text-fg-dim">
-                      No AI results found next to it. Fine, you can run a model later.
+                      <Trans>
+                        No AI results found next to it. Fine, you can run a model later.
+                      </Trans>
                     </div>
                   )
                 }
@@ -663,13 +714,13 @@ function FromStore({ state, set, scene, projectId, projectCode, go }: StepProps)
         </Zone>
       ) : (
         <Zone
-          title="Found there"
+          title={t`Found there`}
           sub="Check the address to list what is there. Nothing is fetched yet."
         />
       )}
-      <Zone title="How the slides come in">
+      <Zone title={t`How the slides come in`}>
         <RadioGroup
-          aria-label="How the slides come in"
+          aria-label={t`How the slides come in`}
           value={state.readMode}
           onValueChange={(value) => set({ readMode: value as UploadState["readMode"] })}
           className="gap-1"

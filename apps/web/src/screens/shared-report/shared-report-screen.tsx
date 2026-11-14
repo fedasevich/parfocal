@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { ApiError, type SharedReport, useGetSharedReport } from "@parfocal/api-client";
 import { Banner } from "@parfocal/ui/components/banner";
 import { CountBars, MetricTiles } from "@parfocal/ui/components/evaluation-report";
@@ -100,6 +101,8 @@ function NumberTable({
 }
 
 function Report({ shared }: { shared: SharedReport }) {
+  const { t } = useLingui();
+
   const evaluation = shared.evaluation;
   const reasons = reasonRows(evaluation);
   const opinions = opinionRows(evaluation);
@@ -119,25 +122,33 @@ function Report({ shared }: { shared: SharedReport }) {
     <Shell>
       <header className="grid gap-2">
         <div className="flex flex-wrap items-center gap-2">
-          <StatusTag tone="research">Research output</StatusTag>
-          <StatusTag>Read-only</StatusTag>
-          {evaluation.sample ? <StatusTag tone="warn">Sample data</StatusTag> : null}
+          <StatusTag tone="research">
+            <Trans>Research output</Trans>
+          </StatusTag>
+          <StatusTag>
+            <Trans>Read-only</Trans>
+          </StatusTag>
+          {evaluation.sample ? (
+            <StatusTag tone="warn">
+              <Trans>Sample data</Trans>
+            </StatusTag>
+          ) : null}
         </div>
         <h1 className="m-0 text-title font-semibold text-fg">{shared.task_name}</h1>
         <p className="m-0 text-body-sm text-fg-dim">
-          {shared.project_name} · evaluation report · this link works until{" "}
+          {shared.project_name} <Trans>· evaluation report · this link works until</Trans>{" "}
           {longDay(shared.expires_at)}
         </p>
       </header>
       <MetricTiles variant="panel" tiles={headlineTiles(evaluation)} />
-      <Section title="Decisions">
+      <Section title={t`Decisions`}>
         <p className="m-0 text-body-sm text-fg-dim">
-          {answerSpread(evaluation) || "No decisions yet."}
+          {answerSpread(evaluation) || t`No decisions yet.`}
         </p>
       </Section>
-      <Section title="Precision and sensitivity">
+      <Section title={t`Precision and sensitivity`}>
         <NumberTable
-          label="Precision and sensitivity"
+          label={t`Precision and sensitivity`}
           head={[
             "Class",
             "True positives",
@@ -161,9 +172,9 @@ function Report({ shared }: { shared: SharedReport }) {
           }))}
         />
       </Section>
-      <Section title="Agreement between reviewers">
+      <Section title={t`Agreement between reviewers`}>
         <NumberTable
-          label="Agreement between reviewers"
+          label={t`Agreement between reviewers`}
           head={["Pair", "Cohen's κ", "Objects"]}
           rows={evaluation.kappa.map((pair) => ({
             key: `${pair.first}-${pair.second}`,
@@ -171,14 +182,15 @@ function Report({ shared }: { shared: SharedReport }) {
           }))}
         />
         <p className="m-0 text-body-sm text-fg-dim">
-          Mean κ {fixed(evaluation.mean_kappa)} · Fleiss κ {fixed(evaluation.fleiss_kappa)} · cells
-          agreed between reviewers {fixed(evaluation.cell_agreement_between_reviewers.value)}
+          <Trans>Mean κ</Trans> {fixed(evaluation.mean_kappa)} <Trans>· Fleiss κ</Trans>{" "}
+          {fixed(evaluation.fleiss_kappa)} <Trans>· cells agreed between reviewers</Trans>{" "}
+          {fixed(evaluation.cell_agreement_between_reviewers.value)}
         </p>
       </Section>
       {Object.keys(evaluation.dice).length ? (
-        <Section title="Dice">
+        <Section title={t`Dice`}>
           <NumberTable
-            label="Dice"
+            label={t`Dice`}
             head={["Class", "Dice"]}
             rows={Object.entries(evaluation.dice).map(([name, rate]) => ({
               key: name,
@@ -188,30 +200,34 @@ function Report({ shared }: { shared: SharedReport }) {
         </Section>
       ) : null}
       {reasons.length ? (
-        <Section title="Why reviewers disagreed">
+        <Section title={t`Why reviewers disagreed`}>
           <CountBars rows={reasons} />
         </Section>
       ) : null}
       {opinions.length ? (
-        <Section title="Opinion scores">
+        <Section title={t`Opinion scores`}>
           <CountBars rows={opinions} />
         </Section>
       ) : null}
       <p className="m-0 text-caption text-fg-dim">
-        Shared from Parfocal. This page shows numbers only: no slides, images, names or comments.
+        <Trans>
+          Shared from Parfocal. This page shows numbers only: no slides, images, names or comments.
+        </Trans>
       </p>
     </Shell>
   );
 }
 
 export function SharedReportScreen({ token }: { token: string }) {
+  const { t } = useLingui();
+
   const query = useGetSharedReport(token, { query: { retry: false, refetchOnWindowFocus: false } });
   const shared = okData(query.data);
   if (shared) return <Report shared={shared} />;
   if (!query.error) {
     return (
       <Shell>
-        <Loader label="Loading the report" />
+        <Loader label={t`Loading the report`} />
       </Shell>
     );
   }

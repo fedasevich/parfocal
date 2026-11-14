@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   getGetMySettingLayersQueryKey,
   useAskToJoinWorkspace,
@@ -196,6 +197,8 @@ type Choices = {
 type Props = { step: SetupStep; change: (step: SetupStep) => void };
 
 export function SetupScreen({ step, change }: Props) {
+  const { t } = useLingui();
+
   const me = okData(useGetMe().data);
   const joinable = okData(useListJoinableWorkspaces().data) ?? [];
   const updateMe = useUpdateMe();
@@ -264,10 +267,10 @@ export function SetupScreen({ step, change }: Props) {
 
   const bodies = [
     <>
-      <AuthHeading title="What do you do in Parfocal?">
-        This sets your home page and which walkthrough you see first.
+      <AuthHeading title={t`What do you do in Parfocal?`}>
+        <Trans>This sets your home page and which walkthrough you see first.</Trans>
       </AuthHeading>
-      <div role="radiogroup" aria-label="Role" className="grid grid-cols-3 gap-2.5">
+      <div role="radiogroup" aria-label={t`Role`} className="grid grid-cols-3 gap-2.5">
         {(Object.keys(roles) as Role[]).map((key) => (
           <ChoiceTile
             key={key}
@@ -284,8 +287,12 @@ export function SetupScreen({ step, change }: Props) {
         <span>{roles[u.role].effect}</span>
       </div>
       <AuthField
-        label="Specialties"
-        aside={<span className="text-fg-faint">used to suggest you for review tasks</span>}
+        label={t`Specialties`}
+        aside={
+          <span className="text-fg-faint">
+            <Trans>used to suggest you for review tasks</Trans>
+          </span>
+        }
       >
         <div className="flex flex-wrap gap-2">
           {specialties.map((item) => (
@@ -300,13 +307,13 @@ export function SetupScreen({ step, change }: Props) {
             </FilterChip>
           ))}
           <FilterChip pressed={other} onPressedChange={setOther}>
-            + Other
+            <Trans>+ Other</Trans>
           </FilterChip>
         </div>
         {other ? (
           <Input
-            aria-label="Another specialty"
-            placeholder="Type a specialty, for example Neuropathology"
+            aria-label={t`Another specialty`}
+            placeholder={t`Type a specialty, for example Neuropathology`}
             value={u.otherSpec}
             onChange={(event) => set({ otherSpec: event.target.value })}
             className="mt-2 h-9"
@@ -314,9 +321,9 @@ export function SetupScreen({ step, change }: Props) {
         ) : null}
       </AuthField>
       <div className="grid grid-cols-2 gap-3">
-        <AuthField label="Title">
+        <AuthField label={t`Title`}>
           <Select value={u.title} onValueChange={(value) => set({ title: String(value) })}>
-            <SelectTrigger aria-label="Title" className="h-9 w-full">
+            <SelectTrigger aria-label={t`Title`} className="h-9 w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -328,7 +335,7 @@ export function SetupScreen({ step, change }: Props) {
             </SelectContent>
           </Select>
         </AuthField>
-        <AuthField label="Shown to others as">
+        <AuthField label={t`Shown to others as`}>
           <span className="flex h-9 items-center rounded-ctl border border-line bg-chrome-2 px-2.5">
             <Person
               person={{
@@ -342,10 +349,12 @@ export function SetupScreen({ step, change }: Props) {
       </div>
     </>,
     <>
-      <AuthHeading title="Your workspace">
-        Projects, people and models live in a workspace. Its name and logo show next to Parfocal.
+      <AuthHeading title={t`Your workspace`}>
+        <Trans>
+          Projects, people and models live in a workspace. Its name and logo show next to Parfocal.
+        </Trans>
       </AuthHeading>
-      <div role="radiogroup" aria-label="Workspace" className="grid gap-2">
+      <div role="radiogroup" aria-label={t`Workspace`} className="grid gap-2">
         {joinable.map((item) =>
           item.how === "join" ? (
             <ChoiceOption
@@ -355,7 +364,9 @@ export function SetupScreen({ step, change }: Props) {
               detail={`${item.domain} matches your email · ${item.members} members · ${item.projects} projects`}
               selected={ws === item.id}
               onClick={() => set({ ws: item.id })}
-              end={<StatusTag tone="ok">{ws === item.id ? "You join at once" : "Join"}</StatusTag>}
+              end={
+                <StatusTag tone="ok">{ws === item.id ? t`You join at once` : t`Join`}</StatusTag>
+              }
             />
           ) : (
             <ChoiceOption
@@ -371,7 +382,7 @@ export function SetupScreen({ step, change }: Props) {
               onClick={() => set({ ws: item.id })}
               end={
                 <span className="text-body-sm text-fg-dim">
-                  {item.asked ? "Asked" : ws === item.id ? "Request" : "Ask"}
+                  {item.asked ? t`Asked` : ws === item.id ? t`Request` : t`Ask`}
                 </span>
               }
             />
@@ -383,7 +394,7 @@ export function SetupScreen({ step, change }: Props) {
               <Icon name="plus" />
             </span>
           }
-          title="Create a new workspace"
+          title={t`Create a new workspace`}
           detail="For a lab or a group that is not here yet. You get admin rights to set it up"
           selected={ws === "new"}
           onClick={() => set({ ws: "new" })}
@@ -395,7 +406,9 @@ export function SetupScreen({ step, change }: Props) {
             {logoMarkOf(u.newName) === "" ? (
               <>
                 <Icon name="upload" />
-                <small>Logo</small>
+                <small>
+                  <Trans>Logo</Trans>
+                </small>
               </>
             ) : (
               <WorkspaceLogo
@@ -409,18 +422,18 @@ export function SetupScreen({ step, change }: Props) {
             )}
           </div>
           <div className="grid flex-1 gap-2.5">
-            <AuthField label="Name">
+            <AuthField label={t`Name`}>
               <Input
-                aria-label="Name"
-                placeholder="Lab or group name"
+                aria-label={t`Name`}
+                placeholder={t`Lab or group name`}
                 value={u.newName}
                 onChange={(event) => set({ newName: event.target.value })}
                 className="h-9"
               />
             </AuthField>
-            <AuthField label="New projects start as">
+            <AuthField label={t`New projects start as`}>
               <SegmentedControl
-                aria-label="New projects start as"
+                aria-label={t`New projects start as`}
                 value={u.mode}
                 onValueChange={(value) => set({ mode: value as SetupMode })}
                 options={[
@@ -432,8 +445,8 @@ export function SetupScreen({ step, change }: Props) {
               />
               <span className="text-caption text-fg-dim">
                 {u.mode === "deid"
-                  ? "No patient fields, names are stripped on upload."
-                  : "Patient fields allowed, every view of them is logged."}
+                  ? t`No patient fields, names are stripped on upload.`
+                  : t`Patient fields allowed, every view of them is logged.`}
               </span>
             </AuthField>
             <span className="text-caption text-fg-dim">{creatorNote}</span>
@@ -442,15 +455,18 @@ export function SetupScreen({ step, change }: Props) {
       ) : null}
       {asking ? (
         <Banner inline tone="info">
-          While you wait, the sample project is yours to try things in.
+          <Trans>While you wait, the sample project is yours to try things in.</Trans>
         </Banner>
       ) : null}
     </>,
     <>
-      <AuthHeading title="Start with a project">
-        A project holds slides, AI results and review tasks. Cases and patient details are optional.
+      <AuthHeading title={t`Start with a project`}>
+        <Trans>
+          A project holds slides, AI results and review tasks. Cases and patient details are
+          optional.
+        </Trans>
       </AuthHeading>
-      <div role="radiogroup" aria-label="First project" className="grid grid-cols-3 gap-2.5">
+      <div role="radiogroup" aria-label={t`First project`} className="grid grid-cols-3 gap-2.5">
         {(Object.keys(firsts) as First[]).map((key) => (
           <ChoiceTile
             key={key}
@@ -461,7 +477,11 @@ export function SetupScreen({ step, change }: Props) {
             selected={u.first === key}
             onClick={() => set({ first: key })}
             badge={
-              key === recommended ? <StatusTag tone="accent">Recommended</StatusTag> : undefined
+              key === recommended ? (
+                <StatusTag tone="accent">
+                  <Trans>Recommended</Trans>
+                </StatusTag>
+              ) : undefined
             }
           />
         ))}
@@ -471,10 +491,10 @@ export function SetupScreen({ step, change }: Props) {
       </Banner>
     </>,
     <>
-      <AuthHeading title="How do you move around a slide?">
-        Sets the wheel, drag and key defaults. Change any of it later in Settings.
+      <AuthHeading title={t`How do you move around a slide?`}>
+        <Trans>Sets the wheel, drag and key defaults. Change any of it later in Settings.</Trans>
       </AuthHeading>
-      <div role="radiogroup" aria-label="Input device" className="grid grid-cols-6 gap-2">
+      <div role="radiogroup" aria-label={t`Input device`} className="grid grid-cols-6 gap-2">
         {devices.map((item) => (
           <ChoiceIcon
             key={item.key}
@@ -494,9 +514,9 @@ export function SetupScreen({ step, change }: Props) {
           </span>
         ))}
       </div>
-      <AuthField label="Viewer you are used to">
+      <AuthField label={t`Viewer you are used to`}>
         <SegmentedControl
-          aria-label="Viewer you are used to"
+          aria-label={t`Viewer you are used to`}
           value={u.keys}
           onValueChange={(value) => set({ keys: String(value) })}
           options={viewers.map((item) => ({ value: item, label: item }))}
@@ -505,13 +525,13 @@ export function SetupScreen({ step, change }: Props) {
         />
         <span className="text-caption text-fg-dim">
           {u.keys === "Parfocal"
-            ? "Parfocal keys, shown on every button."
-            : `Keys follow ${u.keys} where they can. Every key can be changed later.`}
+            ? t`Parfocal keys, shown on every button.`
+            : t`Keys follow ${u.keys} where they can. Every key can be changed later.`}
         </span>
       </AuthField>
-      <AuthField label="Theme">
+      <AuthField label={t`Theme`}>
         <SegmentedControl
-          aria-label="Theme"
+          aria-label={t`Theme`}
           value={u.theme}
           onValueChange={(value) => {
             const theme = value as ThemeChoice;
@@ -530,7 +550,7 @@ export function SetupScreen({ step, change }: Props) {
       <button
         type="button"
         onClick={() => setZoom(!zoom)}
-        title="Click to zoom in and out"
+        title={t`Click to zoom in and out`}
         className={cn(
           "relative h-42.5 cursor-zoom-in rounded-xl border-0 bg-center p-0 transition-[background-size] duration-(--motion-slow)",
           zoom ? "bg-[length:400%] cursor-zoom-out" : "bg-cover",
@@ -539,8 +559,8 @@ export function SetupScreen({ step, change }: Props) {
       >
         <span className="absolute top-3 left-3 rounded-lg bg-black/60 px-2.5 py-1 text-body-sm text-white">
           {zoom
-            ? "Zoomed to 10×. Click again to zoom out."
-            : `Try it. Click to zoom, as with ${device?.keys[1]?.[1].toLowerCase() ?? "the wheel"}.`}
+            ? t`Zoomed to 10×. Click again to zoom out.`
+            : t`Try it. Click to zoom, as with ${device?.keys[1]?.[1].toLowerCase() ?? "the wheel"}.`}
         </span>
       </button>
     </>,
@@ -656,9 +676,17 @@ export function SetupScreen({ step, change }: Props) {
           </Banner>
         ) : null}
         <div className="mt-1.5 flex items-center gap-2.5 border-t border-line pt-4.5">
-          {last ? null : <AuthLink onClick={() => go(index + 1)}>Skip this step</AuthLink>}
+          {last ? null : (
+            <AuthLink onClick={() => go(index + 1)}>
+              <Trans>Skip this step</Trans>
+            </AuthLink>
+          )}
           <span className="flex-1" />
-          {index > 0 ? <Button onClick={() => go(index - 1)}>Back</Button> : null}
+          {index > 0 ? (
+            <Button onClick={() => go(index - 1)}>
+              <Trans>Back</Trans>
+            </Button>
+          ) : null}
           {last ? (
             <Button variant="primary" size="lg" onClick={() => void finish()}>
               {finishLabel}
@@ -692,6 +720,8 @@ function DoneStep({
   ws: "joined" | "asked" | "new";
   wsName: string;
 }) {
+  const { t } = useLingui();
+
   const workspaceRow: [IconName, string, boolean, string?] =
     ws === "joined"
       ? ["check", `Joined ${wsName}`, true]
@@ -735,10 +765,11 @@ function DoneStep({
   ];
   return (
     <>
-      <AuthHeading title={`You're set, ${firstName}`}>
-        Your home keeps a short checklist until each part has been tried once. {roles[role].effect}
+      <AuthHeading title={t`You're set, ${firstName}`}>
+        <Trans>Your home keeps a short checklist until each part has been tried once.</Trans>{" "}
+        {roles[role].effect}
       </AuthHeading>
-      <ul aria-label="Getting started" className="m-0 grid list-none gap-3 p-0">
+      <ul aria-label={t`Getting started`} className="m-0 grid list-none gap-3 p-0">
         {rows.map(([icon, text, ok, note]) => (
           <li
             key={text}

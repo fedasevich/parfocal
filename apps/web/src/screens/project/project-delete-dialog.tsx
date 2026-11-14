@@ -1,3 +1,4 @@
+import { Trans } from "@lingui/react/macro";
 import { deleteProject, type Project } from "@parfocal/api-client";
 import { Input } from "@parfocal/ui/components/input";
 import { SmallModal } from "@parfocal/ui/components/small-modal";
@@ -80,7 +81,9 @@ export function ProjectDeleteDialog({
       <div className="grid gap-3 text-body-sm text-fg">
         {lines.length > 0 ? (
           <div className="grid gap-1">
-            <span className="text-fg-dim">Hidden with it</span>
+            <span className="text-fg-dim">
+              <Trans>Hidden with it</Trans>
+            </span>
             <ul className="m-0 grid list-disc gap-0.5 pl-5" data-testid="project-delete-goes">
               {lines.map((line) => (
                 <li key={line}>{line}</li>
@@ -91,7 +94,7 @@ export function ProjectDeleteDialog({
         <p className="m-0 text-fg-dim">{keptNote}</p>
         <div className="grid gap-1 text-fg-dim">
           <label htmlFor="project-delete-name">
-            Type <b className="text-fg">{project.name}</b> to confirm
+            <Trans>Type</Trans> <b className="text-fg">{project.name}</b> <Trans>to confirm</Trans>
           </label>
           <Input
             id="project-delete-name"

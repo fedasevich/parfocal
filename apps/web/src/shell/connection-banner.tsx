@@ -1,9 +1,12 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Banner } from "@parfocal/ui/components/banner";
 import { Button } from "@parfocal/ui/components/button";
 import { retryNow, useConnection } from "./connection.ts";
 import { showUndoToast } from "./undo-toasts.tsx";
 
 export function ConnectionBanner({ pinned = false }: { pinned?: boolean }) {
+  const { t } = useLingui();
+
   const { online, retrying } = useConnection();
   if (online && !pinned) return null;
   return (
@@ -16,12 +19,15 @@ export function ConnectionBanner({ pinned = false }: { pinned?: boolean }) {
           disabled={retrying}
           onClick={() => (online ? showUndoToast({ message: "Still offline" }) : void retryNow())}
         >
-          Retry now
+          <Trans>Retry now</Trans>
         </Button>
       }
     >
-      <b>Connection lost.</b> Saving is paused and nothing you typed is lost.{" "}
-      {retrying ? "Trying again..." : "Retrying by itself."}
+      <b>
+        <Trans>Connection lost.</Trans>
+      </b>{" "}
+      <Trans>Saving is paused and nothing you typed is lost.</Trans>{" "}
+      {retrying ? t`Trying again...` : t`Retrying by itself.`}
     </Banner>
   );
 }

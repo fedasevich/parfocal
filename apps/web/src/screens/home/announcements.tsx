@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   type Announcement,
   type AnnouncementKind,
@@ -42,6 +43,8 @@ function useRefreshAnnouncements() {
 }
 
 function PostDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { t } = useLingui();
+
   const create = useCreateAnnouncement();
   const refresh = useRefreshAnnouncements();
   const [kind, setKind] = useState<AnnouncementKind>("change");
@@ -66,7 +69,7 @@ function PostDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
           onClose();
         }
       }}
-      title="Post an announcement"
+      title={t`Post an announcement`}
       subtitle="Everyone in this workspace sees it on Home."
       width={560}
       primaryLabel="Post"
@@ -101,7 +104,7 @@ function PostDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
     >
       <div className="grid gap-1.5">
         <span id="announcement-kind" className="text-caption font-semibold text-fg-dim">
-          Kind
+          <Trans>Kind</Trans>
         </span>
         <SegmentedControl
           aria-labelledby="announcement-kind"
@@ -114,19 +117,19 @@ function PostDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
         </small>
       </div>
       <FormField
-        label="Text"
+        label={t`Text`}
         error={tried ? problem : undefined}
         count={`${text.trim().length} of ${maxLength}`}
       >
         <TextFieldInput
-          placeholder="What do you want people to know?"
+          placeholder={t`What do you want people to know?`}
           value={text}
           onChange={(event) => setText(event.target.value)}
         />
       </FormField>
       <div className="grid gap-1.5">
         <span id="announcement-lasts" className="text-caption font-semibold text-fg-dim">
-          Stays for
+          <Trans>Stays for</Trans>
         </span>
         <SegmentedControl
           aria-labelledby="announcement-lasts"
@@ -148,6 +151,8 @@ function AnnouncementRow({
   firstWeek: boolean;
   canPost: boolean;
 }) {
+  const { t } = useLingui();
+
   const today = now();
   const personOf = usePeople();
   const end = useEndAnnouncement();
@@ -164,13 +169,13 @@ function AnnouncementRow({
       {canPost ? (
         <Button
           variant="link"
-          aria-label={`End announcement: ${item.text}`}
+          aria-label={t`End announcement: ${item.text}`}
           disabled={end.isPending}
           onClick={() =>
             end.mutate({ announcementId: item.id }, { onSuccess: () => void refresh() })
           }
         >
-          End
+          <Trans>End</Trans>
         </Button>
       ) : null}
     </div>
@@ -186,14 +191,16 @@ export function Announcements({
   firstWeek: boolean;
   canPost: boolean;
 }) {
+  const { t } = useLingui();
+
   const [posting, setPosting] = useState(false);
   return (
     <SideCard
-      title="Announcements"
+      title={t`Announcements`}
       end={
         canPost ? (
           <Button variant="link" onClick={() => setPosting(true)}>
-            Post
+            <Trans>Post</Trans>
           </Button>
         ) : null
       }
@@ -202,7 +209,9 @@ export function Announcements({
         <AnnouncementRow key={item.id} item={item} firstWeek={firstWeek} canPost={canPost} />
       ))}
       {items.length === 0 ? (
-        <span className="text-body-sm text-fg-dim">Nothing to announce right now.</span>
+        <span className="text-body-sm text-fg-dim">
+          <Trans>Nothing to announce right now.</Trans>
+        </span>
       ) : null}
       {canPost ? <PostDialog open={posting} onClose={() => setPosting(false)} /> : null}
     </SideCard>

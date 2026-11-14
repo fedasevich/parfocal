@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   getListTenantMembersQueryKey,
   getListWorkspaceAccessRequestsQueryKey,
@@ -33,6 +34,8 @@ export function JoinRequestsZone({
   notify: Notify;
   opened?: string | undefined;
 }) {
+  const { t } = useLingui();
+
   const asks = okData(useListWorkspaceAccessRequests().data);
   const queryClient = useQueryClient();
   const approve = useApproveWorkspaceAccessRequest();
@@ -67,20 +70,28 @@ export function JoinRequestsZone({
     );
   return (
     <Zone
-      title="Join requests"
+      title={t`Join requests`}
       sub="People from your email domain who asked to join. They join as reviewers, and you can raise their role later."
-      end={<span className="text-body-sm text-fg-dim">{asks.length} waiting</span>}
+      end={
+        <span className="text-body-sm text-fg-dim">
+          <Trans>{asks.length} waiting</Trans>
+        </span>
+      }
     >
       {asks.length === 0 ? (
         <p className="m-0 text-body-sm text-fg-dim">
-          This ask is already answered. No one else is waiting.
+          <Trans>This ask is already answered. No one else is waiting.</Trans>
         </p>
       ) : (
-        <Table className={tableClass} aria-label="Join requests">
+        <Table className={tableClass} aria-label={t`Join requests`}>
           <TableHeader>
             <TableRow>
-              <TableHead>Person</TableHead>
-              <TableHead>Title</TableHead>
+              <TableHead>
+                <Trans>Person</Trans>
+              </TableHead>
+              <TableHead>
+                <Trans>Title</Trans>
+              </TableHead>
               <TableHead />
             </TableRow>
           </TableHeader>
@@ -97,24 +108,30 @@ export function JoinRequestsZone({
                   <TableCell>
                     <Person person={toPersonInfo(ask)} size={28} sub={askedText(ask)} />
                   </TableCell>
-                  <TableCell>{ask.title ?? <span className="text-fg-faint">None</span>}</TableCell>
+                  <TableCell>
+                    {ask.title ?? (
+                      <span className="text-fg-faint">
+                        <Trans>None</Trans>
+                      </span>
+                    )}
+                  </TableCell>
                   <TableCell>
                     <span className="flex items-center justify-end gap-1.5">
                       <Button
                         size="sm"
                         variant="ghost"
-                        aria-label={`Decline ${ask.display_name}`}
+                        aria-label={t`Decline ${ask.display_name}`}
                         onClick={() => declineAsk(ask)}
                       >
-                        Decline
+                        <Trans>Decline</Trans>
                       </Button>
                       <Button
                         size="sm"
                         variant="primary"
-                        aria-label={`Approve ${ask.display_name}`}
+                        aria-label={t`Approve ${ask.display_name}`}
                         onClick={() => approveAsk(ask)}
                       >
-                        Approve
+                        <Trans>Approve</Trans>
                       </Button>
                     </span>
                   </TableCell>

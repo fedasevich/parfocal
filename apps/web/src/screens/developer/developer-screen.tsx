@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import {
   DeveloperDrawer,
@@ -150,12 +151,14 @@ const confidenceItems: Readonly<Record<string, OutlineModeChoice | null>> = {
 };
 
 function ConfidenceDisplay() {
+  const { t } = useLingui();
+
   const [mode, setMode] = useOutlineMode();
   const shown =
     Object.entries(confidenceItems).find(([, choice]) => choice === mode)?.[0] ?? "Fade";
   return (
     <Pick
-      label="Confidence display"
+      label={t`Confidence display`}
       value={shown}
       items={Object.keys(confidenceItems)}
       onChange={(item) => {
@@ -216,6 +219,8 @@ export function DeveloperScreen({
   onRenderer,
   onClose,
 }: DeveloperScreenProps) {
+  const { t } = useLingui();
+
   const [values, setValues] = useState<Values>({});
   const lab = useLabSettings();
   const text = (key: string, fallback: string) => {
@@ -269,19 +274,21 @@ export function DeveloperScreen({
     renderer: () => (
       <>
         <DevZone
-          title="Renderer"
+          title={t`Renderer`}
           end={
             viv ? (
-              <StatusTag tone="ok">Default</StatusTag>
+              <StatusTag tone="ok">
+                <Trans>Default</Trans>
+              </StatusTag>
             ) : (
               <Button variant="link" size="xs" onClick={() => onRenderer("viv")}>
-                Back to Viv
+                <Trans>Back to Viv</Trans>
               </Button>
             )
           }
         >
           <Segments
-            label="Renderer"
+            label={t`Renderer`}
             value={renderer}
             pairs={[
               ["viv", "Viv · WebGL2"],
@@ -292,7 +299,7 @@ export function DeveloperScreen({
           />
           <span className="text-body-sm leading-[1.45] text-fg-dim">{rendererHints[renderer]}</span>
           <DevRow
-            label="deck.gl backend"
+            label={t`deck.gl backend`}
             disabled={renderer !== "deck"}
             {...(renderer === "deck" ? {} : { hint: "Only for deck.gl 9.4" })}
           >
@@ -308,9 +315,13 @@ export function DeveloperScreen({
           </DevRow>
         </DevZone>
         <DevZone
-          title="Viv switches"
+          title={t`Viv switches`}
           off={!viv}
-          end={<StatusTag tone={viv ? "accent" : "neutral"}>Viv only</StatusTag>}
+          end={
+            <StatusTag tone={viv ? "accent" : "neutral"}>
+              <Trans>Viv only</Trans>
+            </StatusTag>
+          }
           note={viv ? undefined : "Pick Viv to change these."}
         >
           {tog("vivzarr", "Read Zarr on the main thread", false, "Off decodes in a worker")}
@@ -319,12 +330,16 @@ export function DeveloperScreen({
           {tog("earcut", "Earcut triangulation", false, "For polygons with holes")}
         </DevZone>
         <DevZone
-          title="Culling, sampling and motion"
+          title={t`Culling, sampling and motion`}
           off={!gpu}
-          end={<StatusTag tone={gpu ? "accent" : "neutral"}>WebGPU only</StatusTag>}
+          end={
+            <StatusTag tone={gpu ? "accent" : "neutral"}>
+              <Trans>WebGPU only</Trans>
+            </StatusTag>
+          }
           note={gpu ? undefined : "Viv loads its own tiles, so these wait for the WebGPU renderer."}
         >
-          <DevRow label="Culling">
+          <DevRow label={t`Culling`}>
             {seg(
               "cull",
               "Culling",
@@ -336,7 +351,7 @@ export function DeveloperScreen({
               "gpu",
             )}
           </DevRow>
-          <DevRow label="Interpolation">
+          <DevRow label={t`Interpolation`}>
             {seg(
               "interp",
               "Interpolation",
@@ -356,7 +371,7 @@ export function DeveloperScreen({
           )}
           {tog("vector", "Show the motion vector", false)}
         </DevZone>
-        <DevZone title="Mouse wheel" note="Overrides the doctor's Settings while testing.">
+        <DevZone title={t`Mouse wheel`} note="Overrides the doctor's Settings while testing.">
           {seg(
             "wheel",
             "Mouse wheel",
@@ -401,8 +416,8 @@ export function DeveloperScreen({
       );
       return (
         <>
-          <DevZone title="Open a slide">
-            <DevRow label="From">
+          <DevZone title={t`Open a slide`}>
+            <DevRow label={t`From`}>
               {seg(
                 "src",
                 "From",
@@ -416,36 +431,38 @@ export function DeveloperScreen({
             </DevRow>
             {source === "url" ? (
               <DevRow
-                label="Path or URL"
+                label={t`Path or URL`}
                 hint="Local paths, HTTPS with range requests, S3 and Azure"
               >
                 <span className="flex w-full gap-2">
                   <Input
-                    aria-label="Path or URL"
+                    aria-label={t`Path or URL`}
                     className="font-mono"
                     defaultValue="s3://fnvltava-scans/sentinel/tumor_090.tif"
                   />
-                  <Button>Open</Button>
+                  <Button>
+                    <Trans>Open</Trans>
+                  </Button>
                 </span>
               </DevRow>
             ) : source === "local" ? (
-              <DevRow label="File" hint="Opens in this browser only. Nothing is uploaded.">
+              <DevRow label={t`File`} hint="Opens in this browser only. Nothing is uploaded.">
                 <Button>
                   <Icon name="upload" />
-                  Choose a file
+                  <Trans>Choose a file</Trans>
                 </Button>
               </DevRow>
             ) : (
-              <DevRow label="Address" hint="Pick another sample below">
+              <DevRow label={t`Address`} hint="Pick another sample below">
                 <Input
-                  aria-label="Address"
+                  aria-label={t`Address`}
                   readOnly
                   className="font-mono"
                   value="https://uk1s3.embassy.ebi.ac.uk/idr/zarr/v0.4/idr0062A/6001240.zarr"
                 />
               </DevRow>
             )}
-            <DevRow label="Paged loading" hint="Auto pages annotations above 200,000 nuclei">
+            <DevRow label={t`Paged loading`} hint="Auto pages annotations above 200,000 nuclei">
               {seg(
                 "paged",
                 "Paged loading",
@@ -459,44 +476,48 @@ export function DeveloperScreen({
             </DevRow>
           </DevZone>
           <DevZone
-            title="Sample slides"
-            end={<span className="text-caption text-fg-faint">20 samples</span>}
+            title={t`Sample slides`}
+            end={
+              <span className="text-caption text-fg-faint">
+                <Trans>20 samples</Trans>
+              </span>
+            }
           >
             <div
               role="radiogroup"
-              aria-label="Sample slides"
+              aria-label={t`Sample slides`}
               className="grid grid-cols-2 gap-x-3 gap-y-1"
             >
               <div className="col-span-full px-2 pt-2 pb-0.5 text-caption font-semibold text-fg-dim">
-                Formats
+                <Trans>Formats</Trans>
               </div>
               {sampleSlides.map(item)}
               <div className="col-span-full px-2 pt-2 pb-0.5 text-caption font-semibold text-fg-dim">
-                Big slides
+                <Trans>Big slides</Trans>
               </div>
               {bigSlides.map(item)}
             </div>
           </DevZone>
           <DevZone
-            title="Files"
+            title={t`Files`}
             note="Annotations and reviews on this slide, for tests and fixtures."
           >
             <div className="flex flex-wrap gap-2">
               <Button size="sm">
                 <Icon name="download" />
-                Save JSON
+                <Trans>Save JSON</Trans>
               </Button>
               <Button size="sm">
                 <Icon name="download" />
-                GeoJSON and .fgb
+                <Trans>GeoJSON and .fgb</Trans>
               </Button>
               <Button size="sm">
                 <Icon name="download" />
-                Review CSV
+                <Trans>Review CSV</Trans>
               </Button>
               <Button size="sm">
                 <Icon name="upload" />
-                Import
+                <Trans>Import</Trans>
               </Button>
             </div>
           </DevZone>
@@ -506,12 +527,12 @@ export function DeveloperScreen({
     annot: () => (
       <>
         <DevZone
-          title="Synthetic nuclei"
+          title={t`Synthetic nuclei`}
           end={nucleiChip ? <StatusTag tone="accent">{nucleiChip}</StatusTag> : null}
         >
-          <DevRow label="Count" hint="Off, 10k, 100k, 500k or 1M">
+          <DevRow label={t`Count`} hint="Off, 10k, 100k, 500k or 1M">
             <Pick
-              label="Count"
+              label={t`Count`}
               value={syntheticCounts.find((entry) => entry.key === lab.nuclei)?.label ?? ""}
               items={syntheticCounts.map((entry) => entry.label)}
               onChange={(next) =>
@@ -521,13 +542,13 @@ export function DeveloperScreen({
           </DevRow>
           {live(`${nucleiCount.toLocaleString("en-US")} nuclei queued`)}
         </DevZone>
-        <DevZone title="Level of detail">
+        <DevZone title={t`Level of detail`}>
           <DevRow
-            label="Mode"
+            label={t`Mode`}
             hint="Off, fade, dots, density or tiered. Starts from 500 shapes. Density under 2 px, dots under 7 px, fade from 2 to 7 px."
           >
             <Pick
-              label="Mode"
+              label={t`Mode`}
               value={detailLabel(lab.detailLevel)}
               items={detailItems}
               onChange={(next) =>
@@ -539,12 +560,12 @@ export function DeveloperScreen({
               }
             />
           </DevRow>
-          <DevRow label="Fill opacity">
-            <Level label="Fill opacity" value={35} text="35%" />
+          <DevRow label={t`Fill opacity`}>
+            <Level label={t`Fill opacity`} value={35} text="35%" />
           </DevRow>
         </DevZone>
         <DevZone
-          title="CAMELYON16 annotations"
+          title={t`CAMELYON16 annotations`}
           note="Real tumor outlines from CAMELYON16, drawn over the slide."
         >
           <div className="flex flex-wrap gap-2">
@@ -554,12 +575,12 @@ export function DeveloperScreen({
               </Button>
             ))}
             <Button size="sm" variant="ghost">
-              Clear
+              <Trans>Clear</Trans>
             </Button>
           </div>
           {live("T009 loaded · 14 rings · 2,210 vertices · 61 KB")}
         </DevZone>
-        <DevZone title="Channels">
+        <DevZone title={t`Channels`}>
           <div className="grid grid-cols-2 gap-x-3 gap-y-2">
             {[
               ["Channel 0", "ch0"],
@@ -576,9 +597,9 @@ export function DeveloperScreen({
       </>
     ),
     heatmap: () => (
-      <DevZone title="Heatmap">
+      <DevZone title={t`Heatmap`}>
         {tog("heat", "Show the heatmap", true)}
-        <DevRow label="Source">
+        <DevRow label={t`Source`}>
           {seg(
             "hsrc",
             "Source",
@@ -589,7 +610,7 @@ export function DeveloperScreen({
             "tumor",
           )}
         </DevRow>
-        <DevRow label="Colormap">
+        <DevRow label={t`Colormap`}>
           {seg(
             "cmap",
             "Colormap",
@@ -607,13 +628,13 @@ export function DeveloperScreen({
             }}
           />
         </DevRow>
-        <DevRow label="Opacity">
-          <Level label="Opacity" value={70} text="0.70" />
+        <DevRow label={t`Opacity`}>
+          <Level label={t`Opacity`} value={70} text="0.70" />
         </DevRow>
-        <DevRow label="Threshold">
-          <Level label="Threshold" value={8} text="0.08" />
+        <DevRow label={t`Threshold`}>
+          <Level label={t`Threshold`} value={8} text="0.08" />
         </DevRow>
-        <DevRow label="Grid">
+        <DevRow label={t`Grid`}>
           {seg(
             "grid",
             "Grid",
@@ -625,23 +646,25 @@ export function DeveloperScreen({
             "256",
           )}
         </DevRow>
-        <DevRow label="Synthetic field" hint="A new random field for the synthetic source">
+        <DevRow label={t`Synthetic field`} hint="A new random field for the synthetic source">
           {text("hsrc", "tumor") === "syn" ? (
             <StatusTag tone="accent">{fieldChip}</StatusTag>
           ) : null}
-          <Button size="sm">Reseed</Button>
+          <Button size="sm">
+            <Trans>Reseed</Trans>
+          </Button>
         </DevRow>
       </DevZone>
     ),
     models: () => (
       <>
-        <DevZone title="Segmentation model">
+        <DevZone title={t`Segmentation model`}>
           <DevRow
-            label="Provider"
+            label={t`Provider`}
             hint="PathoSAM ViT-B, SlimSAM-77, flood fill, MONAI NuClick or watershed"
           >
             <Pick
-              label="Provider"
+              label={t`Provider`}
               value="PathoSAM ViT-B"
               items={["PathoSAM ViT-B", "SlimSAM-77", "Flood fill", "MONAI NuClick", "Watershed"]}
             />
@@ -649,13 +672,13 @@ export function DeveloperScreen({
           <ProgressBar
             value={100}
             tone="ok"
-            label="PathoSAM ViT-B weights · 358 MB"
+            label={t`PathoSAM ViT-B weights · 358 MB`}
             valueText="Cached"
           />
-          <ProgressBar value={62} label="SlimSAM-77 weights · 38 MB" valueText="62%" />
+          <ProgressBar value={62} label={t`SlimSAM-77 weights · 38 MB`} valueText="62%" />
         </DevZone>
-        <DevZone title="Auto segmentation">
-          <DevRow label="Intent">
+        <DevZone title={t`Auto segmentation`}>
+          <DevRow label={t`Intent`}>
             {seg(
               "intent",
               "Intent",
@@ -668,7 +691,7 @@ export function DeveloperScreen({
               "nuclei",
             )}
           </DevRow>
-          <DevRow label="Quality">
+          <DevRow label={t`Quality`}>
             {seg(
               "q",
               "Quality",
@@ -679,39 +702,46 @@ export function DeveloperScreen({
               "best",
             )}
           </DevRow>
-          <DevRow label="SAM batch size" hint="Auto picks it from free GPU memory">
+          <DevRow label={t`SAM batch size`} hint="Auto picks it from free GPU memory">
             <Pick
-              label="SAM batch size"
+              label={t`SAM batch size`}
               value="Auto, now 8"
               items={["Auto, now 8", "1", "4", "8", "16"]}
             />
           </DevRow>
           {tog("hover", "Hover preview", true, "Shows the outline before you click")}
           {tog("seeds", "Seeds from a detector", true)}
-          <DevRow label="Detector" hint="PathoSAM AIS, HoVer-Net, VISTA-2D or U-Net">
+          <DevRow label={t`Detector`} hint="PathoSAM AIS, HoVer-Net, VISTA-2D or U-Net">
             <Pick
-              label="Detector"
+              label={t`Detector`}
               value="PathoSAM AIS"
               items={["PathoSAM AIS", "HoVer-Net", "VISTA-2D", "U-Net"]}
             />
           </DevRow>
         </DevZone>
-        <DevZone title="While moving">
+        <DevZone title={t`While moving`}>
           {tog("mpause", "Pause models while moving", true, "Resumes 200 ms after the slide stops")}
           {tog("prewarm", "Prewarm when idle", true, "Starts after 350 ms without input")}
         </DevZone>
-        <DevZone title="MONAI server" end={<StatusTag tone="ok">Connected · 3 models</StatusTag>}>
-          <DevRow label="Address">
-            <Input aria-label="MONAI address" className="font-mono" defaultValue="/monai" />
+        <DevZone
+          title={t`MONAI server`}
+          end={
+            <StatusTag tone="ok">
+              <Trans>Connected · 3 models</Trans>
+            </StatusTag>
+          }
+        >
+          <DevRow label={t`Address`}>
+            <Input aria-label={t`MONAI address`} className="font-mono" defaultValue="/monai" />
           </DevRow>
-          <DevRow label="Model">
+          <DevRow label={t`Model`}>
             <Pick
-              label="Model"
+              label={t`Model`}
               value="nuclick"
               items={["nuclick", "segmentation", "classification"]}
             />
           </DevRow>
-          <DevRow label="Device">
+          <DevRow label={t`Device`}>
             {seg(
               "mdev",
               "Device",
@@ -723,8 +753,12 @@ export function DeveloperScreen({
               "auto",
             )}
           </DevRow>
-          <DevRow label="Smallest outline">
-            <Input aria-label="Smallest outline" className="w-28 font-mono" defaultValue="40 px²" />
+          <DevRow label={t`Smallest outline`}>
+            <Input
+              aria-label={t`Smallest outline`}
+              className="w-28 font-mono"
+              defaultValue="40 px²"
+            />
           </DevRow>
           {tog(
             "pixels",
@@ -737,8 +771,8 @@ export function DeveloperScreen({
     ),
     typing: () => (
       <>
-        <DevZone title="Cell typing">
-          <DevRow label="Typer">
+        <DevZone title={t`Cell typing`}>
+          <DevRow label={t`Typer`}>
             {seg(
               "typer",
               "Typer",
@@ -759,18 +793,22 @@ export function DeveloperScreen({
             ]}
           />
           <div className="flex flex-wrap gap-2">
-            <Button size="sm">Teach MONAI</Button>
-            <Button size="sm">Forget learned</Button>
+            <Button size="sm">
+              <Trans>Teach MONAI</Trans>
+            </Button>
+            <Button size="sm">
+              <Trans>Forget learned</Trans>
+            </Button>
           </div>
         </DevZone>
         <DevZone
-          title="Confidence"
+          title={t`Confidence`}
           note="Doctors pick wording and outlines in Settings. These override them while testing."
         >
-          <DevRow label="Display" hint="Off, mark, fade, bands or map">
+          <DevRow label={t`Display`} hint="Off, mark, fade, bands or map">
             <ConfidenceDisplay />
           </DevRow>
-          <DevRow label="Words">
+          <DevRow label={t`Words`}>
             {seg(
               "words",
               "Words",
@@ -782,20 +820,24 @@ export function DeveloperScreen({
               "plain",
             )}
           </DevRow>
-          <DevRow label="Tumor cutoff">
-            <Input aria-label="Tumor cutoff" className="w-28 font-mono" defaultValue="0.20" />
+          <DevRow label={t`Tumor cutoff`}>
+            <Input aria-label={t`Tumor cutoff`} className="w-28 font-mono" defaultValue="0.20" />
           </DevRow>
-          <DevRow label="Calibration">
-            <StatusTag tone="ok">Calibrated · ECE 0.031</StatusTag>
-            <DevStatus>sure 14,102 · likely 3,410 · unsure 726</DevStatus>
+          <DevRow label={t`Calibration`}>
+            <StatusTag tone="ok">
+              <Trans>Calibrated · ECE 0.031</Trans>
+            </StatusTag>
+            <DevStatus>
+              <Trans>sure 14,102 · likely 3,410 · unsure 726</Trans>
+            </DevStatus>
           </DevRow>
         </DevZone>
       </>
     ),
     job: () => (
       <>
-        <DevZone title="Whole-slide job">
-          <DevRow label="Scope">
+        <DevZone title={t`Whole-slide job`}>
+          <DevRow label={t`Scope`}>
             {seg(
               "scope",
               "Scope",
@@ -807,7 +849,7 @@ export function DeveloperScreen({
               "slide",
             )}
           </DevRow>
-          <DevRow label="Order">
+          <DevRow label={t`Order`}>
             {seg(
               "order",
               "Order",
@@ -818,7 +860,7 @@ export function DeveloperScreen({
               "tumor",
             )}
           </DevRow>
-          <DevRow label="Quality">
+          <DevRow label={t`Quality`}>
             {seg(
               "jq",
               "Job quality",
@@ -829,7 +871,7 @@ export function DeveloperScreen({
               "best",
             )}
           </DevRow>
-          <DevRow label="Views" hint="Eight averages rotated and flipped copies of each tile">
+          <DevRow label={t`Views`} hint="Eight averages rotated and flipped copies of each tile">
             {seg(
               "views",
               "Views",
@@ -840,39 +882,47 @@ export function DeveloperScreen({
               "8",
             )}
           </DevRow>
-          <DevRow label="Model">
+          <DevRow label={t`Model`}>
             <Pick
-              label="Job model"
+              label={t`Job model`}
               value="PathoSAM + HoVer-NeXt"
               items={["PathoSAM + HoVer-NeXt", "PathoSAM", "HoVer-NeXt"]}
             />
           </DevRow>
-          <DevRow label="Typer">
-            <Pick label="Job typer" value="HoVer-NeXt" items={["HoVer-NeXt", "MONAI", "Learned"]} />
+          <DevRow label={t`Typer`}>
+            <Pick
+              label={t`Job typer`}
+              value="HoVer-NeXt"
+              items={["HoVer-NeXt", "MONAI", "Learned"]}
+            />
           </DevRow>
           <div className="flex flex-wrap gap-2">
             <Button size="sm" variant="primary">
-              Start
+              <Trans>Start</Trans>
             </Button>
-            <Button size="sm">Cancel</Button>
+            <Button size="sm">
+              <Trans>Cancel</Trans>
+            </Button>
             <Button size="sm">
               <Icon name="upload" />
-              Load a result
+              <Trans>Load a result</Trans>
             </Button>
           </div>
         </DevZone>
-        <DevZone title="Running" highlight>
-          <ProgressBar value={38} label="Tile 712 of 1,880, tumor first" valueText="38%" />
-          <DevStatus>41,220 cells so far · 3.1 tiles a second · about 6 min left</DevStatus>
+        <DevZone title={t`Running`} highlight>
+          <ProgressBar value={38} label={t`Tile 712 of 1,880, tumor first`} valueText="38%" />
+          <DevStatus>
+            <Trans>41,220 cells so far · 3.1 tiles a second · about 6 min left</Trans>
+          </DevStatus>
         </DevZone>
       </>
     ),
     bench: () => <BenchSection route={route} />,
     hud: () => (
       <>
-        <DevZone title="HUD">
+        <DevZone title={t`HUD`}>
           {tog("hud", "Show the HUD", true, "Refreshes every 250 ms")}
-          <DevRow label="Corner">
+          <DevRow label={t`Corner`}>
             {seg(
               "corner",
               "Corner",
@@ -884,7 +934,7 @@ export function DeveloperScreen({
               "tl",
             )}
           </DevRow>
-          <DevRow label="Frame probe">
+          <DevRow label={t`Frame probe`}>
             {seg(
               "probe",
               "Frame probe",
@@ -897,13 +947,17 @@ export function DeveloperScreen({
             )}
           </DevRow>
         </DevZone>
-        <DevZone title="Readouts on the Viv route">
+        <DevZone title={t`Readouts on the Viv route`}>
           <HudReadouts boxes={vivReadouts} />
         </DevZone>
         <DevZone
-          title="Only on the WebGPU route"
+          title={t`Only on the WebGPU route`}
           off={!gpu}
-          end={<StatusTag tone={gpu ? "accent" : "neutral"}>WebGPU only</StatusTag>}
+          end={
+            <StatusTag tone={gpu ? "accent" : "neutral"}>
+              <Trans>WebGPU only</Trans>
+            </StatusTag>
+          }
         >
           <HudReadouts boxes={webgpuReadouts} />
         </DevZone>
@@ -912,24 +966,28 @@ export function DeveloperScreen({
     ref: () => (
       <>
         <DevZone
-          title="URL parameters"
+          title={t`URL parameters`}
           note={
             <>
-              Add them to the viewer address, for example{" "}
-              <code className="font-mono">?lab&amp;renderer=viv&amp;nuclei=100k</code>.
+              <Trans>Add them to the viewer address, for example</Trans>{" "}
+              <code className="font-mono">
+                <Trans>?lab&amp;renderer=viv&amp;nuclei=100k</Trans>
+              </code>
+              .
             </>
           }
         >
           <ReferenceTable rows={urlParameters} />
         </DevZone>
-        <DevZone title="Model bench page">
+        <DevZone title={t`Model bench page`}>
           <ReferenceTable rows={benchParameters} />
         </DevZone>
         <DevZone
-          title="Debug handle"
+          title={t`Debug handle`}
           note={
             <>
-              In the browser console as <code className="font-mono">{debugHandleName}</code>.
+              <Trans>In the browser console as</Trans>{" "}
+              <code className="font-mono">{debugHandleName}</code>.
             </>
           }
         >
@@ -944,7 +1002,9 @@ export function DeveloperScreen({
     <main className="relative h-screen overflow-hidden bg-canvas">
       <header className="flex h-11 items-center gap-2 border-b border-line bg-chrome px-3 text-body-sm text-fg-dim">
         <Icon name="parfocal" />
-        <span>Full viewer</span>
+        <span>
+          <Trans>Full viewer</Trans>
+        </span>
       </header>
       <div className="absolute inset-x-0 top-11 bottom-0" aria-hidden="true" inert>
         <SlideStill
@@ -987,10 +1047,14 @@ export function DeveloperScreen({
           <>
             <i className="size-2 rounded-full bg-ok" />
             <span>
-              {route} · {sample} · 9 levels · 100,000 nuclei
+              <Trans>
+                {route} · {sample} · 9 levels · 100,000 nuclei
+              </Trans>
             </span>
             <span className="flex-1" />
-            <span>60 fps</span>
+            <span>
+              <Trans>60 fps</Trans>
+            </span>
           </>
         }
       >

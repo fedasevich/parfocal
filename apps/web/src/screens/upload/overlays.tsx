@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { type ProjectImports, useGetProjectImports } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
 import { Checkbox } from "@parfocal/ui/components/checkbox";
@@ -50,23 +51,32 @@ function ImportsBody({
   imports: ProjectImports;
   projectCode: string;
 }) {
+  const { t } = useLingui();
+
   const [example, setExample] = useState(false);
   const [fresh, setFresh] = useState(false);
   if (tab === "watch") {
     const folder = imports.watched_folder;
     return (
       <Zone
-        title="Watched folder"
+        title={t`Watched folder`}
         sub={`New files in this folder arrive in ${projectCode} on their own, checked like an upload.`}
-        end={<Switch defaultChecked={folder.on} aria-label="Watched folder on" />}
+        end={<Switch defaultChecked={folder.on} aria-label={t`Watched folder on`} />}
       >
-        <Field label="Folder">
-          <ReadOnly value={folder.address} end={<StatusTag tone="ok">Connected</StatusTag>} />
+        <Field label={t`Folder`}>
+          <ReadOnly
+            value={folder.address}
+            end={
+              <StatusTag tone="ok">
+                <Trans>Connected</Trans>
+              </StatusTag>
+            }
+          />
         </Field>
         <div className="grid grid-cols-2 gap-3">
-          <Field label="New slides">
+          <Field label={t`New slides`}>
             <Select defaultValue={folder.slides}>
-              <SelectTrigger aria-label="New slides" className="w-full">
+              <SelectTrigger aria-label={t`New slides`} className="w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -75,9 +85,9 @@ function ImportsBody({
               </SelectContent>
             </Select>
           </Field>
-          <Field label="Result files">
+          <Field label={t`Result files`}>
             <Select defaultValue={folder.results}>
-              <SelectTrigger aria-label="Result files" className="w-full">
+              <SelectTrigger aria-label={t`Result files`} className="w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -88,9 +98,11 @@ function ImportsBody({
           </Field>
         </div>
         <div className="flex items-center gap-2.5 text-body-sm text-fg">
-          <span>Look for new files every</span>
+          <span>
+            <Trans>Look for new files every</Trans>
+          </span>
           <Select defaultValue={folder.every}>
-            <SelectTrigger size="sm" aria-label="How often" className="w-32">
+            <SelectTrigger size="sm" aria-label={t`How often`} className="w-32">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -107,25 +119,33 @@ function ImportsBody({
     const hook = imports.webhook;
     return (
       <Zone
-        title="Incoming webhook"
+        title={t`Incoming webhook`}
         sub="Your pipeline posts a link to a slide, its results or both. Parfocal fetches them, runs the same checks and answers with what it did."
-        end={<Switch defaultChecked={hook.on} aria-label="Webhook on" />}
+        end={<Switch defaultChecked={hook.on} aria-label={t`Webhook on`} />}
       >
         <div className="grid grid-cols-2 gap-3">
-          <Field label={`Webhook URL for ${projectCode}`}>
+          <Field label={t`Webhook URL for ${projectCode}`}>
             <ReadOnly
               value={hook.url}
-              end={<span className="text-body-sm text-accent">Copy</span>}
+              end={
+                <span className="text-body-sm text-accent">
+                  <Trans>Copy</Trans>
+                </span>
+              }
             />
           </Field>
-          <Field label="Signing secret">
+          <Field label={t`Signing secret`}>
             <ReadOnly
               value={`whsec_••••••••${hook.secret_end}`}
-              end={<span className="text-body-sm text-accent">Rotate</span>}
+              end={
+                <span className="text-body-sm text-accent">
+                  <Trans>Rotate</Trans>
+                </span>
+              }
             />
           </Field>
         </div>
-        <Field label="A call can">
+        <Field label={t`A call can`}>
           <div className="grid grid-cols-2 gap-x-4 gap-y-2">
             {hook.abilities.map((ability) => (
               <label key={ability.label} className="flex items-center gap-2 text-body-sm text-fg">
@@ -137,7 +157,7 @@ function ImportsBody({
         </Field>
         {example ? (
           <pre className={codeClass}>
-            {`POST /hooks/${projectCode}/in/whk_8f3a…
+            {t`POST /hooks/${projectCode}/in/whk_8f3a…
 { "event": "slide.add",
   "slide": { "url": "s3://fnvltava-scans/tumor_090.tif", "read": "in-place" },
   "results": [{ "url": "s3://…/tumor_090.geojson", "model": "lab-model", "version": "3.0" }] }`}
@@ -148,7 +168,7 @@ function ImportsBody({
           onClick={() => setExample(!example)}
           className="cursor-pointer justify-self-start border-0 bg-transparent p-0 text-body-sm font-medium text-accent hover:underline"
         >
-          {example ? "Hide the example call" : "Show an example call"}
+          {example ? t`Hide the example call` : t`Show an example call`}
         </button>
       </Zone>
     );
@@ -157,14 +177,18 @@ function ImportsBody({
     const out = imports.events_out;
     return (
       <Zone
-        title="Events out"
+        title={t`Events out`}
         sub="Parfocal calls your URL when something happens, so a pipeline can react."
-        end={<Switch defaultChecked={out.on} aria-label="Events out on" />}
+        end={<Switch defaultChecked={out.on} aria-label={t`Events out on`} />}
       >
-        <Field label="Your endpoint">
+        <Field label={t`Your endpoint`}>
           <ReadOnly
             value={out.endpoint}
-            end={<StatusTag tone="ok">Last call {out.last_call}</StatusTag>}
+            end={
+              <StatusTag tone="ok">
+                <Trans>Last call {out.last_call}</Trans>
+              </StatusTag>
+            }
           />
         </Field>
         <FileList>
@@ -184,34 +208,40 @@ function ImportsBody({
   }
   return (
     <Zone
-      title="API token"
+      title={t`API token`}
       sub={`For scripts. Add slides and result sets to ${projectCode} with one call.`}
       end={
         fresh ? undefined : (
           <Button size="sm" onClick={() => setFresh(true)}>
-            New token
+            <Trans>New token</Trans>
           </Button>
         )
       }
     >
-      <Field label={`Token for ${projectCode}`}>
+      <Field label={t`Token for ${projectCode}`}>
         <ReadOnly
           value={
             fresh
               ? `pf_live_${projectCode}_7c21d9e04b3a`
               : `pf_live_${projectCode}_••••••••${imports.token.end}`
           }
-          end={<span className="text-body-sm text-accent">Copy</span>}
+          end={
+            <span className="text-body-sm text-accent">
+              <Trans>Copy</Trans>
+            </span>
+          }
         />
       </Field>
       {fresh ? (
         <Hint>
-          Shown once, so copy it now. The old token ending {imports.token.end} stops working in 24
-          hours.
+          <Trans>
+            Shown once, so copy it now. The old token ending {imports.token.end} stops working in 24
+            hours.
+          </Trans>
         </Hint>
       ) : null}
       <pre className={codeClass}>
-        {`curl -X POST $PARFOCAL/api/v1/projects/${projectCode}/result-sets \\
+        {t`curl -X POST $PARFOCAL/api/v1/projects/${projectCode}/result-sets \\
   -H "Authorization: Bearer $PF_TOKEN" \\
   -F "slide_url=s3://fnvltava-scans/tumor_090.tif" -F "model=lab-model" \\
   -F "version=3.0" -F "file=@tumor_090.geojson"`}
@@ -231,6 +261,8 @@ export function ImportsModal({
   projectCode: string;
   onClose: () => void;
 }) {
+  const { t } = useLingui();
+
   const imports = useGetProjectImports(projectId).data?.data;
   const [tab, setTab] = useState<ImportsTab>("watch");
   return (
@@ -242,12 +274,16 @@ export function ImportsModal({
       >
         <div className="flex items-start gap-3 border-b border-line px-5 py-4">
           <div className="grid min-w-0 flex-1 gap-0.5">
-            <DialogTitle className="text-title-sm font-semibold">Automatic imports</DialogTitle>
+            <DialogTitle className="text-title-sm font-semibold">
+              <Trans>Automatic imports</Trans>
+            </DialogTitle>
             <small className="text-body-sm text-fg-dim">
-              Slides and results that arrive in {projectCode} without anyone uploading them
+              <Trans>
+                Slides and results that arrive in {projectCode} without anyone uploading them
+              </Trans>
             </small>
           </div>
-          <Button size="icon" variant="ghost" aria-label="Close" onClick={onClose}>
+          <Button size="icon" variant="ghost" aria-label={t`Close`} onClick={onClose}>
             <Icon name="close" />
           </Button>
         </div>
@@ -257,7 +293,7 @@ export function ImportsModal({
         >
           <div className="flex">
             <SegmentedControl
-              aria-label="Kind of import"
+              aria-label={t`Kind of import`}
               value={tab}
               onValueChange={(value) => setTab(value as ImportsTab)}
               options={[
@@ -270,7 +306,14 @@ export function ImportsModal({
           </div>
           {imports ? <ImportsBody tab={tab} imports={imports} projectCode={projectCode} /> : null}
           {imports && tab !== "out" ? (
-            <Zone title="Last arrivals" end={<Hint>Problems also show in notifications</Hint>}>
+            <Zone
+              title={t`Last arrivals`}
+              end={
+                <Hint>
+                  <Trans>Problems also show in notifications</Trans>
+                </Hint>
+              }
+            >
               <table className="w-full border-collapse text-body-sm">
                 <tbody>
                   {imports.arrivals.map((arrival) => (
@@ -295,10 +338,12 @@ export function ImportsModal({
           ) : null}
         </div>
         <div className="flex items-center gap-2 border-t border-line px-5 py-3.5">
-          <Hint>Every arrival goes through the same checks as an upload.</Hint>
+          <Hint>
+            <Trans>Every arrival goes through the same checks as an upload.</Trans>
+          </Hint>
           <span className="flex-1" />
           <Button variant="primary" onClick={onClose}>
-            Done
+            <Trans>Done</Trans>
           </Button>
         </div>
       </DialogContent>

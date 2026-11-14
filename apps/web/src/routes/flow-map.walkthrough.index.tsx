@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { originStore, usePeople } from "../flow-map/hooks.ts";
@@ -13,26 +14,40 @@ export const Route = createFileRoute("/flow-map/walkthrough/")({
 });
 
 function WalkthroughIndex() {
+  const { t } = useLingui();
+
   const people = usePeople();
   useEffect(() => originStore.set(null), []);
   return (
     <main className="mx-auto flex max-w-5xl flex-col gap-4 p-8">
       <Link to="/flow-map" className="text-accent text-body-sm underline">
-        Back to the map
+        <Trans>Back to the map</Trans>
       </Link>
-      <h1 className="font-semibold text-page-title text-fg">Walkthrough, nine chapters</h1>
+      <h1 className="font-semibold text-page-title text-fg">
+        <Trans>Walkthrough, nine chapters</Trans>
+      </h1>
       <p className="text-body-sm text-fg-dim">
-        The walkthrough follows the map from upload to the co-signed clinical report. Play all runs
-        the chapters in order, and each chapter also starts on its own.
+        <Trans>
+          The walkthrough follows the map from upload to the co-signed clinical report. Play all
+          runs the chapters in order, and each chapter also starts on its own.
+        </Trans>
       </p>
       <WalkBar />
-      <table className="w-full border-collapse text-body-sm" aria-label="Chapters">
+      <table className="w-full border-collapse text-body-sm" aria-label={t`Chapters`}>
         <thead>
           <tr className="border-line border-b text-left text-fg-dim">
-            <th className="py-2 pr-3 font-medium">Chapter</th>
-            <th className="py-2 pr-3 font-medium">As</th>
-            <th className="py-2 pr-3 font-medium">Steps</th>
-            <th className="py-2 font-medium">What it shows</th>
+            <th className="py-2 pr-3 font-medium">
+              <Trans>Chapter</Trans>
+            </th>
+            <th className="py-2 pr-3 font-medium">
+              <Trans>As</Trans>
+            </th>
+            <th className="py-2 pr-3 font-medium">
+              <Trans>Steps</Trans>
+            </th>
+            <th className="py-2 font-medium">
+              <Trans>What it shows</Trans>
+            </th>
           </tr>
         </thead>
         <tbody>

@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   type CountsAsChange,
   type Evaluation,
@@ -144,7 +145,12 @@ function BlockBody({
     case "region-metrics": {
       const columns = block.columns ?? ["sensitivity", "precision", "dice"];
       const regions = (evaluation?.classes ?? []).filter((row) => row.kind === "region");
-      if (!regions.length) return <Empty>This task has no regions to measure.</Empty>;
+      if (!regions.length)
+        return (
+          <Empty>
+            <Trans>This task has no regions to measure.</Trans>
+          </Empty>
+        );
       const value = (row: (typeof regions)[number], column: string) =>
         column === "dice"
           ? fixed(evaluation?.dice[row.class_name]?.value, decimals)
@@ -160,7 +166,11 @@ function BlockBody({
     }
     case "confusion-matrix":
       if (!report.confusion.classes.length)
-        return <Empty>This task has no cells, so there are no cell types to compare.</Empty>;
+        return (
+          <Empty>
+            <Trans>This task has no cells, so there are no cell types to compare.</Trans>
+          </Empty>
+        );
       return (
         <ConfusionMatrix
           classes={report.confusion.classes}
@@ -175,7 +185,11 @@ function BlockBody({
         ["Cell agreement between reviewers", evaluation?.cell_agreement_between_reviewers.value],
       ];
       if (values.every(([, value]) => value == null))
-        return <Empty>Agreement needs two reviewers who answered the same objects.</Empty>;
+        return (
+          <Empty>
+            <Trans>Agreement needs two reviewers who answered the same objects.</Trans>
+          </Empty>
+        );
       return (
         <PaperTable
           head={["Measure", "Value"]}
@@ -185,16 +199,31 @@ function BlockBody({
     }
     case "disagreement-reasons": {
       const rows = evaluation ? reasonRows(evaluation) : [];
-      if (!rows.length) return <Empty>No reviewer gave a reason for disagreeing.</Empty>;
+      if (!rows.length)
+        return (
+          <Empty>
+            <Trans>No reviewer gave a reason for disagreeing.</Trans>
+          </Empty>
+        );
       return <CountBars rows={rows.slice(0, block.top ?? rows.length)} />;
     }
     case "opinion-answers": {
       const rows = evaluation ? opinionRows(evaluation) : [];
-      if (!rows.length) return <Empty>No reviewer answered the opinion form.</Empty>;
+      if (!rows.length)
+        return (
+          <Empty>
+            <Trans>No reviewer answered the opinion form.</Trans>
+          </Empty>
+        );
       return <CountBars heading={report.opinion_question} rows={rows} />;
     }
     case "worst-objects": {
-      if (!report.worst.length) return <Empty>No object has a decision yet.</Empty>;
+      if (!report.worst.length)
+        return (
+          <Empty>
+            <Trans>No object has a decision yet.</Trans>
+          </Empty>
+        );
       const rows = report.worst.slice(0, block.rows ?? report.worst.length);
       return (
         <div className="grid gap-1.5">
@@ -210,14 +239,22 @@ function BlockBody({
             }))}
           />
           <span className="text-[7.5px] text-[#666]">
-            {rows.length} of {report.objects} objects. Every object is in the CSV with its full ID.
+            <Trans>
+              {rows.length} of {report.objects} objects. Every object is in the CSV with its full
+              ID.
+            </Trans>
           </span>
         </div>
       );
     }
     case "slide-table": {
       const rows = slideRows(queue);
-      if (!rows.length) return <Empty>No slide in this task has objects to review.</Empty>;
+      if (!rows.length)
+        return (
+          <Empty>
+            <Trans>No slide in this task has objects to review.</Trans>
+          </Empty>
+        );
       const columns = block.columns ?? ["objects", "disagreements"];
       const names: Record<string, string> = {
         objects: "Objects",
@@ -237,7 +274,12 @@ function BlockBody({
       );
     }
     case "slide-figure":
-      if (!block.slide_id) return <Empty>Pick a slide for this figure.</Empty>;
+      if (!block.slide_id)
+        return (
+          <Empty>
+            <Trans>Pick a slide for this figure.</Trans>
+          </Empty>
+        );
       return (
         <figure className="m-0 grid gap-1">
           <img src={lookUrl("mid")} alt={block.caption || block.title} className="w-full" />
@@ -259,10 +301,20 @@ function BlockBody({
           </div>
         );
       }
-      if (!block.body) return <Empty>This text block is empty.</Empty>;
+      if (!block.body)
+        return (
+          <Empty>
+            <Trans>This text block is empty.</Trans>
+          </Empty>
+        );
       return <p className="m-0 whitespace-pre-line">{block.body}</p>;
     case "comparison":
-      if (!block.task_id) return <Empty>Pick a review task to compare with.</Empty>;
+      if (!block.task_id)
+        return (
+          <Empty>
+            <Trans>Pick a review task to compare with.</Trans>
+          </Empty>
+        );
       return (
         <ComparisonBlock
           taskId={block.task_id}
@@ -272,7 +324,11 @@ function BlockBody({
         />
       );
     case "ai-changes":
-      return <Empty>Only an annotate task counts how the experts changed the AI.</Empty>;
+      return (
+        <Empty>
+          <Trans>Only an annotate task counts how the experts changed the AI.</Trans>
+        </Empty>
+      );
   }
 }
 
@@ -290,7 +346,11 @@ function ComparisonBlock({
   const otherReport = okData(useGetEvaluationReport(taskId).data);
   const otherEvaluation = okData(useGetTaskEvaluation(taskId).data);
   if (!evaluation || !otherReport || !otherEvaluation)
-    return <Empty>The review task to compare with is not available.</Empty>;
+    return (
+      <Empty>
+        <Trans>The review task to compare with is not available.</Trans>
+      </Empty>
+    );
   const head = (side: EvaluationReport) => `${side.task_code}, ${side.model}`;
   return (
     <div className="grid gap-1.5" data-slot="comparison">
@@ -304,18 +364,22 @@ function ComparisonBlock({
         ])}
       />
       <span className="text-[7.5px] text-[#666]">
-        Change is {otherReport.task_code} minus {report.task_code}. Both tasks cover the same
-        slides.
+        <Trans>
+          Change is {otherReport.task_code} minus {report.task_code}. Both tasks cover the same
+          slides.
+        </Trans>
       </span>
     </div>
   );
 }
 
 function Closing({ report, queue, changes, format, nameOf }: PagesProps) {
+  const { t } = useLingui();
+
   const leftOpen = queue.filter((row) => row.state === "left-open");
   return (
     <>
-      <ReportBlock title="Changes after sign-off">
+      <ReportBlock title={t`Changes after sign-off`}>
         {changes.length ? (
           <table className="w-full border-collapse text-[8.5px]">
             <tbody>
@@ -325,7 +389,9 @@ function Closing({ report, queue, changes, format, nameOf }: PagesProps) {
                   className="border-b border-[#ddd]"
                 >
                   <td className="py-1 font-mono font-semibold">
-                    {change.object} on {change.slide_label}
+                    <Trans>
+                      {change.object} on {change.slide_label}
+                    </Trans>
                   </td>
                   <td>
                     {change.text} · "{change.reason}"
@@ -339,22 +405,24 @@ function Closing({ report, queue, changes, format, nameOf }: PagesProps) {
             </tbody>
           </table>
         ) : (
-          <span className="text-[#555]">Nothing changed after sign-off.</span>
+          <span className="text-[#555]">
+            <Trans>Nothing changed after sign-off.</Trans>
+          </span>
         )}
       </ReportBlock>
-      <ReportBlock title="Left open on purpose">
+      <ReportBlock title={t`Left open on purpose`}>
         <span data-phi="">
           {leftOpen.length
             ? leftOpen.map((row) => `${row.object} on ${row.slide_label}`).join(", ")
-            : "Every queued object was decided."}
+            : t`Every queued object was decided.`}
         </span>
       </ReportBlock>
       {format.signature ? (
-        <ReportBlock title="Signature">
+        <ReportBlock title={t`Signature`}>
           <span>
             {report.signed_at && report.signed_by_user_id
-              ? `Signed by ${nameOf(report.signed_by_user_id)} on ${dayMonth(report.signed_at)} at ${time(report.signed_at)}. Changes after sign-off are logged with a reason.`
-              : "Not signed yet."}
+              ? t`Signed by ${nameOf(report.signed_by_user_id)} on ${dayMonth(report.signed_at)} at ${time(report.signed_at)}. Changes after sign-off are logged with a reason.`
+              : t`Not signed yet.`}
           </span>
         </ReportBlock>
       ) : null}
@@ -370,9 +438,11 @@ function Appendix({
   nameOf,
   countsAsChanges = [],
 }: PagesProps & { name: NonNullable<LayoutPage["appendix"]> }) {
+  const { t } = useLingui();
+
   if (name === "methods") {
     return (
-      <ReportBlock title="Appendix: methods">
+      <ReportBlock title={t`Appendix: methods`}>
         {evaluation ? (
           <div className="grid gap-1">
             {methodsLines(evaluation, countsAsChanges, nameOf).map((line) => (
@@ -387,7 +457,7 @@ function Appendix({
   }
   if (name === "decisions") {
     return (
-      <ReportBlock title="Appendix: decisions">
+      <ReportBlock title={t`Appendix: decisions`}>
         <PaperTable
           head={["ID", "Slide", "Reviewer", "Decision"]}
           rows={queue.flatMap((row) =>
@@ -403,18 +473,24 @@ function Appendix({
     );
   }
   return (
-    <ReportBlock title="Appendix: objects">
+    <ReportBlock title={t`Appendix: objects`}>
       <table className="w-full border-collapse text-[8.5px]">
         <thead>
           <tr className="border-b border-[#222] text-left [&>th]:pb-1">
-            <th scope="col">ID</th>
-            <th scope="col">Slide</th>
+            <th scope="col">
+              <Trans>ID</Trans>
+            </th>
+            <th scope="col">
+              <Trans>Slide</Trans>
+            </th>
             {report.reviewer_ids.map((id) => (
               <th key={id} scope="col">
                 {nameOf(id)}
               </th>
             ))}
-            <th scope="col">Decision</th>
+            <th scope="col">
+              <Trans>Decision</Trans>
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -430,8 +506,8 @@ function Appendix({
                 {row.decision
                   ? answerWord[answerOf(row.decision.raw)]
                   : row.state === "left-open"
-                    ? "Left open"
-                    : "Open"}
+                    ? t`Left open`
+                    : t`Open`}
               </td>
             </tr>
           ))}
@@ -447,6 +523,8 @@ export function ReportPage({
   pages,
   ...props
 }: PagesProps & { page: number; plan: LayoutPage; pages: number }) {
+  const { t } = useLingui();
+
   const { report, changes, blocks, format, templateVersion, nameOf, selected, onSelect } = props;
   const status = report.signed_at ? ` · signed ${dayMonth(report.signed_at)}` : " · draft";
   const footer = `${report.task_code} · Evaluation v${report.version}${status}`;
@@ -471,7 +549,7 @@ export function ReportPage({
           <ReportLetterhead
             lab={report.lab}
             kind="Parfocal · research output"
-            title="Evaluation report"
+            title={t`Evaluation report`}
             lines={[
               `${report.task_code} · ${report.model}`,
               `Evaluation v${report.version}${status}`,

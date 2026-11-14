@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { type StorageUsage, useGetStorageUsage } from "@parfocal/api-client";
 import { NameCell, SettingRow, StorageBar, type StoragePart } from "@parfocal/ui/components/admin";
 import { Button } from "@parfocal/ui/components/button";
@@ -30,6 +31,8 @@ const sourceIcon = (kind: string) =>
   kind === "dicomweb" ? "slides" : kind === "https" ? "link" : "folder";
 
 export function StorageSection({ notify }: { notify: Notify }) {
+  const { t } = useLingui();
+
   const usage = useGetStorageUsage().data?.data;
   const [rules, setRules] = useState<Record<string, boolean>>({});
   if (usage === undefined) return null;
@@ -37,18 +40,21 @@ export function StorageSection({ notify }: { notify: Notify }) {
   return (
     <>
       <div className="grid grid-cols-2 gap-(--space-zone)">
-        <Zone title="Space">
+        <Zone title={t`Space`}>
           <StorageBar
             totalTb={usage.total_tb}
             parts={storageParts(usage)}
             foot={
               <>
-                Read in place, not counted:{" "}
-                <span className="font-mono">{tb(usage.in_place_tb)}</span> stays on your sources
+                <Trans>Read in place, not counted:</Trans>{" "}
+                <span className="font-mono">{tb(usage.in_place_tb)}</span>{" "}
+                <Trans>stays on your sources</Trans>
               </>
             }
           />
-          <div className="mt-2 text-caption font-semibold text-fg-dim">By project</div>
+          <div className="mt-2 text-caption font-semibold text-fg-dim">
+            <Trans>By project</Trans>
+          </div>
           <div className="grid gap-2.5">
             {usage.by_project.map((row) => (
               <div
@@ -61,7 +67,7 @@ export function StorageSection({ notify }: { notify: Notify }) {
                 />
                 <b className="truncate font-medium text-fg">{row.project.name}</b>
                 <span className="font-mono text-fg-dim">
-                  {row.cap_gb ? `${row.gb} of ${row.cap_gb} GB` : `${row.gb} GB`}
+                  {row.cap_gb ? t`${row.gb} of ${row.cap_gb} GB` : t`${row.gb} GB`}
                 </span>
                 <span className="col-span-2 col-start-2 h-1 overflow-hidden rounded-full bg-track">
                   <i
@@ -76,7 +82,7 @@ export function StorageSection({ notify }: { notify: Notify }) {
             ))}
           </div>
         </Zone>
-        <Zone title="Rules for sources">
+        <Zone title={t`Rules for sources`}>
           <div>
             {usage.rules.map((rule) => (
               <SettingRow
@@ -93,16 +99,28 @@ export function StorageSection({ notify }: { notify: Notify }) {
       </div>
       <RetentionZone notify={notify} />
       <Zone
-        title="Sources"
-        end={<span className="text-body-sm text-fg-dim">{usage.sources.length} sources</span>}
+        title={t`Sources`}
+        end={
+          <span className="text-body-sm text-fg-dim">
+            <Trans>{usage.sources.length} sources</Trans>
+          </span>
+        }
       >
         <Table className={tableClass}>
           <TableHeader>
             <TableRow>
-              <TableHead>Source</TableHead>
-              <TableHead>Address</TableHead>
-              <TableHead>New slides</TableHead>
-              <TableHead>Health</TableHead>
+              <TableHead>
+                <Trans>Source</Trans>
+              </TableHead>
+              <TableHead>
+                <Trans>Address</Trans>
+              </TableHead>
+              <TableHead>
+                <Trans>New slides</Trans>
+              </TableHead>
+              <TableHead>
+                <Trans>Health</Trans>
+              </TableHead>
               <TableHead />
             </TableRow>
           </TableHeader>
@@ -117,12 +135,18 @@ export function StorageSection({ notify }: { notify: Notify }) {
                   />
                 </TableCell>
                 <TableCell className="font-mono">{source.address}</TableCell>
-                <TableCell>{source.new_slides === "copied" ? "Copied" : "Read in place"}</TableCell>
+                <TableCell>
+                  {source.new_slides === "copied" ? t`Copied` : t`Read in place`}
+                </TableCell>
                 <TableCell>
                   {source.health === "expiring" ? (
-                    <StatusTag tone="warn">Expires in {source.expires_in_days} days</StatusTag>
+                    <StatusTag tone="warn">
+                      <Trans>Expires in {source.expires_in_days} days</Trans>
+                    </StatusTag>
                   ) : (
-                    <StatusTag tone="ok">Answering · {source.first_tile_ms} ms</StatusTag>
+                    <StatusTag tone="ok">
+                      <Trans>Answering · {source.first_tile_ms} ms</Trans>
+                    </StatusTag>
                   )}
                 </TableCell>
                 <TableCell>
@@ -135,9 +159,9 @@ export function StorageSection({ notify }: { notify: Notify }) {
                         )
                       }
                     >
-                      Test
+                      <Trans>Test</Trans>
                     </Button>
-                    <MoreButton label={`More for ${source.name}`} />
+                    <MoreButton label={t`More for ${source.name}`} />
                   </span>
                 </TableCell>
               </TableRow>

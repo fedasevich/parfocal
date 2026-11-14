@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import {
   type Deposit,
@@ -70,7 +71,7 @@ function OpenOnSlide({ objectId, onOpen }: { objectId: string; onOpen: (id: stri
       className={`${linkButton} whitespace-nowrap`}
       onClick={() => onOpen(objectId)}
     >
-      Open on the slide
+      <Trans>Open on the slide</Trans>
     </button>
   );
 }
@@ -84,6 +85,8 @@ export function FindingsStep({
   onOpenSlide,
   onMeasure,
 }: StepProps) {
+  const { t } = useLingui();
+
   const facts = factsOf(data, report.values);
   const pending = report.values.deposits.find(
     (deposit) => deposit.unmeasured && !deposit.size.trim(),
@@ -91,7 +94,7 @@ export function FindingsStep({
   return (
     <>
       <Zone
-        title={`From your decisions on ${data.slide}`}
+        title={t`From your decisions on ${data.slide}`}
         sub="Filled in from what you decided on the slide. To change a fact, change the decision there."
       >
         <KvList
@@ -110,7 +113,7 @@ export function FindingsStep({
                 )}
                 {fact.warn && pending ? (
                   <button type="button" className={linkButton} onClick={onMeasure}>
-                    Measure on {slideOf(data, pending.slide).short}
+                    <Trans>Measure on</Trans> {slideOf(data, pending.slide).short}
                   </button>
                 ) : fact.link ? (
                   <OpenOnSlide objectId={fact.link} onOpen={onOpenSlide} />
@@ -120,11 +123,11 @@ export function FindingsStep({
           }))}
         />
       </Zone>
-      <Zone title="Specimen">
+      <Zone title={t`Specimen`}>
         <div className="grid gap-1.5">
           <Input
             id={fieldId("specimen")}
-            aria-label="Specimen"
+            aria-label={t`Specimen`}
             aria-invalid={errors["specimen"] ? true : undefined}
             maxLength={120}
             value={report.values.specimen}
@@ -143,6 +146,8 @@ export function FindingsStep({
 }
 
 function CategoryField({ data, report, errors, setValues, update }: StepProps) {
+  const { t } = useLingui();
+
   const values = report.values;
   const size = largestMm(values.deposits);
   const suggested = size === null ? null : categoryOf(size);
@@ -158,14 +163,16 @@ function CategoryField({ data, report, errors, setValues, update }: StepProps) {
     <div className="grid gap-3">
       <div className="grid gap-1.5" id={fieldId("cat")}>
         <RadioRows
-          label="Category"
+          label={t`Category`}
           value={values.category ?? ""}
           onChange={(next) => setValues({ category: next as Category, ack: false })}
           options={categoryOptions.map((option) => ({
             ...option,
             end:
               option.value === suggested && values.category !== option.value ? (
-                <StatusTag tone="accent">suggested</StatusTag>
+                <StatusTag tone="accent">
+                  <Trans>suggested</Trans>
+                </StatusTag>
               ) : undefined,
           }))}
         />
@@ -173,8 +180,9 @@ function CategoryField({ data, report, errors, setValues, update }: StepProps) {
           <p className="m-0 flex items-start gap-1.5 text-body-sm leading-[1.45] text-warn">
             <Icon name="warn" className="mt-0.5" />
             <span>
-              A deposit of {mmText(size)} is a {categoryNames[suggested].toLowerCase()}. Confirm the
-              size or pick {categoryNames[suggested]}.
+              <Trans>A deposit of</Trans> {mmText(size)} <Trans>is a</Trans>{" "}
+              {categoryNames[suggested].toLowerCase()}
+              <Trans>. Confirm the size or pick</Trans> {categoryNames[suggested]}.
             </span>
           </p>
         ) : (
@@ -185,7 +193,7 @@ function CategoryField({ data, report, errors, setValues, update }: StepProps) {
         <div className="ml-6.25 grid gap-1.5" id={fieldId("ack")}>
           <CheckRow
             checked={values.ack}
-            label="I confirm this category"
+            label={t`I confirm this category`}
             onChange={(checked) =>
               update((current) => ({
                 ...current,
@@ -195,9 +203,11 @@ function CategoryField({ data, report, errors, setValues, update }: StepProps) {
             }
           >
             <span className="grid">
-              <b className="font-semibold text-fg">I confirm this category</b>
+              <b className="font-semibold text-fg">
+                <Trans>I confirm this category</Trans>
+              </b>
               <small className="text-caption text-fg-dim">
-                For example when the deposit is measured on another level
+                <Trans>For example when the deposit is measured on another level</Trans>
               </small>
             </span>
           </CheckRow>
@@ -209,6 +219,8 @@ function CategoryField({ data, report, errors, setValues, update }: StepProps) {
 }
 
 export function StagingStep(props: StepProps) {
+  const { t } = useLingui();
+
   const {
     data,
     report,
@@ -262,7 +274,7 @@ export function StagingStep(props: StepProps) {
       .map((deposit) => [
         deposit.id,
         <button key={deposit.id} type="button" className={linkButton} onClick={onMeasure}>
-          Measure on {slideOf(data, deposit.slide).short}
+          <Trans>Measure on</Trans> {slideOf(data, deposit.slide).short}
         </button>,
       ]),
   );
@@ -278,12 +290,12 @@ export function StagingStep(props: StepProps) {
   return (
     <>
       <Zone
-        title="Deposits"
+        title={t`Deposits`}
         sub="Every deposit on the case's slides. Sizes come from your measurements and can be changed here."
         end={
           <Button size="sm" id={fieldId("deps")} onClick={onAddDeposit}>
             <Icon name="plus" />
-            Add a deposit
+            <Trans>Add a deposit</Trans>
           </Button>
         }
       >
@@ -302,28 +314,30 @@ export function StagingStep(props: StepProps) {
         <FieldNote error={errors["deps"]} />
       </Zone>
       <Zone
-        title="Category"
+        title={t`Category`}
         sub="The largest deposit sets the suggested category. A category against it needs your confirmation."
       >
         <CategoryField {...props} />
       </Zone>
       <Zone
-        title="Nodes"
+        title={t`Nodes`}
         sub="Positive counts the nodes with at least one deposit. Examined comes from the gross description."
       >
         <div className="grid grid-cols-2 items-start gap-4">
           <div className="grid gap-1.5">
-            <span className="text-body-sm font-semibold">Positive</span>
+            <span className="text-body-sm font-semibold">
+              <Trans>Positive</Trans>
+            </span>
             <span className="grid text-body-sm">
               <b className="font-mono">{positive}</b>
               <span className="text-fg-dim">
-                {positive === 1 ? "node has" : "nodes have"} a deposit
+                {positive === 1 ? t`node has` : t`nodes have`} <Trans>a deposit</Trans>
               </span>
             </span>
           </div>
           <div className="grid gap-1.5">
             <label htmlFor={fieldId("exam")} className="text-body-sm font-semibold">
-              Examined
+              <Trans>Examined</Trans>
             </label>
             <Input
               id={fieldId("exam")}
@@ -339,7 +353,7 @@ export function StagingStep(props: StepProps) {
         </div>
         <div className="grid gap-1.5">
           <span id={fieldId("ene-label")} className="text-body-sm font-semibold">
-            Extranodal extension
+            <Trans>Extranodal extension</Trans>
           </span>
           <SegmentedControl
             id={fieldId("ene")}
@@ -354,18 +368,22 @@ export function StagingStep(props: StepProps) {
           <FieldNote error={errors["ene"]} />
         </div>
       </Zone>
-      <Zone title="Stage">
+      <Zone title={t`Stage`}>
         <div className="grid gap-1.5">
-          <span className="text-body-sm font-semibold">Suggested pN</span>
+          <span className="text-body-sm font-semibold">
+            <Trans>Suggested pN</Trans>
+          </span>
           {pn ? (
             <span className="grid text-body-sm">
               <b className="font-mono">{pn}</b>
               <span className="text-fg-dim">
-                From the category and the positive nodes, UICC and AJCC TNM 8
+                <Trans>From the category and the positive nodes, UICC and AJCC TNM 8</Trans>
               </span>
             </span>
           ) : (
-            <NotSet>Follows from the category</NotSet>
+            <NotSet>
+              <Trans>Follows from the category</Trans>
+            </NotSet>
           )}
         </div>
       </Zone>
@@ -425,12 +443,18 @@ export function TextStep({
   onFocusText,
   update,
 }: StepProps) {
+  const { t } = useLingui();
+
   const values = report.values;
   const staging = hasStep(data, "staging");
-  const optional = <span className="text-caption text-fg-dim">optional</span>;
+  const optional = (
+    <span className="text-caption text-fg-dim">
+      <Trans>optional</Trans>
+    </span>
+  );
   return (
     <>
-      <Zone title="Final diagnosis">
+      <Zone title={t`Final diagnosis`}>
         <TextField
           field="diag"
           rows={3}
@@ -443,27 +467,27 @@ export function TextStep({
           onFocus={() => onFocusText("diag")}
         />
       </Zone>
-      <Zone title="Microscopic" end={optional}>
+      <Zone title={t`Microscopic`} end={optional}>
         <TextField
           field="micro"
           rows={4}
           max={2000}
-          placeholder="What the sections show"
+          placeholder={t`What the sections show`}
           value={values.microscopic}
           onChange={(microscopic) => setValues({ microscopic })}
           onBlur={() => touch("micro")}
           onFocus={() => onFocusText("micro")}
         />
       </Zone>
-      <Zone title="Comment" end={optional}>
+      <Zone title={t`Comment`} end={optional}>
         <TextField
           field="comment"
           rows={3}
           max={1000}
           placeholder={
             staging
-              ? "For example, the pN is final once the breast resection is reported."
-              : "Anything the clinician should know"
+              ? t`For example, the pN is final once the breast resection is reported.`
+              : t`Anything the clinician should know`
           }
           value={values.comment}
           onChange={(comment) => setValues({ comment })}
@@ -472,7 +496,7 @@ export function TextStep({
         />
       </Zone>
       <Zone
-        title="From the slide"
+        title={t`From the slide`}
         sub="Inserts the value with its source where you were last typing."
       >
         <div className="flex flex-wrap gap-2">
@@ -480,7 +504,7 @@ export function TextStep({
             <button
               key={chip.label}
               type="button"
-              title="Insert into the field you were last in"
+              title={t`Insert into the field you were last in`}
               onClick={() => onInsert(chip.text)}
               className="inline-flex min-h-7 cursor-pointer items-center gap-1.5 rounded-full border border-line-strong bg-surf-field px-3 text-body-sm text-fg hover:border-accent"
             >
@@ -492,11 +516,11 @@ export function TextStep({
         </div>
       </Zone>
       <Zone
-        title="Report template"
+        title={t`Report template`}
         end={
           <Button size="sm" onClick={() => update((current) => ({ ...current, preview: true }))}>
             <Icon name="eye" />
-            Preview the page
+            <Trans>Preview the page</Trans>
           </Button>
         }
       >
@@ -504,7 +528,7 @@ export function TextStep({
           <b>
             {data.template.name} {data.template.version}
           </b>
-          , set by the project
+          <Trans>, set by the project</Trans>
         </p>
         {staging ? (
           <KvList
@@ -517,7 +541,7 @@ export function TextStep({
         ) : (
           <p className="m-0 flex items-center gap-2 text-body-sm text-fg-dim">
             <Icon name="file" />
-            Free text. This specimen has no synoptic protocol and no staging step.
+            <Trans>Free text. This specimen has no synoptic protocol and no staging step.</Trans>
           </p>
         )}
       </Zone>
@@ -545,7 +569,9 @@ function summaryRows(data: ReportData, values: Values, key: StepKey) {
               <span key={deposit.id}>
                 <b className="font-mono">{deposit.id}</b> {depositShort(data, deposit)}
                 {index === big ? (
-                  <span className="ml-1.5 text-fg-dim">largest, sets the category</span>
+                  <span className="ml-1.5 text-fg-dim">
+                    <Trans>largest, sets the category</Trans>
+                  </span>
                 ) : null}
               </span>
             ))}
@@ -590,12 +616,22 @@ function summaryRows(data: ReportData, values: Values, key: StepKey) {
     {
       icon: "text" as const,
       label: "Microscopic",
-      value: text(values.microscopic, <NotSet>None</NotSet>),
+      value: text(
+        values.microscopic,
+        <NotSet>
+          <Trans>None</Trans>
+        </NotSet>,
+      ),
     },
     {
       icon: "comment" as const,
       label: "Comment",
-      value: text(values.comment, <NotSet>None</NotSet>),
+      value: text(
+        values.comment,
+        <NotSet>
+          <Trans>None</Trans>
+        </NotSet>,
+      ),
     },
   ];
 }
@@ -609,6 +645,8 @@ export function ReviewList({
   values: Values;
   onChange?: (step: StepKey) => void;
 }) {
+  const { t } = useLingui();
+
   return (
     <div className="grid gap-5">
       {data.template.steps
@@ -620,11 +658,11 @@ export function ReviewList({
               {onChange ? (
                 <button
                   type="button"
-                  aria-label={`Change ${step.label}`}
+                  aria-label={t`Change ${step.label}`}
                   className={linkButton}
                   onClick={() => onChange(step.key)}
                 >
-                  Change
+                  <Trans>Change</Trans>
                 </button>
               ) : null}
             </div>
@@ -636,6 +674,8 @@ export function ReviewList({
 }
 
 export function SignStep({ data, report, errors, update, goTo, person }: StepProps) {
+  const { t } = useLingui();
+
   const me = meOf(data);
   const mode = modeOf(data, report);
   const items = data.members
@@ -652,12 +692,12 @@ export function SignStep({ data, report, errors, update, goTo, person }: StepPro
     });
   return (
     <>
-      <Zone title="Check before you sign">
+      <Zone title={t`Check before you sign`}>
         <ReviewList data={data} values={report.values} onChange={(step) => goTo(step)} />
       </Zone>
       {mode === "sign" ? (
         <Zone
-          title="Sign out"
+          title={t`Sign out`}
           sub="Signing locks this version. A change after it is an amendment with a reason, and the signed version stays readable."
         >
           <Person
@@ -668,19 +708,19 @@ export function SignStep({ data, report, errors, update, goTo, person }: StepPro
         </Zone>
       ) : (
         <Zone
-          title="Send for co-sign"
+          title={t`Send for co-sign`}
           sub={`${me?.covers_case ? "You send the report to a colleague instead of signing it yourself. " : ""}The co-signer can sign it as it is, change values first or return it with a note.`}
         >
           <div className="grid gap-1.5">
             <span id={fieldId("cosigner-label")} className="text-body-sm font-semibold">
-              Who co-signs
+              <Trans>Who co-signs</Trans>
             </span>
             <TokenField
               id={fieldId("cosigner")}
               aria-labelledby={fieldId("cosigner-label")}
-              label="Who co-signs"
+              label={t`Who co-signs`}
               single
-              placeholder="Type a name"
+              placeholder={t`Type a name`}
               items={items}
               picked={report.cosigner ? [report.cosigner] : []}
               invalid={Boolean(errors["cosigner"])}
@@ -704,13 +744,15 @@ export function SignStep({ data, report, errors, update, goTo, person }: StepPro
 }
 
 export function SentPanel({ data, report, person }: StepProps) {
+  const { t } = useLingui();
+
   const to = report.sent?.to ?? null;
   const info = person(to);
   const member = data.members.find((candidate) => candidate.user_id === to);
   return (
     <>
       <Zone
-        title="Sent for co-sign"
+        title={t`Sent for co-sign`}
         sub={`The report stays as you wrote it while it waits. ${info?.name.split(" ")[0] ?? "The co-signer"} can co-sign it as it is, change values and co-sign, or return it with a note.`}
       >
         <div className="flex items-center gap-3">
@@ -719,10 +761,12 @@ export function SentPanel({ data, report, person }: StepProps) {
             size={32}
             sub={`${rightNames[member?.sign_out ?? "own"]} · sent ${report.sent?.at ?? ""}`}
           />
-          <StatusTag tone="warn">Waiting</StatusTag>
+          <StatusTag tone="warn">
+            <Trans>Waiting</Trans>
+          </StatusTag>
         </div>
       </Zone>
-      <Zone title="What you sent">
+      <Zone title={t`What you sent`}>
         <ReviewList data={data} values={report.values} />
       </Zone>
     </>
@@ -730,6 +774,8 @@ export function SentPanel({ data, report, person }: StepProps) {
 }
 
 export function DonePanel({ data, report, person, update }: StepProps) {
+  const { t } = useLingui();
+
   const signature = report.signed;
   if (!signature) return null;
   const showV1 = report.showV1 && Boolean(report.amend);
@@ -748,7 +794,7 @@ export function DonePanel({ data, report, person, update }: StepProps) {
             <small className="text-body-sm text-fg-dim">
               {signature.co ? `${signature.at} · ` : ""}
               {data.template.name} {data.template.version} ·{" "}
-              {showV1 ? "version 1, as first signed" : report.amend ? "version 2" : "version 1"}
+              {showV1 ? t`version 1, as first signed` : report.amend ? t`version 2` : t`version 1`}
             </small>
           </div>
         </div>
@@ -756,15 +802,16 @@ export function DonePanel({ data, report, person, update }: StepProps) {
           <div className="flex items-start gap-2 text-body-sm leading-[1.45]">
             <Icon name="info" className="mt-0.5 text-fg-dim" />
             <span className="flex-1">
-              Amended {report.amend.at}, reason: {why.charAt(0).toLowerCase() + why.slice(1)}. v1
-              stays readable.
+              <Trans>Amended</Trans> {report.amend.at}
+              <Trans>, reason:</Trans> {why.charAt(0).toLowerCase() + why.slice(1)}
+              <Trans>. v1 stays readable.</Trans>
             </span>
             <button
               type="button"
               className={linkButton}
               onClick={() => update((current) => ({ ...current, showV1: !current.showV1 }))}
             >
-              {showV1 ? "Back to v2" : "Open v1"}
+              {showV1 ? t`Back to v2` : t`Open v1`}
             </button>
           </div>
         ) : null}

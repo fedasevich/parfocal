@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   type EvaluationReport,
   getGetTaskReportLayoutQueryKey,
@@ -76,6 +77,8 @@ function ArrangeBody({
   onSaved: (saved: Saved) => void;
   onBack: () => void;
 }) {
+  const { t } = useLingui();
+
   const queryClient = useQueryClient();
   const library = okData(useListStudyTemplates().data) ?? [];
   const compareChoices = (okData(useListReviewTasks(report.project.id).data) ?? [])
@@ -161,7 +164,7 @@ function ArrangeBody({
       onFormatChange={setFormat}
       compareChoices={compareChoices}
       formatHead={
-        <FormField label="Name if saved as a template">
+        <FormField label={t`Name if saved as a template`}>
           <TextFieldInput
             value={name}
             maxLength={60}
@@ -171,24 +174,26 @@ function ArrangeBody({
       }
       footer={
         <div className="flex items-center gap-2.5 border-t border-line bg-chrome px-5 py-3">
-          <Button onClick={onBack}>Back to the report</Button>
+          <Button onClick={onBack}>
+            <Trans>Back to the report</Trans>
+          </Button>
           <span className="flex-1 text-body-sm text-fg-dim">
-            Changes belong to this task. The template itself stays as it is.
+            <Trans>Changes belong to this task. The template itself stays as it is.</Trans>
           </span>
           <Button variant="ghost" onClick={reset}>
-            Reset to the template
+            <Trans>Reset to the template</Trans>
           </Button>
           {keepsLibrary ? (
             <Button onClick={saveAsTemplate} disabled={create.isPending || name.trim() === ""}>
-              Save as template
+              <Trans>Save as template</Trans>
             </Button>
           ) : (
             <Button onClick={offerToAdmin} disabled={offer.isPending || name.trim() === ""}>
-              Offer to an admin
+              <Trans>Offer to an admin</Trans>
             </Button>
           )}
           <Button variant="primary" onClick={saveForTask} disabled={save.isPending}>
-            Save for this task
+            <Trans>Save for this task</Trans>
           </Button>
         </div>
       }

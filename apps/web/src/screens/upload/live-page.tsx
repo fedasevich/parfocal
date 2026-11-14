@@ -1,3 +1,4 @@
+import { useLingui } from "@lingui/react/macro";
 import { useGetProject } from "@parfocal/api-client";
 import { Loader } from "@parfocal/ui/components/loader";
 import { useEffect } from "react";
@@ -15,6 +16,8 @@ export function LivePage({
   projectId: string;
   scene: UploadScene | undefined;
 }) {
+  const { t } = useLingui();
+
   const project = okData(useGetProject(projectId).data);
   useEffect(() => {
     dropStore.begin(projectId);
@@ -22,7 +25,7 @@ export function LivePage({
   if (project === undefined) {
     return (
       <main className="grid flex-1 place-items-center p-8">
-        <Loader label="Loading the upload" />
+        <Loader label={t`Loading the upload`} />
       </main>
     );
   }

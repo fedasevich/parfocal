@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   getListStudyTemplatesQueryKey,
   type Presets,
@@ -61,12 +62,16 @@ function PresetsPanel({
   onPresets: (presets: Presets) => void;
   onDecision: (decision: DecisionPreset) => void;
 }) {
+  const { t } = useLingui();
+
   const scope = scopeChoices.find((item) => item.kind === presets.objects_to_check.kind);
   return (
     <div className="grid gap-4">
       <p className="m-0 text-caption text-fg-dim">
-        A review task made from this template starts with these. The researcher can change each one
-        in the task, and the report keeps the template.
+        <Trans>
+          A review task made from this template starts with these. The researcher can change each
+          one in the task, and the report keeps the template.
+        </Trans>
       </p>
       <div className="grid gap-1.5">
         {choice("Objects to check", "preset-objects")}
@@ -82,7 +87,7 @@ function PresetsPanel({
             })
           }
         >
-          <SelectTrigger aria-label="Objects to check" className="w-full">
+          <SelectTrigger aria-label={t`Objects to check`} className="w-full">
             <SelectValue>{scope?.label ?? presets.objects_to_check.kind}</SelectValue>
           </SelectTrigger>
           <SelectContent>
@@ -158,6 +163,8 @@ function EditorBody({
   notify: Notify;
   onBack: () => void;
 }) {
+  const { t } = useLingui();
+
   const queryClient = useQueryClient();
   const create = useCreateStudyTemplate();
   const edit = useEditStudyTemplate();
@@ -220,7 +227,7 @@ function EditorBody({
       onFormatChange={setFormat}
       formatHead={
         <>
-          <FormField label="Name" error={tried ? problem : undefined}>
+          <FormField label={t`Name`} error={tried ? problem : undefined}>
             <TextFieldInput
               value={name}
               maxLength={60}
@@ -230,7 +237,7 @@ function EditorBody({
           <div className="grid gap-1.5">
             {choice("Kind of study", "template-kind")}
             <Select value={kind} onValueChange={(value) => setKind(String(value) as StudyKind)}>
-              <SelectTrigger aria-label="Kind of study" className="w-full">
+              <SelectTrigger aria-label={t`Kind of study`} className="w-full">
                 <SelectValue>
                   {studyKinds.find((item) => item.value === kind)?.label ?? kind}
                 </SelectValue>
@@ -256,14 +263,16 @@ function EditorBody({
       }
       footer={
         <div className="flex items-center gap-2.5 border-t border-line bg-chrome px-5 py-3">
-          <Button onClick={onBack}>Back to the library</Button>
+          <Button onClick={onBack}>
+            <Trans>Back to the library</Trans>
+          </Button>
           <span className="flex-1 text-body-sm text-fg-dim">{saveHint(source)}</span>
           <Button onClick={() => setShowPdf(true)}>
             <Icon name="eye" />
-            Preview the PDF
+            <Trans>Preview the PDF</Trans>
           </Button>
           <Button variant="primary" onClick={save} disabled={create.isPending || edit.isPending}>
-            {own ? `Save as v${version}` : "Save template"}
+            {own ? t`Save as v${version}` : t`Save template`}
           </Button>
           {showPdf ? (
             <LazyTemplatePdf

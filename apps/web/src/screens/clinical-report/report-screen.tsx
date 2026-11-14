@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   type CaseReport,
   getDownloadCaseReportPdfUrl,
@@ -90,6 +91,8 @@ type ReportScreenProps = {
 };
 
 export function ReportScreen(props: ReportScreenProps) {
+  const { t } = useLingui();
+
   useLengthUnits();
   const owner = useFlowOwner();
   const cases = useListCases(
@@ -102,7 +105,7 @@ export function ReportScreen(props: ReportScreenProps) {
   if (!loaded) {
     return (
       <main className="p-8">
-        <QueryState label="the clinical report" isPending={pending} error={failed || !pending}>
+        <QueryState label={t`the clinical report`} isPending={pending} error={failed || !pending}>
           {null}
         </QueryState>
       </main>
@@ -130,6 +133,8 @@ function ReportFlow({
   onNavigate,
   keep = false,
 }: ReportScreenProps & { loaded: LoadedReport; owner: string | undefined }) {
+  const { t } = useLingui();
+
   const data: ReportData = loaded.data;
   const live = scene === undefined;
   const mock: ReportScene = scene ?? "findings";
@@ -447,7 +452,9 @@ function ReportFlow({
         }
         next={
           <span className="flex gap-3">
-            <Button onClick={() => onNavigate({ step: page, modal: "amend" })}>Amend</Button>
+            <Button onClick={() => onNavigate({ step: page, modal: "amend" })}>
+              <Trans>Amend</Trans>
+            </Button>
             <Button
               variant="primary"
               onClick={() => {
@@ -461,7 +468,7 @@ function ReportFlow({
               }}
             >
               <Icon name="download" />
-              Download PDF
+              <Trans>Download PDF</Trans>
             </Button>
           </span>
         }
@@ -503,7 +510,7 @@ function ReportFlow({
               );
             }}
           >
-            Withdraw the request
+            <Trans>Withdraw the request</Trans>
           </Button>
         }
         hint="You are told when it is signed or returned."
@@ -518,7 +525,9 @@ function ReportFlow({
     const index = steps.findIndex((candidate) => candidate.key === page);
     const before = steps[index - 1];
     const backButton = before ? (
-      <Button onClick={() => goTo(before.key)}>Back</Button>
+      <Button onClick={() => goTo(before.key)}>
+        <Trans>Back</Trans>
+      </Button>
     ) : (
       back("Cancel")
     );
@@ -529,7 +538,7 @@ function ReportFlow({
           hint="The draft is saved as you go."
           next={
             <Button variant="primary" onClick={next}>
-              Next
+              <Trans>Next</Trans>
             </Button>
           }
         />
@@ -552,7 +561,7 @@ function ReportFlow({
             blockers.length ? (
               <BeforeYouList
                 showSingle
-                title={`Before you can ${mode === "sign" ? "sign out" : "send"}`}
+                title={t`Before you can ${mode === "sign" ? "sign out" : "send"}`}
                 className="rounded-none border-0 bg-transparent p-0"
                 blockers={blockers.map((issue) => ({
                   id: issue.field,
@@ -574,17 +583,17 @@ function ReportFlow({
             mode === "sign" ? (
               <span className="flex gap-3">
                 <Button onClick={() => update((current) => ({ ...current, mode: "cosign" }))}>
-                  Send for co-sign instead
+                  <Trans>Send for co-sign instead</Trans>
                 </Button>
                 <Button variant="primary" aria-disabled={blockers.length > 0} onClick={signNow}>
-                  Sign out
+                  <Trans>Sign out</Trans>
                 </Button>
               </span>
             ) : (
               <span className="flex gap-3">
                 {can ? (
                   <Button onClick={() => update((current) => ({ ...current, mode: "sign" }))}>
-                    Sign out myself
+                    <Trans>Sign out myself</Trans>
                   </Button>
                 ) : null}
                 <Button
@@ -593,7 +602,7 @@ function ReportFlow({
                   onClick={sendNow}
                 >
                   <Icon name="mail" />
-                  Send for co-sign
+                  <Trans>Send for co-sign</Trans>
                 </Button>
               </span>
             )
@@ -620,14 +629,17 @@ function ReportFlow({
   const status = done ? (
     <p className="m-0 mt-1.5 flex items-center gap-2 text-body-sm text-fg">
       <Icon name="lock" className="text-fg-dim" />
-      <span>Locked as version {report.amend ? 2 : 1}. A change is an amendment with a reason.</span>
+      <span>
+        <Trans>Locked as version</Trans> {report.amend ? 2 : 1}
+        <Trans>. A change is an amendment with a reason.</Trans>
+      </span>
     </p>
   ) : sent ? (
     <p className="m-0 mt-1.5 flex items-center gap-2 text-body-sm text-fg">
       <Icon name="clock" className="text-fg-dim" />
       <span>
-        Sent to {person(report.sent?.to)?.name}
-        {report.sent?.at ? `, ${report.sent.at}` : ""} · waiting
+        <Trans>Sent to</Trans> {person(report.sent?.to)?.name}
+        {report.sent?.at ? `, ${report.sent.at}` : ""} <Trans>· waiting</Trans>
       </span>
     </p>
   ) : undefined;
@@ -648,14 +660,14 @@ function ReportFlow({
           { label: `Case ${data.case.label}`, href: `${projectHref}?tab=slides` },
           { label: "Clinical report" },
         ]}
-        title="Clinical report"
+        title={t`Clinical report`}
         subtitle={
           <>
             <span className="font-mono" data-phi="">
               {data.case.label}
             </span>{" "}
             · {data.template.name} {data.template.version}
-            {assigned ? ` · assigned to ${assigned}` : ""}
+            {assigned ? t` · assigned to ${assigned}` : ""}
           </>
         }
         steps={stepStates}
@@ -683,8 +695,8 @@ function ReportFlow({
       </FlowPage>
       {report.preview && !done ? (
         <PreviewOverlay
-          label="Preview of the report"
-          title={`${data.case.label}_draft.pdf`}
+          label={t`Preview of the report`}
+          title={t`${data.case.label}_draft.pdf`}
           meta="A4 · draft, from what you typed"
           closeLabel="Close the preview"
           onClose={() => update((current) => ({ ...current, preview: false }))}
@@ -727,7 +739,7 @@ function ReportFlow({
       ) : null}
       {openModal === "sign" && !done && !sent ? (
         <SignModal
-          title={`Sign out ${data.case.label}`}
+          title={t`Sign out ${data.case.label}`}
           subtitle={`${data.template.name} ${data.template.version} · version 1`}
           rows={[
             {
@@ -790,7 +802,7 @@ function ReportFlow({
       ) : null}
       {openModal === "amend" && done ? (
         <ReasonModal
-          title="Amend the report"
+          title={t`Amend the report`}
           subtitle={`${data.case.label} · signed out ${(report.signed?.at ?? "").replace(/^(\d+ \w+) /, "$1 2026, ")}`}
           whatLabel="What changes"
           what="Version 2 of the report, with your reason on top"
@@ -799,8 +811,8 @@ function ReportFlow({
               ? `The clinician and ${nameOf(report.signed.co)}, the co-signer`
               : "The clinician"
           }
-          label="Reason"
-          placeholder="For example, measured again on deeper levels of A1"
+          label={t`Reason`}
+          placeholder={t`For example, measured again on deeper levels of A1`}
           help="The reason goes into the report."
           hint="v1 stays readable."
           primary="Amend and sign again"
@@ -860,11 +872,13 @@ const changeNames: Record<string, string> = {
 };
 
 function ReturnedNote({ server, name }: { server: CaseReport; name: (id: string) => string }) {
+  const { t } = useLingui();
+
   const from = server.cosigner_user_id ? name(server.cosigner_user_id) : "The co-signer";
   const changes = server.changes.map((key) => changeNames[key] ?? key);
   return (
     <Zone
-      title={`Returned by ${from}`}
+      title={t`Returned by ${from}`}
       sub={
         changes.length
           ? `Changed by ${from.split(" ")[0]}: ${andJoin(changes)}. Fix it and send it again.`

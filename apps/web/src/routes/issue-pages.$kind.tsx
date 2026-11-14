@@ -1,3 +1,4 @@
+import { Trans } from "@lingui/react/macro";
 import { Banner, InlineError } from "@parfocal/ui/components/banner";
 import { Button } from "@parfocal/ui/components/button";
 import { createFileRoute, notFound } from "@tanstack/react-router";
@@ -37,22 +38,44 @@ function IssuePagePreview() {
   if (kind === "styles") {
     return (
       <main className="grid max-w-xl gap-4 p-8">
-        <h1 className="m-0 text-page-title">Issue styles</h1>
-        <Banner tone="warn" actions={<Button size="sm">Retry now</Button>}>
-          <b>Connection lost.</b> Saving is paused.
+        <h1 className="m-0 text-page-title">
+          <Trans>Issue styles</Trans>
+        </h1>
+        <Banner
+          tone="warn"
+          actions={
+            <Button size="sm">
+              <Trans>Retry now</Trans>
+            </Button>
+          }
+        >
+          <b>
+            <Trans>Connection lost.</Trans>
+          </b>{" "}
+          <Trans>Saving is paused.</Trans>
         </Banner>
         <Banner inline tone="info" icon="lock">
-          <b>Signed off.</b> Changes need an amendment.
+          <b>
+            <Trans>Signed off.</Trans>
+          </b>{" "}
+          <Trans>Changes need an amendment.</Trans>
         </Banner>
         <Banner inline tone="bad">
-          The export failed.
+          <Trans>The export failed.</Trans>
         </Banner>
         <label className="grid gap-1 text-body-sm">
-          Due date
+          <Trans>Due date</Trans>
           <input aria-describedby="due-error" aria-invalid defaultValue="2020-01-01" />
         </label>
-        <InlineError id="due-error" actions={<Button variant="link">Pick a later date</Button>}>
-          The due date is in the past.
+        <InlineError
+          id="due-error"
+          actions={
+            <Button variant="link">
+              <Trans>Pick a later date</Trans>
+            </Button>
+          }
+        >
+          <Trans>The due date is in the past.</Trans>
         </InlineError>
       </main>
     );

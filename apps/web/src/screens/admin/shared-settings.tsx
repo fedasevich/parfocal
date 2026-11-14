@@ -1,3 +1,4 @@
+import { useLingui } from "@lingui/react/macro";
 import {
   getGetMySettingLayersQueryKey,
   getGetSessionPolicyQueryKey,
@@ -99,9 +100,11 @@ export function IdleLockChoice({
   minutes: number;
   save: (next: Partial<SessionPolicy>, said: string) => void;
 }) {
+  const { t } = useLingui();
+
   return (
     <NumberChoice
-      label="Lock after inactivity"
+      label={t`Lock after inactivity`}
       value={minutes}
       choices={idleLockChoices}
       format={durationText}

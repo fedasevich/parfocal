@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   type Announcement,
   type AnnouncementKind,
@@ -119,12 +120,14 @@ function Labelled({
 type SendContact = (email: string | null, message: string, undo?: () => void) => void;
 
 function SecurityContactField({ saved, send }: { saved: string | null; send: SendContact }) {
+  const { t } = useLingui();
+
   const [draft, setDraft] = useState(saved ?? "");
   const email = securityContactOf(draft);
   const changed = email !== (saved ?? "");
   return (
     <Labelled
-      label="Security contact"
+      label={t`Security contact`}
       help={
         saved === null
           ? "Needed before any project holds clinical data."
@@ -144,15 +147,15 @@ function SecurityContactField({ saved, send }: { saved: string | null; send: Sen
       >
         <Input
           type="email"
-          aria-label="Security contact"
-          placeholder="security@hospital.example"
+          aria-label={t`Security contact`}
+          placeholder={t`security@hospital.example`}
           maxLength={320}
           value={draft}
           onChange={(event) => setDraft(event.target.value)}
           className="w-72"
         />
         <Button type="submit" variant="primary" disabled={!isSecurityContact(draft) || !changed}>
-          Save
+          <Trans>Save</Trans>
         </Button>
         {saved === null ? null : (
           <Button
@@ -163,7 +166,7 @@ function SecurityContactField({ saved, send }: { saved: string | null; send: Sen
               )
             }
           >
-            Remove
+            <Trans>Remove</Trans>
           </Button>
         )}
       </form>
@@ -172,6 +175,8 @@ function SecurityContactField({ saved, send }: { saved: string | null; send: Sen
 }
 
 function SecurityContactZone({ notify }: { notify: Notify }) {
+  const { t } = useLingui();
+
   const contact = okData(useGetSecurityContact().data);
   const queryClient = useQueryClient();
   const update = useSetSecurityContact();
@@ -189,7 +194,7 @@ function SecurityContactZone({ notify }: { notify: Notify }) {
     );
   return (
     <Zone
-      title="Security contact"
+      title={t`Security contact`}
       sub="Where Parfocal reports a security incident or a breach that touches this workspace."
     >
       <div className={rows}>
@@ -200,24 +205,26 @@ function SecurityContactZone({ notify }: { notify: Notify }) {
 }
 
 function LockTimes({ notify }: { notify: Notify }) {
+  const { t } = useLingui();
+
   const { policy, save } = useSessionPolicy(notify);
   if (policy === undefined) return null;
   const hoursText = (hours: number) => (hours === 1 ? "1 hour" : `${hours} hours`);
   return (
     <Zone
-      title="Lock times"
+      title={t`Lock times`}
       sub="When a screen locks, how long a sign-in lasts and how long emergency access lasts."
     >
       <div className={rows}>
         <Labelled
-          label="Lock after inactivity"
+          label={t`Lock after inactivity`}
           help="People unlock with their password or passkey."
         >
           <IdleLockChoice minutes={policy.idle_lock_minutes} save={save} />
         </Labelled>
-        <Labelled label="Sign-in lasts" help="After this long people sign in again.">
+        <Labelled label={t`Sign-in lasts`} help="After this long people sign in again.">
           <NumberChoice
-            label="Sign-in lasts"
+            label={t`Sign-in lasts`}
             value={policy.session_hours}
             choices={sessionHourChoices}
             format={hoursText}
@@ -226,9 +233,9 @@ function LockTimes({ notify }: { notify: Notify }) {
             }
           />
         </Labelled>
-        <Labelled label="Emergency access lasts">
+        <Labelled label={t`Emergency access lasts`}>
           <NumberChoice
-            label="Emergency access lasts"
+            label={t`Emergency access lasts`}
             value={policy.emergency_hours ?? defaultEmergencyHours}
             choices={emergencyHourChoices}
             format={hoursText}
@@ -243,6 +250,8 @@ function LockTimes({ notify }: { notify: Notify }) {
 }
 
 function Defaults({ lab, notify }: { lab: LabSettings; notify: Notify }) {
+  const { t } = useLingui();
+
   const templates = (okData(useListStudyTemplates().data) ?? []).filter(
     (template) => template.retired_at === null,
   );
@@ -266,16 +275,16 @@ function Defaults({ lab, notify }: { lab: LabSettings; notify: Notify }) {
     templates.find((template) => template.id === current.template)?.name ?? "No template";
   return (
     <Zone
-      title="Defaults for new work"
+      title={t`Defaults for new work`}
       sub="What a new project and a new review task start with. People can change them there."
     >
       <div className={rows}>
         <Labelled
-          label="Privacy of new projects"
+          label={t`Privacy of new projects`}
           help="Owners can switch a project later. Clinical projects log every slide opened."
         >
           <SegmentedControl
-            aria-label="Privacy of new projects"
+            aria-label={t`Privacy of new projects`}
             value={current.privacy}
             onValueChange={(value) => {
               const next = String(value);
@@ -290,10 +299,10 @@ function Defaults({ lab, notify }: { lab: LabSettings; notify: Notify }) {
             options={privacyOptions.map((option) => ({ ...option }))}
           />
         </Labelled>
-        <Labelled label="Classes of new projects">
-          <ClassListChoice lab={lab} notify={notify} label="Classes of new projects" />
+        <Labelled label={t`Classes of new projects`}>
+          <ClassListChoice lab={lab} notify={notify} label={t`Classes of new projects`} />
         </Labelled>
-        <Labelled label="Study template of new tasks">
+        <Labelled label={t`Study template of new tasks`}>
           <Select
             value={current.template === NO_TEMPLATE ? NOT_CHOSEN : current.template}
             onValueChange={(value) =>
@@ -305,7 +314,7 @@ function Defaults({ lab, notify }: { lab: LabSettings; notify: Notify }) {
               )
             }
           >
-            <SelectTrigger size="sm" aria-label="Study template of new tasks" className="w-64">
+            <SelectTrigger size="sm" aria-label={t`Study template of new tasks`} className="w-64">
               <SelectValue>{templateName}</SelectValue>
             </SelectTrigger>
             <SelectContent>
@@ -324,6 +333,8 @@ function Defaults({ lab, notify }: { lab: LabSettings; notify: Notify }) {
 }
 
 function TumorShare({ lab, notify }: { lab: LabSettings; notify: Notify }) {
+  const { t } = useLingui();
+
   const queryClient = useQueryClient();
   const save = useSetWorkspaceSettings();
   const current = tumorShareOf(lab);
@@ -366,13 +377,13 @@ function TumorShare({ lab, notify }: { lab: LabSettings; notify: Notify }) {
   );
   return (
     <Zone
-      title="Tumor share result"
+      title={t`Tumor share result`}
       sub="For cases where the lab asks for tumor cellularity, the number line says whether the tumor share is above or below a cutoff whatever the unsure cells are."
     >
       <div className={rows}>
-        <Labelled label="Cutoff" help="Tumor cells as a share of the cells typed.">
+        <Labelled label={t`Cutoff`} help="Tumor cells as a share of the cells typed.">
           <NumberChoice
-            label="Tumor share cutoff"
+            label={t`Tumor share cutoff`}
             value={current.tumor_share_cutoff}
             choices={cutoffChoices}
             format={(value) => `${value}%`}
@@ -399,6 +410,8 @@ function TumorShare({ lab, notify }: { lab: LabSettings; notify: Notify }) {
 }
 
 function DecisionCutoffZone({ lab, notify }: { lab: LabSettings; notify: Notify }) {
+  const { t } = useLingui();
+
   const queryClient = useQueryClient();
   const save = useSetWorkspaceSettings();
   const current = decisionCutoffOf(lab);
@@ -415,13 +428,13 @@ function DecisionCutoffZone({ lab, notify }: { lab: LabSettings; notify: Notify 
     );
   return (
     <Zone
-      title="Decision cutoff"
+      title={t`Decision cutoff`}
       sub="The score below which the viewer fades an outline for everyone in the lab. Reviewers see it in their settings but cannot change it."
     >
       <div className={rows}>
-        <Labelled label="Cutoff" help="Scores under this percentage count as unsure.">
+        <Labelled label={t`Cutoff`} help="Scores under this percentage count as unsure.">
           <NumberChoice
-            label="Decision cutoff"
+            label={t`Decision cutoff`}
             value={current}
             choices={decisionCutoffChoices}
             format={(value) => `${value}%`}
@@ -438,6 +451,8 @@ function DecisionCutoffZone({ lab, notify }: { lab: LabSettings; notify: Notify 
 }
 
 function AnalyticsZone({ lab, notify }: { lab: LabSettings; notify: Notify }) {
+  const { t } = useLingui();
+
   const queryClient = useQueryClient();
   const save = useSetWorkspaceSettings();
   const current = analyticsPolicyOf(lab);
@@ -454,16 +469,16 @@ function AnalyticsZone({ lab, notify }: { lab: LabSettings; notify: Notify }) {
     );
   return (
     <Zone
-      title="Usage statistics"
+      title={t`Usage statistics`}
       sub="Counts of what is used, never names, patient data or slide content. The lab's choice wins over what a person chose."
     >
       <div className={rows}>
         <Labelled
-          label="Usage statistics"
+          label={t`Usage statistics`}
           help="Each person lets people turn them off in their own Settings."
         >
           <SegmentedControl
-            aria-label="Usage statistics"
+            aria-label={t`Usage statistics`}
             value={current}
             onValueChange={(value) => {
               const next = analyticsPolicyOptions.find((option) => option.value === value);
@@ -481,6 +496,8 @@ function AnalyticsZone({ lab, notify }: { lab: LabSettings; notify: Notify }) {
 }
 
 function PatientBannerZone({ lab, notify }: { lab: LabSettings; notify: Notify }) {
+  const { t } = useLingui();
+
   const queryClient = useQueryClient();
   const save = useSetWorkspaceSettings();
   const current = patientBannerOf(lab);
@@ -510,13 +527,13 @@ function PatientBannerZone({ lab, notify }: { lab: LabSettings; notify: Notify }
     );
   return (
     <Zone
-      title="Patient banner"
+      title={t`Patient banner`}
       sub="In clinical projects every case screen shows the patient's name, sex, age and record number. Only the lab changes this."
     >
       <div className={rows}>
-        <Labelled label="Banner" help="Research projects never show it.">
+        <Labelled label={t`Banner`} help="Research projects never show it.">
           <SegmentedControl
-            aria-label="Patient banner"
+            aria-label={t`Patient banner`}
             value={current.shown ? "shown" : "hidden"}
             onValueChange={(value) => {
               const next = value === "shown";
@@ -533,9 +550,9 @@ function PatientBannerZone({ lab, notify }: { lab: LabSettings; notify: Notify }
             ]}
           />
         </Labelled>
-        <Labelled label="Patient names" help="Initials show only the first letter of each name.">
+        <Labelled label={t`Patient names`} help="Initials show only the first letter of each name.">
           <SegmentedControl
-            aria-label="Patient names"
+            aria-label={t`Patient names`}
             value={current.names}
             onValueChange={(value) => {
               const next = value === "initials" ? "initials" : "full";
@@ -552,9 +569,9 @@ function PatientBannerZone({ lab, notify }: { lab: LabSettings; notify: Notify }
             ]}
           />
         </Labelled>
-        <Labelled label="Who chooses names" help="Locked keeps the lab's choice for everyone.">
+        <Labelled label={t`Who chooses names`} help="Locked keeps the lab's choice for everyone.">
           <SegmentedControl
-            aria-label="Who chooses patient names"
+            aria-label={t`Who chooses patient names`}
             value={current.namesLocked ? "lab" : "person"}
             onValueChange={(value) => {
               const next = value === "lab";
@@ -579,6 +596,8 @@ function PatientBannerZone({ lab, notify }: { lab: LabSettings; notify: Notify }
 }
 
 function Tiers({ notify }: { notify: Notify }) {
+  const { t } = useLingui();
+
   const mappings = okData(useListModelTiers().data) ?? [];
   const queryClient = useQueryClient();
   const set = useSetModelTier();
@@ -612,13 +631,15 @@ function Tiers({ notify }: { notify: Notify }) {
   };
   return (
     <Zone
-      title="Model tiers"
+      title={t`Model tiers`}
       sub="The model behind Best, Good and Fast when someone asks for an outline, tumor regions or cell types."
     >
       <Table className={tableClass}>
         <TableHeader>
           <TableRow>
-            <TableHead>Task</TableHead>
+            <TableHead>
+              <Trans>Task</Trans>
+            </TableHead>
             {tierLevels.map((tier) => (
               <TableHead key={tier}>{tierText[tier]}</TableHead>
             ))}
@@ -664,6 +685,8 @@ function Tiers({ notify }: { notify: Notify }) {
 }
 
 function Announcements({ notify }: { notify: Notify }) {
+  const { t } = useLingui();
+
   const current: Announcement[] = okData(useListAnnouncements().data) ?? [];
   const queryClient = useQueryClient();
   const create = useCreateAnnouncement();
@@ -698,12 +721,14 @@ function Announcements({ notify }: { notify: Notify }) {
     );
   return (
     <Zone
-      title="Announcements"
+      title={t`Announcements`}
       sub="A short note everyone in the workspace sees on Home until it ends."
     >
       <div className="grid gap-3">
         {current.length === 0 ? (
-          <span className="text-body-sm text-fg-dim">No announcements are showing.</span>
+          <span className="text-body-sm text-fg-dim">
+            <Trans>No announcements are showing.</Trans>
+          </span>
         ) : (
           <ul className="m-0 grid list-none gap-2 p-0">
             {current.map((item) => (
@@ -717,8 +742,8 @@ function Announcements({ notify }: { notify: Notify }) {
                   </CategoryTag>
                   <span className="min-w-0 truncate">{item.text}</span>
                 </span>
-                <Button size="sm" aria-label={`End: ${item.text}`} onClick={() => stop(item)}>
-                  End
+                <Button size="sm" aria-label={t`End: ${item.text}`} onClick={() => stop(item)}>
+                  <Trans>End</Trans>
                 </Button>
               </li>
             ))}
@@ -732,7 +757,7 @@ function Announcements({ notify }: { notify: Notify }) {
           }}
         >
           <Select value={kind} onValueChange={(value) => setKind(value as AnnouncementKind)}>
-            <SelectTrigger size="sm" aria-label="Kind of announcement" className="w-36">
+            <SelectTrigger size="sm" aria-label={t`Kind of announcement`} className="w-36">
               <SelectValue>
                 {announcementKinds.find((option) => option.value === kind)?.label}
               </SelectValue>
@@ -746,15 +771,15 @@ function Announcements({ notify }: { notify: Notify }) {
             </SelectContent>
           </Select>
           <Input
-            aria-label="Announcement text"
-            placeholder="What should everyone know?"
+            aria-label={t`Announcement text`}
+            placeholder={t`What should everyone know?`}
             maxLength={280}
             value={text}
             onChange={(event) => setText(event.target.value)}
             className="min-w-64 flex-1"
           />
           <Select value={ends} onValueChange={(value) => setEnds(value as AnnouncementEnd)}>
-            <SelectTrigger size="sm" aria-label="Announcement ends" className="w-40">
+            <SelectTrigger size="sm" aria-label={t`Announcement ends`} className="w-40">
               <SelectValue>
                 {announcementEnds.find((option) => option.value === ends)?.label}
               </SelectValue>
@@ -768,7 +793,7 @@ function Announcements({ notify }: { notify: Notify }) {
             </SelectContent>
           </Select>
           <Button type="submit" variant="primary" disabled={!isAnnouncementText(text)}>
-            Post
+            <Trans>Post</Trans>
           </Button>
         </form>
       </div>

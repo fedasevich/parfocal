@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   getListModelRunsQueryKey,
   getListMyJobsQueryKey,
@@ -128,6 +129,8 @@ function browserUploads(entries: readonly UploadEntry[]): BrowserUpload[] {
 }
 
 export function ShellJobs() {
+  const { t } = useLingui();
+
   const tray = useJobsTray();
   const jobs = okData(useListMyJobs().data) ?? [];
   const resume = useResumeJob();
@@ -184,9 +187,13 @@ export function ShellJobs() {
       onOpen={() => open(job)}
       action={
         job.status === "done" ? (
-          <JobRowLink onClick={() => openProject(job)}>Open</JobRowLink>
+          <JobRowLink onClick={() => openProject(job)}>
+            <Trans>Open</Trans>
+          </JobRowLink>
         ) : job.status === "paused" ? (
-          <JobRowLink onClick={() => void resumeFromTray(job)}>Resume</JobRowLink>
+          <JobRowLink onClick={() => void resumeFromTray(job)}>
+            <Trans>Resume</Trans>
+          </JobRowLink>
         ) : undefined
       }
     />
@@ -202,7 +209,7 @@ export function ShellJobs() {
           />
         }
       />
-      <PopoverContent align="end" aria-label="Jobs" className="w-95 gap-0 overflow-hidden p-0">
+      <PopoverContent align="end" aria-label={t`Jobs`} className="w-95 gap-0 overflow-hidden p-0">
         <JobsTray
           running={[...uploadsRunning.map(uploadRow), ...running.map(row)]}
           finished={[...uploadsDone.map(uploadRow), ...finished.map(row)]}

@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import { DevFigures, DevStatus, DevZone } from "@parfocal/ui/components/developer-drawer";
 import { Icon } from "@parfocal/ui/components/icon";
@@ -61,6 +62,8 @@ export function BenchSection({
   host?: DebugHandleHost;
   log?: BenchmarkLog;
 }) {
+  const { t } = useLingui();
+
   const rows = useSyncExternalStore(log.subscribe, log.rows, log.rows);
   const count = useSyncExternalStore(log.subscribe, log.count, log.count);
   const [status, setStatus] = useState<string | null>(null);
@@ -86,18 +89,18 @@ export function BenchSection({
   return (
     <>
       <DevZone
-        title="Pan sweep"
+        title={t`Pan sweep`}
         note="Pans a 180-step ellipse at this zoom, then waits 600 ms for tiles to settle."
       >
         <div className="flex flex-wrap items-center gap-2">
           <Button size="sm" variant="primary" disabled={running} onClick={() => void run()}>
-            Run pan sweep
+            <Trans>Run pan sweep</Trans>
           </Button>
           <DevStatus live={status !== null}>
             {status ??
               (last === undefined
-                ? `Last run 14:02 · ${route} · 100k nuclei · zoom 2`
-                : `Last run · ${cell(last.renderer)} · ${nucleiText(last.nuclei)} nuclei · zoom ${cell(last.zoom)}`)}
+                ? t`Last run 14:02 · ${route} · 100k nuclei · zoom 2`
+                : t`Last run · ${cell(last.renderer)} · ${nucleiText(last.nuclei)} nuclei · zoom ${cell(last.zoom)}`)}
           </DevStatus>
         </div>
         <DevFigures
@@ -119,7 +122,7 @@ export function BenchSection({
         />
       </DevZone>
       <DevZone
-        title="Runs"
+        title={t`Runs`}
         end={
           <Button
             size="sm"
@@ -127,14 +130,16 @@ export function BenchSection({
             onClick={() => downloadCsv(log.csv(), benchmarkFileName(new Date()))}
           >
             <Icon name="download" />
-            Export CSV, {count} {count === 1 ? "run" : "runs"}
+            <Trans>Export CSV,</Trans> {count} {count === 1 ? t`run` : t`runs`}
           </Button>
         }
       >
         <table className="w-full border-collapse text-body-sm">
           <thead>
             <tr className="border-b border-line text-left text-caption text-fg-faint">
-              <th className="py-1.5 font-semibold">Renderer</th>
+              <th className="py-1.5 font-semibold">
+                <Trans>Renderer</Trans>
+              </th>
               {["Nuclei", "Zoom", "p50", "p95", "fps"].map((name) => (
                 <th key={name} className="py-1.5 text-right font-semibold">
                   {name}
@@ -156,7 +161,7 @@ export function BenchSection({
           </tbody>
         </table>
       </DevZone>
-      <DevZone title="CSV columns">
+      <DevZone title={t`CSV columns`}>
         <div className="flex flex-wrap gap-1.5">
           {csvColumns.map((column) => (
             <code

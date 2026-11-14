@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { type SearchHit, useListProjects, useSearch } from "@parfocal/api-client";
 import { Icon } from "@parfocal/ui/components/icon";
 import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
@@ -56,6 +57,8 @@ export function SearchScreen({
   state: SearchState;
   change: (next: Partial<SearchState>) => void;
 }) {
+  const { t } = useLingui();
+
   const goTo = useGoTo();
   const overlay = useOverlay();
   const [draft, setDraft] = useState(state.q);
@@ -97,17 +100,19 @@ export function SearchScreen({
   return (
     <main className="flex min-h-0 flex-col gap-(--density-flow-gap) overflow-auto px-8 pt-5.5 pb-4.5 pl-7">
       <header>
-        <h1 className="m-0 text-page-title font-semibold tracking-[-0.01em] text-fg">Search</h1>
+        <h1 className="m-0 text-page-title font-semibold tracking-[-0.01em] text-fg">
+          <Trans>Search</Trans>
+        </h1>
         <p className="mt-0.75 mb-0 text-body-sm leading-[1.45] text-fg-dim">
-          Projects, cases, slides, object IDs like T2·C145, people and actions
+          <Trans>Projects, cases, slides, object IDs like T2·C145, people and actions</Trans>
         </p>
       </header>
       <search className="flex max-w-[640px] items-center gap-2.5 rounded-lg border border-line-strong bg-chrome px-3.5 py-2.5 text-lead focus-within:border-accent">
         <Icon name="search" className="text-fg-dim" />
         <input
-          aria-label="Search everything"
+          aria-label={t`Search everything`}
           className="min-w-0 flex-1 border-0 bg-transparent text-fg outline-none placeholder:text-fg-faint"
-          placeholder="Search slides, cases, IDs like T2·C145 and people"
+          placeholder={t`Search slides, cases, IDs like T2·C145 and people`}
           value={draft}
           onChange={(event) => {
             setDraft(event.target.value);
@@ -116,7 +121,7 @@ export function SearchScreen({
         />
       </search>
       <SegmentedControl
-        aria-label="Search scope"
+        aria-label={t`Search scope`}
         wrap
         value={state.scope}
         onValueChange={(value) => change({ scope: value as SearchPageScope })}
@@ -124,11 +129,17 @@ export function SearchScreen({
       />
       <div aria-live="polite" className="grid max-w-[760px] gap-2" data-phi="">
         {!ready ? (
-          <p className="m-0 text-body-sm text-fg-dim">Type at least two letters to search.</p>
+          <p className="m-0 text-body-sm text-fg-dim">
+            <Trans>Type at least two letters to search.</Trans>
+          </p>
         ) : found.isPending && !onlyActions ? (
-          <p className="m-0 text-body-sm text-fg-dim">Searching…</p>
+          <p className="m-0 text-body-sm text-fg-dim">
+            <Trans>Searching…</Trans>
+          </p>
         ) : total === 0 ? (
-          <p className="m-0 text-body-sm text-fg-dim">Nothing matches "{trimmed}".</p>
+          <p className="m-0 text-body-sm text-fg-dim">
+            <Trans>Nothing matches "{trimmed}".</Trans>
+          </p>
         ) : (
           <p className="m-0 text-body-sm text-fg-dim">{plural(total, "result")}</p>
         )}
@@ -153,7 +164,7 @@ export function SearchScreen({
           </Group>
         ))}
         {sortedActions.length > 0 ? (
-          <Group title="Actions" count={sortedActions.length}>
+          <Group title={t`Actions`} count={sortedActions.length}>
             {sortedActions.map((entry) => (
               <button key={entry.id} type="button" className={rowClass} onClick={entry.run}>
                 <Icon name={entry.icon} />

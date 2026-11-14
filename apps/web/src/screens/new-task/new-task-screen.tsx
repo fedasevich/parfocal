@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   type TaskDraft,
   useCreateReviewTask,
@@ -98,12 +99,14 @@ function useLinkRenderer(): LinkRenderer {
 }
 
 export function NewTaskScreen(props: NewTaskScreenProps) {
+  const { t } = useLingui();
+
   const owner = useFlowOwner();
   const { data, pending, failed } = useTaskData(props.projectId);
   if (!data) {
     return (
       <main className="p-8">
-        <QueryState label="the new review task" isPending={pending} error={failed || !pending}>
+        <QueryState label={t`the new review task`} isPending={pending} error={failed || !pending}>
           {null}
         </QueryState>
       </main>
@@ -183,6 +186,8 @@ function NewTaskFlow({
   onNavigate,
   keep = false,
 }: NewTaskScreenProps & { data: TaskData; owner: string | undefined }) {
+  const { t } = useLingui();
+
   const flow = useKeptFlow({
     owner,
     id: `new-task:${data.projectId}`,
@@ -383,7 +388,7 @@ function NewTaskFlow({
           listed ? (
             <BeforeYouList
               showSingle
-              title={`Before you can ${last ? "send" : "go on"}`}
+              title={t`Before you can ${last ? "send" : "go on"}`}
               className="rounded-none border-0 bg-transparent p-0"
               blockers={blockers.map((issue) => ({
                 id: issue.field,
@@ -396,7 +401,9 @@ function NewTaskFlow({
         }
         back={
           before ? (
-            <Button onClick={() => go(before)}>Back</Button>
+            <Button onClick={() => go(before)}>
+              <Trans>Back</Trans>
+            </Button>
           ) : (
             renderLink({
               href: `${projectHref}?tab=tasks`,
@@ -413,7 +420,7 @@ function NewTaskFlow({
             onClick={last ? send : next}
           >
             {last ? <Icon name="mail" /> : null}
-            {last ? sendLabel(draft) : "Next"}
+            {last ? sendLabel(draft) : t`Next`}
           </Button>
         }
       />
@@ -424,9 +431,9 @@ function NewTaskFlow({
     <p className="m-0 mt-1.5 flex items-center gap-2 text-body-sm text-fg">
       <Icon name="check" className="text-ok" />
       <span>
-        Sent to {plural(draft.reviewers.length, "reviewer")}
-        {draft.invites.length ? ` and ${draft.invites.length} invited` : ""} on{" "}
-        {draft.sentAt ?? "15 Oct"}
+        <Trans>Sent to</Trans> {plural(draft.reviewers.length, "reviewer")}
+        {draft.invites.length ? t` and ${draft.invites.length} invited` : ""} <Trans>on</Trans>{" "}
+        {draft.sentAt ?? t`15 Oct`}
       </span>
     </p>
   );

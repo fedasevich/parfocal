@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   getGetReviewTaskStatesQueryKey,
   getGetSignOffSummaryQueryKey,
@@ -82,6 +83,8 @@ function SignOffModal({
   taskName: string;
   scene: SignOffScene;
 }) {
+  const { t } = useLingui();
+
   const summary = okData(useGetSignOffSummary(taskId).data);
   const evaluation = okData(useGetTaskEvaluation(taskId).data);
   const me = okData(useGetMe().data);
@@ -134,23 +137,25 @@ function SignOffModal({
           open={!amending}
           onOpenChange={closeOn(toProject)}
           width={560}
-          title={`Sign off ${taskCode}`}
+          title={t`Sign off ${taskCode}`}
           subtitle={subtitle}
           hint="Changes after sign-off are logged, and the report marks them."
           showCancel={false}
           secondaryAction={
             summary.next_version ? (
               <Button onClick={() => setSigningNext(true)}>
-                Sign v{summary.next_version.version}
+                <Trans>Sign v{summary.next_version.version}</Trans>
               </Button>
             ) : (
-              <Button onClick={() => setAmending(true)}>Start v2</Button>
+              <Button onClick={() => setAmending(true)}>
+                <Trans>Start v2</Trans>
+              </Button>
             )
           }
           primaryLabel={
             <>
               <Icon name="file" />
-              Open the evaluation report
+              <Trans>Open the evaluation report</Trans>
             </>
           }
           onPrimary={() => void navigate({ to: "/tasks/$taskId/evaluation", params: { taskId } })}
@@ -158,8 +163,11 @@ function SignOffModal({
           <SmallModalZone
             title={
               <>
-                Evaluation v{summary.version} · signed{" "}
-                <StatusTag tone="accent">Soft lock</StatusTag>
+                <Trans>Evaluation v</Trans>
+                {summary.version} <Trans>· signed</Trans>{" "}
+                <StatusTag tone="accent">
+                  <Trans>Soft lock</Trans>
+                </StatusTag>
               </>
             }
           >
@@ -180,20 +188,23 @@ function SignOffModal({
             />
           </SmallModalZone>
           {summary.next_version ? (
-            <SmallModalZone title="Next version">
+            <SmallModalZone title={t`Next version`}>
               <ChangeLine
                 who={person(summary.next_version.by_user_id)}
                 at="Just now"
                 text={
                   <>
-                    <b>Evaluation v{summary.next_version.version} · draft</b>, started from v
+                    <b>
+                      <Trans>Evaluation v{summary.next_version.version} · draft</Trans>
+                    </b>
+                    <Trans>, started from v</Trans>
                     {summary.version} · "{summary.next_version.reason}"
                   </>
                 }
               />
             </SmallModalZone>
           ) : null}
-          <SmallModalZone title="Export">
+          <SmallModalZone title={t`Export`}>
             <div className="grid gap-2.5">
               {exportsList.map((item) => (
                 <label
@@ -227,15 +238,17 @@ function SignOffModal({
                 }
               >
                 <Icon name="download" />
-                {picked.length ? `Download ${plural(picked.length, "file")}` : "Download"}
+                {picked.length ? t`Download ${plural(picked.length, "file")}` : t`Download`}
               </Button>
               {picked.length ? null : (
-                <span className="text-body-sm text-fg-dim">Pick at least one file</span>
+                <span className="text-body-sm text-fg-dim">
+                  <Trans>Pick at least one file</Trans>
+                </span>
               )}
             </div>
           </SmallModalZone>
           {summary.changes.length ? (
-            <SmallModalZone title="Changed after sign-off">
+            <SmallModalZone title={t`Changed after sign-off`}>
               {summary.changes.map((change) => (
                 <ChangeLine
                   key={`${change.object}-${change.at}`}
@@ -244,7 +257,9 @@ function SignOffModal({
                   text={
                     <>
                       <b data-phi="">
-                        {change.object} on {change.slide_label}
+                        <Trans>
+                          {change.object} on {change.slide_label}
+                        </Trans>
                       </b>
                       : {change.text} · "{change.reason}"
                     </>
@@ -256,13 +271,13 @@ function SignOffModal({
         </SmallModal>
         {amending ? (
           <ReasonModal
-            title="Start Evaluation v2"
+            title={t`Start Evaluation v2`}
             subtitle={`${taskCode} · Evaluation v${summary.version} signed ${longDate(signed.at)}`}
             whatLabel="What changes"
             what="A new draft, Evaluation v2, copied from v1"
             told={`${andJoin(summary.reviewer_ids.map(nameOf))}, the reviewers of ${taskCode}`}
-            label="Reason"
-            placeholder="For example, measured again on deeper levels of A1"
+            label={t`Reason`}
+            placeholder={t`For example, measured again on deeper levels of A1`}
             help="The reason goes into the report."
             hint="v1 stays readable as it was signed."
             primary="Start v2"
@@ -298,8 +313,8 @@ function SignOffModal({
         width={560}
         title={
           summary.next_version
-            ? `Sign off ${taskCode} · v${summary.next_version.version}`
-            : `Sign off ${taskCode}`
+            ? t`Sign off ${taskCode} · v${summary.next_version.version}`
+            : t`Sign off ${taskCode}`
         }
         subtitle={subtitle}
         hint={
@@ -316,7 +331,7 @@ function SignOffModal({
         primaryBusy={busy}
         onPrimary={signature.run}
       >
-        <SmallModalZone title={blockers.length ? "Before you can sign" : "Ready to sign"}>
+        <SmallModalZone title={blockers.length ? t`Before you can sign` : t`Ready to sign`}>
           <ReadinessList>
             {blockers.length ? (
               blockers.map((blocker) => (
@@ -339,7 +354,7 @@ function SignOffModal({
                         )
                       }
                     >
-                      Go to
+                      <Trans>Go to</Trans>
                     </Button>
                   }
                 />
@@ -349,20 +364,20 @@ function SignOffModal({
                 <ReadinessRow
                   data-phi=""
                   tone="ok"
-                  title={`All ${summary.reviews.slides} slides reviewed by both reviewers`}
+                  title={t`All ${summary.reviews.slides} slides reviewed by both reviewers`}
                   sub={`${summary.reviews.submitted} of ${summary.reviews.total} reviews submitted, ${summary.reviews.opinion_forms} opinion forms`}
                 />
                 <ReadinessRow
                   data-phi=""
                   tone="ok"
-                  title={`${summary.queue.total} disagreements resolved`}
+                  title={t`${summary.queue.total} disagreements resolved`}
                   sub={resolvedText(summary, nameOf)}
                 />
                 {summary.queue.left_open.length ? (
                   <ReadinessRow
                     data-phi=""
                     tone="warn"
-                    title={`${summary.queue.left_open.length} objects left open on purpose`}
+                    title={t`${summary.queue.left_open.length} objects left open on purpose`}
                     sub={`${summary.queue.left_open.map((row) => `${row.object} on ${row.slide_label}`).join(", ")} · allowed, in the report`}
                   />
                 ) : null}
@@ -372,26 +387,32 @@ function SignOffModal({
               <ReadinessRow
                 data-phi=""
                 tone="warn"
-                title={`${plural(summary.open_threads.total, "thread")} still open`}
+                title={t`${plural(summary.open_threads.total, "thread")} still open`}
                 sub={`${summary.open_threads.slides.map((row) => `${row.count} on ${row.slide_label}`).join(", ")} · they do not block signing, the report lists them`}
               />
             ) : null}
             <ReadinessRow
               data-phi=""
               tone="ok"
-              title="Result set and IDs fixed"
+              title={t`Result set and IDs fixed`}
               sub={`${summary.result_set.name}, ${summary.result_set.objects} objects, plus ${summary.result_set.added} added by a reviewer`}
             />
           </ReadinessList>
         </SmallModalZone>
-        <SmallModalZone title="Results">
+        <SmallModalZone title={t`Results`}>
           <MetricTiles variant="panel" tiles={evaluation ? headlineTiles(evaluation) : []} />
         </SmallModalZone>
-        <SmallModalZone title="What signing does">
+        <SmallModalZone title={t`What signing does`}>
           <p className="m-0 text-body-sm leading-[1.5] text-fg">
-            It freezes <b>Evaluation v{summary.version}</b>: the result set, every decision, edit,
-            comment and opinion, and the IDs, with a checksum. You can still change things
-            afterwards. Each change is logged with a reason and the report shows it.
+            <Trans>It freezes</Trans>{" "}
+            <b>
+              <Trans>Evaluation v{summary.version}</Trans>
+            </b>
+            <Trans>
+              : the result set, every decision, edit, comment and opinion, and the IDs, with a
+              checksum. You can still change things afterwards. Each change is logged with a reason
+              and the report shows it.
+            </Trans>
           </p>
         </SmallModalZone>
         {busy || blockers.length ? null : signature.zone}

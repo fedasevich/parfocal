@@ -1,3 +1,4 @@
+import { Trans } from "@lingui/react/macro";
 import {
   getGetMyAvailabilityQueryKey,
   type Me,
@@ -66,7 +67,7 @@ function ViewAs({ current }: { current: string | undefined }) {
     <>
       <DropdownMenuSeparator />
       <div className="px-2.5 pt-1 pb-0.5 text-caption font-semibold text-fg-dim">
-        View as, dev build only
+        <Trans>View as, dev build only</Trans>
       </div>
       {shown.map(({ key, person }) => (
         <DropdownMenuItem

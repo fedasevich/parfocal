@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   getGetImportProblemsQueryOptions,
   getGetUploadStatusQueryKey,
@@ -59,10 +60,12 @@ function ClassSelect({
   label: string;
   onChange: (id: string | null) => void;
 }) {
+  const { t } = useLingui();
+
   return (
     <Select value={value ?? ""} onValueChange={(next) => onChange(next === "" ? null : next)}>
       <SelectTrigger size="sm" aria-label={label} className="w-full max-w-64">
-        <SelectValue placeholder="Choose a class" />
+        <SelectValue placeholder={t`Choose a class`} />
       </SelectTrigger>
       <SelectContent>
         {classes.map((item) => (
@@ -119,6 +122,8 @@ function ProblemFix({
   classes: readonly ProjectClass[];
   change: (next: Partial<Choices>) => void;
 }) {
+  const { t } = useLingui();
+
   if (isFixed(problem, choices)) {
     return (
       <DoneRow
@@ -151,7 +156,7 @@ function ProblemFix({
             <ClassSelect
               classes={classes}
               value={choices.mappings[source] ?? null}
-              label={`Class for ${source}`}
+              label={t`Class for ${source}`}
               onChange={(id) => {
                 const mappings = { ...choices.mappings };
                 if (id === null) delete mappings[source];
@@ -179,12 +184,12 @@ function ProblemFix({
       <ClassSelect
         classes={classes}
         value={choices.classId}
-        label="Class for objects with none"
+        label={t`Class for objects with none`}
         onChange={(id) => change({ classId: id })}
       />
     ) : problem.code === known.noScore ? (
       <SegmentedControl
-        aria-label="Objects with no score"
+        aria-label={t`Objects with no score`}
         value={choices.score}
         onValueChange={(value) => change({ score: value as ScoreDefault })}
         options={[
@@ -194,7 +199,8 @@ function ProblemFix({
       />
     ) : problem.code === known.scale && guess !== null ? (
       <span className="text-body-sm text-fg-dim">
-        Guess: level {guess.level ?? "unknown"}, scaled by {guess.downsample}
+        <Trans>Guess: level</Trans> {guess.level ?? t`unknown`}
+        <Trans>, scaled by</Trans> {guess.downsample}
       </span>
     ) : null;
   const selectsOnly = problem.code === known.noClass || problem.code === known.unknownClasses;
@@ -215,7 +221,7 @@ function ProblemFix({
       actions={
         <>
           {selectsOnly ? null : (
-            <Button onClick={confirm}>{fixLabel[problem.code] ?? "Confirm"}</Button>
+            <Button onClick={confirm}>{fixLabel[problem.code] ?? t`Confirm`}</Button>
           )}
           {problem.code === known.unreadable ? (
             <Button
@@ -223,7 +229,7 @@ function ProblemFix({
               render={<a href={`/api/uploads/${uploadId}/problems/report`} download />}
             >
               <Icon name="download" />
-              Error report
+              <Trans>Error report</Trans>
             </Button>
           ) : null}
         </>
@@ -282,18 +288,18 @@ function ResultChoices({ upload, projectId }: { upload: ResultUpload; projectId:
             disabled={open.length > 0 || choose.isPending}
             onClick={send}
           >
-            Import {upload.name}
+            <Trans>Import {upload.name}</Trans>
           </Button>
           <Button
             variant="ghost"
             disabled={leave.isPending}
             onClick={() => leave.mutate({ uploadId: upload.uploadId }, { onSuccess: refresh })}
           >
-            Leave it out
+            <Trans>Leave it out</Trans>
           </Button>
           {open.length > 0 ? (
             <span className="text-body-sm text-fg-dim">
-              {plural(open.length, "problem")} left in this file
+              {plural(open.length, "problem")} <Trans>left in this file</Trans>
             </span>
           ) : null}
         </div>
@@ -309,6 +315,8 @@ export function ResultProblems({
   uploads: readonly ResultUpload[];
   projectId: string;
 }) {
+  const { t } = useLingui();
+
   const open = openResultProblems(uploads);
   const waiting = uploads.filter(waitsForChoices);
   const heatmaps = uploads.filter(notStored);
@@ -316,7 +324,7 @@ export function ResultProblems({
   return (
     <>
       <Zone
-        title="Result files"
+        title={t`Result files`}
         sub={
           open > 0
             ? `${plural(open, "result file")} need${open === 1 ? "s" : ""} you. A file with a problem waits, the rest import.`
@@ -333,7 +341,7 @@ export function ResultProblems({
           icon="layers"
           tag="Heatmap not kept"
           tone="warn"
-          title="Parfocal cannot keep heatmaps yet"
+          title={t`Parfocal cannot keep heatmaps yet`}
           file={upload.name}
           text={
             upload.message ??

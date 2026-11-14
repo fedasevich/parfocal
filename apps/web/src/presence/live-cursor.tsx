@@ -1,3 +1,4 @@
+import { useLingui } from "@lingui/react/macro";
 import { useEffect, useSyncExternalStore } from "react";
 import { firstName, usePeople } from "../screens/project/people.ts";
 import type { ViewerEngine } from "../viewer/viewer-engine.ts";
@@ -16,13 +17,15 @@ export function LiveCursor({
   user: string;
   mirrored?: boolean;
 }) {
+  const { t } = useLingui();
+
   const person = usePeople().byId(user);
   return (
     <span
       data-testid="shared-cursor"
       data-user={user}
       role="img"
-      aria-label={`${person.name} points here`}
+      aria-label={t`${person.name} points here`}
       className="pointer-events-none absolute z-3 size-0"
       style={{ left: x, top: y }}
     >

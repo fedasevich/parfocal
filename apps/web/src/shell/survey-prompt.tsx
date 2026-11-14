@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { seqPoints } from "../telemetry/survey-items.ts";
@@ -86,7 +87,7 @@ function SusCard() {
   return (
     <>
       <p className="text-caption text-ink-2">
-        Question {step + 1} of {susItems.length}
+        <Trans>Question</Trans> {step + 1} <Trans>of</Trans> {susItems.length}
       </p>
       <p className="font-medium text-ink">{item}</p>
       <Scale
@@ -105,7 +106,7 @@ function SusCard() {
       </div>
       {answers.length > 0 ? (
         <Button size="xs" variant="ghost" onClick={() => setAnswers(answers.slice(0, -1))}>
-          Back
+          <Trans>Back</Trans>
         </Button>
       ) : null}
     </>
@@ -113,16 +114,18 @@ function SusCard() {
 }
 
 export function SurveyPrompt() {
+  const { t } = useLingui();
+
   const offer = useOffer();
   if (offer === null) return null;
   return (
     <section
-      aria-label="Quick survey"
+      aria-label={t`Quick survey`}
       className="fixed right-4 bottom-4 z-40 flex w-80 flex-col gap-2 rounded-card border border-line bg-surf-raised p-3 shadow-lg"
     >
       {offer.survey === "seq" ? <SeqCard /> : <SusCard />}
       <Button size="xs" variant="ghost" onClick={() => surveyPrompter.dismiss()}>
-        Not now
+        <Trans>Not now</Trans>
       </Button>
     </section>
   );

@@ -1,3 +1,4 @@
+import { useLingui } from "@lingui/react/macro";
 import { Icon } from "@parfocal/ui/components/icon";
 import { deviceNames, type LegendContext, type LegendDevice, legendRows } from "./device-legend.ts";
 
@@ -8,9 +9,11 @@ export function DeviceLegend({
   device: LegendDevice;
   context: LegendContext;
 }) {
+  const { t } = useLingui();
+
   return (
     <section
-      aria-label={`${deviceNames[device]} controls`}
+      aria-label={t`${deviceNames[device]} controls`}
       data-testid="device-legend"
       data-device={device}
       data-context={context}

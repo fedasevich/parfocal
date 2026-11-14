@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { type MyTask, type SlideRow, useGetMe } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
 import { FilterChip } from "@parfocal/ui/components/filter-chip";
@@ -45,9 +46,23 @@ const reviewWords: Record<string, { word: string; tone: string }> = {
 };
 
 function statusOf(row: SlideRow) {
-  if (row.result_sets.length === 0) return <StatusTag tone="warn">needs results</StatusTag>;
-  if (row.reviews.length > 0) return <StatusTag tone="accent">in review</StatusTag>;
-  return <StatusTag>ready</StatusTag>;
+  if (row.result_sets.length === 0)
+    return (
+      <StatusTag tone="warn">
+        <Trans>needs results</Trans>
+      </StatusTag>
+    );
+  if (row.reviews.length > 0)
+    return (
+      <StatusTag tone="accent">
+        <Trans>in review</Trans>
+      </StatusTag>
+    );
+  return (
+    <StatusTag>
+      <Trans>ready</Trans>
+    </StatusTag>
+  );
 }
 
 function SlidePreview({
@@ -166,6 +181,8 @@ function SlideLine({
   onSelect: (key: string) => void;
   onOpen: (row: SlideRow) => void;
 }) {
+  const { t } = useLingui();
+
   const people = usePeople();
   return (
     <TableRow
@@ -186,7 +203,7 @@ function SlideLine({
       </TableCell>
       {showProject ? (
         <TableCell className="whitespace-normal">
-          {row.project.code} · {row.case_label ? `case ${row.case_label}` : "loose"}
+          {row.project.code} · {row.case_label ? t`case ${row.case_label}` : t`loose`}
         </TableCell>
       ) : null}
       <TableCell className="whitespace-normal">
@@ -197,7 +214,9 @@ function SlideLine({
               return <SetChip key={set.id} label={chip.label} source={chip.source} />;
             })
           ) : (
-            <span className="text-fg-dim">none</span>
+            <span className="text-fg-dim">
+              <Trans>none</Trans>
+            </span>
           )}
         </span>
       </TableCell>
@@ -213,7 +232,9 @@ function SlideLine({
             </span>
           ))
         ) : (
-          <span className="text-fg-dim">not assigned</span>
+          <span className="text-fg-dim">
+            <Trans>not assigned</Trans>
+          </span>
         )}
       </TableCell>
       <TableCell className="whitespace-normal">{statusOf(row)}</TableCell>
@@ -236,6 +257,8 @@ function SlideTable({
   onSelect: (key: string) => void;
   onOpen: (row: SlideRow) => void;
 }) {
+  const { t } = useLingui();
+
   const bodyRef = useRef<HTMLTableSectionElement>(null);
   const [scroller, setScroller] = useState<HTMLElement | null>(null);
   const [margin, setMargin] = useState(0);
@@ -272,7 +295,7 @@ function SlideTable({
   ];
   return (
     <Table
-      aria-label="All slides"
+      aria-label={t`All slides`}
       aria-rowcount={rows.length + 1}
       containerClassName="overflow-visible"
     >
@@ -337,6 +360,8 @@ export function AllSlidesTab({
   selected: string | undefined;
   onSelect: (key: string | undefined) => void;
 }) {
+  const { t } = useLingui();
+
   const people = usePeople();
   const goTo = useGoTo();
   const me = okData(useGetMe().data);
@@ -350,22 +375,22 @@ export function AllSlidesTab({
         <label className="flex h-7.5 w-65 items-center gap-2 rounded-lg border border-line-strong px-2.5 text-body-sm text-fg-faint focus-within:border-accent">
           <Icon name="search" />
           <input
-            aria-label="Find a slide, case or ID"
-            placeholder="Find a slide, case or ID"
+            aria-label={t`Find a slide, case or ID`}
+            placeholder={t`Find a slide, case or ID`}
             value={query}
             onChange={(event) => onQuery(event.target.value)}
             className="min-w-0 flex-1 border-0 bg-transparent text-fg outline-none placeholder:text-fg-faint"
           />
         </label>
         <FilterChip
-          label="Project"
+          label={t`Project`}
           anyLabel="all"
           options={choices.projects}
           value={filters.project}
           onValueChange={(value) => onFilters(withFilter(filters, "project", value))}
         />
         <FilterChip
-          label="Status"
+          label={t`Status`}
           options={statusChoices}
           value={filters.status}
           onValueChange={(value) =>
@@ -379,13 +404,13 @@ export function AllSlidesTab({
           }
         />
         <FilterChip
-          label="Result set"
+          label={t`Result set`}
           options={choices.sets}
           value={filters.set}
           onValueChange={(value) => onFilters(withFilter(filters, "set", value))}
         />
         <FilterChip
-          label="Reviewer"
+          label={t`Reviewer`}
           options={choices.reviewers}
           value={filters.reviewer}
           onValueChange={(value) => onFilters(withFilter(filters, "reviewer", value))}
@@ -403,7 +428,7 @@ export function AllSlidesTab({
               })
             }
           >
-            Clear filters
+            <Trans>Clear filters</Trans>
           </Button>
         ) : null}
       </div>
@@ -420,7 +445,7 @@ export function AllSlidesTab({
         />
         {rows.length === 0 ? (
           <p className="m-0 py-6 text-center text-body-sm text-fg-dim">
-            {active > 0 || query ? "No slide matches these filters." : "No slides yet."}
+            {active > 0 || query ? t`No slide matches these filters.` : t`No slides yet.`}
           </p>
         ) : null}
         {preview ? (

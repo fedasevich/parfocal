@@ -1,3 +1,4 @@
+import { Trans } from "@lingui/react/macro";
 import { type SearchHit, useListProjects, useSearch } from "@parfocal/api-client";
 import { CommandPaletteView, type PaletteCommand } from "@parfocal/ui/components/command-palette";
 import { Dialog, DialogContent, DialogTitle } from "@parfocal/ui/components/dialog";
@@ -178,7 +179,9 @@ export default function PaletteDialog() {
         showCloseButton={false}
         className="top-[110px] translate-y-0 gap-0 overflow-hidden bg-chrome p-0 sm:max-w-[640px]"
       >
-        <DialogTitle className="sr-only">Command palette</DialogTitle>
+        <DialogTitle className="sr-only">
+          <Trans>Command palette</Trans>
+        </DialogTitle>
         <PaletteBody initial={overlay.find ?? ""} close={close} />
       </DialogContent>
     </Dialog>

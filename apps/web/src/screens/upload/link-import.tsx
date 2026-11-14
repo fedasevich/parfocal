@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { type SourceFile, useImportFromLink, useListSourceFiles } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
 import { Checkbox } from "@parfocal/ui/components/checkbox";
@@ -26,6 +27,8 @@ function importable(file: SourceFile) {
 }
 
 export function LinkImport({ projectId, projectCode }: { projectId: string; projectCode: string }) {
+  const { t } = useLingui();
+
   const [draft, setDraft] = useState("");
   const [address, setAddress] = useState("");
   const [skipped, setSkipped] = useState<Set<string>>(new Set());
@@ -51,7 +54,14 @@ export function LinkImport({ projectId, projectCode }: { projectId: string; proj
   };
   return (
     <div data-testid="link-import" className="grid gap-(--space-zone)">
-      <Zone title="Where are the files?" end={<Hint>An HTTPS, S3 or Azure link</Hint>}>
+      <Zone
+        title={t`Where are the files?`}
+        end={
+          <Hint>
+            <Trans>An HTTPS, S3 or Azure link</Trans>
+          </Hint>
+        }
+      >
         <form
           className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2"
           onSubmit={(event) => {
@@ -62,9 +72,9 @@ export function LinkImport({ projectId, projectCode }: { projectId: string; proj
           }}
         >
           <Input
-            aria-label="Address"
+            aria-label={t`Address`}
             value={draft}
-            placeholder="https://data.example.org/slides/"
+            placeholder={t`https://data.example.org/slides/`}
             onChange={(event) => setDraft(event.target.value)}
             className="font-mono"
           />
@@ -73,12 +83,14 @@ export function LinkImport({ projectId, projectCode }: { projectId: string; proj
             variant={listing ? "secondary" : "primary"}
             disabled={!draft.trim()}
           >
-            {listing ? "Check again" : "Check"}
+            {listing ? t`Check again` : t`Check`}
           </Button>
         </form>
         <Hint>
-          The Parfocal server fetches the files, not this computer, so a 20 GB slide never crosses
-          your connection and closing the tab stops nothing.
+          <Trans>
+            The Parfocal server fetches the files, not this computer, so a 20 GB slide never crosses
+            your connection and closing the tab stops nothing.
+          </Trans>
         </Hint>
         {refusal ? (
           <div role="alert" className="text-body-sm text-danger">
@@ -88,15 +100,17 @@ export function LinkImport({ projectId, projectCode }: { projectId: string; proj
       </Zone>
       {listing ? (
         <Zone
-          title="Found there"
+          title={t`Found there`}
           end={
             <Hint>
-              {chosen.length} of {plural(files.length, "slide")}
+              {chosen.length} <Trans>of</Trans> {plural(files.length, "slide")}
             </Hint>
           }
         >
           {files.length === 0 ? (
-            <div className="text-body-sm text-fg-dim">No slides at this link.</div>
+            <div className="text-body-sm text-fg-dim">
+              <Trans>No slides at this link.</Trans>
+            </div>
           ) : (
             <FileList>
               {files.map((file) => (
@@ -108,7 +122,7 @@ export function LinkImport({ projectId, projectCode }: { projectId: string; proj
                         checked={importable(file) && !skipped.has(file.name)}
                         disabled={!importable(file)}
                         onCheckedChange={(on) => toggle(file.name, on === true)}
-                        aria-label={`Include ${file.name}`}
+                        aria-label={t`Include ${file.name}`}
                       />
                       <Thumb />
                     </span>
@@ -129,12 +143,12 @@ export function LinkImport({ projectId, projectCode }: { projectId: string; proj
                 })
               }
             >
-              Import {plural(chosen.length, "slide")}
+              <Trans>Import</Trans> {plural(chosen.length, "slide")}
             </Button>
             {started ? (
               <span role="status" className="text-body-sm text-fg-dim">
-                The server is fetching {plural(started.started.length, "file")}. They are checked
-                and published like any upload.
+                <Trans>The server is fetching</Trans> {plural(started.started.length, "file")}
+                <Trans>. They are checked and published like any upload.</Trans>
               </span>
             ) : null}
             {startError ? (

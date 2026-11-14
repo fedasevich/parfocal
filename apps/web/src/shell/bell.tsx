@@ -1,3 +1,4 @@
+import { useLingui } from "@lingui/react/macro";
 import {
   type InboxItem,
   useGetNotificationCounts,
@@ -124,6 +125,8 @@ function InboxPanel({ onClose }: { onClose: () => void }) {
 }
 
 export function Bell() {
+  const { t } = useLingui();
+
   const overlay = useOverlay();
   useStatSound();
   const { hiddenUnread } = useGatedInbox();
@@ -140,8 +143,8 @@ export function Bell() {
             variant="ghost"
             size="icon"
             className="relative"
-            aria-label={`Notifications, ${unread} unread`}
-            title={`Notifications: ${unread} unread. Mentions, replies, tasks and jobs`}
+            aria-label={t`Notifications, ${unread} unread`}
+            title={t`Notifications: ${unread} unread. Mentions, replies, tasks and jobs`}
           />
         }
       >
@@ -157,7 +160,7 @@ export function Bell() {
       </PopoverTrigger>
       <PopoverContent
         align="end"
-        aria-label="Notifications"
+        aria-label={t`Notifications`}
         className="w-110 gap-0 overflow-hidden p-0"
       >
         <Suspense fallback={null}>

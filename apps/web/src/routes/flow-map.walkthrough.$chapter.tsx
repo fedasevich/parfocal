@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { PersonAvatar } from "@parfocal/ui/components/person";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useEffect } from "react";
@@ -18,6 +19,8 @@ export const Route = createFileRoute("/flow-map/walkthrough/$chapter")({
 });
 
 function ChapterPage() {
+  const { t } = useLingui();
+
   const params = Route.useParams();
   const index = Number(params.chapter) - 1;
   const chapter = chapters[index];
@@ -28,14 +31,14 @@ function ChapterPage() {
   return (
     <main className="mx-auto flex max-w-5xl flex-col gap-4 p-8">
       <Link to="/flow-map" className="text-accent text-body-sm underline">
-        Back to the map
+        <Trans>Back to the map</Trans>
       </Link>
       <WalkBar current={index} />
       <h1 className="font-semibold text-page-title text-fg">
         {index + 1} · {chapter.title}
       </h1>
       <p className="text-body-sm text-fg-dim">{chapter.shows}</p>
-      <ol className="flex flex-col gap-2" aria-label="Steps">
+      <ol className="flex flex-col gap-2" aria-label={t`Steps`}>
         {chapter.steps.map((step, stepIndex) => {
           const ref = { chapter: index, step: stepIndex };
           const who = stepWho(ref) ?? chapter.who;
@@ -52,7 +55,8 @@ function ChapterPage() {
               <div className="flex flex-1 flex-col gap-1">
                 <p className="m-0 text-body-sm text-fg">{step.text}</p>
                 <small className="text-caption text-fg-faint">
-                  As {people(who).name}, {stepRole(ref, personaRoles)} · {step.screen}
+                  <Trans>As</Trans> {people(who).name}, {stepRole(ref, personaRoles)} ·{" "}
+                  {step.screen}
                   {step.scene ? `, ${step.scene}` : ""}
                 </small>
               </div>
@@ -64,7 +68,7 @@ function ChapterPage() {
                     if (ids) originStore.set({ kind: "walk", ...ref, ids });
                   }}
                 >
-                  Open step {stepIndex + 1}
+                  <Trans>Open step</Trans> {stepIndex + 1}
                 </Link>
               ) : null}
             </li>

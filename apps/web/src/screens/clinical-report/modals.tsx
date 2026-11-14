@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { InlineError } from "@parfocal/ui/components/banner";
 import { Input } from "@parfocal/ui/components/input";
 import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
@@ -61,6 +62,8 @@ export function DepositModal({
   onClose: () => void;
   onAdd: (deposit: Omit<Dep, "id">) => void;
 }) {
+  const { t } = useLingui();
+
   const [draft, setDraft] = useState<DepositDraft>(
     hand
       ? { source: "hand", object: null, size: "0", unit: null, slide: null, note: "" }
@@ -122,11 +125,11 @@ export function DepositModal({
       open
       onOpenChange={closeOn(onClose)}
       width={560}
-      title="Add a deposit"
+      title={t`Add a deposit`}
       subtitle={
         <>
-          <span className="font-mono">{caseLabel}</span> · {deposits.length} listed. The largest
-          sets the category.
+          <span className="font-mono">{caseLabel}</span> · {deposits.length}{" "}
+          <Trans>listed. The largest sets the category.</Trans>
         </>
       }
       hint={
@@ -139,7 +142,7 @@ export function DepositModal({
     >
       <div className="grid gap-1.5">
         <span id="dep-source-label" className="text-body-sm font-semibold">
-          Where it comes from
+          <Trans>Where it comes from</Trans>
         </span>
         <SegmentedControl
           aria-labelledby="dep-source-label"
@@ -154,15 +157,15 @@ export function DepositModal({
       {draft.source === "object" ? (
         <div className="grid gap-1.5">
           <span id="dep-obj-label" className="text-body-sm font-semibold">
-            Object
+            <Trans>Object</Trans>
           </span>
           <TokenField
             id={fieldId("dep-obj")}
             aria-labelledby="dep-obj-label"
-            label="Object"
+            label={t`Object`}
             single
             defaultOpen={!hand}
-            placeholder="Type an object ID or a slide"
+            placeholder={t`Type an object ID or a slide`}
             items={objects.map((entry) => entry.item)}
             picked={draft.object ? [draft.object] : []}
             invalid={Boolean(shown["obj"])}
@@ -182,7 +185,7 @@ export function DepositModal({
           <div className="grid grid-cols-[auto_1fr] items-start gap-4">
             <div className="grid gap-1.5">
               <label htmlFor={fieldId("dep-mm")} className="text-body-sm font-semibold">
-                Size
+                <Trans>Size</Trans>
               </label>
               <Input
                 id={fieldId("dep-mm")}
@@ -195,7 +198,7 @@ export function DepositModal({
             </div>
             <div className="grid gap-1.5">
               <span id="dep-unit-label" className="text-body-sm font-semibold">
-                Unit
+                <Trans>Unit</Trans>
               </span>
               <SegmentedControl
                 id={fieldId("dep-unit")}
@@ -217,7 +220,7 @@ export function DepositModal({
           ) : null}
           <div className="grid gap-1.5">
             <span id="dep-slide-label" className="text-body-sm font-semibold">
-              Slide
+              <Trans>Slide</Trans>
             </span>
             <Select value={draft.slide} onValueChange={(next) => set({ slide: next })}>
               <SelectTrigger
@@ -244,12 +247,15 @@ export function DepositModal({
       )}
       <div className="grid gap-1.5">
         <label htmlFor={fieldId("dep-note")} className="text-body-sm font-semibold">
-          Note <span className="font-normal text-fg-dim">optional</span>
+          <Trans>Note</Trans>{" "}
+          <span className="font-normal text-fg-dim">
+            <Trans>optional</Trans>
+          </span>
         </label>
         <Input
           id={fieldId("dep-note")}
           maxLength={120}
-          placeholder="For example, subcapsular sinus"
+          placeholder={t`For example, subcapsular sinus`}
           value={draft.note}
           onChange={(event) => set({ note: event.target.value })}
         />
@@ -270,6 +276,8 @@ export function useSignature({
   email: string;
   onSign: (method: "sso" | "password", done: (ok: boolean) => void) => void;
 }) {
+  const { t } = useLingui();
+
   const [state, setState] = useState<"idle" | "busy" | "fail">(failed ? "fail" : "idle");
   const [password, setPassword] = useState<string | null>(null);
   const [tried, setTried] = useState(false);
@@ -289,10 +297,10 @@ export function useSignature({
   };
   const busy = state === "busy";
   const zone = busy ? null : withPassword ? (
-    <SmallModalZone title="Sign with your password">
+    <SmallModalZone title={t`Sign with your password`}>
       <div className="grid gap-1.5">
         <label htmlFor={fieldId("pass")} className="text-body-sm font-semibold">
-          Password for {email}
+          <Trans>Password for {email}</Trans>
         </label>
         <Input
           id={fieldId("pass")}
@@ -310,7 +318,7 @@ export function useSignature({
       actions={
         <>
           <button type="button" className={linkButton} onClick={run}>
-            Try again
+            <Trans>Try again</Trans>
           </button>
           <button
             type="button"
@@ -320,12 +328,12 @@ export function useSignature({
               setPassword("");
             }}
           >
-            Use my password instead
+            <Trans>Use my password instead</Trans>
           </button>
         </>
       }
     >
-      Vltava single sign-on did not answer. Nothing was signed.
+      <Trans>Vltava single sign-on did not answer. Nothing was signed.</Trans>
     </InlineError>
   ) : null;
   return {
@@ -453,7 +461,9 @@ export function ReasonModal({
       </div>
       {told ? (
         <div className="grid gap-1.5">
-          <span className="text-body-sm font-semibold">Who is told</span>
+          <span className="text-body-sm font-semibold">
+            <Trans>Who is told</Trans>
+          </span>
           <p className="m-0 text-body-sm text-fg">{told}</p>
         </div>
       ) : null}

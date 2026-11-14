@@ -1,3 +1,4 @@
+import { useLingui } from "@lingui/react/macro";
 import { ApiError } from "@parfocal/api-client";
 import { CodeBoxes } from "@parfocal/ui/components/auth";
 import { Icon } from "@parfocal/ui/components/icon";
@@ -31,6 +32,8 @@ export function PasswordInput({
   onChange: (value: string) => void;
   onSubmit?: () => void;
 }) {
+  const { t } = useLingui();
+
   const [shown, setShown] = useState(false);
   return (
     <span className="relative flex items-center">
@@ -46,7 +49,7 @@ export function PasswordInput({
       />
       <button
         type="button"
-        aria-label={shown ? "Hide what you typed" : "Show what you typed"}
+        aria-label={shown ? t`Hide what you typed` : t`Show what you typed`}
         onClick={() => setShown(!shown)}
         className="absolute right-1 grid size-6 cursor-pointer place-items-center border-0 bg-transparent p-0 text-fg-faint"
       >

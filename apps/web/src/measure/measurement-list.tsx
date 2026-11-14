@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { CategoryTag, ObjectIdTag } from "@parfocal/ui/components/tag";
 import { useMemo, useRef } from "react";
 import type { AnnotationDocument } from "../annotations/document.ts";
@@ -21,6 +22,8 @@ export function MeasurementList({
   classNames?: MeasurementNames;
   onRemove?: (id: ShapeId) => void;
 }) {
+  const { t } = useLingui();
+
   const times = useRef<ReadonlyMap<ShapeId, number>>(new Map());
   times.current = noteDrawnTimes(times.current, doc, Date.now());
   const drawn = times.current;
@@ -32,16 +35,16 @@ export function MeasurementList({
 
   return (
     <section
-      aria-label="Measurements"
+      aria-label={t`Measurements`}
       data-testid="measurement-list"
       className="grid gap-1.5 rounded-ctl border border-line bg-chrome p-2"
     >
       <h2 className="m-0 text-body-sm font-semibold">
-        Measurements <span className="font-mono text-fg-dim">{rows.length}</span>
+        <Trans>Measurements</Trans> <span className="font-mono text-fg-dim">{rows.length}</span>
       </h2>
       {rows.length === 0 ? (
         <p className="m-0 text-body-sm text-fg-dim">
-          Nothing measured yet. Press L and drag to measure a length.
+          <Trans>Nothing measured yet. Press L and drag to measure a length.</Trans>
         </p>
       ) : (
         <ul className="m-0 grid list-none gap-1 p-0">
@@ -64,7 +67,7 @@ export function MeasurementList({
                       {row.area}
                     </span>
                     <small data-slot="value" className="font-mono text-caption text-fg-dim">
-                      perimeter {row.value}
+                      <Trans>perimeter {row.value}</Trans>
                     </small>
                   </>
                 )}
@@ -76,11 +79,11 @@ export function MeasurementList({
               {onRemove === undefined ? null : (
                 <button
                   type="button"
-                  aria-label={`Remove ${row.label}`}
+                  aria-label={t`Remove ${row.label}`}
                   className="text-fg-dim hover:text-fg"
                   onClick={() => onRemove(row.shapeId)}
                 >
-                  Remove
+                  <Trans>Remove</Trans>
                 </button>
               )}
             </li>

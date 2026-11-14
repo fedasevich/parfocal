@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   type Project,
   type UploadBatch,
@@ -54,12 +55,14 @@ const stepScenes: UploadScene[] = ["files", "check", "progress"];
 const behindFormats: UploadScene[] = ["drop", "tray", "viewer", "api"];
 
 export function UploadPage(props: UploadPageProps) {
+  const { t } = useLingui();
+
   const project = okData(useGetProject(props.projectId).data);
   const batch = useGetUploadBatch(props.projectId).data?.data;
   if (project === undefined || batch === undefined) {
     return (
       <main className="grid flex-1 place-items-center p-8">
-        <Loader label="Loading the upload" />
+        <Loader label={t`Loading the upload`} />
       </main>
     );
   }
@@ -327,6 +330,8 @@ function UploadFrame({
   bar: ReactNode;
   children: ReactNode;
 }) {
+  const { t } = useLingui();
+
   const renderLink = useCrumbLink();
   const clinical = project.privacy_mode === "clinical";
   return (
@@ -334,13 +339,13 @@ function UploadFrame({
       className="h-full"
       renderLink={renderLink}
       crumbs={[{ label: project.name, href: `/projects/${project.id}` }, { label: "Upload" }]}
-      title="Upload slides and results"
+      title={t`Upload slides and results`}
       subtitle={
         <>
-          Into {project.name} · <span className="font-mono">{project.code}</span> ·{" "}
+          <Trans>Into</Trans> {project.name} · <span className="font-mono">{project.code}</span> ·{" "}
           {clinical
-            ? "Clinical, patient fields are kept and every access is logged"
-            : "De-identified, so labels and patient names are removed on upload"}
+            ? t`Clinical, patient fields are kept and every access is logged`
+            : t`De-identified, so labels and patient names are removed on upload`}
         </>
       }
       steps={steps}
@@ -374,11 +379,17 @@ function UploadBar({
   projectId: string;
   projectCode: string;
 }) {
+  const { t } = useLingui();
+
   const navigate = useNavigate();
   const step = stepOf(scene);
   const open = model.openIn(scene);
   const left = model.leftCount;
-  const back = <Button onClick={() => go("files")}>Back</Button>;
+  const back = (
+    <Button onClick={() => go("files")}>
+      <Trans>Back</Trans>
+    </Button>
+  );
   const start = (label: string) => (
     <Button variant="primary" data-testid="start-upload" onClick={() => go("progress")}>
       <Icon name="upload" />
@@ -410,7 +421,7 @@ function UploadBar({
             ? off(
                 <>
                   <Icon name="upload" />
-                  Upload {both(model.resultCount)}
+                  <Trans>Upload</Trans> {both(model.resultCount)}
                 </>,
                 why,
               )
@@ -464,7 +475,7 @@ function UploadBar({
                   set({ left: leftOut });
                 }}
               >
-                Leave {open > 1 ? "them" : "it"} out
+                <Trans>Leave</Trans> {open > 1 ? t`them` : t`it`} <Trans>out</Trans>
               </Button>
             ) : null}
             {start(label)}
@@ -480,12 +491,16 @@ function UploadBar({
         next={
           <span className="flex items-center gap-2">
             <span className="mr-1.5 inline-flex items-center gap-1.5">
-              <CategoryTag tone="info">Mock only</CategoryTag>
+              <CategoryTag tone="info">
+                <Trans>Mock only</Trans>
+              </CategoryTag>
               <Button variant="ghost" onClick={() => go("done")}>
-                Jump to the end
+                <Trans>Jump to the end</Trans>
               </Button>
             </span>
-            <Button onClick={close}>Close</Button>
+            <Button onClick={close}>
+              <Trans>Close</Trans>
+            </Button>
           </span>
         }
       />
@@ -503,10 +518,10 @@ function UploadBar({
               }
             >
               <Icon name="users" />
-              Create a review task
+              <Trans>Create a review task</Trans>
             </Button>
             <Button variant="primary" onClick={close}>
-              Done
+              <Trans>Done</Trans>
             </Button>
           </span>
         }
@@ -536,14 +551,18 @@ function UploadBar({
   const blocked = scene === "empty" || none || (remote && !checked);
   return (
     <FlowBar
-      back={<Button onClick={close}>Cancel</Button>}
+      back={
+        <Button onClick={close}>
+          <Trans>Cancel</Trans>
+        </Button>
+      }
       hint={hint}
       next={
         blocked ? (
           off("Next", hint)
         ) : (
           <Button variant="primary" data-testid="upload-next" onClick={() => go("check")}>
-            Next
+            <Trans>Next</Trans>
           </Button>
         )
       }
