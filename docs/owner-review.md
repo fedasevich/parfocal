@@ -28,6 +28,10 @@ Temporary, made on 2026-11-14. Tick a box when you agree that the task can move 
 - **IAM-021 (lock screen) and SHELL-012 (account menu).** They wait for the expired sign-in to return to the object, and for the manual lock item. An agent will check whether the older decisions they mention (28, the lock card's password field, and 49, the manual lock) are already answered.
 - **AIP-000 (research check for AI models).** It names decision 47 (accept ADR 0202 and the AIP-002 licence rule), and an agent will check whether that was answered.
 
+- **VIEW-017 (OME-Zarr reader).** It waits for converted real fixtures from INGEST-015, which in turn waits for decision 104 and INGEST-014 (JPEG 2000 performance decision).
+- **INGEST-015 (conversion fallback worker).** It waits for decision 104 (how close a converted JPEG 2000 slide stays to its source).
+- **DS-039 (animated loaders).** It waits for decision 103 (which of the five loaders). Look at them in Storybook under `Feedback/Loader proposals`.
+
 ## Anything else I need from you
 
-- Nothing beyond decision 100 and the boxes above. Production stays untouched until you say the app is ready.
+- Nothing beyond decisions 100 to 104 in [decisions.md](decisions.md) (VIEW-036 tick, refusing an unstitched BIF, who sees a compare cursor, the loader pick and the conversion quality) and the boxes above. Production stays untouched until you say the app is ready.
