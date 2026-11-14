@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import type { ReviewObject } from "@parfocal/api-client";
 import {
   type AnalysisTemplate,
@@ -207,14 +208,15 @@ type FullViewerProps = {
   onSearch: (change: Partial<ViewerSearch>) => void;
 };
 
-const netOff = "The connection is lost. It saves when the connection is back.";
-
-const loading = <Loader label="Loading the slide" size="page" />;
+function SlideLoader() {
+  const { t } = useLingui();
+  return <Loader label={t`Loading the slide`} size="page" />;
+}
 
 export function FullViewer(props: FullViewerProps) {
   const home = okData(useGetMyHome().data);
   const taskId = props.search.task ?? home?.resume?.task_id;
-  if (taskId === undefined) return loading;
+  if (taskId === undefined) return <SlideLoader />;
   return <ViewerWithTask {...props} taskId={taskId} />;
 }
 
@@ -222,7 +224,7 @@ function ViewerWithTask(props: FullViewerProps & { taskId: string }) {
   const session = useReviewSession(props.taskId, props.slideId);
   const project = okData(useGetProject(props.projectId).data);
   const progress = useGetSlideAiProgress(props.slideId);
-  if (!session.ready || project === undefined || progress.isPending) return loading;
+  if (!session.ready || project === undefined || progress.isPending) return <SlideLoader />;
   return (
     <ViewerBody
       key={`${props.search.scene ?? "objects"}-${props.slideId}`}
@@ -274,6 +276,8 @@ function ViewerBody({
   viewerParts,
   template,
 }: BodyProps) {
+  const { t } = useLingui();
+  const netOff = t`The connection is lost. It saves when the connection is back.`;
   const format = useFormat();
   const projectCases = okData(
     useListCases({ project_id: projectId }, { query: { enabled: clinical } }).data,
@@ -1010,20 +1014,22 @@ function ViewerBody({
     objects,
     personalSettings?.model_warnings ?? true,
   );
+  const taskCodeOrThis = session.task?.code ?? t`this task`;
+  const taskCodeOrThe = session.task?.code ?? t`The task`;
   const objectsBody: ReactNode =
     running && progress ? (
       <RunningObjects progress={progress} objects={objects} />
     ) : nothing ? (
-      <Zone title={`Objects on ${slideLabel}`} data-phi="">
+      <Zone title={t`Objects on ${slideLabel}`} data-phi="">
         {firstReadOpen ? (
           <FirstReadNotice taskId={session.taskId} slideId={session.slideId} />
         ) : (
           <p className="m-0 text-body-sm leading-[1.5] text-fg-dim">
             {noTask
-              ? `No review task asks about ${slideLabel}. Look at it here, and write what you find in the clinical report.`
+              ? t`No review task asks about ${slideLabel}. Look at it here, and write what you find in the clinical report.`
               : setup.issue === "noresults"
-                ? `Nothing to decide here yet. ${slideLabel} has no ${setName} result in ${session.task?.code ?? "this task"}.`
-                : `${session.task?.code ?? "The task"} was withdrawn on 16 Oct. There is nothing left to decide.`}
+                ? t`Nothing to decide here yet. ${slideLabel} has no ${setName} result in ${taskCodeOrThis}.`
+                : t`${taskCodeOrThe} was withdrawn on 16 Oct. There is nothing left to decide.`}
           </p>
         )}
       </Zone>
@@ -1162,11 +1168,11 @@ function ViewerBody({
     />
   ) : firstOpen ? (
     <Button variant="primary" className="w-full" onClick={() => pick(firstOpen)}>
-      Go to {firstOpen}, the first open object
+      <Trans>Go to {firstOpen}, the first open object</Trans>
     </Button>
   ) : (
     <Button variant="primary" className="w-full" onClick={() => onSearch({ tab: "opinion" })}>
-      All decided. Open the Slide done card
+      <Trans>All decided. Open the Slide done card</Trans>
     </Button>
   );
 
@@ -1249,7 +1255,14 @@ function ViewerBody({
     return lock ? { ...item, lockedReason: lock.reason } : item;
   });
   const viewZone = (
-    <Zone title="View" end={<span className="text-caption text-fg-dim">Ways to show results</span>}>
+    <Zone
+      title={t`View`}
+      end={
+        <span className="text-caption text-fg-dim">
+          <Trans>Ways to show results</Trans>
+        </span>
+      }
+    >
       <ViewPicker views={pickableViews} value={view} onValueChange={goView} />
     </Zone>
   );
@@ -1257,7 +1270,7 @@ function ViewerBody({
   const displayBody =
     view === "table" && current ? (
       <>
-        <Zone title={`${current.object} · Tumor region`} highlight>
+        <Zone title={t`${current.object} · Tumor region`} highlight>
           <TableObjectFacts
             object={current.object}
             score={showScore ? current.score : null}
@@ -1375,6 +1388,10 @@ function ViewerBody({
     />
   );
 
+  const creatorName = person(session.task?.created_by_user_id)?.name;
+  const researcherName = creatorName?.split(" ")[0];
+  const withdrawnBy = creatorName ?? t`The researcher`;
+  const withdrawnTask = session.task?.code ?? t`the task`;
   const banner =
     setup.connLost || !online ? (
       <ConnectionBanner pinned={setup.connLost} />
@@ -1384,12 +1401,17 @@ function ViewerBody({
         icon="lock"
         actions={
           <Button size="sm">
-            Ask {person(session.task?.created_by_user_id)?.name.split(" ")[0] ?? "the researcher"}{" "}
-            to amend
+            {researcherName === undefined ? (
+              <Trans>Ask the researcher to amend</Trans>
+            ) : (
+              <Trans>Ask {researcherName} to amend</Trans>
+            )}
           </Button>
         }
       >
-        <b>Signed off 15 Oct.</b> Changes need an amendment.
+        <Trans>
+          <b>Signed off 15 Oct.</b> Changes need an amendment.
+        </Trans>
       </Banner>
     ) : setup.sourceOff ? (
       <Banner
@@ -1402,13 +1424,15 @@ function ViewerBody({
               void router.navigate({ href: `${destinations.admin()}?section=storage` })
             }
           >
-            Source status
+            <Trans>Source status</Trans>
           </Button>
         }
       >
-        <b>Scanner archive is not answering since 10:40.</b> {slideLabel} is read in place from
-        there, so it opens from the 7-day tile cache. Places never viewed show a quiet checker until
-        the source is back.
+        <Trans>
+          <b>Scanner archive is not answering since 10:40.</b> {slideLabel} is read in place from
+          there, so it opens from the 7-day tile cache. Places never viewed show a quiet checker
+          until the source is back.
+        </Trans>
       </Banner>
     ) : null;
 
@@ -1416,47 +1440,62 @@ function ViewerBody({
     setup.issue === "slidefail" ? (
       <CanvasNotice
         icon="warn"
-        title={`${slideLabel} could not be read at 20x and 40x.`}
+        title={t`${slideLabel} could not be read at 20x and 40x.`}
         actions={
           <>
-            <Button variant="primary">Retry</Button>
-            <Button>Ask the researcher</Button>
+            <Button variant="primary">
+              <Trans>Retry</Trans>
+            </Button>
+            <Button>
+              <Trans>Ask the researcher</Trans>
+            </Button>
           </>
         }
       >
-        Tiles are missing on the server. Lower magnifications still show, and your other slides
-        work.
+        <Trans>
+          Tiles are missing on the server. Lower magnifications still show, and your other slides
+          work.
+        </Trans>
       </CanvasNotice>
     ) : setup.issue === "withdrawn" ? (
       <CanvasNotice
         icon="info"
-        title={`${session.task?.code ?? "The task"} was withdrawn.`}
+        title={t`${taskCodeOrThe} was withdrawn.`}
         actions={
           <Button variant="primary" onClick={() => void navigate({ to: "/my-work" })}>
-            Back to My work
+            <Trans>Back to My work</Trans>
           </Button>
         }
       >
-        {person(session.task?.created_by_user_id)?.name ?? "The researcher"} withdrew{" "}
-        {session.task?.code ?? "the task"} on 16 Oct. Your 7 decided slides are kept and show in the
-        report.
+        <Trans>
+          {withdrawnBy} withdrew {withdrawnTask} on 16 Oct. Your 7 decided slides are kept and show
+          in the report.
+        </Trans>
       </CanvasNotice>
     ) : setup.issue === "noresults" ? (
       <CanvasNotice
         icon="smart"
-        title={`No ${setName} result on ${slideLabel} yet.`}
-        actions={<Button>Ask the researcher</Button>}
+        title={t`No ${setName} result on ${slideLabel} yet.`}
+        actions={
+          <Button>
+            <Trans>Ask the researcher</Trans>
+          </Button>
+        }
       >
-        Look at the slide without AI, or ask the researcher to run the model.
+        <Trans>Look at the slide without AI, or ask the researcher to run the model.</Trans>
       </CanvasNotice>
     ) : null;
 
   const whole = stillView.kind === "whole";
   const tileHint =
     setup.tileHint === "loading" ? (
-      <TileHint percent={40}>Loading sharper tiles · 12 left</TileHint>
+      <TileHint percent={40}>
+        <Trans>Loading sharper tiles · 12 left</Trans>
+      </TileHint>
     ) : setup.tileHint === "unloaded" ? (
-      <TileHint percent={6}>Loading the slide</TileHint>
+      <TileHint percent={6}>
+        <Trans>Loading the slide</Trans>
+      </TileHint>
     ) : setup.tileHint === "slow" ? (
       <TileHint
         className="w-112"
@@ -1468,12 +1507,14 @@ function ViewerBody({
               void router.navigate({ href: `${destinations.admin()}?section=storage` })
             }
           >
-            Source status
+            <Trans>Source status</Trans>
           </Button>
         }
       >
-        <b>Slow source.</b> The scanner archive answers in 2.4 s. Keep reading, the view sharpens as
-        tiles arrive. Lower magnifications come first.
+        <Trans>
+          <b>Slow source.</b> The scanner archive answers in 2.4 s. Keep reading, the view sharpens
+          as tiles arrive. Lower magnifications come first.
+        </Trans>
       </TileHint>
     ) : null;
 
@@ -1803,7 +1844,7 @@ function ViewerBody({
                         onClick={() => pick(undefined)}
                       >
                         <Icon name="expand" />
-                        Whole slide
+                        <Trans>Whole slide</Trans>
                       </Button>
                     )}
                     <div className="absolute bottom-4 left-1/2 grid -translate-x-1/2 justify-items-center gap-2">
@@ -1978,7 +2019,9 @@ function TableObjectFacts({
       </dl>
       <Button className="w-full" onClick={onComments}>
         <Icon name="comment" />
-        {comments} comments on {object}
+        <Trans>
+          {comments} comments on {object}
+        </Trans>
       </Button>
     </>
   );

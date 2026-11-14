@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { cn } from "@parfocal/ui/lib/utils";
 import {
   type PointerEvent,
@@ -213,6 +214,7 @@ export function SlideStill({
   onPointPick,
   onCellPick,
 }: SlideStillProps) {
+  const { t } = useLingui();
   const ref = useRef<HTMLDivElement>(null);
   const [link, setLink] = useState<StillLink | null>(null);
   const [failedTiles, setFailedTiles] = useState(0);
@@ -334,7 +336,7 @@ export function SlideStill({
       {backdrop?.({ camera: shown, size, onReady: setLink, onTiles: setFailedTiles })}
       <svg
         role="img"
-        aria-label={target ? `The slide around ${target}` : "The whole slide"}
+        aria-label={target ? t`The slide around ${target}` : t`The whole slide`}
         className={cn("absolute inset-0 size-full", failed && "opacity-30")}
         viewBox={viewBox}
         preserveAspectRatio="xMidYMid meet"
@@ -460,7 +462,7 @@ export function SlideStill({
           data-failed={failedTiles}
           className="pointer-events-none absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-black/70 px-3 py-1.5 text-body-sm font-medium text-white"
         >
-          Some tiles did not load. Parts of the slide may look blank.
+          <Trans>Some tiles did not load. Parts of the slide may look blank.</Trans>
         </span>
       ) : null}
       {tiles === "unloaded" ? (
@@ -506,7 +508,7 @@ export function SlideStill({
       ) : null}
       {hint && !moved && view.kind !== "whole" ? (
         <span className="pointer-events-none absolute top-4 left-4 inline-flex items-center gap-2 rounded-full bg-black/60 px-3 py-1.5 text-body-sm font-medium text-white">
-          Drag to move, scroll to zoom
+          <Trans>Drag to move, scroll to zoom</Trans>
         </span>
       ) : null}
       {minimap && view.kind !== "whole" ? (
@@ -605,7 +607,9 @@ function Minimap({
       </div>
       <span className="flex justify-between gap-2 px-0.5 text-caption text-fg-dim">
         <span data-phi="">{slideName}</span>
-        <span>Click to move</span>
+        <span>
+          <Trans>Click to move</Trans>
+        </span>
       </span>
     </div>
   );

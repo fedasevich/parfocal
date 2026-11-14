@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   DisplayPanel,
   type DisplaySettings,
@@ -127,11 +128,12 @@ export function DisplayTab({
     extraLocks,
   );
   const settings = idLabels ? { ...picked, ids: idLabels.on } : picked;
+  const { t } = useLingui();
+  const taskCode = display?.task_code ?? t`this task`;
   return (
     <div className="grid gap-3">
       <p className="m-0 text-body-sm text-fg-dim">
-        Only for you, on {display?.task_code ?? "this task"}. Every change redraws the slide at
-        once.
+        <Trans>Only for you, on {taskCode}. Every change redraws the slide at once.</Trans>
       </p>
       <DisplayPanel
         key={`${preset ?? "task"}-${extraLocks.length}`}

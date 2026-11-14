@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { MagnificationBar } from "@parfocal/ui/components/magnification-bar";
 import {
   MapDots,
@@ -53,6 +54,7 @@ export function NavigatorCanvas({
   onGoTo,
   onPopOut,
 }: NavigatorCanvasProps) {
+  const { t } = useLingui();
   const [camera, setCamera] = useState<Camera | null>(null);
   const [barOpen, setBarOpen] = useState(false);
   const setup = lookOf(scene);
@@ -93,13 +95,14 @@ export function NavigatorCanvas({
           barOpen,
         });
         const { cues, size: mapSize, extent } = spots;
+        const nextMm = (cues.find((cue) => cue.direction === "next")?.mm ?? 0).toFixed(1);
         const ruler = avoidRuler(size);
         const extra =
           scene === "avoid" ? (
-            <RulerLine from={ruler.from} to={ruler.to} label="1.62 mm" />
+            <RulerLine from={ruler.from} to={ruler.to} label={t`1.62 mm`} />
           ) : scene === "focus" ? (
             <CellHud
-              title={'Cell 6 of 12 · AI says "tumor or immune"'}
+              title={t`Cell 6 of 12 · AI says "tumor or immune"`}
               where="area 2"
               keys={[
                 { key: "K", label: "Keep", main: true },
@@ -144,14 +147,13 @@ export function NavigatorCanvas({
                   faded={scene === "pointer"}
                   title={
                     scene === "travel" ? (
-                      <>
-                        <b>Going to area 3</b> ·{" "}
-                        {(cues.find((cue) => cue.direction === "next")?.mm ?? 0).toFixed(1)} mm
-                      </>
+                      <Trans>
+                        <b>Going to area 3</b> · {nextMm} mm
+                      </Trans>
                     ) : (
-                      <>
+                      <Trans>
                         <b>Whole slide</b> · {seenPercent.reading}% seen
-                      </>
+                      </Trans>
                     )
                   }
                   foot={

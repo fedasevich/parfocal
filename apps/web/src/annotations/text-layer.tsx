@@ -1,3 +1,4 @@
+import { useLingui } from "@lingui/react/macro";
 import {
   type KeyboardEvent as ReactKeyboardEvent,
   type RefObject,
@@ -45,6 +46,7 @@ export function TextLayer({
   onApply,
   control,
 }: TextLayerProps) {
+  const { t } = useLingui();
   const camera = useSyncExternalStore(engine.subscribeCamera, engine.getCamera);
   const rect = useStageRect(stage);
   const [draft, setDraftState] = useState<TextDraft | null>(null);
@@ -194,7 +196,7 @@ export function TextLayer({
           key={`${draft.point.x},${draft.point.y}`}
           ref={focusOnMount}
           data-testid="text-draft"
-          aria-label="Text label"
+          aria-label={t`Text label`}
           value={draft.text}
           maxLength={maxTextLength}
           onChange={(event) => setDraft({ ...draft, text: event.target.value })}

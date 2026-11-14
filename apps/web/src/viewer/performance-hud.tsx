@@ -1,3 +1,4 @@
+import { useLingui } from "@lingui/react/macro";
 import { useEffect, useRef } from "react";
 import { createFrameMeter, hudLines, hudRefreshMs } from "../lab/hud-meter.ts";
 import { type LabSettings, setLabSetting } from "../lab/lab-settings.ts";
@@ -22,6 +23,7 @@ export default function PerformanceHud({
   total: number;
   lodTier: string;
 }) {
+  const { t } = useLingui();
   const text = useRef<HTMLPreElement>(null);
   const live = useRef({ drawn, total, lodTier });
   live.current = { drawn, total, lodTier };
@@ -65,11 +67,11 @@ export default function PerformanceHud({
       <pre ref={text} data-testid="lab-hud-text" className="m-0 font-mono" />
       <button
         type="button"
-        aria-label="Hide the HUD"
+        aria-label={t`Hide the HUD`}
         className="cursor-pointer border-0 bg-transparent p-0 text-fg-dim"
         onClick={() => setLabSetting("hud", false)}
       >
-        x
+        {"×"}
       </button>
     </div>
   );
