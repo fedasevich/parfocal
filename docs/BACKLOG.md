@@ -1041,7 +1041,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when an edge test shows a malformed room path answered as a 404 problem and any throw answered as a 500 problem, both with the headers.
   Size: S.
 
-- [ ] SEC-040 · Presence in a blinded task
+- [x] SEC-040 · Presence in a blinded task
   A reviewer in a blinded task receives `presence.joined` and `presence.left` with the other reviewers' user ids, and presence is also announced in task and user rooms, which ADR 0269 (realtime event model by room and kind) does not list ([edge token review](results/2026-11-09-edge-token-review.md), finding C5). Decision 85 (presence in a blinded review) chose 85a on 2026-11-13: a reviewer who has not submitted in a blinded task neither receives presence nor is announced.
   Done when the chosen rule has an API test and an edge test, and presence is sent only in the room kinds the record lists.
   Size: S.
@@ -1076,10 +1076,22 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when an ADR exists.
   Size: S.
 
-- [ ] I18N-001 · String externalisation in the web app
-  Done when every UI string goes through the i18n layer, an English catalogue is extracted, and a lint rule fails on raw string literals in JSX.
+- [x] I18N-001 · String externalisation in the web app
+  Done when the i18n layer, an extracted English catalogue, a pseudo-locale test and a lint rule that fails on new raw string literals in JSX are in, with the files not yet converted on a baseline list. The owner accepted this setup slice on 2026-11-14 and the conversion moved to I18N-004 and I18N-005.
   Uses Lingui 6 with ICU messages, PO catalogues and the `en-XA` pseudo locale per [ADR 0173](adr/0173-lingui-for-web-app-strings.md).
   Depends on I18N-000.
+  Size: M.
+
+- [ ] I18N-004 · Convert the viewer, review and annotate screens to the i18n layer
+  Move every raw string in the viewer, review, annotate and compare screens of `apps/web` into Lingui messages and drop those files from the I18N-001 baseline list.
+  Done when those files are off the baseline, the pseudo-locale test covers one screen of each area and the English catalogue is extracted.
+  Depends on I18N-001.
+  Size: M.
+
+- [ ] I18N-005 · Convert the remaining screens and empty the baseline
+  Convert every other file still on the I18N-001 baseline list, then delete the list so the lint rule covers the whole app.
+  Done when the baseline list is gone, the lint rule passes with no exceptions and the pseudo-locale test renders the shell, home, settings and admin screens with every string translated.
+  Depends on I18N-004.
   Size: M.
 
 - [x] I18N-002 · Locale-aware formatting
@@ -1285,7 +1297,7 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
 
 ## 06 TILES · Tile delivery
 
-- [ ] TILES-000 · Research check for tile delivery
+- [x] TILES-000 · Research check for tile delivery
   Done when STACK-025 is confirmed with measured CDN numbers.
   Size: S.
 
@@ -1299,7 +1311,7 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
   Done when the latency test shows warm tile fetch p95 under 60 ms in the same region.
   Size: L.
 
-- [ ] TILES-003 · Same-origin data path
+- [x] TILES-003 · Same-origin data path
   Serve slide bytes under the app origin through the CDN so CORS round trips and preflights disappear.
   Done when a test confirms no preflight and the open-time numbers match INGEST-007.
   Refs doc 09 (4.3 s to 90 ms).
@@ -1603,7 +1615,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Pointer capture is attempted but never relied on. `pointerup`, `pointercancel`, `lostpointercapture` and window `blur` all end a gesture, and pointer state lives in one map cleared by any of them. The canvas has `touch-action: none` and `user-select: none`, the page has `overscroll-behavior: none`, and read-only overlays such as the readout have `pointer-events: none`. The cursor shows grab at rest and grabbing while panning. Drags and pinches read `getCoalescedEvents()` where the browser has it, so a fast stroke keeps every sample for the release velocity.
   Done when browser tests release the button outside the viewer, over an overlay, after a lost capture and after a window blur, and the drag ends every time with no pan on the next mouse move.
   Depends on VIEW-020. Refs doc 06 §15, doc 16.
-- [ ] VIEW-044 · Prefetch where the view is heading
+- [x] VIEW-044 · Prefetch where the view is heading
   Predict the next view from a fast, straight pan or a steady hover and request its tiles at low priority before they enter the view. Velocity is weighted over the last 160 ms with a 55 ms half-life, a path straighter than 0.7 is needed, the lead is 300 ms and at most 1.25 viewports. Prefetch jobs go through the decode pool behind visible tiles and are dropped by its queue rules, never by aborting a download. The developer drawer can turn it off and show the vector.
   Done when a test on a scripted straight pan shows the predicted tiles requested before they enter the view, a zig-zag pan prefetches nothing, and a result file records time to a sharp view at 100 ms RTT with and without prediction.
   Depends on VIEW-004, VIEW-020. Refs [`poc/src/camera/motion-predictor.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/camera/motion-predictor.ts), doc 34 §2.
@@ -1662,7 +1674,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Done when a result file names the cause and a test pins it.
   Depends on VIEW-011. Refs [result](results/2026-10-26-jpeg-2000-in-the-decode-workers.md).
   Size: M.
-- [ ] VIEW-036 · Renderer interface and route switching
+- [x] VIEW-036 · Renderer interface and route switching
   One interface implemented by Viv (primary), deck.gl 9.4 WebGPU and the custom WebGPU engine. Switching remounts cleanly and keeps the camera.
   Done when the same golden tests pass on all three routes for 8-bit RGB slides and switching 10 times passes the memory test.
   Refs [`poc/src/app/renderer.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/app/renderer.ts).
@@ -1670,13 +1682,13 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
 
 - [ ] VIEW-037 · deck.gl 9.4 WebGPU route
   TileLayer over BitmapLayer from the same PixelSources, SolidPolygonLayer for outlines, with known gotchas handled (redraw with a reason, minZoom, adapter limits for buffer size).
-  Done when golden and perf tests pass, with uncaptured errors counted and zero. The error helpers are in `src/viv/webgpu-errors.ts` ([ADR 0112](adr/0112-finest-level-sampling-and-webgl-context-recovery.md)).
+  Done when the route plugs into the VIEW-036 renderer interface, the same golden tests that Viv passes pass on this route, perf tests pass, and uncaptured errors are counted and zero. The error helpers are in `src/viv/webgpu-errors.ts` ([ADR 0112](adr/0112-finest-level-sampling-and-webgl-context-recovery.md)).
   Refs [`poc/src/deck94/*`](https://github.com/fedasevich/pathlogy-poc/tree/master/src/deck94), doc 23.
   Size: L.
 
 - [ ] VIEW-038 · Custom WebGPU engine route
   Render worker with OffscreenCanvas, tile atlas, compute culling, instanced polygons with instance-step attributes, 8-bit only.
-  Done when golden and perf tests pass and annotation set updates take one buffer write (the POC's advantage).
+  Done when the route plugs into the VIEW-036 renderer interface, the same golden tests that Viv passes pass on this route, perf tests pass and annotation set updates take one buffer write (the POC's advantage).
   Refs [`poc/src/webgpu/*`](https://github.com/fedasevich/pathlogy-poc/tree/master/src/webgpu), docs 04, 07.
   Size: L.
 
@@ -1742,7 +1754,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Done when Tailwind CSS v4, shadcn/ui on Base UI and Storybook are set up as [ADR 0130](adr/0130-shadcn-ui-on-base-ui-with-tailwind-v4.md) says, and axe passes over the stories of the controls in its table, which ticks STACK-007 (component primitives and styling) in the same change.
   Refs [ADR 0129](adr/0129-the-prototype-moves-into-react-as-the-design-source.md), [ADR 0130](adr/0130-shadcn-ui-on-base-ui-with-tailwind-v4.md).
 
-- [ ] DS-001 · Design tokens package
+- [x] DS-001 · Design tokens package
   Product tokens from the frozen kit's Design system page ([docs/design/](design/README.md)) for dark and light: surf-page, surf-panel, surf-section, surf-field, chrome-3, canvas, line, line-strong, fg, fg-dim, fg-faint, accent, accent-fill, ok, warn, bad, research-fg, the decision colours v-agree, v-disagree, v-unsure and v-open, plus class colours, the proposal colour and `unsure` (#cbd5e1 dark, #475569 light, used as a hatch or with a pattern, never as a fill alone). Sizes are space-zone 28, space-in 10, pad-zone 18, pad-modal 24 (20 in a small modal), r-zone 12, r-ctl 8, control heights 28, 32 and 40, tag height 20 and count height 16. The kit's pink mock marker colour is left out. Exported as CSS variables and TS constants.
   Done when unit tests assert every token exists in both themes and a visual test renders the specimen page.
   Depends on PROTO-011. Refs kit Design system page, mock token block, [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
@@ -1970,7 +1982,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on DS-023, DS-033.
   Size: S.
 
-- [ ] DS-039 · Animated loaders instead of loading text
+- [x] DS-039 · Animated loaders instead of loading text
   Screens wait with plain text such as "Loading your home…", which the owner finds poor. Propose five animated loaders that fit the mock's dark, precise look, each either built from a small maintained library (for example a Lottie or CSS loader set) customised to the design tokens, or drawn fresh in CSS or SVG. Show all five side by side in a Storybook story with light, dark, compact and reduced motion variants, plus the bundle size each adds, and put the choice for the owner in `docs/decisions.md`. After the owner picks one, add it to `packages/ui` as one `Loader` component with inline, block and full page sizes, and replace every loading text in `apps/web` with it, keeping an accessible label for screen readers. Reduced motion shows a still state.
   Done when the five proposals are in Storybook with their sizes and an open decision exists, and after the owner's pick a test finds no loading text left in `apps/web` outside the `Loader` label, the loader honours reduced motion, and the golden images of the main screens show it.
   Depends on DS-023.
@@ -2926,7 +2938,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Size: M.
 ## 16 MEAS · Measurements
 
-- [ ] MEAS-000 · Research check
+- [x] MEAS-000 · Research check
   Done when the measurement categories per specimen (macro over 2 mm, micro over 0.2 mm or more than 200 cells, ITC up to 0.2 mm and up to 200 cells) and the pN wording with the (sn) suffix are confirmed from current staging guidance and checked against the published AJCC and CAP texts, with no pathologist needed, and recorded in an ADR.
   Size: M.
 
@@ -4624,7 +4636,7 @@ Importing AI results made elsewhere is first class. A result set is one import o
   Decided in [ADR 0125](adr/0125-result-files-pair-in-python-and-import-as-their-own-job.md) (result files pair in Python and import as their own job). The import writes regions and zones, and cells wait for RSET-011 (cells from imported files).
   Depends on RSET-001. Refs mock: upload/files.
 
-- [ ] RSET-005 · Import checks and fixes
+- [x] RSET-005 · Import checks and fixes
   Schema and parse errors name the line or feature and offer a downloadable error report and "import the other N". A coordinate or scale mismatch guesses the level or microns per pixel and shows both overlays with the share on tissue. Unknown classes are mapped to project classes once and remembered (PROJ-004). Missing scores count as no score or as 1.0.
   A heatmap with no slide at Check offers "Choose a slide" or "Leave it out", and either clears it. A result file that lands outside its slide changes nothing and says so on the project page. Each problem shows in place in the upload or the project, in the issue styles of SHELL-010.
   Done when tests cover each problem with fixtures: three objects without a class, a heatmap at level 2 scaled by 4, three new classes, rows without a score, a heatmap without a slide and a file outside its slide.
@@ -4669,6 +4681,12 @@ Importing AI results made elsewhere is first class. A result set is one import o
   Done when a benchmark imports the synthetic 1.6 million cell GeoJSON through `python -m parfocal_ingest` against MinIO, records the peak memory and the step time in a result file, and the job is claimed once.
   Depends on RSET-011. Split from RSET-011 by [ADR 0127](adr/0127-imported-cells-keep-numbers-by-centre-and-take-the-innermost-region.md) (imported cells keep their numbers by centre distance and take the innermost region).
   Decided in [ADR 0128](adr/0128-result-files-stream-through-a-byte-scanner-into-cell-columns.md) (result files stream through a byte scanner into cell columns): JSON arrays are read in batches by a byte scanner and msgspec, cells are kept as numpy columns spilled to the work folder, and the worker writes chunks from those columns. The [bounded cell import result](results/2026-11-01-bounded-cell-import.md) measured 824 to 1,025 MiB and 42 to 45 s per import, claimed once.
+
+- [ ] RSET-013 · Heatmap storage and the import check leftovers
+  An imported heatmap is stored and shown after the uploader accepts the level and scale guess, instead of ending with `result-heatmap-not-stored`. Each scale guess carries its share on tissue, an unreadable `.png` or `.tif` heatmap is refused with a named problem, and uploads left waiting on the uploader's choices in quarantine are swept after a set time.
+  Done when the RSET-005 test of a heatmap at level 2 scaled by 4 ends in a ready set, a test refuses a corrupt `.png` with its named problem, a test checks the share on tissue of each guess, and a test sweeps a waiting upload past its time.
+  Depends on RSET-005. Split from RSET-005 on 2026-11-14.
+  Size: M.
 
 ---
 

@@ -18,6 +18,7 @@ import {
 import { Button } from "@parfocal/ui/components/button";
 import { Icon, type IconName } from "@parfocal/ui/components/icon";
 import { Keycap } from "@parfocal/ui/components/keycap";
+import { Loader } from "@parfocal/ui/components/loader";
 import { AvatarStack } from "@parfocal/ui/components/person";
 import { ProgressBar } from "@parfocal/ui/components/progress-meter";
 import { StatusTag } from "@parfocal/ui/components/tag";
@@ -427,7 +428,7 @@ function HomeWithoutData({
         <p className="mt-1 mb-0 text-body-sm leading-[1.45] text-fg-dim">{formatLongDay(now())}</p>
       </header>
       {error === null ? (
-        <p className="text-body-sm text-fg-dim">Loading your home…</p>
+        <Loader label="Loading your home" />
       ) : kind === "forbidden" ? (
         <section
           aria-label="No workspace yet"
@@ -481,7 +482,11 @@ export function HomeScreen() {
     },
   });
   if (me === undefined || layersQuery.isPending) {
-    return <p className="p-8 text-body-sm text-fg-dim">Loading your home…</p>;
+    return (
+      <div className="p-8">
+        <Loader label="Loading your home" />
+      </div>
+    );
   }
   const firstName = me.display_name.split(" ")[0] ?? me.display_name;
   if (home === undefined) {
