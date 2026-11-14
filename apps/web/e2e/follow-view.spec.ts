@@ -1,16 +1,18 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 
 const p07 = "00000000-0000-4000-8003-000000000007";
-const annotateTask = "00000000-0000-4000-8007-000000000021";
 const byHand = "00000000-0000-4000-8005-000000000014";
+const blindedTask = "00000000-0000-4000-8007-000000000014";
+const blindedSlide = "00000000-0000-4000-8005-000000000001";
 const budgetMs = 300;
 
 test.use({ viewport: { width: 1440, height: 900 } });
 
 type Sample = { at: number; camera: string };
 
-async function openAs(page: Page, persona: string) {
-  await page.goto(`/projects/${p07}/slides/${byHand}/live?task=${annotateTask}&as=${persona}`);
+async function openAs(page: Page, persona: string, slide = byHand, task?: string) {
+  const inTask = task === undefined ? "" : `task=${task}&`;
+  await page.goto(`/projects/${p07}/slides/${slide}/live?${inTask}as=${persona}`);
   const stage = page.getByTestId("slide-stage");
   await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 20_000 });
   await page.getByTestId("slide-host").evaluate((host) => {
@@ -100,4 +102,33 @@ test("a follower's camera tracks the shared view within 300 ms until the followe
 
   await anna.getByTestId("share-view").click();
   await expect(follow).toHaveCount(0, { timeout: 2000 });
+});
+
+test("a reviewer who has not submitted a blinded slide cannot share, follow or see a shared cursor", async ({
+  context,
+}) => {
+  test.setTimeout(90_000);
+  const lenka = await context.newPage();
+  const sara = await context.newPage();
+  await openAs(lenka, "LM", blindedSlide, blindedTask);
+  const saraHost = await openAs(sara, "SM", blindedSlide, blindedTask);
+  await expect(lenka.getByTestId("presence")).toHaveCount(1, { timeout: 5000 });
+  await expect(sara.getByTestId("presence")).toHaveCount(1, { timeout: 5000 });
+  await expect(lenka.getByTestId("share-view")).toHaveCount(0);
+
+  await sara.bringToFront();
+  const share = sara.getByTestId("share-view");
+  await share.click();
+  await expect(share).toHaveAttribute("aria-pressed", "true");
+  const stage = await saraHost.boundingBox();
+  if (stage === null) throw new Error("no stage");
+  await sara.mouse.move(stage.x + 400, stage.y + 300);
+  await sara.mouse.wheel(0, -300);
+  await sara.mouse.move(stage.x + 460, stage.y + 340, { steps: 6 });
+  await sara.waitForTimeout(600);
+
+  await expect(lenka.getByTestId("presence")).toHaveCount(1);
+  await expect(lenka.getByTestId("share-view")).toHaveCount(0);
+  await expect(lenka.getByTestId("follow-view")).toHaveCount(0);
+  await expect(lenka.getByTestId("shared-cursor")).toHaveCount(0);
 });

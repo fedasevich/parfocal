@@ -37,6 +37,7 @@ import { useBindings } from "../../keys/personal-keys.ts";
 import { useHotkeys } from "../../keys/use-hotkeys.ts";
 import { LiveCursor } from "../../presence/live-cursor.tsx";
 import { pointOfShare } from "../../presence/shared-cursor.ts";
+import { useBlindedOn } from "../../presence/use-blinded.ts";
 import { useRoomCursors } from "../../presence/use-room-cursors.ts";
 import { okData } from "../placeholder.tsx";
 import { type Camera, midSize, SlideStill } from "../review/slide-still.tsx";
@@ -148,7 +149,12 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
     chosen,
     { left: session.slideId, right: fallbackRight?.id },
   );
-  const liveCursors = useRoomCursors(session.slideId, okData(useGetMe().data)?.user_id);
+  const blinded = useBlindedOn(session.taskId, session.slideId);
+  const { cursors: liveCursors } = useRoomCursors(
+    session.slideId,
+    okData(useGetMe().data)?.user_id,
+    blinded,
+  );
   const homeSide = paneSides.find((side) => ids[side] === session.slideId);
   const slideOn = (side: PaneSide) => caseSlides.find((slide) => slide.id === ids[side]);
   const show = (next: PaneSlideIds) => setChosen({ ...next });

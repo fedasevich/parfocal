@@ -25,6 +25,6 @@ The alternative of packing the cursor into the view frame was rejected because t
 - The room accepts two kinds of client input, each with its own size and rate cap. It is still not a general message bus.
 - A share of the slide lands on the same tissue for any window size, zoom or still size. Five decimals is about one slide pixel on a 100 000 pixel slide.
 - Compare has no "Share my view" control, so a person in compare can see a colleague's pointer and cannot send their own. The question is in `docs/decisions.md`.
-- The blinded review question of ADR 0301 now also covers the cursor. TODO: decide whether blinded tasks hide sharing.
+- The blinded review question of ADR 0301 also covers the cursor. Decision 98 (whether a blinded task hides "Share my view") chose A on 2026-11-14, so a reader who is blinded on the slide neither sends nor sees a cursor.
 - In a flipped compare pane the name beside the cursor is mirrored with the pane. TODO: draw the label outside the flipped box.
 - Unit tests cover the caps and the throttle, and a two page test on the fake room over BroadcastChannel shows the follower's marker within 2 px of the sharer's pointer. TODO: measure the deployed relay between two browsers.
