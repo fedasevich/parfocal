@@ -11,8 +11,9 @@ test("the first-run offer starts the tour and the ten steps reach Done", async (
     await expect(tour).toContainText(`Step ${step} of 10`);
     await tour.getByRole("button", { name: "Next" }).click();
   }
-  await expect(tour).toContainText("Step 10 of 10");
   await expect(page).toHaveURL(/\/settings\/shortcuts/);
+  await expect(page.getByRole("dialog", { name: "Settings" })).toBeVisible();
+  await expect(tour).toContainText("Step 10 of 10");
   await tour.getByRole("button", { name: "Done" }).click();
   await expect(tour).toBeHidden();
 });

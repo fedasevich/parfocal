@@ -44,6 +44,7 @@ function SettingsScopeLegend() {
 
 type SettingsDialogProps = {
   open?: boolean;
+  modal?: boolean;
   onOpenChange?: React.ComponentProps<typeof Dialog>["onOpenChange"];
   title: React.ReactNode;
   hint?: React.ReactNode;
@@ -54,6 +55,7 @@ type SettingsDialogProps = {
 
 function SettingsDialog({
   open = true,
+  modal = true,
   onOpenChange,
   title,
   hint,
@@ -62,7 +64,12 @@ function SettingsDialog({
   children,
 }: SettingsDialogProps) {
   return (
-    <Dialog open={open} {...(onOpenChange ? { onOpenChange } : {})}>
+    <Dialog
+      open={open}
+      modal={modal}
+      disablePointerDismissal={!modal}
+      {...(onOpenChange ? { onOpenChange } : {})}
+    >
       <DialogContent
         showCloseButton={false}
         aria-label="Settings"
