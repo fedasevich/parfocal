@@ -273,3 +273,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0306](0306-conversion-triggers-and-the-ome-zarr-target.md) | Conversion runs only on a fired trigger, and writes unsharded OME-Zarr 0.5 with JPEG or zstd chunks | Accepted | 2026-11-14 |
 | [0307](0307-a-bif-is-refused-only-when-its-frame-overlap-is-unknown.md) | A BIF is refused only when its frame overlap is unknown, and a declared zero overlap opens as an exact grid | Accepted | 2026-11-14 |
 | [0308](0308-imported-heatmaps-as-a-byte-grid-beside-the-result-set.md) | An imported heatmap is kept as a gzip byte grid with a facts file under its result set | Accepted | 2026-11-14 |
+| [0309](0309-the-clinical-note-returns-sealed.md) | The clinical note returns, sealed | Accepted | 2026-11-14 |
