@@ -12,7 +12,9 @@ KIND = "result-import"
 STEP_NAMES = ("import",)
 LEASE_SECONDS = 60.0
 RESULT_SET_IDS = uuid.UUID("5d1f0b52-7a43-4c39-9a0e-2f4d8c6b1e70")
-SOURCE_SUFFIXES = frozenset({".geojson", ".json", ".csv", ".tsv"})
+SOURCE_SUFFIXES = frozenset({".geojson", ".json", ".csv", ".tsv", ".png", ".tif", ".tiff"})
+HEATMAP_GRID = "heatmap.bin"
+HEATMAP_FACTS = "heatmap.json"
 
 
 class UploadKind(StrEnum):
@@ -53,7 +55,8 @@ class ImportFailure(StrEnum):
     TOO_MANY_CLASSES = "result-too-many-classes"
     SLIDE_MISSING = "result-slide-missing"
     OUTSIDE_SLIDE = "result-outside-slide"
-    HEATMAP_NOT_STORED = "result-heatmap-not-stored"
+    HEATMAP_UNREADABLE = "result-heatmap-unreadable"
+    HEATMAP_UNPLACED = "result-heatmap-unplaced"
 
 
 IMPORT_FAILURES: Mapping[str, str] = {
@@ -72,8 +75,12 @@ IMPORT_FAILURES: Mapping[str, str] = {
     ImportFailure.OUTSIDE_SLIDE: (
         "Every object in this result file lies outside its slide, so nothing was imported."
     ),
-    ImportFailure.HEATMAP_NOT_STORED: (
-        "Parfocal checked this heatmap against its slide but cannot keep heatmaps yet."
+    ImportFailure.HEATMAP_UNREADABLE: (
+        "Parfocal could not read this heatmap. Send a single-channel PNG or TIFF."
+    ),
+    ImportFailure.HEATMAP_UNPLACED: (
+        "Parfocal could not place this heatmap on its slide, because its shape matches no level "
+        "of the slide."
     ),
 }
 

@@ -127,6 +127,13 @@ msgstr "{0}, key {1}"
 msgid "{0}. Draw the objects by hand."
 msgstr "{0}. Draw the objects by hand."
 
+#. placeholder {0}: magnification.toFixed(1)
+#. placeholder {1}: Math.round(viewport[0])
+#. placeholder {2}: Math.round(viewport[1])
+#: src/popout/popout-screen.tsx
+msgid "{0}× at {1}, {2}"
+msgstr "{0}× at {1}, {2}"
+
 #: src/screens/review/first-read.tsx
 msgid "{added} added."
 msgstr "{added} added."
@@ -751,6 +758,10 @@ msgstr "Finishing a slide"
 msgid "First read"
 msgstr "First read"
 
+#: src/popout/popout-screen.tsx
+msgid "Following the main window"
+msgstr "Following the main window"
+
 #: src/viewer/annotate-task-panel.tsx
 msgid "For example, a newer model run finished"
 msgstr "For example, a newer model run finished"
@@ -1154,6 +1165,14 @@ msgstr "open"
 msgid "Open slide {0}"
 msgstr "Open slide {0}"
 
+#: src/screens/review/inspector-dock.tsx
+msgid "Open the side panel on the second monitor"
+msgstr "Open the side panel on the second monitor"
+
+#: src/popout/popout-screen.tsx
+msgid "Open this window from the viewer."
+msgstr "Open this window from the viewer."
+
 #: src/screens/review/slide-submitted.tsx
 msgid "Opens by itself in {left} s. Your review can be changed until sign-off."
 msgstr "Opens by itself in {left} s. Your review can be changed until sign-off."
@@ -1358,6 +1377,10 @@ msgstr "Scope: all AI objects, least sure first"
 #: src/screens/viewer/object-table.tsx
 msgid "Scores"
 msgstr "Scores"
+
+#: src/popout/popout-screen.tsx
+msgid "Second monitor"
+msgstr "Second monitor"
 
 #: src/screens/review/guided-review.tsx
 msgid "See the whole slide"
@@ -1731,6 +1754,10 @@ msgstr "View"
 msgid "Views"
 msgstr "Views"
 
+#: src/popout/popout-screen.tsx
+msgid "Waiting for the main window"
+msgstr "Waiting for the main window"
+
 #: src/screens/review/object-card.tsx
 msgid "Want to fix it yourself? Optional."
 msgstr "Want to fix it yourself? Optional."
@@ -1763,6 +1790,7 @@ msgstr "What you already saved is safe, and other pages still work."
 msgid "Who made it"
 msgstr "Who made it"
 
+#: src/popout/popout-screen.tsx
 #: src/screens/review/cells-on-slide.tsx
 #: src/screens/review/guided-review.tsx
 #: src/screens/viewer/full-viewer.tsx

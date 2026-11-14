@@ -1,7 +1,8 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 
-const story = (id: string) => `/iframe.html?id=${id}&viewMode=story&globals=a11y.manual:!true`;
+const story = (id: string, theme = "light") =>
+  `/iframe.html?id=${id}&viewMode=story&globals=theme:${theme};a11y.manual:!true`;
 const stories = "components-modals-and-flow-pages--";
 const modal = '[data-slot="small-modal"]';
 
@@ -41,7 +42,7 @@ test("a long title and body grow the modal in height, never in width", async ({ 
 });
 
 test("the scrim is 62% black in dark", async ({ page }) => {
-  await page.goto(`${story(`${stories}nudge-480`)}&globals=theme:dark`);
+  await page.goto(story(`${stories}nudge-480`, "dark"));
   await expect(page.locator(modal)).toBeVisible();
   const color = await page.evaluate(
     () =>
@@ -103,7 +104,7 @@ test("one blocker turns the primary off and says why, two show the list", async 
 
 for (const theme of ["dark", "light"]) {
   test(`the open modal passes axe in ${theme}`, async ({ page }) => {
-    await page.goto(`${story(`${stories}reassign-560`)}&globals=theme:${theme}`);
+    await page.goto(story(`${stories}reassign-560`, theme));
     await expect(page.locator(modal)).toBeVisible();
     const results = await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22a", "wcag22aa"])

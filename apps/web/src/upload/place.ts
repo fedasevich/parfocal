@@ -9,9 +9,18 @@ import {
   type SortingRequest,
 } from "@parfocal/api-client";
 import type { LiveModel, LiveState } from "../screens/upload/live-model.ts";
-import type { DroppedItem, DropRecord, PairMode } from "./drop.ts";
+import {
+  type DroppedItem,
+  type DropRecord,
+  dirOf,
+  isMirax,
+  miraxFolderOf,
+  type PairMode,
+  uploadNameOf,
+} from "./drop.ts";
 import type { UploadEngine } from "./engine.ts";
 import type { FileIdentity } from "./entries.ts";
+import { zipStored } from "./zip.ts";
 
 const postJson = (body: unknown) => ({
   method: "POST",
@@ -38,6 +47,8 @@ export type PlaceInput = {
   caseLabels: readonly (string | null)[];
   pair: PairMode;
   cases: "names" | "loose";
+  duplicates: Readonly<Record<string, "skip" | "keep">>;
+  heldBack: readonly string[];
 };
 
 export type SortDifference = { path: string; browser: string; server: string };
@@ -58,6 +69,8 @@ export const placeInputOf = (
   caseLabels: model.slides.map((_, index) => model.caseOf(index)),
   pair: state.pair,
   cases: state.cases,
+  duplicates: state.duplicate,
+  heldBack: [...model.mrxsWaiting, ...model.mrxsLeftOut].map((slide) => slide.path),
 });
 
 const byOf = (mode: PairMode): PairBy => (mode === "id" ? "embedded" : mode);
@@ -85,16 +98,17 @@ export function sortingRequestOf(input: PlaceInput, final = false): SortingReque
       ...results.map((result) => fileOf(result.item, "result")),
     ],
     result_decisions: decisions,
-    ...(final
-      ? {
-          slide_decisions: input.slides.map((slide, index) => {
-            const label = input.cases === "loose" ? null : (input.caseLabels[index] ?? null);
-            return label === null
-              ? { path: slide.path, loose: true }
-              : { path: slide.path, case: label };
-          }),
-        }
-      : {}),
+    slide_decisions: input.slides.flatMap((slide, index) => {
+      const choice = input.duplicates[slide.path];
+      const keep = choice === undefined ? {} : { keep: choice === "keep" };
+      if (!final) return choice === undefined ? [] : [{ path: slide.path, ...keep }];
+      const label = input.cases === "loose" ? null : (input.caseLabels[index] ?? null);
+      return [
+        label === null
+          ? { path: slide.path, loose: true, ...keep }
+          : { path: slide.path, case: label, ...keep },
+      ];
+    }),
   };
 }
 
@@ -107,14 +121,7 @@ export function compareSorting(input: PlaceInput, server: Sorting): SortDifferen
       differences.push({ path: slide.path, browser: caseText(browser), server: "Not seen" });
       return;
     }
-    if (found.outcome === "left-out") {
-      differences.push({
-        path: slide.path,
-        browser: caseText(browser),
-        server: "Skipped, already in this project",
-      });
-      return;
-    }
+    if (found.outcome === "left-out" || found.duplicate_of !== null) return;
     const there = found.case?.label ?? null;
     if (there !== browser) {
       differences.push({ path: slide.path, browser: caseText(browser), server: caseText(there) });
@@ -148,9 +155,22 @@ const caseText = (label: string | null) => (label === null ? "Loose, no case" : 
 
 const slideText = (path: string | null) => (path === null ? "No slide" : `Slide ${path}`);
 
-export async function checkSorting(input: PlaceInput): Promise<SortDifference[]> {
+export type SortCheck = { differences: SortDifference[]; duplicates: Duplicate[] };
+
+export type Duplicate = { path: string; of: string };
+
+export function duplicatesOf(server: Sorting): Duplicate[] {
+  return server.slides.flatMap((slide) =>
+    slide.duplicate_of === null ? [] : [{ path: slide.path, of: slide.duplicate_of }],
+  );
+}
+
+export async function checkSorting(input: PlaceInput): Promise<SortCheck> {
   const response = await sortDroppedFiles(sortingRequestOf(input));
-  return compareSorting(input, response.data);
+  return {
+    differences: compareSorting(input, response.data),
+    duplicates: duplicatesOf(response.data),
+  };
 }
 
 type Waiting = { promise: Promise<string | null>; settle: (uploadId: string | null) => void };
@@ -173,7 +193,8 @@ export async function placeAndUpload(
 ): Promise<void> {
   const response = await applyDroppedFiles(sortingRequestOf(input, true));
   const sorting = response.data;
-  const itemOf = (path: string) => items.find((item) => item.path === path);
+  const packed = new Map<string, DroppedItem>();
+  const itemOf = (path: string) => packed.get(path) ?? items.find((item) => item.path === path);
   const caseIds = new Map<string, string | null>();
   const slideItems: DroppedItem[] = [];
   for (const slide of input.slides) {
@@ -181,8 +202,24 @@ export async function placeAndUpload(
     const item = itemOf(slide.path);
     if (item === undefined || slide.size === 0) continue;
     if (sorted?.outcome === "left-out") continue;
+    if (input.heldBack.includes(slide.path)) continue;
     caseIds.set(slide.path, sorted?.case?.case_id ?? null);
     slideItems.push(item);
+  }
+  for (const [index, slide] of slideItems.entries()) {
+    if (!isMirax(slide.path)) continue;
+    const folder = miraxFolderOf(slide.path);
+    const base = dirOf(slide.path) === "" ? 0 : dirOf(slide.path).length + 1;
+    const sources = [
+      { name: slide.path.slice(base), file: slide.file },
+      ...items
+        .filter((item) => item.path.startsWith(folder))
+        .map((item) => ({ name: item.path.slice(base), file: item.file })),
+    ];
+    const file = await zipStored(sources, uploadNameOf(slide.path));
+    const zipped = { path: slide.path, size: file.size, file };
+    packed.set(slide.path, zipped);
+    slideItems[index] = zipped;
   }
   const resultItems: { item: DroppedItem; slide: DroppedItem }[] = [];
   for (const result of input.results) {

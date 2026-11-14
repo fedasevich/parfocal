@@ -127,6 +127,13 @@ msgstr ""
 msgid "{0}. Draw the objects by hand."
 msgstr ""
 
+#. placeholder {0}: magnification.toFixed(1)
+#. placeholder {1}: Math.round(viewport[0])
+#. placeholder {2}: Math.round(viewport[1])
+#: src/popout/popout-screen.tsx
+msgid "{0}× at {1}, {2}"
+msgstr ""
+
 #: src/screens/review/first-read.tsx
 msgid "{added} added."
 msgstr ""
@@ -751,6 +758,10 @@ msgstr ""
 msgid "First read"
 msgstr ""
 
+#: src/popout/popout-screen.tsx
+msgid "Following the main window"
+msgstr ""
+
 #: src/viewer/annotate-task-panel.tsx
 msgid "For example, a newer model run finished"
 msgstr ""
@@ -1154,6 +1165,14 @@ msgstr ""
 msgid "Open slide {0}"
 msgstr ""
 
+#: src/screens/review/inspector-dock.tsx
+msgid "Open the side panel on the second monitor"
+msgstr ""
+
+#: src/popout/popout-screen.tsx
+msgid "Open this window from the viewer."
+msgstr ""
+
 #: src/screens/review/slide-submitted.tsx
 msgid "Opens by itself in {left} s. Your review can be changed until sign-off."
 msgstr ""
@@ -1357,6 +1376,10 @@ msgstr ""
 
 #: src/screens/viewer/object-table.tsx
 msgid "Scores"
+msgstr ""
+
+#: src/popout/popout-screen.tsx
+msgid "Second monitor"
 msgstr ""
 
 #: src/screens/review/guided-review.tsx
@@ -1731,6 +1754,10 @@ msgstr ""
 msgid "Views"
 msgstr ""
 
+#: src/popout/popout-screen.tsx
+msgid "Waiting for the main window"
+msgstr ""
+
 #: src/screens/review/object-card.tsx
 msgid "Want to fix it yourself? Optional."
 msgstr ""
@@ -1763,6 +1790,7 @@ msgstr ""
 msgid "Who made it"
 msgstr ""
 
+#: src/popout/popout-screen.tsx
 #: src/screens/review/cells-on-slide.tsx
 #: src/screens/review/guided-review.tsx
 #: src/screens/viewer/full-viewer.tsx

@@ -4,6 +4,7 @@ import { TabCount } from "@parfocal/ui/components/tabs";
 import type { SheetHeight, SheetPixels } from "@parfocal/ui/lib/sheet-gesture";
 import { cn } from "@parfocal/ui/lib/utils";
 import { type KeyboardEvent, type PointerEvent, type ReactNode, useRef, useState } from "react";
+import { openPopout } from "../../popout/popout-channel.ts";
 import {
   dragInspector,
   type InspectorLayout,
@@ -150,6 +151,14 @@ export function InspectorDock({
           />
           <Trans>Hide while panning</Trans>
         </label>
+        <button
+          type="button"
+          data-testid="inspector-popout"
+          onClick={() => void openPopout("inspector")}
+          className="cursor-pointer border-t border-l border-line bg-chrome px-3 py-1.5 text-left text-caption text-fg-dim hover:text-fg"
+        >
+          <Trans>Open the side panel on the second monitor</Trans>
+        </button>
       </div>
     </div>
   );

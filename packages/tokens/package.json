@@ -12,7 +12,9 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.src.json && tsc --noEmit -p tsconfig.test.json",
-    "test": "node --test \"test/**/*.test.ts\""
+    "test": "node --test \"test/**/*.test.ts\"",
+    "colour-check": "node tools/colour-check.ts",
+    "colour-check:sample": "uv run --package parfocal-ingest python tools/sample-he-pixels.py"
   },
   "imports": {
     "#*": "./src/*"

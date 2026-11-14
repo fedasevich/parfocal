@@ -7,6 +7,7 @@ import {
   LevelTableError,
   parseLevelTable,
   SlideBytesError,
+  SlideHasSeveralScanAreasError,
   SlideNeedsReingestError,
   signedOpenRequest,
   slideFormatFromName,
@@ -190,6 +191,19 @@ describe("signedOpenRequest for a Ventana BIF", () => {
     }
     await assert.rejects(
       openBif(bifFetcher([], () => Response.json({ tileKind: "grid", stitching: STITCHING }))),
+      SlideNeedsReingestError,
+    );
+  });
+
+  test("names several scan areas instead of asking for re-ingest", async () => {
+    const sidecar = { tileKind: "bif-frames", stitching: null, unplaced: "several-scan-areas" };
+    await assert.rejects(
+      openBif(bifFetcher([], () => Response.json(sidecar))),
+      SlideHasSeveralScanAreasError,
+    );
+    const unknown = { ...sidecar, unplaced: "unknown-overlap" };
+    await assert.rejects(
+      openBif(bifFetcher([], () => Response.json(unknown))),
       SlideNeedsReingestError,
     );
   });
