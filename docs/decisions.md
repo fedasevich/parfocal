@@ -1,6 +1,6 @@
 # Decisions waiting for the owner
 
-Last updated: 2026-11-13
+Last updated: 2026-11-14
 
 Each decision lists its options, with the recommended one marked. Write your letter after "Your choice:", or leave it empty to take the recommended option. A short note is welcome where you pick "Other".
 
@@ -8,9 +8,9 @@ To take every recommendation at once, write "all recommended" here:
 
 ## What you need to do next, in order
 
-1. Answer decision 94 (how the first production deploy gets past the environment rules).
-2. Answer decision 95 (the Zitadel login service user that turns on the app's own sign-up and sign-in).
-3. Answer decision 96 (turning on deploys from `main`).
+1. Answer decision 100 (whether VIEW-036, the renderer interface, is ticked now).
+2. Go through the review checklist in [owner-review.md](owner-review.md) and tick what you agree with.
+3. When the app is ready for production, say so, and the lead books the deploy session of decisions 93, 94 and 95.
 
 ## What your answers of 2026-11-04 changed
 
@@ -69,6 +69,13 @@ Every other answer kept what was built: 37a (darker primary hover), 39a (Alt+Lef
 | 88a, deploy credentials | Done on 2026-11-13. The GitHub environment `production` holds `CLOUDFLARE_API_TOKEN` (with R2 read), `MODAL_TOKEN_ID`, `MODAL_TOKEN_SECRET`, `NEON_API_KEY` (scoped to project `parfocal`) and `ZITADEL_SA_JSON`, and the variables `CLOUDFLARE_ACCOUNT_ID`, `ZITADEL_ORG_ID` and `NEON_PROJECT_ID` |
 | 86a, database test speed | TEST-027 (database tests in parallel) is ticked at 15 to 18 minutes |
 
+## What your answers of 2026-11-14 changed
+
+- Decision 96 (turning on deploys from `main`), option B. Nothing deploys for now, because the app should be more ready for production first. OPS-005 (continuous deployment) stays in review, and the deploy session of decisions 93 (what the first production deploy still needs), 94 (how the first deploy gets past the environment rules) and 95 (the Zitadel login service user) waits until you say the app is ready. `knowledge/agent-workflow.md` now puts tasks that close epics and milestones first instead of the production slice.
+- Decision 97 (a deleted AI object counts as checked before submit), option A. An agent is changing the submit gate of TASK-008 (submit a slide review) so a deleted AI object no longer blocks the submit, while a skipped one still does.
+- Decision 98 (a blinded task hides "Share my view"), option A. An agent is hiding sharing, following and the shared cursor while the reader is blinded on that slide.
+- Decision 99 (a person in compare can send their own cursor), option B. The same agent adds "Share my cursor" to the compare toolbar right after decision 98.
+
 ## Open decisions from cutting staging (ADR 0293, production only until the first real user)
 
 ### 91. Delete the GitHub environment `staging` and the staging tokens
@@ -113,60 +120,29 @@ IAM-027 (real sign-up and sign-in from the app's own screens) is built and teste
 
 Your choice: a
 
-### 96. Turning on deploys from `main`
+### 100. Whether VIEW-036 (renderer interface and route switching) is ticked now
 
-OPS-005 (continuous deployment) is built. The `Deploy` workflow now also runs after a green `ci` on `main`, but only when the repository variable `DEPLOY_ON_MAIN` is `true`, and it is unset, so nothing deploys yet. A migration check refuses any revision that drops data unless the run is started with `allow_destructive`, and rollback is `gh workflow run deploy.yml --ref main -f rollback_to=<ref>`, which redeploys the older code without migrations, as [ADR 0297](adr/0297-main-deploys-to-production-behind-a-switch-with-a-migration-check-and-rollback-by-redeploy.md) (main deploys behind a switch, migration check, rollback by redeploy) describes. The rollback drill has not run on production.
+VIEW-036 built the renderer interface and the switch between routes inside the engine ([ADR 0302](adr/0302-renderer-routes-switch-inside-the-engine-behind-lazy-loaders.md), renderer routes switch inside the engine behind lazy loaders). Its Done line asks for the same golden tests on all three routes, but only Viv exists. The goldens pass on Viv, a switch at 10x still matches, and 15 switches grow the heap 5.3% against a 10% budget.
 
-- **A. After decision 94 lands the first tagged deploy, you run `gh variable set DEPLOY_ON_MAIN --body true` and the lead runs one rollback drill with you watching (recommended).** Every green `main` then deploys. Each deploy uses a little Modal compute inside the $30.
-- B. Keep deploying only tagged releases with your approval and leave OPS-005 in review.
-- Other.
-
-Your choice: 
-
-### 97. Whether an AI object the reviewer deleted counts as checked before submit
-
-TASK-008 (submit a slide review) made the API refuse a submit while any object is still open or a required question is unanswered. Today an AI object the reviewer deleted, and an object the reviewer skipped, both stay open, so they block the submit until the reviewer gives them a decision.
-
-- **A. A deleted AI object counts as checked, because deleting it already says the reviewer disagrees with it (recommended).** A skipped object stays open.
-- B. Keep it open until the reviewer gives it a decision as well.
+- **A. Tick VIEW-036 now and add "the goldens pass on this route" to the Done lines of VIEW-037 (deck.gl 9.4 WebGPU route) and VIEW-038 (custom WebGPU engine route) (recommended).** The interface is finished, and each new route proves itself when it lands.
+- B. Leave VIEW-036 in review until both routes exist.
 - Other.
 
 Your choice:
-### 98. Whether a blinded task hides "Share my view"
 
-COLLAB-010 (follow my view) lets anyone on a slide share their camera and lets anyone else on that slide follow it ([ADR 0301](adr/0301-a-shared-camera-is-a-capped-client-frame-relayed-by-the-slide-room.md), a shared camera is a capped client frame relayed by the slide room). In a blinded task, following shows where a colleague looks, which can hint at what they found.
+### 101. Whether the app refuses a BIF that has no frame stitching
 
-- **A. Hide sharing and following while the reader is blinded on that slide (recommended).** It needs a small follow-up task.
-- B. Leave it as built, because sharing is a deliberate act by the sharer.
-- Other.
+VIEW-014 (Ventana BIF with frame stitching) opens a BIF in the app with the frame positions from its sidecar. When the sidecar is missing or holds no stitching, the reader draws the camera frames as a plain grid, as [ADR 0164](adr/0164-bif-frames-placed-like-openslide.md) (BIF frames placed like OpenSlide) says, and the tissue in every frame overlap shows twice. Ingest refuses such a file today, so this happens only if a sidecar is lost.
 
-Your choice: 
-
-### 99. Whether a person in compare can send their own cursor
-
-COLLAB-011 (live shared cursor) shows in compare the pointer of everyone who shares their view on the live slide. Compare has no "Share my view" control, so a person there sees a colleague's pointer and cannot send their own ([ADR 0304](adr/0304-a-shared-cursor-is-a-second-capped-frame-in-shares-of-the-slide.md), a shared cursor is a second capped client frame). Decision 98 (whether a blinded task hides "Share my view") covers the cursor too.
-
-- **A. Leave compare as display only (recommended).** Sharing stays one deliberate act on the live slide.
-- B. Add "Share my cursor" to the compare toolbar. It needs a small follow-up task.
+- **A. Refuse to open it in the app and say the slide needs re-ingest (recommended).** Nobody reviews a slide with repeated tissue by accident.
+- B. Keep opening it as a plain grid.
 - Other.
 
 Your choice:
 
 ## The review column, what each task waits for
 
-Nothing else in review needs you. Nine tasks that only waited for green CI were ticked on 2026-11-02.
-
-| Task | Waits for | Who does it |
-|---|---|---|
-| GUIDE-015 (decision styles in task screens) | The UI half | The next Sonnet agent, first in the queue |
-| INGEST-001 (resumable upload) | INGEST-028 (upload check on the R2 dev bucket), which ADR 0151 now allows | The next Opus agent |
-| CASES-009 (search API) | The latency test, which missed 100 ms only on the shared CI runner | An agent reruns it on your Mac with `PARFOCAL_PERF=1` |
-| IAM-027 (the app's own sign-up and sign-in) | Decision 95, the Zitadel login service user and its Modal secret | You and the lead |
-| IAM-021 (lock screen) | The expired sign-in returning to the object, not only the slide | The session already working on it |
-| VIEW-021 (wheel and pinch) | VIEW-056 (a guided trace recorder), then two minutes of your scrolling when you have a mouse | An agent builds the page, then you |
-| TILES-003 (same-origin data path) | Open time in Chrome is 0.63 s against INGEST-007's 0.35 s, still under the 1 s budget. Either accept the budget as enough or add a small read cache first | An agent, unless you say the budget is enough |
-| OPS-005 (deploys from `main`) | Decision 96, the `DEPLOY_ON_MAIN` switch and one rollback drill | You and the lead |
-| AITUM-003, RSET-005 and TASK-007 | Other tasks, now shown as blocked | Agents, when those tasks land |
+The tasks in review, each with a short summary and what you would check, are in [owner-review.md](owner-review.md), a temporary checklist.
 
 ## Notes, no decision needed
 
@@ -174,5 +150,4 @@ Nothing else in review needs you. Nine tasks that only waited for green CI were 
 - The local stack now has a MinIO `storage` service on port 9000. Run `pnpm db:up` once after pulling. Nothing creates the local bucket `parfocal-local` yet, so `pnpm api:dev` fails its first upload until it exists. The command is in `docs/knowledge/uploads.md`.
 - The migration chain on `main` is `0039` (admin rights), `0040` (review order), `0041` (inbox mutes), `0042` (first reads), `0043` (muted notifications), `0044` (study templates), `0045` (uploads), `0046` (model runs), `0047` (slide ingest) from INGEST-017 (publish step and slide status), and `0048` (result uploads) from RSET-004 (pairing results with slides), and `0049` (job tries) from AIP-018 (claim cap for failing jobs).
 - Migration `0044` (study templates) imports the built-in template content from `parfocal_api.study_templates`, so replaying it later seeds whatever the content is then. TODO: freeze the seed data inside the migration before the first production database.
-- VIEW-036 (renderer interface and route switching) asks for the golden tests to pass on all three routes, but only Viv exists. The interface, the switch and the tests are built, and the goldens pass on one of three routes. The other two are skipped until VIEW-037 (deck.gl 9.4 WebGPU route) and VIEW-038 (custom WebGPU engine route) register their loaders, so VIEW-036 stays unticked or is ticked with that part moved to those two tasks.
 - The upload spike broke one browser test on `main` because the latency proxy gained an upload byte counter. It was fixed the same hour.

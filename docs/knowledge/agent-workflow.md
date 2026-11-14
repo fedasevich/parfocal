@@ -54,11 +54,11 @@ The owner's Claude plan has a 5-hour and a weekly limit. The status line records
 
 - Run `python3 scripts/guard_usage.py` before spawning agents or starting a long task to see both limits and any override.
 - At 80% the hook asks for cheap actions. At 90% finish the current step, start nothing new and record the next step. At 95% stop: note where you stopped with `board.py note`, commit and push only green work, tell the owner and end the turn.
-- Only the owner turns on the override, by typing `! python3 scripts/guard_usage.py override [hours]` in the prompt. Without a number of hours it lasts until the 5-hour window resets, and `off` ends it. A hook blocks agents from running it or writing the override file, so never try to get around that.
+- Only the owner turns on the override, by typing `! python3 scripts/guard_usage.py override [hours]` in the prompt. Without a number of hours it lasts until the 5-hour window resets, and `off` ends it. A hook blocks agents from running it or writing the override file, so never try to get around that. The override file lives in the main checkout's `.claude/`, so `guard_usage.py` inside an agent's worktree always prints "No override". Agents in a run with the override on check usage with `cd <main checkout> && python3 scripts/guard_usage.py`, and the lead's prompt says so.
 
 ## Picking the next task
 
-Advice from Fable on 2026-11-02, accepted by the owner. Since 2026-11-13 the production slice comes before everything else, with production as the only cloud environment until the first real user ([ADR 0293](../adr/0293-production-only-until-the-first-real-user.md), production only until the first real user): OPS-002 (deploy definitions), SKEL-001 (production environment exists), OPS-005 (continuous deployment) and SKEL-009 (CI deploys main to production). Start no other new task until the real end-to-end specs pass on production. Tasks already claimed, review follow-ups and fixes to `main` may finish. After that, take the first ready task that passes, in this order:
+Advice from Fable on 2026-11-02, accepted by the owner. Since 2026-11-13 the production slice comes before everything else, with production as the only cloud environment until the first real user ([ADR 0293](../adr/0293-production-only-until-the-first-real-user.md), production only until the first real user): OPS-002 (deploy definitions), SKEL-001 (production environment exists), OPS-005 (continuous deployment) and SKEL-009 (CI deploys main to production). On 2026-11-14 the owner paused deploys until the app is more ready for production (decision 96, option B), so the production slice waits and the order below applies, with tasks that close an epic or a milestone first. Take the first ready task that passes, in this order:
 
 1. The annotation path (milestone MA), in the order [ADR 0237](../adr/0237-annotate-tasks-on-one-shared-layer.md) (annotate tasks on one shared layer) lists, with TASK-015 (check options) after TASK-013, PROTO-020 (annotate task screens over fake data) before SHELL-004 and ANN-032 (check state) and GUIDE-019 (guided check) after ANN-031 as [ADR 0238](../adr/0238-check-options-and-presets-on-annotate-tasks.md) adds, since 2026-11-04.
 2. The thesis slice: the SKEL walking skeleton tasks, EVAL-002 (evaluation report page), EVAL-003 (exports) and PILOT-004 (pilot data onboarding).
@@ -73,8 +73,9 @@ The way the owner runs a batch of tasks, used for the overnight run of 2026-11-0
 
 How many agents and which model:
 
-- Frontend tasks (`apps/web`, `packages/ui`) go to Sonnet with high effort. Backend tasks (`apps/api`, `workers`, `infra`, migrations, measured work) go to Opus with medium effort. Nothing higher.
-- Two agents at a time by default. When the queue is all Sonnet work, run up to five. Go back to two as soon as the 5-hour usage climbs faster than about 5% per merged task, or passes 60%.
+- Fable has its own limit, separate from the plan limits the status line shows, and the owner keeps it mostly for advising. Give a task to a Fable agent only when it is truly heavy and the choice of model makes a real difference, such as a new slide format reader, renderer or performance work, a security design or a red CI with no clear cause. Routine frontend tasks (`apps/web`, `packages/ui`) go to Sonnet with high effort, other backend tasks to Opus with medium effort, and small mechanical follow-ups, such as applying an answered decision to one file, go to Sonnet.
+- Two agents at a time by default. When the owner asks to use up a limit, run five at once until the window the owner names reaches 95%, such as "until 95% of the 5-hour window" (owner, 2026-11-14). Otherwise go back to two as soon as the 5-hour usage climbs faster than about 5% per merged task, or passes 60%.
+- In such a run prefer tasks that close an epic or a milestone: run `board.py counts` and pick the last open tasks of the nearest complete epics.
 - At most one task that adds a migration runs at a time. Never run two tasks that touch the same screen or fake API store, such as the bell and mentions, at once. Hold the second until the first merges.
 - Pick tasks by [Picking the next task](#picking-the-next-task), quick wins and high "unblocks" counts first.
 
@@ -111,6 +112,9 @@ What the lead does with a hand-back:
 - If the "Done when" line is met, tick. If only CI or a deploy is missing, move the task to review or blocked with a note naming the wait.
 - A real product choice goes into `docs/decisions.md` with a recommended option.
 - Watch `main`'s CI between merges with `bash scripts/lead/ci.sh`, which prints every workflow of the pushed head and the last finished `ci` run, and fix a red run before starting more agents. A push to `main` no longer cancels the `ci` run in progress, so each finished run is a result, and the docs checks are a job under `ci-ok`. `scripts/lead/push.sh` does not wait, and a second push during one run still replaces a queued run, so push once per finished `ci` run: when `ci.sh` prints `WAIT ci`, wait before the next push.
+- Before `merge.sh`, merge `origin/main` into the agent's branch in its worktree, resolve `docs/log.md`, `docs/results/README.md` and `docs/adr/README.md` by keeping both sides, and commit `chore(ID): Merge main`. Parallel branches always collide there.
+- Agents that number their own ADR or decision collide. Before merging, check the number against `main`, renumber the file, its title line, the index row and every link, and keep the index in order.
+- `verify-changed.sh` checks only the changed packages, so a night of green branches can still leave `main` red. Check `ci.sh` after each push, and when `ci` fails give the fix to one agent before anything else.
 - When the run ends, consolidate the docs memory ([Consolidation](#consolidation)), push and only then report. The README went three weeks without it once, while the board more than tripled its ticks.
 
 ## Tasks in review

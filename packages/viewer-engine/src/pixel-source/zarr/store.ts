@@ -18,15 +18,18 @@ function isMetadata(key: string): boolean {
   return metadataNames.some((name) => key.endsWith(`/${name}`));
 }
 
-function checked(key: AbsolutePath, bytes: Uint8Array | undefined): Uint8Array | undefined {
-  if (bytes === undefined && !isMetadata(key)) throw new AbsentChunkError(key);
-  return bytes;
-}
+export type MetadataRewrite = (metadata: Uint8Array) => Uint8Array | null;
 
-export function slideStore(inner: AsyncReadable): AsyncReadable {
+export function slideStore(inner: AsyncReadable, rewrite?: MetadataRewrite): AsyncReadable {
+  const checked = (key: AbsolutePath, bytes: Uint8Array | undefined): Uint8Array | undefined => {
+    if (bytes === undefined && !isMetadata(key)) throw new AbsentChunkError(key);
+    return bytes;
+  };
   const store: AsyncReadable = {
     async get(key: AbsolutePath, options?: StoreOptions) {
-      return checked(key, await inner.get(key, options));
+      const bytes = checked(key, await inner.get(key, options));
+      if (bytes === undefined || rewrite === undefined || !isMetadata(key)) return bytes;
+      return rewrite(bytes) ?? bytes;
     },
   };
   if (inner.getRange !== undefined) {
