@@ -1,7 +1,7 @@
 # 0265. Join a workspace by its verified email domain, or ask its admins
 
 - Date: 2026-11-09
-- Status: Accepted
+- Status: Accepted, changed by [ADR 0303](0303-a-new-workspace-saves-no-mail-domain.md) (a new workspace saves no mail domain, an admin turns joining by domain on)
 - Deciders: agent, for the owner to review
 - Backlog: ONB-010 (join or ask for a workspace and keep the setup profile)
 
