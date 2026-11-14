@@ -108,3 +108,4 @@ One file per measured run, named `YYYY-MM-DD-short-topic.md`. Copy [_template.md
 | 2026-11-14 | [BIFs with several scan areas are normal scanner output, and one of the two public BIFs OpenSlide opens has them](2026-11-14-bif-several-scan-areas.md) | VIEW-069 | spike |
 | 2026-11-14 | [Converted OME-Zarr stores pass the level checks and open in Viv, and JPEG q90 on JPEG 2000 tissue is 5 to 6 grey levels from the source](2026-11-14-conversion-to-ome-zarr.md) | INGEST-015 | baseline |
 | 2026-11-14 | [The tile delivery choice of STACK-025 holds against Cloudflare documentation, and the same-region numbers still belong to TILES-002](2026-11-14-tile-delivery-research-check.md) | TILES-000 | spike |
+| 2026-11-15 | [PathoSAM browser graphs match PyTorch on 48 TNBC clicks in Chrome, WebGPU q4 at a mean IoU of 0.9625 and WebAssembly uint8 at 0.9822, with AIS foreground IoU at least 0.973](2026-11-15-browser-parity-with-pytorch.md) | MLEVAL-007 | check |
