@@ -2070,7 +2070,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on SHELL-010.
   Size: M.
 
-- [ ] SHELL-011 · Second-monitor pop-out windows
+- [x] SHELL-011 · Second-monitor pop-out windows
   The minimap and the inspector can pop out into a second window that stays in sync (BroadcastChannel), using the Window Management API where available.
   Done when an E2E test with two pages confirms camera sync both ways.
   Refs doc 35, mock 7 pop-out icon.
