@@ -12,6 +12,7 @@ minimumReleaseAgeExclude:
   - rollup-plugin-visualizer@7.1.2
 overrides:
   fast-uri@3: ^3.1.9
+  fast-xml-parser@5: ^5.12.0
   fflate@0.7: ^0.7.5
   glob@13: ^14.0.2
   image-size@0.7: ^2.0.3

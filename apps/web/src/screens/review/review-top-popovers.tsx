@@ -17,6 +17,7 @@ import { useQueries } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { useBindings } from "../../keys/personal-keys.ts";
 import { useHotkeys } from "../../keys/use-hotkeys.ts";
+import { submittedStates } from "../../presence/blinded.ts";
 import { destinations } from "../../shell/destinations.ts";
 import { usePinnedStrip } from "../../shell/pinned-strip.ts";
 import { useGoTo } from "../../shell/router-link.tsx";
@@ -33,7 +34,6 @@ import { slidePickerSummary, topBarMoreItems } from "./top-bar-model.ts";
 
 const slideStepKeys = ["prevslide", "nextslide"];
 const processingStates = new Set(["uploaded", "ai-running"]);
-const submittedStates = new Set(["submitted", "disagreement-queue", "signed-off", "exported"]);
 
 const seenPercentInPrototype = 38;
 

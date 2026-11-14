@@ -40,6 +40,11 @@ def rename_table(old: str, new: str) -> None:
         ).scalars()
         for name in list(names):
             op.execute(f"ALTER TABLE {new} RENAME CONSTRAINT {name} TO {renamed(name, old, new)}")
+    not_null = connection.execute(
+        sa.text(CONSTRAINTS), {"table": new, "prefix": f"{old}\\_%\\_not\\_null"}
+    ).scalars()
+    for name in list(not_null):
+        op.execute(f"ALTER TABLE {new} RENAME CONSTRAINT {name} TO {new}{name[len(old) :]}")
     indexes = connection.execute(
         sa.text(INDEXES), {"table": new, "prefix": f"ix\\_{old}\\_%"}
     ).scalars()

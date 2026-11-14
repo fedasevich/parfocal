@@ -63,7 +63,7 @@ export function AreaCallButtons({
           disabled={disabled}
           data-call={call}
           onClick={() => onCall(call)}
-          className="inline-flex h-11.5 cursor-pointer items-center justify-center gap-2 rounded-ctl border-[1.5px] border-line-strong bg-chrome-2 px-2 font-semibold text-fg text-lead outline-none hover:not-disabled:border-accent hover:not-disabled:bg-accent-soft focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-45 aria-pressed:border-accent aria-pressed:bg-accent-soft"
+          className="inline-flex h-11.5 cursor-pointer items-center justify-center gap-2 rounded-ctl border-[1.5px] border-line-strong bg-chrome-2 px-2 font-semibold text-fg text-lead outline-none hover:not-disabled:border-accent hover:not-disabled:bg-accent-soft focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-45 aria-pressed:border-accent aria-pressed:bg-accent-soft"
         >
           <Icon name={callIcon[call]} size="md" className={callTone[call]} />
           <span className="truncate">{label}</span>

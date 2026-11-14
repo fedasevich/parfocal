@@ -115,7 +115,15 @@ async def test_constraint_names_follow_the_convention(database: Fixture) -> None
             ),
             {"namespace": database.schema, "schema": database.schema},
         )
-        assert [row[0] for row in rows] == ["ix_notes_tenant_id", "pk_notes"]
+        assert [row[0] for row in rows] == [
+            "ix_notes_tenant_id",
+            "notes_body_not_null",
+            "notes_created_at_not_null",
+            "notes_id_not_null",
+            "notes_tenant_id_not_null",
+            "notes_updated_at_not_null",
+            "pk_notes",
+        ]
 
 
 async def test_the_guard_finds_tables_without_isolation(database: Fixture) -> None:
