@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
   buildCullGrid,
+  cameraViewRect,
   cullCellCount as cellCount,
   cellsIn,
   containsCells,
@@ -14,6 +15,7 @@ import {
   polygonSubset,
   rangeTotal,
   rowRanges,
+  slideToScreen,
   triangleStarts,
   triangulatePolygons,
   type ViewRect,
@@ -231,4 +233,29 @@ test("a subset of points keeps positions and colours", () => {
   assert.equal(subset.count, 2);
   assert.deepEqual([...subset.positions], [30, 0, 70, 50]);
   assert.deepEqual([...subset.colors], [3, 0, 0, 255, 57, 0, 0, 255]);
+});
+
+test("the view of a camera is the slide rectangle its canvas shows", () => {
+  const camera = { x: 5000, y: 3000, zoom: -2 };
+  const view = cameraViewRect(camera, 800, 600);
+  assert.deepEqual(view, [5000 - 1600, 3000 - 1200, 5000 + 1600, 3000 + 1200]);
+  const screen = { left: 0, top: 0, width: 800, height: 600 };
+  assert.deepEqual(slideToScreen(camera, screen, { x: view?.[0] ?? 0, y: view?.[1] ?? 0 }), {
+    x: 0,
+    y: 0,
+  });
+  assert.deepEqual(slideToScreen(camera, screen, { x: view?.[2] ?? 0, y: view?.[3] ?? 0 }), {
+    x: 800,
+    y: 600,
+  });
+  assert.equal(cameraViewRect(camera, 0, 600), undefined);
+});
+
+test("a camera pan of a few screens moves the window and a small one keeps it", () => {
+  const grid = buildCullGrid(lattice(400, 400, 10), diameter, 0);
+  const at = (x: number, y: number) => cameraViewRect({ x, y, zoom: 1 }, 800, 600);
+  const first = cullWindow(grid, at(2000, 2000) ?? [0, 0, 0, 0], undefined);
+  assert.ok(first && cellCount(first) < grid.columns * grid.rows);
+  assert.equal(cullWindow(grid, at(2050, 2030) ?? [0, 0, 0, 0], first), first);
+  assert.notEqual(cullWindow(grid, at(3200, 2000) ?? [0, 0, 0, 0], first), first);
 });

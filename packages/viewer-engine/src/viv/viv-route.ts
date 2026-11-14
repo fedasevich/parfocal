@@ -1,7 +1,7 @@
 import { Deck, type Layer, OrthographicView } from "@deck.gl/core";
 import { BitmapLayer as DeckBitmapLayer } from "@deck.gl/layers";
 import { BitmapLayer, MultiscaleImageLayer } from "@hms-dbmi/viv";
-import { type Camera, originCamera, screenToSlide } from "../camera/camera.ts";
+import { type Camera, originCamera } from "../camera/camera.ts";
 import type { MotionVector } from "../camera/motion-predictor.ts";
 import { defaultDecodeWorkers, type PrefetchStats } from "../decode/decode-pool.ts";
 import { createRangeCache } from "../decode/range-cache.ts";
@@ -22,7 +22,7 @@ import {
   systemTimers,
 } from "../engine/scheduling.ts";
 import type { EngineContainer, OverlayLayer, RendererRoute } from "../engine/types.ts";
-import type { ViewRect } from "../overlay/cull-grid.ts";
+import { cameraViewRect, type ViewRect } from "../overlay/cull-grid.ts";
 import { createOverlayLayerBuilder } from "../overlay/deck/overlay-layers.ts";
 import type { DecodeReport } from "../pixel-source/types.ts";
 import { absoluteUrl } from "../pixel-source/url.ts";
@@ -294,15 +294,8 @@ export function createVivRoute(
     sleep?.wake("change");
   };
 
-  const viewRect = (): ViewRect | undefined => {
-    const width = canvas.clientWidth;
-    const height = canvas.clientHeight;
-    if (!(width > 0 && height > 0)) return undefined;
-    const screen = { left: 0, top: 0, width, height };
-    const from = screenToSlide(camera, screen, 0, 0);
-    const to = screenToSlide(camera, screen, width, height);
-    return [from.x, from.y, to.x, to.y];
-  };
+  const viewRect = (): ViewRect | undefined =>
+    cameraViewRect(camera, canvas.clientWidth, canvas.clientHeight);
 
   const overlayDetailMoved = (): boolean =>
     overlayBuilder.lodKey(overlays, 2 ** camera.zoom, viewRect()) !== overlayLod;

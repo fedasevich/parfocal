@@ -1,3 +1,4 @@
+import { type Camera, screenToSlide } from "../camera/camera.ts";
 import type { PointBatch, PolygonBatch } from "./batch-types.ts";
 
 export const cullCellDiameters = 16;
@@ -24,6 +25,18 @@ export interface CellRect {
   readonly y0: number;
   readonly x1: number;
   readonly y1: number;
+}
+
+export function cameraViewRect(
+  camera: Camera,
+  width: number,
+  height: number,
+): ViewRect | undefined {
+  if (!(width > 0 && height > 0)) return undefined;
+  const screen = { left: 0, top: 0, width, height };
+  const from = screenToSlide(camera, screen, 0, 0);
+  const to = screenToSlide(camera, screen, width, height);
+  return [from.x, from.y, to.x, to.y];
 }
 
 export function buildCullGrid(points: PointBatch, diameter: number, margin: number): CullGrid {

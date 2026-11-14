@@ -414,6 +414,7 @@ export {
   buildCullGrid,
   type CellRect as CullCells,
   type CullGrid,
+  cameraViewRect,
   cellCount as cullCellCount,
   cellsIn,
   containsCells,
