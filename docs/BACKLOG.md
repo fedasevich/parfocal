@@ -1232,7 +1232,7 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
   Depends on INGEST-002, INGEST-011, RSET-004, CASES-024. Refs mock: upload, doc 38, doc 39, doc 42, [ADR 0053](adr/0053-ai-results-review-direction.md).
   Size: L.
 
-- [ ] INGEST-022 · Per-file problems in the Check step
+- [x] INGEST-022 · Per-file problems in the Check step
   One zone per problem, each with its fix: a slide that cannot be read, an MRXS without its data folder (add the folder), a duplicate already in the project (skip or keep both), and a result file with parse errors, a scale mismatch or new classes (RSET-005). Files with a problem wait and the rest upload. The step counts the open problems down to "Nothing needs you".
   Done when component tests resolve each problem class, and an E2E uploads a mixed set and ends with the fixed files uploaded and the others waiting.
   Depends on INGEST-021, INGEST-018, RSET-005. Refs mock: upload/check, doc 40 R3.
