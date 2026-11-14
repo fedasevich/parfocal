@@ -56,6 +56,10 @@ const tiny = syntheticPath("synthetic-jpeg.tiff");
 | `synthetic-channels-uint16.ome.tiff` | The same with 16-bit samples |
 | `synthetic-mxif-uint16-be.ome.tiff` | Big-endian BigTIFF OME with four 16-bit channels named like the Vanderbilt kidney MxIF scan (Hoechst, Laminin, Synaptopodin, THP), two SubIFD levels each in 32 px zlib tiles, so the tile offset arrays lie outside the first directory read. The first three channels equal `synthetic-channels-uint16.ome.tiff` |
 | `synthetic-grey.tiff` | Generic tiled TIFF with one 8-bit BlackIsZero sample, the luma of the same image, three levels in 256 px deflate tiles. Made by `scripts/make_synthetic_grey.py` |
+| `synthetic-jpeg.ome.zarr/` | OME-Zarr 0.4 folder (Zarr version 2) of the same pyramid, one JPEG chunk of 256 px per tile with all three channels, quality 90 and 4:4:4 chroma, compressor `imagecodecs_jpeg` |
+| `synthetic-jpeg-sharded.ome.zarr/` | OME-Zarr 0.5 folder (Zarr version 3) with the same JPEG chunks in shards of 2 × 2 chunks, with a crc32c shard index at the end. It stands in for the output of INGEST-015 (conversion fallback worker) |
+
+The two Zarr folders are not in `fixtures.json`, which lists single files. `scripts/make_synthetic_zarr.py` writes both with the same command and packages as below.
 
 The image has a grid every 128 px, an L-shaped mark in the top left and a block in the bottom right, so flips and rotations show. Each level is the 2 × 2 mean of the level above. Regenerate them with
 
