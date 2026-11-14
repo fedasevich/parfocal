@@ -3352,7 +3352,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Done when tests reject an artifact whose checksum does not match.
   Size: M.
 
-- [ ] AIP-002 · Model registry
+- [x] AIP-002 · Model registry
   Model family, task (tumor map, detector, typer, interactive encoder, decoder), version, licence of weights and data, allowed tenant types, input microns per pixel, calibration temperature, evaluation report link, status (candidate, validated, retired).
   Done when API tests cover registration and the licence fields are recorded for every model. While STACK-031 (licence policy) is on hold the registry blocks nothing, as the owner chose on 2026-11-04 ([ADR 0202](adr/0202-v1-model-line-up-per-tier.md)), and the block of a non-commercial model in a commercial tenant comes back with STACK-031.
   Each model is either a Parfocal model, always listed unless a researcher with admin rights hides it (JOBS-006), or a lab model behind the lab's own endpoint (JOBS-005), and records what it makes (regions, cells, heatmap).
