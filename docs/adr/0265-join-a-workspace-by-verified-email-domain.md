@@ -1,7 +1,7 @@
 # 0265. Join a workspace by its verified email domain, or ask its admins
 
 - Date: 2026-11-09
-- Status: Accepted, changed by [ADR 0303](0303-a-new-workspace-saves-no-mail-domain.md) (a new workspace saves no mail domain, an admin turns joining by domain on)
+- Status: Accepted
 - Deciders: agent, for the owner to review
 - Backlog: ONB-010 (join or ask for a workspace and keep the setup profile)
 
@@ -26,3 +26,5 @@ The workspace logo is the short text mark and colour that the logo component alr
 - There is no screen yet to change a workspace's domain or policy, or to answer a request inside the app. The admin learns of a request by notification and approves it through the API.
 - A request cannot be declined yet, it stays pending.
 - If the owner wants joining to need approval by default, flipping the default of `join_policy` is one additive migration.
+
+On 2026-11-14 [ADR 0303](0303-a-new-workspace-saves-no-mail-domain.md) (a new workspace saves no mail domain, an admin turns joining by domain on) changed this record. A new workspace no longer saves its creator's mail domain, and joining by domain starts only when an admin turns it on.
