@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-14
 
+- Conversion fallback worker: converts to OME-Zarr 0.5 with JPEG or zstd chunks only when an ADR trigger fires and refuses slides the trigger does not cover. test_conversion.py (29 with the Zarr index tests) and two Viv goldens pass. No trigger fires yet, only JPEG 2000 is listed and waits on INGEST-014. The real JPEG 2000 slide converts 5 to 6 grey levels from the source at quality 90, over INGEST-009's 1.0, decision 104 asks.
 - Five loader proposals built in SVG and CSS (Arc, Scan, Reticle, Tiles, Ticks) in the story Feedback/Loader proposals with dark, light, compact and reduced-motion variants, loader-proposals.test.ts passes. The final Loader and replacing the loading texts wait for the owner's pick, decision 103.
 - Inspector primitives finished: stories for the staging hero, range bar, regions, zones, steps, count and class bars and fact list on the three-area mock data, range-bar-geometry.test.ts (3) and inspector-primitives.spec.ts (4) pass.
 - Overlay primitives finished: TimedToast with a 1.6 s default, overlay-states stories run through axe in dark and light, overlays.spec.ts (9) covers focus trap and return, Esc, menu arrows and toast expiry. No app call site uses TimedToast yet.
