@@ -38,6 +38,7 @@ class Refusal(StrEnum):
     DAMAGED_TIFF = "damaged-tiff"
     ARCHIVE_WITHOUT_SLIDE = "archive-without-slide"
     MULTI_REGION = "multi-region"
+    SEVERAL_SCAN_AREAS = "several-scan-areas"
     TRUNCATED = "truncated"
     DAMAGED_ARCHIVE = "damaged-archive"
     NO_PYRAMID = "no-pyramid"
@@ -62,6 +63,9 @@ REASONS = {
     Refusal.MULTI_REGION: (
         "This Leica file holds several separately scanned regions. Export each region as its own "
         "slide."
+    ),
+    Refusal.SEVERAL_SCAN_AREAS: (
+        "This slide holds several scan areas, which Parfocal cannot place yet."
     ),
     Refusal.NO_PYRAMID: "The file holds no image large enough to be a whole slide.",
     Refusal.TRUNCATED: (

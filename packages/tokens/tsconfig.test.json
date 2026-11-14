@@ -1,6 +1,6 @@
 {
   "extends": "@parfocal/typescript-config/node.json",
-  "include": ["test"],
+  "include": ["test", "tools"],
   "compilerOptions": {
     "lib": ["es2024", "dom", "dom.iterable"]
   }

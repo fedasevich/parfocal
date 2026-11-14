@@ -12,7 +12,7 @@ from wsidicom import WsiDicom
 from wsidicom.errors import WsiDicomError
 
 from parfocal_common.ingest import Notice
-from parfocal_ingest.bif_frames import frame_placement
+from parfocal_ingest.bif_frames import Unplaced, frame_placement
 from parfocal_ingest.identify import Format, Identified, Refusal
 
 USABLE_MPP = 100.0
@@ -286,13 +286,20 @@ def stitched(levels: tuple[Level, ...], slide: openslide.OpenSlide) -> tuple[Lev
     )
 
 
-def frames_placed(path: Path, level: int, openslide_size: tuple[int, int]) -> bool:
+UNPLACED_REFUSALS = {
+    Unplaced.UNKNOWN_OVERLAP: Refusal.UNREADABLE,
+    Unplaced.SEVERAL_SCAN_AREAS: Refusal.SEVERAL_SCAN_AREAS,
+}
+
+
+def frames_refusal(path: Path, level: int, openslide_size: tuple[int, int]) -> Refusal | None:
     with tifffile.TiffFile(path) as tiff:
         series = main_series(tiff)
         keyframe = None if series is None else series.levels[level].keyframe
         if not isinstance(keyframe, tifffile.TiffPage):
-            return False
-        return frame_placement(keyframe, openslide_size) is not None
+            return Refusal.UNREADABLE
+        placement = frame_placement(keyframe, openslide_size)
+        return UNPLACED_REFUSALS[placement] if isinstance(placement, Unplaced) else None
 
 
 def tiff_pyramid(path: Path, found: Format) -> Pyramid | Refusal:
@@ -318,8 +325,9 @@ def tiff_pyramid(path: Path, found: Format) -> Pyramid | Refusal:
     with slide:
         scale = openslide_scale(slide)
         if found is Format.VENTANA_BIF:
-            if not frames_placed(path, levels[0].index, slide.dimensions):
-                return Refusal.UNREADABLE
+            refusal = frames_refusal(path, levels[0].index, slide.dimensions)
+            if refusal is not None:
+                return refusal
             levels = stitched(levels, slide)
     return pyramid(Reader.OPENSLIDE, levels, scale, planes, skipped)
 

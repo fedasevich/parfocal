@@ -125,6 +125,7 @@
   "apps/web/src/screens/upload/live-wizard.tsx",
   "apps/web/src/screens/upload/overlays.tsx",
   "apps/web/src/screens/upload/progress-step.tsx",
+  "apps/web/src/screens/upload/result-problems.tsx",
   "apps/web/src/screens/upload/server-check.tsx",
   "apps/web/src/screens/upload/upload-page.tsx",
   "apps/web/src/screens/upload/viewer-flow.tsx",
