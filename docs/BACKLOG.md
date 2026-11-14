@@ -1041,7 +1041,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when an edge test shows a malformed room path answered as a 404 problem and any throw answered as a 500 problem, both with the headers.
   Size: S.
 
-- [ ] SEC-040 · Presence in a blinded task
+- [x] SEC-040 · Presence in a blinded task
   A reviewer in a blinded task receives `presence.joined` and `presence.left` with the other reviewers' user ids, and presence is also announced in task and user rooms, which ADR 0269 (realtime event model by room and kind) does not list ([edge token review](results/2026-11-09-edge-token-review.md), finding C5). Decision 85 (presence in a blinded review) chose 85a on 2026-11-13: a reviewer who has not submitted in a blinded task neither receives presence nor is announced.
   Done when the chosen rule has an API test and an edge test, and presence is sent only in the room kinds the record lists.
   Size: S.
