@@ -1754,7 +1754,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Done when Tailwind CSS v4, shadcn/ui on Base UI and Storybook are set up as [ADR 0130](adr/0130-shadcn-ui-on-base-ui-with-tailwind-v4.md) says, and axe passes over the stories of the controls in its table, which ticks STACK-007 (component primitives and styling) in the same change.
   Refs [ADR 0129](adr/0129-the-prototype-moves-into-react-as-the-design-source.md), [ADR 0130](adr/0130-shadcn-ui-on-base-ui-with-tailwind-v4.md).
 
-- [ ] DS-001 · Design tokens package
+- [x] DS-001 · Design tokens package
   Product tokens from the frozen kit's Design system page ([docs/design/](design/README.md)) for dark and light: surf-page, surf-panel, surf-section, surf-field, chrome-3, canvas, line, line-strong, fg, fg-dim, fg-faint, accent, accent-fill, ok, warn, bad, research-fg, the decision colours v-agree, v-disagree, v-unsure and v-open, plus class colours, the proposal colour and `unsure` (#cbd5e1 dark, #475569 light, used as a hatch or with a pattern, never as a fill alone). Sizes are space-zone 28, space-in 10, pad-zone 18, pad-modal 24 (20 in a small modal), r-zone 12, r-ctl 8, control heights 28, 32 and 40, tag height 20 and count height 16. The kit's pink mock marker colour is left out. Exported as CSS variables and TS constants.
   Done when unit tests assert every token exists in both themes and a visual test renders the specimen page.
   Depends on PROTO-011. Refs kit Design system page, mock token block, [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
