@@ -3032,7 +3032,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Done when E2E with two pages shows the follower's camera tracking within 300 ms.
   Size: L.
 
-- [ ] COLLAB-011 · Live shared cursor in compare and follow modes
+- [x] COLLAB-011 · Live shared cursor in compare and follow modes
   Done when tests cover cursor broadcast throttling and display.
   Size: L.
 

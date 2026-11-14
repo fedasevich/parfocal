@@ -58,6 +58,7 @@ import { useBindings } from "../keys/personal-keys.ts";
 import { useHotkeys } from "../keys/use-hotkeys.ts";
 import { MeasurementList } from "../measure/measurement-list.tsx";
 import { RulerLayer } from "../measure/ruler-layer.tsx";
+import { SharedCursorLayer } from "../presence/live-cursor.tsx";
 import { registerStageEngine } from "../presence/stage-engines.ts";
 import { areaRoleText, areaRows } from "../screens/viewer/area-nav.ts";
 import { annotateRail } from "../screens/viewer-tools/rails.ts";
@@ -614,6 +615,7 @@ function OpenedSlide({
         ) : null}
         {session && hostNode ? (
           <>
+            <SharedCursorLayer slideId={slideId} engine={session.engine} stage={hostNode} />
             <RulerLayer
               engine={session.engine}
               stage={hostNode}

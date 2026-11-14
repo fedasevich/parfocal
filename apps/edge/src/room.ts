@@ -31,6 +31,9 @@ export const MAX_SOCKETS_PER_PERSON = 8;
 export const VIEW_FRAME = "view";
 export const MAX_VIEW_FRAME = 160;
 export const MAX_VIEW_FRAMES_PER_SECOND = 30;
+export const CURSOR_FRAME = "cursor";
+export const MAX_CURSOR_FRAME = 96;
+export const MAX_CURSOR_FRAMES_PER_SECOND = 30;
 
 const KIND = /^[a-z][a-z-]*(\.[a-z][a-z-]*)+$/;
 const ID_NAME = /^[a-z][a-z_]{0,31}$/;
@@ -75,6 +78,19 @@ export function sharedViewOf(frame: Record<string, unknown>): SharedView | null 
   return finite ? { x: x as number, y: y as number, zoom: zoom as number } : null;
 }
 
+export type SharedCursor = { readonly gone: true } | { readonly x: number; readonly y: number };
+
+export function sharedCursorOf(frame: Record<string, unknown>): SharedCursor | null {
+  if (frame.gone === true) {
+    return { gone: true };
+  }
+  const { x, y } = frame;
+  const finite = [x, y].every((value) => typeof value === "number" && Number.isFinite(value));
+  return finite ? { x: x as number, y: y as number } : null;
+}
+
+type FrameRates = WeakMap<WebSocket, { since: number; count: number }>;
+
 export const PRESENCE_JOINED = "presence.joined";
 export const PRESENCE_LEFT = "presence.left";
 
@@ -104,7 +120,8 @@ function json(body: unknown, status = 200): Response {
 export class Room {
   now: () => number = () => Math.floor(Date.now() / 1000);
   clock: () => number = () => Date.now();
-  private readonly viewRates = new WeakMap<WebSocket, { since: number; count: number }>();
+  private readonly viewRates: FrameRates = new WeakMap();
+  private readonly cursorRates: FrameRates = new WeakMap();
   readonly ctx: DurableObjectState;
   readonly env: RoomEnv;
 
@@ -318,7 +335,13 @@ export class Room {
     }
     const { type, token } = (frame ?? {}) as Record<string, unknown>;
     if (type === VIEW_FRAME) {
-      this.relayView(socket, frame as Record<string, unknown>, size);
+      const fits = size <= MAX_VIEW_FRAME;
+      const view = fits ? sharedViewOf(frame as Record<string, unknown>) : null;
+      this.relay(socket, VIEW_FRAME, view, this.viewRates, MAX_VIEW_FRAMES_PER_SECOND);
+    } else if (type === CURSOR_FRAME) {
+      const fits = size <= MAX_CURSOR_FRAME;
+      const cursor = fits ? sharedCursorOf(frame as Record<string, unknown>) : null;
+      this.relay(socket, CURSOR_FRAME, cursor, this.cursorRates, MAX_CURSOR_FRAMES_PER_SECOND);
     } else if (type === "ping") {
       socket.send(JSON.stringify({ type: "pong" }));
     } else if (type === "renew" && typeof token === "string") {
@@ -326,19 +349,23 @@ export class Room {
     }
   }
 
-  private relayView(socket: WebSocket, frame: Record<string, unknown>, size: number): void {
+  private relay(
+    socket: WebSocket,
+    type: string,
+    payload: SharedView | SharedCursor | null,
+    rates: FrameRates,
+    perSecond: number,
+  ): void {
     const seat = this.seatOf(socket);
-    const view = sharedViewOf(frame);
     const refused =
-      view === null ||
-      size > MAX_VIEW_FRAME ||
+      payload === null ||
       !seat.room.startsWith(SLIDE_ROOM) ||
       seat.expires <= this.now() ||
-      !this.withinViewRate(socket);
+      !this.withinRate(socket, rates, perSecond);
     if (refused) {
       return;
     }
-    const relayed = JSON.stringify({ type: VIEW_FRAME, user: seat.user, ...view });
+    const relayed = JSON.stringify({ type, user: seat.user, ...payload });
     const now = this.now();
     for (const other of this.ctx.getWebSockets()) {
       const listener = this.seatOf(other);
@@ -348,15 +375,15 @@ export class Room {
     }
   }
 
-  private withinViewRate(socket: WebSocket): boolean {
+  private withinRate(socket: WebSocket, rates: FrameRates, perSecond: number): boolean {
     const at = this.clock();
-    const rate = this.viewRates.get(socket);
+    const rate = rates.get(socket);
     if (rate === undefined || at - rate.since >= 1000) {
-      this.viewRates.set(socket, { since: at, count: 1 });
+      rates.set(socket, { since: at, count: 1 });
       return true;
     }
     rate.count += 1;
-    return rate.count <= MAX_VIEW_FRAMES_PER_SECOND;
+    return rate.count <= perSecond;
   }
 
   private async renew(socket: WebSocket, token: string): Promise<void> {

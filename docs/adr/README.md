@@ -267,3 +267,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0301](0301-a-shared-camera-is-a-capped-client-frame-relayed-by-the-slide-room.md) | A shared camera is a capped client frame that the slide room relays and never stores | Accepted | 2026-11-14 |
 | [0302](0302-renderer-routes-switch-inside-the-engine-behind-lazy-loaders.md) | Renderer routes switch inside the engine, and a registry loads each route lazily | Accepted | 2026-11-14 |
 | [0303](0303-a-new-workspace-saves-no-mail-domain.md) | A new workspace saves no mail domain, and only an admin turns joining by domain on in the join settings | Accepted | 2026-11-14 |
+| [0304](0304-a-shared-cursor-is-a-second-capped-frame-in-shares-of-the-slide.md) | A shared cursor is a second capped client frame, sent as shares of the slide, with its own rate cap | Accepted | 2026-11-14 |

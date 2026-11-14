@@ -37,6 +37,16 @@ export function pointOfScreen(
   };
 }
 
+export function pointOnPane<Side extends string>(
+  point: SlidePoint,
+  home: Side | undefined,
+  side: Side,
+  offsets: Readonly<Record<Side, ViewOffset>>,
+): SlidePoint | null {
+  if (home === undefined) return null;
+  return home === side ? point : carryPoint(point, offsets[home], offsets[side]);
+}
+
 export function carryPoint(point: SlidePoint, from: ViewOffset, to: ViewOffset): SlidePoint {
   return { x: point.x + to.x - from.x, y: point.y + to.y - from.y };
 }
