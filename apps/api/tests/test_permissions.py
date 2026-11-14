@@ -1165,6 +1165,9 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "reorderCaseSlides": lambda w: Call(
         "PUT", f"/api/cases/{w.case}/slide-order", {"slide_ids": []}
     ),
+    "setCaseClinicalNote": lambda w: Call(
+        "PUT", f"/api/cases/{w.case}/clinical-note", {"note": "Fake note for a test"}
+    ),
     "listAvailability": lambda _: Call("GET", "/api/tenant/availability"),
     "updateSessionPolicy": lambda _: Call(
         "PUT", "/api/tenant/session-policy", {"idle_lock_minutes": 15, "session_hours": 12}

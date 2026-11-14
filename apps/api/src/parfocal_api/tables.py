@@ -815,6 +815,7 @@ cases = Table(
         nullable=True,
         info=PERSONAL,
     ),
+    Column("clinical_note_ciphertext", LargeBinary, nullable=True, info=PHI),
     *case_timestamps(),
     UniqueConstraint("project_id", "label"),
     UniqueConstraint("id", "tenant_id"),

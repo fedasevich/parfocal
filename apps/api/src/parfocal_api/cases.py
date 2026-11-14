@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
 from parfocal_api.context import CurrentPrincipal, TenantConnection
-from parfocal_api.identifiers import TenantKeys, load_keys, read_patient
+from parfocal_api.identifiers import TenantKeys, load_keys, open_field, read_patient
 from parfocal_api.permissions import Grant, Permission, grant_of, require
 from parfocal_api.principals import Principal, database_scope
 from parfocal_api.problems import NotFoundError
@@ -37,6 +37,7 @@ from parfocal_api.tables import (
 )
 from parfocal_common.envelope import MasterKeyring
 from parfocal_common.ingest import RestrictedImage
+from parfocal_common.structured_logging import register_sensitive
 
 
 class PatientDetail(BaseModel):
@@ -84,9 +85,12 @@ class CaseDetail(BaseModel):
     label: str
     source: CaseSource
     patient: PatientDetail | None
+    clinical_note: str | None
     specimens: list[SpecimenDetail]
     slides: list[SlideDetail]
 
+
+CLINICAL_NOTE_FIELD = "clinical_note"
 
 router = APIRouter(prefix="/api/cases", tags=["cases"])
 
@@ -100,6 +104,12 @@ CASE_SLIDE_ORDER = (
 
 def keyring_of(request: Request) -> MasterKeyring:
     return cast("MasterKeyring", request.app.keyring)
+
+
+def open_clinical_note(keys: TenantKeys, case_id: uuid.UUID, sealed: bytes | None) -> str | None:
+    note = open_field(keys, "cases", case_id, CLINICAL_NOTE_FIELD, sealed)
+    register_sensitive(note)
+    return note
 
 
 async def patient_detail(
@@ -206,12 +216,17 @@ async def case_detail(
         connection, principal, row.project_id, PrivacyMode(row.privacy_mode)
     )
     patient = None
-    if row.patient_id is not None:
+    clinical_note = None
+    clinical = PrivacyMode(row.privacy_mode) is PrivacyMode.CLINICAL
+    sealed_note = row.clinical_note_ciphertext if clinical else None
+    if row.patient_id is not None or sealed_note is not None:
         tenant_id = database_scope(principal).tenant_id
         assert tenant_id is not None
         keys = await load_keys(connection, keyring, tenant_id)
-        patient = await patient_detail(connection, keys, row.patient_id)
-    if patient is not None and patient_viewed:
+        if row.patient_id is not None:
+            patient = await patient_detail(connection, keys, row.patient_id)
+        clinical_note = open_clinical_note(keys, case_id, sealed_note)
+    if (patient is not None or clinical_note is not None) and patient_viewed:
         await record(
             connection,
             actor_of(principal),
@@ -227,6 +242,7 @@ async def case_detail(
         label=row.label,
         source=CaseSource(row.source),
         patient=patient,
+        clinical_note=clinical_note,
         specimens=await specimen_details(connection, case_id),
         slides=[
             SlideDetail(
