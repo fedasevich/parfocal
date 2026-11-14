@@ -104,3 +104,4 @@ One file per measured run, named `YYYY-MM-DD-short-topic.md`. Copy [_template.md
 | 2026-11-14 | [The NDPI reader agrees with OpenSlide within 0.16 grey levels on CMU-1.ndpi and the 6.9 GB Hamamatsu-1.ndpi, and decodes natively](2026-11-14-ndpi-reader-agreement.md) | VIEW-013 | baseline |
 | 2026-11-14 | [The Zarr reader returns identical samples from the public IDR 0.4 and sharded 0.5 stores, and JPEG chunks stay within 3 grey levels of the lossless picture](2026-11-14-ome-zarr-jpeg-and-sharded-stores.md) | VIEW-017 | baseline |
 | 2026-11-14 | [A stitched BIF shows the overlap tissue once, and the Viv goldens fail when the frames are drawn as a grid](2026-11-14-bif-no-duplicated-tissue.md) | VIEW-014 | check |
+| 2026-11-14 | [Converted OME-Zarr stores pass the level checks, stay within 1.0 grey level on the synthetics and 30.8 dB on JPEG 2000 tissue, and open in Viv](2026-11-14-conversion-to-ome-zarr.md) | INGEST-015 | baseline |

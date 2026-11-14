@@ -58,8 +58,10 @@ const tiny = syntheticPath("synthetic-jpeg.tiff");
 | `synthetic-grey.tiff` | Generic tiled TIFF with one 8-bit BlackIsZero sample, the luma of the same image, three levels in 256 px deflate tiles. Made by `scripts/make_synthetic_grey.py` |
 | `synthetic-jpeg.ome.zarr/` | OME-Zarr 0.4 folder (Zarr version 2) of the same pyramid, one JPEG chunk of 256 px per tile with all three channels, quality 90 and 4:4:4 chroma, compressor `imagecodecs_jpeg` |
 | `synthetic-jpeg-sharded.ome.zarr/` | OME-Zarr 0.5 folder (Zarr version 3) with the same JPEG chunks in shards of 2 × 2 chunks, with a crc32c shard index at the end. It stands in for the output of INGEST-015 (conversion fallback worker) |
+| `synthetic-jpeg-converted.ome.zarr/` | `synthetic-jpeg.tiff` as the INGEST-015 converter writes it: OME-Zarr 0.5, unsharded, one JPEG chunk of 512 px per tile, quality 90 and 4:4:4 chroma |
+| `synthetic-channels-uint16-converted.ome.zarr/` | `synthetic-channels-uint16.ome.tiff` as the INGEST-015 converter writes it: OME-Zarr 0.5, unsharded, 16-bit zstd chunks of 512 px with all three channels |
 
-The two Zarr folders are not in `fixtures.json`, which lists single files. `scripts/make_synthetic_zarr.py` writes both with the same command and packages as below.
+The Zarr folders are not in `fixtures.json`, which lists single files. `scripts/make_synthetic_zarr.py` writes the first two with the same command and packages as below. The converted ones come from `uv run python -m parfocal_ingest.conversion SOURCE STORE`, and `test_conversion.py` fails when they drift from a fresh conversion.
 
 The image has a grid every 128 px, an L-shaped mark in the top left and a block in the bottom right, so flips and rotations show. Each level is the 2 × 2 mean of the level above. Regenerate them with
 

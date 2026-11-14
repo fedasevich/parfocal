@@ -1,0 +1,87 @@
+{
+  "zarr_format": 3,
+  "node_type": "group",
+  "attributes": {
+    "ome": {
+      "version": "0.5",
+      "multiscales": [
+        {
+          "name": "synthetic-channels-uint16-converted.ome.zarr",
+          "axes": [
+            {
+              "name": "c",
+              "type": "channel"
+            },
+            {
+              "name": "y",
+              "type": "space",
+              "unit": "micrometer"
+            },
+            {
+              "name": "x",
+              "type": "space",
+              "unit": "micrometer"
+            }
+          ],
+          "datasets": [
+            {
+              "path": "0",
+              "coordinateTransformations": [
+                {
+                  "type": "scale",
+                  "scale": [1, 0.5, 0.5]
+                }
+              ]
+            },
+            {
+              "path": "1",
+              "coordinateTransformations": [
+                {
+                  "type": "scale",
+                  "scale": [1, 1.0, 1.0]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "omero": {
+        "channels": [
+          {
+            "label": "DAPI",
+            "color": "0000FF",
+            "active": true,
+            "window": {
+              "start": 173,
+              "end": 65535,
+              "min": 0,
+              "max": 65535
+            }
+          },
+          {
+            "label": "FITC",
+            "color": "00FF00",
+            "active": true,
+            "window": {
+              "start": 128,
+              "end": 52428,
+              "min": 0,
+              "max": 65535
+            }
+          },
+          {
+            "label": "TRITC",
+            "color": "FF0000",
+            "active": true,
+            "window": {
+              "start": 0,
+              "end": 65535,
+              "min": 0,
+              "max": 65535
+            }
+          }
+        ]
+      }
+    }
+  }
+}

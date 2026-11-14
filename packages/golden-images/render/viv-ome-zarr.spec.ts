@@ -26,6 +26,20 @@ const scenes: readonly VivGoldenScene[] = [
     format: "ome-zarr-jpeg",
     view: { kind: "fit" },
   },
+  {
+    name: "viv-synthetic-jpeg-converted-zarr-fit",
+    fixture: "synthetic-jpeg-converted.ome.zarr",
+    formatId: "ome-zarr",
+    format: "ome-zarr-jpeg",
+    view: { kind: "fit" },
+  },
+  {
+    name: "viv-synthetic-channels-uint16-converted-zarr-fit",
+    fixture: "synthetic-channels-uint16-converted.ome.zarr",
+    formatId: "ome-zarr",
+    format: "ome-zarr",
+    view: { kind: "fit" },
+  },
 ];
 
 function fileSize(path: string): number | null {
