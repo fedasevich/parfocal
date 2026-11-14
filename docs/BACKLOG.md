@@ -4440,7 +4440,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when the spec passes locally with no retries and the test stays out of the `flaky-*` artifacts of the next three ci runs on main.
   Size: S.
 
-- [ ] TEST-035 · Find why two axe scans fail on a first attempt
+- [x] TEST-035 · Find why two axe scans fail on a first attempt
   Two tests failed once and passed their retry on 2026-11-10. "the open modal passes axe in light" in `packages/ui/e2e/small-modal.spec.ts` threw "Axe is already running" (ci run on commit 1f61523d), so something else on the story page runs axe while the spec does. "an email that already has an account says so" in `apps/web/e2e/sign-up.spec.ts` got a `color-contrast` violation on the primary button of `/sign-up` (ci run on commit fc1723ce), right after the click that submits the form.
   Done when each has a named cause, a fix in the spec, the fixture or the component, and neither test sits in a `flaky-*` artifact for a week of main.
   Size: S.
