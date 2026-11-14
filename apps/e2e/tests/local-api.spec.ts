@@ -14,7 +14,7 @@ test("home reads the local API when the fake API is off", async ({ page }) => {
   expect(me.display_name).not.toBe("Lenka Malá");
   const firstName = me.display_name.split(" ")[0] ?? me.display_name;
   await expect(page.getByRole("heading", { level: 1 })).toContainText(firstName);
-  await expect(page.getByText("Loading your home…")).toHaveCount(0);
+  await expect(page.getByText("Loading your home")).toHaveCount(0);
   await page.getByRole("button", { name: "Account menu" }).click();
   await expect(page.getByTestId("account-name")).toHaveText(me.display_name);
   await expect(page.getByTestId("fake-data-badge")).toHaveCount(0);

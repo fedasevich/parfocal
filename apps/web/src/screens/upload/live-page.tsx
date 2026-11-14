@@ -1,4 +1,5 @@
 import { useGetProject } from "@parfocal/api-client";
+import { Loader } from "@parfocal/ui/components/loader";
 import { useEffect } from "react";
 import { dropStore } from "../../upload/drop-store.ts";
 import { okData } from "../placeholder.tsx";
@@ -20,8 +21,8 @@ export function LivePage({
   }, [projectId]);
   if (project === undefined) {
     return (
-      <main className="grid flex-1 place-items-center p-8 text-body-sm text-fg-dim">
-        Loading the upload…
+      <main className="grid flex-1 place-items-center p-8">
+        <Loader label="Loading the upload" />
       </main>
     );
   }

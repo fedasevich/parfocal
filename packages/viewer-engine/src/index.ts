@@ -12,6 +12,7 @@ export {
   type SignedSlideOptions,
   type SlideAccess,
   SlideBytesError,
+  SlideNeedsReingestError,
   signedOpenRequest,
   slideFormatFromName,
   slideIndexFromLevelTable,
