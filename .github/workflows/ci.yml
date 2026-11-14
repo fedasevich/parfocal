@@ -134,6 +134,8 @@ jobs:
       - run: pnpm turbo run test --cache-dir=.turbo/cache
         env:
           PARFOCAL_REQUIRE_FIXTURES: small
+      - name: Check the colour tokens against the accessibility and class colour limits
+        run: pnpm --filter @parfocal/tokens colour-check
       - name: Check the generated API client is current
         run: |
           pnpm api:generate
