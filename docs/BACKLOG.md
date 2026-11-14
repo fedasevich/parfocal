@@ -2138,7 +2138,7 @@ The launchpad is everyone's home ([ADR 0021](adr/0021-chosen-home-worklist-statu
   Done when unit tests cover the heuristic and E2E applies a suggestion with an audit entry.
   Size: M.
 
-- [ ] HOME-007 · Activity on the launchpad and in notifications
+- [x] HOME-007 · Activity on the launchpad and in notifications
   Replies, mentions, new tasks, finished model runs and imports, and sign-offs, shown on the launchpad and in the notification centre, filterable by everything, mentions and jobs. Each item links to the slide, object, thread, task or job.
   Done when component tests render seeded events with each filter and the activity updates in realtime.
   Depends on COLLAB-001, NOTIF-002. Refs mock 1 scene C, [ADR 0021](adr/0021-chosen-home-worklist-status-board-and-account-menu.md).
