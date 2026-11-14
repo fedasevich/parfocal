@@ -2,7 +2,16 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from guard_images import allow_image
+from guard_images import advice, allow_image
+
+ROOT = Path(__file__).resolve().parent.parent
+AGENT_FACING = (
+    "AGENTS.md",
+    "README.md",
+    ".claude/agents/task-runner.md",
+    "docs/knowledge/agent-workflow.md",
+    "apps/web/e2e/shot.ts",
+)
 
 
 def read(path: str, agent: str = "a1") -> dict[str, object]:
@@ -31,6 +40,17 @@ class GuardImagesTest(unittest.TestCase):
             "tool_input": {"command": "ls *.png"},
         }
         self.assertTrue(allow_image(bash, self.counts, 0))
+
+    def test_advice_points_at_no_mock_comparison(self) -> None:
+        self.assertIn("--against", advice(5))
+        self.assertNotIn("mock", advice(5).lower())
+
+    def test_nothing_agents_read_compares_against_the_mock(self) -> None:
+        banned = ("--mock", "against the mock", "with the mock", "mock scene")
+        for name in AGENT_FACING:
+            text = (ROOT / name).read_text().lower()
+            for phrase in banned:
+                self.assertNotIn(phrase, text, name)
 
 
 if __name__ == "__main__":
