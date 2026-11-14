@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import { ControlRow } from "@parfocal/ui/components/control-row";
 import {
@@ -247,10 +248,14 @@ function PresetMenu({
   onSaveAs,
   onReset,
 }: PresetMenuProps) {
+  const { t } = useLingui();
+
   const saveReason = saveBlocked ?? (changed ? undefined : "Nothing changed");
   return (
     <div className="grid gap-1.5">
-      <span className="text-caption font-semibold text-fg-dim">Preset</span>
+      <span className="text-caption font-semibold text-fg-dim">
+        <Trans>Preset</Trans>
+      </span>
       <DropdownMenu {...(defaultOpen === undefined ? {} : { defaultOpen })}>
         <DropdownMenuTrigger render={<Button className="w-full justify-between font-medium" />}>
           <span className="min-w-0 truncate">
@@ -258,14 +263,15 @@ function PresetMenu({
             {lockedCount ? (
               <span className="text-fg-dim">
                 {" "}
-                · {lockedCount === 1 ? "1 setting" : `${lockedCount} settings`} locked by the task
+                · {lockedCount === 1 ? t`1 setting` : t`${lockedCount} settings`}{" "}
+                <Trans>locked by the task</Trans>
               </span>
             ) : null}
           </span>
           {changed ? (
             <i
-              title="Changed since you picked it"
-              aria-label="Changed since you picked it"
+              title={t`Changed since you picked it`}
+              aria-label={t`Changed since you picked it`}
               role="img"
               className="ml-auto size-2 rounded-full bg-(--accent)"
             />
@@ -275,13 +281,15 @@ function PresetMenu({
         <DropdownMenuContent className="w-72">
           <DropdownMenuRadioGroup value={current} onValueChange={(name) => onPick?.(String(name))}>
             <DropdownMenuRadioItem value="Task default">
-              Task default
+              <Trans>Task default</Trans>
               <DropdownMenuShortcut>
                 <Keycap keys="⇧1" size="sm" />
               </DropdownMenuShortcut>
             </DropdownMenuRadioItem>
             <DropdownMenuGroup>
-              <DropdownMenuLabel>My presets</DropdownMenuLabel>
+              <DropdownMenuLabel>
+                <Trans>My presets</Trans>
+              </DropdownMenuLabel>
               {presets.map((preset) => (
                 <DropdownMenuRadioItem key={preset.name} value={preset.name}>
                   {preset.name}
@@ -297,19 +305,23 @@ function PresetMenu({
           <DropdownMenuSeparator />
           <DropdownMenuItem disabled={saveReason !== undefined} onClick={onSave}>
             <span className="grid">
-              Save
+              <Trans>Save</Trans>
               {saveReason === undefined ? null : (
                 <small className="text-caption text-fg-dim">{saveReason}</small>
               )}
             </span>
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={onSaveAs}>Save as</DropdownMenuItem>
-          <DropdownMenuItem onClick={onReset}>Reset to the task default</DropdownMenuItem>
+          <DropdownMenuItem onClick={onSaveAs}>
+            <Trans>Save as</Trans>
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={onReset}>
+            <Trans>Reset to the task default</Trans>
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
       {changed ? (
         <small className="text-caption text-fg-dim">
-          Changed since you picked {current}. Save as keeps it as a preset.
+          <Trans>Changed since you picked {current}. Save as keeps it as a preset.</Trans>
         </small>
       ) : null}
     </div>
@@ -343,32 +355,34 @@ function DisplayPanel({
   className,
   ...props
 }: DisplayPanelProps) {
+  const { t } = useLingui();
+
   return (
     <Zones data-slot="display-panel" className={cn("gap-3", className)} {...props}>
       <Zone>
         <PresetMenu {...preset} />
       </Zone>
       <FoldingZone
-        title="How objects draw"
+        title={t`How objects draw`}
         summary={displaySummary("draw", settings)}
         defaultOpen={!folded.includes("draw")}
       >
         <SegRow
-          label="Draw as"
+          label={t`Draw as`}
           name="draw"
           value={settings.draw}
           lock={locks.draw}
           onChange={onChange}
         />
         <SegRow
-          label="Width"
+          label={t`Width`}
           name="width"
           value={settings.width}
           lock={locks.width}
           onChange={onChange}
         />
         <RangeRow
-          label="Opacity"
+          label={t`Opacity`}
           value={settings.opacity}
           min={20}
           max={100}
@@ -377,14 +391,14 @@ function DisplayPanel({
           onChange={onChange && ((value) => onChange("opacity", value))}
         />
         <SegRow
-          label="Color by"
+          label={t`Color by`}
           name="colorBy"
           value={settings.colorBy}
           lock={locks.colorBy}
           onChange={onChange}
         />
         <SwitchRow
-          label="ID labels"
+          label={t`ID labels`}
           sub="The ID tags on the slide"
           checked={settings.ids}
           onChange={onIdsChange}
@@ -392,19 +406,19 @@ function DisplayPanel({
         {classVisibility}
       </FoldingZone>
       <FoldingZone
-        title="What the AI shows"
+        title={t`What the AI shows`}
         summary={displaySummary("ai", settings)}
         defaultOpen={!folded.includes("ai")}
       >
         <SegRow
-          label="Confidence"
+          label={t`Confidence`}
           name="confidence"
           value={settings.confidence}
           lock={locks.confidence}
           onChange={onChange}
         />
         <RangeRow
-          label="Heatmap"
+          label={t`Heatmap`}
           value={settings.heatmap}
           min={0}
           max={100}
@@ -414,7 +428,7 @@ function DisplayPanel({
           onChange={onChange && ((value) => onChange("heatmap", snapHeatmapStrength(value)))}
         />
         <RangeRow
-          label="Score cutoff"
+          label={t`Score cutoff`}
           value={settings.cutoff}
           min={0}
           max={1}
@@ -426,41 +440,45 @@ function DisplayPanel({
         />
         {resultSets ? (
           <div className="grid gap-2">
-            <span className="text-caption font-semibold text-fg-dim">Result sets</span>
+            <span className="text-caption font-semibold text-fg-dim">
+              <Trans>Result sets</Trans>
+            </span>
             {resultSets}
           </div>
         ) : null}
       </FoldingZone>
       <FoldingZone
-        title="How the review moves"
+        title={t`How the review moves`}
         summary={displaySummary("move", settings)}
         defaultOpen={!folded.includes("move")}
       >
         {viewer ? (
-          <p className="m-0 text-body-sm text-fg-dim">These apply in guided review.</p>
+          <p className="m-0 text-body-sm text-fg-dim">
+            <Trans>These apply in guided review.</Trans>
+          </p>
         ) : null}
         <SegRow
-          label="Order"
+          label={t`Order`}
           name="order"
           value={settings.order}
           lock={locks.order}
           onChange={onChange}
         />
         <SegRow
-          label="Zoom around the object"
+          label={t`Zoom around the object`}
           name="zoom"
           value={settings.zoom}
           lock={locks.zoom}
           onChange={onChange}
         />
         <SwitchRow
-          label="Move on by itself"
+          label={t`Move on by itself`}
           sub="The next object comes after an answer"
           checked={settings.auto}
           onChange={onChange && ((on) => onChange("auto", on))}
         />
         <SegRow
-          label="Answer buttons"
+          label={t`Answer buttons`}
           name="buttons"
           value={settings.buttons}
           lock={locks.buttons}

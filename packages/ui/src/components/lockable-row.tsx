@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import { FormField, TextFieldInput } from "@parfocal/ui/components/form-field";
 import { Icon } from "@parfocal/ui/components/icon";
@@ -32,6 +33,8 @@ function LockableRow({
   children,
   ...props
 }: LockableRowProps) {
+  const { t } = useLingui();
+
   const on = lockable && locked;
   return (
     <div
@@ -42,13 +45,17 @@ function LockableRow({
     >
       <span className="flex min-h-8 flex-wrap items-center gap-x-2 gap-y-1.5 text-body-sm text-fg-dim">
         <span>{label}</span>
-        {on ? <StatusTag tone="accent">Locked</StatusTag> : null}
+        {on ? (
+          <StatusTag tone="accent">
+            <Trans>Locked</Trans>
+          </StatusTag>
+        ) : null}
       </span>
       <div className="grid min-w-0 justify-items-start gap-2.5">
         {children}
         {on ? (
           <FormField
-            label="Why it is locked"
+            label={t`Why it is locked`}
             help="Reviewers see this reason next to the setting."
             error={reasonError}
             count={`${reason.length} of ${reasonMax}`}
@@ -58,7 +65,7 @@ function LockableRow({
               id={reasonId}
               value={reason}
               maxLength={reasonMax}
-              placeholder="For example, confidence hidden this round"
+              placeholder={t`For example, confidence hidden this round`}
               onChange={(event) => onReasonChange?.(event.target.value)}
             />
           </FormField>
@@ -70,7 +77,7 @@ function LockableRow({
           size="icon-sm"
           aria-pressed={on}
           aria-label={`${on ? "Unlock" : "Lock"} ${label.toLowerCase()}`}
-          title={on ? "Unlock" : "Lock for every reviewer"}
+          title={on ? t`Unlock` : t`Lock for every reviewer`}
           onClick={() => onLockedChange?.(!on)}
           className={on ? "" : "border-transparent bg-transparent text-fg-dim"}
         >

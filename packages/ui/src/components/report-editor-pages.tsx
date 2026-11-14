@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import { Icon } from "@parfocal/ui/components/icon";
 import {
@@ -81,6 +82,8 @@ function SampleBars({ rows }: { rows: [string, number][] }) {
 }
 
 function SampleBody({ block, decimals }: { block: EditorBlock; decimals: number }) {
+  const { t } = useLingui();
+
   const list = (key: string) => (Array.isArray(block[key]) ? (block[key] as string[]) : []);
   switch (block.kind) {
     case "headline-numbers":
@@ -218,7 +221,7 @@ function SampleBody({ block, decimals }: { block: EditorBlock; decimals: number 
         <p className="m-0 whitespace-pre-wrap text-[10px]">
           {typeof block["body"] === "string" && block["body"]
             ? filled(block["body"])
-            : "Your text appears here."}
+            : t`Your text appears here.`}
         </p>
       );
     case "comparison":
@@ -266,17 +269,19 @@ function BlockToolbar({
   onBlocksChange: (blocks: EditorBlock[]) => void;
   onSelectedChange: (id: string | null) => void;
 }) {
+  const { t } = useLingui();
+
   const index = blocks.findIndex((item) => item.id === block.id);
   return (
     <div
       role="toolbar"
-      aria-label={`Tools for ${block.title}`}
+      aria-label={t`Tools for ${block.title}`}
       className="absolute -top-3 right-1 z-10 flex gap-0.5 rounded-ctl border border-line bg-chrome p-0.5 shadow-pop"
     >
       <Button
         size="icon-sm"
         variant="ghost"
-        aria-label="Move up"
+        aria-label={t`Move up`}
         disabled={index <= 0}
         onClick={() => onBlocksChange(moveBlock(blocks, block.id, -1))}
       >
@@ -285,7 +290,7 @@ function BlockToolbar({
       <Button
         size="icon-sm"
         variant="ghost"
-        aria-label="Move down"
+        aria-label={t`Move down`}
         disabled={index >= blocks.length - 1}
         onClick={() => onBlocksChange(moveBlock(blocks, block.id, 1))}
       >
@@ -294,7 +299,7 @@ function BlockToolbar({
       <Button
         size="icon-sm"
         variant="ghost"
-        aria-label="Duplicate"
+        aria-label={t`Duplicate`}
         onClick={() => {
           const result = duplicateBlock(blocks, block.id);
           onBlocksChange(result.blocks);
@@ -306,7 +311,7 @@ function BlockToolbar({
       <Button
         size="icon-sm"
         variant="ghost"
-        aria-label="Remove"
+        aria-label={t`Remove`}
         onClick={() => {
           onBlocksChange(removeBlock(blocks, block.id));
           onSelectedChange(null);
@@ -327,6 +332,8 @@ export function ReportPages({
   onBlocksChange,
   onSelectedChange,
 }: PageViewProps) {
+  const { t } = useLingui();
+
   const [over, setOver] = React.useState<{ id: string; after: boolean } | "end" | null>(null);
   const size = paperSize(format);
   const pages = paginate(blocks);
@@ -353,7 +360,7 @@ export function ReportPages({
       {pages.map((page, pageIndex) => (
         <section
           key={`${page.blocks[0]?.id ?? "empty"}-${pageIndex}`}
-          aria-label={`Page ${pageIndex + 1} of ${pages.length}`}
+          aria-label={t`Page ${pageIndex + 1} of ${pages.length}`}
           data-page={pageIndex + 1}
           className="relative grid w-full max-w-130 grid-rows-[auto_minmax(0,1fr)_auto] gap-3 rounded-sm bg-white p-7 text-[#111] shadow-pop"
           style={{ aspectRatio: `${size.w} / ${size.h}`, fontSize: textSize }}
@@ -372,8 +379,14 @@ export function ReportPages({
           {pageIndex === 0 ? (
             <div className="flex justify-between border-b-[1.5px] border-[#222] pb-2">
               <div className="grid">
-                {format.logo ? <b className="text-[1.15em]">Parfocal</b> : null}
-                <span className="text-[0.8em] text-[#555]">Sample project · sample numbers</span>
+                {format.logo ? (
+                  <b className="text-[1.15em]">
+                    <Trans>Parfocal</Trans>
+                  </b>
+                ) : null}
+                <span className="text-[0.8em] text-[#555]">
+                  <Trans>Sample project · sample numbers</Trans>
+                </span>
               </div>
               <div className="grid justify-items-end text-right">
                 <b className="text-[1.15em]">{filled(format.title)}</b>
@@ -399,7 +412,7 @@ export function ReportPages({
                 <div
                   key={block.id}
                   role="group"
-                  aria-label={`Block ${at + 1}, ${block.title}`}
+                  aria-label={t`Block ${at + 1}, ${block.title}`}
                   data-block={block.id}
                   data-kind={block.kind}
                   className={cn(
@@ -468,22 +481,22 @@ export function ReportPages({
                   over === "end" && "border-[#1d5fd1]",
                 )}
               >
-                An empty page. Drag a block here or click one on the left.
+                <Trans>An empty page. Drag a block here or click one on the left.</Trans>
               </span>
             ) : null}
           </div>
           <div className="relative flex items-end justify-between text-[0.8em] text-[#555]">
             <span>
               {pageIndex === pages.length - 1 && format.signature
-                ? "Signed off by: ____________  Date: ________"
-                : "Sample · not a real evaluation"}
+                ? t`Signed off by: ____________  Date: ________`
+                : t`Sample · not a real evaluation`}
             </span>
             <span>
               {format.page_numbers === "none"
                 ? ""
                 : format.page_numbers === "page"
                   ? `${pageIndex + 1}`
-                  : `Page ${pageIndex + 1} of ${pages.length}`}
+                  : t`Page ${pageIndex + 1} of ${pages.length}`}
             </span>
           </div>
           {format.draft_watermark ? (

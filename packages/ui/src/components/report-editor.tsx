@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import { Checkbox } from "@parfocal/ui/components/checkbox";
 import { Icon } from "@parfocal/ui/components/icon";
@@ -63,6 +64,8 @@ function BlockFieldControl({
   block: EditorBlock;
   onChange: (value: unknown) => void;
 }) {
+  const { t } = useLingui();
+
   const labelId = `${block.id}-${field.key}`;
   if (field.kind === "toggle") {
     return (
@@ -148,7 +151,8 @@ function BlockFieldControl({
       />
       {block.kind === "text" ? (
         <small className="text-caption text-fg-dim">
-          Fills in {"{task}"}, {"{model}"}, {"{version}"} and {"{slides}"} from the task.
+          <Trans>Fills in</Trans> {t`{task}`}, {t`{model}`}, {t`{version}`} <Trans>and</Trans>{" "}
+          {t`{slides}`} <Trans>from the task.</Trans>
         </small>
       ) : null}
     </div>
@@ -171,7 +175,7 @@ function BlockPanel({
   if (block === null) {
     return (
       <p className="m-0 text-body-sm text-fg-dim">
-        Click a block on the page to set its title, width and fields.
+        <Trans>Click a block on the page to set its title, width and fields.</Trans>
       </p>
     );
   }
@@ -180,7 +184,7 @@ function BlockPanel({
       <div className="grid gap-0.5 text-body-sm">
         <b>{blockCopy[block.kind].name}</b>
         <small className="text-caption text-fg-dim">
-          Block {index + 1} of {count}. {blockCopy[block.kind].shows}.
+          <Trans>Block</Trans> {index + 1} <Trans>of</Trans> {count}. {blockCopy[block.kind].shows}.
         </small>
       </div>
       {block.kind === "comparison" && compareChoices ? (
@@ -206,7 +210,7 @@ function BlockPanel({
       ))}
       <div className="grid gap-1.5">
         <label htmlFor={`${block.id}-title`} className="text-body-sm font-semibold">
-          Title
+          <Trans>Title</Trans>
         </label>
         <input
           id={`${block.id}-title`}
@@ -218,7 +222,7 @@ function BlockPanel({
       </div>
       <div className="flex items-center justify-between gap-3 text-body-sm">
         <span id={`${block.id}-show-title`} className="font-semibold">
-          Show the title
+          <Trans>Show the title</Trans>
         </span>
         <Switch
           aria-labelledby={`${block.id}-show-title`}
@@ -227,7 +231,9 @@ function BlockPanel({
         />
       </div>
       <div className="grid gap-1.5">
-        <FieldLabel id={`${block.id}-width`}>Width</FieldLabel>
+        <FieldLabel id={`${block.id}-width`}>
+          <Trans>Width</Trans>
+        </FieldLabel>
         <SegmentedControl
           aria-labelledby={`${block.id}-width`}
           value={block.width}
@@ -240,7 +246,7 @@ function BlockPanel({
       </div>
       <div className="flex items-center justify-between gap-3 text-body-sm">
         <span id={`${block.id}-page-break`} className="font-semibold">
-          Start on a new page
+          <Trans>Start on a new page</Trans>
         </span>
         <Switch
           aria-labelledby={`${block.id}-page-break`}
@@ -261,6 +267,8 @@ function FormatPanel({
   onChange: (format: FormatSettings) => void;
   head?: React.ReactNode;
 }) {
+  const { t } = useLingui();
+
   const set = <K extends keyof FormatSettings>(key: K, value: FormatSettings[K]) =>
     onChange({ ...format, [key]: value });
   const segment = <K extends keyof FormatSettings>(
@@ -361,12 +369,14 @@ function FormatPanel({
       {text("subtitle", "Subtitle", "Fills in {task}, {model}, {version} and {slides}.")}
       {toggle("running_header", "Running header from page 2")}
       <div className="grid gap-1.5">
-        <FieldLabel id="format-page_numbers">Page numbers</FieldLabel>
+        <FieldLabel id="format-page_numbers">
+          <Trans>Page numbers</Trans>
+        </FieldLabel>
         <Select
           value={format.page_numbers}
           onValueChange={(value) => set("page_numbers", value as FormatSettings["page_numbers"])}
         >
-          <SelectTrigger aria-label="Page numbers" className="w-full">
+          <SelectTrigger aria-label={t`Page numbers`} className="w-full">
             <SelectValue>
               {{ "page-of": "Page 1 of 3", page: "1", none: "None" }[format.page_numbers]}
             </SelectValue>
@@ -381,14 +391,16 @@ function FormatPanel({
       {toggle("draft_watermark", "DRAFT watermark until signed off")}
       {toggle("signature", "Signature block")}
       <div className="grid gap-1.5">
-        <FieldLabel id="format-label_language">Language of labels</FieldLabel>
+        <FieldLabel id="format-label_language">
+          <Trans>Language of labels</Trans>
+        </FieldLabel>
         <Select
           value={format.label_language}
           onValueChange={(value) =>
             set("label_language", value as FormatSettings["label_language"])
           }
         >
-          <SelectTrigger aria-label="Language of labels" className="w-full">
+          <SelectTrigger aria-label={t`Language of labels`} className="w-full">
             <SelectValue>
               {{ en: "English", cs: "Czech", de: "German" }[format.label_language]}
             </SelectValue>
@@ -440,6 +452,8 @@ function ReportEditor({
   className,
   ...props
 }: ReportEditorProps) {
+  const { t } = useLingui();
+
   const [selected, setSelected] = React.useState<string | null>(initialSelected);
   const [tab, setTab] = React.useState<string>(initialTab);
   const current = blocks.find((block) => block.id === selected) ?? null;
@@ -460,12 +474,14 @@ function ReportEditor({
     >
       <div className="grid min-h-0 grid-cols-[240px_minmax(0,1fr)_320px]">
         <aside
-          aria-label="Block catalogue"
+          aria-label={t`Block catalogue`}
           className="grid content-start gap-2 overflow-auto border-r border-line bg-chrome p-3.5"
         >
-          <b className="text-body-sm">Blocks</b>
+          <b className="text-body-sm">
+            <Trans>Blocks</Trans>
+          </b>
           <p className="m-0 text-caption text-fg-dim">
-            Drag one onto the page, or click it to add it after the selected block.
+            <Trans>Drag one onto the page, or click it to add it after the selected block.</Trans>
           </p>
           <div className="grid gap-1.5">
             {blockKinds.map((kind) => (
@@ -491,7 +507,7 @@ function ReportEditor({
         </aside>
         <div
           role="region"
-          aria-label="The report as pages"
+          aria-label={t`The report as pages`}
           className="overflow-auto bg-canvas p-6"
           onClick={(event) => {
             if (event.target === event.currentTarget) select(null);
@@ -510,9 +526,17 @@ function ReportEditor({
         <aside className="overflow-auto border-l border-line bg-chrome p-3.5">
           <Tabs value={tab} onValueChange={(value) => setTab(String(value))}>
             <TabsList>
-              <TabsTrigger value="block">Block</TabsTrigger>
-              <TabsTrigger value="format">Page and format</TabsTrigger>
-              {presets ? <TabsTrigger value="presets">Task presets</TabsTrigger> : null}
+              <TabsTrigger value="block">
+                <Trans>Block</Trans>
+              </TabsTrigger>
+              <TabsTrigger value="format">
+                <Trans>Page and format</Trans>
+              </TabsTrigger>
+              {presets ? (
+                <TabsTrigger value="presets">
+                  <Trans>Task presets</Trans>
+                </TabsTrigger>
+              ) : null}
             </TabsList>
             <TabsContent value="block" className="pt-3">
               <BlockPanel

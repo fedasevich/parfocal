@@ -1,4 +1,5 @@
 import { Avatar as AvatarPrimitive } from "@base-ui/react/avatar";
+import { useLingui } from "@lingui/react/macro";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@parfocal/ui/components/tooltip";
 import {
@@ -39,6 +40,8 @@ function PersonAvatar({
   style,
   ...props
 }: PersonAvatarProps) {
+  const { t } = useLingui();
+
   return (
     <AvatarPrimitive.Root
       data-slot="person-avatar"
@@ -55,7 +58,7 @@ function PersonAvatar({
         color: person ? readableOn(person.color) : undefined,
         ...style,
       }}
-      title={person?.name ?? "Unassigned"}
+      title={person?.name ?? t`Unassigned`}
       {...props}
     >
       <AvatarPrimitive.Fallback>
@@ -110,6 +113,8 @@ function Person({
   className,
   ...props
 }: PersonProps) {
+  const { t } = useLingui();
+
   const name = person ? (short ? shortName(person.name) : person.name) : "Unassigned";
   const subLine = sub === true ? person?.role : sub || undefined;
   return (
@@ -126,7 +131,7 @@ function Person({
       <span className="grid min-w-0 leading-tight">
         <span className="font-medium whitespace-nowrap text-fg">
           {name}
-          {you ? " (you)" : ""}
+          {you ? t` (you)` : ""}
         </span>
         {subLine ? (
           <small className="text-caption whitespace-nowrap text-fg-faint">{subLine}</small>

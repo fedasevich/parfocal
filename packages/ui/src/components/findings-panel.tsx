@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import type { Decision } from "@parfocal/tokens";
 import { AreaCallButtons } from "@parfocal/ui/components/area-call";
 import { Button } from "@parfocal/ui/components/button";
@@ -195,6 +196,8 @@ function CellFindings({
   hovered,
   warnings = [],
 }: CellFindingsProps) {
+  const { t } = useLingui();
+
   const ordered = zonesMostUnsureFirst(zones);
   const everyZone = changed ? [...ordered, changed] : ordered;
   const zoneOf = (id: string | null) => everyZone.find((zone) => zone.id === id);
@@ -240,10 +243,10 @@ function CellFindings({
       <Zone
         key="zones"
         data-slot="findings-zones"
-        title="Where the AI is unsure"
+        title={t`Where the AI is unsure`}
         sub="Most unsure first. Open a zone to go through its cells."
       >
-        <ul aria-label="Zones where the AI is unsure" className="m-0 grid list-none gap-1.5 p-0">
+        <ul aria-label={t`Zones where the AI is unsure`} className="m-0 grid list-none gap-1.5 p-0">
           {ordered.map((zone) => (
             <li key={zone.id}>
               <ZoneButton zone={zone} onOpen={() => onSelect({ kind: "zone", id: zone.id })} />
@@ -256,11 +259,11 @@ function CellFindings({
       <Zone
         key="scattered"
         data-slot="findings-scattered"
-        title="Scattered unsure cells"
+        title={t`Scattered unsure cells`}
         sub={`${scattered.length} outside every zone`}
       >
         <Tiles
-          label="Scattered unsure cells"
+          label={t`Scattered unsure cells`}
           image={image}
           cells={scattered}
           onPick={pickIn(null)}
@@ -269,7 +272,7 @@ function CellFindings({
     ),
     outline: () =>
       outline ? (
-        <Zone key="outline" data-slot="findings-outline" title="Your outline">
+        <Zone key="outline" data-slot="findings-outline" title={t`Your outline`}>
           <button
             type="button"
             className={rowClass}
@@ -291,7 +294,7 @@ function CellFindings({
           end={
             onUndoChanged ? (
               <Button variant="ghost" size="sm" onClick={onUndoChanged}>
-                Undo
+                <Trans>Undo</Trans>
               </Button>
             ) : null
           }
@@ -307,7 +310,7 @@ function CellFindings({
         <Zone
           key="gallery"
           data-slot="findings-gallery"
-          title={openZone.id === CHANGED_ZONE_ID ? "Changed cells" : "Unsure cells"}
+          title={openZone.id === CHANGED_ZONE_ID ? t`Changed cells` : t`Unsure cells`}
           sub={zoneNumbers(openZone)}
         >
           <Tiles
@@ -321,7 +324,7 @@ function CellFindings({
       ) : null,
     cell: () =>
       selection.kind === "cell" ? (
-        <Zone key="cell" data-slot="findings-cell" title={`Cell ${selection.id}`}>
+        <Zone key="cell" data-slot="findings-cell" title={t`Cell ${selection.id}`}>
           <div className="flex items-start gap-3">
             <CellCrop
               image={image}
@@ -332,11 +335,15 @@ function CellFindings({
             <div className="grid min-w-0 flex-1 gap-1.5">
               {cellCall ? <AiCallLine {...cellCall} /> : null}
               {cell?.decision ? (
-                <span className="text-caption text-fg-dim">Checked by you</span>
+                <span className="text-caption text-fg-dim">
+                  <Trans>Checked by you</Trans>
+                </span>
               ) : null}
             </div>
           </div>
-          <Hint>Pick the type in the bar next to the cell on the slide.</Hint>
+          <Hint>
+            <Trans>Pick the type in the bar next to the cell on the slide.</Trans>
+          </Hint>
         </Zone>
       ) : null,
     siblings: () =>
@@ -389,20 +396,28 @@ type AreaStepsProps = {
 };
 
 function AreaSteps({ area, number, onCall, onMeasure, onCount }: AreaStepsProps) {
+  const { t } = useLingui();
+
   const next = nextStagingStep(area);
   const later = (step: StagingStep) =>
-    step.name === next ? null : <Hint>Opens after step {step.index - 1}.</Hint>;
+    step.name === next ? null : (
+      <Hint>
+        <Trans>Opens after step</Trans> {step.index - 1}.
+      </Hint>
+    );
   const bodies: Record<StagingStep["name"], (step: StagingStep) => React.ReactNode> = {
     tumor: () => <AreaCallButtons area={`area ${number}`} value={area.call} onCall={onCall} />,
     size: (step) =>
       later(step) ?? (
         <>
           <span className="text-body-sm text-fg-dim">
-            The AI sizes it at {formatAreaMm(area.size)}, between {formatAreaMm(area.low)} and{" "}
-            {formatAreaMm(area.high)}. Measure across the widest part.
+            <Trans>The AI sizes it at</Trans> {formatAreaMm(area.size)}
+            <Trans>, between</Trans> {formatAreaMm(area.low)} <Trans>and</Trans>{" "}
+            {formatAreaMm(area.high)}
+            <Trans>. Measure across the widest part.</Trans>
           </span>
           <Button size="sm" onClick={onMeasure}>
-            Measure it
+            <Trans>Measure it</Trans>
           </Button>
         </>
       ),
@@ -412,20 +427,20 @@ function AreaSteps({ area, number, onCall, onMeasure, onCount }: AreaStepsProps)
           {area.cells ? (
             <>
               <span className="text-body-sm text-fg-dim">
-                The AI counts {area.cells.low} to {area.cells.high} tumor cells. The line is{" "}
-                {cellLine}.
+                <Trans>The AI counts</Trans> {area.cells.low} <Trans>to</Trans> {area.cells.high}{" "}
+                <Trans>tumor cells. The line is</Trans> {cellLine}.
               </span>
               <CountBar count={Math.round((area.cells.low + area.cells.high) / 2)} />
             </>
           ) : null}
           <Button size="sm" onClick={onCount}>
-            Count the tumor cells
+            <Trans>Count the tumor cells</Trans>
           </Button>
         </>
       ),
   };
   return (
-    <ol aria-label={`Steps for area ${number}`} className="m-0 grid list-none gap-2 p-0">
+    <ol aria-label={t`Steps for area ${number}`} className="m-0 grid list-none gap-2 p-0">
       {stagingSteps(area).map((step) => (
         <li key={step.name}>
           <StepBlock
@@ -452,14 +467,18 @@ function NodeStaging({
   onCount,
   warnings = [],
 }: NodeStagingProps) {
+  const { t } = useLingui();
+
   const largestFirst = [...areas].sort((a, b) => (b.measured ?? b.size) - (a.measured ?? a.size));
   const callable = largestFirst.map((area) => ({ id: area.id, call: area.call }));
   return (
     <>
       {warnings.length > 0 ? <Warnings warnings={warnings} /> : null}
       {areas.length === 0 ? (
-        <Zone title="Areas">
-          <Hint>The AI found no tumor area on this slide.</Hint>
+        <Zone title={t`Areas`}>
+          <Hint>
+            <Trans>The AI found no tumor area on this slide.</Trans>
+          </Hint>
         </Zone>
       ) : null}
       {largestFirst.map((area, position) => {
@@ -471,7 +490,7 @@ function NodeStaging({
             key={area.id}
             data-slot="findings-area"
             data-role={role}
-            aria-label={`Area ${position + 1}`}
+            aria-label={t`Area ${position + 1}`}
             highlight={open}
           >
             <button
@@ -482,7 +501,7 @@ function NodeStaging({
             >
               <span className="grid min-w-0 flex-1 gap-0.5">
                 <span className="flex items-center gap-2 text-body font-semibold">
-                  Area {position + 1}
+                  <Trans>Area</Trans> {position + 1}
                   <ObjectIdTag>{area.id}</ObjectIdTag>
                   <span className="font-normal text-fg-dim">{formatAreaMm(shown)}</span>
                 </span>

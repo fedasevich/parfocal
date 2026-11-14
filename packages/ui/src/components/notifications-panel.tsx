@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import { Icon, type IconName } from "@parfocal/ui/components/icon";
 import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
@@ -33,7 +34,8 @@ function NotificationDetail({ item }: { item: NotificationItem }) {
   if (item.quote) {
     return (
       <small className={detailClass}>
-        "{item.quote.text}" on <ObjectIdTag>{item.quote.objectId}</ObjectIdTag>
+        "{item.quote.text}
+        <Trans>" on</Trans> <ObjectIdTag>{item.quote.objectId}</ObjectIdTag>
         {item.quote.slide ? ` · ${item.quote.slide}` : ""}
       </small>
     );
@@ -48,6 +50,8 @@ function NotificationRow({
   item: NotificationItem;
   onOpen: (item: NotificationItem) => void;
 }) {
+  const { t } = useLingui();
+
   return (
     <li
       data-testid="notification"
@@ -58,7 +62,7 @@ function NotificationRow({
       ) : (
         <span
           role="img"
-          aria-label="Unread"
+          aria-label={t`Unread`}
           className="mt-2.75 size-1.75 rounded-full bg-accent-fill"
         />
       )}
@@ -69,7 +73,7 @@ function NotificationRow({
         <b className="block text-body-sm text-fg">{item.title}</b>
         <NotificationDetail item={item} />
         <Button size="sm" className="mt-2" onClick={() => onOpen(item)}>
-          {item.action ?? "Open"}
+          {item.action ?? t`Open`}
         </Button>
       </div>
       <span className="whitespace-nowrap text-caption text-fg-faint">{item.time}</span>
@@ -84,6 +88,8 @@ function NotificationsPanel({
   onSeeAll,
   onClose,
 }: NotificationsPanelProps) {
+  const { t } = useLingui();
+
   const [tab, setTab] = useState<NotificationGroup>("all");
   const [unreadOnly, setUnreadOnly] = useState(false);
   const inTab = (item: NotificationItem, which: NotificationGroup) =>
@@ -104,13 +110,15 @@ function NotificationsPanel({
   return (
     <div className="flex max-h-[780px] min-h-0 flex-col">
       <div className="flex items-center justify-between px-4 pt-3.5 pb-2">
-        <b className="text-lead text-fg">Notifications</b>
+        <b className="text-lead text-fg">
+          <Trans>Notifications</Trans>
+        </b>
         <span className="flex items-center gap-3">
           <label className="flex cursor-pointer items-center gap-2 text-caption text-fg-dim">
-            Unread only
+            <Trans>Unread only</Trans>
             <Switch size="sm" checked={unreadOnly} onCheckedChange={setUnreadOnly} />
           </label>
-          <Button variant="ghost" size="icon-sm" aria-label="Close" onClick={onClose}>
+          <Button variant="ghost" size="icon-sm" aria-label={t`Close`} onClick={onClose}>
             <Icon name="close" />
           </Button>
         </span>
@@ -118,7 +126,7 @@ function NotificationsPanel({
       <div className="px-4 pb-2.5">
         <SegmentedControl
           fill
-          aria-label="Show"
+          aria-label={t`Show`}
           value={tab}
           onValueChange={(value) => setTab(value as NotificationGroup)}
           options={[
@@ -134,20 +142,22 @@ function NotificationsPanel({
         ) : (
           <li className="flex items-center gap-2 px-4 py-6 text-body-sm text-fg-dim">
             <Icon name="check" />
-            {unreadOnly ? "Nothing unread here" : "Nothing here yet"}
+            {unreadOnly ? t`Nothing unread here` : t`Nothing here yet`}
           </li>
         )}
       </ul>
       <div className="flex items-center justify-between px-4 py-3">
         {anyUnread ? (
           <Button variant="link" onClick={onMarkAllRead}>
-            Mark all read
+            <Trans>Mark all read</Trans>
           </Button>
         ) : (
-          <span className="text-caption text-fg-dim">All read</span>
+          <span className="text-caption text-fg-dim">
+            <Trans>All read</Trans>
+          </span>
         )}
         <Button variant="link" className="text-fg-dim" onClick={onSeeAll}>
-          See all
+          <Trans>See all</Trans>
           <Icon name="next" />
         </Button>
       </div>

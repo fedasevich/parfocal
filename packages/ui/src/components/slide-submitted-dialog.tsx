@@ -1,3 +1,4 @@
+import { Trans } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Keycap } from "@parfocal/ui/components/keycap";
@@ -67,10 +68,10 @@ function SlideSubmittedDialog({
             <Keycap keys="↵" />
           </Button>
           <Button size="lg" onClick={onDiffer}>
-            See where we differ
+            <Trans>See where we differ</Trans>
           </Button>
           <Button size="lg" onClick={onBreak}>
-            Take a break
+            <Trans>Take a break</Trans>
           </Button>
         </div>
         <span className="text-body-sm text-fg-dim">{status}</span>

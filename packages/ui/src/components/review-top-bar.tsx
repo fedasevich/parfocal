@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import type { LinkRenderer } from "@parfocal/ui/components/app-shell";
 import { Button } from "@parfocal/ui/components/button";
 import {
@@ -76,6 +77,8 @@ function ReviewTopBar({
   className,
   ...props
 }: ReviewTopBarProps) {
+  const { t } = useLingui();
+
   const [slidesOpen, setSlidesOpen] = useState(false);
   const [progressOpen, setProgressOpen] = useState(false);
   const big = mode === "guided" || mode === "adjudicate";
@@ -89,7 +92,9 @@ function ReviewTopBar({
   const backBody = (
     <>
       <Icon name="back" />
-      <span className="sr-only">Back to {backLabel}</span>
+      <span className="sr-only">
+        <Trans>Back to {backLabel}</Trans>
+      </span>
     </>
   );
   const backClass =
@@ -123,7 +128,7 @@ function ReviewTopBar({
       {mode === "guided" || !slidesPopover ? (
         <span
           className="inline-flex h-8 shrink-0 items-center gap-2 px-2"
-          title="Submit opens the next slide"
+          title={t`Submit opens the next slide`}
         >
           {thumb}
           <b className="text-body-sm font-semibold" data-phi="">
@@ -134,7 +139,7 @@ function ReviewTopBar({
         <Popover open={slidesOpen} onOpenChange={setSlidesOpen}>
           <PopoverTrigger
             aria-haspopup="dialog"
-            title="Slides in this case and task, with their result sets (Q and E step through them)"
+            title={t`Slides in this case and task, with their result sets (Q and E step through them)`}
             className="inline-flex h-8 shrink-0 cursor-pointer items-center gap-2 rounded-ctl border border-line-strong bg-btn-bg px-2 text-fg outline-none hover:border-fg-faint focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent aria-expanded:border-fg-faint"
           >
             {thumb}
@@ -165,7 +170,7 @@ function ReviewTopBar({
         <Popover open={progressOpen} onOpenChange={setProgressOpen}>
           <PopoverTrigger
             aria-haspopup="dialog"
-            title="Progress on this slide and in the whole task"
+            title={t`Progress on this slide and in the whole task`}
             className="inline-flex shrink-0 cursor-pointer items-center gap-2.5 rounded-ctl border-0 bg-transparent p-1 text-left text-fg outline-none hover:bg-[color-mix(in_srgb,var(--fg)_8%,transparent)] focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent aria-expanded:bg-[color-mix(in_srgb,var(--fg)_8%,transparent)]"
           >
             <ProgressRing split={progress} size={big ? 40 : 34} />
@@ -189,7 +194,7 @@ function ReviewTopBar({
       ) : (
         <span
           className="inline-flex shrink-0 items-center gap-2.5"
-          title="Progress on this slide and in the whole task"
+          title={t`Progress on this slide and in the whole task`}
         >
           {progress ? <ProgressRing split={progress} size={big ? 40 : 34} /> : null}
           <span className="grid leading-tight">
@@ -201,7 +206,7 @@ function ReviewTopBar({
       <span className="flex-1" />
       {mode === "adjudicate" ? null : (
         <SegmentedControl
-          aria-label="How to review"
+          aria-label={t`How to review`}
           className="shrink-0"
           value={mode}
           onValueChange={(value) => onModeChange?.(value as "guided" | "full" | "annotate")}
@@ -219,9 +224,9 @@ function ReviewTopBar({
         <Button
           variant="ghost"
           size="icon"
-          aria-label="Side panel"
+          aria-label={t`Side panel`}
           aria-pressed={panelHidden === undefined ? undefined : !panelHidden}
-          title={panelHidden ? "Show the side panel" : "Hide the side panel"}
+          title={panelHidden ? t`Show the side panel` : t`Hide the side panel`}
           onClick={onTogglePanel}
         >
           <Icon name="panel" />
@@ -234,8 +239,8 @@ function ReviewTopBar({
               <Button
                 variant="ghost"
                 size="icon"
-                aria-label="More"
-                title="More: share, focus mode, shortcuts, settings"
+                aria-label={t`More`}
+                title={t`More: share, focus mode, shortcuts, settings`}
               />
             }
           >
@@ -262,7 +267,7 @@ function ReviewTopBar({
         title={primaryDisabledReason ?? primaryTitle}
         onClick={onPrimary}
       >
-        {mode === "adjudicate" ? "Done for now" : primaryLabel}
+        {mode === "adjudicate" ? t`Done for now` : primaryLabel}
       </Button>
       {accountSlot}
     </header>

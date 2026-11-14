@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Banner } from "@parfocal/ui/components/banner";
 import { Button } from "@parfocal/ui/components/button";
 import { Icon } from "@parfocal/ui/components/icon";
@@ -104,16 +105,19 @@ function OriginLines({
   const made =
     model && origin !== "human" ? (
       <p data-slot="origin-model" className="m-0 text-body-sm text-fg-dim">
-        Made by <b className="font-semibold text-fg">{modelLabel(model)}</b>
+        <Trans>Made by</Trans> <b className="font-semibold text-fg">{modelLabel(model)}</b>
       </p>
     ) : null;
   if (!author) {
     return model ? (
       <p data-slot="origin-model" className="m-0 text-body-sm text-fg-dim">
-        Made by <b className="font-semibold text-fg">{modelLabel(model)}</b>, nobody has changed it.
+        <Trans>Made by</Trans> <b className="font-semibold text-fg">{modelLabel(model)}</b>
+        <Trans>, nobody has changed it.</Trans>
       </p>
     ) : (
-      <p className="m-0 text-body-sm text-fg-dim">Made by the model, nobody has changed it.</p>
+      <p className="m-0 text-body-sm text-fg-dim">
+        <Trans>Made by the model, nobody has changed it.</Trans>
+      </p>
     );
   }
   return (
@@ -137,10 +141,12 @@ function OriginCard({
   className,
   ...props
 }: OriginCardProps) {
+  const { t } = useLingui();
+
   return (
     <section
       data-slot="origin-card"
-      aria-label={`${objectId} origin and history`}
+      aria-label={t`${objectId} origin and history`}
       className={cn("grid gap-3 rounded-zone border border-line bg-surf-panel p-3.5", className)}
       {...props}
     >
@@ -157,7 +163,7 @@ function OriginCard({
         <OriginMark origin={origin} author={author} />
       </header>
       <OriginLines origin={origin} author={author} model={model} />
-      <ol aria-label="History" className="m-0 grid list-none gap-2 p-0">
+      <ol aria-label={t`History`} className="m-0 grid list-none gap-2 p-0">
         {history.map((entry) => (
           <li key={entry.id} className="grid grid-cols-[auto_1fr_auto] items-center gap-2">
             {entry.who ? (
@@ -208,10 +214,12 @@ function AiResultToggle({
     >
       <span className="grid min-w-0 gap-0.5">
         <b id={`${id}-name`} className="text-body-sm font-semibold text-fg">
-          Show the AI result
+          <Trans>Show the AI result</Trans>
         </b>
         <small id={`${id}-sub`} className="text-caption text-fg-dim">
-          {resultName} · {count} objects
+          <Trans>
+            {resultName} · {count} objects
+          </Trans>
         </small>
       </span>
       <Switch
@@ -236,21 +244,31 @@ type CheckProgressProps = React.ComponentProps<"div"> & {
 };
 
 function CheckProgress({ counts, scope, className, ...props }: CheckProgressProps) {
+  const { t } = useLingui();
+
   const done = checkedOf(counts);
   return (
     <div data-slot="check-progress" className={cn("grid gap-2", className)} {...props}>
       <ProgressBar
-        label={`${done} of ${counts.total} ${scope} checked`}
+        label={t`${done} of ${counts.total} ${scope} checked`}
         valueText={`${counts.total === 0 ? 0 : Math.round((done / counts.total) * 100)}%`}
         value={done}
         max={Math.max(counts.total, 1)}
         tone={done === counts.total && counts.total > 0 ? "ok" : "accent"}
       />
       <ul className="m-0 flex list-none flex-wrap gap-x-3 gap-y-1 p-0 text-caption text-fg-dim">
-        <li>{counts.confirmed} confirmed</li>
-        <li>{counts.edited} edited</li>
-        <li>{counts.deleted} deleted</li>
-        <li>{counts.total - done} left</li>
+        <li>
+          <Trans>{counts.confirmed} confirmed</Trans>
+        </li>
+        <li>
+          <Trans>{counts.edited} edited</Trans>
+        </li>
+        <li>
+          <Trans>{counts.deleted} deleted</Trans>
+        </li>
+        <li>
+          {counts.total - done} <Trans>left</Trans>
+        </li>
       </ul>
     </div>
   );
@@ -312,11 +330,13 @@ function CheckedCard({
   className,
   ...props
 }: CheckedCardProps) {
+  const { t } = useLingui();
+
   return (
     <section
       data-slot="checked-card"
       data-nothing={nothingToMark || undefined}
-      aria-label="Slide checked"
+      aria-label={t`Slide checked`}
       className={cn(
         "grid w-88 gap-3 rounded-zone border border-line-strong bg-surf-panel p-4 shadow-[0_8px_24px_rgb(0_0_0/0.35)]",
         className,
@@ -331,14 +351,14 @@ function CheckedCard({
           <Icon name="check" />
         </span>
         <h3 className="m-0 text-lead font-semibold text-fg">
-          {nothingToMark ? "Nothing to mark" : "You checked this slide"}
+          {nothingToMark ? t`Nothing to mark` : t`You checked this slide`}
         </h3>
       </header>
       <p className="m-0 text-body-sm text-fg-dim">{summary}</p>
       <footer className="flex items-center justify-between gap-2">
         {onUndo ? (
           <Button size="sm" variant="ghost" onClick={onUndo}>
-            Reopen for changes
+            <Trans>Reopen for changes</Trans>
           </Button>
         ) : (
           <span />
@@ -374,6 +394,8 @@ function SignOffCard({
   className,
   ...props
 }: SignOffCardProps) {
+  const { t } = useLingui();
+
   const waiting = experts.filter((expert) => !expert.checked);
   const reason =
     waiting.length > 0
@@ -383,7 +405,7 @@ function SignOffCard({
     <section
       data-slot="sign-off-card"
       data-signed={signedOff || undefined}
-      aria-label="Sign off"
+      aria-label={t`Sign off`}
       className={cn(
         "grid w-104 gap-3.5 rounded-zone border border-line-strong bg-surf-panel p-4 shadow-[0_8px_24px_rgb(0_0_0/0.35)]",
         className,
@@ -392,15 +414,15 @@ function SignOffCard({
     >
       <header className="grid gap-0.5">
         <h3 className="m-0 text-lead font-semibold text-fg">
-          {signedOff ? "Signed off" : "Sign off this slide"}
+          {signedOff ? t`Signed off` : t`Sign off this slide`}
         </h3>
         <p className="m-0 text-body-sm text-fg-dim" data-phi="">
           {signedOff
-            ? `${slideName} is locked. Later changes go to the change log.`
-            : `${slideName} locks for everyone once you sign it off.`}
+            ? t`${slideName} is locked. Later changes go to the change log.`
+            : t`${slideName} locks for everyone once you sign it off.`}
         </p>
       </header>
-      <ul aria-label="Experts" className="m-0 grid list-none gap-2 p-0">
+      <ul aria-label={t`Experts`} className="m-0 grid list-none gap-2 p-0">
         {experts.map((expert) => (
           <li key={expert.person.name} className="flex items-center gap-2.5">
             <PersonAvatar person={expert.person} size={22} />
@@ -412,7 +434,7 @@ function SignOffCard({
               )}
             >
               <Icon name={expert.checked ? "check" : "clock"} size="xs" />
-              {expert.checked ? (expert.sub ?? "Checked") : "Not yet"}
+              {expert.checked ? (expert.sub ?? t`Checked`) : t`Not yet`}
             </span>
           </li>
         ))}
@@ -424,13 +446,15 @@ function SignOffCard({
           actions={
             onShowThreads ? (
               <Button size="sm" onClick={onShowThreads}>
-                Show threads
+                <Trans>Show threads</Trans>
               </Button>
             ) : undefined
           }
         >
-          {openThreads === 1 ? "1 thread is still open." : `${openThreads} threads are still open.`}{" "}
-          They stay open after the sign-off.
+          {openThreads === 1
+            ? t`1 thread is still open.`
+            : t`${openThreads} threads are still open.`}{" "}
+          <Trans>They stay open after the sign-off.</Trans>
         </Banner>
       ) : null}
       {signedOff ? null : (
@@ -443,7 +467,7 @@ function SignOffCard({
             onClick={onSignOff}
             title={reason}
           >
-            {openThreads > 0 ? "Sign off anyway" : "Sign off"}
+            {openThreads > 0 ? t`Sign off anyway` : t`Sign off`}
           </Button>
         </footer>
       )}
@@ -542,10 +566,12 @@ type PresetPickerProps = Omit<React.ComponentProps<"div">, "onChange"> & {
 };
 
 function PresetPicker({ value, onValueChange, className, ...props }: PresetPickerProps) {
+  const { t } = useLingui();
+
   return (
     <div data-slot="preset-picker" className={cn("grid gap-2", className)} {...props}>
       <RadioGroup
-        aria-label="Preset"
+        aria-label={t`Preset`}
         value={value}
         onValueChange={(next) => onValueChange(next as PresetKey)}
         className="grid gap-2"
@@ -564,7 +590,9 @@ function PresetPicker({ value, onValueChange, className, ...props }: PresetPicke
         ))}
       </RadioGroup>
       <small className="text-caption text-fg-dim">
-        A preset only fills in the options. You can change each of them on the next step.
+        <Trans>
+          A preset only fills in the options. You can change each of them on the next step.
+        </Trans>
       </small>
     </div>
   );
@@ -647,6 +675,8 @@ function checkSummary(values: CheckOptionValues) {
 }
 
 function CheckOptions({ values, onValuesChange, className, ...props }: CheckOptionsProps) {
+  const { t } = useLingui();
+
   const set = (patch: Partial<CheckOptionValues>) => onValuesChange({ ...values, ...patch });
   const noResult = !values.hasResult;
   return (
@@ -679,7 +709,7 @@ function CheckOptions({ values, onValuesChange, className, ...props }: CheckOpti
       />
       {values.scope === "sample" ? (
         <label className="grid gap-1.5 text-body-sm font-semibold text-fg">
-          Sample size
+          <Trans>Sample size</Trans>
           <Input
             type="number"
             inputMode="numeric"
@@ -693,14 +723,14 @@ function CheckOptions({ values, onValuesChange, className, ...props }: CheckOpti
           />
           <small className="font-normal text-fg-dim">
             {validSampleSize(values.sampleSize)
-              ? "How many AI cells each slide checks. The sample is the same for every expert."
-              : `Use a whole number from 1 to ${sampleSizeLimit}.`}
+              ? t`How many AI cells each slide checks. The sample is the same for every expert.`
+              : t`Use a whole number from 1 to ${sampleSizeLimit}.`}
           </small>
         </label>
       ) : null}
       {values.scope === "none" ? (
         <p className="m-0 text-body-sm text-fg-dim">
-          Nothing to check, so the order and the finishing rule do not apply.
+          <Trans>Nothing to check, so the order and the finishing rule do not apply.</Trans>
         </p>
       ) : (
         <>
@@ -774,6 +804,8 @@ function BlindFirstSwitch({
   className,
   ...props
 }: BlindFirstSwitchProps) {
+  const { t } = useLingui();
+
   const id = useId();
   return (
     <label
@@ -786,12 +818,12 @@ function BlindFirstSwitch({
     >
       <span className="grid gap-0.5">
         <b id={`${id}-name`} className="text-body-sm font-semibold text-fg">
-          Blind first
+          <Trans>Blind first</Trans>
         </b>
         <small id={`${id}-sub`} className="text-body-sm text-fg-dim">
           {checked
-            ? "Each expert's new objects stay hidden from colleagues until that expert marks the slide checked. Turning it off later shows everything at once."
-            : "Experts see each other's work from the start. Turn this on to keep first opinions independent. Turning it on later hides only objects drawn after that, and what is already shown stays shown."}
+            ? t`Each expert's new objects stay hidden from colleagues until that expert marks the slide checked. Turning it off later shows everything at once.`
+            : t`Experts see each other's work from the start. Turn this on to keep first opinions independent. Turning it on later hides only objects drawn after that, and what is already shown stays shown.`}
         </small>
       </span>
       <Switch
@@ -826,6 +858,8 @@ function RunProgress({
   className,
   ...props
 }: RunProgressProps) {
+  const { t } = useLingui();
+
   const heading =
     state === "running"
       ? "Running on the whole slide"
@@ -846,12 +880,12 @@ function RunProgress({
         <b className="text-body-sm font-semibold text-fg">{heading}</b>
         {state === "running" && onCancel ? (
           <Button size="sm" onClick={onCancel}>
-            Cancel run
+            <Trans>Cancel run</Trans>
           </Button>
         ) : null}
       </div>
       <ProgressBar
-        label={`${tilesDone} of ${tilesTotal} tiles finished`}
+        label={t`${tilesDone} of ${tilesTotal} tiles finished`}
         valueText={`${objects.toLocaleString("en-US")} objects`}
         value={tilesDone}
         max={tilesTotal}
@@ -859,10 +893,10 @@ function RunProgress({
       />
       <small className="text-caption text-fg-dim">
         {state === "running"
-          ? `About ${estimate ?? "a few minutes"} left. Objects appear as each tile finishes.`
+          ? t`About ${estimate ?? "a few minutes"} left. Objects appear as each tile finishes.`
           : state === "cancelled"
-            ? "The objects of finished tiles are in the layer and join the check scope."
-            : "All objects are in the layer and join the check scope."}
+            ? t`The objects of finished tiles are in the layer and join the check scope.`
+            : t`All objects are in the layer and join the check scope.`}
       </small>
     </div>
   );
@@ -920,6 +954,8 @@ type ChangesByMarkerProps = Omit<React.ComponentProps<"button">, "children"> & {
 };
 
 function ChangesByMarker({ people, count, className, ...props }: ChangesByMarkerProps) {
+  const { t } = useLingui();
+
   const names = people.map((person) => person.name).join(" and ");
   return (
     <button
@@ -936,8 +972,10 @@ function ChangesByMarker({ people, count, className, ...props }: ChangesByMarker
           <PersonAvatar key={person.name} person={person} size={18} />
         ))}
       </span>
-      {count === 1 ? "1 change" : `${count} changes`} by {names}
-      <span className="text-accent">Show</span>
+      {count === 1 ? t`1 change` : t`${count} changes`} <Trans>by</Trans> {names}
+      <span className="text-accent">
+        <Trans>Show</Trans>
+      </span>
     </button>
   );
 }

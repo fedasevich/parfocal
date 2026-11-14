@@ -1,4 +1,5 @@
 import { Progress as ProgressPrimitive } from "@base-ui/react/progress";
+import { useLingui } from "@lingui/react/macro";
 import { Icon } from "@parfocal/ui/components/icon";
 import {
   type Decision,
@@ -78,6 +79,8 @@ type ProgressRingProps = Omit<React.ComponentProps<"span">, "children"> & {
 };
 
 function ProgressRing({ split, size = 40, label, className, ...props }: ProgressRingProps) {
+  const { t } = useLingui();
+
   const stroke = Math.max(3, Math.round(size / 10));
   const radius = (size - stroke) / 2;
   const circumference = 2 * Math.PI * radius;
@@ -89,7 +92,7 @@ function ProgressRing({ split, size = 40, label, className, ...props }: Progress
       role="img"
       aria-label={
         label ??
-        `${percent}% done: ${split.agree} agree, ${split.disagree} disagree, ${split.unsure} not sure, ${split.open} open`
+        t`${percent}% done: ${split.agree} agree, ${split.disagree} disagree, ${split.unsure} not sure, ${split.open} open`
       }
       className={cn("relative inline-grid shrink-0 place-items-center align-middle", className)}
       style={{ width: size, height: size }}

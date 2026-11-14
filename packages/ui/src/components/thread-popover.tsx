@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import {
   CommentComposer,
@@ -69,11 +70,13 @@ function ThreadPopover({
   onKeyDown,
   ...props
 }: ThreadPopoverProps) {
+  const { t } = useLingui();
+
   return (
     <section
       data-slot="thread-popover"
       data-resolved={resolved}
-      aria-label={`Thread: ${title}`}
+      aria-label={t`Thread: ${title}`}
       className={cn(
         "grid w-80 gap-3 rounded-zone border border-line-strong bg-chrome p-3 shadow-pop",
         className,
@@ -90,32 +93,36 @@ function ThreadPopover({
       <header className="flex items-start gap-2">
         <h3 className="m-0 min-w-0 flex-1 text-body font-semibold leading-snug text-fg">{title}</h3>
         <Button size="sm" variant={resolved ? "secondary" : "primary"} onClick={onToggleResolved}>
-          {resolved ? "Reopen" : "Resolve"}
+          {resolved ? t`Reopen` : t`Resolve`}
         </Button>
-        <IconButton icon="close" label="Close thread" size="sm" onClick={onClose} />
+        <IconButton icon="close" label={t`Close thread`} size="sm" onClick={onClose} />
       </header>
       {resolved ? (
         <p role="status" className="m-0 text-caption text-fg-dim">
-          Resolved. Reopen it to keep talking.
+          <Trans>Resolved. Reopen it to keep talking.</Trans>
         </p>
       ) : null}
       {measurement ? <MeasurementEmbed measurement={measurement} /> : null}
       <div className="max-h-64 overflow-y-auto pr-1">
-        {loading ? <Loader label="Loading the messages" /> : <CommentThread messages={messages} />}
+        {loading ? (
+          <Loader label={t`Loading the messages`} />
+        ) : (
+          <CommentThread messages={messages} />
+        )}
       </div>
       <CommentComposer
         value={reply}
         onValueChange={onReplyChange}
         onSend={onSend}
-        label="Reply to this thread"
-        placeholder="Write a reply"
+        label={t`Reply to this thread`}
+        placeholder={t`Write a reply`}
         sendLabel="Reply"
         hint="Enter posts, Shift+Enter adds a line"
         offReason={offReason ?? (busy ? "Posting your reply" : undefined)}
       />
       {failed ? (
         <p role="alert" className="m-0 text-body-sm text-bad">
-          That did not save. Try again.
+          <Trans>That did not save. Try again.</Trans>
         </p>
       ) : null}
     </section>

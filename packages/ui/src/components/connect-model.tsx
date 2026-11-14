@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Icon, type IconName } from "@parfocal/ui/components/icon";
 import {
   Select,
@@ -196,6 +197,8 @@ function ClassMapTable({
   className,
   ...props
 }: ClassMapTableProps) {
+  const { t } = useLingui();
+
   return (
     <table
       data-slot="class-map-table"
@@ -206,7 +209,9 @@ function ClassMapTable({
         <tr className="border-b border-line-strong text-left text-caption font-semibold text-fg-dim">
           <th className="w-[34%] py-2 font-semibold">{sentLabel}</th>
           <th className="w-10">
-            <span className="sr-only">Maps to</span>
+            <span className="sr-only">
+              <Trans>Maps to</Trans>
+            </span>
           </th>
           <th className="py-2 font-semibold">{becomesLabel}</th>
           <th className="w-28 py-2 text-right font-semibold">{countLabel}</th>
@@ -228,7 +233,7 @@ function ClassMapTable({
                   value={row.value}
                   onValueChange={(value) => onValueChange?.(row.sent, String(value))}
                 >
-                  <SelectTrigger size="sm" aria-label={`Class for ${row.sent}`} className="w-55">
+                  <SelectTrigger size="sm" aria-label={t`Class for ${row.sent}`} className="w-55">
                     {chosen ? (
                       <SelectValue>
                         <OptionLabel option={chosen} />

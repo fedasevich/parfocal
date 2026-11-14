@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import { Icon, type IconName } from "@parfocal/ui/components/icon";
 import { Person, PersonAvatar, type PersonInfo } from "@parfocal/ui/components/person";
@@ -31,12 +32,16 @@ function AuthBrand() {
       <span className="grid size-8 place-items-center rounded-lg border border-white/30 text-accent">
         <Icon name="parfocal" size="md" />
       </span>
-      <b className="text-title font-bold tracking-[-0.01em]">Parfocal</b>
+      <b className="text-title font-bold tracking-[-0.01em]">
+        <Trans>Parfocal</Trans>
+      </b>
     </div>
   );
 }
 
 function AuthWorkspaceLine({ workspace, plain }: { workspace: AuthWorkspace; plain?: boolean }) {
+  const { t } = useLingui();
+
   return (
     <div
       className={cn(
@@ -48,7 +53,7 @@ function AuthWorkspaceLine({ workspace, plain }: { workspace: AuthWorkspace; pla
       <span>
         <b className="block text-body-sm">{workspace.name}</b>
         <small className="block text-body-sm leading-[1.45] opacity-80">
-          {workspace.note ?? "Your workspace · sign-in managed by its IT"}
+          {workspace.note ?? t`Your workspace · sign-in managed by its IT`}
         </small>
       </span>
     </div>
@@ -76,9 +81,9 @@ function AuthPitchSide({
   imageUrl,
   headline = (
     <>
-      See what the AI found.
+      <Trans>See what the AI found.</Trans>
       <br />
-      Say what you think.
+      <Trans>Say what you think.</Trans>
     </>
   ),
   points = defaultPoints,
@@ -147,13 +152,15 @@ function AuthStepsSide({
   onStepSelect,
   note,
 }: AuthStepsSideProps) {
+  const { t } = useLingui();
+
   return (
     <aside
       data-slot="auth-side"
       className="flex flex-col gap-5 overflow-hidden border-r border-line bg-chrome px-9 py-8 text-fg"
     >
       <AuthBrand />
-      <ol aria-label="Setup steps" className="m-0 grid list-none gap-1 p-0">
+      <ol aria-label={t`Setup steps`} className="m-0 grid list-none gap-1 p-0">
         {steps.map((step, index) => {
           const done = index !== current && index <= reached;
           const can = index !== current && index <= reached && onStepSelect !== undefined;
@@ -166,7 +173,7 @@ function AuthStepsSide({
                 title={
                   index === current || can
                     ? undefined
-                    : "Not reached yet. Use Next or Skip this step to get here."
+                    : t`Not reached yet. Use Next or Skip this step to get here.`
                 }
                 onClick={() => onStepSelect?.(index)}
                 className={cn(
@@ -350,11 +357,13 @@ type PasswordMeterProps = React.ComponentProps<"div"> & {
 };
 
 function PasswordMeter({ strength, label, className, ...props }: PasswordMeterProps) {
+  const { t } = useLingui();
+
   return (
     <div
       data-slot="password-meter"
       role="meter"
-      aria-label="Password strength"
+      aria-label={t`Password strength`}
       aria-valuemin={0}
       aria-valuemax={4}
       aria-valuenow={strength}
@@ -379,6 +388,8 @@ function PasswordMeter({ strength, label, className, ...props }: PasswordMeterPr
 }
 
 function RequirementList({ items }: { items: { text: string; met: boolean }[] }) {
+  const { t } = useLingui();
+
   return (
     <ul className="-mt-1 m-0 grid list-none gap-1.25 p-0 text-body-sm text-fg-dim">
       {items.map((item) => (
@@ -388,7 +399,7 @@ function RequirementList({ items }: { items: { text: string; met: boolean }[] })
             className={item.met ? "text-ok" : undefined}
           />
           {item.text}
-          <span className="sr-only">{item.met ? ", met" : ", not met"}</span>
+          <span className="sr-only">{item.met ? t`, met` : t`, not met`}</span>
         </li>
       ))}
     </ul>
@@ -540,6 +551,8 @@ type PasskeySheetProps = {
 };
 
 function QrCode() {
+  const { t } = useLingui();
+
   const size = 25;
   const finder = (x: number, y: number) =>
     [
@@ -566,7 +579,7 @@ function QrCode() {
     <svg
       viewBox={`0 0 ${size} ${size}`}
       role="img"
-      aria-label="QR code for signing in with a phone"
+      aria-label={t`QR code for signing in with a phone`}
       className="size-30 rounded-md bg-white p-1.5"
     >
       <path d={path} fill="#111" />
@@ -595,11 +608,13 @@ function PasskeySheet({
       )}
     >
       <StatusTag tone="research" className="justify-self-start">
-        The browser's own window · mocked
+        <Trans>The browser's own window · mocked</Trans>
       </StatusTag>
       <div className="flex items-center gap-2 text-caption text-fg-faint">
         <Icon name="key" />
-        <span>parfocal.eu</span>
+        <span>
+          <Trans>parfocal.eu</Trans>
+        </span>
       </div>
       <b className="text-lead font-semibold text-fg">{title}</b>
       {kind === "qr" ? (
@@ -607,10 +622,16 @@ function PasskeySheet({
           <QrCode />
           <div className="grid gap-2">
             <p className="m-0">
-              Scan this with the phone or tablet that has your passkey for parfocal.eu.
+              <Trans>
+                Scan this with the phone or tablet that has your passkey for parfocal.eu.
+              </Trans>
             </p>
-            <p className="m-0">Or plug in your security key and touch it.</p>
-            <span>Waiting for your phone or key…</span>
+            <p className="m-0">
+              <Trans>Or plug in your security key and touch it.</Trans>
+            </p>
+            <span>
+              <Trans>Waiting for your phone or key…</Trans>
+            </span>
           </div>
         </div>
       ) : (
@@ -623,7 +644,9 @@ function PasskeySheet({
           <div className="flex items-center gap-3 text-body-sm leading-[1.45] text-fg-dim">
             <Icon name="key" />
             <span>
-              Touch ID, or your computer's PIN, unlocks the passkey saved on this computer.
+              <Trans>
+                Touch ID, or your computer's PIN, unlocks the passkey saved on this computer.
+              </Trans>
             </span>
           </div>
         </>
@@ -631,22 +654,26 @@ function PasskeySheet({
       <div className="flex items-center gap-2 text-body-sm">
         {kind === "qr" ? (
           onBack ? (
-            <AuthLink onClick={onBack}>Back</AuthLink>
+            <AuthLink onClick={onBack}>
+              <Trans>Back</Trans>
+            </AuthLink>
           ) : null
         ) : onOther ? (
-          <AuthLink onClick={onOther}>Use a phone or security key</AuthLink>
+          <AuthLink onClick={onOther}>
+            <Trans>Use a phone or security key</Trans>
+          </AuthLink>
         ) : null}
         <span className="flex-1" />
         <Button size="sm" onClick={onCancel}>
-          Cancel
+          <Trans>Cancel</Trans>
         </Button>
         {kind === "qr" ? (
           <Button size="sm" variant="primary" onClick={onContinue}>
-            The phone answered
+            <Trans>The phone answered</Trans>
           </Button>
         ) : (
           <Button size="sm" variant="primary" onClick={onContinue}>
-            Continue
+            <Trans>Continue</Trans>
           </Button>
         )}
       </div>
@@ -663,6 +690,8 @@ type LockCardProps = {
 };
 
 function LockCard({ person, minutes, onUnlock, onPasskey, onLogOut }: LockCardProps) {
+  const { t } = useLingui();
+
   const first = person.name.split(" ")[0] ?? person.name;
   return (
     <div
@@ -670,14 +699,14 @@ function LockCard({ person, minutes, onUnlock, onPasskey, onLogOut }: LockCardPr
       className="absolute inset-0 z-25 grid place-items-center bg-[color-mix(in_srgb,var(--page)_55%,transparent)] backdrop-blur-[22px] backdrop-saturate-[.6]"
     >
       <section
-        aria-label="Locked"
+        aria-label={t`Locked`}
         className="flex w-90 flex-col items-center gap-3.5 rounded-xl border border-line bg-chrome p-7 text-center"
       >
         <PersonAvatar person={person} size={56} />
         <div>
           <b className="text-title-sm text-fg">{person.name}</b>
           <div className="text-body-sm text-fg-dim">
-            Locked after {minutes} minutes without input
+            <Trans>Locked after {minutes} minutes without input</Trans>
           </div>
         </div>
         <form
@@ -688,27 +717,32 @@ function LockCard({ person, minutes, onUnlock, onPasskey, onLogOut }: LockCardPr
           }}
         >
           <label className="sr-only" htmlFor="lock-password">
-            Password
+            <Trans>Password</Trans>
           </label>
           <span className="flex h-9 items-center gap-2 rounded-ctl border border-line bg-surf-field px-2.5 focus-within:border-accent focus-within:shadow-[0_0_0_3px_var(--accent-soft)]">
             <Icon name="lock" className="text-fg-faint" />
             <input
               id="lock-password"
               type="password"
-              placeholder="Password"
+              placeholder={t`Password`}
               className="min-w-0 flex-1 border-0 bg-transparent text-body-sm text-fg outline-none"
             />
           </span>
           <Button type="submit" variant="primary" className="w-full">
-            Unlock
+            <Trans>Unlock</Trans>
           </Button>
           <Button type="button" className="w-full" onClick={onPasskey}>
             <Icon name="key" />
-            Unlock with a passkey
+            <Trans>Unlock with a passkey</Trans>
           </Button>
         </form>
         <span className="text-body-sm text-fg-dim">
-          Not {first}? <AuthLink onClick={onLogOut}>Log out</AuthLink>, {first}'s work is saved.
+          <Trans>Not</Trans> {first}?{" "}
+          <AuthLink onClick={onLogOut}>
+            <Trans>Log out</Trans>
+          </AuthLink>
+          , {first}
+          <Trans>'s work is saved.</Trans>
         </span>
       </section>
     </div>

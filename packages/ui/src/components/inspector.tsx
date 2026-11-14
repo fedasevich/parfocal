@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Icon, type IconName } from "@parfocal/ui/components/icon";
 import { Keycap } from "@parfocal/ui/components/keycap";
 import { CategoryTag, ObjectIdTag } from "@parfocal/ui/components/tag";
@@ -86,7 +87,9 @@ function RegionRow({
       {visited ? (
         <span className="inline-flex items-center gap-1 text-ok" data-visited>
           <Icon name="check" />
-          <span className="sr-only">visited</span>
+          <span className="sr-only">
+            <Trans>visited</Trans>
+          </span>
         </span>
       ) : (
         <span />
@@ -178,6 +181,8 @@ function RangeBar({
   className,
   ...props
 }: RangeBarProps) {
+  const { t } = useLingui();
+
   const geometry = sizeScaleGeometry({
     min,
     max,
@@ -191,7 +196,7 @@ function RangeBar({
     <div
       data-slot="range-bar"
       role="img"
-      aria-label={`${point} mm, between ${low} and ${high} mm`}
+      aria-label={t`${point} mm, between ${low} and ${high} mm`}
       className={cn("relative mt-3 h-14", className)}
       {...props}
     >
@@ -245,7 +250,7 @@ function RangeBar({
             className="absolute top-11 -translate-x-1/2 font-mono text-label text-fg-faint"
             style={{ left: `${cut.left}%` }}
           >
-            {cut.mm} mm
+            <Trans>{cut.mm} mm</Trans>
           </span>
         </span>
       ))}
@@ -270,6 +275,8 @@ function StagingHero({
   className,
   ...props
 }: StagingHeroProps) {
+  const { t } = useLingui();
+
   return (
     <div data-slot="staging-hero" className={cn("grid gap-2", className)} {...props}>
       <h3 className="m-0 mt-0.5 flex items-start justify-between gap-2.5 text-title leading-tight font-semibold">
@@ -287,8 +294,8 @@ function StagingHero({
           />
           <span className="text-caption text-fg-dim">
             {count.cells == null
-              ? "Tumor cells not counted yet"
-              : `About ${count.cells} tumor cells, the line is at ${count.line ?? 200}`}
+              ? t`Tumor cells not counted yet`
+              : t`About ${count.cells} tumor cells, the line is at ${count.line ?? 200}`}
           </span>
         </div>
       ) : null}
@@ -299,12 +306,14 @@ function StagingHero({
 type CountBarProps = React.ComponentProps<"div"> & { count: number; line?: number; max?: number };
 
 function CountBar({ count, line = 200, max = 400, className, ...props }: CountBarProps) {
+  const { t } = useLingui();
+
   const geometry = countBarGeometry(count, line, max);
   return (
     <div
       data-slot="count-bar"
       role="img"
-      aria-label={`${count} cells, the line is at ${line}`}
+      aria-label={t`${count} cells, the line is at ${line}`}
       className={cn("relative h-6", className)}
       {...props}
     >
@@ -370,6 +379,8 @@ type ZoneRowProps = React.ComponentProps<"div"> & {
 };
 
 function ZoneRow({ objectId, text, pinned = false, className, ...props }: ZoneRowProps) {
+  const { t } = useLingui();
+
   return (
     <div
       data-slot="zone-row"
@@ -384,7 +395,7 @@ function ZoneRow({ objectId, text, pinned = false, className, ...props }: ZoneRo
       <span className="min-w-0 flex-1 truncate">{text}</span>
       <Icon
         name="target"
-        label={pinned ? "Pinned" : "Pin"}
+        label={pinned ? t`Pinned` : t`Pin`}
         className={pinned ? "text-pin" : "text-fg-faint"}
       />
     </div>
@@ -442,6 +453,8 @@ function Segment({
 }
 
 function NumberLine({ classes, result, className, ...props }: NumberLineProps) {
+  const { t } = useLingui();
+
   const totals = numberLineTotals(classes);
   const max = Math.max(1, ...classes.map(classCount));
   const grand = Math.max(1, totals.total);
@@ -465,7 +478,7 @@ function NumberLine({ classes, result, className, ...props }: NumberLineProps) {
           </span>
           <span
             role="img"
-            aria-label={`${row.name}: ${row.sure} sure, ${row.unsure} unsure`}
+            aria-label={t`${row.name}: ${row.sure} sure, ${row.unsure} unsure`}
             className="flex h-1.5 overflow-hidden rounded-[3px] bg-track"
           >
             <Segment part="sure" count={row.sure} max={max} style={{ background: row.color }} />
@@ -487,8 +500,9 @@ function NumberLine({ classes, result, className, ...props }: NumberLineProps) {
           <Segment part="unsure" count={totals.unsure} max={grand} className={unsureFill} />
         </span>
         <span data-slot="number-line-legend" className="text-caption text-fg-dim">
-          {number(totals.checked)} checked by you · {number(totals.sure)} sure ·{" "}
-          {number(totals.unsure)} unsure of {number(totals.total)}
+          {number(totals.checked)} <Trans>checked by you ·</Trans> {number(totals.sure)}{" "}
+          <Trans>sure ·</Trans> {number(totals.unsure)} <Trans>unsure of</Trans>{" "}
+          {number(totals.total)}
         </span>
       </div>
       {result ? <ResultChip result={result} /> : null}
@@ -513,11 +527,13 @@ function CellCrop({
   className,
   ...props
 }: CellCropProps) {
+  const { t } = useLingui();
+
   return (
     <div
       data-slot="cell-crop"
       role="img"
-      aria-label={`Crop of ${objectId}`}
+      aria-label={t`Crop of ${objectId}`}
       className={cn(
         "relative shrink-0 rounded-md bg-[#111] bg-cover bg-center shadow-[inset_0_0_0_1px_var(--line)]",
         className,

@@ -9,7 +9,7 @@ export default defineConfig({
   catalogs: [
     {
       path: "<rootDir>/src/locales/{locale}",
-      include: ["<rootDir>/src"],
+      include: ["<rootDir>/src", "<rootDir>/../../packages/ui/src"],
       exclude: ["**/fake-api/**", "**/*.gen.ts"],
     },
   ],

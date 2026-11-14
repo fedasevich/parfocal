@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { InlineError } from "@parfocal/ui/components/banner";
 import { BeforeYouList, type Blocker } from "@parfocal/ui/components/before-you-list";
 import { Icon } from "@parfocal/ui/components/icon";
@@ -44,6 +45,8 @@ function QuestionControl({
   question: OpinionQuestion;
   onAnswerChange: AnswerChange;
 }) {
+  const { t } = useLingui();
+
   const change = (value: unknown) => onAnswerChange?.(question.id, String(value));
   const picked = onAnswerChange
     ? { value: question.answer ?? "" }
@@ -99,7 +102,7 @@ function QuestionControl({
     <textarea
       aria-label={question.question}
       rows={2}
-      placeholder="Optional"
+      placeholder={t`Optional`}
       {...(onAnswerChange
         ? { value: question.answer ?? "", onChange: (event) => change(event.target.value) }
         : { defaultValue: question.answer })}
@@ -139,6 +142,8 @@ function SlideDoneCard({
   className,
   ...props
 }: SlideDoneCardProps) {
+  const { t } = useLingui();
+
   const done = counts.open === 0;
   const off = Boolean(lockedReason) || blockers.length > 0;
   const whyId = React.useId();
@@ -153,7 +158,7 @@ function SlideDoneCard({
         : undefined;
   const under = failed ? (
     <InlineError>
-      The review could not be submitted. Nothing was lost, every decision is saved.
+      <Trans>The review could not be submitted. Nothing was lost, every decision is saved.</Trans>
     </InlineError>
   ) : lockedReason ? (
     <span id={reasonId} className="text-center text-body-sm text-fg-dim">
@@ -165,7 +170,7 @@ function SlideDoneCard({
     </span>
   ) : blockers.length ? null : (
     <span className="text-center text-body-sm text-fg-dim">
-      Saved as you go. You can change it until the researcher signs off.
+      <Trans>Saved as you go. You can change it until the researcher signs off.</Trans>
     </span>
   );
   return (
@@ -192,7 +197,7 @@ function SlideDoneCard({
           />
         )}
         <h2 className={cn("m-0 font-semibold", panel ? "text-title-sm" : "text-page-title")}>
-          {done ? `Slide ${slideNumber} is done` : `${counts.open} left on slide ${slideNumber}`}
+          {done ? t`Slide ${slideNumber} is done` : t`${counts.open} left on slide ${slideNumber}`}
         </h2>
         <p className="m-0 text-body-sm leading-[1.45] text-fg-dim">{doneLine(counts)}</p>
       </div>
@@ -211,15 +216,22 @@ function SlideDoneCard({
                 {index + 1} · {question.question}
               </b>
               {question.required ? (
-                <span className="shrink-0 text-caption text-fg-dim">Required</span>
+                <span className="shrink-0 text-caption text-fg-dim">
+                  <Trans>Required</Trans>
+                </span>
               ) : null}
             </div>
             <QuestionControl question={question} onAnswerChange={onAnswerChange} />
           </div>
         ))}
       </div>
-      <BeforeYouList id={listId} title="Before you submit" blockers={blockers} />
-      <BeforeYouList data-slot="unsure-list" title="Still not sure" blockers={unsure} showSingle />
+      <BeforeYouList id={listId} title={t`Before you submit`} blockers={blockers} />
+      <BeforeYouList
+        data-slot="unsure-list"
+        title={t`Still not sure`}
+        blockers={unsure}
+        showSingle
+      />
       {warning ? (
         <InlineError tone="warn" role="status" data-slot="submit-warning">
           {warning}
@@ -237,7 +249,7 @@ function SlideDoneCard({
           )}
           data-variant="primary"
         >
-          {failed ? "Try again" : submitLabel}
+          {failed ? t`Try again` : submitLabel}
           <Keycap keys="↵" />
         </button>
         {under}

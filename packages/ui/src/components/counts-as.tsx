@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import type { DecisionStyle } from "@parfocal/ui/components/decision-buttons";
 import { NumberStepper } from "@parfocal/ui/components/number-stepper";
 import { StackedBar } from "@parfocal/ui/components/progress-meter";
@@ -24,13 +25,17 @@ function CountsAsLine({
   className,
   ...props
 }: CountsAsLineProps) {
+  const { t } = useLingui();
+
   return (
     <div data-slot="counts-as" className={cn("grid gap-1.5", className)} {...props}>
       {decisionStyle === "certainty" ? (
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 text-body-sm leading-[1.45] text-fg">
-          <span>Counts as agree from</span>
+          <span>
+            <Trans>Counts as agree from</Trans>
+          </span>
           <NumberStepper
-            label="Agree starts at"
+            label={t`Agree starts at`}
             value={agreeFrom}
             min={Math.max(3, disagreeTo + 1)}
             max={5}
@@ -38,9 +43,11 @@ function CountsAsLine({
               onRangeChange?.({ agreeFrom: value ?? agreeFrom, disagreeTo })
             }
           />
-          <span>up, and as disagree from</span>
+          <span>
+            <Trans>up, and as disagree from</Trans>
+          </span>
           <NumberStepper
-            label="Disagree ends at"
+            label={t`Disagree ends at`}
             value={disagreeTo}
             min={1}
             max={Math.min(3, agreeFrom - 1)}
@@ -48,7 +55,9 @@ function CountsAsLine({
               onRangeChange?.({ agreeFrom, disagreeTo: value ?? disagreeTo })
             }
           />
-          <span>down.</span>
+          <span>
+            <Trans>down.</Trans>
+          </span>
         </div>
       ) : null}
       <p className="m-0 text-body-sm leading-[1.45] text-fg-dim">

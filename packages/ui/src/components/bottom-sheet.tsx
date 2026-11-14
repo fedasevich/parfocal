@@ -1,3 +1,4 @@
+import { useLingui } from "@lingui/react/macro";
 import {
   dragHeight,
   isNextCellSwipe,
@@ -31,6 +32,8 @@ function BottomSheet({
   pixels = defaultPixels,
   children,
 }: BottomSheetProps) {
+  const { t } = useLingui();
+
   const [livePx, setLivePx] = useState<number | null>(null);
   const handlePress = useRef<Press | null>(null);
   const bodyPress = useRef<Press | null>(null);
@@ -97,7 +100,7 @@ function BottomSheet({
     >
       <button
         type="button"
-        aria-label="Resize the panel"
+        aria-label={t`Resize the panel`}
         data-slot="bottom-sheet-handle"
         className="flex h-11 shrink-0 cursor-grab touch-none items-center justify-center"
         onPointerDown={startDrag}

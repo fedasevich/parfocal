@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Icon, type IconName } from "@parfocal/ui/components/icon";
 import { ProgressBar, type ProgressTone } from "@parfocal/ui/components/progress-meter";
 import { cn } from "@parfocal/ui/lib/utils";
@@ -77,14 +78,16 @@ type JobsButtonProps = Omit<React.ComponentProps<"button">, "children"> & {
 };
 
 function JobsButton({ running, percent, open = false, className, ...props }: JobsButtonProps) {
+  const { t } = useLingui();
+
   return (
     <button
       type="button"
       data-slot="jobs-button"
-      aria-label={`Jobs, ${running} running`}
+      aria-label={t`Jobs, ${running} running`}
       aria-haspopup="dialog"
       aria-expanded={open}
-      title={`Jobs: ${running} running. Uploads and model runs`}
+      title={t`Jobs: ${running} running. Uploads and model runs`}
       className={cn(
         "grid size-8 cursor-pointer place-items-center rounded-ctl border border-transparent bg-transparent p-0 hover:bg-[color-mix(in_srgb,var(--fg)_6%,transparent)] focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent",
         open && "bg-[color-mix(in_srgb,var(--fg)_8%,transparent)]",
@@ -97,7 +100,7 @@ function JobsButton({ running, percent, open = false, className, ...props }: Job
         size={26}
         stroke={3}
         text={String(running)}
-        label={`${running} running, ${percent}%`}
+        label={t`${running} running, ${percent}%`}
         className="[&_b]:text-label"
       />
     </button>
@@ -127,6 +130,8 @@ function JobRow({
   className,
   ...props
 }: JobRowProps) {
+  const { t } = useLingui();
+
   const label = typeof title === "string" ? title : undefined;
   return (
     <div
@@ -142,7 +147,7 @@ function JobRow({
         <div className="flex min-w-0 items-baseline justify-between gap-2.5">
           <button
             type="button"
-            title="Show every step"
+            title={t`Show every step`}
             onClick={onOpen}
             className="min-w-0 cursor-pointer truncate border-0 bg-transparent p-0 text-left text-body-sm font-semibold text-fg outline-none after:absolute after:inset-0 after:content-['']"
           >
@@ -187,23 +192,29 @@ function JobsTray({ running, finished, className, ...props }: JobsTrayProps) {
   return (
     <div data-slot="jobs-tray" className={cn("grid w-95 pt-1.5", className)} {...props}>
       <div className="flex items-baseline gap-2.5 px-4 pt-2.5 pb-1.5">
-        <b className="text-body text-fg">Jobs</b>
+        <b className="text-body text-fg">
+          <Trans>Jobs</Trans>
+        </b>
         <span className="text-body-sm text-fg-dim">
-          Uploads and model runs · click one for its steps
+          <Trans>Uploads and model runs · click one for its steps</Trans>
         </span>
       </div>
       <section className="grid gap-0.5 px-4 pt-2 pb-2.5">
         <span className="pt-1 pb-1.5 text-caption font-semibold text-fg-dim">
-          Running · {running.length}
+          <Trans>Running · {running.length}</Trans>
         </span>
         {running.length > 0 ? (
           running.map((row, index) => <React.Fragment key={index}>{row}</React.Fragment>)
         ) : (
-          <span className="text-body-sm text-fg-dim">Nothing running</span>
+          <span className="text-body-sm text-fg-dim">
+            <Trans>Nothing running</Trans>
+          </span>
         )}
       </section>
       <section className="grid gap-0.5 border-t border-line px-4 pt-2 pb-2.5">
-        <span className="pt-1 pb-1.5 text-caption font-semibold text-fg-dim">Finished</span>
+        <span className="pt-1 pb-1.5 text-caption font-semibold text-fg-dim">
+          <Trans>Finished</Trans>
+        </span>
         {finished.map((row, index) => (
           <React.Fragment key={index}>{row}</React.Fragment>
         ))}
@@ -211,7 +222,9 @@ function JobsTray({ running, finished, className, ...props }: JobsTrayProps) {
       <div className="flex items-start gap-2 rounded-b-zone border-t border-line bg-surf-section px-4 py-3 text-body-sm leading-[1.45] text-fg-dim">
         <Icon name="bell" className="mt-0.5" />
         <span>
-          Jobs keep going when you close the tab. You get a notification when one finishes.
+          <Trans>
+            Jobs keep going when you close the tab. You get a notification when one finishes.
+          </Trans>
         </span>
       </div>
     </div>

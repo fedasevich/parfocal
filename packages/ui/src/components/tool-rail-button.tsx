@@ -1,4 +1,5 @@
 import { Toggle as TogglePrimitive } from "@base-ui/react/toggle";
+import { useLingui } from "@lingui/react/macro";
 import { Icon, type IconName } from "@parfocal/ui/components/icon";
 import { useKeyLabel } from "@parfocal/ui/components/keycap";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@parfocal/ui/components/tooltip";
@@ -70,13 +71,15 @@ function ToolRail({
   layout = "rail",
   ...props
 }: React.ComponentProps<"div"> & { layout?: "rail" | "dock" }) {
+  const { t } = useLingui();
+
   return (
     <div
       data-slot="tool-rail"
       data-layout={layout}
       role="toolbar"
       aria-orientation={layout === "dock" ? "horizontal" : "vertical"}
-      aria-label="Tools"
+      aria-label={t`Tools`}
       className={cn(
         layout === "dock"
           ? "absolute bottom-3.5 left-1/2 z-6 flex -translate-x-1/2 items-center gap-0.5 rounded-zone border border-line bg-chrome p-1.25 shadow-pop"

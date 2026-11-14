@@ -24,6 +24,8 @@
   },
   "dependencies": {
     "@base-ui/react": "1.9.0",
+    "@lingui/core": "6.11.0",
+    "@lingui/react": "6.11.0",
     "@parfocal/tokens": "workspace:*",
     "@xstate/react": "6.1.0",
     "class-variance-authority": "0.7.1",
@@ -37,6 +39,10 @@
   "devDependencies": {
     "@axe-core/playwright": "4.14.0",
     "@babel/core": "8.0.10",
+    "@lingui/babel-plugin-lingui-macro": "6.11.0",
+    "@lingui/cli": "6.11.0",
+    "@lingui/format-po": "6.11.0",
+    "@lingui/vite-plugin": "6.11.0",
     "@parfocal/api-client": "workspace:*",
     "@parfocal/typescript-config": "workspace:*",
     "@playwright/test": "1.64.0",

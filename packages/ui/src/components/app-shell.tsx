@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import { Icon, type IconName } from "@parfocal/ui/components/icon";
 import { Keycap } from "@parfocal/ui/components/keycap";
@@ -40,7 +41,9 @@ function Brand({
   const mark = (
     <>
       <Icon name="parfocal" size="md" className="text-accent" />
-      <b className="text-body font-semibold text-fg">Parfocal</b>
+      <b className="text-body font-semibold text-fg">
+        <Trans>Parfocal</Trans>
+      </b>
     </>
   );
   return (
@@ -104,6 +107,8 @@ function TopBar({
   className,
   ...props
 }: TopBarProps) {
+  const { t } = useLingui();
+
   return (
     <header
       data-slot="top-bar"
@@ -127,22 +132,24 @@ function TopBar({
         className="flex w-105 cursor-pointer items-center gap-2 rounded-ctl border border-line-strong bg-transparent px-2.5 py-1.5 text-left text-body-sm text-fg-faint"
       >
         <Icon name="search" />
-        <span className="flex-1 truncate">Search projects, slides, IDs like T2·C145</span>
+        <span className="flex-1 truncate">
+          <Trans>Search projects, slides, IDs like T2·C145</Trans>
+        </span>
         <Keycap keys="⌘K" />
       </button>
       <span className="flex-1" />
       <Button variant="ghost" onClick={onNewProject}>
         <Icon name="folder" />
-        New project
+        <Trans>New project</Trans>
       </Button>
       <Button variant="ghost" onClick={onUpload}>
         <Icon name="upload" />
-        Upload
+        <Trans>Upload</Trans>
       </Button>
       {jobsSlot !== undefined ? (
         jobsSlot
       ) : jobs > 0 ? (
-        <Button variant="ghost" aria-label={`${jobs} jobs running`}>
+        <Button variant="ghost" aria-label={t`${jobs} jobs running`}>
           <Icon name="clock" />
           {jobs}
         </Button>
@@ -151,7 +158,7 @@ function TopBar({
         bellSlot
       ) : (
         <span className="relative">
-          <Button variant="ghost" size="icon" aria-label={`Notifications, ${unread} unread`}>
+          <Button variant="ghost" size="icon" aria-label={t`Notifications, ${unread} unread`}>
             <Icon name="bell" />
           </Button>
           {unread > 0 ? (
@@ -173,7 +180,9 @@ function TopBar({
           className="cursor-pointer rounded-full border-0 bg-transparent p-0"
         >
           <PersonAvatar person={user} size={28} presence={presence} />
-          <span className="sr-only">Account menu</span>
+          <span className="sr-only">
+            <Trans>Account menu</Trans>
+          </span>
         </button>
       )}
     </header>
@@ -199,10 +208,12 @@ type SidebarProps = React.ComponentProps<"nav"> & {
 };
 
 function Sidebar({ sections, active, renderLink = anchorLink, className, ...props }: SidebarProps) {
+  const { t } = useLingui();
+
   return (
     <nav
       data-slot="sidebar"
-      aria-label="Main"
+      aria-label={t`Main`}
       className={cn("flex w-60 flex-col gap-0.5 overflow-hidden px-3 py-4.5", className)}
       {...props}
     >

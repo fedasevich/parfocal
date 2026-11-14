@@ -1,3 +1,4 @@
+import { Trans } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import { Icon } from "@parfocal/ui/components/icon";
 import { cn } from "@parfocal/ui/lib/utils";
@@ -57,7 +58,7 @@ function IngestFailure({
         <p className="m-0 leading-[1.45] text-fg-dim">{copy.next}</p>
         {failureClass === "transient" && onRetry ? (
           <Button size="sm" className="mt-1 w-fit" onClick={onRetry}>
-            Try again
+            <Trans>Try again</Trans>
           </Button>
         ) : null}
         {failureClass === "permanent" && supportHref ? (
@@ -65,7 +66,7 @@ function IngestFailure({
             href={supportHref}
             className="mt-1 w-fit font-semibold text-accent hover:underline focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent"
           >
-            Contact support
+            <Trans>Contact support</Trans>
           </a>
         ) : null}
       </div>

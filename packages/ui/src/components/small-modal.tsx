@@ -1,4 +1,5 @@
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
+import { useLingui } from "@lingui/react/macro";
 import {
   BeforeYouList,
   type Blocker,
@@ -58,6 +59,8 @@ function SmallModal({
   children,
   ...props
 }: SmallModalProps) {
+  const { t } = useLingui();
+
   const blocked = blockers.length > 0;
   const off = primaryDisabled || blocked || primaryBusy;
   const reason = blockerReason(blockers);
@@ -111,7 +114,7 @@ function SmallModal({
             </div>
             <DialogPrimitive.Close
               render={<Button variant="ghost" size="icon" className="-mt-1.5 -mr-2" />}
-              aria-label="Close"
+              aria-label={t`Close`}
             >
               <Icon name="close" />
             </DialogPrimitive.Close>

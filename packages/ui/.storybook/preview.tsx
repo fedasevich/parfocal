@@ -5,6 +5,7 @@ import { withThemeByDataAttribute } from "@storybook/addon-themes";
 import type { Preview } from "@storybook/react-vite";
 import { mswLoader } from "msw-storybook-addon/csf3";
 import { TooltipProvider } from "../src/components/tooltip.tsx";
+import { StoryI18n } from "./story-i18n.tsx";
 
 const preview: Preview = {
   loaders: [mswLoader(() => startFakeWorker(fakeApiHandlers("all")))],
@@ -15,9 +16,11 @@ const preview: Preview = {
       attributeName: "data-theme",
     }),
     (Story) => (
-      <TooltipProvider>
-        <Story />
-      </TooltipProvider>
+      <StoryI18n>
+        <TooltipProvider>
+          <Story />
+        </TooltipProvider>
+      </StoryI18n>
     ),
   ],
   parameters: {

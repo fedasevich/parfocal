@@ -1,3 +1,4 @@
+import { useLingui } from "@lingui/react/macro";
 import { Icon, type IconName } from "@parfocal/ui/components/icon";
 import { Keycap } from "@parfocal/ui/components/keycap";
 import { type AreaCall, areaCalls } from "@parfocal/ui/lib/area-call";
@@ -38,6 +39,8 @@ export function AreaCallButtons({
   enterForTumor = true,
   className,
 }: AreaCallProps) {
+  const { t } = useLingui();
+
   useEffect(() => {
     if (!enterForTumor || disabled) return;
     const onKey = (event: KeyboardEvent) => {
@@ -52,7 +55,7 @@ export function AreaCallButtons({
     <div
       data-slot="area-call"
       role="group"
-      aria-label={`Your call on ${area}`}
+      aria-label={t`Your call on ${area}`}
       className={cn("grid grid-cols-3 gap-2", className)}
     >
       {areaCalls.map(({ call, label, key }) => (

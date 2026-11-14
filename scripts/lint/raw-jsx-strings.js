@@ -1,12 +1,3 @@
-import { readFileSync } from "node:fs";
-import { relative, sep } from "node:path";
-import { fileURLToPath } from "node:url";
-
-const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
-const baseline = new Set(
-  JSON.parse(readFileSync(new URL("./raw-jsx-strings-baseline.json", import.meta.url), "utf8")),
-);
-
 const textProps = new Set([
   "alt",
   "aria-description",
@@ -51,14 +42,9 @@ function insideTranslation(node) {
   return false;
 }
 
-function repoPath(filename) {
-  return relative(repoRoot, filename).split(sep).join("/");
-}
-
 const rule = {
   meta: { type: "problem", schema: [] },
   create(context) {
-    if (baseline.has(repoPath(context.filename))) return {};
     const report = (node) => context.report({ node, message });
     return {
       JSXText(node) {

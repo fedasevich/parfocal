@@ -1,3 +1,4 @@
+import { Trans } from "@lingui/react/macro";
 import { Switch } from "@parfocal/ui/components/switch";
 import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
@@ -67,7 +68,9 @@ function StorageBar({ parts, totalTb, size = "md", foot, className, ...props }: 
         >
           {tb(used)}
         </b>
-        <span>of {tb(totalTb)} used</span>
+        <span>
+          <Trans>of</Trans> {tb(totalTb)} <Trans>used</Trans>
+        </span>
       </div>
       <div
         role="img"

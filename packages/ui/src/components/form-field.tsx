@@ -1,5 +1,6 @@
 import { Field as FieldPrimitive } from "@base-ui/react/field";
 import { Fieldset as FieldsetPrimitive } from "@base-ui/react/fieldset";
+import { Trans } from "@lingui/react/macro";
 import { Checkbox } from "@parfocal/ui/components/checkbox";
 import { Icon } from "@parfocal/ui/components/icon";
 import { RadioGroup } from "@parfocal/ui/components/radio-group";
@@ -81,9 +82,17 @@ function FormField({
       >
         <span>
           {label}
-          {optional ? <span className="ml-1.5 font-normal text-fg-dim">Optional</span> : null}
+          {optional ? (
+            <span className="ml-1.5 font-normal text-fg-dim">
+              <Trans>Optional</Trans>
+            </span>
+          ) : null}
         </span>
-        {required ? <span className="text-caption font-normal text-fg-dim">Required</span> : null}
+        {required ? (
+          <span className="text-caption font-normal text-fg-dim">
+            <Trans>Required</Trans>
+          </span>
+        ) : null}
       </FieldPrimitive.Label>
       {children}
       <FieldFooter error={error} warning={warning} help={help} count={count} />
@@ -166,7 +175,11 @@ function CheckboxField({
         />
         <span className="group-data-disabled/field:opacity-45">
           {label}
-          {required ? <span className="ml-1.5 text-caption text-fg-dim">Required</span> : null}
+          {required ? (
+            <span className="ml-1.5 text-caption text-fg-dim">
+              <Trans>Required</Trans>
+            </span>
+          ) : null}
         </span>
       </FieldPrimitive.Label>
       <div className="pl-6.5">
@@ -225,7 +238,11 @@ function RadioField({
       >
         <FieldsetPrimitive.Legend className="mb-1 flex w-full items-baseline justify-between gap-3 text-body-sm font-semibold text-fg">
           <span>{legend}</span>
-          {required ? <span className="text-caption font-normal text-fg-dim">Required</span> : null}
+          {required ? (
+            <span className="text-caption font-normal text-fg-dim">
+              <Trans>Required</Trans>
+            </span>
+          ) : null}
         </FieldsetPrimitive.Legend>
         {children}
       </FieldsetPrimitive.Root>

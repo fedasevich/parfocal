@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Input } from "@parfocal/ui/components/input";
@@ -58,22 +59,26 @@ type DepositTableProps = React.ComponentProps<"div"> & {
 };
 
 function DepositSource({ deposit, largest }: { deposit: Deposit; largest: boolean }) {
+  const { t } = useLingui();
+
   return (
     <span className="grid min-w-0 gap-0.5 pt-1">
       <b className="font-semibold text-fg">{deposit.slide}</b>
       <small className="text-caption text-fg-dim">
-        {deposit.node === undefined ? "" : `Node ${deposit.node} · `}
+        {deposit.node === undefined ? "" : t`Node ${deposit.node} · `}
         {deposit.hand || !deposit.objectId ? (
-          "measured by hand"
+          t`measured by hand`
         ) : (
           <>
-            object <span className="font-mono">{deposit.objectId}</span>
+            <Trans>object</Trans> <span className="font-mono">{deposit.objectId}</span>
           </>
         )}
       </small>
       {largest ? (
         <span className="mt-1">
-          <StatusTag tone="accent">Largest, sets the category</StatusTag>
+          <StatusTag tone="accent">
+            <Trans>Largest, sets the category</Trans>
+          </StatusTag>
         </span>
       ) : null}
     </span>
@@ -94,25 +99,37 @@ function DepositTable({
   className,
   ...props
 }: DepositTableProps) {
+  const { t } = useLingui();
+
   const largest = largestDeposit(deposits);
   return (
     <div data-slot="deposit-table" className={cn("grid gap-2", className)} {...props}>
       {deposits.length === 0 ? (
         <p className="m-0 text-body-sm text-fg-dim">
-          No deposit yet. Add one from an object on a slide, or measure one by hand.
+          <Trans>No deposit yet. Add one from an object on a slide, or measure one by hand.</Trans>
         </p>
       ) : (
         <Table className="leading-[1.45]">
           <TableHeader>
             <TableRow className="border-b-0">
               <TableHead className="w-12">
-                <span className="sr-only">Deposit</span>
+                <span className="sr-only">
+                  <Trans>Deposit</Trans>
+                </span>
               </TableHead>
-              <TableHead>Slide and source</TableHead>
-              <TableHead className="w-44">Size</TableHead>
-              <TableHead>Note</TableHead>
+              <TableHead>
+                <Trans>Slide and source</Trans>
+              </TableHead>
+              <TableHead className="w-44">
+                <Trans>Size</Trans>
+              </TableHead>
+              <TableHead>
+                <Trans>Note</Trans>
+              </TableHead>
               <TableHead className="w-10">
-                <span className="sr-only">Remove</span>
+                <span className="sr-only">
+                  <Trans>Remove</Trans>
+                </span>
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -127,7 +144,9 @@ function DepositTable({
                     >
                       <span className="pt-1.5 font-mono font-semibold">{deposit.id}</span>
                       <span className="grid min-w-0 gap-0.5 pt-1">
-                        <b className="font-semibold">{deposit.id} removed</b>
+                        <b className="font-semibold">
+                          <Trans>{deposit.id} removed</Trans>
+                        </b>
                         <small className="text-caption">
                           {deposit.removedText ??
                             `${deposit.sizeMm === undefined ? "no size" : `${formatMm(deposit.sizeMm)} mm`}, ${deposit.objectId ? `${deposit.objectId} on` : "by hand on"} ${deposit.slide}`}
@@ -135,7 +154,7 @@ function DepositTable({
                       </span>
                       <Button size="sm" onClick={() => onUndo?.(deposit.id)}>
                         <Icon name="undo" />
-                        Undo
+                        <Trans>Undo</Trans>
                       </Button>
                     </div>
                   </TableCell>
@@ -160,7 +179,7 @@ function DepositTable({
                           <Input
                             id={inputId(deposit.id)}
                             inputMode="decimal"
-                            aria-label={`Size of ${deposit.id} in mm`}
+                            aria-label={t`Size of ${deposit.id} in mm`}
                             aria-invalid={errors[deposit.id] ? true : undefined}
                             value={
                               deposit.size ??
@@ -170,14 +189,18 @@ function DepositTable({
                             onBlur={() => onSizeBlur?.(deposit.id)}
                             className="w-22 text-center font-mono tabular-nums"
                           />
-                          <span className="text-body-sm text-fg-dim">mm</span>
+                          <span className="text-body-sm text-fg-dim">
+                            <Trans>mm</Trans>
+                          </span>
                         </span>
                       ) : (
                         <span className="pt-1 font-mono tabular-nums">
                           {deposit.sizeMm === undefined ? (
-                            <span className="text-warn">No size yet</span>
+                            <span className="text-warn">
+                              <Trans>No size yet</Trans>
+                            </span>
                           ) : (
-                            `${formatMm(deposit.sizeMm)} mm`
+                            t`${formatMm(deposit.sizeMm)} mm`
                           )}
                         </span>
                       )}
@@ -194,8 +217,8 @@ function DepositTable({
                   <TableCell className="whitespace-normal">
                     {onNoteChange ? (
                       <Input
-                        aria-label={`Note on ${deposit.id}`}
-                        placeholder="Note, optional"
+                        aria-label={t`Note on ${deposit.id}`}
+                        placeholder={t`Note, optional`}
                         maxLength={120}
                         value={deposit.note ?? ""}
                         onChange={(event) => onNoteChange(deposit.id, event.target.value)}
@@ -209,8 +232,8 @@ function DepositTable({
                       size="icon-sm"
                       variant="ghost"
                       className="mt-1"
-                      title={`Remove ${deposit.id}`}
-                      aria-label={`Remove ${deposit.id}`}
+                      title={t`Remove ${deposit.id}`}
+                      aria-label={t`Remove ${deposit.id}`}
                       onClick={() => onRemove?.(deposit.id)}
                     >
                       <Icon name="close" />
@@ -224,7 +247,9 @@ function DepositTable({
       )}
       {showSuggestion && largest?.sizeMm !== undefined ? (
         <p className="m-0 inline-flex items-center gap-2 text-body-sm text-fg-dim">
-          The largest deposit, {formatMm(largest.sizeMm)} mm on {largest.slide}, suggests
+          <Trans>The largest deposit,</Trans> {formatMm(largest.sizeMm)} <Trans>mm on</Trans>{" "}
+          {largest.slide}
+          <Trans>, suggests</Trans>
           <CategoryTag>{stagingCategory(largest.sizeMm)}</CategoryTag>
         </p>
       ) : null}
@@ -280,16 +305,32 @@ function CoSignColumns({
             <span className="flex flex-wrap items-center gap-1.5 pt-1 text-fg-dim">
               {row.icon ? <Icon name={row.icon} /> : null}
               <span>{row.label}</span>
-              {changed ? <b className="text-caption font-semibold text-accent">changed</b> : null}
+              {changed ? (
+                <b className="text-caption font-semibold text-accent">
+                  <Trans>changed</Trans>
+                </b>
+              ) : null}
             </span>
             <span className="grid pt-1 text-fg">
-              {row.author || <span className="text-fg-faint">None</span>}
-              {row.ai ? <small className="text-caption text-fg-faint">AI {row.ai}</small> : null}
+              {row.author || (
+                <span className="text-fg-faint">
+                  <Trans>None</Trans>
+                </span>
+              )}
+              {row.ai ? (
+                <small className="text-caption text-fg-faint">
+                  <Trans>AI {row.ai}</Trans>
+                </small>
+              ) : null}
             </span>
             <div className="min-w-0">
               {typeof row.coSigner === "string" ? (
                 <span className="block pt-1">
-                  {row.coSigner || <span className="text-fg-faint">None</span>}
+                  {row.coSigner || (
+                    <span className="text-fg-faint">
+                      <Trans>None</Trans>
+                    </span>
+                  )}
                 </span>
               ) : (
                 row.coSigner
@@ -305,6 +346,8 @@ function CoSignColumns({
 type ReportDocumentProps = React.ComponentProps<"article"> & { model: ReportDocumentModel };
 
 function ReportDocument({ model, className, ...props }: ReportDocumentProps) {
+  const { t } = useLingui();
+
   const heading = (title: string) => (
     <h4 className="m-0 mt-3 border-b border-[#bbb] pb-0.5 text-[10px] font-bold tracking-[0.06em] text-[#333] uppercase">
       {title}
@@ -314,7 +357,7 @@ function ReportDocument({ model, className, ...props }: ReportDocumentProps) {
     <article
       data-slot="report-document"
       data-status={model.status}
-      aria-label="Report"
+      aria-label={t`Report`}
       className={cn(
         "relative grid w-full max-w-[595px] content-start gap-1.5 overflow-hidden rounded-sm bg-white px-10 py-9 text-[11px] leading-[1.5] text-[#111] shadow-pop",
         className,
@@ -326,7 +369,7 @@ function ReportDocument({ model, className, ...props }: ReportDocumentProps) {
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 grid place-items-center text-[88px] font-bold text-[#000]/5 not-italic -rotate-30"
         >
-          DRAFT
+          <Trans>DRAFT</Trans>
         </i>
       ) : null}
       <div className="flex justify-between gap-4 border-b-[1.5px] border-[#222] pb-2">
@@ -337,14 +380,14 @@ function ReportDocument({ model, className, ...props }: ReportDocumentProps) {
         </div>
         <div className="grid justify-items-end text-right">
           <b className="text-[12px]">
-            {model.status === "amended" ? "AMENDED REPORT" : "SURGICAL PATHOLOGY REPORT"}
+            {model.status === "amended" ? t`AMENDED REPORT` : t`SURGICAL PATHOLOGY REPORT`}
           </b>
           <span className="text-[9px] text-[#555]">
             {model.status === "draft"
-              ? "Draft, not signed"
+              ? t`Draft, not signed`
               : model.status === "amended"
-                ? "Version 2, replaces version 1"
-                : "Final report, version 1"}
+                ? t`Version 2, replaces version 1`
+                : t`Final report, version 1`}
           </span>
         </div>
       </div>
@@ -359,12 +402,14 @@ function ReportDocument({ model, className, ...props }: ReportDocumentProps) {
       {model.amendment ? (
         <div className="grid gap-0.5 rounded-[3px] border border-[#c9a227] bg-[#fdf6dc] px-2.5 py-2">
           <b>{model.amendment.title}</b>
-          <p className="m-0">Reason: {model.amendment.reason}</p>
+          <p className="m-0">
+            <Trans>Reason: {model.amendment.reason}</Trans>
+          </p>
           {model.amendment.changes.map(([label, before, after]) => (
             <p key={label} className="m-0">
               <span className="text-[#555]">{label}:</span>{" "}
               {before === null ? (
-                "rewritten"
+                t`rewritten`
               ) : (
                 <>
                   <s>{before}</s> → <b>{after}</b>
@@ -409,23 +454,29 @@ function ReportDocument({ model, className, ...props }: ReportDocumentProps) {
         {model.sign ? (
           <>
             <b>{model.sign.by}</b>
-            <span>on {model.sign.at}</span>
+            <span>
+              <Trans>on {model.sign.at}</Trans>
+            </span>
             <span className="text-[9px] text-[#555]">
-              I have reviewed the whole-slide images and rendered this diagnosis.
+              <Trans>I have reviewed the whole-slide images and rendered this diagnosis.</Trans>
             </span>
           </>
         ) : (
           <>
-            <b>Not signed</b>
+            <b>
+              <Trans>Not signed</Trans>
+            </b>
             <span className="text-[9px] text-[#555]">
-              Draft. Not for clinical use until it is signed.
+              <Trans>Draft. Not for clinical use until it is signed.</Trans>
             </span>
           </>
         )}
       </div>
       <div className="mt-3 flex justify-between text-[8px] text-[#6b6b6b]">
         <span>{model.lab.footer}</span>
-        <span>Page 1 of 1</span>
+        <span>
+          <Trans>Page 1 of 1</Trans>
+        </span>
       </div>
     </article>
   );

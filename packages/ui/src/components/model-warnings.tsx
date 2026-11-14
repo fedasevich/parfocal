@@ -1,3 +1,4 @@
+import { useLingui } from "@lingui/react/macro";
 import { WarnBar } from "@parfocal/ui/components/inspector";
 import { Zone } from "@parfocal/ui/components/zone";
 import type { ModelWarning } from "@parfocal/ui/lib/model-warnings";
@@ -9,12 +10,14 @@ type ModelWarningsBlockProps = Omit<React.ComponentProps<"section">, "title"> & 
 };
 
 function ModelWarningsBlock({ warnings, enabled = true, ...props }: ModelWarningsBlockProps) {
+  const { t } = useLingui();
+
   if (!enabled || warnings.length === 0) return null;
   return (
     <Zone
       data-slot="model-warnings"
-      aria-label="Model warnings"
-      title="Model warnings"
+      aria-label={t`Model warnings`}
+      title={t`Model warnings`}
       end={
         warnings.length > 1 ? (
           <span className="font-mono text-caption text-fg-dim">{warnings.length}</span>

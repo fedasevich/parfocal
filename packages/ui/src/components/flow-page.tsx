@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import type { LinkRenderer } from "@parfocal/ui/components/app-shell";
 import {
   BeforeYouList,
@@ -26,9 +27,11 @@ function Breadcrumbs({
   renderLink?: LinkRenderer | undefined;
   start?: React.ReactNode;
 }) {
+  const { t } = useLingui();
+
   return (
     <nav
-      aria-label="Breadcrumb"
+      aria-label={t`Breadcrumb`}
       className={cn(
         "flex min-h-6 flex-wrap items-center gap-1.5 text-body-sm text-fg-faint",
         className,
@@ -108,12 +111,14 @@ function Stepper({
   className,
   ...props
 }: StepperProps) {
+  const { t } = useLingui();
+
   const id = React.useId();
   const furthest = Math.max(reached, current);
   return (
     <ol
       data-slot="stepper"
-      aria-label="Steps"
+      aria-label={t`Steps`}
       onKeyDown={moveStepFocus}
       className={cn(
         "m-0 flex list-none flex-wrap items-center gap-2.5 p-0 text-body-sm text-fg-dim",
@@ -440,6 +445,8 @@ type SummaryRowsProps = React.ComponentProps<"dl"> & {
 };
 
 function SummaryRows({ rows, className, ...props }: SummaryRowsProps) {
+  const { t } = useLingui();
+
   return (
     <dl
       data-slot="summary-rows"
@@ -457,10 +464,10 @@ function SummaryRows({ rows, className, ...props }: SummaryRowsProps) {
             <button
               type="button"
               onClick={row.onChange}
-              aria-label={`Change ${row.label}`}
+              aria-label={t`Change ${row.label}`}
               className="cursor-pointer border-0 bg-transparent p-0 text-body-sm font-medium text-accent hover:underline"
             >
-              Change
+              <Trans>Change</Trans>
             </button>
           </dd>
         </div>

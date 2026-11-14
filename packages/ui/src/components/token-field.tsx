@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Icon, type IconName } from "@parfocal/ui/components/icon";
 import { PersonAvatar, type PersonInfo } from "@parfocal/ui/components/person";
 import { cn } from "@parfocal/ui/lib/utils";
@@ -46,6 +47,8 @@ function TokenLead({ item }: { item: TokenItem }) {
 const hasLead = (item: TokenItem) => Boolean(item.person || item.thumbnail || item.icon);
 
 function Token({ item, onRemove, className, ...props }: TokenProps) {
+  const { t } = useLingui();
+
   return (
     <span
       data-slot="token"
@@ -61,7 +64,7 @@ function Token({ item, onRemove, className, ...props }: TokenProps) {
         <button
           type="button"
           onClick={onRemove}
-          aria-label={`Remove ${item.name}`}
+          aria-label={t`Remove ${item.name}`}
           className="grid size-5 cursor-pointer place-items-center rounded-sm border-0 bg-transparent p-0 text-fg-faint hover:bg-[color-mix(in_srgb,var(--fg)_10%,transparent)] hover:text-fg"
         >
           <Icon name="close" size="xs" />
@@ -108,6 +111,8 @@ function TokenField({
   className,
   ...props
 }: TokenFieldProps) {
+  const { t } = useLingui();
+
   const [query, setQuery] = useState(defaultQuery);
   const [open, setOpen] = useState(defaultOpen);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -190,7 +195,7 @@ function TokenField({
             aria-autocomplete="list"
             aria-invalid={invalid || undefined}
             value={query}
-            placeholder={pickedItems.length ? "Add another" : placeholder}
+            placeholder={pickedItems.length ? t`Add another` : placeholder}
             onChange={(event) => {
               setQuery(event.target.value);
               setActiveIndex(0);
@@ -207,7 +212,7 @@ function TokenField({
         <div
           id={listId}
           role="listbox"
-          aria-label={`${label} matches`}
+          aria-label={t`${label} matches`}
           className="absolute top-[calc(100%+4px)] right-0 left-0 z-40 grid max-h-63 gap-px overflow-auto rounded-zone border border-line-strong bg-chrome p-1 shadow-pop"
         >
           {matches.map((item) => (
@@ -270,16 +275,18 @@ function TokenField({
             >
               <TokenLead item={{ id: inviteId, name: query, icon: "mail" }} />
               <span>
-                <b className="block text-body-sm font-medium">Invite {query.trim()} by email</b>
+                <b className="block text-body-sm font-medium">
+                  <Trans>Invite</Trans> {query.trim()} <Trans>by email</Trans>
+                </b>
                 <small className="block text-caption text-fg-dim">
-                  They get a one-step sign-up, then the task
+                  <Trans>They get a one-step sign-up, then the task</Trans>
                 </small>
               </span>
             </div>
           ) : null}
           {matches.length === 0 && !inviteable ? (
             <div className="p-2 text-body-sm text-fg-dim">
-              No one called that. Type an email to invite them.
+              <Trans>No one called that. Type an email to invite them.</Trans>
             </div>
           ) : null}
         </div>

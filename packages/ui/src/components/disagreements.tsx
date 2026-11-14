@@ -1,3 +1,4 @@
+import { useLingui } from "@lingui/react/macro";
 import { MentionText } from "@parfocal/ui/components/comment-thread";
 import { Icon, type IconName } from "@parfocal/ui/components/icon";
 import {
@@ -52,6 +53,8 @@ function QueueRow({
   className,
   ...props
 }: QueueRowProps) {
+  const { t } = useLingui();
+
   const content = (
     <>
       <ObjectIdTag>{object}</ObjectIdTag>
@@ -79,7 +82,7 @@ function QueueRow({
     >
       {locked ? null : (
         <TablePickCell
-          label={`Select ${object} on ${slide}`}
+          label={t`Select ${object} on ${slide}`}
           picked={checked}
           disabled={!checkable}
           reason={checkReason}

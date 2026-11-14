@@ -1,3 +1,4 @@
+import { useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import { Icon } from "@parfocal/ui/components/icon";
 import { cn } from "@parfocal/ui/lib/utils";
@@ -26,6 +27,8 @@ function DrawerPanel({
   children,
   testId,
 }: DrawerPanelProps) {
+  const { t } = useLingui();
+
   const panel = (
     <aside
       role="dialog"
@@ -46,7 +49,7 @@ function DrawerPanel({
         <b className={scrim ? "text-title-sm" : "text-body"}>{title}</b>
         {hint ? <span className="text-body-sm text-fg-dim">{hint}</span> : null}
         <span className="flex-1" />
-        <Button size="icon" variant="ghost" aria-label="Close" onClick={onClose}>
+        <Button size="icon" variant="ghost" aria-label={t`Close`} onClick={onClose}>
           <Icon name="close" />
         </Button>
       </div>
@@ -68,7 +71,7 @@ function DrawerPanel({
     <>
       <button
         type="button"
-        aria-label={`Close ${label}`}
+        aria-label={t`Close ${label}`}
         onClick={onClose}
         className="fixed inset-0 z-40 cursor-default border-0 bg-[rgb(0_0_0/0.25)]"
       />

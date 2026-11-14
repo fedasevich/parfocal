@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Keycap } from "@parfocal/ui/components/keycap";
@@ -21,11 +22,13 @@ function DeveloperDrawer({
   children,
   ...props
 }: DeveloperDrawerProps) {
+  const { t } = useLingui();
+
   return (
     <div
       data-slot="developer-drawer"
       role="dialog"
-      aria-label="Developer"
+      aria-label={t`Developer`}
       className={cn(
         "absolute top-11 right-0 bottom-0 z-[8] grid w-[720px] max-w-full grid-rows-[auto_minmax(0,1fr)_auto] border-l border-line bg-surf-panel text-body-sm text-fg shadow-pop",
         className,
@@ -35,18 +38,21 @@ function DeveloperDrawer({
       <div className="flex items-center gap-2.5 border-b border-line py-3 pr-3 pl-4.5">
         <div className="grid min-w-0 gap-0.5">
           <b className="flex items-center gap-2 text-lead font-semibold">
-            Developer
+            <Trans>Developer</Trans>
             <span className="rounded-[3px] bg-bad-fill px-1.5 font-mono text-label leading-4 font-semibold tracking-[0.05em] text-white">
-              LAB
+              <Trans>LAB</Trans>
             </span>
           </b>
           <small className="text-body-sm leading-[1.45] text-fg-dim">
-            Hidden from doctors. Opens with <Keycap keys="⌃⇧D" size="sm" /> or{" "}
-            <span className="font-mono">?lab</span>
+            <Trans>Hidden from doctors. Opens with</Trans> <Keycap keys="⌃⇧D" size="sm" />{" "}
+            <Trans>or</Trans>{" "}
+            <span className="font-mono">
+              <Trans>?lab</Trans>
+            </span>
           </small>
         </div>
         <span className="flex-1" />
-        <Button variant="ghost" size="icon" aria-label="Close developer mode" onClick={onClose}>
+        <Button variant="ghost" size="icon" aria-label={t`Close developer mode`} onClick={onClose}>
           <Icon name="close" />
         </Button>
       </div>
@@ -75,10 +81,12 @@ type DeveloperNavProps = Omit<React.ComponentProps<"nav">, "onChange"> & {
 };
 
 function DeveloperNav({ groups, value, onValueChange, className, ...props }: DeveloperNavProps) {
+  const { t } = useLingui();
+
   return (
     <nav
       data-slot="developer-nav"
-      aria-label="Developer sections"
+      aria-label={t`Developer sections`}
       className={cn(
         "flex flex-col gap-0.5 overflow-y-auto border-r border-line bg-surf-section px-2 py-3",
         className,
@@ -258,11 +266,13 @@ type PerformanceHudProps = React.ComponentProps<"div"> & {
 };
 
 function PerformanceHud({ route, summary, lines, className, ...props }: PerformanceHudProps) {
+  const { t } = useLingui();
+
   return (
     <div
       data-slot="performance-hud"
       role="group"
-      aria-label="Performance HUD"
+      aria-label={t`Performance HUD`}
       className={cn(
         "absolute top-14 left-16 z-[6] w-[230px] rounded-[10px] border border-line bg-chrome px-2.5 py-2 font-mono text-caption leading-[1.55] text-fg-dim shadow-pop",
         className,

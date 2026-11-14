@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import { DrawerPanel } from "@parfocal/ui/components/drawer-panel";
 import { FormField, TextFieldInput } from "@parfocal/ui/components/form-field";
@@ -45,6 +46,8 @@ function NewProjectForm({
   onCreate,
   onClose,
 }: NewProjectFormProps) {
+  const { t } = useLingui();
+
   const [name, setName] = useState("");
   const [privacy, setPrivacy] = useState<PrivacyChoice>("de-identified");
   const [template, setTemplate] = useState<AnalysisChoice>("sentinel-node");
@@ -60,30 +63,41 @@ function NewProjectForm({
   };
   return (
     <DrawerPanel
-      label="New project"
-      title="New project"
+      label={t`New project`}
+      title={t`New project`}
       hint={`${code} when created`}
       width={560}
       testId="project-drawer"
       onClose={onClose}
       footer={
         <>
-          <Hint>Settings can change later</Hint>
+          <Hint>
+            <Trans>Settings can change later</Trans>
+          </Hint>
           <span className="flex-1" />
           <Failure message={failure} />
-          <Button onClick={onClose}>Cancel</Button>
+          <Button onClick={onClose}>
+            <Trans>Cancel</Trans>
+          </Button>
           <Button variant="primary" disabled={pending} onClick={submit}>
-            Create and upload
+            <Trans>Create and upload</Trans>
           </Button>
         </>
       }
     >
-      <Zone title="Name">
-        <FormField label={<span className="sr-only">Name</span>} error={problem ?? undefined}>
+      <Zone title={t`Name`}>
+        <FormField
+          label={
+            <span className="sr-only">
+              <Trans>Name</Trans>
+            </span>
+          }
+          error={problem ?? undefined}
+        >
           <TextFieldInput
             autoFocus
             value={name}
-            placeholder="Sentinel nodes, model B validation"
+            placeholder={t`Sentinel nodes, model B validation`}
             maxLength={120}
             onChange={(event) => setName(event.target.value)}
             onKeyDown={(event) => {
@@ -92,9 +106,9 @@ function NewProjectForm({
           />
         </FormField>
       </Zone>
-      <Zone title="Privacy">
+      <Zone title={t`Privacy`}>
         <RadioGroup
-          aria-label="Privacy"
+          aria-label={t`Privacy`}
           value={privacy}
           onValueChange={(value) => setPrivacy(value as PrivacyChoice)}
           className="gap-2.5"
@@ -104,9 +118,9 @@ function NewProjectForm({
           ))}
         </RadioGroup>
       </Zone>
-      <Zone title="Analysis template" sub="Decides what the review panel adds.">
+      <Zone title={t`Analysis template`} sub="Decides what the review panel adds.">
         <RadioGroup
-          aria-label="Analysis template"
+          aria-label={t`Analysis template`}
           value={template}
           onValueChange={(value) => setTemplate(value as AnalysisChoice)}
           className="gap-2.5"
@@ -116,9 +130,9 @@ function NewProjectForm({
           ))}
         </RadioGroup>
       </Zone>
-      <Zone title="Classes" sub="Imports map their own class names to these.">
+      <Zone title={t`Classes`} sub="Imports map their own class names to these.">
         <RadioGroup
-          aria-label="Class list"
+          aria-label={t`Class list`}
           value={taxonomy?.id ?? ""}
           onValueChange={(value) => setPickedTaxonomy(String(value))}
           className="gap-2.5"
@@ -158,6 +172,8 @@ type NewCaseFormProps = {
 };
 
 function NewCaseForm({ project, pending = false, failure, onCreate, onClose }: NewCaseFormProps) {
+  const { t } = useLingui();
+
   const clinical = project.privacy === "clinical";
   const [label, setLabel] = useState("");
   const [specimen, setSpecimen] = useState("");
@@ -180,8 +196,8 @@ function NewCaseForm({ project, pending = false, failure, onCreate, onClose }: N
   const patientProblem = tried && label.trim() !== "" ? problem : null;
   return (
     <DrawerPanel
-      label="New case"
-      title="New case"
+      label={t`New case`}
+      title={t`New case`}
       hint={`in ${project.code} · ${project.name}`}
       width={520}
       testId="project-drawer"
@@ -190,76 +206,94 @@ function NewCaseForm({ project, pending = false, failure, onCreate, onClose }: N
         <>
           <span className="flex-1" />
           <Failure message={failure} />
-          <Button onClick={onClose}>Cancel</Button>
+          <Button onClick={onClose}>
+            <Trans>Cancel</Trans>
+          </Button>
           <Button variant="primary" disabled={pending} onClick={submit}>
-            Create case
+            <Trans>Create case</Trans>
           </Button>
         </>
       }
     >
       <Hint className="mx-0.5">
-        A case is optional. It groups the slides of one specimen so they are reviewed together.
-        Slides can also stay loose in the project.
+        <Trans>
+          A case is optional. It groups the slides of one specimen so they are reviewed together.
+          Slides can also stay loose in the project.
+        </Trans>
       </Hint>
-      <Zone title="Case">
+      <Zone title={t`Case`}>
         <div className="grid grid-cols-2 gap-3">
           <FormField
-            label="Case ID"
+            label={t`Case ID`}
             {...(labelProblem ? { error: labelProblem } : { help: "from the file names" })}
           >
             <TextFieldInput
               autoFocus
               value={label}
               maxLength={100}
-              placeholder="S26-04830"
+              placeholder={t`S26-04830`}
               className="font-mono"
               onChange={(event) => setLabel(event.target.value)}
             />
           </FormField>
-          <FormField label="Specimen">
+          <FormField label={t`Specimen`}>
             <TextFieldInput
               value={specimen}
               maxLength={200}
-              placeholder="Sentinel lymph node, left"
+              placeholder={t`Sentinel lymph node, left`}
               onChange={(event) => setSpecimen(event.target.value)}
             />
           </FormField>
         </div>
       </Zone>
-      <Zone title="Patient" end={<Hint>optional</Hint>} data-testid="case-patient">
+      <Zone
+        title={t`Patient`}
+        end={
+          <Hint>
+            <Trans>optional</Trans>
+          </Hint>
+        }
+        data-testid="case-patient"
+      >
         {clinical ? (
           <>
             <div className="grid grid-cols-2 gap-3">
-              <FormField label="Name">
+              <FormField label={t`Name`}>
                 <TextFieldInput
                   value={patientName}
                   maxLength={200}
-                  placeholder="Not entered"
+                  placeholder={t`Not entered`}
                   onChange={(event) => setPatientName(event.target.value)}
                 />
               </FormField>
-              <FormField label="Birth number">
+              <FormField label={t`Birth number`}>
                 <TextFieldInput
                   value={birthNumber}
                   maxLength={40}
-                  placeholder="Not entered"
+                  placeholder={t`Not entered`}
                   onChange={(event) => setBirthNumber(event.target.value)}
                 />
               </FormField>
             </div>
             {patientProblem ? <Failure message={patientProblem} /> : null}
             <Hint>
-              This is a clinical project. Names can be hidden for everyone in Settings, and opening
-              them is logged.
+              <Trans>
+                This is a clinical project. Names can be hidden for everyone in Settings, and
+                opening them is logged.
+              </Trans>
             </Hint>
           </>
         ) : (
           <>
             <div className="flex min-h-8 items-center gap-2 rounded-ctl border border-dashed border-line-strong bg-chrome-2 px-2.5 text-body-sm text-fg-dim">
               <Icon name="shield" />
-              <span>Off in a de-identified project</span>
+              <span>
+                <Trans>Off in a de-identified project</Trans>
+              </span>
             </div>
-            <Hint>The project owner can switch to clinical in project settings.</Hint>
+            <Hint>
+              <Trans>The project owner can switch to clinical in project settings.</Trans>
+            </Hint>
           </>
         )}
       </Zone>

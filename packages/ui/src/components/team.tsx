@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import { FormField } from "@parfocal/ui/components/form-field";
 import { Icon } from "@parfocal/ui/components/icon";
@@ -60,6 +61,8 @@ function ReviewerRow({
   className,
   ...props
 }: ReviewerRowProps) {
+  const { t } = useLingui();
+
   const detail = status === "away" && awayUntil ? `until ${awayUntil}` : last;
   const canNudge = status !== "done" && status !== "away" && !nudged && !you;
   return (
@@ -78,24 +81,26 @@ function ReviewerRow({
       <Person person={person} you={you} />
       <ProgressBar
         value={of === 0 ? 0 : (done / of) * 100}
-        aria-label={`${person.name}, ${done} of ${of} slides`}
+        aria-label={t`${person.name}, ${done} of ${of} slides`}
         tone={status === "done" ? "ok" : "accent"}
       />
       <span className="font-mono text-fg tabular-nums">
-        {done} of {of}
+        <Trans>
+          {done} of {of}
+        </Trans>
       </span>
       <span className="flex min-w-0 items-center gap-2.5 text-fg-dim">
         <StatusTag tone={statusTones[status]}>{statusWords[status]}</StatusTag>
         <span className="min-w-0 truncate">
           {detail}
-          {nudged ? " · nudged just now" : ""}
+          {nudged ? t` · nudged just now` : ""}
         </span>
       </span>
       <span className="flex justify-end gap-1.5">
         {canNudge ? (
           <Button size="sm" onClick={onNudge}>
             <Icon name="bell" />
-            Nudge
+            <Trans>Nudge</Trans>
           </Button>
         ) : null}
         {status === "done" ? null : (
@@ -104,7 +109,7 @@ function ReviewerRow({
             variant={status === "away" ? "primary" : "secondary"}
             onClick={onReassign}
           >
-            Reassign
+            <Trans>Reassign</Trans>
           </Button>
         )}
       </span>
@@ -137,7 +142,7 @@ function DueText({ due, dueIn, overdue }: { due: string; dueIn: string; overdue:
       )}
     >
       <Icon name={overdue ? "warn" : "calendar"} />
-      Due {due} · {dueIn}
+      <Trans>Due</Trans> {due} · {dueIn}
     </span>
   );
 }
@@ -219,11 +224,11 @@ function DoneTaskRow({
       <AvatarStack people={people} size={22} max={4} />
       <span className="inline-flex items-center gap-1.5 text-body-sm whitespace-nowrap text-fg-dim">
         <Icon name="check" />
-        Signed off {signedOn}
+        <Trans>Signed off</Trans> {signedOn}
       </span>
       <Button size="sm" onClick={onOpenReport}>
         <Icon name="file" />
-        Open the report
+        <Trans>Open the report</Trans>
       </Button>
     </div>
   );
@@ -244,7 +249,7 @@ function TeamNoMatch({ onClear, className, children, ...props }: TeamNoMatchProp
       <Icon name="search" />
       <span>{children}</span>
       <Button size="sm" onClick={onClear}>
-        Clear filters
+        <Trans>Clear filters</Trans>
       </Button>
     </div>
   );
@@ -288,7 +293,9 @@ function ConfirmInButton({
   return (
     <span data-slot="confirm-in-button" className="inline-flex items-center gap-2.5">
       <span className="text-body-sm font-semibold text-fg">{question}</span>
-      <Button onClick={() => setAsking(false)}>Cancel</Button>
+      <Button onClick={() => setAsking(false)}>
+        <Trans>Cancel</Trans>
+      </Button>
       <Button
         variant="primary"
         onClick={() => {
@@ -341,24 +348,26 @@ function NudgeModal({
   onSend,
   maxLength = 500,
 }: NudgeModalProps) {
+  const { t } = useLingui();
+
   const empty = message.trim() === "";
   return (
     <SmallModal
       open={open}
       onOpenChange={onOpenChange}
-      title="Nudge"
+      title={t`Nudge`}
       subtitle={subtitle}
       hint="Sent by email and shown at the top of My work."
       primaryLabel="Send"
       onPrimary={onSend}
       blockers={empty ? [{ id: "message", text: "Write a message to send.", goTo: "Go to" }] : []}
     >
-      <FormField label="To">
+      <FormField label={t`To`}>
         <ReadOnlyPerson person={person} done={done} of={of} />
       </FormField>
-      <FormField label="Message" count={`${message.length} of ${maxLength}`}>
+      <FormField label={t`Message`} count={`${message.length} of ${maxLength}`}>
         <textarea
-          aria-label="Message"
+          aria-label={t`Message`}
           rows={4}
           maxLength={maxLength}
           value={message}
@@ -407,6 +416,8 @@ function ReassignModal({
   onNoteChange,
   onReassign,
 }: ReassignModalProps) {
+  const { t } = useLingui();
+
   const left = of - done;
   const count = what === "all" ? of : left;
   const first = from.name.split(" ")[0] ?? from.name;
@@ -419,29 +430,29 @@ function ReassignModal({
       open={open}
       onOpenChange={onOpenChange}
       width={560}
-      title="Reassign slides"
+      title={t`Reassign slides`}
       subtitle={subtitle}
       hint="Both are told by email."
       primaryLabel={`Reassign ${count} slides`}
       onPrimary={onReassign}
       blockers={to ? [] : [{ id: "to", text: "Pick who takes the slides.", goTo: "Go to" }]}
     >
-      <FormField label="From">
+      <FormField label={t`From`}>
         <ReadOnlyPerson person={from} done={done} of={of} />
       </FormField>
-      <FormField label="To" warning={toWarning}>
+      <FormField label={t`To`} warning={toWarning}>
         <TokenField
-          label="To"
-          placeholder="Type a name"
+          label={t`To`}
+          placeholder={t`Type a name`}
           items={candidates}
           picked={to ? [to] : []}
           single
           onPickedChange={(ids) => onToChange(ids.at(-1) ?? null)}
         />
       </FormField>
-      <FormField label="What moves">
+      <FormField label={t`What moves`}>
         <RadioGroup
-          aria-label="What moves"
+          aria-label={t`What moves`}
           value={what}
           onValueChange={(value) => onWhatChange(value as ReassignWhat)}
           className="gap-2.5"
@@ -460,18 +471,20 @@ function ReassignModal({
           <div className="flex items-start gap-1.5 text-body-sm leading-[1.45] text-warn">
             <Icon name="warn" size="xs" className="mt-0.5 shrink-0" />
             <span>
-              {done} slides already have {first}'s decisions. They stay under {first}'s name and the
-              new reviewer starts fresh on them.
+              <Trans>
+                {done} slides already have {first}'s decisions. They stay under {first}'s name and
+                the new reviewer starts fresh on them.
+              </Trans>
             </span>
           </div>
         ) : null}
       </FormField>
-      <FormField label="Note" optional count={`${note.length} of 300`}>
+      <FormField label={t`Note`} optional count={`${note.length} of 300`}>
         <textarea
-          aria-label="Note"
+          aria-label={t`Note`}
           rows={2}
           maxLength={300}
-          placeholder="For both of them"
+          placeholder={t`For both of them`}
           value={note}
           onChange={(event) => onNoteChange(event.target.value)}
           className={textareaClass}

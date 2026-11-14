@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import { Icon } from "@parfocal/ui/components/icon";
 import { ScrollArea } from "@parfocal/ui/components/scroll-area";
@@ -65,13 +66,19 @@ function ReportPagePreview({
     >
       <div className="flex justify-between border-b-[1.5px] border-[#222] pb-2">
         <div className="grid">
-          <b className="text-[13px]">Parfocal</b>
-          <span className="text-[9px] text-[#555]">Evaluation report</span>
+          <b className="text-[13px]">
+            <Trans>Parfocal</Trans>
+          </b>
+          <span className="text-[9px] text-[#555]">
+            <Trans>Evaluation report</Trans>
+          </span>
         </div>
         <div className="grid justify-items-end text-right">
           <b className="text-[13px]">{title}</b>
           <span className="text-[9px] text-[#555]">
-            Page {page} of {pages}
+            <Trans>
+              Page {page} of {pages}
+            </Trans>
           </span>
         </div>
       </div>
@@ -103,7 +110,7 @@ function BlockSettings({ block, className, ...props }: BlockSettingsProps) {
     <div data-slot="block-settings" className={cn("grid gap-4 text-body-sm", className)} {...props}>
       <div className="grid gap-1.5">
         <label htmlFor={`block-title-${block.id}`} className="font-semibold">
-          Title
+          <Trans>Title</Trans>
         </label>
         <input
           id={`block-title-${block.id}`}
@@ -113,7 +120,7 @@ function BlockSettings({ block, className, ...props }: BlockSettingsProps) {
       </div>
       <div className="grid gap-1.5">
         <span id={`block-width-${block.id}`} className="font-semibold">
-          Width
+          <Trans>Width</Trans>
         </span>
         <SegmentedControl
           aria-labelledby={`block-width-${block.id}`}
@@ -125,13 +132,17 @@ function BlockSettings({ block, className, ...props }: BlockSettingsProps) {
         />
       </div>
       <label className="flex cursor-pointer items-center justify-between gap-4">
-        <span className="font-semibold">Start on a new page</span>
+        <span className="font-semibold">
+          <Trans>Start on a new page</Trans>
+        </span>
         <Switch />
       </label>
       {block.setting ? (
         <div className="grid gap-1.5">
           <span className="font-semibold">{block.setting}</span>
-          <span className="text-fg-dim">Set for this block only.</span>
+          <span className="text-fg-dim">
+            <Trans>Set for this block only.</Trans>
+          </span>
         </div>
       ) : null}
     </div>
@@ -171,6 +182,8 @@ function PdfPreview({
   className,
   ...props
 }: PdfPreviewProps) {
+  const { t } = useLingui();
+
   const [zoom, setZoom] = React.useState(100);
   const [inner, setInner] = React.useState(current);
   const holder = React.useRef<HTMLDivElement>(null);
@@ -213,10 +226,12 @@ function PdfPreview({
     >
       <div className="flex items-center gap-2 border-b border-line bg-chrome px-3 py-2 text-body-sm">
         <Icon name="file" />
-        <b className="min-w-0 truncate font-medium">{title}.pdf</b>
+        <b className="min-w-0 truncate font-medium">
+          <Trans>{title}.pdf</Trans>
+        </b>
         {meta ? <span className="min-w-0 flex-1 truncate text-fg-dim">{meta}</span> : null}
         <output
-          aria-label="Current page"
+          aria-label={t`Current page`}
           className={cn("font-mono text-caption text-fg-dim", meta ? "" : "ml-auto")}
         >
           {shown} / {pages}
@@ -224,31 +239,31 @@ function PdfPreview({
         <Button
           size="sm"
           variant="ghost"
-          aria-label="Zoom out"
+          aria-label={t`Zoom out`}
           onClick={() => setZoom((value) => Math.max(50, value - 25))}
         >
           <Icon name="minus" />
         </Button>
-        <output aria-label="Zoom" className="w-10 text-center font-mono text-caption">
+        <output aria-label={t`Zoom`} className="w-10 text-center font-mono text-caption">
           {zoom}%
         </output>
         <Button
           size="sm"
           variant="ghost"
-          aria-label="Zoom in"
+          aria-label={t`Zoom in`}
           onClick={() => setZoom((value) => Math.min(200, value + 25))}
         >
           <Icon name="plus" />
         </Button>
         <Button size="sm" disabled={failed || loading} onClick={onPrint}>
-          Print
+          <Trans>Print</Trans>
         </Button>
         <Button size="sm" variant="primary" disabled={failed || loading} onClick={onDownload}>
           <Icon name="download" />
-          Download
+          <Trans>Download</Trans>
         </Button>
         {onClose ? (
-          <Button size="sm" variant="ghost" aria-label="Close the preview" onClick={onClose}>
+          <Button size="sm" variant="ghost" aria-label={t`Close the preview`} onClick={onClose}>
             <Icon name="close" />
           </Button>
         ) : null}
@@ -256,7 +271,7 @@ function PdfPreview({
       <div className="grid min-h-0 grid-cols-[124px_minmax(0,1fr)]">
         <div
           role="group"
-          aria-label="Pages"
+          aria-label={t`Pages`}
           className="grid content-start gap-3 overflow-auto border-r border-line bg-chrome p-3"
         >
           {numbers.map((page) => (
@@ -284,7 +299,9 @@ function PdfPreview({
                 ) : null}
               </span>
               <span>
-                <span className="sr-only">Page </span>
+                <span className="sr-only">
+                  <Trans>Page</Trans>{" "}
+                </span>
                 {page}
               </span>
             </button>
@@ -299,12 +316,16 @@ function PdfPreview({
               {failed ? (
                 <div className="grid max-w-80 justify-items-center gap-2 self-center text-center text-body-sm">
                   <Icon name="warn" size="xl" className="text-warn" />
-                  <b>The PDF could not be made</b>
-                  <span className="text-fg-dim">The CSV files still download.</span>
+                  <b>
+                    <Trans>The PDF could not be made</Trans>
+                  </b>
+                  <span className="text-fg-dim">
+                    <Trans>The CSV files still download.</Trans>
+                  </span>
                 </div>
               ) : loading ? (
                 <span role="status" className="self-center text-body-sm text-fg-dim">
-                  Making the preview
+                  <Trans>Making the preview</Trans>
                 </span>
               ) : renderPage ? (
                 numbers.map((page) => (

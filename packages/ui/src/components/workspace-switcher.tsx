@@ -1,3 +1,4 @@
+import { useLingui } from "@lingui/react/macro";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -47,11 +48,13 @@ function WorkspaceLabel({ workspace }: { workspace: WorkspaceBrand }) {
 type WorkspaceButtonProps = React.ComponentProps<"button"> & { workspace: WorkspaceBrand };
 
 function WorkspaceButton({ workspace, ...props }: WorkspaceButtonProps) {
+  const { t } = useLingui();
+
   return (
     <button
       type="button"
       data-slot="workspace-switch"
-      title="Switch workspace"
+      title={t`Switch workspace`}
       className="flex min-w-0 cursor-pointer items-center gap-2.5 rounded-md border-0 bg-transparent px-1.5 py-1 text-left hover:bg-chrome-2 aria-expanded:bg-chrome-2"
       {...props}
     >

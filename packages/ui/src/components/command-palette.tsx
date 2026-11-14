@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Icon, type IconName } from "@parfocal/ui/components/icon";
 import { Keycap } from "@parfocal/ui/components/keycap";
 import { cn } from "@parfocal/ui/lib/utils";
@@ -78,19 +79,21 @@ function CommandPaletteView({
   onCurrentChange,
   onKeyDown,
 }: CommandPaletteViewProps) {
+  const { t } = useLingui();
+
   const trimmed = query.trim();
   return (
     <>
       <div className="flex items-center gap-2.5 border-line border-b px-4 py-3.5 text-lead focus-within:border-b-accent">
         <Icon name="search" className="text-fg-dim" />
         <input
-          aria-label="Search actions, places and settings"
+          aria-label={t`Search actions, places and settings`}
           role="combobox"
           aria-expanded="true"
           aria-controls="palette-results"
           aria-activedescendant={commands[current] ? `palette-${commands[current].id}` : undefined}
           className="min-w-0 flex-1 border-0 bg-transparent text-fg outline-none placeholder:text-fg-faint"
-          placeholder="Search actions, slides, IDs like T2·C145 and settings"
+          placeholder={t`Search actions, slides, IDs like T2·C145 and settings`}
           value={query}
           onChange={(event) => onQueryChange(event.target.value)}
           onKeyDown={onKeyDown}
@@ -137,18 +140,22 @@ function CommandPaletteView({
           );
         })}
         {commands.length === 0 ? (
-          <p className="px-5 py-6 text-body-sm text-fg-dim">Nothing matches "{trimmed}".</p>
+          <p className="px-5 py-6 text-body-sm text-fg-dim">
+            <Trans>Nothing matches "{trimmed}".</Trans>
+          </p>
         ) : null}
       </div>
       <div className="flex gap-3.5 border-line border-t px-4 py-2 text-body-sm text-fg-dim">
         <span className="inline-flex items-center gap-1">
           <Keycap keys="↑" size="sm" />
-          <Keycap keys="↓" size="sm" /> choose
+          <Keycap keys="↓" size="sm" /> <Trans>choose</Trans>
         </span>
         <span className="inline-flex items-center gap-1">
-          <Keycap keys="↵" size="sm" /> run
+          <Keycap keys="↵" size="sm" /> <Trans>run</Trans>
         </span>
-        <span>Every action in the app is here, with its key</span>
+        <span>
+          <Trans>Every action in the app is here, with its key</Trans>
+        </span>
       </div>
     </>
   );

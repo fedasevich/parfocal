@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Keycap } from "@parfocal/ui/components/keycap";
 import { type MapRect, type MinimapSize, minimapBox } from "@parfocal/ui/lib/minimap-box";
@@ -244,6 +245,8 @@ function SmartMinimap({
   style,
   ...props
 }: SmartMinimapProps) {
+  const { t } = useLingui();
+
   const [pointer, setPointer] = useState(false);
   const drag = useRef<{ moved: boolean } | null>(null);
   const box: MapRect = extent ?? [0, 0, image.width, image.height];
@@ -302,11 +305,11 @@ function SmartMinimap({
             {title}
           </span>
           <span className="flex shrink-0 items-center gap-0.5 text-fg-faint">
-            <Keycap keys="Z" size="sm" title="Hold Z to see the whole slide" />
+            <Keycap keys="Z" size="sm" title={t`Hold Z to see the whole slide`} />
             <button
               type="button"
-              aria-label="Open on the second monitor"
-              title="Open on the second monitor"
+              aria-label={t`Open on the second monitor`}
+              title={t`Open on the second monitor`}
               onClick={onPopOut}
               className="grid size-5 cursor-pointer place-items-center rounded-md border-0 bg-transparent text-fg-faint hover:bg-chrome-2 hover:text-fg"
             >
@@ -320,8 +323,8 @@ function SmartMinimap({
         {onOpen ? (
           <button
             type="button"
-            aria-label="Open the whole slide"
-            title="Click to open the whole slide (or hold Z)"
+            aria-label={t`Open the whole slide`}
+            title={t`Click to open the whole slide (or hold Z)`}
             onClick={() => {
               const dragged = drag.current?.moved === true;
               drag.current = null;
@@ -348,7 +351,9 @@ function SmartMinimap({
             {size === "pip" ? null : (
               <span className="pointer-events-none absolute top-1.25 right-1.25 inline-flex h-5.5 items-center gap-1 rounded-md bg-[rgb(17_17_17/0.78)] px-1.5 text-caption font-medium text-white">
                 <Icon name="expand" size="xs" />
-                <span className="hidden group-hover:inline">Open</span>
+                <span className="hidden group-hover:inline">
+                  <Trans>Open</Trans>
+                </span>
               </span>
             )}
           </button>
@@ -411,6 +416,8 @@ function WholeSlidePeek({
   className,
   ...props
 }: WholeSlidePeekProps) {
+  const { t } = useLingui();
+
   const ref = useRef<SVGSVGElement>(null);
   const width = useWidth(ref);
   const scale = width > 0 ? image.width / width : 1;
@@ -426,13 +433,13 @@ function WholeSlidePeek({
       <button
         type="button"
         tabIndex={-1}
-        aria-label="Close the whole slide"
+        aria-label={t`Close the whole slide`}
         onClick={onClose}
         className="absolute inset-0 cursor-default border-0 bg-transparent p-0"
       />
       <div
         role="dialog"
-        aria-label="Whole slide"
+        aria-label={t`Whole slide`}
         className="relative flex max-h-full flex-col gap-2.5 rounded-[14px] border border-line bg-chrome px-3.5 py-3 shadow-pop motion-safe:animate-in motion-safe:fade-in-0 motion-safe:zoom-in-95"
       >
         <div className="flex items-center justify-between gap-4">
@@ -442,8 +449,8 @@ function WholeSlidePeek({
           </div>
           <button
             type="button"
-            aria-label="Back to the view"
-            title="Back to the view (Esc)"
+            aria-label={t`Back to the view`}
+            title={t`Back to the view (Esc)`}
             onClick={onClose}
             className="grid size-8 cursor-pointer place-items-center rounded-ctl border-0 bg-transparent text-fg-dim hover:bg-chrome-2 hover:text-fg"
           >
@@ -453,7 +460,7 @@ function WholeSlidePeek({
         <svg
           ref={ref}
           role="img"
-          aria-label="The whole slide. Click a place to go there"
+          aria-label={t`The whole slide. Click a place to go there`}
           viewBox={`0 0 ${image.width} ${image.height}`}
           className="mx-auto block h-[min(72dvh,760px)] max-w-full cursor-pointer rounded-lg bg-[#f1eef2]"
           style={{ aspectRatio: `${image.width} / ${image.height}` }}
@@ -483,17 +490,18 @@ function WholeSlidePeek({
           ))}
           <span className="flex-1" />
           <span className="inline-flex items-center gap-1">
-            Click a place to go there ·{" "}
+            <Trans>Click a place to go there ·</Trans>{" "}
             {held ? (
               <>
-                release <Keycap keys="Z" size="sm" />
+                <Trans>release</Trans> <Keycap keys="Z" size="sm" />
               </>
             ) : (
               <>
-                press <Keycap keys="Z" size="sm" /> or <Keycap keys="Esc" size="sm" />
+                <Trans>press</Trans> <Keycap keys="Z" size="sm" /> <Trans>or</Trans>{" "}
+                <Keycap keys="Esc" size="sm" />
               </>
             )}{" "}
-            to return
+            <Trans>to return</Trans>
           </span>
         </div>
       </div>

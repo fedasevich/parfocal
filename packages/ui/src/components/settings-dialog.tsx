@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import { Dialog, DialogClose, DialogContent } from "@parfocal/ui/components/dialog";
 import { Icon, type IconName } from "@parfocal/ui/components/icon";
@@ -34,7 +35,9 @@ function SettingsScopeLegend() {
       data-slot="settings-scope-legend"
       className="mt-auto flex flex-col gap-1.5 border-t border-line px-2.5 pt-3"
     >
-      <span className="text-caption font-medium text-fg-faint">Who a setting applies to</span>
+      <span className="text-caption font-medium text-fg-faint">
+        <Trans>Who a setting applies to</Trans>
+      </span>
       {(Object.keys(scopes) as SettingScopeKind[]).map((scope) => (
         <SettingScope key={scope} scope={scope} />
       ))}
@@ -63,6 +66,8 @@ function SettingsDialog({
   closeLabel = "Close settings",
   children,
 }: SettingsDialogProps) {
+  const { t } = useLingui();
+
   return (
     <Dialog
       open={open}
@@ -72,7 +77,7 @@ function SettingsDialog({
     >
       <DialogContent
         showCloseButton={false}
-        aria-label="Settings"
+        aria-label={t`Settings`}
         className="grid h-[min(720px,calc(100vh-2rem))] w-[960px] max-w-[calc(100vw-2rem)] grid-cols-[240px_minmax(0,1fr)] grid-rows-[minmax(0,1fr)] items-stretch gap-0 overflow-hidden rounded-[14px] border-line bg-chrome p-0 text-body-sm text-fg sm:max-w-[calc(100vw-2rem)]"
       >
         {nav}
@@ -111,10 +116,12 @@ function SettingsNav({
   children,
   ...props
 }: SettingsNavProps) {
+  const { t } = useLingui();
+
   return (
     <nav
       data-slot="settings-nav"
-      aria-label="Settings sections"
+      aria-label={t`Settings sections`}
       className={cn(
         "flex min-h-0 flex-col gap-0.5 overflow-y-auto bg-chrome-2 px-3 py-4",
         className,
@@ -127,8 +134,8 @@ function SettingsNav({
           type="search"
           value={query}
           onChange={(event) => onQueryChange(event.target.value)}
-          placeholder="Search settings"
-          aria-label="Search settings"
+          placeholder={t`Search settings`}
+          aria-label={t`Search settings`}
           className="min-w-0 flex-1 border-0 bg-transparent text-body-sm text-fg outline-none [&::-webkit-search-cancel-button]:hidden"
         />
       </label>
@@ -262,9 +269,15 @@ function SettingsEmpty({ query, onClear }: SettingsEmptyProps) {
       className="grid justify-items-center gap-2 py-24 text-center text-body-sm text-fg-dim"
     >
       <Icon name="search" size="lg" className="text-fg-faint" />
-      <b className="text-body font-medium text-fg">Nothing matches "{query}"</b>
-      <span>Try another word, for example zoom, names or preset.</span>
-      <Button onClick={onClear}>Clear the search</Button>
+      <b className="text-body font-medium text-fg">
+        <Trans>Nothing matches "{query}"</Trans>
+      </b>
+      <span>
+        <Trans>Try another word, for example zoom, names or preset.</Trans>
+      </span>
+      <Button onClick={onClear}>
+        <Trans>Clear the search</Trans>
+      </Button>
     </div>
   );
 }
