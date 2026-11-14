@@ -54,6 +54,7 @@ test("Tab reaches every row's checkbox and action, and Space picks a row", async
     "Pick Slide B2",
     "Open Slide B2",
   ];
+  await expect(page.getByRole("button", { name: "Open Slide B2" })).toBeVisible();
   await page.locator("body").click({ position: { x: 1, y: 1 } });
   const reached: string[] = [];
   for (const stop of stops) {
