@@ -6,6 +6,7 @@ export type RoomGrant = {
   readonly user: string;
   readonly project: string | null;
   readonly expires: number;
+  readonly quiet?: true;
 };
 
 export type RoomTokenCheck =
@@ -37,7 +38,7 @@ function grantOf(claims: unknown): RoomGrant | null {
   if (typeof claims !== "object" || claims === null) {
     return null;
   }
-  const { v, t, r, u, p, e } = claims as Record<string, unknown>;
+  const { v, t, r, u, p, e, q } = claims as Record<string, unknown>;
   if (
     v !== ROOM_TOKEN_VERSION ||
     typeof t !== "string" ||
@@ -47,11 +48,13 @@ function grantOf(claims: unknown): RoomGrant | null {
     typeof u !== "string" ||
     !ID.test(u) ||
     !(p === null || (typeof p === "string" && ID.test(p))) ||
-    !Number.isSafeInteger(e)
+    !Number.isSafeInteger(e) ||
+    !(q === undefined || q === true)
   ) {
     return null;
   }
-  return { tenant: t, room: r, user: u, project: p, expires: e as number };
+  const grant: RoomGrant = { tenant: t, room: r, user: u, project: p, expires: e as number };
+  return q === true ? { ...grant, quiet: true } : grant;
 }
 
 export async function verifyRoomToken(
@@ -92,6 +95,7 @@ export async function signRoomToken(grant: RoomGrant, key: CryptoKey): Promise<s
   const claims = {
     e: grant.expires,
     p: grant.project,
+    ...(grant.quiet === true ? { q: true } : {}),
     r: grant.room,
     t: grant.tenant,
     u: grant.user,

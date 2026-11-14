@@ -32,6 +32,27 @@ It builds one `PolygonBatch` of all the squares and one vector overlay, then cal
 | Array buffers at the end | 166 MB |
 | Viv route GPU time at detail zoom, 1.6M nuclei, owner's Mac | TODO |
 
+## How to rerun on the Mac
+
+One command times both open budgets (VIEW-028, overlay level of detail, under 1 ms at overview with 81k nuclei, and VIEW-029, this cull grid, under 6 ms at detail zoom with 1.6M nuclei) on the real GPU. Run it in a terminal on the Mac, with nothing else heavy open and the laptop on power:
+
+```
+pnpm --filter @parfocal/web gpu-timing
+```
+
+It is the same as `pnpm --filter @parfocal/viewer-engine gpu-timing`. The command builds a bench page with Vite, serves it with the small synthetic slide `synthetic-zlib.ome.tiff` on a random local port, opens headed Chrome (`channel: "chrome"`, hardware GPU), mounts the real Viv route and sets one nuclei overlay on it. When it ends, Playwright closes the browser and the global teardown closes the server, so nothing keeps running. Leave the Chrome window alone while it runs, which takes about a minute.
+
+The two cases are squares of side 6 on a grid of pitch 20, centred on the slide, on a window of 1440 by 900 CSS pixels at device pixel ratio 2. The overview case has 285 by 285 = 81,225 nuclei at 1 px across, which is the density tier. The detail case has 1265 by 1265 = 1,600,225 nuclei at 20 px across, which is the outline tier with the cull grid. Each case draws 20 warm-up frames and then 120 timed frames, once with no overlay and once with the overlay, at the same camera after the route is idle. Each frame is a forced `deck.redraw`, and its end is a WebGL fence (`fenceSync` and `clientWaitSync`, polled across tasks), never `gl.finish`. When Chrome offers `EXT_disjoint_timer_query_webgl2` the GPU time is that query around the redraw, and the fence time is kept next to it. If the extension is missing the fence time is used and the report says so in `timingSource`.
+
+The terminal prints two lines, each with its budget:
+
+- Overview, 81k nuclei, overlay GPU time: the median of the frames with the overlay minus the median without it, against 1 ms.
+- Detail zoom, 1.6M nuclei, Viv route GPU time: the median frame with the overlay, slide tiles included, against 6 ms. The overlay's own share is printed under it.
+
+It also writes `packages/viewer-engine/test-results/gpu-timing/report.json` with the GPU name, canvas size, timing source, medians, 95th percentiles and the pass flags, ready to paste into this file's table. The test fails when either number is over its budget, and the JSON is written first either way. Set `GPU_TIMING_DPR`, `GPU_TIMING_WIDTH` and `GPU_TIMING_HEIGHT` to change the window, and say which values were used in the result file. The scripts are `packages/viewer-engine/gpu-bench/gpu-timing.spec.ts` and `packages/viewer-engine/gpu-bench/page/gpu-timing-harness.ts`.
+
+The slide behind the overlay is the small synthetic one, so the slide tiles add little GPU work. The 6 ms line therefore covers the overlay and a light slide layer, and a real slide will add its tile cost on top.
+
 ## Interpretation
 
 At this zoom the window holds 0.3% of the layer, so the fill, casing and outline layers each draw about five thousand shapes where they drew 1.6M before. A pan inside the window costs no rebuild, and a new window costs about a millisecond of copying with no triangulation.
