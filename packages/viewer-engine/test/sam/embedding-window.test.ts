@@ -118,7 +118,9 @@ describe("embedding window outputs", () => {
   });
 
   it("ignores a window edge that is also the patch edge and masks that lost on score", () => {
-    const spilling = windowOutputs(32, 2, (mask, x) => (mask === 1 && x < 10 ? 4 : -4));
+    const spilling = windowOutputs(32, 2, (mask, x, y) =>
+      mask === 1 && x < 10 && Math.abs(y - 64) < 20 ? 4 : -4,
+    );
     assert.equal(touchesInnerEdge(spilling, { x: 0, y: 16, size: 32 }), false);
     const loser = windowOutputs(32, 2, (mask, x) => (mask === 0 && x < 10 ? 4 : -4));
     assert.equal(touchesInnerEdge(loser, { x: 16, y: 16, size: 32 }), false);

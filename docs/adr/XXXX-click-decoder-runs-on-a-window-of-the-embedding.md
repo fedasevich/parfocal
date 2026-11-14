@@ -1,4 +1,4 @@
-# 0308. The click decoder runs on a 32 token window of the embedding around the prompt
+# XXXX. The click decoder runs on a 32 token window of the embedding around the prompt
 
 - Date: 2026-11-14
 - Status: Proposed
