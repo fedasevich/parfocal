@@ -1,6 +1,7 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "plugins": ["typescript"],
+  "jsPlugins": ["./scripts/lint/raw-jsx-strings.js"],
   "categories": {
     "correctness": "off"
   },
@@ -56,5 +57,25 @@
     "typescript/unbound-method": "error",
     "typescript/use-unknown-in-catch-callback-variable": "error"
   },
+  "overrides": [
+    {
+      "files": ["apps/web/src/**/*.tsx", "packages/ui/src/**/*.tsx"],
+      "rules": { "parfocal-i18n/no-raw-jsx-strings": "error" }
+    },
+    {
+      "files": ["**/*.stories.tsx", "**/*.test.tsx"],
+      "rules": { "parfocal-i18n/no-raw-jsx-strings": "off" }
+    },
+    {
+      "files": ["scripts/lint/*.js"],
+      "rules": {
+        "typescript/no-unsafe-argument": "off",
+        "typescript/no-unsafe-assignment": "off",
+        "typescript/no-unsafe-call": "off",
+        "typescript/no-unsafe-member-access": "off",
+        "typescript/no-unsafe-return": "off"
+      }
+    }
+  ],
   "ignorePatterns": ["infra/**", "docs/**", "apps/web/src/routeTree.gen.ts"]
 }

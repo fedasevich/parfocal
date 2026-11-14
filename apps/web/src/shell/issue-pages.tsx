@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Banner } from "@parfocal/ui/components/banner";
 import { Button } from "@parfocal/ui/components/button";
 import { Icon, type IconName } from "@parfocal/ui/components/icon";
@@ -31,41 +32,44 @@ function GoHome({ primary = false }: { primary?: boolean }) {
   const navigate = useNavigate();
   return (
     <Button variant={primary ? "primary" : "secondary"} onClick={() => void navigate({ to: "/" })}>
-      Go home
+      <Trans>Go home</Trans>
     </Button>
   );
 }
 
 export function NotFoundPage() {
+  const { t } = useLingui();
   return (
     <IssuePage
       testId="issue-not-found"
       icon="search"
-      title="Page not found"
-      happened="This page does not exist, or it was moved or deleted."
-      stillWorks="Everything else in Parfocal works and nothing was changed."
+      title={t`Page not found`}
+      happened={t`This page does not exist, or it was moved or deleted.`}
+      stillWorks={t`Everything else in Parfocal works and nothing was changed.`}
       actions={<GoHome primary />}
     />
   );
 }
 
 export function ServerErrorPage({ reference }: { reference?: string }) {
+  const { t } = useLingui();
   return (
     <IssuePage
       testId="issue-server-error"
       icon="warn"
-      title="Something went wrong on our side"
+      title={t`Something went wrong on our side`}
       happened={
-        <>
-          The page could not be shown.
-          {reference ? <> Reference {reference}.</> : null}
-        </>
+        reference ? (
+          <Trans>The page could not be shown. Reference {reference}.</Trans>
+        ) : (
+          <Trans>The page could not be shown.</Trans>
+        )
       }
-      stillWorks="What you already saved is safe, and other pages still work."
+      stillWorks={t`What you already saved is safe, and other pages still work.`}
       actions={
         <>
           <Button variant="primary" onClick={() => window.location.reload()}>
-            Try again
+            <Trans>Try again</Trans>
           </Button>
           <GoHome />
         </>
@@ -83,16 +87,17 @@ export function SessionExpiredPage({
   lastSaved: string;
   onSignIn: () => void;
 }) {
+  const { t } = useLingui();
   return (
     <IssuePage
       testId="issue-session-expired"
       icon="clock"
-      title="Your session ended"
-      happened={`Your session ended after ${hours} hours.`}
-      stillWorks={`Everything you saved is kept. Your last save was ${lastSaved}.`}
+      title={t`Your session ended`}
+      happened={t`Your session ended after ${hours} hours.`}
+      stillWorks={t`Everything you saved is kept. Your last save was ${lastSaved}.`}
       actions={
         <Button variant="primary" onClick={onSignIn}>
-          Sign in to go on
+          <Trans>Sign in to go on</Trans>
         </Button>
       }
     />
@@ -110,23 +115,24 @@ export function NoAccessPage({
   asked: boolean;
   onAsk: () => void;
 }) {
+  const { t } = useLingui();
   return (
     <IssuePage
       testId="issue-no-access"
       icon="lock"
-      title={`No access to ${projectName}`}
-      happened={`You are not a member of ${projectName}. Its owner is ${ownerName}.`}
-      stillWorks="Your other projects and your work are not affected."
+      title={t`No access to ${projectName}`}
+      happened={t`You are not a member of ${projectName}. Its owner is ${ownerName}.`}
+      stillWorks={t`Your other projects and your work are not affected.`}
       actions={
         <>
           {asked ? (
             <Button variant="primary" disabled>
               <Icon name="check" />
-              Asked {ownerName}
+              <Trans>Asked {ownerName}</Trans>
             </Button>
           ) : (
             <Button variant="primary" onClick={onAsk}>
-              Ask for access
+              <Trans>Ask for access</Trans>
             </Button>
           )}
           <GoHome />

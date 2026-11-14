@@ -7,6 +7,7 @@ import { createRoot } from "react-dom/client";
 import { selectWebClients } from "./clients.ts";
 import { readBuildConfig } from "./config.ts";
 import { installDebugHandle, provideDebug } from "./debug-handle.ts";
+import { AppI18n } from "./i18n/app-i18n.tsx";
 import { benchmarkDebug } from "./lab/pan-sweep.ts";
 import { createQueryClient } from "./query-client.ts";
 import { createAppRouter } from "./router.ts";
@@ -58,9 +59,11 @@ createRoot(container, {
 }).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
-      <ErrorToasts />
-      <UndoToasts />
+      <AppI18n>
+        <RouterProvider router={router} />
+        <ErrorToasts />
+        <UndoToasts />
+      </AppI18n>
     </QueryClientProvider>
   </StrictMode>,
 );

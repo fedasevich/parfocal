@@ -1,6 +1,7 @@
 import { createReadStream, existsSync } from "node:fs";
 import { extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
+import { lingui, linguiTransformerBabelPreset } from "@lingui/vite-plugin";
 import babel from "@rolldown/plugin-babel";
 import tailwindcss from "@tailwindcss/vite";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
@@ -74,7 +75,11 @@ export default defineConfig(({ mode }) => ({
       disableLogging: true,
     }),
     react(),
-    babel({ presets: [reactCompilerPreset()], exclude: [/\/generated\//, /node_modules/] }),
+    lingui(),
+    babel({
+      presets: [linguiTransformerBabelPreset(), reactCompilerPreset()],
+      exclude: [/\/generated\//, /node_modules/],
+    }),
     tailwindcss(),
     fakeApiWorkerInDevOnly(),
     mockAssetsInDevOnly(),

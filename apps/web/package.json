@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.src.json && tsc --noEmit -p tsconfig.test.json && tsc --noEmit -p tsconfig.node.json",
     "test": "node --test \"test/**/*.test.ts\"",
     "build": "vite build",
+    "i18n:extract": "lingui extract --clean",
     "analyze": "PARFOCAL_PUBLIC_APP_ENV=prod vite build --mode analyze",
     "dev": "vite",
     "dev:fake": "PARFOCAL_PUBLIC_APP_ENV=dev PARFOCAL_PUBLIC_FAKE_API=all vite",
@@ -22,6 +23,8 @@
     "#*": "./src/*"
   },
   "dependencies": {
+    "@lingui/core": "6.11.0",
+    "@lingui/react": "6.11.0",
     "@parfocal/api-client": "workspace:*",
     "@parfocal/edge": "workspace:*",
     "@parfocal/tokens": "workspace:*",
@@ -42,6 +45,10 @@
   "devDependencies": {
     "@axe-core/playwright": "4.14.0",
     "@babel/core": "8.0.10",
+    "@lingui/babel-plugin-lingui-macro": "6.11.0",
+    "@lingui/cli": "6.11.0",
+    "@lingui/format-po": "6.11.0",
+    "@lingui/vite-plugin": "6.11.0",
     "@parfocal/golden-images": "workspace:*",
     "@parfocal/test-fixtures": "workspace:*",
     "@parfocal/typescript-config": "workspace:*",
