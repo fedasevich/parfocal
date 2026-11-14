@@ -63,3 +63,26 @@ test("the throttle sends the first call at once and one trailing call per window
   assert.equal(runs, 3);
   mock.timers.reset();
 });
+
+test("an overdue trailing send goes out on the next call instead of waiting for its late timer", () => {
+  mock.timers.enable({ apis: ["setTimeout"] });
+  let time = 1000;
+  let runs = 0;
+  const paced = throttle(
+    () => {
+      runs += 1;
+    },
+    50,
+    () => time,
+  );
+  paced.call();
+  time += 10;
+  paced.call();
+  assert.equal(runs, 1);
+  time += 150;
+  paced.call();
+  assert.equal(runs, 2);
+  mock.timers.tick(200);
+  assert.equal(runs, 2);
+  mock.timers.reset();
+});
