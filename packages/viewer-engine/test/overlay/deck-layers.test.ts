@@ -355,3 +355,125 @@ test("changing the tier reuses the data of every layer that stays", () => {
   assert.equal(propsOf(dotted[0]).data, propsOf(smaller[0]).data);
   assert.notEqual(builder.lodKey([layer], nucleusPx(5)), builder.lodKey([layer], nucleusPx(9)));
 });
+
+const nearIds = [
+  "overlay:n:near-fills",
+  "overlay:n:near-outline-casings",
+  "overlay:n:near-outlines",
+];
+
+function lengthOf(layer: unknown): number {
+  return (propsOf(layer).data as { length: number }).length;
+}
+
+test("with a view, detail zoom draws only the nuclei of the cull window", () => {
+  const builder = createOverlayLayerBuilder();
+  const layer = nuclei(4000);
+  const layers = builder.build([layer], nucleusPx(9), [300, 900, 420, 1000]);
+  assert.deepEqual(visibleIds(layers), nearIds);
+  const drawn = lengthOf(layers[0]);
+  assert.ok(drawn > 0 && drawn < 4000 / 2);
+  for (const near of layers) assert.equal(lengthOf(near), drawn);
+});
+
+test("the window holds every nucleus that reaches into the view", () => {
+  const builder = createOverlayLayerBuilder();
+  const view = [300, 900, 420, 1000] as const;
+  const fills = propsOf(builder.build([nuclei(4000)], nucleusPx(9), view)[0]).data as {
+    attributes: { getPolygon: { value: Float32Array } };
+  };
+  const drawn = new Set<string>();
+  const positions = fills.attributes.getPolygon.value;
+  for (let at = 0; at < positions.length; at += 8) {
+    drawn.add(`${positions[at]},${positions[at + 1]}`);
+  }
+  for (let shape = 0; shape < 4000; shape++) {
+    const x = (shape % 40) * 20;
+    const y = Math.floor(shape / 40) * 20;
+    const reaches = x + 6 >= view[0] && x <= view[2] && y + 6 >= view[1] && y <= view[3];
+    if (reaches) assert.ok(drawn.has(`${x},${y}`), `${x},${y}`);
+  }
+});
+
+test("a pan inside the window keeps the key and every data object, leaving it changes both", () => {
+  const builder = createOverlayLayerBuilder();
+  const layer = nuclei(4000);
+  const zoom = nucleusPx(9);
+  const first = builder.build([layer], zoom, [300, 900, 420, 1000]);
+  const key = builder.lodKey([layer], zoom, [300, 900, 420, 1000]);
+  const near = builder.build([layer], zoom, [320, 930, 440, 1030]);
+  assert.equal(builder.lodKey([layer], zoom, [320, 930, 440, 1030]), key);
+  first.forEach((before, index) => {
+    assert.equal(propsOf(near[index]).data, propsOf(before).data);
+  });
+  assert.notEqual(builder.lodKey([layer], zoom, [300, 1700, 420, 1800]), key);
+  const far = builder.build([layer], zoom, [300, 1700, 420, 1800]);
+  assert.notEqual(propsOf(far[0]).data, propsOf(first[0]).data);
+  assert.deepEqual(visibleIds(far), nearIds);
+});
+
+test("zooming in on a wide window makes a smaller one", () => {
+  const builder = createOverlayLayerBuilder();
+  const layer = nuclei(4000);
+  const wide = lengthOf(builder.build([layer], nucleusPx(9), [0, 0, 780, 1980])[0]);
+  assert.equal(wide, 4000);
+  const close = lengthOf(builder.build([layer], nucleusPx(30), [380, 980, 400, 1000])[0]);
+  assert.ok(close < wide / 2);
+});
+
+test("dots are culled to the window and the density tier is not", () => {
+  const builder = createOverlayLayerBuilder();
+  const layer = nuclei(4000);
+  const view = [300, 900, 420, 1000] as const;
+  const dotted = builder.build([layer], nucleusPx(5), view);
+  assert.deepEqual(visibleIds(dotted), ["overlay:n:dots"]);
+  assert.ok(lengthOf(dotted[0]) > 0 && lengthOf(dotted[0]) < 2000);
+  assert.deepEqual(visibleIds(builder.build([layer], nucleusPx(1), view)), ["overlay:n:density"]);
+  assert.equal(
+    builder.lodKey([layer], nucleusPx(1), view),
+    builder.lodKey([layer], nucleusPx(1), [0, 0, 50, 50]),
+  );
+});
+
+test("a large shape is drawn whole wherever the view is", () => {
+  const builder = createOverlayLayerBuilder();
+  const layer = nuclei(4000, 400);
+  const layers = builder.build([layer], nucleusPx(9), [300, 100, 420, 200]);
+  const large = layers.filter((entry) => entry.id.includes(":large-"));
+  assert.equal(large.length, 3);
+  for (const entry of large) {
+    assert.equal(lengthOf(entry), 1);
+    assert.notEqual(propsOf(entry).visible, false);
+  }
+  assert.deepEqual(
+    ids(layers).map((id) => id.split(":")[2]),
+    [
+      "near-fills",
+      "large-fills",
+      "near-outline-casings",
+      "large-outline-casings",
+      "near-outlines",
+      "large-outlines",
+    ],
+  );
+});
+
+test("a view off the layer draws no nuclei and coming back draws them again", () => {
+  const builder = createOverlayLayerBuilder();
+  const layer = nuclei(4000);
+  assert.deepEqual(visibleIds(builder.build([layer], nucleusPx(9), [9000, 9000, 9100, 9100])), []);
+  assert.deepEqual(
+    visibleIds(builder.build([layer], nucleusPx(9), [300, 900, 420, 1000])),
+    nearIds,
+  );
+});
+
+test("under 500 nuclei a view changes nothing", () => {
+  const builder = createOverlayLayerBuilder();
+  const layer = nuclei(499);
+  assert.deepEqual(ids(builder.build([layer], nucleusPx(9), [0, 0, 50, 50])), detailedIds);
+  assert.equal(
+    builder.lodKey([layer], nucleusPx(9), [0, 0, 50, 50]),
+    builder.lodKey([layer], nucleusPx(9), [200, 200, 250, 250]),
+  );
+});

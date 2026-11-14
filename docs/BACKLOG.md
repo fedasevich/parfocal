@@ -1394,7 +1394,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Refs [ADR 0111](adr/0111-jpeg-2000-in-the-decode-workers-and-ome-channel-pages.md).
   Size: M.
 
-- [ ] VIEW-013 · NDPI including above 4 GB
+- [x] VIEW-013 · NDPI including above 4 GB
   Tiles cut from the restart-marker index, 64-bit offsets rebuilt, YCbCr handled.
   Done when CMU-1.ndpi and a file above 4 GB pass and colours match the golden image.
   Refs [`poc/src/slide/ndpi*.ts`](https://github.com/fedasevich/pathlogy-poc/tree/master/src/slide).
