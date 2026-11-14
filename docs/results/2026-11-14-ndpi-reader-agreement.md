@@ -53,7 +53,9 @@ Slide index.
 | Slide | Requests to open by directory walk | Requests to open from the index | Ingest sidecar size | Restart tables it replaces |
 | --- | --- | --- | --- | --- |
 | CMU-1.ndpi | 12 | 1 | 1,282,597 bytes | 625,800 bytes |
-| Hamamatsu-1.ndpi | about 120 | 0 | 10,902,475 bytes | 9,779,616 bytes |
+| Hamamatsu-1.ndpi | 17 | 0 | 10,902,475 bytes | 9,779,616 bytes |
+
+The one request on `CMU-1.ndpi` reads the frame header of its smallest level, which is stored without restart intervals. Every level of `Hamamatsu-1.ndpi` has them, so its index open needs no request.
 
 Pixels read from the index were identical to pixels read after a directory walk on the tissue window and on the bottom right window of every level, for both the index built in the test and the ingest sidecar.
 
