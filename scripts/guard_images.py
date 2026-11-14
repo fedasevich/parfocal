@@ -15,7 +15,7 @@ def advice(limit: int) -> str:
     return (
         f"This agent has already opened {limit} images, the limit per agent. Every image stays in "
         "context for the rest of the run. Compare by number instead with "
-        "`pnpm --filter @parfocal/web shot APP_URL out.png --mock SCREEN/SCENE`, and leave the "
+        "`pnpm --filter @parfocal/web shot APP_URL out.png --against URL_OR_PNG`, and leave the "
         "visual check to the owner's review. The owner can raise PARFOCAL_IMAGE_LIMIT."
     )
 

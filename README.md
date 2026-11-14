@@ -39,7 +39,7 @@ pnpm typecheck
 pnpm check
 ```
 
-`pnpm -s verify` runs lint, format, types and unit tests in one quiet pass. `pnpm --filter @parfocal/web shot APP_URL out.png --mock SCREEN/SCENE` takes a small screenshot and reports how much it differs from the same mock scene ([knowledge/agent-workflow.md](docs/knowledge/agent-workflow.md)).
+`pnpm -s verify` runs lint, format, types and unit tests in one quiet pass. `pnpm --filter @parfocal/web shot APP_URL out.png --against URL_OR_PNG` takes a small screenshot and reports how much it differs from another page or image ([knowledge/agent-workflow.md](docs/knowledge/agent-workflow.md)).
 
 `pnpm board` opens the live task board over the backlog, and `python3 scripts/board.py ready` lists the tasks free to start ([docs/board](docs/board/README.md)).
 

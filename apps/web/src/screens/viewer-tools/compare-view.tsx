@@ -1,4 +1,4 @@
-import { type ProjectSlide, useListProjectSlides } from "@parfocal/api-client";
+import { type ProjectSlide, useGetMe, useListProjectSlides } from "@parfocal/api-client";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Keycap } from "@parfocal/ui/components/keycap";
 import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
@@ -35,6 +35,9 @@ import {
 } from "react";
 import { useBindings } from "../../keys/personal-keys.ts";
 import { useHotkeys } from "../../keys/use-hotkeys.ts";
+import { LiveCursor } from "../../presence/live-cursor.tsx";
+import { pointOfShare } from "../../presence/shared-cursor.ts";
+import { useRoomCursors } from "../../presence/use-room-cursors.ts";
 import { okData } from "../placeholder.tsx";
 import { type Camera, midSize, SlideStill } from "../review/slide-still.tsx";
 import { ViewerFrame } from "../review/viewer-frame.tsx";
@@ -51,7 +54,13 @@ import {
   paneSides,
   panesOf,
 } from "./compare-layout.ts";
-import { carryPoint, pointOfScreen, type SlidePoint, screenOfPoint } from "./cursor-map.ts";
+import {
+  carryPoint,
+  pointOfScreen,
+  pointOnPane,
+  type SlidePoint,
+  screenOfPoint,
+} from "./cursor-map.ts";
 import {
   cameraOfView,
   moveCameraKeepingRotation,
@@ -139,6 +148,8 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
     chosen,
     { left: session.slideId, right: fallbackRight?.id },
   );
+  const liveCursors = useRoomCursors(session.slideId, okData(useGetMe().data)?.user_id);
+  const homeSide = paneSides.find((side) => ids[side] === session.slideId);
   const slideOn = (side: PaneSide) => caseSlides.find((slide) => slide.id === ids[side]);
   const show = (next: PaneSlideIds) => setChosen({ ...next });
   const pick = (side: PaneSide, id: string) => {
@@ -267,7 +278,17 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
         ? source.point
         : carryPoint(source.point, link.offsets[source.side], link.offsets[side]);
     const at = screenOfPoint(own, box, point);
-    return <Crosshair x={at.x} y={at.y} />;
+    return (
+      <>
+        <Crosshair x={at.x} y={at.y} />
+        {liveCursors.map((live) => {
+          const carried = pointOnPane(pointOfShare(live.at, midSize), homeSide, side, link.offsets);
+          if (carried === null) return null;
+          const spot = screenOfPoint(own, box, carried);
+          return <LiveCursor key={live.user} x={spot.x} y={spot.y} user={live.user} />;
+        })}
+      </>
+    );
   };
 
   const pane = (side: PaneSide) => {

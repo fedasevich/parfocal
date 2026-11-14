@@ -509,7 +509,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Cut tokens per task: `board.py` commands so nobody reads the backlog or log whole, a hook that blocks those reads, a short `AGENTS.md` with the procedures in `docs/knowledge/agent-workflow.md`, an output budget, `/start`, `/finish` and `/consolidate` commands, `task-runner` and `ui-porter` agents, `pnpm verify` and a small screenshot compare script ([ADR 0136](adr/0136-lean-agent-workflow.md)).
   Done when `scripts/test_board.py` and `scripts/test_guard_big_docs.py` pass and `pnpm verify` is green.
 
-- [ ] FOUND-022 · Remove the mock comparison tooling
+- [x] FOUND-022 · Remove the mock comparison tooling
   Temporary tooling from FOUND-021 (lean agent workflow) exists only while screens are ported from the frozen mock. Once the React app is the design source, remove the `--mock` option from `apps/web/e2e/shot.ts`, the mock lines in `docs/knowledge/agent-workflow.md`, `AGENTS.md`, the root README and `.claude/agents/task-runner.md`, and decide whether the per-agent image limit hook (`scripts/guard_images.py`) and the rest of the shot script still earn their place.
   Done when no doc or script tells agents to compare against the mock and `pnpm verify` is green.
   Depends on PROTO-010.
@@ -811,7 +811,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Depends on ADMIN-009, IAM-001.
   Size: M.
 
-- [ ] IAM-026 · A workspace on a shared mail domain is not open to strangers
+- [x] IAM-026 · A workspace on a shared mail domain is not open to strangers
   A person who creates a workspace saves their mail domain on it with the join policy `join`, and only a hand-kept list of 32 domains and 7 prefixes keeps consumer mail providers out ([tenant isolation review](results/2026-11-09-tenant-isolation-review.md), confirmed finding 1). On a provider missing from the list, such as `onet.pl`, `btinternet.com` or `comcast.net`, any stranger with a free mailbox sees the workspace's name, logo and counts and joins it as a reviewer. Decision 84 (a new workspace and its mail domain) chose 84a on 2026-11-13: a new workspace saves no domain, and an admin turns on joining by domain in the join settings, which already check that the domain is the admin's own and not public.
   Done when a test shows a stranger on an unlisted shared provider neither listing nor joining a workspace made there, and the chosen rule is recorded.
   Size: S.
@@ -3032,7 +3032,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Done when E2E with two pages shows the follower's camera tracking within 300 ms.
   Size: L.
 
-- [ ] COLLAB-011 · Live shared cursor in compare and follow modes
+- [x] COLLAB-011 · Live shared cursor in compare and follow modes
   Done when tests cover cursor broadcast throttling and display.
   Size: L.
 

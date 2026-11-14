@@ -32,6 +32,10 @@ def create_workspace(browser: Browser, domain: str, **extra: str) -> str:
     sign_in(browser, f"admin@{domain}")
     created = browser.client.post("/api/me/workspaces", json={"name": "Sentinel lab", **extra})
     assert created.status_code == 201
+    opened = browser.client.put(
+        "/api/tenant/join-settings", json={"email_domain": domain, "join_policy": "join"}
+    )
+    assert opened.status_code == 200
     return str(created.json()["tenant_id"])
 
 
@@ -65,13 +69,31 @@ def test_a_person_from_another_domain_cannot_join_or_ask(
         assert (refused.status_code, refused.json()["code"]) == (404, "workspace-not-joinable")
 
 
-def test_a_workspace_made_from_a_public_email_is_not_joinable(browser: Browser) -> None:
-    sign_in(browser, f"someone-{secrets.token_hex(4)}@gmail.com")
-    tenant_id = browser.client.post("/api/me/workspaces", json={"name": "Home lab"}).json()[
-        "tenant_id"
-    ]
-    rows = browser.sql(f"SELECT email_domain FROM tenants WHERE id = '{tenant_id}'")
-    assert rows == [(None,)]
+def test_a_new_workspace_saves_no_email_domain(browser: Browser, domain: str) -> None:
+    sign_in(browser, f"admin@{domain}")
+    created = browser.client.post("/api/me/workspaces", json={"name": "Sentinel lab"})
+    assert created.status_code == 201
+    tenant_id = created.json()["tenant_id"]
+    assert browser.client.get("/api/tenant/join-settings").json()["email_domain"] is None
+    assert browser.sql(f"SELECT email_domain FROM tenants WHERE id = '{tenant_id}'") == [(None,)]
+
+
+@pytest.mark.parametrize("provider", ["onet.pl", "btinternet.com", "comcast.net"])
+def test_a_stranger_on_an_unlisted_shared_provider_neither_lists_nor_joins(
+    browser: Browser, colleague: Browser, provider: str
+) -> None:
+    assert not workspace_access.is_public_domain(provider)
+    sign_in(browser, f"founder-{secrets.token_hex(4)}@{provider}")
+    created = browser.client.post("/api/me/workspaces", json={"name": "Home lab"})
+    assert created.status_code == 201
+    tenant_id = created.json()["tenant_id"]
+    sign_in(colleague, f"stranger-{secrets.token_hex(4)}@{provider}")
+    assert colleague.client.get("/api/me/joinable-workspaces").json() == []
+    for path in ("membership", "access-requests"):
+        refused = colleague.client.post(f"/api/me/joinable-workspaces/{tenant_id}/{path}")
+        assert (refused.status_code, refused.json()["code"]) == (404, "workspace-not-joinable")
+    members = browser.sql(f"SELECT count(*) FROM memberships WHERE tenant_id = '{tenant_id}'")
+    assert int(str(members[0][0])) == 1
 
 
 def test_an_ask_notifies_the_admins_and_an_admin_approves_it(
@@ -291,7 +313,7 @@ def test_an_admin_sets_the_join_domain_policy_and_logo(
         f"WHERE action = 'tenant.join-settings-changed' AND tenant_id = '{tenant_id}' "
         "ORDER BY seq"
     )
-    assert audited == [("join", "true"), ("ask", "true")]
+    assert audited == [("join", "true"), ("join", "true"), ("ask", "true")]
 
     sign_in(colleague, f"asker@{domain}")
     joinable = colleague.client.get("/api/me/joinable-workspaces").json()

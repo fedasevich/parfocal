@@ -178,10 +178,6 @@ The full viewer route `/projects/$projectId/slides/$slideId` holds the mock's `c
 
 `SlideStill` in `apps/web/src/screens/review/slide-still.tsx` draws in the mock's overview pixels, so a view adds its layers through `underlay`, which renders inside the SVG after the image and before the outlines, with the camera and size so it can turn a screen position into slide coordinates (the swipe's split line). `regionStyle` restyles or hides each outline (`stroke: "none"`), and `tags` places the ID tags with their score in HTML at whole slide, so they keep their size. The mock's added region T6⁺ is the sixth outline, `T6`, in `slide-geometry.ts`, and `shapeKey` and `objectOfShape` map between the two names. `apps/web/src/screens/viewer/layer-views.tsx` builds one drawing per view. Source: PROTO-018.
 
-## Screenshots of the frozen mock for comparison
-
-`docs/design/ux-mock/index.html` opens a screen from its hash, such as `#layers`, but only on load, so a script that moves between screens must reload after changing the hash. The scene chips are buttons with `data-scene="<key>"`, and the app frame is `#app`, so a Playwright script can click each chip and screenshot `#app` to compare a scene with the app. Source: PROTO-018.
-
 ## A scene link without a scene keeps the fake server state
 
 PROTO-008 (disagreements, sign-off and the evaluation report) shares one piece of fake server state across three routes: the stage of RT-14's queue in `packages/api-client/src/fake/queue-scene.ts`. `apps/web/src/fake-api/queue-scene-rules.ts` returns `null` for the disagreements and sign-off routes when the URL has no `scene`, and `start.tsx` then leaves the state alone, so decisions and sends made in the queue are still there when Go to sign-off opens the modal. A prototype link with a scene sets the canonical state, and every other route resets it. The evaluation route maps its report, arrange and PDF scenes onto the same state, so moving between them does not reset the queries, which would unmount the page and lose an arrangement. Source: PROTO-008.

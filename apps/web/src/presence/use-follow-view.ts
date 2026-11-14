@@ -1,5 +1,6 @@
 import type { RoomSignal } from "@parfocal/edge/room-client";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { onPointer, showCursor } from "./cursor-bridge.ts";
 import {
   heardViewOf,
   type SharedCamera,
@@ -17,6 +18,7 @@ import {
   type Sighting,
   viewersOf,
 } from "./presence-state.ts";
+import { cursorSender, heardCursorOf, type SlideShare } from "./shared-cursor.ts";
 import { useStageEngine } from "./stage-engines.ts";
 import { useRoomEvents } from "./use-room-presence.ts";
 
@@ -40,6 +42,7 @@ export function useFollowView(slideId: string, me: string | undefined): FollowVi
   const [sharing, setSharingState] = useState(false);
   const [following, setFollowing] = useState<string | null>(null);
   const views = useRef(new Map<string, SharedCamera>());
+  const cursors = useRef(new Map<string, SlideShare>());
   const applied = useRef<SharedCamera | null>(null);
   const applying = useRef(false);
   const send = useRef<(signal: RoomSignal) => boolean>(() => false);
@@ -63,6 +66,7 @@ export function useFollowView(slideId: string, me: string | undefined): FollowVi
 
   const forget = useCallback((user: string) => {
     views.current.delete(user);
+    cursors.current.delete(user);
     setSharers((known) => (known.includes(user) ? known.filter((id) => id !== user) : known));
     setFollowing((current) => (current === user ? null : current));
   }, []);
@@ -81,6 +85,25 @@ export function useFollowView(slideId: string, me: string | undefined): FollowVi
       send.current(stopFrame);
     };
   }, [engine, sharing]);
+
+  useEffect(() => {
+    if (engine === null || !sharing) return;
+    const sender = cursorSender((signal) => send.current(signal));
+    const unsubscribe = onPointer(slideId, (at) => {
+      if (at === null) sender.leave();
+      else sender.move(at);
+    });
+    return () => {
+      unsubscribe();
+      sender.cancel();
+    };
+  }, [engine, sharing, slideId]);
+
+  useEffect(() => {
+    const at = following === null ? undefined : cursors.current.get(following);
+    showCursor(slideId, following === null || at === undefined ? null : { user: following, at });
+    return () => showCursor(slideId, null);
+  }, [slideId, following]);
 
   useEffect(() => {
     if (engine === null || following === null) return;
@@ -103,11 +126,21 @@ export function useFollowView(slideId: string, me: string | undefined): FollowVi
     () => {
       setPresent(nobody);
       views.current.clear();
+      cursors.current.clear();
       setSharers(noSharers);
       setFollowing(null);
       sendNow();
     },
     (signal) => {
+      const pointed = heardCursorOf(signal, me ?? "");
+      if (pointed !== null) {
+        if (pointed.gone) cursors.current.delete(pointed.user);
+        else cursors.current.set(pointed.user, pointed.at);
+        if (state.current.following === pointed.user) {
+          showCursor(slideId, pointed.gone ? null : { user: pointed.user, at: pointed.at });
+        }
+        return;
+      }
       const heard = heardViewOf(signal, me ?? "");
       if (heard === null) return;
       if (heard.stop) {

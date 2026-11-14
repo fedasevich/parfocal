@@ -43,7 +43,7 @@ Name a group of tasks by its epic or purpose ("the PROTO screen tasks") instead 
 
 | Work | Model |
 |---|---|
-| Porting mock screens, routine UI, tests for existing code | Sonnet, medium effort |
+| Routine UI, tests for existing code | Sonnet, medium effort |
 | ADRs, research checks, backend design, security, tricky bugs | Opus |
 | Board moves, index rows, log lines, simple doc edits | Haiku |
 | Second opinion | Fable, once before starting and once before hand-back, never per turn |
@@ -98,7 +98,7 @@ The agent prompt always says:
 
 - Read the task with `board.py show ID` and only the docs it lists. Grep for what already exists and build on it.
 - Run `pnpm install` first, and `uv sync` when Python is touched.
-- Build the tests that the "Done when" line names, and compare screens with the mock by number.
+- Build the tests that the "Done when" line names, and compare screens by number.
 - Name new ADRs `docs/adr/XXXX-short-title.md`, with a `# XXXX. Title` line and the `- Date:`, `- Status:`, `- Deciders:` and `- Backlog:` lines.
 - Do not edit `docs/BACKLOG.md`, `docs/log.md`, `docs/decisions.md`, `docs/board/` or READMEs (except the results index). Do not claim, note, tick or push.
 - Never use the word "verdict", and write no code comments.
@@ -130,13 +130,11 @@ Review is for what only the owner can give. A task "waiting for a green CI run o
 
 An image costs a lot and stays in context for every later turn. Take few screenshots and open fewer.
 
-The mock comparison below is temporary. FOUND-022 (remove the mock comparison tooling) deletes it once PROTO-010 (make the React app the design source) is done.
-
-- Read the mock's HTML and the code to know what a screen should show. Don't screenshot to find out.
-- Compare by number: `pnpm --filter @parfocal/web shot APP_URL out.png --mock SCREEN/SCENE` shoots the app and the same mock scene at 720 by 450 in the same theme, then prints the share of pixels that differ and writes a diff image. Scene keys are in [design/prototype-inventory.md](../design/prototype-inventory.md), and a wrong key prints the valid ones. `--theme dark` compares the dark theme. `--against URL_OR_PNG` compares with any other page or image.
-- Expect some difference, because fake data and fonts never match exactly (Home in the light theme differs on about 17%). Look at a screen only when its number is far above the others or jumps after a change.
+- Read the code and the Storybook stories to know what a screen should show. Don't screenshot to find out.
+- Compare by number: `pnpm --filter @parfocal/web shot APP_URL out.png --against URL_OR_PNG` shoots the app at 720 by 450 and compares it with another page or an earlier image, such as the same screen on `main` or a shot taken before the change. It prints the share of pixels that differ and writes a diff image. `--theme dark` shoots the dark theme. Without `--against` it only writes the screenshot.
+- Look at a screen only when its number is far above what the change explains or jumps after a change.
 - A hook in `.claude/settings.json` lets each agent open at most 5 images. After that it refuses, and the owner can raise `PARFOCAL_IMAGE_LIMIT` for a session.
-- Leave pixel nits to the owner's review against the mock.
+- Leave pixel nits to the owner's review.
 
 ## Starting and finishing a task
 
