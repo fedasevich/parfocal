@@ -1,9 +1,10 @@
 import { Trans, useLingui } from "@lingui/react/macro";
 import { MapViewport, SmartMinimap } from "@parfocal/ui/components/smart-minimap";
-import { inspectorTabLabels, inspectorTabOrder } from "@parfocal/ui/lib/inspector-tabs";
 import type { MapRect } from "@parfocal/ui/lib/minimap-box";
 import { overviewSize } from "../screens/review/slide-geometry.ts";
 import { lookUrl } from "../screens/thumbnails.ts";
+import { FullViewer, type ViewerSearch } from "../screens/viewer/full-viewer.tsx";
+import type { ViewerTab } from "../screens/viewer/viewer-scenes.ts";
 import { usePopoutState } from "./popout-channel.ts";
 
 const overviewImage = {
@@ -14,11 +15,42 @@ const overviewImage = {
 
 const slideExtent: MapRect = [0, 0, overviewSize.width, overviewSize.height];
 
-export function PopoutScreen() {
+type PopoutSearch = {
+  kind?: "minimap" | "inspector" | undefined;
+  project?: string | undefined;
+  slide?: string | undefined;
+  task?: string | undefined;
+  tab?: ViewerTab | undefined;
+  object?: string | undefined;
+};
+
+export function PopoutScreen({
+  search,
+  onSearch,
+}: {
+  search: PopoutSearch;
+  onSearch: (change: Partial<ViewerSearch>) => void;
+}) {
   const { t } = useLingui();
-  const { viewport, magnification, moveTo, inspector, selectTab } = usePopoutState();
-  const kind = new URLSearchParams(window.location.search).get("kind");
-  const showsInspector = kind === "inspector";
+  const { viewport, magnification, moveTo } = usePopoutState();
+  if (search.kind === "inspector") {
+    if (search.project === undefined || search.slide === undefined) {
+      return (
+        <main className="p-4 text-body text-fg-dim" data-testid="popout-window">
+          <Trans>Open this window from the viewer.</Trans>
+        </main>
+      );
+    }
+    return (
+      <FullViewer
+        projectId={search.project}
+        slideId={search.slide}
+        search={{ task: search.task, tab: search.tab, object: search.object }}
+        onSearch={onSearch}
+        panelOnly
+      />
+    );
+  }
   return (
     <main className="relative min-h-screen bg-bg p-4 text-fg" data-testid="popout-window">
       <h1 className="font-semibold text-section-title">
@@ -27,30 +59,11 @@ export function PopoutScreen() {
       <p
         className="text-body text-fg-dim"
         data-testid="popout-status"
-        data-following={showsInspector ? inspector !== null : viewport !== null}
+        data-following={viewport !== null}
       >
-        {(showsInspector ? inspector === null : viewport === null)
-          ? t`Waiting for the main window`
-          : t`Following the main window`}
+        {viewport === null ? t`Waiting for the main window` : t`Following the main window`}
       </p>
-      {showsInspector && inspector !== null ? (
-        <div role="tablist" className="mt-4 flex gap-2" data-testid="popout-tabs">
-          {inspectorTabOrder.map((name) => (
-            <button
-              key={name}
-              type="button"
-              role="tab"
-              aria-selected={inspector.tab === name}
-              onClick={() => selectTab(name)}
-              className="cursor-pointer rounded-ctl border border-line bg-chrome px-3 py-1.5 text-body-sm aria-selected:border-accent aria-selected:font-semibold"
-            >
-              {inspectorTabLabels[name]}
-              {inspector.counts[name] ? ` ${inspector.counts[name]}` : ""}
-            </button>
-          ))}
-        </div>
-      ) : null}
-      {showsInspector || viewport === null ? null : (
+      {viewport === null ? null : (
         <>
           <p className="mt-2 text-body" data-testid="popout-readout">
             {t`${magnification.toFixed(1)}× at ${Math.round(viewport[0])}, ${Math.round(viewport[1])}`}

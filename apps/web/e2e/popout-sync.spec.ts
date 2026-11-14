@@ -55,24 +55,24 @@ test("the second window follows the main camera and moves it back", async ({ con
   await expect.poll(async () => (await viewportOf(second).boundingBox())?.x).not.toBe(secondMid.x);
 });
 
-test("the second window shows the side panel tab and switches it both ways", async ({
-  context,
+test("an object selected in the side panel window is selected in the main window", async ({
+  page,
 }) => {
-  const main = await context.newPage();
-  await openScene(main, "Full viewer, one object · An open region, T5");
-  const second = await context.newPage();
-  await second.goto("/popout?kind=inspector");
-  await expect(second.getByTestId("popout-status")).toHaveAttribute("data-following", "true");
-  const tabs = second.getByTestId("popout-tabs");
-  await tabs.getByRole("tab", { name: /^Display/ }).click();
-  await expect(main).toHaveURL(/tab=display/);
-  await expect(tabs.getByRole("tab", { name: /^Display/ })).toHaveAttribute(
-    "aria-selected",
-    "true",
-  );
-  await main.getByRole("tab", { name: /^Comments/ }).click();
-  await expect(tabs.getByRole("tab", { name: /^Comments/ })).toHaveAttribute(
-    "aria-selected",
-    "true",
-  );
+  await page.goto("/prototype");
+  const link = page
+    .getByRole("list", { name: "Screens" })
+    .getByRole("link", { name: "Full viewer · Objects tab", exact: true });
+  await page.goto((await link.getAttribute("href")) ?? "");
+  await expect(page.getByTestId("full-viewer")).toBeVisible();
+  const opened = page.context().waitForEvent("page");
+  await page.getByTestId("inspector-popout").click();
+  const second = await opened;
+  const panel = second.getByRole("complementary", { name: "Side panel" });
+  await panel.getByRole("button", { name: /^T5 Tumor region/ }).click();
+  await expect(page).toHaveURL(/object=T5/);
+  await page.getByRole("button", { name: "Whole slide", exact: true }).click();
+  await expect(page).not.toHaveURL(/object=/);
+  await expect(second).not.toHaveURL(/object=/);
+  await panel.getByRole("tab", { name: /^Comments/ }).click();
+  await expect(page).toHaveURL(/tab=comments/);
 });

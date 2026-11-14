@@ -1,4 +1,3 @@
-import type { InspectorCounts, InspectorTabName } from "@parfocal/ui/lib/inspector-tabs";
 import { useEffect, useRef, useState } from "react";
 
 export type PopoutKind = "minimap" | "inspector";
@@ -9,13 +8,25 @@ export type PopoutMessage =
   | { type: "hello" }
   | { type: "view"; viewport: MapViewport; magnification: number }
   | { type: "move"; centre: [number, number] }
-  | { type: "inspector"; tab: InspectorTabName; counts: InspectorCounts }
-  | { type: "tab"; tab: InspectorTabName };
+  | { type: "select"; tab: string | null; object: string | null };
 
 export const popoutChannelName = "parfocal-popout";
 
-export function popoutPath(kind: PopoutKind): string {
-  return `/popout?kind=${kind}`;
+const slidePath = /^\/projects\/([^/]+)\/slides\/([^/]+)/;
+
+export function popoutPath(kind: PopoutKind, here: Location = window.location): string {
+  const query = new URLSearchParams({ kind });
+  const match = slidePath.exec(here.pathname);
+  if (match?.[1] && match[2]) {
+    query.set("project", decodeURIComponent(match[1]));
+    query.set("slide", decodeURIComponent(match[2]));
+  }
+  const current = new URLSearchParams(here.search);
+  for (const key of ["task", "tab", "object"]) {
+    const value = current.get(key);
+    if (value) query.set(key, value);
+  }
+  return `/popout?${query.toString()}`;
 }
 
 type ScreenDetail = { isPrimary: boolean; availLeft: number; availTop: number };
@@ -35,12 +46,25 @@ async function otherScreen(): Promise<ScreenDetail | null> {
   }
 }
 
-export async function openPopout(kind: PopoutKind): Promise<Window | null> {
-  const screen = await otherScreen();
-  const placement = screen
-    ? `,left=${screen.availLeft},top=${screen.availTop},width=720,height=720`
-    : ",width=520,height=620";
+function popup(kind: PopoutKind, placement: string): Window | null {
   return window.open(popoutPath(kind), `parfocal-popout-${kind}`, `popup=yes${placement}`);
+}
+
+const plainPlacement = ",width=520,height=620";
+
+export function openPopout(kind: PopoutKind): Promise<Window | null> {
+  const host = window as ScreenDetailsWindow;
+  if (!host.getScreenDetails || !window.screen.isExtended) {
+    return Promise.resolve(popup(kind, plainPlacement));
+  }
+  return otherScreen().then((screen) =>
+    popup(
+      kind,
+      screen
+        ? `,left=${screen.availLeft},top=${screen.availTop},width=720,height=720`
+        : plainPlacement,
+    ),
+  );
 }
 
 export function openPopoutChannel(): BroadcastChannel {
@@ -85,51 +109,61 @@ export function useMainPopoutSync({
   }, [x, y, width, height, magnification]);
 }
 
-export function useMainInspectorSync({
+export function useSelectionSync({
   tab,
-  counts,
-  onTab,
+  object,
+  ask,
+  onRemote,
 }: {
-  tab: InspectorTabName;
-  counts: InspectorCounts;
-  onTab: (tab: InspectorTabName) => void;
+  tab: string | undefined;
+  object: string | undefined;
+  ask: boolean;
+  onRemote: (change: { tab?: string; object?: string }) => void;
 }): void {
   const channel = useRef<BroadcastChannel | null>(null);
-  const latest = useRef({ tab, counts });
-  latest.current = { tab, counts };
-  const select = useRef(onTab);
-  select.current = onTab;
+  const latest = useRef({ tab, object });
+  latest.current = { tab, object };
+  const remote = useRef(onRemote);
+  remote.current = onRemote;
 
   useEffect(() => {
     const opened = openPopoutChannel();
     channel.current = opened;
+    const announce = () =>
+      opened.postMessage({
+        type: "select",
+        tab: latest.current.tab ?? null,
+        object: latest.current.object ?? null,
+      } satisfies PopoutMessage);
     opened.onmessage = (event: MessageEvent<PopoutMessage>) => {
-      if (event.data.type === "tab") select.current(event.data.tab);
-      if (event.data.type === "hello") {
-        opened.postMessage({ type: "inspector", ...latest.current } satisfies PopoutMessage);
+      if (event.data.type === "hello" && !ask) announce();
+      if (event.data.type !== "select") return;
+      const { tab: nextTab, object: nextObject } = event.data;
+      if (
+        nextTab === (latest.current.tab ?? null) &&
+        nextObject === (latest.current.object ?? null)
+      ) {
+        return;
       }
+      remote.current({ tab: nextTab ?? undefined, object: nextObject ?? undefined });
     };
+    if (ask) opened.postMessage({ type: "hello" } satisfies PopoutMessage);
     return () => {
       opened.close();
       channel.current = null;
     };
-  }, []);
+  }, [ask]);
 
-  const { objects, display, comments, opinion } = counts;
   useEffect(() => {
     channel.current?.postMessage({
-      type: "inspector",
-      tab,
-      counts: { objects, display, comments, opinion },
+      type: "select",
+      tab: tab ?? null,
+      object: object ?? null,
     } satisfies PopoutMessage);
-  }, [tab, objects, display, comments, opinion]);
+  }, [tab, object]);
 }
 
-export type InspectorSnapshot = { tab: InspectorTabName; counts: InspectorCounts };
-
 export type PopoutState = {
-  inspector: InspectorSnapshot | null;
-  selectTab: (tab: InspectorTabName) => void;
   viewport: MapViewport | null;
   magnification: number;
   moveTo: (centre: [number, number]) => void;
@@ -139,15 +173,11 @@ export function usePopoutState(): PopoutState {
   const channel = useRef<BroadcastChannel | null>(null);
   const [viewport, setViewport] = useState<MapViewport | null>(null);
   const [magnification, setMagnification] = useState(0);
-  const [inspector, setInspector] = useState<InspectorSnapshot | null>(null);
 
   useEffect(() => {
     const opened = openPopoutChannel();
     channel.current = opened;
     opened.onmessage = (event: MessageEvent<PopoutMessage>) => {
-      if (event.data.type === "inspector") {
-        setInspector({ tab: event.data.tab, counts: event.data.counts });
-      }
       if (event.data.type !== "view") return;
       setViewport(event.data.viewport);
       setMagnification(event.data.magnification);
@@ -160,8 +190,6 @@ export function usePopoutState(): PopoutState {
   }, []);
 
   return {
-    inspector,
-    selectTab: (tab) => channel.current?.postMessage({ type: "tab", tab } satisfies PopoutMessage),
     viewport,
     magnification,
     moveTo: (centre) =>
