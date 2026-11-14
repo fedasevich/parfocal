@@ -1,7 +1,7 @@
-# XXXX. Conversion runs only on a fired trigger, and writes unsharded OME-Zarr 0.5 with JPEG or zstd chunks
+# 0306. Conversion runs only on a fired trigger, and writes unsharded OME-Zarr 0.5 with JPEG or zstd chunks
 
 - Date: 2026-11-14
-- Status: Proposed
+- Status: Accepted
 - Deciders: Yurii Fedas
 - Backlog: INGEST-015 (conversion fallback worker). Builds on [ADR 0043](0043-server-slide-reading.md) (server slide reading, whose rule 6 says a conversion trigger needs its own ADR), [ADR 0111](0111-jpeg-2000-in-the-decode-workers-and-ome-channel-pages.md) (JPEG 2000 in the decode workers, which names the only trigger so far) and [ADR 0305](0305-jpeg-chunks-in-ome-zarr-and-absent-inner-chunks.md) (the JPEG chunk layout the browser reads).
 

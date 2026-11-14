@@ -270,4 +270,5 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0304](0304-a-shared-cursor-is-a-second-capped-frame-in-shares-of-the-slide.md) | A shared cursor is a second capped client frame, sent as shares of the slide, with its own rate cap | Accepted | 2026-11-14 |
 | [XXXX](0305-jpeg-chunks-in-ome-zarr-and-absent-inner-chunks.md) | OME-Zarr JPEG chunks are a zarrita codec named `imagecodecs_jpeg`, and absent inner chunks of a shard come from the slide index | Proposed | 2026-11-14 |
 | [0305](0305-jpeg-chunks-in-ome-zarr-and-absent-inner-chunks.md) | OME-Zarr JPEG chunks are a zarrita codec named `imagecodecs_jpeg`, and absent inner chunks of a shard come from the slide index | Accepted | 2026-11-14 |
-| [XXXX](XXXX-conversion-triggers-and-the-ome-zarr-target.md) | Conversion runs only on a fired trigger, and writes unsharded OME-Zarr 0.5 with JPEG or zstd chunks | Proposed | 2026-11-14 |
+| [XXXX](0306-conversion-triggers-and-the-ome-zarr-target.md) | Conversion runs only on a fired trigger, and writes unsharded OME-Zarr 0.5 with JPEG or zstd chunks | Proposed | 2026-11-14 |
+| [0306](0306-conversion-triggers-and-the-ome-zarr-target.md) | Conversion runs only on a fired trigger, and writes unsharded OME-Zarr 0.5 with JPEG or zstd chunks | Accepted | 2026-11-14 |
