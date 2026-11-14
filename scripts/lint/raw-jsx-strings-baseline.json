@@ -16,6 +16,7 @@
   "apps/web/src/help/help-dialog.tsx",
   "apps/web/src/help/tour-host.tsx",
   "apps/web/src/measure/measurement-list.tsx",
+  "apps/web/src/presence/live-cursor.tsx",
   "apps/web/src/presence/viewing-now.tsx",
   "apps/web/src/routes/developer.tsx",
   "apps/web/src/routes/flow-map.index.tsx",
