@@ -1801,7 +1801,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on PROTO-011.
   Size: S.
 
-- [ ] DS-011 · Popover, dialog, menu, tooltip, toast
+- [x] DS-011 · Popover, dialog, menu, tooltip, toast
   Toasts last 1.6 s by default and never cover the slide centre.
   Every overlay of the mock has one kit component with a story for each state it supports: empty, many items, long text, disabled or locked with its reason, open and closed, in dark and light. The layer, result set and template menus are plain Dropdown menus with items, and the passkey sheet is the browser's own window drawn only in the mock, so neither needs a component of its own.
   Done when focus trapping, Esc handling and axe tests pass.
