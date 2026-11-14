@@ -1808,7 +1808,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on PROTO-011.
   Size: L.
 
-- [ ] DS-012 · Inspector primitives
+- [x] DS-012 · Inspector primitives
   Section label, card, warn bar, region row with size and category tag, class bars, staging hero with the log size scale, count bar with the 200 line, step block ("1 · Is it tumor?") and the done state of a step, zone row with its pin, number line with sure and unsure parts, cell crop, the back link with its key, and the fact list of icon, key and value rows (the mock's `kvList`).
   Done when stories render the mock 6 data and a unit test checks the range bar geometry.
   Depends on PROTO-011.
