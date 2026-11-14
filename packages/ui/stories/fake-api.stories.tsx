@@ -1,12 +1,13 @@
 import { useGetMe, useListMyJobs } from "@parfocal/api-client";
 import { getGetMeMockHandler } from "@parfocal/api-client/fake";
+import { Loader } from "@parfocal/ui/components/loader";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 function SignedInAs() {
   const me = useGetMe();
   const jobs = useListMyJobs();
-  if (me.data?.status !== 200) return <p className="text-fg-dim text-body">Loading…</p>;
+  if (me.data?.status !== 200) return <Loader label="Loading your account" />;
   return (
     <div className="flex flex-col gap-1 text-body">
       <p className="text-fg" data-testid="signed-in-as">

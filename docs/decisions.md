@@ -8,8 +8,8 @@ To take every recommendation at once, write "all recommended" here:
 
 ## What you need to do next, in order
 
-1. Answer decisions 100 (whether VIEW-036, the renderer interface, is ticked now), 101 (whether the app refuses a BIF with no frame stitching) 102 (who sees a cursor shared from compare) 103 (which animated loader) and 104 (how close a converted JPEG 2000 slide must stay to its source).
-2. Go through the review checklist in [owner-review.md](owner-review.md) and tick what you agree with.
+1. Decision 105 below (older Ventana archives with several scan areas).
+2. The checks on your Mac listed under "The review column" below, when you have a few minutes.
 3. When the app is ready for production, say so, and the lead books the deploy session of decisions 93, 94 and 95.
 
 ## What your answers of 2026-11-04 changed
@@ -75,6 +75,12 @@ Every other answer kept what was built: 37a (darker primary hover), 39a (Alt+Lef
 - Decision 97 (a deleted AI object counts as checked before submit), option A. An agent is changing the submit gate of TASK-008 (submit a slide review) so a deleted AI object no longer blocks the submit, while a skipped one still does.
 - Decision 98 (a blinded task hides "Share my view"), option A. An agent is hiding sharing, following and the shared cursor while the reader is blinded on that slide.
 - Decision 99 (a person in compare can send their own cursor), option B. The same agent adds "Share my cursor" to the compare toolbar right after decision 98.
+- Decision 100 (VIEW-036, the renderer interface, ticked now), option A. VIEW-036 is ticked, and the Done lines of VIEW-037 (deck.gl 9.4 WebGPU route) and VIEW-038 (custom WebGPU engine route) now ask for the same goldens Viv passes, through the renderer interface.
+- Decision 101 (refusing a BIF with no frame stitching), option A with your question. Fable advised keying the refusal on "overlap unknown" rather than "no stitching", so a BIF that genuinely has no overlap still opens as an exact grid, as OpenSlide does. An agent is checking OpenSlide's Ventana driver and the fixtures and makes ingest and the viewer share one rule.
+- Decision 102 (who sees a cursor shared from compare), option A. Kept as built, everyone on the live slide who is not blinded.
+- Decision 103 (the animated loader), option A. An agent is making Reticle the one loader and removing the other four proposals.
+- Decision 104 (how close a converted JPEG 2000 slide stays to its source), option A. Fable agreed lossless is right for slides that must look correct, and added two things: the INGEST-009 check (seams and correctness) becomes exact equality for converted slides, and each pyramid level comes from the source's own level where it has one, not from a fresh downsample. The storage size is measured in a result file.
+- Review checklist. TILES-003 (same-origin data path), VIEW-044 (prefetch where the view is heading) and MEAS-000 (research check for measurements) are ticked. For MEAS-000 Fable agreed AJCC and ICCR are enough, since CAP follows the AJCC pN categories, and ADR 0298 already scopes the categories to breast. The CAP check stays a TODO in that ADR. I18N-001 (string externalisation) is ticked as the setup slice, and yes, everything gets converted after it: I18N-004 (viewer, review and annotate screens) and I18N-005 (the remaining screens, then the baseline list is deleted) do that.
 
 ## Open decisions from cutting staging (ADR 0293, production only until the first real user)
 
@@ -120,63 +126,36 @@ IAM-027 (real sign-up and sign-in from the app's own screens) is built and teste
 
 Your choice: a
 
-### 100. Whether VIEW-036 (renderer interface and route switching) is ticked now
+## Open decisions from the night run of 2026-11-14
 
-VIEW-036 built the renderer interface and the switch between routes inside the engine ([ADR 0302](adr/0302-renderer-routes-switch-inside-the-engine-behind-lazy-loaders.md), renderer routes switch inside the engine behind lazy loaders). Its Done line asks for the same golden tests on all three routes, but only Viv exists. The goldens pass on Viv, a switch at 10x still matches, and 15 switches grow the heap 5.3% against a 10% budget.
+### 105. Whether older Ventana iScan archives with several scan areas open
 
-- **A. Tick VIEW-036 now and add "the goldens pass on this route" to the Done lines of VIEW-037 (deck.gl 9.4 WebGPU route) and VIEW-038 (custom WebGPU engine route) (recommended).** The interface is finished, and each new route proves itself when it lands.
-- B. Leave VIEW-036 in review until both routes exist.
+You asked to research before building. VIEW-069 (BIF with several scan areas) found, in [the research result](results/2026-11-14-bif-several-scan-areas.md), that a BIF holds one scan area per tissue piece, so such files are common. Today's DP 200 and DP 600 scanners join frames in a direction OpenSlide itself refuses, so neither OpenSlide nor Parfocal opens their files with or without several areas. Only older iScan files would gain, and Roche says those cannot be rebuilt exactly from their metadata. The refusal now has its own message instead of "unreadable".
+
+- **A. Keep the refusal with its own message, and build area placement later together with support for the DP 200 and DP 600 join direction (recommended).** Building it now helps only older archives that cannot be rebuilt exactly anyway.
+- B. Build area placement now against the public OpenSlide test file `OS-2.bif`.
 - Other.
 
-Your choice: A
-
-### 101. Whether the app refuses a BIF that has no frame stitching
-
-VIEW-014 (Ventana BIF with frame stitching) opens a BIF in the app with the frame positions from its sidecar. When the sidecar is missing or holds no stitching, the reader draws the camera frames as a plain grid, as [ADR 0164](adr/0164-bif-frames-placed-like-openslide.md) (BIF frames placed like OpenSlide) says, and the tissue in every frame overlap shows twice. Ingest refuses such a file today, so this happens only if a sidecar is lost.
-
-- **A. Refuse to open it in the app and say the slide needs re-ingest (recommended).** Nobody reviews a slide with repeated tissue by accident.
-- B. Keep opening it as a plain grid.
-- Other.
-
-Your choice:a, but some of them like that right? so maybe openslide is right somehow? do the best ask fable
-
-### 102. Who on the live slide sees the cursor of a person in compare
-
-Decision 99 added "Share my cursor" to compare. As built, everyone on the live slide who is not blinded sees that cursor, the same as a cursor shared from the live slide ([ADR 0304](adr/0304-a-shared-cursor-is-a-second-capped-frame-in-shares-of-the-slide.md), a shared cursor is a second capped client frame).
-
-- **A. Everyone on the live slide who is not blinded, as built (recommended).** Sharing is already a deliberate act by the sharer.
-- B. Only people who turn on "Show shared cursors" themselves.
-- Other.
-
-Your choice:a
-
-### 103. Which animated loader replaces the loading texts
-
-DS-039 (animated loaders instead of loading text) built five proposals in SVG and CSS with no new dependency. See them in Storybook under `Feedback/Loader proposals` (`pnpm --filter @parfocal/ui storybook`), in dark, light, compact and reduced motion. Arc is a spinning arc, Scan a sweeping line, Reticle a focusing crosshair, Tiles a grid filling in and Ticks a row of pulsing bars.
-
-- **A. Reticle (recommended).** It reads as a microscope coming into focus, which fits the name Parfocal.
-- B. Arc.
-- C. Scan.
-- D. Tiles.
-- E. Ticks.
-- Other.
-
-Your choice: a
-
-### 104. How close a converted JPEG 2000 slide must stay to its source
-
-INGEST-015 (conversion fallback worker) converts a slide to OME-Zarr only when an ADR trigger fires, and the only trigger listed is JPEG 2000, waiting on INGEST-014 (JPEG 2000 performance decision). On the real JPEG 2000 test slide, JPEG chunks at quality 90 land 5 to 6 grey levels from the source, about 30 dB, while INGEST-009 (seams and correctness check) allows 1.0. Synthetic slides stay under 1.0.
-
-- **A. Use lossless zstd chunks for converted JPEG 2000 slides (recommended).** The store keeps the source exactly, at the cost of more storage for the few slides that convert.
-- B. Raise the JPEG quality until the slide stays within 1.0, and measure the size.
-- C. Accept about 30 dB for converted slides and loosen the check for them.
-- Other.
-
-Your choice: a, ask fable for best thing because i want slides to look correctly
+Your choice:
 
 ## The review column, what each task waits for
 
-The tasks in review, each with a short summary and what you would check, are in [owner-review.md](owner-review.md), a temporary checklist.
+The temporary review checklist of 2026-11-14 is handled and deleted. What still waits is below.
+
+A few minutes of you on the Mac, when convenient:
+
+- DEV-008 (tablet layout). Look at the app once at 1024×1366, for example with the Chrome device toolbar on an iPad Pro portrait. There is no tablet mock, so your eye is the check. The spec is `apps/web/e2e/tablet-layout.spec.ts`.
+- VIEW-021 (wheel, trackpad and pinch) and DEV-013 (two-finger click and Safari pinch). Both wait for traces recorded on real hardware. The trace recorder page from VIEW-056 is built at `/spikes/input-traces` in the dev app (`pnpm dev`), so you spend about two minutes scrolling and pinching on the Mac trackpad in Safari and Chrome there, plus a mouse if you have one, and leave the downloaded files in `~/Downloads`.
+- VIEW-028 (overlay level of detail) and VIEW-029 (cull grid for overlays). Both need a GPU timing on your Mac: under 1 ms at overview with 81k nuclei, and under 6 ms at detail zoom with 1.6M nuclei. An agent prepares a one-command run for this.
+
+Waiting on something else, nothing for you now:
+
+- IAM-027 (sign-up and sign-in from the app's own screens) waits for the deploy session in decision 95 (the Zitadel login service user), paused until the app is ready for production.
+- OPS-005 (continuous deployment) is paused by your answer to decision 96, and TEST-020 (showcase seed) and SEC-042 (the edge guards the real API path) wait for the next production deploy.
+- IAM-001 (identity provider as code) and TEST-010 (load test tooling) wait for staging, which is cut for now.
+- FOUND-030 (bundle analyzer report), TEST-017 (flaky test management), TEST-036 (display panel Undo tests) and TEST-039 (local Zitadel for the end-to-end suite) wait for a green CI run on `main`, which agents are fixing.
+- IAM-021 (lock screen) and SHELL-012 (account menu) wait for the expired sign-in to return to the object and for the manual lock item.
+- VIEW-017 (OME-Zarr reader) waits for converted real fixtures from INGEST-015 (conversion fallback worker), which an agent now finishes with lossless chunks after decision 104.
 
 ## Notes, no decision needed
 

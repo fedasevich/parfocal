@@ -12,6 +12,8 @@ export {
   type SignedSlideOptions,
   type SlideAccess,
   SlideBytesError,
+  SlideHasSeveralScanAreasError,
+  SlideNeedsReingestError,
   signedOpenRequest,
   slideFormatFromName,
   slideIndexFromLevelTable,

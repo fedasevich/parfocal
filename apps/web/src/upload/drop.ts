@@ -223,3 +223,13 @@ export function fromFile(file: File): DroppedItem {
 export function fromFileList(files: FileList | null): DroppedItem[] {
   return files ? Array.from(files).map(fromFile) : [];
 }
+
+export const isMirax = (path: string) => extensionOf(path) === "mrxs";
+
+export const miraxFolderOf = (path: string) => {
+  const dir = dirOf(path);
+  return `${dir === "" ? "" : `${dir}/`}${stemOf(path)}/`;
+};
+
+export const uploadNameOf = (path: string) =>
+  isMirax(path) ? `${stemOf(path)}.zip` : nameOf(path);

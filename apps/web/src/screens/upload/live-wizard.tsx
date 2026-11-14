@@ -21,12 +21,16 @@ import {
   type DroppedItem,
   type DropRecord,
   fromFileList,
+  isMirax,
+  kindOf,
   type PairMode,
   readDropped,
   stemOf,
+  uploadNameOf,
 } from "../../upload/drop.ts";
 import { dropStore, useDropStore } from "../../upload/drop-store.ts";
 import { formatBytes, sameFile } from "../../upload/entries.ts";
+import type { Duplicate } from "../../upload/place.ts";
 import { minutesLeft, slideSteps, timeLeftText } from "../../upload/slide-steps.ts";
 import { useSlideStates } from "../../upload/use-slide-states.ts";
 import { useUploads } from "../../upload/use-uploads.ts";
@@ -36,6 +40,8 @@ import { LinkImport } from "./link-import.tsx";
 import { createLiveModel, freshLiveState, type LiveModel, type LiveState } from "./live-model.ts";
 import { FileIcon, FileList, FileRow, TextLink, Thumb, useCrumbLink } from "./parts.tsx";
 import { StepList } from "./progress-step.tsx";
+import { ResultProblems } from "./result-problems.tsx";
+import type { ResultUpload } from "./result-problems-model.ts";
 import { plural } from "./state.ts";
 
 export type LiveScene = "empty" | "files" | "check" | "progress" | "done";
@@ -82,7 +88,12 @@ export function LiveWizard({ project, scene }: { project: Project; scene: LiveSc
   const [state, setState] = useState<LiveState>(freshLiveState);
   const [dragging, setDragging] = useState(false);
   const [phase, setPhase] = useState<"busy" | "error" | null>(null);
+  const [duplicates, setDuplicates] = useState<Duplicate[]>([]);
   const model = createLiveModel(items, state);
+  const openDuplicates = duplicates.filter(
+    (duplicate) => state.duplicate[duplicate.path] === undefined,
+  );
+  const toFix = model.problems + openDuplicates.length;
   const base = items.length === 0 && scene !== "progress" && scene !== "done" ? "empty" : scene;
   const shown: LiveScene = started.length === 0 && stepOfScene(base) === 2 ? "empty" : base;
   const step = stepOfScene(shown);
@@ -191,8 +202,8 @@ export function LiveWizard({ project, scene }: { project: Project; scene: LiveSc
       <FlowBar
         back={back}
         hint={
-          model.problems > 0
-            ? `${plural(model.problems, "file")} wait${model.problems === 1 ? "s" : ""} for a fix. The rest upload now.`
+          toFix > 0
+            ? `${plural(toFix, "file")} wait${toFix === 1 ? "s" : ""} for a fix. The rest upload now.`
             : "Nothing needs you."
         }
         next={
@@ -278,6 +289,10 @@ export function LiveWizard({ project, scene }: { project: Project; scene: LiveSc
             set={set}
             projectId={project.id}
             startError={phase === "error"}
+            toFix={toFix}
+            take={take}
+            duplicates={duplicates}
+            onDuplicates={setDuplicates}
           />
         ) : (
           <UploadStep model={model} entries={mine} projectId={project.id} />
@@ -740,17 +755,27 @@ function CheckStep({
   set,
   projectId,
   startError,
+  toFix,
+  take,
+  duplicates,
+  onDuplicates,
 }: {
   model: LiveModel<DroppedItem>;
   state: LiveState;
   set: Change;
   projectId: string;
   startError: boolean;
+  toFix: number;
+  take: (taken: DroppedItem[]) => void;
+  duplicates: readonly Duplicate[];
+  onDuplicates: (found: Duplicate[]) => void;
 }) {
   const left = model.leftOut.length;
+  const dataFolder = useRef<HTMLInputElement>(null);
+  const [addingFolderTo, setAddingFolderTo] = useState<string | null>(null);
   const lead =
-    model.problems > 0
-      ? `${plural(model.problems, "file")} need${model.problems === 1 ? "s" : ""} a look. A file with a problem waits until it is fixed, the rest upload.`
+    toFix > 0
+      ? `${plural(toFix, "file")} need${toFix === 1 ? "s" : ""} a look. A file with a problem waits until it is fixed, the rest upload.`
       : left > 0
         ? `${plural(left, "result file")} ${left === 1 ? "is" : "are"} left out. The other files are fine and upload.`
         : "Every file is readable and has its place. Nothing needs you.";
@@ -776,7 +801,7 @@ function CheckStep({
             {
               icon: "warn",
               label: "To fix",
-              value: model.problems ? plural(model.problems, "file") : "Nothing",
+              value: toFix ? plural(toFix, "file") : "Nothing",
             },
             ...(model.others.length > 0
               ? [
@@ -791,7 +816,20 @@ function CheckStep({
         />
       </Zone>
       <Suspense fallback={null}>
-        <ServerCheck projectId={projectId} model={model} state={state} startError={startError} />
+        <ServerCheck
+          projectId={projectId}
+          model={model}
+          state={state}
+          startError={startError}
+          duplicates={duplicates}
+          onDuplicates={onDuplicates}
+          decide={(path, choice) => {
+            const next = { ...state.duplicate };
+            if (choice === null) delete next[path];
+            else next[path] = choice;
+            set({ duplicate: next });
+          }}
+        />
       </Suspense>
       {model.unplaced.map((result) => (
         <ProblemZone
@@ -821,13 +859,81 @@ function CheckStep({
           }
         />
       ))}
+      {model.mrxsWaiting.map((slide) => (
+        <ProblemZone
+          key={slide.path}
+          icon="folder"
+          tag="Data folder missing"
+          tone="warn"
+          title="This MRXS slide has no data folder"
+          file={slide.path}
+          text={`An MRXS slide is the .mrxs file plus a folder named ${stemOf(slide.path)} with its data files. Add that folder, or leave the slide out. It waits until you do.`}
+          actions={
+            <>
+              <Button
+                onClick={() => {
+                  setAddingFolderTo(slide.path);
+                  dataFolder.current?.click();
+                }}
+              >
+                <Icon name="folder" />
+                Add the folder
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={() => set({ left: { ...state.left, [slide.path]: true } })}
+              >
+                Leave it out
+              </Button>
+            </>
+          }
+        />
+      ))}
+      {model.mrxsLeftOut.map((slide) => (
+        <DoneRow
+          key={slide.path}
+          file={slide.path}
+          what="Left out of this upload"
+          out
+          onUndo={() => {
+            const next = { ...state.left };
+            delete next[slide.path];
+            set({ left: next });
+          }}
+        />
+      ))}
+      <input
+        ref={dataFolder}
+        type="file"
+        multiple
+        data-testid="data-folder-input"
+        aria-label="Choose the data folder"
+        className="sr-only"
+        {...{ webkitdirectory: "" }}
+        onChange={(event) => {
+          const chosen = fromFileList(event.currentTarget.files);
+          event.currentTarget.value = "";
+          const slide = model.slides.find((candidate) => candidate.path === addingFolderTo);
+          if (slide === undefined) return;
+          take(
+            chosen.map((item) => ({
+              ...item,
+              path: `${model.dataFolderOf(slide)}${item.path.slice(item.path.indexOf("/") + 1)}`,
+            })),
+          );
+        }}
+      />
       {model.empty.map((item) => (
         <ProblemZone
           key={item.path}
           icon="x-circle"
           tag="Empty file"
           tone="bad"
-          title="This file has nothing in it"
+          title={
+            kindOf(item.path) === "slide"
+              ? "This slide cannot be read"
+              : "This file has nothing in it"
+          }
           file={item.path}
           text="The file is 0 bytes, so there is nothing to read. It waits until you take it out or choose it again."
           actions={
@@ -866,8 +972,6 @@ function CheckStep({
   );
 }
 
-const baseName = (path: string) => path.slice(path.lastIndexOf("/") + 1);
-
 function UploadStep({
   model,
   entries,
@@ -882,7 +986,9 @@ function UploadStep({
   const [leaveBare, setLeaveBare] = useState(false);
   const slideOf = (entry: (typeof entries)[number]) =>
     model.slides.findIndex(
-      (slide) => baseName(slide.path) === entry.name && slide.size === entry.size,
+      (slide) =>
+        uploadNameOf(slide.path) === entry.name &&
+        (isMirax(slide.path) || slide.size === entry.size),
     );
   const slideEntries = entries.filter((entry) => slideOf(entry) >= 0);
   const states = useSlideStates(
@@ -890,6 +996,26 @@ function UploadStep({
       entry.status === "done" && entry.uploadId !== undefined ? [entry.uploadId] : [],
     ),
   );
+  const resultEntries = entries.filter(
+    (entry) => slideOf(entry) < 0 && entry.status === "done" && entry.uploadId !== undefined,
+  );
+  const resultStates = useSlideStates(
+    resultEntries.flatMap((entry) => (entry.uploadId === undefined ? [] : [entry.uploadId])),
+  );
+  const resultUploads: ResultUpload[] = resultEntries.flatMap((entry) => {
+    const found = entry.uploadId === undefined ? undefined : resultStates[entry.uploadId];
+    return found === undefined
+      ? []
+      : [
+          {
+            uploadId: found.upload_id,
+            name: entry.name,
+            status: found.status,
+            reason: found.reason,
+            message: found.message,
+          },
+        ];
+  });
   const total = entries.reduce((sum, entry) => sum + entry.size, 0);
   const sent = entries.reduce(
     (sum, entry) => sum + (entry.status === "done" ? entry.size : entry.bytesUploaded),
@@ -1011,6 +1137,7 @@ function UploadStep({
           })}
         </FileList>
       </Zone>
+      <ResultProblems uploads={resultUploads} projectId={projectId} />
       {bare.length === 0 ? null : leaveBare ? (
         <Zone
           title={`${plural(bare.length, "slide stays", "slides stay")} without results`}

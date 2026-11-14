@@ -1,6 +1,14 @@
 {
   "extends": "@parfocal/typescript-config/node.json",
-  "include": ["test", "browser", "sam-bench", "playwright.config.ts", "playwright.sam.config.ts"],
+  "include": [
+    "test",
+    "browser",
+    "sam-bench",
+    "gpu-bench/*.ts",
+    "playwright.config.ts",
+    "playwright.sam.config.ts",
+    "playwright.gpu.config.ts"
+  ],
   "compilerOptions": {
     "lib": ["es2024", "dom", "dom.iterable"]
   }
