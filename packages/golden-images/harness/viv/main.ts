@@ -190,6 +190,7 @@ const render = async (request: VivSceneRequest): Promise<VivSceneResult> => {
       const openRequest = {
         formatId: request.formatId,
         url: request.url,
+        ...(request.index === undefined ? {} : { index: request.index }),
         ...(request.breakage === "native-unvalidated"
           ? { nativeJpeg: "unvalidated" as const }
           : {}),

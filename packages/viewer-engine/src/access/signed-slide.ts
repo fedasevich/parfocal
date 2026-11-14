@@ -1,9 +1,11 @@
+import { TILE_INDEX_FILE } from "../pixel-source/tile-index.ts";
 import type {
   MicronsPerPixel,
   OpenRequest,
   SlideFormatId,
   SlideIndex,
   SlideIndexLevel,
+  SlideStitching,
 } from "../pixel-source/types.ts";
 import { slideFormatIds, UnsupportedFormatError } from "../pixel-source/types.ts";
 import { absoluteUrl } from "../pixel-source/url.ts";
@@ -157,6 +159,35 @@ function requestUrl(input: RequestInfo | URL): string {
   return input.url;
 }
 
+function isFrameStitching(value: unknown): value is SlideStitching {
+  if (typeof value !== "object" || value === null) return false;
+  const stitching = value as Record<string, unknown>;
+  return ["columns", "rows", "frameWidth", "frameHeight"].every((key) => {
+    const size = stitching[key];
+    return typeof size === "number" && Number.isFinite(size) && size > 0;
+  });
+}
+
+export function frameStitchingOf(document: unknown): SlideStitching | null {
+  if (typeof document !== "object" || document === null) return null;
+  const sidecar = document as Record<string, unknown>;
+  if (sidecar["tileKind"] !== "bif-frames") return null;
+  return isFrameStitching(sidecar["stitching"]) ? sidecar["stitching"] : null;
+}
+
+async function withFrameStitching(
+  table: SlideIndex,
+  sidecarUrl: string,
+  options: SignedSlideOptions,
+): Promise<SlideIndex> {
+  const { access, fetcher, signal } = options;
+  const response = await access.fetch(sidecarUrl, signal === undefined ? {} : { signal }, fetcher);
+  if (response.status === 404) return table;
+  if (!response.ok) throw new SlideBytesError(sidecarUrl, response.status);
+  const stitching = frameStitchingOf(await response.json());
+  return stitching === null ? table : { ...table, tileKind: "bif-frames", stitching };
+}
+
 export async function signedOpenRequest(options: SignedSlideOptions): Promise<OpenRequest> {
   const { access, basePath, original, baseUrl, fetcher, signal } = options;
   const formatId =
@@ -172,7 +203,11 @@ export async function signedOpenRequest(options: SignedSlideOptions): Promise<Op
   const tableUrl = new URL(LEVEL_TABLE_FILE, directory).href;
   const response = await access.fetch(tableUrl, signal === undefined ? {} : { signal }, fetcher);
   if (!response.ok) throw new SlideBytesError(tableUrl, response.status);
-  const index = slideIndexFromLevelTable(parseLevelTable(await response.json()), formatId);
+  const table = slideIndexFromLevelTable(parseLevelTable(await response.json()), formatId);
+  const index =
+    formatId === "ventana-bif"
+      ? await withFrameStitching(table, new URL(TILE_INDEX_FILE, directory).href, options)
+      : table;
   const url = new URL(encodeURIComponent(original), directory).href;
   return {
     formatId,

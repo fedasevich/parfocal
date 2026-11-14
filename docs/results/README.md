@@ -102,3 +102,4 @@ One file per measured run, named `YYYY-MM-DD-short-topic.md`. Copy [_template.md
 | 2026-11-13 | [The first API request after scale to zero takes 6 to 12 s, and a warm one from Vienna takes about 190 ms, nearly all network](2026-11-13-modal-cold-start-and-api-latency.md) | STACK-019 | baseline |
 | 2026-11-14 | [Fifteen Viv to Viv renderer route switches grow the heap 5.3% after warm-up, with one deck and one canvas each time](2026-11-14-renderer-route-switch-memory.md) | VIEW-036 | baseline |
 | 2026-11-14 | [The NDPI reader agrees with OpenSlide within 0.16 grey levels on CMU-1.ndpi and the 6.9 GB Hamamatsu-1.ndpi, and decodes natively](2026-11-14-ndpi-reader-agreement.md) | VIEW-013 | baseline |
+| 2026-11-14 | [A stitched BIF shows the overlap tissue once, and the Viv goldens fail when the frames are drawn as a grid](2026-11-14-bif-no-duplicated-tissue.md) | VIEW-014 | check |

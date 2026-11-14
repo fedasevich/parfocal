@@ -1,4 +1,4 @@
-import type { SlideArea, SlideFormatId } from "@parfocal/viewer-engine";
+import type { SlideArea, SlideFormatId, SlideIndex } from "@parfocal/viewer-engine";
 import type { VivView } from "../harness/viv/protocol.ts";
 import type { SlideFormat } from "../src/tolerances.ts";
 
@@ -9,6 +9,7 @@ export interface VivGoldenScene {
   readonly format: SlideFormat;
   readonly view: VivView;
   readonly tissue?: SlideArea;
+  readonly index?: SlideIndex;
 }
 
 export const cmu1TissueCentre = { x: 28_750, y: 10_700 };
