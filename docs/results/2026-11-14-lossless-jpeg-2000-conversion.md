@@ -3,7 +3,7 @@
 - Date: 2026-11-14
 - Backlog: INGEST-015 (conversion fallback worker)
 - Kind: baseline
-- Commit: the INGEST-015 commit that applies decision 104 (lossless chunks for converted JPEG 2000 slides)
+- Commit: 62ec1b30 (the INGEST-015 commit that applies decision 104, lossless chunks for converted JPEG 2000 slides)
 - Environment: MacBook with Apple M4, Python 3.14 with openslide-bin 4 and Pillow 13, shared with about ten other agents (load average 31 to 43 during the runs)
 - Data: the committed synthetic slides and the public OpenSlide test slide `JP2K-33003-1.svs` (15374 × 17497, Aperio JPEG 2000 33003, levels at downsample 1, 4 and 8, 63,847,265 bytes, fixture group `formats`). No PHI
 
@@ -27,11 +27,11 @@ Every compared pixel is equal, maximum difference 0, at every level of all five 
 - The store has 7 levels at downsamples 1 to 64. Levels 0, 2 and 3 come from the source, and levels 1, 4, 5 and 6 are fresh 2 by 2 means.
 - Both stores have 1,482 files. Glass chunks are written, not left absent.
 - The JPEG 2000 levels at downsample 4 and 8 are decoded tile by tile: Pillow (OpenJPEG) decodes each codestream inside a JP2 wrapper that declares sRGB, so the YCbCr components come out unconverted, and the converter applies the libjpeg fixed point tables that OpenSlide uses. On a 4096 × 4096 OpenSlide read from (0, 0) this is equal at every pixel. With Pillow's own YCbCr conversion it was 1 grey level lower on 73% of the pixels of a tile, and an earlier table with rounded floating point factors was 1 off on a few pixels.
-- OpenSlide cannot be the reader for those levels. It maps a location to a level as location divided by downsample, and at 4.0004 that leaves a fraction of a pixel, so every read not at (0, 0) is resampled, by up to 37 grey levels at the offsets tried. It also splits a read into pieces of 4096 px, so even a read from (0, 0) is resampled past row 4096 (up to 21 grey levels). The test compares those levels only inside the first 4096 × 4096, which covers both levels 2 and 3 of this slide whole.
+- OpenSlide cannot be the reader for those levels. It maps a location to a level as location divided by downsample, and at 4.0004 that leaves a fraction of a pixel, so every read not at (0, 0) is resampled, by up to 37 grey levels at the offsets tried. It also splits a read into pieces of 4096 px, so even a read from (0, 0) is resampled past row 4096 (up to 21 grey levels). The test compares those levels only inside the first 4096 × 4096, which covers store level 3 (1921 × 2187) whole and store level 2 (3843 × 4374) on its first 4096 of 4374 rows. The last 278 rows of level 2 come from the same tile decoder but have no exact OpenSlide reference.
 
 ## Conclusion
 
-Decision 104 holds as built: the converted slide is the source, sample for sample, at every level the source has, and every other level is an exact mean of the one above it. The cost is size. At 11.6 times the source, one converted JPEG 2000 slide of this kind costs about $0.011 a month in R2 at $0.015 per GB past the free 10 GB, so 100 slides of 1 GB each would add about 1,160 GB and about $17 a month, more than half of the $30 budget. The times are inflated by the shared machine and are not a Modal estimate.
+Decision 104 holds as built: wherever an exact reference exists, the converted slide equals the source sample for sample at every level the source has, and every other level is an exact mean of the one above it. The cost is size. At 11.6 times the source, one converted JPEG 2000 slide of this kind costs about $0.011 a month in R2 at $0.015 per GB past the free 10 GB, so 100 slides of 1 GB each would add about 1,160 GB and about $17 a month, more than half of the $30 budget. The times are inflated by the shared machine and are not a Modal estimate.
 
 ## Limits
 

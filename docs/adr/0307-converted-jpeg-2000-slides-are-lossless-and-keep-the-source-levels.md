@@ -29,5 +29,6 @@ The source's coarse JPEG 2000 levels cannot come from OpenSlide. It resamples ev
 
 - The trigger fixture's store equals its source at every compared pixel, and the synthetics do too ([result](../results/2026-11-14-lossless-jpeg-2000-conversion.md)).
 - The store is 11.6 times the source, 741 MB against 64 MB, and JPEG q90 was 2.9 times. At that ratio, 100 converted slides of 1 GB would cost about $17 a month in R2. Leaving glass chunks absent through INGEST-008 (absence map), a stronger zstd level, a byte shuffle filter or a lossless image codec could shrink it. Each is a follow-up with its own measurement, and none is needed until a trigger fires.
-- Regenerating the two committed converted stores changed level 1 of each, now taken from the source. The Viv goldens of `viv-ome-zarr.spec.ts` were not rerun in this change.
+- Regenerating the two committed converted stores changed level 1 of each, now taken from the source. In `synthetic-jpeg-converted.ome.zarr` it moved by 0.905 mean and 41 at most, and in `synthetic-channels-uint16-converted.ome.zarr` by 0.143 mean and 1 at most. The Viv goldens of `viv-ome-zarr.spec.ts` were not rerun in this change and may need regenerating.
+- A zero-length or undecodable JPEG 2000 tile makes its level a fresh mean, not a failed conversion.
 - No lossless RGB store is committed or drawn in Viv yet. The browser treats a uint8, three channel store with red, green and blue `omero` colours as brightfield whatever its codec, but that is not yet checked by a golden.

@@ -27,7 +27,7 @@ from parfocal_ingest.conversion import (
 from parfocal_ingest.identify import Format, identify
 from parfocal_ingest.pyramid import Pyramid, Reader, Stored, ladder, main_series, read_pyramid
 from parfocal_ingest.reference_tiles import Window, read_window
-from parfocal_ingest.source_levels import planar, ycbcr_to_rgb
+from parfocal_ingest.source_levels import jpeg2000_tile, planar, ycbcr_to_rgb
 from parfocal_ingest.thumbnail import background_of, flattened
 from parfocal_ingest.zarr_index import zarr_tile_index
 
@@ -230,6 +230,15 @@ def test_ycbcr_follows_the_openslide_tables() -> None:
     grey = np.full((2, 2, 3), 128, dtype=np.uint8)
     grey[..., 0] = 77
     assert (ycbcr_to_rgb(grey) == 77).all()
+    measured = np.array([[[148, 144, 170], [145, 144, 170]]], dtype=np.uint8)
+    assert ycbcr_to_rgb(measured).tolist() == [[[207, 112, 176], [204, 109, 173]]]
+
+
+def test_a_jpeg2000_codestream_decodes_unchanged_through_the_wrapper() -> None:
+    pixels = np.random.default_rng(15).integers(0, 256, (48, 64, 3), dtype=np.uint8)
+    output = io.BytesIO()
+    Image.fromarray(pixels, "RGB").save(output, "JPEG2000", no_jp2=True)
+    assert np.array_equal(jpeg2000_tile(output.getvalue(), ycbcr=False), pixels)
 
 
 @pytest.mark.parametrize("name", LOSSLESS_BRIGHTFIELD)

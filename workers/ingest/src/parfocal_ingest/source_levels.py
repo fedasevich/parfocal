@@ -155,10 +155,15 @@ def aperio_jpeg2000_level(path: Path, index: int, into: Path) -> np.ndarray | No
         ):
             row, column = divmod(tile, across)
             top, left = row * page.tilelength, column * page.tilewidth
+            if count == 0:
+                return None
             tiff.filehandle.seek(offset)
-            decoded = jpeg2000_tile(
-                tiff.filehandle.read(count), compression == APERIO_JPEG2000_YCBCR
-            )
+            try:
+                decoded = jpeg2000_tile(
+                    tiff.filehandle.read(count), compression == APERIO_JPEG2000_YCBCR
+                )
+            except ValueError, OSError, struct.error:
+                return None
             part = decoded[: height - top, : width - left]
             pixels[top : top + part.shape[0], left : left + part.shape[1]] = part
         pixels.flush()
