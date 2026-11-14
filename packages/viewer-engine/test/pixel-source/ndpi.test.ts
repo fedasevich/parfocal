@@ -9,7 +9,6 @@ import {
   SourceClosedError,
   tileColumns,
   tileRows,
-  UnsupportedFormatError,
 } from "../../src/index.ts";
 import { type NdpiPage, readRestartStarts } from "../../src/pixel-source/ndpi/directory.ts";
 import { buildNdpiJpeg, parseNdpiFrame } from "../../src/pixel-source/ndpi/jpeg.ts";
@@ -195,7 +194,9 @@ describe("NDPI source on a virtual file", () => {
       )) as typeof globalThis.fetch;
     await assert.rejects(
       openNdpiSource({ formatId: "hamamatsu-ndpi", url: "http://slides.test/a", fetch: zeros }),
-      UnsupportedFormatError,
+      (error: unknown) =>
+        error instanceof NdpiFormatError &&
+        /cannot be read as NDPI.*not a little-endian classic TIFF/.test(error.message),
     );
     const whole = (() =>
       Promise.resolve(new Response(new Uint8Array(12)))) as typeof globalThis.fetch;

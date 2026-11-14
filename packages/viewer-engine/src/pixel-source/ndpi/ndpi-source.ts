@@ -16,7 +16,6 @@ import {
   type RasterRequest,
   SourceClosedError,
   type TileRequest,
-  UnsupportedFormatError,
 } from "../types.ts";
 import { absoluteUrl } from "../url.ts";
 import {
@@ -224,7 +223,9 @@ export async function openNdpiSource(request: OpenRequest): Promise<PixelSource>
   const read = rangeReader(url, request.fetch ?? globalThis.fetch.bind(globalThis));
   const pages = pyramidPages(
     await readNdpiPages(read, request.signal).catch((error: unknown) => {
-      throw error instanceof NdpiFormatError ? new UnsupportedFormatError(request.formatId) : error;
+      throw error instanceof NdpiFormatError
+        ? new NdpiFormatError(`The file cannot be read as NDPI. ${error.message}`)
+        : error;
     }),
   );
   const [basePage] = pages;
