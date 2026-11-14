@@ -132,53 +132,53 @@ export function CheckStep({
   const others = model.files - open;
   const lead =
     scene === "storagefull"
-      ? "Every file reads cleanly. Only the space is short, and nothing uploads until it fits."
+      ? t`Every file reads cleanly. Only the space is short, and nothing uploads until it fits.`
       : open
-        ? `${open} file${open > 1 ? "s need" : " needs"} a look. The other ${plural(others, "file")} ${others === 1 ? "is" : "are"} fine. A file with a problem waits until it is fixed, the rest upload.`
+        ? t`${open} file${open > 1 ? "s need" : " needs"} a look. The other ${plural(others, "file")} ${others === 1 ? "is" : "are"} fine. A file with a problem waits until it is fixed, the rest upload.`
         : left
-          ? `${left} file${left > 1 ? "s are" : " is"} left out. The other ${plural(model.files - left, "file")} read cleanly and upload.`
-          : "Every file reads cleanly and lines up with its slide. Nothing needs you.";
+          ? t`${left} file${left > 1 ? "s are" : " is"} left out. The other ${plural(model.files - left, "file")} read cleanly and upload.`
+          : t`Every file reads cleanly and lines up with its slide. Nothing needs you.`;
   const loose = model.slides.length - model.inCase.length;
   const rows = [
     {
       icon: "slides" as const,
-      label: "Slides",
+      label: t`Slides`,
       value:
         scene === "storagefull" && state.trimmed
-          ? `${batch.storage.trimmed_slides} · ${gb(batch.storage.trimmed_gb)}, ${model.slides.length - batch.storage.trimmed_slides} left out`
+          ? t`${batch.storage.trimmed_slides} · ${gb(batch.storage.trimmed_gb)}, ${model.slides.length - batch.storage.trimmed_slides} left out`
           : `${model.slides.length} · ${gb(model.sizeGb)}`,
     },
     {
       icon: "layers" as const,
       label: "AI results",
       value: left
-        ? `${plural(model.resultCount - left, "file")}, ${left} left out`
+        ? t`${plural(model.resultCount - left, "file")}, ${left} left out`
         : plural(model.resultCount, "file"),
     },
-    { icon: "link" as const, label: "Matched", value: `${model.matched} of ${model.resultCount}` },
+    { icon: "link" as const, label: t`Matched`, value: `${model.matched} of ${model.resultCount}` },
     {
       icon: "folder" as const,
-      label: "Cases",
+      label: t`Cases`,
       value:
         state.cases === "names" && model.inCase.length > 0
-          ? `1 case, ${loose} loose`
+          ? t`1 case, ${loose} loose`
           : plural(model.slides.length, "loose slide"),
     },
     ...(scene === "storagefull"
       ? [
           {
             icon: "database" as const,
-            label: "Space",
+            label: t`Space`,
             value: full
-              ? `${batch.storage.needed_gb} GB needed, ${batch.storage.left_gb} GB left in ${projectCode}`
-              : `${batch.storage.trimmed_gb} GB needed, ${batch.storage.left_gb} GB left in ${projectCode}`,
+              ? t`${batch.storage.needed_gb} GB needed, ${batch.storage.left_gb} GB left in ${projectCode}`
+              : t`${batch.storage.trimmed_gb} GB needed, ${batch.storage.left_gb} GB left in ${projectCode}`,
           },
         ]
       : []),
     {
       icon: "warn" as const,
-      label: "To fix",
-      value: open ? `${open} file${open > 1 ? "s" : ""}` : "Nothing",
+      label: t`To fix`,
+      value: open ? `${open} file${open > 1 ? "s" : ""}` : t`Nothing`,
     },
   ];
   const heatmap = batch.results[2];
@@ -192,7 +192,7 @@ export function CheckStep({
           <DoneRow
             key={file}
             file={file}
-            what="Left out of this upload"
+            what={t`Left out of this upload`}
             out
             onUndo={() => set({ unmatchedOut: false })}
           />
@@ -202,11 +202,11 @@ export function CheckStep({
         <ProblemZone
           key={file}
           icon="link"
-          tag="No slide yet"
+          tag={t`No slide yet`}
           tone="warn"
           title={t`This heatmap has no slide yet`}
           file={file}
-          text="It sat in results/ and a PNG has no slide ID inside. Pick its slide and Parfocal checks how it lines up."
+          text={t`It sat in results/ and a PNG has no slide ID inside. Pick its slide and Parfocal checks how it lines up.`}
           actions={
             <>
               <SlidePicker
@@ -228,7 +228,7 @@ export function CheckStep({
         <DoneRow
           key={file}
           file={heatmap?.name ?? file}
-          what={`Goes with ${batch.slides[model.resultTo(2).slide ?? 2]?.name ?? ""}, placed at level 2, scaled ×4`}
+          what={t`Goes with ${batch.slides[model.resultTo(2).slide ?? 2]?.name ?? ""}, placed at level 2, scaled ×4`}
           onUndo={() => {
             const placed = { ...state.placed };
             delete placed[2];
@@ -253,7 +253,7 @@ export function CheckStep({
         <DoneRow
           key={file}
           file={file}
-          what="Left out of this upload"
+          what={t`Left out of this upload`}
           out
           onUndo={() => set({ left: { ...state.left, [index]: false } })}
         />
@@ -356,8 +356,8 @@ export function CheckStep({
                 aria-label={t`Rows with no score`}
                 defaultValue="keep"
                 options={[
-                  { value: "keep", label: "Keep with no score" },
-                  { value: "one", label: "Count as 1.0" },
+                  { value: "keep", label: t`Keep with no score` },
+                  { value: "one", label: t`Count as 1.0` },
                 ]}
               />
             </div>
@@ -368,7 +368,7 @@ export function CheckStep({
             <Button onClick={fix}>{problem.fix}</Button>
             {problem.kind === "read-error" ? (
               <>
-                <Button onClick={() => toast("Downloads the error report as a CSV (mock)")}>
+                <Button onClick={() => toast(t`Downloads the error report as a CSV (mock)`)}>
                   <Icon name="download" />
                   <Trans>Error report</Trans>
                 </Button>
@@ -409,12 +409,11 @@ export function CheckStep({
             </>
           }
         >
-          <b>
-            <Trans>Not enough space.</Trans>
-          </b>{" "}
-          <Trans>This upload needs</Trans> {batch.storage.needed_gb} <Trans>GB and</Trans>{" "}
-          {projectCode} <Trans>has</Trans> {batch.storage.left_gb} <Trans>GB left of its</Trans>{" "}
-          {batch.storage.allowance_gb} <Trans>GB allowance.</Trans>
+          <Trans>
+            <b>Not enough space.</b> This upload needs {batch.storage.needed_gb} GB and{" "}
+            {projectCode} has {batch.storage.left_gb} GB left of its {batch.storage.allowance_gb} GB
+            allowance.
+          </Trans>
         </Banner>
       ) : null}
       <Zone title={t`In this upload`} sub={lead}>

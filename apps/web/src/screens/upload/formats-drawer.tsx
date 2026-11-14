@@ -42,15 +42,15 @@ export default function FormatsDrawer({
   const { t } = useLingui();
 
   const formats = [
-    ["Parfocal JSON", "Regions, cells, classes, scores and IDs in one file. The native format."],
+    ["Parfocal JSON", t`Regions, cells, classes, scores and IDs in one file. The native format.`],
     [
-      "GeoJSON or a QuPath export",
-      "Polygons and points. QuPath classes and measurements are kept.",
+      t`GeoJSON or a QuPath export`,
+      t`Polygons and points. QuPath classes and measurements are kept.`,
     ],
-    ["CSV or TSV", "One row per cell with x, y and a class."],
+    [t`CSV or TSV`, t`One row per cell with x, y and a class.`],
     [
-      "Masks or heatmaps",
-      "PNG or TIFF at one pyramid level. The level is checked with an overlay.",
+      t`Masks or heatmaps`,
+      t`PNG or TIFF at one pyramid level. The level is checked with an overlay.`,
     ],
   ];
   return (
@@ -74,13 +74,12 @@ export default function FormatsDrawer({
       <Zone
         title={
           <>
-            <Trans>AI results</Trans>{" "}
-            <span className="ml-1.5 font-normal text-fg-dim">
-              <Trans>optional</Trans>
-            </span>
+            <Trans>
+              AI results <span className="ml-1.5 font-normal text-fg-dim">optional</span>
+            </Trans>
           </>
         }
-        sub="A result file goes with the slide that has the same name, or whose ID is inside the file."
+        sub={t`A result file goes with the slide that has the same name, or whose ID is inside the file.`}
       >
         <FileList>
           {formats.map(([name, text]) => (
@@ -103,7 +102,7 @@ export default function FormatsDrawer({
             <Icon name="download" />
             <Trans>Parfocal JSON</Trans>
           </a>
-          <Button onClick={() => toast("Downloads cells.template.csv (mock)")}>
+          <Button onClick={() => toast(t`Downloads cells.template.csv (mock)`)}>
             <Icon name="download" />
             <Trans>CSV</Trans>
           </Button>
@@ -118,7 +117,7 @@ export default function FormatsDrawer({
       </Zone>
       <Zone
         title={t`If a Parfocal JSON file is rejected`}
-        sub="Each problem names its line and one of these codes."
+        sub={t`Each problem names its line and one of these codes.`}
       >
         <FileList>
           {errorCodes.map(([code, text]) => (

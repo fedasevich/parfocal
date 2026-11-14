@@ -82,14 +82,14 @@ export function AuditSection({ filter, onFilter }: FilterProps) {
       <div className="flex flex-wrap gap-2.5">
         <FilterChip
           label={t`Person`}
-          anyLabel="Everyone"
+          anyLabel={t`Everyone`}
           options={members.map((member) => ({ value: member.user_id, label: member.display_name }))}
           value={filter.person}
           onValueChange={(person) => onFilter({ ...filter, person })}
         />
         <FilterChip
           label={t`Project`}
-          anyLabel="All projects"
+          anyLabel={t`All projects`}
           options={projects.map((project) => ({
             value: project.id,
             label: project.name,
@@ -100,7 +100,7 @@ export function AuditSection({ filter, onFilter }: FilterProps) {
         />
         <FilterChip
           label={t`Time`}
-          anyLabel="Any time"
+          anyLabel={t`Any time`}
           options={auditPeriods.map(({ value, label }) => ({ value, label }))}
           value={filter.period}
           onValueChange={(period) =>
@@ -109,7 +109,7 @@ export function AuditSection({ filter, onFilter }: FilterProps) {
         />
         <FilterChip
           label={t`Action`}
-          anyLabel="All actions"
+          anyLabel={t`All actions`}
           options={auditGroups}
           value={filter.group}
           onValueChange={(group) => onFilter({ ...filter, group })}
@@ -178,6 +178,8 @@ function downloadJson(document: unknown, fileName: string) {
 }
 
 export function AuditExportButton({ filter, notify }: { filter: AuditFilter; notify: Notify }) {
+  const { t } = useLingui();
+
   const [busy, setBusy] = useState(false);
   const run = async () => {
     setBusy(true);
@@ -185,15 +187,15 @@ export function AuditExportButton({ filter, notify }: { filter: AuditFilter; not
       const today = now();
       const answer = await exportAuditEvents(auditParams(filter, today));
       if (answer.status !== 200) {
-        notify("The audit log could not be exported. Try again.");
+        notify(t`The audit log could not be exported. Try again.`);
         return;
       }
       downloadJson(answer.data, auditFileName(today));
       notify(
-        `Exported ${plural(answer.data.events.length, "event")}, signed with ${answer.data.signature.key_id}.`,
+        t`Exported ${plural(answer.data.events.length, "event")}, signed with ${answer.data.signature.key_id}.`,
       );
     } catch {
-      notify("The audit log could not be exported. Try again.");
+      notify(t`The audit log could not be exported. Try again.`);
     } finally {
       setBusy(false);
     }

@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import {
   ApiError,
@@ -39,9 +40,9 @@ type Props = { scene: SignUpScene; change: (scene: SignUpScene) => void };
 type Mostly = "run" | "review";
 
 const signUpSteps = (scene: SignUpScene) => [
-  { label: "Account", why: "Create the account first." },
-  { label: "Confirm email", ...(scene === "form" ? { why: "Create the account first." } : {}) },
-  { label: "Set up", why: "Confirm your email first. Setup starts after the code." },
+  { label: t`Account`, why: t`Create the account first.` },
+  { label: t`Confirm email`, ...(scene === "form" ? { why: t`Create the account first.` } : {}) },
+  { label: t`Set up`, why: t`Confirm your email first. Setup starts after the code.` },
 ];
 
 const messageOf = (error: unknown, fallback: string) =>
@@ -182,7 +183,7 @@ function FormScreen({ steps, workspace, details, set, onCreated, land, signIn }:
         onSuccess: (response) => {
           if (response.status === 200) onCreated(response.data.email, response.data.resend_seconds);
         },
-        onError: (error) => setFailure(messageOf(error, "Could not create the account.")),
+        onError: (error) => setFailure(messageOf(error, t`Could not create the account.`)),
       },
     );
   };
@@ -196,7 +197,7 @@ function FormScreen({ steps, workspace, details, set, onCreated, land, signIn }:
         onSuccess: (response) => {
           if (response.status === 200) land(response.data.return_to);
         },
-        onError: (error) => setFailure(problemText(error, "Single sign-on did not answer.")),
+        onError: (error) => setFailure(problemText(error, t`Single sign-on did not answer.`)),
       },
     );
   };
@@ -256,14 +257,14 @@ function FormScreen({ steps, workspace, details, set, onCreated, land, signIn }:
           <ChoiceTile
             icon="flask"
             title={t`Run evaluations`}
-            detail="Upload slides and AI results, assign reviews"
+            detail={t`Upload slides and AI results, assign reviews`}
             selected={details.mostly === "run"}
             onClick={() => set.setMostly("run")}
           />
           <ChoiceTile
             icon="check"
             title={t`Review AI results`}
-            detail="Check, fix and comment on what the AI found"
+            detail={t`Check, fix and comment on what the AI found`}
             selected={details.mostly === "review"}
             onClick={() => set.setMostly("review")}
           />
@@ -319,7 +320,7 @@ function VerifyForm({ steps, email, secondsLeft, restart, change, toast, land }:
           if (response.status === 200) land(response.data.return_to);
         },
         onError: (error) => {
-          setFailure(problemText(error, "Could not check the code."));
+          setFailure(problemText(error, t`Could not check the code.`));
           setCode("");
         },
       },
@@ -335,9 +336,9 @@ function VerifyForm({ steps, email, secondsLeft, restart, change, toast, land }:
           setCode("");
           setFailure(null);
           restart(response.data.resend_seconds);
-          toast("A new code is on its way. The old one stops working");
+          toast(t`A new code is on its way. The old one stops working`);
         },
-        onError: (error) => setFailure(problemText(error, "Could not send the code.")),
+        onError: (error) => setFailure(problemText(error, t`Could not send the code.`)),
       },
     );
   };
@@ -346,8 +347,11 @@ function VerifyForm({ steps, email, secondsLeft, restart, change, toast, land }:
       {steps}
       <AuthBadge icon="mail" />
       <AuthHeading title={t`Confirm your email`}>
-        <Trans>Enter the</Trans> {codeLength}
-        <Trans>-digit code we sent to</Trans> <b>{email}</b>.
+        <Trans>
+          Enter the {codeLength}
+          -digit code we sent to <b>{email}</b>
+        </Trans>
+        .
       </AuthHeading>
       <CodeInput label={t`Confirmation code`} value={code} onChange={setCode} onSubmit={submit} />
       <Failure>{failure}</Failure>

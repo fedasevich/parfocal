@@ -1,4 +1,4 @@
-import { Trans } from "@lingui/react/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Banner, InlineError } from "@parfocal/ui/components/banner";
 import { Button } from "@parfocal/ui/components/button";
 import { createFileRoute, notFound } from "@tanstack/react-router";
@@ -18,6 +18,8 @@ export const Route = createFileRoute("/issue-pages/$kind")({
 });
 
 function IssuePagePreview() {
+  const { t } = useLingui();
+
   const { kind } = Route.useParams();
   const [asked, setAsked] = useState(false);
   if (kind === "not-found") return <NotFoundPage />;
@@ -28,7 +30,7 @@ function IssuePagePreview() {
   if (kind === "no-access") {
     return (
       <NoAccessPage
-        projectName="Lung biopsies"
+        projectName={t`Lung biopsies`}
         ownerName="Dana Reyes"
         asked={asked}
         onAsk={() => setAsked(true)}
@@ -49,16 +51,14 @@ function IssuePagePreview() {
             </Button>
           }
         >
-          <b>
-            <Trans>Connection lost.</Trans>
-          </b>{" "}
-          <Trans>Saving is paused.</Trans>
+          <Trans>
+            <b>Connection lost.</b> Saving is paused.
+          </Trans>
         </Banner>
         <Banner inline tone="info" icon="lock">
-          <b>
-            <Trans>Signed off.</Trans>
-          </b>{" "}
-          <Trans>Changes need an amendment.</Trans>
+          <Trans>
+            <b>Signed off.</b> Changes need an amendment.
+          </Trans>
         </Banner>
         <Banner inline tone="bad">
           <Trans>The export failed.</Trans>

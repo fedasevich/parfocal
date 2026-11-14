@@ -87,7 +87,7 @@ function ArrangeBody({
   const base = library.find((item) => item.id === report.template.id);
   const [blocks, setBlocks] = useState<EditorBlock[]>(start.blocks);
   const [format, setFormat] = useState<FormatSettings>(start.format);
-  const [name, setName] = useState(`${report.template.name} for ${report.task_code}`);
+  const [name, setName] = useState(t`${report.template.name} for ${report.task_code}`);
   const save = useSetTaskReportLayout();
   const create = useCreateStudyTemplate();
   const offer = useOfferStudyTemplate();
@@ -109,7 +109,7 @@ function ArrangeBody({
             return;
           }
           void queryClient.invalidateQueries({ queryKey: getGetTaskReportLayoutQueryKey(taskId) });
-          notify("Arranged for this task. The template itself has not changed.");
+          notify(t`Arranged for this task. The template itself has not changed.`);
           onSaved({ blocks: toApiBlocks(blocks), format });
         },
       },
@@ -132,7 +132,7 @@ function ArrangeBody({
             return;
           }
           void queryClient.invalidateQueries({ queryKey: getListStudyTemplatesQueryKey() });
-          notify(`Offered to the library as ${name.trim() || "Untitled template"}`);
+          notify(t`Offered to the library as ${name.trim() || t`Untitled template`}`);
         },
       },
     );
@@ -146,7 +146,7 @@ function ArrangeBody({
             return;
           }
           notify(
-            `Offered ${name.trim() || "Untitled template"} to the admins. They accept it into the library.`,
+            t`Offered ${name.trim() || t`Untitled template`} to the admins. They accept it into the library.`,
           );
         },
       },
@@ -157,7 +157,7 @@ function ArrangeBody({
   };
   return (
     <ReportEditor
-      name={`${report.task_code} evaluation report`}
+      name={t`${report.task_code} evaluation report`}
       blocks={blocks}
       onBlocksChange={setBlocks}
       format={format}

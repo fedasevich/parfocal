@@ -87,7 +87,9 @@ function SusCard() {
   return (
     <>
       <p className="text-caption text-ink-2">
-        <Trans>Question</Trans> {step + 1} <Trans>of</Trans> {susItems.length}
+        <Trans>
+          Question {step + 1} of {susItems.length}
+        </Trans>
       </p>
       <p className="font-medium text-ink">{item}</p>
       <Scale

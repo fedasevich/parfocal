@@ -40,7 +40,9 @@ export function MeasurementList({
       className="grid gap-1.5 rounded-ctl border border-line bg-chrome p-2"
     >
       <h2 className="m-0 text-body-sm font-semibold">
-        <Trans>Measurements</Trans> <span className="font-mono text-fg-dim">{rows.length}</span>
+        <Trans>
+          Measurements <span className="font-mono text-fg-dim">{rows.length}</span>
+        </Trans>
       </h2>
       {rows.length === 0 ? (
         <p className="m-0 text-body-sm text-fg-dim">

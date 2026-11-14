@@ -56,9 +56,9 @@ function LockableRow({
         {on ? (
           <FormField
             label={t`Why it is locked`}
-            help="Reviewers see this reason next to the setting."
+            help={t`Reviewers see this reason next to the setting.`}
             error={reasonError}
-            count={`${reason.length} of ${reasonMax}`}
+            count={t`${reason.length} of ${reasonMax}`}
             className="w-full max-w-108"
           >
             <TextFieldInput
@@ -76,7 +76,7 @@ function LockableRow({
           variant={on ? "primary" : "ghost"}
           size="icon-sm"
           aria-pressed={on}
-          aria-label={`${on ? "Unlock" : "Lock"} ${label.toLowerCase()}`}
+          aria-label={`${on ? t`Unlock` : t`Lock`} ${label.toLowerCase()}`}
           title={on ? t`Unlock` : t`Lock for every reviewer`}
           onClick={() => onLockedChange?.(!on)}
           className={on ? "" : "border-transparent bg-transparent text-fg-dim"}

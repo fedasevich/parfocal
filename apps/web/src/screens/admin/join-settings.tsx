@@ -67,7 +67,7 @@ function JoinForm({
             setRefusal({ domain: change.email_domain ?? "", message: refusalText });
             return;
           }
-          notify(error instanceof Error ? error.message : "That did not save. Try again.");
+          notify(error instanceof Error ? error.message : t`That did not save. Try again.`);
         },
         onSuccess: () => {
           void queryClient.invalidateQueries({ queryKey: getGetJoinSettingsQueryKey() });
@@ -186,7 +186,7 @@ export function JoinSettingsZone({
   return (
     <Zone
       title={t`Logo and joining`}
-      sub="The logo shows next to Parfocal. The email domain decides who can find this workspace when they set up."
+      sub={t`The logo shows next to Parfocal. The email domain decides who can find this workspace when they set up.`}
     >
       <JoinForm
         key={JSON.stringify(saved)}

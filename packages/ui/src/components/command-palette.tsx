@@ -147,11 +147,15 @@ function CommandPaletteView({
       </div>
       <div className="flex gap-3.5 border-line border-t px-4 py-2 text-body-sm text-fg-dim">
         <span className="inline-flex items-center gap-1">
-          <Keycap keys="↑" size="sm" />
-          <Keycap keys="↓" size="sm" /> <Trans>choose</Trans>
+          <Trans>
+            <Keycap keys="↑" size="sm" />
+            <Keycap keys="↓" size="sm" /> choose
+          </Trans>
         </span>
         <span className="inline-flex items-center gap-1">
-          <Keycap keys="↵" size="sm" /> <Trans>run</Trans>
+          <Trans>
+            <Keycap keys="↵" size="sm" /> run
+          </Trans>
         </span>
         <span>
           <Trans>Every action in the app is here, with its key</Trans>

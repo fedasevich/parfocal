@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import { Icon } from "@parfocal/ui/components/icon";
@@ -77,30 +78,30 @@ type StagingCardsProps = React.ComponentProps<"section"> &
   };
 
 function rowKind(area: RankedArea, settled: boolean) {
-  if (!settled) return "Tumor region";
-  if (area.lead) return "Sets the category";
-  if (area.call === "disagree") return "Not tumor";
-  return area.canChangeCategory ? "Tumor region" : "Cannot change the category";
+  if (!settled) return t`Tumor region`;
+  if (area.lead) return t`Sets the category`;
+  if (area.call === "disagree") return t`Not tumor`;
+  return area.canChangeCategory ? t`Tumor region` : t`Cannot change the category`;
 }
 
 type ClusterState = Extract<AiState, { kind: "small-cluster" }>;
 
 const stepWords: Record<ClusterStepName, (number: number) => string> = {
-  confirm: (number) => `confirm area ${number}`,
+  confirm: (number) => t`confirm area ${number}`,
   measure: () => "measure it",
-  count: () => "count its tumor cells",
+  count: () => t`count its tumor cells`,
 };
 
 const joinSteps = (words: string[]) =>
-  words.length > 1 ? `${words.slice(0, -1).join(", ")} and ${words.at(-1)}` : (words[0] ?? "");
+  words.length > 1 ? t`${words.slice(0, -1).join(", ")} and ${words.at(-1)}` : (words[0] ?? "");
 
 const capital = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
 
 function stepDone(step: ClusterStepName, state: ClusterState) {
-  if (step === "confirm") return `Area ${state.lead.number} confirmed`;
+  if (step === "confirm") return t`Area ${state.lead.number} confirmed`;
   if (step === "measure") return `Measured ${formatMm(state.size)}`;
   const cells = state.lead.cells;
-  return cells && cells.low > 200 ? "Over 200 tumor cells" : "Under 200 tumor cells";
+  return cells && cells.low > 200 ? t`Over 200 tumor cells` : t`Under 200 tumor cells`;
 }
 
 function ClusterSteps({ state }: { state: ClusterState }) {
@@ -159,7 +160,7 @@ function ClusterHero({ state }: { state: ClusterState }) {
       <StagingHero
         title={t`${categoryName[state.category]}, ${formatMm(state.size)}, settled`}
         category={state.pn}
-        sub={`Suggested ${state.pn}. Area ${state.lead.number} is confirmed, measured and holds ${count} tumor cells, so the smaller areas cannot change the category.`}
+        sub={t`Suggested ${state.pn}. Area ${state.lead.number} is confirmed, measured and holds ${count} tumor cells, so the smaller areas cannot change the category.`}
         range={{
           min: scaleMin,
           max: scaleMax,
@@ -181,7 +182,7 @@ function ClusterHero({ state }: { state: ClusterState }) {
     <StagingHero
       title={t`Small tumor cluster, about ${formatMm(state.size)}`}
       category={chip}
-      sub={`It sits near the 0.2 mm line, so both its size and its tumor cell count decide between isolated tumor cells and a micrometastasis. To settle it, ${joinSteps(open)}.`}
+      sub={t`It sits near the 0.2 mm line, so both its size and its tumor cell count decide between isolated tumor cells and a micrometastasis. To settle it, ${joinSteps(open)}.`}
       range={{
         min: scaleMin,
         max: scaleMax,
@@ -287,21 +288,21 @@ function summaryOf(
   onSubmit: (() => void) | undefined,
 ): Summary | null {
   if (state.kind === "running")
-    return { title: `Still reading, ${areaWord(state.areas.length)} so far` };
+    return { title: t`Still reading, ${areaWord(state.areas.length)} so far` };
   if (state.kind === "pre-read") {
     if (state.phase === "settled") {
       return {
-        title: `${state.pn}, ${formatMm(state.size)}, settled`,
+        title: t`${state.pn}, ${formatMm(state.size)}, settled`,
         chip: state.pn,
-        action: { label: "Submit", title: "Submit", run: () => onSubmit?.() },
+        action: { label: t`Submit`, title: t`Submit`, run: () => onSubmit?.() },
       };
     }
     return {
-      title: `Metastasis likely, ${formatMm(state.size)}`,
+      title: t`Metastasis likely, ${formatMm(state.size)}`,
       chip: categoryShort[state.category],
       action: {
-        label: "Start",
-        title: `Start with area ${state.lead.number}`,
+        label: t`Start`,
+        title: t`Start with area ${state.lead.number}`,
         run: () => onStart?.(state.lead.object),
       },
     };
@@ -309,24 +310,24 @@ function summaryOf(
   if (state.kind === "small-cluster") {
     if (state.phase === "settled") {
       return {
-        title: `${state.pn}, ${formatMm(state.size)}, settled`,
+        title: t`${state.pn}, ${formatMm(state.size)}, settled`,
         chip: state.pn,
-        action: { label: "Submit", title: "Submit", run: () => onSubmit?.() },
+        action: { label: t`Submit`, title: t`Submit`, run: () => onSubmit?.() },
       };
     }
     const done = state.steps.filter((step) => step.done).length;
     return {
-      title: `Small cluster, about ${formatMm(state.size)}`,
+      title: t`Small cluster, about ${formatMm(state.size)}`,
       chip: categoryShort[state.category],
       ...(done === 0
         ? {
             action: {
-              label: "Start",
-              title: `Start with area ${state.lead.number}`,
+              label: t`Start`,
+              title: t`Start with area ${state.lead.number}`,
               run: () => onStart?.(state.lead.object),
             },
           }
-        : { note: `${done} of ${state.steps.length} steps` }),
+        : { note: t`${done} of ${state.steps.length} steps` }),
     };
   }
   return null;
@@ -430,7 +431,7 @@ function StagingCards({
           {state.kind === "running" ? (
             <div data-slot="staging-hero" className="grid gap-2">
               <h3 className="m-0 mt-0.5 text-title leading-tight font-semibold">
-                <Trans>Still reading,</Trans> {areaWord(state.areas.length)} <Trans>so far</Trans>
+                <Trans>Still reading, {areaWord(state.areas.length)} so far</Trans>
               </h3>
               <p className="m-0 text-body-sm leading-normal text-fg-dim">
                 <Trans>
@@ -449,7 +450,7 @@ function StagingCards({
               <StagingHero
                 title={t`${categoryName[state.category]}, ${formatMm(state.size)}, settled`}
                 category={state.pn}
-                sub={`Suggested ${state.pn}. Area ${state.lead.number} is confirmed and measured, so the smaller areas cannot change the category.`}
+                sub={t`Suggested ${state.pn}. Area ${state.lead.number} is confirmed and measured, so the smaller areas cannot change the category.`}
                 range={{
                   min: scaleMin,
                   max: scaleMax,
@@ -464,7 +465,7 @@ function StagingCards({
               <StagingHero
                 title={t`${findingWords("Metastasis", state.lead.probability, wording, typer)}, largest about ${formatMm(state.size)}`}
                 category={categoryIfConfirmed[state.category]}
-                sub={`${areaWord(state.areas.length)}, largest first. Confirm and measure area ${state.lead.number} to settle the category.`}
+                sub={t`${areaWord(state.areas.length)}, largest first. Confirm and measure area ${state.lead.number} to settle the category.`}
                 range={{
                   min: scaleMin,
                   max: scaleMax,

@@ -55,7 +55,7 @@ function ChapterPage() {
               <div className="flex flex-1 flex-col gap-1">
                 <p className="m-0 text-body-sm text-fg">{step.text}</p>
                 <small className="text-caption text-fg-faint">
-                  <Trans>As</Trans> {people(who).name}, {stepRole(ref, personaRoles)} ·{" "}
+                  <Trans>As {people(who).name}</Trans>, {stepRole(ref, personaRoles)} ·{" "}
                   {step.screen}
                   {step.scene ? `, ${step.scene}` : ""}
                 </small>
@@ -68,7 +68,7 @@ function ChapterPage() {
                     if (ids) originStore.set({ kind: "walk", ...ref, ids });
                   }}
                 >
-                  <Trans>Open step</Trans> {stepIndex + 1}
+                  <Trans>Open step {stepIndex + 1}</Trans>
                 </Link>
               ) : null}
             </li>

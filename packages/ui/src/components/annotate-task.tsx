@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { Banner } from "@parfocal/ui/components/banner";
 import { Button } from "@parfocal/ui/components/button";
@@ -105,14 +106,18 @@ function OriginLines({
   const made =
     model && origin !== "human" ? (
       <p data-slot="origin-model" className="m-0 text-body-sm text-fg-dim">
-        <Trans>Made by</Trans> <b className="font-semibold text-fg">{modelLabel(model)}</b>
+        <Trans>
+          Made by <b className="font-semibold text-fg">{modelLabel(model)}</b>
+        </Trans>
       </p>
     ) : null;
   if (!author) {
     return model ? (
       <p data-slot="origin-model" className="m-0 text-body-sm text-fg-dim">
-        <Trans>Made by</Trans> <b className="font-semibold text-fg">{modelLabel(model)}</b>
-        <Trans>, nobody has changed it.</Trans>
+        <Trans>
+          Made by <b className="font-semibold text-fg">{modelLabel(model)}</b>, nobody has changed
+          it.
+        </Trans>
       </p>
     ) : (
       <p className="m-0 text-body-sm text-fg-dim">
@@ -267,7 +272,7 @@ function CheckProgress({ counts, scope, className, ...props }: CheckProgressProp
           <Trans>{counts.deleted} deleted</Trans>
         </li>
         <li>
-          {counts.total - done} <Trans>left</Trans>
+          <Trans>{counts.total - done} left</Trans>
         </li>
       </ul>
     </div>
@@ -326,7 +331,7 @@ function CheckedCard({
   summary,
   onUndo,
   onNext,
-  nextLabel = "Next slide",
+  nextLabel = t`Next slide`,
   className,
   ...props
 }: CheckedCardProps) {
@@ -399,7 +404,7 @@ function SignOffCard({
   const waiting = experts.filter((expert) => !expert.checked);
   const reason =
     waiting.length > 0
-      ? `${waiting.map((expert) => expert.person.name).join(" and ")} ${waiting.length > 1 ? "have" : "has"} not checked this slide yet`
+      ? t`${waiting.map((expert) => expert.person.name).join(" and ")} ${waiting.length > 1 ? "have" : "has"} not checked this slide yet`
       : undefined;
   return (
     <section
@@ -652,26 +657,26 @@ function ChoiceCards({
 }
 
 const scopePhrase = (values: CheckOptionValues) => {
-  if (values.scope === "all") return "every AI cell";
-  if (values.scope === "sample") return `a random sample of ${values.sampleSize} AI cells`;
-  if (values.scope === "regions") return "the AI cells inside the areas you draw";
+  if (values.scope === "all") return t`every AI cell`;
+  if (values.scope === "sample") return t`a random sample of ${values.sampleSize} AI cells`;
+  if (values.scope === "regions") return t`the AI cells inside the areas you draw`;
   return "";
 };
 
 function checkSummary(values: CheckOptionValues) {
   const exported = values.exportUnchecked
-    ? "unchecked AI cells are exported marked as not checked"
-    : "unchecked AI cells are left out of the export";
-  if (!values.hasResult) return "There is no AI result, so experts only draw.";
+    ? t`unchecked AI cells are exported marked as not checked`
+    : t`unchecked AI cells are left out of the export`;
+  if (!values.hasResult) return t`There is no AI result, so experts only draw.`;
   if (values.scope === "none")
-    return `Experts only draw, nobody checks the AI cells, and ${exported}.`;
+    return t`Experts only draw, nobody checks the AI cells, and ${exported}.`;
   const order =
-    values.order === "least-sure" ? "least sure first" : "from top left to bottom right";
+    values.order === "least-sure" ? t`least sure first` : t`from top left to bottom right`;
   const finish =
     values.rule === "require"
-      ? "a slide cannot finish until they are all checked"
-      : "a slide can finish with some left unchecked";
-  return `Experts check ${scopePhrase(values)}, ${order}, ${finish}, and ${exported}.`;
+      ? t`a slide cannot finish until they are all checked`
+      : t`a slide can finish with some left unchecked`;
+  return t`Experts check ${scopePhrase(values)}, ${order}, ${finish}, and ${exported}.`;
 }
 
 function CheckOptions({ values, onValuesChange, className, ...props }: CheckOptionsProps) {
@@ -682,27 +687,27 @@ function CheckOptions({ values, onValuesChange, className, ...props }: CheckOpti
   return (
     <div data-slot="check-options" className={cn("grid gap-5", className)} {...props}>
       <ChoiceCards
-        legend="What experts check"
+        legend={t`What experts check`}
         value={values.scope}
         onValueChange={(next) => set({ scope: next as CheckScopeKind })}
         choices={[
-          { value: "none", title: "Check nothing", text: "Experts only draw." },
+          { value: "none", title: t`Check nothing`, text: t`Experts only draw.` },
           {
             value: "all",
-            title: "Check every AI cell",
-            text: "Each cell is confirmed, fixed or deleted.",
+            title: t`Check every AI cell`,
+            text: t`Each cell is confirmed, fixed or deleted.`,
             disabled: noResult,
           },
           {
             value: "sample",
-            title: "Check a random sample",
-            text: "A random sample of cells is checked, the rest stays unchecked.",
+            title: t`Check a random sample`,
+            text: t`A random sample of cells is checked, the rest stays unchecked.`,
             disabled: noResult,
           },
           {
             value: "regions",
-            title: "Check inside areas I draw",
-            text: "Only the cells inside those areas.",
+            title: t`Check inside areas I draw`,
+            text: t`Only the cells inside those areas.`,
             disabled: noResult,
           },
         ]}
@@ -735,56 +740,56 @@ function CheckOptions({ values, onValuesChange, className, ...props }: CheckOpti
       ) : (
         <>
           <ChoiceCards
-            legend="Start with"
+            legend={t`Start with`}
             value={values.order}
             onValueChange={(next) => set({ order: next as CheckOrder })}
             choices={[
               {
                 value: "least-sure",
-                title: "The cells the AI was least sure of",
-                text: "The doubtful cells are seen first, while experts are fresh.",
+                title: t`The cells the AI was least sure of`,
+                text: t`The doubtful cells are seen first, while experts are fresh.`,
               },
               {
                 value: "position",
-                title: "Top left to bottom right",
-                text: "Experts sweep the slide in reading order.",
+                title: t`Top left to bottom right`,
+                text: t`Experts sweep the slide in reading order.`,
               },
             ]}
           />
           <ChoiceCards
-            legend="Finishing a slide"
+            legend={t`Finishing a slide`}
             value={values.rule}
             onValueChange={(next) => set({ rule: next as SignOffRule })}
             choices={[
               {
                 value: "require",
-                title: "Only when every cell in scope is checked",
-                text: "The owner cannot sign a slide off while checks are missing.",
+                title: t`Only when every cell in scope is checked`,
+                text: t`The owner cannot sign a slide off while checks are missing.`,
               },
               {
                 value: "warn",
-                title: "Allowed with cells left unchecked",
-                text: "The owner sees a warning and can still sign off.",
+                title: t`Allowed with cells left unchecked`,
+                text: t`The owner sees a warning and can still sign off.`,
               },
             ]}
           />
         </>
       )}
       <ChoiceCards
-        legend="Unchecked AI cells in the export"
+        legend={t`Unchecked AI cells in the export`}
         value={values.exportUnchecked ? "include" : "leave-out"}
         onValueChange={(next) => set({ exportUnchecked: next === "include" })}
         choices={[
           {
             value: "leave-out",
-            title: "Leave them out",
-            text: "The training data holds only cells a person checked or drew.",
+            title: t`Leave them out`,
+            text: t`The training data holds only cells a person checked or drew.`,
             disabled: noResult,
           },
           {
             value: "include",
-            title: "Export them marked as not checked",
-            text: "Cells outside the sample or areas are kept, labelled so you can filter them.",
+            title: t`Export them marked as not checked`,
+            text: t`Cells outside the sample or areas are kept, labelled so you can filter them.`,
             disabled: noResult,
           },
         ]}
@@ -862,10 +867,10 @@ function RunProgress({
 
   const heading =
     state === "running"
-      ? "Running on the whole slide"
+      ? t`Running on the whole slide`
       : state === "cancelled"
-        ? "Run cancelled, finished tiles kept"
-        : "Run finished";
+        ? t`Run cancelled, finished tiles kept`
+        : t`Run finished`;
   return (
     <div
       data-slot="run-progress"
@@ -920,6 +925,8 @@ function RunTiles({
   runningTile,
   ...props
 }: RunTilesProps) {
+  const { t } = useLingui();
+
   const tileWidth = width / columns;
   const tileHeight = height / rows;
   const tiles = Array.from({ length: columns * rows }, (_, index) => index);
@@ -937,8 +944,8 @@ function RunTiles({
             y={Math.floor(index / columns) * tileHeight}
             width={tileWidth}
             height={tileHeight}
-            fill={done ? "rgb(52 211 153 / 0.10)" : active ? "rgb(255 255 255 / 0.12)" : "none"}
-            stroke={done ? "rgb(52 211 153 / 0.7)" : "rgb(255 255 255 / 0.28)"}
+            fill={done ? `rgb(52 211 153 / 0.10)` : active ? `rgb(255 255 255 / 0.12)` : "none"}
+            stroke={done ? `rgb(52 211 153 / 0.7)` : `rgb(255 255 255 / 0.28)`}
             strokeWidth={done ? 3 : 2}
             strokeDasharray={done ? undefined : "10 8"}
           />
@@ -972,10 +979,11 @@ function ChangesByMarker({ people, count, className, ...props }: ChangesByMarker
           <PersonAvatar key={person.name} person={person} size={18} />
         ))}
       </span>
-      {count === 1 ? t`1 change` : t`${count} changes`} <Trans>by</Trans> {names}
-      <span className="text-accent">
-        <Trans>Show</Trans>
-      </span>
+      {count === 1 ? t`1 change` : t`${count} changes`}{" "}
+      <Trans>
+        by {names}
+        <span className="text-accent">Show</span>
+      </Trans>
     </button>
   );
 }

@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import { Keycap } from "@parfocal/ui/components/keycap";
@@ -206,9 +207,9 @@ function CommentComposer({
   onValueChange,
   onSend,
   label,
-  placeholder = "Write a comment. Type @ to mention someone",
+  placeholder = t`Write a comment. Type @ to mention someone`,
   hint,
-  sendLabel = "Send",
+  sendLabel = t`Send`,
   offReason,
   replyingTo,
   onCancelReply,

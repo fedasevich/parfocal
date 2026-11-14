@@ -29,9 +29,9 @@ export default function FeedbackDialog({
   const trimmed = text.trim();
   const problem =
     trimmed === ""
-      ? "Write what happened or what you would like"
+      ? t`Write what happened or what you would like`
       : trimmed.length > maxLength
-        ? `Keep it under ${maxLength} characters`
+        ? t`Keep it under ${maxLength} characters`
         : undefined;
   const screenshot = attach && feedback.screenshot ? feedback.screenshot : null;
   return (
@@ -43,21 +43,21 @@ export default function FeedbackDialog({
       title={sent ? t`Thanks, the team has it` : t`Send feedback`}
       subtitle={
         sent
-          ? "We read every message. Nothing else from this screen was sent."
-          : "Goes to the Parfocal team. Slides, images, names and case details are blurred in your browser before anything is sent."
+          ? t`We read every message. Nothing else from this screen was sent.`
+          : t`Goes to the Parfocal team. Slides, images, names and case details are blurred in your browser before anything is sent.`
       }
       width={560}
-      primaryLabel={sent ? "Done" : "Send"}
+      primaryLabel={sent ? t`Done` : t`Send`}
       showCancel={!sent}
       primaryBusy={send.isPending}
       blockers={
         tried && problem
-          ? [{ id: "text", text: problem, goTo: "Go to the text" }]
+          ? [{ id: "text", text: problem, goTo: t`Go to the text` }]
           : failure
-            ? [{ id: "failure", text: failure, goTo: "Try again" }]
+            ? [{ id: "failure", text: failure, goTo: t`Try again` }]
             : []
       }
-      blockersTitle="Before you can send"
+      blockersTitle={t`Before you can send`}
       onPrimary={() => {
         if (sent) {
           onClose();
@@ -78,12 +78,12 @@ export default function FeedbackDialog({
           {
             onSuccess: (response) => {
               if (response.status !== 200) {
-                setFailure("The team did not get it. Try again in a moment.");
+                setFailure(t`The team did not get it. Try again in a moment.`);
                 return;
               }
               setSent(true);
             },
-            onError: () => setFailure("The team did not get it. Try again in a moment."),
+            onError: () => setFailure(t`The team did not get it. Try again in a moment.`),
           },
         );
       }}
@@ -93,7 +93,7 @@ export default function FeedbackDialog({
           <FormField
             label={t`What happened, or what would help?`}
             error={tried ? problem : undefined}
-            count={`${trimmed.length} of ${maxLength}`}
+            count={t`${trimmed.length} of ${maxLength}`}
           >
             <TextAreaInput
               rows={4}

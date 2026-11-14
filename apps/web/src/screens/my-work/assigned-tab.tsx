@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { type AssignedTask, useGetReviewTask, useGetReviewTaskStates } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
@@ -25,13 +26,13 @@ function statusOf(task: AssignedTask, signedOn: string | null): [string, StatusT
     case "disagreements":
       return [`${task.open_disagreements} disagreements`, "warn"];
     case "ready-to-sign-off":
-      return ["Ready to sign off", "ok"];
+      return [t`Ready to sign off`, "ok"];
     case "signed-off":
-      return [signedOn ? `Signed off ${signedOn}` : "Signed off", "ok"];
+      return [signedOn ? t`Signed off ${signedOn}` : t`Signed off`, "ok"];
     case "in-review":
-      return ["In review", "accent"];
+      return [t`In review`, "accent"];
     case "not-started":
-      return ["Not started", "neutral"];
+      return [t`Not started`, "neutral"];
   }
 }
 
@@ -159,6 +160,8 @@ export function AssignedTab({
   selected: string | undefined;
   onSelect: (key: string | undefined) => void;
 }) {
+  const { t } = useLingui();
+
   const goTo = useGoTo();
   const firstProject = tasks[0]?.project.id;
   return (
@@ -177,7 +180,7 @@ export function AssignedTab({
       <Table>
         <TableHeader>
           <TableRow>
-            {["Task", "Result set", "Reviewers", "Due", "Status", ""].map((heading) => (
+            {[t`Task`, t`Result set`, t`Reviewers`, "Due", t`Status`, ""].map((heading) => (
               <TableHead key={heading || "actions"}>{heading}</TableHead>
             ))}
           </TableRow>

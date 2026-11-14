@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import {
   type InboxItem,
@@ -50,8 +51,8 @@ const timeLeft = (slides: number) => {
   const minutes = slides * minutesPerSlide;
   const hours = Math.floor(minutes / 60);
   const rest = minutes % 60;
-  if (hours === 0) return `about ${rest} min left`;
-  return rest === 0 ? `about ${hours} h left` : `about ${hours} h ${rest} min left`;
+  if (hours === 0) return t`about ${rest} min left`;
+  return rest === 0 ? t`about ${hours} h left` : t`about ${hours} h ${rest} min left`;
 };
 
 function ContinueHero({ task, resume }: { task: MyTask; resume: ResumeTarget }) {
@@ -76,8 +77,10 @@ function ContinueHero({ task, resume }: { task: MyTask; resume: ResumeTarget }) 
         </SectionLabel>
         <h3 className="m-0 text-title font-semibold text-fg">{task.name}</h3>
         <p className="m-0 text-body-sm text-fg-dim">
-          <Trans>Slide</Trans> {resume.position + 1} <Trans>of</Trans> {resume.slides_assigned} ·{" "}
-          {timeLeft(left)}
+          <Trans>
+            Slide {resume.position + 1} of {resume.slides_assigned}
+          </Trans>{" "}
+          · {timeLeft(left)}
           {task.due_on ? t` · due ${formatDue(task.due_on)}` : ""}
         </p>
         <ProgressBar
@@ -86,7 +89,9 @@ function ContinueHero({ task, resume }: { task: MyTask; resume: ResumeTarget }) 
         />
       </div>
       <Button variant="primary" size="lg" onClick={open}>
-        <Trans>Continue reviewing</Trans> <Keycap keys="↵" />
+        <Trans>
+          Continue reviewing <Keycap keys="↵" />
+        </Trans>
       </Button>
     </div>
   );
@@ -154,8 +159,11 @@ function MentionRow({ item }: { item: InboxItem }) {
         <b className="text-fg">{actor?.name}</b>{" "}
         {item.kind === "mention" ? (
           <>
-            <Trans>asked about</Trans> <ObjectIdTag>{objectId}</ObjectIdTag> <Trans>on</Trans>{" "}
-            <span data-phi="">{payloadText(item, "slide_label")}</span>: {said}
+            <Trans>asked about</Trans> <ObjectIdTag>{objectId}</ObjectIdTag>{" "}
+            <Trans>
+              on <span data-phi="">{payloadText(item, "slide_label")}</span>
+            </Trans>
+            : {said}
           </>
         ) : (
           <>
@@ -191,13 +199,15 @@ function AsksForYou() {
           >
             <PersonAvatar person={from} size={26} />
             <div>
-              <b className="text-fg">{from?.name}</b> <Trans>asks you to co-sign</Trans>{" "}
-              <span className="font-mono text-fg" data-phi="">
-                {ask.case_label}
-              </span>
-              <small className="mt-0.75 block text-caption text-fg-faint">
-                {ask.project.name} · {formatDayMonth(sent)} {formatClock(sent)}
-              </small>
+              <Trans>
+                <b className="text-fg">{from?.name}</b> asks you to co-sign{" "}
+                <span className="font-mono text-fg" data-phi="">
+                  {ask.case_label}
+                </span>
+                <small className="mt-0.75 block text-caption text-fg-faint">
+                  {ask.project.name} · {formatDayMonth(sent)} {formatClock(sent)}
+                </small>
+              </Trans>
             </div>
             <Button size="sm" onClick={open}>
               <Trans>Open</Trans>
@@ -245,6 +255,8 @@ function TaskPreview({
   resume: ResumeTarget | null;
   onClose: () => void;
 }) {
+  const { t } = useLingui();
+
   const goTo = useGoTo();
   const here = resume?.task_id === task.id ? resume : null;
   const slideId = here?.slide_id ?? task.next_slide_id ?? undefined;
@@ -258,26 +270,26 @@ function TaskPreview({
       subtitle={task.project.name}
       progress={progress}
       facts={[
-        { icon: "users", label: "Task", value: `${task.code} · ${task.name}` },
+        { icon: "users", label: t`Task`, value: `${task.code} · ${task.name}` },
         ...(task.due_on
           ? [{ icon: "calendar" as const, label: "Due", value: formatDue(task.due_on) }]
           : []),
-        { icon: "target", label: "To check", value: scopeWords[task.scope] },
+        { icon: "target", label: t`To check`, value: scopeWords[task.scope] },
         {
           icon: "slides",
-          label: "Where",
+          label: t`Where`,
           value: here
-            ? `Slide ${here.position + 1} of ${here.slides_assigned}, case ${here.case_label}`
-            : `Slide 1 of ${task.slides_assigned}, not started`,
+            ? t`Slide ${here.position + 1} of ${here.slides_assigned}, case ${here.case_label}`
+            : t`Slide 1 of ${task.slides_assigned}, not started`,
         },
         {
           icon: "comment",
-          label: "Open comments",
+          label: t`Open comments`,
           value: <ThreadsValue anchors={threads.map((thread) => thread.anchor)} />,
         },
       ]}
       main={{
-        label: task.slides_submitted > 0 ? "Continue in guided review" : "Start in guided review",
+        label: task.slides_submitted > 0 ? t`Continue in guided review` : t`Start in guided review`,
         run: guided,
       }}
       full={
@@ -289,21 +301,23 @@ function TaskPreview({
 }
 
 function AdjudicationPreview({ item, onClose }: { item: MyAdjudication; onClose: () => void }) {
+  const { t } = useLingui();
+
   const goTo = useGoTo();
   return (
     <PreviewPanel
       title={item.slide_label}
       subtitle={item.project.name}
       facts={[
-        { icon: "users", label: "Task", value: `${item.task_code} · ${item.task_name}` },
+        { icon: "users", label: t`Task`, value: `${item.task_code} · ${item.task_name}` },
         {
           icon: "slides",
-          label: "Where",
+          label: t`Where`,
           value: `${andJoin(item.objects)} queued for you`,
         },
       ]}
       main={{
-        label: item.decided > 0 ? "Continue deciding" : "Start deciding",
+        label: item.decided > 0 ? t`Continue deciding` : t`Start deciding`,
         run: () => void goTo(destinations.disagreements(item.task_id, "adjudicate")),
       }}
       onClose={onClose}
@@ -363,10 +377,10 @@ export function ToReviewTab({
                   selected={selected === adjudicationKey(item)}
                   colour={colourOf(item.project.id)}
                   title={t`Decide ${total} objects on ${item.task_code}`}
-                  sub={`${item.project.name} · asked by ${asker} · ${andJoin(item.objects)} on ${item.slide_label}`}
+                  sub={t`${item.project.name} · asked by ${asker} · ${andJoin(item.objects)} on ${item.slide_label}`}
                   progress={{
                     value: percent(item.decided, total),
-                    label: `${item.decided} of ${total} objects decided`,
+                    label: t`${item.decided} of ${total} objects decided`,
                   }}
                   tags={
                     <StatusTag tone={allDone ? "ok" : "accent"}>
@@ -374,7 +388,7 @@ export function ToReviewTab({
                     </StatusTag>
                   }
                   action={{
-                    label: allDone ? "Open" : item.decided > 0 ? "Continue" : "Start",
+                    label: allDone ? t`Open` : item.decided > 0 ? t`Continue` : t`Start`,
                     primary: !allDone,
                     run: () => void goTo(destinations.disagreements(item.task_id, "adjudicate")),
                   }}

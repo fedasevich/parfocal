@@ -130,8 +130,8 @@ function SecurityContactField({ saved, send }: { saved: string | null; send: Sen
       label={t`Security contact`}
       help={
         saved === null
-          ? "Needed before any project holds clinical data."
-          : "Parfocal writes here within 24 hours of a security incident."
+          ? t`Needed before any project holds clinical data.`
+          : t`Parfocal writes here within 24 hours of a security incident.`
       }
     >
       <form
@@ -139,8 +139,8 @@ function SecurityContactField({ saved, send }: { saved: string | null; send: Sen
         onSubmit={(event) => {
           event.preventDefault();
           if (isSecurityContact(draft) && changed) {
-            send(email, `Security incidents are reported to ${email}.`, () =>
-              send(saved, "Security contact restored."),
+            send(email, t`Security incidents are reported to ${email}.`, () =>
+              send(saved, t`Security contact restored.`),
             );
           }
         }}
@@ -161,8 +161,8 @@ function SecurityContactField({ saved, send }: { saved: string | null; send: Sen
           <Button
             type="button"
             onClick={() =>
-              send(null, "Security contact removed.", () =>
-                send(saved, "Security contact restored."),
+              send(null, t`Security contact removed.`, () =>
+                send(saved, t`Security contact restored.`),
               )
             }
           >
@@ -195,7 +195,7 @@ function SecurityContactZone({ notify }: { notify: Notify }) {
   return (
     <Zone
       title={t`Security contact`}
-      sub="Where Parfocal reports a security incident or a breach that touches this workspace."
+      sub={t`Where Parfocal reports a security incident or a breach that touches this workspace.`}
     >
       <div className={rows}>
         <SecurityContactField key={contact.email ?? ""} saved={contact.email} send={send} />
@@ -213,23 +213,23 @@ function LockTimes({ notify }: { notify: Notify }) {
   return (
     <Zone
       title={t`Lock times`}
-      sub="When a screen locks, how long a sign-in lasts and how long emergency access lasts."
+      sub={t`When a screen locks, how long a sign-in lasts and how long emergency access lasts.`}
     >
       <div className={rows}>
         <Labelled
           label={t`Lock after inactivity`}
-          help="People unlock with their password or passkey."
+          help={t`People unlock with their password or passkey.`}
         >
           <IdleLockChoice minutes={policy.idle_lock_minutes} save={save} />
         </Labelled>
-        <Labelled label={t`Sign-in lasts`} help="After this long people sign in again.">
+        <Labelled label={t`Sign-in lasts`} help={t`After this long people sign in again.`}>
           <NumberChoice
             label={t`Sign-in lasts`}
             value={policy.session_hours}
             choices={sessionHourChoices}
             format={hoursText}
             onChange={(value) =>
-              save({ session_hours: value }, `Sign-ins last ${hoursText(value)} now.`)
+              save({ session_hours: value }, t`Sign-ins last ${hoursText(value)} now.`)
             }
           />
         </Labelled>
@@ -240,7 +240,7 @@ function LockTimes({ notify }: { notify: Notify }) {
             choices={emergencyHourChoices}
             format={hoursText}
             onChange={(value) =>
-              save({ emergency_hours: value }, `Emergency access lasts ${hoursText(value)} now.`)
+              save({ emergency_hours: value }, t`Emergency access lasts ${hoursText(value)} now.`)
             }
           />
         </Labelled>
@@ -270,18 +270,18 @@ function Defaults({ lab, notify }: { lab: LabSettings; notify: Notify }) {
       },
     );
   const change = (key: DefaultKey, was: string, value: string, said: string) =>
-    apply(key, value, said, () => apply(key, was, "Default restored."));
+    apply(key, value, said, () => apply(key, was, t`Default restored.`));
   const templateName =
-    templates.find((template) => template.id === current.template)?.name ?? "No template";
+    templates.find((template) => template.id === current.template)?.name ?? t`No template`;
   return (
     <Zone
       title={t`Defaults for new work`}
-      sub="What a new project and a new review task start with. People can change them there."
+      sub={t`What a new project and a new review task start with. People can change them there.`}
     >
       <div className={rows}>
         <Labelled
           label={t`Privacy of new projects`}
-          help="Owners can switch a project later. Clinical projects log every slide opened."
+          help={t`Owners can switch a project later. Clinical projects log every slide opened.`}
         >
           <SegmentedControl
             aria-label={t`Privacy of new projects`}
@@ -293,7 +293,7 @@ function Defaults({ lab, notify }: { lab: LabSettings; notify: Notify }) {
                 "default_privacy_mode",
                 current.privacy,
                 next,
-                `New projects start ${next === "clinical" ? "clinical" : "de-identified"}.`,
+                t`New projects start ${next === "clinical" ? "clinical" : "de-identified"}.`,
               );
             }}
             options={privacyOptions.map((option) => ({ ...option }))}
@@ -364,13 +364,13 @@ function TumorShare({ lab, notify }: { lab: LabSettings; notify: Notify }) {
           apply(
             key,
             next,
-            next ? "The tumor share result is shown." : "The tumor share result is hidden.",
-            () => apply(key, !next, "Setting restored."),
+            next ? t`The tumor share result is shown.` : t`The tumor share result is hidden.`,
+            () => apply(key, !next, t`Setting restored.`),
           );
         }}
         options={[
-          { value: "shown", label: "Shown" },
-          { value: "hidden", label: "Hidden" },
+          { value: "shown", label: t`Shown` },
+          { value: "hidden", label: t`Hidden` },
         ]}
       />
     </Labelled>
@@ -378,31 +378,31 @@ function TumorShare({ lab, notify }: { lab: LabSettings; notify: Notify }) {
   return (
     <Zone
       title={t`Tumor share result`}
-      sub="For cases where the lab asks for tumor cellularity, the number line says whether the tumor share is above or below a cutoff whatever the unsure cells are."
+      sub={t`For cases where the lab asks for tumor cellularity, the number line says whether the tumor share is above or below a cutoff whatever the unsure cells are.`}
     >
       <div className={rows}>
-        <Labelled label={t`Cutoff`} help="Tumor cells as a share of the cells typed.">
+        <Labelled label={t`Cutoff`} help={t`Tumor cells as a share of the cells typed.`}>
           <NumberChoice
             label={t`Tumor share cutoff`}
             value={current.tumor_share_cutoff}
             choices={cutoffChoices}
             format={(value) => `${value}%`}
             onChange={(value) =>
-              apply("tumor_share_cutoff", value, `The cutoff is ${value}%.`, () =>
-                apply("tumor_share_cutoff", current.tumor_share_cutoff, "Cutoff restored."),
+              apply("tumor_share_cutoff", value, t`The cutoff is ${value}%.`, () =>
+                apply("tumor_share_cutoff", current.tumor_share_cutoff, t`Cutoff restored.`),
               )
             }
           />
         </Labelled>
         {switchRow(
-          "Cell cases",
+          t`Cell cases`,
           "tumor_share_result_pannuke",
-          "For example a block chosen for molecular testing.",
+          t`For example a block chosen for molecular testing.`,
         )}
         {switchRow(
-          "Sentinel nodes",
+          t`Sentinel nodes`,
           "tumor_share_result_sentinel_node",
-          "A sentinel node is staged by the size of its largest deposit, so this stays hidden unless you ask for it.",
+          t`A sentinel node is staged by the size of its largest deposit, so this stays hidden unless you ask for it.`,
         )}
       </div>
     </Zone>
@@ -429,18 +429,18 @@ function DecisionCutoffZone({ lab, notify }: { lab: LabSettings; notify: Notify 
   return (
     <Zone
       title={t`Decision cutoff`}
-      sub="The score below which the viewer fades an outline for everyone in the lab. Reviewers see it in their settings but cannot change it."
+      sub={t`The score below which the viewer fades an outline for everyone in the lab. Reviewers see it in their settings but cannot change it.`}
     >
       <div className={rows}>
-        <Labelled label={t`Cutoff`} help="Scores under this percentage count as unsure.">
+        <Labelled label={t`Cutoff`} help={t`Scores under this percentage count as unsure.`}>
           <NumberChoice
             label={t`Decision cutoff`}
             value={current}
             choices={decisionCutoffChoices}
             format={(value) => `${value}%`}
             onChange={(value) =>
-              apply(value, `The decision cutoff is ${value}%.`, () =>
-                apply(current, "Cutoff restored."),
+              apply(value, t`The decision cutoff is ${value}%.`, () =>
+                apply(current, t`Cutoff restored.`),
               )
             }
           />
@@ -470,12 +470,12 @@ function AnalyticsZone({ lab, notify }: { lab: LabSettings; notify: Notify }) {
   return (
     <Zone
       title={t`Usage statistics`}
-      sub="Counts of what is used, never names, patient data or slide content. The lab's choice wins over what a person chose."
+      sub={t`Counts of what is used, never names, patient data or slide content. The lab's choice wins over what a person chose.`}
     >
       <div className={rows}>
         <Labelled
           label={t`Usage statistics`}
-          help="Each person lets people turn them off in their own Settings."
+          help={t`Each person lets people turn them off in their own Settings.`}
         >
           <SegmentedControl
             aria-label={t`Usage statistics`}
@@ -483,8 +483,8 @@ function AnalyticsZone({ lab, notify }: { lab: LabSettings; notify: Notify }) {
             onValueChange={(value) => {
               const next = analyticsPolicyOptions.find((option) => option.value === value);
               if (next === undefined || next.value === current) return;
-              apply(next.value, `Usage statistics: ${next.label.toLowerCase()}.`, () =>
-                apply(current, "Setting restored."),
+              apply(next.value, t`Usage statistics: ${next.label.toLowerCase()}.`, () =>
+                apply(current, t`Setting restored.`),
               );
             }}
             options={analyticsPolicyOptions.map((option) => ({ ...option }))}
@@ -515,7 +515,7 @@ function PatientBannerZone({ lab, notify }: { lab: LabSettings; notify: Notify }
                   void queryClient.invalidateQueries({
                     queryKey: getGetMySettingLayersQueryKey(),
                   });
-                  notify("Setting restored.");
+                  notify(t`Setting restored.`);
                 },
                 onError: (error) => notify(failure(error)),
               },
@@ -528,10 +528,10 @@ function PatientBannerZone({ lab, notify }: { lab: LabSettings; notify: Notify }
   return (
     <Zone
       title={t`Patient banner`}
-      sub="In clinical projects every case screen shows the patient's name, sex, age and record number. Only the lab changes this."
+      sub={t`In clinical projects every case screen shows the patient's name, sex, age and record number. Only the lab changes this.`}
     >
       <div className={rows}>
-        <Labelled label={t`Banner`} help="Research projects never show it.">
+        <Labelled label={t`Banner`} help={t`Research projects never show it.`}>
           <SegmentedControl
             aria-label={t`Patient banner`}
             value={current.shown ? "shown" : "hidden"}
@@ -540,17 +540,20 @@ function PatientBannerZone({ lab, notify }: { lab: LabSettings; notify: Notify }
               if (next === current.shown) return;
               apply(
                 { key: "shown", value: next },
-                next ? "The patient banner is shown." : "The patient banner is hidden.",
+                next ? t`The patient banner is shown.` : t`The patient banner is hidden.`,
                 { key: "shown", value: current.shown },
               );
             }}
             options={[
-              { value: "shown", label: "Shown" },
-              { value: "hidden", label: "Hidden" },
+              { value: "shown", label: t`Shown` },
+              { value: "hidden", label: t`Hidden` },
             ]}
           />
         </Labelled>
-        <Labelled label={t`Patient names`} help="Initials show only the first letter of each name.">
+        <Labelled
+          label={t`Patient names`}
+          help={t`Initials show only the first letter of each name.`}
+        >
           <SegmentedControl
             aria-label={t`Patient names`}
             value={current.names}
@@ -559,17 +562,20 @@ function PatientBannerZone({ lab, notify }: { lab: LabSettings; notify: Notify }
               if (next === current.names) return;
               apply(
                 { key: "names", value: next },
-                next === "initials" ? "Patients show as initials." : "Patients show full names.",
+                next === "initials" ? t`Patients show as initials.` : t`Patients show full names.`,
                 { key: "names", value: current.names },
               );
             }}
             options={[
-              { value: "full", label: "Full name" },
-              { value: "initials", label: "Initials" },
+              { value: "full", label: t`Full name` },
+              { value: "initials", label: t`Initials` },
             ]}
           />
         </Labelled>
-        <Labelled label={t`Who chooses names`} help="Locked keeps the lab's choice for everyone.">
+        <Labelled
+          label={t`Who chooses names`}
+          help={t`Locked keeps the lab's choice for everyone.`}
+        >
           <SegmentedControl
             aria-label={t`Who chooses patient names`}
             value={current.namesLocked ? "lab" : "person"}
@@ -579,14 +585,14 @@ function PatientBannerZone({ lab, notify }: { lab: LabSettings; notify: Notify }
               apply(
                 { key: "namesLocked", value: next },
                 next
-                  ? "Patient names are locked by the lab."
-                  : "Each person chooses patient names.",
+                  ? t`Patient names are locked by the lab.`
+                  : t`Each person chooses patient names.`,
                 { key: "namesLocked", value: current.namesLocked },
               );
             }}
             options={[
-              { value: "lab", label: "Locked by the lab" },
-              { value: "person", label: "Each person" },
+              { value: "lab", label: t`Locked by the lab` },
+              { value: "person", label: t`Each person` },
             ]}
           />
         </Labelled>
@@ -611,7 +617,7 @@ function Tiers({ notify }: { notify: Notify }) {
         {
           onSuccess: () => {
             void refreshed();
-            notify(`${title} is back to Parfocal's choice.`);
+            notify(t`${title} is back to Parfocal's choice.`);
           },
           onError: (error) => notify(failure(error)),
         },
@@ -623,7 +629,7 @@ function Tiers({ notify }: { notify: Notify }) {
       {
         onSuccess: () => {
           void refreshed();
-          notify(`${title} uses your choice now.`);
+          notify(t`${title} uses your choice now.`);
         },
         onError: (error) => notify(failure(error)),
       },
@@ -632,7 +638,7 @@ function Tiers({ notify }: { notify: Notify }) {
   return (
     <Zone
       title={t`Model tiers`}
-      sub="The model behind Best, Good and Fast when someone asks for an outline, tumor regions or cell types."
+      sub={t`The model behind Best, Good and Fast when someone asks for an outline, tumor regions or cell types.`}
     >
       <Table className={tableClass}>
         <TableHeader>
@@ -703,7 +709,7 @@ function Announcements({ notify }: { notify: Notify }) {
         onSuccess: () => {
           void refreshed();
           setText("");
-          notify("Announcement posted. Everyone sees it on Home.");
+          notify(t`Announcement posted. Everyone sees it on Home.`);
         },
         onError: (error) => notify(failure(error)),
       },
@@ -714,7 +720,7 @@ function Announcements({ notify }: { notify: Notify }) {
       {
         onSuccess: () => {
           void refreshed();
-          notify("Announcement ended.");
+          notify(t`Announcement ended.`);
         },
         onError: (error) => notify(failure(error)),
       },
@@ -722,7 +728,7 @@ function Announcements({ notify }: { notify: Notify }) {
   return (
     <Zone
       title={t`Announcements`}
-      sub="A short note everyone in the workspace sees on Home until it ends."
+      sub={t`A short note everyone in the workspace sees on Home until it ends.`}
     >
       <div className="grid gap-3">
         {current.length === 0 ? (

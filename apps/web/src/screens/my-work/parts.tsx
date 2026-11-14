@@ -186,9 +186,10 @@ export function PreviewPanel({
         ) : null}
       </div>
       <span className="flex items-center gap-1.5 text-caption text-fg-faint">
-        <Keycap keys="↑" />
-        <Keycap keys="↓" /> <Trans>next row</Trans>{" "}
-        <Keycap action="esc" keys="Esc" className="ml-2" /> <Trans>close</Trans>
+        <Trans>
+          <Keycap keys="↑" />
+          <Keycap keys="↓" /> next row <Keycap action="esc" keys="Esc" className="ml-2" /> close
+        </Trans>
       </span>
     </aside>
   );

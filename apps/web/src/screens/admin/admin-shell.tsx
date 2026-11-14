@@ -92,9 +92,11 @@ export function AdminShell({
   const person = personOf(me);
   const workspace = workspaceBrand(me);
   const sections: SidebarSection[] = [
-    { items: [{ id: "back", href: destinations.home(), label: "Back to Parfocal", icon: "back" }] },
     {
-      title: workspace ? `Admin · ${workspace.name}` : "Admin",
+      items: [{ id: "back", href: destinations.home(), label: t`Back to Parfocal`, icon: "back" }],
+    },
+    {
+      title: workspace ? t`Admin · ${workspace.name}` : t`Admin`,
       items: adminSectionList.map((item) => ({
         id: item.key,
         href: adminHref(item.key),

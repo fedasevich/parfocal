@@ -89,14 +89,16 @@ function DeepLinkLine({ options }: { options: SignInOptions | undefined }) {
           <b>{link.task_code}</b>,{" "}
         </>
       ) : null}
-      <Trans>slide</Trans>{" "}
-      <b className="font-mono" data-phi="">
-        {link.slide_label}
-      </b>{" "}
-      <Trans>of</Trans>{" "}
-      <b className="font-mono" data-phi="">
-        {link.case_label}
-      </b>
+      <Trans>
+        slide{" "}
+        <b className="font-mono" data-phi="">
+          {link.slide_label}
+        </b>{" "}
+        of{" "}
+        <b className="font-mono" data-phi="">
+          {link.case_label}
+        </b>
+      </Trans>
     </DeepLinkNote>
   );
 }
@@ -121,7 +123,7 @@ export function EmailForm({ flow }: { flow: Flow }) {
         onSuccess: (response) => {
           if (response.status === 200) flow.land(response.data);
         },
-        onError: (error) => setFailure(problemText(error, "Could not sign in. Try again.")),
+        onError: (error) => setFailure(problemText(error, t`Could not sign in. Try again.`)),
       },
     );
   };
@@ -132,7 +134,7 @@ export function EmailForm({ flow }: { flow: Flow }) {
       { data: { workspace_id: matched.workspace_id, return_to: flow.returnTo } },
       {
         onSuccess: (response) => flow.land(response.data),
-        onError: (error) => setFailure(problemText(error, "Single sign-on did not answer.")),
+        onError: (error) => setFailure(problemText(error, t`Single sign-on did not answer.`)),
       },
     );
   };
@@ -250,9 +252,9 @@ export function MagicForm({ flow }: { flow: Flow }) {
           setCode("");
           setFailure(null);
           setSecondsLeft(response.data.resend_seconds);
-          flow.toast("Sends a new link. The old one stops working");
+          flow.toast(t`Sends a new link. The old one stops working`);
         },
-        onError: (error) => setFailure(problemText(error, "Could not send the link.")),
+        onError: (error) => setFailure(problemText(error, t`Could not send the link.`)),
       },
     );
   };
@@ -263,7 +265,7 @@ export function MagicForm({ flow }: { flow: Flow }) {
       {
         onSuccess: (response) => flow.land(response.data),
         onError: (error) => {
-          setFailure(problemText(error, "Could not check the code."));
+          setFailure(problemText(error, t`Could not check the code.`));
           setCode("");
         },
       },
@@ -273,8 +275,10 @@ export function MagicForm({ flow }: { flow: Flow }) {
     <AuthForm center>
       <AuthBadge icon="mail" />
       <AuthHeading title={t`Check your email`}>
-        <Trans>We sent a sign-in link and a code to</Trans> <b>{email}</b>
-        <Trans>. Both work once, for</Trans> {options?.link_minutes ?? 15} <Trans>minutes.</Trans>
+        <Trans>
+          We sent a sign-in link and a code to <b>{email}</b>. Both work once, for{" "}
+          {options?.link_minutes ?? 15} minutes.
+        </Trans>
       </AuthHeading>
       <CodeInput label={t`Sign-in code`} value={code} onChange={setCode} onSubmit={submit} />
       {failure === null ? null : (
@@ -325,7 +329,7 @@ export function SsoForm({ flow }: { flow: Flow }) {
       { data: { workspace_id: chosen.workspace_id, return_to: flow.returnTo } },
       {
         onSuccess: (response) => flow.land(response.data),
-        onError: (error) => setFailure(problemText(error, "Single sign-on did not answer.")),
+        onError: (error) => setFailure(problemText(error, t`Single sign-on did not answer.`)),
       },
     );
   };
@@ -377,8 +381,7 @@ export function SsoForm({ flow }: { flow: Flow }) {
         onClick={go}
         disabled={chosen === undefined || sso.isPending}
       >
-        <Trans>Continue to</Trans> {chosen?.short_name ?? t`your institution`}{" "}
-        <Trans>sign-in</Trans>
+        <Trans>Continue to {chosen?.short_name ?? t`your institution`} sign-in</Trans>
       </Button>
       <AuthFoot>
         <Trans>Not listed? Your admin can connect it in</Trans> <AdminSecurityLink />
@@ -411,10 +414,10 @@ export function ForgotForm({ flow }: { flow: Flow }) {
       { data: { email: flow.email } },
       {
         onSuccess: (response) => {
-          flow.toast(`Reset link sent to ${response.data.email}`);
+          flow.toast(t`Reset link sent to ${response.data.email}`);
           flow.change("reset");
         },
-        onError: (error) => setFailure(problemText(error, "Could not send the link.")),
+        onError: (error) => setFailure(problemText(error, t`Could not send the link.`)),
       },
     );
   };
@@ -435,9 +438,10 @@ export function ForgotForm({ flow }: { flow: Flow }) {
         <Trans>Send reset link</Trans>
       </Button>
       <Banner inline tone="info">
-        <Trans>Signing in with</Trans>{" "}
-        {institutionFor(flow.email, flow.options?.institutions ?? [])?.short_name}{" "}
-        <Trans>single sign-on? Reset that password with hospital IT instead.</Trans>
+        <Trans>
+          Signing in with {institutionFor(flow.email, flow.options?.institutions ?? [])?.short_name}{" "}
+          single sign-on? Reset that password with hospital IT instead.
+        </Trans>
       </Banner>
       <AuthFoot>
         <AuthLink onClick={() => flow.change("email")}>
@@ -459,7 +463,7 @@ export function ResetForm({ flow }: { flow: Flow }) {
   const check = checkPassword(password, flags);
   const submit = () => {
     if (password !== repeat) {
-      setFailure("The two passwords are not the same.");
+      setFailure(t`The two passwords are not the same.`);
       return;
     }
     setFailure(null);
@@ -475,7 +479,7 @@ export function ResetForm({ flow }: { flow: Flow }) {
                   .fieldErrors()
                   .map((item) => item.message)
                   .join(". ")
-              : problemText(error, "Could not save the password."),
+              : problemText(error, t`Could not save the password.`),
           );
         },
       },
@@ -484,8 +488,9 @@ export function ResetForm({ flow }: { flow: Flow }) {
   return (
     <AuthForm>
       <AuthHeading title={t`Choose a new password`}>
-        <Trans>For</Trans> <b>{flow.email}</b>
-        <Trans>. Other devices are signed out after the change.</Trans>
+        <Trans>
+          For <b>{flow.email}</b>. Other devices are signed out after the change.
+        </Trans>
       </AuthHeading>
       <AuthField label={t`New password`}>
         <PasswordInput

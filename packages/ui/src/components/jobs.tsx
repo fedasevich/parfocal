@@ -24,6 +24,8 @@ function ValueRing({
   style,
   ...props
 }: ValueRingProps) {
+  const { t } = useLingui();
+
   const percent = Math.max(0, Math.min(100, Math.round(value)));
   const width = ((stroke ?? (size < 32 ? 3.5 : 4.5)) * 36) / size;
   const dash = Math.max(0.01, percent);
@@ -38,7 +40,7 @@ function ValueRing({
       {...props}
     >
       <svg aria-hidden="true" viewBox="0 0 36 36" className="absolute inset-0 size-full">
-        <g transform="rotate(-90 18 18)">
+        <g transform={`rotate(-90 18 18)`}>
           <circle
             cx="18"
             cy="18"

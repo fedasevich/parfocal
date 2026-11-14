@@ -75,9 +75,10 @@ export function HotkeysSpike() {
           <Trans>Waiting for:</Trans> {pending ? t`${pending.join(" then ")} then …` : t`nothing`}
         </span>
         <span>
-          <Trans>Taps</Trans> {log.taps}
-          <Trans>, holds</Trans> {log.holds}
-          <Trans>, whole slide</Trans> {log.peek ? t`open` : t`closed`}
+          <Trans>
+            Taps {log.taps}, holds {log.holds}, whole slide
+          </Trans>{" "}
+          {log.peek ? t`open` : t`closed`}
         </span>
       </output>
     </main>

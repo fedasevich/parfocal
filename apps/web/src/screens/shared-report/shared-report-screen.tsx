@@ -136,8 +136,10 @@ function Report({ shared }: { shared: SharedReport }) {
         </div>
         <h1 className="m-0 text-title font-semibold text-fg">{shared.task_name}</h1>
         <p className="m-0 text-body-sm text-fg-dim">
-          {shared.project_name} <Trans>· evaluation report · this link works until</Trans>{" "}
-          {longDay(shared.expires_at)}
+          <Trans>
+            {shared.project_name} · evaluation report · this link works until{" "}
+            {longDay(shared.expires_at)}
+          </Trans>
         </p>
       </header>
       <MetricTiles variant="panel" tiles={headlineTiles(evaluation)} />
@@ -150,13 +152,13 @@ function Report({ shared }: { shared: SharedReport }) {
         <NumberTable
           label={t`Precision and sensitivity`}
           head={[
-            "Class",
-            "True positives",
-            "False positives",
-            "False negatives",
-            "Not sure",
-            "Precision",
-            "Sensitivity",
+            t`Class`,
+            t`True positives`,
+            t`False positives`,
+            t`False negatives`,
+            t`Not sure`,
+            t`Precision`,
+            t`Sensitivity`,
           ]}
           rows={classes.map(({ key, label, row }) => ({
             key,
@@ -175,23 +177,25 @@ function Report({ shared }: { shared: SharedReport }) {
       <Section title={t`Agreement between reviewers`}>
         <NumberTable
           label={t`Agreement between reviewers`}
-          head={["Pair", "Cohen's κ", "Objects"]}
+          head={[t`Pair`, "Cohen's κ", t`Objects`]}
           rows={evaluation.kappa.map((pair) => ({
             key: `${pair.first}-${pair.second}`,
-            cells: [`${pair.first} and ${pair.second}`, fixed(pair.value), pair.objects],
+            cells: [t`${pair.first} and ${pair.second}`, fixed(pair.value), pair.objects],
           }))}
         />
         <p className="m-0 text-body-sm text-fg-dim">
-          <Trans>Mean κ</Trans> {fixed(evaluation.mean_kappa)} <Trans>· Fleiss κ</Trans>{" "}
-          {fixed(evaluation.fleiss_kappa)} <Trans>· cells agreed between reviewers</Trans>{" "}
-          {fixed(evaluation.cell_agreement_between_reviewers.value)}
+          <Trans>
+            Mean κ {fixed(evaluation.mean_kappa)} · Fleiss κ {fixed(evaluation.fleiss_kappa)} ·
+            cells agreed between reviewers{" "}
+            {fixed(evaluation.cell_agreement_between_reviewers.value)}
+          </Trans>
         </p>
       </Section>
       {Object.keys(evaluation.dice).length ? (
         <Section title={t`Dice`}>
           <NumberTable
             label={t`Dice`}
-            head={["Class", "Dice"]}
+            head={[t`Class`, t`Dice`]}
             rows={Object.entries(evaluation.dice).map(([name, rate]) => ({
               key: name,
               cells: [name, fixed(rate.value)],

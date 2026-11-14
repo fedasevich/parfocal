@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import type { LinkRenderer } from "@parfocal/ui/components/app-shell";
 import { Icon, type IconName } from "@parfocal/ui/components/icon";
@@ -35,9 +36,9 @@ export function KvList({
   );
 }
 
-export const NotSet = ({ children = "Not set" }: { children?: ReactNode }) => (
-  <span className="text-fg-faint">{children}</span>
-);
+export const NotSet = ({ children = t`Not set` }: { children?: ReactNode }) => {
+  return <span className="text-fg-faint">{children}</span>;
+};
 
 export function useLinkRenderer(): LinkRenderer {
   const router = useRouter();

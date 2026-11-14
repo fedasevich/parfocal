@@ -30,7 +30,7 @@ export function SendToAdjudicatorModal({
   const [picked, setPicked] = useState<string | null>(null);
   const [note, setNote] = useState("");
   const [tried, setTried] = useState(false);
-  const error = tried && picked === null ? "Pick who decides." : undefined;
+  const error = tried && picked === null ? t`Pick who decides.` : undefined;
   const items = members
     .filter((member) => member.role === "reviewer")
     .map((member) => {
@@ -40,7 +40,7 @@ export function SendToAdjudicatorModal({
         name: member.display_name,
         person: toPersonInfo(member),
         ...(member.title ? { sub: member.title } : {}),
-        ...(blocked ? { dim: `A reviewer of ${taskCode}` } : {}),
+        ...(blocked ? { dim: t`A reviewer of ${taskCode}` } : {}),
       };
     });
   const count = labels.length;
@@ -50,8 +50,8 @@ export function SendToAdjudicatorModal({
       onOpenChange={closeOn(onClose)}
       title={t`Send to an adjudicator`}
       subtitle={`${andJoin(labels)} · ${taskCode}`}
-      hint={picked === null ? "Pick who decides." : "They see it in My work."}
-      primaryLabel={`Send ${count} object${count === 1 ? "" : "s"}`}
+      hint={picked === null ? t`Pick who decides.` : t`They see it in My work.`}
+      primaryLabel={t`Send ${count} object${count === 1 ? "" : "s"}`}
       onPrimary={() => {
         setTried(true);
         if (picked === null) {
@@ -80,10 +80,9 @@ export function SendToAdjudicatorModal({
       </div>
       <div className="grid gap-1.5">
         <label htmlFor="adjudicator-note" className="text-body-sm font-semibold">
-          <Trans>Note to them</Trans>{" "}
-          <span className="font-normal text-fg-dim">
-            <Trans>optional</Trans>
-          </span>
+          <Trans>
+            Note to them <span className="font-normal text-fg-dim">optional</span>
+          </Trans>
         </label>
         <Textarea
           id="adjudicator-note"
@@ -93,7 +92,7 @@ export function SendToAdjudicatorModal({
           value={note}
           onChange={(event) => setNote(event.target.value)}
         />
-        <FieldNote count={`${note.length} of 300`} />
+        <FieldNote count={t`${note.length} of 300`} />
       </div>
       <p className="m-0 flex items-start gap-2 text-body-sm text-fg">
         <Icon name="shield" className="mt-0.5 text-fg-dim" />

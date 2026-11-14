@@ -1,3 +1,4 @@
+import { plural } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import { DevFigures, DevStatus, DevZone } from "@parfocal/ui/components/developer-drawer";
@@ -72,12 +73,12 @@ export function BenchSection({
   const run = async () => {
     const zoom = host.__parfocal?.getCamera?.()?.scale ?? 0;
     setRunning(true);
-    setStatus("Sweeping 180 steps");
+    setStatus(t`Sweeping 180 steps`);
     try {
       await sweepAndLog(host, zoom, log);
       setStatus(null);
     } catch (error) {
-      setStatus(error instanceof NoSlideOpen ? error.message : "The pan sweep stopped");
+      setStatus(error instanceof NoSlideOpen ? error.message : t`The pan sweep stopped`);
     } finally {
       setRunning(false);
     }
@@ -90,7 +91,7 @@ export function BenchSection({
     <>
       <DevZone
         title={t`Pan sweep`}
-        note="Pans a 180-step ellipse at this zoom, then waits 600 ms for tiles to settle."
+        note={t`Pans a 180-step ellipse at this zoom, then waits 600 ms for tiles to settle.`}
       >
         <div className="flex flex-wrap items-center gap-2">
           <Button size="sm" variant="primary" disabled={running} onClick={() => void run()}>
@@ -130,7 +131,7 @@ export function BenchSection({
             onClick={() => downloadCsv(log.csv(), benchmarkFileName(new Date()))}
           >
             <Icon name="download" />
-            <Trans>Export CSV,</Trans> {count} {count === 1 ? t`run` : t`runs`}
+            {plural(count, { one: "Export CSV, # run", other: "Export CSV, # runs" })}
           </Button>
         }
       >
@@ -140,7 +141,7 @@ export function BenchSection({
               <th className="py-1.5 font-semibold">
                 <Trans>Renderer</Trans>
               </th>
-              {["Nuclei", "Zoom", "p50", "p95", "fps"].map((name) => (
+              {[t`Nuclei`, t`Zoom`, "p50", "p95", "fps"].map((name) => (
                 <th key={name} className="py-1.5 text-right font-semibold">
                   {name}
                 </th>

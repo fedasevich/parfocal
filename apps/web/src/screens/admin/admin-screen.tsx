@@ -51,7 +51,7 @@ export function AdminScreen({ section, scene, modal, request, change }: Props) {
   const [source, setSource] = useState<TemplateSource | null>(null);
   const [auditFilter, setAuditFilter] = useState<AuditFilter>(defaultAuditFilter);
   const workspaceName =
-    me?.workspaces.find((item) => item.tenant_id === me.active_tenant_id)?.name ?? "The workspace";
+    me?.workspaces.find((item) => item.tenant_id === me.active_tenant_id)?.name ?? t`The workspace`;
   const open = (next: AdminSection) =>
     change({ section: next, scene: undefined, modal: undefined });
 
@@ -99,8 +99,8 @@ export function AdminScreen({ section, scene, modal, request, change }: Props) {
           <header className="grid gap-1 border-b border-line px-6 pt-4 pb-3">
             <Breadcrumbs
               items={[
-                { label: "Admin", href: adminHref("overview") },
-                { label: "Report templates", href: adminHref("templates") },
+                { label: t`Admin`, href: adminHref("overview") },
+                { label: t`Report templates`, href: adminHref("templates") },
                 { label: head.title },
               ]}
               renderLink={renderLink}
@@ -154,7 +154,7 @@ export function AdminScreen({ section, scene, modal, request, change }: Props) {
         variant="primary"
         onClick={() =>
           notify(
-            "Connect a source: S3, Azure, DICOMweb or HTTPS with range requests. Read-only keys only (mock)",
+            t`Connect a source: S3, Azure, DICOMweb or HTTPS with range requests. Read-only keys only (mock)`,
           )
         }
       >
@@ -213,6 +213,8 @@ export function AdminScreen({ section, scene, modal, request, change }: Props) {
 }
 
 export function AdminRefusal({ access }: { access: Exclude<AdminAccess, "granted"> }) {
+  const { t } = useLingui();
+
   const renderLink = useRouterLink();
   const refusal = refusalOf(access);
   return (
@@ -230,7 +232,7 @@ export function AdminRefusal({ access }: { access: Exclude<AdminAccess, "granted
         {renderLink({
           href: destinations.home(),
           className: "text-body-sm font-medium text-accent hover:underline",
-          children: "Back to Parfocal",
+          children: t`Back to Parfocal`,
         })}
       </div>
     </main>

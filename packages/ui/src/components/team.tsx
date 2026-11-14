@@ -142,7 +142,7 @@ function DueText({ due, dueIn, overdue }: { due: string; dueIn: string; overdue:
       )}
     >
       <Icon name={overdue ? "warn" : "calendar"} />
-      <Trans>Due</Trans> {due} · {dueIn}
+      <Trans>Due {due}</Trans> · {dueIn}
     </span>
   );
 }
@@ -224,7 +224,7 @@ function DoneTaskRow({
       <AvatarStack people={people} size={22} max={4} />
       <span className="inline-flex items-center gap-1.5 text-body-sm whitespace-nowrap text-fg-dim">
         <Icon name="check" />
-        <Trans>Signed off</Trans> {signedOn}
+        <Trans>Signed off {signedOn}</Trans>
       </span>
       <Button size="sm" onClick={onOpenReport}>
         <Icon name="file" />
@@ -313,9 +313,11 @@ function ConfirmInButton({
 type ReadOnlyPersonProps = { person: PersonInfo; done: number; of: number };
 
 function ReadOnlyPerson({ person, done, of }: ReadOnlyPersonProps) {
+  const { t } = useLingui();
+
   return (
     <div className="flex min-h-6 items-center text-body-sm">
-      <Person person={person} sub={`${done} of ${of} slides done`} />
+      <Person person={person} sub={t`${done} of ${of} slides done`} />
     </div>
   );
 }
@@ -357,15 +359,15 @@ function NudgeModal({
       onOpenChange={onOpenChange}
       title={t`Nudge`}
       subtitle={subtitle}
-      hint="Sent by email and shown at the top of My work."
-      primaryLabel="Send"
+      hint={t`Sent by email and shown at the top of My work.`}
+      primaryLabel={t`Send`}
       onPrimary={onSend}
-      blockers={empty ? [{ id: "message", text: "Write a message to send.", goTo: "Go to" }] : []}
+      blockers={empty ? [{ id: "message", text: t`Write a message to send.`, goTo: t`Go to` }] : []}
     >
       <FormField label={t`To`}>
         <ReadOnlyPerson person={person} done={done} of={of} />
       </FormField>
-      <FormField label={t`Message`} count={`${message.length} of ${maxLength}`}>
+      <FormField label={t`Message`} count={t`${message.length} of ${maxLength}`}>
         <textarea
           aria-label={t`Message`}
           rows={4}
@@ -422,8 +424,8 @@ function ReassignModal({
   const count = what === "all" ? of : left;
   const first = from.name.split(" ")[0] ?? from.name;
   const options: { value: ReassignWhat; label: string }[] = [
-    { value: "rest", label: `The ${left} slides not started` },
-    { value: "all", label: `All ${of} slides, including ${done} with decisions` },
+    { value: "rest", label: t`The ${left} slides not started` },
+    { value: "all", label: t`All ${of} slides, including ${done} with decisions` },
   ];
   return (
     <SmallModal
@@ -432,10 +434,10 @@ function ReassignModal({
       width={560}
       title={t`Reassign slides`}
       subtitle={subtitle}
-      hint="Both are told by email."
-      primaryLabel={`Reassign ${count} slides`}
+      hint={t`Both are told by email.`}
+      primaryLabel={t`Reassign ${count} slides`}
       onPrimary={onReassign}
-      blockers={to ? [] : [{ id: "to", text: "Pick who takes the slides.", goTo: "Go to" }]}
+      blockers={to ? [] : [{ id: "to", text: t`Pick who takes the slides.`, goTo: t`Go to` }]}
     >
       <FormField label={t`From`}>
         <ReadOnlyPerson person={from} done={done} of={of} />
@@ -479,7 +481,7 @@ function ReassignModal({
           </div>
         ) : null}
       </FormField>
-      <FormField label={t`Note`} optional count={`${note.length} of 300`}>
+      <FormField label={t`Note`} optional count={t`${note.length} of 300`}>
         <textarea
           aria-label={t`Note`}
           rows={2}

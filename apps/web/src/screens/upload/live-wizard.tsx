@@ -146,17 +146,17 @@ export function LiveWizard({ project, scene }: { project: Project; scene: LiveSc
     const todo = index > max && index !== step;
     const why = running
       ? index < 2
-        ? "The upload has started. Files and checks are fixed now."
+        ? t`The upload has started. Files and checks are fixed now.`
         : ""
       : index === 2
         ? max >= 1
-          ? "Starts from the upload button on Check."
-          : "Not reached yet. Check the files first."
+          ? t`Starts from the upload button on Check.`
+          : t`Not reached yet. Check the files first.`
         : items.length === 0 && index === 1
-          ? "Add slides or result files first."
+          ? t`Add slides or result files first.`
           : can
-            ? `Go to ${label}`
-            : "Not reached yet. Use Next.";
+            ? t`Go to ${label}`
+            : t`Not reached yet. Use Next.`;
     return {
       label,
       ...(index === step
@@ -180,7 +180,7 @@ export function LiveWizard({ project, scene }: { project: Project; scene: LiveSc
       <Trans>Back</Trans>
     </Button>
   );
-  const uploadLabel = `Upload ${plural(model.uploadSlides.length, "slide")} and ${plural(model.uploadResults.length, "result")}`;
+  const uploadLabel = t`Upload ${plural(model.uploadSlides.length, "slide")} and ${plural(model.uploadResults.length, "result")}`;
   const bar =
     step === 0 ? (
       <FlowBar
@@ -191,12 +191,12 @@ export function LiveWizard({ project, scene }: { project: Project; scene: LiveSc
         }
         hint={
           items.length === 0
-            ? "Add slides, result files or both to go on."
+            ? t`Add slides, result files or both to go on.`
             : model.slides.length === 0
-              ? "Add at least one slide to go on. Results go with a slide."
+              ? t`Add at least one slide to go on. Results go with a slide.`
               : model.unplaced.length > 0
-                ? `${plural(model.unplaced.length, "result file")} wait${model.unplaced.length === 1 ? "s" : ""} in Not matched yet. With no slide ${model.unplaced.length === 1 ? "it stays" : "they stay"} out of the upload.`
-                : "Every result found its slide."
+                ? t`${plural(model.unplaced.length, "result file")} wait${model.unplaced.length === 1 ? "s" : ""} in Not matched yet. With no slide ${model.unplaced.length === 1 ? "it stays" : "they stay"} out of the upload.`
+                : t`Every result found its slide.`
         }
         next={
           <Button
@@ -214,8 +214,8 @@ export function LiveWizard({ project, scene }: { project: Project; scene: LiveSc
         back={back}
         hint={
           toFix > 0
-            ? `${plural(toFix, "file")} wait${toFix === 1 ? "s" : ""} for a fix. The rest upload now.`
-            : "Nothing needs you."
+            ? t`${plural(toFix, "file")} wait${toFix === 1 ? "s" : ""} for a fix. The rest upload now.`
+            : t`Nothing needs you.`
         }
         next={
           <Button
@@ -233,8 +233,8 @@ export function LiveWizard({ project, scene }: { project: Project; scene: LiveSc
       <FlowBar
         hint={
           finished
-            ? "Every file is stored. Slides are being prepared for the viewer."
-            : "Closing this window keeps the upload going in the jobs tray. Closing the browser tab pauses it, and you pick the files again to continue."
+            ? t`Every file is stored. Slides are being prepared for the viewer.`
+            : t`Closing this window keeps the upload going in the jobs tray. Closing the browser tab pauses it, and you pick the files again to continue.`
         }
         next={
           <Button
@@ -263,11 +263,11 @@ export function LiveWizard({ project, scene }: { project: Project; scene: LiveSc
       <FlowPage
         className="h-full"
         renderLink={renderLink}
-        crumbs={[{ label: project.name, href: `/projects/${project.id}` }, { label: "Upload" }]}
+        crumbs={[{ label: project.name, href: `/projects/${project.id}` }, { label: t`Upload` }]}
         title={t`Upload slides and results`}
         subtitle={
           <>
-            <Trans>Into</Trans> {project.name} · <span className="font-mono">{project.code}</span> ·{" "}
+            <Trans>Into {project.name}</Trans> · <span className="font-mono">{project.code}</span> ·{" "}
             {clinical
               ? t`Clinical, patient fields are kept and every access is logged`
               : t`De-identified, so labels and patient names are removed on upload`}
@@ -327,10 +327,10 @@ function Summary({
   const clinical = project.privacy_mode === "clinical";
   const where =
     model.caseCount > 0
-      ? `${plural(model.caseCount, "new case")}${model.looseCount > 0 ? `, ${model.looseCount} loose` : ""}`
+      ? `${plural(model.caseCount, "new case")}${model.looseCount > 0 ? t`, ${model.looseCount} loose` : ""}`
       : model.slides.length > 0
-        ? "Loose slides, no case"
-        : "Not chosen yet";
+        ? t`Loose slides, no case`
+        : t`Not chosen yet`;
   return (
     <Zone title={t`Where the files go`} data-testid="upload-summary">
       <FactList
@@ -338,25 +338,25 @@ function Summary({
         rows={[
           {
             icon: "folder",
-            label: "Project",
+            label: t`Project`,
             value: (
               <>
                 {project.name} · <span className="font-mono">{project.code}</span>
               </>
             ),
           },
-          { icon: "slides", label: "Cases", value: where },
+          { icon: "slides", label: t`Cases`, value: where },
           {
             icon: "lock",
-            label: "Privacy",
-            value: clinical ? "Clinical, patient fields are kept" : "De-identified",
+            label: t`Privacy`,
+            value: clinical ? t`Clinical, patient fields are kept` : "De-identified",
           },
           {
             icon: "file",
-            label: "So far",
+            label: t`So far`,
             value:
               scene === "empty"
-                ? "Nothing yet"
+                ? t`Nothing yet`
                 : `${plural(model.uploadSlides.length, "slide")}, ${plural(model.uploadResults.length, "result")}, ${formatBytes(model.bytes)}`,
           },
         ]}
@@ -492,8 +492,8 @@ function FilesStep({
         value={source}
         onValueChange={(value) => setSource(value === "link" ? "link" : "computer")}
         options={[
-          { value: "computer", label: "From this computer" },
-          { value: "link", label: "From a link or storage" },
+          { value: "computer", label: t`From this computer` },
+          { value: "link", label: t`From a link or storage` },
         ]}
       />
       <span className="flex-1" />
@@ -553,7 +553,7 @@ function FilesStep({
           <FileRow
             lead={<Thumb />}
             name={slide.path}
-            detail={`${formatBytes(slide.size)}${slide.size === 0 ? " · empty file" : ""}`}
+            detail={`${formatBytes(slide.size)}${slide.size === 0 ? t` · empty file` : ""}`}
             end={
               <RemoveButton
                 name={slide.path}
@@ -610,7 +610,7 @@ function FilesStep({
                 }}
               >
                 <Icon name="plus" />
-                <Trans>Add a result file for</Trans> {stemOf(slide.path)}
+                <Trans>Add a result file for {stemOf(slide.path)}</Trans>
               </Button>
             </div>
           </>
@@ -625,8 +625,8 @@ function FilesStep({
         title={group.label === null ? t`Loose slides` : t`Case ${group.label}`}
         sub={
           group.label === null
-            ? `${plural(group.slides.length, "slide")}, no case number`
-            : `${plural(group.slides.length, "slide")} · case number from the folder name`
+            ? t`${plural(group.slides.length, "slide")}, no case number`
+            : t`${plural(group.slides.length, "slide")} · case number from the folder name`
         }
       />
       {group.slides.map(slideBlock)}
@@ -639,8 +639,10 @@ function FilesStep({
         title={t`Slides and their results`}
         end={
           <Hint>
-            {plural(model.slides.length, "slide")} · {formatBytes(model.bytes)} · {model.matched}{" "}
-            <Trans>of</Trans> {plural(model.results.length, "result")} <Trans>matched</Trans>
+            {plural(model.slides.length, "slide")} · {formatBytes(model.bytes)} ·{" "}
+            <Trans>
+              {model.matched} of {plural(model.results.length, "result")} matched
+            </Trans>
           </Hint>
         }
       >
@@ -681,8 +683,8 @@ function FilesStep({
                 value={state.cases}
                 onValueChange={(value) => set({ cases: value as LiveState["cases"] })}
                 options={[
-                  { value: "names", label: "From folder names" },
-                  { value: "loose", label: "Keep all loose" },
+                  { value: "names", label: t`From folder names` },
+                  { value: "loose", label: t`Keep all loose` },
                 ]}
               />
             </div>
@@ -719,7 +721,7 @@ function FilesStep({
       {model.unplaced.length > 0 ? (
         <Zone
           title={t`Not matched yet`}
-          sub="Pick the slide each file goes with. A file with no slide stays out of this upload."
+          sub={t`Pick the slide each file goes with. A file with no slide stays out of this upload.`}
           end={<Hint>{plural(model.unplaced.length, "file")}</Hint>}
           data-testid="not-matched"
         >
@@ -747,8 +749,8 @@ function FilesStep({
         <Hint>
           {plural(model.others.length, "file")} {model.others.length === 1 ? t`is` : t`are`}{" "}
           <Trans>not</Trans>{" "}
-          {model.others.length === 1 ? t`a slide or a result` : t`slides or results`}{" "}
-          <Trans>and stay out:</Trans> {model.others.map((other) => other.path).join(", ")}
+          {model.others.length === 1 ? t`a slide or a result` : t`slides or results`}
+          <Trans> and stay out: {model.others.map((other) => other.path).join(", ")}</Trans>
         </Hint>
       ) : null}
       <div className="grid gap-3">
@@ -805,39 +807,39 @@ function CheckStep({
   const [addingFolderTo, setAddingFolderTo] = useState<string | null>(null);
   const lead =
     toFix > 0
-      ? `${plural(toFix, "file")} need${toFix === 1 ? "s" : ""} a look. A file with a problem waits until it is fixed, the rest upload.`
+      ? t`${plural(toFix, "file")} need${toFix === 1 ? "s" : ""} a look. A file with a problem waits until it is fixed, the rest upload.`
       : left > 0
-        ? `${plural(left, "result file")} ${left === 1 ? "is" : "are"} left out. The other files are fine and upload.`
-        : "Every file is readable and has its place. Nothing needs you.";
+        ? t`${plural(left, "result file")} ${left === 1 ? "is" : "are"} left out. The other files are fine and upload.`
+        : t`Every file is readable and has its place. Nothing needs you.`;
   const placedBack = model.results.filter((result) => result.picked);
   return (
     <>
       <Zone title={t`In this upload`} sub={lead} data-testid="check-summary">
         <FactList
           rows={[
-            { icon: "slides", label: "Slides", value: String(model.uploadSlides.length) },
+            { icon: "slides", label: t`Slides`, value: String(model.uploadSlides.length) },
             {
               icon: "layers",
               label: "AI results",
               value: left
-                ? `${plural(model.uploadResults.length, "file")}, ${left} left out`
+                ? t`${plural(model.uploadResults.length, "file")}, ${left} left out`
                 : plural(model.uploadResults.length, "file"),
             },
             {
               icon: "link",
-              label: "Matched",
+              label: t`Matched`,
               value: `${model.matched} of ${model.results.length}`,
             },
             {
               icon: "warn",
-              label: "To fix",
-              value: toFix ? plural(toFix, "file") : "Nothing",
+              label: t`To fix`,
+              value: toFix ? plural(toFix, "file") : t`Nothing`,
             },
             ...(model.others.length > 0
               ? [
                   {
                     icon: "file" as const,
-                    label: "Not uploaded",
+                    label: t`Not uploaded`,
                     value: `${plural(model.others.length, "file")} that ${model.others.length === 1 ? "is" : "are"} not slides or results`,
                   },
                 ]
@@ -865,11 +867,11 @@ function CheckStep({
         <ProblemZone
           key={result.item.path}
           icon="link"
-          tag="No slide yet"
+          tag={t`No slide yet`}
           tone="warn"
           title={t`This result file has no slide yet`}
           file={result.item.path}
-          text="Nothing next to it or in its name says which slide it belongs to. Pick its slide, or leave it out of this upload."
+          text={t`Nothing next to it or in its name says which slide it belongs to. Pick its slide, or leave it out of this upload.`}
           actions={
             <>
               <LiveSlidePicker
@@ -893,11 +895,11 @@ function CheckStep({
         <ProblemZone
           key={slide.path}
           icon="folder"
-          tag="Data folder missing"
+          tag={t`Data folder missing`}
           tone="warn"
           title={t`This MRXS slide has no data folder`}
           file={slide.path}
-          text={`An MRXS slide is the .mrxs file plus a folder named ${stemOf(slide.path)} with its data files. Add that folder, or leave the slide out. It waits until you do.`}
+          text={t`An MRXS slide is the .mrxs file plus a folder named ${stemOf(slide.path)} with its data files. Add that folder, or leave the slide out. It waits until you do.`}
           actions={
             <>
               <Button
@@ -923,7 +925,7 @@ function CheckStep({
         <DoneRow
           key={slide.path}
           file={slide.path}
-          what="Left out of this upload"
+          what={t`Left out of this upload`}
           out
           onUndo={() => {
             const next = { ...state.left };
@@ -957,7 +959,7 @@ function CheckStep({
         <ProblemZone
           key={item.path}
           icon="x-circle"
-          tag="Empty file"
+          tag={t`Empty file`}
           tone="bad"
           title={
             kindOf(item.path) === "slide"
@@ -965,7 +967,7 @@ function CheckStep({
               : t`This file has nothing in it`
           }
           file={item.path}
-          text="The file is 0 bytes, so there is nothing to read. It waits until you take it out or choose it again."
+          text={t`The file is 0 bytes, so there is nothing to read. It waits until you take it out or choose it again.`}
           actions={
             <Button onClick={() => set({ removed: { ...state.removed, [item.path]: true } })}>
               <Trans>Remove from this upload</Trans>
@@ -977,7 +979,7 @@ function CheckStep({
         <DoneRow
           key={result.item.path}
           file={result.item.path}
-          what={`Goes with ${model.slides[result.slide ?? 0]?.path ?? ""}`}
+          what={t`Goes with ${model.slides[result.slide ?? 0]?.path ?? ""}`}
           onUndo={() => {
             const placed = { ...state.placed };
             delete placed[result.item.path];
@@ -989,7 +991,7 @@ function CheckStep({
         <DoneRow
           key={result.item.path}
           file={result.item.path}
-          what="Left out of this upload"
+          what={t`Left out of this upload`}
           out
           onUndo={() => {
             const next = { ...state.left };
@@ -1072,12 +1074,12 @@ function UploadStep({
           value={percent}
           tone={done === entries.length && entries.length > 0 ? "ok" : "accent"}
           label={t`${done} of ${plural(entries.length, "file")} uploaded`}
-          valueText={`${percent}% · ${formatBytes(sent)} of ${formatBytes(total)}${left}`}
+          valueText={t`${percent}% · ${formatBytes(sent)} of ${formatBytes(total)}${left}`}
         />
       </Zone>
       <Zone
         title={t`Each file`}
-        sub={`${plural(model.uploadSlides.length, "slide")} and ${plural(model.uploadResults.length, "result")}`}
+        sub={t`${plural(model.uploadSlides.length, "slide")} and ${plural(model.uploadResults.length, "result")}`}
       >
         <FileList>
           {entries.map((entry) => {
@@ -1117,15 +1119,15 @@ function UploadStep({
                     label={<span className="font-mono">{entry.name}</span>}
                     valueText={
                       state?.status === "skipped"
-                        ? "Skipped"
+                        ? t`Skipped`
                         : entry.status === "done"
-                          ? "Uploaded"
+                          ? t`Uploaded`
                           : entry.status === "failed"
-                            ? "Stopped. What was stored is kept"
+                            ? t`Stopped. What was stored is kept`
                             : entry.status === "retrying"
-                              ? "Connection lost. Trying again"
+                              ? t`Connection lost. Trying again`
                               : entry.status === "paused"
-                                ? `Paused at ${filePercent}%`
+                                ? t`Paused at ${filePercent}%`
                                 : `${filePercent}%`
                     }
                   />
@@ -1158,7 +1160,7 @@ function UploadStep({
                       running: steps.running
                         ? {
                             percent: steps.done === 0 ? filePercent : null,
-                            text: steps.done === 0 ? `${filePercent}%` : "Working",
+                            text: steps.done === 0 ? `${filePercent}%` : t`Working`,
                           }
                         : null,
                     }}
@@ -1175,7 +1177,7 @@ function UploadStep({
       {bare.length === 0 ? null : leaveBare ? (
         <Zone
           title={t`${plural(bare.length, "slide stays", "slides stay")} without results`}
-          sub="Add a result file or run a model on them any time, from the project or from the slide."
+          sub={t`Add a result file or run a model on them any time, from the project or from the slide.`}
           end={
             <Button size="sm" variant="ghost" onClick={() => setLeaveBare(false)}>
               <Trans>Undo</Trans>
@@ -1186,7 +1188,7 @@ function UploadStep({
         <Zone
           highlight
           title={t`${plural(bare.length, "slide has", "slides have")} no results`}
-          sub="Run a model on them now, or leave them and add results later."
+          sub={t`Run a model on them now, or leave them and add results later.`}
           data-testid="no-results-zone"
         >
           <div className="mt-1 flex flex-wrap items-center gap-2">

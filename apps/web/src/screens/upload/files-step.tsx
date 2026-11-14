@@ -219,8 +219,8 @@ function SourceSwitch({ scene, go, openFormats }: Pick<StepProps, "scene" | "go"
           go(value === "link" ? "link" : scene === "empty" ? "empty" : "files")
         }
         options={[
-          { value: "computer", label: "From this computer" },
-          { value: "link", label: "From a link or storage" },
+          { value: "computer", label: t`From this computer` },
+          { value: "link", label: t`From a link or storage` },
         ]}
       />
       <span className="flex-1" />
@@ -298,7 +298,7 @@ export function FilesStep(props: StepProps) {
             <FileRow
               lead={<Thumb />}
               name={slide.name}
-              detail={`${slide.format} · ${slide.size_gb.toFixed(1)} GB · 40x`}
+              detail={t`${slide.format} · ${slide.size_gb.toFixed(1)} GB · 40x`}
               end={
                 duplicate ? (
                   <span className="inline-flex items-center gap-2.5">
@@ -312,8 +312,8 @@ export function FilesStep(props: StepProps) {
                         set({ duplicate: value as UploadState["duplicate"] })
                       }
                       options={[
-                        { value: "skip", label: "Skip" },
-                        { value: "replace", label: "Replace" },
+                        { value: "skip", label: t`Skip` },
+                        { value: "replace", label: t`Replace` },
                       ]}
                     />
                   </span>
@@ -329,7 +329,7 @@ export function FilesStep(props: StepProps) {
             />
             {duplicate ? (
               <p className="m-0 pb-2 pl-13 text-body-sm leading-[1.45] text-fg-dim">
-                {slide.name} <Trans>is already in this project, uploaded</Trans>{" "}
+                <Trans>{slide.name} is already in this project, uploaded </Trans>
                 {new Date(batch.duplicate.uploaded_on).toLocaleDateString("en-GB", {
                   day: "numeric",
                   month: "short",
@@ -348,7 +348,7 @@ export function FilesStep(props: StepProps) {
                     key={`added-${row.index}`}
                     name={slide.extra_result.name}
                     detail={slide.extra_result.detail}
-                    how="Added by you"
+                    how={t`Added by you`}
                     end={
                       <RemoveButton
                         name={slide.extra_result.name}
@@ -397,7 +397,7 @@ export function FilesStep(props: StepProps) {
                     onClick={() => set({ added: { ...state.added, [slideIndex]: true } })}
                   >
                     <Icon name="plus" />
-                    <Trans>Add a result file for</Trans> {short}
+                    <Trans>Add a result file for {short}</Trans>
                   </Button>
                 )}
               </div>
@@ -420,7 +420,7 @@ export function FilesStep(props: StepProps) {
             <GroupHead
               icon="folder"
               title={t`Case ${caseLabel}`}
-              sub={`${plural(model.inCase.length, "slide")} · case number in the folder and file names`}
+              sub={t`${plural(model.inCase.length, "slide")} · case number in the folder and file names`}
             />
             {model.inCase.map(block)}
           </>
@@ -430,7 +430,7 @@ export function FilesStep(props: StepProps) {
             <GroupHead
               icon="slides"
               title={t`Loose slides`}
-              sub={`${plural(model.loose.length, "slide")}, no case number`}
+              sub={t`${plural(model.loose.length, "slide")}, no case number`}
             />
             {model.loose.map(block)}
           </>
@@ -453,8 +453,10 @@ export function FilesStep(props: StepProps) {
         title={t`Slides and their results`}
         end={
           <Hint>
-            {plural(model.slides.length, "slide")} · {gb(model.sizeGb)} · {model.matched}{" "}
-            <Trans>of</Trans> {plural(model.resultCount, "result")} <Trans>matched</Trans>
+            {plural(model.slides.length, "slide")} · {gb(model.sizeGb)} ·{" "}
+            <Trans>
+              {model.matched} of {plural(model.resultCount, "result")} matched
+            </Trans>
           </Hint>
         }
       >
@@ -489,8 +491,8 @@ export function FilesStep(props: StepProps) {
                 value={state.cases}
                 onValueChange={(value) => set({ cases: value as UploadState["cases"] })}
                 options={[
-                  { value: "names", label: "From file names" },
-                  { value: "loose", label: "Keep all loose" },
+                  { value: "names", label: t`From file names` },
+                  { value: "loose", label: t`Keep all loose` },
                 ]}
               />
             </div>
@@ -501,7 +503,7 @@ export function FilesStep(props: StepProps) {
       {model.unmatched.length > 0 ? (
         <Zone
           title={t`Not matched yet`}
-          sub="Pick the slide each file goes with. A file with no slide stays out of this upload."
+          sub={t`Pick the slide each file goes with. A file with no slide stays out of this upload.`}
           end={<Hint>{plural(model.unmatched.length, "file")}</Hint>}
           data-testid="not-matched"
         >
@@ -647,8 +649,10 @@ function FromStore({ state, set, scene, projectId, projectCode, go }: StepProps)
           title={t`Found there`}
           end={
             <Hint>
-              {chosen.length} <Trans>of</Trans> {plural(files.length, "slide")} · {gb(chosenGb)} ·{" "}
-              {matched} <Trans>results matched</Trans>
+              <Trans>
+                {chosen.length} of {plural(files.length, "slide")}
+              </Trans>{" "}
+              · {gb(chosenGb)} ·<Trans> {matched} results matched</Trans>
             </Hint>
           }
         >
@@ -661,7 +665,7 @@ function FromStore({ state, set, scene, projectId, projectCode, go }: StepProps)
             <GroupHead
               icon="slides"
               title={t`Loose slides`}
-              sub={`${plural(files.length, "slide")}, no case number`}
+              sub={t`${plural(files.length, "slide")}, no case number`}
             />
             {files.map((file) => (
               <SlideBlock
@@ -679,7 +683,7 @@ function FromStore({ state, set, scene, projectId, projectCode, go }: StepProps)
                     }
                     name={file.name}
                     detail={
-                      file.in_project ? `${file.detail} · already in ${projectCode}` : file.detail
+                      file.in_project ? t`${file.detail} · already in ${projectCode}` : file.detail
                     }
                   />
                 }
@@ -698,7 +702,7 @@ function FromStore({ state, set, scene, projectId, projectCode, go }: StepProps)
                       }
                       name={file.result.name}
                       detail={file.result.detail}
-                      how="Same folder, same name"
+                      how={t`Same folder, same name`}
                     />
                   ) : (
                     <div className="flex min-h-8.5 items-center rounded-ctl border border-dashed border-line px-3 text-body-sm text-fg-dim">
@@ -715,7 +719,7 @@ function FromStore({ state, set, scene, projectId, projectCode, go }: StepProps)
       ) : (
         <Zone
           title={t`Found there`}
-          sub="Check the address to list what is there. Nothing is fetched yet."
+          sub={t`Check the address to list what is there. Nothing is fetched yet.`}
         />
       )}
       <Zone title={t`How the slides come in`}>
@@ -728,13 +732,13 @@ function FromStore({ state, set, scene, projectId, projectCode, go }: StepProps)
           {[
             {
               value: "place",
-              title: "Read in place",
-              text: "Tiles stream from the source when someone looks. Nothing is copied and the slide shows a remote badge.",
+              title: t`Read in place`,
+              text: t`Tiles stream from the source when someone looks. Nothing is copied and the slide shows a remote badge.`,
             },
             {
               value: "copy",
-              title: "Copy into Parfocal",
-              text: "The server copies the files once. Faster to open and safe if the source goes away. Uses storage.",
+              title: t`Copy into Parfocal`,
+              text: t`The server copies the files once. Faster to open and safe if the source goes away. Uses storage.`,
             },
           ].map((option) => (
             <label key={option.value} className="flex cursor-pointer items-start gap-2.5 py-1.5">

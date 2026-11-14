@@ -142,14 +142,14 @@ function EvaluationBody({
     const block: PageBlock = {
       id: `comparison-${Date.now()}`,
       kind: "comparison",
-      title: "Comparison",
+      title: t`Comparison`,
       width: "full",
       show_title: true,
       page_break: false,
       task_id: offered.id,
     };
     change([...blocks, block]);
-    toast.show(`${offered.code}, ${offered.name}, is now next to this one`, () =>
+    toast.show(t`${offered.code}, ${offered.name}, is now next to this one`, () =>
       setBlocks(blocks),
     );
   };
@@ -159,7 +159,7 @@ function EvaluationBody({
       return;
     }
     toast.show(
-      `${file}.${fileKind === "docx" ? "docx" : fileKind === "pdf" ? "pdf" : "csv"} saved to Downloads`,
+      t`${file}.${fileKind === "docx" ? "docx" : fileKind === "pdf" ? "pdf" : "csv"} saved to Downloads`,
     );
   };
   const switchTemplate = (id: string | null) => {
@@ -175,7 +175,7 @@ function EvaluationBody({
       })),
     );
     setArranged(false);
-    toast.show(`The report now uses ${picked.name} v${picked.version}`, () => {
+    toast.show(t`The report now uses ${picked.name} v${picked.version}`, () => {
       setBlocks(before.blocks);
       setTemplateName(before.name);
       setVersion(before.version);
@@ -184,12 +184,12 @@ function EvaluationBody({
 
   const crumbs = [
     { label: report.project.name, href: projectHref },
-    { label: "Review tasks", href: `${projectHref}?tab=tasks` },
+    { label: t`Review tasks`, href: `${projectHref}?tab=tasks` },
     { label: `${report.task_code} · ${report.round_name}`, href: `${projectHref}?tab=tasks` },
     arranging
-      ? { label: "Evaluation report", href: `/tasks/${taskId}/evaluation` }
-      : { label: "Evaluation report" },
-    ...(arranging ? [{ label: "Arrange blocks and format" }] : []),
+      ? { label: t`Evaluation report`, href: `/tasks/${taskId}/evaluation` }
+      : { label: t`Evaluation report` },
+    ...(arranging ? [{ label: t`Arrange blocks and format` }] : []),
   ];
   const pages = (
     <div className="grid justify-items-center gap-6 py-6">
@@ -214,8 +214,11 @@ function EvaluationBody({
               {report.round_name} · {report.model}
             </h1>
             <p className="m-0 text-body-sm text-fg-dim">
-              {report.project.name} ({report.project.code}
-              <Trans>) · task</Trans> {report.task_code} · {pageCount} <Trans>pages</Trans>
+              {report.project.name} (
+              <Trans>
+                {report.project.code}) · task {report.task_code}
+              </Trans>{" "}
+              · <Trans>{pageCount} pages</Trans>
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -224,8 +227,9 @@ function EvaluationBody({
             </StatusTag>
             {report.signed_at ? (
               <StatusTag tone="accent">
-                <Trans>Evaluation v</Trans>
-                {report.version} <Trans>· signed</Trans> {shortDay(report.signed_at)}
+                <Trans>
+                  Evaluation v{report.version} · signed {shortDay(report.signed_at)}
+                </Trans>
               </StatusTag>
             ) : (
               <StatusTag tone="neutral">
@@ -234,7 +238,7 @@ function EvaluationBody({
             )}
             {changes.length ? (
               <StatusTag tone="warn">
-                <Trans>Changed after sign-off ·</Trans> {changes.length} <Trans>change</Trans>
+                <Trans>Changed after sign-off · {changes.length} change</Trans>
                 {changes.length === 1 ? "" : t`s`}
               </StatusTag>
             ) : null}
@@ -282,8 +286,9 @@ function EvaluationBody({
               {retired ? (
                 <>
                   <span className="flex items-center gap-2 text-body-sm font-medium text-fg">
-                    {templateName} <Trans>v</Trans>
-                    {version}{" "}
+                    <Trans>
+                      {templateName} v{version}{" "}
+                    </Trans>
                     <StatusTag>
                       <Trans>Retired</Trans>
                     </StatusTag>
@@ -292,19 +297,24 @@ function EvaluationBody({
                     <span className="grid justify-items-start gap-2">
                       <span>
                         <b>
-                          {templateName} <Trans>v</Trans>
-                          {version} <Trans>was retired on</Trans>{" "}
-                          {shortDay(`${report.template.retired_on}T12:00:00`)}.
-                        </b>{" "}
-                        <Trans>This report keeps it. New tasks use v</Trans>
-                        {report.template.latest_version}.
+                          <Trans>
+                            {templateName} v{version} was retired on{" "}
+                            {shortDay(`${report.template.retired_on}T12:00:00`)}
+                          </Trans>
+                          .
+                        </b>
+                        <Trans>
+                          {" "}
+                          This report keeps it. New tasks use v{report.template.latest_version}
+                        </Trans>
+                        .
                       </span>
                       <Button
                         size="sm"
                         onClick={() => {
                           setVersion(report.template.latest_version);
                           toast.show(
-                            `The report now uses ${templateName} v${report.template.latest_version}`,
+                            t`The report now uses ${templateName} v${report.template.latest_version}`,
                           );
                         }}
                       >
@@ -337,8 +347,11 @@ function EvaluationBody({
               <span className="text-body-sm text-fg-dim">
                 {arranged
                   ? t`Arranged for this task. The template itself has not changed.`
-                  : t`Blocks and format come from the template.`}{" "}
-                {blocks.length} <Trans>blocks on</Trans> {pageCount} <Trans>pages.</Trans>
+                  : t`Blocks and format come from the template.`}
+                <Trans>
+                  {" "}
+                  {blocks.length} blocks on {pageCount} pages.
+                </Trans>
               </span>
               <Button variant="primary" onClick={() => onScene("pdf")}>
                 <Icon name="eye" />
@@ -384,7 +397,7 @@ function EvaluationBody({
                         className="cursor-pointer border-0 bg-transparent p-0 text-body-sm text-accent hover:underline"
                         onClick={() => {
                           setFailed(false);
-                          toast.show(`${file}.pdf saved to Downloads`);
+                          toast.show(t`${file}.pdf saved to Downloads`);
                         }}
                       >
                         <Trans>Try again</Trans>
@@ -392,7 +405,7 @@ function EvaluationBody({
                       <button
                         type="button"
                         className="cursor-pointer border-0 bg-transparent p-0 text-body-sm text-accent hover:underline"
-                        onClick={() => toast.show("2 CSV files saved to Downloads")}
+                        onClick={() => toast.show(t`2 CSV files saved to Downloads`)}
                       >
                         <Trans>Download CSV only</Trans>
                       </button>
@@ -407,7 +420,7 @@ function EvaluationBody({
             </FoldingZone>
             <FoldingZone
               title={t`Compare and share`}
-              summary={offered ? `${offered.code} or a read-only link` : "A read-only link"}
+              summary={offered ? t`${offered.code} or a read-only link` : t`A read-only link`}
             >
               <Button onClick={compare} disabled={!offered}>
                 <Icon name="slides" />

@@ -148,12 +148,11 @@ export function ProjectPage({
             </>
           }
         >
-          <b>
-            <Trans>{failure.file} was not imported.</Trans>
-          </b>{" "}
-          <Trans>All</Trans> {failure.objects} <Trans>objects fall outside slide</Trans>{" "}
-          {failure.slide_label}, {failure.reason}
-          <Trans>. Nothing was changed.</Trans>
+          <Trans>
+            <b>{failure.file} was not imported.</b> All {failure.objects} objects fall outside slide{" "}
+            {failure.slide_label}
+          </Trans>
+          , <Trans>{failure.reason}. Nothing was changed.</Trans>
         </Banner>
       ) : null}
       <div className="flex min-h-0 flex-1 flex-col pt-5.5 pr-8 pb-4.5 pl-7">
@@ -175,7 +174,7 @@ export function ProjectPage({
               {overview ? <span>{plural(overview.result_sets, "result set")}</span> : null}
               {overview ? (
                 <span>
-                  {format.integer(overview.objects)} <Trans>objects with an ID</Trans>
+                  <Trans>{format.integer(overview.objects)} objects with an ID</Trans>
                 </span>
               ) : null}
               {overview ? (
@@ -241,7 +240,7 @@ export function ProjectPage({
                 <DropdownMenuItem
                   onClick={() =>
                     toast.show(
-                      "Downloads decisions per object and every result set of the project (mock)",
+                      t`Downloads decisions per object and every result set of the project (mock)`,
                     )
                   }
                 >

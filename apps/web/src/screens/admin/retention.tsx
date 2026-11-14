@@ -93,11 +93,11 @@ export function RetentionZone({ notify }: { notify: Notify }) {
   const change = (key: RetentionKey, days: number | null) => {
     if (days === retentionDays(policy, key)) return;
     send(retentionChange(policy, key, days), retentionNotice(key, days), () =>
-      send(policy, "Retention restored."),
+      send(policy, t`Retention restored.`),
     );
   };
   return (
-    <Zone title={t`Retention`} sub="Nothing is removed until you choose a period.">
+    <Zone title={t`Retention`} sub={t`Nothing is removed until you choose a period.`}>
       <div className="grid grid-cols-[200px_minmax(0,1fr)] items-start gap-x-4 gap-y-4 text-body-sm">
         {rows.map((row) => {
           const days = retentionDays(policy, row.key);

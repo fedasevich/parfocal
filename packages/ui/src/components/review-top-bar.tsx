@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import type { LinkRenderer } from "@parfocal/ui/components/app-shell";
 import { Button } from "@parfocal/ui/components/button";
@@ -62,13 +63,13 @@ function ReviewTopBar({
   progress,
   progressTitle,
   progressSub,
-  primaryLabel = "Submit",
+  primaryLabel = t`Submit`,
   primaryDisabledReason,
   primaryTitle,
   onPrimary,
   onModeChange,
   backHref,
-  backLabel = "My work",
+  backLabel = t`My work`,
   renderLink = anchorLink,
   accountSlot,
   slidesPopover,
@@ -114,7 +115,7 @@ function ReviewTopBar({
         ? renderLink({
             href: backHref,
             className: backClass,
-            title: "Back to My work. Every answer is saved",
+            title: t`Back to My work. Every answer is saved`,
             children: backBody,
           })
         : null}
@@ -212,10 +213,10 @@ function ReviewTopBar({
           onValueChange={(value) => onModeChange?.(value as "guided" | "full" | "annotate")}
           size={big ? "lg" : "md"}
           options={[
-            { value: "guided", label: "Guided" },
-            { value: "full", label: "Full viewer" },
+            { value: "guided", label: t`Guided` },
+            { value: "full", label: t`Full viewer` },
             ...(showAnnotate || mode === "annotate"
-              ? [{ value: "annotate", label: "Annotate" }]
+              ? [{ value: "annotate", label: t`Annotate` }]
               : []),
           ]}
         />

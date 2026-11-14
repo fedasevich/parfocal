@@ -58,22 +58,22 @@ export function OverviewSection({ open }: { open: (section: AdminSection) => voi
         stats={[
           {
             value: overview.people,
-            label: "People",
-            detail: `${overview.invites_waiting} invites waiting`,
+            label: t`People`,
+            detail: t`${overview.invites_waiting} invites waiting`,
           },
           {
             value: overview.models,
             label: "AI models",
-            detail: `${overview.runs_now} runs going now`,
+            detail: t`${overview.runs_now} runs going now`,
           },
           {
             value: tb(overview.stored_tb),
-            label: `Stored, of ${tb(overview.capacity_tb)}`,
-            detail: `${tb(overview.in_place_tb)} more read in place`,
+            label: t`Stored, of ${tb(overview.capacity_tb)}`,
+            detail: t`${tb(overview.in_place_tb)} more read in place`,
           },
           {
             value: overview.webhook_calls_today,
-            label: "Webhook calls today",
+            label: t`Webhook calls today`,
             detail: `${overview.webhook_rejected_today} rejected`,
           },
         ]}
@@ -102,12 +102,12 @@ export function OverviewSection({ open }: { open: (section: AdminSection) => voi
           </div>
           <div>
             {[
-              ["Researchers", overview.researchers, "Upload, run models, create tasks, sign off"],
-              ["Reviewers", overview.reviewers, "Review the slides they are given"],
+              [t`Researchers`, overview.researchers, t`Upload, run models, create tasks, sign off`],
+              [t`Reviewers`, overview.reviewers, t`Review the slides they are given`],
               [
-                "With admin rights",
+                t`With admin rights`,
                 overview.with_admin_rights,
-                "Researchers who also set up this page",
+                t`Researchers who also set up this page`,
               ],
             ].map(([label, count, detail]) => (
               <SummaryRow key={String(label)}>

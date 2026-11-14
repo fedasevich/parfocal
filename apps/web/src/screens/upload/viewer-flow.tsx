@@ -53,20 +53,23 @@ function ViewerFlowBody({
       crumbs={[
         { label: project.name, href: `/projects/${project.id}` },
         { label: `Slide ${batch.result_preview.slide_label}`, href: slideHref },
-        { label: "Add a result set" },
+        { label: t`Add a result set` },
       ]}
       title={t`Add a result set`}
       subtitle={
         <>
-          <Trans>To slide</Trans> {preview.slide_label} <Trans>in case</Trans>{" "}
-          <span className="font-mono">{preview.case_label}</span>, {project.name}
+          <Trans>
+            To slide {preview.slide_label} in case{" "}
+            <span className="font-mono">{preview.case_label}</span>
+          </Trans>
+          , {project.name}
         </>
       }
       steps={[
-        { label: "File", ...(step !== 0 ? { why: "Go to File" } : {}) },
+        { label: t`File`, ...(step !== 0 ? { why: t`Go to File` } : {}) },
         {
-          label: "Check",
-          ...(reached < 1 ? { why: "Not reached yet. Use Next." } : {}),
+          label: t`Check`,
+          ...(reached < 1 ? { why: t`Not reached yet. Use Next.` } : {}),
           ...(reached >= 1 && step !== 1 ? { state: "done" as const } : {}),
         },
       ]}
@@ -86,7 +89,7 @@ function ViewerFlowBody({
                 <Trans>Cancel</Trans>
               </Button>
             }
-            hint="Parfocal reads the file and lines it up with A1 before anything is added."
+            hint={t`Parfocal reads the file and lines it up with A1 before anything is added.`}
             next={
               <Button variant="primary" onClick={() => go(1)}>
                 <Trans>Next</Trans>
@@ -100,13 +103,13 @@ function ViewerFlowBody({
                 <Trans>Back</Trans>
               </Button>
             }
-            hint="It goes on A1 only. Every result set records its file, model and version."
+            hint={t`It goes on A1 only. Every result set records its file, model and version.`}
             next={
               <Button
                 variant="primary"
                 onClick={() => {
                   flow.forget();
-                  onAdded(`${preview.model} ${preview.version} is a result set on A1 (mock)`);
+                  onAdded(t`${preview.model} ${preview.version} is a result set on A1 (mock)`);
                 }}
               >
                 <Icon name="layers" />
@@ -124,14 +127,15 @@ function ViewerFlowBody({
           </FileList>
           <FactList
             rows={[
-              { icon: "smart", label: "Model", value: preview.model },
+              { icon: "smart", label: t`Model`, value: preview.model },
               {
                 icon: "flag",
-                label: "Version",
+                label: t`Version`,
                 value: (
                   <>
-                    <span className="font-mono">{preview.version}</span>
-                    <Trans>, read from the file</Trans>
+                    <Trans>
+                      <span className="font-mono">{preview.version}</span>, read from the file
+                    </Trans>
                   </>
                 ),
               },
@@ -171,17 +175,17 @@ function ViewerFlowBody({
               rows={[
                 {
                   icon: "layers",
-                  label: "Pyramid level",
+                  label: t`Pyramid level`,
                   value: <span className="font-mono">{preview.level}</span>,
                 },
                 {
                   icon: "expand",
-                  label: "Scale",
+                  label: t`Scale`,
                   value: <span className="font-mono">{preview.scale.toFixed(2)}</span>,
                 },
                 {
                   icon: "target",
-                  label: "Shift x, y",
+                  label: t`Shift x, y`,
                   value: <span className="font-mono">{preview.shift.join(", ")}</span>,
                 },
               ]}

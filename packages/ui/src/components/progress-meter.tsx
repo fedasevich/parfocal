@@ -1,4 +1,5 @@
 import { Progress as ProgressPrimitive } from "@base-ui/react/progress";
+import { t } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react/macro";
 import { Icon } from "@parfocal/ui/components/icon";
 import {
@@ -154,7 +155,14 @@ const stackedFill = {
 
 const stackedWords = { agree: "agree", unsure: "not sure", disagree: "disagree" };
 
-function StackedBar({ split, emptyText = "No answers yet", className, ...props }: StackedBarProps) {
+function StackedBar({
+  split,
+  emptyText = t`No answers yet`,
+  className,
+  ...props
+}: StackedBarProps) {
+  const { t } = useLingui();
+
   const parts = stackedParts(split);
   const total = parts.reduce((sum, part) => sum + part.count, 0);
   return (

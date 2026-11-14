@@ -129,8 +129,10 @@ function WalkOrigin({ at, ids }: { at: StepRef; ids: ScenarioIds }) {
         <Trans>Back to the chapter</Trans>
       </Link>
       <span className="font-semibold text-fg" data-testid="walk-position">
-        {at.chapter + 1} · {chapter.title}
-        <Trans>, step</Trans> {at.step + 1} <Trans>of</Trans> {chapter.steps.length}
+        {at.chapter + 1} ·{" "}
+        <Trans>
+          {chapter.title}, step {at.step + 1} of {chapter.steps.length}
+        </Trans>
       </span>
       <PersonaChip persona={people(who)} role={stepRole(at, personaRoles)} />
       <p className="m-0 basis-full text-fg" data-testid="walk-text">

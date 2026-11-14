@@ -68,7 +68,7 @@ function CellsPanel({
         <div className="flex items-start gap-3">
           <span className="grid min-w-0 gap-0.5">
             <b className="text-body-sm font-semibold">
-              <Trans>Agree with</Trans> {confirmRest} <Trans>open cell</Trans>
+              <Trans>Agree with {confirmRest} open cell</Trans>
               {confirmRest === 1 ? "" : t`s`}?
             </b>
             <span className="text-caption text-fg-dim">
@@ -77,10 +77,14 @@ function CellsPanel({
           </span>
           <span className="flex-1" />
           <Button variant="ghost" size="sm" onClick={onCancelRest}>
-            <Trans>Cancel</Trans> <Keycap keys="Esc" size="sm" />
+            <Trans>
+              Cancel <Keycap keys="Esc" size="sm" />
+            </Trans>
           </Button>
           <Button variant="primary" size="sm" onClick={onApplyRest}>
-            <Trans>Agree with</Trans> {confirmRest} <Keycap keys="↵" size="sm" />
+            <Trans>
+              Agree with {confirmRest} <Keycap keys="↵" size="sm" />
+            </Trans>
           </Button>
         </div>
       ) : (
@@ -136,15 +140,20 @@ function CellsPanel({
             {children}
           </div>
           <span className="flex flex-wrap items-center gap-1 text-caption text-fg-dim">
-            <Keycap keys="←" size="sm" />
-            <Keycap keys="→" size="sm" />
-            <Keycap keys="↑" size="sm" />
-            <Keycap keys="↓" size="sm" /> <Trans>pick a cell ·</Trans> {keyList(answerKeys, t`or`)}{" "}
-            <Trans>decide ·</Trans> <Keycap keys="N" size="sm" /> <Trans>note</Trans>
+            <Trans>
+              <Keycap keys="←" size="sm" />
+              <Keycap keys="→" size="sm" />
+              <Keycap keys="↑" size="sm" />
+              <Keycap keys="↓" size="sm" /> pick a cell · {keyList(answerKeys, t`or`)} decide ·{" "}
+              <Keycap keys="N" size="sm" /> note
+            </Trans>
             {rest ? (
               <>
                 {" "}
-                · <Keycap keys="⇧K" size="sm" /> <Trans>agree with the rest</Trans>
+                ·{" "}
+                <Trans>
+                  <Keycap keys="⇧K" size="sm" /> agree with the rest
+                </Trans>
               </>
             ) : null}{" "}
             · <Keycap keys="Esc" size="sm" /> {confirming ? t`cancel` : t`close`}
@@ -208,7 +217,9 @@ function CellCluster({ split, className, ...props }: CellClusterProps) {
           <Trans>{total} sampled cells</Trans>
         </b>
         <small className="text-caption text-fg-dim">
-          {total - split.open} <Trans>decided,</Trans> {split.open} <Trans>open</Trans>
+          <Trans>
+            {total - split.open} decided, {split.open} open
+          </Trans>
         </small>
       </span>
     </button>

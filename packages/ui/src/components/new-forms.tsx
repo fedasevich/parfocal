@@ -65,7 +65,7 @@ function NewProjectForm({
     <DrawerPanel
       label={t`New project`}
       title={t`New project`}
-      hint={`${code} when created`}
+      hint={t`${code} when created`}
       width={560}
       testId="project-drawer"
       onClose={onClose}
@@ -118,7 +118,7 @@ function NewProjectForm({
           ))}
         </RadioGroup>
       </Zone>
-      <Zone title={t`Analysis template`} sub="Decides what the review panel adds.">
+      <Zone title={t`Analysis template`} sub={t`Decides what the review panel adds.`}>
         <RadioGroup
           aria-label={t`Analysis template`}
           value={template}
@@ -130,7 +130,7 @@ function NewProjectForm({
           ))}
         </RadioGroup>
       </Zone>
-      <Zone title={t`Classes`} sub="Imports map their own class names to these.">
+      <Zone title={t`Classes`} sub={t`Imports map their own class names to these.`}>
         <RadioGroup
           aria-label={t`Class list`}
           value={taxonomy?.id ?? ""}
@@ -198,7 +198,7 @@ function NewCaseForm({ project, pending = false, failure, onCreate, onClose }: N
     <DrawerPanel
       label={t`New case`}
       title={t`New case`}
-      hint={`in ${project.code} · ${project.name}`}
+      hint={t`in ${project.code} · ${project.name}`}
       width={520}
       testId="project-drawer"
       onClose={onClose}
@@ -225,7 +225,7 @@ function NewCaseForm({ project, pending = false, failure, onCreate, onClose }: N
         <div className="grid grid-cols-2 gap-3">
           <FormField
             label={t`Case ID`}
-            {...(labelProblem ? { error: labelProblem } : { help: "from the file names" })}
+            {...(labelProblem ? { error: labelProblem } : { help: t`from the file names` })}
           >
             <TextFieldInput
               autoFocus

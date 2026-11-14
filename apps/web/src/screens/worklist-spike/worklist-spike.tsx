@@ -155,12 +155,13 @@ export function WorklistSpike({ data, mode }: { data: WorklistRow[]; mode: Workl
   return (
     <div className="flex h-full min-h-0 flex-col p-4">
       <p className="mb-2 text-caption text-fg-dim">
-        {rows.length.toLocaleString("en-GB")} <Trans>rows,</Trans> {mode}
-        <Trans>. J and K move, Home and End jump.</Trans>
+        <Trans>
+          {rows.length.toLocaleString("en-GB")} rows, {mode}. J and K move, Home and End jump.
+        </Trans>
       </p>
       <div
         ref={scrollRef}
-        {...scrollRegionProps("Worklist rows")}
+        {...scrollRegionProps(t`Worklist rows`)}
         className="relative min-h-0 flex-1 overflow-auto rounded-md border border-line focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent focus-visible:outline-solid"
       >
         <table

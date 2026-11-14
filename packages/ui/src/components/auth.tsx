@@ -81,9 +81,11 @@ function AuthPitchSide({
   imageUrl,
   headline = (
     <>
-      <Trans>See what the AI found.</Trans>
-      <br />
-      <Trans>Say what you think.</Trans>
+      <Trans>
+        See what the AI found.
+        <br />
+        Say what you think.
+      </Trans>
     </>
   ),
   points = defaultPoints,
@@ -596,7 +598,10 @@ function PasskeySheet({
   onBack,
   className,
 }: PasskeySheetProps) {
-  const title = kind === "qr" ? "Use a phone or security key" : "Use your passkey for parfocal.eu";
+  const { t } = useLingui();
+
+  const title =
+    kind === "qr" ? t`Use a phone or security key` : t`Use your passkey for parfocal.eu`;
   return (
     <div
       role="dialog"
@@ -737,12 +742,15 @@ function LockCard({ person, minutes, onUnlock, onPasskey, onLogOut }: LockCardPr
           </Button>
         </form>
         <span className="text-body-sm text-fg-dim">
-          <Trans>Not</Trans> {first}?{" "}
+          <Trans>Not {first}</Trans>?{" "}
           <AuthLink onClick={onLogOut}>
             <Trans>Log out</Trans>
           </AuthLink>
-          , {first}
-          <Trans>'s work is saved.</Trans>
+          ,{" "}
+          <Trans>
+            {first}
+            's work is saved.
+          </Trans>
         </span>
       </section>
     </div>

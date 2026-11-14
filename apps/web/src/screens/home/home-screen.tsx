@@ -78,17 +78,23 @@ function ResumeHero({ resume }: { resume: ResumeTarget }) {
           {resume.slide_label} · {resume.case_label} · {resume.project.name}
         </span>
         <span className="flex flex-wrap items-center gap-2 text-body-sm text-fg-dim">
-          <Trans>Slide</Trans> {resume.position + 1} <Trans>of</Trans> {resume.slides_assigned}
+          <Trans>
+            Slide {resume.position + 1} of {resume.slides_assigned}
+          </Trans>
           {progress ? (
             <>
-              <span className="text-fg-faint">·</span>
-              {progress.decided} <Trans>of</Trans> {progress.total} <Trans>objects decided</Trans>
+              <Trans>
+                <span className="text-fg-faint">·</span>
+                {progress.decided} of {progress.total} objects decided
+              </Trans>
             </>
           ) : null}
           {resume.due_on ? (
             <>
-              <span className="text-fg-faint">·</span>
-              <Trans>due</Trans> {formatDue(resume.due_on)}
+              <Trans>
+                <span className="text-fg-faint">·</span>
+                due {formatDue(resume.due_on)}
+              </Trans>
             </>
           ) : null}
           {resume.blinded ? (
@@ -99,7 +105,9 @@ function ResumeHero({ resume }: { resume: ResumeTarget }) {
         </span>
         <div className="mt-1.5 flex gap-2">
           <Button variant="primary" onClick={() => void goTo(continueHref)}>
-            <Trans>Continue</Trans> <Keycap keys="↵" />
+            <Trans>
+              Continue <Keycap keys="↵" />
+            </Trans>
           </Button>
           <Button onClick={() => void goTo(openInFullViewer(resume))}>
             <Trans>Open in the full viewer</Trans>
@@ -140,7 +148,9 @@ function SampleHero({
         </span>
         <div className="mt-1.5 flex gap-2">
           <Button variant="primary" onClick={() => void goTo(destinations.guided("sample"))}>
-            <Trans>Review the first slide</Trans> <Keycap keys="↵" />
+            <Trans>
+              Review the first slide <Keycap keys="↵" />
+            </Trans>
           </Button>
           <Button onClick={() => void goTo(destinations.project(firstProjectId))}>
             <Trans>Open the project</Trans>
@@ -160,40 +170,42 @@ function QuickActions({
   slidesWithoutResults: number;
   projectId: string;
 }) {
+  const { t } = useLingui();
+
   const goTo = useGoTo();
   const overlay = useOverlay();
   const actions: QuickAction[] = [
     {
       icon: "upload",
-      title: "Upload",
-      text: "Slides and their AI results",
+      title: t`Upload`,
+      text: t`Slides and their AI results`,
       run: () => void goTo(destinations.upload(projectId)),
     },
     {
       icon: "smart",
-      title: "Run a model",
+      title: t`Run a model`,
       text:
         slidesWithoutResults > 0
-          ? `${plural(slidesWithoutResults, "slide")} ${slidesWithoutResults === 1 ? "has" : "have"} no results yet`
-          : "Every slide has results",
+          ? t`${plural(slidesWithoutResults, "slide")} ${slidesWithoutResults === 1 ? "has" : "have"} no results yet`
+          : t`Every slide has results`,
       run: () => void goTo(destinations.runModel(projectId)),
     },
     {
       icon: "users",
-      title: "New review task",
-      text: "Hand slides out to reviewers",
+      title: t`New review task`,
+      text: t`Hand slides out to reviewers`,
       run: () => void goTo(destinations.newReviewTask(projectId)),
     },
     {
       icon: "search",
-      title: "Find an object",
-      text: "A slide, a case or an ID like T2·C145",
+      title: t`Find an object`,
+      text: t`A slide, a case or an ID like T2·C145`,
       run: () => void overlay.set("palette"),
     },
     {
       icon: "folder",
-      title: "New project",
-      text: "Privacy, classes and a template",
+      title: t`New project`,
+      text: t`Privacy, classes and a template`,
       run: () => void goTo(destinations.newProject()),
     },
   ];
@@ -419,14 +431,14 @@ function ComingUp({ tasks, projects }: { tasks: MyTask[]; projects: HomeProject[
       {active.map((task) => {
         const progress =
           task.slides_submitted > 0
-            ? `${task.slides_submitted} of ${task.slides_assigned} done`
-            : `New from ${people(task.created_by_user_id)?.name ?? "a researcher"}`;
+            ? t`${task.slides_submitted} of ${task.slides_assigned} done`
+            : t`New from ${people(task.created_by_user_id)?.name ?? "a researcher"}`;
         return (
           <DotRow
             key={task.id}
             colour={colourOf(task.project.id)}
             title={task.name}
-            sub={`${progress}${task.due_on ? ` · due ${formatDue(task.due_on)}` : ""}`}
+            sub={`${progress}${task.due_on ? t` · due ${formatDue(task.due_on)}` : ""}`}
             onClick={() => void goTo(destinations.guided(task.id, task.next_slide_id))}
           />
         );
@@ -565,12 +577,12 @@ export function HomeScreen() {
     .reduce((sum, kind) => sum + kind.unread, 0);
   const today = now();
   const summary = firstWeek
-    ? "your sample project is ready"
+    ? t`your sample project is ready`
     : [
-        `${plural(inProgress, "task")} in progress`,
+        t`${plural(inProgress, "task")} in progress`,
         mentions > 0 ? plural(mentions, "mention") : null,
         home.resume?.due_on
-          ? `${shortName(home.resume)} due ${formatWeekday(home.resume.due_on)}`
+          ? t`${shortName(home.resume)} due ${formatWeekday(home.resume.due_on)}`
           : null,
       ]
         .filter(Boolean)

@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import {
   getGetReviewTaskStatesQueryKey,
@@ -116,7 +117,7 @@ function SignOffModal({
             timing.finish();
             setSigningNext(false);
             void refresh();
-            toast.show(`Evaluation v${signingVersion} is signed. Reviewers are told.`);
+            toast.show(t`Evaluation v${signingVersion} is signed. Reviewers are told.`);
           },
           onError: () => done(false),
         },
@@ -124,7 +125,7 @@ function SignOffModal({
   });
   const toProject = () =>
     void navigate({ to: "/projects/$projectId", params: { projectId }, search: { tab: "tasks" } });
-  const subtitle = `${taskName} · Sentinel node AI evaluation`;
+  const subtitle = t`${taskName} · Sentinel node AI evaluation`;
   const signingVersion = summary?.next_version?.version ?? summary?.version ?? 1;
   if (!summary) return null;
   const nameOf = (userId: string) => person(userId)?.name ?? "";
@@ -139,7 +140,7 @@ function SignOffModal({
           width={560}
           title={t`Sign off ${taskCode}`}
           subtitle={subtitle}
-          hint="Changes after sign-off are logged, and the report marks them."
+          hint={t`Changes after sign-off are logged, and the report marks them.`}
           showCancel={false}
           secondaryAction={
             summary.next_version ? (
@@ -163,8 +164,7 @@ function SignOffModal({
           <SmallModalZone
             title={
               <>
-                <Trans>Evaluation v</Trans>
-                {summary.version} <Trans>· signed</Trans>{" "}
+                <Trans>Evaluation v{summary.version} · signed </Trans>
                 <StatusTag tone="accent">
                   <Trans>Soft lock</Trans>
                 </StatusTag>
@@ -175,13 +175,13 @@ function SignOffModal({
               rows={[
                 {
                   icon: "user",
-                  label: "Signed by",
+                  label: t`Signed by`,
                   value: signed.by_user_id ? nameOf(signed.by_user_id) : "",
                 },
-                { icon: "calendar", label: "When", value: longDate(signed.at) },
+                { icon: "calendar", label: t`When`, value: longDate(signed.at) },
                 {
                   icon: "shield",
-                  label: "Checksum",
+                  label: t`Checksum`,
                   value: <span className="font-mono">{signed.checksum}</span>,
                 },
               ]}
@@ -191,14 +191,14 @@ function SignOffModal({
             <SmallModalZone title={t`Next version`}>
               <ChangeLine
                 who={person(summary.next_version.by_user_id)}
-                at="Just now"
+                at={t`Just now`}
                 text={
                   <>
-                    <b>
-                      <Trans>Evaluation v{summary.next_version.version} · draft</Trans>
-                    </b>
-                    <Trans>, started from v</Trans>
-                    {summary.version} · "{summary.next_version.reason}"
+                    <Trans>
+                      <b>Evaluation v{summary.next_version.version} · draft</b>, started from v
+                      {summary.version}
+                    </Trans>{" "}
+                    · "{summary.next_version.reason}"
                   </>
                 }
               />
@@ -229,7 +229,7 @@ function SignOffModal({
                 disabled={picked.length === 0}
                 onClick={() =>
                   toast.show(
-                    `${plural(picked.length, "file")} downloading: ${andJoin(
+                    t`${plural(picked.length, "file")} downloading: ${andJoin(
                       exportsList
                         .filter((item) => picked.includes(item.key))
                         .map((item) => item.label.toLowerCase()),
@@ -272,16 +272,16 @@ function SignOffModal({
         {amending ? (
           <ReasonModal
             title={t`Start Evaluation v2`}
-            subtitle={`${taskCode} · Evaluation v${summary.version} signed ${longDate(signed.at)}`}
-            whatLabel="What changes"
-            what="A new draft, Evaluation v2, copied from v1"
-            told={`${andJoin(summary.reviewer_ids.map(nameOf))}, the reviewers of ${taskCode}`}
+            subtitle={t`${taskCode} · Evaluation v${summary.version} signed ${longDate(signed.at)}`}
+            whatLabel={t`What changes`}
+            what={t`A new draft, Evaluation v2, copied from v1`}
+            told={t`${andJoin(summary.reviewer_ids.map(nameOf))}, the reviewers of ${taskCode}`}
             label={t`Reason`}
             placeholder={t`For example, measured again on deeper levels of A1`}
-            help="The reason goes into the report."
-            hint="v1 stays readable as it was signed."
-            primary="Start v2"
-            tooShort="Give a reason of at least 10 characters."
+            help={t`The reason goes into the report.`}
+            hint={t`v1 stays readable as it was signed.`}
+            primary={t`Start v2`}
+            tooShort={t`Give a reason of at least 10 characters.`}
             tried={scene === "amend"}
             onClose={() => setAmending(false)}
             onSubmit={(reason) =>
@@ -291,7 +291,7 @@ function SignOffModal({
                   onSuccess: () => {
                     setAmending(false);
                     void refresh();
-                    toast.show("Evaluation v2 started from v1. v1 stays as it was signed.");
+                    toast.show(t`Evaluation v2 started from v1. v1 stays as it was signed.`);
                   },
                 },
               )
@@ -319,12 +319,12 @@ function SignOffModal({
         subtitle={subtitle}
         hint={
           blockers.length
-            ? `${blockers.length} thing${blockers.length === 1 ? "" : "s"} to finish first.`
+            ? t`${blockers.length} thing${blockers.length === 1 ? "" : "s"} to finish first.`
             : busy
-              ? "Waiting for Vltava single sign-on…"
-              : "Reviewers are told once signed."
+              ? t`Waiting for Vltava single sign-on…`
+              : t`Reviewers are told once signed.`
         }
-        cancelLabel="Back to disagreements"
+        cancelLabel={t`Back to disagreements`}
         onCancel={() => void navigate({ to: "/tasks/$taskId/disagreements", params: { taskId } })}
         primaryLabel={signature.label}
         primaryDisabled={blockers.length > 0}
@@ -365,7 +365,7 @@ function SignOffModal({
                   data-phi=""
                   tone="ok"
                   title={t`All ${summary.reviews.slides} slides reviewed by both reviewers`}
-                  sub={`${summary.reviews.submitted} of ${summary.reviews.total} reviews submitted, ${summary.reviews.opinion_forms} opinion forms`}
+                  sub={t`${summary.reviews.submitted} of ${summary.reviews.total} reviews submitted, ${summary.reviews.opinion_forms} opinion forms`}
                 />
                 <ReadinessRow
                   data-phi=""
@@ -378,7 +378,7 @@ function SignOffModal({
                     data-phi=""
                     tone="warn"
                     title={t`${summary.queue.left_open.length} objects left open on purpose`}
-                    sub={`${summary.queue.left_open.map((row) => `${row.object} on ${row.slide_label}`).join(", ")} · allowed, in the report`}
+                    sub={t`${summary.queue.left_open.map((row) => t`${row.object} on ${row.slide_label}`).join(", ")} · allowed, in the report`}
                   />
                 ) : null}
               </>
@@ -388,14 +388,14 @@ function SignOffModal({
                 data-phi=""
                 tone="warn"
                 title={t`${plural(summary.open_threads.total, "thread")} still open`}
-                sub={`${summary.open_threads.slides.map((row) => `${row.count} on ${row.slide_label}`).join(", ")} · they do not block signing, the report lists them`}
+                sub={t`${summary.open_threads.slides.map((row) => t`${row.count} on ${row.slide_label}`).join(", ")} · they do not block signing, the report lists them`}
               />
             ) : null}
             <ReadinessRow
               data-phi=""
               tone="ok"
               title={t`Result set and IDs fixed`}
-              sub={`${summary.result_set.name}, ${summary.result_set.objects} objects, plus ${summary.result_set.added} added by a reviewer`}
+              sub={t`${summary.result_set.name}, ${summary.result_set.objects} objects, plus ${summary.result_set.added} added by a reviewer`}
             />
           </ReadinessList>
         </SmallModalZone>
@@ -404,14 +404,10 @@ function SignOffModal({
         </SmallModalZone>
         <SmallModalZone title={t`What signing does`}>
           <p className="m-0 text-body-sm leading-[1.5] text-fg">
-            <Trans>It freezes</Trans>{" "}
-            <b>
-              <Trans>Evaluation v{summary.version}</Trans>
-            </b>
             <Trans>
-              : the result set, every decision, edit, comment and opinion, and the IDs, with a
-              checksum. You can still change things afterwards. Each change is logged with a reason
-              and the report shows it.
+              It freezes <b>Evaluation v{summary.version}</b>: the result set, every decision, edit,
+              comment and opinion, and the IDs, with a checksum. You can still change things
+              afterwards. Each change is logged with a reason and the report shows it.
             </Trans>
           </p>
         </SmallModalZone>
@@ -446,10 +442,10 @@ function blockersOf(summary: SignOffSummary, nameOf: (userId: string) => string)
   if (pending > 0) {
     list.push({
       key: "reviews",
-      title: `${pending} reviews not submitted`,
+      title: t`${pending} reviews not submitted`,
       sub: andJoin(
         summary.reviews.behind.map(
-          (row) => `${nameOf(row.user_id)} has ${plural(row.slides_left, "slide")} left`,
+          (row) => t`${nameOf(row.user_id)} has ${plural(row.slides_left, "slide")} left`,
         ),
       ),
     });
@@ -457,21 +453,21 @@ function blockersOf(summary: SignOffSummary, nameOf: (userId: string) => string)
   const open = summary.queue.total - summary.queue.resolved;
   if (open > 0) {
     const waiting = summary.queue.with_adjudicator
-      .map((row) => `${row.count} with ${nameOf(row.user_id)}`)
+      .map((row) => t`${row.count} with ${nameOf(row.user_id)}`)
       .join(", ");
     list.push({
       key: "queue",
-      title: `${open} disagreements not resolved`,
-      sub: `${summary.queue.resolved} of ${summary.queue.total} resolved so far${waiting ? `, ${waiting}` : ""}`,
+      title: t`${open} disagreements not resolved`,
+      sub: t`${summary.queue.resolved} of ${summary.queue.total} resolved so far${waiting ? `, ${waiting}` : ""}`,
     });
   }
   return list;
 }
 
 function resolvedText(summary: SignOffSummary, nameOf: (userId: string) => string) {
-  const parts = [`${summary.queue.by_researcher} by you`];
+  const parts = [t`${summary.queue.by_researcher} by you`];
   for (const row of summary.queue.by_adjudicator)
-    parts.push(`${row.count} by ${nameOf(row.user_id)}`);
-  if (summary.queue.left_open.length) parts.push(`${summary.queue.left_open.length} left open`);
+    parts.push(t`${row.count} by ${nameOf(row.user_id)}`);
+  if (summary.queue.left_open.length) parts.push(t`${summary.queue.left_open.length} left open`);
   return parts.join(", ");
 }

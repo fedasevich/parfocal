@@ -500,9 +500,10 @@ function NumberLine({ classes, result, className, ...props }: NumberLineProps) {
           <Segment part="unsure" count={totals.unsure} max={grand} className={unsureFill} />
         </span>
         <span data-slot="number-line-legend" className="text-caption text-fg-dim">
-          {number(totals.checked)} <Trans>checked by you ·</Trans> {number(totals.sure)}{" "}
-          <Trans>sure ·</Trans> {number(totals.unsure)} <Trans>unsure of</Trans>{" "}
-          {number(totals.total)}
+          <Trans>
+            {number(totals.checked)} checked by you · {number(totals.sure)} sure ·{" "}
+            {number(totals.unsure)} unsure of {number(totals.total)}
+          </Trans>
         </span>
       </div>
       {result ? <ResultChip result={result} /> : null}

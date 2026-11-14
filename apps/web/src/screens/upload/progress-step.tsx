@@ -134,9 +134,9 @@ export function ProgressStep({
   const back = scene === "sourceoff" && state.sourceBack;
   const progressOf = (index: number): Progress => {
     const slide = batch.slides[index];
-    if (offline && index >= 4) return { percent: 0, tone: "warn", text: "Waiting for the source" };
-    if (back && index >= 4) return { percent: 8, tone: "accent", text: "Uploading · 8%" };
-    return slide?.progress ?? { percent: 0, tone: "accent", text: "Waiting" };
+    if (offline && index >= 4) return { percent: 0, tone: "warn", text: t`Waiting for the source` };
+    if (back && index >= 4) return { percent: 8, tone: "accent", text: t`Uploading · 8%` };
+    return slide?.progress ?? { percent: 0, tone: "accent", text: t`Waiting` };
   };
   const all = model.slides.map(progressOf);
   const ready = all.filter((item) => item.percent === 100).length;
@@ -145,9 +145,9 @@ export function ProgressStep({
   const running = all.length - ready - waiting - source;
   const tally = [
     ready && `${ready} ready`,
-    running && `${running} in progress`,
+    running && t`${running} in progress`,
     waiting && `${waiting} waiting`,
-    source && `${source} wait for the source`,
+    source && t`${source} wait for the source`,
   ]
     .filter(Boolean)
     .join(" · ");
@@ -158,11 +158,13 @@ export function ProgressStep({
           value={46}
           label={
             <b className="font-semibold text-fg">
-              {plural(model.slides.length, "slide")} <Trans>and</Trans>{" "}
-              {plural(model.uploadingResults, "result file")}
+              <Trans>
+                {plural(model.slides.length, "slide")} and{" "}
+                {plural(model.uploadingResults, "result file")}
+              </Trans>
             </b>
           }
-          valueText="46% · about 3 min left"
+          valueText={t`46% · about 3 min left`}
         />
         <Hint>
           <Trans>
@@ -188,13 +190,13 @@ export function ProgressStep({
               </>
             }
           >
-            <b>
-              <Trans>
+            <Trans>
+              <b>
                 {batch.source_outage.source} stopped answering at {batch.source_outage.at}.
-              </Trans>
-            </b>{" "}
-            {batch.source_outage.waiting} <Trans>of</Trans> {model.slides.length}{" "}
-            <Trans>slides wait. The others keep going.</Trans>
+              </b>{" "}
+              {batch.source_outage.waiting} of {model.slides.length} slides wait. The others keep
+              going.
+            </Trans>
           </Banner>
         ) : null}
         <div className="grid min-w-0 overflow-hidden rounded-[10px] border border-surf-edge bg-surf-panel">
@@ -238,8 +240,9 @@ export function ProgressStep({
                     className="inline-flex h-6.5 cursor-pointer items-center gap-1.5 rounded-md border border-line bg-transparent px-2 text-caption text-fg-dim hover:border-line-strong hover:text-fg"
                   >
                     <span className="font-mono">
-                      {Math.min(slide.steps_done, slide.steps.length)} <Trans>of</Trans>{" "}
-                      {slide.steps.length}
+                      <Trans>
+                        {Math.min(slide.steps_done, slide.steps.length)} of {slide.steps.length}
+                      </Trans>
                     </span>
                     <Icon name="down" className={cn(open && "rotate-180")} />
                   </button>
@@ -291,7 +294,7 @@ export function DoneStep({
   const loose = model.slides.length - caseSlides.length;
   const caseLabel = batch.slides.find((slide) => slide.case_label)?.case_label ?? "";
   const where = caseSlides.length
-    ? `Case ${caseLabel} holds ${joinAnd(caseSlides)}${loose ? `, the other ${plural(loose, "slide is", "slides are")} loose` : ""}.`
+    ? t`Case ${caseLabel} holds ${joinAnd(caseSlides)}${loose ? t`, the other ${plural(loose, "slide is", "slides are")} loose` : ""}.`
     : `${plural(loose, "slide is", "slides are")} loose.`;
   const bare = model.bare.map((index) => batch.slides[index]?.name ?? "");
   const count = bare.length;
@@ -304,9 +307,12 @@ export function DoneStep({
           <Icon name="check" size="md" className="text-ok" />
           <div>
             <h3 className="m-0 text-body font-semibold text-fg">
-              {plural(model.slides.length, "slide")} <Trans>and</Trans>{" "}
-              {plural(model.uploadingResults, "result set")} {total === 1 ? t`is` : t`are`}{" "}
-              <Trans>in</Trans> {projectCode}
+              <Trans>
+                {plural(model.slides.length, "slide")} and{" "}
+                {plural(model.uploadingResults, "result set")}
+              </Trans>{" "}
+              {total === 1 ? t`is` : t`are`}
+              <Trans> in {projectCode}</Trans>
             </h3>
             <Hint className="mt-1">
               {where}
@@ -320,13 +326,13 @@ export function DoneStep({
           value={100}
           tone="ok"
           label={t`${plural(model.slides.length, "slide")} and ${plural(model.uploadingResults, "result file")}`}
-          valueText={`Done in ${batch.done.minutes} min`}
+          valueText={t`Done in ${batch.done.minutes} min`}
         />
       </Zone>
       {count === 0 ? null : state.leaveBare ? (
         <Zone
           title={t`${plural(count, "slide stays", "slides stay")} without results`}
-          sub={`Add a result file or run a model on ${them} any time, from the project or from the slide.`}
+          sub={t`Add a result file or run a model on ${them} any time, from the project or from the slide.`}
           end={
             <Button size="sm" variant="ghost" onClick={() => set({ leaveBare: false })}>
               <Trans>Undo</Trans>
@@ -337,7 +343,7 @@ export function DoneStep({
         <Zone
           highlight
           title={t`${plural(count, "slide has", "slides have")} no results`}
-          sub={`${joinAnd(bare)} came without AI results. Run a model on ${them} now, or leave ${them} and add results later.`}
+          sub={t`${joinAnd(bare)} came without AI results. Run a model on ${them} now, or leave ${them} and add results later.`}
           end={
             <StatusTag tone="accent">
               <Trans>Optional</Trans>

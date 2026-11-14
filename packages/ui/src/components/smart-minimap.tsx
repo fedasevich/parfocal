@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Keycap } from "@parfocal/ui/components/keycap";
@@ -55,6 +56,8 @@ function MapArea({
   badge?: MapAreaBadge;
   fill?: string;
 }) {
+  const { t } = useLingui();
+
   const scale = useMapScale();
   return (
     <g data-slot="map-area" data-badge={badge}>
@@ -85,7 +88,7 @@ function MapArea({
             fontSize={9}
             fontWeight={700}
             fill="#fff"
-            fontFamily="IBM Plex Sans, sans-serif"
+            fontFamily={t`IBM Plex Sans, sans-serif`}
           >
             {badge === "checked" ? "✓" : label}
           </text>
@@ -407,7 +410,7 @@ type WholeSlidePeekProps = Omit<React.ComponentProps<"div">, "title"> & {
 
 function WholeSlidePeek({
   image,
-  title = "Whole slide",
+  title = t`Whole slide`,
   sub,
   held = false,
   onClose,
@@ -493,12 +496,15 @@ function WholeSlidePeek({
             <Trans>Click a place to go there ·</Trans>{" "}
             {held ? (
               <>
-                <Trans>release</Trans> <Keycap keys="Z" size="sm" />
+                <Trans>
+                  release <Keycap keys="Z" size="sm" />
+                </Trans>
               </>
             ) : (
               <>
-                <Trans>press</Trans> <Keycap keys="Z" size="sm" /> <Trans>or</Trans>{" "}
-                <Keycap keys="Esc" size="sm" />
+                <Trans>
+                  press <Keycap keys="Z" size="sm" /> or <Keycap keys="Esc" size="sm" />
+                </Trans>
               </>
             )}{" "}
             <Trans>to return</Trans>
@@ -520,6 +526,8 @@ function PeekArea({
   label: string;
   checked: boolean;
 }) {
+  const { t } = useLingui();
+
   const scale = useMapScale();
   return (
     <g data-slot="peek-area" data-checked={checked || undefined}>
@@ -548,7 +556,7 @@ function PeekArea({
             fill="#fff"
             fontSize={10.5}
             fontWeight={600}
-            fontFamily="IBM Plex Sans, sans-serif"
+            fontFamily={t`IBM Plex Sans, sans-serif`}
           >
             {label}
           </text>

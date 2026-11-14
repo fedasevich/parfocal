@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import { Icon, type IconName } from "@parfocal/ui/components/icon";
@@ -145,7 +146,9 @@ function ReviewProgressPopover({
           value={taskPercent}
           label={
             <>
-              <Trans>Slide</Trans> <b>{position}</b> <Trans>of</Trans> {slideTotal}
+              <Trans>
+                Slide <b>{position}</b> of {slideTotal}
+              </Trans>
             </>
           }
           valueText={`${taskPercent}%`}
@@ -212,15 +215,15 @@ function CaseDetails({ details }: { details: CaseDetailsData }) {
 
   const blocks = details.blocks ?? [];
   const rows: [string, string, string | undefined, string][] = [
-    ["project", "Project", details.project, "Not known"],
-    ["case", "Case", details.caseLabel, "No case attached"],
-    ["specimen", "Specimen", details.specimen, "Not recorded"],
-    ["blocks", "Blocks", blocks.length > 0 ? blocks.join(", ") : undefined, "No blocks recorded"],
-    ["task", "Task", details.task, "Not part of a task"],
-    ["researcher", "Researcher", details.researcher, "Not known"],
+    ["project", t`Project`, details.project, t`Not known`],
+    ["case", t`Case`, details.caseLabel, t`No case attached`],
+    ["specimen", t`Specimen`, details.specimen, t`Not recorded`],
+    ["blocks", t`Blocks`, blocks.length > 0 ? blocks.join(", ") : undefined, t`No blocks recorded`],
+    ["task", t`Task`, details.task, t`Not part of a task`],
+    ["researcher", t`Researcher`, details.researcher, t`Not known`],
   ];
   if (details.clinical) {
-    rows.push(["clinical-note", "Clinical note", details.clinicalNote, "No clinical note"]);
+    rows.push(["clinical-note", t`Clinical note`, details.clinicalNote, t`No clinical note`]);
   }
   return (
     <dl
@@ -358,7 +361,7 @@ function SlidesPopover({
   caseSub,
   onOpenCase,
   details,
-  caseHeading = "Slides in this case",
+  caseHeading = t`Slides in this case`,
   caseSlides,
   looseHeading,
   looseSlides = [],
@@ -367,7 +370,7 @@ function SlidesPopover({
   onSideBySide,
   sideBySideTitle,
   footer,
-  ariaLabel = "Slides in this case and task",
+  ariaLabel = t`Slides in this case and task`,
   className,
 }: SlidesPopoverProps) {
   const { t } = useLingui();

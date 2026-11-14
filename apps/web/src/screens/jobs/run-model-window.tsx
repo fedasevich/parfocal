@@ -42,6 +42,8 @@ export function RunModelWindow({
   onClose,
   onStarted,
 }: RunModelWindowProps) {
+  const { t } = useLingui();
+
   const project = okData(useGetProject(projectId).data);
   const slides = useListProjectSlides(projectId).data?.data;
   const models = okData(useListProjectModels(projectId).data);
@@ -52,7 +54,7 @@ export function RunModelWindow({
   return (
     <RunModelForm
       key={scene}
-      projectLabel={`In ${project.code} · ${project.name}`}
+      projectLabel={t`In ${project.code} · ${project.name}`}
       projectId={projectId}
       slides={slides}
       models={models}
@@ -124,7 +126,7 @@ function RunModelForm({
       width={560}
       title={t`Run a model`}
       subtitle={projectLabel}
-      hint="You can close this window. Jobs in the top bar shows how far it is."
+      hint={t`You can close this window. Jobs in the top bar shows how far it is.`}
       blockers={blockers}
       primaryBusy={start.isPending}
       primaryLabel={
@@ -177,7 +179,7 @@ function RunModelForm({
               <Trans>Connect your own model</Trans>
             </Link>
           }
-          note="A run always uses the latest version, and the result set records which one."
+          note={t`A run always uses the latest version, and the result set records which one.`}
         />
       </SmallModalZone>
       <SmallModalZone title={t`What happens`}>
@@ -187,7 +189,7 @@ function RunModelForm({
               <OutcomeRow
                 icon="layers"
                 title={t`A new result set on each slide`}
-                detail={`Called ${model.title} · ${formatDayMonth(now())}. Result sets you already have stay as they are.`}
+                detail={t`Called ${model.title} · ${formatDayMonth(now())}. Result sets you already have stay as they are.`}
               />
               <OutcomeRow
                 icon="calendar"
@@ -203,7 +205,7 @@ function RunModelForm({
           <OutcomeRow
             icon="bell"
             title={t`You get a notification when it is done`}
-            detail="In the bell at the top, with a link to the slides."
+            detail={t`In the bell at the top, with a link to the slides.`}
           />
         </div>
       </SmallModalZone>

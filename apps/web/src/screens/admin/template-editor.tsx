@@ -74,7 +74,7 @@ function PresetsPanel({
         </Trans>
       </p>
       <div className="grid gap-1.5">
-        {choice("Objects to check", "preset-objects")}
+        {choice(t`Objects to check`, "preset-objects")}
         <Select
           value={presets.objects_to_check.kind}
           onValueChange={(value) =>
@@ -101,7 +101,7 @@ function PresetsPanel({
       </div>
       <DecisionPresetPicker value={decision} onChange={onDecision} />
       <div className="flex items-center justify-between gap-3 text-body-sm">
-        {choice("Blind review", "preset-blind")}
+        {choice(t`Blind review`, "preset-blind")}
         <Switch
           aria-labelledby="preset-blind"
           checked={presets.blinding ?? true}
@@ -109,7 +109,7 @@ function PresetsPanel({
         />
       </div>
       <div className="flex items-center justify-between gap-3 text-body-sm">
-        {choice("First read without the AI", "preset-first")}
+        {choice(t`First read without the AI`, "preset-first")}
         <Switch
           aria-labelledby="preset-first"
           checked={presets.first_read ?? false}
@@ -117,7 +117,7 @@ function PresetsPanel({
         />
       </div>
       <div className="grid gap-1.5">
-        {choice("Reviewers start in", "preset-start")}
+        {choice(t`Reviewers start in`, "preset-start")}
         <SegmentedControl
           aria-labelledby="preset-start"
           value={presets.start_mode ?? "guided"}
@@ -128,13 +128,13 @@ function PresetsPanel({
             })
           }
           options={[
-            { value: "guided", label: "Guided review" },
-            { value: "viewer", label: "Full viewer" },
+            { value: "guided", label: t`Guided review` },
+            { value: "viewer", label: t`Full viewer` },
           ]}
         />
       </div>
       <div className="grid gap-1.5">
-        {choice("The work", "preset-split")}
+        {choice(t`The work`, "preset-split")}
         <SegmentedControl
           aria-labelledby="preset-split"
           value={presets.split ?? "everyone"}
@@ -142,9 +142,9 @@ function PresetsPanel({
             onPresets({ ...presets, split: String(value) as NonNullable<Presets["split"]> })
           }
           options={[
-            { value: "everyone", label: "Everyone all" },
-            { value: "even", label: "Split" },
-            { value: "chosen", label: "Per slide" },
+            { value: "everyone", label: t`Everyone all` },
+            { value: "even", label: t`Split` },
+            { value: "chosen", label: t`Per slide` },
           ]}
         />
       </div>
@@ -210,8 +210,8 @@ function EditorBody({
       void queryClient.invalidateQueries({ queryKey: getListStudyTemplatesQueryKey() });
       notify(
         own
-          ? `Saved ${name.trim()} v${version}. Tasks made from the earlier version keep it.`
-          : `Saved ${name.trim()} v1. Researchers can pick it in a new review task.`,
+          ? t`Saved ${name.trim()} v${version}. Tasks made from the earlier version keep it.`
+          : t`Saved ${name.trim()} v1. Researchers can pick it in a new review task.`,
       );
       onBack();
     };
@@ -235,7 +235,7 @@ function EditorBody({
             />
           </FormField>
           <div className="grid gap-1.5">
-            {choice("Kind of study", "template-kind")}
+            {choice(t`Kind of study`, "template-kind")}
             <Select value={kind} onValueChange={(value) => setKind(String(value) as StudyKind)}>
               <SelectTrigger aria-label={t`Kind of study`} className="w-full">
                 <SelectValue>
@@ -277,7 +277,7 @@ function EditorBody({
           {showPdf ? (
             <LazyTemplatePdf
               draft={{
-                name: name.trim() || "Untitled template",
+                name: name.trim() || t`Untitled template`,
                 blocks: toApiBlocks(blocks) as unknown as StudyTemplateSummary["blocks"],
                 format,
               }}

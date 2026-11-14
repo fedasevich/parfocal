@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { InlineError } from "@parfocal/ui/components/banner";
 import { BeforeYouList, type Blocker } from "@parfocal/ui/components/before-you-list";
@@ -31,9 +32,9 @@ type SlideDoneCounts = {
 
 function doneLine(counts: SlideDoneCounts) {
   const decided = counts.total - counts.open;
-  const head = decided === counts.total ? `${counts.total}` : `${decided} of ${counts.total}`;
+  const head = decided === counts.total ? `${counts.total}` : t`${decided} of ${counts.total}`;
   const added = counts.added ? ` ${counts.added} added.` : "";
-  return `${head} objects checked: ${counts.agree} agree, ${counts.disagree} disagree, ${counts.unsure} not sure.${added}`;
+  return t`${head} objects checked: ${counts.agree} agree, ${counts.disagree} disagree, ${counts.unsure} not sure.${added}`;
 }
 
 type AnswerChange = ((id: string, value: string) => void) | undefined;

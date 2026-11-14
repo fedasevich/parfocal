@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import {
   type Project,
@@ -33,7 +34,7 @@ const dueText = (iso: string | null) =>
         day: "numeric",
         month: "short",
       })
-    : "No due date";
+    : t`No due date`;
 
 const headCell = "px-4 py-(--density-head-y)";
 
@@ -112,7 +113,7 @@ function TaskRow({
   const set = sets.find((candidate) => candidate.id === detail?.slides[0]?.result_set_id);
   const facts = [
     set ? `${set.name.split(" ")[0]} ${set.model_version}` : null,
-    `${task.slide_count} slides${task.split === "even" ? ", split evenly" : ""}`,
+    `${task.slide_count} slides${task.split === "even" ? t`, split evenly` : ""}`,
     task.blinded ? "blind" : null,
   ].filter(Boolean);
   const behind = [...progress].sort((a, b) => b.total - b.done - (a.total - a.done))[0];
@@ -153,7 +154,7 @@ function TaskRow({
             ))
           ) : (
             <span>
-              {task.reviewer_count} <Trans>reviewer</Trans>
+              <Trans>{task.reviewer_count} reviewer</Trans>
               {task.reviewer_count === 1 ? "" : t`s`}
             </span>
           )}

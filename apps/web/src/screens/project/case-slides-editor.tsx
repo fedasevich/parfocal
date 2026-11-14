@@ -71,7 +71,7 @@ function EditorBody({
     slideErrors(draft, drafts).map((text, index) => ({
       id: `${draft.id}-${index}`,
       text,
-      goTo: "Go to the slide",
+      goTo: t`Go to the slide`,
     })),
   );
   const edit = (id: string, patch: Partial<SlideDraft>) =>
@@ -106,13 +106,13 @@ function EditorBody({
         if (!next) onClose();
       }}
       title={t`Edit slides`}
-      subtitle={`Case ${caseLabel}. Labels, stains, blocks, levels and the order of the slides.`}
+      subtitle={t`Case ${caseLabel}. Labels, stains, blocks, levels and the order of the slides.`}
       width={560}
-      hint={failure ?? "Every change is kept in the audit log."}
-      primaryLabel="Save slides"
+      hint={failure ?? t`Every change is kept in the audit log.`}
+      primaryLabel={t`Save slides`}
       primaryBusy={busy}
       blockers={tried ? blockers : []}
-      blockersTitle="Before you can save"
+      blockersTitle={t`Before you can save`}
       onPrimary={() => void save()}
     >
       <ol aria-label={t`Slides in order`} className="grid gap-2">

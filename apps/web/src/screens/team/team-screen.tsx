@@ -141,7 +141,7 @@ export function TeamScreen({
   });
 
   if (!team) {
-    if (notAvailable(teamQuery)) return <NotAvailableYet what="Team workload" />;
+    if (notAvailable(teamQuery)) return <NotAvailableYet what={t`Team workload`} />;
     return (
       <main className="px-8 pt-5.5 pl-7">
         <Loader label={t`Loading Team`} />
@@ -165,7 +165,7 @@ export function TeamScreen({
     setModal(null);
     await refresh();
     if (!sent) return;
-    show(`Nudge sent to ${person(modal.userId).name}`, async () => {
+    show(t`Nudge sent to ${person(modal.userId).name}`, async () => {
       await cancelNudge(task.id, sent.id);
       await refresh();
     });
@@ -180,7 +180,7 @@ export function TeamScreen({
     );
     await refresh();
     const names = [...new Set(list.map(({ row }) => person(row.user_id).name))];
-    show(`Nudge sent to ${andJoin(names)}`, async () => {
+    show(t`Nudge sent to ${andJoin(names)}`, async () => {
       await Promise.all(
         sent.flatMap((nudge) => (nudge ? [cancelNudge(nudge.task_id, nudge.id)] : [])),
       );
@@ -203,7 +203,7 @@ export function TeamScreen({
     await refresh();
     if (moved.status !== 201) return;
     show(
-      `${moved.data.slides_moved} slides of ${task.code} moved to ${person(to).name}. Both are told by email.`,
+      t`${moved.data.slides_moved} slides of ${task.code} moved to ${person(to).name}. Both are told by email.`,
       async () => {
         await undoReassignment(task.id, moved.data.id);
         await refresh();
@@ -239,9 +239,9 @@ export function TeamScreen({
           const absence = availability.find((entry) => entry.user_id === item.user_id);
           const dim =
             item.user_id === modal.fromId
-              ? "Has these slides now"
+              ? t`Has these slides now`
               : modalTask.reviewers.some((row) => row.user_id === item.user_id)
-                ? "Reviews this task"
+                ? t`Reviews this task`
                 : undefined;
           return {
             id: item.user_id,
@@ -251,7 +251,7 @@ export function TeamScreen({
             ...(dim ? { dim } : {}),
             ...(absence?.until && !dim
               ? {
-                  end: `Away until ${formatDayMonth(parseDay(absence.until))}`,
+                  end: t`Away until ${formatDayMonth(parseDay(absence.until))}`,
                   endTone: "warn" as const,
                 }
               : {}),
@@ -271,7 +271,7 @@ export function TeamScreen({
             <Trans>Team</Trans>
           </h1>
           <p className="mt-0.75 mb-0 text-body-sm leading-[1.45] text-fg-dim">
-            <Trans>Who is reviewing what ·</Trans> {headerLine(team)}
+            <Trans>Who is reviewing what · {headerLine(team)}</Trans>
           </p>
         </div>
         <div className="flex items-center gap-2.5">
@@ -339,8 +339,9 @@ export function TeamScreen({
       <Zones className="min-h-0 flex-1 overflow-auto pb-2">
         {shownTasks.length === 0 ? (
           <TeamNoMatch onClear={clear}>
-            <Trans>No</Trans> {state.tab === "done" ? t`signed-off` : t`open`}{" "}
-            <Trans>task matches these filters.</Trans>
+            {state.tab === "done"
+              ? t`No signed-off task matches these filters.`
+              : t`No open task matches these filters.`}
           </TeamNoMatch>
         ) : state.tab === "done" ? (
           <Zone title={t`Signed off`}>
@@ -410,7 +411,7 @@ export function TeamScreen({
           onToChange={(to) => setModal({ ...modal, to })}
           toWarning={
             modal.to && pickedAbsence?.until
-              ? `${person(modal.to).name} is away until ${formatDayMonth(parseDay(pickedAbsence.until))}. The slides wait until then.`
+              ? t`${person(modal.to).name} is away until ${formatDayMonth(parseDay(pickedAbsence.until))}. The slides wait until then.`
               : undefined
           }
           what={modal.what}
@@ -453,6 +454,8 @@ function OpenTask({
   onNudge: (row: TeamReviewer) => void;
   onReassign: (row: TeamReviewer) => void;
 }) {
+  const { t } = useLingui();
+
   const due = dueText(task, team.as_of);
   const rows = task.reviewers.filter((row) => !state.reviewer || row.user_id === state.reviewer);
   return (
@@ -482,7 +485,7 @@ function OpenTask({
             highlight={state.task === task.id && state.focus === row.user_id}
             hint={
               row.status === "away"
-                ? `${task.code} waits for ${firstName(info.name)}. Reassign if it cannot.`
+                ? t`${task.code} waits for ${firstName(info.name)}. Reassign if it cannot.`
                 : undefined
             }
             onNudge={() => onNudge(row)}

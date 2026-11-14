@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { useAcceptInvitation, useGetInvitePreview } from "@parfocal/api-client";
 import {
@@ -30,9 +31,9 @@ import type { InviteScene } from "./scenes.ts";
 type Props = { token: string; scene: InviteScene; change: (scene: InviteScene) => void };
 
 const inviteSteps = (scene: InviteScene) => [
-  { label: "Invite", why: "Accept the invite first." },
-  { label: "Your account", ...(scene === "landing" ? { why: "Accept the invite first." } : {}) },
-  { label: "First slide", why: "Join first. Your first slide opens after that." },
+  { label: t`Invite`, why: t`Accept the invite first.` },
+  { label: t`Your account`, ...(scene === "landing" ? { why: t`Accept the invite first.` } : {}) },
+  { label: t`First slide`, why: t`Join first. Your first slide opens after that.` },
 ];
 
 function Fact({
@@ -181,17 +182,22 @@ export function InviteScreen({ token, scene, change }: Props) {
           <div className="flex items-center gap-2.5">
             <PersonAvatar person={inviter} size={32} />
             <span>
-              <b>{inviter.name}</b> <Trans>invited you to review</Trans>
+              <Trans>
+                <b>{inviter.name}</b> invited you to review
+              </Trans>
               <small className="block text-body-sm text-fg-dim">
-                {preview.invited_by.title} ·{" "}
-                {plural(
-                  Math.max(
-                    1,
-                    Math.round((now().getTime() - Date.parse(preview.sent_at)) / 3_600_000),
-                  ),
-                  "hour",
-                )}{" "}
-                <Trans>ago</Trans>
+                {preview.invited_by.title} ·
+                <Trans>
+                  {" "}
+                  {plural(
+                    Math.max(
+                      1,
+                      Math.round((now().getTime() - Date.parse(preview.sent_at)) / 3_600_000),
+                    ),
+                    "hour",
+                  )}{" "}
+                  ago
+                </Trans>
               </small>
             </span>
           </div>
@@ -250,14 +256,14 @@ export function InviteScreen({ token, scene, change }: Props) {
           <AuthLink
             onClick={() =>
               show(
-                `${inviter.name.split(" ")[0]} is told you declined, with an optional note (mock)`,
+                t`${inviter.name.split(" ")[0]} is told you declined, with an optional note (mock)`,
               )
             }
           >
             <Trans>Decline</Trans>
           </AuthLink>
           <DotSeparator />
-          <Trans>The invite expires on</Trans> {formatDue(preview.expires_on)}
+          <Trans>The invite expires on {formatDue(preview.expires_on)}</Trans>
         </AuthFoot>
       </AuthForm>
       {notice}

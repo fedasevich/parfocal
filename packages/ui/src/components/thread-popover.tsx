@@ -116,9 +116,9 @@ function ThreadPopover({
         onSend={onSend}
         label={t`Reply to this thread`}
         placeholder={t`Write a reply`}
-        sendLabel="Reply"
-        hint="Enter posts, Shift+Enter adds a line"
-        offReason={offReason ?? (busy ? "Posting your reply" : undefined)}
+        sendLabel={t`Reply`}
+        hint={t`Enter posts, Shift+Enter adds a line`}
+        offReason={offReason ?? (busy ? t`Posting your reply` : undefined)}
       />
       {failed ? (
         <p role="alert" className="m-0 text-body-sm text-bad">

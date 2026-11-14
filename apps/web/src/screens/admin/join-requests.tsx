@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import {
   getListTenantMembersQueryKey,
@@ -25,7 +26,7 @@ import { okData } from "../placeholder.tsx";
 import { lastActive, type Notify, tableClass } from "./common.tsx";
 
 const askedText = (ask: PendingAccessRequest) =>
-  `${ask.email ?? ""} · asked ${lastActive(ask.asked_at).toLowerCase()}`;
+  t`${ask.email ?? ""} · asked ${lastActive(ask.asked_at).toLowerCase()}`;
 
 export function JoinRequestsZone({
   notify,
@@ -58,20 +59,20 @@ export function JoinRequestsZone({
     },
     onError: () => {
       void refresh();
-      notify("This ask is already answered.");
+      notify(t`This ask is already answered.`);
     },
   });
   const approveAsk = (ask: PendingAccessRequest) =>
-    approve.mutate({ requestId: ask.id }, answered(`${ask.display_name} joined as a reviewer.`));
+    approve.mutate({ requestId: ask.id }, answered(t`${ask.display_name} joined as a reviewer.`));
   const declineAsk = (ask: PendingAccessRequest) =>
     decline.mutate(
       { requestId: ask.id },
-      answered(`You declined ${ask.display_name}'s ask to join.`),
+      answered(t`You declined ${ask.display_name}'s ask to join.`),
     );
   return (
     <Zone
       title={t`Join requests`}
-      sub="People from your email domain who asked to join. They join as reviewers, and you can raise their role later."
+      sub={t`People from your email domain who asked to join. They join as reviewers, and you can raise their role later.`}
       end={
         <span className="text-body-sm text-fg-dim">
           <Trans>{asks.length} waiting</Trans>

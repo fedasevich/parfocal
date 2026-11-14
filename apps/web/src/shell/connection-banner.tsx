@@ -23,10 +23,9 @@ export function ConnectionBanner({ pinned = false }: { pinned?: boolean }) {
         </Button>
       }
     >
-      <b>
-        <Trans>Connection lost.</Trans>
-      </b>{" "}
-      <Trans>Saving is paused and nothing you typed is lost.</Trans>{" "}
+      <Trans>
+        <b>Connection lost.</b> Saving is paused and nothing you typed is lost.{" "}
+      </Trans>
       {retrying ? t`Trying again...` : t`Retrying by itself.`}
     </Banner>
   );

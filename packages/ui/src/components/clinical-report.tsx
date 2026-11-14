@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import { Icon } from "@parfocal/ui/components/icon";
@@ -29,9 +30,9 @@ type Deposit = {
 };
 
 function stagingCategory(sizeMm: number) {
-  if (sizeMm > 2) return "Macrometastasis";
-  if (sizeMm > 0.2) return "Micrometastasis";
-  return "Isolated tumour cells";
+  if (sizeMm > 2) return t`Macrometastasis`;
+  if (sizeMm > 0.2) return t`Micrometastasis`;
+  return t`Isolated tumour cells`;
 }
 
 function largestDeposit(deposits: Deposit[]) {
@@ -70,7 +71,9 @@ function DepositSource({ deposit, largest }: { deposit: Deposit; largest: boolea
           t`measured by hand`
         ) : (
           <>
-            <Trans>object</Trans> <span className="font-mono">{deposit.objectId}</span>
+            <Trans>
+              object <span className="font-mono">{deposit.objectId}</span>
+            </Trans>
           </>
         )}
       </small>
@@ -149,7 +152,7 @@ function DepositTable({
                         </b>
                         <small className="text-caption">
                           {deposit.removedText ??
-                            `${deposit.sizeMm === undefined ? "no size" : `${formatMm(deposit.sizeMm)} mm`}, ${deposit.objectId ? `${deposit.objectId} on` : "by hand on"} ${deposit.slide}`}
+                            `${deposit.sizeMm === undefined ? "no size" : `${formatMm(deposit.sizeMm)} mm`}, ${deposit.objectId ? `${deposit.objectId} on` : t`by hand on`} ${deposit.slide}`}
                         </small>
                       </span>
                       <Button size="sm" onClick={() => onUndo?.(deposit.id)}>
@@ -247,9 +250,9 @@ function DepositTable({
       )}
       {showSuggestion && largest?.sizeMm !== undefined ? (
         <p className="m-0 inline-flex items-center gap-2 text-body-sm text-fg-dim">
-          <Trans>The largest deposit,</Trans> {formatMm(largest.sizeMm)} <Trans>mm on</Trans>{" "}
-          {largest.slide}
-          <Trans>, suggests</Trans>
+          <Trans>
+            The largest deposit, {formatMm(largest.sizeMm)} mm on {largest.slide}, suggests
+          </Trans>
           <CategoryTag>{stagingCategory(largest.sizeMm)}</CategoryTag>
         </p>
       ) : null}

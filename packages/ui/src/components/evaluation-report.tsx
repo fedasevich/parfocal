@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
@@ -143,6 +144,8 @@ function ReportBlock({
   children,
   ...props
 }: ReportBlockProps) {
+  const { t } = useLingui();
+
   return (
     <section
       data-slot="report-block"
@@ -150,7 +153,7 @@ function ReportBlock({
       className={cn(
         "relative grid content-start gap-2 rounded-[3px] outline-offset-4",
         half ? "col-span-1" : "col-span-2",
-        onSelect && "hover:outline-1 hover:outline-dashed hover:outline-[#1a56be]/50",
+        onSelect && `hover:outline-1 hover:outline-dashed hover:outline-[#1a56be]/50`,
         selected && "outline-2 outline-[#1a56be]",
         className,
       )}
@@ -161,7 +164,7 @@ function ReportBlock({
       {onSelect ? (
         <button
           type="button"
-          aria-label={`Select the block ${typeof title === "string" ? title : ""}`.trim()}
+          aria-label={t`Select the block ${typeof title === "string" ? title : ""}`.trim()}
           aria-pressed={selected}
           onClick={onSelect}
           className="absolute -inset-1 cursor-pointer border-0 bg-transparent focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-[#1a56be]"
@@ -239,11 +242,13 @@ function ConfusionMatrix({
   classes,
   counts,
   caption,
-  rowTitle = "The AI said",
-  columnTitle = "Consensus of the reviewers",
+  rowTitle = t`The AI said`,
+  columnTitle = t`Consensus of the reviewers`,
   className,
   ...props
 }: ConfusionMatrixProps) {
+  const { t } = useLingui();
+
   const max = Math.max(1, ...counts.flat());
   return (
     <figure data-slot="confusion-matrix" className={cn("m-0 grid gap-2", className)} {...props}>

@@ -22,12 +22,12 @@ export function HelpDialog() {
         if (!next) closeHelp();
       }}
       title={t`Help`}
-      subtitle="Short answers, the shortcut sheet and the tour."
-      primaryLabel={resuming ? "Resume the tour" : "Take the tour"}
+      subtitle={t`Short answers, the shortcut sheet and the tour.`}
+      primaryLabel={resuming ? t`Resume the tour` : t`Take the tour`}
       onPrimary={() => startTour(resumeIndex(progress))}
-      cancelLabel="Close"
+      cancelLabel={t`Close`}
       onCancel={closeHelp}
-      hint={`The tour has ${tourLength} steps and you can stop at any time.`}
+      hint={t`The tour has ${tourLength} steps and you can stop at any time.`}
       secondaryAction={
         <button
           type="button"

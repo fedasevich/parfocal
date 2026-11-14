@@ -118,8 +118,8 @@ export function ProjectsSection({ notify }: { notify: Notify }) {
               value={view}
               onValueChange={(value) => setView(value === "archived" ? "archived" : "active")}
               options={[
-                { value: "active", label: "Active" },
-                { value: "archived", label: "Archived" },
+                { value: "active", label: t`Active` },
+                { value: "archived", label: t`Archived` },
               ]}
             />
             <span className="text-body-sm text-fg-dim">
@@ -248,8 +248,10 @@ export function ProjectsSection({ notify }: { notify: Notify }) {
               <ClassListChoice lab={lab} notify={notify} label={t`Class list of new projects`} />
             ) : null}
             <small className="text-caption text-fg-dim">
-              <Trans>Built-in lists:</Trans> {classListNames(taxonomies)}
-              <Trans>. Each project can change its own classes.</Trans>
+              <Trans>
+                Built-in lists: {classListNames(taxonomies)}. Each project can change its own
+                classes.
+              </Trans>
             </small>
           </div>
         </div>
@@ -262,6 +264,8 @@ const modelLists = (key: readonly unknown[]) =>
   typeof key[0] === "string" && key[0].endsWith("/models");
 
 function useModelVisibility(notify: Notify) {
+  const { t } = useLingui();
+
   const queryClient = useQueryClient();
   const hide = useHideModel();
   const show = useShowModel();
@@ -276,7 +280,7 @@ function useModelVisibility(notify: Notify) {
           void queryClient.invalidateQueries({ predicate: (query) => modelLists(query.queryKey) }),
         onError: (error) => {
           setShown((current) => ({ ...current, [model.id]: !next }));
-          notify(error instanceof Error ? error.message : "That did not save. Try again.");
+          notify(error instanceof Error ? error.message : t`That did not save. Try again.`);
         },
       },
     );
@@ -285,8 +289,8 @@ function useModelVisibility(notify: Notify) {
     apply(model, next);
     notify(
       next
-        ? `${model.name} shows in every model list again.`
-        : `${model.name} is hidden from every model list. Result sets it made stay.`,
+        ? t`${model.name} shows in every model list again.`
+        : t`${model.name} is hidden from every model list. Result sets it made stay.`,
       () => apply(model, !next),
     );
   };
@@ -296,6 +300,8 @@ function useModelVisibility(notify: Notify) {
 const cancelDelayMs = 6000;
 
 function useRunCancellation(notify: Notify) {
+  const { t } = useLingui();
+
   const queryClient = useQueryClient();
   const cancel = useCancelModelRun();
   const [cancelled, setCancelled] = useState<string[]>([]);
@@ -309,7 +315,7 @@ function useRunCancellation(notify: Notify) {
           void queryClient.invalidateQueries({ predicate: (query) => modelLists(query.queryKey) }),
         onError: (error) => {
           setCancelled((current) => current.filter((id) => id !== run.id));
-          notify(error instanceof Error ? error.message : "That did not cancel. Try again.");
+          notify(error instanceof Error ? error.message : t`That did not cancel. Try again.`);
         },
       },
     );
@@ -329,7 +335,7 @@ function useRunCancellation(notify: Notify) {
     setCancelled((current) => [...current, run.id]);
     const timer = window.setTimeout(() => commit(run), cancelDelayMs);
     pending.current.set(run.id, { run, timer });
-    notify(`${run.model} run cancelled. Slides already done keep their results.`, () => {
+    notify(t`${run.model} run cancelled. Slides already done keep their results.`, () => {
       window.clearTimeout(timer);
       pending.current.delete(run.id);
       setCancelled((current) => current.filter((id) => id !== run.id));
@@ -353,7 +359,7 @@ export function ModelsSection({ notify }: { notify: Notify }) {
     <>
       <Zone
         title={t`Parfocal models`}
-        sub="Always ready and kept up to date by Parfocal. They run on the Parfocal GPU in Prague, so slides stay in the EU. Hide one to take it out of every model list."
+        sub={t`Always ready and kept up to date by Parfocal. They run on the Parfocal GPU in Prague, so slides stay in the EU. Hide one to take it out of every model list.`}
       >
         <Table className={tableClass}>
           <TableHeader>
@@ -414,7 +420,7 @@ export function ModelsSection({ notify }: { notify: Notify }) {
       </Zone>
       <Zone
         title={t`Your lab's models`}
-        sub="Models your lab runs on its own server. They show in every model list next to Parfocal's."
+        sub={t`Models your lab runs on its own server. They show in every model list next to Parfocal's.`}
       >
         <Table className={tableClass}>
           <TableHeader>
@@ -461,7 +467,7 @@ export function ModelsSection({ notify }: { notify: Notify }) {
                         size="sm"
                         onClick={() =>
                           notify(
-                            `Sent one sample tile: answered in ${model.latency_ms ?? 0} ms, 38 cells (mock)`,
+                            t`Sent one sample tile: answered in ${model.latency_ms ?? 0} ms, 38 cells (mock)`,
                           )
                         }
                       >
@@ -493,7 +499,7 @@ export function ModelsSection({ notify }: { notify: Notify }) {
                   <NameCell
                     lead={<Icon name="smart" />}
                     title={run.model}
-                    sub={`${run.project.code} · ${run.slides} slides`}
+                    sub={t`${run.project.code} · ${run.slides} slides`}
                   />
                   {by ? <Person person={by} size={20} /> : <span />}
                   <ProgressBar
@@ -538,7 +544,7 @@ export function ApiSection({ notify }: { notify: Notify }) {
           <Button
             size="sm"
             onClick={() =>
-              notify("New token: pick a project and what it can do. Shown once (mock)")
+              notify(t`New token: pick a project and what it can do. Shown once (mock)`)
             }
           >
             <Trans>New token</Trans>
@@ -567,8 +573,10 @@ export function ApiSection({ notify }: { notify: Notify }) {
                 .map((token) => (
                   <TableRow key={token.id}>
                     <TableCell className="font-mono font-semibold">
-                      <Trans>pf_live_…</Trans>
-                      {token.id.slice(-4)}
+                      <Trans>
+                        pf_live_…
+                        {token.id.slice(-4)}
+                      </Trans>
                     </TableCell>
                     <TableCell>{account.name}</TableCell>
                     <TableCell>
@@ -581,7 +589,7 @@ export function ApiSection({ notify }: { notify: Notify }) {
                           variant="ghost"
                           onClick={() => {
                             setRevoked([...revoked, token.id]);
-                            notify("Token revoked. Pipelines using it stop at once (mock)");
+                            notify(t`Token revoked. Pipelines using it stop at once (mock)`);
                           }}
                         >
                           <Trans>Revoke</Trans>
@@ -600,7 +608,7 @@ export function ApiSection({ notify }: { notify: Notify }) {
           <Button
             size="sm"
             onClick={() =>
-              notify("Add a webhook: incoming for a project, or outgoing to your server (mock)")
+              notify(t`Add a webhook: incoming for a project, or outgoing to your server (mock)`)
             }
           >
             <Trans>Add webhook</Trans>
@@ -662,7 +670,7 @@ export function ApiSection({ notify }: { notify: Notify }) {
         <Trans>
           Pipelines post result files to a project's incoming webhook, signed with its token.
         </Trans>
-        <TextLink onClick={() => notify("Opens the API reference in the docs (mock)")}>
+        <TextLink onClick={() => notify(t`Opens the API reference in the docs (mock)`)}>
           <Trans>API reference</Trans>
         </TextLink>
       </InfoLine>
@@ -707,11 +715,11 @@ export function SecuritySection({ notify }: { notify: Notify }) {
           void queryClient.invalidateQueries({ queryKey: getGetMySettingLayersQueryKey() });
           notify(
             on
-              ? "Saved. Sign-in does not ask for a second factor yet."
-              : "Saved. Two factors are no longer required for everyone.",
+              ? t`Saved. Sign-in does not ask for a second factor yet.`
+              : t`Saved. Two factors are no longer required for everyone.`,
           );
         },
-        onError: () => notify("The two factor setting did not save. Try again."),
+        onError: () => notify(t`The two factor setting did not save. Try again.`),
       },
     );
   const row = (item: SecuritySetting) => (
@@ -734,7 +742,7 @@ export function SecuritySection({ notify }: { notify: Notify }) {
           <ProgressBar
             value={percent(settings.two_factor.people, settings.two_factor.of)}
             label={t`People with two factors`}
-            valueText={`${settings.two_factor.people} of ${settings.two_factor.of}`}
+            valueText={t`${settings.two_factor.people} of ${settings.two_factor.of}`}
           />
         ) : null}
       </Zone>

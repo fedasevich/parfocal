@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import type { DecisionStyle } from "@parfocal/ui/components/decision-buttons";
 import { NumberStepper } from "@parfocal/ui/components/number-stepper";
@@ -21,7 +22,7 @@ function CountsAsLine({
   disagreeTo = 2,
   onRangeChange,
   split = { agree: 0, unsure: 0, disagree: 0 },
-  emptyText = "No answers yet. The split fills in as reviews come in.",
+  emptyText = t`No answers yet. The split fills in as reviews come in.`,
   className,
   ...props
 }: CountsAsLineProps) {

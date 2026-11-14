@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import {
@@ -48,6 +49,8 @@ type VizKeyProps = React.ComponentProps<"div"> & {
 };
 
 function VizKey({ color, label, count, cue = "solid", className, ...props }: VizKeyProps) {
+  const { t } = useLingui();
+
   return (
     <div
       data-slot="viz-key"
@@ -180,10 +183,12 @@ function SetChip({ color, className, children, ...props }: SetChipProps) {
 type SwipeHandleProps = React.ComponentProps<"div"> & { label?: string };
 
 function SwipeHandle({
-  label = "Drag to swipe between the two sets",
+  label = t`Drag to swipe between the two sets`,
   className,
   ...props
 }: SwipeHandleProps) {
+  const { t } = useLingui();
+
   return (
     <div
       data-slot="swipe-handle"
@@ -378,7 +383,7 @@ function ScoreHistogram({ bins, cutoff, className, ...props }: ScoreHistogramPro
       <div className="flex justify-between font-mono text-caption text-fg-dim">
         <span>0</span>
         <span>
-          {cutoff.toFixed(2)} <Trans>cutoff</Trans>
+          <Trans>{cutoff.toFixed(2)} cutoff</Trans>
         </span>
         <span>1</span>
       </div>

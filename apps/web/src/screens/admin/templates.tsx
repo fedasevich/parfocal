@@ -101,14 +101,14 @@ export function TemplatesSection({
   const retireOrRestore = (template: StudyTemplateSummary) => {
     const off = template.retired_at !== null;
     if (!off && defaultId === template.id) {
-      notify(`${template.name} is the default for new projects. Pick another default first.`);
+      notify(t`${template.name} is the default for new projects. Pick another default first.`);
       return;
     }
     const run = off ? restore : retire;
     run.mutate(
       { templateId: template.id },
       {
-        onError: () => notify("That did not work. Try again."),
+        onError: () => notify(t`That did not work. Try again.`),
         onSuccess: (response) => {
           if (response.status >= 300) {
             notify(problemTitle(response.data));
@@ -117,8 +117,8 @@ export function TemplatesSection({
           void refresh();
           notify(
             off
-              ? `${template.name} is back`
-              : `${template.name} is retired. New tasks can't pick it, tasks that use it keep it.`,
+              ? t`${template.name} is back`
+              : t`${template.name} is retired. New tasks can't pick it, tasks that use it keep it.`,
             () => {
               (off ? retire : restore).mutate(
                 { templateId: template.id },
@@ -130,7 +130,7 @@ export function TemplatesSection({
                     }
                     void refresh();
                   },
-                  onError: () => notify("That did not work. Try again."),
+                  onError: () => notify(t`That did not work. Try again.`),
                 },
               );
             },
@@ -155,18 +155,19 @@ export function TemplatesSection({
           },
         },
       );
-    apply(template.id, `${template.name} is now the default for new projects`, () => apply(was));
+    apply(template.id, t`${template.name} is now the default for new projects`, () => apply(was));
   };
   return (
     <>
       <TemplateOffers notify={notify} />
       <Zone
         title={t`Study templates`}
-        sub="A template lays out the evaluation report as blocks on pages and fills in what a new review task checks, its opinion form and how it runs. Researchers pick one when they create a task, and can still arrange one task's report on its own."
+        sub={t`A template lays out the evaluation report as blocks on pages and fills in what a new review task checks, its opinion form and how it runs. Researchers pick one when they create a task, and can still arrange one task's report on its own.`}
         end={
           <span className="text-body-sm text-fg-dim">
-            {builtIn} <Trans>come with Parfocal,</Trans> {templates.length - builtIn}{" "}
-            <Trans>made here</Trans>
+            <Trans>
+              {builtIn} come with Parfocal, {templates.length - builtIn} made here
+            </Trans>
           </span>
         }
       >
@@ -203,7 +204,7 @@ export function TemplatesSection({
                         lead={<Icon name="file" />}
                         title={template.name}
                         version={`v${template.version}`}
-                        sub={`${kindLabel(template.study_kind)} · ${own ? "made here" : "comes with Parfocal"}`}
+                        sub={`${kindLabel(template.study_kind)} · ${own ? "made here" : t`comes with Parfocal`}`}
                       />
                       {defaultId === template.id ? (
                         <StatusTag tone="accent">
@@ -243,7 +244,7 @@ export function TemplatesSection({
                       </Button>
                       <Button
                         size="sm"
-                        aria-label={`${own ? "Edit" : "Duplicate"} ${template.name}`}
+                        aria-label={`${own ? t`Edit` : t`Duplicate`} ${template.name}`}
                         onClick={() => onOpen(template)}
                       >
                         {own ? t`Edit` : t`Duplicate`}
@@ -302,8 +303,8 @@ export function TemplatesSection({
           onOpen(draft);
           notify(
             draft.from === null
-              ? "An empty template. Drag blocks onto the page."
-              : "A copy to change. Name, paper and format are on the right.",
+              ? t`An empty template. Drag blocks onto the page.`
+              : t`A copy to change. Name, paper and format are on the right.`,
           );
         }}
       />
@@ -349,10 +350,10 @@ function NewTemplateModal({
       }}
       title={t`New study template`}
       width={560}
-      hint="Opens in the editor."
-      primaryLabel="Create and open"
-      blockers={tried && error ? [{ id: "name", text: error, goTo: "Go to the name" }] : []}
-      blockersTitle="Before you can create it"
+      hint={t`Opens in the editor.`}
+      primaryLabel={t`Create and open`}
+      blockers={tried && error ? [{ id: "name", text: error, goTo: t`Go to the name` }] : []}
+      blockersTitle={t`Before you can create it`}
       onPrimary={() => {
         setTried(true);
         if (error) return;
@@ -362,7 +363,7 @@ function NewTemplateModal({
     >
       <FormField
         label={t`Name`}
-        help="Researchers see it when they create a review task."
+        help={t`Researchers see it when they create a review task.`}
         error={tried ? error : undefined}
       >
         <TextFieldInput
@@ -400,8 +401,8 @@ function NewTemplateModal({
           className="grid gap-2"
         >
           {[
-            ["blank", "An empty page", "Only the header and footer. You add the blocks."],
-            ["tpl", "A template", "A copy of one from the library, to change."],
+            ["blank", t`An empty page`, t`Only the header and footer. You add the blocks.`],
+            ["tpl", "A template", t`A copy of one from the library, to change.`],
           ].map(([value, label, detail]) => (
             <label key={value} className="flex cursor-pointer items-start gap-2.5 text-body-sm">
               <RadioGroupItem value={String(value)} className="mt-0.5" />

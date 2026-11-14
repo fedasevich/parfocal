@@ -74,6 +74,8 @@ function SlidePreview({
   tasks: MyTask[];
   onClose: () => void;
 }) {
+  const { t } = useLingui();
+
   const goTo = useGoTo();
   const people = usePeople();
   const look = useSetLook(row.project.id);
@@ -86,33 +88,33 @@ function SlidePreview({
   const open = () => void goTo(destinations.slide(row.project.id, row.id, mine?.task_id));
   const taskFacts = task
     ? [
-        { icon: "users" as const, label: "Task", value: `${task.code} · ${task.name}` },
+        { icon: "users" as const, label: t`Task`, value: `${task.code} · ${task.name}` },
         ...(task.due_on
           ? [{ icon: "calendar" as const, label: "Due", value: formatDue(task.due_on) }]
           : []),
-        { icon: "target" as const, label: "To check", value: scopeWords[task.scope] },
+        { icon: "target" as const, label: t`To check`, value: scopeWords[task.scope] },
       ]
     : [
         {
           icon: "user" as const,
-          label: "Reviews",
+          label: t`Reviews`,
           value:
             row.reviews.length > 0
               ? row.reviews
                   .map(
                     (review) =>
-                      `${people(review.user_id)?.name ?? "Reviewer"}, ${reviewWords[review.state]?.word ?? review.state}`,
+                      `${people(review.user_id)?.name ?? t`Reviewer`}, ${reviewWords[review.state]?.word ?? review.state}`,
                   )
                   .join(", ")
-              : "Not in a review task",
+              : t`Not in a review task`,
         },
         {
           icon: "layers" as const,
-          label: "Result sets",
+          label: t`Result sets`,
           value:
             row.result_sets.length > 0
               ? row.result_sets.map((set) => look(set).label).join(", ")
-              : "None yet",
+              : t`None yet`,
         },
       ];
   return (
@@ -124,23 +126,23 @@ function SlidePreview({
         ...taskFacts,
         {
           icon: "file",
-          label: row.case_label ? "Case" : "Where",
-          value: row.case_label ?? `${row.project.code}, a loose slide`,
+          label: row.case_label ? t`Case` : t`Where`,
+          value: row.case_label ?? t`${row.project.code}, a loose slide`,
         },
         {
           icon: "comment",
-          label: "Open comments",
+          label: t`Open comments`,
           value: <ThreadsValue anchors={threads.map((thread) => thread.anchor)} />,
         },
       ]}
       main={
         reviewing && mine
           ? {
-              label: "Continue in guided review",
+              label: t`Continue in guided review`,
               run: () => void goTo(destinations.guided(mine.task_id, row.id)),
             }
           : {
-              label: "Open",
+              label: t`Open`,
               run: () => void goTo(destinations.openSlide(row.project.id, row.id, mine?.task_id)),
             }
       }
@@ -287,11 +289,11 @@ function SlideTable({
   const before = (items[0]?.start ?? margin) - margin;
   const after = virtualizer.getTotalSize() - ((items.at(-1)?.end ?? margin) - margin);
   const headings = [
-    "Slide",
-    ...(showProject ? ["Project"] : []),
-    "Result sets",
-    "Reviews",
-    "Status",
+    t`Slide`,
+    ...(showProject ? [t`Project`] : []),
+    t`Result sets`,
+    t`Reviews`,
+    t`Status`,
   ];
   return (
     <Table
@@ -367,7 +369,7 @@ export function AllSlidesTab({
   const me = okData(useGetMe().data);
   const look = useSetLook(rows[0]?.project.id);
   const preview = rows.find((row) => row.id === selected);
-  const choices = filterChoices(everyRow, (userId) => people(userId)?.name ?? "Reviewer");
+  const choices = filterChoices(everyRow, (userId) => people(userId)?.name ?? t`Reviewer`);
   const active = activeFilterCount(filters);
   return (
     <div className="flex flex-col gap-3">

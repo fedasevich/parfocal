@@ -109,7 +109,9 @@ function PendingCard({
         ))}
         keys={
           <>
-            <Keycap keys="Esc" /> <Trans>cancel</Trans>
+            <Trans>
+              <Keycap keys="Esc" /> cancel
+            </Trans>
           </>
         }
       >
@@ -126,8 +128,9 @@ function PendingCard({
         title={t`Press the new key for ${action.name.toLowerCase()}`}
         keys={
           <>
-            <Keycap keys="Esc" /> <Trans>cancel</Trans> <Keycap keys="⌫" />{" "}
-            <Trans>remove this key</Trans>
+            <Trans>
+              <Keycap keys="Esc" /> cancel <Keycap keys="⌫" /> remove this key
+            </Trans>
           </>
         }
       >
@@ -186,9 +189,10 @@ function PendingCard({
           </>
         }
       >
-        {other.name} <Trans>uses</Trans> {pending.slot}{" "}
-        <Trans>as a set or a chord, so one of its keys would stop working. Change</Trans>{" "}
-        {other.name.toLowerCase()} <Trans>first, or pick another key.</Trans>
+        <Trans>
+          {other.name} uses {pending.slot} as a set or a chord, so one of its keys would stop
+          working. Change {other.name.toLowerCase()} first, or pick another key.
+        </Trans>
       </KeyCard>
     );
   }
@@ -206,8 +210,9 @@ function PendingCard({
           </>
         }
       >
-        <Trans>It</Trans> {reservedKeys[pending.combo]}
-        <Trans>, before the viewer can see the key. Pick another key.</Trans>
+        <Trans>
+          It {reservedKeys[pending.combo]}, before the viewer can see the key. Pick another key.
+        </Trans>
       </KeyCard>
     );
   }
@@ -219,7 +224,7 @@ function PendingCard({
         actions={
           <>
             <Button onClick={() => apply({ state: applySafeCombo(state) })}>
-              <Trans>Use</Trans> {safeCombo(pending.combo)} <Trans>instead</Trans>
+              <Trans>Use {safeCombo(pending.combo)} instead</Trans>
             </Button>
             {cancel}
           </>
@@ -278,7 +283,7 @@ function Row({
                   : "default"
         }
         disabled={action.fixed ?? false}
-        aria-label={`${action.name}: ${recording ? "Press a key" : key}`}
+        aria-label={`${action.name}: ${recording ? t`Press a key` : key}`}
         title={
           action.fixed
             ? t`Kept fixed so there is always a way back`
@@ -319,7 +324,7 @@ function Row({
         changed ? (
           <>
             <span>
-              <Trans>default</Trans> {action.keys.join(", ")}
+              <Trans>default {action.keys.join(", ")}</Trans>
             </span>
             <Button
               variant="link"
@@ -372,10 +377,10 @@ export function ShortcutsSection({ state, query, apply, notify }: ShortcutsSecti
     link.click();
     URL.revokeObjectURL(link.href);
     notify(
-      `${shortcutFileName} saved to Downloads, with ${
+      t`${shortcutFileName} saved to Downloads, with ${
         changedCount
-          ? `your ${changedCount} changed key${changedCount > 1 ? "s" : ""}`
-          : "the default keys"
+          ? t`your ${changedCount} changed key${changedCount > 1 ? "s" : ""}`
+          : t`the default keys`
       }`,
     );
   };
@@ -401,8 +406,8 @@ export function ShortcutsSection({ state, query, apply, notify }: ShortcutsSecti
     });
     notify(
       dropped.length === 0
-        ? `Loaded ${Object.keys(settings.custom).length} changed keys from ${file.name}`
-        : `Loaded ${file.name}. Left out ${dropped.length}: ${dropped.join("; ")}`,
+        ? t`Loaded ${Object.keys(settings.custom).length} changed keys from ${file.name}`
+        : t`Loaded ${file.name}. Left out ${dropped.length}: ${dropped.join("; ")}`,
     );
   };
   const nextPreset =
@@ -442,7 +447,7 @@ export function ShortcutsSection({ state, query, apply, notify }: ShortcutsSecti
             onClick={() => {
               set({ preset: nextPreset });
               notify(
-                `Preset ${shortcutPresetNames[nextPreset]}. Your own changes stay on top of it.`,
+                t`Preset ${shortcutPresetNames[nextPreset]}. Your own changes stay on top of it.`,
               );
             }}
           >
@@ -457,7 +462,7 @@ export function ShortcutsSection({ state, query, apply, notify }: ShortcutsSecti
           title={changedCount === 0 ? t`Nothing changed` : undefined}
           onClick={() => {
             set({ custom: {} });
-            notify("Every shortcut is back to the default");
+            notify(t`Every shortcut is back to the default`);
           }}
         >
           <Trans>Reset all</Trans>
@@ -479,7 +484,7 @@ export function ShortcutsSection({ state, query, apply, notify }: ShortcutsSecti
               title={group}
               where={
                 context === "review"
-                  ? "in a review. The answer keys follow the task's decision style"
+                  ? t`in a review. The answer keys follow the task's decision style`
                   : "everywhere"
               }
             >
@@ -506,7 +511,7 @@ export function ShortcutsSection({ state, query, apply, notify }: ShortcutsSecti
       <div className="grid gap-3 border-t border-line pt-3.5">
         <OptionRow
           label={t`Single-letter shortcuts`}
-          help="Turn off if keys fire by accident, for example with speech input. Keys with ⌘, ⌃ or ⌥ keep working."
+          help={t`Turn off if keys fire by accident, for example with speech input. Keys with ⌘, ⌃ or ⌥ keep working.`}
         >
           <Switch
             aria-label={t`Single-letter shortcuts`}
@@ -516,7 +521,7 @@ export function ShortcutsSection({ state, query, apply, notify }: ShortcutsSecti
         </OptionRow>
         <OptionRow
           label={t`Match keys by position, not by letter`}
-          help="Keeps ⌥1 to ⌥6 and the type keys in place on Czech QWERTZ, where the number row types ě, š, č."
+          help={t`Keeps ⌥1 to ⌥6 and the type keys in place on Czech QWERTZ, where the number row types ě, š, č.`}
         >
           <Switch
             aria-label={t`Match keys by position`}
@@ -524,20 +529,23 @@ export function ShortcutsSection({ state, query, apply, notify }: ShortcutsSecti
             onCheckedChange={(checked) => set({ byPosition: checked })}
           />
         </OptionRow>
-        <OptionRow label={t`Whole slide key`} help="How Z behaves.">
+        <OptionRow label={t`Whole slide key`} help={t`How Z behaves.`}>
           <SegmentedControl
             fill
             aria-label={t`Whole slide key`}
             value={state.wholeSlide}
             onValueChange={(value) => set({ wholeSlide: value as WholeSlide })}
             options={[
-              { value: "both", label: "Tap or hold" },
-              { value: "hold", label: "Hold only" },
-              { value: "tap", label: "Tap toggles" },
+              { value: "both", label: t`Tap or hold` },
+              { value: "hold", label: t`Hold only` },
+              { value: "tap", label: t`Tap toggles` },
             ]}
           />
         </OptionRow>
-        <OptionRow label={t`Your shortcuts`} help="Personal: they follow you to any workstation.">
+        <OptionRow
+          label={t`Your shortcuts`}
+          help={t`Personal: they follow you to any workstation.`}
+        >
           <div className="flex gap-2">
             <Button onClick={() => fileInput.current?.click()}>
               <Trans>Import</Trans>

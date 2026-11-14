@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { type SourceFile, useImportFromLink, useListSourceFiles } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
@@ -17,9 +18,9 @@ function problemText(data: unknown, fallback: string) {
 }
 
 function detailOf(file: SourceFile, projectCode: string) {
-  if (file.in_project) return `${file.detail} · already in ${projectCode}`;
+  if (file.in_project) return t`${file.detail} · already in ${projectCode}`;
   if (file.message) return `${file.detail} · ${file.message}`;
-  return file.case ? `${file.detail} · case ${file.case.label}` : file.detail;
+  return file.case ? t`${file.detail} · case ${file.case.label}` : file.detail;
 }
 
 function importable(file: SourceFile) {
@@ -37,14 +38,14 @@ export function LinkImport({ projectId, projectCode }: { projectId: string; proj
   const listing = okData(query.data);
   const refusal =
     query.data !== undefined && query.data.status !== 200
-      ? problemText(query.data.data, "Parfocal could not read this link.")
+      ? problemText(query.data.data, t`Parfocal could not read this link.`)
       : null;
   const files = listing?.files ?? [];
   const chosen = files.filter((file) => importable(file) && !skipped.has(file.name));
   const started = starting.data?.status === 202 ? starting.data.data : undefined;
   const startError =
     starting.data !== undefined && starting.data.status !== 202
-      ? problemText(starting.data.data, "The import could not start.")
+      ? problemText(starting.data.data, t`The import could not start.`)
       : null;
   const toggle = (name: string, on: boolean) => {
     const next = new Set(skipped);
@@ -103,7 +104,9 @@ export function LinkImport({ projectId, projectCode }: { projectId: string; proj
           title={t`Found there`}
           end={
             <Hint>
-              {chosen.length} <Trans>of</Trans> {plural(files.length, "slide")}
+              <Trans>
+                {chosen.length} of {plural(files.length, "slide")}
+              </Trans>
             </Hint>
           }
         >
@@ -143,12 +146,14 @@ export function LinkImport({ projectId, projectCode }: { projectId: string; proj
                 })
               }
             >
-              <Trans>Import</Trans> {plural(chosen.length, "slide")}
+              <Trans>Import {plural(chosen.length, "slide")}</Trans>
             </Button>
             {started ? (
               <span role="status" className="text-body-sm text-fg-dim">
-                <Trans>The server is fetching</Trans> {plural(started.started.length, "file")}
-                <Trans>. They are checked and published like any upload.</Trans>
+                <Trans>
+                  The server is fetching {plural(started.started.length, "file")}. They are checked
+                  and published like any upload.
+                </Trans>
               </span>
             ) : null}
             {startError ? (

@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import {
   annotatePresets,
@@ -103,7 +104,7 @@ export const styleOf: Record<DecisionKindKey, DecisionStyle> = {
 const setColours = { cam: "var(--c-tumor)", sam: "#a3e635", rev: "#38bdf8" } as const;
 
 const rsShort = (data: TaskData, id: string) =>
-  data.resultSets.find((set) => set.id === id)?.short ?? "this result set";
+  data.resultSets.find((set) => set.id === id)?.short ?? t`this result set`;
 
 function TextLink({ children, onClick }: { children: ReactNode; onClick?: () => void }) {
   return (
@@ -124,7 +125,7 @@ export function KindStep({ draft, update }: StepProps) {
     <>
       <Zone title={t`Kind`}>
         <ChoiceCards
-          legend="What the experts do"
+          legend={t`What the experts do`}
           value={draft.kind}
           onValueChange={(kind) =>
             update((current) => ({ ...current, kind: kind as Draft["kind"] }))
@@ -132,13 +133,13 @@ export function KindStep({ draft, update }: StepProps) {
           choices={[
             {
               value: "review",
-              title: "Review AI results",
-              text: "Reviewers decide whether the AI result is right, without drawing.",
+              title: t`Review AI results`,
+              text: t`Reviewers decide whether the AI result is right, without drawing.`,
             },
             {
               value: "annotate",
-              title: "Annotate",
-              text: "Experts draw cells and fix what the AI found. The output is training data.",
+              title: t`Annotate`,
+              text: t`Experts draw cells and fix what the AI found. The output is training data.`,
             },
           ]}
         />
@@ -146,7 +147,7 @@ export function KindStep({ draft, update }: StepProps) {
       {isAnnotate(draft) ? (
         <Zone
           title={t`Starting point`}
-          sub="A suggestion only. It fills in the next steps, and you can change every setting there."
+          sub={t`A suggestion only. It fills in the next steps, and you can change every setting there.`}
         >
           <PresetPicker
             value={draft.preset}
@@ -243,7 +244,7 @@ export function SlidesStep({ draft, data, update, errors, onTemplate, openModal 
             </div>
             <FieldNote
               error={errors.get("tpl")}
-              help="It fills in what to check, how it runs and the display defaults. You can still change each of them."
+              help={t`It fills in what to check, how it runs and the display defaults. You can still change each of them.`}
             />
           </div>
         </Zone>
@@ -284,7 +285,7 @@ export function SlidesStep({ draft, data, update, errors, onTemplate, openModal 
                   <SlideThumb />
                   <RowText
                     title={slide.name}
-                    sub={`${slide.caseLabel ? `Case ${slide.caseLabel}` : "Loose"} · added`}
+                    sub={t`${slide.caseLabel ? `Case ${slide.caseLabel}` : t`Loose`} · added`}
                   />
                 </span>
                 <SetTags data={data} ids={slide.sets} />
@@ -333,29 +334,40 @@ export function SlidesStep({ draft, data, update, errors, onTemplate, openModal 
                 value: set.id,
                 title: set.label,
                 sub: set.detail,
-                end: `on ${all.filter((slide) => slide.sets.includes(set.id)).length} of ${sum.all}`,
+                end: t`on ${all.filter((slide) => slide.sets.includes(set.id)).length} of ${sum.all}`,
               }))}
             />
             <FieldNote error={errors.get("rset")} />
             {!annotate && !sum.ns && all.length ? (
               <Warn icon="smart">
-                <a href="#run-model" className="text-accent">
-                  <Trans>Run a model</Trans>
-                </a>{" "}
-                <Trans>on the picked slides, or pick another result set.</Trans>
+                <Trans>
+                  <a href="#run-model" className="text-accent">
+                    Run a model
+                  </a>{" "}
+                  on the picked slides, or pick another result set.
+                </Trans>
               </Warn>
             ) : null}
             {sum.ns && !annotate
               ? leftOut.map(({ group, count }) => (
                   <Warn key={group.key}>
-                    {count} <Trans>slide</Trans>
-                    {count > 1 ? t`s` : ""} <Trans>in</Trans> {group.title}{" "}
-                    {count > 1 ? t`have` : t`has`} <Trans>no</Trans> {short} <Trans>and</Trans>{" "}
-                    {count > 1 ? t`are` : t`is`} <Trans>left out.</Trans>{" "}
-                    <a href="#run-model" className="text-accent">
-                      <Trans>Run a model</Trans>
-                    </a>{" "}
-                    <Trans>to include</Trans> {count > 1 ? t`them` : t`it`}.
+                    {count > 1 ? (
+                      <Trans>
+                        {count} slides in {group.title} have no {short} and are left out.{" "}
+                        <a href="#run-model" className="text-accent">
+                          Run a model
+                        </a>{" "}
+                        to include them.
+                      </Trans>
+                    ) : (
+                      <Trans>
+                        {count} slide in {group.title} has no {short} and is left out.{" "}
+                        <a href="#run-model" className="text-accent">
+                          Run a model
+                        </a>{" "}
+                        to include it.
+                      </Trans>
+                    )}
                   </Warn>
                 ))
               : null}
@@ -381,8 +393,8 @@ export function SlidesStep({ draft, data, update, errors, onTemplate, openModal 
           />
           <FieldNote
             error={errors.get("name")}
-            help="Reviewers see this name in My work and in the email."
-            count={`${draft.name.length} of 80`}
+            help={t`Reviewers see this name in My work and in the email.`}
+            count={t`${draft.name.length} of 80`}
           />
         </div>
       </Zone>
@@ -424,10 +436,10 @@ function personItems(draft: Draft, data: TaskData): TokenItem[] {
       sub: person.title,
       person: { initials: person.initials, name: person.name, color: person.colour },
       end: person.awayUntil
-        ? `Away until ${person.awayUntil}`
+        ? t`Away until ${person.awayUntil}`
         : person.openTasks
-          ? `${person.openTasks} open task${person.openTasks > 1 ? "s" : ""}`
-          : "No open tasks",
+          ? t`${person.openTasks} open task${person.openTasks > 1 ? "s" : ""}`
+          : t`No open tasks`,
       ...(person.awayUntil ? { endTone: "warn" as const } : {}),
     })),
     ...draft.invites.map((email) => ({
@@ -505,14 +517,16 @@ export function ReviewersStep({ draft, data, update, errors }: StepProps) {
             <FieldNote error={errors.get("revs")} />
           ) : awayPerson ? (
             <Warn>
-              {awayPerson.name} <Trans>is away until</Trans> {awayPerson.awayUntil}
-              <Trans>. The task waits for them unless you reassign.</Trans>{" "}
+              <Trans>
+                {awayPerson.name} is away until {awayPerson.awayUntil}. The task waits for them
+                unless you reassign.{" "}
+              </Trans>
               <TextLink onClick={() => unpick(awayPerson.id)}>
                 <Trans>Pick someone else</Trans>
               </TextLink>
             </Warn>
           ) : (
-            <FieldNote help="Type a name, or an email to invite someone new." />
+            <FieldNote help={t`Type a name, or an email to invite someone new.`} />
           )}
         </div>
       </Zone>
@@ -520,8 +534,8 @@ export function ReviewersStep({ draft, data, update, errors }: StepProps) {
         title={t`How the work is split`}
         sub={
           isAnnotate(draft)
-            ? `${plural(sum.ns, "slide")} in this task.`
-            : `${plural(sum.ns, "slide")} with ${short} in this task.`
+            ? t`${plural(sum.ns, "slide")} in this task.`
+            : t`${plural(sum.ns, "slide")} with ${short} in this task.`
         }
       >
         <div className="grid gap-1.5" id={fieldId("split")}>
@@ -534,26 +548,26 @@ export function ReviewersStep({ draft, data, update, errors }: StepProps) {
             options={[
               {
                 value: "all",
-                title: "Everyone reviews all",
-                sub: "Each reviewer gets every slide, which gives agreement between them.",
+                title: t`Everyone reviews all`,
+                sub: t`Each reviewer gets every slide, which gives agreement between them.`,
                 end: sum.n ? `${sum.ns} each` : "",
               },
               {
                 value: "even",
-                title: "Split evenly",
-                sub: "Faster, with no agreement numbers.",
-                end: `about ${ceil} each`,
-                ...(sum.n < 2 ? { disabled: "Needs two or more reviewers" } : {}),
+                title: t`Split evenly`,
+                sub: t`Faster, with no agreement numbers.`,
+                end: t`about ${ceil} each`,
+                ...(sum.n < 2 ? { disabled: t`Needs two or more reviewers` } : {}),
               },
               {
                 value: "per",
-                title: "Choose per slide",
-                sub: "For example an expert for the hard ones.",
+                title: t`Choose per slide`,
+                sub: t`For example an expert for the hard ones.`,
                 end:
                   sum.n && draft.split === "per" && counts.length
                     ? Math.min(...counts) === Math.max(...counts)
                       ? `${counts[0]} each`
-                      : `${Math.min(...counts)} to ${Math.max(...counts)} each`
+                      : t`${Math.min(...counts)} to ${Math.max(...counts)} each`
                     : "",
                 under: sum.n ? <PerSlideGrid {...{ draft, data, update }} /> : null,
               },
@@ -746,15 +760,15 @@ function ScopeControl({
       scopeOptions: { ...current.scopeOptions, [key]: value },
       touched: { ...current.touched, [`scopeOpts.${key}`]: true },
     }));
-  if (kind === "regions") return fixed("All regions");
+  if (kind === "regions") return fixed(t`All regions`);
   if (!on) {
     const low = Number(options.low);
     return fixed(
       {
-        cells: `${options.cells} per slide`,
+        cells: t`${options.cells} per slide`,
         low: `Under ${Number.isFinite(low) ? low.toFixed(2) : options.low}`,
-        roi: andJoin(options.roi) || "None picked",
-        unsure: andJoin(options.unsure) || "None picked",
+        roi: andJoin(options.roi) || t`None picked`,
+        unsure: andJoin(options.unsure) || t`None picked`,
       }[kind],
     );
   }
@@ -796,7 +810,7 @@ function ScopeControl({
       : data.zones.map((zone) => ({
           id: zone.key,
           name: zone.key,
-          sub: `${zone.cells} cells per slide on average`,
+          sub: t`${zone.cells} cells per slide on average`,
         }));
   const picked = kind === "roi" ? options.roi : options.unsure;
   const field = kind === "roi" ? "scopeOpts.roi" : "scopeOpts.unsure";
@@ -853,8 +867,8 @@ function AnnotateCheckStep({ draft, data, update }: StepProps) {
       title={t`What to check`}
       sub={
         draft.check.hasResult
-          ? `${checkSummary(draft.check)} The preset filled these in, change any of them.`
-          : "The preset Annotate by hand has no result set, so there is nothing to check."
+          ? t`${checkSummary(draft.check)} The preset filled these in, change any of them.`
+          : t`The preset Annotate by hand has no result set, so there is nothing to check.`
       }
     >
       <CheckOptions
@@ -929,7 +943,7 @@ function ReviewCheckStep({ draft, data, update, errors, openModal }: StepProps) 
       <Zone
         title={t`Decision question`}
         end={<FromTemplate template={template} changed={templateChanges(draft, data).how} />}
-        sub="What reviewers answer for each object. Every answer keeps its raw value, so counts can be worked out again later."
+        sub={t`What reviewers answer for each object. Every answer keeps its raw value, so counts can be worked out again later.`}
       >
         <div className="grid gap-1.5">
           <RadioRows
@@ -975,7 +989,7 @@ function ReviewCheckStep({ draft, data, update, errors, openModal }: StepProps) 
       </Zone>
       <Zone
         title={t`Opinion form`}
-        sub="Asked once per slide, after the objects."
+        sub={t`Asked once per slide, after the objects.`}
         end={<FromTemplate template={template} changed={templateChanges(draft, data).form} />}
       >
         <Select
@@ -1215,7 +1229,7 @@ function DisplayZone({ draft, data, update, errors }: StepProps) {
       title: set.label,
       sub: set.detail.replace(/^Imported/, "imported").replace(/^Run here/, "run here"),
     })),
-    { key: "rev", title: "Your review", sub: "The reviewed layer, as the reviewer edits it" },
+    { key: "rev", title: t`Your review`, sub: t`The reviewed layer, as the reviewer edits it` },
   ];
   return (
     <section className="grid gap-4 rounded-zone border border-surf-edge bg-surf-section p-(--pad-zone)">
@@ -1248,7 +1262,7 @@ function DisplayZone({ draft, data, update, errors }: StepProps) {
             </GroupTitle>
             {seg("draw")}
             {seg("width")}
-            {range("opacity", "Opacity", 20, 100, 10)}
+            {range("opacity", t`Opacity`, 20, 100, 10)}
             {seg("colorBy")}
             {row(
               "ids",
@@ -1266,11 +1280,11 @@ function DisplayZone({ draft, data, update, errors }: StepProps) {
               <Trans>What the AI shows</Trans>
             </GroupTitle>
             {seg("conf")}
-            {range("heat", "Heatmap", 0, 100, 10)}
-            {range("cutoff", "Score cutoff", 0, 1, 0.05)}
+            {range("heat", t`Heatmap`, 0, 100, 10)}
+            {range("cutoff", t`Score cutoff`, 0, 1, 0.05)}
             {row(
               "sets",
-              "Other layers",
+              t`Other layers`,
               <div className="grid w-full max-w-110 gap-2.5">
                 {sets.map((set) => (
                   <div key={set.key} className="flex items-start gap-2.5">
@@ -1302,7 +1316,7 @@ function DisplayZone({ draft, data, update, errors }: StepProps) {
             {seg("zoom")}
             {row(
               "auto",
-              "Move on by itself",
+              t`Move on by itself`,
               <ToggleRow
                 inline
                 title={t`The next object comes after an answer`}
@@ -1401,13 +1415,13 @@ function ReviewHowStep(props: StepProps) {
         <div className="grid gap-3.5">
           <ToggleRow
             title={t`Blind review`}
-            sub="Reviewers see each other's decisions only after they submit."
+            sub={t`Reviewers see each other's decisions only after they submit.`}
             checked={draft.blind}
             onChange={(blind) => update((current) => ({ ...current, blind }))}
           />
           <ToggleRow
             title={t`Hide the AI for a first read`}
-            sub="Reviewers mark the slide on their own first, then the AI result is shown."
+            sub={t`Reviewers mark the slide on their own first, then the AI result is shown.`}
             checked={draft.hide}
             onChange={(hide) => update((current) => ({ ...current, hide }))}
           />
@@ -1432,15 +1446,15 @@ function ReviewHowStep(props: StepProps) {
               update((current) => ({ ...current, start: value as Draft["start"] }))
             }
             options={[
-              { value: "guided", label: "Guided review" },
-              { value: "full", label: "Full viewer" },
+              { value: "guided", label: t`Guided review` },
+              { value: "full", label: t`Full viewer` },
             ]}
           />
           <FieldNote
             help={
               draft.start === "guided"
-                ? "One object at a time with big buttons. They can still zoom and pan."
-                : "The whole slide with every tool and the object list."
+                ? t`One object at a time with big buttons. They can still zoom and pan.`
+                : t`The whole slide with every tool and the object list.`
             }
           />
         </div>
@@ -1496,10 +1510,10 @@ export function SendStep({ draft, data, update, goTo }: StepProps) {
     [
       "kind",
       [
-        ["flag", "Kind", "Annotate"],
+        ["flag", t`Kind`, t`Annotate`],
         [
           "target",
-          "Starting point",
+          t`Starting point`,
           annotatePresets.find((item) => item.key === draft.preset)?.title ?? "",
         ],
       ],
@@ -1509,34 +1523,36 @@ export function SendStep({ draft, data, update, goTo }: StepProps) {
       [
         [
           "slides",
-          "Slides",
-          sum.all ? `${sum.all} slides, ${slidesWithResult(draft, data).length} with ${short}` : "",
+          t`Slides`,
+          sum.all
+            ? t`${sum.all} slides, ${slidesWithResult(draft, data).length} with ${short}`
+            : "",
         ],
-        ["text", "Task name", draft.name.trim()],
+        ["text", t`Task name`, draft.name.trim()],
       ],
     ],
     [
       "reviewers",
       [
-        ["users", "Experts", people],
-        ["list", "Split", splitText(sum, nameOf)],
+        ["users", t`Experts`, people],
+        ["list", t`Split`, splitText(sum, nameOf)],
       ],
     ],
     [
       "check",
       [
-        ["target", "Experts check", checkSummary(draft.check)],
-        ["sliders", "Estimate", estimateText(draft, data)],
+        ["target", t`Experts check`, checkSummary(draft.check)],
+        ["sliders", t`Estimate`, estimateText(draft, data)],
       ],
     ],
     [
       "how",
       [
-        ["eye", "Blind first", draft.blindFirst ? "On" : "Off"],
+        ["eye", t`Blind first`, draft.blindFirst ? "On" : "Off"],
         ["calendar", "Due", draft.due ? dueText(draft.due) : ""],
         [
           "bell",
-          "Reminders",
+          t`Reminders`,
           reminderChoices.find((choice) => choice.key === draft.reminders)?.name ?? "",
         ],
       ],
@@ -1546,21 +1562,21 @@ export function SendStep({ draft, data, update, goTo }: StepProps) {
     [
       "slides",
       [
-        ["file", "Template", template ? `${template.name} ${template.version}` : ""],
+        ["file", t`Template`, template ? `${template.name} ${template.version}` : ""],
         [
           "slides",
-          "Slides",
-          sum.ns ? `${sum.ns} of ${sum.all} slides${out ? `, ${out} without ${short}` : ""}` : "",
+          t`Slides`,
+          sum.ns ? t`${sum.ns} of ${sum.all} slides${out ? t`, ${out} without ${short}` : ""}` : "",
         ],
         ["layers", "AI result", set?.label ?? ""],
-        ["text", "Task name", draft.name.trim()],
+        ["text", t`Task name`, draft.name.trim()],
       ],
     ],
     [
       "reviewers",
       [
-        ["users", "Reviewers", people],
-        ["list", "Split", splitText(sum, nameOf)],
+        ["users", t`Reviewers`, people],
+        ["list", t`Split`, splitText(sum, nameOf)],
       ],
     ],
     [
@@ -1568,20 +1584,20 @@ export function SendStep({ draft, data, update, goTo }: StepProps) {
       [
         [
           "target",
-          "To check",
+          t`To check`,
           scopeKinds(draft).length
-            ? `${scopePhrase(draft)}${sum.ns && sum.n ? `. About ${hoursText(sum.hours)} each.` : ""}`
+            ? `${scopePhrase(draft)}${sum.ns && sum.n ? t`. About ${hoursText(sum.hours)} each.` : ""}`
             : "",
         ],
         [
           "flag",
-          "Decision question",
-          `${kind?.name ?? ""}${draft.decision.kind === "certainty5" && mappingOk(draft.decision) ? `, ${numberList(mappingOf(draft.decision).agree)} count as agree` : ""}`,
+          t`Decision question`,
+          `${kind?.name ?? ""}${draft.decision.kind === "certainty5" && mappingOk(draft.decision) ? t`, ${numberList(mappingOf(draft.decision).agree)} count as agree` : ""}`,
         ],
         [
           "comment",
-          "Opinion form",
-          draft.form === "none" ? "None" : `${form?.name ?? ""}, ${required} required`,
+          t`Opinion form`,
+          draft.form === "none" ? t`None` : t`${form?.name ?? ""}, ${required} required`,
         ],
       ],
     ],
@@ -1590,15 +1606,15 @@ export function SendStep({ draft, data, update, goTo }: StepProps) {
       [
         [
           "eye",
-          "Blinding",
-          `${draft.blind ? "Blind until they submit" : "Open"}${draft.hide ? ", first read without the AI" : ""}`,
+          t`Blinding`,
+          `${draft.blind ? t`Blind until they submit` : t`Open`}${draft.hide ? t`, first read without the AI` : ""}`,
         ],
-        ["monitor", "Starts in", draft.start === "guided" ? "Guided review" : "The full viewer"],
-        ["sliders", "Display", displaySummary(draft)],
+        ["monitor", t`Starts in`, draft.start === "guided" ? t`Guided review` : t`The full viewer`],
+        ["sliders", t`Display`, displaySummary(draft)],
         ["calendar", "Due", draft.due ? dueText(draft.due) : ""],
         [
           "bell",
-          "Reminders",
+          t`Reminders`,
           reminderChoices.find((choice) => choice.key === draft.reminders)?.name ?? "",
         ],
       ],
@@ -1659,8 +1675,8 @@ export function SendStep({ draft, data, update, goTo }: StepProps) {
             }}
           />
           <FieldNote
-            help="Added to the email the reviewers get."
-            count={`${draft.note.length} of 500`}
+            help={t`Added to the email the reviewers get.`}
+            count={t`${draft.note.length} of 500`}
           />
         </div>
       </Zone>
@@ -1684,16 +1700,16 @@ export function SentPanel({ draft, data }: Pick<StepProps, "draft" | "data">) {
       {people.length ? (
         <>
           <p className="m-0 mb-2 max-w-130 text-body-sm text-fg-dim">
-            {andJoin(people.map((person) => person.name))} {people.length > 1 ? t`were` : t`was`}{" "}
-            <Trans>told by email.</Trans> {people.length > 1 ? t`Each sees` : t`They see`}{" "}
-            <Trans>it at the top of My work, with one button to start.</Trans>
+            {people.length > 1
+              ? t`${andJoin(people.map((person) => person.name))} were told by email. Each sees it at the top of My work, with one button to start.`
+              : t`${andJoin(people.map((person) => person.name))} was told by email. They see it at the top of My work, with one button to start.`}
           </p>
           <div className="mt-2.5 flex justify-center gap-7">
             {people.map((person) => (
               <Person
                 key={person.id}
                 size={32}
-                sub="Told just now"
+                sub={t`Told just now`}
                 person={{ initials: person.initials, name: person.name, color: person.colour }}
               />
             ))}

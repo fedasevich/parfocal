@@ -33,7 +33,7 @@ export function AddSlidesModal({
       return slide ? [slide] : [];
     });
   const where = (slide: (typeof pool)[number]) =>
-    slide.caseLabel ? `Case ${slide.caseLabel}` : "Loose";
+    slide.caseLabel ? `Case ${slide.caseLabel}` : t`Loose`;
   const shown = pool.filter((slide) =>
     `${slide.name} ${where(slide)}`.toLowerCase().includes(needle),
   );
@@ -47,10 +47,10 @@ export function AddSlidesModal({
       }}
       width={560}
       title={t`Add slides`}
-      subtitle={`To ${draft.name.trim() || "the new task"} · from P07`}
+      subtitle={t`To ${draft.name.trim() || t`the new task`} · from P07`}
       hint={`${count} picked`}
-      primaryLabel={count ? `Add ${count} slide${count > 1 ? "s" : ""}` : "Add slides"}
-      blockers={count ? [] : [{ id: "pick", text: "Pick at least one slide", goTo: "" }]}
+      primaryLabel={count ? t`Add ${count} slide${count > 1 ? "s" : ""}` : t`Add slides`}
+      blockers={count ? [] : [{ id: "pick", text: t`Pick at least one slide`, goTo: "" }]}
       onPrimary={() => onAdd(picked)}
     >
       <div className="relative">
@@ -98,8 +98,7 @@ export function AddSlidesModal({
           </span>
         ) : !shown.length ? (
           <span className="text-body-sm text-fg-dim">
-            <Trans>Nothing matches "</Trans>
-            {query.trim()}".
+            <Trans>Nothing matches "{query.trim()}</Trans>".
           </span>
         ) : null}
       </div>
@@ -158,12 +157,12 @@ export function PreviewQuestionModal({ draft, onClose }: ModalProps) {
   const offered = counts === "disagree" ? regionReasons : counts === "unsure" ? unsureReasons : [];
   const question =
     kind === "certainty5"
-      ? "How sure are you that T2 is tumor?"
+      ? t`How sure are you that T2 is tumor?`
       : kind === "agree"
-        ? "The AI says T2 is tumor, 91% sure."
+        ? t`The AI says T2 is tumor, 91% sure.`
         : kind === "yesno"
-          ? "Is this tumor?"
-          : "What is T2?";
+          ? t`Is this tumor?`
+          : t`What is T2?`;
   return (
     <SmallModal
       open
@@ -172,9 +171,9 @@ export function PreviewQuestionModal({ draft, onClose }: ModalProps) {
       }}
       width={560}
       title={t`Preview the question`}
-      subtitle={`T2 on A1 · ${name}`}
-      hint="Nothing is saved. Reviewers get this card for every object."
-      primaryLabel="Done"
+      subtitle={t`T2 on A1 · ${name}`}
+      hint={t`Nothing is saved. Reviewers get this card for every object.`}
+      primaryLabel={t`Done`}
       showCancel={false}
       onPrimary={onClose}
     >
@@ -186,10 +185,9 @@ export function PreviewQuestionModal({ draft, onClose }: ModalProps) {
             </ObjectIdTag>
             {kind === "certainty5" ? (
               <span>
-                <Trans>AI says:</Trans>{" "}
-                <b className="font-semibold text-fg">
-                  <Trans>Tumor, 91% sure</Trans>
-                </b>
+                <Trans>
+                  AI says: <b className="font-semibold text-fg">Tumor, 91% sure</b>
+                </Trans>
               </span>
             ) : kind === "agree" ? null : (
               <span>
@@ -203,7 +201,7 @@ export function PreviewQuestionModal({ draft, onClose }: ModalProps) {
             decisionStyle={styleOf[kind]}
             range={{ agreeFrom: draft.decision.agreeFrom, disagreeTo: draft.decision.disagreeTo }}
             classes={projectClasses}
-            aiClass="Tumor"
+            aiClass={t`Tumor`}
             value={raw}
             onValueChange={(next) => {
               setRaw(next);
@@ -218,7 +216,9 @@ export function PreviewQuestionModal({ draft, onClose }: ModalProps) {
                 style={{ background: countsColours[counts] }}
               />
               <span>
-                <Trans>Counts as</Trans> <b className="text-fg">{countsWords[counts]}</b>
+                <Trans>
+                  Counts as <b className="text-fg">{countsWords[counts]}</b>
+                </Trans>
               </span>
             </div>
           ) : null}

@@ -65,11 +65,11 @@ export default function ServerCheck({
       {startError ? (
         <ProblemZone
           icon="x-circle"
-          tag="Not started"
+          tag={t`Not started`}
           tone="bad"
           title={t`The server could not place these files`}
-          file="Nothing was uploaded"
-          text="Your files stay as they are. Check your connection and press the upload button again."
+          file={t`Nothing was uploaded`}
+          text={t`Your files stay as they are. Check your connection and press the upload button again.`}
           actions={null}
         />
       ) : null}
@@ -79,11 +79,11 @@ export default function ServerCheck({
           <ProblemZone
             key={duplicate.path}
             icon="layers"
-            tag="Already here"
+            tag={t`Already here`}
             tone="warn"
             title={t`This slide is already in the project`}
             file={duplicate.path}
-            text="A slide with the same name and size was uploaded before. Skip it, or keep both copies. Until you choose, it waits and the rest upload."
+            text={t`A slide with the same name and size was uploaded before. Skip it, or keep both copies. Until you choose, it waits and the rest upload.`}
             actions={
               <>
                 <Button onClick={() => decide(duplicate.path, "skip")}>
@@ -100,7 +100,7 @@ export default function ServerCheck({
             key={duplicate.path}
             file={duplicate.path}
             what={
-              choice === "keep" ? "Kept next to the copy already here" : "Skipped, already here"
+              choice === "keep" ? t`Kept next to the copy already here` : t`Skipped, already here`
             }
             out={choice === "skip"}
             onUndo={() => decide(duplicate.path, null)}
@@ -111,11 +111,11 @@ export default function ServerCheck({
         <ProblemZone
           key={difference.path}
           icon="warn"
-          tag="Sorted differently"
+          tag={t`Sorted differently`}
           tone="warn"
           title={t`The server sorts this file differently`}
           file={difference.path}
-          text={`Your browser puts it with: ${difference.browser}. The server puts it with: ${difference.server}. The upload follows your browser's choice. Pick a place for it on Files if that is wrong.`}
+          text={t`Your browser puts it with: ${difference.browser}. The server puts it with: ${difference.server}. The upload follows your browser's choice. Pick a place for it on Files if that is wrong.`}
           actions={null}
         />
       ))}

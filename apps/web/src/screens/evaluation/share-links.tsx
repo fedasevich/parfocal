@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import {
   type CreatedReportLink,
@@ -21,9 +22,9 @@ const day = (iso: string) =>
 const times = (count: number) => (count === 1 ? "once" : `${count} times`);
 
 function stateOf(link: ReportLink) {
-  if (link.revoked_at !== null) return { tone: "neutral", label: "Revoked" } as const;
-  if (link.expired) return { tone: "neutral", label: "Expired" } as const;
-  return { tone: "ok", label: "Active" } as const;
+  if (link.revoked_at !== null) return { tone: "neutral", label: t`Revoked` } as const;
+  if (link.expired) return { tone: "neutral", label: t`Expired` } as const;
+  return { tone: "ok", label: t`Active` } as const;
 }
 
 export function ShareLinks({ taskId, taskCode }: { taskId: string; taskCode: string }) {
@@ -75,17 +76,17 @@ export function ShareLinks({ taskId, taskCode }: { taskId: string; taskCode: str
       onOpenChange={setOpen}
       width={560}
       title={t`Share ${taskCode} read-only`}
-      subtitle="Anyone with the link sees the numbers of this report without signing in. No slides, no names and no free text. A link lasts 30 days."
+      subtitle={t`Anyone with the link sees the numbers of this report without signing in. No slides, no names and no free text. A link lasts 30 days.`}
       trigger={
         <Button>
           <Icon name="link" />
           <Trans>Read-only link</Trans>
         </Button>
       }
-      primaryLabel="Make a link"
+      primaryLabel={t`Make a link`}
       onPrimary={make}
       primaryBusy={create.isPending}
-      cancelLabel="Close"
+      cancelLabel={t`Close`}
     >
       {fresh ? (
         <SmallModalZone title={t`New link`}>
@@ -125,7 +126,7 @@ export function ShareLinks({ taskId, taskCode }: { taskId: string; taskCode: str
                 >
                   <span className="grid min-w-0 flex-1">
                     <span className="flex items-center gap-2 font-medium text-fg">
-                      <Trans>Made</Trans> {day(link.created_at)}
+                      <Trans>Made {day(link.created_at)}</Trans>
                       <StatusTag tone={state.tone}>{state.label}</StatusTag>
                     </span>
                     <small className="text-caption text-fg-dim">

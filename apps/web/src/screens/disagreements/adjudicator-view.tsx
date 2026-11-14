@@ -113,7 +113,7 @@ export function AdjudicatorView({ taskId }: { taskId: string }) {
   };
   const allDone = objects.length > 0 && counts.open === 0;
   const current = objects[Math.max(0, Math.min(objects.length - 1, index))];
-  const asker = person(adjudication?.asked_by_user_id)?.name.split(" ")[0] ?? "The researcher";
+  const asker = person(adjudication?.asked_by_user_id)?.name.split(" ")[0] ?? t`The researcher`;
   const goTo = (next: number) => {
     setIndex(((next % objects.length) + objects.length) % objects.length);
     setCamera(null);
@@ -195,7 +195,7 @@ export function AdjudicatorView({ taskId }: { taskId: string }) {
       <ProgressDots
         current={objects.indexOf(current)}
         onJump={goTo}
-        summary={`${decided.length} of ${objects.length} decided`}
+        summary={t`${decided.length} of ${objects.length} decided`}
         items={objects.map((object) => ({
           key: object.key,
           label: object.object,
@@ -235,10 +235,9 @@ export function AdjudicatorView({ taskId }: { taskId: string }) {
       />
       <div className="grid gap-1.5">
         <label htmlFor="adjudication-note" className="text-body-sm font-semibold">
-          <Trans>Note for the record</Trans>{" "}
-          <span className="font-normal text-fg-dim">
-            <Trans>Optional</Trans>
-          </span>
+          <Trans>
+            Note for the record <span className="font-normal text-fg-dim">Optional</span>
+          </Trans>
         </label>
         <Textarea
           id="adjudication-note"
@@ -280,15 +279,15 @@ export function AdjudicatorView({ taskId }: { taskId: string }) {
     <div className="grid h-dvh grid-rows-[auto_minmax(0,1fr)] bg-page">
       <ReviewTopBar
         mode="adjudicate"
-        taskName={`Adjudication · ${task?.code ?? ""}`}
-        taskSub={`Sentinel node AI evaluation · due ${dueText(task?.due_on)}`}
+        taskName={t`Adjudication · ${task?.code ?? ""}`}
+        taskSub={t`Sentinel node AI evaluation · due ${dueText(task?.due_on)}`}
         slideName={`${shown?.slide_label ?? "A1"} · H&E`}
         slideThumb={lookUrl("overview")}
         progress={counts}
         slidesPopover={
           <SlidesPopover
-            ariaLabel="Slides with objects queued for you"
-            caseHeading="Slides with objects for you"
+            ariaLabel={t`Slides with objects queued for you`}
+            caseHeading={t`Slides with objects for you`}
             showKeys={false}
             caseSlides={slideLabels.map((label) => {
               const count = objects.filter((object) => object.slide_label === label).length;
@@ -296,13 +295,13 @@ export function AdjudicatorView({ taskId }: { taskId: string }) {
               return {
                 id: label,
                 name: `${label} · H&E`,
-                sub: `${count} object${count === 1 ? "" : "s"} · ${decided.length} decided`,
+                sub: t`${count} object${count === 1 ? "" : "s"} · ${decided.length} decided`,
                 thumb: lookUrl("overview"),
                 resultSets: count,
                 current: open,
                 status: open
-                  ? { label: "Open", tone: "accent" as const }
-                  : { label: "Queued", tone: "neutral" as const },
+                  ? { label: t`Open`, tone: "accent" as const }
+                  : { label: t`Queued`, tone: "neutral" as const },
               };
             })}
             onPick={(label) => {
@@ -311,8 +310,8 @@ export function AdjudicatorView({ taskId }: { taskId: string }) {
             }}
           />
         }
-        progressTitle={`${decided.length} of ${objects.length} decided`}
-        progressSub="Objects queued for you"
+        progressTitle={t`${decided.length} of ${objects.length} decided`}
+        progressSub={t`Objects queued for you`}
         primaryTitle={`${percent}% decided`}
         onPrimary={() => void navigate({ to: "/my-work", search: { scene: "anna" } })}
         backHref={destinations.myWork()}
@@ -338,10 +337,10 @@ export function AdjudicatorView({ taskId }: { taskId: string }) {
           value={tab}
           onValueChange={setTab}
           tabs={[
-            { value: "review", label: "Review", body: review, ...(foot ? { foot } : {}) },
+            { value: "review", label: t`Review`, body: review, ...(foot ? { foot } : {}) },
             {
               value: "display",
-              label: "Display",
+              label: t`Display`,
               body: (
                 <DisplayTab
                   display={display}

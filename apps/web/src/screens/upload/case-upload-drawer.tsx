@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import type { Project } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
@@ -20,17 +21,17 @@ function statusText(entry: UploadEntry): string {
   const total = formatBytes(entry.size);
   switch (entry.status) {
     case "uploading":
-      return `${formatBytes(entry.bytesUploaded)} of ${total}`;
+      return t`${formatBytes(entry.bytesUploaded)} of ${total}`;
     case "paused":
-      return `Paused at ${formatBytes(entry.bytesUploaded)} of ${total}`;
+      return t`Paused at ${formatBytes(entry.bytesUploaded)} of ${total}`;
     case "retrying":
-      return `Connection lost. Trying again, attempt ${entry.attempt} of 3`;
+      return t`Connection lost. Trying again, attempt ${entry.attempt} of 3`;
     case "failed":
-      return `Stopped at ${formatBytes(entry.bytesUploaded)} of ${total}. What was stored is kept`;
+      return t`Stopped at ${formatBytes(entry.bytesUploaded)} of ${total}. What was stored is kept`;
     case "done":
       return `${total}, uploaded`;
     case "interrupted":
-      return `${total}. Choose this file again to continue where it stopped`;
+      return t`${total}. Choose this file again to continue where it stopped`;
   }
 }
 
@@ -129,7 +130,7 @@ export function CaseUploadDrawer({
     <DrawerPanel
       label={t`Upload slides`}
       title={t`Upload slides`}
-      hint={`to ${project.code} · ${project.name}`}
+      hint={t`to ${project.code} · ${project.name}`}
       width={560}
       testId="upload-drawer"
       onClose={onClose}

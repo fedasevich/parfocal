@@ -46,9 +46,10 @@ export function StorageSection({ notify }: { notify: Notify }) {
             parts={storageParts(usage)}
             foot={
               <>
-                <Trans>Read in place, not counted:</Trans>{" "}
-                <span className="font-mono">{tb(usage.in_place_tb)}</span>{" "}
-                <Trans>stays on your sources</Trans>
+                <Trans>
+                  Read in place, not counted:{" "}
+                  <span className="font-mono">{tb(usage.in_place_tb)}</span> stays on your sources
+                </Trans>
               </>
             }
           />
@@ -155,7 +156,7 @@ export function StorageSection({ notify }: { notify: Notify }) {
                       size="sm"
                       onClick={() =>
                         notify(
-                          `Read one tile and listed the folder: answered in ${source.first_tile_ms ?? 180} ms (mock)`,
+                          t`Read one tile and listed the folder: answered in ${source.first_tile_ms ?? 180} ms (mock)`,
                         )
                       }
                     >

@@ -62,67 +62,67 @@ function PrototypeIndex() {
         </Trans>
       </p>
       <ul className="flex flex-col gap-2" aria-label={t`Screens`}>
-        <Entry note="The four lanes, each box opens its screen in its scene">
+        <Entry note={t`The four lanes, each box opens its screen in its scene`}>
           <Link to="/flow-map">
             <Trans>How a review works</Trans>
           </Link>
         </Entry>
-        <Entry note="The nine chapters from upload to the co-signed clinical report">
+        <Entry note={t`The nine chapters from upload to the co-signed clinical report`}>
           <Link to="/flow-map/walkthrough">
             <Trans>Walkthrough</Trans>
           </Link>
         </Entry>
-        <Entry note="Every error and empty state grouped by flow, each opens its own screen">
+        <Entry note={t`Every error and empty state grouped by flow, each opens its own screen`}>
           <Link to="/issue-states">
             <Trans>Issue states</Trans>
           </Link>
         </Entry>
-        <Entry note="Launchpad">
+        <Entry note={t`Launchpad`}>
           <Link to="/">
             <Trans>Home</Trans>
           </Link>
         </Entry>
-        <Entry note="Lenka's first week, with the sample project and the checklist">
+        <Entry note={t`Lenka's first week, with the sample project and the checklist`}>
           <Link to="/" search={{ scene: "new" }}>
             <Trans>Home · first week</Trans>
           </Link>
         </Entry>
-        <Entry note="Continue reviewing, your tasks, asks and mentions">
+        <Entry note={t`Continue reviewing, your tasks, asks and mentions`}>
           <Link to="/my-work" search={{ tab: "review" }}>
             <Trans>My work · To review</Trans>
           </Link>
         </Entry>
-        <Entry note="RT-14 opened in the preview on the right">
+        <Entry note={t`RT-14 opened in the preview on the right`}>
           <Link to="/my-work" search={{ scene: "preview" }}>
             <Trans>My work · a task previewed</Trans>
           </Link>
         </Entry>
-        <Entry note="Anna Kopecká with three objects to adjudicate on RT-14">
+        <Entry note={t`Anna Kopecká with three objects to adjudicate on RT-14`}>
           <Link to="/my-work" search={{ scene: "anna" }}>
             <Trans>My work · Anna as adjudicator</Trans>
           </Link>
         </Entry>
-        <Entry note="Daniel Hruška's tasks with their reviewers">
+        <Entry note={t`Daniel Hruška's tasks with their reviewers`}>
           <Link to="/my-work" search={{ tab: "assigned" }}>
             <Trans>My work · Assigned by me</Trans>
           </Link>
         </Entry>
-        <Entry note="Every slide across projects">
+        <Entry note={t`Every slide across projects`}>
           <Link to="/my-work" search={{ tab: "all" }}>
             <Trans>My work · All slides</Trans>
           </Link>
         </Entry>
-        <Entry note="A1 opened in the preview on the right">
+        <Entry note={t`A1 opened in the preview on the right`}>
           <Link to="/my-work" search={{ scene: "allpreview" }}>
             <Trans>My work · a slide previewed</Trans>
           </Link>
         </Entry>
-        <Entry note="The bell open over My work">
+        <Entry note={t`The bell open over My work`}>
           <Link to="/my-work" search={{ tab: "all", open: "notifications" }}>
             <Trans>Notifications</Trans>
           </Link>
         </Entry>
-        <Entry note="⌘K with a search typed">
+        <Entry note={t`⌘K with a search typed`}>
           <Link to="/my-work" search={{ open: "palette", find: "meas" }}>
             <Trans>Command palette</Trans>
           </Link>
@@ -161,7 +161,7 @@ function PrototypeIndex() {
           </Entry>
         ))}
         {project && (
-          <Entry note={`${project.code} with its slides tab`}>
+          <Entry note={t`${project.code} with its slides tab`}>
             <Link to="/projects/$projectId" params={{ projectId: project.id }}>
               <Trans>Project · {project.code}</Trans>
             </Link>
@@ -169,7 +169,7 @@ function PrototypeIndex() {
         )}
         {resume && (
           <>
-            <Entry note={`${resume.task_code} at ${resume.object_id ?? "the first object"}`}>
+            <Entry note={t`${resume.task_code} at ${resume.object_id ?? t`the first object`}`}>
               <Link
                 to="/projects/$projectId/slides/$slideId"
                 params={{ projectId: resume.project.id, slideId: resume.slide_id }}

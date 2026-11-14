@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import {
   type CountsAsChange,
@@ -60,7 +61,7 @@ const dayMonth = (iso: string) =>
   new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 
 export const changedLine = (count: number, version: number) =>
-  `Changed after sign-off · ${count} change${count === 1 ? "" : "s"} listed at the end · the checksum is of v${version} as signed`;
+  t`Changed after sign-off · ${count} change${count === 1 ? "" : "s"} listed at the end · the checksum is of v${version} as signed`;
 
 const time = (iso: string) =>
   new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
@@ -132,6 +133,8 @@ function BlockBody({
   nameOf: (userId: string) => string;
   countsAsChanges?: CountsAsChange[] | undefined;
 }) {
+  const { t } = useLingui();
+
   const decimals = format.decimals;
   switch (block.kind) {
     case "headline-numbers":
@@ -157,7 +160,7 @@ function BlockBody({
           : fixed(row[column as "sensitivity" | "precision"].value, decimals);
       return (
         <PaperTable
-          head={["Class", ...columns.map((column) => metricName[column] ?? column)]}
+          head={[t`Class`, ...columns.map((column) => metricName[column] ?? column)]}
           rows={regions
             .slice(0, block.rows ?? regions.length)
             .map((row) => [row.class_name, ...columns.map((column) => value(row, column))])}
@@ -175,14 +178,14 @@ function BlockBody({
         <ConfusionMatrix
           classes={report.confusion.classes}
           counts={report.confusion.counts}
-          caption="The diagonal is agreement between the AI and the consensus."
+          caption={t`The diagonal is agreement between the AI and the consensus.`}
         />
       );
     case "reviewer-agreement": {
       const values: [string, number | null | undefined][] = [
-        ["Fleiss kappa", evaluation?.fleiss_kappa],
-        ["Cohen kappa", evaluation?.mean_kappa],
-        ["Cell agreement between reviewers", evaluation?.cell_agreement_between_reviewers.value],
+        [t`Fleiss kappa`, evaluation?.fleiss_kappa],
+        [t`Cohen kappa`, evaluation?.mean_kappa],
+        [t`Cell agreement between reviewers`, evaluation?.cell_agreement_between_reviewers.value],
       ];
       if (values.every(([, value]) => value == null))
         return (
@@ -192,7 +195,7 @@ function BlockBody({
         );
       return (
         <PaperTable
-          head={["Measure", "Value"]}
+          head={[t`Measure`, t`Value`]}
           rows={values.map(([name, value]) => [name, fixed(value, decimals)])}
         />
       );
@@ -257,17 +260,17 @@ function BlockBody({
         );
       const columns = block.columns ?? ["objects", "disagreements"];
       const names: Record<string, string> = {
-        objects: "Objects",
-        disagreements: "Disagreements",
-        time: "Review time",
+        objects: t`Objects`,
+        disagreements: t`Disagreements`,
+        time: t`Review time`,
       };
       return (
         <PaperTable
-          head={["Slide", ...columns.map((column) => names[column] ?? column)]}
+          head={[t`Slide`, ...columns.map((column) => names[column] ?? column)]}
           rows={rows.map(([label, counts]) => [
             label,
             ...columns.map((column) =>
-              column === "time" ? "Not recorded" : counts[column as "objects" | "disagreements"],
+              column === "time" ? t`Not recorded` : counts[column as "objects" | "disagreements"],
             ),
           ])}
         />
@@ -343,6 +346,8 @@ function ComparisonBlock({
   evaluation: Evaluation | undefined;
   decimals: number;
 }) {
+  const { t } = useLingui();
+
   const otherReport = okData(useGetEvaluationReport(taskId).data);
   const otherEvaluation = okData(useGetTaskEvaluation(taskId).data);
   if (!evaluation || !otherReport || !otherEvaluation)
@@ -355,7 +360,7 @@ function ComparisonBlock({
   return (
     <div className="grid gap-1.5" data-slot="comparison">
       <PaperTable
-        head={["Measure", head(report), head(otherReport), "Change"]}
+        head={[t`Measure`, head(report), head(otherReport), t`Change`]}
         rows={comparisonRows(evaluation, otherEvaluation, decimals).map((row) => [
           row.label,
           row.left,
@@ -413,7 +418,7 @@ function Closing({ report, queue, changes, format, nameOf }: PagesProps) {
       <ReportBlock title={t`Left open on purpose`}>
         <span data-phi="">
           {leftOpen.length
-            ? leftOpen.map((row) => `${row.object} on ${row.slide_label}`).join(", ")
+            ? leftOpen.map((row) => t`${row.object} on ${row.slide_label}`).join(", ")
             : t`Every queued object was decided.`}
         </span>
       </ReportBlock>
@@ -459,7 +464,7 @@ function Appendix({
     return (
       <ReportBlock title={t`Appendix: decisions`}>
         <PaperTable
-          head={["ID", "Slide", "Reviewer", "Decision"]}
+          head={["ID", t`Slide`, t`Reviewer`, t`Decision`]}
           rows={queue.flatMap((row) =>
             row.answers.map((answer) => [
               row.object,
@@ -526,8 +531,8 @@ export function ReportPage({
   const { t } = useLingui();
 
   const { report, changes, blocks, format, templateVersion, nameOf, selected, onSelect } = props;
-  const status = report.signed_at ? ` · signed ${dayMonth(report.signed_at)}` : " · draft";
-  const footer = `${report.task_code} · Evaluation v${report.version}${status}`;
+  const status = report.signed_at ? t` · signed ${dayMonth(report.signed_at)}` : " · draft";
+  const footer = t`${report.task_code} · Evaluation v${report.version}${status}`;
   return (
     <ReportSheet
       page={page}
@@ -537,7 +542,7 @@ export function ReportPage({
       landscape={format.orientation === "landscape"}
       header={
         format.running_header && page > 1
-          ? `${report.task_code} · Evaluation report v${report.version}`
+          ? t`${report.task_code} · Evaluation report v${report.version}`
           : undefined
       }
       watermark={format.draft_watermark && !report.signed_at ? "DRAFT" : undefined}
@@ -548,25 +553,25 @@ export function ReportPage({
         <>
           <ReportLetterhead
             lab={report.lab}
-            kind="Parfocal · research output"
+            kind={t`Parfocal · research output`}
             title={t`Evaluation report`}
             lines={[
               `${report.task_code} · ${report.model}`,
-              `Evaluation v${report.version}${status}`,
+              t`Evaluation v${report.version}${status}`,
               ...(changes[0] ? [changedLine(changes.length, changes[0].version)] : []),
             ]}
           />
           <ReportFacts
             facts={[
-              { label: "Project", value: `${report.project.name} (${report.project.code})` },
-              { label: "Task", value: `${report.task_code} · ${report.round_name}` },
-              { label: "Model", value: report.model },
-              { label: "Slides", value: `${report.slides} slides · ${report.objects} objects` },
+              { label: t`Project`, value: `${report.project.name} (${report.project.code})` },
+              { label: t`Task`, value: `${report.task_code} · ${report.round_name}` },
+              { label: t`Model`, value: report.model },
+              { label: t`Slides`, value: `${report.slides} slides · ${report.objects} objects` },
               {
-                label: "Reviewers",
+                label: t`Reviewers`,
                 value: `${report.reviewer_ids.length} blind reviewers, ${report.adjudicators} adjudicator`,
               },
-              { label: "Template", value: `${report.template.name} v${templateVersion}` },
+              { label: t`Template`, value: `${report.template.name} v${templateVersion}` },
             ]}
           />
         </>

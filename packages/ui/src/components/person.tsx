@@ -115,7 +115,7 @@ function Person({
 }: PersonProps) {
   const { t } = useLingui();
 
-  const name = person ? (short ? shortName(person.name) : person.name) : "Unassigned";
+  const name = person ? (short ? shortName(person.name) : person.name) : t`Unassigned`;
   const subLine = sub === true ? person?.role : sub || undefined;
   return (
     <span

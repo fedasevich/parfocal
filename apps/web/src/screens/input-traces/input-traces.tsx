@@ -206,19 +206,12 @@ export function InputTraces() {
         <p className="text-fg-2">
           <Trans>
             Each device has a short list of gestures. For every gesture the page names it, counts
-            down
-          </Trans>{" "}
-          {timing.countdownMs / 1000} <Trans>seconds, records</Trans> {timing.recordMs / 1000}{" "}
-          <Trans>
-            seconds of raw wheel, pointer and gesture events over a pad and moves to the next one.
-            At the end you download one JSON file for the device. Put it in
-          </Trans>{" "}
-          <code>
-            <Trans>packages/viewer-engine/test/input/traces</Trans>
-          </code>{" "}
-          <Trans>
-            and the replay tests pick it up. The file holds event types, deltas, positions, modifier
-            keys and the user agent, nothing else.
+            down {timing.countdownMs / 1000} seconds, records {timing.recordMs / 1000} seconds of
+            raw wheel, pointer and gesture events over a pad and moves to the next one. At the end
+            you download one JSON file for the device. Put it in{" "}
+            <code>packages/viewer-engine/test/input/traces</code> and the replay tests pick it up.
+            The file holds event types, deltas, positions, modifier keys and the user agent, nothing
+            else.
           </Trans>
         </p>
         <label className="grid gap-1">
@@ -244,9 +237,13 @@ export function InputTraces() {
               {profile.optional ? t` (optional)` : ""}
             </h2>
             <p className="text-fg-2">
-              {profile.summary} {profile.steps.length} <Trans>steps, about</Trans>{" "}
-              {Math.ceil((profile.steps.length * (timing.countdownMs + timing.recordMs)) / 60_000)}{" "}
-              <Trans>minutes.</Trans>
+              <Trans>
+                {profile.summary} {profile.steps.length} steps, about{" "}
+                {Math.ceil(
+                  (profile.steps.length * (timing.countdownMs + timing.recordMs)) / 60_000,
+                )}{" "}
+                minutes.
+              </Trans>
             </p>
             <StepList profile={profile} />
             <div>
@@ -325,8 +322,9 @@ export function InputTraces() {
   return (
     <main className="grid max-w-3xl gap-4 p-8 text-fg">
       <h1 className="text-title-sm font-semibold">
-        {session.profile.title}
-        <Trans>, step</Trans> {session.index + 1} <Trans>of</Trans> {session.profile.steps.length}
+        <Trans>
+          {session.profile.title}, step {session.index + 1} of {session.profile.steps.length}
+        </Trans>
       </h1>
       <h2 className="font-semibold">{step?.title}</h2>
       <p className="text-fg-2">{step?.instruction}</p>

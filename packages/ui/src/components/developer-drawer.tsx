@@ -38,17 +38,18 @@ function DeveloperDrawer({
       <div className="flex items-center gap-2.5 border-b border-line py-3 pr-3 pl-4.5">
         <div className="grid min-w-0 gap-0.5">
           <b className="flex items-center gap-2 text-lead font-semibold">
-            <Trans>Developer</Trans>
-            <span className="rounded-[3px] bg-bad-fill px-1.5 font-mono text-label leading-4 font-semibold tracking-[0.05em] text-white">
-              <Trans>LAB</Trans>
-            </span>
+            <Trans>
+              Developer
+              <span className="rounded-[3px] bg-bad-fill px-1.5 font-mono text-label leading-4 font-semibold tracking-[0.05em] text-white">
+                LAB
+              </span>
+            </Trans>
           </b>
           <small className="text-body-sm leading-[1.45] text-fg-dim">
-            <Trans>Hidden from doctors. Opens with</Trans> <Keycap keys="⌃⇧D" size="sm" />{" "}
-            <Trans>or</Trans>{" "}
-            <span className="font-mono">
-              <Trans>?lab</Trans>
-            </span>
+            <Trans>
+              Hidden from doctors. Opens with <Keycap keys="⌃⇧D" size="sm" /> or{" "}
+              <span className="font-mono">?lab</span>
+            </Trans>
           </small>
         </div>
         <span className="flex-1" />
@@ -59,7 +60,7 @@ function DeveloperDrawer({
       <div className="grid min-h-0 grid-cols-[188px_minmax(0,1fr)]">
         {nav}
         <div
-          {...scrollRegionProps("Developer section")}
+          {...scrollRegionProps(t`Developer section`)}
           className="grid min-h-0 content-start gap-5 overflow-y-auto px-4.5 pt-4.5 pb-6 [scrollbar-gutter:stable] focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent focus-visible:outline-solid"
         >
           {children}

@@ -60,7 +60,7 @@ function ImportsBody({
     return (
       <Zone
         title={t`Watched folder`}
-        sub={`New files in this folder arrive in ${projectCode} on their own, checked like an upload.`}
+        sub={t`New files in this folder arrive in ${projectCode} on their own, checked like an upload.`}
         end={<Switch defaultChecked={folder.on} aria-label={t`Watched folder on`} />}
       >
         <Field label={t`Folder`}>
@@ -120,7 +120,7 @@ function ImportsBody({
     return (
       <Zone
         title={t`Incoming webhook`}
-        sub="Your pipeline posts a link to a slide, its results or both. Parfocal fetches them, runs the same checks and answers with what it did."
+        sub={t`Your pipeline posts a link to a slide, its results or both. Parfocal fetches them, runs the same checks and answers with what it did.`}
         end={<Switch defaultChecked={hook.on} aria-label={t`Webhook on`} />}
       >
         <div className="grid grid-cols-2 gap-3">
@@ -178,7 +178,7 @@ function ImportsBody({
     return (
       <Zone
         title={t`Events out`}
-        sub="Parfocal calls your URL when something happens, so a pipeline can react."
+        sub={t`Parfocal calls your URL when something happens, so a pipeline can react.`}
         end={<Switch defaultChecked={out.on} aria-label={t`Events out on`} />}
       >
         <Field label={t`Your endpoint`}>
@@ -209,7 +209,7 @@ function ImportsBody({
   return (
     <Zone
       title={t`API token`}
-      sub={`For scripts. Add slides and result sets to ${projectCode} with one call.`}
+      sub={t`For scripts. Add slides and result sets to ${projectCode} with one call.`}
       end={
         fresh ? undefined : (
           <Button size="sm" onClick={() => setFresh(true)}>
@@ -288,7 +288,7 @@ export function ImportsModal({
           </Button>
         </div>
         <div
-          {...scrollRegionProps("Automatic imports settings")}
+          {...scrollRegionProps(t`Automatic imports settings`)}
           className="grid content-start gap-4 overflow-auto p-5 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent focus-visible:outline-solid"
         >
           <div className="flex">
@@ -297,9 +297,9 @@ export function ImportsModal({
               value={tab}
               onValueChange={(value) => setTab(value as ImportsTab)}
               options={[
-                { value: "watch", label: "Watched folder" },
-                { value: "hook", label: "Webhook in" },
-                { value: "out", label: "Events out" },
+                { value: "watch", label: t`Watched folder` },
+                { value: "hook", label: t`Webhook in` },
+                { value: "out", label: t`Events out` },
                 { value: "api", label: "API token" },
               ]}
             />

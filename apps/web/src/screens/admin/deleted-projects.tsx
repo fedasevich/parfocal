@@ -30,7 +30,7 @@ export function DeletedProjectsZone({ notify }: { notify: Notify }) {
     try {
       await undeleteProject(id);
       await queryClient.invalidateQueries();
-      notify(`${code} ${name} is back in every list.`);
+      notify(t`${code} ${name} is back in every list.`);
     } catch (error) {
       notify(failureText(error).failure);
     } finally {

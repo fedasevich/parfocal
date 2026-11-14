@@ -82,7 +82,7 @@ function PdfViewer({ preview, loading, failed, loadPdf, loadPages, onClose }: Vi
         title={name.replace(/\.pdf$/, "")}
         meta={
           preview
-            ? `${paperLabel(preview.paper)} · ${preview.orientation} · ${preview.page_count} ${preview.page_count === 1 ? "page" : "pages"}${preview.sample ? " · sample numbers" : ""}`
+            ? `${paperLabel(preview.paper)} · ${preview.orientation} · ${preview.page_count} ${preview.page_count === 1 ? "page" : "pages"}${preview.sample ? t` · sample numbers` : ""}`
             : undefined
         }
         pages={Math.max(1, preview?.page_count ?? 1)}

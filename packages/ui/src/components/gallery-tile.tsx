@@ -87,7 +87,7 @@ function GalleryTile({
       data-wording={wording?.mode ?? wording?.setting}
       data-band={wording?.band}
       data-flag={flagged ? "may-not-be-nucleus" : undefined}
-      aria-label={`${objectId} ${shown}, ${status}${flagged ? ", may not be a nucleus" : ""}`}
+      aria-label={`${objectId} ${shown}, ${status}${flagged ? t`, may not be a nucleus` : ""}`}
       className={cn(
         "group/tile relative block shrink-0 cursor-pointer rounded-md border-0 bg-transparent p-0 text-left text-fg focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-4 focus-visible:outline-solid",
         crop && "rounded-[5px]",

@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react/macro";
 import {
   getGetMySettingLayersQueryKey,
@@ -33,7 +34,7 @@ import {
 export const defaultEmergencyHours = 4;
 
 export const failure = (error: unknown) =>
-  error instanceof Error ? error.message : "That did not save. Try again.";
+  error instanceof Error ? error.message : t`That did not save. Try again.`;
 
 export function NumberChoice({
   label,
@@ -65,6 +66,8 @@ export function NumberChoice({
 }
 
 export function useSessionPolicy(notify: Notify) {
+  const { t } = useLingui();
+
   const policy = okData(useGetSessionPolicy().data);
   const queryClient = useQueryClient();
   const update = useUpdateSessionPolicy();
@@ -88,7 +91,7 @@ export function useSessionPolicy(notify: Notify) {
           onError: (error) => notify(failure(error)),
         },
       );
-    send({ ...before, ...next }, said, () => send(before, "Lock times restored."));
+    send({ ...before, ...next }, said, () => send(before, t`Lock times restored.`));
   };
   return { policy, save };
 }
@@ -111,7 +114,7 @@ export function IdleLockChoice({
       onChange={(value) =>
         save(
           { idle_lock_minutes: value },
-          `Screens lock after ${durationText(value)} without activity.`,
+          t`Screens lock after ${durationText(value)} without activity.`,
         )
       }
     />
@@ -143,6 +146,8 @@ export function PrivacyChoice({
   notify: Notify;
   label: string;
 }) {
+  const { t } = useLingui();
+
   const current = defaultsOf(lab).privacy;
   const apply = useDefaultSave(lab, notify, "default_privacy_mode");
   return (
@@ -154,8 +159,8 @@ export function PrivacyChoice({
         if (next === current) return;
         apply(
           next,
-          `New projects start ${next === "clinical" ? "clinical" : "de-identified"}.`,
-          () => apply(current, "Default restored."),
+          t`New projects start ${next === "clinical" ? "clinical" : "de-identified"}.`,
+          () => apply(current, t`Default restored.`),
         );
       }}
       options={privacyOptions.map((option) => ({ ...option }))}

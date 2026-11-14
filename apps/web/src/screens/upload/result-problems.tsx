@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import {
   getGetImportProblemsQueryOptions,
@@ -83,14 +84,14 @@ function ClassSelect({
 
 const fixedText = (problem: ImportProblem, choices: Choices, classes: readonly ProjectClass[]) => {
   const className = (id: string | null) => classes.find((item) => item.id === id)?.name ?? "";
-  if (problem.code === known.noClass) return `Put in ${className(choices.classId)}`;
+  if (problem.code === known.noClass) return t`Put in ${className(choices.classId)}`;
   if (problem.code === known.unknownClasses)
     return `${plural(problem.names.length, "class")} mapped`;
   if (problem.code === known.noScore)
-    return choices.score === ScoreDefault.one ? "Counted as 1.0" : "Kept with no score";
-  if (problem.code === known.outside) return "Left out of the import";
-  if (problem.code === known.scale) return "Placed at the guessed level";
-  return "Left out of the import";
+    return choices.score === ScoreDefault.one ? t`Counted as 1.0` : t`Kept with no score`;
+  if (problem.code === known.outside) return t`Left out of the import`;
+  if (problem.code === known.scale) return t`Placed at the guessed level`;
+  return t`Left out of the import`;
 };
 
 const isFixed = (problem: ImportProblem, choices: Choices) => {
@@ -193,28 +194,29 @@ function ProblemFix({
         value={choices.score}
         onValueChange={(value) => change({ score: value as ScoreDefault })}
         options={[
-          { value: ScoreDefault.none, label: "Keep with no score" },
-          { value: ScoreDefault.one, label: "Count as 1.0" },
+          { value: ScoreDefault.none, label: t`Keep with no score` },
+          { value: ScoreDefault.one, label: t`Count as 1.0` },
         ]}
       />
     ) : problem.code === known.scale && guess !== null ? (
       <span className="text-body-sm text-fg-dim">
-        <Trans>Guess: level</Trans> {guess.level ?? t`unknown`}
-        <Trans>, scaled by</Trans> {guess.downsample}
+        <Trans>
+          Guess: level {guess.level ?? t`unknown`}, scaled by {guess.downsample}
+        </Trans>
       </span>
     ) : null;
   const selectsOnly = problem.code === known.noClass || problem.code === known.unknownClasses;
   return (
     <ProblemZone
       icon={problem.code === known.unreadable ? "x-circle" : "warn"}
-      tag={problem.count > 0 ? plural(problem.count, "object") : "To check"}
+      tag={problem.count > 0 ? plural(problem.count, "object") : t`To check`}
       tone={problem.code === known.unreadable ? "bad" : "warn"}
       title={problem.message}
       file={name}
       text={
         selectsOnly
-          ? "Choose a class and the file imports with it."
-          : "Confirm what to do and the file imports with your choice."
+          ? t`Choose a class and the file imports with it.`
+          : t`Confirm what to do and the file imports with your choice.`
       }
       evidence={evidence}
       extra={extra}
@@ -299,7 +301,7 @@ function ResultChoices({ upload, projectId }: { upload: ResultUpload; projectId:
           </Button>
           {open.length > 0 ? (
             <span className="text-body-sm text-fg-dim">
-              {plural(open.length, "problem")} <Trans>left in this file</Trans>
+              <Trans>{plural(open.length, "problem")} left in this file</Trans>
             </span>
           ) : null}
         </div>
@@ -327,8 +329,8 @@ export function ResultProblems({
         title={t`Result files`}
         sub={
           open > 0
-            ? `${plural(open, "result file")} need${open === 1 ? "s" : ""} you. A file with a problem waits, the rest import.`
-            : "Nothing needs you."
+            ? t`${plural(open, "result file")} need${open === 1 ? "s" : ""} you. A file with a problem waits, the rest import.`
+            : t`Nothing needs you.`
         }
         data-testid="result-problems-summary"
       />
@@ -339,13 +341,13 @@ export function ResultProblems({
         <ProblemZone
           key={upload.uploadId}
           icon="layers"
-          tag="Heatmap not kept"
+          tag={t`Heatmap not kept`}
           tone="warn"
           title={t`Parfocal cannot keep heatmaps yet`}
           file={upload.name}
           text={
             upload.message ??
-            "Parfocal checked this heatmap against its slide but cannot keep heatmaps yet."
+            t`Parfocal checked this heatmap against its slide but cannot keep heatmaps yet.`
           }
           actions={null}
         />

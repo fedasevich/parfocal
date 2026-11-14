@@ -222,7 +222,7 @@ export function SetupScreen({ step, change }: Props) {
   const [zoom, setZoom] = useState(false);
   const [u, setU] = useState<Choices>({
     role: "rev",
-    spec: ["Breast", "Lymph nodes"],
+    spec: [t`Breast`, t`Lymph nodes`],
     otherSpec: "",
     title: "MUDr.",
     ws: "",
@@ -253,16 +253,16 @@ export function SetupScreen({ step, change }: Props) {
   const firstName = name.split(" ")[0] ?? name;
   const wsName =
     ws === "new"
-      ? u.newName || "your new workspace"
+      ? u.newName || t`your new workspace`
       : joinable.find((item) => item.id === ws)?.name;
   const device = devices.find((item) => item.key === u.device) ?? devices[0];
   const recommended = recommendedFirst(u.role);
   const summary = [
     `${roles[u.role].title}${u.spec.length ? ` · ${u.spec.slice(0, 2).join(", ")}` : ""}`,
-    ws === "new" ? "New workspace" : asking ? "Request sent" : "Joined",
+    ws === "new" ? t`New workspace` : asking ? t`Request sent` : t`Joined`,
     firsts[u.first].title,
     `${device?.label ?? ""} · ${u.theme}`,
-    "Getting started",
+    t`Getting started`,
   ];
 
   const bodies = [
@@ -361,7 +361,7 @@ export function SetupScreen({ step, change }: Props) {
               key={item.id}
               lead={<WorkspaceLogo workspace={brand(item)} />}
               title={item.name}
-              detail={`${item.domain} matches your email · ${item.members} members · ${item.projects} projects`}
+              detail={t`${item.domain} matches your email · ${item.members} members · ${item.projects} projects`}
               selected={ws === item.id}
               onClick={() => set({ ws: item.id })}
               end={
@@ -375,8 +375,8 @@ export function SetupScreen({ step, change }: Props) {
               title={item.name}
               detail={
                 ws === item.id || item.asked
-                  ? "Someone with admin rights there gets your request and answers by email, usually within a day"
-                  : "Asks someone with admin rights to let you in"
+                  ? t`Someone with admin rights there gets your request and answers by email, usually within a day`
+                  : t`Asks someone with admin rights to let you in`
               }
               selected={ws === item.id}
               onClick={() => set({ ws: item.id })}
@@ -395,7 +395,7 @@ export function SetupScreen({ step, change }: Props) {
             </span>
           }
           title={t`Create a new workspace`}
-          detail="For a lab or a group that is not here yet. You get admin rights to set it up"
+          detail={t`For a lab or a group that is not here yet. You get admin rights to set it up`}
           selected={ws === "new"}
           onClick={() => set({ ws: "new" })}
         />
@@ -438,7 +438,7 @@ export function SetupScreen({ step, change }: Props) {
                 onValueChange={(value) => set({ mode: value as SetupMode })}
                 options={[
                   { value: "deid", label: "De-identified" },
-                  { value: "clin", label: "Clinical" },
+                  { value: "clin", label: t`Clinical` },
                 ]}
                 className="w-75"
                 fill
@@ -539,9 +539,9 @@ export function SetupScreen({ step, change }: Props) {
             set({ theme });
           }}
           options={[
-            { value: "dark", label: "Dark" },
-            { value: "light", label: "Light" },
-            { value: "system", label: "System" },
+            { value: "dark", label: t`Dark` },
+            { value: "light", label: t`Light` },
+            { value: "system", label: t`System` },
           ]}
           className="w-75"
           fill
@@ -577,9 +577,9 @@ export function SetupScreen({ step, change }: Props) {
   const last = index === stepNames.length - 1;
   const nextLabel =
     index === 1 && asking
-      ? "Send the request and continue"
+      ? t`Send the request and continue`
       : index === 1 && ws === "new"
-        ? "Create it and continue"
+        ? t`Create it and continue`
         : `Next: ${stepNames[index + 1] ?? ""}`;
   const workspaceMove = () =>
     workspaceMoveOf({
@@ -625,7 +625,7 @@ export function SetupScreen({ step, change }: Props) {
       }
       go(index + 1);
     } catch {
-      setFailed("That did not go through. Try again, or skip this step and do it later.");
+      setFailed(t`That did not go through. Try again, or skip this step and do it later.`);
     }
   };
   const finish = async () => {
@@ -639,15 +639,15 @@ export function SetupScreen({ step, change }: Props) {
       if (sample !== undefined && sample.status !== 201) throw new Error("No sample project");
       void goTo(firstDestination(u.first, sample?.data.id));
     } catch {
-      setFailed("Setup could not be finished. Try again.");
+      setFailed(t`Setup could not be finished. Try again.`);
     }
   };
   const finishLabel =
     u.first === "create"
-      ? "Create my first project"
+      ? t`Create my first project`
       : u.first === "wait"
-        ? "Go to my home"
-        : "Open the sample project";
+        ? t`Go to my home`
+        : t`Open the sample project`;
   return (
     <AuthLayout
       side={
@@ -664,7 +664,7 @@ export function SetupScreen({ step, change }: Props) {
           current={index}
           reached={reached}
           onStepSelect={go}
-          note="Everything here can be changed later in Settings. Skip any step."
+          note={t`Everything here can be changed later in Settings. Skip any step.`}
         />
       }
     >
@@ -726,48 +726,50 @@ function DoneStep({
     ws === "joined"
       ? ["check", `Joined ${wsName}`, true]
       : ws === "asked"
-        ? ["mail", `Asked to join ${wsName}`, false, "waiting for its admin"]
+        ? ["mail", t`Asked to join ${wsName}`, false, t`waiting for its admin`]
         : ["check", `Created ${wsName}`, true];
   const projectRow: [IconName, string, boolean, string?] =
     first === "sample"
-      ? ["check", "Sample project ready: 4 slides, 2 result sets", true]
+      ? ["check", t`Sample project ready: 4 slides, 2 result sets`, true]
       : first === "create"
-        ? ["folder", "Create your first project", false, "next, after this"]
-        : ["bell", "Wait for an invite from a researcher", false, "on your home"];
+        ? ["folder", t`Create your first project`, false, t`next, after this`]
+        : ["bell", t`Wait for an invite from a researcher`, false, t`on your home`];
   const todo: [IconName, string][] =
     role === "res"
       ? [
-          ["upload", "Upload slides and their AI results"],
-          ["users", "Hand slides to reviewers as a review task"],
-          ["file", "Read an evaluation report"],
+          ["upload", t`Upload slides and their AI results`],
+          ["users", t`Hand slides to reviewers as a review task`],
+          ["file", t`Read an evaluation report`],
         ]
       : role === "rev"
         ? [
-            ["flag", "Review your first slide in RT-S1"],
-            ["comment", "Leave a comment on an object ID"],
-            ["file", "Submit your opinion form"],
+            ["flag", t`Review your first slide in RT-S1`],
+            ["comment", t`Leave a comment on an object ID`],
+            ["file", t`Submit your opinion form`],
           ]
         : [
-            ["flag", "Review your first slide in RT-S1"],
-            ["upload", "Upload slides and their AI results"],
-            ["users", "Hand slides to reviewers as a review task"],
+            ["flag", t`Review your first slide in RT-S1`],
+            ["upload", t`Upload slides and their AI results`],
+            ["users", t`Hand slides to reviewers as a review task`],
           ];
   const rows: [IconName, string, boolean, string?][] = [
-    ["check", "Account and email confirmed", true],
+    ["check", t`Account and email confirmed`, true],
     workspaceRow,
     projectRow,
     ...todo.map(([icon, text]): [IconName, string, boolean, string] => [
       icon,
       text,
       false,
-      "on your home",
+      t`on your home`,
     ]),
   ];
   return (
     <>
       <AuthHeading title={t`You're set, ${firstName}`}>
-        <Trans>Your home keeps a short checklist until each part has been tried once.</Trans>{" "}
-        {roles[role].effect}
+        <Trans>
+          Your home keeps a short checklist until each part has been tried once.{" "}
+          {roles[role].effect}
+        </Trans>
       </AuthHeading>
       <ul aria-label={t`Getting started`} className="m-0 grid list-none gap-3 p-0">
         {rows.map(([icon, text, ok, note]) => (

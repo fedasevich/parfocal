@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import { ControlRow } from "@parfocal/ui/components/control-row";
@@ -105,12 +106,12 @@ function word(key: string, value: string): string {
 
 function displaySummary(zone: "draw" | "ai" | "move", settings: DisplaySettings) {
   if (zone === "draw") {
-    return `${word("draw", settings.draw)} ${settings.width} px · by ${settings.colorBy}${settings.opacity < 100 ? ` · ${settings.opacity}%` : ""} · IDs ${settings.ids ? "on" : "off"}`;
+    return t`${word("draw", settings.draw)} ${settings.width} px · by ${settings.colorBy}${settings.opacity < 100 ? ` · ${settings.opacity}%` : ""} · IDs ${settings.ids ? "on" : "off"}`;
   }
   if (zone === "ai") {
-    return `Confidence as a ${settings.confidence} · ${settings.heatmap ? `heatmap ${settings.heatmap}%` : "heatmap off"} · cutoff ${settings.cutoff.toFixed(2)}`;
+    return t`Confidence as a ${settings.confidence} · ${settings.heatmap ? `heatmap ${settings.heatmap}%` : "heatmap off"} · cutoff ${settings.cutoff.toFixed(2)}`;
   }
-  return `${word("order", settings.order)} · ${settings.zoom} · ${settings.auto ? "moves on by itself" : "stays after an answer"}`;
+  return `${word("order", settings.order)} · ${settings.zoom} · ${settings.auto ? t`moves on by itself` : t`stays after an answer`}`;
 }
 
 type SettingChange = (key: keyof DisplaySettings, value: string | number | boolean) => void;
@@ -250,7 +251,7 @@ function PresetMenu({
 }: PresetMenuProps) {
   const { t } = useLingui();
 
-  const saveReason = saveBlocked ?? (changed ? undefined : "Nothing changed");
+  const saveReason = saveBlocked ?? (changed ? undefined : t`Nothing changed`);
   return (
     <div className="grid gap-1.5">
       <span className="text-caption font-semibold text-fg-dim">
@@ -280,7 +281,7 @@ function PresetMenu({
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-72">
           <DropdownMenuRadioGroup value={current} onValueChange={(name) => onPick?.(String(name))}>
-            <DropdownMenuRadioItem value="Task default">
+            <DropdownMenuRadioItem value={t`Task default`}>
               <Trans>Task default</Trans>
               <DropdownMenuShortcut>
                 <Keycap keys="⇧1" size="sm" />
@@ -345,7 +346,7 @@ function DisplayPanel({
   settings = defaultDisplaySettings,
   locks = {},
   folded = [],
-  preset = { current: "Task default", presets: [{ name: "Tumor first", key: "⇧2" }] },
+  preset = { current: t`Task default`, presets: [{ name: "Tumor first", key: "⇧2" }] },
   viewer = false,
   resultSets,
   after,
@@ -399,7 +400,7 @@ function DisplayPanel({
         />
         <SwitchRow
           label={t`ID labels`}
-          sub="The ID tags on the slide"
+          sub={t`The ID tags on the slide`}
           checked={settings.ids}
           onChange={onIdsChange}
         />
@@ -434,7 +435,7 @@ function DisplayPanel({
           max={1}
           step={0.05}
           format={(value) => value.toFixed(2)}
-          help="Objects under it draw dashed and faint"
+          help={t`Objects under it draw dashed and faint`}
           lock={locks.cutoff}
           onChange={onChange && ((value) => onChange("cutoff", value))}
         />
@@ -473,7 +474,7 @@ function DisplayPanel({
         />
         <SwitchRow
           label={t`Move on by itself`}
-          sub="The next object comes after an answer"
+          sub={t`The next object comes after an answer`}
           checked={settings.auto}
           onChange={onChange && ((on) => onChange("auto", on))}
         />

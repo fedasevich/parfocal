@@ -43,6 +43,12 @@ import { cn } from "@parfocal/ui/lib/utils";
 import * as React from "react";
 
 const noTaskValue = "none";
+const fillFields = {
+  task: "{task}",
+  model: "{model}",
+  version: "{version}",
+  slides: "{slides}",
+};
 
 const inputClass =
   "min-h-8 w-full rounded-ctl border border-line-strong bg-surf-field px-2.5 text-body-sm text-fg outline-none focus:border-accent focus:shadow-[0_0_0_3px_var(--accent-soft)]";
@@ -64,8 +70,6 @@ function BlockFieldControl({
   block: EditorBlock;
   onChange: (value: unknown) => void;
 }) {
-  const { t } = useLingui();
-
   const labelId = `${block.id}-${field.key}`;
   if (field.kind === "toggle") {
     return (
@@ -151,8 +155,10 @@ function BlockFieldControl({
       />
       {block.kind === "text" ? (
         <small className="text-caption text-fg-dim">
-          <Trans>Fills in</Trans> {t`{task}`}, {t`{model}`}, {t`{version}`} <Trans>and</Trans>{" "}
-          {t`{slides}`} <Trans>from the task.</Trans>
+          <Trans>
+            Fills in {fillFields.task}, {fillFields.model}, {fillFields.version} and{" "}
+            {fillFields.slides} from the task.
+          </Trans>
         </small>
       ) : null}
     </div>
@@ -172,6 +178,7 @@ function BlockPanel({
   onChange: (field: string, value: unknown) => void;
   compareChoices?: FieldOption[] | undefined;
 }) {
+  const { t } = useLingui();
   if (block === null) {
     return (
       <p className="m-0 text-body-sm text-fg-dim">
@@ -184,7 +191,10 @@ function BlockPanel({
       <div className="grid gap-0.5 text-body-sm">
         <b>{blockCopy[block.kind].name}</b>
         <small className="text-caption text-fg-dim">
-          <Trans>Block</Trans> {index + 1} <Trans>of</Trans> {count}. {blockCopy[block.kind].shows}.
+          <Trans>
+            Block {index + 1} of {count}
+          </Trans>
+          . {blockCopy[block.kind].shows}.
         </small>
       </div>
       {block.kind === "comparison" && compareChoices ? (
@@ -192,8 +202,8 @@ function BlockPanel({
           field={{
             kind: "select",
             key: "task_id",
-            label: "Compare with task",
-            options: [{ value: noTaskValue, label: "Pick a task" }, ...compareChoices],
+            label: t`Compare with task`,
+            options: [{ value: noTaskValue, label: t`Pick a task` }, ...compareChoices],
             nullAs: noTaskValue,
           }}
           block={block}
@@ -239,8 +249,8 @@ function BlockPanel({
           value={block.width}
           onValueChange={(value) => onChange("width", String(value))}
           options={[
-            { value: "full", label: "Full width" },
-            { value: "half", label: "Half" },
+            { value: "full", label: t`Full width` },
+            { value: "half", label: t`Half` },
           ]}
         />
       </div>
@@ -351,23 +361,27 @@ function FormatPanel({
   return (
     <div className="grid gap-4">
       {head}
-      {segment("paper", "Paper", [
+      {segment("paper", t`Paper`, [
         { value: "a4", label: "A4" },
         { value: "letter", label: "US Letter" },
       ])}
-      {segment("orientation", "Orientation", [
-        { value: "portrait", label: "Portrait" },
-        { value: "landscape", label: "Landscape" },
+      {segment("orientation", t`Orientation`, [
+        { value: "portrait", label: t`Portrait` },
+        { value: "landscape", label: t`Landscape` },
       ])}
-      {segment("text_size", "Text size", [
-        { value: "small", label: "Small" },
-        { value: "normal", label: "Normal" },
-        { value: "large", label: "Large" },
+      {segment("text_size", t`Text size`, [
+        { value: "small", label: t`Small` },
+        { value: "normal", label: t`Normal` },
+        { value: "large", label: t`Large` },
       ])}
-      {toggle("logo", "Workspace logo")}
-      {text("title", "Title")}
-      {text("subtitle", "Subtitle", "Fills in {task}, {model}, {version} and {slides}.")}
-      {toggle("running_header", "Running header from page 2")}
+      {toggle("logo", t`Workspace logo`)}
+      {text("title", t`Title`)}
+      {text(
+        "subtitle",
+        t`Subtitle`,
+        t`Fills in ${fillFields.task}, ${fillFields.model}, ${fillFields.version} and ${fillFields.slides}.`,
+      )}
+      {toggle("running_header", t`Running header from page 2`)}
       <div className="grid gap-1.5">
         <FieldLabel id="format-page_numbers">
           <Trans>Page numbers</Trans>
@@ -388,8 +402,8 @@ function FormatPanel({
           </SelectContent>
         </Select>
       </div>
-      {toggle("draft_watermark", "DRAFT watermark until signed off")}
-      {toggle("signature", "Signature block")}
+      {toggle("draft_watermark", t`DRAFT watermark until signed off`)}
+      {toggle("signature", t`Signature block`)}
       <div className="grid gap-1.5">
         <FieldLabel id="format-label_language">
           <Trans>Language of labels</Trans>
@@ -412,13 +426,13 @@ function FormatPanel({
           </SelectContent>
         </Select>
       </div>
-      {segment("decimals", "Decimals", [
+      {segment("decimals", t`Decimals`, [
         { value: "1", label: "0.9" },
         { value: "2", label: "0.86" },
         { value: "3", label: "0.861" },
       ])}
-      {checks("appendices", "Appendices after the report", appendixOptions, false)}
-      {checks("downloads", "Downloads offered", downloadOptions, true)}
+      {checks("appendices", t`Appendices after the report`, appendixOptions, false)}
+      {checks("downloads", t`Downloads offered`, downloadOptions, true)}
     </div>
   );
 }

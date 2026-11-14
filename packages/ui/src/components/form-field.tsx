@@ -1,5 +1,6 @@
 import { Field as FieldPrimitive } from "@base-ui/react/field";
 import { Fieldset as FieldsetPrimitive } from "@base-ui/react/fieldset";
+import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Checkbox } from "@parfocal/ui/components/checkbox";
 import { Icon } from "@parfocal/ui/components/icon";
@@ -131,7 +132,7 @@ function TextAreaInput({ className, rows = 3, ...props }: TextAreaInputProps) {
 }
 
 function characterCount(text: string, limit: number) {
-  return `${text.length} of ${limit}`;
+  return t`${text.length} of ${limit}`;
 }
 
 type CheckboxFieldProps = Omit<FieldPrimitive.Root.Props, "children"> & {

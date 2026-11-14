@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { InlineError } from "@parfocal/ui/components/banner";
 import { Input } from "@parfocal/ui/components/input";
@@ -33,17 +34,17 @@ type DepositDraft = {
 export function depositErrors(draft: DepositDraft) {
   const errors: Record<string, string> = {};
   if (draft.source === "object") {
-    if (!draft.object) errors["obj"] = "Pick an object, or measure the deposit by hand.";
+    if (!draft.object) errors["obj"] = t`Pick an object, or measure the deposit by hand.`;
     return errors;
   }
   const number = parseNumber(draft.size);
   const mm = number === null ? null : draft.unit === "um" ? number / 1000 : number;
-  if (!draft.size.trim()) errors["mm"] = "Enter the size.";
-  else if (number === null || number <= 0) errors["mm"] = "Use a number above 0, for example 1.5.";
-  else if (draft.unit && mm !== null && mm > 100) errors["mm"] = "Use a size up to 100 mm.";
-  else if (draft.unit && mm !== null && mm < 0.01) errors["mm"] = "Use a size of at least 10 µm.";
-  if (!draft.unit) errors["unit"] = "Pick mm or µm.";
-  if (!draft.slide) errors["slide"] = "Pick the slide you measured on.";
+  if (!draft.size.trim()) errors["mm"] = t`Enter the size.`;
+  else if (number === null || number <= 0) errors["mm"] = t`Use a number above 0, for example 1.5.`;
+  else if (draft.unit && mm !== null && mm > 100) errors["mm"] = t`Use a size up to 100 mm.`;
+  else if (draft.unit && mm !== null && mm < 0.01) errors["mm"] = t`Use a size of at least 10 µm.`;
+  if (!draft.unit) errors["unit"] = t`Pick mm or µm.`;
+  if (!draft.slide) errors["slide"] = t`Pick the slide you measured on.`;
   return errors;
 }
 
@@ -83,12 +84,12 @@ export function DepositModal({
       item: {
         id: `${object.slide}:${object.object_id}`,
         name: `${object.object_id} on ${slide?.label ?? object.slide}`,
-        sub: `Node ${slide?.node ?? 1} · ${mmText(object.size_mm)}, ${object.measured_by === "you" ? "measured by you" : "AI outline"}`,
+        sub: t`Node ${slide?.node ?? 1} · ${mmText(object.size_mm)}, ${object.measured_by === "you" ? t`measured by you` : "AI outline"}`,
         find: `${object.object_id} ${object.slide} ${slide?.label ?? ""} ${slide?.short ?? ""}`,
         ...(used
-          ? { dim: "Already listed" }
+          ? { dim: t`Already listed` }
           : object.state === "disagree"
-            ? { dim: "Marked not tumor by you" }
+            ? { dim: t`Marked not tumor by you` }
             : {}),
       },
     };
@@ -128,16 +129,16 @@ export function DepositModal({
       title={t`Add a deposit`}
       subtitle={
         <>
-          <span className="font-mono">{caseLabel}</span> · {deposits.length}{" "}
-          <Trans>listed. The largest sets the category.</Trans>
+          <span className="font-mono">{caseLabel}</span> ·{" "}
+          <Trans>{deposits.length} listed. The largest sets the category.</Trans>
         </>
       }
       hint={
         draft.source === "object"
-          ? "The size comes from the object."
-          : "Sizes in µm are kept in mm."
+          ? t`The size comes from the object.`
+          : t`Sizes in µm are kept in mm.`
       }
-      primaryLabel="Add the deposit"
+      primaryLabel={t`Add the deposit`}
       onPrimary={submit}
     >
       <div className="grid gap-1.5">
@@ -149,8 +150,8 @@ export function DepositModal({
           value={draft.source}
           onValueChange={(next) => set({ source: next as DepositDraft["source"] })}
           options={[
-            { value: "object", label: "An object on a slide" },
-            { value: "hand", label: "Measured by hand" },
+            { value: "object", label: t`An object on a slide` },
+            { value: "hand", label: t`Measured by hand` },
           ]}
         />
       </div>
@@ -175,8 +176,8 @@ export function DepositModal({
             error={shown["obj"]}
             help={
               picked
-                ? `${mmText(picked.size_mm)}, ${picked.measured_by === "you" ? "measured by you" : "from the AI outline"}. You can change the size in the list.`
-                : "Type an object ID or a slide, for example T4 or A2."
+                ? t`${mmText(picked.size_mm)}, ${picked.measured_by === "you" ? t`measured by you` : t`from the AI outline`}. You can change the size in the list.`
+                : t`Type an object ID or a slide, for example T4 or A2.`
             }
           />
         </div>
@@ -247,10 +248,9 @@ export function DepositModal({
       )}
       <div className="grid gap-1.5">
         <label htmlFor={fieldId("dep-note")} className="text-body-sm font-semibold">
-          <Trans>Note</Trans>{" "}
-          <span className="font-normal text-fg-dim">
-            <Trans>optional</Trans>
-          </span>
+          <Trans>
+            Note <span className="font-normal text-fg-dim">optional</span>
+          </Trans>
         </label>
         <Input
           id={fieldId("dep-note")}
@@ -284,7 +284,7 @@ export function useSignature({
   const timer = useRef<number | undefined>(undefined);
   useEffect(() => () => window.clearTimeout(timer.current), []);
   const withPassword = password !== null;
-  const passwordError = tried && withPassword && !password ? "Enter your password." : undefined;
+  const passwordError = tried && withPassword && !password ? t`Enter your password.` : undefined;
   const run = () => {
     if (withPassword && !password) {
       setTried(true);
@@ -310,7 +310,7 @@ export function useSignature({
           value={password}
           onChange={(event) => setPassword(event.target.value)}
         />
-        <FieldNote error={passwordError} help="Your Vltava password" />
+        <FieldNote error={passwordError} help={t`Your Vltava password`} />
       </div>
     </SmallModalZone>
   ) : state === "fail" ? (
@@ -341,7 +341,7 @@ export function useSignature({
     run,
     zone,
     label: signLabel[withPassword ? "typed" : "sso"],
-    busyHint: withPassword ? "Checking your password…" : "Waiting for single sign-on…",
+    busyHint: withPassword ? t`Checking your password…` : t`Waiting for single sign-on…`,
   };
 }
 
@@ -364,6 +364,8 @@ export function SignModal({
   onClose: () => void;
   onSign: (method: "sso" | "password", done: (ok: boolean) => void) => void;
 }) {
+  const { t } = useLingui();
+
   const signature = useSignature({ failed, email, onSign });
   const busy = signature.busy || pending;
   return (
@@ -372,7 +374,7 @@ export function SignModal({
       onOpenChange={closeOn(onClose)}
       title={title}
       subtitle={subtitle}
-      hint={busy ? signature.busyHint : "Signing locks this version."}
+      hint={busy ? signature.busyHint : t`Signing locks this version.`}
       primaryLabel={signature.label}
       primaryBusy={busy}
       onPrimary={signature.run}

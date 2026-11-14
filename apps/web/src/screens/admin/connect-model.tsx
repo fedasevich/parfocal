@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import {
   type LabModelConnection,
@@ -157,11 +158,13 @@ function SecretField({
   value: string;
   onChange: (next: string) => void;
 }) {
+  const { t } = useLingui();
+
   const [shown, setShown] = useState(false);
-  const label = signIn === "header" ? "Header" : "Token";
+  const label = signIn === "header" ? t`Header` : t`Token`;
   const placeholder =
     signIn === "header" ? `X-Api-Key: ••••••••${lastFour}` : `••••••••••••••••${lastFour}`;
-  const toggle = shown ? "Hide what you typed" : "Show what you typed";
+  const toggle = shown ? t`Hide what you typed` : t`Show what you typed`;
   return (
     <FormField label={label}>
       <div className="relative">
@@ -199,11 +202,11 @@ function ContractModal({ address, onClose }: { address: string; onClose: () => v
       }}
       width={560}
       title={t`The model contract`}
-      subtitle="What Parfocal sends to your server and what it expects back"
+      subtitle={t`What Parfocal sends to your server and what it expects back`}
       showCancel={false}
-      primaryLabel="Close"
+      primaryLabel={t`Close`}
       onPrimary={onClose}
-      hint="MONAI Label and Triton servers follow it with a small adapter."
+      hint={t`MONAI Label and Triton servers follow it with a small adapter.`}
     >
       <SmallModalZone title={t`Parfocal sends`}>
         <CodeBlock>
@@ -324,9 +327,9 @@ function ConnectModelBody({
   const host = form ? hostOf(form.address) : (data?.host ?? "");
   const passed = data?.test.outcome === "follows-contract";
   const crumbs = [
-    { label: "Admin", href: adminHref("overview") },
+    { label: t`Admin`, href: adminHref("overview") },
     { label: "AI models", href: adminHref("models") },
-    { label: "Connect a model" },
+    { label: t`Connect a model` },
   ];
   if (data === undefined) {
     return (
@@ -337,12 +340,12 @@ function ConnectModelBody({
         title={t`Connect your own model`}
         subtitle={
           query.isError ? (
-            "The server's details could not be loaded."
+            t`The server's details could not be loaded.`
           ) : (
             <Loader label={t`Loading the server details`} size="inline" />
           )
         }
-        steps={[{ label: "Connect and test" }, { label: "Classes and access" }]}
+        steps={[{ label: t`Connect and test` }, { label: t`Classes and access` }]}
         current={page}
         bar={<FlowBar next={null} />}
       />
@@ -359,14 +362,14 @@ function ConnectModelBody({
     setForm({ ...current, ...change });
   };
   const steps = [
-    { label: "Connect and test" },
+    { label: t`Connect and test` },
     {
-      label: "Classes and access",
+      label: t`Classes and access`,
       ...(flow.reached < 1
         ? {
             why: passed
-              ? "Not reached yet. Use Next: classes and access."
-              : "Test the connection first.",
+              ? t`Not reached yet. Use Next: classes and access.`
+              : t`Test the connection first.`,
           }
         : {}),
     },
@@ -382,8 +385,8 @@ function ConnectModelBody({
         title={t`Connect your own model`}
         subtitle={
           page === 1
-            ? `Your lab's server · ${host}`
-            : "A server your lab runs, next to Parfocal's models"
+            ? t`Your lab's server · ${host}`
+            : t`A server your lab runs, next to Parfocal's models`
         }
         steps={steps}
         current={page}
@@ -410,10 +413,10 @@ function ConnectModelBody({
               }
               hint={
                 passed
-                  ? "Connected. Next, match its classes and choose who can run it."
+                  ? t`Connected. Next, match its classes and choose who can run it.`
                   : data.test.outcome === "not-contract"
-                    ? "The test answer does not follow the contract yet. Fix it and test again."
-                    : "Test the connection to go on."
+                    ? t`The test answer does not follow the contract yet. Fix it and test again.`
+                    : t`Test the connection to go on.`
               }
               next={
                 <Button
@@ -453,7 +456,7 @@ function ConnectModelBody({
                 {
                   onSuccess: (answer) => {
                     if (answer.status !== 200) {
-                      notify(problemText(answer.data, "The server could not be tested."));
+                      notify(problemText(answer.data, t`The server could not be tested.`));
                       return;
                     }
                     setTested(answer.data);
@@ -464,7 +467,7 @@ function ConnectModelBody({
                     setTile(0);
                     onScene(answer.data.outcome === "follows-contract" ? "addtested" : "addfail");
                   },
-                  onError: () => notify("The server could not be tested. Try again."),
+                  onError: () => notify(t`The server could not be tested. Try again.`),
                 },
               );
             }}
@@ -602,7 +605,7 @@ function ConnectStep({
             state={passed ? "ok" : failed ? "fail" : "empty"}
             image="/mock-assets/hpf-40x.jpg"
             label={sample?.label ?? t`Sample tile from ${test.sample_slide}`}
-            emptyText="The outlines your server sends back show here, on the sample tile"
+            emptyText={t`The outlines your server sends back show here, on the sample tile`}
             regions={sample?.outline.regions ?? []}
             cells={(sample?.outline.cells ?? []).map((cell) => ({
               ...cell,
@@ -627,14 +630,14 @@ function ConnectStep({
               <KeyValueList
                 tight
                 rows={[
-                  { icon: "clock", label: "Answered in", value: `${sample.answered_ms} ms` },
+                  { icon: "clock", label: t`Answered in`, value: `${sample.answered_ms} ms` },
                   {
                     icon: "target",
-                    label: "Found",
+                    label: t`Found`,
                     value: `${plural(sample.regions, "region")}, ${plural(sample.cells, "cell")}`,
                   },
-                  { icon: "list", label: "Classes", value: String(sample.classes) },
-                  { icon: "database", label: "Server", value: test.server_software ?? "Unknown" },
+                  { icon: "list", label: t`Classes`, value: String(sample.classes) },
+                  { icon: "database", label: t`Server`, value: test.server_software ?? t`Unknown` },
                 ]}
               />
             </>
@@ -648,10 +651,9 @@ function ConnectStep({
               </div>
               <InlineError>
                 <b>
-                  {test.missing_geometry} <Trans>cells came back without a</Trans>{" "}
-                  <code>
-                    <Trans>geometry</Trans>
-                  </code>
+                  <Trans>
+                    {test.missing_geometry} cells came back without a <code>geometry</code>
+                  </Trans>
                   .
                 </b>{" "}
                 <Trans>
@@ -729,7 +731,7 @@ const taxonomyLabel = (template: string) => `${taxonomyNames[template] ?? templa
 
 function matchedText(map: Record<string, string | null>) {
   const values = Object.values(map);
-  return `${values.filter((value) => value !== null && value !== leaveOut).length} of ${values.length} matched`;
+  return t`${values.filter((value) => value !== null && value !== leaveOut).length} of ${values.length} matched`;
 }
 
 function MapStep({
@@ -790,9 +792,9 @@ function MapStep({
         }
       >
         <Hint>
-          {matchedText(map)}{" "}
           <Trans>
-            by name. Parfocal remembers this for the server, so its next runs need nothing.
+            {matchedText(map)} by name. Parfocal remembers this for the server, so its next runs
+            need nothing.
           </Trans>
         </Hint>
         <ClassMapTable
@@ -801,7 +803,7 @@ function MapStep({
             value: map[item.name] ?? null,
             count: plural(counts.get(item.name) ?? 0, "cell"),
           }))}
-          options={[...options, { value: leaveOut, label: "Leave out of results" }]}
+          options={[...options, { value: leaveOut, label: t`Leave out of results` }]}
           onValueChange={(sent, value) => update({ classMap: { ...map, [sent]: value } })}
         />
       </Zone>
@@ -816,8 +818,8 @@ function MapStep({
               value={form.whoCanRun}
               onValueChange={(value) => update({ whoCanRun: value as WhoCanRun })}
               options={[
-                { value: "admins", label: "Admin rights only" },
-                { value: "researchers", label: "Every researcher" },
+                { value: "admins", label: t`Admin rights only` },
+                { value: "researchers", label: t`Every researcher` },
               ]}
             />
           </div>
@@ -857,33 +859,33 @@ function MapStep({
         <KeyValueList
           tight
           rows={[
-            { icon: "database", label: "Server", value: hostOf(form.address) },
+            { icon: "database", label: t`Server`, value: hostOf(form.address) },
             { icon: "key", label: "Sign-in", value: signInLabels[form.signIn] },
             {
               icon: "target",
-              label: "Returns",
+              label: t`Returns`,
               value: data.test.returns
                 .map((item, index) => (index === 0 ? item : item.toLowerCase()))
                 .join(" and "),
             },
             {
               icon: "layers",
-              label: "Tiles",
+              label: t`Tiles`,
               value: `${form.tileSize} px at ${form.magnification}×, ${data.tiles_at_once} at a time`,
             },
-            { icon: "list", label: "Classes", value: matchedText(map) },
+            { icon: "list", label: t`Classes`, value: matchedText(map) },
             {
               icon: "users",
-              label: "Runs it",
-              value: form.whoCanRun === "admins" ? "Admin rights only" : "Every researcher",
+              label: t`Runs it`,
+              value: form.whoCanRun === "admins" ? t`Admin rights only` : t`Every researcher`,
             },
             {
               icon: "folder",
-              label: "Projects",
+              label: t`Projects`,
               value:
                 chosenProjects.length > 0
                   ? chosenProjects.map((project) => project.code).join(", ")
-                  : "None yet",
+                  : t`None yet`,
             },
           ]}
         />
@@ -922,21 +924,20 @@ function MapBar({
       }
       hint={
         missing ? (
-          "Give the model a name and a version."
+          t`Give the model a name and a version.`
         ) : open.length > 0 ? (
           <>
-            <Trans>Choose a class for</Trans>{" "}
-            {open.map((sent, index) => (
-              <span key={sent}>
-                {index > 0 ? ", " : ""}
+            {open.length === 1
+              ? t`Choose a class for the sentence below, or leave it out of results.`
+              : t`Choose a class for the sentences below, or leave them out of results.`}
+            {open.map((sent) => (
+              <span key={sent} className="block">
                 <code>{sent}</code>
               </span>
             ))}
-            <Trans>, or leave</Trans> {open.length === 1 ? t`it` : t`them`}{" "}
-            <Trans>out of results.</Trans>
           </>
         ) : (
-          "Every class has a match."
+          t`Every class has a match.`
         )
       }
       next={
@@ -965,16 +966,16 @@ function MapBar({
               {
                 onSuccess: (answer) => {
                   if (answer.status !== 201) {
-                    notify(problemText(answer.data, "The model could not be added. Try again."));
+                    notify(problemText(answer.data, t`The model could not be added. Try again.`));
                     return;
                   }
                   const model = answer.data;
                   onDone();
                   notify(
-                    `${model.name} ${model.version} added. ${runnerLabels[model.who_can_run]} can run it.`,
+                    t`${model.name} ${model.version} added. ${runnerLabels[model.who_can_run]} can run it.`,
                   );
                 },
-                onError: () => notify("The model could not be added. Try again."),
+                onError: () => notify(t`The model could not be added. Try again.`),
               },
             )
           }

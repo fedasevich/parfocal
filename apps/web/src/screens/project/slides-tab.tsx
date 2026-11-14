@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import {
   type Project,
@@ -93,10 +94,12 @@ function groupSlides(slides: ProjectSlide[], overview: ProjectOverview | undefin
     key: item.label,
     label: (
       <>
-        <Trans>Case</Trans> <span className="font-mono">{item.label}</span>
+        <Trans>
+          Case <span className="font-mono">{item.label}</span>
+        </Trans>
       </>
     ),
-    sub: `${item.slide_count} slide${item.slide_count === 1 ? "" : "s"} · ${item.specimen.toLowerCase()}`,
+    sub: t`${item.slide_count} slide${item.slide_count === 1 ? "" : "s"} · ${item.specimen.toLowerCase()}`,
     count: item.slide_count,
     slides: slides.filter((slide) => slide.case_label === item.label),
   }));
@@ -108,7 +111,9 @@ function groupSlides(slides: ProjectSlide[], overview: ProjectOverview | undefin
       key: label,
       label: (
         <>
-          <Trans>Case</Trans> <span className="font-mono">{label}</span>
+          <Trans>
+            Case <span className="font-mono">{label}</span>
+          </Trans>
         </>
       ),
       sub: `${own.length} slide${own.length === 1 ? "" : "s"}`,
@@ -120,8 +125,8 @@ function groupSlides(slides: ProjectSlide[], overview: ProjectOverview | undefin
   if (loose.length > 0) {
     groups.push({
       key: "loose",
-      label: "Loose slides",
-      sub: `${loose.length} slide${loose.length === 1 ? "" : "s"}, no case`,
+      label: t`Loose slides`,
+      sub: t`${loose.length} slide${loose.length === 1 ? "" : "s"}, no case`,
       count: loose.length,
       slides: loose,
     });
@@ -160,7 +165,7 @@ export function SlidesTab({
         ? {
             ...group,
             count: group.slides.length,
-            sub: `${group.slides.length} matching slide${group.slides.length === 1 ? "" : "s"}`,
+            sub: t`${group.slides.length} matching slide${group.slides.length === 1 ? "" : "s"}`,
           }
         : group,
     )
@@ -222,7 +227,7 @@ export function SlidesTab({
         <span className="flex-1" />
         <span className="inline-flex items-center gap-1.5 text-body-sm text-fg-dim">
           <Icon name="upload" />
-          <Trans>Drop files anywhere here to upload into</Trans> {project.code}
+          <Trans>Drop files anywhere here to upload into {project.code}</Trans>
         </span>
       </div>
       <div className="min-h-0 flex-1 overflow-auto rounded-zone border border-line bg-surf-panel">
@@ -331,7 +336,7 @@ export function SlidesTab({
                           className="cursor-pointer border-0 bg-transparent p-0 text-body-sm font-medium text-accent hover:underline"
                           onClick={() =>
                             toast(
-                              `Loads the other ${group.count - group.slides.length} slides of ${group.key} (mock)`,
+                              t`Loads the other ${group.count - group.slides.length} slides of ${group.key} (mock)`,
                             )
                           }
                         >
@@ -452,7 +457,7 @@ function SlideRow({
               {own.map((set) => (
                 <span
                   key={set.id}
-                  title={`${withVersion(set.name, set.model_version)} · ${set.source === "import" ? `imported from ${set.source_file ?? "a file"}` : "run here"}`}
+                  title={`${withVersion(set.name, set.model_version)} · ${set.source === "import" ? t`imported from ${set.source_file ?? "a file"}` : "run here"}`}
                   className="inline-flex h-5.5 items-center gap-1.25 rounded-md border border-line bg-surf-section px-2 text-caption font-medium whitespace-nowrap text-fg"
                 >
                   <Icon name="layers" size="xs" />
@@ -566,7 +571,7 @@ function ResultSetDetail({
                 </small>
               </span>
               <span className="text-body-sm text-fg-dim">
-                {set.region_count} <Trans>regions</Trans>
+                <Trans>{set.region_count} regions</Trans>
                 {set.cell_count ? t` · ${format.integer(set.cell_count)} cells` : ""}
               </span>
               <Person
@@ -587,7 +592,7 @@ function ResultSetDetail({
                   size="sm"
                   variant="ghost"
                   onClick={() =>
-                    toast("Downloads this result set as Parfocal JSON, GeoJSON or CSV (mock)")
+                    toast(t`Downloads this result set as Parfocal JSON, GeoJSON or CSV (mock)`)
                   }
                 >
                   <Icon name="download" />

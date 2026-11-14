@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import { Dialog, DialogClose, DialogContent } from "@parfocal/ui/components/dialog";
@@ -63,7 +64,7 @@ function SettingsDialog({
   title,
   hint,
   nav,
-  closeLabel = "Close settings",
+  closeLabel = t`Close settings`,
   children,
 }: SettingsDialogProps) {
   const { t } = useLingui();
@@ -110,7 +111,7 @@ type SettingsNavProps = React.ComponentProps<"nav"> & {
 function SettingsNav({
   query,
   onQueryChange,
-  group = "Preferences",
+  group = t`Preferences`,
   empty,
   className,
   children,

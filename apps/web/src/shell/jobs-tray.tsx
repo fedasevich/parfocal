@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import {
   getListModelRunsQueryKey,
@@ -75,8 +76,8 @@ export function useResumeJob() {
 }
 
 export function resumedMessage({ tile, left }: { tile: number | undefined; left: number | null }) {
-  const from = tile === undefined ? "Resumed." : `Resumed from tile ${tile}.`;
-  return left === null ? from : `${from} About ${left} min left.`;
+  const from = tile === undefined ? t`Resumed.` : t`Resumed from tile ${tile}.`;
+  return left === null ? from : t`${from} About ${left} min left.`;
 }
 
 function useGoToTarget() {
@@ -156,8 +157,8 @@ export function ShellJobs() {
       key={`browser-${upload.projectId}`}
       data-testid="browser-upload-job"
       icon="upload"
-      title={`${upload.finished ? "Uploaded" : "Uploading"} ${upload.count} ${upload.count === 1 ? "file" : "files"}`}
-      detail={`${formatBytes(upload.sent)} of ${formatBytes(upload.total)}`}
+      title={`${upload.finished ? t`Uploaded` : t`Uploading`} ${upload.count} ${upload.count === 1 ? "file" : "files"}`}
+      detail={t`${formatBytes(upload.sent)} of ${formatBytes(upload.total)}`}
       percent={upload.percent}
       valueText={`${upload.percent}%`}
       onOpen={() => {

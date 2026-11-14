@@ -1,4 +1,4 @@
-import { Trans } from "@lingui/react/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { moveSlide, useListCases } from "@parfocal/api-client";
 import { SmallModal } from "@parfocal/ui/components/small-modal";
 import { Textarea } from "@parfocal/ui/components/textarea";
@@ -26,6 +26,8 @@ export function SlideMoveDialog({
   toast: (message: ReactNode) => void;
   onClose: () => void;
 }) {
+  const { t } = useLingui();
+
   const queryClient = useQueryClient();
   const cases = okData(useListCases({ project_id: projectId }).data) ?? [];
   const choices = targetChoices(cases, caseLabel);
@@ -37,7 +39,7 @@ export function SlideMoveDialog({
   const blockers = moveErrors(caseId, reason).map((text, index) => ({
     id: `move-${index}`,
     text,
-    goTo: "Go to the field",
+    goTo: t`Go to the field`,
   }));
   const save = async () => {
     setTried(true);
@@ -47,7 +49,7 @@ export function SlideMoveDialog({
     try {
       await moveSlide(slideId, { case_id: caseId, reason: reason.trim() });
       await queryClient.invalidateQueries();
-      toast(`${slideTitle} is now in case ${choices.find((item) => item.id === caseId)?.label}`);
+      toast(t`${slideTitle} is now in case ${choices.find((item) => item.id === caseId)?.label}`);
       onClose();
     } catch (error) {
       setFailure(failureText(error).failure);
@@ -64,8 +66,8 @@ export function SlideMoveDialog({
       title={moveTitle(caseLabel !== null)}
       subtitle={
         caseLabel === null
-          ? `${slideTitle} has no case yet.`
-          : `${slideTitle} sits in case ${caseLabel}.`
+          ? t`${slideTitle} has no case yet.`
+          : t`${slideTitle} sits in case ${caseLabel}.`
       }
       hint={
         failure ? (
@@ -73,13 +75,13 @@ export function SlideMoveDialog({
             {failure}
           </span>
         ) : (
-          "The move and the reason are kept in the audit log."
+          t`The move and the reason are kept in the audit log.`
         )
       }
-      primaryLabel={caseLabel === null ? "File slide" : "Move slide"}
+      primaryLabel={caseLabel === null ? t`File slide` : t`Move slide`}
       primaryBusy={busy}
       blockers={tried ? blockers : []}
-      blockersTitle="Before you can move it"
+      blockersTitle={t`Before you can move it`}
       onPrimary={() => void save()}
     >
       <div className="grid gap-3">

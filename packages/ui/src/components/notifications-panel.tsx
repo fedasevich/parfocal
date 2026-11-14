@@ -34,8 +34,7 @@ function NotificationDetail({ item }: { item: NotificationItem }) {
   if (item.quote) {
     return (
       <small className={detailClass}>
-        "{item.quote.text}
-        <Trans>" on</Trans> <ObjectIdTag>{item.quote.objectId}</ObjectIdTag>
+        "<Trans>{item.quote.text}" on</Trans> <ObjectIdTag>{item.quote.objectId}</ObjectIdTag>
         {item.quote.slide ? ` · ${item.quote.slide}` : ""}
       </small>
     );
@@ -130,9 +129,9 @@ function NotificationsPanel({
           value={tab}
           onValueChange={(value) => setTab(value as NotificationGroup)}
           options={[
-            { value: "all", label: tabLabel("all", "For me") },
-            { value: "mentions", label: tabLabel("mentions", "Mentions") },
-            { value: "jobs", label: tabLabel("jobs", "Jobs") },
+            { value: "all", label: tabLabel("all", t`For me`) },
+            { value: "mentions", label: tabLabel("mentions", t`Mentions`) },
+            { value: "jobs", label: tabLabel("jobs", t`Jobs`) },
           ]}
         />
       </div>

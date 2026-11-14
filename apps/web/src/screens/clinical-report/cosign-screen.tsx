@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import {
   type CaseReport,
@@ -80,9 +81,9 @@ type Row = { field: string; label: string; icon: IconName };
 
 function sections(data: ReportData, from: Values): [string, Row[]][] {
   return [
-    ["Findings", [{ field: "specimen", label: "Specimen", icon: "file" }]],
+    [t`Findings`, [{ field: "specimen", label: t`Specimen`, icon: "file" }]],
     [
-      "Deposits",
+      t`Deposits`,
       from.deposits.map((deposit) => ({
         field: `deps.${deposit.id}`,
         label: `${deposit.id} · ${depositSource(data, deposit)}`,
@@ -90,21 +91,21 @@ function sections(data: ReportData, from: Values): [string, Row[]][] {
       })),
     ],
     [
-      "Staging",
+      t`Staging`,
       [
-        { field: "size", label: "Largest deposit", icon: "ruler" },
-        { field: "cat", label: "Category", icon: "flag" },
-        { field: "pos", label: "Nodes positive", icon: "list" },
-        { field: "exam", label: "Nodes examined", icon: "list" },
-        { field: "ene", label: "Extranodal extension", icon: "target" },
-        { field: "pn", label: "Suggested pN", icon: "shield" },
+        { field: "size", label: t`Largest deposit`, icon: "ruler" },
+        { field: "cat", label: t`Category`, icon: "flag" },
+        { field: "pos", label: t`Nodes positive`, icon: "list" },
+        { field: "exam", label: t`Nodes examined`, icon: "list" },
+        { field: "ene", label: t`Extranodal extension`, icon: "target" },
+        { field: "pn", label: t`Suggested pN`, icon: "shield" },
       ],
     ],
     [
-      "Report text",
+      t`Report text`,
       [
-        { field: "diag", label: "Final diagnosis", icon: "text" },
-        { field: "micro", label: "Microscopic", icon: "text" },
+        { field: "diag", label: t`Final diagnosis`, icon: "text" },
+        { field: "micro", label: t`Microscopic`, icon: "text" },
       ],
     ],
   ];
@@ -116,7 +117,7 @@ const aiValues = (data: ReportData, from: Values) => {
   if (sizes.length) {
     const largest = Math.max(...sizes);
     out["size"] = mmText(largest);
-    out["cat"] = largest > 2 ? "Macrometastasis" : "Micrometastasis";
+    out["cat"] = largest > 2 ? t`Macrometastasis` : t`Micrometastasis`;
   }
   for (const deposit of from.deposits) {
     const ai = data.objects.find(
@@ -140,21 +141,21 @@ const clockOf = (iso: string | null | undefined) => {
 
 function cosignIssues(data: ReportData, values: Values) {
   const out: { field: string; text: string }[] = [];
-  if (!values.specimen.trim()) out.push({ field: "specimen", text: "Name the specimen." });
+  if (!values.specimen.trim()) out.push({ field: "specimen", text: t`Name the specimen.` });
   for (const deposit of values.deposits) {
     if (depositMm(deposit) === null) {
-      out.push({ field: `deps.${deposit.id}`, text: "Use a size in mm from 0.1 to 100." });
+      out.push({ field: `deps.${deposit.id}`, text: t`Use a size in mm from 0.1 to 100.` });
     }
   }
   const positive = positiveNodes(data, values.deposits);
   const examined = parseNumber(values.examined, true);
-  if (examined === null || examined < 1) out.push({ field: "exam", text: "Enter at least 1." });
+  if (examined === null || examined < 1) out.push({ field: "exam", text: t`Enter at least 1.` });
   else if (positive > examined) {
-    out.push({ field: "exam", text: `Fewer than the ${positive} nodes with a deposit.` });
+    out.push({ field: "exam", text: t`Fewer than the ${positive} nodes with a deposit.` });
   }
   const diagnosis = values.diagnosis.trim();
-  if (!diagnosis) out.push({ field: "diag", text: "Write the final diagnosis." });
-  else if (diagnosis.length < 10) out.push({ field: "diag", text: "Use at least 10 characters." });
+  if (!diagnosis) out.push({ field: "diag", text: t`Write the final diagnosis.` });
+  else if (diagnosis.length < 10) out.push({ field: "diag", text: t`Use at least 10 characters.` });
   return out;
 }
 
@@ -167,8 +168,7 @@ const sceneValues = (from: Values): Values => ({
     index === 0 ? { ...deposit, size: "8.0" } : deposit,
   ),
   category: "macro",
-  diagnosis:
-    "Lymph nodes, sentinel, left axilla, excision: METASTATIC CARCINOMA, macrometastasis, 3 deposits, largest 8.0 mm (1/2).",
+  diagnosis: t`Lymph nodes, sentinel, left axilla, excision: METASTATIC CARCINOMA, macrometastasis, 3 deposits, largest 8.0 mm (1/2).`,
 });
 
 function CosignFlow({
@@ -185,7 +185,7 @@ function CosignFlow({
   const from = sentValues(loaded);
   const [values, setValues] = useState<Values>(() => (live ? loaded.values : sceneValues(from)));
   const [returned, setReturned] = useState<{ note: string; at: string } | null>(() => {
-    if (scene === "returned") return { note: returnedNote, at: "15 Oct 11:35" };
+    if (scene === "returned") return { note: returnedNote, at: t`15 Oct 11:35` };
     if (live && server.state === "returned") return { note: server.return_note ?? "", at: "" };
     return null;
   });
@@ -203,7 +203,7 @@ function CosignFlow({
   const senderId = server.sent_by_user_id;
   const sender = person(senderId);
   const me = person(meId);
-  const senderFirst = sender?.name.split(" ")[0] ?? "The sender";
+  const senderFirst = sender?.name.split(" ")[0] ?? t`The sender`;
   const ai = aiValues(data, from);
   const flush = async (): Promise<void> => {
     const result = await pushValues(writer, saved.current, values);
@@ -369,7 +369,7 @@ function CosignFlow({
           crumbs={[
             { label: data.project.name, href: `${projectHref}?tab=slides` },
             { label: `Case ${data.case.label}`, href: `${projectHref}?tab=slides` },
-            { label: "Clinical report" },
+            { label: t`Clinical report` },
           ]}
           title={t`Clinical report`}
           subtitle={
@@ -395,9 +395,9 @@ function CosignFlow({
               back={renderLink({
                 href: `${projectHref}?tab=slides`,
                 className: buttonVariants({}),
-                children: "Back to the project",
+                children: t`Back to the project`,
               })}
-              hint="A change from now on is an amendment with a reason."
+              hint={t`A change from now on is an amendment with a reason.`}
               next={
                 <Button
                   variant="primary"
@@ -407,7 +407,7 @@ function CosignFlow({
                       link.href = getDownloadCaseReportPdfUrl(projectId, caseId, 1);
                       link.click();
                     }
-                    toast.show({ text: `${data.case.label}_report_v1.pdf saved to Downloads` });
+                    toast.show({ text: t`${data.case.label}_report_v1.pdf saved to Downloads` });
                   }}
                 >
                   <Icon name="download" />
@@ -441,20 +441,20 @@ function CosignFlow({
   }
 
   const hint = returned
-    ? `${senderFirst} sees your changes and the note. He sends it again when it is fixed.`
+    ? t`${senderFirst} sees your changes and the note. He sends it again when it is fixed.`
     : waiting
-      ? "This report is not waiting for your co-sign."
+      ? t`This report is not waiting for your co-sign.`
       : !can
-        ? "You cannot sign out in this project. Ask the owner for the right."
+        ? t`You cannot sign out in this project. Ask the owner for the right.`
         : issues.length
-          ? `${plural(issues.length, "value")} to fix first.`
+          ? t`${plural(issues.length, "value")} to fix first.`
           : changed.length
-            ? `${plural(changed.length, "change")}, highlighted. ${senderFirst} sees each one.`
-            : `No changes yet. Co-signing keeps ${senderFirst}'s values.`;
+            ? t`${plural(changed.length, "change")}, highlighted. ${senderFirst} sees each one.`
+            : t`No changes yet. Co-signing keeps ${senderFirst}'s values.`;
 
-  const sentText = scene ? "15 Oct 11:20" : clockOf(server.sent_at);
+  const sentText = scene ? t`15 Oct 11:20` : clockOf(server.sent_at);
   const returnedTo = returned
-    ? `Returned to ${sender?.name}${returned.at ? `, ${returned.at}` : ""}`
+    ? t`Returned to ${sender?.name}${returned.at ? `, ${returned.at}` : ""}`
     : "";
 
   return (
@@ -476,8 +476,10 @@ function CosignFlow({
             <span className="font-mono" data-phi="">
               {data.case.label}
             </span>{" "}
-            · {data.template.name} {data.template.version} <Trans>· drafted by</Trans>{" "}
-            {sender?.name}
+            ·{" "}
+            <Trans>
+              {data.template.name} {data.template.version} · drafted by {sender?.name}
+            </Trans>
           </>
         }
         steps={[]}
@@ -505,7 +507,7 @@ function CosignFlow({
                 renderLink({
                   href: destinations.myWork(),
                   className: buttonVariants({ variant: "primary" }),
-                  children: "Back to My work",
+                  children: t`Back to My work`,
                 })
               ) : (
                 <Button
@@ -527,8 +529,7 @@ function CosignFlow({
               <div className="grid">
                 <b className="text-body font-semibold">{returnedTo}</b>
                 <small className="text-body-sm text-fg-dim">
-                  <Trans>With</Trans> {plural(changed.length, "change")}{" "}
-                  <Trans>and your note</Trans>
+                  <Trans>With {plural(changed.length, "change")} and your note</Trans>
                 </small>
               </div>
             </div>
@@ -560,26 +561,26 @@ function CosignFlow({
         <ReasonModal
           title={t`Return to ${sender?.name}`}
           subtitle={`${data.case.label} · ${changed.length ? `${plural(changed.length, "change")} highlighted` : "no changes"}`}
-          whatLabel="What he gets back"
+          whatLabel={t`What he gets back`}
           what={
             changed.length
-              ? `${andJoin(changed.map((row, index) => (index ? row.label.charAt(0).toLowerCase() + row.label.slice(1) : row.label)))}, changed by you`
-              : "The report as he sent it"
+              ? t`${andJoin(changed.map((row, index) => (index ? row.label.charAt(0).toLowerCase() + row.label.slice(1) : row.label)))}, changed by you`
+              : t`The report as he sent it`
           }
           label={t`Note to ${senderFirst}`}
           placeholder={t`For example, measure the widest extent across the capsule.`}
-          help={`${senderFirst} sees your changes and the note.`}
-          hint="He can fix it and send it again."
-          primary="Return with the note"
-          empty={`Write a note. ${senderFirst} sees it with your changes.`}
-          tooShort="Use at least 10 characters."
+          help={t`${senderFirst} sees your changes and the note.`}
+          hint={t`He can fix it and send it again.`}
+          primary={t`Return with the note`}
+          empty={t`Write a note. ${senderFirst} sees it with your changes.`}
+          tooShort={t`Use at least 10 characters.`}
           onClose={() => setModal(null)}
           onSubmit={(note) => {
             setModal(null);
             const done = () => {
-              setReturned({ note, at: live ? clockOf(new Date().toISOString()) : "15 Oct 11:35" });
+              setReturned({ note, at: live ? clockOf(new Date().toISOString()) : t`15 Oct 11:35` });
               toast.show({
-                text: `Returned to ${sender?.name} with your note`,
+                text: t`Returned to ${sender?.name} with your note`,
                 ...(live ? {} : { undo: () => setReturned(null) }),
               });
             };
@@ -597,28 +598,28 @@ function CosignFlow({
                     done();
                   }),
               )
-              .catch(() => toast.show({ text: "The report could not be returned. Try again." }));
+              .catch(() => toast.show({ text: t`The report could not be returned. Try again.` }));
           }}
         />
       ) : null}
       {modal === "sign" ? (
         <SignModal
           title={t`Co-sign and sign out ${data.case.label}`}
-          subtitle={`Reported by ${sender?.name}, verified by you`}
+          subtitle={t`Reported by ${sender?.name}, verified by you`}
           rows={[
             {
               icon: "user",
-              label: "Signed by",
+              label: t`Signed by`,
               value: `${me?.name}, MUDr. ${sender?.name} is named as the reporter`,
             },
             {
               icon: "mail",
-              label: "Goes to",
+              label: t`Goes to`,
               value: data.case.requested_by
-                ? `${data.case.requested_by}, who requested it`
-                : "The clinician who requested it",
+                ? t`${data.case.requested_by}, who requested it`
+                : t`The clinician who requested it`,
             },
-            { icon: "file", label: "What you sign", value: "The report with your changes" },
+            { icon: "file", label: t`What you sign`, value: "The report with your changes" },
           ]}
           email={workEmail(me?.name ?? "")}
           failed={false}
@@ -643,7 +644,7 @@ function CosignFlow({
                 showV1: false,
                 preview: false,
               });
-              toast.show({ text: "Co-signed and signed out. The report names you both." });
+              toast.show({ text: t`Co-signed and signed out. The report names you both.` });
             };
             if (!live) {
               finish(null);

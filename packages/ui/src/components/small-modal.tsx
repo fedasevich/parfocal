@@ -1,4 +1,5 @@
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
+import { t } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react/macro";
 import {
   BeforeYouList,
@@ -50,8 +51,8 @@ function SmallModal({
   primaryDisabled = false,
   primaryBusy = false,
   blockers = [],
-  blockersTitle = "Before you can",
-  cancelLabel = "Cancel",
+  blockersTitle = t`Before you can`,
+  cancelLabel = t`Cancel`,
   showCancel = true,
   onCancel,
   secondaryAction,

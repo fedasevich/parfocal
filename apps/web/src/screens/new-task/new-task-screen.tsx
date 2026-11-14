@@ -1,3 +1,4 @@
+import { plural as pluralOf } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import {
   type TaskDraft,
@@ -254,7 +255,7 @@ function NewTaskFlow({
   const update = (change: (current: Draft) => Draft) => setDraft(change);
   const projectHref = `/projects/${data.projectId}`;
   const sent = page === "sent";
-  const taskTitle = isAnnotate(draft) ? "New annotate task" : "New review task";
+  const taskTitle = isAnnotate(draft) ? t`New annotate task` : t`New review task`;
   const index = sent ? stepKeys.length : stepKeys.indexOf(page);
 
   const steps: FlowStep[] = stepKeys.map((key) => {
@@ -265,8 +266,8 @@ function NewTaskFlow({
       state: state === "current" ? "current" : state,
       why:
         state === "todo"
-          ? `Not reached yet. Finish ${stepNames[page === "sent" ? "send" : page]} first, then use Next.`
-          : `Go to ${stepNames[key]}${count && draft.seen.includes(key) ? `. ${plural(count, "thing")} to fix` : ""}`,
+          ? t`Not reached yet. Finish ${stepNames[page === "sent" ? "send" : page]} first, then use Next.`
+          : t`Go to ${stepNames[key]}${count && draft.seen.includes(key) ? t`. ${plural(count, "thing")} to fix` : ""}`,
     };
   });
 
@@ -279,7 +280,7 @@ function NewTaskFlow({
     openModal: (next: TaskModal) => onNavigate({ step: page, modal: next }),
     onTemplate: (template: (typeof data.templates)[number]) => {
       setDraft((current) => applyTemplate(current, template, data));
-      setToast(`${template.name} filled in what to check, how it runs and the display defaults`);
+      setToast(t`${template.name} filled in what to check, how it runs and the display defaults`);
     },
   };
 
@@ -321,7 +322,8 @@ function NewTaskFlow({
                 invite.mutate(
                   { taskId, data: { email } },
                   {
-                    onError: () => setToast(`The invite to ${email} could not be sent. Try again.`),
+                    onError: () =>
+                      setToast(t`The invite to ${email} could not be sent. Try again.`),
                   },
                 );
               }
@@ -329,7 +331,7 @@ function NewTaskFlow({
             setDraft((current) => ({ ...current, sentAt: "15 Oct" }));
             onNavigate({ step: "sent" });
           },
-          onError: () => setToast("The task could not be created. Try again."),
+          onError: () => setToast(t`The task could not be created. Try again.`),
         },
       );
     const own = templateOf(draft, data);
@@ -344,7 +346,7 @@ function NewTaskFlow({
       {
         onSuccess: (response) =>
           response.status === 200 ? createTask(response.data.version) : createTask(null),
-        onError: () => setToast("The template's opinion form could not be published. Try again."),
+        onError: () => setToast(t`The template's opinion form could not be published. Try again.`),
       },
     );
   };
@@ -353,18 +355,18 @@ function NewTaskFlow({
   if (sent) {
     bar = (
       <FlowBar
-        hint="Settings can change until the first review starts."
+        hint={t`Settings can change until the first review starts.`}
         next={
           <span className="flex gap-3">
             {renderLink({
               href: `${projectHref}?tab=tasks`,
               className: buttonVariants({}),
-              children: "Back to the project",
+              children: t`Back to the project`,
             })}
             {renderLink({
               href: `/team?task=${encodeURIComponent(sentTaskId ?? data.taskId)}`,
               className: buttonVariants({ variant: "primary" }),
-              children: "Track it in Team",
+              children: t`Track it in Team`,
             })}
           </span>
         }
@@ -375,12 +377,12 @@ function NewTaskFlow({
     const blockers = blockersFor(all, page);
     const listed = blockers.length > 1 || (last && blockers.length > 0);
     const hint = listed
-      ? `${plural(blockers.length, "thing")} to finish first.`
+      ? t`${plural(blockers.length, "thing")} to finish first.`
       : blockers[0]
         ? (blockers[0].blockText ?? blockers[0].text)
         : last
-          ? "Each reviewer gets one email, and the task shows at the top of their My work."
-          : "The draft is saved as you go.";
+          ? t`Each reviewer gets one email, and the task shows at the top of their My work.`
+          : t`The draft is saved as you go.`;
     const before = stepKeys[index - 1];
     bar = (
       <FlowBar
@@ -393,7 +395,7 @@ function NewTaskFlow({
               blockers={blockers.map((issue) => ({
                 id: issue.field,
                 text: issue.text,
-                goTo: "Go to",
+                goTo: t`Go to`,
                 onGoTo: () => go(issue.step, issue.field),
               }))}
             />
@@ -408,7 +410,7 @@ function NewTaskFlow({
             renderLink({
               href: `${projectHref}?tab=tasks`,
               className: buttonVariants({}),
-              children: "Cancel",
+              children: t`Cancel`,
             })
           )
         }
@@ -427,13 +429,17 @@ function NewTaskFlow({
     );
   }
 
+  const reviewerCount = pluralOf(draft.reviewers.length, {
+    one: "# reviewer",
+    other: "# reviewers",
+  });
   const sentLine = (
     <p className="m-0 mt-1.5 flex items-center gap-2 text-body-sm text-fg">
       <Icon name="check" className="text-ok" />
       <span>
-        <Trans>Sent to</Trans> {plural(draft.reviewers.length, "reviewer")}
-        {draft.invites.length ? t` and ${draft.invites.length} invited` : ""} <Trans>on</Trans>{" "}
-        {draft.sentAt ?? t`15 Oct`}
+        {draft.invites.length
+          ? t`Sent to ${reviewerCount} and ${draft.invites.length} invited on ${draft.sentAt ?? "15 Oct"}`
+          : t`Sent to ${reviewerCount} on ${draft.sentAt ?? "15 Oct"}`}
       </span>
     </p>
   );
@@ -448,7 +454,7 @@ function NewTaskFlow({
         crumbStart={<SidebarToggle />}
         crumbs={[
           { label: data.projectName, href: `${projectHref}?tab=slides` },
-          { label: "Review tasks", href: `${projectHref}?tab=tasks` },
+          { label: t`Review tasks`, href: `${projectHref}?tab=tasks` },
           { label: sent ? data.code : taskTitle },
         ]}
         title={
@@ -491,7 +497,7 @@ function NewTaskFlow({
               touched: { ...current.touched, groups: true },
             }));
             onNavigate({ step: page, modal: undefined });
-            setToast(`${plural(ids.length, "slide")} added to the task`);
+            setToast(t`${plural(ids.length, "slide")} added to the task`);
           }}
         />
       ) : null}

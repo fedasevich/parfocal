@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import type { Decision } from "@parfocal/tokens";
 import { AreaCallButtons } from "@parfocal/ui/components/area-call";
@@ -111,7 +112,7 @@ type FindingsPanelProps =
 const zoneLabel = (zone: FindingsZone) =>
   zone.id === CHANGED_ZONE_ID
     ? CHANGED_ZONE_NAME
-    : `${zone.id.replace("zone-", "Zone ")} · ${zone.name}`;
+    : `${zone.id.replace("zone-", t`Zone `)} · ${zone.name}`;
 
 const hatch =
   "size-3 shrink-0 rounded-[3px] border-[1.5px] border-dashed border-unsure bg-[repeating-linear-gradient(-45deg,var(--unsure)_0_2px,transparent_2px_5px)]";
@@ -227,7 +228,7 @@ function CellFindings({
         ? { title: `${outline.id} · ${outline.name}`, numbers: outline }
         : { title: slide.label, numbers: slide };
   const tilesLabel = (zone: FindingsZone) =>
-    `${zone.id === CHANGED_ZONE_ID ? "Cells" : "Unsure cells"} in ${zoneLabel(zone)}`;
+    t`${zone.id === CHANGED_ZONE_ID ? t`Cells` : t`Unsure cells`} in ${zoneLabel(zone)}`;
   const pickIn = (zoneId: string | null) => (picked: FindingsCell) =>
     onSelect({ kind: "cell", id: picked.id, zoneId });
 
@@ -244,7 +245,7 @@ function CellFindings({
         key="zones"
         data-slot="findings-zones"
         title={t`Where the AI is unsure`}
-        sub="Most unsure first. Open a zone to go through its cells."
+        sub={t`Most unsure first. Open a zone to go through its cells.`}
       >
         <ul aria-label={t`Zones where the AI is unsure`} className="m-0 grid list-none gap-1.5 p-0">
           {ordered.map((zone) => (
@@ -260,7 +261,7 @@ function CellFindings({
         key="scattered"
         data-slot="findings-scattered"
         title={t`Scattered unsure cells`}
-        sub={`${scattered.length} outside every zone`}
+        sub={t`${scattered.length} outside every zone`}
       >
         <Tiles
           label={t`Scattered unsure cells`}
@@ -290,7 +291,7 @@ function CellFindings({
           key="changed"
           data-slot="findings-changed"
           title={CHANGED_ZONE_NAME}
-          sub="The AI re-checked this slide after your corrections. Learning stays on this slide."
+          sub={t`The AI re-checked this slide after your corrections. Learning stays on this slide.`}
           end={
             onUndoChanged ? (
               <Button variant="ghost" size="sm" onClick={onUndoChanged}>
@@ -402,7 +403,7 @@ function AreaSteps({ area, number, onCall, onMeasure, onCount }: AreaStepsProps)
   const later = (step: StagingStep) =>
     step.name === next ? null : (
       <Hint>
-        <Trans>Opens after step</Trans> {step.index - 1}.
+        <Trans>Opens after step {step.index - 1}</Trans>.
       </Hint>
     );
   const bodies: Record<StagingStep["name"], (step: StagingStep) => React.ReactNode> = {
@@ -411,10 +412,10 @@ function AreaSteps({ area, number, onCall, onMeasure, onCount }: AreaStepsProps)
       later(step) ?? (
         <>
           <span className="text-body-sm text-fg-dim">
-            <Trans>The AI sizes it at</Trans> {formatAreaMm(area.size)}
-            <Trans>, between</Trans> {formatAreaMm(area.low)} <Trans>and</Trans>{" "}
-            {formatAreaMm(area.high)}
-            <Trans>. Measure across the widest part.</Trans>
+            <Trans>
+              The AI sizes it at {formatAreaMm(area.size)}, between {formatAreaMm(area.low)} and{" "}
+              {formatAreaMm(area.high)}. Measure across the widest part.
+            </Trans>
           </span>
           <Button size="sm" onClick={onMeasure}>
             <Trans>Measure it</Trans>
@@ -427,8 +428,11 @@ function AreaSteps({ area, number, onCall, onMeasure, onCount }: AreaStepsProps)
           {area.cells ? (
             <>
               <span className="text-body-sm text-fg-dim">
-                <Trans>The AI counts</Trans> {area.cells.low} <Trans>to</Trans> {area.cells.high}{" "}
-                <Trans>tumor cells. The line is</Trans> {cellLine}.
+                <Trans>
+                  The AI counts {area.cells.low} to {area.cells.high} tumor cells. The line is{" "}
+                  {cellLine}
+                </Trans>
+                .
               </span>
               <CountBar count={Math.round((area.cells.low + area.cells.high) / 2)} />
             </>
@@ -501,7 +505,7 @@ function NodeStaging({
             >
               <span className="grid min-w-0 flex-1 gap-0.5">
                 <span className="flex items-center gap-2 text-body font-semibold">
-                  <Trans>Area</Trans> {position + 1}
+                  <Trans>Area {position + 1}</Trans>
                   <ObjectIdTag>{area.id}</ObjectIdTag>
                   <span className="font-normal text-fg-dim">{formatAreaMm(shown)}</span>
                 </span>

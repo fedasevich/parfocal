@@ -43,7 +43,7 @@ export function TemplateOffers({ notify }: { notify: Notify }) {
     run.mutate(
       { offerId: offer.id },
       {
-        onError: () => notify("That did not work. Try again."),
+        onError: () => notify(t`That did not work. Try again.`),
         onSuccess: (response) => {
           if (response.status >= 300) {
             notify(problemTitle(response.data));
@@ -52,8 +52,8 @@ export function TemplateOffers({ notify }: { notify: Notify }) {
           refresh();
           notify(
             accepting
-              ? `${offer.name} is now in the library`
-              : `${offer.name} was declined and is not in the library`,
+              ? t`${offer.name} is now in the library`
+              : t`${offer.name} was declined and is not in the library`,
           );
         },
       },
@@ -62,7 +62,7 @@ export function TemplateOffers({ notify }: { notify: Notify }) {
   return (
     <Zone
       title={t`Offered by researchers`}
-      sub="A researcher arranged a report and offered the layout to the library. Accept adds it as a template, decline leaves the library as it is."
+      sub={t`A researcher arranged a report and offered the layout to the library. Accept adds it as a template, decline leaves the library as it is.`}
     >
       <Table className={tableClass} aria-label={t`Offered report layouts`}>
         <TableHeader>
@@ -83,7 +83,7 @@ export function TemplateOffers({ notify }: { notify: Notify }) {
                 <NameCell
                   lead={<Icon name="file" />}
                   title={offer.name}
-                  sub={`${kindLabel(offer.study_kind)} · ${offer.blocks.length} blocks`}
+                  sub={t`${kindLabel(offer.study_kind)} · ${offer.blocks.length} blocks`}
                 />
               </TableCell>
               <TableCell>{person(offer.offered_by_user_id)?.name ?? t`A researcher`}</TableCell>

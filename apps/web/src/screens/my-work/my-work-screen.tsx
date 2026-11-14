@@ -1,4 +1,4 @@
-import { Trans } from "@lingui/react/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   useGetMe,
   useGetMyHome,
@@ -41,6 +41,8 @@ export function MyWorkScreen({
   state: MyWorkState;
   change: (next: Change) => void;
 }) {
+  const { t } = useLingui();
+
   const goTo = useGoTo();
   const tasks = okData(useListMyReviewTasks().data) ?? [];
   const adjudications = okData(useListMyAdjudications().data) ?? [];
@@ -113,8 +115,8 @@ export function MyWorkScreen({
   const toDecide = adjudications.reduce((sum, item) => sum + item.objects.length - item.decided, 0);
   const subtitle =
     state.tab === "assigned"
-      ? `${today} · ${plural(assigned.length, "task")} you assigned${waiting ? ` · ${waiting} waiting for you to resolve` : ""}`
-      : `${today} · ${plural(active.length, "task")} to review${toDecide ? ` · ${plural(toDecide, "object")} to decide` : ""}`;
+      ? t`${today} · ${plural(assigned.length, "task")} you assigned${waiting ? t` · ${waiting} waiting for you to resolve` : ""}`
+      : t`${today} · ${plural(active.length, "task")} to review${toDecide ? t` · ${plural(toDecide, "object")} to decide` : ""}`;
   const tabLabel = (label: string, count: number) => (
     <>
       {label}
@@ -140,9 +142,9 @@ export function MyWorkScreen({
         }
       >
         <TabsList variant="page">
-          <TabsTrigger value="review">{tabLabel("To review", toReview)}</TabsTrigger>
-          <TabsTrigger value="assigned">{tabLabel("Assigned by me", assigned.length)}</TabsTrigger>
-          <TabsTrigger value="all">{tabLabel("All slides", slides.length)}</TabsTrigger>
+          <TabsTrigger value="review">{tabLabel(t`To review`, toReview)}</TabsTrigger>
+          <TabsTrigger value="assigned">{tabLabel(t`Assigned by me`, assigned.length)}</TabsTrigger>
+          <TabsTrigger value="all">{tabLabel(t`All slides`, slides.length)}</TabsTrigger>
         </TabsList>
       </Tabs>
       <div className="flex min-h-0 flex-col gap-3">

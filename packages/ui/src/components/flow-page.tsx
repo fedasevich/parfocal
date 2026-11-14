@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import type { LinkRenderer } from "@parfocal/ui/components/app-shell";
 import {
@@ -85,7 +86,7 @@ const stepButton =
   "inline-flex min-h-6 items-center gap-1.75 rounded-sm border-0 bg-transparent p-0 text-body-sm text-fg-dim focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent";
 
 function moveStepFocus(event: React.KeyboardEvent<HTMLOListElement>) {
-  const keys = ["ArrowRight", "ArrowLeft", "Home", "End"];
+  const keys = ["ArrowRight", "ArrowLeft", t`Home`, "End"];
   if (!keys.includes(event.key)) return;
   const buttons = Array.from(event.currentTarget.querySelectorAll<HTMLButtonElement>("button"));
   const at = buttons.indexOf(document.activeElement as HTMLButtonElement);
@@ -144,7 +145,7 @@ function Stepper({
         );
         const why =
           step.why ??
-          `Not reached yet. Finish ${steps[current]?.label ?? "this step"} first, then use Next.`;
+          t`Not reached yet. Finish ${steps[current]?.label ?? "this step"} first, then use Next.`;
         const whyId = `${id}-why-${index}`;
         return (
           <li
@@ -296,6 +297,8 @@ function FlowPage({
   children,
   ...props
 }: FlowPageProps) {
+  const { t } = useLingui();
+
   const [scrollRef, scroll] = useScrollState();
   const more = moreBelow ?? scroll.more;
   return (
@@ -329,7 +332,9 @@ function FlowPage({
       <div
         ref={scrollRef}
         data-slot="flow-body"
-        {...(scroll.overflows ? { tabIndex: 0, role: "region", "aria-label": "Step content" } : {})}
+        {...(scroll.overflows
+          ? { tabIndex: 0, role: "region", "aria-label": t`Step content` }
+          : {})}
         className="min-h-0 overflow-auto focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-solid focus-visible:outline-accent"
       >
         <div className="mx-auto grid w-full max-w-208 grid-cols-[minmax(0,760px)] justify-center px-9 pt-6 pb-10">

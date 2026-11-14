@@ -1,3 +1,4 @@
+import { plural } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import {
   getGetDisagreementQueueQueryKey,
@@ -176,8 +177,8 @@ export function QueueScreen({ taskId, scene }: { taskId: string; scene: QueueSce
   const everyClosed = allClosed(rows);
   const lockedName = nameOf(locked?.user_id) ?? "A reviewer";
   const sub = locked
-    ? `The queue opens when every reviewer has submitted. ${lockedName} has ${locked.slides_left} slides left.`
-    : `${task?.name ?? ""} · ${rows.length} objects need a decision out of ${queue?.total_objects ?? 0} · ${resolved} resolved${withAdjudicator ? ` · ${withAdjudicator} with the adjudicator` : ""}`;
+    ? t`The queue opens when every reviewer has submitted. ${lockedName} has ${locked.slides_left} slides left.`
+    : t`${task?.name ?? ""} · ${rows.length} objects need a decision out of ${queue?.total_objects ?? 0} · ${resolved} resolved${withAdjudicator ? t` · ${withAdjudicator} with the adjudicator` : ""}`;
   const checkedRows = rows.filter((item) => checked.includes(item.key));
 
   const sendObjects = (keys: string[], adjudicatorId: string, note: string | null) => {
@@ -194,7 +195,7 @@ export function QueueScreen({ taskId, scene }: { taskId: string; scene: QueueSce
       {
         onSuccess: () =>
           toast.show(
-            `${picked.length} object${picked.length === 1 ? "" : "s"} sent to ${nameOf(adjudicatorId) ?? "the adjudicator"}`,
+            t`${picked.length} object${picked.length === 1 ? "" : "s"} sent to ${nameOf(adjudicatorId) ?? "the adjudicator"}`,
           ),
       },
     );
@@ -209,16 +210,16 @@ export function QueueScreen({ taskId, scene }: { taskId: string; scene: QueueSce
           <Breadcrumbs
             renderLink={renderLink}
             items={[
-              { label: "My work", href: destinations.myWork() },
+              { label: t`My work`, href: destinations.myWork() },
               {
-                label: project?.name ?? "Project",
+                label: project?.name ?? t`Project`,
                 ...(task ? { href: destinations.project(task.project_id) } : {}),
               },
               {
                 label: `${taskCode} · ${task?.name.split(" · ")[0] ?? ""}`,
                 ...(task ? { href: `${destinations.project(task.project_id)}?tab=tasks` } : {}),
               },
-              { label: "Disagreements" },
+              { label: t`Disagreements` },
             ]}
           />
           <h1 className="m-0 text-page-title font-semibold tracking-[-0.01em] text-fg">
@@ -236,12 +237,12 @@ export function QueueScreen({ taskId, scene }: { taskId: string; scene: QueueSce
               onClick={() =>
                 setNudging({
                   userId: locked.user_id,
-                  message: `Hi ${lockedName.split(" ")[0]}, ${taskCode} is waiting on your last ${locked.slides_left} slides before its disagreements can be decided. Could you fit them in this week?`,
+                  message: t`Hi ${lockedName.split(" ")[0]}, ${taskCode} is waiting on your last ${locked.slides_left} slides before its disagreements can be decided. Could you fit them in this week?`,
                 })
               }
             >
               <Icon name="bell" />
-              <Trans>Nudge</Trans> {lockedName.split(" ")[0]}
+              <Trans>Nudge {lockedName.split(" ")[0]}</Trans>
             </Button>
           ) : (
             <>
@@ -284,8 +285,8 @@ export function QueueScreen({ taskId, scene }: { taskId: string; scene: QueueSce
             onValueChange={(value) => setFilter(value as QueueFilter)}
             options={[
               { value: "all", label: `All ${counts.all}` },
-              { value: "rev", label: `Reviewers differ ${counts.rev}` },
-              { value: "ai", label: `Both vs AI ${counts.ai}` },
+              { value: "rev", label: t`Reviewers differ ${counts.rev}` },
+              { value: "ai", label: t`Both vs AI ${counts.ai}` },
             ]}
           />
           <QueueTable aria-label={t`Queued objects`}>
@@ -378,8 +379,7 @@ export function QueueScreen({ taskId, scene }: { taskId: string; scene: QueueSce
                       </StatusTag>
                       {row.state === "adjudicated" ? (
                         <small className="text-caption text-fg-dim">
-                          {nameOf(row.decision.by_user_id)}
-                          <Trans>, adjudicator</Trans>
+                          <Trans>{nameOf(row.decision.by_user_id)}, adjudicator</Trans>
                         </small>
                       ) : row.decision.note ? (
                         <QuotedNote>{row.decision.note}</QuotedNote>
@@ -398,8 +398,10 @@ export function QueueScreen({ taskId, scene }: { taskId: string; scene: QueueSce
                 <div className="grid gap-3">
                   <div className="flex items-center justify-between">
                     <b className="text-body font-semibold">
-                      {checkedRows.length} <Trans>object</Trans>
-                      {checkedRows.length > 1 ? t`s` : ""} <Trans>selected</Trans>
+                      {plural(checkedRows.length, {
+                        one: "# object selected",
+                        other: "# objects selected",
+                      })}
                     </b>
                     <Button size="sm" variant="ghost" onClick={() => setChecked([])}>
                       <Trans>Clear</Trans>
@@ -441,7 +443,7 @@ export function QueueScreen({ taskId, scene }: { taskId: string; scene: QueueSce
                       object: row.object,
                       data: { action: "leave-open", note: notes[row.key]?.trim() || null },
                     });
-                    toast.show(`${rowLabel(row)} is left open. Sign-off counts it on purpose.`);
+                    toast.show(t`${rowLabel(row)} is left open. Sign-off counts it on purpose.`);
                   }}
                   onSend={(keys, excluded) => setSend({ keys, excluded })}
                   onEdit={() =>
@@ -461,7 +463,7 @@ export function QueueScreen({ taskId, scene }: { taskId: string; scene: QueueSce
                       object: row.object,
                       data: { action: "look-again" },
                     });
-                    toast.show(`Both reviewers have ${row.object} open again`);
+                    toast.show(t`Both reviewers have ${row.object} open again`);
                   }}
                   onKeep={() =>
                     update.mutate({
@@ -505,7 +507,7 @@ export function QueueScreen({ taskId, scene }: { taskId: string; scene: QueueSce
               data: { user_id: nudging.userId, message: nudging.message },
             });
             setNudging(null);
-            toast.show(`Nudge sent to ${nameOf(nudging.userId) ?? "the reviewer"}`);
+            toast.show(t`Nudge sent to ${nameOf(nudging.userId) ?? "the reviewer"}`);
           }}
         />
       ) : null}
@@ -580,8 +582,10 @@ function DecidePanel({
       <div className="grid gap-3">
         {head}
         <p className="m-0 text-body-sm text-fg-dim">
-          {nameOf(row.adjudicator?.user_id)} <Trans>decides</Trans> {row.object}
-          <Trans>. Her decision shows here next to the reviewers' answers.</Trans>
+          <Trans>
+            {nameOf(row.adjudicator?.user_id)} decides {row.object}. Her decision shows here next to
+            the reviewers' answers.
+          </Trans>
         </p>
       </div>
     );
@@ -593,15 +597,15 @@ function DecidePanel({
         <KeyValueList
           tight
           rows={[
-            { icon: "user", label: "Decided by", value: nameOf(row.decision.by_user_id) ?? "" },
+            { icon: "user", label: t`Decided by`, value: nameOf(row.decision.by_user_id) ?? "" },
             {
               icon: "check",
-              label: "Decision",
+              label: t`Decision`,
               value: styledWord(look.style, row.decision.raw, look.classes, row.ai.class_name),
             },
             {
               icon: "clock",
-              label: "When",
+              label: t`When`,
               value: new Date(row.decision.at).toLocaleString("en-GB", {
                 day: "numeric",
                 month: "short",
@@ -617,9 +621,9 @@ function DecidePanel({
   const disagreeing = row.answers
     .filter((answer) => answer.raw === "disagree")
     .map((answer) => nameOf(answer.user_id) ?? "");
-  const mapping = `Agree keeps the AI's call.${
+  const mapping = t`Agree keeps the AI's call.${
     disagreeing.length
-      ? ` Disagree goes with ${disagreeing.length === 2 ? "both reviewers" : disagreeing[0]}.`
+      ? t` Disagree goes with ${disagreeing.length === 2 ? "both reviewers" : disagreeing[0]}.`
       : ""
   }`;
   const declinedKeys = rows.filter((item) => item.state === "declined").map((item) => item.key);
@@ -630,8 +634,9 @@ function DecidePanel({
         <div className="grid gap-2.5 rounded-zone bg-[color-mix(in_srgb,var(--warn)_14%,transparent)] p-3 text-body-sm text-fg">
           <Icon name="warn" className="text-warn" />
           <span>
-            {row.object} <Trans>was redrawn by</Trans> {nameOf(row.edited.by_user_id)}{" "}
-            <Trans>on</Trans>{" "}
+            <Trans>
+              {row.object} was redrawn by {nameOf(row.edited.by_user_id)} on{" "}
+            </Trans>
             {new Date(`${row.edited.on}T12:00:00`).toLocaleDateString("en-GB", {
               day: "numeric",
               month: "short",
@@ -679,7 +684,7 @@ function DecidePanel({
       <div className="grid justify-items-start gap-2">
         <button type="button" className={linkClass} onClick={onEdit}>
           <Icon name="pen" />
-          <Trans>Edit</Trans> {row.object} <Trans>myself in the viewer</Trans>
+          <Trans>Edit {row.object} myself in the viewer</Trans>
         </button>
         {row.state === "decided" ? null : (
           <>
@@ -702,10 +707,9 @@ function DecidePanel({
       </div>
       <div className="grid gap-1.5">
         <label htmlFor="queue-note" className="text-body-sm font-semibold">
-          <Trans>Note for the record</Trans>{" "}
-          <span className="font-normal text-fg-dim">
-            <Trans>Optional</Trans>
-          </span>
+          <Trans>
+            Note for the record <span className="font-normal text-fg-dim">Optional</span>
+          </Trans>
         </label>
         <Textarea
           id="queue-note"

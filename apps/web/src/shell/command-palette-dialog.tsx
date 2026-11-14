@@ -1,4 +1,5 @@
-import { Trans } from "@lingui/react/macro";
+import { t } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { type SearchHit, useListProjects, useSearch } from "@parfocal/api-client";
 import { CommandPaletteView, type PaletteCommand } from "@parfocal/ui/components/command-palette";
 import { Dialog, DialogContent, DialogTitle } from "@parfocal/ui/components/dialog";
@@ -25,7 +26,7 @@ function hitRow(hit: SearchHit, query: string, run: () => void): Row {
   const found = query ? matchCommand(label, keywords, query) : null;
   return {
     id: `hit-${hit.kind}-${hit.id}`,
-    group: "Go to",
+    group: t`Go to`,
     icon: hitIcons[hit.kind],
     label,
     matched: found?.indices ?? [],
@@ -63,6 +64,8 @@ function usePlaces(query: string, close: () => void): Row[] {
 }
 
 function PaletteBody({ initial, close }: { initial: string; close: () => void }) {
+  const { t } = useLingui();
+
   const [query, setQuery] = useState(initial);
   const [active, setActive] = useState(0);
   const goTo = useGoTo();
@@ -127,9 +130,9 @@ function PaletteBody({ initial, close }: { initial: string; close: () => void })
       ? [
           {
             id: "all-results",
-            group: "Go to",
+            group: t`Go to`,
             icon: "search",
-            label: `All results for "${trimmed}"`,
+            label: t`All results for "${trimmed}"`,
             matched: [],
             score: 0,
             run: () => {

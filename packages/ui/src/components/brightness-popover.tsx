@@ -74,7 +74,7 @@ function BrightnessPopover({
             onValueChange={(next: number | readonly number[]) =>
               onValueChange(typeof next === "number" ? next : (next[0] ?? 100))
             }
-            getAriaLabel={() => "Slide brightness"}
+            getAriaLabel={() => t`Slide brightness`}
           />
           <Button
             size="icon-sm"
@@ -89,9 +89,9 @@ function BrightnessPopover({
         <p className="m-0 text-caption leading-[1.45] text-fg-dim">
           <Trans>
             Like the light dial on a microscope. Changes the slide only, never the interface or the
-            monitor's calibration. Remembered on this computer.
-          </Trans>{" "}
-          <Keycap keys="Alt+↑" /> <Keycap keys="Alt+↓" /> <Keycap keys="Alt+0" />
+            monitor's calibration. Remembered on this computer. <Keycap keys="Alt+↑" />{" "}
+            <Keycap keys="Alt+↓" /> <Keycap keys="Alt+0" />
+          </Trans>
         </p>
       </PopoverContent>
     </Popover>

@@ -35,7 +35,7 @@ export function AddClassModal({
   const blockers = Object.entries(errors).map(([field, text]) => ({
     id: field,
     text,
-    goTo: field === "name" ? "Go to Name" : "Go to Key",
+    goTo: field === "name" ? t`Go to Name` : t`Go to Key`,
   }));
   const reset = () => {
     setName("");
@@ -52,12 +52,12 @@ export function AddClassModal({
         }
       }}
       title={t`Add a class`}
-      subtitle={`To ${projectCode}. New imports and tasks can use it.`}
+      subtitle={t`To ${projectCode}. New imports and tasks can use it.`}
       width={480}
-      hint="Classes from imports can map to it later."
-      primaryLabel="Add class"
+      hint={t`Classes from imports can map to it later.`}
+      primaryLabel={t`Add class`}
       blockers={tried ? blockers : []}
-      blockersTitle="Before you can add the class"
+      blockersTitle={t`Before you can add the class`}
       onPrimary={() => {
         setTried(true);
         if (blockers.length > 0) return;
@@ -92,7 +92,7 @@ export function AddClassModal({
       <FormField
         label={t`Key`}
         error={tried ? errors.key : undefined}
-        help="A number from 1 to 9. Reviewers press it to give a cell this class."
+        help={t`A number from 1 to 9. Reviewers press it to give a cell this class.`}
       >
         <TextFieldInput
           value={key}

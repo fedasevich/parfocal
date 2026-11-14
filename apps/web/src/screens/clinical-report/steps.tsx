@@ -1,3 +1,4 @@
+import { plural, t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import {
@@ -95,7 +96,7 @@ export function FindingsStep({
     <>
       <Zone
         title={t`From your decisions on ${data.slide}`}
-        sub="Filled in from what you decided on the slide. To change a fact, change the decision there."
+        sub={t`Filled in from what you decided on the slide. To change a fact, change the decision there.`}
       >
         <KvList
           rows={facts.map((fact) => ({
@@ -113,7 +114,7 @@ export function FindingsStep({
                 )}
                 {fact.warn && pending ? (
                   <button type="button" className={linkButton} onClick={onMeasure}>
-                    <Trans>Measure on</Trans> {slideOf(data, pending.slide).short}
+                    <Trans>Measure on {slideOf(data, pending.slide).short}</Trans>
                   </button>
                 ) : fact.link ? (
                   <OpenOnSlide objectId={fact.link} onOpen={onOpenSlide} />
@@ -136,7 +137,7 @@ export function FindingsStep({
           />
           <FieldNote
             error={errors["specimen"]}
-            help="From the case. It heads the report."
+            help={t`From the case. It heads the report.`}
             count={`${report.values.specimen.length} / 120`}
           />
         </div>
@@ -152,12 +153,12 @@ function CategoryField({ data, report, errors, setValues, update }: StepProps) {
   const size = largestMm(values.deposits);
   const suggested = size === null ? null : categoryOf(size);
   const big = values.deposits[largestIndex(values.deposits)];
-  const from = big && size !== null ? `${big.id}, the largest deposit at ${mmText(size)}` : "";
+  const from = big && size !== null ? t`${big.id}, the largest deposit at ${mmText(size)}` : "";
   const help = suggested
     ? values.category
-      ? `Suggested from ${from}: ${categoryNames[suggested].toLowerCase()}.`
-      : `Suggested from ${from}. Pick a category to confirm it.`
-    : "Enter a deposit size to get a suggestion.";
+      ? t`Suggested from ${from}: ${categoryNames[suggested].toLowerCase()}.`
+      : t`Suggested from ${from}. Pick a category to confirm it.`
+    : t`Enter a deposit size to get a suggestion.`;
   const against = suggested !== null && values.category !== null && values.category !== suggested;
   return (
     <div className="grid gap-3">
@@ -180,9 +181,11 @@ function CategoryField({ data, report, errors, setValues, update }: StepProps) {
           <p className="m-0 flex items-start gap-1.5 text-body-sm leading-[1.45] text-warn">
             <Icon name="warn" className="mt-0.5" />
             <span>
-              <Trans>A deposit of</Trans> {mmText(size)} <Trans>is a</Trans>{" "}
-              {categoryNames[suggested].toLowerCase()}
-              <Trans>. Confirm the size or pick</Trans> {categoryNames[suggested]}.
+              <Trans>
+                A deposit of {mmText(size)} is a {categoryNames[suggested].toLowerCase()}. Confirm
+                the size or pick {categoryNames[suggested]}
+              </Trans>
+              .
             </span>
           </p>
         ) : (
@@ -274,7 +277,7 @@ export function StagingStep(props: StepProps) {
       .map((deposit) => [
         deposit.id,
         <button key={deposit.id} type="button" className={linkButton} onClick={onMeasure}>
-          <Trans>Measure on</Trans> {slideOf(data, deposit.slide).short}
+          <Trans>Measure on {slideOf(data, deposit.slide).short}</Trans>
         </button>,
       ]),
   );
@@ -291,7 +294,7 @@ export function StagingStep(props: StepProps) {
     <>
       <Zone
         title={t`Deposits`}
-        sub="Every deposit on the case's slides. Sizes come from your measurements and can be changed here."
+        sub={t`Every deposit on the case's slides. Sizes come from your measurements and can be changed here.`}
         end={
           <Button size="sm" id={fieldId("deps")} onClick={onAddDeposit}>
             <Icon name="plus" />
@@ -315,13 +318,13 @@ export function StagingStep(props: StepProps) {
       </Zone>
       <Zone
         title={t`Category`}
-        sub="The largest deposit sets the suggested category. A category against it needs your confirmation."
+        sub={t`The largest deposit sets the suggested category. A category against it needs your confirmation.`}
       >
         <CategoryField {...props} />
       </Zone>
       <Zone
         title={t`Nodes`}
-        sub="Positive counts the nodes with at least one deposit. Examined comes from the gross description."
+        sub={t`Positive counts the nodes with at least one deposit. Examined comes from the gross description.`}
       >
         <div className="grid grid-cols-2 items-start gap-4">
           <div className="grid gap-1.5">
@@ -331,7 +334,7 @@ export function StagingStep(props: StepProps) {
             <span className="grid text-body-sm">
               <b className="font-mono">{positive}</b>
               <span className="text-fg-dim">
-                {positive === 1 ? t`node has` : t`nodes have`} <Trans>a deposit</Trans>
+                {plural(positive, { one: "node has a deposit", other: "nodes have a deposit" })}
               </span>
             </span>
           </div>
@@ -461,7 +464,7 @@ export function TextStep({
           max={600}
           value={values.diagnosis}
           error={errors["diag"]}
-          help="It opens the report. Capitals as the lab writes them."
+          help={t`It opens the report. Capitals as the lab writes them.`}
           onChange={(diagnosis) => setValues({ diagnosis })}
           onBlur={() => touch("diag")}
           onFocus={() => onFocusText("diag")}
@@ -497,7 +500,7 @@ export function TextStep({
       </Zone>
       <Zone
         title={t`From the slide`}
-        sub="Inserts the value with its source where you were last typing."
+        sub={t`Inserts the value with its source where you were last typing.`}
       >
         <div className="flex flex-wrap gap-2">
           {chipsOf(data, values).map((chip) => (
@@ -525,10 +528,12 @@ export function TextStep({
         }
       >
         <p className="m-0 text-body-sm">
-          <b>
-            {data.template.name} {data.template.version}
-          </b>
-          <Trans>, set by the project</Trans>
+          <Trans>
+            <b>
+              {data.template.name} {data.template.version}
+            </b>
+            , set by the project
+          </Trans>
         </p>
         {staging ? (
           <KvList
@@ -553,7 +558,7 @@ function summaryRows(data: ReportData, values: Values, key: StepKey) {
   const text = (value: string, none: ReactNode = <NotSet />) =>
     value.trim() ? value.trim() : none;
   if (key === "findings")
-    return [{ icon: "file" as const, label: "Specimen", value: text(values.specimen) }];
+    return [{ icon: "file" as const, label: t`Specimen`, value: text(values.specimen) }];
   if (key === "staging") {
     const big = largestIndex(values.deposits);
     const size = largestMm(values.deposits);
@@ -562,7 +567,7 @@ function summaryRows(data: ReportData, values: Values, key: StepKey) {
     return [
       {
         icon: "ruler" as const,
-        label: "Deposits",
+        label: t`Deposits`,
         value: values.deposits.length ? (
           <span className="grid">
             {values.deposits.map((deposit, index) => (
@@ -582,40 +587,40 @@ function summaryRows(data: ReportData, values: Values, key: StepKey) {
       },
       {
         icon: "flag" as const,
-        label: "Category",
+        label: t`Category`,
         value: values.category ? (
-          `${categoryNames[values.category]}${size !== null && values.category !== categoryOf(size) ? ", kept against the size" : ""}`
+          `${categoryNames[values.category]}${size !== null && values.category !== categoryOf(size) ? t`, kept against the size` : ""}`
         ) : (
           <NotSet />
         ),
       },
       {
         icon: "list" as const,
-        label: "Nodes",
+        label: t`Nodes`,
         value:
           examined !== null ? (
-            `${positiveNodes(data, values.deposits)} positive of ${examined} examined`
+            t`${positiveNodes(data, values.deposits)} positive of ${examined} examined`
           ) : (
             <NotSet />
           ),
       },
       {
         icon: "target" as const,
-        label: "Extranodal extension",
+        label: t`Extranodal extension`,
         value: values.extranodal ? extranodalNames[values.extranodal] : <NotSet />,
       },
       {
         icon: "shield" as const,
-        label: "Suggested pN",
+        label: t`Suggested pN`,
         value: pn ? <span className="font-mono">{pn}</span> : <NotSet />,
       },
     ];
   }
   return [
-    { icon: "text" as const, label: "Final diagnosis", value: text(values.diagnosis) },
+    { icon: "text" as const, label: t`Final diagnosis`, value: text(values.diagnosis) },
     {
       icon: "text" as const,
-      label: "Microscopic",
+      label: t`Microscopic`,
       value: text(
         values.microscopic,
         <NotSet>
@@ -625,7 +630,7 @@ function summaryRows(data: ReportData, values: Values, key: StepKey) {
     },
     {
       icon: "comment" as const,
-      label: "Comment",
+      label: t`Comment`,
       value: text(
         values.comment,
         <NotSet>
@@ -686,8 +691,8 @@ export function SignStep({ data, report, errors, update, goTo, person }: StepPro
         id: member.user_id,
         name: info?.name ?? member.user_id,
         ...(info ? { person: info } : {}),
-        sub: member.covers_case ? "Can sign out" : "Can sign out own cases",
-        ...(member.covers_case ? {} : { dim: "Not on this case" }),
+        sub: member.covers_case ? t`Can sign out` : t`Can sign out own cases`,
+        ...(member.covers_case ? {} : { dim: t`Not on this case` }),
       };
     });
   return (
@@ -698,18 +703,18 @@ export function SignStep({ data, report, errors, update, goTo, person }: StepPro
       {mode === "sign" ? (
         <Zone
           title={t`Sign out`}
-          sub="Signing locks this version. A change after it is an amendment with a reason, and the signed version stays readable."
+          sub={t`Signing locks this version. A change after it is an amendment with a reason, and the signed version stays readable.`}
         >
           <Person
             person={person(data.author_user_id) ?? { name: "You", initials: "", color: "" }}
             size={32}
-            sub={`${rightNames[me?.sign_out ?? "never"]} · assigned to this case`}
+            sub={t`${rightNames[me?.sign_out ?? "never"]} · assigned to this case`}
           />
         </Zone>
       ) : (
         <Zone
           title={t`Send for co-sign`}
-          sub={`${me?.covers_case ? "You send the report to a colleague instead of signing it yourself. " : ""}The co-signer can sign it as it is, change values first or return it with a note.`}
+          sub={t`${me?.covers_case ? t`You send the report to a colleague instead of signing it yourself. ` : ""}The co-signer can sign it as it is, change values first or return it with a note.`}
         >
           <div className="grid gap-1.5">
             <span id={fieldId("cosigner-label")} className="text-body-sm font-semibold">
@@ -734,7 +739,7 @@ export function SignStep({ data, report, errors, update, goTo, person }: StepPro
             />
             <FieldNote
               error={errors["cosigner"]}
-              help="Only members who can sign out this case can be picked."
+              help={t`Only members who can sign out this case can be picked.`}
             />
           </div>
         </Zone>
@@ -753,13 +758,13 @@ export function SentPanel({ data, report, person }: StepProps) {
     <>
       <Zone
         title={t`Sent for co-sign`}
-        sub={`The report stays as you wrote it while it waits. ${info?.name.split(" ")[0] ?? "The co-signer"} can co-sign it as it is, change values and co-sign, or return it with a note.`}
+        sub={t`The report stays as you wrote it while it waits. ${info?.name.split(" ")[0] ?? t`The co-signer`} can co-sign it as it is, change values and co-sign, or return it with a note.`}
       >
         <div className="flex items-center gap-3">
           <Person
             person={info ?? { name: "Co-signer", initials: "", color: "" }}
             size={32}
-            sub={`${rightNames[member?.sign_out ?? "own"]} · sent ${report.sent?.at ?? ""}`}
+            sub={t`${rightNames[member?.sign_out ?? "own"]} · sent ${report.sent?.at ?? ""}`}
           />
           <StatusTag tone="warn">
             <Trans>Waiting</Trans>
@@ -781,8 +786,8 @@ export function DonePanel({ data, report, person, update }: StepProps) {
   const showV1 = report.showV1 && Boolean(report.amend);
   const name = (userId: string) => person(userId)?.name ?? "";
   const who = signature.co
-    ? `Reported by ${name(signature.co)}, verified and signed by ${name(signature.by)}`
-    : `Signed out ${signature.at} by ${name(signature.by)}`;
+    ? t`Reported by ${name(signature.co)}, verified and signed by ${name(signature.by)}`
+    : t`Signed out ${signature.at} by ${name(signature.by)}`;
   const why = report.amend ? report.amend.why.replace(/\.$/, "") : "";
   return (
     <>
@@ -802,9 +807,10 @@ export function DonePanel({ data, report, person, update }: StepProps) {
           <div className="flex items-start gap-2 text-body-sm leading-[1.45]">
             <Icon name="info" className="mt-0.5 text-fg-dim" />
             <span className="flex-1">
-              <Trans>Amended</Trans> {report.amend.at}
-              <Trans>, reason:</Trans> {why.charAt(0).toLowerCase() + why.slice(1)}
-              <Trans>. v1 stays readable.</Trans>
+              <Trans>
+                Amended {report.amend.at}, reason: {why.charAt(0).toLowerCase() + why.slice(1)}. v1
+                stays readable.
+              </Trans>
             </span>
             <button
               type="button"

@@ -172,7 +172,9 @@ function CommentsTab({
       )}
       <Button block onClick={onNewComment}>
         <Icon name="comment" />
-        <Trans>New comment</Trans> <Keycap keys="C" size="sm" />
+        <Trans>
+          New comment <Keycap keys="C" size="sm" />
+        </Trans>
       </Button>
     </div>
   );

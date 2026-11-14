@@ -38,6 +38,8 @@ function Brand({
   onWorkspaceClick,
   workspaceSlot,
 }: BrandProps) {
+  const { t } = useLingui();
+
   const mark = (
     <>
       <Icon name="parfocal" size="md" className="text-accent" />
@@ -51,7 +53,7 @@ function Brand({
       {homeHref
         ? renderLink({
             href: homeHref,
-            title: "Parfocal home",
+            title: t`Parfocal home`,
             className: "flex min-h-6 items-center gap-2.5 no-underline",
             children: mark,
           })
@@ -284,6 +286,8 @@ type AppShellProps = React.ComponentProps<"div"> & {
 };
 
 function AppShell({ top, side, className, children, ...props }: AppShellProps) {
+  const { t } = useLingui();
+
   return (
     <div
       data-slot="app-shell"
@@ -297,7 +301,7 @@ function AppShell({ top, side, className, children, ...props }: AppShellProps) {
       <div className={cn("grid min-h-0", side ? "grid-cols-[240px_minmax(0,1fr)]" : "")}>
         {side}
         <div
-          {...scrollRegionProps("Page content")}
+          {...scrollRegionProps(t`Page content`)}
           className="min-h-0 overflow-auto focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent focus-visible:outline-solid"
         >
           {children}

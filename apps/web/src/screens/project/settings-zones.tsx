@@ -43,6 +43,8 @@ type Defaults = Partial<
 >;
 
 export function useProjectChange(project: Project, toast: Toast) {
+  const { t } = useLingui();
+
   const queryClient = useQueryClient();
   const [shown, setShown] = useState<Defaults>({});
   const { mutate } = useUpdateProject();
@@ -55,14 +57,14 @@ export function useProjectChange(project: Project, toast: Toast) {
         onSuccess: (response) => {
           if (response.status !== 200) {
             setShown(before);
-            toast("Only an owner of this project changes its settings.");
+            toast(t`Only an owner of this project changes its settings.`);
             return;
           }
           queryClient.setQueryData(getGetProjectQueryKey(project.id), response);
         },
         onError: () => {
           setShown(before);
-          toast("The setting was not saved. Try again.");
+          toast(t`The setting was not saved. Try again.`);
         },
       },
     );
@@ -80,7 +82,7 @@ export function ReportTemplateZone({
   const { t } = useLingui();
 
   return (
-    <Zone title={t`Report template`} sub="Lays out the clinical report of each case.">
+    <Zone title={t`Report template`} sub={t`Lays out the clinical report of each case.`}>
       <RadioGroup
         aria-label={t`Report template`}
         value={value ?? "sentinel-node"}
@@ -117,7 +119,10 @@ export function IdMatchingZone({
   const { t } = useLingui();
 
   return (
-    <Zone title={t`ID matching`} sub="A new result set keeps the IDs of the objects it overlaps.">
+    <Zone
+      title={t`ID matching`}
+      sub={t`A new result set keeps the IDs of the objects it overlaps.`}
+    >
       <div className="grid gap-2 text-body-sm text-fg" data-testid="id-matching">
         <div className="flex items-center justify-between gap-4">
           <span>
@@ -163,7 +168,7 @@ export function ClinicalMembersZone({ project, toast }: { project: Project; toas
         onSuccess: (response) => {
           if (response.status !== 200) {
             setRows(before);
-            toast("Only an owner of this project sets who can sign out.");
+            toast(t`Only an owner of this project sets who can sign out.`);
             return;
           }
           queryClient.setQueryData(getGetProjectQueryKey(project.id), {
@@ -178,7 +183,7 @@ export function ClinicalMembersZone({ project, toast }: { project: Project; toas
   return (
     <Zone
       title={t`Members`}
-      sub={`Own cases means the cases a member is assigned to. A member who cannot sign out sends the report for co-sign to one who can.${owner ? ` Set by ${people.byId(owner.user_id).name}, the owner.` : ""}`}
+      sub={t`Own cases means the cases a member is assigned to. A member who cannot sign out sends the report for co-sign to one who can.${owner ? t` Set by ${people.byId(owner.user_id).name}, the owner.` : ""}`}
       end={
         <Link to="/admin" className="text-body-sm font-medium text-accent hover:underline">
           <Trans>Invite people</Trans>

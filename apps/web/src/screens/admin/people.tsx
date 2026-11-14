@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import {
   type Invitation,
@@ -139,8 +140,8 @@ export function PeopleSection({
     apply(!was);
     notify(
       was
-        ? `${member.display_name} no longer has admin rights and stays a researcher.`
-        : `${member.display_name} has admin rights now and can open Admin.`,
+        ? t`${member.display_name} no longer has admin rights and stays a researcher.`
+        : t`${member.display_name} has admin rights now and can open Admin.`,
       () => apply(was),
     );
   };
@@ -152,7 +153,7 @@ export function PeopleSection({
       {
         onSuccess: (response) => {
           if (response.status === 200) {
-            notify(`${member.display_name} is a ${roleText[next].toLowerCase()} now.`);
+            notify(t`${member.display_name} is a ${roleText[next].toLowerCase()} now.`);
             return;
           }
           setRoles((current) => ({ ...current, [member.user_id]: was }));
@@ -169,7 +170,7 @@ export function PeopleSection({
           void invitationList.refetch();
           notify(
             response.status === 201
-              ? `Invite sent again to ${invitation.email}. The earlier link no longer works.`
+              ? t`Invite sent again to ${invitation.email}. The earlier link no longer works.`
               : problemText(response.data),
           );
         },
@@ -222,9 +223,9 @@ export function PeopleSection({
             onValueChange={(value) => setFilter(value as Filter)}
             options={[
               { value: "all", label: `All ${overview?.people ?? members.length}` },
-              { value: "res", label: "Researchers" },
-              { value: "rev", label: "Reviewers" },
-              { value: "adm", label: "With admin rights" },
+              { value: "res", label: t`Researchers` },
+              { value: "rev", label: t`Reviewers` },
+              { value: "adm", label: t`With admin rights` },
             ]}
           />
         </div>
@@ -361,16 +362,15 @@ export function PeopleSection({
           </TableBody>
         </Table>
         <span className="text-body-sm text-fg-dim">
-          {rows.length} <Trans>of</Trans> {overview?.people ?? members.length}{" "}
           <Trans>
-            shown. At least one researcher keeps admin rights, and giving or removing them is in the
-            audit log.
+            {rows.length} of {overview?.people ?? members.length} shown. At least one researcher
+            keeps admin rights, and giving or removing them is in the audit log.
           </Trans>
         </span>
       </Zone>
       <Zone
         title={t`What each role is responsible for`}
-        sub="Two roles apply in the whole workspace. Admin rights are a switch on a researcher, not a third role, and add no access to project data. Inside a project people are also owner, reviewer or viewer. The server enforces all of it, the screens only hide what someone cannot use."
+        sub={t`Two roles apply in the whole workspace. Admin rights are a switch on a researcher, not a third role, and add no access to project data. Inside a project people are also owner, reviewer or viewer. The server enforces all of it, the screens only hide what someone cannot use.`}
       >
         <Table className={tableClass}>
           <TableHeader>
@@ -418,7 +418,7 @@ export function PeopleSection({
         onClose={() => setInviting(false)}
         onSent={(invitation) => {
           void invitationList.refetch();
-          notify(`Invite sent to ${invitation.email}`, () => withdraw(invitation));
+          notify(t`Invite sent to ${invitation.email}`, () => withdraw(invitation));
         }}
       />
     </>
@@ -427,7 +427,7 @@ export function PeopleSection({
 
 function problemText(body: unknown): string {
   const title = (body as { title?: unknown } | null)?.title;
-  return typeof title === "string" ? title : "That did not work. Try again.";
+  return typeof title === "string" ? title : t`That did not work. Try again.`;
 }
 
 const emailPattern = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
@@ -454,9 +454,9 @@ function InvitePeopleModal({
   const [tried, setTried] = useState(false);
   const trimmed = email.trim().toLowerCase();
   const error = !emailPattern.test(trimmed)
-    ? "Enter an email address."
+    ? t`Enter an email address.`
     : taken.includes(trimmed)
-      ? `${trimmed} is already a member here.`
+      ? t`${trimmed} is already a member here.`
       : undefined;
   const reset = () => {
     setEmail("");
@@ -475,13 +475,13 @@ function InvitePeopleModal({
         }
       }}
       title={t`Invite people`}
-      subtitle="To Fakultní nemocnice Vltava"
+      subtitle={t`To Fakultní nemocnice Vltava`}
       width={560}
-      hint="They get a one-step sign-up."
-      primaryLabel="Send invite"
+      hint={t`They get a one-step sign-up.`}
+      primaryLabel={t`Send invite`}
       primaryBusy={create.isPending}
-      blockers={tried && error ? [{ id: "email", text: error, goTo: "Go to the email" }] : []}
-      blockersTitle="Before you can invite"
+      blockers={tried && error ? [{ id: "email", text: error, goTo: t`Go to the email` }] : []}
+      blockersTitle={t`Before you can invite`}
       onPrimary={() => {
         setTried(true);
         if (error) return;
@@ -515,8 +515,8 @@ function InvitePeopleModal({
           value={role}
           onValueChange={(value) => setRole(value as Member["role"])}
           options={[
-            { value: "researcher", label: "Researcher" },
-            { value: "reviewer", label: "Reviewer" },
+            { value: "researcher", label: t`Researcher` },
+            { value: "reviewer", label: t`Reviewer` },
           ]}
         />
         <small className="text-caption text-fg-dim">
@@ -531,7 +531,7 @@ function InvitePeopleModal({
         items={projects.map((project) => ({
           id: project.id,
           name: `${project.code} · ${project.name}`,
-          sub: project.privacy_mode === "clinical" ? "Clinical" : "De-identified",
+          sub: project.privacy_mode === "clinical" ? t`Clinical` : "De-identified",
           find: project.name,
         }))}
         picked={picked}

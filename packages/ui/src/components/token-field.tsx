@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { Icon, type IconName } from "@parfocal/ui/components/icon";
 import { PersonAvatar, type PersonInfo } from "@parfocal/ui/components/person";
@@ -102,7 +103,7 @@ function TokenField({
   items,
   picked,
   onPickedChange,
-  placeholder = "Type a name or an email",
+  placeholder = t`Type a name or an email`,
   defaultQuery = "",
   defaultOpen = false,
   onInvite,
@@ -276,7 +277,7 @@ function TokenField({
               <TokenLead item={{ id: inviteId, name: query, icon: "mail" }} />
               <span>
                 <b className="block text-body-sm font-medium">
-                  <Trans>Invite</Trans> {query.trim()} <Trans>by email</Trans>
+                  <Trans>Invite {query.trim()} by email</Trans>
                 </b>
                 <small className="block text-caption text-fg-dim">
                   <Trans>They get a one-step sign-up, then the task</Trans>

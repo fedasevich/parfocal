@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import {
   type Announcement,
@@ -30,7 +31,7 @@ import { DotRow, SideCard } from "./cards.tsx";
 
 const problemTitle = (body: unknown) => {
   const title = (body as { title?: unknown } | null)?.title;
-  return typeof title === "string" ? title : "That did not work. Try again.";
+  return typeof title === "string" ? title : t`That did not work. Try again.`;
 };
 
 function useRefreshAnnouncements() {
@@ -70,18 +71,18 @@ function PostDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
         }
       }}
       title={t`Post an announcement`}
-      subtitle="Everyone in this workspace sees it on Home."
+      subtitle={t`Everyone in this workspace sees it on Home.`}
       width={560}
-      primaryLabel="Post"
+      primaryLabel={t`Post`}
       primaryBusy={create.isPending}
       blockers={
         tried && problem
-          ? [{ id: "text", text: problem, goTo: "Go to the text" }]
+          ? [{ id: "text", text: problem, goTo: t`Go to the text` }]
           : failure
-            ? [{ id: "failure", text: failure, goTo: "Try again" }]
+            ? [{ id: "failure", text: failure, goTo: t`Try again` }]
             : []
       }
-      blockersTitle="Before you can post"
+      blockersTitle={t`Before you can post`}
       onPrimary={() => {
         setTried(true);
         setFailure(undefined);
@@ -119,7 +120,7 @@ function PostDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
       <FormField
         label={t`Text`}
         error={tried ? problem : undefined}
-        count={`${text.trim().length} of ${maxLength}`}
+        count={t`${text.trim().length} of ${maxLength}`}
       >
         <TextFieldInput
           placeholder={t`What do you want people to know?`}

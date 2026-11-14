@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react/macro";
 import { MentionText } from "@parfocal/ui/components/comment-thread";
 import { Icon, type IconName } from "@parfocal/ui/components/icon";
@@ -47,7 +48,7 @@ function QueueRow({
   locked = false,
   checked = false,
   checkable = true,
-  checkReason = "Already decided or with the adjudicator",
+  checkReason = t`Already decided or with the adjudicator`,
   onSelect,
   onCheckedChange,
   className,
@@ -214,6 +215,8 @@ const dotTone = {
 };
 
 function ProgressDots({ items, current, onJump, summary, className, ...props }: ProgressDotsProps) {
+  const { t } = useLingui();
+
   return (
     <div
       data-slot="progress-dots"
@@ -224,14 +227,14 @@ function ProgressDots({ items, current, onJump, summary, className, ...props }: 
         <button
           key={item.key}
           type="button"
-          aria-label={`${item.label}, ${item.value ?? "not decided yet"}`}
+          aria-label={`${item.label}, ${item.value ?? t`not decided yet`}`}
           aria-current={index === current || undefined}
           onClick={() => onJump?.(index)}
           className={cn(
             "grid size-5 cursor-pointer place-items-center rounded-full border-2 border-line-strong bg-transparent p-0 text-label font-bold",
             item.value ? dotTone[item.value] : "",
             "focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-4 focus-visible:outline-accent",
-            index === current && "outline-2 outline-solid outline-offset-2 outline-accent",
+            index === current && t`outline-2 outline-solid outline-offset-2 outline-accent`,
           )}
         >
           {item.value === "agree" ? (

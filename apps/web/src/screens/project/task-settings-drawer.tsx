@@ -77,11 +77,11 @@ export function TaskSettingsDrawer({
           ]);
           toast(
             blindFirst
-              ? `Blind first is on for ${task.code}. Objects already shown stay shown.`
-              : `Blind first is off for ${task.code}. Every expert's objects are shown.`,
+              ? t`Blind first is on for ${task.code}. Objects already shown stay shown.`
+              : t`Blind first is off for ${task.code}. Every expert's objects are shown.`,
           );
         },
-        onError: () => setFailure("The change was not saved. Try again."),
+        onError: () => setFailure(t`The change was not saved. Try again.`),
       },
     );
   };
@@ -105,7 +105,7 @@ export function TaskSettingsDrawer({
           ]);
           toast(
             <>
-              <Trans>Counts as changed on</Trans> {task.code}. {recountText(recount)}{" "}
+              <Trans>Counts as changed on {task.code}</Trans>. {recountText(recount)}{" "}
               <Link
                 to="/tasks/$taskId/evaluation"
                 params={{ taskId: task.id }}
@@ -120,8 +120,8 @@ export function TaskSettingsDrawer({
         onError: (error) =>
           setFailure(
             error instanceof ApiError && error.kind === "conflict"
-              ? "Counts as cannot change after sign-off."
-              : "The change was not saved. Check the mapping and try again.",
+              ? t`Counts as cannot change after sign-off.`
+              : t`The change was not saved. Check the mapping and try again.`,
           ),
       },
     );
@@ -170,7 +170,7 @@ export function TaskSettingsDrawer({
       }
     >
       {annotate ? (
-        <Zone title={t`How it runs`} sub="You can change this at any time.">
+        <Zone title={t`How it runs`} sub={t`You can change this at any time.`}>
           <BlindFirstSwitch
             checked={detail.blind_first ?? false}
             onCheckedChange={switchBlindFirst}
@@ -178,7 +178,7 @@ export function TaskSettingsDrawer({
         </Zone>
       ) : (
         <>
-          <Zone title={task.name} sub="Pinned when the task was sent.">
+          <Zone title={task.name} sub={t`Pinned when the task was sent.`}>
             <Fact label={t`Decision style`}>{styleName[stored.kind]}</Fact>
             {stored.question ? <Fact label={t`Question`}>{stored.question}</Fact> : null}
             <Hint>
@@ -187,7 +187,7 @@ export function TaskSettingsDrawer({
           </Zone>
           <Zone
             title={t`Counts as`}
-            sub="How each answer counts toward agree, not sure and disagree in the evaluation."
+            sub={t`How each answer counts toward agree, not sure and disagree in the evaluation.`}
           >
             <CountsAsLine
               decisionStyle={stored.kind}
@@ -222,8 +222,8 @@ export function TaskSettingsDrawer({
         title={t`Change Counts as on ${task.code}?`}
         subtitle={countsAsRule(stored.kind, range)}
         width={480}
-        hint={failure ?? "Written to the audit log and the task's log with your name."}
-        primaryLabel="Change Counts as"
+        hint={failure ?? t`Written to the audit log and the task's log with your name.`}
+        primaryLabel={t`Change Counts as`}
         primaryBusy={change.isPending}
         onPrimary={save}
       >

@@ -38,7 +38,7 @@ function DistanceCue({
       {direction === "back" ? <Icon name="back" /> : null}
       <Icon name="flag" />
       <span>
-        <b className="font-semibold">{label}</b> · {distance} <Trans>away</Trans>
+        <b className="font-semibold">{label}</b> · <Trans>{distance} away</Trans>
       </span>
       {direction === "next" ? <Icon name="next" /> : null}
     </button>
@@ -114,7 +114,7 @@ function RulerLine({
         textAnchor="middle"
         fill="#fff"
         fontSize={dashed ? 14 : 12}
-        fontFamily="IBM Plex Mono, monospace"
+        fontFamily={t`IBM Plex Mono, monospace`}
       >
         {label}
       </text>
@@ -389,7 +389,7 @@ function LayerList({
             className="size-2.5 rounded-[3px]"
             style={
               row.proposal
-                ? { background: "var(--c-prop)", boxShadow: "0 0 0 1.5px #ffffff" }
+                ? { background: "var(--c-prop)", boxShadow: `0 0 0 1.5px #ffffff` }
                 : { background: row.colour }
             }
           />
@@ -455,7 +455,7 @@ function LayerList({
               <button
                 type="button"
                 aria-pressed={!off}
-                aria-label={`${off ? "Show" : "Hide"} ${row.name}`}
+                aria-label={`${off ? t`Show` : t`Hide`} ${row.name}`}
                 onClick={() => onToggle?.(row.key)}
                 className="grid size-6 cursor-pointer place-items-center rounded-md border-0 bg-transparent text-fg-faint hover:bg-chrome-2 hover:text-fg"
               >
@@ -468,7 +468,7 @@ function LayerList({
               <button
                 type="button"
                 aria-pressed={row.locked ?? false}
-                aria-label={`${row.locked ? "Unlock" : "Lock"} ${row.name}`}
+                aria-label={`${row.locked ? t`Unlock` : t`Lock`} ${row.name}`}
                 onClick={() => onLock(row.key)}
                 className="grid size-6 cursor-pointer place-items-center rounded-md border-0 bg-transparent text-fg-faint hover:bg-chrome-2 hover:text-fg"
               >
@@ -597,7 +597,7 @@ function PanePicker({
       )}
     >
       <div className="px-2 pt-1 pb-2 text-caption font-semibold text-fg-dim">
-        <Trans>Show on the</Trans> {sideName[side]}
+        <Trans>Show on the {sideName[side]}</Trans>
       </div>
       {slides.map((slide) => (
         <div

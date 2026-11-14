@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import { Icon } from "@parfocal/ui/components/icon";
@@ -21,18 +22,18 @@ export const dragType = "application/x-parfocal-block";
 
 export const filled = (text: string) =>
   text
-    .replaceAll("{task}", "RT-14 · Round 2")
+    .replaceAll("{task}", t`RT-14 · Round 2`)
     .replaceAll("{model}", "CAMELYON")
     .replaceAll("{version}", "v1.0")
     .replaceAll("{slides}", "12 slides");
 
 const metricLabel = (metric: string) =>
   ({
-    sensitivity: "Sensitivity",
-    precision: "Precision",
-    dice: "Dice",
+    sensitivity: t`Sensitivity`,
+    precision: t`Precision`,
+    dice: t`Dice`,
     kappa: "Cohen's κ",
-    "cell-agreement": "Cells agreed",
+    "cell-agreement": t`Cells agreed`,
   })[metric] ?? metric;
 
 function SampleTable({ head, rows }: { head: string[]; rows: string[][] }) {
@@ -101,7 +102,7 @@ function SampleBody({ block, decimals }: { block: EditorBlock; decimals: number 
       const columns = list("columns");
       return (
         <SampleTable
-          head={["Slide", ...columns.map(metricLabel)]}
+          head={[t`Slide`, ...columns.map(metricLabel)]}
           rows={["A1", "A2", "B1"].map((slide, index) => [
             slide,
             ...columns.map((metric) =>
@@ -115,11 +116,11 @@ function SampleBody({ block, decimals }: { block: EditorBlock; decimals: number 
       const share = block["values"] === "share";
       return (
         <SampleTable
-          head={["AI said", "Tumor", "Inflammatory", "Other"]}
+          head={["AI said", t`Tumor`, t`Inflammatory`, t`Other`]}
           rows={[
-            ["Tumor", share ? "88%" : "412", share ? "8%" : "37", share ? "4%" : "19"],
-            ["Inflammatory", share ? "9%" : "28", share ? "84%" : "261", share ? "7%" : "22"],
-            ["Other", share ? "6%" : "11", share ? "5%" : "9", share ? "89%" : "140"],
+            [t`Tumor`, share ? "88%" : "412", share ? "8%" : "37", share ? "4%" : "19"],
+            [t`Inflammatory`, share ? "9%" : "28", share ? "84%" : "261", share ? "7%" : "22"],
+            [t`Other`, share ? "6%" : "11", share ? "5%" : "9", share ? "89%" : "140"],
           ]}
         />
       );
@@ -127,9 +128,9 @@ function SampleBody({ block, decimals }: { block: EditorBlock; decimals: number 
     case "reviewer-agreement":
       return (
         <SampleTable
-          head={["Agreement on", "Cohen's κ"]}
+          head={[t`Agreement on`, "Cohen's κ"]}
           rows={list("parts").map((part) => [
-            part === "form" ? "Opinion form" : part === "cells" ? "Cells" : "Regions",
+            part === "form" ? t`Opinion form` : part === "cells" ? t`Cells` : t`Regions`,
             sampleValue("kappa", decimals),
           ])}
         />
@@ -137,30 +138,30 @@ function SampleBody({ block, decimals }: { block: EditorBlock; decimals: number 
     case "disagreement-reasons":
       return block["style"] === "table" ? (
         <SampleTable
-          head={["Reason", "Share"]}
+          head={[t`Reason`, t`Share`]}
           rows={[
-            ["Wrong class", "41%"],
-            ["Wrong outline", "33%"],
-            ["Not a nucleus", "26%"],
+            [t`Wrong class`, "41%"],
+            [t`Wrong outline`, "33%"],
+            [t`Not a nucleus`, "26%"],
           ]}
         />
       ) : (
         <SampleBars
           rows={[
-            ["Wrong class", 41],
-            ["Wrong outline", 33],
-            ["Not a nucleus", 26],
+            [t`Wrong class`, 41],
+            [t`Wrong outline`, 33],
+            [t`Not a nucleus`, 26],
           ]}
         />
       );
     case "opinion-answers":
       return block["style"] === "table" ? (
         <SampleTable
-          head={["Answer", "Share"]}
+          head={[t`Answer`, t`Share`]}
           rows={[
             ["Yes", "64%"],
             ["No", "22%"],
-            ["Unsure", "14%"],
+            [t`Unsure`, "14%"],
           ]}
         />
       ) : (
@@ -168,25 +169,25 @@ function SampleBody({ block, decimals }: { block: EditorBlock; decimals: number 
           rows={[
             ["Yes", 64],
             ["No", 22],
-            ["Unsure", 14],
+            [t`Unsure`, 14],
           ]}
         />
       );
     case "worst-objects":
       return (
         <SampleTable
-          head={["Object", "Disagreed"]}
+          head={[t`Object`, t`Disagreed`]}
           rows={[
-            ["T2·C145", "3 of 3"],
-            ["T1·R12", "3 of 3"],
-            ["T4·C88", "2 of 3"],
+            ["T2·C145", t`3 of 3`],
+            ["T1·R12", t`3 of 3`],
+            ["T4·C88", t`2 of 3`],
           ]}
         />
       );
     case "slide-table": {
       const columns = list("columns");
       const label = (column: string) =>
-        column === "time" ? "Review time" : column === "objects" ? "Objects" : "Disagreements";
+        column === "time" ? t`Review time` : column === "objects" ? t`Objects` : t`Disagreements`;
       const value = (column: string, index: number) =>
         column === "time"
           ? `${14 + index} min`
@@ -195,7 +196,7 @@ function SampleBody({ block, decimals }: { block: EditorBlock; decimals: number 
             : String(9 - index * 2);
       return (
         <SampleTable
-          head={["Slide", ...columns.map(label)]}
+          head={[t`Slide`, ...columns.map(label)]}
           rows={["A1", "A2", "B1"].map((slide, index) => [
             slide,
             ...columns.map((column) => value(column, index)),
@@ -208,7 +209,7 @@ function SampleBody({ block, decimals }: { block: EditorBlock; decimals: number 
         <div className="grid gap-0.5">
           <span className="grid h-14 place-items-center bg-[#efe9dc] text-[9px] text-[#555]">
             {list("layers")
-              .map((layer) => (layer === "ai" ? "AI result" : "Reviewed layer"))
+              .map((layer) => (layer === "ai" ? "AI result" : t`Reviewed layer`))
               .join(" + ")}
           </span>
           {typeof block["caption"] === "string" && block["caption"] ? (
@@ -227,7 +228,7 @@ function SampleBody({ block, decimals }: { block: EditorBlock; decimals: number 
     case "comparison":
       return (
         <SampleTable
-          head={["Metric", "RT-14", "RT-15"]}
+          head={[t`Metric`, "RT-14", "RT-15"]}
           rows={list("metrics").map((metric) => [
             metricLabel(metric),
             sampleValue(metric, decimals),
@@ -238,10 +239,15 @@ function SampleBody({ block, decimals }: { block: EditorBlock; decimals: number 
     case "ai-changes":
       return (
         <SampleTable
-          head={[block["group_by"] === "slide" ? "Slide" : "Class", "Kept", "Edited", "Deleted"]}
+          head={[
+            block["group_by"] === "slide" ? t`Slide` : t`Class`,
+            t`Kept`,
+            t`Edited`,
+            t`Deleted`,
+          ]}
           rows={[
-            ["Tumor", "331", "52", "29"],
-            ["Inflammatory", "204", "31", "26"],
+            [t`Tumor`, "331", "52", "29"],
+            [t`Inflammatory`, "204", "31", "26"],
           ]}
         />
       );

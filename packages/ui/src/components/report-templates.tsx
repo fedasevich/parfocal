@@ -106,6 +106,8 @@ function ReportPagePreview({
 type BlockSettingsProps = React.ComponentProps<"div"> & { block: ReportBlock };
 
 function BlockSettings({ block, className, ...props }: BlockSettingsProps) {
+  const { t } = useLingui();
+
   return (
     <div data-slot="block-settings" className={cn("grid gap-4 text-body-sm", className)} {...props}>
       <div className="grid gap-1.5">
@@ -126,8 +128,8 @@ function BlockSettings({ block, className, ...props }: BlockSettingsProps) {
           aria-labelledby={`block-width-${block.id}`}
           defaultValue="full"
           options={[
-            { value: "full", label: "Full width" },
-            { value: "half", label: "Half" },
+            { value: "full", label: t`Full width` },
+            { value: "half", label: t`Half` },
           ]}
         />
       </div>
@@ -291,7 +293,7 @@ function PdfPreview({
                       "pointer-events-none block",
                       renderThumbnail
                         ? "h-full w-full"
-                        : "absolute top-0 left-0 origin-top-left scale-[0.15]",
+                        : `absolute top-0 left-0 origin-top-left scale-[0.15]`,
                     )}
                   >
                     {thumbnail(page)}
@@ -310,7 +312,7 @@ function PdfPreview({
         <div ref={holder} onScrollCapture={follow} className="min-h-0">
           <ScrollArea
             className="h-full"
-            viewportProps={{ tabIndex: 0, role: "region", "aria-label": "Pages of the report" }}
+            viewportProps={{ tabIndex: 0, role: "region", "aria-label": t`Pages of the report` }}
           >
             <div className="grid justify-items-center gap-6 p-6">
               {failed ? (

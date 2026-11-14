@@ -118,7 +118,9 @@ function TourCard({ index }: { index: number }) {
         className="fixed right-4 bottom-4 z-[60] flex w-80 flex-col gap-2 rounded-card border border-line bg-surf-raised p-3 shadow-lg"
       >
         <p className="text-caption text-ink-2">
-          <Trans>Step</Trans> {index + 1} <Trans>of</Trans> {tourLength}
+          <Trans>
+            Step {index + 1} of {tourLength}
+          </Trans>
         </p>
         <h2 className="text-body font-semibold text-ink">{step.title}</h2>
         <p className="text-body-sm text-ink">{step.text}</p>

@@ -77,6 +77,8 @@ function UploadFlow({
   project,
   batch,
 }: UploadPageProps & { project: Project; batch: UploadBatch }) {
+  const { t } = useLingui();
+
   const navigate = useNavigate();
   const toast = useMockToast();
   useOpenJobsTray(scene === "tray");
@@ -219,19 +221,19 @@ function UploadFlow({
     const can = !started && index < 2 && index <= max && !(index === 1 && background === "empty");
     const why = started
       ? index < 2
-        ? "The upload has started. Files and checks are fixed now."
+        ? t`The upload has started. Files and checks are fixed now.`
         : ""
       : index === 2
         ? max >= 1
-          ? "Starts from the upload button on Check."
-          : "Not reached yet. Check the files first."
+          ? t`Starts from the upload button on Check.`
+          : t`Not reached yet. Check the files first.`
         : background === "empty"
-          ? "Add slides or result files first."
+          ? t`Add slides or result files first.`
           : can && index === 1 && open
-            ? `Go to Check. ${open} file${open > 1 ? "s wait" : " waits"} for a fix`
+            ? t`Go to Check. ${open} file${open > 1 ? "s wait" : " waits"} for a fix`
             : can
-              ? `Go to ${label}`
-              : "Not reached yet. Use Next.";
+              ? t`Go to ${label}`
+              : t`Not reached yet. Use Next.`;
     return {
       label,
       ...(stateOf ? { state: stateOf } : {}),
@@ -338,11 +340,11 @@ function UploadFrame({
     <FlowPage
       className="h-full"
       renderLink={renderLink}
-      crumbs={[{ label: project.name, href: `/projects/${project.id}` }, { label: "Upload" }]}
+      crumbs={[{ label: project.name, href: `/projects/${project.id}` }, { label: t`Upload` }]}
       title={t`Upload slides and results`}
       subtitle={
         <>
-          <Trans>Into</Trans> {project.name} · <span className="font-mono">{project.code}</span> ·{" "}
+          <Trans>Into {project.name}</Trans> · <span className="font-mono">{project.code}</span> ·{" "}
           {clinical
             ? t`Clinical, patient fields are kept and every access is logged`
             : t`De-identified, so labels and patient names are removed on upload`}
@@ -402,11 +404,11 @@ function UploadBar({
     </Button>
   );
   const both = (results: number) =>
-    `${plural(model.slides.length, "slide")} and ${plural(results, "result")}`;
+    t`${plural(model.slides.length, "slide")} and ${plural(results, "result")}`;
   if (scene === "storagefull") {
     const full = !state.trimmed;
     const freeGb = (batch.storage.needed_gb - batch.storage.left_gb).toFixed(1);
-    const why = `Free ${freeGb} GB in ${projectCode} or ask an admin for a larger allowance.`;
+    const why = t`Free ${freeGb} GB in ${projectCode} or ask an admin for a larger allowance.`;
     const out = model.slides.length - batch.storage.trimmed_slides;
     return (
       <FlowBar
@@ -414,18 +416,18 @@ function UploadBar({
         hint={
           full
             ? why
-            : `${out} slides are out. ${batch.storage.trimmed_gb} GB fits in the ${batch.storage.left_gb} GB left in ${projectCode}.`
+            : t`${out} slides are out. ${batch.storage.trimmed_gb} GB fits in the ${batch.storage.left_gb} GB left in ${projectCode}.`
         }
         next={
           full
             ? off(
                 <>
                   <Icon name="upload" />
-                  <Trans>Upload</Trans> {both(model.resultCount)}
+                  <Trans>Upload {both(model.resultCount)}</Trans>
                 </>,
                 why,
               )
-            : start(`Upload ${batch.storage.trimmed_slides} slides, ${out} left out`)
+            : start(t`Upload ${batch.storage.trimmed_slides} slides, ${out} left out`)
         }
       />
     );
@@ -437,12 +439,12 @@ function UploadBar({
         back={back}
         hint={
           waits && !state.unmatchedOut
-            ? "1 file waits for a slide. Without one it stays out."
-            : "Nothing needs you."
+            ? t`1 file waits for a slide. Without one it stays out.`
+            : t`Nothing needs you.`
         }
         next={start(
           waits
-            ? `Upload ${both(model.resultCount - 1)}, 1 left out`
+            ? t`Upload ${both(model.resultCount - 1)}, 1 left out`
             : `Upload ${both(model.resultCount)}`,
         )}
       />
@@ -450,15 +452,15 @@ function UploadBar({
   }
   if (step === 1) {
     const label = open
-      ? `Upload ${plural(model.files - open, "file")}, ${open} wait`
+      ? t`Upload ${plural(model.files - open, "file")}, ${open} wait`
       : left
-        ? `Upload ${both(model.resultCount - left)}, ${left} left out`
+        ? t`Upload ${both(model.resultCount - left)}, ${left} left out`
         : `Upload ${both(model.resultCount)}`;
     const hint = open
-      ? `${open} file${open > 1 ? "s wait" : " waits"} for a fix. The rest upload now.`
+      ? t`${open} file${open > 1 ? "s wait" : " waits"} for a fix. The rest upload now.`
       : left
-        ? `${left} result file${left > 1 ? "s are" : " is"} left out. Add ${left > 1 ? "them" : "it"} to the project later.`
-        : "Nothing needs you.";
+        ? t`${left} result file${left > 1 ? "s are" : " is"} left out. Add ${left > 1 ? "them" : "it"} to the project later.`
+        : t`Nothing needs you.`;
     return (
       <FlowBar
         back={back}
@@ -475,7 +477,7 @@ function UploadBar({
                   set({ left: leftOut });
                 }}
               >
-                <Trans>Leave</Trans> {open > 1 ? t`them` : t`it`} <Trans>out</Trans>
+                {open > 1 ? t`Leave them out` : t`Leave it out`}
               </Button>
             ) : null}
             {start(label)}
@@ -487,7 +489,7 @@ function UploadBar({
   if (scene === "progress" || scene === "sourceoff") {
     return (
       <FlowBar
-        hint="The upload keeps going if you leave this page or close the tab."
+        hint={t`The upload keeps going if you leave this page or close the tab.`}
         next={
           <span className="flex items-center gap-2">
             <span className="mr-1.5 inline-flex items-center gap-1.5">
@@ -509,7 +511,7 @@ function UploadBar({
   if (scene === "done") {
     return (
       <FlowBar
-        hint="Every result set records its file, model and version."
+        hint={t`Every result set records its file, model and version.`}
         next={
           <span className="flex items-center gap-2">
             <Button
@@ -534,20 +536,20 @@ function UploadBar({
   const checked = remote && state.checked[scene === "link" ? "link" : "remote"];
   const duplicate = batch.slides[batch.duplicate.slide]?.name ?? "";
   const hint = none
-    ? "Every file is removed. Drop slides or result files to go on."
+    ? t`Every file is removed. Drop slides or result files to go on.`
     : scene === "dup"
       ? state.duplicate === "skip"
-        ? `${duplicate} is skipped. The other ${model.slides.length - 1} slides upload.`
-        : `${duplicate} replaces the slide in ${projectCode}. Its reviews stay.`
+        ? t`${duplicate} is skipped. The other ${model.slides.length - 1} slides upload.`
+        : t`${duplicate} replaces the slide in ${projectCode}. Its reviews stay.`
       : remote
         ? checked
-          ? "Nothing is fetched until you start the upload."
-          : "Check the address first."
+          ? t`Nothing is fetched until you start the upload.`
+          : t`Check the address first.`
         : scene === "empty"
-          ? "Add slides, result files or both to go on."
+          ? t`Add slides, result files or both to go on.`
           : out
-            ? `${out} result file${out > 1 ? "s wait" : " waits"} in Not matched yet. With no slide it stays out of the upload.`
-            : "Every result found its slide.";
+            ? t`${out} result file${out > 1 ? "s wait" : " waits"} in Not matched yet. With no slide it stays out of the upload.`
+            : t`Every result found its slide.`;
   const blocked = scene === "empty" || none || (remote && !checked);
   return (
     <FlowBar
@@ -559,7 +561,7 @@ function UploadBar({
       hint={hint}
       next={
         blocked ? (
-          off("Next", hint)
+          off(t`Next`, hint)
         ) : (
           <Button variant="primary" data-testid="upload-next" onClick={() => go("check")}>
             <Trans>Next</Trans>
