@@ -258,14 +258,14 @@ def test_deleting_a_set_that_review_work_uses_needs_confirmation(api: ApiAs, dat
     path = f"/api/result-sets/{s.result_set}"
     refused = client.delete(path)
     assert (refused.status_code, refused.json()["code"]) == (409, "result-set-in-review")
-    assert refused.json()["detail"] == "Used by 1 review task and 1 decision"
+    assert refused.json()["detail"] == "Used by 1 review task and 2 decisions"
     assert client.get(path).status_code == 200
     deleted = client.delete(path, params={"confirm": "true"})
-    assert (deleted.status_code, deleted.json()) == (200, {"tasks": 1, "decisions": 1})
+    assert (deleted.status_code, deleted.json()) == (200, {"tasks": 1, "decisions": 2})
     assert client.get(path).status_code == 404
     details = owner(
         database,
         "SELECT details::jsonb->>'tasks', details::jsonb->>'decisions' FROM audit_events "
         f"WHERE target_id = '{s.result_set}' AND action = 'result-set.deleted'",
     )
-    assert details == [("1", "1")]
+    assert details == [("1", "2")]
