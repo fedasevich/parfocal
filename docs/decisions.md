@@ -152,6 +152,16 @@ COLLAB-011 (live shared cursor) shows in compare the pointer of everyone who sha
 
 Your choice:
 
+### 100. Whether the app refuses a BIF that has no frame stitching
+
+VIEW-014 (Ventana BIF with frame stitching) opens a BIF in the app with the frame positions from its sidecar. When the sidecar is missing or holds no stitching, the reader draws the camera frames as a plain grid, as [ADR 0164](adr/0164-bif-frames-placed-like-openslide.md) (BIF frames placed like OpenSlide) says, and the tissue in every frame overlap shows twice. Ingest refuses such a file today, so this happens only if a sidecar is lost.
+
+- **A. Refuse to open it in the app and say the slide needs re-ingest (recommended).** Nobody reviews a slide with repeated tissue by accident.
+- B. Keep opening it as a plain grid.
+- Other.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 Nothing else in review needs you. Nine tasks that only waited for green CI were ticked on 2026-11-02.

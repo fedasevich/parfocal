@@ -175,6 +175,14 @@ export function frameStitchingOf(document: unknown): SlideStitching | null {
   return isFrameStitching(sidecar["stitching"]) ? sidecar["stitching"] : null;
 }
 
+async function sidecarDocument(response: Response): Promise<unknown> {
+  const bytes = new Uint8Array(await response.arrayBuffer());
+  const gzipped = bytes[0] === 0x1f && bytes[1] === 0x8b;
+  if (!gzipped) return JSON.parse(new TextDecoder().decode(bytes));
+  const inflated = new Blob([bytes]).stream().pipeThrough(new DecompressionStream("gzip"));
+  return new Response(inflated).json();
+}
+
 async function withFrameStitching(
   table: SlideIndex,
   sidecarUrl: string,
@@ -184,7 +192,7 @@ async function withFrameStitching(
   const response = await access.fetch(sidecarUrl, signal === undefined ? {} : { signal }, fetcher);
   if (response.status === 404) return table;
   if (!response.ok) throw new SlideBytesError(sidecarUrl, response.status);
-  const stitching = frameStitchingOf(await response.json());
+  const stitching = frameStitchingOf(await sidecarDocument(response));
   return stitching === null ? table : { ...table, tileKind: "bif-frames", stitching };
 }
 

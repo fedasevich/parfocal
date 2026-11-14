@@ -36,6 +36,8 @@ The plain grid repeats the overlap strip, which the search finds at 12.34, and t
 
 ## Follow-ups
 
-- The goldens and the real-slide test need `OS-1.bif` from the fixture group `big`, so they skip wherever that group is not cached. TODO: check whether the `formats` CI job caches `big`.
+- The goldens and the real-slide test need `OS-1.bif` from the fixture group `big`, so they skip wherever that group is not cached. No CI job caches `big` (`docs/knowledge/test-fixtures.md`), so they run only on a machine that holds the slide. The synthetic test and the `signedOpenRequest` tests run everywhere.
 - `Ventana-1.bif` has no stitching in its sidecar and ingest refuses it, so it has no golden.
 - The app reads only `tileKind` and `stitching` from `tile-index.json` for a BIF. Using the sidecar's directory offsets for a faster open is not part of this task.
+- The edge tile route sends no `Content-Encoding`, so the gzipped sidecar reaches the browser still compressed. `signedOpenRequest` inflates it when it starts with the gzip magic bytes, which a unit test covers. No BIF was opened through a deployed edge in this task.
+- A BIF whose sidecar is missing or has no stitching opens as a plain grid. Decision 100 in `docs/decisions.md` asks whether the app should refuse it instead.

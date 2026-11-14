@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, test } from "node:test";
+import { gzipSync } from "node:zlib";
 import {
   CrossOriginSlideBytesError,
   createSlideAccess,
@@ -143,6 +144,17 @@ describe("signedOpenRequest for a Ventana BIF", () => {
     assert.equal(request.index?.tileKind, "bif-frames");
     assert.deepEqual(request.index?.stitching, STITCHING);
     assert.equal(request.index?.levels?.length, 2);
+  });
+
+  test("reads a sidecar that arrives still gzipped, as the stored object is", async () => {
+    const stored = gzipSync(JSON.stringify({ tileKind: "bif-frames", stitching: STITCHING }));
+    const request = await openBif(
+      bifFetcher(
+        [],
+        () => new Response(stored, { headers: { "content-type": "application/json" } }),
+      ),
+    );
+    assert.deepEqual(request.index?.stitching, STITCHING);
   });
 
   test("keeps the plain level table when the slide has no sidecar or no stitching", async () => {
