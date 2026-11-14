@@ -3521,7 +3521,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Refs doc 20 §2.10.
   Size: M.
 
-- [ ] AISEG-009 · Embedding window crop for decoder speed
+- [x] AISEG-009 · Embedding window crop for decoder speed
   Crop the embedding around the prompt before decoding.
   Done when the decoder time drops below the POC's 40 ms floor in the browser test, or an ADR records why not.
   Refs doc 20 §2.10.
