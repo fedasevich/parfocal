@@ -107,7 +107,7 @@ function LiveSlide() {
           onValueChange={(next) => switchTo(next as SlideWorkspace)}
           options={workspaces.map((name) => ({ value: name, label: workspaceSetups[name].label }))}
         />
-        <ViewingNow slideId={slideId} />
+        <ViewingNow slideId={slideId} taskId={task} />
         {percent === null ? null : (
           <ViewedRing data-testid="viewed-ring" percent={percent} onClick={() => setPeek(true)} />
         )}

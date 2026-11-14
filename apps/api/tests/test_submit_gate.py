@@ -83,3 +83,23 @@ def test_another_reviewers_decisions_do_not_count(api: ApiAs, database: str) -> 
     answer(api, r, ANSWERED)
     refused = submit(api, r)
     assert refused.json()["current"]["open_objects"] == ["T1", "T2"], refused.text
+
+
+def test_a_deleted_ai_object_counts_as_checked(api: ApiAs, database: str) -> None:
+    r = review(api, database)
+    answer(api, r, ANSWERED)
+    decide(api, r, "T1")
+    deleted = api(r.people["first"]).put(f"{r.base}/edits/T2", json={"deleted": True})
+    assert deleted.status_code == 200, deleted.text
+    accepted = submit(api, r)
+    assert accepted.status_code == 200, accepted.text
+
+
+def test_a_skipped_object_still_blocks_the_submit(api: ApiAs, database: str) -> None:
+    r = review(api, database)
+    answer(api, r, ANSWERED)
+    deleted = api(r.people["first"]).put(f"{r.base}/edits/T1", json={"deleted": True})
+    assert deleted.status_code == 200, deleted.text
+    refused = submit(api, r)
+    assert refused.status_code == 409, refused.text
+    assert refused.json()["current"]["open_objects"] == ["T2"]

@@ -1,6 +1,7 @@
 import type { RoomSignal } from "@parfocal/edge/room-client";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { onPointer, showCursor } from "./cursor-bridge.ts";
+import { hearUnlessBlinded, sendUnlessBlinded } from "./blinded.ts";
+import { onPointer, showCursors } from "./cursor-bridge.ts";
 import {
   heardViewOf,
   type SharedCamera,
@@ -18,7 +19,7 @@ import {
   type Sighting,
   viewersOf,
 } from "./presence-state.ts";
-import { cursorSender, heardCursorOf, type SlideShare } from "./shared-cursor.ts";
+import { cursorSender, heardCursorOf, type SlideShare, shownOnStage } from "./shared-cursor.ts";
 import { useStageEngine } from "./stage-engines.ts";
 import { useRoomEvents } from "./use-room-presence.ts";
 
@@ -35,8 +36,15 @@ export type FollowView = {
   readonly follow: (user: string | null) => void;
 };
 
-export function useFollowView(slideId: string, me: string | undefined): FollowView {
+export function useFollowView(
+  slideId: string,
+  me: string | undefined,
+  blinded: boolean,
+): FollowView {
   const engine = useStageEngine(slideId);
+  const blind = useRef(blinded);
+  blind.current = blinded;
+  const isBlinded = useCallback(() => blind.current, []);
   const [present, setPresent] = useState(nobody);
   const [sharers, setSharers] = useState(noSharers);
   const [sharing, setSharingState] = useState(false);
@@ -64,15 +72,29 @@ export function useFollowView(slideId: string, me: string | undefined): FollowVi
     if (stage !== null && state.current.sharing) send.current(viewFrame(stage.getCamera()));
   }, []);
 
-  const forget = useCallback((user: string) => {
-    views.current.delete(user);
-    cursors.current.delete(user);
-    setSharers((known) => (known.includes(user) ? known.filter((id) => id !== user) : known));
-    setFollowing((current) => (current === user ? null : current));
-  }, []);
+  const publish = useCallback(
+    (following: string | null = state.current.following) => {
+      const drawn = blind.current
+        ? []
+        : shownOnStage(cursors.current, (user) => views.current.has(user), following);
+      showCursors(slideId, drawn);
+    },
+    [slideId],
+  );
+
+  const forget = useCallback(
+    (user: string) => {
+      views.current.delete(user);
+      cursors.current.delete(user);
+      publish();
+      setSharers((known) => (known.includes(user) ? known.filter((id) => id !== user) : known));
+      setFollowing((current) => (current === user ? null : current));
+    },
+    [publish],
+  );
 
   useEffect(() => {
-    if (engine === null || !sharing) return;
+    if (engine === null || !sharing || blinded) return;
     const sendCamera = () => send.current(viewFrame(engine.getCamera()));
     const paced = throttle(sendCamera, VIEW_SEND_MS);
     paced.call();
@@ -84,10 +106,10 @@ export function useFollowView(slideId: string, me: string | undefined): FollowVi
       clearInterval(heartbeat);
       send.current(stopFrame);
     };
-  }, [engine, sharing]);
+  }, [engine, sharing, blinded]);
 
   useEffect(() => {
-    if (engine === null || !sharing) return;
+    if (engine === null || !sharing || blinded) return;
     const sender = cursorSender((signal) => send.current(signal));
     const unsubscribe = onPointer(slideId, (at) => {
       if (at === null) sender.leave();
@@ -97,13 +119,12 @@ export function useFollowView(slideId: string, me: string | undefined): FollowVi
       unsubscribe();
       sender.cancel();
     };
-  }, [engine, sharing, slideId]);
+  }, [engine, sharing, slideId, blinded]);
 
   useEffect(() => {
-    const at = following === null ? undefined : cursors.current.get(following);
-    showCursor(slideId, following === null || at === undefined ? null : { user: following, at });
-    return () => showCursor(slideId, null);
-  }, [slideId, following]);
+    publish(following);
+    return () => showCursors(slideId, []);
+  }, [slideId, following, publish]);
 
   useEffect(() => {
     if (engine === null || following === null) return;
@@ -114,7 +135,17 @@ export function useFollowView(slideId: string, me: string | undefined): FollowVi
     });
   }, [engine, following]);
 
-  send.current = useRoomEvents(
+  useEffect(() => {
+    if (!blinded) return;
+    views.current.clear();
+    cursors.current.clear();
+    setSharers(noSharers);
+    setSharingState(false);
+    setFollowing(null);
+    publish();
+  }, [blinded, publish]);
+
+  const sendToRoom = useRoomEvents(
     `slide:${slideId}`,
     me,
     (event) => {
@@ -127,18 +158,17 @@ export function useFollowView(slideId: string, me: string | undefined): FollowVi
       setPresent(nobody);
       views.current.clear();
       cursors.current.clear();
+      publish();
       setSharers(noSharers);
       setFollowing(null);
       sendNow();
     },
-    (signal) => {
+    hearUnlessBlinded(isBlinded, (signal) => {
       const pointed = heardCursorOf(signal, me ?? "");
       if (pointed !== null) {
         if (pointed.gone) cursors.current.delete(pointed.user);
         else cursors.current.set(pointed.user, pointed.at);
-        if (state.current.following === pointed.user) {
-          showCursor(slideId, pointed.gone ? null : { user: pointed.user, at: pointed.at });
-        }
+        publish();
         return;
       }
       const heard = heardViewOf(signal, me ?? "");
@@ -147,11 +177,14 @@ export function useFollowView(slideId: string, me: string | undefined): FollowVi
         forget(heard.user);
         return;
       }
+      const known = views.current.has(heard.user);
       views.current.set(heard.user, heard.camera);
+      if (!known) publish();
       setSharers((known) => (known.includes(heard.user) ? known : [...known, heard.user]));
       if (state.current.following === heard.user) apply(heard.camera);
-    },
+    }),
   );
+  send.current = sendUnlessBlinded(isBlinded, sendToRoom);
 
   const setSharing = useCallback((next: boolean) => {
     if (next) setFollowing(null);
@@ -174,7 +207,7 @@ export function useFollowView(slideId: string, me: string | undefined): FollowVi
 
   return {
     present: viewersOf(present),
-    available: engine !== null,
+    available: engine !== null && !blinded,
     sharing,
     sharers,
     following,

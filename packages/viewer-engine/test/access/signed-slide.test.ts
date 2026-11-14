@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, test } from "node:test";
+import { gzipSync } from "node:zlib";
 import {
   CrossOriginSlideBytesError,
   createSlideAccess,
@@ -92,7 +93,97 @@ describe("slideFormatFromName", () => {
     assert.equal(slideFormatFromName("slide.ome.tiff"), "ome-tiff");
     assert.equal(slideFormatFromName("slide.tif"), "generic-tiff");
     assert.equal(slideFormatFromName("slide.ndpi"), "hamamatsu-ndpi");
+    assert.equal(slideFormatFromName("slide.bif"), "ventana-bif");
     assert.equal(slideFormatFromName("slide.unknown"), null);
+  });
+});
+
+const STITCHING = {
+  columns: 3,
+  rows: 2,
+  frameWidth: 1024,
+  frameHeight: 1360,
+  columnX: [0, 913, 1821],
+  rowY: [0, 1251],
+  advanceX: 911.2,
+  advanceY: 1251.2,
+  width: 2845,
+  height: 2611,
+};
+
+function bifFetcher(seen: string[], sidecar: () => Response): Fetcher {
+  return (input) => {
+    seen.push(input);
+    return Promise.resolve(input.endsWith("/tile-index.json") ? sidecar() : Response.json(TABLE));
+  };
+}
+
+function openBif(fetcher: Fetcher) {
+  return signedOpenRequest({
+    access: access(),
+    basePath: "/tiles/slide-1/",
+    baseUrl: "https://app.test/",
+    original: "OS-1.bif",
+    fetcher,
+  });
+}
+
+describe("signedOpenRequest for a Ventana BIF", () => {
+  test("reads the frame stitching from the sidecar beside the level table", async () => {
+    const seen: string[] = [];
+    const request = await openBif(
+      bifFetcher(seen, () =>
+        Response.json({ version: 1, tileKind: "bif-frames", stitching: STITCHING, levels: [] }),
+      ),
+    );
+    assert.deepEqual(seen, [
+      "https://app.test/tiles/slide-1/levels.json",
+      "https://app.test/tiles/slide-1/tile-index.json",
+    ]);
+    assert.equal(request.formatId, "ventana-bif");
+    assert.equal(request.index?.tileKind, "bif-frames");
+    assert.deepEqual(request.index?.stitching, STITCHING);
+    assert.equal(request.index?.levels?.length, 2);
+  });
+
+  test("reads a sidecar that arrives still gzipped, as the stored object is", async () => {
+    const stored = gzipSync(JSON.stringify({ tileKind: "bif-frames", stitching: STITCHING }));
+    const request = await openBif(
+      bifFetcher(
+        [],
+        () => new Response(stored, { headers: { "content-type": "application/json" } }),
+      ),
+    );
+    assert.deepEqual(request.index?.stitching, STITCHING);
+  });
+
+  test("keeps the plain level table when the slide has no sidecar or no stitching", async () => {
+    const missing = await openBif(bifFetcher([], () => new Response(null, { status: 404 })));
+    assert.equal(missing.index?.stitching, undefined);
+    assert.equal(missing.index?.tileKind, undefined);
+    const unstitched = await openBif(
+      bifFetcher([], () => Response.json({ version: 1, tileKind: "bif-frames", stitching: null })),
+    );
+    assert.equal(unstitched.index?.stitching, undefined);
+  });
+
+  test("reports a sidecar the server refuses", async () => {
+    await assert.rejects(
+      openBif(bifFetcher([], () => new Response(null, { status: 403 }))),
+      SlideBytesError,
+    );
+  });
+
+  test("asks for no sidecar for other formats", async () => {
+    const seen: string[] = [];
+    await signedOpenRequest({
+      access: access(),
+      basePath: "/tiles/slide-1/",
+      baseUrl: "https://app.test/",
+      original: "a.svs",
+      fetcher: bifFetcher(seen, () => Response.json({})),
+    });
+    assert.deepEqual(seen, ["https://app.test/tiles/slide-1/levels.json"]);
   });
 });
 

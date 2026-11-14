@@ -4,14 +4,15 @@ import { AvatarStack } from "@parfocal/ui/components/person";
 import { okData } from "../screens/placeholder.tsx";
 import { firstName, usePeople } from "../screens/project/people.ts";
 import { viewersOf } from "./presence-state.ts";
+import { useBlindedOn } from "./use-blinded.ts";
 import { useFollowView } from "./use-follow-view.ts";
 import { useRoomPresence } from "./use-room-presence.ts";
 
 const pressedLook = "aria-pressed:border-accent aria-pressed:bg-accent-soft";
 
-export function ViewingNow({ slideId }: { slideId: string }) {
+export function ViewingNow({ slideId, taskId }: { slideId: string; taskId: string | undefined }) {
   const me = okData(useGetMe().data)?.user_id;
-  const view = useFollowView(slideId, me);
+  const view = useFollowView(slideId, me, useBlindedOn(taskId, slideId));
   const people = usePeople();
   if (view.present.length === 0) return null;
   const viewers = view.present.map((id) => people.byId(id));

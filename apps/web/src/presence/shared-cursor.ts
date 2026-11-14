@@ -47,6 +47,16 @@ export function withCursor(known: readonly ShownCursor[], heard: HeardCursor): S
   return heard.gone ? others : [...others, { user: heard.user, at: heard.at }];
 }
 
+export function shownOnStage(
+  cursors: ReadonlyMap<string, SlideShare>,
+  sharesView: (user: string) => boolean,
+  following: string | null,
+): ShownCursor[] {
+  return [...cursors]
+    .filter(([user]) => user === following || !sharesView(user))
+    .map(([user, at]) => ({ user, at }));
+}
+
 export type CursorSender = {
   readonly move: (at: SlideShare) => void;
   readonly leave: () => void;

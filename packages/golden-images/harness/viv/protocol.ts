@@ -3,6 +3,7 @@ import type {
   RendererRouteId,
   SlideArea,
   SlideFormatId,
+  SlideIndex,
 } from "@parfocal/viewer-engine";
 
 export type VivView =
@@ -29,6 +30,7 @@ export interface VivSceneRequest {
   readonly view: VivView;
   readonly breakage: VivBreakage;
   readonly tissue?: SlideArea;
+  readonly index?: SlideIndex;
   readonly route?: RendererRouteId;
   readonly switches?: readonly RendererRouteId[];
 }
