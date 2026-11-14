@@ -23,6 +23,8 @@ export interface MemoryRoute extends RendererRoute<MemorySlide> {
   whenLoaded(timeoutMs: number): Promise<boolean>;
 }
 
+const idleTimeoutMs = 30_000;
+
 const view = new OrthographicView({ id: "slide", controller: false });
 
 function viewState(camera: Camera) {
@@ -64,6 +66,19 @@ export function createMemoryRoute(
     return created as Layer;
   };
 
+  const whenLoaded = async (timeoutMs: number): Promise<boolean> => {
+    const deadline = performance.now() + timeoutMs;
+    let settled = 0;
+    while (performance.now() < deadline) {
+      await nextFrame();
+      const shown = current;
+      const loaded = Boolean(shown?.deck.isInitialized && shown.layer.isLoaded);
+      settled = loaded ? settled + 1 : 0;
+      if (settled >= 3) return true;
+    }
+    return false;
+  };
+
   return {
     showSlide(slide) {
       release();
@@ -96,17 +111,9 @@ export function createMemoryRoute(
     invalidateOverlay() {},
     setSlideBrightness() {},
     destroy: release,
-    async whenLoaded(timeoutMs) {
-      const deadline = performance.now() + timeoutMs;
-      let settled = 0;
-      while (performance.now() < deadline) {
-        await nextFrame();
-        const shown = current;
-        const loaded = Boolean(shown?.deck.isInitialized && shown.layer.isLoaded);
-        settled = loaded ? settled + 1 : 0;
-        if (settled >= 3) return true;
-      }
-      return false;
+    whenLoaded,
+    async whenIdle() {
+      await whenLoaded(idleTimeoutMs);
     },
   };
 }

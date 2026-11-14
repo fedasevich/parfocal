@@ -1,18 +1,25 @@
 import {
+  availableRendererRoutes,
   createDefaultPixelSourceRegistry,
   createViewerEngine,
   type PixelArray,
   type PixelResult,
   type PixelSource,
   type RasterRequest,
-  type ViewerEngine,
+  type RendererFactory,
+  type RendererRouteId,
+  type RendererRouteLoaders,
+  RendererRouteUnavailableError,
+  type RoutedViewerEngine,
   zoomForMagnification,
 } from "@parfocal/viewer-engine";
 import {
   createVivLevels,
   type PixelSlide,
+  pixelRendererRoutes,
   pixelSlide,
   type VivRoute,
+  type VivRouteOptions,
   vivRendererFactory,
 } from "@parfocal/viewer-engine/viv";
 import {
@@ -122,7 +129,7 @@ function viewer(): HTMLElement {
   return element;
 }
 
-let engine: ViewerEngine | null = null;
+let engine: RoutedViewerEngine<PixelSlide> | null = null;
 const errors: string[] = [];
 
 globalThis.addEventListener("error", (event) => {
@@ -138,21 +145,47 @@ const reset = () => {
   errors.length = 0;
 };
 
+interface HarnessRoutes {
+  readonly loaders: RendererRouteLoaders<PixelSlide>;
+  readonly viv: () => VivRoute | null;
+}
+
+function harnessRoutes(options: VivRouteOptions = {}): HarnessRoutes {
+  const createViv = vivRendererFactory(options);
+  let viv: VivRoute | null = null;
+  return {
+    loaders: {
+      ...pixelRendererRoutes({ viv: options }),
+      viv: () => (container) => {
+        viv = createViv(container);
+        return viv;
+      },
+    },
+    viv: () => viv,
+  };
+}
+
+async function loadRoute(
+  loaders: RendererRouteLoaders<PixelSlide>,
+  id: RendererRouteId,
+): Promise<RendererFactory<PixelSlide>> {
+  const load = loaders[id];
+  if (load === undefined) throw new RendererRouteUnavailableError(id);
+  return load();
+}
+
 const render = async (request: VivSceneRequest): Promise<VivSceneResult> => {
   reset();
-  let route: VivRoute | null = null;
   let opened: PixelSlide | null = null;
-  const factory = vivRendererFactory({
+  const routes = harnessRoutes({
     ...(request.breakage === "linear-everywhere" ? { interpolation: "linear" as const } : {}),
     onError: (error) => {
       errors.push(error.message);
     },
   });
+  let shown: RendererRouteId = request.route ?? "viv";
   const current = createViewerEngine<PixelSlide>({
-    createRenderer: (container) => {
-      route = factory(container);
-      return route;
-    },
+    createRenderer: await loadRoute(routes.loaders, shown),
     openSlide: async (ref, signal) => {
       const openRequest = {
         formatId: request.formatId,
@@ -183,19 +216,25 @@ const render = async (request: VivSceneRequest): Promise<VivSceneResult> => {
   if (request.view.kind === "camera") {
     current.setCamera({ x: request.view.x, y: request.view.y, zoom: request.view.zoom });
   }
-  const mountedRoute = route as VivRoute | null;
   const openedSlide = opened as PixelSlide | null;
-  if (mountedRoute === null || openedSlide === null) throw new Error("The route never mounted");
-  await mountedRoute.whenIdle();
-  const { ladder, tileSize } = mountedRoute.channels() ?? createVivLevels(openedSlide.source);
-  const decodeStats = mountedRoute.decodeStats();
+  if (openedSlide === null) throw new Error("The slide never opened");
+  await current.whenIdle();
+  for (const next of request.switches ?? []) {
+    current.switchRenderer(await loadRoute(routes.loaders, next));
+    shown = next;
+    await current.whenIdle();
+  }
+  const viv = shown === "viv" ? routes.viv() : null;
+  const { ladder, tileSize } = viv?.channels() ?? createVivLevels(openedSlide.source);
+  const decodeStats = viv?.decodeStats() ?? null;
   return {
+    route: shown,
     camera: current.getCamera(),
     slide: { width: slide.width, height: slide.height, micronsPerPixel: slide.micronsPerPixel },
     tileSize,
     ladder: ladder.map(({ downsample, backing }) => ({ downsample, backing })),
     errors: [...errors],
-    jpeg: mountedRoute.jpegReports(),
+    jpeg: viv?.jpegReports() ?? [],
     decoded:
       decodeStats === null
         ? null
@@ -203,5 +242,7 @@ const render = async (request: VivSceneRequest): Promise<VivSceneResult> => {
   };
 };
 
-const harness: VivHarness = { render, reset };
+const routes = () => availableRendererRoutes(harnessRoutes().loaders);
+
+const harness: VivHarness = { render, reset, routes };
 Object.assign(globalThis, { [harnessGlobal]: harness });

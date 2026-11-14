@@ -61,6 +61,7 @@ const stillRoute: RendererRoute = {
   setOverlays: () => {},
   invalidateOverlay: () => {},
   setSlideBrightness: () => {},
+  whenIdle: () => Promise.resolve(),
   destroy: () => {},
 };
 

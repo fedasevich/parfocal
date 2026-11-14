@@ -1,4 +1,9 @@
-import type { DecodeReport, SlideArea, SlideFormatId } from "@parfocal/viewer-engine";
+import type {
+  DecodeReport,
+  RendererRouteId,
+  SlideArea,
+  SlideFormatId,
+} from "@parfocal/viewer-engine";
 
 export type VivView =
   | { readonly kind: "fit" }
@@ -24,9 +29,12 @@ export interface VivSceneRequest {
   readonly view: VivView;
   readonly breakage: VivBreakage;
   readonly tissue?: SlideArea;
+  readonly route?: RendererRouteId;
+  readonly switches?: readonly RendererRouteId[];
 }
 
 export interface VivSceneResult {
+  readonly route: RendererRouteId;
   readonly camera: { readonly x: number; readonly y: number; readonly zoom: number };
   readonly slide: {
     readonly width: number;
@@ -43,6 +51,7 @@ export interface VivSceneResult {
 export interface VivHarness {
   render(request: VivSceneRequest): Promise<VivSceneResult>;
   reset(): void;
+  routes(): readonly RendererRouteId[];
 }
 
 export const harnessGlobal = "parfocalVivHarness";

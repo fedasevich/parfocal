@@ -1,5 +1,13 @@
 import { fileURLToPath } from "node:url";
-import { cameraBounds, fitCamera, tissueArea, zoomForMagnification } from "@parfocal/viewer-engine";
+import {
+  cameraBounds,
+  fitCamera,
+  PRIMARY_RENDERER_ROUTE,
+  RENDERER_ROUTE_IDS,
+  type RendererRouteId,
+  tissueArea,
+  zoomForMagnification,
+} from "@parfocal/viewer-engine";
 import { expect, test } from "@playwright/test";
 import type { ViteDevServer } from "vite";
 import {
@@ -19,6 +27,7 @@ import {
   renderVivFrame,
   skipUnlessCached,
   startVivHarness,
+  vivHarnessRoutes,
 } from "./viv-harness.ts";
 import {
   cmu1MicronsPerPixel,
@@ -75,21 +84,61 @@ function goldenOutcome(frame: Frame, scene: VivGoldenScene, outputDirectory: str
   }
 }
 
-for (const scene of VIV_SCENES) {
-  test(`${scene.name} matches its golden image`, async ({ page }, testInfo) => {
-    const { result, frame } = await renderVivFrame(page, scene);
-    expect(result.errors).toEqual([]);
-    expect(result.decoded?.workers).toBe(6);
-    expect(result.decoded?.dispatched).toBeGreaterThan(0);
-    const outcome = checkGolden(frame, {
-      name: scene.name,
-      format: scene.format,
-      goldenDirectory,
-      outputDirectory: testInfo.outputDir,
+const routeTasks: Record<RendererRouteId, string> = {
+  viv: "the primary route",
+  "deck-webgpu": "VIEW-037 (the deck.gl 9.4 WebGPU route) registers it",
+  "custom-webgpu": "VIEW-038 (the custom WebGPU engine route) registers it",
+};
+
+for (const route of RENDERER_ROUTE_IDS) {
+  for (const scene of VIV_SCENES) {
+    const title =
+      route === PRIMARY_RENDERER_ROUTE
+        ? `${scene.name} matches its golden image`
+        : `${scene.name} matches its golden image on the ${route} route`;
+    test(title, async ({ page }, testInfo) => {
+      const registered = await vivHarnessRoutes(page);
+      test.skip(
+        !registered.includes(route),
+        `The ${route} route is not registered yet, ${routeTasks[route]}`,
+      );
+      const { result, frame } = await renderVivFrame(page, scene, "none", { route });
+      expect(result.errors).toEqual([]);
+      expect(result.route).toBe(route);
+      if (route === PRIMARY_RENDERER_ROUTE) {
+        expect(result.decoded?.workers).toBe(6);
+        expect(result.decoded?.dispatched).toBeGreaterThan(0);
+      }
+      const outcome = checkGolden(frame, {
+        name: scene.name,
+        format: scene.format,
+        goldenDirectory,
+        outputDirectory: testInfo.outputDir,
+      });
+      if (outcome.status === "mismatched") throw new Error(outcome.message);
     });
-    if (outcome.status === "mismatched") throw new Error(outcome.message);
-  });
+  }
 }
+
+test("switching through every registered route and back keeps the camera and the 10x golden", async ({
+  page,
+}, testInfo) => {
+  const scene = VIV_SCENES.find((candidate) => candidate.name.endsWith("-10x"));
+  if (scene === undefined) throw new Error("No 10x scene is defined");
+  const registered = await vivHarnessRoutes(page);
+  expect(registered).toContain(PRIMARY_RENDERER_ROUTE);
+  const switches = [
+    ...registered.filter((route) => route !== PRIMARY_RENDERER_ROUTE),
+    PRIMARY_RENDERER_ROUTE,
+  ];
+  const plain = await renderVivFrame(page, scene);
+  const { result, frame } = await renderVivFrame(page, scene, "none", { switches });
+  expect(result.errors).toEqual([]);
+  expect(result.route).toBe(PRIMARY_RENDERER_ROUTE);
+  expect(result.camera).toEqual(plain.result.camera);
+  expect(result.decoded?.dispatched).toBeGreaterThan(0);
+  expect(goldenOutcome(frame, scene, testInfo.outputDir)).toBe("matched");
+});
 
 test("the route hands Viv a power-of-two ladder over the 1x, 4x and 16x levels of CMU-1.svs", async ({
   page,
