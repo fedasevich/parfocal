@@ -1,7 +1,7 @@
 import type { RoomSignal } from "@parfocal/edge/room-client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { hearUnlessBlinded, sendUnlessBlinded } from "./blinded.ts";
-import { onPointer, showCursor } from "./cursor-bridge.ts";
+import { onPointer, showCursors } from "./cursor-bridge.ts";
 import {
   heardViewOf,
   type SharedCamera,
@@ -19,7 +19,7 @@ import {
   type Sighting,
   viewersOf,
 } from "./presence-state.ts";
-import { cursorSender, heardCursorOf, type SlideShare } from "./shared-cursor.ts";
+import { cursorSender, heardCursorOf, type SlideShare, shownOnStage } from "./shared-cursor.ts";
 import { useStageEngine } from "./stage-engines.ts";
 import { useRoomEvents } from "./use-room-presence.ts";
 
@@ -72,12 +72,26 @@ export function useFollowView(
     if (stage !== null && state.current.sharing) send.current(viewFrame(stage.getCamera()));
   }, []);
 
-  const forget = useCallback((user: string) => {
-    views.current.delete(user);
-    cursors.current.delete(user);
-    setSharers((known) => (known.includes(user) ? known.filter((id) => id !== user) : known));
-    setFollowing((current) => (current === user ? null : current));
-  }, []);
+  const publish = useCallback(
+    (following: string | null = state.current.following) => {
+      const drawn = blind.current
+        ? []
+        : shownOnStage(cursors.current, (user) => views.current.has(user), following);
+      showCursors(slideId, drawn);
+    },
+    [slideId],
+  );
+
+  const forget = useCallback(
+    (user: string) => {
+      views.current.delete(user);
+      cursors.current.delete(user);
+      publish();
+      setSharers((known) => (known.includes(user) ? known.filter((id) => id !== user) : known));
+      setFollowing((current) => (current === user ? null : current));
+    },
+    [publish],
+  );
 
   useEffect(() => {
     if (engine === null || !sharing || blinded) return;
@@ -108,10 +122,9 @@ export function useFollowView(
   }, [engine, sharing, slideId, blinded]);
 
   useEffect(() => {
-    const at = following === null ? undefined : cursors.current.get(following);
-    showCursor(slideId, following === null || at === undefined ? null : { user: following, at });
-    return () => showCursor(slideId, null);
-  }, [slideId, following]);
+    publish(following);
+    return () => showCursors(slideId, []);
+  }, [slideId, following, publish]);
 
   useEffect(() => {
     if (engine === null || following === null) return;
@@ -129,7 +142,8 @@ export function useFollowView(
     setSharers(noSharers);
     setSharingState(false);
     setFollowing(null);
-  }, [blinded]);
+    publish();
+  }, [blinded, publish]);
 
   const sendToRoom = useRoomEvents(
     `slide:${slideId}`,
@@ -144,6 +158,7 @@ export function useFollowView(
       setPresent(nobody);
       views.current.clear();
       cursors.current.clear();
+      publish();
       setSharers(noSharers);
       setFollowing(null);
       sendNow();
@@ -153,9 +168,7 @@ export function useFollowView(
       if (pointed !== null) {
         if (pointed.gone) cursors.current.delete(pointed.user);
         else cursors.current.set(pointed.user, pointed.at);
-        if (state.current.following === pointed.user) {
-          showCursor(slideId, pointed.gone ? null : { user: pointed.user, at: pointed.at });
-        }
+        publish();
         return;
       }
       const heard = heardViewOf(signal, me ?? "");
@@ -164,7 +177,9 @@ export function useFollowView(
         forget(heard.user);
         return;
       }
+      const known = views.current.has(heard.user);
       views.current.set(heard.user, heard.camera);
+      if (!known) publish();
       setSharers((known) => (known.includes(heard.user) ? known : [...known, heard.user]));
       if (state.current.following === heard.user) apply(heard.camera);
     }),

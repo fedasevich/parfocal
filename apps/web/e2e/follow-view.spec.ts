@@ -109,23 +109,23 @@ test("a reviewer who has not submitted a blinded slide cannot share, follow or s
 }) => {
   test.setTimeout(90_000);
   const lenka = await context.newPage();
-  const sara = await context.newPage();
+  const simona = await context.newPage();
   await openAs(lenka, "LM", blindedSlide, blindedTask);
-  const saraHost = await openAs(sara, "SM", blindedSlide, blindedTask);
+  const simonaHost = await openAs(simona, "SM", blindedSlide, blindedTask);
   await expect(lenka.getByTestId("presence")).toHaveCount(1, { timeout: 5000 });
-  await expect(sara.getByTestId("presence")).toHaveCount(1, { timeout: 5000 });
+  await expect(simona.getByTestId("presence")).toHaveCount(1, { timeout: 5000 });
   await expect(lenka.getByTestId("share-view")).toHaveCount(0);
 
-  await sara.bringToFront();
-  const share = sara.getByTestId("share-view");
+  await simona.bringToFront();
+  const share = simona.getByTestId("share-view");
   await share.click();
   await expect(share).toHaveAttribute("aria-pressed", "true");
-  const stage = await saraHost.boundingBox();
+  const stage = await simonaHost.boundingBox();
   if (stage === null) throw new Error("no stage");
-  await sara.mouse.move(stage.x + 400, stage.y + 300);
-  await sara.mouse.wheel(0, -300);
-  await sara.mouse.move(stage.x + 460, stage.y + 340, { steps: 6 });
-  await sara.waitForTimeout(600);
+  await simona.mouse.move(stage.x + 400, stage.y + 300);
+  await simona.mouse.wheel(0, -300);
+  await simona.mouse.move(stage.x + 460, stage.y + 340, { steps: 6 });
+  await simona.waitForTimeout(600);
 
   await expect(lenka.getByTestId("presence")).toHaveCount(1);
   await expect(lenka.getByTestId("share-view")).toHaveCount(0);
