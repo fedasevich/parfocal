@@ -1417,6 +1417,12 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Refs [`poc/src/slide/ventana.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/slide/ventana.ts), doc 06.
   Size: M.
 
+- [ ] VIEW-069 · Ventana BIF with several scan areas
+  Since [ADR 0307](adr/0307-a-bif-is-refused-only-when-its-frame-overlap-is-unknown.md) (a BIF is refused only when its frame overlap is unknown), a BIF with several scan areas is refused because the reader cannot place them, while OpenSlide opens such files. Place each area by its own joints and origin as OpenSlide's Ventana driver does, in ingest and the browser reader through the one `frame_placement` rule.
+  Done when a synthetic BIF with two scan areas opens with both areas where OpenSlide puts them and matches an OpenSlide reference window, and the refusal stays for areas whose overlap is unknown.
+  Depends on VIEW-014.
+  Size: M.
+
 - [x] VIEW-015 · Leica SCN multi-pyramid
   Done when the main pyramid opens, not the decoy.
   Size: S.
