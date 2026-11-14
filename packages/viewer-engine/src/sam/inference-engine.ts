@@ -1,3 +1,9 @@
+import {
+  type EmbeddingWindow,
+  embeddingWindow,
+  pasteWindowOutputs,
+  touchesInnerEdge,
+} from "./embedding-window.ts";
 import type { ModelCache } from "./model-cache.ts";
 import type { SamRuntime, SamSession, SamTensor } from "./runtime.ts";
 import { type SamGraph, type SamProvider, samProvider, samVariant } from "./variants.ts";
@@ -33,8 +39,15 @@ export interface SamOutput {
 
 export type SamOutputs = Readonly<Record<string, SamOutput>>;
 
+export type SamDecodePath = "full" | "window" | "window-edge";
+
 export type SamPromptOutcome =
-  | { readonly status: "answer"; readonly outputs: SamOutputs; readonly ms: number }
+  | {
+      readonly status: "answer";
+      readonly outputs: SamOutputs;
+      readonly ms: number;
+      readonly path?: SamDecodePath;
+    }
   | { readonly status: "stale" };
 
 export interface SamGraphLoad {
@@ -47,6 +60,7 @@ export interface SamReady {
   readonly fellBack: boolean;
   readonly loads: readonly SamGraphLoad[];
   readonly warmed: boolean;
+  readonly windowed?: boolean;
 }
 
 export interface SamEncoded {
@@ -62,6 +76,7 @@ export interface InferenceEngineOptions {
   readonly hasGpuAdapter: () => Promise<boolean>;
   readonly embeddingCapacity?: number;
   readonly warm?: boolean;
+  readonly windowDecoder?: boolean;
   readonly onStage?: (graph: SamGraph) => void;
 }
 
@@ -124,6 +139,7 @@ function promptFeed(
   name: string,
   embedding: SamTensor,
   prompt: SamPrompt,
+  window: EmbeddingWindow | null,
 ): SamTensor {
   const { points } = prompt;
   const box = prompt.box ?? null;
@@ -165,6 +181,9 @@ function promptFeed(
   if (name === "orig_im_size") {
     return runtime.tensor(Float32Array.of(samImageSize, samImageSize), [2]);
   }
+  if (name === "window_origin" && window !== null) {
+    return runtime.tensor(Float32Array.of(window.x, window.y), [2]);
+  }
   throw new UnsupportedGraphInputError(name);
 }
 
@@ -180,6 +199,7 @@ export function createInferenceEngine(options: InferenceEngineOptions): Inferenc
   let provider: SamProvider = "wasm";
   let encoder: SamSession | null = null;
   let decoder: SamSession | null = null;
+  let windowSession: SamSession | null = null;
   let aisDecoder: Promise<SamSession> | null = null;
   let promptSequence = 0;
   let closed = false;
@@ -228,11 +248,12 @@ export function createInferenceEngine(options: InferenceEngineOptions): Inferenc
     session: SamSession,
     embedding: SamTensor,
     prompt: SamPrompt,
+    window: EmbeddingWindow | null,
   ): Record<string, SamTensor> {
     const feeds: Record<string, SamTensor> = {};
     try {
       for (const name of session.inputNames) {
-        feeds[name] = promptFeed(runtime, name, embedding, prompt);
+        feeds[name] = promptFeed(runtime, name, embedding, prompt, window);
       }
     } catch (error) {
       disposeFeeds(feeds, embedding);
@@ -253,8 +274,9 @@ export function createInferenceEngine(options: InferenceEngineOptions): Inferenc
     session: SamSession,
     embedding: SamTensor,
     prompt: SamPrompt,
+    window: EmbeddingWindow | null = null,
   ): Promise<SamOutputs> {
-    const feeds = buildFeeds(session, embedding, prompt);
+    const feeds = buildFeeds(session, embedding, prompt, window);
     try {
       return toOutputs(await session.run(feeds));
     } finally {
@@ -262,11 +284,40 @@ export function createInferenceEngine(options: InferenceEngineOptions): Inferenc
     }
   }
 
-  async function warmDecoder(session: SamSession): Promise<boolean> {
+  async function decode(
+    session: SamSession,
+    embedding: SamTensor,
+    prompt: SamPrompt,
+  ): Promise<{ outputs: SamOutputs; path: SamDecodePath }> {
+    const window = windowSession === null ? null : embeddingWindow(prompt);
+    if (windowSession === null || window === null) {
+      return { outputs: await runDecoder(session, embedding, prompt), path: "full" };
+    }
+    const windowed = await runDecoder(windowSession, embedding, prompt, window);
+    if (touchesInnerEdge(windowed, window)) {
+      return { outputs: await runDecoder(session, embedding, prompt), path: "window-edge" };
+    }
+    return { outputs: pasteWindowOutputs(windowed, window), path: "window" };
+  }
+
+  async function loadWindowDecoder(onProvider: SamProvider): Promise<SamSession | null> {
+    try {
+      return await createSession(samVariant(onProvider).windowDecoder, onProvider, []);
+    } catch {
+      return null;
+    }
+  }
+
+  async function warmDecoder(session: SamSession, window: SamSession | null): Promise<boolean> {
     const zeros = runtime.tensor(new Float32Array(embeddingValues), samEmbeddingDims);
     try {
       const middle = samImageSize / 2;
-      await runDecoder(session, zeros, { points: [{ x: middle, y: middle, positive: true }] });
+      const click: SamPrompt = { points: [{ x: middle, y: middle, positive: true }] };
+      await runDecoder(session, zeros, click);
+      const centred = embeddingWindow(click);
+      if (window !== null && centred !== null) {
+        await runDecoder(window, zeros, click, centred);
+      }
       return true;
     } catch {
       return false;
@@ -294,8 +345,10 @@ export function createInferenceEngine(options: InferenceEngineOptions): Inferenc
     provider = chosen;
     encoder = sessions.encoder;
     decoder = sessions.decoder;
-    const warmed = options.warm === false ? false : await warmDecoder(sessions.decoder);
-    return { provider: chosen, fellBack, loads, warmed };
+    windowSession = options.windowDecoder === true ? await loadWindowDecoder(chosen) : null;
+    const warmed =
+      options.warm === false ? false : await warmDecoder(sessions.decoder, windowSession);
+    return { provider: chosen, fellBack, loads, warmed, windowed: windowSession !== null };
   }
 
   async function ready(): Promise<{ encoder: SamSession; decoder: SamSession }> {
@@ -384,11 +437,11 @@ export function createInferenceEngine(options: InferenceEngineOptions): Inferenc
         }
         const { decoder: session } = await ready();
         const started = performance.now();
-        const outputs = await runDecoder(session, embeddingFor(id), prompt);
+        const { outputs, path } = await decode(session, embeddingFor(id), prompt);
         if (sequence !== promptSequence) {
           return { status: "stale" };
         }
-        return { status: "answer", outputs, ms: performance.now() - started };
+        return { status: "answer", outputs, ms: performance.now() - started, path };
       });
     },
 
@@ -426,9 +479,15 @@ export function createInferenceEngine(options: InferenceEngineOptions): Inferenc
       }
       embeddings.clear();
       const ais = aisDecoder === null ? null : await aisDecoder.catch(() => null);
-      await Promise.all([encoder?.release(), decoder?.release(), ais?.release()]);
+      await Promise.all([
+        encoder?.release(),
+        decoder?.release(),
+        windowSession?.release(),
+        ais?.release(),
+      ]);
       encoder = null;
       decoder = null;
+      windowSession = null;
       aisDecoder = null;
     },
   };

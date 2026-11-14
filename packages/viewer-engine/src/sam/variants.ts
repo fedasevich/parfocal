@@ -4,6 +4,7 @@ export const samGraphs = {
   encoderQ4: "pathosam.encoder_q4.onnx",
   encoderUint8: "pathosam.encoder_uint8.onnx",
   decoder: "pathosam.decoder.onnx",
+  windowDecoder: "pathosam.decoder_window32.onnx",
   aisDecoder: "pathosam.ais_decoder.onnx",
   aisDecoderUint8: "pathosam.ais_decoder_uint8.onnx",
   aisDecoderInt8Weights: "pathosam.ais_decoder_int8_weights.onnx",
@@ -15,6 +16,7 @@ export interface SamVariant {
   readonly provider: SamProvider;
   readonly encoder: SamGraph;
   readonly decoder: SamGraph;
+  readonly windowDecoder: SamGraph;
   readonly aisDecoder: SamGraph;
 }
 
@@ -23,12 +25,14 @@ const variants: Readonly<Record<SamProvider, SamVariant>> = {
     provider: "webgpu",
     encoder: samGraphs.encoderQ4,
     decoder: samGraphs.decoder,
+    windowDecoder: samGraphs.windowDecoder,
     aisDecoder: samGraphs.aisDecoderInt8Weights,
   },
   wasm: {
     provider: "wasm",
     encoder: samGraphs.encoderUint8,
     decoder: samGraphs.decoder,
+    windowDecoder: samGraphs.windowDecoder,
     aisDecoder: samGraphs.aisDecoderInt8Weights,
   },
 };
