@@ -15,6 +15,7 @@ import {
 import { Button } from "@parfocal/ui/components/button";
 import { Checkbox } from "@parfocal/ui/components/checkbox";
 import { Keycap } from "@parfocal/ui/components/keycap";
+import { Loader } from "@parfocal/ui/components/loader";
 import { MagnificationBar } from "@parfocal/ui/components/magnification-bar";
 import { UndoToast } from "@parfocal/ui/components/undo-toast";
 import { ContextBar, ContextDivider, ContextPill } from "@parfocal/ui/components/viewer-tools";
@@ -500,9 +501,7 @@ function TaskWorkspace({ tools, scene, people }: TaskWorkspaceProps) {
 export function AnnotateTaskView({ tools, scene }: { tools: ToolSession; scene: TaskScene }) {
   const people = useTaskPeople();
   if (people === undefined) {
-    return (
-      <main className="grid h-dvh place-items-center bg-page text-fg-dim">Loading the slide…</main>
-    );
+    return <Loader label="Loading the slide" size="page" />;
   }
   return <TaskWorkspace key={scene} tools={tools} scene={scene} people={people} />;
 }

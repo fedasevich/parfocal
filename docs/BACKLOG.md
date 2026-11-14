@@ -1297,7 +1297,7 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
 
 ## 06 TILES · Tile delivery
 
-- [ ] TILES-000 · Research check for tile delivery
+- [x] TILES-000 · Research check for tile delivery
   Done when STACK-025 is confirmed with measured CDN numbers.
   Size: S.
 
@@ -1982,7 +1982,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on DS-023, DS-033.
   Size: S.
 
-- [ ] DS-039 · Animated loaders instead of loading text
+- [x] DS-039 · Animated loaders instead of loading text
   Screens wait with plain text such as "Loading your home…", which the owner finds poor. Propose five animated loaders that fit the mock's dark, precise look, each either built from a small maintained library (for example a Lottie or CSS loader set) customised to the design tokens, or drawn fresh in CSS or SVG. Show all five side by side in a Storybook story with light, dark, compact and reduced motion variants, plus the bundle size each adds, and put the choice for the owner in `docs/decisions.md`. After the owner picks one, add it to `packages/ui` as one `Loader` component with inline, block and full page sizes, and replace every loading text in `apps/web` with it, keeping an accessible label for screen readers. Reduced motion shows a still state.
   Done when the five proposals are in Storybook with their sizes and an open decision exists, and after the owner's pick a test finds no loading text left in `apps/web` outside the `Loader` label, the loader honours reduced motion, and the golden images of the main screens show it.
   Depends on DS-023.
@@ -4636,7 +4636,7 @@ Importing AI results made elsewhere is first class. A result set is one import o
   Decided in [ADR 0125](adr/0125-result-files-pair-in-python-and-import-as-their-own-job.md) (result files pair in Python and import as their own job). The import writes regions and zones, and cells wait for RSET-011 (cells from imported files).
   Depends on RSET-001. Refs mock: upload/files.
 
-- [ ] RSET-005 · Import checks and fixes
+- [x] RSET-005 · Import checks and fixes
   Schema and parse errors name the line or feature and offer a downloadable error report and "import the other N". A coordinate or scale mismatch guesses the level or microns per pixel and shows both overlays with the share on tissue. Unknown classes are mapped to project classes once and remembered (PROJ-004). Missing scores count as no score or as 1.0.
   A heatmap with no slide at Check offers "Choose a slide" or "Leave it out", and either clears it. A result file that lands outside its slide changes nothing and says so on the project page. Each problem shows in place in the upload or the project, in the issue styles of SHELL-010.
   Done when tests cover each problem with fixtures: three objects without a class, a heatmap at level 2 scaled by 4, three new classes, rows without a score, a heatmap without a slide and a file outside its slide.
@@ -4681,6 +4681,12 @@ Importing AI results made elsewhere is first class. A result set is one import o
   Done when a benchmark imports the synthetic 1.6 million cell GeoJSON through `python -m parfocal_ingest` against MinIO, records the peak memory and the step time in a result file, and the job is claimed once.
   Depends on RSET-011. Split from RSET-011 by [ADR 0127](adr/0127-imported-cells-keep-numbers-by-centre-and-take-the-innermost-region.md) (imported cells keep their numbers by centre distance and take the innermost region).
   Decided in [ADR 0128](adr/0128-result-files-stream-through-a-byte-scanner-into-cell-columns.md) (result files stream through a byte scanner into cell columns): JSON arrays are read in batches by a byte scanner and msgspec, cells are kept as numpy columns spilled to the work folder, and the worker writes chunks from those columns. The [bounded cell import result](results/2026-11-01-bounded-cell-import.md) measured 824 to 1,025 MiB and 42 to 45 s per import, claimed once.
+
+- [ ] RSET-013 · Heatmap storage and the import check leftovers
+  An imported heatmap is stored and shown after the uploader accepts the level and scale guess, instead of ending with `result-heatmap-not-stored`. Each scale guess carries its share on tissue, an unreadable `.png` or `.tif` heatmap is refused with a named problem, and uploads left waiting on the uploader's choices in quarantine are swept after a set time.
+  Done when the RSET-005 test of a heatmap at level 2 scaled by 4 ends in a ready set, a test refuses a corrupt `.png` with its named problem, a test checks the share on tissue of each guess, and a test sweeps a waiting upload past its time.
+  Depends on RSET-005. Split from RSET-005 on 2026-11-14.
+  Size: M.
 
 ---
 

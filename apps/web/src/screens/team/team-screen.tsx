@@ -12,6 +12,7 @@ import {
   useListReviewerWorkload,
   useListTeamWorkload,
 } from "@parfocal/api-client";
+import { Loader } from "@parfocal/ui/components/loader";
 import type { PersonInfo } from "@parfocal/ui/components/person";
 import {
   Select,
@@ -140,7 +141,7 @@ export function TeamScreen({
     if (notAvailable(teamQuery)) return <NotAvailableYet what="Team workload" />;
     return (
       <main className="px-8 pt-5.5 pl-7">
-        <p className="text-body-sm text-fg-dim">Loading Team…</p>
+        <Loader label="Loading Team" />
       </main>
     );
   }

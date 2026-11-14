@@ -14,6 +14,7 @@ import { CellCluster, CellsLauncher } from "@parfocal/ui/components/cells-panel"
 import { DecisionButtons } from "@parfocal/ui/components/decision-buttons";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Keycap } from "@parfocal/ui/components/keycap";
+import { Loader } from "@parfocal/ui/components/loader";
 import { SidePanel } from "@parfocal/ui/components/side-panel";
 import { type OpinionQuestion, SlideDoneCard } from "@parfocal/ui/components/slide-done-card";
 import {
@@ -115,9 +116,7 @@ export function GuidedReview(props: GuidedReviewProps) {
     query: { enabled: hidesAi, retry: false },
   });
   if (!session.ready || (hidesAi && firstRead.isPending)) {
-    return (
-      <main className="grid h-dvh place-items-center bg-page text-fg-dim">Loading the review…</main>
-    );
+    return <Loader label="Loading the review" size="page" />;
   }
   if (hidesAi && firstRead.isError) {
     const notRecorded = firstRead.error instanceof ApiError && firstRead.error.status === 404;

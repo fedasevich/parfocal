@@ -1,3 +1,4 @@
+import { Loader } from "@parfocal/ui/components/loader";
 import type { ReactNode } from "react";
 
 type PlaceholderProps = {
@@ -30,7 +31,7 @@ type QueryStateProps = {
 };
 
 export function QueryState({ label, isPending, error, children }: QueryStateProps) {
-  if (isPending) return <p className="text-fg-dim text-body">Loading {label}…</p>;
+  if (isPending) return <Loader label={`Loading ${label}`} />;
   if (error) {
     return (
       <p role="alert" className="text-bad text-body">

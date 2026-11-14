@@ -68,6 +68,7 @@ test("a follower's camera tracks the shared view within 300 ms until the followe
   await expect.poll(() => inStep(lenkaHost, annaHost), { timeout: 5000 }).toBe(true);
 
   const before = await cameraOf(annaHost);
+  const leadingFrom = await anna.evaluate(() => Date.now());
   await anna.mouse.move(520, 380);
   for (let step = 0; step < leaderSteps; step += 1) {
     const from = await cameraOf(annaHost);
@@ -78,7 +79,7 @@ test("a follower's camera tracks the shared view within 300 ms until the followe
   await expect.poll(() => inStep(lenkaHost, annaHost), { timeout: 5000 }).toBe(true);
   const led = await samplesOf(anna);
   const followed = await samplesOf(lenka);
-  const moves = led.filter((sample) => sample.at > (led[0]?.at ?? 0));
+  const moves = led.filter((sample) => sample.at > leadingFrom);
   expect(moves.length).toBeGreaterThan(3);
   const lags = moves.flatMap((move) => {
     const arrival = followed.find((sample) => sample.camera === move.camera);

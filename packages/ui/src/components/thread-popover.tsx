@@ -5,6 +5,7 @@ import {
   CommentThread,
 } from "@parfocal/ui/components/comment-thread";
 import { IconButton } from "@parfocal/ui/components/icon-button";
+import { Loader } from "@parfocal/ui/components/loader";
 import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
 
@@ -100,13 +101,7 @@ function ThreadPopover({
       ) : null}
       {measurement ? <MeasurementEmbed measurement={measurement} /> : null}
       <div className="max-h-64 overflow-y-auto pr-1">
-        {loading ? (
-          <p role="status" className="m-0 text-body-sm text-fg-dim">
-            Loading the messages
-          </p>
-        ) : (
-          <CommentThread messages={messages} />
-        )}
+        {loading ? <Loader label="Loading the messages" /> : <CommentThread messages={messages} />}
       </div>
       <CommentComposer
         value={reply}
