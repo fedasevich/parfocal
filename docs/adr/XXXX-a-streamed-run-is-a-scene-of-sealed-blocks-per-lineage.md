@@ -26,8 +26,9 @@ How a rebuild reaches the GPU:
 Option 1, then option 2.
 
 - `StreamedScene` keeps, per lineage, the tiles in the order they first arrived and assigns each to the open block. A tile is triangulated once when it arrives, in slices of 1,000 polygons with a task break between them. A tile reported again with a higher sequence number, as a later stage would, replaces its polygons and marks only its block dirty.
-- `rebuild()` merges dirty blocks and returns every block, unchanged ones by reference. `merged()` of the scene equals `polygonBatchFromRings` over the same polygons, which the tests check.
-- `RebuildGate` lets a rebuild through when 3 s have passed and the last rebuild's cost is under 5% of the gap. The first rebuild runs as soon as the first tile lands, and the last one runs when the run ends.
+- A rebuild pass merges one dirty block at a time and hands the blocks over after each, with a frame between, so a frame uploads at most one new block. Unchanged blocks are handed over by reference. `merged()` of the scene equals `polygonBatchFromRings` over the same polygons, which the tests check.
+- `RebuildGate` lets a pass through when 3 s have passed and the last pass's cost is under 5% of the gap. The first pass runs as soon as the first tile lands, and the last one runs when the run ends.
+- A tile records its sequence number only with its last slice, so a stream closed in the middle of a tile appends the whole tile again when it is opened again.
 - `RunStream` polls the areas cursor, fetches each finished tile's chunk, appends it under the run's lineage, keeps the finished tiles for marks, and reports progress with an estimate from the areas' finish times once two have finished. Cancel asks the source to cancel and keeps polling through `cancelling` until the run ends, so every finished tile stays.
 - A stream opened again on the same lineage skips tiles it already holds, so a resumed run continues and is not doubled.
 
@@ -35,4 +36,5 @@ Option 1, then option 2.
 
 - No API route serves a running run's tile chunks yet, so `httpRunStreamSource` takes the tile URL from its caller. TODO: AINUC-010 (whole-slide nuclei job UI) needs that route, the area total from the run's stage `units_total`, and the screen wiring.
 - Cell edits through `CellEdits` do not apply to streamed tiles, because tile chunks number their cells inside the tile. Once the run ends, the finished result set opens through `PagedCells` as before.
+- The scene has no vertex budget and holds each tile twice, as its parts and inside its merged block. A 250,000 nucleus run fits, but a 1.6 million nucleus run would sit far above the 4,000,000 vertices that ADR 0242 allows resident. TODO: hand a finished run over to `PagedCells`, or drop parts once their block is sealed, before streaming runs of that size.
 - The engine tests are `test/nuclei/streamed-scene.test.ts` and `test/nuclei/run-stream.test.ts`, and `browser/nuclei-stream.spec.ts` streams 250,000 nuclei through deck.gl and cancels a run in a browser.

@@ -39,14 +39,21 @@ export class RebuildGate {
     return this.waitMs() === 0;
   }
 
+  clock(): number {
+    return this.now();
+  }
+
+  record(costMs: number): void {
+    this.lastCost = costMs;
+    this.spent += costMs;
+    this.last = this.now();
+    this.builds++;
+  }
+
   run<T>(build: () => T): T {
     const started = this.now();
     const built = build();
-    const finished = this.now();
-    this.lastCost = finished - started;
-    this.spent += this.lastCost;
-    this.last = finished;
-    this.builds++;
+    this.record(this.now() - started);
     return built;
   }
 }

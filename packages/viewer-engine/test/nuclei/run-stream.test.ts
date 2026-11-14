@@ -111,6 +111,7 @@ function streamOf(
     slice: extra.slice ?? 3,
     pollMs: 1000,
     yieldTask: () => Promise.resolve(),
+    yieldFrame: () => Promise.resolve(),
     wait: (ms) => {
       run.clock.now += ms;
       extra.onWait?.();
@@ -165,6 +166,7 @@ describe("RunStream", () => {
       gate: new RebuildGate({ now: clock.read }),
       pollMs: 1000,
       yieldTask: () => Promise.resolve(),
+      yieldFrame: () => Promise.resolve(),
       wait: (ms) => {
         clock.now += ms;
         run.advance();
@@ -260,6 +262,36 @@ describe("RunStream", () => {
     }).start();
     assert.equal(progress.objects, 5);
     assert.equal(scene.seqOf("run-1", 0), 9);
+  });
+});
+
+describe("RunStream closed in the middle of a tile", () => {
+  it("appends the whole tile again when the stream is opened again", async () => {
+    const clock = new FakeClock();
+    const run = new FakeRun([tile(0, 7)], clock);
+    run.advance();
+    const scene = new StreamedScene();
+    const rebuilt: number[] = [];
+    let yields = 0;
+    const closing: RunStream = new RunStream({
+      lineage: "run-1",
+      scene,
+      source: run,
+      slice: 3,
+      yieldTask: () => {
+        yields++;
+        if (yields === 1) closing.close();
+        return Promise.resolve();
+      },
+      yieldFrame: () => Promise.resolve(),
+      onRebuild: (blocks) => rebuilt.push(blocks.length),
+    });
+    await closing.start();
+    assert.equal(scene.polygons("run-1"), 3);
+    assert.equal(scene.seqOf("run-1", 0), 0);
+    assert.deepEqual(rebuilt, []);
+    const progress = await streamOf(run, scene).stream.start();
+    assert.equal(progress.objects, 7);
   });
 });
 

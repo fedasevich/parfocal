@@ -157,21 +157,35 @@ export class StreamedScene {
     return dirty;
   }
 
-  rebuild(): SceneBlock[] {
+  rebuildNext(): boolean {
+    for (const run of this.runs.values()) {
+      for (const block of run.blocks) {
+        if (!block.dirty && block.built !== null) continue;
+        block.built = mergePolygonBatches(
+          block.units.flatMap((unit) => run.segments.get(unit)?.parts ?? []),
+        );
+        block.dirty = false;
+        return true;
+      }
+    }
+    return false;
+  }
+
+  blocks(): SceneBlock[] {
     const blocks: SceneBlock[] = [];
     for (const [lineage, run] of this.runs) {
       for (const block of run.blocks) {
-        if (block.dirty || block.built === null) {
-          block.built = mergePolygonBatches(
-            block.units.flatMap((unit) => run.segments.get(unit)?.parts ?? []),
-          );
-          block.dirty = false;
-        }
-        if (block.built.count === 0) continue;
+        if (block.built === null || block.built.count === 0) continue;
         blocks.push({ id: `${lineage}:${block.index}`, lineage, batch: block.built });
       }
     }
     return blocks;
+  }
+
+  rebuild(): SceneBlock[] {
+    let merged = this.rebuildNext();
+    while (merged) merged = this.rebuildNext();
+    return this.blocks();
   }
 
   merged(): PolygonBatch {

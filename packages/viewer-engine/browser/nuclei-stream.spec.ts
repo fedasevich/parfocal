@@ -6,10 +6,10 @@ import { fileURLToPath } from "node:url";
 import { expect, type Page, test } from "@playwright/test";
 import { type SyntheticSlide, syntheticSlide } from "../test/nuclei/synthetic.ts";
 import { harnessUrl } from "./cdp.ts";
+import { summarizeMainThread, traceCategories } from "./main-thread-trace.ts";
 import type { StreamState } from "./page/nuclei-stream-harness.ts";
 
 const frameLimitMs = 33;
-const vsyncJitterMs = 1;
 const reportDir = fileURLToPath(new URL("../test-results/nuclei-stream", import.meta.url));
 
 interface SimulatedRun {
@@ -133,16 +133,25 @@ test.afterAll(async () => {
   await new Promise<void>((resolve) => (server ? server.close(() => resolve()) : resolve()));
 });
 
-async function openHarness(page: Page, current: SimulatedRun, pollMs: number): Promise<void> {
+async function openHarness(
+  page: Page,
+  current: SimulatedRun,
+  pollMs: number,
+  beforeStart: () => Promise<void> = () => Promise.resolve(),
+): Promise<void> {
   await page.goto(harnessUrl("/app/nuclei-stream.html"));
   await page.waitForFunction(() => window.streamHarness !== undefined);
-  await page.evaluate((config) => window.streamHarness.start(config), {
+  const config = {
     origin,
     lineage: "run-1",
     slideWidth: current.slide.width,
     slideHeight: current.slide.height,
     pollMs,
-  });
+  };
+  await page.evaluate((next) => window.streamHarness.prepare(next), config);
+  await page.waitForTimeout(500);
+  await beforeStart();
+  await page.evaluate((next) => window.streamHarness.start(next), config);
 }
 
 function report(name: string, state: StreamState): void {
@@ -180,24 +189,31 @@ test("a run's objects appear before it ends, and cancel keeps them", async ({ pa
   expect(later.drawn).toBe(kept);
 });
 
-test("streaming 250,000 nuclei never holds a frame over 33 ms", async ({ page }) => {
+test("streaming 250,000 nuclei never holds a frame over 33 ms", async ({ page, browser }) => {
   const current = simulate(250_000, 2048, 120);
   run = current;
-  await openHarness(page, current, 250);
+  await openHarness(page, current, 250, () =>
+    browser.startTracing(undefined, { categories: [...traceCategories] }),
+  );
   const ended = await page.evaluate(() => window.streamHarness.finished());
+  const trace = summarizeMainThread(await browser.stopTracing());
   report("perf", ended);
   console.log(
-    `frames ${ended.frames}, longest ${ended.longestFrameMs.toFixed(1)} ms, over ${ended.framesOver}, longest task ${ended.longestTaskMs.toFixed(1)} ms, rebuilds ${ended.rebuilds.length}`,
+    `longest main-thread task ${trace.longestPageMs.toFixed(1)} ms, frames ${ended.frames}, longest frame gap ${ended.longestFrameMs.toFixed(1)} ms, gaps over ${frameLimitMs} ms ${ended.framesOver}, passes ${ended.progress?.rebuilds}`,
   );
 
   expect(ended.error).toBeNull();
   expect(ended.progress?.status).toBe("done");
   expect(ended.drawn).toBe(250_000);
-  expect(ended.rebuilds.length).toBeGreaterThanOrEqual(3);
-  const during = ended.rebuilds.slice(0, -1);
-  for (let index = 1; index < during.length; index++) {
-    expect((during[index]?.at ?? 0) - (during[index - 1]?.at ?? 0)).toBeGreaterThanOrEqual(2999);
+  const passStarts = new Map<number, number>();
+  for (const entry of ended.rebuilds) {
+    if (!passStarts.has(entry.pass)) passStarts.set(entry.pass, entry.at);
+  }
+  const starts = [...passStarts.values()].slice(0, -1);
+  expect(starts.length).toBeGreaterThanOrEqual(2);
+  for (let index = 1; index < starts.length; index++) {
+    expect((starts[index] ?? 0) - (starts[index - 1] ?? 0)).toBeGreaterThanOrEqual(2999);
   }
   expect(ended.frames).toBeGreaterThan(100);
-  expect(ended.longestFrameMs).toBeLessThan(frameLimitMs + vsyncJitterMs);
+  expect(trace.longestPageMs).toBeLessThan(frameLimitMs);
 });

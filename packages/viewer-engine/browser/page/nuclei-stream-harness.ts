@@ -25,6 +25,7 @@ export interface RebuildEntry {
   readonly status: string;
   readonly drawn: number;
   readonly blocks: number;
+  readonly pass: number;
   readonly at: number;
 }
 
@@ -41,6 +42,7 @@ export interface StreamState {
 }
 
 export interface StreamHarness {
+  prepare(config: StreamConfig): Promise<void>;
   start(config: StreamConfig): Promise<void>;
   cancel(): Promise<void>;
   finished(): Promise<StreamState>;
@@ -130,6 +132,7 @@ function draw(blocks: readonly SceneBlock[]): void {
     status: stream?.progress().status ?? "queued",
     drawn,
     blocks: blocks.length,
+    pass: stream?.progress().rebuilds ?? 0,
     at: performance.now(),
   });
   deck?.setProps({
@@ -165,8 +168,12 @@ async function openDeck(config: StreamConfig): Promise<void> {
   });
 }
 
+async function prepare(config: StreamConfig): Promise<void> {
+  if (deck === null) await openDeck(config);
+}
+
 async function start(config: StreamConfig): Promise<void> {
-  await openDeck(config);
+  await prepare(config);
   watchFrames();
   const palettePick = (classIndex: number): Rgba =>
     palette[classIndex % palette.length] ?? [0, 0, 0, 255];
@@ -214,6 +221,7 @@ async function settleFrames(count: number): Promise<void> {
 }
 
 window.streamHarness = {
+  prepare,
   start,
   cancel: async () => {
     await stream?.cancel();

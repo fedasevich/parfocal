@@ -77,6 +77,12 @@ export interface RunStreamOptions {
   readonly onProgress?: (progress: RunProgress) => void;
   readonly wait?: (ms: number, signal: AbortSignal) => Promise<void>;
   readonly yieldTask?: () => Promise<void>;
+  readonly yieldFrame?: () => Promise<void>;
+}
+
+function nextFrame(): Promise<void> {
+  if (typeof requestAnimationFrame !== "function") return nextTask();
+  return new Promise((resolve) => requestAnimationFrame(() => resolve()));
 }
 
 function waitFor(ms: number, signal: AbortSignal): Promise<void> {
@@ -216,14 +222,15 @@ export class RunStream {
         if (signal.aborted) break;
       }
       this.cursor = page.after;
-      this.rebuildIfDue();
+      await this.rebuildIfDue(signal);
       this.report();
       if (page.more) continue;
       if (endedStatuses.has(page.status)) break;
       await (this.options.wait ?? waitFor)(this.options.pollMs ?? POLL_MS, this.wake.signal);
       if (this.wake.signal.aborted && !signal.aborted) this.wake = new AbortController();
     }
-    if (this.options.scene.dirtyBlocks() > 0) this.rebuild();
+    if (signal.aborted) return this.progress();
+    if (this.options.scene.dirtyBlocks() > 0) await this.rebuild(signal);
     this.report();
     return this.progress();
   }
@@ -242,28 +249,42 @@ export class RunStream {
           : [];
       if (signal.aborted) return;
       const slice = this.options.slice ?? APPEND_SLICE;
-      scene.append(lineage, area.unit, polygons.slice(0, slice), 0, area.seq);
-      for (let start = slice, part = 1; start < polygons.length; start += slice, part++) {
-        await yieldTask();
+      const parts = Math.max(1, Math.ceil(polygons.length / slice));
+      for (let part = 0; part < parts; part++) {
+        if (part > 0) await yieldTask();
         if (signal.aborted) return;
-        scene.append(lineage, area.unit, polygons.slice(start, start + slice), part, area.seq);
+        const from = part * slice;
+        const seq = part === parts - 1 ? area.seq : 0;
+        scene.append(lineage, area.unit, polygons.slice(from, from + slice), part, seq);
       }
     }
     this.tiles.set(area.unit, areaRect(area));
     if (this.seen === 0) this.firstDoneAt = area.doneAt;
     this.lastDoneAt = Math.max(this.lastDoneAt, area.doneAt);
     this.seen++;
-    this.rebuildIfDue();
     await yieldTask();
+    await this.rebuildIfDue(signal);
   }
 
-  private rebuildIfDue(): void {
-    if (this.options.scene.dirtyBlocks() > 0 && this.gate.due()) this.rebuild();
+  private async rebuildIfDue(signal: AbortSignal): Promise<void> {
+    if (this.options.scene.dirtyBlocks() > 0 && this.gate.due()) await this.rebuild(signal);
   }
 
-  private rebuild(): void {
-    const blocks = this.gate.run(() => this.options.scene.rebuild());
-    this.options.onRebuild?.(blocks);
+  private async rebuild(signal: AbortSignal): Promise<void> {
+    const { scene } = this.options;
+    const yieldFrame = this.options.yieldFrame ?? nextFrame;
+    let cost = 0;
+    for (;;) {
+      const started = this.gate.clock();
+      const merged = scene.rebuildNext();
+      if (!merged) break;
+      const blocks = scene.blocks();
+      this.options.onRebuild?.(blocks);
+      cost += this.gate.clock() - started;
+      await yieldFrame();
+      if (signal.aborted) break;
+    }
+    this.gate.record(cost);
   }
 
   private report(): void {
