@@ -100,3 +100,4 @@ One file per measured run, named `YYYY-MM-DD-short-topic.md`. Copy [_template.md
 | 2026-11-10 | [The next two ci runs of the database tests on four workers take 17 min 23 s and 18 min 24 s, so the job is 15 to 18 minutes](2026-11-10-db-tests-in-parallel-next-two-runs.md) | TEST-027 | baseline |
 | 2026-11-13 | [A warm API request with four or more Neon round trips takes 20 to 50 ms inside Modal, so Neon stays in aws-us-east-1](2026-11-13-neon-region-from-modal.md) | STACK-020 | baseline |
 | 2026-11-13 | [The first API request after scale to zero takes 6 to 12 s, and a warm one from Vienna takes about 190 ms, nearly all network](2026-11-13-modal-cold-start-and-api-latency.md) | STACK-019 | baseline |
+| 2026-11-14 | [Fifteen Viv to Viv renderer route switches grow the heap 5.3% after warm-up, with one deck and one canvas each time](2026-11-14-renderer-route-switch-memory.md) | VIEW-036 | baseline |

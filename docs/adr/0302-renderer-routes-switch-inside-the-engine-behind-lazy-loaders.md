@@ -21,7 +21,7 @@ Option 3. `RendererRoute` gains `whenIdle(signal)`, the only method hoisted from
 
 Golden files keep route-free names, so every route is compared with the same image. The golden spec loops over all three route ids and skips an id that has no loader, which is reported as skipped and never as passed.
 
-Measured on this Mac under SwiftShader with only Viv registered: 15 switches on `CMU-1-Small-Region.svs`, heap growth 5.3% after a five-switch warm-up against a 10% budget ([ADR 0103](0103-memory-settings-and-test-baseline.md), memory settings and test baseline), one live `Deck` and one canvas after every switch, zero of each after dispose, 633 to 670 ms per switch. A 60-switch soak stayed flat at 7.8 MB from about the eighth switch.
+Measured on this Mac under SwiftShader with only Viv registered: 15 switches on `CMU-1-Small-Region.svs`, heap growth 5.3% after a five-switch warm-up against a 10% budget ([ADR 0103](0103-memory-settings-and-test-baseline.md), memory settings and test baseline), one live `Deck` and one canvas after every switch, zero of each after dispose, 633 to 670 ms per switch. An earlier 60-switch soak with a one-switch warm-up grew 7.9% and stayed flat at 7.8 MB from about the eighth switch. Every switch was Viv to Viv. The numbers are in the [result file](../results/2026-11-14-renderer-route-switch-memory.md).
 
 ## Consequences
 
