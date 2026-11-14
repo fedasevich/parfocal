@@ -1076,10 +1076,22 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when an ADR exists.
   Size: S.
 
-- [ ] I18N-001 · String externalisation in the web app
-  Done when every UI string goes through the i18n layer, an English catalogue is extracted, and a lint rule fails on raw string literals in JSX.
+- [x] I18N-001 · String externalisation in the web app
+  Done when the i18n layer, an extracted English catalogue, a pseudo-locale test and a lint rule that fails on new raw string literals in JSX are in, with the files not yet converted on a baseline list. The owner accepted this setup slice on 2026-11-14 and the conversion moved to I18N-004 and I18N-005.
   Uses Lingui 6 with ICU messages, PO catalogues and the `en-XA` pseudo locale per [ADR 0173](adr/0173-lingui-for-web-app-strings.md).
   Depends on I18N-000.
+  Size: M.
+
+- [ ] I18N-004 · Convert the viewer, review and annotate screens to the i18n layer
+  Move every raw string in the viewer, review, annotate and compare screens of `apps/web` into Lingui messages and drop those files from the I18N-001 baseline list.
+  Done when those files are off the baseline, the pseudo-locale test covers one screen of each area and the English catalogue is extracted.
+  Depends on I18N-001.
+  Size: M.
+
+- [ ] I18N-005 · Convert the remaining screens and empty the baseline
+  Convert every other file still on the I18N-001 baseline list, then delete the list so the lint rule covers the whole app.
+  Done when the baseline list is gone, the lint rule passes with no exceptions and the pseudo-locale test renders the shell, home, settings and admin screens with every string translated.
+  Depends on I18N-004.
   Size: M.
 
 - [x] I18N-002 · Locale-aware formatting
@@ -1299,7 +1311,7 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
   Done when the latency test shows warm tile fetch p95 under 60 ms in the same region.
   Size: L.
 
-- [ ] TILES-003 · Same-origin data path
+- [x] TILES-003 · Same-origin data path
   Serve slide bytes under the app origin through the CDN so CORS round trips and preflights disappear.
   Done when a test confirms no preflight and the open-time numbers match INGEST-007.
   Refs doc 09 (4.3 s to 90 ms).
@@ -1603,7 +1615,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Pointer capture is attempted but never relied on. `pointerup`, `pointercancel`, `lostpointercapture` and window `blur` all end a gesture, and pointer state lives in one map cleared by any of them. The canvas has `touch-action: none` and `user-select: none`, the page has `overscroll-behavior: none`, and read-only overlays such as the readout have `pointer-events: none`. The cursor shows grab at rest and grabbing while panning. Drags and pinches read `getCoalescedEvents()` where the browser has it, so a fast stroke keeps every sample for the release velocity.
   Done when browser tests release the button outside the viewer, over an overlay, after a lost capture and after a window blur, and the drag ends every time with no pan on the next mouse move.
   Depends on VIEW-020. Refs doc 06 §15, doc 16.
-- [ ] VIEW-044 · Prefetch where the view is heading
+- [x] VIEW-044 · Prefetch where the view is heading
   Predict the next view from a fast, straight pan or a steady hover and request its tiles at low priority before they enter the view. Velocity is weighted over the last 160 ms with a 55 ms half-life, a path straighter than 0.7 is needed, the lead is 300 ms and at most 1.25 viewports. Prefetch jobs go through the decode pool behind visible tiles and are dropped by its queue rules, never by aborting a download. The developer drawer can turn it off and show the vector.
   Done when a test on a scripted straight pan shows the predicted tiles requested before they enter the view, a zig-zag pan prefetches nothing, and a result file records time to a sharp view at 100 ms RTT with and without prediction.
   Depends on VIEW-004, VIEW-020. Refs [`poc/src/camera/motion-predictor.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/camera/motion-predictor.ts), doc 34 §2.
@@ -1662,7 +1674,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Done when a result file names the cause and a test pins it.
   Depends on VIEW-011. Refs [result](results/2026-10-26-jpeg-2000-in-the-decode-workers.md).
   Size: M.
-- [ ] VIEW-036 · Renderer interface and route switching
+- [x] VIEW-036 · Renderer interface and route switching
   One interface implemented by Viv (primary), deck.gl 9.4 WebGPU and the custom WebGPU engine. Switching remounts cleanly and keeps the camera.
   Done when the same golden tests pass on all three routes for 8-bit RGB slides and switching 10 times passes the memory test.
   Refs [`poc/src/app/renderer.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/app/renderer.ts).
@@ -1670,13 +1682,13 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
 
 - [ ] VIEW-037 · deck.gl 9.4 WebGPU route
   TileLayer over BitmapLayer from the same PixelSources, SolidPolygonLayer for outlines, with known gotchas handled (redraw with a reason, minZoom, adapter limits for buffer size).
-  Done when golden and perf tests pass, with uncaptured errors counted and zero. The error helpers are in `src/viv/webgpu-errors.ts` ([ADR 0112](adr/0112-finest-level-sampling-and-webgl-context-recovery.md)).
+  Done when the route plugs into the VIEW-036 renderer interface, the same golden tests that Viv passes pass on this route, perf tests pass, and uncaptured errors are counted and zero. The error helpers are in `src/viv/webgpu-errors.ts` ([ADR 0112](adr/0112-finest-level-sampling-and-webgl-context-recovery.md)).
   Refs [`poc/src/deck94/*`](https://github.com/fedasevich/pathlogy-poc/tree/master/src/deck94), doc 23.
   Size: L.
 
 - [ ] VIEW-038 · Custom WebGPU engine route
   Render worker with OffscreenCanvas, tile atlas, compute culling, instanced polygons with instance-step attributes, 8-bit only.
-  Done when golden and perf tests pass and annotation set updates take one buffer write (the POC's advantage).
+  Done when the route plugs into the VIEW-036 renderer interface, the same golden tests that Viv passes pass on this route, perf tests pass and annotation set updates take one buffer write (the POC's advantage).
   Refs [`poc/src/webgpu/*`](https://github.com/fedasevich/pathlogy-poc/tree/master/src/webgpu), docs 04, 07.
   Size: L.
 
@@ -2926,7 +2938,7 @@ Cell findings and node staging run in the Objects tab of the slide view (CASE-01
   Size: M.
 ## 16 MEAS · Measurements
 
-- [ ] MEAS-000 · Research check
+- [x] MEAS-000 · Research check
   Done when the measurement categories per specimen (macro over 2 mm, micro over 0.2 mm or more than 200 cells, ITC up to 0.2 mm and up to 200 cells) and the pN wording with the (sn) suffix are confirmed from current staging guidance and checked against the published AJCC and CAP texts, with no pathologist needed, and recorded in an ADR.
   Size: M.
 
