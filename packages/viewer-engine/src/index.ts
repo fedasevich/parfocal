@@ -219,6 +219,20 @@ export {
   type MovingListener,
 } from "./engine/interaction-signal.ts";
 export {
+  availableRendererRoutes,
+  createRendererSwitcher,
+  PRIMARY_RENDERER_ROUTE,
+  RENDERER_ROUTE_IDS,
+  type RendererRouteId,
+  type RendererRouteLoader,
+  type RendererRouteLoaders,
+  RendererRouteUnavailableError,
+  type RendererSwitcher,
+  type RendererSwitcherOptions,
+  type RendererSwitchOutcome,
+  type RendererSwitchTarget,
+} from "./engine/renderer-switch.ts";
+export {
   type Cancel,
   createTimeSlice,
   defaultWatchdogMs,
@@ -245,6 +259,7 @@ export type {
   RendererFactory,
   RendererRoute,
   ResizeObserve,
+  RoutedViewerEngine,
   SlideInfo,
   SlideOpener,
   SlidePointerEvent,

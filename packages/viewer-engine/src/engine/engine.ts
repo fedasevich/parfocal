@@ -38,13 +38,14 @@ import type {
   EngineStatus,
   OverlayLayer,
   OverlayRegistration,
+  RendererFactory,
   RendererRoute,
+  RoutedViewerEngine,
   SlideInfo,
   SlidePointerEvent,
   SlidePointerKind,
   SlideRef,
   Unsubscribe,
-  ViewerEngine,
   ViewerEngineOptions,
 } from "./types.ts";
 
@@ -71,7 +72,7 @@ interface PointerLike {
 
 interface Mounted<Slide extends EngineSlide> {
   readonly container: EngineContainer;
-  readonly route: RendererRoute<Slide>;
+  route: RendererRoute<Slide>;
   readonly detach: readonly Unsubscribe[];
 }
 
@@ -100,7 +101,7 @@ function describe(slide: EngineSlide): SlideInfo {
 
 export function createViewerEngine<Slide extends EngineSlide>(
   options: ViewerEngineOptions<Slide>,
-): ViewerEngine {
+): RoutedViewerEngine<Slide> {
   const frames = options.frames ?? animationFrames;
   const observeResize = options.observeResize ?? observeElementResize;
   const now = options.now ?? systemClock;
@@ -124,6 +125,7 @@ export function createViewerEngine<Slide extends EngineSlide>(
     });
 
   let disposed = false;
+  let createRenderer = options.createRenderer;
   let mounted: Mounted<Slide> | null = null;
   let slide: Slide | null = null;
   let slideInfo: SlideInfo | null = null;
@@ -352,10 +354,17 @@ export function createViewerEngine<Slide extends EngineSlide>(
       emit("pointer", event);
     };
 
+  const replay = (route: RendererRoute<Slide>) => {
+    route.setOverlays(sortedOverlays());
+    route.setSlideBrightness(slideBrightnessFactor(brightness));
+    route.showSlide(slide);
+    route.setCamera(camera);
+  };
+
   const mount = (container: EngineContainer) => {
     assertAlive();
     if (mounted) throw new Error("The viewer engine is already mounted");
-    const route = options.createRenderer(container);
+    const route = createRenderer(container);
     const detach: Unsubscribe[] = [];
     for (const [type, kind] of pointerEventKinds) {
       const listener = pointerListener(kind, container);
@@ -372,13 +381,31 @@ export function createViewerEngine<Slide extends EngineSlide>(
     );
     mounted = { container, route, detach };
     bounds = null;
-    route.setOverlays(sortedOverlays());
-    route.setSlideBrightness(slideBrightnessFactor(brightness));
-    route.showSlide(slide);
-    route.setCamera(camera);
+    replay(route);
     if (fitPending) fitIfPossible();
     else reclamp();
   };
+
+  const switchRenderer = (create: RendererFactory<Slide>) => {
+    assertAlive();
+    const previous = createRenderer;
+    createRenderer = create;
+    if (!mounted) return;
+    const current = mounted;
+    current.route.destroy();
+    try {
+      current.route = create(current.container);
+    } catch (error) {
+      createRenderer = previous;
+      current.route = previous(current.container);
+      replay(current.route);
+      throw error;
+    }
+    replay(current.route);
+  };
+
+  const whenIdle = (signal?: AbortSignal): Promise<void> =>
+    mounted ? mounted.route.whenIdle(signal) : Promise.resolve();
 
   const unmount = () => {
     if (!mounted) return;
@@ -493,6 +520,8 @@ export function createViewerEngine<Slide extends EngineSlide>(
     status,
     mount,
     unmount,
+    switchRenderer,
+    whenIdle,
     openSlide,
     closeSlide,
     getSlide: () => slideInfo,

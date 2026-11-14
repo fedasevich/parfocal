@@ -5,7 +5,7 @@ import { syntheticDir } from "@parfocal/test-fixtures";
 import { identifiedSlideFormat, signedOpenRequest } from "../../src/access/signed-slide.ts";
 import { type Fetcher, TileAccess } from "../../src/access/tile-access.ts";
 import { createDefaultPixelSourceRegistry } from "../../src/index.ts";
-import { UnsupportedFormatError } from "../../src/pixel-source/types.ts";
+import { NdpiFormatError } from "../../src/pixel-source/ndpi/directory.ts";
 import { serve } from "../pixel-source/serve.ts";
 
 const misnamed = "slide.ndpi";
@@ -67,7 +67,7 @@ describe("the format ingest identified", () => {
   test("without it the extension names a reader the slide does not fit", async () => {
     const request = await open(null);
     assert.equal(request.formatId, "hamamatsu-ndpi");
-    await assert.rejects(registry.open(request), UnsupportedFormatError);
+    await assert.rejects(registry.open(request), NdpiFormatError);
   });
 
   test("an unknown identified format falls back to the extension", () => {

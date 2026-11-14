@@ -4,6 +4,7 @@ import type { AddressInfo } from "node:net";
 import { basename, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { fixturesDir, loadManifest, syntheticDir } from "@parfocal/test-fixtures";
+import type { RendererRouteId } from "@parfocal/viewer-engine";
 import { type Page, test } from "@playwright/test";
 import { createServer, type Plugin, type ViteDevServer } from "vite";
 import {
@@ -145,10 +146,24 @@ export async function renderVivScene(
   );
 }
 
+export async function vivHarnessRoutes(page: Page): Promise<readonly RendererRouteId[]> {
+  return page.evaluate((name) => {
+    const harness = (globalThis as unknown as Record<string, VivHarness>)[name];
+    if (harness === undefined) throw new Error("The Viv harness did not load");
+    return harness.routes();
+  }, harnessGlobal);
+}
+
+export interface VivRouting {
+  readonly route?: RendererRouteId;
+  readonly switches?: readonly RendererRouteId[];
+}
+
 export async function renderVivFrame(
   page: Page,
   scene: VivGoldenScene,
   breakage: VivBreakage = "none",
+  routing: VivRouting = {},
 ): Promise<{ readonly result: VivSceneResult; readonly frame: Frame; readonly ms: number }> {
   const started = performance.now();
   const result = await renderVivScene(page, {
@@ -157,6 +172,7 @@ export async function renderVivFrame(
     view: scene.view,
     breakage,
     ...(scene.tissue === undefined ? {} : { tissue: scene.tissue }),
+    ...routing,
   });
   const ms = performance.now() - started;
   const frame = await captureScreenshot(page.locator("#viewer canvas"));

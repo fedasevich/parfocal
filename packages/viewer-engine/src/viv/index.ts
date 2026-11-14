@@ -64,6 +64,7 @@ export {
   predictedTiles,
   tileLevelForZoom,
 } from "./prefetch.ts";
+export { type PixelRendererRouteOptions, pixelRendererRoutes } from "./renderer-routes.ts";
 export {
   mountSlideViewport,
   type SlideViewport,

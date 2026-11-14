@@ -46,6 +46,7 @@ export interface RendererRoute<Slide extends EngineSlide = EngineSlide> {
   setOverlays(overlays: readonly OverlayLayer[]): void;
   invalidateOverlay(id: string): void;
   setSlideBrightness(factor: number): void;
+  whenIdle(signal?: AbortSignal): Promise<void>;
   destroy(): void;
 }
 
@@ -159,4 +160,9 @@ export interface ViewerEngine {
   readonly getSlideBrightness: () => number;
   readonly setSlideBrightness: (percent: number) => void;
   readonly dispose: () => void;
+}
+
+export interface RoutedViewerEngine<Slide extends EngineSlide = EngineSlide> extends ViewerEngine {
+  readonly switchRenderer: (createRenderer: RendererFactory<Slide>) => void;
+  readonly whenIdle: (signal?: AbortSignal) => Promise<void>;
 }

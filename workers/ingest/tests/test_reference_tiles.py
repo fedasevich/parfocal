@@ -20,6 +20,8 @@ FIXTURES = [
     "CMU-1-Small-Region.svs",
     "JP2K-33003-1.svs",
     "CMU-1.svs",
+    "CMU-1.ndpi",
+    "Hamamatsu-1.ndpi",
 ]
 TOLERANCE = 1.0
 

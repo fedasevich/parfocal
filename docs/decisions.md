@@ -144,7 +144,7 @@ Your choice:
 
 ### 99. Whether a person in compare can send their own cursor
 
-COLLAB-011 (live shared cursor) shows in compare the pointer of everyone who shares their view on the live slide. Compare has no "Share my view" control, so a person there sees a colleague's pointer and cannot send their own ([ADR 0302](adr/0302-a-shared-cursor-is-a-second-capped-frame-in-shares-of-the-slide.md), a shared cursor is a second capped client frame). Decision 98 (whether a blinded task hides "Share my view") covers the cursor too.
+COLLAB-011 (live shared cursor) shows in compare the pointer of everyone who shares their view on the live slide. Compare has no "Share my view" control, so a person there sees a colleague's pointer and cannot send their own ([ADR 0304](adr/0304-a-shared-cursor-is-a-second-capped-frame-in-shares-of-the-slide.md), a shared cursor is a second capped client frame). Decision 98 (whether a blinded task hides "Share my view") covers the cursor too.
 
 - **A. Leave compare as display only (recommended).** Sharing stays one deliberate act on the live slide.
 - B. Add "Share my cursor" to the compare toolbar. It needs a small follow-up task.
@@ -174,4 +174,5 @@ Nothing else in review needs you. Nine tasks that only waited for green CI were 
 - The local stack now has a MinIO `storage` service on port 9000. Run `pnpm db:up` once after pulling. Nothing creates the local bucket `parfocal-local` yet, so `pnpm api:dev` fails its first upload until it exists. The command is in `docs/knowledge/uploads.md`.
 - The migration chain on `main` is `0039` (admin rights), `0040` (review order), `0041` (inbox mutes), `0042` (first reads), `0043` (muted notifications), `0044` (study templates), `0045` (uploads), `0046` (model runs), `0047` (slide ingest) from INGEST-017 (publish step and slide status), and `0048` (result uploads) from RSET-004 (pairing results with slides), and `0049` (job tries) from AIP-018 (claim cap for failing jobs).
 - Migration `0044` (study templates) imports the built-in template content from `parfocal_api.study_templates`, so replaying it later seeds whatever the content is then. TODO: freeze the seed data inside the migration before the first production database.
+- VIEW-036 (renderer interface and route switching) asks for the golden tests to pass on all three routes, but only Viv exists. The interface, the switch and the tests are built, and the goldens pass on one of three routes. The other two are skipped until VIEW-037 (deck.gl 9.4 WebGPU route) and VIEW-038 (custom WebGPU engine route) register their loaders, so VIEW-036 stays unticked or is ticked with that part moved to those two tasks.
 - The upload spike broke one browser test on `main` because the latency proxy gained an upload byte counter. It was fixed the same hour.

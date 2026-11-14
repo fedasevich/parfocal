@@ -27,7 +27,6 @@ from parfocal_api.tables import (
     workspace_settings,
 )
 from parfocal_api.users import Workspace, logo_colour_of, logo_mark_of, signed_in
-from parfocal_api.workspace_access import email_domain_of
 from parfocal_common.db import DatabaseScope, scoped_transaction
 
 
@@ -80,7 +79,6 @@ async def create_my_workspace(
         )
         if holds_admin_rights:
             raise AlreadyAnAdminError
-        email = await connection.scalar(select(users.c.email).where(users.c.id == person.user_id))
         logo = draft.logo or logo_mark_of(draft.name)
         logo_colour = draft.logo_colour or logo_colour_of(tenant_id)
         organisation_id = (
@@ -99,7 +97,6 @@ async def create_my_workspace(
                 kind=TenantKind.RESEARCH,
                 region=Region.EU,
                 plan=Plan.PILOT,
-                email_domain=email_domain_of(email),
                 logo=logo,
                 logo_colour=logo_colour,
             )

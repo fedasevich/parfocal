@@ -185,6 +185,10 @@ export class FakeRoute implements RendererRoute<FakeSlide> {
     this.brightness.push(factor);
   }
 
+  whenIdle(): Promise<void> {
+    return Promise.resolve();
+  }
+
   destroy(): void {
     this.destroyed = true;
   }

@@ -89,6 +89,7 @@ import { useTissueScan } from "./use-tissue-scan.ts";
 import { useViewerKeys } from "./use-viewer-keys.ts";
 import { ViewedPeek } from "./viewed-peek.tsx";
 import type { ViewerEngine, VivRoute } from "./viewer-engine.ts";
+import { type SelectionArea, zoomTargetArea } from "./viewer-keys.ts";
 import { railHasTool, type SlideWorkspace, showsCountPanel, workspaceSetups } from "./workspace.ts";
 
 type Phase =
@@ -117,8 +118,14 @@ type Session = {
   readonly route: VivRoute | null;
 };
 
-function ViewerKeys({ session }: { session: Session }) {
-  useViewerKeys(session.engine, session.module);
+function ViewerKeys({
+  session,
+  selection,
+}: {
+  session: Session;
+  selection: () => SelectionArea | null;
+}) {
+  useViewerKeys(session.engine, session.module, selection);
   return null;
 }
 
@@ -126,12 +133,20 @@ function AreaKeys({
   session,
   areas,
   host,
+  focused,
 }: {
   session: Session;
   areas: readonly SlideAreaEntry[];
   host: HTMLElement | null;
+  focused: { current: SelectionArea | null };
 }) {
   const nav = useEngineAreaNav(session.engine, session.module, areas, host);
+  useEffect(() => {
+    focused.current = areas.find((entry) => entry.object === nav.current)?.bounds ?? null;
+    return () => {
+      focused.current = null;
+    };
+  }, [focused, areas, nav.current]);
   const rows = useMemo(() => areaRows(areas, () => undefined), [areas]);
   const roles = useMemo(
     () =>
@@ -332,6 +347,7 @@ function OpenedSlide({
   const snapshot = annotateTask?.classes ?? null;
   const liveGuard = useRef<LiveGuard>(idleGuard);
   const [selectedIds, setSelectedIds] = useState<readonly ShapeId[]>([]);
+  const focusedArea = useRef<SelectionArea | null>(null);
   const saved = useSavedAnnotations(
     slideId,
     session !== null && layerKnown,
@@ -867,8 +883,15 @@ function OpenedSlide({
             </div>
           </>
         ) : null}
-        {session ? <ViewerKeys session={session} /> : null}
-        {session ? <AreaKeys session={session} areas={areas} host={hostNode} /> : null}
+        {session ? (
+          <ViewerKeys
+            session={session}
+            selection={() => zoomTargetArea(annotations.shapes, selectedIds, focusedArea.current)}
+          />
+        ) : null}
+        {session ? (
+          <AreaKeys session={session} areas={areas} host={hostNode} focused={focusedArea} />
+        ) : null}
         {session && hostNode && systematicScan ? (
           <ScanKeys session={session} host={hostNode} tissue={coverage?.tissue ?? null} />
         ) : null}

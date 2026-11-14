@@ -6,6 +6,7 @@ import {
   selectionArea,
   type ViewerKeyTarget,
   viewerKeyBindings,
+  zoomTargetArea,
 } from "../src/viewer/viewer-keys.ts";
 
 type Key = Omit<Extract<KeyInput, { type: "down" | "up" }>, "at" | "type"> & {
@@ -210,4 +211,27 @@ test("the selection area is the box around every selected shape", () => {
   assert.deepEqual(selectionArea([[40, 60, 40, 60]]), { x: 40, y: 60, width: 0, height: 0 });
   assert.equal(selectionArea([]), null);
   assert.equal(selectionArea([[Number.NaN, 0, 1, 1]]), null);
+});
+
+test("the zoom target is the selected shapes, then the focused area, then nothing", () => {
+  const shapes = new Map<string, { bounds: [number, number, number, number] }>([
+    ["a", { bounds: [100, 200, 150, 250] }],
+    ["b", { bounds: [400, 100, 500, 120] }],
+  ]);
+  const focused = { x: 10, y: 20, width: 30, height: 40 };
+  assert.deepEqual(zoomTargetArea(shapes, ["a", "b"], focused), {
+    x: 100,
+    y: 100,
+    width: 400,
+    height: 150,
+  });
+  assert.deepEqual(zoomTargetArea(shapes, ["gone", "a"], null), {
+    x: 100,
+    y: 200,
+    width: 50,
+    height: 50,
+  });
+  assert.deepEqual(zoomTargetArea(shapes, ["gone"], focused), focused);
+  assert.deepEqual(zoomTargetArea(shapes, [], focused), focused);
+  assert.equal(zoomTargetArea(shapes, [], null), null);
 });

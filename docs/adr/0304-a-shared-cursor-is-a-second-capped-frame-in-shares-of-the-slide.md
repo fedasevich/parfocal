@@ -1,4 +1,4 @@
-# 0302. A shared cursor is a second capped client frame, sent as shares of the slide
+# 0304. A shared cursor is a second capped client frame, sent as shares of the slide
 
 - Date: 2026-11-14
 - Status: Accepted

@@ -9,7 +9,6 @@ import {
   SourceClosedError,
   tileColumns,
   tileRows,
-  UnsupportedFormatError,
 } from "../../src/index.ts";
 import { type NdpiPage, readRestartStarts } from "../../src/pixel-source/ndpi/directory.ts";
 import { buildNdpiJpeg, parseNdpiFrame } from "../../src/pixel-source/ndpi/jpeg.ts";
@@ -21,6 +20,7 @@ import {
   type VirtualNdpi,
   virtualNdpi,
 } from "./ndpi-fixture.ts";
+import { ndpiIndexOf } from "./ndpi-index.ts";
 
 const fourGigabytes = 2 ** 32;
 
@@ -123,6 +123,50 @@ describe("NDPI source on a virtual file", () => {
     source.close();
   });
 
+  for (const [layout, title] of layouts) {
+    it(`reads every tile from a slide index without the directories of ${title}`, async () => {
+      const file = virtualNdpi(layout);
+      const url = "http://slides.test/virtual.ndpi";
+      const index = await ndpiIndexOf(url, file.fetch, { x: 0.25, y: 0.25 });
+      const walked = file.requests.length;
+      file.requests.length = 0;
+      const source = await openNdpiSource({
+        formatId: "hamamatsu-ndpi",
+        url,
+        fetch: file.fetch,
+        nativeJpeg: "off",
+        index,
+      });
+      assert.equal(file.requests.length, 1);
+      assert.ok(walked > 1);
+      assert.deepEqual(
+        source.levels.map((level) => `${level.downsample} ${level.width}x${level.height}`),
+        ["1 1280x1088", "2 640x544", "4 320x272"],
+      );
+      assert.deepEqual(source.micronsPerPixel, { x: 0.25, y: 0.25 });
+      await assertEveryTile(source);
+      source.close();
+    });
+  }
+
+  it("walks the directories when the slide index locates no restart intervals", async () => {
+    const file = virtualNdpi("small");
+    const source = await openNdpiSource({
+      formatId: "hamamatsu-ndpi",
+      url: "http://slides.test/virtual.ndpi",
+      fetch: file.fetch,
+      nativeJpeg: "off",
+      index: {
+        formatId: "hamamatsu-ndpi",
+        tileKind: "ndpi-restart",
+        levels: [{ downsample: 1, width: 1280, height: 1088 }],
+      },
+    });
+    assert.equal(source.levels.length, 3);
+    await assertEveryTile(source);
+    source.close();
+  });
+
   it("uses a native decoder that agrees with the script decoder", async () => {
     const reference = await open(virtualNdpi("small"), "off");
     const native: NativeTileDecoder = async (jpeg) => {
@@ -195,7 +239,9 @@ describe("NDPI source on a virtual file", () => {
       )) as typeof globalThis.fetch;
     await assert.rejects(
       openNdpiSource({ formatId: "hamamatsu-ndpi", url: "http://slides.test/a", fetch: zeros }),
-      UnsupportedFormatError,
+      (error: unknown) =>
+        error instanceof NdpiFormatError &&
+        /cannot be read as NDPI.*not a little-endian classic TIFF/.test(error.message),
     );
     const whole = (() =>
       Promise.resolve(new Response(new Uint8Array(12)))) as typeof globalThis.fetch;

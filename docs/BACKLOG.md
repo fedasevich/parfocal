@@ -811,7 +811,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Depends on ADMIN-009, IAM-001.
   Size: M.
 
-- [ ] IAM-026 · A workspace on a shared mail domain is not open to strangers
+- [x] IAM-026 · A workspace on a shared mail domain is not open to strangers
   A person who creates a workspace saves their mail domain on it with the join policy `join`, and only a hand-kept list of 32 domains and 7 prefixes keeps consumer mail providers out ([tenant isolation review](results/2026-11-09-tenant-isolation-review.md), confirmed finding 1). On a provider missing from the list, such as `onet.pl`, `btinternet.com` or `comcast.net`, any stranger with a free mailbox sees the workspace's name, logo and counts and joins it as a reviewer. Decision 84 (a new workspace and its mail domain) chose 84a on 2026-11-13: a new workspace saves no domain, and an admin turns on joining by domain in the join settings, which already check that the domain is the admin's own and not public.
   Done when a test shows a stranger on an unlisted shared provider neither listing nor joining a workspace made there, and the chosen rule is recorded.
   Size: S.
@@ -1394,7 +1394,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Refs [ADR 0111](adr/0111-jpeg-2000-in-the-decode-workers-and-ome-channel-pages.md).
   Size: M.
 
-- [ ] VIEW-013 · NDPI including above 4 GB
+- [x] VIEW-013 · NDPI including above 4 GB
   Tiles cut from the restart-marker index, 64-bit offsets rebuilt, YCbCr handled.
   Done when CMU-1.ndpi and a file above 4 GB pass and colours match the golden image.
   Refs [`poc/src/slide/ndpi*.ts`](https://github.com/fedasevich/pathlogy-poc/tree/master/src/slide).
@@ -2465,7 +2465,7 @@ The case view becomes the slide view ([ADR 0053](adr/0053-ai-results-review-dire
   Done when a test confirms the selection is fitted with margin.
   Size: S.
 
-- [ ] NAV-013 · Feed the selection to zoom to selection
+- [x] NAV-013 · Feed the selection to zoom to selection
   NAV-012 (zoom to selection) added the `zoomsel` action and `engine.flyToSelection`, but the live slide stage passes no selection, so the key does nothing there. Feed the selected shapes, or the focused AI area, into `useViewerKeys` once a select tool or area focus reaches the live stage.
   Done when a browser test selects a shape on the live stage, presses the key and the camera fits it with the 48 px margin.
   Depends on NAV-012, ANN-004.
