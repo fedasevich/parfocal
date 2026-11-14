@@ -1,4 +1,4 @@
-# XXXX. Converted JPEG 2000 slides are lossless zstd, and each store level is the source's own level where it has one
+# 0310. Converted JPEG 2000 slides are lossless zstd, and each store level is the source's own level where it has one
 
 - Date: 2026-11-14
 - Status: Accepted
