@@ -17,7 +17,7 @@ export function ConnectionBanner({ pinned = false }: { pinned?: boolean }) {
         <Button
           size="sm"
           disabled={retrying}
-          onClick={() => (online ? showUndoToast({ message: "Still offline" }) : void retryNow())}
+          onClick={() => (online ? showUndoToast({ message: t`Still offline` }) : void retryNow())}
         >
           <Trans>Retry now</Trans>
         </Button>

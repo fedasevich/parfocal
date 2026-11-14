@@ -1,4 +1,4 @@
-import { Trans } from "@lingui/react/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   getGetMyAvailabilityQueryKey,
   type Me,
@@ -28,31 +28,35 @@ const openHelp = () => window.dispatchEvent(new Event("help"));
 
 export const logOutUrl = "/api/auth/logout";
 
-const entries = [
-  { icon: "gear", label: "Settings", href: destinations.settings("display"), keys: "⌘," },
-  {
-    icon: "keyboard",
-    label: "Keyboard shortcuts",
-    href: destinations.settings("shortcuts"),
-    keys: "?",
-  },
-  { icon: "pen", label: "Profile and signature", href: destinations.settings("account") },
-  {
-    icon: "lock",
-    label: "Lock the screen",
-    keys: "⌃⌘Q",
-    disabledReason: "Locks after a quiet spell for now",
-  },
-  { icon: "comment", label: "Send feedback", action: "feedback" },
-  { icon: "help", label: "Help and tour", action: "help" },
-] satisfies {
-  icon: IconName;
-  label: string;
-  href?: string;
-  action?: "feedback" | "help";
-  keys?: string;
-  disabledReason?: string;
-}[];
+type EntryText = ReturnType<typeof useLingui>["t"];
+
+function entriesFor(t: EntryText) {
+  return [
+    { icon: "gear", label: t`Settings`, href: destinations.settings("display"), keys: "⌘," },
+    {
+      icon: "keyboard",
+      label: t`Keyboard shortcuts`,
+      href: destinations.settings("shortcuts"),
+      keys: "?",
+    },
+    { icon: "pen", label: t`Profile and signature`, href: destinations.settings("account") },
+    {
+      icon: "lock",
+      label: t`Lock the screen`,
+      keys: "⌃⌘Q",
+      disabledReason: t`Locks after a quiet spell for now`,
+    },
+    { icon: "comment", label: t`Send feedback`, action: "feedback" },
+    { icon: "help", label: t`Help and tour`, action: "help" },
+  ] satisfies {
+    icon: IconName;
+    label: string;
+    href?: string;
+    action?: "feedback" | "help";
+    keys?: string;
+    disabledReason?: string;
+  }[];
+}
 
 const viewAs: PersonaKey[] = ["DH", "LM", "AK", "TB"];
 
@@ -93,6 +97,7 @@ function ViewAs({ current }: { current: string | undefined }) {
 }
 
 export function AccountMenu({ me, person }: { me: Me | undefined; person: PersonInfo }) {
+  const { t } = useLingui();
   const [theme, setTheme] = useState<ThemeChoice>(() => readTheme());
   const initialsOnly = useShell((state) => state.initialsOnly);
   const goTo = useGoTo();
@@ -121,7 +126,7 @@ export function AccountMenu({ me, person }: { me: Me | undefined; person: Person
       onThemeChange={chooseTheme}
       initialsOnly={initialsOnly}
       onInitialsOnlyChange={(value) => shellStore.setState({ initialsOnly: value })}
-      entries={entries.map(({ href, action, ...entry }) => ({
+      entries={entriesFor(t).map(({ href, action, ...entry }) => ({
         ...entry,
         ...(href ? { onSelect: () => void goTo(href) } : {}),
         ...(action === "feedback" ? { onSelect: openFeedback } : {}),

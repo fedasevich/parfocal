@@ -23,3 +23,45 @@ for (const screen of converted) {
     await expect(page.getByTestId(screen.testId)).toContainText(screen.english);
   });
 }
+
+const screens = [
+  {
+    name: "settings",
+    path: "/settings/display",
+    english: ["Slide brightness", "Density", "Patient names", "Magnification label"],
+  },
+  {
+    name: "admin",
+    path: "/admin",
+    english: ["at a glance", "Audit log", "Invite people"],
+  },
+  {
+    name: "home",
+    path: "/",
+    english: [
+      "Review the first slide",
+      "Open the project",
+      "Nothing here counts in a real evaluation",
+    ],
+  },
+];
+
+for (const screen of screens) {
+  test(`the ${screen.name} screen shows no English in the en-XA pseudo locale`, async ({
+    page,
+  }) => {
+    await page.addInitScript((key) => localStorage.setItem(key, "1"), pseudoLocaleKey);
+    await page.goto(screen.path);
+    const main = page.locator("main").first();
+    await expect(main).toBeVisible({ timeout: 20_000 });
+    for (const phrase of screen.english) await expect(main).not.toContainText(phrase);
+  });
+}
+
+test("the shell shows no English in the en-XA pseudo locale", async ({ page }) => {
+  await page.addInitScript((key) => localStorage.setItem(key, "1"), pseudoLocaleKey);
+  await page.goto("/settings/display");
+  await expect(page.locator("main").first()).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByRole("button", { name: /^Notifications/ })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Retry now" })).toHaveCount(0);
+});
