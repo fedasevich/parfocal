@@ -1,5 +1,7 @@
+import itertools
 import json
 import os
+import struct
 from collections.abc import Sequence
 from pathlib import Path
 
@@ -8,6 +10,9 @@ import pytest
 from parfocal_ingest.zarr_index import UnsupportedZarrError, absent_runs, zarr_tile_index
 
 GOLDEN = Path(__file__).resolve().parent / "golden" / "tile-index" / "sparse-ome-zarr-0.4.json"
+
+SYNTHETIC = Path(__file__).resolve().parents[3] / "packages" / "test-fixtures" / "synthetic"
+EMPTY = 2**64 - 1
 
 type Missing = Sequence[tuple[int, int, int]]
 
@@ -101,10 +106,85 @@ def test_a_tile_with_any_channel_stored_is_present(tmp_path: Path) -> None:
     assert zarr_tile_index(root)["levels"][0]["absentTiles"] == []
 
 
-def test_a_sharded_array_is_refused_until_the_viewer_reads_shards(tmp_path: Path) -> None:
-    root = write_store(tmp_path / "sharded.zarr", 3, [], levels=1)
+def write_sharded(
+    root: Path,
+    missing: Missing,
+    location: str = "end",
+    checksum: bool = True,
+    without_shards: Sequence[tuple[int, int]] = (),
+) -> Path:
+    axes = [{"name": "c", "type": "channel"}, {"name": "y"}, {"name": "x"}]
+    attributes = {"multiscales": [{"axes": axes, "datasets": [{"path": "0"}]}]}
+    group = {"zarr_format": 3, "node_type": "group", "attributes": {"ome": attributes}}
+    put(root / "zarr.json", json.dumps(group))
+    index_codecs = [{"name": "bytes"}, *([{"name": "crc32c"}] if checksum else [])]
+    sharding = {
+        "name": "sharding_indexed",
+        "configuration": {
+            "chunk_shape": [3, 32, 32],
+            "codecs": [{"name": "bytes"}],
+            "index_codecs": index_codecs,
+            "index_location": location,
+        },
+    }
+    grid = {"name": "regular", "configuration": {"chunk_shape": [3, 64, 64]}}
+    meta = {
+        "zarr_format": 3,
+        "node_type": "array",
+        "shape": [3, 120, 128],
+        "chunk_grid": grid,
+        "codecs": [sharding],
+    }
+    put(root / "0" / "zarr.json", json.dumps(meta))
+    for shard_row, shard_column in itertools.product(range(2), range(2)):
+        if (shard_row, shard_column) in without_shards:
+            continue
+        entries: list[int] = []
+        body = b""
+        for inner_row, inner_column in itertools.product(range(2), range(2)):
+            cell = (0, shard_row * 2 + inner_row, shard_column * 2 + inner_column)
+            if cell in missing:
+                entries += [EMPTY, EMPTY]
+                continue
+            entries += [(0 if location == "end" else 68) + len(body), 5]
+            body += b"chunk"
+        index = struct.pack("<8Q", *entries) + (b"\x00" * 4 if checksum else b"")
+        content = body + index if location == "end" else index + body
+        put(root / "0" / "c" / "0" / str(shard_row) / str(shard_column), content)
+    return root
+
+
+@pytest.mark.parametrize(("location", "checksum"), [("end", True), ("end", False), ("start", True)])
+def test_a_sharded_store_reports_inner_chunks_as_tiles(
+    tmp_path: Path, location: str, checksum: bool
+) -> None:
+    root = write_sharded(
+        tmp_path / "sharded.zarr", [(0, 0, 1)], location, checksum, without_shards=[(1, 1)]
+    )
+    level = zarr_tile_index(root)["levels"][0]
+    assert (level["tileWidth"], level["tileHeight"]) == (32, 32)
+    assert (level["width"], level["height"]) == (128, 120)
+    assert level["absentTiles"] == [[1, 1], [10, 2], [14, 2]]
+
+
+def test_the_committed_sharded_jpeg_store_has_every_tile() -> None:
+    document = zarr_tile_index(SYNTHETIC / "synthetic-jpeg-sharded.ome.zarr")
+    assert document["zarrVersion"] == 3
+    assert [
+        (level["width"], level["height"], level["tileWidth"], level["absentTiles"])
+        for level in document["levels"]
+    ] == [(1024, 768, 256, []), (512, 384, 256, []), (256, 192, 256, [])]
+
+
+def test_a_shard_index_this_reader_cannot_parse_is_refused(tmp_path: Path) -> None:
+    root = write_sharded(tmp_path / "sharded.zarr", [])
     meta = json.loads((root / "0" / "zarr.json").read_text())
-    meta["codecs"] = [{"name": "sharding_indexed", "configuration": {}}]
-    (root / "0" / "zarr.json").write_text(json.dumps(meta))
-    with pytest.raises(UnsupportedZarrError):
-        zarr_tile_index(root)
+    for configuration in (
+        {},
+        {"chunk_shape": [3, 48, 48], "index_codecs": [{"name": "bytes"}]},
+        {"chunk_shape": [3, 32, 32], "index_codecs": [{"name": "bytes"}, {"name": "zstd"}]},
+    ):
+        meta["codecs"] = [{"name": "sharding_indexed", "configuration": configuration}]
+        (root / "0" / "zarr.json").write_text(json.dumps(meta))
+        with pytest.raises(UnsupportedZarrError):
+            zarr_tile_index(root)

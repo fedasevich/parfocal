@@ -12,6 +12,7 @@ export const FORMAT_CODECS = {
   synthetic: "lossless",
   "ome-tiff": "lossless",
   "ome-zarr": "lossless",
+  "ome-zarr-jpeg": "jpeg",
   "huron-uncompressed": "lossless",
   "svs-jpeg": "jpeg",
   "svs-jp2k": "jpeg2000",
