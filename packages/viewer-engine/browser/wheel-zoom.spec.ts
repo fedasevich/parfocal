@@ -8,22 +8,30 @@ import { crossOriginIsolated, outDir } from "./global-setup.ts";
 import { summarizeMainThread, traceCategories } from "./main-thread-trace.ts";
 import type { FrameReport, PanSlide } from "./page/pan-harness.ts";
 
-const slideFile = "Huron-1-40x.tif";
+const slides = [
+  { file: "Huron-1-40x.tif", budget: "viewer.wheel-zoom-longest-task-ms" },
+  {
+    file: "Huron-1-Uncompressed.tif",
+    budget: "viewer.wheel-zoom-uncompressed-longest-task-ms",
+  },
+] as const;
 const repetitions = 3;
 const notches = 12;
 const notchGapMs = 40;
 const notchDeltaY = -100;
-const availability = fixtureAvailability(slideFile);
+const availabilities = slides.map((slide) => fixtureAvailability(slide.file));
 
 test.describe.configure({ mode: "serial", timeout: 240_000 });
 
 let served: Served | null = null;
 
 test.beforeAll(async () => {
-  if (availability.status === "missing" && availability.required) {
-    throw new Error(availability.message);
+  for (const availability of availabilities) {
+    if (availability.status === "missing" && availability.required) {
+      throw new Error(availability.message);
+    }
   }
-  if (availability.status !== "ready") return;
+  if (availabilities.every((availability) => availability.status !== "ready")) return;
   served = await serve(
     { "/app": outDir, "/cache": fixturesDir() },
     { headers: crossOriginIsolated },
@@ -35,20 +43,18 @@ test.afterAll(async () => {
   served = null;
 });
 
-test.beforeEach(() => {
-  test.skip(
-    availability.status === "missing",
-    availability.status === "missing" ? availability.message : "",
-  );
-});
-
 interface Run {
   readonly before: number;
   readonly report: FrameReport;
   readonly longestTaskMs: number;
 }
 
-async function zoomRun(page: Page, browser: Browser, origin: string): Promise<Run> {
+async function zoomRun(
+  page: Page,
+  browser: Browser,
+  origin: string,
+  slideFile: string,
+): Promise<Run> {
   await page.goto(`${origin}/app/pan.html`);
   await page.waitForFunction(() => window.panHarness !== undefined);
   const slide: PanSlide = {
@@ -82,26 +88,33 @@ async function zoomRun(page: Page, browser: Browser, origin: string): Promise<Ru
   return { before: before.zoom, report, longestTaskMs: trace.longestPageMs };
 }
 
-test("wheel zoom on Huron-1-40x.tif keeps the longest main-thread task within budget", async ({
-  page,
-  browser,
-}, testInfo) => {
-  if (served === null) throw new Error("The slide server is not running");
-  await page.setContent("<!doctype html><html><body></body></html>");
-  await assertSwiftShader(page);
-  const runs: Run[] = [];
-  for (let round = 0; round < repetitions; round++) {
-    runs.push(await zoomRun(page, browser, served.origin));
-  }
-  for (const run of runs) expect(run.report.camera.zoom).toBeGreaterThan(run.before);
-  const worst = Math.min(...runs.map((run) => run.longestTaskMs));
-  const description = `fastest of ${repetitions}: longest main-thread task ${worst.toFixed(1)} ms; runs ${runs
-    .map(
-      (run) =>
-        `${run.longestTaskMs.toFixed(1)} ms longest task, ${run.report.worstMs.toFixed(1)} ms worst frame gap, ${run.report.p95Ms.toFixed(1)} ms p95, ${run.report.frames} frames`,
-    )
-    .join("; ")}`;
-  testInfo.annotations.push({ type: "perf", description });
-  console.log(description);
-  await checkBudget("viewer.wheel-zoom-longest-task-ms", worst);
-});
+for (const [index, slide] of slides.entries()) {
+  test(`wheel zoom on ${slide.file} keeps the longest main-thread task within budget`, async ({
+    page,
+    browser,
+  }, testInfo) => {
+    const availability = availabilities[index];
+    test.skip(
+      availability?.status === "missing",
+      availability?.status === "missing" ? availability.message : "",
+    );
+    if (served === null) throw new Error("The slide server is not running");
+    await page.setContent("<!doctype html><html><body></body></html>");
+    await assertSwiftShader(page);
+    const runs: Run[] = [];
+    for (let round = 0; round < repetitions; round++) {
+      runs.push(await zoomRun(page, browser, served.origin, slide.file));
+    }
+    for (const run of runs) expect(run.report.camera.zoom).toBeGreaterThan(run.before);
+    const worst = Math.min(...runs.map((run) => run.longestTaskMs));
+    const description = `fastest of ${repetitions}: longest main-thread task ${worst.toFixed(1)} ms; runs ${runs
+      .map(
+        (run) =>
+          `${run.longestTaskMs.toFixed(1)} ms longest task, ${run.report.worstMs.toFixed(1)} ms worst frame gap, ${run.report.p95Ms.toFixed(1)} ms p95, ${run.report.frames} frames`,
+      )
+      .join("; ")}`;
+    testInfo.annotations.push({ type: "perf", description });
+    console.log(description);
+    await checkBudget(slide.budget, worst);
+  });
+}

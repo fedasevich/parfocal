@@ -57,7 +57,7 @@ There is no malware scanner ([ADR 0081](../adr/0081-uploads-are-checked-by-struc
 - geotiff never follows SubIFDs. An OME-TIFF pyramid stored there shows as one level unless the SubIFD offsets are parsed with `tiff.parser.parseFileDirectoryAt`.
 - Deferred tags throw from `getValue` and are not properties of `fileDirectory`. Load them with `loadValue` while opening, never from the tile path.
 - zarrita fills a missing chunk with `fill_value`. Only a store that reports the miss can tell an unwritten chunk from black. zarrita 0.7.5 no longer breaks behind an SPA fallback that answers metadata probes with HTML, which the POC hit.
-- The browser source reads pixel size from Aperio `MPP`, OME-XML and the resolution tags only. Philips-style XML (`Philips-4.tiff`, `tumor_009.tif`) gives `null` there, and the value comes from the slide index that ingest writes.
+- The browser source reads pixel size from Aperio `MPP`, OME-XML, Philips XML and the resolution tags. For Philips XML (`Philips-4.tiff`, `Philips-3.tiff`, `tumor_009.tif`) it takes `DICOM_PIXEL_SPACING` of the scanned image whose `PIM_DP_IMAGE_TYPE` is `WSI`, in millimetres, rows first, so the first number is y and the second is x. A slide index from ingest still wins when one is given. Source: VIEW-016.
 
 Tests serve fixtures from a local HTTP server with range requests, so they exercise the same `fromUrl` and `FetchStore` paths as the browser. Source: STACK-016 and VIEW-003.
 
