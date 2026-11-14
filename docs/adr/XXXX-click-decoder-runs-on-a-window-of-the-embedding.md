@@ -1,7 +1,7 @@
 # XXXX. The click decoder runs on a 32 token window of the embedding around the prompt
 
 - Date: 2026-11-14
-- Status: Proposed
+- Status: Accepted
 - Deciders: Yurii Fedas (to confirm)
 - Backlog: AISEG-009 (embedding window crop for decoder speed). Builds on [ADR 0246](0246-pathosam-onnx-export-contract.md) (PathoSAM exports to ONNX with the legacy TorchScript exporter) and [ADR 0253](0253-sam-inference-worker.md) (the SAM inference worker)
 
@@ -17,11 +17,12 @@ POC doc 20 (the review of what the POC is missing), section 2.10, puts the decod
 
 ## Decision
 
-Option 2, opt in until the measurements below are in. `python -m parfocal_ml.sam_onnx.export` writes `pathosam.decoder_window32.onnx`, and `--window-sizes 16 24 32` writes other sizes for the bench. In the browser, `embeddingWindow` centres the window on the prompt and returns null, which means the full decoder, when the prompt does not fit inside a 4 token margin or the previous mask reaches outside the window. After a windowed run, `touchesInnerEdge` checks whether the best mask reaches a window edge that is not the patch edge. When it does, the engine reruns the full decoder. `pasteWindowOutputs` puts the window logits back into full-size planes filled with -20, so callers and the worker protocol see the same outputs as before. The engine loads the window graph only with `windowDecoder: true` and falls back to the full decoder when the graph is not published.
+Option 2, a 32 token window, on in `sam.worker.ts`. `python -m parfocal_ml.sam_onnx.export` writes `pathosam.decoder_window32.onnx`, and `--window-sizes 16 24 32` writes other sizes for the bench. In the browser, `embeddingWindow` centres the window on the prompt and returns null, which means the full decoder, when the prompt does not fit inside a 4 token margin or the previous mask reaches outside the window. After a windowed run, `touchesInnerEdge` checks whether the best mask reaches a window edge that is not the patch edge. When it does, the engine reruns the full decoder. `pasteWindowOutputs` puts the window logits back into full-size planes filled with -20, so callers and the worker protocol see the same outputs as before. The engine loads the window graph only with `windowDecoder: true`, which the worker sets, and falls back to the full decoder when the graph is not published.
 
 ## Consequences
 
-- The window decoder sees less context, so its masks are an approximation. `python -m parfocal_ml.sam_onnx.window_check` compares it with the full decoder on TNBC nucleus clicks, and the `weights` test asks for a mean IoU of at least 0.9 on the clicks that stay inside the window. TODO: the IoU, the share of edge clicks and the browser timings, in a result file.
-- TODO: the steady window decode on WebGPU and WebAssembly from `sam-variants.spec.ts`, which asserts below 40 ms and below the full decoder. If it is not below 40 ms, this ADR records why, and the window stays off.
-- Turning it on in `sam.worker.ts` is a one-line change once both numbers pass.
-- The model artifact manifest gains one graph of about the decoder's size.
+- The window decoder sees less context, so its masks are an approximation. On 78 TNBC nucleus clicks the [result](../results/2026-11-15-embedding-window-decoder.md) found a mean IoU of 0.9896 with the full decoder and a minimum of 0.945 at 32 tokens, with no edge clicks. The `weights` test keeps the bar at a mean IoU of 0.9.
+- The steady click decode in Chrome fell from 32 to 17 ms on WebGPU and from 54 to 14 ms on WebAssembly, below the POC's 40 ms floor. `sam-variants.spec.ts` asserts both bars whenever the window graph is exported.
+- 16 and 24 token windows are faster on the CPU but agree less at their worst click, so they stay bench options.
+- Prompts larger than the window, such as gland-sized boxes, still pay the full decoder, and an edge rerun pays both. TODO: measure how often that happens in the hover and region-pass benches.
+- The model artifact manifest gains one 16.5 MB graph.

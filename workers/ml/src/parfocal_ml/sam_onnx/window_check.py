@@ -103,6 +103,7 @@ def check_window(
         (embeddings,) = encoder.run(None, {"pixel_values": pixel_values(patch.rgb)})
         for click in nucleus_clicks(patch.labels, clicks_per_patch):
             feeds = decoder_feeds(embeddings, click, side, side)
+            feeds["orig_im_size"] = np.array([IMAGE_SIZE, IMAGE_SIZE], dtype=np.float32)
             (masks, scores, _), full_ms = timed(lambda feeds=feeds: full.run(None, feeds))
             x, y = (float(value) for value in feeds["point_coords"][0, 0])
             origin = window_origin(x, y, size)
