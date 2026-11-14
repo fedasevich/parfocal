@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { ApiError } from "@parfocal/api-client";
-import { SlideNeedsReingestError } from "@parfocal/viewer-engine";
+import { SlideHasSeveralScanAreasError, SlideNeedsReingestError } from "@parfocal/viewer-engine";
 import { describeOpenFailure } from "../src/viewer/open-failure.ts";
 
 class NamedError extends Error {
@@ -42,6 +42,18 @@ test("a BIF without frame placement asks for re-ingest instead of drawing repeat
   const failure = describeOpenFailure(new SlideNeedsReingestError("/tiles/s/tile-index.json"));
   assert.equal(failure.title, "This slide needs re-ingest");
   assert.match(failure.detail, /tissue would show twice/);
+  assert.doesNotMatch(failure.detail, /tiles/);
+});
+
+test("a BIF with several scan areas says so instead of asking for re-ingest", () => {
+  const failure = describeOpenFailure(
+    new SlideHasSeveralScanAreasError("/tiles/s/tile-index.json"),
+  );
+  assert.equal(
+    failure.title,
+    "This slide holds several scan areas, which Parfocal cannot place yet",
+  );
+  assert.match(failure.detail, /stored safely/);
   assert.doesNotMatch(failure.detail, /tiles/);
 });
 

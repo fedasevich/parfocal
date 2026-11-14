@@ -12,6 +12,10 @@ When `fakeApi` is `off`, `apps/web/src/main.tsx` calls `setDraftsAnswered(false)
 
 Three draft paths sit under a real route with a path parameter, so the real API answers 422 instead of 404 and the call fails as an ordinary error. They are `getLabModelConnection` (under `/api/tenant/models/{id}`), `getModelRunDefaults` (under `/api/projects/{id}/model-runs/{id}`) and `listStudyTemplateReviewDefaults` (under `/api/study-templates/{id}`). `listAiModels` gets a 405 because only POST exists on its path, which the mechanism handles.
 
+## Counting them
+
+`node scripts/draft-calls.ts` counts the operations in `packages/api-client/src/draft` per area and prints the total. `pnpm verify` runs it as its last step and never fails on the count, because the count may grow while the UI is built on fakes ([ADR 0295](../adr/0295-ui-first-on-fakes-then-switch-each-area-to-the-real-api.md), UI first on fakes). OPS-017 (switch each area to the real API) reads the count of an area to show it is fully switched. A new operation must be added to the area map in the script, and `scripts/draft-calls.test.ts` fails until it is.
+
 ## Promoted
 
 `listMyJobs` (the jobs tray, the job window and the admin shell) and `getMyChecklist` (the getting started card on home) are real routes in `apps/api` since OPS-015.

@@ -4,12 +4,19 @@ import math
 import re
 from collections.abc import Sequence
 from dataclasses import dataclass
+from enum import StrEnum
 from typing import Any
 
 import tifffile
 
 XMP_TAG = 700
 LEVEL_SIZE_SLACK = 1
+
+
+class Unplaced(StrEnum):
+    UNKNOWN_OVERLAP = "unknown-overlap"
+    SEVERAL_SCAN_AREAS = "several-scan-areas"
+
 
 IMAGE_INFO = re.compile(r"<ImageInfo\s[^>]*>")
 TILE_JOINT = re.compile(r"<TileJointInfo\s([^>]*?)/>")
@@ -92,16 +99,18 @@ def plain_grid(width: int, height: int, frame_width: int, frame_height: int) -> 
     return {**placed, "width": width, "height": height}
 
 
-def bif_stitching(xmp: str, frame_width: int, frame_height: int) -> dict[str, Any] | None:
+def bif_stitching(xmp: str, frame_width: int, frame_height: int) -> dict[str, Any] | Unplaced:
     areas = IMAGE_INFO.findall(xmp)
-    if len(areas) != 1 or attribute(areas[0], "AOIScanned") == 0:
-        return None
+    if len(areas) > 1:
+        return Unplaced.SEVERAL_SCAN_AREAS
+    if not areas or attribute(areas[0], "AOIScanned") == 0:
+        return Unplaced.UNKNOWN_OVERLAP
     columns = int(attribute(areas[0], "NumCols") or 0)
     rows = int(attribute(areas[0], "NumRows") or 0)
     if columns < 1 or rows < 1:
-        return None
+        return Unplaced.UNKNOWN_OVERLAP
     if (attribute(areas[0], "Width"), attribute(areas[0], "Height")) != (frame_width, frame_height):
-        return None
+        return Unplaced.UNKNOWN_OVERLAP
     across = [Boundary()] * max(1, columns - 1)
     down = [Boundary()] * max(1, rows - 1)
     whole_across = Boundary()
@@ -123,7 +132,7 @@ def bif_stitching(xmp: str, frame_width: int, frame_height: int) -> dict[str, An
             down[boundary] = down[boundary].plus(confidence, overlap)
             whole_down = whole_down.plus(confidence, overlap)
     if (columns > 1 and whole_across.weight <= 0) or (rows > 1 and whole_down.weight <= 0):
-        return None
+        return Unplaced.UNKNOWN_OVERLAP
     mean_across = whole_across.overlap(0.0)
     mean_down = whole_down.overlap(0.0)
     return layout(
@@ -155,23 +164,23 @@ def placed_extent(stitching: dict[str, Any]) -> tuple[int, int]:
 
 def frame_placement(
     page: tifffile.TiffPage, openslide_size: tuple[int, int] | None = None
-) -> dict[str, Any] | None:
+) -> dict[str, Any] | Unplaced:
     frame_width, frame_height = page.tilewidth, page.tilelength
     if frame_width < 1 or frame_height < 1:
-        return None
+        return Unplaced.UNKNOWN_OVERLAP
     xmp = xmp_of(page)
     if xmp is None:
         stitching = plain_grid(page.imagewidth, page.imagelength, frame_width, frame_height)
         extent = (stitching["width"], stitching["height"])
     else:
         found = bif_stitching(xmp, frame_width, frame_height)
-        if found is None:
-            return None
+        if isinstance(found, Unplaced):
+            return found
         stitching = found
         extent = placed_extent(stitching)
     if openslide_size is not None and any(
         abs(ours - theirs) > LEVEL_SIZE_SLACK
         for ours, theirs in zip(extent, openslide_size, strict=True)
     ):
-        return None
+        return Unplaced.UNKNOWN_OVERLAP
     return stitching
