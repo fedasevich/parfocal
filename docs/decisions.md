@@ -8,7 +8,7 @@ To take every recommendation at once, write "all recommended" here:
 
 ## What you need to do next, in order
 
-1. Answer decisions 100 (whether VIEW-036, the renderer interface, is ticked now), 101 (whether the app refuses a BIF with no frame stitching) and 102 (who sees a cursor shared from compare).
+1. Answer decisions 100 (whether VIEW-036, the renderer interface, is ticked now), 101 (whether the app refuses a BIF with no frame stitching) 102 (who sees a cursor shared from compare) and 103 (which animated loader).
 2. Go through the review checklist in [owner-review.md](owner-review.md) and tick what you agree with.
 3. When the app is ready for production, say so, and the lead books the deploy session of decisions 93, 94 and 95.
 
@@ -146,6 +146,19 @@ Decision 99 added "Share my cursor" to compare. As built, everyone on the live s
 
 - **A. Everyone on the live slide who is not blinded, as built (recommended).** Sharing is already a deliberate act by the sharer.
 - B. Only people who turn on "Show shared cursors" themselves.
+- Other.
+
+Your choice:
+
+### 103. Which animated loader replaces the loading texts
+
+DS-039 (animated loaders instead of loading text) built five proposals in SVG and CSS with no new dependency. See them in Storybook under `Feedback/Loader proposals` (`pnpm --filter @parfocal/ui storybook`), in dark, light, compact and reduced motion. Arc is a spinning arc, Scan a sweeping line, Reticle a focusing crosshair, Tiles a grid filling in and Ticks a row of pulsing bars.
+
+- **A. Reticle (recommended).** It reads as a microscope coming into focus, which fits the name Parfocal.
+- B. Arc.
+- C. Scan.
+- D. Tiles.
+- E. Ticks.
 - Other.
 
 Your choice:
