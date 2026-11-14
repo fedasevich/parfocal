@@ -1400,7 +1400,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Refs [`poc/src/slide/ndpi*.ts`](https://github.com/fedasevich/pathlogy-poc/tree/master/src/slide).
   Size: L.
 
-- [ ] VIEW-014 · Ventana BIF with frame stitching
+- [x] VIEW-014 · Ventana BIF with frame stitching
   Done when the BIF fixture shows no duplicated tissue and matches the golden image.
   Refs [`poc/src/slide/ventana.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/slide/ventana.ts), doc 06.
   Size: M.
