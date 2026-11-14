@@ -77,7 +77,7 @@ class RegisteredModel:
     input_mpp: float | None
     status: ModelStatus
     evaluation_report: str | None = None
-    calibration_temperatures: Mapping[int, float] = field(default_factory=dict)
+    calibration_temperatures: Mapping[int, float] = field(default_factory=dict[int, float])
 
 
 class RegistrationError(ValueError):

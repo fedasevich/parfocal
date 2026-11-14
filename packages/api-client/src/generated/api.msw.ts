@@ -117,6 +117,7 @@ import type {
   QueuedObject,
   Reassignment,
   RegionMetrics,
+  RegistryEntry,
   ReportLink,
   ReportPreview,
   Resolved,
@@ -241,10 +242,13 @@ import {
   LabModelSignIn,
   Laterality,
   Layer,
+  LicenceClass,
   LinkRefusal,
   Metric,
   ModelHost,
   ModelMakes,
+  ModelStatus,
+  ModelTask,
   ModelTier,
   MuteSubject,
   MyJobKind,
@@ -4048,6 +4052,82 @@ export const getShowModelResponseMock = (
   title: faker.string.alpha({ length: { min: 10, max: 20 } }),
   shown: faker.datatype.boolean(),
   hidden_by: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  ...overrideResponse,
+});
+
+export const getListRegisteredModelsResponseMock = (): RegistryEntry[] =>
+  Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    family: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    version: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    title: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    tasks: faker.helpers.arrayElements(Object.values(ModelTask)),
+    makes: faker.helpers.arrayElements(Object.values(ModelMakes)),
+    host: faker.helpers.arrayElement(Object.values(ModelHost)),
+    licence: {
+      weights: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      weights_class: faker.helpers.arrayElement(Object.values(LicenceClass)),
+      code: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      data: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () => ({
+          dataset: faker.string.alpha({ length: { min: 10, max: 20 } }),
+          licence: faker.string.alpha({ length: { min: 10, max: 20 } }),
+          licence_class: faker.helpers.arrayElement(Object.values(LicenceClass)),
+        }),
+      ),
+      source: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      read_on: faker.date.past().toISOString().slice(0, 10),
+      policy_kinds: faker.helpers.arrayElements(Object.values(TenantKind)),
+      enforced: faker.datatype.boolean(),
+    },
+    allowed_tenant_kinds: faker.helpers.arrayElements(Object.values(TenantKind)),
+    input_mpp: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+    calibration_temperatures: {
+      [faker.string.alphanumeric(5)]: faker.number.float({ fractionDigits: 2 }),
+    },
+    evaluation_report: faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    status: faker.helpers.arrayElement(Object.values(ModelStatus)),
+  }));
+
+export const getGetRegisteredModelResponseMock = (
+  overrideResponse: Partial<Extract<RegistryEntry, object>> = {},
+): RegistryEntry => ({
+  name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  family: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  version: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  title: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  tasks: faker.helpers.arrayElements(Object.values(ModelTask)),
+  makes: faker.helpers.arrayElements(Object.values(ModelMakes)),
+  host: faker.helpers.arrayElement(Object.values(ModelHost)),
+  licence: {
+    weights: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    weights_class: faker.helpers.arrayElement(Object.values(LicenceClass)),
+    code: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    data: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () => ({
+        dataset: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        licence: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        licence_class: faker.helpers.arrayElement(Object.values(LicenceClass)),
+      }),
+    ),
+    source: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    read_on: faker.date.past().toISOString().slice(0, 10),
+    policy_kinds: faker.helpers.arrayElements(Object.values(TenantKind)),
+    enforced: faker.datatype.boolean(),
+  },
+  allowed_tenant_kinds: faker.helpers.arrayElements(Object.values(TenantKind)),
+  input_mpp: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+  calibration_temperatures: {
+    [faker.string.alphanumeric(5)]: faker.number.float({ fractionDigits: 2 }),
+  },
+  evaluation_report: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  status: faker.helpers.arrayElement(Object.values(ModelStatus)),
   ...overrideResponse,
 });
 
@@ -17264,6 +17344,54 @@ export const getShowModelMockHandler = (
   );
 };
 
+export const getListRegisteredModelsMockHandler = (
+  overrideResponse?:
+    | RegistryEntry[]
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<RegistryEntry[]> | RegistryEntry[]),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/model-registry",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getListRegisteredModelsResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getGetRegisteredModelMockHandler = (
+  overrideResponse?:
+    | RegistryEntry
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<RegistryEntry> | RegistryEntry),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/model-registry/:name/:version",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetRegisteredModelResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getTestLabModelMockHandler = (
   overrideResponse?:
     | LabModelTest
@@ -23305,6 +23433,8 @@ export const getParfocalAPIMock = () => [
   getListModelVisibilityMockHandler(),
   getHideModelMockHandler(),
   getShowModelMockHandler(),
+  getListRegisteredModelsMockHandler(),
+  getGetRegisteredModelMockHandler(),
   getTestLabModelMockHandler(),
   getConnectLabModelMockHandler(),
   getGetLabModelMockHandler(),
