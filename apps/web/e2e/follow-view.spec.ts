@@ -4,6 +4,7 @@ const p07 = "00000000-0000-4000-8003-000000000007";
 const annotateTask = "00000000-0000-4000-8007-000000000021";
 const byHand = "00000000-0000-4000-8005-000000000014";
 const budgetMs = 300;
+const leaderSteps = 5;
 
 test.use({ viewport: { width: 1440, height: 900 } });
 
@@ -66,7 +67,11 @@ test("a follower's camera tracks the shared view within 300 ms until the followe
 
   const before = await cameraOf(annaHost);
   await anna.mouse.move(520, 380);
-  await anna.mouse.wheel(0, -300);
+  for (let step = 0; step < leaderSteps; step += 1) {
+    const from = await cameraOf(annaHost);
+    await anna.mouse.wheel(0, -100);
+    await expect.poll(() => cameraOf(annaHost)).not.toBe(from);
+  }
   await expect.poll(() => cameraOf(annaHost)).not.toBe(before);
   await expect.poll(() => inStep(lenkaHost, annaHost), { timeout: 5000 }).toBe(true);
   const led = await samplesOf(anna);
