@@ -1,4 +1,4 @@
-import type { MicronsPerPixel, SlideIndex, SlideIndexLevel } from "../../src/index.ts";
+import type { SlideIndex, SlideIndexLevel } from "../../src/index.ts";
 import {
   type ByteReader,
   type NdpiPage,
@@ -60,7 +60,7 @@ async function indexLevel(
 export async function ndpiIndexOf(
   url: string,
   fetcher: typeof globalThis.fetch,
-  micronsPerPixel: MicronsPerPixel | null,
+  micronsPerPixel: NonNullable<SlideIndex["micronsPerPixel"]>,
 ): Promise<SlideIndex> {
   const read = rangeReader(url, fetcher);
   const pages = slideLevels(await readNdpiPages(read));
