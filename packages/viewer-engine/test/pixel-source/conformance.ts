@@ -16,7 +16,7 @@ export interface Expected {
   readonly levels: number;
   readonly photometric: PixelSource["photometric"];
   readonly dtype: PixelDtype;
-  readonly micronsPerPixel: number | null;
+  readonly micronsPerPixel: number | { readonly x: number; readonly y: number } | null;
   readonly levelSizes?: readonly string[];
 }
 
@@ -81,9 +81,13 @@ export function pixelSourceConformance(
       if (expected.micronsPerPixel === null) {
         assert.equal(source.micronsPerPixel, null);
       } else {
+        const { x, y } =
+          typeof expected.micronsPerPixel === "number"
+            ? { x: expected.micronsPerPixel, y: expected.micronsPerPixel }
+            : expected.micronsPerPixel;
         assert.ok(source.micronsPerPixel !== null);
-        assert.ok(Math.abs(source.micronsPerPixel.x - expected.micronsPerPixel) < 1e-6);
-        assert.ok(Math.abs(source.micronsPerPixel.y - expected.micronsPerPixel) < 1e-6);
+        assert.ok(Math.abs(source.micronsPerPixel.x - x) < 1e-6);
+        assert.ok(Math.abs(source.micronsPerPixel.y - y) < 1e-6);
       }
       if (expected.levelSizes !== undefined) {
         assert.deepEqual(

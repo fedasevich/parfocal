@@ -24,7 +24,7 @@ The `formats` job in `.github/workflows/ci.yml` fetches the `small` and `formats
 - BIF levels are stored as unstitched tile grids (118784×102000 for `OS-1.bif`). The content size comes from OpenSlide's stitched level sizes (105813×93951). `Ventana-1.bif` fails in OpenSlide and is refused as unreadable.
 - The photometric value is the colour space of the decoded samples. Aperio JPEG 2000 33003 is tagged RGB but decodes to YCbCr, so it is reported as `ycbcr`. DICOM `YBR_ICT` and `YBR_RCT` are reported as `rgb`, because the JPEG 2000 decoder undoes that transform.
 - A pixel size above 100 µm or missing is unusable (CMU-1.tiff reports 1000). When it is missing and the objective power is known, it is estimated as `10 / power` with an `mpp-estimated` notice. When the power is missing it is estimated as the nearest of 1.25x, 2.5x, 5x, 10x, 20x and 40x to `10 / mpp` with an `objective-estimated` notice. Philips and Huron files never state the power. With neither value the slide gets `mpp-missing` and `objective-missing`.
-- Argos stacked files have 5 focal planes. OpenSlide shows the first, so they get a `first-plane-only` notice.
+- Argos stacked files have 5 focal planes, stored from `MinZ` to `MaxZ` of the metadata in TIFF tag 65000. OpenSlide shows the plane at Z 0, the third of five in `Argos-1-Stacked.avs` and not the first in the file, so they get a `first-plane-only` notice. The browser reader and the sidecar tile index name the same plane. Source: VIEW-016, [result](../results/2026-11-14-philips-huron-argos-reader-agreement.md).
 
 ## Thumbnails and overviews are rendered from the pyramid
 

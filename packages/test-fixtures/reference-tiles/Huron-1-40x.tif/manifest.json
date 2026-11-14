@@ -1,0 +1,24 @@
+{
+  "fixture": "Huron-1-40x.tif",
+  "reader": "openslide",
+  "windows": [
+    {
+      "level": 0,
+      "downsample": 1,
+      "x": 6016,
+      "y": 13952,
+      "width": 256,
+      "height": 256,
+      "file": "level-0-6016-13952.png"
+    },
+    {
+      "level": 1,
+      "downsample": 4,
+      "x": 1408,
+      "y": 4480,
+      "width": 256,
+      "height": 256,
+      "file": "level-1-1408-4480.png"
+    }
+  ]
+}

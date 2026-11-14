@@ -1,0 +1,24 @@
+{
+  "fixture": "Huron-1-Uncompressed.tif",
+  "reader": "openslide",
+  "windows": [
+    {
+      "level": 0,
+      "downsample": 1,
+      "x": 2944,
+      "y": 8832,
+      "width": 256,
+      "height": 256,
+      "file": "level-0-2944-8832.png"
+    },
+    {
+      "level": 1,
+      "downsample": 4,
+      "x": 640,
+      "y": 2176,
+      "width": 256,
+      "height": 256,
+      "file": "level-1-640-2176.png"
+    }
+  ]
+}

@@ -141,7 +141,7 @@ function area(page: TiffPage): number {
   return page.image.getWidth() * page.image.getHeight();
 }
 
-export function largestPyramid(pages: readonly TiffPage[]): TiffPage[] {
+export function largestPyramid(pages: readonly TiffPage[], plane = 0): TiffPage[] {
   const withSubIfds = new Set(pages.filter((page) => page.subIfd !== null).map((page) => page.ifd));
   const runs: TiffPage[][] = [];
   for (const page of pages) {
@@ -164,7 +164,15 @@ export function largestPyramid(pages: readonly TiffPage[]): TiffPage[] {
     if (first !== undefined && (bestFirst === undefined || area(first) > area(bestFirst)))
       best = run;
   }
-  return best;
+  const [base] = best;
+  if (plane === 0 || base === undefined) return best;
+  const planes = runs.filter(
+    (run) =>
+      run.length === best.length &&
+      run[0]?.image.getWidth() === base.image.getWidth() &&
+      run[0]?.image.getHeight() === base.image.getHeight(),
+  );
+  return planes[plane] ?? best;
 }
 
 export async function loadTag(image: GeoTIFFImage, tag: TagName): Promise<unknown> {
