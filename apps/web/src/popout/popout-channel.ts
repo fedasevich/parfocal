@@ -22,7 +22,7 @@ export function popoutPath(kind: PopoutKind, here: Location = window.location): 
     query.set("slide", decodeURIComponent(match[2]));
   }
   const current = new URLSearchParams(here.search);
-  for (const key of ["task", "tab", "object"]) {
+  for (const key of ["task", "scene", "tab", "object"]) {
     const value = current.get(key);
     if (value) query.set(key, value);
   }
@@ -33,11 +33,12 @@ type ScreenDetail = { isPrimary: boolean; availLeft: number; availTop: number };
 
 type ScreenDetailsWindow = Window & {
   getScreenDetails?: () => Promise<{ screens: ScreenDetail[] }>;
+  screen: Screen & { isExtended?: boolean };
 };
 
 async function otherScreen(): Promise<ScreenDetail | null> {
   const host = window as ScreenDetailsWindow;
-  if (!host.getScreenDetails || !window.screen.isExtended) return null;
+  if (!host.getScreenDetails || !host.screen.isExtended) return null;
   try {
     const details = await host.getScreenDetails();
     return details.screens.find((screen) => !screen.isPrimary) ?? null;
@@ -54,7 +55,7 @@ const plainPlacement = ",width=520,height=620";
 
 export function openPopout(kind: PopoutKind): Promise<Window | null> {
   const host = window as ScreenDetailsWindow;
-  if (!host.getScreenDetails || !window.screen.isExtended) {
+  if (!host.getScreenDetails || !host.screen.isExtended) {
     return Promise.resolve(popup(kind, plainPlacement));
   }
   return otherScreen().then((screen) =>
@@ -118,7 +119,7 @@ export function useSelectionSync({
   tab: string | undefined;
   object: string | undefined;
   ask: boolean;
-  onRemote: (change: { tab?: string; object?: string }) => void;
+  onRemote: (change: { tab?: string | undefined; object?: string | undefined }) => void;
 }): void {
   const channel = useRef<BroadcastChannel | null>(null);
   const latest = useRef({ tab, object });

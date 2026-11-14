@@ -20,6 +20,7 @@ type PopoutSearch = {
   project?: string | undefined;
   slide?: string | undefined;
   task?: string | undefined;
+  scene?: ViewerSearch["scene"];
   tab?: ViewerTab | undefined;
   object?: string | undefined;
 };
@@ -45,7 +46,12 @@ export function PopoutScreen({
       <FullViewer
         projectId={search.project}
         slideId={search.slide}
-        search={{ task: search.task, tab: search.tab, object: search.object }}
+        search={{
+          task: search.task,
+          scene: search.scene,
+          tab: search.tab,
+          object: search.object,
+        }}
         onSearch={onSearch}
         panelOnly
       />
@@ -74,6 +80,7 @@ export function PopoutScreen({
             extent={slideExtent}
             viewport={viewport}
             title={t`Whole slide`}
+            onOpen={() => (window.opener as Window | null)?.focus()}
             onMoveView={(centre) => moveTo([centre[0], centre[1]])}
             style={{ left: 16, top: 120 }}
           >
