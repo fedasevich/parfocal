@@ -8,7 +8,7 @@ To take every recommendation at once, write "all recommended" here:
 
 ## What you need to do next, in order
 
-1. Answer decisions 100 (whether VIEW-036, the renderer interface, is ticked now), 101 (whether the app refuses a BIF with no frame stitching) 102 (who sees a cursor shared from compare) and 103 (which animated loader).
+1. Answer decisions 100 (whether VIEW-036, the renderer interface, is ticked now), 101 (whether the app refuses a BIF with no frame stitching) 102 (who sees a cursor shared from compare) 103 (which animated loader) and 104 (how close a converted JPEG 2000 slide must stay to its source).
 2. Go through the review checklist in [owner-review.md](owner-review.md) and tick what you agree with.
 3. When the app is ready for production, say so, and the lead books the deploy session of decisions 93, 94 and 95.
 
@@ -159,6 +159,17 @@ DS-039 (animated loaders instead of loading text) built five proposals in SVG an
 - C. Scan.
 - D. Tiles.
 - E. Ticks.
+- Other.
+
+Your choice:
+
+### 104. How close a converted JPEG 2000 slide must stay to its source
+
+INGEST-015 (conversion fallback worker) converts a slide to OME-Zarr only when an ADR trigger fires, and the only trigger listed is JPEG 2000, waiting on INGEST-014 (JPEG 2000 performance decision). On the real JPEG 2000 test slide, JPEG chunks at quality 90 land 5 to 6 grey levels from the source, about 30 dB, while INGEST-009 (seams and correctness check) allows 1.0. Synthetic slides stay under 1.0.
+
+- **A. Use lossless zstd chunks for converted JPEG 2000 slides (recommended).** The store keeps the source exactly, at the cost of more storage for the few slides that convert.
+- B. Raise the JPEG quality until the slide stays within 1.0, and measure the size.
+- C. Accept about 30 dB for converted slides and loosen the check for them.
 - Other.
 
 Your choice:
