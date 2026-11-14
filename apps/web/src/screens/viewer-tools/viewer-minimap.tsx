@@ -11,6 +11,7 @@ import { type MapRect, type MinimapSetting, minimapBox } from "@parfocal/ui/lib/
 import { mapExtent, pointerDistance } from "@parfocal/ui/lib/minimap-machine";
 import { useMinimap } from "@parfocal/ui/lib/use-minimap";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { openPopout, useMainPopoutSync } from "../../popout/popout-channel.ts";
 import type { Pin } from "../review/comment-pin.ts";
 import { cellShapes, overviewSize, regionShapes } from "../review/slide-geometry.ts";
 import {
@@ -152,6 +153,12 @@ export function ViewerMinimap({
     [view, camera.scale, onMoveView],
   );
 
+  useMainPopoutSync({ viewport, magnification, onMoveTo: moveView });
+  const popOut = useCallback(() => {
+    void openPopout("minimap");
+    onPopOut();
+  }, [onPopOut]);
+
   if (minimap.size === null) return null;
   const position = Math.max(1, areas.findIndex((item) => item.object === current) + 1);
   const targetShape = travelTo === null ? undefined : regionShapes[shapeKey(travelTo)];
@@ -199,7 +206,7 @@ export function ViewerMinimap({
       footEnd={content.footEnd}
       viewport={viewport}
       onOpen={onOpen}
-      onPopOut={onPopOut}
+      onPopOut={popOut}
       onMoveView={minimap.size === "pip" ? undefined : moveView}
       style={{ left: place.x, top: place.y }}
     >
