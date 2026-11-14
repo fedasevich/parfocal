@@ -77,6 +77,7 @@ import { ObjectDrawLayer } from "./object-draw-layer.tsx";
 import { describeOpenFailure, type OpenFailure } from "./open-failure.ts";
 import { OutlineLayer } from "./outline-layer.tsx";
 import { type OutlineModeChoice, outlineModeChoices, outlineModeLabels } from "./outline-mode.ts";
+import { RunStreamLayer } from "./run-stream-layer.tsx";
 import type { SlideAreaEntry } from "./slide-areas.ts";
 import { useSlideBrightness } from "./slide-brightness.ts";
 import { useSlideCoverage } from "./slide-coverage.ts";
@@ -732,6 +733,15 @@ function OpenedSlide({
               onDocumentChange={setAnnotations}
             />
             <ProposalLayer engine={session.engine} stage={hostNode} proposals={proposals.pending} />
+            {workspace === "annotate" ? (
+              <RunStreamLayer
+                key={slideId}
+                engine={session.engine}
+                projectId={projectId}
+                slideId={slideId}
+                taskId={taskId ?? null}
+              />
+            ) : null}
             {annotateTask ? (
               <AnnotateTaskPanel
                 engine={session.engine}

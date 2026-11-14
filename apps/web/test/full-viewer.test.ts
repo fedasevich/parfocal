@@ -70,6 +70,7 @@ test("the findings scenes pick T5, T2 and the added T6⁺", () => {
 test("only the running scene of the slide route makes the AI still read", () => {
   assert.equal(fakeViewerSceneFor("/projects/p/slides/s", { scene: "running" }), "running");
   assert.equal(fakeViewerSceneFor("/projects/p/slides/s", { scene: "heat" }), "ready");
+  assert.equal(fakeViewerSceneFor("/projects/p/slides/s", { scene: "streaming" }), "streaming");
   assert.equal(fakeViewerSceneFor("/projects/p/slides/s/report", { scene: "running" }), null);
   assert.equal(fakeViewerSceneFor("/my-work", {}), null);
 });

@@ -34,7 +34,7 @@ Option 1, then option 2.
 
 ## Consequences
 
-- No API route serves a running run's tile chunks yet, so `httpRunStreamSource` takes the tile URL from its caller. TODO: AINUC-010 (whole-slide nuclei job UI) needs that route, the area total from the run's stage `units_total`, and the screen wiring.
+- `getModelRunTile` serves a finished tile's chunk while the run goes on, and the areas answer carries the model stage's total. In the app, `use-run-stream.ts` starts a slide run, streams it and registers one engine overlay per block plus one for the finished-tile marks. `run-stream-layer.tsx` shows progress, the estimate and cancel, and the annotate workspace mounts it from one line in `slide-stage.tsx`. The fake scene `scene=streaming` serves a run that finishes one tile per poll. AINUC-010 (whole-slide nuclei job UI) owns the fuller job controls.
 - Cell edits through `CellEdits` do not apply to streamed tiles, because tile chunks number their cells inside the tile. Once the run ends, the finished result set opens through `PagedCells` as before.
 - The scene has no vertex budget and holds each tile twice, as its parts and inside its merged block. A 250,000 nucleus run fits, but a 1.6 million nucleus run would sit far above the 4,000,000 vertices that ADR 0242 allows resident. TODO: hand a finished run over to `PagedCells`, or drop parts once their block is sealed, before streaming runs of that size.
 - The engine tests are `test/nuclei/streamed-scene.test.ts` and `test/nuclei/run-stream.test.ts`, and `browser/nuclei-stream.spec.ts` streams 250,000 nuclei through deck.gl and cancels a run in a browser.

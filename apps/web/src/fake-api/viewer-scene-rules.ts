@@ -7,5 +7,6 @@ export function fakeViewerSceneFor(
   search: Record<string, unknown>,
 ): FakeViewerScene | null {
   if (!slidePath.test(pathname)) return null;
-  return search["scene"] === "running" ? "running" : "ready";
+  if (search["scene"] === "running") return "running";
+  return search["scene"] === "streaming" ? "streaming" : "ready";
 }

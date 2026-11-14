@@ -626,6 +626,9 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "listModelRunAreas": lambda w: Call(
         "GET", f"/api/projects/{w.project}/model-runs/{w.queued_run}/areas"
     ),
+    "getModelRunTile": lambda w: Call(
+        "GET", f"/api/projects/{w.project}/model-runs/{w.queued_run}/tiles/0"
+    ),
     "cancelModelRun": lambda w: Call(
         "POST", f"/api/projects/{w.project}/model-runs/{w.queued_run}/cancel"
     ),

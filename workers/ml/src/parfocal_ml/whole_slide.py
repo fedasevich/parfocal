@@ -1,5 +1,4 @@
 import math
-import uuid
 from collections.abc import Awaitable, Callable, Mapping, Sequence
 from dataclasses import dataclass, replace
 from typing import Any, Protocol
@@ -18,7 +17,8 @@ from parfocal_common.chunk_store import (
     problem_of,
 )
 from parfocal_common.jobs import JobStoppedError, StepFunction, StepRun
-from parfocal_common.model_runs import Area, Ordering, mark_area
+from parfocal_common.model_runs import Area, Ordering, mark_area, tile_key
+from parfocal_common.model_runs import run_prefix as run_prefix
 from parfocal_common.result_store import ResultStore
 
 TISSUE_CELL = 64
@@ -141,14 +141,6 @@ class Progress(Protocol):
     async def mark(self, tile: Tile, objects: int) -> None: ...
 
     async def should_stop(self) -> bool: ...
-
-
-def run_prefix(tenant_id: uuid.UUID, slide_id: uuid.UUID, job_id: uuid.UUID) -> str:
-    return f"t/{tenant_id}/s/{slide_id}/runs/{job_id}/"
-
-
-def tile_key(prefix: str, index: int) -> str:
-    return f"{prefix}tiles/tile-{index:06}.pfc"
 
 
 def owned_cells(tile: Tile, cells: Sequence[Cell], classes: int) -> list[Cell]:
