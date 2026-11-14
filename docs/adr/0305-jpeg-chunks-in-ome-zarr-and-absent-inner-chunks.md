@@ -1,7 +1,7 @@
-# XXXX. OME-Zarr JPEG chunks are a zarrita codec named `imagecodecs_jpeg`, and absent inner chunks of a shard come from the slide index
+# 0305. OME-Zarr JPEG chunks are a zarrita codec named `imagecodecs_jpeg`, and absent inner chunks of a shard come from the slide index
 
 - Date: 2026-11-14
-- Status: Proposed
+- Status: Accepted
 - Deciders: Yurii Fedas
 - Backlog: VIEW-017 (OME-Zarr v0.4 and v0.5 sharded with JPEG and lossless codecs). Sets the store layout for INGEST-015 (conversion fallback worker). Builds on [ADR 0099](0099-tiff-and-zarr-readers-in-the-browser.md) (TIFF and Zarr readers in the browser) and INGEST-008 (sparse tile and absent chunk map).
 

@@ -39,6 +39,6 @@ The two IDR stores hold the same image in the two layouts, and the reader return
 
 ## Follow-ups
 
-- [ADR XXXX](../adr/XXXX-jpeg-chunks-in-ome-zarr-and-absent-inner-chunks.md) records the chunk layout.
+- [ADR 0305](../adr/0305-jpeg-chunks-in-ome-zarr-and-absent-inner-chunks.md) records the chunk layout.
 - The converted fixtures of INGEST-015 (conversion fallback worker) do not exist yet. The committed stores stand in for them, written by `packages/test-fixtures/scripts/make_synthetic_zarr.py` in the layout that task is asked to produce. TODO: run the same tests on real converted stores when INGEST-015 lands.
 - TODO: no brightfield RGB store from IDR was read, only the two-channel fluorescence image.
