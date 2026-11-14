@@ -139,7 +139,9 @@ async function openHarness(
   pollMs: number,
   beforeStart: () => Promise<void> = () => Promise.resolve(),
 ): Promise<void> {
-  await page.goto(harnessUrl("/app/nuclei-stream.html"));
+  await page.goto(
+    harnessUrl(`/app/nuclei-stream.html${process.env["STREAM_WARM"] ? "?warm" : ""}`),
+  );
   await page.waitForFunction(() => window.streamHarness !== undefined);
   const config = {
     origin,
@@ -201,6 +203,7 @@ test("streaming 250,000 nuclei never holds a frame over 33 ms", async ({ page, b
   console.log(
     JSON.stringify(trace.longest),
     `longest draw ${ended.longestDrawMs.toFixed(1)} ms, layer build ${ended.longestBuildMs.toFixed(1)} ms`,
+    `longest gap ends ${(ended.longestFrameAt - (ended.rebuilds[0]?.at ?? 0)).toFixed(0)} ms after the first draw`,
   );
   console.log(
     `longest main-thread task ${trace.longestPageMs.toFixed(1)} ms, frames ${ended.frames}, longest frame gap ${ended.longestFrameMs.toFixed(1)} ms, gaps over ${frameLimitMs} ms ${ended.framesOver}, passes ${ended.progress?.rebuilds}`,

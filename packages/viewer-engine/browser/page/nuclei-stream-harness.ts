@@ -40,6 +40,7 @@ export interface StreamState {
   readonly framesOver: number;
   readonly longestTaskMs: number;
   readonly longestDrawMs: number;
+  readonly longestFrameAt: number;
   readonly longestBuildMs: number;
   readonly buildTimes: readonly number[];
   readonly error: string | null;
@@ -89,6 +90,7 @@ let longestFrameMs = 0;
 let framesOver = 0;
 let longestTaskMs = 0;
 let longestDrawMs = 0;
+let longestFrameAt = 0;
 let longestBuildMs = 0;
 const buildTimes: number[] = [];
 let watching = false;
@@ -100,6 +102,7 @@ function watchFrames(): void {
     const gap = now - last;
     last = now;
     frames++;
+    if (gap > longestFrameMs) longestFrameAt = now;
     longestFrameMs = Math.max(longestFrameMs, gap);
     if (gap > frameLimitMs + vsyncJitterMs) framesOver++;
     if (watching) requestAnimationFrame(tick);
@@ -180,6 +183,17 @@ async function openDeck(config: StreamConfig): Promise<void> {
 
 async function prepare(config: StreamConfig): Promise<void> {
   if (deck === null) await openDeck(config);
+  if (new URLSearchParams(location.search).has("warm")) {
+    const scene = new StreamedScene();
+    const rings = Array.from({ length: 600 }, (_, item) => ({
+      ring: [item * 20, 0, item * 20 + 8, 0, item * 20 + 8, 8, item * 20, 8],
+      color: [10, 10, 10, 10] as const,
+    }));
+    scene.append("warm", 0, rings);
+    draw(scene.rebuild());
+    await new Promise<void>((resolve) => setTimeout(resolve, 500));
+    deck?.setProps({ layers: [] });
+  }
 }
 
 async function start(config: StreamConfig): Promise<void> {
@@ -221,6 +235,7 @@ function state(): StreamState {
     framesOver,
     longestTaskMs,
     longestDrawMs,
+    longestFrameAt,
     longestBuildMs,
     buildTimes,
     error,

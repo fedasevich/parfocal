@@ -21,6 +21,17 @@ Does `browser/nuclei-stream.spec.ts` stream 250,000 nuclei with no frame over 33
 
 In the final run, the longest `requestAnimationFrame` gap was 150 ms, and 11 of 479 frames had gaps over 33 ms. Those gaps come from SwiftShader rasterising in the GPU process, not from page work.
 
+## On the real GPU
+
+`playwright.stream-gpu.config.ts` runs the same spec headed in Chrome on the Mac's own GPU, with the 1-minute load at 15 to 16. Setting `STREAM_WARM=1` makes the harness draw a small nuclei overlay once before the run starts, so its shaders are compiled before the frames are measured.
+
+| Run | Longest main-thread task | Longest frame gap | Gaps over 33 ms | Frames |
+| --- | --- | --- | --- | --- |
+| Cold, the first nuclei overlay drawn during the run | 60.6 ms | 68.4 ms | 1 | 479 |
+| Shaders compiled before the run (`STREAM_WARM=1`) | 27.7 ms | 18.7 ms | 0 | 489 |
+
+The only long frame of the cold run ends 70 ms after the first draw. It is the frame where WebGL first links the programs of the nuclei layers, a one-time cost per page that does not grow with the run. Streaming itself never held a frame over 33 ms. Our layer build peaked at 12.0 ms.
+
 ## Decision
 
-The test asserts the longest main-thread task, and it now passes. The app draws the stream through the same overlay builder (`engine.registerOverlay`). Frame gaps on real GPU hardware are TODO and belong in a `gpu-bench` run.
+The SwiftShader test asserts the longest main-thread task, and it passes. The app draws the stream through the same overlay builder (`engine.registerOverlay`). The first-use shader link is not streaming work, but the viewer pays it in the middle of a run when no nuclei overlay was drawn before. TODO: compile the overlay shaders when the slide opens, in the renderer route, so the first streamed tile does not pay for them.
