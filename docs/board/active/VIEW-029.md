@@ -1,3 +1,3 @@
-status: in-progress
+status: review
 since: 2026-11-14
-note: Code and unit tests landed. Next step: manual GPU measurement at 1.6M nuclei on the owner's Mac, fill the TODO row in docs/results/2026-11-14-overlay-cull-grid.md
+note: Needs the manual Viv route GPU measurement under 6 ms at 1.6M nuclei and a route-level test of the cull path
