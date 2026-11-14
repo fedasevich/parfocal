@@ -73,8 +73,8 @@ The way the owner runs a batch of tasks, used for the overnight run of 2026-11-0
 
 How many agents and which model:
 
-- Thinking-heavy tasks go to Fable: new readers and formats, renderer and performance work, realtime and collaboration, security, cross-cutting refactors, red CI on `main` and anything with a design choice. Routine frontend tasks (`apps/web`, `packages/ui`) go to Sonnet with high effort, other backend tasks to Opus with medium effort. Small mechanical follow-ups, such as applying an answered decision to one file, go to Sonnet.
-- Two agents at a time by default. When the owner asks to use up a limit, run five at once, mostly Fable, until the window the owner names reaches 95%, such as "until 95% of the 5-hour window" (owner, 2026-11-14). Otherwise go back to two as soon as the 5-hour usage climbs faster than about 5% per merged task, or passes 60%.
+- Fable has its own limit, separate from the plan limits the status line shows, and the owner keeps it mostly for advising. Give a task to a Fable agent only when it is truly heavy and the choice of model makes a real difference, such as a new slide format reader, renderer or performance work, a security design or a red CI with no clear cause. Routine frontend tasks (`apps/web`, `packages/ui`) go to Sonnet with high effort, other backend tasks to Opus with medium effort, and small mechanical follow-ups, such as applying an answered decision to one file, go to Sonnet.
+- Two agents at a time by default. When the owner asks to use up a limit, run five at once until the window the owner names reaches 95%, such as "until 95% of the 5-hour window" (owner, 2026-11-14). Otherwise go back to two as soon as the 5-hour usage climbs faster than about 5% per merged task, or passes 60%.
 - In such a run prefer tasks that close an epic or a milestone: run `board.py counts` and pick the last open tasks of the nearest complete epics.
 - At most one task that adds a migration runs at a time. Never run two tasks that touch the same screen or fake API store, such as the bell and mentions, at once. Hold the second until the first merges.
 - Pick tasks by [Picking the next task](#picking-the-next-task), quick wins and high "unblocks" counts first.
@@ -114,7 +114,7 @@ What the lead does with a hand-back:
 - Watch `main`'s CI between merges with `bash scripts/lead/ci.sh`, which prints every workflow of the pushed head and the last finished `ci` run, and fix a red run before starting more agents. A push to `main` no longer cancels the `ci` run in progress, so each finished run is a result, and the docs checks are a job under `ci-ok`. `scripts/lead/push.sh` does not wait, and a second push during one run still replaces a queued run, so push once per finished `ci` run: when `ci.sh` prints `WAIT ci`, wait before the next push.
 - Before `merge.sh`, merge `origin/main` into the agent's branch in its worktree, resolve `docs/log.md`, `docs/results/README.md` and `docs/adr/README.md` by keeping both sides, and commit `chore(ID): Merge main`. Parallel branches always collide there.
 - Agents that number their own ADR or decision collide. Before merging, check the number against `main`, renumber the file, its title line, the index row and every link, and keep the index in order.
-- `verify-changed.sh` checks only the changed packages, so a night of green branches can still leave `main` red. Check `ci.sh` after each push, and when `ci` fails give the fix to one Fable agent before anything else.
+- `verify-changed.sh` checks only the changed packages, so a night of green branches can still leave `main` red. Check `ci.sh` after each push, and when `ci` fails give the fix to one agent before anything else.
 - When the run ends, consolidate the docs memory ([Consolidation](#consolidation)), push and only then report. The README went three weeks without it once, while the board more than tripled its ticks.
 
 ## Tasks in review

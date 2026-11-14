@@ -130,6 +130,16 @@ VIEW-036 built the renderer interface and the switch between routes inside the e
 
 Your choice:
 
+### 101. Whether the app refuses a BIF that has no frame stitching
+
+VIEW-014 (Ventana BIF with frame stitching) opens a BIF in the app with the frame positions from its sidecar. When the sidecar is missing or holds no stitching, the reader draws the camera frames as a plain grid, as [ADR 0164](adr/0164-bif-frames-placed-like-openslide.md) (BIF frames placed like OpenSlide) says, and the tissue in every frame overlap shows twice. Ingest refuses such a file today, so this happens only if a sidecar is lost.
+
+- **A. Refuse to open it in the app and say the slide needs re-ingest (recommended).** Nobody reviews a slide with repeated tissue by accident.
+- B. Keep opening it as a plain grid.
+- Other.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 The tasks in review, each with a short summary and what you would check, are in [owner-review.md](owner-review.md), a temporary checklist.
