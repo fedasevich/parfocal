@@ -142,7 +142,7 @@ export function CellFocus({
                 <button
                   type="button"
                   onClick={onLeave}
-                  aria-label="Leave focus mode"
+                  aria-label="Esc, leave focus mode"
                   className="cursor-pointer border-0 bg-transparent p-0"
                 >
                   <Keycap keys="Esc" size="sm" />

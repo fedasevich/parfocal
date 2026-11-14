@@ -92,6 +92,21 @@ export function lodKey(choice: LodChoice): string {
   return `${choice.tier}:${choice.dotRadiusPx}`;
 }
 
+export function smallShapeIds(count: number, stats: LodStats): Uint32Array {
+  const ids = new Uint32Array(stats.smallCount);
+  const { large } = stats;
+  let nextLarge = 0;
+  let cursor = 0;
+  for (let shape = 0; shape < count; shape++) {
+    if (large[nextLarge] === shape) {
+      nextLarge++;
+      continue;
+    }
+    ids[cursor++] = shape;
+  }
+  return ids;
+}
+
 export function smallShapeCentres(batch: PolygonBatch, stats: LodStats): PointBatch {
   const positions = new Float32Array(stats.smallCount * 2);
   const colors = new Uint8Array(stats.smallCount * 4);
