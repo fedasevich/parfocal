@@ -1,13 +1,21 @@
+import asyncio
 import csv
 import io
+import json
 import uuid
 from pathlib import Path
 from typing import Any
 
+import httpx2
 import pytest
-from db_support import ApiAs
+from db_support import APP_URL, ApiAs, with_database
+from storage_support import read_object
 from upload_support import Lab, exists, run_worker, send_file, start_upload, status_of
 from workspace_support import make_slide, owner
+
+from parfocal_api.stale_uploads import sweep_waiting_results
+from parfocal_common.db import create_engine
+from parfocal_common.object_store import ObjectStore, StorageLocation
 
 pytestmark = [pytest.mark.db, pytest.mark.usefixtures("storage")]
 
@@ -66,6 +74,18 @@ def checked(
     assert (state["status"], state["reason"]) == ("waiting", "needs-choices"), state
     assert state["message"]
     return started, problems(api, lab, started)
+
+
+def sweep(database: str, storage: StorageLocation) -> list[uuid.UUID]:
+    async def go() -> list[uuid.UUID]:
+        engine = create_engine(with_database(APP_URL, database))
+        try:
+            async with httpx2.AsyncClient() as http:
+                return await sweep_waiting_results(engine, ObjectStore(storage, http))
+        finally:
+            await engine.dispose()
+
+    return asyncio.run(go())
 
 
 def imported_classes(api: ApiAs, lab: Lab, started: dict[str, Any]) -> list[tuple[str, int]]:
@@ -220,13 +240,63 @@ def test_a_heatmap_at_level_2_scaled_by_4_reports_the_guess(
         api, database, lab, tmp_path, "heat.tif", HEATMAP, slide_id=str(slide_id)
     )
     assert status_of(api, lab.lead, started)["result_format"] == "heatmap"
+    guess = {"level": 2, "downsample": 4.0, "mpp": 1.0, "tissue_share": None}
     assert [(item["code"], item["guess"]) for item in found["problems"]] == [
-        ("heatmap-scale", {"level": 2, "downsample": 4.0, "mpp": 1.0})
+        ("heatmap-scale", guess)
     ]
+    assert [item["level"] for item in found["problems"][0]["guesses"]] == [2, 0, 1]
     assert choose(api, lab, started).status_code == 200
     run_worker(database, lab.tenant_id, tmp_path)
     state = status_of(api, lab.lead, started)
-    assert (state["status"], state["reason"]) == ("failed", "result-heatmap-not-stored")
+    assert state["status"] == "ready", state
+    set_id = state["result_set_id"]
+    prefix = f"t/{lab.tenant_id}/s/{slide_id}/results/{set_id}/"
+    facts = json.loads(read_object(f"{prefix}heatmap.json"))
+    assert {key: facts[key] for key in ("width", "height", "level", "downsample")} == {
+        "width": 32,
+        "height": 32,
+        "level": 2,
+        "downsample": 4.0,
+    }
+    assert exists(facts["object_key"])
+    assert exists(f"{prefix}source.tif")
+    assert not exists(started["key"])
+    detail = api(lab.lead).get(f"/api/result-sets/{set_id}")
+    assert detail.status_code == 200, detail.text
+    assert detail.json()["status"] == "ready"
+
+
+def test_a_corrupt_png_heatmap_is_refused_with_its_named_problem(
+    api: ApiAs, database: str, lab: Lab, tmp_path: Path
+) -> None:
+    slide_id = sized_slide(database, lab, width=128, height=128)
+    started = upload(api, lab, "heat.png", b"\x89PNG\r\n\x1a\nbroken", slide_id=str(slide_id))
+    run_worker(database, lab.tenant_id, tmp_path)
+    state = status_of(api, lab.lead, started)
+    assert (state["status"], state["reason"]) == ("failed", "result-heatmap-unreadable")
+    assert state["message"]
+    assert not exists(started["key"])
+
+
+def test_a_result_left_waiting_on_choices_is_swept_after_its_time(
+    api: ApiAs, database: str, lab: Lab, tmp_path: Path, storage: StorageLocation
+) -> None:
+    slide_id = sized_slide(database, lab, width=128, height=128)
+    stale, _ = checked(api, database, lab, tmp_path, "old.tif", HEATMAP, slide_id=str(slide_id))
+    fresh, _ = checked(api, database, lab, tmp_path, "new.tif", HEATMAP, slide_id=str(slide_id))
+    owner(
+        database,
+        "UPDATE uploads SET last_activity_at = now() - interval '8 days' "
+        f"WHERE id = '{stale['uploadId']}' RETURNING id",
+    )
+    assert sweep(database, storage) == [uuid.UUID(stale["uploadId"])]
+    assert status_of(api, lab.lead, stale)["status"] == "failed"
+    assert not exists(stale["key"])
+    assert exists(fresh["key"])
+    assert status_of(api, lab.lead, fresh)["reason"] == "needs-choices"
+    late = choose(api, lab, stale)
+    assert late.status_code == 409, late.text
+    assert sweep(database, storage) == []
 
 
 def test_a_heatmap_without_a_slide_is_cleared_by_choosing_one_or_leaving_it_out(

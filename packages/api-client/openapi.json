@@ -48547,13 +48547,25 @@
               }
             ],
             "title": "Mpp"
+          },
+          "tissue_share": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tissue Share"
           }
         },
         "type": "object",
         "required": [
           "level",
           "downsample",
-          "mpp"
+          "mpp",
+          "tissue_share"
         ],
         "title": "HeatmapGuess"
       },
@@ -48787,6 +48799,13 @@
                 "type": "null"
               }
             ]
+          },
+          "guesses": {
+            "items": {
+              "$ref": "#/components/schemas/HeatmapGuess"
+            },
+            "type": "array",
+            "title": "Guesses"
           }
         },
         "type": "object",
@@ -48796,7 +48815,8 @@
           "count",
           "places",
           "names",
-          "guess"
+          "guess",
+          "guesses"
         ],
         "title": "ImportProblem"
       },

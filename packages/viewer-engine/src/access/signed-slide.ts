@@ -52,6 +52,16 @@ export class SlideNeedsReingestError extends Error {
   }
 }
 
+export class SlideHasSeveralScanAreasError extends Error {
+  readonly url: string;
+
+  constructor(url: string) {
+    super(`The sidecar ${url} records several scan areas, which cannot be placed yet`);
+    this.name = "SlideHasSeveralScanAreasError";
+    this.url = url;
+  }
+}
+
 export interface LevelTableLevel {
   readonly downsample: number;
   readonly width: number;
@@ -202,9 +212,18 @@ async function withFrameStitching(
   const response = await access.fetch(sidecarUrl, signal === undefined ? {} : { signal }, fetcher);
   if (response.status === 404) throw new SlideNeedsReingestError(sidecarUrl);
   if (!response.ok) throw new SlideBytesError(sidecarUrl, response.status);
-  const stitching = frameStitchingOf(await sidecarDocument(response));
-  if (stitching === null) throw new SlideNeedsReingestError(sidecarUrl);
-  return { ...table, tileKind: "bif-frames", stitching };
+  const document = await sidecarDocument(response);
+  const stitching = frameStitchingOf(document);
+  if (stitching !== null) return { ...table, tileKind: "bif-frames", stitching };
+  if (unplacedReasonOf(document) === "several-scan-areas") {
+    throw new SlideHasSeveralScanAreasError(sidecarUrl);
+  }
+  throw new SlideNeedsReingestError(sidecarUrl);
+}
+
+function unplacedReasonOf(document: unknown): unknown {
+  if (typeof document !== "object" || document === null) return null;
+  return (document as Record<string, unknown>)["unplaced"];
 }
 
 export async function signedOpenRequest(options: SignedSlideOptions): Promise<OpenRequest> {
