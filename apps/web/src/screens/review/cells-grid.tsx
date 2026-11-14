@@ -1,3 +1,4 @@
+import { useLingui } from "@lingui/react/macro";
 import type { ReviewObject } from "@parfocal/api-client";
 import { CellsPanel } from "@parfocal/ui/components/cells-panel";
 import { GalleryTile } from "@parfocal/ui/components/gallery-tile";
@@ -75,6 +76,7 @@ export function CellsGrid({
   onClose,
   className,
 }: CellsGridProps) {
+  const { t } = useLingui();
   const open = cells.filter((cell) => !answer(cell.object));
   return (
     <CellsPanel
@@ -102,7 +104,7 @@ export function CellsGrid({
             size={40}
             image={lookUrl("hpf")}
             objectId={cell.object}
-            label={`${cell.class_name.toLowerCase()} cell`}
+            label={t`${cell.class_name.toLowerCase()} cell`}
             state={cell.object === current ? "current" : value ? "done" : "to-check"}
             decision={value ?? "open"}
             ringed={confirming && !value}

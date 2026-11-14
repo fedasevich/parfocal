@@ -1512,6 +1512,10 @@ GET_ROUTES = {
     "listDeletedProjects": Route(Exposure.TENANT, lambda _: "/api/projects/deleted"),
     "getProject": Route(Exposure.TENANT, lambda a: f"/api/projects/{a.ids['project']}"),
     "listTaxonomyTemplates": Route(Exposure.PUBLIC, lambda _: "/api/taxonomy-templates"),
+    "listRegisteredModels": Route(Exposure.PUBLIC, lambda _: "/api/model-registry"),
+    "getRegisteredModel": Route(
+        Exposure.PUBLIC, lambda _: "/api/model-registry/camelyon-tumor/v1.0"
+    ),
     "getOpinionFormTemplate": Route(Exposure.PUBLIC, lambda _: "/api/opinion-form-template"),
     "getResultsSchema": Route(
         Exposure.PUBLIC, lambda _: "/api/result-formats/parfocal-json/schema"

@@ -147,6 +147,8 @@ OPEN_OPERATIONS = {
     "listSiteValidations": "member",
     "listModelTiers": "member",
     "listModelVisibility": "member",
+    "listRegisteredModels": "member",
+    "getRegisteredModel": "member",
     "getMyHome": "member",
     "getMyChecklist": "member",
     "listMyJobs": "member",
@@ -1165,6 +1167,9 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "reorderCaseSlides": lambda w: Call(
         "PUT", f"/api/cases/{w.case}/slide-order", {"slide_ids": []}
     ),
+    "setCaseClinicalNote": lambda w: Call(
+        "PUT", f"/api/cases/{w.case}/clinical-note", {"note": "Fake note for a test"}
+    ),
     "listAvailability": lambda _: Call("GET", "/api/tenant/availability"),
     "updateSessionPolicy": lambda _: Call(
         "PUT", "/api/tenant/session-policy", {"idle_lock_minutes": 15, "session_hours": 12}
@@ -1265,6 +1270,8 @@ MEMBER_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "listSiteValidations": lambda _: Call("GET", "/api/site-validations"),
     "listModelTiers": lambda _: Call("GET", "/api/tenant/model-tiers"),
     "listModelVisibility": lambda _: Call("GET", "/api/tenant/hidden-models"),
+    "listRegisteredModels": lambda _: Call("GET", "/api/model-registry"),
+    "getRegisteredModel": lambda _: Call("GET", "/api/model-registry/hovernet/v0.9"),
     "getMyHome": lambda _: Call("GET", "/api/me/home"),
     "listMyJobs": lambda _: Call("GET", "/api/me/jobs"),
     "getMyChecklist": lambda _: Call("GET", "/api/me/checklist"),

@@ -8,20 +8,16 @@ from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
 from typing import Any
-from xml.etree import ElementTree
 
 import numpy as np
-import openslide
-import tifffile
 from numpy.lib.format import open_memmap
 from PIL import Image
 
 from parfocal_ingest.identify import Format, identify
-from parfocal_ingest.pyramid import Pyramid, Reader, children, main_series, read_pyramid
-from parfocal_ingest.thumbnail import background_of, flattened
+from parfocal_ingest.pyramid import Pyramid, Reader, read_pyramid
+from parfocal_ingest.source_levels import UnconvertibleError, source_level, tifffile_names
 
 CHUNK = 512
-READ_BLOCK = 2048
 JPEG_QUALITY = 90
 ZSTD_LEVEL = 3
 NGFF_VERSION = "0.5"
@@ -45,12 +41,17 @@ class Chunks(StrEnum):
     ZSTD = "zstd"
 
 
+TRIGGER_CHUNKS = {Trigger.JPEG2000_DECODE_BUDGET: Chunks.ZSTD}
+
+
 class NotTriggeredError(ValueError):
     pass
 
 
-class UnconvertibleError(ValueError):
-    pass
+@dataclass(frozen=True)
+class Planned:
+    downsample: int
+    from_source: bool
 
 
 @dataclass(frozen=True)
@@ -59,6 +60,7 @@ class Converted:
     chunks: Chunks
     levels: tuple[tuple[int, int], ...]
     trigger: Trigger | None
+    from_source: tuple[bool, ...]
 
 
 def trigger_for(pyramid: Pyramid, fired: Collection[Trigger] = FIRED) -> Trigger | None:
@@ -70,65 +72,21 @@ def trigger_for(pyramid: Pyramid, fired: Collection[Trigger] = FIRED) -> Trigger
     return None
 
 
+def is_brightfield(dtype: np.dtype, channels: int) -> bool:
+    return dtype == np.uint8 and channels == 3
+
+
 def chunks_for(dtype: np.dtype, channels: int) -> Chunks:
-    return Chunks.JPEG if dtype == np.uint8 and channels == 3 else Chunks.ZSTD
+    return Chunks.JPEG if is_brightfield(dtype, channels) else Chunks.ZSTD
 
 
-def openslide_level_zero(path: Path, found: Format, into: Path) -> np.ndarray:
-    with openslide.OpenSlide(path) as slide:
-        origin_x = origin_y = 0
-        if found is Format.LEICA_SCN:
-            origin_x = int(slide.properties.get("openslide.region[0].x", 0))
-            origin_y = int(slide.properties.get("openslide.region[0].y", 0))
-        width, height = slide.dimensions
-        background = background_of(slide)
-        pixels = open_memmap(into, mode="w+", dtype=np.uint8, shape=(height, width, 3))
-        for top in range(0, height, READ_BLOCK):
-            for left in range(0, width, READ_BLOCK):
-                size = (min(READ_BLOCK, width - left), min(READ_BLOCK, height - top))
-                region = slide.read_region((origin_x + left, origin_y + top), 0, size)
-                rgb = np.asarray(flattened(region, background))
-                pixels[top : top + size[1], left : left + size[0]] = rgb
-        pixels.flush()
-    return pixels.transpose(2, 0, 1)
-
-
-def planar(pixels: np.ndarray, axes: str) -> np.ndarray:
-    match axes:
-        case "YXS":
-            return pixels.transpose(2, 0, 1)
-        case "CYX" | "SYX":
-            return pixels
-        case "YX":
-            return pixels[np.newaxis]
-        case _:
-            raise UnconvertibleError(f"axes {axes} are not converted")
-
-
-def tifffile_level_zero(path: Path, into: Path) -> tuple[np.ndarray, list[str]]:
-    with tifffile.TiffFile(path) as tiff:
-        series = main_series(tiff)
-        if series is None:
-            raise UnconvertibleError("no slide series")
-        level = series.levels[0]
-        pixels = open_memmap(
-            into, mode="w+", dtype=level.dtype.newbyteorder("="), shape=level.shape
-        )
-        level.asarray(out=pixels)
-        pixels.flush()
-        names = channel_names(tiff.ome_metadata or "", tiff.series.index(series))
-        return planar(pixels, level.axes), names
-
-
-def channel_names(ome: str, image: int) -> list[str]:
-    try:
-        root = ElementTree.fromstring(ome)
-    except ElementTree.ParseError:
-        return []
-    images = list(children(root, "Image"))
-    if image >= len(images):
-        return []
-    return [channel.get("Name", "") for channel in children(images[image], "Channel")]
+def level_plan(source: Collection[int], width: int, height: int, chunk: int) -> tuple[Planned, ...]:
+    plan = [Planned(1, True)]
+    while max(width, height) > chunk and min(width, height) >= 2:
+        width, height = width // 2, height // 2
+        downsample = plan[-1].downsample * 2
+        plan.append(Planned(downsample, downsample in source))
+    return tuple(plan)
 
 
 def halved(level: np.ndarray, into: Path, chunk: int) -> np.ndarray:
@@ -210,10 +168,8 @@ def window_of(level: np.ndarray, channel: int) -> dict[str, int]:
     return {"start": low, "end": max(high, low + 1), "min": 0, "max": top}
 
 
-def omero_channels(
-    chunks: Chunks, coarsest: np.ndarray, names: Sequence[str]
-) -> list[dict[str, Any]]:
-    if chunks is Chunks.JPEG:
+def omero_channels(coarsest: np.ndarray, names: Sequence[str]) -> list[dict[str, Any]]:
+    if is_brightfield(coarsest.dtype, coarsest.shape[0]):
         return [
             {
                 "label": label,
@@ -287,39 +243,46 @@ def write_store(
     *,
     trigger: Trigger | None = None,
     chunk: int = CHUNK,
+    chunks: Chunks | None = None,
 ) -> Converted:
     found, pyramid = slide_of(source)
+    if pyramid.reader is Reader.WSIDICOM:
+        raise UnconvertibleError("DICOM slides are not converted")
     work.mkdir(parents=True, exist_ok=True)
-    names: list[str] = []
-    match pyramid.reader:
-        case Reader.OPENSLIDE:
-            level = openslide_level_zero(source, found, work / "level-0.npy")
-        case Reader.TIFFFILE:
-            level, names = tifffile_level_zero(source, work / "level-0.npy")
-        case Reader.WSIDICOM:
-            raise UnconvertibleError("DICOM slides are not converted")
-    chunks = chunks_for(level.dtype, level.shape[0])
-    fill = BRIGHTFIELD_BACKGROUND if chunks is Chunks.JPEG else 0
+    names = tifffile_names(source) if pyramid.reader is Reader.TIFFFILE else []
+    by_downsample = {level.downsample: level for level in pyramid.levels}
+    base = pyramid.levels[0]
+    plan = level_plan(by_downsample, base.width, base.height, chunk)
     partial = store.with_name(store.name + ".partial")
     shutil.rmtree(partial, ignore_errors=True)
     extents: list[tuple[int, int]] = []
-    index = 0
-    while True:
-        write_level(partial / str(index), level, chunks, chunk, fill)
+    from_source: list[bool] = []
+    first = source_level(source, found, pyramid, base, work / "level-0.npy")
+    if first is None:
+        raise UnconvertibleError("the finest level could not be read")
+    level = first
+    kind = chunks or chunks_for(level.dtype, level.shape[0])
+    fill = BRIGHTFIELD_BACKGROUND if is_brightfield(level.dtype, level.shape[0]) else 0
+    for index, planned in enumerate(plan):
+        into = work / f"level-{index}.npy"
+        read = (
+            source_level(source, found, pyramid, by_downsample[planned.downsample], into)
+            if planned.from_source and index > 0
+            else None
+        )
+        if index > 0:
+            level = read if read is not None else halved(level, into, chunk)
+        write_level(partial / str(index), level, kind, chunk, fill)
         extents.append((level.shape[2], level.shape[1]))
-        if max(level.shape[1:]) <= chunk or min(level.shape[1:]) < 2:
-            break
-        index += 1
-        level = halved(level, work / f"level-{index}.npy", chunk)
-    channels = omero_channels(chunks, level, names)
+        from_source.append(index == 0 or read is not None)
     write_json(
         partial / "zarr.json",
-        group_metadata(store.name, len(extents), pyramid.scale.mpp_x, channels),
+        group_metadata(store.name, len(extents), pyramid.scale.mpp_x, omero_channels(level, names)),
     )
     shutil.rmtree(store, ignore_errors=True)
     partial.rename(store)
     shutil.rmtree(work, ignore_errors=True)
-    return Converted(store, chunks, tuple(extents), trigger)
+    return Converted(store, kind, tuple(extents), trigger, tuple(from_source))
 
 
 def convert(
@@ -335,7 +298,9 @@ def convert(
         raise NotTriggeredError(f"the {trigger} conversion trigger has not fired")
     if trigger_for(slide_of(source)[1], fired) is not trigger:
         raise NotTriggeredError(f"the {trigger} conversion trigger does not apply to this slide")
-    return write_store(source, store, work, trigger=trigger, chunk=chunk)
+    return write_store(
+        source, store, work, trigger=trigger, chunk=chunk, chunks=TRIGGER_CHUNKS[trigger]
+    )
 
 
 def main() -> None:

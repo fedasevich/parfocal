@@ -349,6 +349,7 @@ export function SlidesTab({
         <CaseSlidesEditor
           caseId={editing.id}
           caseLabel={editing.label}
+          clinical={project.privacy_mode === "clinical"}
           onClose={() => setEditing(undefined)}
         />
       ) : null}

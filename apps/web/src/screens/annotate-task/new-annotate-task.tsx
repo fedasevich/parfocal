@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { useGetProject } from "@parfocal/api-client";
 import {
   annotatePresets,
@@ -23,28 +24,12 @@ import { resultName } from "./fake-task.ts";
 import { type AnnotateStep, annotateStepKeys } from "./step-keys.ts";
 import { useTaskPeople } from "./task-people.ts";
 
-const stepNames: Record<AnnotateStep, string> = {
-  kind: "Kind",
-  slides: "Slides",
-  experts: "Experts",
-  check: "What to check",
-  how: "How it runs",
-  send: "Send",
-};
-
 const slideRows = [
   { id: "A1", name: "A1 H&E", result: true },
   { id: "A2", name: "A2 H&E", result: true },
   { id: "B4", name: "B4 CK", result: false },
   { id: "C2", name: "C2 H&E", result: false },
 ];
-
-const scopeNames = {
-  none: "Nothing, experts only draw",
-  all: "Every AI cell",
-  sample: "A random sample of AI cells",
-  regions: "AI cells inside the areas you draw",
-} as const;
 
 type NewAnnotateTaskProps = {
   projectId: string;
@@ -64,6 +49,21 @@ const presetOptions = (key: PresetKey): CheckOptionValues =>
   };
 
 export function NewAnnotateTask({ projectId, step, preset, onStep }: NewAnnotateTaskProps) {
+  const { t } = useLingui();
+  const stepNames: Record<AnnotateStep, string> = {
+    kind: t`Kind`,
+    slides: t`Slides`,
+    experts: t`Experts`,
+    check: t`What to check`,
+    how: t`How it runs`,
+    send: t`Send`,
+  };
+  const scopeNames = {
+    none: t`Nothing, experts only draw`,
+    all: t`Every AI cell`,
+    sample: t`A random sample of AI cells`,
+    regions: t`AI cells inside the areas you draw`,
+  } as const;
   const project = okData(useGetProject(projectId).data);
   const people = useTaskPeople();
   const navigate = useNavigate();
@@ -97,12 +97,12 @@ export function NewAnnotateTask({ projectId, step, preset, onStep }: NewAnnotate
       className="h-full"
       crumbStart={<SidebarToggle />}
       crumbs={[
-        { label: project?.name ?? "Project" },
-        { label: "Tasks" },
-        { label: "New annotate task" },
+        { label: project?.name ?? t`Project` },
+        { label: t`Tasks` },
+        { label: t`New annotate task` },
       ]}
-      title="New annotate task"
-      subtitle="Experts draw on a shared layer for each slide and check what the AI made."
+      title={t`New annotate task`}
+      subtitle={t`Experts draw on a shared layer for each slide and check what the AI made.`}
       steps={steps}
       current={index}
       reached={reached}
@@ -112,10 +112,16 @@ export function NewAnnotateTask({ projectId, step, preset, onStep }: NewAnnotate
       }}
       bar={
         <FlowBar
-          hint={`About ${toCheck} objects to check, roughly ${minutes} min per expert`}
-          back={before ? <Button onClick={() => onStep(before)}>Back</Button> : undefined}
+          hint={t`About ${toCheck} objects to check, roughly ${minutes} min per expert`}
+          back={
+            before ? (
+              <Button onClick={() => onStep(before)}>
+                <Trans>Back</Trans>
+              </Button>
+            ) : undefined
+          }
           primary={{
-            label: after ? "Next" : "Send to experts",
+            label: after ? t`Next` : t`Send to experts`,
             onClick: () => (after ? onStep(after) : undefined),
           }}
         />
@@ -123,9 +129,9 @@ export function NewAnnotateTask({ projectId, step, preset, onStep }: NewAnnotate
     >
       {step === "kind" ? (
         <>
-          <Zone title="Kind">
+          <Zone title={t`Kind`}>
             <ChoiceCards
-              legend="What the experts do"
+              legend={t`What the experts do`}
               value="annotate"
               onValueChange={(next) => {
                 if (next === "review") {
@@ -135,20 +141,20 @@ export function NewAnnotateTask({ projectId, step, preset, onStep }: NewAnnotate
               choices={[
                 {
                   value: "review",
-                  title: "Review AI results",
-                  text: "Experts decide whether the AI result is right, without drawing.",
+                  title: t`Review AI results`,
+                  text: t`Experts decide whether the AI result is right, without drawing.`,
                 },
                 {
                   value: "annotate",
-                  title: "Annotate",
-                  text: "Experts draw cells and fix what the AI found. The output is training data.",
+                  title: t`Annotate`,
+                  text: t`Experts draw cells and fix what the AI found. The output is training data.`,
                 },
               ]}
             />
           </Zone>
           <Zone
-            title="Starting point"
-            sub="A suggestion only. It fills in the next steps, and you can change every setting there."
+            title={t`Starting point`}
+            sub={t`A suggestion only. It fills in the next steps, and you can change every setting there.`}
           >
             <PresetPicker value={chosen} onValueChange={choosePreset} />
           </Zone>
@@ -156,8 +162,8 @@ export function NewAnnotateTask({ projectId, step, preset, onStep }: NewAnnotate
       ) : null}
       {step === "slides" ? (
         <Zone
-          title="Slides"
-          sub="Slides with no result set can be annotated by hand. Slides with one start with the AI objects."
+          title={t`Slides`}
+          sub={t`Slides with no result set can be annotated by hand. Slides with one start with the AI objects.`}
         >
           <ul className="m-0 grid list-none gap-2 p-0">
             {slideRows.map((row) => {
@@ -176,7 +182,9 @@ export function NewAnnotateTask({ projectId, step, preset, onStep }: NewAnnotate
                     {row.result ? (
                       <StatusTag tone="accent">{resultName}</StatusTag>
                     ) : (
-                      <StatusTag>No result set</StatusTag>
+                      <StatusTag>
+                        <Trans>No result set</Trans>
+                      </StatusTag>
                     )}
                   </label>
                 </li>
@@ -186,7 +194,7 @@ export function NewAnnotateTask({ projectId, step, preset, onStep }: NewAnnotate
         </Zone>
       ) : null}
       {step === "experts" ? (
-        <Zone title="Experts" sub="Every expert edits the same layer on each slide.">
+        <Zone title={t`Experts`} sub={t`Every expert edits the same layer on each slide.`}>
           <ul className="m-0 grid list-none gap-2 p-0">
             {[people?.me, people?.anna, people?.simona]
               .flatMap((person) => (person ? [person] : []))
@@ -204,71 +212,71 @@ export function NewAnnotateTask({ projectId, step, preset, onStep }: NewAnnotate
       ) : null}
       {step === "check" ? (
         <Zone
-          title="What to check"
+          title={t`What to check`}
           sub={
             hasResult
-              ? `${checkSummary(options)} The preset filled these in, change any of them.`
-              : "The preset Annotate by hand has no result set, so there is nothing to check."
+              ? t`${checkSummary(options)} The preset filled these in, change any of them.`
+              : t`The preset Annotate by hand has no result set, so there is nothing to check.`
           }
         >
           <CheckOptions values={options} onValuesChange={setOptions} />
         </Zone>
       ) : null}
       {step === "how" ? (
-        <Zone title="How it runs">
+        <Zone title={t`How it runs`}>
           <BlindFirstSwitch checked={blind} onCheckedChange={setBlind} />
         </Zone>
       ) : null}
       {step === "send" ? (
-        <Zone title="Send" sub="One last look before the experts get the task.">
+        <Zone title={t`Send`} sub={t`One last look before the experts get the task.`}>
           <SummaryRows
             rows={[
               {
-                label: "Preset",
+                label: t`Preset`,
                 value: annotatePresets.find((item) => item.key === chosen)?.title ?? "",
                 onChange: () => onStep("kind"),
               },
               {
-                label: "Slides",
-                value: `${picked.length} slides, ${slidesWithResult} with a result set`,
+                label: t`Slides`,
+                value: t`${picked.length} slides, ${slidesWithResult} with a result set`,
                 onChange: () => onStep("slides"),
               },
-              { label: "Experts", value: "3 experts", onChange: () => onStep("experts") },
+              { label: t`Experts`, value: t`3 experts`, onChange: () => onStep("experts") },
               {
-                label: "Experts check",
+                label: t`Experts check`,
                 value: scopeNames[options.scope],
                 onChange: () => onStep("check"),
               },
               {
-                label: "Unchecked AI cells",
+                label: t`Unchecked AI cells`,
                 value: options.exportUnchecked
-                  ? "Exported marked as not checked"
-                  : "Left out of the export",
+                  ? t`Exported marked as not checked`
+                  : t`Left out of the export`,
                 onChange: () => onStep("check"),
               },
               ...(options.scope === "none"
                 ? []
                 : [
                     {
-                      label: "Start with",
+                      label: t`Start with`,
                       value:
                         options.order === "least-sure"
-                          ? "The cells the AI was least sure of"
-                          : "Top left to bottom right",
+                          ? t`The cells the AI was least sure of`
+                          : t`Top left to bottom right`,
                       onChange: () => onStep("check"),
                     },
                     {
-                      label: "Finishing a slide",
+                      label: t`Finishing a slide`,
                       value:
                         options.rule === "require"
-                          ? "Only when every cell in scope is checked"
-                          : "Allowed with cells left unchecked",
+                          ? t`Only when every cell in scope is checked`
+                          : t`Allowed with cells left unchecked`,
                       onChange: () => onStep("check"),
                     },
                   ]),
               {
-                label: "Blind first",
-                value: blind ? "On" : "Off",
+                label: t`Blind first`,
+                value: blind ? t`On` : t`Off`,
                 onChange: () => onStep("how"),
               },
             ]}

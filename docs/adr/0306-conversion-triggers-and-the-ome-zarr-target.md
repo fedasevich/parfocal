@@ -2,6 +2,7 @@
 
 - Date: 2026-11-14
 - Status: Accepted
+- Amended by [ADR 0310](0310-converted-jpeg-2000-slides-are-lossless-and-keep-the-source-levels.md) (converted JPEG 2000 slides are lossless and keep the source levels)
 - Deciders: Yurii Fedas
 - Backlog: INGEST-015 (conversion fallback worker). Builds on [ADR 0043](0043-server-slide-reading.md) (server slide reading, whose rule 6 says a conversion trigger needs its own ADR), [ADR 0111](0111-jpeg-2000-in-the-decode-workers-and-ome-channel-pages.md) (JPEG 2000 in the decode workers, which names the only trigger so far) and [ADR 0305](0305-jpeg-chunks-in-ome-zarr-and-absent-inner-chunks.md) (the JPEG chunk layout the browser reads).
 

@@ -1,3 +1,4 @@
+import { useLingui } from "@lingui/react/macro";
 import { useGetSlideAgreement, useListReviewObjects } from "@parfocal/api-client";
 import { SlideSubmittedDialog } from "@parfocal/ui/components/slide-submitted-dialog";
 import { useNavigate } from "@tanstack/react-router";
@@ -30,6 +31,7 @@ export function SlideSubmitted({ taskId, slideId }: SlideSubmittedProps) {
 }
 
 function NextSlideCard({ taskId, slideId }: SlideSubmittedProps) {
+  const { t } = useLingui();
   const session = useReviewSession(taskId, slideId);
   const navigate = useNavigate();
   const person = usePeople();
@@ -83,7 +85,7 @@ function NextSlideCard({ taskId, slideId }: SlideSubmittedProps) {
   const nextSlide = nextObjects?.slide;
   const agreementText =
     other && agreement
-      ? `You and ${other} agree on ${agreement.agree} of ${agreement.total} objects. You can look at the differences later, or go on.`
+      ? t`You and ${other} agree on ${agreement.agree} of ${agreement.total} objects. You can look at the differences later, or go on.`
       : undefined;
   const nextInfo =
     next === null
@@ -106,11 +108,15 @@ function NextSlideCard({ taskId, slideId }: SlideSubmittedProps) {
   };
   return (
     <SlideSubmittedDialog
-      title={`Slide ${position} submitted`}
+      title={t`Slide ${position} submitted`}
       agreement={agreementText}
       next={nextInfo}
-      primaryLabel={next ? `Open slide ${position + 1}` : "Back to My work"}
-      status={`${stopped ? "Stays open until you pick." : `Opens by itself in ${left} s.`} Your review can be changed until sign-off.`}
+      primaryLabel={next ? t`Open slide ${position + 1}` : t`Back to My work`}
+      status={
+        stopped
+          ? t`Stays open until you pick. Your review can be changed until sign-off.`
+          : t`Opens by itself in ${left} s. Your review can be changed until sign-off.`
+      }
       onPrimary={openNext}
       onDiffer={seeDifferences}
       onBreak={() => void navigate({ to: "/my-work" })}

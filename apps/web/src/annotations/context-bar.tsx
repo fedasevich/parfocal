@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import type { ProjectClass } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
 import { Keycap } from "@parfocal/ui/components/keycap";
@@ -12,10 +13,11 @@ type ClassStripProps = {
 };
 
 export function ClassStrip({ classes, activeClass, onPick }: ClassStripProps) {
+  const { t } = useLingui();
   if (classes.length === 0) return null;
   return (
     <fieldset
-      aria-label="Class for new shapes"
+      aria-label={t`Class for new shapes`}
       data-testid="class-strip"
       className="m-0 flex min-w-0 gap-1 border-0 p-0"
     >
@@ -26,7 +28,7 @@ export function ClassStrip({ classes, activeClass, onPick }: ClassStripProps) {
           data-testid="class-swatch"
           data-class={item.id}
           title={item.name}
-          aria-label={`${item.name}, key ${index + 1}`}
+          aria-label={t`${item.name}, key ${index + 1}`}
           aria-pressed={activeClass === item.id}
           onClick={() => onPick(item.id)}
           className="inline-flex items-center gap-1.5 rounded-md border border-line px-1.5 py-0.75 aria-pressed:border-accent aria-pressed:bg-accent/15"
@@ -65,13 +67,14 @@ export function ContextBarView({
   onPick,
   proposals,
 }: ContextBarViewProps) {
+  const { t } = useLingui();
   const strip = model.classStrip ? (
     <ClassStrip classes={classes} activeClass={activeClass} onPick={onPick} />
   ) : null;
   if (proposals !== null) {
     return (
       <ContextBar
-        label={model.label === "Auto region" ? model.label : "Proposals"}
+        label={model.label === "Auto region" ? model.label : t`Proposals`}
         data-testid="context-bar"
         data-mode="proposals"
         data-proposals={proposals.count}
@@ -83,10 +86,10 @@ export function ContextBarView({
             aria-hidden="true"
             className="size-2 rounded-full bg-(--c-prop) shadow-[0_0_0_1.5px_#fff]"
           />
-          {proposals.count} found
+          <Trans>{proposals.count} found</Trans>
         </span>
         <Button size="sm" data-testid="proposal-discard" onClick={proposals.onDiscard}>
-          Discard <Keycap size="sm" keys="Esc" />
+          <Trans>Discard</Trans> <Keycap size="sm" keys="Esc" />
         </Button>
         <Button
           size="sm"

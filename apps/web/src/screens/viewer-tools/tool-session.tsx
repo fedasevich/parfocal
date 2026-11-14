@@ -1,3 +1,4 @@
+import { useLingui } from "@lingui/react/macro";
 import { useGetMyHome, useGetProject } from "@parfocal/api-client";
 import { Loader } from "@parfocal/ui/components/loader";
 import type { ReactNode } from "react";
@@ -25,7 +26,10 @@ export type ToolSession = {
   counts: SlideCounts;
 };
 
-const loading = <Loader label="Loading the slide" size="page" />;
+function SlideLoader() {
+  const { t } = useLingui();
+  return <Loader label={t`Loading the slide`} size="page" />;
+}
 
 export function WithToolSession({
   projectId,
@@ -40,7 +44,7 @@ export function WithToolSession({
 }) {
   const home = okData(useGetMyHome().data);
   const taskId = task ?? home?.resume?.task_id;
-  if (taskId === undefined) return loading;
+  if (taskId === undefined) return <SlideLoader />;
   return (
     <SessionLoader projectId={projectId} slideId={slideId} taskId={taskId}>
       {children}
@@ -69,7 +73,7 @@ function SessionLoader({
     : loaded;
   const project = okData(useGetProject(projectId).data);
   const [overrides, setOverrides] = useState<Answers>(new Map());
-  if (!session.ready || project === undefined) return loading;
+  if (!session.ready || project === undefined) return <SlideLoader />;
   const base = baseAnswers(
     session.objects,
     session.decisions,

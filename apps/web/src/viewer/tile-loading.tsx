@@ -1,3 +1,4 @@
+import { Trans } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import { TileHint as TileHintCard } from "@parfocal/ui/components/visualize";
 import { useRouter } from "@tanstack/react-router";
@@ -69,7 +70,7 @@ export function TileHintChip({ route }: { route: VivRoute | null }) {
               void router.navigate({ href: `${destinations.admin()}?section=storage` })
             }
           >
-            Source status
+            <Trans>Source status</Trans>
           </Button>
         ) : undefined
       }
@@ -139,7 +140,7 @@ export function FailedTilePlaceholders({
                 className="pointer-events-auto"
                 onClick={() => route.retryTile(tile.key)}
               >
-                Retry
+                <Trans>Retry</Trans>
               </Button>
             ) : null}
           </div>

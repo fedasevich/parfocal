@@ -134,3 +134,21 @@ test("Continue lands on the exact slide and object the derived resume names", as
     timeout: 60_000,
   });
 });
+
+test("the activity card filters everything, mentions and jobs and opens an item", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const card = page.getByRole("region", { name: "Activity" });
+  await expect(card.getByTestId("activity-row").first()).toBeVisible();
+  await card.getByRole("radio", { name: "Mentions" }).click();
+  await expect(card.getByTestId("activity-row")).toHaveCount(2);
+  await expect(card.getByText("Daniel Hruška mentioned you")).toBeVisible();
+  await expect(card.getByText("Simona Marková replied")).toBeVisible();
+  await card.getByRole("radio", { name: "Jobs" }).click();
+  await expect(card.getByText("PathoSAM + HoVer-NeXt finished")).toBeVisible();
+  await expect(card.getByText("Daniel Hruška mentioned you")).toHaveCount(0);
+  await card.getByRole("radio", { name: "Everything" }).click();
+  await card.getByText("Daniel Hruška mentioned you").click();
+  await expect(page).not.toHaveURL(/\/$/);
+});
