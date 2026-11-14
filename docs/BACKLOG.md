@@ -4655,7 +4655,7 @@ Importing AI results made elsewhere is first class. A result set is one import o
   Depends on RSET-003, RSET-004, PROJ-004. Refs mock: upload/check, mock: upload/unmatched, mock: project/importfail, doc 44.
   Size: L.
 
-- [ ] RSET-006 · Add a result set from the viewer
+- [x] RSET-006 · Add a result set from the viewer
   On an open slide a file is previewed as an overlay before it is saved, with alignment and scale fixes, and shown next to the existing sets once added.
   Done when E2E adds a GeoJSON from the slide view, fixes its offset and sees it in Layers.
   Depends on RSET-005, VIZ-001. Refs mock: upload/viewer.
