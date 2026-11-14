@@ -1,6 +1,7 @@
 import { ApiError, type SharedReport, useGetSharedReport } from "@parfocal/api-client";
 import { Banner } from "@parfocal/ui/components/banner";
 import { CountBars, MetricTiles } from "@parfocal/ui/components/evaluation-report";
+import { Loader } from "@parfocal/ui/components/loader";
 import { StatusTag } from "@parfocal/ui/components/tag";
 import type { ReactNode } from "react";
 import {
@@ -210,7 +211,7 @@ export function SharedReportScreen({ token }: { token: string }) {
   if (!query.error) {
     return (
       <Shell>
-        <p className="m-0 text-body-sm text-fg-dim">Loading the report</p>
+        <Loader label="Loading the report" />
       </Shell>
     );
   }

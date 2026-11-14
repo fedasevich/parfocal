@@ -2,6 +2,7 @@ import { listProjectClasses, type ProjectClass } from "@parfocal/api-client";
 import { AreaList } from "@parfocal/ui/components/analysis-cards";
 import { InlineState } from "@parfocal/ui/components/banner";
 import { Button } from "@parfocal/ui/components/button";
+import { Loader } from "@parfocal/ui/components/loader";
 import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
 import { ToolRailButton } from "@parfocal/ui/components/tool-rail-button";
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -910,9 +911,9 @@ function OpenedSlide({
           </div>
         ) : null}
         {phase.state === "loading" ? (
-          <p role="status" className="absolute top-4 left-4 text-body-sm text-fg-dim">
-            Loading the slide
-          </p>
+          <div className="absolute top-4 left-4">
+            <Loader label="Loading the slide" size="inline" />
+          </div>
         ) : null}
         {chosenDevice === undefined ? null : (
           <DeviceLegend
