@@ -67,3 +67,15 @@ export function selectionArea(bounds: readonly Extent[]): SelectionArea | null {
   const bottom = Math.max(...finite.map((extent) => extent[3]));
   return { x: left, y: top, width: right - left, height: bottom - top };
 }
+
+export function zoomTargetArea<Id>(
+  shapes: ReadonlyMap<Id, { readonly bounds: Extent }>,
+  selected: readonly Id[],
+  focused: SelectionArea | null,
+): SelectionArea | null {
+  const bounds = selected.flatMap((id) => {
+    const shape = shapes.get(id);
+    return shape === undefined ? [] : [shape.bounds];
+  });
+  return selectionArea(bounds) ?? focused;
+}
