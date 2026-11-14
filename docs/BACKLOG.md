@@ -1417,7 +1417,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Refs [`poc/src/slide/ventana.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/slide/ventana.ts), doc 06.
   Size: M.
 
-- [ ] VIEW-069 · Ventana BIF with several scan areas, research first
+- [x] VIEW-069 · Ventana BIF with several scan areas, research first
   Since [ADR 0307](adr/0307-a-bif-is-refused-only-when-its-frame-overlap-is-unknown.md) (a BIF is refused only when its frame overlap is unknown), a BIF with several scan areas is refused because the reader cannot place them, while OpenSlide opens such files. First research how common such files are from Roche DP 200, DP 600 and iScan output, OpenSlide's Ventana test data and public datasets, and what OpenSlide does with them. Then decide: place each area by its own joints and origin in ingest and the browser reader through the one `frame_placement` rule, or keep the refusal with a clear message. The owner asked for research before any build (2026-11-14).
   Done when a result file records the sources, how often the files occur and a recommendation, and either the placement is built (a synthetic two-area BIF matches an OpenSlide reference window, with the refusal kept for areas of unknown overlap) or the refusal stays and its message says why.
   Depends on VIEW-014.
