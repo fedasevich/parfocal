@@ -54,3 +54,25 @@ test("the second window follows the main camera and moves it back", async ({ con
   await drag(main, viewportOf(main));
   await expect.poll(async () => (await viewportOf(second).boundingBox())?.x).not.toBe(secondMid.x);
 });
+
+test("the second window shows the side panel tab and switches it both ways", async ({
+  context,
+}) => {
+  const main = await context.newPage();
+  await openScene(main, "Full viewer, one object · An open region, T5");
+  const second = await context.newPage();
+  await second.goto("/popout?kind=inspector");
+  await expect(second.getByTestId("popout-status")).toHaveAttribute("data-following", "true");
+  const tabs = second.getByTestId("popout-tabs");
+  await tabs.getByRole("tab", { name: /^Display/ }).click();
+  await expect(main).toHaveURL(/tab=display/);
+  await expect(tabs.getByRole("tab", { name: /^Display/ })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+  await main.getByRole("tab", { name: /^Comments/ }).click();
+  await expect(tabs.getByRole("tab", { name: /^Comments/ })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+});

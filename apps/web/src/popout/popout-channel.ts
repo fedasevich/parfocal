@@ -1,3 +1,4 @@
+import type { InspectorCounts, InspectorTabName } from "@parfocal/ui/lib/inspector-tabs";
 import { useEffect, useRef, useState } from "react";
 
 export type PopoutKind = "minimap" | "inspector";
@@ -7,7 +8,9 @@ export type MapViewport = [number, number, number, number];
 export type PopoutMessage =
   | { type: "hello" }
   | { type: "view"; viewport: MapViewport; magnification: number }
-  | { type: "move"; centre: [number, number] };
+  | { type: "move"; centre: [number, number] }
+  | { type: "inspector"; tab: InspectorTabName; counts: InspectorCounts }
+  | { type: "tab"; tab: InspectorTabName };
 
 export const popoutChannelName = "parfocal-popout";
 
@@ -82,7 +85,51 @@ export function useMainPopoutSync({
   }, [x, y, width, height, magnification]);
 }
 
+export function useMainInspectorSync({
+  tab,
+  counts,
+  onTab,
+}: {
+  tab: InspectorTabName;
+  counts: InspectorCounts;
+  onTab: (tab: InspectorTabName) => void;
+}): void {
+  const channel = useRef<BroadcastChannel | null>(null);
+  const latest = useRef({ tab, counts });
+  latest.current = { tab, counts };
+  const select = useRef(onTab);
+  select.current = onTab;
+
+  useEffect(() => {
+    const opened = openPopoutChannel();
+    channel.current = opened;
+    opened.onmessage = (event: MessageEvent<PopoutMessage>) => {
+      if (event.data.type === "tab") select.current(event.data.tab);
+      if (event.data.type === "hello") {
+        opened.postMessage({ type: "inspector", ...latest.current } satisfies PopoutMessage);
+      }
+    };
+    return () => {
+      opened.close();
+      channel.current = null;
+    };
+  }, []);
+
+  const { objects, display, comments, opinion } = counts;
+  useEffect(() => {
+    channel.current?.postMessage({
+      type: "inspector",
+      tab,
+      counts: { objects, display, comments, opinion },
+    } satisfies PopoutMessage);
+  }, [tab, objects, display, comments, opinion]);
+}
+
+export type InspectorSnapshot = { tab: InspectorTabName; counts: InspectorCounts };
+
 export type PopoutState = {
+  inspector: InspectorSnapshot | null;
+  selectTab: (tab: InspectorTabName) => void;
   viewport: MapViewport | null;
   magnification: number;
   moveTo: (centre: [number, number]) => void;
@@ -92,11 +139,15 @@ export function usePopoutState(): PopoutState {
   const channel = useRef<BroadcastChannel | null>(null);
   const [viewport, setViewport] = useState<MapViewport | null>(null);
   const [magnification, setMagnification] = useState(0);
+  const [inspector, setInspector] = useState<InspectorSnapshot | null>(null);
 
   useEffect(() => {
     const opened = openPopoutChannel();
     channel.current = opened;
     opened.onmessage = (event: MessageEvent<PopoutMessage>) => {
+      if (event.data.type === "inspector") {
+        setInspector({ tab: event.data.tab, counts: event.data.counts });
+      }
       if (event.data.type !== "view") return;
       setViewport(event.data.viewport);
       setMagnification(event.data.magnification);
@@ -109,6 +160,8 @@ export function usePopoutState(): PopoutState {
   }, []);
 
   return {
+    inspector,
+    selectTab: (tab) => channel.current?.postMessage({ type: "tab", tab } satisfies PopoutMessage),
     viewport,
     magnification,
     moveTo: (centre) =>

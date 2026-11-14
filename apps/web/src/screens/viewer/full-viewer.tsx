@@ -51,6 +51,7 @@ import { type ReactNode, useEffect, useRef, useState } from "react";
 import { provideDebug } from "../../debug-handle.ts";
 import { useFormat } from "../../format.ts";
 import { escLayer } from "../../keys/esc-ladder.ts";
+import { useMainInspectorSync } from "../../popout/popout-channel.ts";
 import { useConnection } from "../../shell/connection.ts";
 import { ConnectionBanner } from "../../shell/connection-banner.tsx";
 import { destinations } from "../../shell/destinations.ts";
@@ -1522,6 +1523,11 @@ function ViewerBody({
     resultSets: slideSets.length + 1,
     threads: nothing ? [] : session.threads,
     questions: questions.map((question) => ({ answered: Boolean(question.answer) })),
+  });
+  useMainInspectorSync({
+    tab,
+    counts: tabCounts,
+    onTab: (next) => onSearch({ tab: next }),
   });
   const inspector = (
     <InspectorPanel
