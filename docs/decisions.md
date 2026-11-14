@@ -128,7 +128,7 @@ VIEW-036 built the renderer interface and the switch between routes inside the e
 - B. Leave VIEW-036 in review until both routes exist.
 - Other.
 
-Your choice:
+Your choice: A
 
 ### 101. Whether the app refuses a BIF that has no frame stitching
 
@@ -138,7 +138,7 @@ VIEW-014 (Ventana BIF with frame stitching) opens a BIF in the app with the fram
 - B. Keep opening it as a plain grid.
 - Other.
 
-Your choice:
+Your choice:a, but some of them like that right? so maybe openslide is right somehow? do the best ask fable
 
 ### 102. Who on the live slide sees the cursor of a person in compare
 
@@ -148,7 +148,7 @@ Decision 99 added "Share my cursor" to compare. As built, everyone on the live s
 - B. Only people who turn on "Show shared cursors" themselves.
 - Other.
 
-Your choice:
+Your choice:a
 
 ### 103. Which animated loader replaces the loading texts
 
@@ -161,7 +161,7 @@ DS-039 (animated loaders instead of loading text) built five proposals in SVG an
 - E. Ticks.
 - Other.
 
-Your choice:
+Your choice: a
 
 ### 104. How close a converted JPEG 2000 slide must stay to its source
 
@@ -172,7 +172,7 @@ INGEST-015 (conversion fallback worker) converts a slide to OME-Zarr only when a
 - C. Accept about 30 dB for converted slides and loosen the check for them.
 - Other.
 
-Your choice:
+Your choice: a, ask fable for best thing because i want slides to look correctly
 
 ## The review column, what each task waits for
 
