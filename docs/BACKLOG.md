@@ -1297,7 +1297,7 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
 
 ## 06 TILES · Tile delivery
 
-- [ ] TILES-000 · Research check for tile delivery
+- [x] TILES-000 · Research check for tile delivery
   Done when STACK-025 is confirmed with measured CDN numbers.
   Size: S.
 
