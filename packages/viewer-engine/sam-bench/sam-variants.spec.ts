@@ -11,6 +11,7 @@ const aisDecoders = [
   samGraphs.aisDecoderUint8,
   samGraphs.aisDecoderInt8Weights,
 ] as const;
+const pocDecoderFloorMs = 40;
 
 const benches: readonly { name: string; request: Omit<SamBenchRequest, "modelsUrl"> }[] = [
   {
@@ -55,7 +56,13 @@ for (const bench of benches) {
 
     await page.goto(`${origin}/app/sam-variants.html`);
     await page.waitForFunction(() => window.samBench !== undefined);
-    const request: SamBenchRequest = { ...bench.request, modelsUrl: `${origin}/models` };
+    const windowDecoder = samVariant(bench.request.provider).windowDecoder;
+    const windowed = missingGraphs([windowDecoder]).length === 0;
+    const request: SamBenchRequest = {
+      ...bench.request,
+      ...(windowed ? { windowDecoder } : {}),
+      modelsUrl: `${origin}/models`,
+    };
     const report: SamBenchReport = await page.evaluate((r) => window.samBench.run(r), request);
 
     mkdirSync(reportDir, { recursive: true });
@@ -67,6 +74,9 @@ for (const bench of benches) {
         threads: report.threads,
         steadyEncodeMs: Math.round(median(report.encodeMs.slice(2))),
         steadyDecodeMs: Math.round(median(report.decodeMs.slice(2))),
+        steadyWindowDecodeMs: report.window
+          ? Math.round(median(report.window.runsMs.slice(2)))
+          : null,
         ais: report.ais.map((ais) => ({
           graph: ais.graph,
           steadyMs: Math.round(median(ais.runsMs.slice(1))),
@@ -83,6 +93,13 @@ for (const bench of benches) {
     expect(report.decodeMs).toHaveLength(bench.request.decodeRuns);
     for (const timing of [...report.encodeMs, ...report.decodeMs]) {
       expect(timing).toBeGreaterThan(0);
+    }
+    if (windowed) {
+      expect(report.window?.runsMs).toHaveLength(bench.request.decodeRuns);
+      expect(report.window?.lowResDims).toEqual([1, 4, 128, 128]);
+      const steadyWindow = median(report.window?.runsMs.slice(2) ?? []);
+      expect(steadyWindow).toBeLessThan(pocDecoderFloorMs);
+      expect(steadyWindow).toBeLessThan(median(report.decodeMs.slice(2)));
     }
     expect(report.ais.map((ais) => ais.graph)).toEqual(bench.request.aisDecoders);
     for (const ais of report.ais) {

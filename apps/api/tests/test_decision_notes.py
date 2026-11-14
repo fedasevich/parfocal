@@ -117,7 +117,7 @@ def test_a_blinded_reviewers_note_waits_until_they_submit(api: ApiAs, database: 
     assert notes_seen(api, s, "first") == [
         (s.user("first"), f"Margin is off, {mention(s, 'owner')}")
     ]
-    assert len(notes_seen(api, s, "owner")) == 3
+    assert len(notes_seen(api, s, "owner")) == 2
 
     ok(finished_submit(api(s.people["first"]), f"{s.base}"))
     assert told(database, s) == [s.user("owner")]

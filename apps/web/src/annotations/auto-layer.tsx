@@ -1,3 +1,4 @@
+import { useLingui } from "@lingui/react/macro";
 import { startTransition, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { type AisOutliner, createAisOutliner } from "../aiseg/ais-outliner.ts";
 import {
@@ -78,6 +79,7 @@ export function AutoLayer({
   openRequest,
   onDocumentChange,
 }: AutoLayerProps) {
+  const { t } = useLingui();
   const camera = useSyncExternalStore(engine.subscribeCamera, engine.getCamera);
   const rect = useStageRect(stage);
   const [press, setPress] = useState<Press | null>(null);
@@ -320,7 +322,7 @@ export function AutoLayer({
           className="absolute bottom-16 left-1/2 -translate-x-1/2 rounded-ctl border border-line bg-chrome px-3 py-1.5 font-mono text-caption"
         >
           {progress !== null
-            ? `Tile ${Math.min(progress.done + 1, progress.total)} of ${progress.total} · ${progress.found} found`
+            ? t`Tile ${Math.min(progress.done + 1, progress.total)} of ${progress.total} · ${progress.found} found`
             : status.message}
         </div>
       ) : null}

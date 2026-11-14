@@ -17,10 +17,12 @@ type SlideEdit = Partial<Pick<SlideDetail, "label" | "stain" | "block_id" | "lev
 const slideEdits = new Map<string, SlideEdit>();
 const caseOrders = new Map<string, string[]>();
 const movedFrom = new Map<string, string | null>();
+const clinicalNotes = new Map<string, string | null>();
 
 export const resetSlideEdits = () => {
   slideEdits.clear();
   caseOrders.clear();
+  clinicalNotes.clear();
   for (const [id, label] of movedFrom) {
     const slide = slides.find((item) => item.id === id);
     if (slide !== undefined) slide.caseLabel = label;
@@ -84,6 +86,12 @@ const specimensOf = (label: string): SpecimenDetail[] => {
   ];
 };
 
+const clinicalNoteOf = (caseId: string, label: string): string | null => {
+  if (clinicalNotes.has(caseId)) return clinicalNotes.get(caseId) ?? null;
+  const shown = clinicalCaseOf(caseId)?.label ?? label;
+  return clinicalCases.find((item) => item.label === shown)?.clinical ?? null;
+};
+
 export const toCaseDetail = (caseId: string): CaseDetail | null => {
   const found = cases.find((item) => item.id === caseId);
   if (found === undefined) return null;
@@ -106,6 +114,7 @@ export const toCaseDetail = (caseId: string): CaseDetail | null => {
             age_years: null,
           }
         : null,
+    clinical_note: project.privacy === "clinical" ? clinicalNoteOf(caseId, found.label) : null,
     specimens: specimensOf(clinicalCaseOf(caseId)?.label ?? found.label),
     slides: slidesOfCase(caseId).map(toSlideDetail),
   };
@@ -197,6 +206,16 @@ export const caseHandlers = (): RequestHandler[] => [
         "slide-outside-case",
       );
     caseOrders.set(params.caseId, [...listed, ...current.filter((id) => !listed.includes(id))]);
+    return HttpResponse.json(toCaseDetail(params.caseId));
+  }),
+  http.put<{ caseId: string }>("*/api/cases/:caseId/clinical-note", async ({ params, request }) => {
+    const detail = toCaseDetail(params.caseId);
+    if (detail === null) return problem(404, "Case not found", "not-found");
+    const project = projects.find((item) => item.id === detail.project_id);
+    if (project?.privacy !== "clinical")
+      return problem(400, "A de-identified project holds no patient data", "de-identified-project");
+    const { note } = (await request.json()) as { note: string | null };
+    clinicalNotes.set(params.caseId, note?.trim() || null);
     return HttpResponse.json(toCaseDetail(params.caseId));
   }),
 ];

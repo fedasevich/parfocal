@@ -1,3 +1,4 @@
+import { useLingui } from "@lingui/react/macro";
 import { Keycap } from "@parfocal/ui/components/keycap";
 import { actionOf } from "../../keys/actions.ts";
 import { useBindings } from "../../keys/personal-keys.ts";
@@ -31,12 +32,13 @@ export function TypeBar({
   onChoose,
   disabledReason,
 }: TypeBarProps) {
+  const { t } = useLingui();
   const width = Math.min(size.width - 24, typeOptions.length * buttonWidth + 16);
   const box = placeBar(centre, ringRadius * scale, { width, height: barHeight }, size);
   return (
     <div
       role="toolbar"
-      aria-label={`Type for ${object}`}
+      aria-label={t`Type for ${object}`}
       data-testid="cell-type-bar"
       title={disabledReason}
       className="absolute z-4 flex items-center gap-1 rounded-zone border border-line bg-chrome p-1 shadow-pop"

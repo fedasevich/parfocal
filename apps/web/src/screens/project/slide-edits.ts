@@ -63,3 +63,10 @@ export function slideChange(before: SlideDetail, draft: SlideDraft): SlideDetail
 
 export const orderChanged = (before: SlideDetail[], drafts: SlideDraft[]) =>
   before.some((slide, index) => drafts[index]?.id !== slide.id);
+
+export const CLINICAL_NOTE_MAX = 4000;
+
+export function noteChange(before: string | null, draft: string): { note: string | null } | null {
+  const note = draft.trim() || null;
+  return note === (before?.trim() || null) ? null : { note };
+}

@@ -266,6 +266,7 @@ THREAD = {"title": "A question", "body": "What is this?", "anchor": ANCHOR}
 WRITE_ROUTES: dict[str, Write] = {
     "reorderCaseSlides": Write(body=lambda a: {"slide_ids": case_slides(a)}),
     "changeSlideDetails": Write(body=constant({"stain": "HE"})),
+    "setCaseClinicalNote": Write(body=constant({"note": "Fake note for a test"})),
     "createAnnotation": Write(body=constant({"kind": "measurement", "geometry": LINE})),
     "createAnnotations": Write(
         body=constant({"annotations": [{"kind": "measurement", "geometry": LINE}]})

@@ -1,3 +1,5 @@
+import { plural } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import type { ProjectClass } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
 import { Icon } from "@parfocal/ui/components/icon";
@@ -58,6 +60,7 @@ export function LayersPanel({
   onTarget,
   resultSets,
 }: LayersPanelProps) {
+  const { t } = useLingui();
   const [lens, setLens] = useState<LayerLens | null>(null);
   const context = useMemo<LayerContext>(
     () => ({
@@ -119,7 +122,7 @@ export function LayersPanel({
 
   return (
     <section
-      aria-label="Layers"
+      aria-label={t`Layers`}
       data-testid="layers-panel"
       data-overlays={off ? "hidden" : "shown"}
       data-target={effective ?? ""}
@@ -131,13 +134,15 @@ export function LayersPanel({
         </div>
       ) : null}
       <div className="flex items-center justify-between gap-1">
-        <h2 className="m-0 text-body-sm font-semibold">Layers</h2>
+        <h2 className="m-0 text-body-sm font-semibold">
+          <Trans>Layers</Trans>
+        </h2>
         <span className="flex items-center gap-1">
           <Button
             size="icon-sm"
             variant="ghost"
-            aria-label="Add a layer"
-            title="Add a layer"
+            aria-label={t`Add a layer`}
+            title={t`Add a layer`}
             onClick={() => onApply(addLayer(doc, effective).document, "Add layer")}
           >
             <Icon name="plus" />
@@ -145,9 +150,9 @@ export function LayersPanel({
           <Button
             size="icon-sm"
             variant="ghost"
-            aria-label={off ? "Show overlays" : "Hide overlays"}
+            aria-label={off ? t`Show overlays` : t`Hide overlays`}
             aria-pressed={off}
-            title={off ? "Show overlays (A)" : "Hide overlays (A)"}
+            title={off ? t`Show overlays (A)` : t`Hide overlays (A)`}
             data-testid="layers-overlays"
             onClick={toggleOverlays}
           >
@@ -158,7 +163,7 @@ export function LayersPanel({
       </div>
       {rows.length === 0 ? (
         <p className="m-0 text-body-sm text-fg-dim">
-          Nothing drawn yet. Select shapes and press ⌘G to group them.
+          <Trans>Nothing drawn yet. Select shapes and press ⌘G to group them.</Trans>
         </p>
       ) : (
         <LayerList
@@ -178,9 +183,11 @@ export function LayersPanel({
         />
       )}
       <div className="grid gap-1">
-        <span className="text-caption font-semibold text-fg-dim uppercase">Group by</span>
+        <span className="text-caption font-semibold text-fg-dim uppercase">
+          <Trans>Group by</Trans>
+        </span>
         <SegmentedControl
-          aria-label="Group by"
+          aria-label={t`Group by`}
           fill
           value={lens ?? ""}
           onValueChange={(value) => {
@@ -197,12 +204,17 @@ export function LayersPanel({
             data-testid="layers-regroup"
             onClick={() => onApply(groupBy(doc, lens, context), `Group by ${lensWords[lens]}`)}
           >
-            Group {loose} loose {loose === 1 ? "shape" : "shapes"} by {lensWords[lens]}
+            {plural(loose, {
+              one: `Group # loose shape by ${lensWords[lens]}`,
+              other: `Group # loose shapes by ${lensWords[lens]}`,
+            })}
           </Button>
         ) : null}
       </div>
       <div className="grid gap-1">
-        <span className="text-caption font-semibold text-fg-dim uppercase">New shapes go to</span>
+        <span className="text-caption font-semibold text-fg-dim uppercase">
+          <Trans>New shapes go to</Trans>
+        </span>
         <div
           data-testid="layers-target"
           className="flex items-center justify-between gap-2 text-body-sm"
@@ -216,12 +228,12 @@ export function LayersPanel({
                   rows.find((row) => row.groupId === effective)?.colour ?? "var(--fg-faint)",
               }}
             />
-            {goesTo?.name ?? "Ungrouped"}
+            {goesTo?.name ?? t`Ungrouped`}
           </span>
           <span className="text-fg-dim">
             {target !== null && effective === null
-              ? "that layer is hidden or locked"
-              : "click a layer name to change"}
+              ? t`that layer is hidden or locked`
+              : t`click a layer name to change`}
           </span>
         </div>
       </div>

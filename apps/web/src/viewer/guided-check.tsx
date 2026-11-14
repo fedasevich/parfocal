@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import { Keycap } from "@parfocal/ui/components/keycap";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
@@ -44,6 +45,7 @@ export function GuidedCheck({
   onReclass,
   onLeave,
 }: GuidedCheckProps) {
+  const { t } = useLingui();
   const [state, setState] = useState(startState);
   const queue = useMemo(
     () => checkQueueOf(objects, state.skipped, storedOrder),
@@ -79,7 +81,7 @@ export function GuidedCheck({
 
   return (
     <section
-      aria-label="Guided check"
+      aria-label={t`Guided check`}
       data-testid="guided-check"
       data-current={current ?? ""}
       data-left={queue.length}
@@ -87,29 +89,29 @@ export function GuidedCheck({
     >
       <p className="m-0 text-body-sm" data-testid="guided-line">
         {object === undefined
-          ? "Every AI object is checked."
-          : `${object.object} · ${
-              object.score === null ? "no score" : `score ${object.score.toFixed(2)}`
-            } · ${queue.length} left`}
+          ? t`Every AI object is checked.`
+          : object.score === null
+            ? t`${object.object} · no score · ${queue.length} left`
+            : t`${object.object} · score ${object.score.toFixed(2)} · ${queue.length} left`}
       </p>
       {object === undefined ? null : (
         <div className="flex flex-wrap gap-2">
           <Button size="sm" variant="primary" disabled={locked} onClick={onConfirm}>
-            Confirm <Keycap action={confirmAction} keys="D" size="sm" />
+            <Trans>Confirm</Trans> <Keycap action={confirmAction} keys="D" size="sm" />
           </Button>
           <Button size="sm" disabled={locked || !canReclass} onClick={onReclass}>
-            Next class <Keycap action={classAction} keys="⇧Y" size="sm" />
+            <Trans>Next class</Trans> <Keycap action={classAction} keys="⇧Y" size="sm" />
           </Button>
           <Button size="sm" disabled={locked} onClick={onDelete}>
-            Delete <Keycap action={deleteAction} keys="⇧X" size="sm" />
+            <Trans>Delete</Trans> <Keycap action={deleteAction} keys="⇧X" size="sm" />
           </Button>
           <Button size="sm" onClick={() => setState(skippedState(queue, state))}>
-            Skip <Keycap action={nextAction} keys="⇧E" size="sm" />
+            <Trans>Skip</Trans> <Keycap action={nextAction} keys="⇧E" size="sm" />
           </Button>
         </div>
       )}
       <Button size="sm" variant="ghost" onClick={onLeave}>
-        Leave the guided check
+        <Trans>Leave the guided check</Trans>
       </Button>
     </section>
   );

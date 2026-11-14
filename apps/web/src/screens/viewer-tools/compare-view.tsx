@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { type ProjectSlide, useGetMe, useListProjectSlides } from "@parfocal/api-client";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Keycap } from "@parfocal/ui/components/keycap";
@@ -121,6 +122,7 @@ type CompareViewProps = {
 };
 
 export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareViewProps) {
+  const { t } = useLingui();
   const { session, projectId, counts } = tools;
   const all = okData(useListProjectSlides(projectId).data) ?? [];
   const caseSlides = all
@@ -346,13 +348,13 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
               <>
                 {cursorOn(side, camera, size)}
                 <fieldset
-                  aria-label={`Rotate ${paneName[side]} pane`}
+                  aria-label={t`Rotate ${paneName[side]} pane`}
                   className="absolute right-3 bottom-16 m-0 flex min-w-0 border-0 items-center gap-1 rounded-full bg-black/60 px-1.5 py-1 text-body-sm text-white"
                   onPointerDown={(event) => event.stopPropagation()}
                 >
                   <button
                     type="button"
-                    aria-label={`Rotate ${paneName[side]} pane left`}
+                    aria-label={t`Rotate ${paneName[side]} pane left`}
                     className="rounded-full px-2 py-0.5 hover:bg-white/15"
                     onClick={() => rotateOn(side, camera, { by: -rotationStep })}
                   >
@@ -363,7 +365,7 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
                   </span>
                   <button
                     type="button"
-                    aria-label={`Rotate ${paneName[side]} pane right`}
+                    aria-label={t`Rotate ${paneName[side]} pane right`}
                     className="rounded-full px-2 py-0.5 hover:bg-white/15"
                     onClick={() => rotateOn(side, camera, { by: rotationStep })}
                   >
@@ -371,7 +373,7 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
                   </button>
                   <button
                     type="button"
-                    aria-label={`Reset ${paneName[side]} pane rotation to 0°`}
+                    aria-label={t`Reset ${paneName[side]} pane rotation to 0°`}
                     className="rounded-full px-2 py-0.5 hover:bg-white/15"
                     onClick={() => rotateOn(side, camera, { to: 0 })}
                   >
@@ -426,8 +428,12 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
         onSwap={visible.length > 1 ? swap : undefined}
       />
       <Zone
-        title="Layers"
-        end={<span className="font-mono text-caption text-fg-dim">Left · Right</span>}
+        title={t`Layers`}
+        end={
+          <span className="font-mono text-caption text-fg-dim">
+            <Trans>Left · Right</Trans>
+          </span>
+        }
       >
         <SideToggles
           rows={layers}
@@ -436,18 +442,18 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
           }
         />
       </Zone>
-      <Zone title="Views">
+      <Zone title={t`Views`}>
         <div className="grid gap-2.5 rounded-zone bg-chrome-2 p-3">
           <label className="flex items-center justify-between gap-2 text-body-sm">
-            Move both together
+            <Trans>Move both together</Trans>
             <Switch checked={linked} onCheckedChange={setLinked} />
           </label>
           <label className="flex items-center justify-between gap-2 text-body-sm">
-            Shared cursor
+            <Trans>Shared cursor</Trans>
             <Switch checked={cursor} onCheckedChange={setCursor} />
           </label>
           <SegmentedControl
-            aria-label="Layout"
+            aria-label={t`Layout`}
             fill
             value={layout}
             onValueChange={(value) => {
@@ -472,7 +478,7 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
               }
               onClick={() => void lineUp()}
             >
-              Line up automatically
+              <Trans>Line up automatically</Trans>
             </button>
             {alignment === "done" || aligned ? (
               <button
@@ -480,27 +486,29 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
                 className="rounded-full px-3 py-1 text-body-sm text-fg-dim hover:bg-white/10"
                 onClick={clearAlignment}
               >
-                Clear
+                <Trans>Clear</Trans>
               </button>
             ) : null}
           </div>
           <p role="status" data-testid="alignment-status" className="m-0 text-caption text-fg-dim">
             {alignment === "working"
-              ? "Comparing the two overviews"
+              ? t`Comparing the two overviews`
               : alignment === "done"
-                ? "Proposed from the overviews. Drag or rotate a pane to adjust."
+                ? t`Proposed from the overviews. Drag or rotate a pane to adjust.`
                 : aligned
-                  ? "Your alignment is kept for this pair of slides. Clear puts the panes back."
+                  ? t`Your alignment is kept for this pair of slides. Clear puts the panes back.`
                   : alignment === "none"
-                    ? "No clear match between these two. Line them up by hand."
+                    ? t`No clear match between these two. Line them up by hand.`
                     : layout === "four"
-                      ? "Lines the right pane up with the left. The two bottom panes keep their own view."
-                      : "Proposes a starting offset and rotation from the overviews."}
+                      ? t`Lines the right pane up with the left. The two bottom panes keep their own view.`
+                      : t`Proposes a starting offset and rotation from the overviews.`}
           </p>
         </div>
         <p className="m-0 text-caption text-fg-dim">
-          The capsule question in the comments is answered on the CK level at the same spot. The
-          shared cursor shows the same point on both.
+          <Trans>
+            The capsule question in the comments is answered on the CK level at the same spot. The
+            shared cursor shows the same point on both.
+          </Trans>
         </p>
       </Zone>
     </>
@@ -536,19 +544,23 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
         ))}
         <FloatingPill className="top-auto bottom-4">
           <Icon name="slides" />
-          <span>Linked: pan, zoom and rotation move both</span>
-          <Switch aria-label="Linked" checked={linked} onCheckedChange={setLinked} />
+          <span>
+            <Trans>Linked: pan, zoom and rotation move both</Trans>
+          </span>
+          <Switch aria-label={t`Linked`} checked={linked} onCheckedChange={setLinked} />
           <Keycap action="linkviews" keys="⇧L" size="sm" />
           {canShareCursor ? (
             <>
-              <span>Share my cursor</span>
+              <span>
+                <Trans>Share my cursor</Trans>
+              </span>
               <Switch
-                aria-label="Share my cursor"
+                aria-label={t`Share my cursor`}
                 data-testid="share-cursor"
                 title={
                   shareCursor
-                    ? "Others on this slide see where you point. Click to stop"
-                    : "Let others on this slide see where you point"
+                    ? t`Others on this slide see where you point. Click to stop`
+                    : t`Let others on this slide see where you point`
                 }
                 checked={shareCursor}
                 onCheckedChange={setShareCursor}

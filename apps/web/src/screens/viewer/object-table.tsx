@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import type { SlideResultStats } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
 import { Icon } from "@parfocal/ui/components/icon";
@@ -49,32 +50,34 @@ export function ObjectTablePanel({
   onPick,
   onCsv,
 }: ObjectTablePanelProps) {
+  const { t } = useLingui();
   const [find, setFind] = useState("");
   const columns = tableColumns({ showScore, presetUsed });
   const shown = rows.filter((row) => row.object.toLowerCase().includes(find.trim().toLowerCase()));
   return (
     <section
-      aria-label={`Objects on ${slideLabel}`}
+      aria-label={t`Objects on ${slideLabel}`}
       className="flex h-75 shrink-0 flex-col border-t border-line bg-chrome"
     >
       <div className="flex items-center gap-3 px-4 py-3">
         <b className="text-body font-semibold" data-phi="">
-          Objects on {slideLabel}
+          <Trans>Objects on {slideLabel}</Trans>
         </b>
         <span className="min-w-0 flex-1 truncate text-body-sm text-fg-dim">
-          {stats ? `${stats.object_count.toLocaleString("en-US")} in all · ` : ""}showing the
-          regions, your added region and the cells with a note or a disagreement
+          {stats
+            ? t`${stats.object_count.toLocaleString("en-US")} in all · showing the regions, your added region and the cells with a note or a disagreement`
+            : t`showing the regions, your added region and the cells with a note or a disagreement`}
         </span>
         <Input
           className="h-8 w-52"
           value={find}
           onChange={(event) => setFind(event.target.value)}
-          placeholder="Find an ID"
-          aria-label="Find an ID"
+          placeholder={t`Find an ID`}
+          aria-label={t`Find an ID`}
         />
         <Button size="sm" onClick={onCsv}>
           <Icon name="download" />
-          CSV
+          <Trans>CSV</Trans>
         </Button>
       </div>
       <div className="flex min-h-0 flex-1 gap-4 px-4 pb-3">
@@ -114,19 +117,23 @@ export function ObjectTablePanel({
                   <TableCell>{row.kind}</TableCell>
                   {showScore ? (
                     <TableCell className="font-mono">
-                      {row.score === null ? "no score" : row.score.toFixed(2)}
+                      {row.score === null ? t`no score` : row.score.toFixed(2)}
                     </TableCell>
                   ) : null}
                   <TableCell className="font-mono">{row.size}</TableCell>
                   <TableCell>
                     {row.added ? (
-                      <StatusTag tone="accent">Added</StatusTag>
+                      <StatusTag tone="accent">
+                        <Trans>Added</Trans>
+                      </StatusTag>
                     ) : row.answer ? (
                       <StatusTag tone={tone[row.answer.value]}>
                         {countWord[row.answer.value]}
                       </StatusTag>
                     ) : (
-                      <span className="text-fg-dim">open</span>
+                      <span className="text-fg-dim">
+                        <Trans>open</Trans>
+                      </span>
                     )}
                   </TableCell>
                   {presetUsed ? <TableCell className="text-fg-dim">{row.preset}</TableCell> : null}
@@ -137,12 +144,18 @@ export function ObjectTablePanel({
           </Table>
         </div>
         <Zone
-          title="Scores"
-          end={<span className="text-caption text-fg-dim">Regions and cells</span>}
+          title={t`Scores`}
+          end={
+            <span className="text-caption text-fg-dim">
+              <Trans>Regions and cells</Trans>
+            </span>
+          }
           className="w-80 shrink-0 overflow-auto"
         >
           <ScoreHistogram bins={stats?.score_bins ?? []} cutoff={cutoff} />
-          <b className="text-body-sm font-semibold">Per class</b>
+          <b className="text-body-sm font-semibold">
+            <Trans>Per class</Trans>
+          </b>
           <ClassCounts
             rows={(stats?.class_counts ?? []).map((row) => ({
               name: row.class_name,
