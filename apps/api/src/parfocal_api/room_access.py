@@ -8,6 +8,7 @@ from fastapi import APIRouter, Response
 from pydantic import BaseModel
 from sqlalchemy import select
 
+from parfocal_api.blinding import blinded_on
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.principals import MemberPrincipal
 from parfocal_api.problems import ForbiddenError, NotFoundError, ProblemError
@@ -111,6 +112,18 @@ async def room_project(
     return cast("uuid.UUID", task.project_id)
 
 
+async def quiet_seat(
+    connection: TenantConnection,
+    principal: MemberPrincipal,
+    kind: RoomKind,
+    room_id: uuid.UUID,
+    project_id: uuid.UUID | None,
+) -> bool:
+    if kind is not RoomKind.SLIDE or project_id is None:
+        return False
+    return await blinded_on(connection, principal, project_id, room_id)
+
+
 @router.get("", operation_id="getRoomAccess")
 async def get_room_access(
     room: str,
@@ -129,7 +142,7 @@ async def get_room_access(
     response.headers["Cache-Control"] = "private, no-store"
     expires = int(time.time()) + ROOM_TOKEN_SECONDS
     name = room_name(kind, room_id)
-    claims = {
+    claims: dict[str, object] = {
         "v": ROOM_TOKEN_VERSION,
         "t": str(principal.tenant_id),
         "r": name,
@@ -137,6 +150,8 @@ async def get_room_access(
         "p": None if project_id is None else str(project_id),
         "e": expires,
     }
+    if await quiet_seat(connection, principal, kind, room_id, project_id):
+        claims["q"] = True
     return RoomAccess(
         token=sign_capability(secret, claims),
         expires_at=datetime.fromtimestamp(expires, UTC),
