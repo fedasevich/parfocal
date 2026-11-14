@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+import { Trans } from "@lingui/react/macro";
 import type { ReviewObject, SlideResultStats } from "@parfocal/api-client";
 import { Person, type PersonInfo } from "@parfocal/ui/components/person";
 import { SetChip, VizKey, VizLegend, VizRamp } from "@parfocal/ui/components/visualize";
@@ -155,12 +157,12 @@ export function layerDrawing(input: LayerInput): LayerDrawing {
       legend: (
         <VizLegend
           kind="Heatmap"
-          title="Tumor probability"
-          note={`Regions ${faded.join(" and ")} fade out above ${heatCutoff.toFixed(2)}.`}
+          title={t`Tumor probability`}
+          note={t`Regions ${faded.join(" and ")} fade out above ${heatCutoff.toFixed(2)}.`}
         >
           <VizRamp ramp="heat" labels={["0", "0.5", "1"]} />
           <span className="flex items-center justify-between gap-3 text-fg-dim">
-            Show from
+            <Trans>Show from</Trans>
             <span className="h-1 flex-1 overflow-hidden rounded-full bg-chrome-2">
               <i className="block h-full w-[60%] bg-accent-fill" />
             </span>
@@ -199,7 +201,7 @@ export function layerDrawing(input: LayerInput): LayerDrawing {
         </>
       ),
       legend: (
-        <VizLegend kind="Density" title="Cells per 0.1 mm²">
+        <VizLegend kind="Density" title={t`Cells per 0.1 mm²`}>
           <VizRamp ramp="density" labels={["0", "400", "800+"]} />
         </VizLegend>
       ),
@@ -238,16 +240,16 @@ export function layerDrawing(input: LayerInput): LayerDrawing {
       legend: (
         <VizLegend
           kind="Confidence"
-          title="How sure the AI is"
+          title={t`How sure the AI is`}
           note={
             faded.length
-              ? `Regions ${faded.join(" and ")} fade out below ${confidenceCutoff.toFixed(2)}.`
+              ? t`Regions ${faded.join(" and ")} fade out below ${confidenceCutoff.toFixed(2)}.`
               : undefined
           }
         >
           <VizRamp ramp="confidence" labels={["0", "0.5", "1"]} />
           <span className="flex items-center justify-between gap-3 text-fg-dim">
-            Show from
+            <Trans>Show from</Trans>
             <span className="h-1 flex-1 overflow-hidden rounded-full bg-chrome-2">
               <i className="block h-full w-[40%] bg-accent-fill" />
             </span>
@@ -281,27 +283,27 @@ export function layerDrawing(input: LayerInput): LayerDrawing {
       legend: (
         <VizLegend
           kind="AI vs reviewed"
-          title={`${input.setA} and Reviewed`}
+          title={t`${input.setA} and Reviewed`}
           note={
             stats
-              ? `Region Dice ${stats.ai_vs_reviewed.dice.toFixed(2)} · cells agree ${stats.ai_vs_reviewed.cells_agree_percent}%`
+              ? t`Region Dice ${stats.ai_vs_reviewed.dice.toFixed(2)} · cells agree ${stats.ai_vs_reviewed.cells_agree_percent}%`
               : undefined
           }
         >
           <VizKey
             color={agreementColours.both}
-            label="AI and reviewer agree"
+            label={t`AI and reviewer agree`}
             count={count("both")}
           />
           <VizKey
             color={agreementColours.ai_only}
-            label="AI only, reviewer disagreed"
+            label={t`AI only, reviewer disagreed`}
             cue="dashed"
             count={count("ai_only")}
           />
           <VizKey
             color={agreementColours.reviewer_only}
-            label={`Reviewer only, added ${added.join(", ")}`}
+            label={t`Reviewer only, added ${added.join(", ")}`}
             cue="double"
             count={count("reviewer_only")}
           />
@@ -315,6 +317,8 @@ export function layerDrawing(input: LayerInput): LayerDrawing {
     const inBoth = regions
       .filter((item) => !onlyA.includes(item.object))
       .map((item) => item.object);
+    const firstBoth = inBoth[0] ?? "";
+    const lastBoth = inBoth.at(-1) ?? "";
     return {
       regionStyle: (object) =>
         added.includes(object) ? { stroke: "none" } : { stroke: setColours.a, width: 2.4 },
@@ -333,11 +337,15 @@ export function layerDrawing(input: LayerInput): LayerDrawing {
       legend: (
         <VizLegend
           kind="Model vs model"
-          title="Two result sets"
-          note={`Matched by overlap. ${inBoth[0]} to ${inBoth.at(-1)} are in both, ${onlyA.join(", ")} only in A.${stats ? ` Dice ${stats.model_vs_model.dice.toFixed(2)}.` : ""}`}
+          title={t`Two result sets`}
+          note={
+            stats
+              ? t`Matched by overlap. ${firstBoth} to ${lastBoth} are in both, ${onlyA.join(", ")} only in A. Dice ${stats.model_vs_model.dice.toFixed(2)}.`
+              : t`Matched by overlap. ${firstBoth} to ${lastBoth} are in both, ${onlyA.join(", ")} only in A.`
+          }
         >
-          <VizKey color={setColours.a} label={`A · ${input.setA}`} />
-          <VizKey color={setColours.b} label={`B · ${input.setB}`} />
+          <VizKey color={setColours.a} label={t`A · ${input.setA}`} />
+          <VizKey color={setColours.b} label={t`B · ${input.setB}`} />
         </VizLegend>
       ),
       extra: null,
@@ -357,11 +365,11 @@ export function layerDrawing(input: LayerInput): LayerDrawing {
       legend: (
         <VizLegend
           kind="Reviewer vs reviewer"
-          title="Two reviewers"
+          title={t`Two reviewers`}
           note={
             stats?.reviewers.kappa === null || stats === undefined
-              ? "Shown only after both submitted."
-              : `Cohen's kappa ${stats.reviewers.kappa.toFixed(2)} on regions. Shown only after both submitted.`
+              ? t`Shown only after both submitted.`
+              : t`Cohen's kappa ${stats.reviewers.kappa.toFixed(2)} on regions. Shown only after both submitted.`
           }
         >
           <div className="grid gap-1.5">
@@ -369,13 +377,13 @@ export function layerDrawing(input: LayerInput): LayerDrawing {
               <Person key={person.initials} person={person} size={20} />
             ))}
           </div>
-          <VizKey color={readerColours.same} label="Same decision" count={count("same")} />
+          <VizKey color={readerColours.same} label={t`Same decision`} count={count("same")} />
           <VizKey
             color={readerColours.split}
-            label="One agrees, one disagrees"
+            label={t`One agrees, one disagrees`}
             count={count("split")}
           />
-          <VizKey color={readerColours.unsure} label="One unsure" count={count("unsure")} />
+          <VizKey color={readerColours.unsure} label={t`One unsure`} count={count("unsure")} />
         </VizLegend>
       ),
       extra: null,
@@ -417,10 +425,10 @@ export function layerDrawing(input: LayerInput): LayerDrawing {
       extra: (
         <>
           <SetChip color={setColours.a} className="absolute top-4 left-4">
-            A · {input.setA}
+            <Trans>A · {input.setA}</Trans>
           </SetChip>
           <SetChip color={setColours.b} className="absolute top-4 right-4">
-            B · {input.setB}
+            <Trans>B · {input.setB}</Trans>
           </SetChip>
           <SwipeDivider split={split} onSplit={input.onSplit ?? noSplit} />
         </>
@@ -436,7 +444,7 @@ export function layerDrawing(input: LayerInput): LayerDrawing {
       legend: null,
       extra: (
         <SetChip color={setColours.a} className="absolute top-4 left-4">
-          A · {input.setA}
+          <Trans>A · {input.setA}</Trans>
         </SetChip>
       ),
       second: {
@@ -447,7 +455,7 @@ export function layerDrawing(input: LayerInput): LayerDrawing {
         tags: tagsIn(() => setColours.b).filter((tag) => !added.includes(tag.object)),
         extra: (
           <SetChip color={setColours.b} className="absolute top-4 left-4">
-            B · {input.setB}
+            <Trans>B · {input.setB}</Trans>
           </SetChip>
         ),
       },

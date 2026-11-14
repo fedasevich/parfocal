@@ -1,3 +1,4 @@
+import { useLingui } from "@lingui/react/macro";
 import { SwipeHandle } from "@parfocal/ui/components/visualize";
 import type { KeyboardEvent, PointerEvent } from "react";
 import { splitAfterKey, splitFromPointer, splitPercent } from "./swipe-split.ts";
@@ -8,6 +9,7 @@ type SwipeDividerProps = {
 };
 
 export function SwipeDivider({ split, onSplit }: SwipeDividerProps) {
+  const { t } = useLingui();
   const moveTo = (event: PointerEvent<HTMLElement>) => {
     const stage =
       event.currentTarget.closest<HTMLElement>('[data-slot="slide-still"]') ??
@@ -27,7 +29,7 @@ export function SwipeDivider({ split, onSplit }: SwipeDividerProps) {
       data-testid="swipe-divider"
       role="slider"
       tabIndex={0}
-      aria-label="Swipe line between the two sets"
+      aria-label={t`Swipe line between the two sets`}
       aria-orientation="horizontal"
       aria-valuemin={0}
       aria-valuemax={100}

@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   getGetThreadQueryKey,
   getListThreadsQueryKey,
@@ -88,6 +89,7 @@ export function ObjectThread({
   offReason,
   onSent,
 }: ThreadBodyProps) {
+  const { t } = useLingui();
   const loaded = useThreadMessages(taskId, slideId, thread, meId);
   const members = useMentionable();
   const queryClient = useQueryClient();
@@ -146,18 +148,18 @@ export function ObjectThread({
         <CommentThread messages={messages} onReply={setReplyTo} />
       ) : (
         <p className="m-0 text-body-sm text-fg-dim">
-          No comments on {object} yet. Write the first one below.
+          <Trans>No comments on {object} yet. Write the first one below.</Trans>
         </p>
       )}
       <CommentComposer
         value={draft}
         onValueChange={setDraft}
         onSend={send}
-        label={`Comment on ${object}`}
+        label={t`Comment on ${object}`}
         hint={
           blind
-            ? "Blind review. Other reviewers see it after they submit."
-            : "Everyone on the task sees it."
+            ? t`Blind review. Other reviewers see it after they submit.`
+            : t`Everyone on the task sees it.`
         }
         offReason={offReason}
         replyingTo={replyingTo?.author.name}
@@ -188,7 +190,7 @@ export function ObjectThread({
       />
       {failed ? (
         <p role="alert" className="m-0 text-body-sm text-bad">
-          The comment did not save. Try again.
+          <Trans>The comment did not save. Try again.</Trans>
         </p>
       ) : null}
     </div>
@@ -206,17 +208,20 @@ export function ObjectComments({
   decisionNotes = null,
   ...props
 }: ObjectCommentsProps) {
+  const { t } = useLingui();
   const thread = threads.find((item) => item.anchor === object);
   return (
     <div className="grid gap-4">
       <div className="flex items-center justify-between gap-3">
-        <span className="text-body text-fg-dim">Comments on this object</span>
+        <span className="text-body text-fg-dim">
+          <Trans>Comments on this object</Trans>
+        </span>
         <ObjectIdTag size="lg">{object}</ObjectIdTag>
       </div>
       {decisionNotes ? (
-        <section aria-label={`Decision notes on ${object}`} className="grid gap-2">
+        <section aria-label={t`Decision notes on ${object}`} className="grid gap-2">
           <h3 className="m-0 text-label font-semibold uppercase tracking-wide text-fg-dim">
-            Decision notes
+            <Trans>Decision notes</Trans>
           </h3>
           {decisionNotes}
         </section>

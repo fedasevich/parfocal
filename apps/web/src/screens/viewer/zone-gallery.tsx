@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import type { ReviewObject } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
 import type { FindingsCell } from "@parfocal/ui/components/findings-panel";
@@ -45,19 +46,20 @@ type ZoneFootProps = {
 };
 
 export function ZoneFoot({ remaining, disabledReason, onNext, onRest }: ZoneFootProps) {
+  const { t } = useLingui();
   return (
     <div className="flex flex-wrap items-center gap-2">
       <Button size="sm" disabled={remaining === 0} onClick={onNext}>
-        Next unsure cell <Keycap keys="J" size="sm" />
+        <Trans>Next unsure cell</Trans> <Keycap keys="J" size="sm" />
       </Button>
       <Button
         size="sm"
         variant="primary"
         disabled={remaining === 0 || disabledReason !== undefined}
-        title={disabledReason ?? "Keeps the AI call on every open unsure cell in this zone"}
+        title={disabledReason ?? t`Keeps the AI call on every open unsure cell in this zone`}
         onClick={onRest}
       >
-        Rest look right <Keycap keys="⇧K" size="sm" />
+        <Trans>Rest look right</Trans> <Keycap keys="⇧K" size="sm" />
       </Button>
     </div>
   );

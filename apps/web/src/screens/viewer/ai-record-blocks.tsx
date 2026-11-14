@@ -1,3 +1,4 @@
+import { useLingui } from "@lingui/react/macro";
 import { Zone } from "@parfocal/ui/components/zone";
 
 type LinesBlockProps = { slot: string; title: string; lines: readonly string[]; enabled: boolean };
@@ -16,9 +17,11 @@ function LinesBlock({ slot, title, lines, enabled }: LinesBlockProps) {
 }
 
 export function TrackRecordBlock(props: Omit<LinesBlockProps, "slot" | "title">) {
-  return <LinesBlock slot="track-record" title="Your track record" {...props} />;
+  const { t } = useLingui();
+  return <LinesBlock slot="track-record" title={t`Your track record`} {...props} />;
 }
 
 export function CalibrationBlock(props: Omit<LinesBlockProps, "slot" | "title">) {
-  return <LinesBlock slot="calibration-details" title="Calibration details" {...props} />;
+  const { t } = useLingui();
+  return <LinesBlock slot="calibration-details" title={t`Calibration details`} {...props} />;
 }

@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { getListThreadsQueryKey, useCreateThread } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
 import { CommentComposer } from "@parfocal/ui/components/comment-thread";
@@ -42,6 +43,9 @@ export function PinnedThread({
   onPosted,
   onCancel,
 }: PinnedThreadProps) {
+  const { t } = useLingui();
+  const pinX = Math.round(pin.x);
+  const pinY = Math.round(pin.y);
   const [draft, setDraft] = useState("");
   const members = useMentionable();
   const queryClient = useQueryClient();
@@ -61,7 +65,7 @@ export function PinnedThread({
   };
   return (
     <section
-      aria-label="New pinned thread"
+      aria-label={t`New pinned thread`}
       data-testid="pinned-thread"
       className="grid gap-3"
       onKeyDown={(event) => {
@@ -69,26 +73,29 @@ export function PinnedThread({
       }}
     >
       <div className="flex items-center justify-between gap-3">
-        <span className="text-body font-semibold text-fg">New thread at the pin</span>
+        <span className="text-body font-semibold text-fg">
+          <Trans>New thread at the pin</Trans>
+        </span>
         <Button size="sm" variant="ghost" onClick={onCancel}>
-          Cancel
+          <Trans>Cancel</Trans>
         </Button>
       </div>
       <p className="m-0 text-body-sm text-fg-dim">
-        Pinned at {Math.round(pin.x)}, {Math.round(pin.y)} on the slide. Click the slide again to
-        move the pin.
+        <Trans>
+          Pinned at {pinX}, {pinY} on the slide. Click the slide again to move the pin.
+        </Trans>
       </p>
       <CommentComposer
         value={draft}
         onValueChange={setDraft}
         onSend={send}
-        label="Comment at the pin"
-        hint="Everyone on the task sees it."
+        label={t`Comment at the pin`}
+        hint={t`Everyone on the task sees it.`}
         offReason={offReason}
       />
       {create.isError ? (
         <p role="alert" className="m-0 text-body-sm text-bad">
-          The thread did not save. Try again.
+          <Trans>The thread did not save. Try again.</Trans>
         </p>
       ) : null}
     </section>

@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { type Thread, useListThreads, useListThreadsOnSlide } from "@parfocal/api-client";
 import { CommentComposer } from "@parfocal/ui/components/comment-thread";
 import { SmallModal } from "@parfocal/ui/components/small-modal";
@@ -69,6 +70,7 @@ function Composer({
   onSend: (text: string) => void;
   onCancel: () => void;
 }) {
+  const { t } = useLingui();
   const [text, setText] = useState("");
   const section = useRef<HTMLElement | null>(null);
   useEffect(() => {
@@ -77,7 +79,7 @@ function Composer({
   return (
     <section
       ref={section}
-      aria-label="New pinned thread"
+      aria-label={t`New pinned thread`}
       data-testid="pin-composer"
       className="pointer-events-auto absolute z-10 grid w-72 gap-2 rounded-ctl border border-line bg-chrome p-3 shadow-pop"
       style={{ left: at.x + 12, top: at.y + 12 }}
@@ -94,13 +96,13 @@ function Composer({
         onSend={() => {
           if (!busy) onSend(text);
         }}
-        label="Comment at the pin"
-        hint="Enter posts, Shift+Enter adds a line"
+        label={t`Comment at the pin`}
+        hint={t`Enter posts, Shift+Enter adds a line`}
         offReason={offReason}
       />
       {failed ? (
         <p role="alert" className="m-0 text-body-sm text-bad">
-          The thread did not save. Try again.
+          <Trans>The thread did not save. Try again.</Trans>
         </p>
       ) : null}
     </section>
@@ -121,6 +123,8 @@ export function PinLayer({
   onDocumentChange,
   onCommit,
 }: PinLayerProps) {
+  const { t } = useLingui();
+  const someone = t`someone`;
   const camera = useSyncExternalStore(engine.subscribeCamera, engine.getCamera);
   const rect = useStageRect(stage);
   const people = usePeople();
@@ -342,7 +346,7 @@ export function PinLayer({
             data-thread={thread.id}
             data-linked={doc.pins.get(thread.id)?.shapeId ?? ""}
             data-dragging={drag?.threadId === thread.id}
-            aria-label={`${author?.initials ?? "?"}, comment by ${author?.name ?? "someone"}: ${thread.title}`}
+            aria-label={t`${author?.initials ?? "?"}, comment by ${author?.name ?? someone}: ${thread.title}`}
             title={thread.title}
             className={`${selecting ? "pointer-events-none" : "pointer-events-auto"} absolute grid size-7 -translate-y-full cursor-grab place-items-center rounded-full rounded-bl-none border-0 bg-accent-fill p-0 font-semibold text-caption text-on-accent shadow-md active:cursor-grabbing`}
             style={{ left: at.x, top: at.y }}
@@ -404,15 +408,17 @@ export function PinLayer({
         }}
         title={removalTitle(removal?.threadIds.length ?? 0)}
         subtitle={removalDetail(removal?.threadIds ?? [], threads)}
-        primaryLabel="Delete"
+        primaryLabel={t`Delete`}
         primaryBusy={removing}
         onPrimary={() => void confirmRemoval()}
         onCancel={() => setRemoval(null)}
       >
         {removalFailed ? (
           <p role="alert" className="m-0 text-body-sm text-bad">
-            Some threads could not be deleted. Only the person who started a thread or a project
-            owner deletes it.
+            <Trans>
+              Some threads could not be deleted. Only the person who started a thread or a project
+              owner deletes it.
+            </Trans>
           </p>
         ) : null}
       </SmallModal>

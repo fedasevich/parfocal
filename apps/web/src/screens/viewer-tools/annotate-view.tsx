@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { useListAnnotationLayers, useListModelTiers } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
 import { Keycap } from "@parfocal/ui/components/keycap";
@@ -65,6 +66,7 @@ type AnnotateViewProps = {
 };
 
 export function AnnotateView({ tools, scene, initialTool, onScene, onLeave }: AnnotateViewProps) {
+  const { t } = useLingui();
   const { session, counts } = tools;
   const goTo = useGoTo();
   const layers = okData(useListAnnotationLayers(session.slideId).data);
@@ -146,9 +148,10 @@ export function AnnotateView({ tools, scene, initialTool, onScene, onLeave }: An
       ? [...rows, proposalRow]
       : [...rows.slice(0, firstOther), proposalRow, ...rows.slice(firstOther)];
 
+  const targetName = target?.name ?? "";
   const layersBody = (
     <>
-      <Zone title="Layers" end={<Keycap keys="⌘G" />}>
+      <Zone title={t`Layers`} end={<Keycap keys="⌘G" />}>
         <LayerList
           rows={orderedRows}
           hidden={hidden}
@@ -159,9 +162,9 @@ export function AnnotateView({ tools, scene, initialTool, onScene, onLeave }: An
           }
         />
       </Zone>
-      <Zone title="Group by">
+      <Zone title={t`Group by`}>
         <SegmentedControl
-          aria-label="Group by"
+          aria-label={t`Group by`}
           fill
           value={groupBy}
           onValueChange={(value) => setGroupBy(String(value))}
@@ -173,13 +176,15 @@ export function AnnotateView({ tools, scene, initialTool, onScene, onLeave }: An
           ]}
         />
       </Zone>
-      <Zone title="New shapes go to">
+      <Zone title={t`New shapes go to`}>
         <div className="flex items-center justify-between gap-2 text-body-sm">
           <span className="inline-flex items-center gap-2">
             <i aria-hidden="true" className="size-2.5 rounded-full bg-c-tumor" />
-            tumor <Keycap keys="1" size="sm" />
+            <Trans>tumor</Trans> <Keycap keys="1" size="sm" />
           </span>
-          <span className="text-fg-dim">into "{target?.name ?? ""}"</span>
+          <span className="text-fg-dim">
+            <Trans>into "{targetName}"</Trans>
+          </span>
         </div>
       </Zone>
     </>
@@ -285,7 +290,7 @@ export function AnnotateView({ tools, scene, initialTool, onScene, onLeave }: An
           return (
             <>
               {tool === "auto" ? (
-                <ContextBar label="Auto region">
+                <ContextBar label={t`Auto region`}>
                   {tier ? (
                     <TierPill
                       tier={tier}
@@ -293,20 +298,22 @@ export function AnnotateView({ tools, scene, initialTool, onScene, onLeave }: An
                       onClick={() => onScene(pickerOpen ? "auto" : "models")}
                     />
                   ) : null}
-                  <ContextPill>nuclei · 0.25 µm</ContextPill>
+                  <ContextPill>
+                    <Trans>nuclei · 0.25 µm</Trans>
+                  </ContextPill>
                   <ContextDivider />
                   <span className="inline-flex items-center gap-1.5 font-mono">
                     <i
                       aria-hidden="true"
                       className="size-2 rounded-full bg-(--c-prop) shadow-[0_0_0_1.5px_#fff]"
                     />
-                    {proposals} found
+                    <Trans>{proposals} found</Trans>
                   </span>
                   <Button size="sm" onClick={discard} disabled={proposals === 0}>
-                    Discard <Keycap action="esc" keys="Esc" size="sm" />
+                    <Trans>Discard</Trans> <Keycap action="esc" keys="Esc" size="sm" />
                   </Button>
                   <Button size="sm" variant="primary" onClick={accept} disabled={proposals === 0}>
-                    Accept as tumor <Keycap keys="↵" size="sm" />
+                    <Trans>Accept as tumor</Trans> <Keycap keys="↵" size="sm" />
                   </Button>
                 </ContextBar>
               ) : (
@@ -321,7 +328,7 @@ export function AnnotateView({ tools, scene, initialTool, onScene, onLeave }: An
               {pickerOpen ? (
                 <TierPicker
                   className="top-16.5 left-[calc(50%-250px)]"
-                  title="Model for outlining nuclei"
+                  title={t`Model for outlining nuclei`}
                   tiers={tierList}
                   value={tierName}
                   onValueChange={(name) => {

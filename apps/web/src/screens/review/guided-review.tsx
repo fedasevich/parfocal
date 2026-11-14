@@ -1,3 +1,5 @@
+import { plural } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   ApiError,
   resolveSetting,
@@ -110,13 +112,14 @@ type GuidedReviewProps = {
 };
 
 export function GuidedReview(props: GuidedReviewProps) {
+  const { t } = useLingui();
   const session = useReviewSession(props.taskId, props.slideId);
   const hidesAi = session.task?.ai_hidden_first_read === true;
   const firstRead = useGetFirstRead(props.taskId, props.slideId, undefined, {
     query: { enabled: hidesAi, retry: false },
   });
   if (!session.ready || (hidesAi && firstRead.isPending)) {
-    return <Loader label="Loading the review" size="page" />;
+    return <Loader label={t`Loading the review`} size="page" />;
   }
   if (hidesAi && firstRead.isError) {
     const notRecorded = firstRead.error instanceof ApiError && firstRead.error.status === 404;
@@ -129,14 +132,16 @@ export function GuidedReview(props: GuidedReviewProps) {
       >
         <InlineState
           icon="warn"
-          title="Your first read could not be checked"
+          title={t`Your first read could not be checked`}
           action={
             <Button variant="ghost" onClick={() => void firstRead.refetch()}>
-              Try again
+              <Trans>Try again</Trans>
             </Button>
           }
         >
-          The AI stays hidden until your first read is confirmed. Try again in a moment.
+          <Trans>
+            The AI stays hidden until your first read is confirmed. Try again in a moment.
+          </Trans>
         </InlineState>
       </main>
     );
@@ -148,8 +153,6 @@ export function GuidedReview(props: GuidedReviewProps) {
 
 type BodyProps = GuidedReviewProps & { session: ReviewSession };
 
-const netOff = "The connection is lost. It saves when the connection is back.";
-
 function GuidedBody({
   session,
   objectId,
@@ -160,6 +163,8 @@ function GuidedBody({
   tab,
   onTabChange,
 }: BodyProps) {
+  const { t } = useLingui();
+  const netOff = t`The connection is lost. It saves when the connection is back.`;
   const { online } = useConnection();
   const sceneSetup = guidedSetup(scene);
   const setup = { ...sceneSetup, connLost: sceneSetup.connLost || !online };
@@ -265,6 +270,13 @@ function GuidedBody({
   const [failed, setFailed] = useState(setup.submitFail);
   const coach = useGuidedCoach(session.meId, scene === undefined && objectId === undefined);
   const coachOn = setup.coach || coach.open;
+  const slideShort = session.slideName.split(" ")[0] ?? "";
+  const creatorName = person(session.task?.created_by_user_id)?.name;
+  const researcherFirstName = creatorName?.split(" ")[0];
+  const withdrawnBy = creatorName ?? t`The researcher`;
+  const withdrawnTask = session.task?.code ?? t`the task`;
+  const taskCodeOrThe = session.task?.code ?? t`The task`;
+  const taskCodeOrThis = session.task?.code ?? t`this task`;
   const startReview = () => {
     if (setup.coach) {
       void navigate({
@@ -278,6 +290,10 @@ function GuidedBody({
   };
   const tabNow: GuidedTab = coachOn ? "review" : (tab ?? setup.tab);
   const current = objects[Math.min(index, Math.max(0, objects.length - 1))];
+  const answerKeyList = answersOf(style, session.classes, current)
+    .map((item) => item.key)
+    .join(", ")
+    .replace(/, ([^,]*)$/, t` or $1`);
   const currentId = current?.object ?? "";
   const timing = useTaskRun("review", session.slideId, "viewer");
   useCellTiming(currentId, current?.kind === "cell");
@@ -626,7 +642,10 @@ function GuidedBody({
   });
   const submitReason =
     counts.open > 0
-      ? `${counts.open} object${counts.open === 1 ? " is" : "s are"} still open.`
+      ? plural(counts.open, {
+          one: "# object is still open.",
+          other: "# objects are still open.",
+        })
       : undefined;
   const openRegions = regions.filter((region) => !answer(region.object));
   const blockers: Blocker[] = [
@@ -738,7 +757,7 @@ function GuidedBody({
         className="inline-flex w-fit cursor-pointer items-center gap-1.5 border-0 bg-transparent p-0 text-body-sm font-medium text-fg-dim hover:text-fg"
       >
         <Icon name="comment" />
-        Add a note
+        <Trans>Add a note</Trans>
         <Keycap action={noteAction} size="sm" />
       </button>
     ) : null;
@@ -746,18 +765,13 @@ function GuidedBody({
   const coachTips = coachOn ? (
     <div className="grid gap-3">
       <CoachTip n={3}>
-        Answer with one of the buttons, or press{" "}
-        {answersOf(style, session.classes, current)
-          .map((item) => item.key)
-          .join(", ")
-          .replace(/, ([^,]*)$/, " or $1")}
-        .
+        <Trans>Answer with one of the buttons, or press {answerKeyList}.</Trans>
       </CoachTip>
       <CoachTip n={4}>
-        The next object comes by itself. The dots take you back to any of them.
+        <Trans>The next object comes by itself. The dots take you back to any of them.</Trans>
       </CoachTip>
       <Button variant="primary" size="lg" className="w-fit" onClick={startReview}>
-        Got it, start
+        <Trans>Got it, start</Trans>
       </Button>
     </div>
   ) : null;
@@ -766,8 +780,8 @@ function GuidedBody({
     setup.issue === "withdrawn" ? (
       <IssueCard
         icon="info"
-        title={`${session.task?.code ?? "The task"} was withdrawn`}
-        body={`${person(session.task?.created_by_user_id)?.name ?? "The researcher"} withdrew ${session.task?.code ?? "the task"} on 16 Oct. Your 7 decided slides are kept and show in the report.`}
+        title={t`${taskCodeOrThe} was withdrawn`}
+        body={t`${withdrawnBy} withdrew ${withdrawnTask} on 16 Oct. Your 7 decided slides are kept and show in the report.`}
         action={
           <Button
             variant="primary"
@@ -776,18 +790,18 @@ function GuidedBody({
             onClick={() => void navigate({ to: "/my-work" })}
           >
             <Icon name="back" />
-            Back to My work
+            <Trans>Back to My work</Trans>
           </Button>
         }
       />
     ) : noResults ? (
       <IssueCard
         icon="smart"
-        title="Nothing to decide here yet."
-        body={`${session.slideName.split(" ")[0]} has no ${setName} result in ${session.task?.code ?? "this task"}. Look at it without AI in the full viewer, or go on to the next slide.`}
+        title={t`Nothing to decide here yet.`}
+        body={t`${slideShort} has no ${setName} result in ${taskCodeOrThis}. Look at it without AI in the full viewer, or go on to the next slide.`}
         action={
           <Button variant="primary" size="lg" className="w-fit" onClick={() => void toSubmitted()}>
-            Next slide
+            <Trans>Next slide</Trans>
             <Icon name="next" />
           </Button>
         }
@@ -871,15 +885,15 @@ function GuidedBody({
         <Button
           variant="ghost"
           disabled={index === 0}
-          title={index === 0 ? "This is the first object" : undefined}
+          title={index === 0 ? t`This is the first object` : undefined}
           onClick={() => goTo(index - 1)}
         >
           <Icon name="back" />
-          Previous
+          <Trans>Previous</Trans>
           <Keycap action={previousObjectAction} size="sm" />
         </Button>
         <Button variant="ghost" onClick={() => goTo(index + 1)}>
-          {kept ? "Next" : "Skip for now"}
+          {kept ? t`Next` : t`Skip for now`}
           <Keycap action={nextObjectAction} size="sm" />
           <Icon name="next" />
         </Button>
@@ -916,7 +930,9 @@ function GuidedBody({
         offReason={setup.connLost ? netOff : undefined}
         onSent={(text) =>
           showUndoToast({
-            message: `Comment added on ${currentId}. It shows in the full viewer too${text.includes("@") ? ", and the people you mention are told" : ""}.`,
+            message: text.includes("@")
+              ? t`Comment added on ${currentId}. It shows in the full viewer too, and the people you mention are told.`
+              : t`Comment added on ${currentId}. It shows in the full viewer too.`,
           })
         }
       />
@@ -930,46 +946,62 @@ function GuidedBody({
       icon="lock"
       actions={
         <Button size="sm">
-          Ask {person(session.task?.created_by_user_id)?.name.split(" ")[0] ?? "the researcher"} to
-          amend
+          {researcherFirstName === undefined ? (
+            <Trans>Ask the researcher to amend</Trans>
+          ) : (
+            <Trans>Ask {researcherFirstName} to amend</Trans>
+          )}
         </Button>
       }
     >
-      <b>Signed off 15 Oct.</b> Changes need an amendment.
+      <Trans>
+        <b>Signed off 15 Oct.</b> Changes need an amendment.
+      </Trans>
     </Banner>
   ) : submitted && !behind ? (
     <Banner
       tone="info"
       actions={
         <Button size="sm" onClick={reopen}>
-          Reopen my review
+          <Trans>Reopen my review</Trans>
         </Button>
       }
     >
-      You submitted this slide. Changes are saved and {otherReviewer} is told.
+      <Trans>You submitted this slide. Changes are saved and {otherReviewer} is told.</Trans>
     </Banner>
   ) : null;
 
   const canvasIssue = tileFail ? (
     <CanvasNotice
       icon="warn"
-      title={`${session.slideName.split(" ")[0]} could not be read at 20x and 40x.`}
+      title={t`${slideShort} could not be read at 20x and 40x.`}
       actions={
         <>
-          <Button variant="primary">Retry</Button>
-          <Button>Ask the researcher</Button>
+          <Button variant="primary">
+            <Trans>Retry</Trans>
+          </Button>
+          <Button>
+            <Trans>Ask the researcher</Trans>
+          </Button>
         </>
       }
     >
-      Tiles are missing on the server. Lower magnifications still show, and your other slides work.
+      <Trans>
+        Tiles are missing on the server. Lower magnifications still show, and your other slides
+        work.
+      </Trans>
     </CanvasNotice>
   ) : noResults ? (
     <CanvasNotice
       icon="smart"
-      title={`No ${setName} result on ${session.slideName.split(" ")[0]} yet.`}
-      actions={<Button>Ask the researcher</Button>}
+      title={t`No ${setName} result on ${slideShort} yet.`}
+      actions={
+        <Button>
+          <Trans>Ask the researcher</Trans>
+        </Button>
+      }
     >
-      Review the slide without AI, or ask the researcher to run the model.
+      <Trans>Review the slide without AI, or ask the researcher to run the model.</Trans>
     </CanvasNotice>
   ) : null;
 
@@ -1035,11 +1067,13 @@ function GuidedBody({
                 {coachOn ? (
                   <>
                     <CoachTip n={1} className="absolute top-[45%] left-[35%] w-75">
-                      The AI found this. It is outlined in white.
+                      <Trans>The AI found this. It is outlined in white.</Trans>
                     </CoachTip>
                     <CoachTip n={2} className="absolute bottom-24 left-4 w-85">
-                      Drag to move around. Scroll or use + and − to zoom. Back to {currentId} brings
-                      you back.
+                      <Trans>
+                        Drag to move around. Scroll or use + and − to zoom. Back to {currentId}{" "}
+                        brings you back.
+                      </Trans>
                     </CoachTip>
                   </>
                 ) : null}
@@ -1117,40 +1151,40 @@ function GuidedBody({
                       <Button
                         size="lg"
                         variant={moved && !confirmRest ? "primary" : "secondary"}
-                        title={`Center ${currentId} again`}
+                        title={t`Center ${currentId} again`}
                         onClick={() => {
                           setCamera(null);
                           setWhole(false);
                         }}
                       >
                         <Icon name="target" />
-                        Back to {currentId}
+                        <Trans>Back to {currentId}</Trans>
                       </Button>
                     )}
                     <fieldset
-                      aria-label="Zoom"
+                      aria-label={t`Zoom`}
                       className="m-0 inline-flex h-10 min-w-0 items-center rounded-ctl border border-line-strong bg-btn-bg p-0"
                     >
                       <Button
                         variant="ghost"
                         size="icon-lg"
-                        aria-label="Zoom out"
-                        title="Zoom out (−)"
+                        aria-label={t`Zoom out`}
+                        title={t`Zoom out (−)`}
                         onClick={() => setCamera({ ...shown, scale: shown.scale / 1.4 })}
                       >
                         <Icon name="minus" />
                       </Button>
                       <span
                         className="min-w-14 text-center font-mono text-body-sm font-semibold"
-                        title="Magnification on screen"
+                        title={t`Magnification on screen`}
                       >
                         {readout(view, shown)}
                       </span>
                       <Button
                         variant="ghost"
                         size="icon-lg"
-                        aria-label="Zoom in"
-                        title="Zoom in (+)"
+                        aria-label={t`Zoom in`}
+                        title={t`Zoom in (+)`}
                         onClick={() => setCamera({ ...shown, scale: shown.scale * 1.4 })}
                       >
                         <Icon name="plus" />
@@ -1164,7 +1198,9 @@ function GuidedBody({
                           : undefined
                       }
                       aria-pressed={view.kind === "whole"}
-                      title={view.kind === "whole" ? `Back to ${currentId}` : "See the whole slide"}
+                      title={
+                        view.kind === "whole" ? t`Back to ${currentId}` : t`See the whole slide`
+                      }
                       onClick={() => {
                         setCamera(null);
                         setWhole(view.kind !== "whole");
@@ -1172,7 +1208,7 @@ function GuidedBody({
                       }}
                     >
                       <Icon name="expand" />
-                      Whole slide
+                      <Trans>Whole slide</Trans>
                     </Button>
                   </div>
                 )}
@@ -1192,7 +1228,7 @@ function GuidedBody({
                 aiClass={current.class_name}
                 range={{ agreeFrom: style.agreeFrom, disagreeTo: style.disagreeTo }}
                 disabled={buttonsOff}
-                label={`Your answer on ${currentId}`}
+                label={t`Your answer on ${currentId}`}
               />
             </div>
           ) : null}

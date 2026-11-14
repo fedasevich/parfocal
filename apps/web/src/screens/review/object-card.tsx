@@ -1,3 +1,5 @@
+import { plural } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import type { ReviewObject } from "@parfocal/api-client";
 import { AreaCallButtons } from "@parfocal/ui/components/area-call";
 import { Button } from "@parfocal/ui/components/button";
@@ -51,11 +53,12 @@ export function ObjectDots({
   lead = null,
   onJump,
 }: DotsProps) {
+  const { t } = useLingui();
   const cellsDone = cells.filter((cell) => answer(cell.object)).length;
   const onCell = cells.some((cell) => cell.object === current);
   return (
     <fieldset
-      aria-label="Objects"
+      aria-label={t`Objects`}
       className="m-0 flex min-w-0 flex-wrap items-center gap-2 border-0 p-0"
     >
       {regions.map((region) => {
@@ -67,7 +70,11 @@ export function ObjectDots({
             key={region.object}
             type="button"
             onClick={() => onJump(region.object)}
-            title={`${region.object}, ${dotStateWord(value, skip)}${region.object === lead ? ", sets the category" : ""}`}
+            title={
+              region.object === lead
+                ? t`${region.object}, ${dotStateWord(value, skip)}, sets the category`
+                : t`${region.object}, ${dotStateWord(value, skip)}`
+            }
             data-lead={region.object === lead || undefined}
             aria-label={region.object}
             aria-current={region.object === current ? "true" : undefined}
@@ -93,21 +100,25 @@ export function ObjectDots({
         <button
           type="button"
           onClick={() => onJump("cells")}
-          title={`Cells in the sample, ${cellsDone} of ${cells.length} decided. Opens the first open cell`}
+          title={t`Cells in the sample, ${cellsDone} of ${cells.length} decided. Opens the first open cell`}
           className={cn(
             "inline-flex h-5.5 cursor-pointer items-center gap-1.5 rounded-full border-0 bg-chrome-2 px-2.5 text-caption text-fg-dim",
             onCell && "shadow-[inset_0_0_0_1.5px_color-mix(in_srgb,var(--accent)_75%,white)]",
           )}
         >
-          Cells
+          <Trans>Cells</Trans>
           <b className="font-mono font-semibold text-fg">
-            {cellsDone} of {cells.length}
+            <Trans>
+              {cellsDone} of {cells.length}
+            </Trans>
           </b>
         </button>
       ) : null}
       {lead ? (
         <span data-slot="lead-area" className="text-caption text-fg-dim">
-          <b className="font-mono font-semibold text-fg">{lead}</b> sets the category
+          <Trans>
+            <b className="font-mono font-semibold text-fg">{lead}</b> sets the category
+          </Trans>
         </span>
       ) : null}
     </fieldset>
@@ -141,6 +152,7 @@ export function NoteEditor({
   onSave,
   onCancel,
 }: NoteEditorProps) {
+  const { t } = useLingui();
   const members = useMentionable();
   const [active, setActive] = useState(0);
   const field = useRef<HTMLTextAreaElement>(null);
@@ -183,7 +195,7 @@ export function NoteEditor({
     >
       {reasons.length ? (
         <fieldset
-          aria-label="Quick reasons, optional"
+          aria-label={t`Quick reasons, optional`}
           className="m-0 flex min-w-0 flex-wrap gap-1.5 border-0 p-0"
         >
           {reasons.map((reason) => (
@@ -204,8 +216,8 @@ export function NoteEditor({
           value={text}
           onChange={(event) => onText(event.target.value)}
           onKeyDown={onKey}
-          placeholder="Add a note, type @ to mention someone"
-          aria-label={`Note on your decision for ${object}`}
+          placeholder={t`Add a note, type @ to mention someone`}
+          aria-label={t`Note on your decision for ${object}`}
           className="min-h-13.5 w-full resize-y rounded-ctl border border-accent bg-surf-field px-2.5 py-2 text-body-sm leading-[1.45] text-fg outline-none placeholder:text-fg-faint focus-visible:shadow-[0_0_0_3px_var(--accent-soft)]"
         />
         {query === undefined ? null : (
@@ -219,13 +231,13 @@ export function NoteEditor({
       </div>
       <div className="flex items-center gap-2">
         <span className="flex-1 text-caption text-fg-dim">
-          {over ? `Up to ${noteLimit} characters` : "Optional"}
+          {over ? t`Up to ${noteLimit} characters` : t`Optional`}
         </span>
         <Button variant="ghost" size="sm" onClick={onCancel}>
-          Cancel <Keycap action="esc" keys="Esc" size="sm" />
+          <Trans>Cancel</Trans> <Keycap action="esc" keys="Esc" size="sm" />
         </Button>
         <Button variant="primary" size="sm" disabled={!saveable} title={offReason} onClick={onSave}>
-          Save <Keycap keys="↵" size="sm" />
+          <Trans>Save</Trans> <Keycap keys="↵" size="sm" />
         </Button>
       </div>
     </div>
@@ -245,11 +257,11 @@ export function SavedNote({ answer, label, author, onEdit }: SavedNoteProps) {
       <div className="flex items-center gap-2">
         {author ? <Person person={author} size={20} /> : null}
         <span className="flex-1 text-right text-body-sm text-fg-dim">
-          Note on decision: {label}
+          <Trans>Note on decision: {label}</Trans>
         </span>
         {onEdit ? (
           <Button variant="ghost" size="xs" onClick={onEdit}>
-            Edit
+            <Trans>Edit</Trans>
           </Button>
         ) : null}
       </div>
@@ -320,10 +332,13 @@ export function ObjectCard({
   onCancelRedraw,
   onAddMissed,
 }: ObjectCardProps) {
+  const { t } = useLingui();
   const head = (
     <div className="flex items-center justify-between gap-3">
       <span className="text-body text-fg-dim">
-        Object <b className="font-semibold text-fg">{position}</b> of {total} on this slide
+        <Trans>
+          Object <b className="font-semibold text-fg">{position}</b> of {total} on this slide
+        </Trans>
       </span>
       <ObjectIdTag size="lg">{object.object}</ObjectIdTag>
     </div>
@@ -335,22 +350,26 @@ export function ObjectCard({
         {dots}
         <div className="grid gap-1.5">
           <h2 className="m-0 text-title font-semibold leading-snug text-fg">
-            Draw the new outline of {object.object}
+            <Trans>Draw the new outline of {object.object}</Trans>
           </h2>
           <p className="m-0 text-body text-fg-dim">
-            Click around it. Click the first point or press Finish to close it. The AI result stays
-            as it was.
+            <Trans>
+              Click around it. Click the first point or press Finish to close it. The AI result
+              stays as it was.
+            </Trans>
           </p>
           <small className="text-body-sm text-fg-dim" aria-live="polite">
-            {redrawPoints} {redrawPoints === 1 ? "point" : "points"}
+            {plural(redrawPoints, { one: "# point", other: "# points" })}
           </small>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Button variant="primary" disabled={redrawPoints < 3} onClick={onFinishRedraw}>
             <Icon name="check" />
-            Finish outline
+            <Trans>Finish outline</Trans>
           </Button>
-          <Button onClick={onCancelRedraw}>Cancel</Button>
+          <Button onClick={onCancelRedraw}>
+            <Trans>Cancel</Trans>
+          </Button>
         </div>
       </div>
     );
@@ -361,10 +380,12 @@ export function ObjectCard({
         {head}
         {dots}
         <small className="text-body-sm font-semibold text-fg-dim">
-          You disagree with the AI on {object.object}
+          <Trans>You disagree with the AI on {object.object}</Trans>
         </small>
         <div className="grid gap-2.5">
-          <span className="text-body-sm font-semibold">What is wrong</span>
+          <span className="text-body-sm font-semibold">
+            <Trans>What is wrong</Trans>
+          </span>
           <div className="flex flex-wrap gap-2">
             {disagreeOptions(object.kind, object.class_name, classes).map(({ label: reason }) => (
               <FilterChip
@@ -381,20 +402,20 @@ export function ObjectCard({
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <span className="w-full text-body-sm text-fg-dim">
-            Want to fix it yourself? Optional.
+            <Trans>Want to fix it yourself? Optional.</Trans>
           </span>
           <Button onClick={() => onFix("outline")}>
             <Icon name="pen" />
-            Redraw the outline
+            <Trans>Redraw the outline</Trans>
           </Button>
           <Button onClick={() => onFix("type")}>
             <Icon name="pen" />
-            Change the type
+            <Trans>Change the type</Trans>
           </Button>
         </div>
         <Button variant="ghost" className="w-fit px-0" onClick={onBackToAnswers}>
           <Icon name="back" />
-          Back to the answers
+          <Trans>Back to the answers</Trans>
         </Button>
       </div>
     );
@@ -414,7 +435,9 @@ export function ObjectCard({
         ) : null}
         {text.above ? (
           <>
-            <small className="text-body-sm font-semibold text-fg-dim">AI says</small>
+            <small className="text-body-sm font-semibold text-fg-dim">
+              <Trans>AI says</Trans>
+            </small>
             <p className="m-0 text-lead text-fg">{text.above}</p>
           </>
         ) : null}
@@ -441,13 +464,13 @@ export function ObjectCard({
           aiClass={object.class_name}
           range={{ agreeFrom: style.agreeFrom, disagreeTo: style.disagreeTo }}
           disabled={disabled}
-          label={`Your answer on ${object.object}`}
+          label={t`Your answer on ${object.object}`}
         />
       )}
       {pending ? (
         <span className="inline-flex items-center gap-2 text-body-sm text-warn">
           <Icon name="clock" />
-          Not saved yet. It saves when the connection is back.
+          <Trans>Not saved yet. It saves when the connection is back.</Trans>
         </span>
       ) : lockLine ? (
         <span className="inline-flex items-center gap-2 text-body-sm text-warn">
@@ -459,7 +482,7 @@ export function ObjectCard({
       {coach}
       <Button className="w-fit" disabled={disabled} onClick={onAddMissed}>
         <Icon name="poly" />
-        Add something the AI missed
+        <Trans>Add something the AI missed</Trans>
       </Button>
     </div>
   );
