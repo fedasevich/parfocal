@@ -5,17 +5,17 @@ import os
 from pathlib import Path
 from typing import Any
 
+import numpy as np
 import pytest
 import tifffile
 from fixture_support import fixture_path
 from PIL import Image
 
+from parfocal_ingest.bif_frames import bif_stitching, frame_cell, frame_placement, placed_extent
 from parfocal_ingest.identify import Format, Identified
-from parfocal_ingest.pyramid import Pyramid, main_series, read_pyramid
+from parfocal_ingest.pyramid import Pyramid, frames_placed, main_series, read_pyramid
 from parfocal_ingest.tile_index import (
     argos_focused_plane,
-    bif_stitching,
-    frame_cell,
     index_document,
     offset_gaps,
     tile_index,
@@ -217,11 +217,88 @@ def test_overlaps_are_weighted_by_confidence_per_boundary() -> None:
     assert (stitching["width"], stitching["height"]) == (185, 152)
 
 
-def test_a_grid_with_nothing_to_correct_has_no_layout() -> None:
-    joints = "<TileJointInfo Confidence='5' Tile1='1' Tile2='2' OverlapX='0' OverlapY='0'/>"
-    assert bif_stitching(packet(joints), 100, 80) is None
-    assert bif_stitching(packet(joints), 64, 80) is None
+ZERO_OVERLAP = (
+    "<TileJointInfo Confidence='5' Tile1='1' Tile2='2' OverlapX='0' OverlapY='0'/>"
+    "<TileJointInfo Confidence='5' Tile1='1' Tile2='4' OverlapX='0' OverlapY='0'/>"
+)
+
+
+def test_joints_that_declare_no_overlap_place_the_frames_as_an_exact_grid() -> None:
+    stitching = bif_stitching(packet(ZERO_OVERLAP), 100, 80)
+    assert stitching is not None
+    assert (stitching["advanceX"], stitching["advanceY"]) == (100, 80)
+    assert stitching["columnX"] == [0.0, 100.0]
+    assert stitching["rowY"] == [0.0, 80.0]
+    assert (stitching["width"], stitching["height"]) == (200, 160)
+
+
+def test_a_frame_size_that_differs_from_the_tiles_leaves_the_overlap_unknown() -> None:
+    assert bif_stitching(packet(ZERO_OVERLAP), 64, 80) is None
+
+
+def test_a_packet_without_joints_leaves_the_overlap_unknown() -> None:
     assert bif_stitching(packet(""), 100, 80) is None
+
+
+def test_an_axis_whose_joints_all_have_zero_confidence_leaves_the_overlap_unknown() -> None:
+    joints = (
+        "<TileJointInfo Confidence='5' Tile1='1' Tile2='2' OverlapX='12' OverlapY='0'/>"
+        "<TileJointInfo Confidence='0' Tile1='1' Tile2='4' OverlapX='0' OverlapY='9'/>"
+    )
+    assert bif_stitching(packet(joints), 100, 80) is None
+    assert bif_stitching(packet(joints, rows=1), 100, 80) is not None
+
+
+def test_several_or_skipped_scan_areas_leave_the_overlap_unknown() -> None:
+    area = '<ImageInfo AOIScanned="1" Width="100" Height="80" NumRows="2" NumCols="2">'
+    assert bif_stitching(f"<Data>{area}{area}{ZERO_OVERLAP}</Data>", 100, 80) is None
+    skipped = packet(ZERO_OVERLAP).replace('AOIScanned="1"', 'AOIScanned="0"')
+    assert bif_stitching(skipped, 100, 80) is None
+
+
+def placement(
+    tmp_path: Path, xmp: bytes | None, openslide_size: tuple[int, int]
+) -> dict[str, Any] | None:
+    path = tmp_path / "frames.bif"
+    extratags = [] if xmp is None else [(700, 1, len(xmp), xmp, True)]
+    tifffile.imwrite(path, np.zeros((160, 200, 3), np.uint8), tile=(80, 112), extratags=extratags)
+    with tifffile.TiffFile(path) as tiff:
+        page = tiff.pages.first
+        assert isinstance(page, tifffile.TiffPage)
+        return frame_placement(page, openslide_size)
+
+
+def test_a_level_zero_without_a_packet_is_a_plain_grid_as_openslide_draws_it(
+    tmp_path: Path,
+) -> None:
+    stitching = placement(tmp_path, None, (200, 160))
+    assert stitching is not None
+    assert (stitching["columns"], stitching["rows"]) == (2, 2)
+    assert (stitching["advanceX"], stitching["advanceY"]) == (112, 80)
+    assert (stitching["width"], stitching["height"]) == (200, 160)
+
+
+def test_a_packet_without_joints_is_refused_by_frame_placement(tmp_path: Path) -> None:
+    assert placement(tmp_path, packet("").encode(), (200, 160)) is None
+
+
+def test_a_layout_that_disagrees_with_the_openslide_level_size_is_refused(
+    tmp_path: Path,
+) -> None:
+    assert placement(tmp_path, None, (201, 160)) is not None
+    assert placement(tmp_path, None, (210, 160)) is None
+
+
+def test_ingest_checks_the_same_rule_before_it_accepts_a_bif(tmp_path: Path) -> None:
+    placement(tmp_path, packet("").encode(), (200, 160))
+    assert not frames_placed(tmp_path / "frames.bif", 0, (200, 160))
+    placement(tmp_path, None, (200, 160))
+    assert frames_placed(tmp_path / "frames.bif", 0, (200, 160))
+
+
+def test_the_os_1_layout_reproduces_the_openslide_level_size() -> None:
+    _, document = indexed("OS-1.bif")
+    assert placed_extent(document["stitching"]) == (105813, 93951)
 
 
 def test_the_document_is_compact_json() -> None:

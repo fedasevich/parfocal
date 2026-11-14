@@ -32,6 +32,12 @@ function advanceOf(
   return count > 1 ? (extent - frame) / (count - 1) : frame;
 }
 
+export function isPlainFrameGrid(stitching: SlideStitching): boolean {
+  return (
+    stitching.advanceX === stitching.frameWidth && stitching.advanceY === stitching.frameHeight
+  );
+}
+
 export function frameLayout(
   stitching: SlideStitching,
   baseWidth: number,
