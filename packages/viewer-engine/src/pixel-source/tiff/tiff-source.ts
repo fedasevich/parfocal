@@ -31,7 +31,13 @@ import {
   openTiff,
   type TiffPage,
 } from "./directory.ts";
-import { frameLayout, rawWindow, resample, sampleAxis } from "./frame-stitching.ts";
+import {
+  frameLayout,
+  isPlainFrameGrid,
+  rawWindow,
+  resample,
+  sampleAxis,
+} from "./frame-stitching.ts";
 import { scnMainPyramid } from "./leica-scn.ts";
 import {
   browserTileDecoder,
@@ -369,7 +375,10 @@ export async function openTiffSource(request: OpenRequest): Promise<PixelSource>
       : await readMicronsPerPixel(base.image);
   const stitching =
     request.index?.tileKind === "bif-frames" ? (request.index.stitching ?? null) : null;
-  const frames = stitching === null ? null : frameLayout(stitching, base.width, base.height);
+  const frames =
+    stitching === null || isPlainFrameGrid(stitching)
+      ? null
+      : frameLayout(stitching, base.width, base.height);
   let closed = false;
   const nativeDecoder =
     request.nativeJpeg === "off"

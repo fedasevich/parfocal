@@ -1,7 +1,7 @@
 # 0164. The browser reader places BIF camera frames on OpenSlide's even confidence-weighted pitch, not on the per-boundary layout
 
 - Date: 2026-11-03
-- Status: Accepted
+- Status: Accepted, amended by [ADR 0307](0307-a-bif-is-refused-only-when-its-frame-overlap-is-unknown.md) (a BIF is refused only when its frame overlap is unknown), which replaces the plain grid for a missing or null stitching with a re-ingest request
 - Deciders: Yurii Fedas
 - Backlog: VIEW-057 (place BIF frames by their stitch positions in the browser reader). Changes how [ADR 0153](0153-sidecar-tile-index.md) (sidecar tile index) uses its BIF stitching layout. Touches VIEW-014 (Ventana BIF with frame stitching)
 

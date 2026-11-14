@@ -7,6 +7,7 @@ export type Seat = {
   readonly user: string;
   readonly project: string | null;
   readonly expires: number;
+  readonly quiet?: true;
 };
 
 export type RoomEvent = { readonly kind: string; readonly ids: Readonly<Record<string, string>> };
@@ -47,6 +48,14 @@ const SLIDE_ROOM = "slide:";
 const PROJECT_ROOM = "project:";
 
 type Viewing = { readonly slide: string; readonly user: string; readonly kind: string };
+
+function isQuiet(seat: Seat): boolean {
+  return seat.quiet === true;
+}
+
+function hasPresence(seat: Seat): boolean {
+  return !isQuiet(seat) && (seat.room.startsWith(SLIDE_ROOM) || seat.room.startsWith(PROJECT_ROOM));
+}
 
 export function roomEventOf(value: unknown): RoomEvent | null {
   if (typeof value !== "object" || value === null) {
@@ -182,9 +191,17 @@ export class Room {
   }
 
   async join(server: WebSocket, seat: Seat): Promise<void> {
-    const present = this.presentUsers(new Set());
     this.ctx.acceptWebSocket(server, [userTag(seat.user)]);
     server.serializeAttachment(seat);
+    await this.arrive(server, seat);
+    await this.scheduleExpiry();
+  }
+
+  private async arrive(server: WebSocket, seat: Seat): Promise<void> {
+    if (!hasPresence(seat)) {
+      return;
+    }
+    const present = this.presentUsers(new Set([server]));
     for (const user of present) {
       if (user !== seat.user) {
         server.send(frameOf(presenceEvent(PRESENCE_JOINED, user)));
@@ -197,10 +214,20 @@ export class Room {
       }
     }
     if (!present.has(seat.user)) {
-      this.broadcast(presenceEvent(PRESENCE_JOINED, seat.user), new Set([server]));
+      this.announce(presenceEvent(PRESENCE_JOINED, seat.user), new Set([server]));
       await this.tellProject(seat, PRESENCE_JOINED);
     }
-    await this.scheduleExpiry();
+  }
+
+  private announce(event: RoomEvent, except: ReadonlySet<WebSocket> = new Set()): void {
+    const frame = frameOf(event);
+    const now = this.now();
+    for (const socket of this.ctx.getWebSockets()) {
+      const listener = this.seatOf(socket);
+      if (!except.has(socket) && listener.expires > now && !isQuiet(listener)) {
+        socket.send(frame);
+      }
+    }
   }
 
   private async tellProject(seat: Seat, kind: string): Promise<void> {
@@ -221,7 +248,7 @@ export class Room {
     } else {
       await this.ctx.storage.delete([key]);
     }
-    this.broadcast({ kind, ids: { slide, user } });
+    this.announce({ kind, ids: { slide, user } });
   }
 
   broadcast(event: RoomEvent, except: ReadonlySet<WebSocket> = new Set()): number {
@@ -250,8 +277,9 @@ export class Room {
     return new Set(
       this.ctx
         .getWebSockets()
-        .filter((socket) => !except.has(socket) && this.seatOf(socket).expires > now)
-        .map((socket) => this.seatOf(socket).user),
+        .map((socket) => ({ socket, seat: this.seatOf(socket) }))
+        .filter(({ socket, seat }) => !except.has(socket) && seat.expires > now && !isQuiet(seat))
+        .map(({ seat }) => seat.user),
     );
   }
 
@@ -260,17 +288,26 @@ export class Room {
     code: number | null,
     reason: string,
   ): Promise<void> {
-    const gone = new Set(closing);
-    const users = new Map(closing.map((socket) => [this.seatOf(socket).user, this.seatOf(socket)]));
     if (code !== null) {
       for (const socket of closing) {
         socket.close(code, reason);
       }
     }
+    await this.depart(closing);
+  }
+
+  private async depart(going: readonly WebSocket[]): Promise<void> {
+    const gone = new Set(going);
+    const users = new Map(
+      going
+        .map((socket) => this.seatOf(socket))
+        .filter((seat) => hasPresence(seat))
+        .map((seat) => [seat.user, seat]),
+    );
     const remaining = this.presentUsers(gone);
     for (const [user, seat] of users) {
       if (!remaining.has(user)) {
-        this.broadcast(presenceEvent(PRESENCE_LEFT, user), gone);
+        this.announce(presenceEvent(PRESENCE_LEFT, user), gone);
         await this.tellProject(seat, PRESENCE_LEFT);
       }
     }
@@ -360,6 +397,7 @@ export class Room {
     const refused =
       payload === null ||
       !seat.room.startsWith(SLIDE_ROOM) ||
+      isQuiet(seat) ||
       seat.expires <= this.now() ||
       !this.withinRate(socket, rates, perSecond);
     if (refused) {
@@ -369,7 +407,7 @@ export class Room {
     const now = this.now();
     for (const other of this.ctx.getWebSockets()) {
       const listener = this.seatOf(other);
-      if (listener.user !== seat.user && listener.expires > now) {
+      if (listener.user !== seat.user && listener.expires > now && !isQuiet(listener)) {
         other.send(relayed);
       }
     }
@@ -398,11 +436,7 @@ export class Room {
       await this.leave([socket], CLOSE_EXPIRED, "token-refused");
       return;
     }
-    const renewed: Seat = {
-      ...seat,
-      project: access.grant.project,
-      expires: access.grant.expires,
-    };
+    const renewed: Seat = access.grant;
     const index = await roomStub(this.env, seat.tenant, `user:${seat.user}`).fetch(
       "https://room/join",
       {
@@ -418,8 +452,14 @@ export class Room {
       await this.leave([socket], CLOSE_REMOVED, "removed");
       return;
     }
+    if (isQuiet(renewed) && !isQuiet(seat)) {
+      await this.depart([socket]);
+    }
     socket.serializeAttachment(renewed);
     socket.send(JSON.stringify({ type: "renewed", expires: renewed.expires }));
+    if (isQuiet(seat) && !isQuiet(renewed)) {
+      await this.arrive(socket, renewed);
+    }
     await this.scheduleExpiry();
   }
 

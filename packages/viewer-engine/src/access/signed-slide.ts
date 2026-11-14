@@ -42,6 +42,16 @@ export class CrossOriginSlideBytesError extends Error {
   }
 }
 
+export class SlideNeedsReingestError extends Error {
+  readonly url: string;
+
+  constructor(url: string) {
+    super(`The frame placement in ${url} is missing, so the slide must be ingested again`);
+    this.name = "SlideNeedsReingestError";
+    this.url = url;
+  }
+}
+
 export interface LevelTableLevel {
   readonly downsample: number;
   readonly width: number;
@@ -190,10 +200,11 @@ async function withFrameStitching(
 ): Promise<SlideIndex> {
   const { access, fetcher, signal } = options;
   const response = await access.fetch(sidecarUrl, signal === undefined ? {} : { signal }, fetcher);
-  if (response.status === 404) return table;
+  if (response.status === 404) throw new SlideNeedsReingestError(sidecarUrl);
   if (!response.ok) throw new SlideBytesError(sidecarUrl, response.status);
   const stitching = frameStitchingOf(await sidecarDocument(response));
-  return stitching === null ? table : { ...table, tileKind: "bif-frames", stitching };
+  if (stitching === null) throw new SlideNeedsReingestError(sidecarUrl);
+  return { ...table, tileKind: "bif-frames", stitching };
 }
 
 export async function signedOpenRequest(options: SignedSlideOptions): Promise<OpenRequest> {
