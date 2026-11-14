@@ -461,6 +461,7 @@ WRITE_ROUTES: dict[str, Write] = {
         path=SHARED_OBJECT, query=constant_query(version="1", reason=REASON)
     ),
     "signOffAnnotateSlide": Write(path=ON_ANNOTATE_TASK, owner=CONFLICT),
+    "startPatchExport": Write(path=ON_ANNOTATE_TASK, body=constant({})),
     "skipObject": Write(path=OBJECT, body=constant({}), owner=CONFLICT),
     "clearSkip": Write(path=OBJECT),
     "submitSlideReview": Write(owner=CONFLICT),
