@@ -61,6 +61,10 @@ import { MeasurementList } from "../measure/measurement-list.tsx";
 import { RulerLayer } from "../measure/ruler-layer.tsx";
 import { SharedCursorLayer } from "../presence/live-cursor.tsx";
 import { registerStageEngine } from "../presence/stage-engines.ts";
+import { AddResultSet } from "../results/add-result-set.tsx";
+import type { ParsedResults, Placement } from "../results/geojson-placement.ts";
+import { PreviewLayer } from "../results/preview-layer.tsx";
+import { ResultSetLayers } from "../results/result-set-layers.tsx";
 import { areaRoleText, areaRows } from "../screens/viewer/area-nav.ts";
 import { annotateRail } from "../screens/viewer-tools/rails.ts";
 import { useDeveloperMode } from "../shell/developer-mode.ts";
@@ -304,6 +308,12 @@ function OpenedSlide({
   const setup = workspaceSetups[workspace];
   const restingTool: ViewerTool = setup.restingTool;
   const [tool, setTool] = useState<ViewerTool>(restingTool);
+  const [addingResults, setAddingResults] = useState(false);
+  const [resultPreview, setResultPreview] = useState<{
+    results: ParsedResults;
+    placement: Placement;
+  } | null>(null);
+  const closeAddResults = useCallback(() => setAddingResults(false), []);
   useEffect(() => setTool(restingTool), [restingTool]);
   const toolBindings = useBindings(["annotate"], railActions);
   const onToolKey = useCallback(
@@ -732,6 +742,22 @@ function OpenedSlide({
               onDocumentChange={setAnnotations}
             />
             <ProposalLayer engine={session.engine} stage={hostNode} proposals={proposals.pending} />
+            {resultPreview === null ? null : (
+              <PreviewLayer
+                engine={session.engine}
+                stage={hostNode}
+                results={resultPreview.results}
+                placement={resultPreview.placement}
+              />
+            )}
+            {addingResults && projectId !== undefined ? (
+              <AddResultSet
+                projectId={projectId}
+                slideId={slideId}
+                onClose={closeAddResults}
+                onPreview={setResultPreview}
+              />
+            ) : null}
             {annotateTask ? (
               <AnnotateTaskPanel
                 engine={session.engine}
@@ -809,6 +835,15 @@ function OpenedSlide({
                   areas={areas}
                   target={saved.target}
                   onTarget={saved.setTarget}
+                  resultSets={
+                    projectId === undefined ? undefined : (
+                      <ResultSetLayers
+                        slideId={slideId}
+                        adding={addingResults}
+                        onAdd={() => setAddingResults(true)}
+                      />
+                    )
+                  }
                 />
               ) : null}
               {showsCountPanel(setup, {

@@ -7,8 +7,37 @@ msgstr ""
 "X-Generator: @lingui/cli\n"
 "Language: cs\n"
 
+#. placeholder {0}: picked.results.objects
+#: src/results/add-result-set.tsx
+msgid "{0} objects, shown in cyan and not saved yet"
+msgstr ""
+
+#. placeholder {0}: magnification.toFixed(1)
+#. placeholder {1}: Math.round(viewport[0])
+#. placeholder {2}: Math.round(viewport[1])
+#: src/popout/popout-screen.tsx
+msgid "{0}× at {1}, {2}"
+msgstr ""
+
 #: src/shell/not-available.tsx
 msgid "{what} is not available yet. This part of Parfocal is still being built."
+msgstr ""
+
+#: src/results/add-result-set.tsx
+#: src/results/result-set-layers.tsx
+msgid "Add a result set"
+msgstr ""
+
+#: src/results/add-result-set.tsx
+msgid "Add result set"
+msgstr ""
+
+#: src/results/add-result-set.tsx
+msgid "Adding the result set to the slide"
+msgstr ""
+
+#: src/results/add-result-set.tsx
+msgid "Alignment"
 msgstr ""
 
 #: src/shell/issue-pages.tsx
@@ -19,12 +48,28 @@ msgstr ""
 msgid "Asked {ownerName}"
 msgstr ""
 
+#: src/results/add-result-set.tsx
+msgid "Cancel"
+msgstr ""
+
+#: src/results/add-result-set.tsx
+msgid "Choose a GeoJSON file. You see it on the slide in cyan before anything is saved."
+msgstr ""
+
+#: src/results/add-result-set.tsx
+msgid "Choose another file"
+msgstr ""
+
 #: src/shell/issue-pages.tsx
 msgid "Everything else in Parfocal works and nothing was changed."
 msgstr ""
 
 #: src/shell/issue-pages.tsx
 msgid "Everything you saved is kept. Your last save was {lastSaved}."
+msgstr ""
+
+#: src/popout/popout-screen.tsx
+msgid "Following the main window"
 msgstr ""
 
 #: src/shell/issue-pages.tsx
@@ -35,8 +80,44 @@ msgstr ""
 msgid "No access to {projectName}"
 msgstr ""
 
+#: src/screens/review/inspector-dock.tsx
+msgid "Open the side panel on the second monitor"
+msgstr ""
+
+#: src/popout/popout-screen.tsx
+msgid "Open this window from the viewer."
+msgstr ""
+
 #: src/shell/issue-pages.tsx
 msgid "Page not found"
+msgstr ""
+
+#: src/results/add-result-set.tsx
+msgid "Reset alignment"
+msgstr ""
+
+#: src/results/add-result-set.tsx
+msgid "Result file"
+msgstr ""
+
+#: src/results/result-set-layers.tsx
+msgid "Result sets"
+msgstr ""
+
+#: src/results/add-result-set.tsx
+msgid "Scale"
+msgstr ""
+
+#: src/popout/popout-screen.tsx
+msgid "Second monitor"
+msgstr ""
+
+#: src/results/add-result-set.tsx
+msgid "Shift x"
+msgstr ""
+
+#: src/results/add-result-set.tsx
+msgid "Shift y"
 msgstr ""
 
 #: src/shell/issue-pages.tsx
@@ -45,6 +126,14 @@ msgstr ""
 
 #: src/shell/issue-pages.tsx
 msgid "Something went wrong on our side"
+msgstr ""
+
+#: src/results/add-result-set.tsx
+msgid "That file has no shapes Parfocal can draw. Choose a GeoJSON file."
+msgstr ""
+
+#: src/results/add-result-set.tsx
+msgid "The file could not be added."
 msgstr ""
 
 #: src/shell/issue-pages.tsx
@@ -63,8 +152,16 @@ msgstr ""
 msgid "Try again"
 msgstr ""
 
+#: src/popout/popout-screen.tsx
+msgid "Waiting for the main window"
+msgstr ""
+
 #: src/shell/issue-pages.tsx
 msgid "What you already saved is safe, and other pages still work."
+msgstr ""
+
+#: src/popout/popout-screen.tsx
+msgid "Whole slide"
 msgstr ""
 
 #: src/shell/issue-pages.tsx

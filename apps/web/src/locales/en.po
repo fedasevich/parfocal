@@ -7,9 +7,38 @@ msgstr ""
 "X-Generator: @lingui/cli\n"
 "Language: en\n"
 
+#. placeholder {0}: picked.results.objects
+#: src/results/add-result-set.tsx
+msgid "{0} objects, shown in cyan and not saved yet"
+msgstr "{0} objects, shown in cyan and not saved yet"
+
+#. placeholder {0}: magnification.toFixed(1)
+#. placeholder {1}: Math.round(viewport[0])
+#. placeholder {2}: Math.round(viewport[1])
+#: src/popout/popout-screen.tsx
+msgid "{0}× at {1}, {2}"
+msgstr "{0}× at {1}, {2}"
+
 #: src/shell/not-available.tsx
 msgid "{what} is not available yet. This part of Parfocal is still being built."
 msgstr "{what} is not available yet. This part of Parfocal is still being built."
+
+#: src/results/add-result-set.tsx
+#: src/results/result-set-layers.tsx
+msgid "Add a result set"
+msgstr "Add a result set"
+
+#: src/results/add-result-set.tsx
+msgid "Add result set"
+msgstr "Add result set"
+
+#: src/results/add-result-set.tsx
+msgid "Adding the result set to the slide"
+msgstr "Adding the result set to the slide"
+
+#: src/results/add-result-set.tsx
+msgid "Alignment"
+msgstr "Alignment"
 
 #: src/shell/issue-pages.tsx
 msgid "Ask for access"
@@ -19,6 +48,18 @@ msgstr "Ask for access"
 msgid "Asked {ownerName}"
 msgstr "Asked {ownerName}"
 
+#: src/results/add-result-set.tsx
+msgid "Cancel"
+msgstr "Cancel"
+
+#: src/results/add-result-set.tsx
+msgid "Choose a GeoJSON file. You see it on the slide in cyan before anything is saved."
+msgstr "Choose a GeoJSON file. You see it on the slide in cyan before anything is saved."
+
+#: src/results/add-result-set.tsx
+msgid "Choose another file"
+msgstr "Choose another file"
+
 #: src/shell/issue-pages.tsx
 msgid "Everything else in Parfocal works and nothing was changed."
 msgstr "Everything else in Parfocal works and nothing was changed."
@@ -26,6 +67,10 @@ msgstr "Everything else in Parfocal works and nothing was changed."
 #: src/shell/issue-pages.tsx
 msgid "Everything you saved is kept. Your last save was {lastSaved}."
 msgstr "Everything you saved is kept. Your last save was {lastSaved}."
+
+#: src/popout/popout-screen.tsx
+msgid "Following the main window"
+msgstr "Following the main window"
 
 #: src/shell/issue-pages.tsx
 msgid "Go home"
@@ -35,9 +80,45 @@ msgstr "Go home"
 msgid "No access to {projectName}"
 msgstr "No access to {projectName}"
 
+#: src/screens/review/inspector-dock.tsx
+msgid "Open the side panel on the second monitor"
+msgstr "Open the side panel on the second monitor"
+
+#: src/popout/popout-screen.tsx
+msgid "Open this window from the viewer."
+msgstr "Open this window from the viewer."
+
 #: src/shell/issue-pages.tsx
 msgid "Page not found"
 msgstr "Page not found"
+
+#: src/results/add-result-set.tsx
+msgid "Reset alignment"
+msgstr "Reset alignment"
+
+#: src/results/add-result-set.tsx
+msgid "Result file"
+msgstr "Result file"
+
+#: src/results/result-set-layers.tsx
+msgid "Result sets"
+msgstr "Result sets"
+
+#: src/results/add-result-set.tsx
+msgid "Scale"
+msgstr "Scale"
+
+#: src/popout/popout-screen.tsx
+msgid "Second monitor"
+msgstr "Second monitor"
+
+#: src/results/add-result-set.tsx
+msgid "Shift x"
+msgstr "Shift x"
+
+#: src/results/add-result-set.tsx
+msgid "Shift y"
+msgstr "Shift y"
 
 #: src/shell/issue-pages.tsx
 msgid "Sign in to go on"
@@ -46,6 +127,14 @@ msgstr "Sign in to go on"
 #: src/shell/issue-pages.tsx
 msgid "Something went wrong on our side"
 msgstr "Something went wrong on our side"
+
+#: src/results/add-result-set.tsx
+msgid "That file has no shapes Parfocal can draw. Choose a GeoJSON file."
+msgstr "That file has no shapes Parfocal can draw. Choose a GeoJSON file."
+
+#: src/results/add-result-set.tsx
+msgid "The file could not be added."
+msgstr "The file could not be added."
 
 #: src/shell/issue-pages.tsx
 msgid "The page could not be shown."
@@ -63,9 +152,17 @@ msgstr "This page does not exist, or it was moved or deleted."
 msgid "Try again"
 msgstr "Try again"
 
+#: src/popout/popout-screen.tsx
+msgid "Waiting for the main window"
+msgstr "Waiting for the main window"
+
 #: src/shell/issue-pages.tsx
 msgid "What you already saved is safe, and other pages still work."
 msgstr "What you already saved is safe, and other pages still work."
+
+#: src/popout/popout-screen.tsx
+msgid "Whole slide"
+msgstr "Whole slide"
 
 #: src/shell/issue-pages.tsx
 msgid "You are not a member of {projectName}. Its owner is {ownerName}."
