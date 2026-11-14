@@ -7,6 +7,7 @@ import {
   CLOSE_EXPIRED,
   CLOSE_REMOVED,
   CLOSE_TOO_BIG,
+  MAX_CURSOR_FRAMES_PER_SECOND,
   MAX_SOCKETS_PER_PERSON,
   MAX_VIEW_FRAMES_PER_SECOND,
   ROOM_TOKEN_SECONDS,
@@ -817,6 +818,88 @@ describe("follow my view", () => {
     const state = edge.state(`${TENANT}/${SLIDE}`);
     const before = JSON.stringify([...state.stored]);
     await say(view(camera));
+    assert.equal(JSON.stringify([...state.stored]), before);
+  });
+});
+
+describe("live shared cursor", () => {
+  const cursor = (fields: Record<string, unknown>) => JSON.stringify({ type: "cursor", ...fields });
+  const view = JSON.stringify({ type: "view", x: 1, y: 2, zoom: 3 });
+  const point = { x: 0.4125, y: 0.73 };
+
+  async function pair(grant: Partial<RoomGrant> = {}) {
+    const edge = new Edge();
+    const anna = await edge.join(grant);
+    const ben = await edge.join({ ...grant, user: BEN });
+    const room = edge.room(`${TENANT}/${grant.room ?? SLIDE}`);
+    anna.sent.length = 0;
+    ben.sent.length = 0;
+    const say = (text: string) => room.webSocketMessage(anna as unknown as WebSocket, text);
+    return { edge, anna, ben, room, say };
+  }
+
+  test("a cursor frame reaches the others in the slide room under the sender's own name", async () => {
+    const { edge, anna, ben, say } = await pair();
+    const secondTab = await edge.join({});
+    secondTab.sent.length = 0;
+    await say(cursor({ ...point, user: BEN, n: "t" }));
+    assert.deepEqual(ben.sent, [cursor({ user: ANNA, ...point })]);
+    assert.deepEqual(anna.sent, []);
+    assert.deepEqual(secondTab.sent, []);
+    await say(cursor({ gone: true }));
+    assert.deepEqual(ben.sent.at(-1), cursor({ user: ANNA, gone: true }));
+  });
+
+  test("a cursor frame that is not two finite numbers, or is too long, is dropped", async () => {
+    const { anna, ben, say } = await pair();
+    await say(cursor({ x: 1 }));
+    await say(cursor({ x: "1", y: 2 }));
+    await say(cursor({ x: null, y: 2 }));
+    await say(cursor({ ...point, padding: "p".repeat(100) }));
+    assert.deepEqual(ben.sent, []);
+    assert.equal(anna.closed, null);
+  });
+
+  test("a room that is not a slide room passes no cursor on", async () => {
+    const { ben, say } = await pair({ room: "task:33333333-3333-4333-8333-333333333333" });
+    await say(cursor(point));
+    assert.deepEqual(ben.sent, []);
+  });
+
+  test("cursor frames past the rate are dropped and never use up the rate of view frames", async () => {
+    const { ben, room, say } = await pair();
+    let at = 5000;
+    room.clock = () => at;
+    for (let sent = 0; sent < MAX_CURSOR_FRAMES_PER_SECOND + 10; sent += 1) {
+      await say(cursor(point));
+    }
+    assert.equal(ben.sent.length, MAX_CURSOR_FRAMES_PER_SECOND);
+    await say(view);
+    assert.equal(ben.sent.length, MAX_CURSOR_FRAMES_PER_SECOND + 1);
+    at += 1000;
+    await say(cursor(point));
+    assert.equal(ben.sent.length, MAX_CURSOR_FRAMES_PER_SECOND + 2);
+  });
+
+  test("an expired seat neither sends nor receives a cursor", async () => {
+    const edge = new Edge();
+    const anna = await edge.join({ expires: NOW + 900 });
+    const ben = await edge.join({ user: BEN });
+    const room = edge.room(`${TENANT}/${SLIDE}`);
+    edge.now = NOW + 400;
+    anna.sent.length = 0;
+    ben.sent.length = 0;
+    await room.webSocketMessage(anna as unknown as WebSocket, cursor(point));
+    assert.deepEqual(ben.sent, []);
+    await room.webSocketMessage(ben as unknown as WebSocket, cursor(point));
+    assert.deepEqual(anna.sent, []);
+  });
+
+  test("nothing about a cursor is stored", async () => {
+    const { edge, say } = await pair();
+    const state = edge.state(`${TENANT}/${SLIDE}`);
+    const before = JSON.stringify([...state.stored]);
+    await say(cursor(point));
     assert.equal(JSON.stringify([...state.stored]), before);
   });
 });

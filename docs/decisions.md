@@ -142,6 +142,16 @@ COLLAB-010 (follow my view) lets anyone on a slide share their camera and lets a
 
 Your choice: 
 
+### 99. Whether a person in compare can send their own cursor
+
+COLLAB-011 (live shared cursor) shows in compare the pointer of everyone who shares their view on the live slide. Compare has no "Share my view" control, so a person there sees a colleague's pointer and cannot send their own ([ADR 0302](adr/0302-a-shared-cursor-is-a-second-capped-frame-in-shares-of-the-slide.md), a shared cursor is a second capped client frame). Decision 98 (whether a blinded task hides "Share my view") covers the cursor too.
+
+- **A. Leave compare as display only (recommended).** Sharing stays one deliberate act on the live slide.
+- B. Add "Share my cursor" to the compare toolbar. It needs a small follow-up task.
+- Other.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 Nothing else in review needs you. Nine tasks that only waited for green CI were ticked on 2026-11-02.
