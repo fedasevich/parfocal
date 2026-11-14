@@ -1,0 +1,24 @@
+{
+  "fixture": "CMU-1.ndpi",
+  "reader": "openslide",
+  "windows": [
+    {
+      "level": 0,
+      "downsample": 1,
+      "x": 34688,
+      "y": 19040,
+      "width": 256,
+      "height": 64,
+      "file": "level-0-34688-19040.png"
+    },
+    {
+      "level": 1,
+      "downsample": 4,
+      "x": 8576,
+      "y": 4736,
+      "width": 256,
+      "height": 64,
+      "file": "level-1-8576-4736.png"
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "fixture": "Hamamatsu-1.ndpi",
+  "reader": "openslide",
+  "windows": [
+    {
+      "level": 0,
+      "downsample": 1,
+      "x": 30592,
+      "y": 50656,
+      "width": 256,
+      "height": 64,
+      "file": "level-0-30592-50656.png"
+    },
+    {
+      "level": 1,
+      "downsample": 2,
+      "x": 78592,
+      "y": 42208,
+      "width": 256,
+      "height": 64,
+      "file": "level-1-78592-42208.png"
+    }
+  ]
+}

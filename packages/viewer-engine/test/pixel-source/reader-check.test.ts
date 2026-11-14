@@ -12,6 +12,7 @@ import { PNG } from "pngjs";
 import {
   checkAgainstReference,
   checkSeams,
+  openNdpiSource,
   openTiffSource,
   type PixelResult,
   type PixelSource,
@@ -43,6 +44,8 @@ const slides: readonly Slide[] = [
   { name: "JP2K-33003-1.svs", formatId: "aperio-svs", cached: true },
   { name: "CMU-1.svs", formatId: "aperio-svs", cached: true },
   { name: "OS-1.bif", formatId: "ventana-bif", cached: true, indexed: true },
+  { name: "CMU-1.ndpi", formatId: "hamamatsu-ndpi", cached: true },
+  { name: "Hamamatsu-1.ndpi", formatId: "hamamatsu-ndpi", cached: true },
 ];
 
 function slide(name: string): Slide {
@@ -64,7 +67,8 @@ function sidecar(name: string): SlideIndex {
 async function open(entry: Slide, withIndex = true): Promise<PixelSource> {
   const url = served.url(`/${entry.cached ? "cache" : "synthetic"}/${entry.name}`);
   const index = entry.indexed && withIndex ? { index: sidecar(entry.name) } : {};
-  return openTiffSource({ formatId: entry.formatId, url, nativeJpeg: "off", ...index });
+  const opener = entry.formatId === "hamamatsu-ndpi" ? openNdpiSource : openTiffSource;
+  return opener({ formatId: entry.formatId, url, nativeJpeg: "off", ...index });
 }
 
 function reference(name: string): ReferenceWindow[] {

@@ -1,6 +1,7 @@
 import { getDecoder } from "geotiff";
 import { checkTile, checkWindow, levelAt, tileWindow } from "../geometry.ts";
 import { browserTileDecoder } from "../tiff/native-jpeg.ts";
+import { tileOffsets } from "../tile-index.ts";
 import {
   type ChannelInfo,
   type DecodeReport,
@@ -14,9 +15,10 @@ import {
   type PixelSource,
   type PixelWindow,
   type RasterRequest,
+  type SlideIndex,
+  type SlideIndexLevel,
   SourceClosedError,
   type TileRequest,
-  UnsupportedFormatError,
 } from "../types.ts";
 import { absoluteUrl } from "../url.ts";
 import {
@@ -219,12 +221,98 @@ function meanAbsoluteError(a: Uint8Array, b: Uint8Array): number {
   return total / a.length;
 }
 
-export async function openNdpiSource(request: OpenRequest): Promise<PixelSource> {
-  const url = absoluteUrl(request.url, request.baseUrl).href;
-  const read = rangeReader(url, request.fetch ?? globalThis.fetch.bind(globalThis));
+interface Opened {
+  readonly levels: readonly NdpiLevel[];
+  readonly micronsPerPixel: MicronsPerPixel | null;
+  readonly starts: Map<number, Promise<Float64Array>>;
+}
+
+interface IndexedLevel {
+  readonly level: SlideIndexLevel;
+  readonly offsets: readonly number[];
+  readonly end: number;
+  readonly header: Uint8Array | null;
+}
+
+function bytesFromBase64(text: string): Uint8Array {
+  return Uint8Array.from(atob(text), (character) => character.charCodeAt(0));
+}
+
+function indexedLevels(index: SlideIndex | undefined): IndexedLevel[] | null {
+  if (index?.tileKind !== "ndpi-restart" || index.levels === undefined) return null;
+  const located: IndexedLevel[] = [];
+  for (const level of index.levels) {
+    const offsets = tileOffsets({ ...level, page: level.page ?? 0 });
+    const last = offsets?.at(-1);
+    const lastCount = level.tileByteCounts?.at(-1);
+    if (offsets === null || last === undefined || lastCount === undefined) return null;
+    const header = typeof level.jpegHeader === "string" ? bytesFromBase64(level.jpegHeader) : null;
+    if (header === null && offsets.length !== 1) return null;
+    located.push({ level, offsets, end: last + lastCount, header });
+  }
+  return located.length === 0 ? null : located;
+}
+
+async function openFromIndex(
+  read: ByteReader,
+  index: SlideIndex,
+  located: readonly IndexedLevel[],
+  signal?: AbortSignal,
+): Promise<Opened> {
+  const starts = new Map<number, Promise<Float64Array>>();
+  const levels = await Promise.all(
+    located.map(async ({ level, offsets, end, header }, position) => {
+      const frame = header === null ? null : parseNdpiFrame(header);
+      if (header !== null && frame === null) {
+        throw new NdpiFormatError(
+          `The slide index holds no JPEG scan header for level ${position}`,
+        );
+      }
+      const stripOffset = (offsets[0] ?? 0) - (frame?.header.length ?? 0);
+      const page: NdpiPage = {
+        ifd: level.page ?? position,
+        offset: level.ifdOffset ?? 0,
+        width: level.width,
+        height: level.height,
+        compression: jpegCompression,
+        stripOffset,
+        stripLength: end - stripOffset,
+        sourceLens: null,
+        focalOffset: 0,
+        resolutionUnit: centimetre,
+        xResolutionOffset: null,
+        yResolutionOffset: null,
+        restartCount: frame === null ? 0 : offsets.length,
+        restartOffset: null,
+        restartHighOffset: null,
+      };
+      const described = describeLevel(
+        page,
+        frame ?? (await readFrame(read, page, signal)),
+        level.downsample,
+      );
+      if (!described.whole) {
+        starts.set(
+          position,
+          Promise.resolve(Float64Array.from(offsets, (offset) => offset - stripOffset)),
+        );
+      }
+      return described;
+    }),
+  );
+  return { levels, micronsPerPixel: index.micronsPerPixel ?? null, starts };
+}
+
+async function openFromDirectories(
+  read: ByteReader,
+  index: SlideIndex | undefined,
+  signal?: AbortSignal,
+): Promise<Opened> {
   const pages = pyramidPages(
-    await readNdpiPages(read, request.signal).catch((error: unknown) => {
-      throw error instanceof NdpiFormatError ? new UnsupportedFormatError(request.formatId) : error;
+    await readNdpiPages(read, signal).catch((error: unknown) => {
+      throw error instanceof NdpiFormatError
+        ? new NdpiFormatError(`The file cannot be read as NDPI. ${error.message}`)
+        : error;
     }),
   );
   const [basePage] = pages;
@@ -233,15 +321,26 @@ export async function openNdpiSource(request: OpenRequest): Promise<PixelSource>
     pages.map(async (page) =>
       describeLevel(
         page,
-        await readFrame(read, page, request.signal),
+        await readFrame(read, page, signal),
         Math.round(basePage.width / page.width),
       ),
     ),
   );
   const micronsPerPixel =
-    request.index?.micronsPerPixel !== undefined
-      ? request.index.micronsPerPixel
-      : await readMicronsPerPixel(read, basePage, request.signal);
+    index?.micronsPerPixel !== undefined
+      ? index.micronsPerPixel
+      : await readMicronsPerPixel(read, basePage, signal);
+  return { levels, micronsPerPixel, starts: new Map() };
+}
+
+export async function openNdpiSource(request: OpenRequest): Promise<PixelSource> {
+  const url = absoluteUrl(request.url, request.baseUrl).href;
+  const read = rangeReader(url, request.fetch ?? globalThis.fetch.bind(globalThis));
+  const located = indexedLevels(request.index);
+  const { levels, micronsPerPixel, starts } =
+    located !== null && request.index !== undefined
+      ? await openFromIndex(read, request.index, located, request.signal)
+      : await openFromDirectories(read, request.index, request.signal);
 
   let closed = false;
   const nativeDecoder =
@@ -255,7 +354,6 @@ export async function openNdpiSource(request: OpenRequest): Promise<PixelSource>
   let nativeReads = 0;
   let scriptReads = 0;
   let nativeFallbacks = 0;
-  const starts = new Map<number, Promise<Float64Array>>();
   const units = new Map<string, Unit>();
   const pending = new Map<string, Promise<Unit>>();
   let cachedBytes = 0;
