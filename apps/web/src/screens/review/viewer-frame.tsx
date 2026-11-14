@@ -1,3 +1,5 @@
+import { plural } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import type { ReviewObject } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
 import { Icon, type IconName } from "@parfocal/ui/components/icon";
@@ -113,6 +115,7 @@ export function ViewerFrame({
   overlay,
   panelTab,
 }: ViewerFrameProps) {
+  const { t } = useLingui();
   const panelKey = useKeyLabel("panel");
   useRailKeys(railGroups, onToolChange, railKeys);
   const [layout, setLayout] = useInspectorLayout();
@@ -152,7 +155,10 @@ export function ViewerFrame({
           progressSub={progressSub}
           submitReason={
             counts?.open
-              ? `${counts.open} object${counts.open === 1 ? " is" : "s are"} still open.`
+              ? plural(counts.open, {
+                  one: "# object is still open.",
+                  other: "# objects are still open.",
+                })
               : undefined
           }
           {...(onSubmit ? { onSubmit } : {})}
@@ -181,7 +187,7 @@ export function ViewerFrame({
               {onCompare ? (
                 <ToolRailButton
                   icon="slides"
-                  label="Compare slides"
+                  label={t`Compare slides`}
                   tipSide={tipSide}
                   pressed={false}
                   onPressedChange={onCompare}
@@ -189,7 +195,7 @@ export function ViewerFrame({
               ) : null}
               <ToolRailButton
                 icon="panel"
-                label={layout.hidden ? "Show the side panel" : "Hide the side panel"}
+                label={layout.hidden ? t`Show the side panel` : t`Hide the side panel`}
                 tipSide={tipSide}
                 pressed={!layout.hidden}
                 onPressedChange={() => setLayout((current) => ({ hidden: !current.hidden }))}
@@ -226,7 +232,7 @@ export function ViewerFrame({
                   {onCompare ? (
                     <ToolRailButton
                       icon="slides"
-                      label="Compare slides"
+                      label={t`Compare slides`}
                       tipSide={tipSide}
                       pressed={false}
                       onPressedChange={onCompare}
@@ -234,7 +240,7 @@ export function ViewerFrame({
                   ) : null}
                   <ToolRailButton
                     icon="panel"
-                    label={layout.hidden ? "Show the side panel" : "Hide the side panel"}
+                    label={layout.hidden ? t`Show the side panel` : t`Hide the side panel`}
                     tipSide={tipSide}
                     pressed={!layout.hidden}
                     onPressedChange={() => setLayout((current) => ({ hidden: !current.hidden }))}
@@ -286,13 +292,16 @@ export function ObjectsSummary({
   counts: SlideCounts;
   added: string[];
 }) {
+  const { t } = useLingui();
   return (
     <Zone
       data-phi=""
-      title={`Objects on ${slideLabel}`}
+      title={t`Objects on ${slideLabel}`}
       end={
         <span className="font-mono text-caption text-fg-dim">
-          {counts.decided} of {counts.total}
+          <Trans>
+            {counts.decided} of {counts.total}
+          </Trans>
         </span>
       }
     >
@@ -317,12 +326,13 @@ export function ObjectsSummary({
 }
 
 export function AiSays({ setName, objects }: { setName: string; objects: ReviewObject[] }) {
+  const { t } = useLingui();
   useLengthUnits();
   const regions = objects.filter((item) => item.kind === "region");
   const sizes = regions.map((item) => item.size_mm ?? 0);
   const cells = objects.length - regions.length;
   return (
-    <Zone title="AI says">
+    <Zone title={t`AI says`}>
       <FactList
         tight
         rows={[
@@ -396,6 +406,7 @@ export function ObjectList({
   notes,
   measurements = [],
 }: ObjectListProps) {
+  const { t } = useLingui();
   useLengthUnits();
   const shown = filter ?? "all";
   const matches = (object: string) => {
@@ -415,7 +426,10 @@ export function ObjectList({
     "grid w-full cursor-pointer grid-cols-[44px_1fr_auto_auto] items-start gap-2 rounded-ctl border-0 bg-transparent px-1 py-2 text-left text-body-sm text-fg hover:bg-chrome-2 aria-[current=true]:bg-surf-hl";
   return (
     <div className="grid gap-3">
-      <fieldset aria-label="Show" className="m-0 flex min-w-0 gap-1.5 overflow-hidden border-0 p-0">
+      <fieldset
+        aria-label={t`Show`}
+        className="m-0 flex min-w-0 gap-1.5 overflow-hidden border-0 p-0"
+      >
         {filters.map((item) => (
           <FilterChip
             key={item.key}
@@ -443,7 +457,9 @@ export function ObjectList({
               >
                 <ObjectIdTag>{item.object}</ObjectIdTag>
                 <span className="grid">
-                  <span>Tumor region</span>
+                  <span>
+                    <Trans>Tumor region</Trans>
+                  </span>
                   <small className="inline-flex items-center gap-1.5 text-caption text-fg-dim">
                     <i
                       aria-hidden="true"
@@ -452,12 +468,12 @@ export function ObjectList({
                         decided ? decisionDot[decided.value] : "bg-fg-faint",
                       )}
                     />
-                    {decided ? countWord[decided.value].toLowerCase() : "open"}
+                    {decided ? countWord[decided.value].toLowerCase() : t`open`}
                     {decided?.reasons.length
                       ? ` · ${decided.reasons.join(", ").toLowerCase()}`
                       : ""}
                     {notes?.(item.object) || decided?.note ? (
-                      <Icon name="comment" size="xs" label="Has a note" />
+                      <Icon name="comment" size="xs" label={t`Has a note`} />
                     ) : null}
                   </small>
                 </span>
@@ -479,13 +495,17 @@ export function ObjectList({
             >
               <Icon name="target" className="justify-self-center text-fg-dim" />
               <span className="grid">
-                <b className="font-semibold">Cells, {cellWord}</b>
+                <b className="font-semibold">
+                  <Trans>Cells, {cellWord}</Trans>
+                </b>
                 <small className="text-caption text-fg-dim">
-                  {cellsDone} of {cells.length} decided
+                  <Trans>
+                    {cellsDone} of {cells.length} decided
+                  </Trans>
                 </small>
               </span>
               <Button size="sm" onClick={onOpenCells}>
-                Show the cells
+                <Trans>Show the cells</Trans>
               </Button>
             </div>
           </li>
@@ -500,10 +520,12 @@ export function ObjectList({
             >
               <ObjectIdTag className="border-[#93c5fd]">{item.object}</ObjectIdTag>
               <span className="grid">
-                <span>Tumor region</span>
+                <span>
+                  <Trans>Tumor region</Trans>
+                </span>
                 <small className="inline-flex items-center gap-1.5 text-caption text-fg-dim">
                   <i aria-hidden="true" className="size-2 rounded-full bg-[#93c5fd]" />
-                  added by you
+                  <Trans>added by you</Trans>
                 </small>
               </span>
               <span />
@@ -521,10 +543,12 @@ export function ObjectList({
             >
               <ObjectIdTag>{item.object}</ObjectIdTag>
               <span className="grid">
-                <span>Measurement</span>
+                <span>
+                  <Trans>Measurement</Trans>
+                </span>
                 <small className="inline-flex items-center gap-1.5 text-caption text-fg-dim">
                   <i aria-hidden="true" className="size-2 rounded-full bg-fg-faint" />
-                  ruler, across {item.across}
+                  <Trans>ruler, across {item.across}</Trans>
                 </small>
               </span>
               <span />
@@ -535,9 +559,9 @@ export function ObjectList({
       </ul>
       {empty ? (
         <p className="m-0 text-body-sm text-fg-dim">
-          Nothing{" "}
-          {shown === "open" ? "open" : `marked ${filterWord[shown as Exclude<ListFilter, "all">]}`}{" "}
-          on this slide.
+          {shown === "open"
+            ? t`Nothing open on this slide.`
+            : t`Nothing marked ${filterWord[shown as Exclude<ListFilter, "all">]} on this slide.`}
         </p>
       ) : null}
     </div>

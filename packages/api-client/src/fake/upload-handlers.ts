@@ -9,6 +9,7 @@ import {
   Outcome,
   PairBy,
   type ResultPairing,
+  type ResultSet,
   Rule,
   type SlideChoice,
   SlideOutcome,
@@ -235,10 +236,21 @@ export type FakeOverrides = {
   problems?: ImportCheck;
   chosen?: unknown[];
   left?: string[];
+  sets?: ResultSet[];
 };
 
 const overrides = (): FakeOverrides =>
   (globalThis as { __parfocalFake?: FakeOverrides }).__parfocalFake ?? {};
+
+export const addedResultSets = (slideId: string): ResultSet[] => {
+  const fake = overrides();
+  const ready = new Set(
+    Object.values(fake.statuses ?? {})
+      .filter((state) => state.status === IngestStatus.ready)
+      .map((state) => state.result_set_id),
+  );
+  return (fake.sets ?? []).filter((set) => set.slide_id === slideId && ready.has(set.id));
+};
 
 const overriddenState = (uploadId: string): UploadState | null => {
   const found = overrides().statuses?.[uploadId];

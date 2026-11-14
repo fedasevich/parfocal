@@ -7,17 +7,746 @@ msgstr ""
 "X-Generator: @lingui/cli\n"
 "Language: en\n"
 
+#: src/screens/review/guided-review.tsx
+msgid " or $1"
+msgstr " or $1"
+
+#. placeholder {0}: counts.open
+#: src/screens/review/guided-review.tsx
+#: src/screens/review/viewer-frame.tsx
+msgid "{0, plural, one {# object is still open.} other {# objects are still open.}}"
+msgstr "{0, plural, one {# object is still open.} other {# objects are still open.}}"
+
+#. placeholder {0}: missing.length
+#: src/screens/review/first-read.tsx
+msgid "{0, plural, one {# required question is not answered.} other {# required questions are not answered.}}"
+msgstr "{0, plural, one {# required question is not answered.} other {# required questions are not answered.}}"
+
+#. placeholder {0}: object.object
+#. placeholder {1}: queue.length
+#: src/viewer/guided-check.tsx
+msgid "{0} · no score · {1} left"
+msgstr "{0} · no score · {1} left"
+
+#. placeholder {0}: object.object
+#. placeholder {1}: object.score.toFixed(2)
+#. placeholder {2}: queue.length
+#: src/viewer/guided-check.tsx
+msgid "{0} · score {1} · {2} left"
+msgstr "{0} · score {1} · {2} left"
+
+#. placeholder {0}: current.object
+#: src/screens/viewer-tools/focus-view.tsx
+#: src/screens/viewer/full-viewer.tsx
+msgid "{0} · Tumor region"
+msgstr "{0} · Tumor region"
+
+#. placeholder {0}: input.setA
+#: src/screens/viewer/layer-views.tsx
+msgid "{0} and Reviewed"
+msgstr "{0} and Reviewed"
+
+#. placeholder {0}: cell.class_name.toLowerCase()
+#: src/screens/review/cells-grid.tsx
+msgid "{0} cell"
+msgstr "{0} cell"
+
+#. placeholder {0}: proposals.count
+#: src/annotations/context-bar.tsx
+msgid "{0} found"
+msgstr "{0} found"
+
+#. placeholder {0}: stats.object_count.toLocaleString("en-US")
+#: src/screens/viewer/object-table.tsx
+msgid "{0} in all · showing the regions, your added region and the cells with a note or a disagreement"
+msgstr "{0} in all · showing the regions, your added region and the cells with a note or a disagreement"
+
+#. placeholder {0}: measurement.mm.toFixed(2)
+#: src/screens/viewer-tools/measure-canvas.tsx
+msgid "{0} mm"
+msgstr "{0} mm"
+
+#. placeholder {0}: current.size_mm?.toFixed(2) ?? ""
+#: src/screens/viewer-tools/focus-view.tsx
+msgid "{0} mm across. Decided. Press a key again to change it."
+msgstr "{0} mm across. Decided. Press a key again to change it."
+
+#. placeholder {0}: current.size_mm?.toFixed(2) ?? ""
+#: src/screens/viewer-tools/focus-view.tsx
+msgid "{0} mm across. Still open."
+msgstr "{0} mm across. Still open."
+
+#. placeholder {0}: picked.results.objects
+#: src/results/add-result-set.tsx
+msgid "{0} objects, shown in cyan and not saved yet"
+msgstr "{0} objects, shown in cyan and not saved yet"
+
+#. placeholder {0}: counts.decided
+#. placeholder {1}: counts.total
+#: src/screens/review/viewer-frame.tsx
+msgid "{0} of {1}"
+msgstr "{0} of {1}"
+
+#. placeholder {0}: visible.length
+#: src/screens/annotate-task/annotate-task-view.tsx
+msgid "{0} on the slide"
+msgstr "{0} on the slide"
+
+#. placeholder {0}: picked.length
+#: src/screens/annotate-task/new-annotate-task.tsx
+msgid "{0} slides, {slidesWithResult} with a result set"
+msgstr "{0} slides, {slidesWithResult} with a result set"
+
+#. placeholder {0}: checkSummary(options)
+#: src/screens/annotate-task/new-annotate-task.tsx
+msgid "{0} The preset filled these in, change any of them."
+msgstr "{0} The preset filled these in, change any of them."
+
+#. placeholder {0}: region.object
+#. placeholder {1}: dotStateWord(value, skip)
+#: src/screens/review/object-card.tsx
+msgid "{0}, {1}"
+msgstr "{0}, {1}"
+
+#. placeholder {0}: region.object
+#. placeholder {1}: dotStateWord(value, skip)
+#: src/screens/review/object-card.tsx
+msgid "{0}, {1}, sets the category"
+msgstr "{0}, {1}, sets the category"
+
+#. placeholder {0}: author?.initials ?? "?"
+#. placeholder {1}: author?.name ?? someone
+#. placeholder {2}: thread.title
+#: src/annotations/pin-layer.tsx
+msgid "{0}, comment by {1}: {2}"
+msgstr "{0}, comment by {1}: {2}"
+
+#. placeholder {0}: item.name
+#. placeholder {1}: index + 1
+#: src/annotations/context-bar.tsx
+msgid "{0}, key {1}"
+msgstr "{0}, key {1}"
+
+#. placeholder {0}: view.label
+#: src/viewer/annotate-task-panel.tsx
+msgid "{0}. Draw the objects by hand."
+msgstr "{0}. Draw the objects by hand."
+
+#. placeholder {0}: magnification.toFixed(1)
+#. placeholder {1}: Math.round(viewport[0])
+#. placeholder {2}: Math.round(viewport[1])
+#: src/popout/popout-screen.tsx
+msgid "{0}× at {1}, {2}"
+msgstr "{0}× at {1}, {2}"
+
+#: src/screens/review/first-read.tsx
+msgid "{added} added."
+msgstr "{added} added."
+
+#. placeholder {0}: cells.length
+#: src/screens/review/object-card.tsx
+msgid "{cellsDone} of {0}"
+msgstr "{cellsDone} of {0}"
+
+#. placeholder {0}: cells.length
+#: src/screens/review/viewer-frame.tsx
+msgid "{cellsDone} of {0} decided"
+msgstr "{cellsDone} of {0} decided"
+
+#: src/screens/viewer/full-viewer.tsx
+msgid "{comments} comments on {object}"
+msgstr "{comments} comments on {object}"
+
+#. placeholder {0}: spots.length
+#: src/screens/viewer-tools/cell-focus.tsx
+msgid "{decidedCount} of {0} cells decided"
+msgstr "{decidedCount} of {0} cells decided"
+
+#. placeholder {0}: lensWords[lens]
+#. placeholder {1}: lensWords[lens]
+#: src/annotations/layers-panel.tsx
+msgid "{loose, plural, one {Group # loose shape by {0}} other {Group # loose shapes by {1}}}"
+msgstr "{loose, plural, one {Group # loose shape by {0}} other {Group # loose shapes by {1}}}"
+
+#: src/annotations/conflict-notice.tsx
+msgid "{more} more waiting."
+msgstr "{more} more waiting."
+
+#: src/screens/viewer-tools/annotate-view.tsx
+msgid "{proposals} found"
+msgstr "{proposals} found"
+
+#: src/screens/review/object-card.tsx
+msgid "{redrawPoints, plural, one {# point} other {# points}}"
+msgstr "{redrawPoints, plural, one {# point} other {# points}}"
+
+#: src/screens/viewer/full-viewer.tsx
+msgid "{slideLabel} could not be read at 20x and 40x."
+msgstr "{slideLabel} could not be read at 20x and 40x."
+
+#: src/screens/review/guided-review.tsx
+msgid "{slideShort} could not be read at 20x and 40x."
+msgstr "{slideShort} could not be read at 20x and 40x."
+
+#: src/screens/review/guided-review.tsx
+msgid "{slideShort} has no {setName} result in {taskCodeOrThis}. Look at it without AI in the full viewer, or go on to the next slide."
+msgstr "{slideShort} has no {setName} result in {taskCodeOrThis}. Look at it without AI in the full viewer, or go on to the next slide."
+
+#: src/screens/review/guided-review.tsx
+msgid "{taskCodeOrThe} was withdrawn"
+msgstr "{taskCodeOrThe} was withdrawn"
+
+#: src/screens/viewer/full-viewer.tsx
+msgid "{taskCodeOrThe} was withdrawn on 16 Oct. There is nothing left to decide."
+msgstr "{taskCodeOrThe} was withdrawn on 16 Oct. There is nothing left to decide."
+
+#: src/screens/viewer/full-viewer.tsx
+msgid "{taskCodeOrThe} was withdrawn."
+msgstr "{taskCodeOrThe} was withdrawn."
+
+#: src/annotations/live-changes-marker.tsx
+msgid "{text}. Show changes"
+msgstr "{text}. Show changes"
+
 #: src/shell/not-available.tsx
 msgid "{what} is not available yet. This part of Parfocal is still being built."
 msgstr "{what} is not available yet. This part of Parfocal is still being built."
+
+#: src/screens/review/guided-review.tsx
+#: src/screens/viewer/full-viewer.tsx
+msgid "{withdrawnBy} withdrew {withdrawnTask} on 16 Oct. Your 7 decided slides are kept and show in the report."
+msgstr "{withdrawnBy} withdrew {withdrawnTask} on 16 Oct. Your 7 decided slides are kept and show in the report."
+
+#: src/screens/review/object-card.tsx
+msgid "<0>{lead}</0> sets the category"
+msgstr "<0>{lead}</0> sets the category"
+
+#: src/screens/viewer-tools/navigator-canvas.tsx
+msgid "<0>Going to area 3</0> · {nextMm} mm"
+msgstr "<0>Going to area 3</0> · {nextMm} mm"
+
+#: src/screens/viewer/full-viewer.tsx
+msgid "<0>Scanner archive is not answering since 10:40.</0> {slideLabel} is read in place from there, so it opens from the 7-day tile cache. Places never viewed show a quiet checker until the source is back."
+msgstr "<0>Scanner archive is not answering since 10:40.</0> {slideLabel} is read in place from there, so it opens from the 7-day tile cache. Places never viewed show a quiet checker until the source is back."
+
+#: src/screens/review/guided-review.tsx
+#: src/screens/viewer/full-viewer.tsx
+msgid "<0>Signed off 15 Oct.</0> Changes need an amendment."
+msgstr "<0>Signed off 15 Oct.</0> Changes need an amendment."
+
+#: src/screens/viewer/full-viewer.tsx
+msgid "<0>Slow source.</0> The scanner archive answers in 2.4 s. Keep reading, the view sharpens as tiles arrive. Lower magnifications come first."
+msgstr "<0>Slow source.</0> The scanner archive answers in 2.4 s. Keep reading, the view sharpens as tiles arrive. Lower magnifications come first."
+
+#. placeholder {0}: seenPercent.reading
+#: src/screens/viewer-tools/focus-view.tsx
+#: src/screens/viewer-tools/navigator-canvas.tsx
+msgid "<0>Whole slide</0> · {0}% seen"
+msgstr "<0>Whole slide</0> · {0}% seen"
+
+#: src/screens/review/comments-on-ids.tsx
+msgid "<0>Whole slide</0> · {openThreads} threads"
+msgstr "<0>Whole slide</0> · {openThreads} threads"
+
+#: src/screens/viewer-tools/navigator-canvas.tsx
+msgid "1.62 mm"
+msgstr "1.62 mm"
+
+#. placeholder {0}: counts.decided
+#. placeholder {1}: counts.total
+#: src/screens/review/comments-on-ids.tsx
+msgid "10× · {0} of {1} decided"
+msgstr "10× · {0} of {1} decided"
+
+#: src/screens/annotate-task/new-annotate-task.tsx
+msgid "3 experts"
+msgstr "3 experts"
+
+#. placeholder {0}: input.setA
+#: src/screens/viewer/layer-views.tsx
+msgid "A · {0}"
+msgstr "A · {0}"
+
+#: src/annotations/conflict-notice.tsx
+msgid "A colleague already deleted this shape"
+msgstr "A colleague already deleted this shape"
+
+#: src/annotations/conflict-notice.tsx
+msgid "A colleague changed the shape you changed"
+msgstr "A colleague changed the shape you changed"
+
+#: src/annotations/conflict-notice.tsx
+msgid "A colleague changed the shape you deleted"
+msgstr "A colleague changed the shape you deleted"
+
+#: src/annotations/conflict-notice.tsx
+msgid "A colleague deleted the shape you changed"
+msgstr "A colleague deleted the shape you changed"
+
+#: src/screens/viewer/objects-panel.tsx
+msgid "A notification when every region is found"
+msgstr "A notification when every region is found"
+
+#: src/screens/annotate-task/new-annotate-task.tsx
+msgid "A random sample of AI cells"
+msgstr "A random sample of AI cells"
+
+#: src/screens/annotate-task/new-annotate-task.tsx
+msgid "A suggestion only. It fills in the next steps, and you can change every setting there."
+msgstr "A suggestion only. It fills in the next steps, and you can change every setting there."
+
+#: src/screens/annotate-task/new-annotate-task.tsx
+msgid "About {toCheck} objects to check, roughly {minutes} min per expert"
+msgstr "About {toCheck} objects to check, roughly {minutes} min per expert"
+
+#: src/screens/viewer-tools/annotate-view.tsx
+msgid "Accept as tumor"
+msgstr "Accept as tumor"
+
+#: src/screens/home/activity-card.tsx
+msgid "Activity"
+msgstr "Activity"
+
+#: src/annotations/layers-panel.tsx
+msgid "Add a layer"
+msgstr "Add a layer"
+
+#: src/screens/review/guided-review.tsx
+#: src/screens/viewer/objects-panel.tsx
+msgid "Add a note"
+msgstr "Add a note"
+
+#: src/screens/review/object-card.tsx
+msgid "Add a note, type @ to mention someone"
+msgstr "Add a note, type @ to mention someone"
+
+#: src/results/add-result-set.tsx
+#: src/results/result-set-layers.tsx
+msgid "Add a result set"
+msgstr "Add a result set"
+
+#: src/viewer/annotate-task-panel.tsx
+msgid "Add a run to a signed-off slide"
+msgstr "Add a run to a signed-off slide"
+
+#: src/screens/review/first-read.tsx
+msgid "Add an object"
+msgstr "Add an object"
+
+#: src/results/add-result-set.tsx
+msgid "Add result set"
+msgstr "Add result set"
+
+#: src/screens/review/object-card.tsx
+msgid "Add something the AI missed"
+msgstr "Add something the AI missed"
+
+#: src/viewer/annotate-task-panel.tsx
+msgid "Add the run"
+msgstr "Add the run"
+
+#. placeholder {0}: set.name
+#: src/viewer/annotate-task-panel.tsx
+msgid "Add the run {0}"
+msgstr "Add the run {0}"
+
+#: src/screens/viewer/object-table.tsx
+msgid "Added"
+msgstr "Added"
+
+#: src/screens/review/viewer-frame.tsx
+msgid "added by you"
+msgstr "added by you"
+
+#: src/screens/viewer/objects-panel.tsx
+msgid "Added by you: {reason}. It sits outside the scope and is counted apart."
+msgstr "Added by you: {reason}. It sits outside the scope and is counted apart."
+
+#: src/results/add-result-set.tsx
+msgid "Adding the result set to the slide"
+msgstr "Adding the result set to the slide"
+
+#: src/screens/review/first-read.tsx
+msgid "After this the AI result appears and you can give your decisions."
+msgstr "After this the AI result appears and you can give your decisions."
+
+#: src/screens/viewer/layer-views.tsx
+msgid "AI and reviewer agree"
+msgstr "AI and reviewer agree"
+
+#: src/screens/annotate-task/new-annotate-task.tsx
+msgid "AI cells inside the areas you draw"
+msgstr "AI cells inside the areas you draw"
+
+#: src/screens/viewer/layer-views.tsx
+msgid "AI only, reviewer disagreed"
+msgstr "AI only, reviewer disagreed"
+
+#: src/viewer/annotate-task-panel.tsx
+msgid "AI result"
+msgstr "AI result"
+
+#: src/screens/annotate-task/annotate-task-view.tsx
+msgid "AI result hidden"
+msgstr "AI result hidden"
+
+#: src/screens/annotate-task/annotate-task-view.tsx
+msgid "AI result on · {resultName}"
+msgstr "AI result on · {resultName}"
+
+#: src/screens/review/object-card.tsx
+#: src/screens/review/viewer-frame.tsx
+msgid "AI says"
+msgstr "AI says"
+
+#. placeholder {0}: text.above
+#: src/screens/viewer/objects-panel.tsx
+msgid "AI says: {0}"
+msgstr "AI says: {0}"
+
+#: src/results/add-result-set.tsx
+msgid "Alignment"
+msgstr "Alignment"
+
+#: src/screens/viewer/full-viewer.tsx
+msgid "All decided. Open the Slide done card"
+msgstr "All decided. Open the Slide done card"
+
+#: src/screens/viewer/save-preset-modal.tsx
+msgid "All my tasks"
+msgstr "All my tasks"
+
+#: src/screens/annotate-task/new-annotate-task.tsx
+msgid "Allowed with cells left unchecked"
+msgstr "Allowed with cells left unchecked"
+
+#: src/screens/annotate-task/new-annotate-task.tsx
+msgid "Annotate"
+msgstr "Annotate"
+
+#: src/screens/annotate-task/annotate-task-view.tsx
+#: src/viewer/annotate-task-panel.tsx
+msgid "Annotate task"
+msgstr "Annotate task"
+
+#: src/screens/review/guided-review.tsx
+msgid "Answer with one of the buttons, or press {answerKeyList}."
+msgstr "Answer with one of the buttons, or press {answerKeyList}."
+
+#: src/viewer/slide-stage.tsx
+msgid "Areas"
+msgstr "Areas"
+
+#: src/viewer/slide-stage.tsx
+msgid "Areas, largest first"
+msgstr "Areas, largest first"
+
+#: src/screens/review/guided-review.tsx
+msgid "Ask {researcherFirstName} to amend"
+msgstr "Ask {researcherFirstName} to amend"
+
+#: src/screens/viewer/full-viewer.tsx
+msgid "Ask {researcherName} to amend"
+msgstr "Ask {researcherName} to amend"
 
 #: src/shell/issue-pages.tsx
 msgid "Ask for access"
 msgstr "Ask for access"
 
+#: src/screens/review/guided-review.tsx
+#: src/screens/viewer/full-viewer.tsx
+msgid "Ask the researcher"
+msgstr "Ask the researcher"
+
+#: src/screens/review/guided-review.tsx
+#: src/screens/viewer/full-viewer.tsx
+msgid "Ask the researcher to amend"
+msgstr "Ask the researcher to amend"
+
 #: src/shell/issue-pages.tsx
 msgid "Asked {ownerName}"
 msgstr "Asked {ownerName}"
+
+#: src/screens/viewer-tools/annotate-view.tsx
+msgid "Auto region"
+msgstr "Auto region"
+
+#. placeholder {0}: input.setB
+#: src/screens/viewer/layer-views.tsx
+msgid "B · {0}"
+msgstr "B · {0}"
+
+#: src/screens/annotate-task/new-annotate-task.tsx
+msgid "Back"
+msgstr "Back"
+
+#: src/screens/review/guided-review.tsx
+msgid "Back to {currentId}"
+msgstr "Back to {currentId}"
+
+#: src/screens/review/guided-review.tsx
+#: src/screens/review/slide-submitted.tsx
+#: src/screens/viewer/full-viewer.tsx
+msgid "Back to My work"
+msgstr "Back to My work"
+
+#: src/screens/review/object-card.tsx
+msgid "Back to the answers"
+msgstr "Back to the answers"
+
+#: src/screens/annotate-task/new-annotate-task.tsx
+msgid "Blind first"
+msgstr "Blind first"
+
+#: src/screens/review/object-comments.tsx
+msgid "Blind review. Other reviewers see it after they submit."
+msgstr "Blind review. Other reviewers see it after they submit."
+
+#: src/screens/viewer/ai-record-blocks.tsx
+msgid "Calibration details"
+msgstr "Calibration details"
+
+#: src/results/add-result-set.tsx
+#: src/screens/review/first-read.tsx
+#: src/screens/review/object-card.tsx
+#: src/screens/review/pinned-thread.tsx
+msgid "Cancel"
+msgstr "Cancel"
+
+#: src/screens/viewer-tools/navigator-canvas.tsx
+msgid "Cell 6 of 12 · AI says \"tumor or immune\""
+msgstr "Cell 6 of 12 · AI says \"tumor or immune\""
+
+#: src/screens/review/cells-on-slide.tsx
+#: src/screens/viewer/objects-panel.tsx
+msgid "Cell in your sample"
+msgstr "Cell in your sample"
+
+#: src/screens/review/object-card.tsx
+msgid "Cells"
+msgstr "Cells"
+
+#. placeholder {0}: cells.length
+#: src/screens/review/object-card.tsx
+msgid "Cells in the sample, {cellsDone} of {0} decided. Opens the first open cell"
+msgstr "Cells in the sample, {cellsDone} of {0} decided. Opens the first open cell"
+
+#: src/screens/viewer/layer-views.tsx
+msgid "Cells per 0.1 mm²"
+msgstr "Cells per 0.1 mm²"
+
+#: src/screens/review/viewer-frame.tsx
+msgid "Cells, {cellWord}"
+msgstr "Cells, {cellWord}"
+
+#: src/screens/review/guided-review.tsx
+msgid "Center {currentId} again"
+msgstr "Center {currentId} again"
+
+#: src/screens/review/object-card.tsx
+msgid "Change the type"
+msgstr "Change the type"
+
+#: src/screens/annotate-task/annotate-task-view.tsx
+msgid "Check progress"
+msgstr "Check progress"
+
+#: src/results/add-result-set.tsx
+msgid "Choose a GeoJSON file. You see it on the slide in cyan before anything is saved."
+msgstr "Choose a GeoJSON file. You see it on the slide in cyan before anything is saved."
+
+#: src/results/add-result-set.tsx
+msgid "Choose another file"
+msgstr "Choose another file"
+
+#: src/annotations/context-bar.tsx
+msgid "Class for new shapes"
+msgstr "Class for new shapes"
+
+#: src/screens/viewer-tools/compare-view.tsx
+msgid "Clear"
+msgstr "Clear"
+
+#: src/viewer/slide-stage.tsx
+msgid "Clear all"
+msgstr "Clear all"
+
+#: src/annotations/layers-panel.tsx
+msgid "click a layer name to change"
+msgstr "click a layer name to change"
+
+#: src/screens/review/object-card.tsx
+msgid "Click around it. Click the first point or press Finish to close it. The AI result stays as it was."
+msgstr "Click around it. Click the first point or press Finish to close it. The AI result stays as it was."
+
+#: src/screens/review/first-read.tsx
+msgid "Click around the object on the slide to outline it."
+msgstr "Click around the object on the slide to outline it."
+
+#: src/annotations/count-panel.tsx
+msgid "Click to drop a marker. Shift-click removes one."
+msgstr "Click to drop a marker. Shift-click removes one."
+
+#: src/screens/review/slide-still.tsx
+msgid "Click to move"
+msgstr "Click to move"
+
+#: src/screens/review/cells-on-slide.tsx
+#: src/screens/viewer/objects-panel.tsx
+msgid "Close"
+msgstr "Close"
+
+#: src/screens/viewer/objects-panel.tsx
+msgid "Close (Esc)"
+msgstr "Close (Esc)"
+
+#: src/screens/review/redraw-layer.tsx
+msgid "Close the outline"
+msgstr "Close the outline"
+
+#: src/screens/review/comments-on-ids.tsx
+msgid "Close the thread"
+msgstr "Close the thread"
+
+#. placeholder {0}: stats.reviewers.kappa.toFixed(2)
+#: src/screens/viewer/layer-views.tsx
+msgid "Cohen's kappa {0} on regions. Shown only after both submitted."
+msgstr "Cohen's kappa {0} on regions. Shown only after both submitted."
+
+#: src/screens/review/guided-review.tsx
+msgid "Comment added on {currentId}. It shows in the full viewer too, and the people you mention are told."
+msgstr "Comment added on {currentId}. It shows in the full viewer too, and the people you mention are told."
+
+#: src/screens/review/guided-review.tsx
+msgid "Comment added on {currentId}. It shows in the full viewer too."
+msgstr "Comment added on {currentId}. It shows in the full viewer too."
+
+#: src/annotations/pin-layer.tsx
+#: src/screens/review/pinned-thread.tsx
+msgid "Comment at the pin"
+msgstr "Comment at the pin"
+
+#: src/screens/review/object-comments.tsx
+msgid "Comment on {object}"
+msgstr "Comment on {object}"
+
+#: src/screens/review/object-comments.tsx
+msgid "Comments on this object"
+msgstr "Comments on this object"
+
+#: src/screens/review/viewer-frame.tsx
+msgid "Compare slides"
+msgstr "Compare slides"
+
+#: src/screens/viewer-tools/compare-view.tsx
+msgid "Comparing the two overviews"
+msgstr "Comparing the two overviews"
+
+#: src/screens/review/confidence-chip.tsx
+msgid "Confidence"
+msgstr "Confidence"
+
+#. placeholder {0}: chip.text
+#: src/screens/review/confidence-chip.tsx
+msgid "Confidence by colour: {0}"
+msgstr "Confidence by colour: {0}"
+
+#: src/viewer/guided-check.tsx
+msgid "Confirm"
+msgstr "Confirm"
+
+#. placeholder {0}: selectedAi.object
+#. placeholder {0}: selectedObject?.id
+#: src/screens/annotate-task/annotate-task-view.tsx
+#: src/viewer/annotate-task-panel.tsx
+msgid "Confirm {0}"
+msgstr "Confirm {0}"
+
+#: src/annotations/count-panel.tsx
+msgid "Counts"
+msgstr "Counts"
+
+#: src/viewer/annotate-task-panel.tsx
+msgid "Counts per class"
+msgstr "Counts per class"
+
+#: src/screens/viewer/object-table.tsx
+msgid "CSV"
+msgstr "CSV"
+
+#: src/screens/review/object-comments.tsx
+msgid "Decision notes"
+msgstr "Decision notes"
+
+#: src/screens/review/object-comments.tsx
+msgid "Decision notes on {object}"
+msgstr "Decision notes on {object}"
+
+#: src/annotations/pin-layer.tsx
+#: src/screens/annotate-task/annotate-task-view.tsx
+#: src/viewer/guided-check.tsx
+msgid "Delete"
+msgstr "Delete"
+
+#. placeholder {0}: selectedAi.object
+#: src/viewer/annotate-task-panel.tsx
+msgid "Delete {0}"
+msgstr "Delete {0}"
+
+#: src/annotations/context-bar.tsx
+#: src/screens/viewer-tools/annotate-view.tsx
+msgid "Discard"
+msgstr "Discard"
+
+#: src/screens/review/guided-review.tsx
+msgid "Drag to move around. Scroll or use + and − to zoom. Back to {currentId} brings you back."
+msgstr "Drag to move around. Scroll or use + and − to zoom. Back to {currentId} brings you back."
+
+#: src/screens/review/slide-still.tsx
+msgid "Drag to move, scroll to zoom"
+msgstr "Drag to move, scroll to zoom"
+
+#. placeholder {0}: object.object
+#: src/screens/review/object-card.tsx
+msgid "Draw the new outline of {0}"
+msgstr "Draw the new outline of {0}"
+
+#: src/screens/viewer/objects-panel.tsx
+msgid "Drawn with the ruler across {across}. It is yours only and is not a decision."
+msgstr "Drawn with the ruler across {across}. It is yours only and is not a decision."
+
+#: src/screens/review/object-card.tsx
+msgid "Edit"
+msgstr "Edit"
+
+#: src/annotations/pin-layer.tsx
+msgid "Enter posts, Shift+Enter adds a line"
+msgstr "Enter posts, Shift+Enter adds a line"
+
+#: src/screens/viewer-tools/cell-focus.tsx
+msgid "Esc, leave focus mode"
+msgstr "Esc, leave focus mode"
+
+#: src/screens/annotate-task/new-annotate-task.tsx
+msgid "Every AI cell"
+msgstr "Every AI cell"
+
+#: src/viewer/guided-check.tsx
+msgid "Every AI object is checked."
+msgstr "Every AI object is checked."
+
+#: src/screens/annotate-task/new-annotate-task.tsx
+msgid "Every expert edits the same layer on each slide."
+msgstr "Every expert edits the same layer on each slide."
+
+#: src/screens/review/object-comments.tsx
+#: src/screens/review/pinned-thread.tsx
+msgid "Everyone on the task sees it."
+msgstr "Everyone on the task sees it."
+
+#: src/screens/home/activity-card.tsx
+msgid "Everything"
+msgstr "Everything"
 
 #: src/shell/issue-pages.tsx
 msgid "Everything else in Parfocal works and nothing was changed."
@@ -27,25 +756,923 @@ msgstr "Everything else in Parfocal works and nothing was changed."
 msgid "Everything you saved is kept. Your last save was {lastSaved}."
 msgstr "Everything you saved is kept. Your last save was {lastSaved}."
 
+#: src/screens/annotate-task/new-annotate-task.tsx
+msgid "Experts"
+msgstr "Experts"
+
+#: src/screens/annotate-task/new-annotate-task.tsx
+msgid "Experts check"
+msgstr "Experts check"
+
+#: src/screens/annotate-task/new-annotate-task.tsx
+msgid "Experts decide whether the AI result is right, without drawing."
+msgstr "Experts decide whether the AI result is right, without drawing."
+
+#: src/screens/annotate-task/new-annotate-task.tsx
+msgid "Experts draw cells and fix what the AI found. The output is training data."
+msgstr "Experts draw cells and fix what the AI found. The output is training data."
+
+#: src/screens/annotate-task/new-annotate-task.tsx
+msgid "Experts draw on a shared layer for each slide and check what the AI made."
+msgstr "Experts draw on a shared layer for each slide and check what the AI made."
+
+#: src/screens/annotate-task/new-annotate-task.tsx
+msgid "Exported marked as not checked"
+msgstr "Exported marked as not checked"
+
+#: src/screens/viewer/object-table.tsx
+msgid "Find an ID"
+msgstr "Find an ID"
+
+#: src/screens/review/first-read.tsx
+#: src/screens/review/object-card.tsx
+msgid "Finish outline"
+msgstr "Finish outline"
+
+#: src/screens/annotate-task/new-annotate-task.tsx
+msgid "Finishing a slide"
+msgstr "Finishing a slide"
+
+#: src/screens/review/first-read.tsx
+msgid "First read"
+msgstr "First read"
+
+#: src/popout/popout-screen.tsx
+msgid "Following the main window"
+msgstr "Following the main window"
+
+#: src/viewer/annotate-task-panel.tsx
+msgid "For example, a newer model run finished"
+msgstr "For example, a newer model run finished"
+
+#: src/screens/viewer/save-preset-modal.tsx
+msgid "For example, Fill by score"
+msgstr "For example, Fill by score"
+
+#: src/screens/viewer/objects-panel.tsx
+msgid "Found so far"
+msgstr "Found so far"
+
+#: src/viewer/annotate-task-panel.tsx
+msgid "Give a reason of at least 10 characters."
+msgstr "Give a reason of at least 10 characters."
+
 #: src/shell/issue-pages.tsx
 msgid "Go home"
 msgstr "Go home"
+
+#: src/screens/viewer/full-viewer.tsx
+msgid "Go to {firstOpen}, the first open object"
+msgstr "Go to {firstOpen}, the first open object"
+
+#: src/screens/review/guided-review.tsx
+msgid "Got it, start"
+msgstr "Got it, start"
+
+#: src/annotations/layers-panel.tsx
+#: src/screens/viewer-tools/annotate-view.tsx
+msgid "Group by"
+msgstr "Group by"
+
+#: src/viewer/annotate-task-panel.tsx
+#: src/viewer/guided-check.tsx
+msgid "Guided check"
+msgstr "Guided check"
+
+#: src/screens/review/viewer-frame.tsx
+msgid "Has a note"
+msgstr "Has a note"
+
+#: src/annotations/layers-panel.tsx
+msgid "Hide overlays"
+msgstr "Hide overlays"
+
+#: src/annotations/layers-panel.tsx
+msgid "Hide overlays (A)"
+msgstr "Hide overlays (A)"
+
+#: src/viewer/performance-hud.tsx
+msgid "Hide the HUD"
+msgstr "Hide the HUD"
+
+#: src/screens/review/viewer-frame.tsx
+msgid "Hide the side panel"
+msgstr "Hide the side panel"
+
+#: src/screens/review/inspector-dock.tsx
+msgid "Hide while panning"
+msgstr "Hide while panning"
+
+#: src/annotations/smart-layer.tsx
+msgid "Hover preview off"
+msgstr "Hover preview off"
+
+#: src/annotations/smart-layer.tsx
+msgid "Hover preview on"
+msgstr "Hover preview on"
+
+#: src/screens/annotate-task/new-annotate-task.tsx
+msgid "How it runs"
+msgstr "How it runs"
+
+#: src/screens/viewer/layer-views.tsx
+msgid "How sure the AI is"
+msgstr "How sure the AI is"
+
+#: src/screens/viewer-tools/annotate-view.tsx
+msgid "into \"{targetName}\""
+msgstr "into \"{targetName}\""
+
+#: src/screens/home/activity-card.tsx
+msgid "Jobs"
+msgstr "Jobs"
+
+#: src/screens/viewer/objects-panel.tsx
+msgid "just found"
+msgstr "just found"
+
+#: src/annotations/conflict-notice.tsx
+msgid "Keep mine"
+msgstr "Keep mine"
+
+#: src/annotations/conflict-notice.tsx
+msgid "Keep theirs"
+msgstr "Keep theirs"
+
+#: src/screens/viewer/zone-gallery.tsx
+msgid "Keeps the AI call on every open unsure cell in this zone"
+msgstr "Keeps the AI call on every open unsure cell in this zone"
+
+#: src/screens/annotate-task/new-annotate-task.tsx
+msgid "Kind"
+msgstr "Kind"
+
+#: src/annotations/layers-panel.tsx
+#: src/screens/viewer-tools/annotate-view.tsx
+#: src/screens/viewer-tools/compare-view.tsx
+msgid "Layers"
+msgstr "Layers"
+
+#: src/screens/viewer-tools/compare-view.tsx
+msgid "Layout"
+msgstr "Layout"
+
+#: src/viewer/guided-check.tsx
+msgid "Leave the guided check"
+msgstr "Leave the guided check"
+
+#: src/screens/viewer-tools/compare-view.tsx
+msgid "Left · Right"
+msgstr "Left · Right"
+
+#: src/screens/annotate-task/new-annotate-task.tsx
+msgid "Left out of the export"
+msgstr "Left out of the export"
+
+#: src/screens/viewer-tools/compare-view.tsx
+msgid "Let others on this slide see where you point"
+msgstr "Let others on this slide see where you point"
+
+#: src/screens/viewer-tools/compare-view.tsx
+msgid "Line up automatically"
+msgstr "Line up automatically"
+
+#: src/screens/viewer-tools/compare-view.tsx
+msgid "Lines the right pane up with the left. The two bottom panes keep their own view."
+msgstr "Lines the right pane up with the left. The two bottom panes keep their own view."
+
+#: src/screens/viewer-tools/compare-view.tsx
+msgid "Linked"
+msgstr "Linked"
+
+#: src/screens/viewer-tools/compare-view.tsx
+msgid "Linked: pan, zoom and rotation move both"
+msgstr "Linked: pan, zoom and rotation move both"
+
+#: src/screens/viewer/full-viewer.tsx
+msgid "Loading sharper tiles · 12 left"
+msgstr "Loading sharper tiles · 12 left"
+
+#: src/viewer/annotate-task-panel.tsx
+msgid "Loading the check order"
+msgstr "Loading the check order"
+
+#: src/screens/review/guided-review.tsx
+msgid "Loading the review"
+msgstr "Loading the review"
+
+#: src/screens/annotate-task/annotate-task-view.tsx
+#: src/screens/review/cells-on-slide.tsx
+#: src/screens/review/comments-on-ids.tsx
+#: src/screens/viewer-tools/tool-session.tsx
+#: src/screens/viewer/full-viewer.tsx
+#: src/viewer/slide-stage.tsx
+msgid "Loading the slide"
+msgstr "Loading the slide"
+
+#: src/screens/viewer/full-viewer.tsx
+msgid "Look at the slide without AI, or ask the researcher to run the model."
+msgstr "Look at the slide without AI, or ask the researcher to run the model."
+
+#: src/screens/review/guided-review.tsx
+msgid "Magnification on screen"
+msgstr "Magnification on screen"
+
+#: src/viewer/annotate-task-panel.tsx
+msgid "Mark slide checked"
+msgstr "Mark slide checked"
+
+#: src/annotations/count-panel.tsx
+msgid "Marker"
+msgstr "Marker"
+
+#. placeholder {0}: onlyA.join(", ")
+#: src/screens/viewer/layer-views.tsx
+msgid "Matched by overlap. {firstBoth} to {lastBoth} are in both, {0} only in A."
+msgstr "Matched by overlap. {firstBoth} to {lastBoth} are in both, {0} only in A."
+
+#. placeholder {0}: onlyA.join(", ")
+#. placeholder {1}: stats.model_vs_model.dice.toFixed(2)
+#: src/screens/viewer/layer-views.tsx
+msgid "Matched by overlap. {firstBoth} to {lastBoth} are in both, {0} only in A. Dice {1}."
+msgstr "Matched by overlap. {firstBoth} to {lastBoth} are in both, {0} only in A. Dice {1}."
+
+#: src/screens/review/viewer-frame.tsx
+msgid "Measurement"
+msgstr "Measurement"
+
+#: src/screens/viewer/objects-panel.tsx
+msgid "Measurement · {length}"
+msgstr "Measurement · {length}"
+
+#: src/screens/home/activity-card.tsx
+msgid "Mentions"
+msgstr "Mentions"
+
+#: src/screens/viewer/objects-panel.tsx
+msgid "missed by the AI"
+msgstr "missed by the AI"
+
+#: src/screens/viewer-tools/annotate-view.tsx
+msgid "Model for outlining nuclei"
+msgstr "Model for outlining nuclei"
+
+#: src/screens/viewer-tools/compare-view.tsx
+msgid "Move both together"
+msgstr "Move both together"
+
+#: src/screens/viewer/save-preset-modal.tsx
+msgid "Name"
+msgstr "Name"
+
+#: src/screens/annotate-task/new-annotate-task.tsx
+msgid "New annotate task"
+msgstr "New annotate task"
+
+#: src/annotations/pin-layer.tsx
+#: src/screens/review/pinned-thread.tsx
+msgid "New pinned thread"
+msgstr "New pinned thread"
+
+#: src/annotations/layers-panel.tsx
+#: src/screens/viewer-tools/annotate-view.tsx
+msgid "New shapes go to"
+msgstr "New shapes go to"
+
+#: src/screens/review/pinned-thread.tsx
+msgid "New thread at the pin"
+msgstr "New thread at the pin"
+
+#: src/screens/annotate-task/new-annotate-task.tsx
+#: src/screens/review/guided-review.tsx
+msgid "Next"
+msgstr "Next"
+
+#: src/viewer/guided-check.tsx
+msgid "Next class"
+msgstr "Next class"
+
+#: src/screens/review/guided-review.tsx
+msgid "Next slide"
+msgstr "Next slide"
+
+#: src/screens/viewer/zone-gallery.tsx
+msgid "Next unsure cell"
+msgstr "Next unsure cell"
+
+#: src/screens/viewer/full-viewer.tsx
+msgid "No {setName} result on {slideLabel} yet."
+msgstr "No {setName} result on {slideLabel} yet."
+
+#: src/screens/review/guided-review.tsx
+msgid "No {setName} result on {slideShort} yet."
+msgstr "No {setName} result on {slideShort} yet."
 
 #: src/shell/issue-pages.tsx
 msgid "No access to {projectName}"
 msgstr "No access to {projectName}"
 
+#: src/screens/viewer-tools/compare-view.tsx
+msgid "No clear match between these two. Line them up by hand."
+msgstr "No clear match between these two. Line them up by hand."
+
+#: src/screens/review/object-comments.tsx
+msgid "No comments on {object} yet. Write the first one below."
+msgstr "No comments on {object} yet. Write the first one below."
+
+#: src/screens/annotate-task/new-annotate-task.tsx
+msgid "No result set"
+msgstr "No result set"
+
+#: src/screens/viewer/full-viewer.tsx
+msgid "No review task asks about {slideLabel}. Look at it here, and write what you find in the clinical report."
+msgstr "No review task asks about {slideLabel}. Look at it here, and write what you find in the clinical report."
+
+#: src/screens/viewer/object-table.tsx
+msgid "no score"
+msgstr "no score"
+
+#: src/screens/review/first-read.tsx
+msgid "None added yet."
+msgstr "None added yet."
+
+#: src/screens/review/object-card.tsx
+msgid "Not saved yet. It saves when the connection is back."
+msgstr "Not saved yet. It saves when the connection is back."
+
+#: src/screens/review/object-card.tsx
+msgid "Note on decision: {label}"
+msgstr "Note on decision: {label}"
+
+#: src/screens/review/object-card.tsx
+msgid "Note on your decision for {object}"
+msgstr "Note on your decision for {object}"
+
+#: src/annotations/layers-panel.tsx
+msgid "Nothing drawn yet. Select shapes and press ⌘G to group them."
+msgstr "Nothing drawn yet. Select shapes and press ⌘G to group them."
+
+#: src/screens/home/activity-card.tsx
+msgid "Nothing here yet"
+msgstr "Nothing here yet"
+
+#: src/screens/annotate-task/annotate-task-view.tsx
+msgid "Nothing is shown. Turn the AI result on."
+msgstr "Nothing is shown. Turn the AI result on."
+
+#. placeholder {0}: filterWord[shown as Exclude<ListFilter, "all">]
+#: src/screens/review/viewer-frame.tsx
+msgid "Nothing marked {0} on this slide."
+msgstr "Nothing marked {0} on this slide."
+
+#: src/screens/review/viewer-frame.tsx
+msgid "Nothing open on this slide."
+msgstr "Nothing open on this slide."
+
+#: src/screens/review/guided-review.tsx
+msgid "Nothing to decide here yet."
+msgstr "Nothing to decide here yet."
+
+#: src/screens/viewer/full-viewer.tsx
+msgid "Nothing to decide here yet. {slideLabel} has no {setName} result in {taskCodeOrThis}."
+msgstr "Nothing to decide here yet. {slideLabel} has no {setName} result in {taskCodeOrThis}."
+
+#: src/viewer/annotate-task-panel.tsx
+msgid "Nothing to mark"
+msgstr "Nothing to mark"
+
+#: src/screens/annotate-task/new-annotate-task.tsx
+msgid "Nothing, experts only draw"
+msgstr "Nothing, experts only draw"
+
+#: src/screens/viewer-tools/annotate-view.tsx
+msgid "nuclei · 0.25 µm"
+msgstr "nuclei · 0.25 µm"
+
+#: src/screens/review/object-card.tsx
+msgid "Object <0>{position}</0> of {total} on this slide"
+msgstr "Object <0>{position}</0> of {total} on this slide"
+
+#: src/screens/review/first-read.tsx
+msgid "Object added to your first read."
+msgstr "Object added to your first read."
+
+#: src/screens/annotate-task/annotate-task-view.tsx
+#: src/screens/review/object-card.tsx
+#: src/viewer/annotate-task-panel.tsx
+msgid "Objects"
+msgstr "Objects"
+
+#: src/screens/review/viewer-frame.tsx
+#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/object-table.tsx
+msgid "Objects on {slideLabel}"
+msgstr "Objects on {slideLabel}"
+
+#: src/screens/review/first-read.tsx
+msgid "Objects you found"
+msgstr "Objects you found"
+
+#: src/screens/annotate-task/new-annotate-task.tsx
+msgid "Off"
+msgstr "Off"
+
+#: src/screens/annotate-task/new-annotate-task.tsx
+msgid "On"
+msgstr "On"
+
+#: src/screens/viewer/layer-views.tsx
+msgid "One agrees, one disagrees"
+msgstr "One agrees, one disagrees"
+
+#: src/screens/annotate-task/new-annotate-task.tsx
+msgid "One last look before the experts get the task."
+msgstr "One last look before the experts get the task."
+
+#: src/screens/viewer/layer-views.tsx
+msgid "One unsure"
+msgstr "One unsure"
+
+#: src/screens/review/display-tab.tsx
+msgid "Only for you, on {taskCode}. Every change redraws the slide at once."
+msgstr "Only for you, on {taskCode}. Every change redraws the slide at once."
+
+#: src/screens/viewer/save-preset-modal.tsx
+msgid "Only this task"
+msgstr "Only this task"
+
+#: src/screens/annotate-task/new-annotate-task.tsx
+msgid "Only when every cell in scope is checked"
+msgstr "Only when every cell in scope is checked"
+
+#: src/screens/review/viewer-frame.tsx
+#: src/screens/viewer-tools/focus-view.tsx
+#: src/screens/viewer/object-table.tsx
+msgid "open"
+msgstr "open"
+
+#. placeholder {0}: position + 1
+#: src/screens/review/slide-submitted.tsx
+msgid "Open slide {0}"
+msgstr "Open slide {0}"
+
+#: src/screens/review/inspector-dock.tsx
+msgid "Open the side panel on the second monitor"
+msgstr "Open the side panel on the second monitor"
+
+#: src/popout/popout-screen.tsx
+msgid "Open this window from the viewer."
+msgstr "Open this window from the viewer."
+
+#: src/screens/review/slide-submitted.tsx
+msgid "Opens by itself in {left} s. Your review can be changed until sign-off."
+msgstr "Opens by itself in {left} s. Your review can be changed until sign-off."
+
+#: src/screens/review/object-card.tsx
+msgid "Optional"
+msgstr "Optional"
+
+#: src/screens/viewer-tools/compare-view.tsx
+msgid "Others on this slide see where you point. Click to stop"
+msgstr "Others on this slide see where you point. Click to stop"
+
+#: src/viewer/slide-stage.tsx
+msgid "Outline display"
+msgstr "Outline display"
+
+#: src/annotations/smart-layer.tsx
+msgid "Outlining"
+msgstr "Outlining"
+
 #: src/shell/issue-pages.tsx
 msgid "Page not found"
 msgstr "Page not found"
+
+#: src/viewer/patient-banner-view.tsx
+msgid "Patient"
+msgstr "Patient"
+
+#: src/screens/annotate-task/annotate-task-view.tsx
+#: src/screens/viewer/object-table.tsx
+msgid "Per class"
+msgstr "Per class"
+
+#: src/screens/viewer/save-preset-modal.tsx
+msgid "Pick it from the presets menu."
+msgstr "Pick it from the presets menu."
+
+#: src/screens/review/pinned-thread.tsx
+msgid "Pinned at {pinX}, {pinY} on the slide. Click the slide again to move the pin."
+msgstr "Pinned at {pinX}, {pinY} on the slide. Click the slide again to move the pin."
+
+#: src/screens/annotate-task/new-annotate-task.tsx
+msgid "Preset"
+msgstr "Preset"
+
+#: src/screens/review/guided-review.tsx
+msgid "Previous"
+msgstr "Previous"
+
+#: src/screens/annotate-task/new-annotate-task.tsx
+msgid "Project"
+msgstr "Project"
+
+#: src/annotations/context-bar.tsx
+msgid "Proposals"
+msgstr "Proposals"
+
+#: src/screens/viewer-tools/compare-view.tsx
+msgid "Proposed from the overviews. Drag or rotate a pane to adjust."
+msgstr "Proposed from the overviews. Drag or rotate a pane to adjust."
+
+#: src/screens/viewer-tools/compare-view.tsx
+msgid "Proposes a starting offset and rotation from the overviews."
+msgstr "Proposes a starting offset and rotation from the overviews."
+
+#: src/screens/review/object-card.tsx
+msgid "Quick reasons, optional"
+msgstr "Quick reasons, optional"
+
+#: src/screens/review/first-read.tsx
+msgid "Read the slide without the AI"
+msgstr "Read the slide without the AI"
+
+#: src/screens/viewer/objects-panel.tsx
+msgid "reading"
+msgstr "reading"
+
+#: src/viewer/annotate-task-panel.tsx
+msgid "Reason"
+msgstr "Reason"
+
+#: src/screens/review/first-read-notice.tsx
+#: src/screens/review/first-read.tsx
+msgid "Record my first read"
+msgstr "Record my first read"
+
+#: src/screens/review/first-read.tsx
+msgid "Record your first read first"
+msgstr "Record your first read first"
+
+#: src/screens/review/object-card.tsx
+msgid "Redraw the outline"
+msgstr "Redraw the outline"
+
+#. placeholder {0}: stats.ai_vs_reviewed.dice.toFixed(2)
+#. placeholder {1}: stats.ai_vs_reviewed.cells_agree_percent
+#: src/screens/viewer/layer-views.tsx
+msgid "Region Dice {0} · cells agree {1}%"
+msgstr "Region Dice {0} · cells agree {1}%"
+
+#. placeholder {0}: faded.join(" and ")
+#. placeholder {1}: heatCutoff.toFixed(2)
+#: src/screens/viewer/layer-views.tsx
+msgid "Regions {0} fade out above {1}."
+msgstr "Regions {0} fade out above {1}."
+
+#. placeholder {0}: faded.join(" and ")
+#. placeholder {1}: confidenceCutoff.toFixed(2)
+#: src/screens/viewer/layer-views.tsx
+msgid "Regions {0} fade out below {1}."
+msgstr "Regions {0} fade out below {1}."
+
+#: src/screens/viewer/object-table.tsx
+msgid "Regions and cells"
+msgstr "Regions and cells"
+
+#: src/screens/viewer/objects-panel.tsx
+msgid "Remove {object}"
+msgstr "Remove {object}"
+
+#: src/screens/review/guided-review.tsx
+msgid "Reopen my review"
+msgstr "Reopen my review"
+
+#: src/screens/review/first-read.tsx
+msgid "Required"
+msgstr "Required"
+
+#. placeholder {0}: paneName[side]
+#: src/screens/viewer-tools/compare-view.tsx
+msgid "Reset {0} pane rotation to 0°"
+msgstr "Reset {0} pane rotation to 0°"
+
+#: src/results/add-result-set.tsx
+msgid "Reset alignment"
+msgstr "Reset alignment"
+
+#: src/screens/review/inspector-dock.tsx
+msgid "Resize the side panel"
+msgstr "Resize the side panel"
+
+#: src/screens/viewer/zone-gallery.tsx
+msgid "Rest look right"
+msgstr "Rest look right"
+
+#: src/results/add-result-set.tsx
+msgid "Result file"
+msgstr "Result file"
+
+#: src/results/result-set-layers.tsx
+msgid "Result sets"
+msgstr "Result sets"
+
+#: src/screens/review/guided-review.tsx
+#: src/screens/viewer/full-viewer.tsx
+#: src/viewer/tile-loading.tsx
+msgid "Retry"
+msgstr "Retry"
+
+#: src/screens/annotate-task/new-annotate-task.tsx
+msgid "Review AI results"
+msgstr "Review AI results"
+
+#: src/screens/review/guided-review.tsx
+msgid "Review the slide without AI, or ask the researcher to run the model."
+msgstr "Review the slide without AI, or ask the researcher to run the model."
+
+#. placeholder {0}: added.join(", ")
+#: src/screens/viewer/layer-views.tsx
+msgid "Reviewer only, added {0}"
+msgstr "Reviewer only, added {0}"
+
+#. placeholder {0}: paneName[side]
+#: src/screens/viewer-tools/compare-view.tsx
+msgid "Rotate {0} pane"
+msgstr "Rotate {0} pane"
+
+#. placeholder {0}: paneName[side]
+#: src/screens/viewer-tools/compare-view.tsx
+msgid "Rotate {0} pane left"
+msgstr "Rotate {0} pane left"
+
+#. placeholder {0}: paneName[side]
+#: src/screens/viewer-tools/compare-view.tsx
+msgid "Rotate {0} pane right"
+msgstr "Rotate {0} pane right"
+
+#. placeholder {0}: item.across
+#: src/screens/review/viewer-frame.tsx
+msgid "ruler, across {0}"
+msgstr "ruler, across {0}"
+
+#: src/viewer/annotate-task-panel.tsx
+msgid "Runs to add"
+msgstr "Runs to add"
+
+#: src/screens/viewer/layer-views.tsx
+msgid "Same decision"
+msgstr "Same decision"
+
+#: src/screens/review/object-card.tsx
+#: src/screens/viewer/save-preset-modal.tsx
+msgid "Save"
+msgstr "Save"
+
+#: src/screens/viewer/save-preset-modal.tsx
+msgid "Save a preset"
+msgstr "Save a preset"
+
+#: src/results/add-result-set.tsx
+msgid "Scale"
+msgstr "Scale"
+
+#: src/screens/annotate-task/annotate-task-view.tsx
+msgid "Scope: all AI objects, least sure first"
+msgstr "Scope: all AI objects, least sure first"
+
+#: src/screens/viewer/object-table.tsx
+msgid "Scores"
+msgstr "Scores"
+
+#: src/popout/popout-screen.tsx
+msgid "Second monitor"
+msgstr "Second monitor"
+
+#: src/screens/review/guided-review.tsx
+msgid "See the whole slide"
+msgstr "See the whole slide"
+
+#: src/screens/annotate-task/new-annotate-task.tsx
+msgid "Send"
+msgstr "Send"
+
+#: src/screens/annotate-task/new-annotate-task.tsx
+msgid "Send to experts"
+msgstr "Send to experts"
+
+#: src/screens/viewer-tools/compare-view.tsx
+msgid "Share my cursor"
+msgstr "Share my cursor"
+
+#: src/screens/viewer-tools/compare-view.tsx
+msgid "Shared cursor"
+msgstr "Shared cursor"
+
+#: src/results/add-result-set.tsx
+msgid "Shift x"
+msgstr "Shift x"
+
+#: src/results/add-result-set.tsx
+msgid "Shift y"
+msgstr "Shift y"
+
+#: src/screens/viewer/save-preset-modal.tsx
+msgid "Shift+{shiftKey} switches to it."
+msgstr "Shift+{shiftKey} switches to it."
+
+#: src/screens/review/viewer-frame.tsx
+msgid "Show"
+msgstr "Show"
+
+#: src/screens/home/activity-card.tsx
+msgid "Show activity"
+msgstr "Show activity"
+
+#: src/screens/viewer/layer-views.tsx
+msgid "Show from"
+msgstr "Show from"
+
+#: src/annotations/layers-panel.tsx
+msgid "Show overlays"
+msgstr "Show overlays"
+
+#: src/annotations/layers-panel.tsx
+msgid "Show overlays (A)"
+msgstr "Show overlays (A)"
+
+#: src/screens/review/viewer-frame.tsx
+msgid "Show the cells"
+msgstr "Show the cells"
+
+#: src/screens/viewer-tools/focus-view.tsx
+msgid "Show the interface"
+msgstr "Show the interface"
+
+#: src/screens/review/viewer-frame.tsx
+msgid "Show the side panel"
+msgstr "Show the side panel"
+
+#: src/screens/review/inspector-dock.tsx
+msgid "Show the side panel,"
+msgstr "Show the side panel,"
+
+#: src/screens/viewer/object-table.tsx
+msgid "showing the regions, your added region and the cells with a note or a disagreement"
+msgstr "showing the regions, your added region and the cells with a note or a disagreement"
+
+#: src/screens/viewer/layer-views.tsx
+msgid "Shown only after both submitted."
+msgstr "Shown only after both submitted."
+
+#: src/screens/review/inspector-dock.tsx
+msgid "Side panel"
+msgstr "Side panel"
 
 #: src/shell/issue-pages.tsx
 msgid "Sign in to go on"
 msgstr "Sign in to go on"
 
+#: src/viewer/guided-check.tsx
+msgid "Skip"
+msgstr "Skip"
+
+#: src/screens/review/guided-review.tsx
+msgid "Skip for now"
+msgstr "Skip for now"
+
+#: src/screens/review/slide-submitted.tsx
+msgid "Slide {position} submitted"
+msgstr "Slide {position} submitted"
+
+#: src/screens/annotate-task/new-annotate-task.tsx
+msgid "Slides"
+msgstr "Slides"
+
+#: src/screens/annotate-task/new-annotate-task.tsx
+msgid "Slides with no result set can be annotated by hand. Slides with one start with the AI objects."
+msgstr "Slides with no result set can be annotated by hand. Slides with one start with the AI objects."
+
+#: src/annotations/pin-layer.tsx
+msgid "Some threads could not be deleted. Only the person who started a thread or a project owner deletes it."
+msgstr "Some threads could not be deleted. Only the person who started a thread or a project owner deletes it."
+
+#: src/screens/review/slide-still.tsx
+msgid "Some tiles did not load. Parts of the slide may look blank."
+msgstr "Some tiles did not load. Parts of the slide may look blank."
+
+#: src/annotations/pin-layer.tsx
+msgid "someone"
+msgstr "someone"
+
 #: src/shell/issue-pages.tsx
 msgid "Something went wrong on our side"
 msgstr "Something went wrong on our side"
+
+#: src/screens/viewer/full-viewer.tsx
+#: src/viewer/tile-loading.tsx
+msgid "Source status"
+msgstr "Source status"
+
+#: src/screens/annotate-task/new-annotate-task.tsx
+msgid "Start with"
+msgstr "Start with"
+
+#: src/screens/annotate-task/new-annotate-task.tsx
+msgid "Starting point"
+msgstr "Starting point"
+
+#: src/screens/review/slide-submitted.tsx
+msgid "Stays open until you pick. Your review can be changed until sign-off."
+msgstr "Stays open until you pick. Your review can be changed until sign-off."
+
+#. placeholder {0}: found.length
+#: src/screens/viewer/objects-panel.tsx
+msgid "Still reading this slide, {0} regions so far"
+msgstr "Still reading this slide, {0} regions so far"
+
+#: src/screens/viewer/swipe-divider.tsx
+msgid "Swipe line between the two sets"
+msgstr "Swipe line between the two sets"
+
+#: src/screens/annotate-task/new-annotate-task.tsx
+msgid "Tasks"
+msgstr "Tasks"
+
+#: src/screens/viewer/objects-panel.tsx
+msgid "Tell me when it is ready"
+msgstr "Tell me when it is ready"
+
+#: src/annotations/text-layer.tsx
+msgid "Text label"
+msgstr "Text label"
+
+#: src/results/add-result-set.tsx
+msgid "That file has no shapes Parfocal can draw. Choose a GeoJSON file."
+msgstr "That file has no shapes Parfocal can draw. Choose a GeoJSON file."
+
+#: src/annotations/layers-panel.tsx
+msgid "that layer is hidden or locked"
+msgstr "that layer is hidden or locked"
+
+#: src/screens/review/guided-review.tsx
+msgid "The AI found this. It is outlined in white."
+msgstr "The AI found this. It is outlined in white."
+
+#: src/viewer/annotate-task-panel.tsx
+msgid "The AI result did not load. Reload the slide to try again."
+msgstr "The AI result did not load. Reload the slide to try again."
+
+#: src/screens/review/first-read.tsx
+msgid "The AI result is hidden until you record your first read. Answer the questions, add what you find, then record. Your first read stays as it is after that."
+msgstr "The AI result is hidden until you record your first read. Answer the questions, add what you find, then record. Your first read stays as it is after that."
+
+#. placeholder {0}: object.class_name.toLowerCase()
+#. placeholder {1}: Math.round(object.score * 100)
+#: src/screens/review/cells-on-slide.tsx
+msgid "The AI says this is a {0} cell, {1}% sure."
+msgstr "The AI says this is a {0} cell, {1}% sure."
+
+#: src/screens/review/first-read-notice.tsx
+msgid "The AI stays hidden until your first read"
+msgstr "The AI stays hidden until your first read"
+
+#: src/screens/review/guided-review.tsx
+msgid "The AI stays hidden until your first read is confirmed. Try again in a moment."
+msgstr "The AI stays hidden until your first read is confirmed. Try again in a moment."
+
+#: src/screens/viewer-tools/compare-view.tsx
+msgid "The capsule question in the comments is answered on the CK level at the same spot. The shared cursor shows the same point on both."
+msgstr "The capsule question in the comments is answered on the CK level at the same spot. The shared cursor shows the same point on both."
+
+#: src/screens/annotate-task/new-annotate-task.tsx
+msgid "The cells the AI was least sure of"
+msgstr "The cells the AI was least sure of"
+
+#: src/viewer/annotate-task-panel.tsx
+msgid "The change is listed with the evaluation."
+msgstr "The change is listed with the evaluation."
+
+#: src/screens/review/object-comments.tsx
+msgid "The comment did not save. Try again."
+msgstr "The comment did not save. Try again."
+
+#: src/screens/review/guided-review.tsx
+#: src/screens/viewer/full-viewer.tsx
+msgid "The connection is lost. It saves when the connection is back."
+msgstr "The connection is lost. It saves when the connection is back."
+
+#: src/screens/viewer/save-preset-modal.tsx
+msgid "The display settings you have now, on {slideLabel} in {taskCode}"
+msgstr "The display settings you have now, on {slideLabel} in {taskCode}"
+
+#: src/results/add-result-set.tsx
+msgid "The file could not be added."
+msgstr "The file could not be added."
+
+#: src/screens/review/guided-review.tsx
+msgid "The next object comes by itself. The dots take you back to any of them."
+msgstr "The next object comes by itself. The dots take you back to any of them."
 
 #: src/shell/issue-pages.tsx
 msgid "The page could not be shown."
@@ -55,25 +1682,274 @@ msgstr "The page could not be shown."
 msgid "The page could not be shown. Reference {reference}."
 msgstr "The page could not be shown. Reference {reference}."
 
+#: src/screens/annotate-task/new-annotate-task.tsx
+msgid "The preset Annotate by hand has no result set, so there is nothing to check."
+msgstr "The preset Annotate by hand has no result set, so there is nothing to check."
+
+#: src/screens/viewer/save-preset-modal.tsx
+msgid "The preset was not saved. Try again."
+msgstr "The preset was not saved. Try again."
+
+#: src/viewer/annotate-task-panel.tsx
+msgid "The reason goes into the history of the layer."
+msgstr "The reason goes into the history of the layer."
+
+#: src/screens/review/guided-review.tsx
+#: src/screens/viewer/full-viewer.tsx
+msgid "The researcher"
+msgstr "The researcher"
+
+#. placeholder {0}: addingSet.name
+#: src/viewer/annotate-task-panel.tsx
+msgid "The run {0} joins this slide"
+msgstr "The run {0} joins this slide"
+
+#: src/screens/review/slide-still.tsx
+msgid "The slide around {target}"
+msgstr "The slide around {target}"
+
+#: src/screens/review/cells-on-slide.tsx
+#: src/screens/review/comments-on-ids.tsx
+msgid "The Slide done card with the opinion questions. It opens from Submit once every object is decided."
+msgstr "The Slide done card with the opinion questions. It opens from Submit once every object is decided."
+
+#: src/screens/review/guided-review.tsx
+#: src/screens/viewer/full-viewer.tsx
+msgid "the task"
+msgstr "the task"
+
+#: src/screens/review/guided-review.tsx
+#: src/screens/viewer/full-viewer.tsx
+msgid "The task"
+msgstr "The task"
+
+#: src/annotations/pin-layer.tsx
+#: src/screens/review/pinned-thread.tsx
+msgid "The thread did not save. Try again."
+msgstr "The thread did not save. Try again."
+
+#: src/screens/review/slide-still.tsx
+msgid "The whole slide"
+msgstr "The whole slide"
+
+#: src/screens/review/guided-review.tsx
+msgid "This is the first object"
+msgstr "This is the first object"
+
 #: src/shell/issue-pages.tsx
 msgid "This page does not exist, or it was moved or deleted."
 msgstr "This page does not exist, or it was moved or deleted."
 
+#: src/screens/annotate-task/annotate-task-view.tsx
+msgid "This slide has no objects."
+msgstr "This slide has no objects."
+
+#: src/viewer/annotate-task-panel.tsx
+msgid "This slide is signed off"
+msgstr "This slide is signed off"
+
+#: src/screens/review/display-tab.tsx
+#: src/screens/review/guided-review.tsx
+#: src/screens/viewer/full-viewer.tsx
+msgid "this task"
+msgstr "this task"
+
+#: src/screens/review/first-read-notice.tsx
+msgid "This task asks for your own read of the slide before the AI result appears. Record it in guided review."
+msgstr "This task asks for your own read of the slide before the AI result appears. Record it in guided review."
+
+#: src/screens/review/comments-on-ids.tsx
+msgid "Thread on {anchor}"
+msgstr "Thread on {anchor}"
+
+#. placeholder {0}: Math.min(progress.done + 1, progress.total)
+#. placeholder {1}: progress.total
+#. placeholder {2}: progress.found
+#: src/annotations/auto-layer.tsx
+msgid "Tile {0} of {1} · {2} found"
+msgstr "Tile {0} of {1} · {2} found"
+
+#: src/screens/review/guided-review.tsx
+#: src/screens/viewer/full-viewer.tsx
+msgid "Tiles are missing on the server. Lower magnifications still show, and your other slides work."
+msgstr "Tiles are missing on the server. Lower magnifications still show, and your other slides work."
+
+#: src/screens/annotate-task/new-annotate-task.tsx
+msgid "Top left to bottom right"
+msgstr "Top left to bottom right"
+
+#: src/screens/review/guided-review.tsx
 #: src/shell/issue-pages.tsx
+#: src/viewer/slide-stage.tsx
 msgid "Try again"
 msgstr "Try again"
+
+#: src/screens/viewer-tools/annotate-view.tsx
+msgid "tumor"
+msgstr "tumor"
+
+#: src/screens/viewer/layer-views.tsx
+msgid "Tumor probability"
+msgstr "Tumor probability"
+
+#: src/screens/review/viewer-frame.tsx
+#: src/screens/viewer/objects-panel.tsx
+msgid "Tumor region"
+msgstr "Tumor region"
+
+#: src/screens/viewer/objects-panel.tsx
+msgid "Tumor region · {regionSize}"
+msgstr "Tumor region · {regionSize}"
+
+#: src/screens/viewer/objects-panel.tsx
+msgid "Tumor region · {size}"
+msgstr "Tumor region · {size}"
+
+#: src/screens/viewer/layer-views.tsx
+msgid "Two result sets"
+msgstr "Two result sets"
+
+#: src/screens/viewer/layer-views.tsx
+msgid "Two reviewers"
+msgstr "Two reviewers"
+
+#: src/screens/review/type-bar.tsx
+msgid "Type for {object}"
+msgstr "Type for {object}"
+
+#: src/screens/annotate-task/new-annotate-task.tsx
+msgid "Unchecked AI cells"
+msgstr "Unchecked AI cells"
+
+#: src/annotations/layers-panel.tsx
+msgid "Ungrouped"
+msgstr "Ungrouped"
+
+#: src/screens/home/activity-card.tsx
+msgid "Unread"
+msgstr "Unread"
+
+#: src/screens/review/object-card.tsx
+msgid "Up to {noteLimit} characters"
+msgstr "Up to {noteLimit} characters"
+
+#: src/screens/viewer/save-preset-modal.tsx
+msgid "Use for"
+msgstr "Use for"
+
+#: src/screens/viewer/full-viewer.tsx
+msgid "View"
+msgstr "View"
+
+#: src/screens/viewer-tools/compare-view.tsx
+msgid "Views"
+msgstr "Views"
+
+#: src/popout/popout-screen.tsx
+msgid "Waiting for the main window"
+msgstr "Waiting for the main window"
+
+#: src/screens/review/object-card.tsx
+msgid "Want to fix it yourself? Optional."
+msgstr "Want to fix it yourself? Optional."
+
+#: src/screens/viewer/full-viewer.tsx
+msgid "Ways to show results"
+msgstr "Ways to show results"
+
+#: src/viewer/annotate-task-panel.tsx
+msgid "What changes"
+msgstr "What changes"
+
+#: src/screens/review/object-card.tsx
+msgid "What is wrong"
+msgstr "What is wrong"
+
+#: src/screens/annotate-task/new-annotate-task.tsx
+msgid "What the experts do"
+msgstr "What the experts do"
+
+#: src/screens/annotate-task/new-annotate-task.tsx
+msgid "What to check"
+msgstr "What to check"
 
 #: src/shell/issue-pages.tsx
 msgid "What you already saved is safe, and other pages still work."
 msgstr "What you already saved is safe, and other pages still work."
 
+#: src/screens/annotate-task/annotate-task-view.tsx
+msgid "Who made it"
+msgstr "Who made it"
+
+#: src/popout/popout-screen.tsx
+#: src/screens/review/cells-on-slide.tsx
+#: src/screens/review/guided-review.tsx
+#: src/screens/viewer/full-viewer.tsx
+msgid "Whole slide"
+msgstr "Whole slide"
+
+#. placeholder {0}: name.trim()
+#: src/screens/viewer/save-preset-modal.tsx
+msgid "You already have a preset called {0}."
+msgstr "You already have a preset called {0}."
+
+#. placeholder {0}: agreement.agree
+#. placeholder {1}: agreement.total
+#: src/screens/review/slide-submitted.tsx
+msgid "You and {other} agree on {0} of {1} objects. You can look at the differences later, or go on."
+msgstr "You and {other} agree on {0} of {1} objects. You can look at the differences later, or go on."
+
 #: src/shell/issue-pages.tsx
 msgid "You are not a member of {projectName}. Its owner is {ownerName}."
 msgstr "You are not a member of {projectName}. Its owner is {ownerName}."
 
+#: src/screens/viewer/objects-panel.tsx
+msgid "You can look at the slide meanwhile. Regions join the list as they are found, and the view never moves under you."
+msgstr "You can look at the slide meanwhile. Regions join the list as they are found, and the view never moves under you."
+
+#. placeholder {0}: object.object
+#: src/screens/review/object-card.tsx
+msgid "You disagree with the AI on {0}"
+msgstr "You disagree with the AI on {0}"
+
+#: src/screens/review/guided-review.tsx
+msgid "You submitted this slide. Changes are saved and {otherReviewer} is told."
+msgstr "You submitted this slide. Changes are saved and {otherReviewer} is told."
+
+#: src/screens/viewer-tools/compare-view.tsx
+msgid "Your alignment is kept for this pair of slides. Clear puts the panes back."
+msgstr "Your alignment is kept for this pair of slides. Clear puts the panes back."
+
+#. placeholder {0}: object.object
+#: src/screens/review/cells-on-slide.tsx
+#: src/screens/review/object-card.tsx
+#: src/screens/viewer/objects-panel.tsx
+msgid "Your answer on {0}"
+msgstr "Your answer on {0}"
+
+#: src/screens/review/guided-review.tsx
+msgid "Your answer on {currentId}"
+msgstr "Your answer on {currentId}"
+
+#: src/screens/review/comments-on-ids.tsx
+msgid "Your decision notes"
+msgstr "Your decision notes"
+
+#: src/screens/review/guided-review.tsx
+msgid "Your first read could not be checked"
+msgstr "Your first read could not be checked"
+
+#: src/screens/review/first-read.tsx
+msgid "Your first read could not be recorded. Nothing was lost. Try again."
+msgstr "Your first read could not be recorded. Nothing was lost. Try again."
+
 #: src/shell/issue-pages.tsx
 msgid "Your other projects and your work are not affected."
 msgstr "Your other projects and your work are not affected."
+
+#: src/annotations/conflict-notice.tsx
+msgid "Your outline in blue and your colleague's outline in orange"
+msgstr "Your outline in blue and your colleague's outline in orange"
 
 #: src/shell/issue-pages.tsx
 msgid "Your session ended"
@@ -82,3 +1958,31 @@ msgstr "Your session ended"
 #: src/shell/issue-pages.tsx
 msgid "Your session ended after {hours} hours."
 msgstr "Your session ended after {hours} hours."
+
+#: src/screens/viewer/ai-record-blocks.tsx
+msgid "Your track record"
+msgstr "Your track record"
+
+#: src/annotations/conflict-notice.tsx
+msgid "Yours is blue, theirs is orange."
+msgstr "Yours is blue, theirs is orange."
+
+#: src/screens/review/guided-review.tsx
+msgid "Zoom"
+msgstr "Zoom"
+
+#: src/screens/review/guided-review.tsx
+msgid "Zoom in"
+msgstr "Zoom in"
+
+#: src/screens/review/guided-review.tsx
+msgid "Zoom in (+)"
+msgstr "Zoom in (+)"
+
+#: src/screens/review/guided-review.tsx
+msgid "Zoom out"
+msgstr "Zoom out"
+
+#: src/screens/review/guided-review.tsx
+msgid "Zoom out (−)"
+msgstr "Zoom out (−)"

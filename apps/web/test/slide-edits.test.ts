@@ -5,6 +5,7 @@ import {
   blockChoices,
   draftOf,
   moveSlide,
+  noteChange,
   orderChanged,
   slideChange,
   slideErrors,
@@ -92,4 +93,12 @@ test("blocks are offered by specimen letter and block number", () => {
     ]),
     [{ id: "k", name: "B2" }],
   );
+});
+
+test("a clinical note change sends only a real change and blank clears", () => {
+  assert.equal(noteChange(null, "  "), null);
+  assert.equal(noteChange("Fake note", " Fake note "), null);
+  assert.deepEqual(noteChange(null, " Fake note "), { note: "Fake note" });
+  assert.deepEqual(noteChange("Fake note", ""), { note: null });
+  assert.deepEqual(noteChange("Fake note", "Fake note, changed"), { note: "Fake note, changed" });
 });

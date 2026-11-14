@@ -1,6 +1,8 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { bandColour, type ConfidenceChip } from "./ai-wording.ts";
 
 export function ConfidenceByColour({ chip }: { chip: ConfidenceChip | null | undefined }) {
+  const { t } = useLingui();
   if (chip?.form !== "color") return null;
   return (
     <span
@@ -8,8 +10,8 @@ export function ConfidenceByColour({ chip }: { chip: ConfidenceChip | null | und
       data-form="color"
       data-band={chip.band}
       role="img"
-      aria-label={`Confidence by colour: ${chip.text}`}
-      title={`Confidence by colour: ${chip.text}`}
+      aria-label={t`Confidence by colour: ${chip.text}`}
+      title={t`Confidence by colour: ${chip.text}`}
       className="inline-flex w-fit items-center gap-2 text-caption text-fg-dim"
     >
       <i
@@ -17,7 +19,7 @@ export function ConfidenceByColour({ chip }: { chip: ConfidenceChip | null | und
         className="size-3 rounded-full border border-line"
         style={{ background: bandColour(chip.band) }}
       />
-      Confidence
+      <Trans>Confidence</Trans>
     </span>
   );
 }

@@ -8,7 +8,7 @@ To take every recommendation at once, write "all recommended" here:
 
 ## What you need to do next, in order
 
-1. Decision 105 below (older Ventana archives with several scan areas).
+1. Decisions 105 (older Ventana archives with several scan areas) and 106 (who reads the sealed clinical note) below.
 2. The checks on your Mac listed under "The review column" below, when you have a few minutes.
 3. When the app is ready for production, say so, and the lead books the deploy session of decisions 93, 94 and 95.
 
@@ -134,6 +134,16 @@ You asked to research before building. VIEW-069 (BIF with several scan areas) fo
 
 - **A. Keep the refusal with its own message, and build area placement later together with support for the DP 200 and DP 600 join direction (recommended).** Building it now helps only older archives that cannot be rebuilt exactly anyway.
 - B. Build area placement now against the public OpenSlide test file `OS-2.bif`.
+- Other.
+
+Your choice:
+
+### 106. Who can read the sealed clinical note of a case
+
+CASES-026 (encrypted clinical note per case) brought the note back sealed, writable only by project owners in clinical projects. As built, everyone who can see the case reads it, the same as the patient name, which includes a reviewer who only has slides of that case assigned.
+
+- **A. Everyone who can see the case, the same as the patient name (recommended).** A reviewer reading the slide usually needs the clinical context, and it keeps one rule for patient details.
+- B. Only project owners and the reviewers of that case's slides who have already submitted.
 - Other.
 
 Your choice:

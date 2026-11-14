@@ -1082,7 +1082,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Depends on I18N-000.
   Size: M.
 
-- [ ] I18N-004 · Convert the viewer, review and annotate screens to the i18n layer
+- [x] I18N-004 · Convert the viewer, review and annotate screens to the i18n layer
   Move every raw string in the viewer, review, annotate and compare screens of `apps/web` into Lingui messages and drop those files from the I18N-001 baseline list.
   Done when those files are off the baseline, the pseudo-locale test covers one screen of each area and the English catalogue is extracted.
   Depends on I18N-001.
@@ -1193,7 +1193,7 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
   Refs [`poc/src/slide/codecs/openjpeg.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/slide/codecs/openjpeg.ts), doc 03.
   Size: M.
 
-- [ ] INGEST-015 · Conversion fallback worker
+- [x] INGEST-015 · Conversion fallback worker
   Convert to OME-Zarr v0.5 with all RGB channels in one chunk and JPEG chunks at q90 for brightfield, or lossless zstd for 16-bit and fluorescence. Write NGFF metadata. Only invoked by a trigger.
   Done when converting each trigger fixture produces a store that passes INGEST-006 and INGEST-009 and opens in Viv.
   Refs doc 32, [`poc/scripts/tiff-to-zarr.mjs`](https://github.com/fedasevich/pathlogy-poc/blob/master/scripts/tiff-to-zarr.mjs), [`poc/server/tools/ome_tiff_to_zarr16.py`](https://github.com/fedasevich/pathlogy-poc/blob/master/server/tools/ome_tiff_to_zarr16.py).
@@ -2138,7 +2138,7 @@ The launchpad is everyone's home ([ADR 0021](adr/0021-chosen-home-worklist-statu
   Done when unit tests cover the heuristic and E2E applies a suggestion with an audit entry.
   Size: M.
 
-- [ ] HOME-007 · Activity on the launchpad and in notifications
+- [x] HOME-007 · Activity on the launchpad and in notifications
   Replies, mentions, new tasks, finished model runs and imports, and sign-offs, shown on the launchpad and in the notification centre, filterable by everything, mentions and jobs. Each item links to the slide, object, thread, task or job.
   Done when component tests render seeded events with each filter and the activity updates in realtime.
   Depends on COLLAB-001, NOTIF-002. Refs mock 1 scene C, [ADR 0021](adr/0021-chosen-home-worklist-status-board-and-account-menu.md).
@@ -3317,7 +3317,7 @@ Cases are optional groups of slides inside a project (PROJ-001). Patient fields 
   Depends on CASES-003 and the final UI shell.
   Size: M.
 
-- [ ] CASES-026 · Encrypted clinical note per case
+- [x] CASES-026 · Encrypted clinical note per case
   The slide picker's case details (CASE-011) have a clinical note row in clinical projects, but [ADR 0054](adr/0054-hospital-code-inventory-and-revert-order.md) removed `cases.clinical_note`, so it always reads "No clinical note". The owner chose on 2026-11-04 to store it again. A migration adds the note sealed with the tenant key as patient identifiers are (SEC-004), with the column classed phi in the data map. Project owners write it in clinical projects only, de-identified projects refuse it, and it is never written to logs, audit details, notifications or telemetry. A short ADR records why the note comes back, and a security review of the sealing is written into it.
   Done when API tests cover writing, reading, clearing, tenant isolation, the refusal in de-identified projects and an audit entry without the text, a log capture test proves the text never reaches a log, and the case details show the note.
   Depends on SEC-004, CASE-011.
@@ -3352,7 +3352,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Done when tests reject an artifact whose checksum does not match.
   Size: M.
 
-- [ ] AIP-002 · Model registry
+- [x] AIP-002 · Model registry
   Model family, task (tumor map, detector, typer, interactive encoder, decoder), version, licence of weights and data, allowed tenant types, input microns per pixel, calibration temperature, evaluation report link, status (candidate, validated, retired).
   Done when API tests cover registration and the licence fields are recorded for every model. While STACK-031 (licence policy) is on hold the registry blocks nothing, as the owner chose on 2026-11-04 ([ADR 0202](adr/0202-v1-model-line-up-per-tier.md)), and the block of a non-commercial model in a commercial tenant comes back with STACK-031.
   Each model is either a Parfocal model, always listed unless a researcher with admin rights hides it (JOBS-006), or a lab model behind the lab's own endpoint (JOBS-005), and records what it makes (regions, cells, heatmap).
@@ -3458,6 +3458,12 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Depends on AIP-000.
   Size: S.
 
+- [ ] AIP-020 · Runtime model registration and model parts in the registry
+  AIP-002 (model registry) keeps the registry in code. A migration moves it into a table so an admin can register a model while the app runs, adds licence fields for lab models connected through their own endpoint (JOBS-005), and adds rows with versions for the separate model parts in ADR 0202's line-up, such as the PathoSAM encoder and decoder.
+  Done when an API test registers a model at run time and reads it back with its licence fields, a lab model row carries its licence, and every part in ADR 0202's line-up has a registry row with a version.
+  Depends on AIP-002.
+  Size: M.
+
 ---
 
 ## 22 AISEG · Interactive segmentation
@@ -3515,7 +3521,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Refs doc 20 §2.10.
   Size: M.
 
-- [ ] AISEG-009 · Embedding window crop for decoder speed
+- [x] AISEG-009 · Embedding window crop for decoder speed
   Crop the embedding around the prompt before decoding.
   Done when the decoder time drops below the POC's 40 ms floor in the browser test, or an ADR records why not.
   Refs doc 20 §2.10.
@@ -4649,7 +4655,7 @@ Importing AI results made elsewhere is first class. A result set is one import o
   Depends on RSET-003, RSET-004, PROJ-004. Refs mock: upload/check, mock: upload/unmatched, mock: project/importfail, doc 44.
   Size: L.
 
-- [ ] RSET-006 · Add a result set from the viewer
+- [x] RSET-006 · Add a result set from the viewer
   On an open slide a file is previewed as an overlay before it is saved, with alignment and scale fixes, and shown next to the existing sets once added.
   Done when E2E adds a GeoJSON from the slide view, fixes its offset and sees it in Layers.
   Depends on RSET-005, VIZ-001. Refs mock: upload/viewer.

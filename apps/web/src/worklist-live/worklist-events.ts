@@ -16,7 +16,8 @@ export function changesWorklist(event: RoomMessage): boolean {
 
 export function isWorklistQuery(queryKey: readonly unknown[]): boolean {
   const root = queryKey[0];
-  return typeof root === "string" && worklistQueryRoots.has(root);
+  if (typeof root !== "string") return false;
+  return worklistQueryRoots.has(root) || root.startsWith("/api/me/notifications");
 }
 
 export function userRoom(userId: string): string {

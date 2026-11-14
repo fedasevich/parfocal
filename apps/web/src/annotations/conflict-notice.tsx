@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+import { Trans } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import { type Part, sketchOf } from "./conflicts.ts";
 import type { Choice } from "./save-queue.ts";
@@ -6,12 +8,12 @@ import type { SaveConflict } from "./use-saved-annotations.ts";
 export function conflictText(conflict: SaveConflict): string {
   if (conflict.action === "remove") {
     return conflict.theirs.deleted
-      ? "A colleague already deleted this shape"
-      : "A colleague changed the shape you deleted";
+      ? t`A colleague already deleted this shape`
+      : t`A colleague changed the shape you deleted`;
   }
   return conflict.theirs.deleted
-    ? "A colleague deleted the shape you changed"
-    : "A colleague changed the shape you changed";
+    ? t`A colleague deleted the shape you changed`
+    : t`A colleague changed the shape you changed`;
 }
 
 function PartShape({ part, tone, size }: { part: Part; tone: string; size: number }) {
@@ -36,7 +38,7 @@ function Preview({ conflict }: { conflict: SaveConflict }) {
     <svg
       viewBox={`${x} ${y} ${width} ${height}`}
       role="img"
-      aria-label="Your outline in blue and your colleague's outline in orange"
+      aria-label={t`Your outline in blue and your colleague's outline in orange`}
       data-testid="conflict-preview"
       className="size-24 shrink-0 rounded-ctl border border-line bg-chrome-2"
     >
@@ -76,17 +78,18 @@ export function ConflictNotice({
           {conflictText(conflict)}
         </p>
         <p className="text-caption text-fg-dim">
-          {more > 0 ? `${more} more waiting. ` : ""}
-          Yours is blue, theirs is orange.
+          {more > 0 ? <Trans>{more} more waiting.</Trans> : null}
+          {more > 0 ? " " : null}
+          <Trans>Yours is blue, theirs is orange.</Trans>
         </p>
         <div className="flex flex-wrap gap-2">
           {hasMine ? (
             <Button size="sm" onClick={() => onResolve(conflict, "mine")}>
-              Keep mine
+              <Trans>Keep mine</Trans>
             </Button>
           ) : null}
           <Button size="sm" variant="primary" onClick={() => onResolve(conflict, "theirs")}>
-            Keep theirs
+            <Trans>Keep theirs</Trans>
           </Button>
         </div>
       </div>

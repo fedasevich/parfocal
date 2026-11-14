@@ -12,6 +12,8 @@ EMBED_DIM = 256
 EMBED_SIZE = 64
 MASK_INPUT_SIZE = 4 * EMBED_SIZE
 AIS_OUTPUT_SIZE = 512
+WINDOW_SIZE = 32
+WINDOW_MIN_IOU = 0.9
 OPSET = 17
 PIXEL_MEAN = np.array([123.675, 116.28, 103.53], dtype=np.float32)
 PIXEL_STD = np.array([58.395, 57.12, 57.375], dtype=np.float32)
@@ -49,6 +51,7 @@ class Graphs:
     encoder_q4: str = "pathosam.encoder_q4.onnx"
     decoder: str = "pathosam.decoder.onnx"
     batch_decoder: str = "pathosam.decoder_batch.onnx"
+    window_decoder: str = f"pathosam.decoder_window{WINDOW_SIZE}.onnx"
     ais_decoder: str = "pathosam.ais_decoder.onnx"
     ais_decoder_full: str = "pathosam.ais_decoder_full.onnx"
     ais_decoder_uint8: str = "pathosam.ais_decoder_uint8.onnx"
@@ -56,6 +59,10 @@ class Graphs:
 
 
 GRAPHS = Graphs()
+
+
+def window_decoder_graph(size: int) -> str:
+    return f"pathosam.decoder_window{size}.onnx"
 
 
 class MissingCheckpointError(FileNotFoundError):

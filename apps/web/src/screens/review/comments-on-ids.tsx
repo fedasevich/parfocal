@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Keycap } from "@parfocal/ui/components/keycap";
@@ -28,9 +29,10 @@ type CommentsOnIdsProps = {
 };
 
 export function CommentsOnIds(props: CommentsOnIdsProps) {
+  const { t } = useLingui();
   const session = useReviewSession(props.taskId, props.slideId);
   if (!session.ready) {
-    return <Loader label="Loading the slide" size="page" />;
+    return <Loader label={t`Loading the slide`} size="page" />;
   }
   return <CommentsBody session={session} {...props} />;
 }
@@ -40,6 +42,7 @@ function CommentsBody({
   thread: picked,
   onThreadChange,
 }: CommentsOnIdsProps & { session: ReviewSession }) {
+  const { t } = useLingui();
   const [tab, setTab] = useState("comments");
   const person = usePeople();
   const openThreads = session.threads.filter((item) => !item.resolved).length;
@@ -110,7 +113,7 @@ function CommentsBody({
               </Zone>
               {notes.length ? (
                 <Zone
-                  title="Your decision notes"
+                  title={t`Your decision notes`}
                   end={<span className="font-mono text-caption text-fg-dim">{notes.length}</span>}
                 >
                   <div className="grid gap-3">
@@ -141,8 +144,10 @@ function CommentsBody({
           label: "Opinion",
           body: (
             <p className="m-0 text-body-sm text-fg-dim">
-              The Slide done card with the opinion questions. It opens from Submit once every object
-              is decided.
+              <Trans>
+                The Slide done card with the opinion questions. It opens from Submit once every
+                object is decided.
+              </Trans>
             </p>
           ),
         },
@@ -165,7 +170,7 @@ function CommentsBody({
           </span>
         </span>
         <section
-          aria-label={`Thread on ${anchor}`}
+          aria-label={t`Thread on ${anchor}`}
           className="absolute top-[37%] left-[calc(42%+48px)] grid w-82 gap-3 rounded-zone border border-line bg-chrome p-3.5 text-fg shadow-pop"
         >
           <div className="flex items-center gap-2.5">
@@ -174,8 +179,8 @@ function CommentsBody({
             <Button
               variant="ghost"
               size="icon-sm"
-              aria-label="Close the thread"
-              title="Close the thread"
+              aria-label={t`Close the thread`}
+              title={t`Close the thread`}
             >
               <Icon name="close" />
             </Button>
@@ -194,8 +199,9 @@ function CommentsBody({
         <div className="absolute right-4 bottom-4 grid w-50 gap-1.5 rounded-zone border border-line bg-chrome p-2 shadow-pop">
           <span className="flex items-center justify-between text-caption text-fg-dim">
             <span>
-              <b className="text-fg">Whole slide</b> ·{" "}
-              {session.threads.filter((item) => !item.resolved).length} threads
+              <Trans>
+                <b className="text-fg">Whole slide</b> · {openThreads} threads
+              </Trans>
             </span>
             <Keycap action="peek" keys="Z" size="sm" />
           </span>
@@ -207,7 +213,9 @@ function CommentsBody({
           <span className="flex justify-between text-caption text-fg-dim">
             <span>{anchor}</span>
             <span>
-              10× · {counts.decided} of {counts.total} decided
+              <Trans>
+                10× · {counts.decided} of {counts.total} decided
+              </Trans>
             </span>
           </span>
         </div>

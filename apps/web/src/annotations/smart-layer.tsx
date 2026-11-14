@@ -1,3 +1,4 @@
+import { useLingui } from "@lingui/react/macro";
 import { isTwoFingerClick, secondaryButton } from "@parfocal/viewer-engine";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useHoverPreview } from "../aiseg/hover-preview-setting.ts";
@@ -89,6 +90,7 @@ export function SmartLayer({
   openRequest,
   onDocumentChange,
 }: SmartLayerProps) {
+  const { t } = useLingui();
   const camera = useSyncExternalStore(engine.subscribeCamera, engine.getCamera);
   const rect = useStageRect(stage);
   const [snapshot, setSnapshot] = useState<SmartSnapshot>(idle);
@@ -427,7 +429,7 @@ export function SmartLayer({
           onClick={() => setHoverOn(!hoverOn)}
           className="absolute bottom-16 left-3 rounded-ctl border border-line bg-chrome px-2 py-1 font-mono text-caption aria-pressed:border-accent"
         >
-          {hoverOn ? "Hover preview on" : "Hover preview off"}
+          {hoverOn ? t`Hover preview on` : t`Hover preview off`}
         </button>
       ) : null}
       {active && (snapshot.phase === "thinking" || snapshot.message !== null) ? (
@@ -436,7 +438,7 @@ export function SmartLayer({
           role="status"
           className="absolute bottom-16 left-1/2 -translate-x-1/2 rounded-ctl border border-line bg-chrome px-3 py-1.5 font-mono text-caption"
         >
-          {snapshot.phase === "thinking" ? "Outlining" : snapshot.message}
+          {snapshot.phase === "thinking" ? t`Outlining` : snapshot.message}
         </div>
       ) : null}
     </>

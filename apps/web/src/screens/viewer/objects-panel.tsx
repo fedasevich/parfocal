@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import type { ReviewObject, SlideAiProgress } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
 import { DecisionButtons, type ProjectClass } from "@parfocal/ui/components/decision-buttons";
@@ -52,29 +53,38 @@ export function RunningObjects({
   progress: SlideAiProgress;
   objects: ReviewObject[];
 }) {
+  const { t } = useLingui();
   useLengthUnits();
   const found = objects.filter((item) => progress.found.includes(item.object));
   return (
     <>
       <Zone
-        title={`Still reading this slide, ${found.length} regions so far`}
-        end={<StatusTag tone="accent">reading</StatusTag>}
+        title={t`Still reading this slide, ${found.length} regions so far`}
+        end={
+          <StatusTag tone="accent">
+            <Trans>reading</Trans>
+          </StatusTag>
+        }
       >
         <p className="m-0 text-body-sm leading-[1.5] text-fg-dim">
-          You can look at the slide meanwhile. Regions join the list as they are found, and the view
-          never moves under you.
+          <Trans>
+            You can look at the slide meanwhile. Regions join the list as they are found, and the
+            view never moves under you.
+          </Trans>
         </p>
         <AiRunningSteps steps={aiSteps(progress)} />
       </Zone>
-      <ul aria-label="Found so far" className="m-0 grid list-none gap-1 p-0">
+      <ul aria-label={t`Found so far`} className="m-0 grid list-none gap-1 p-0">
         {found.map((item) => (
           <li key={item.object} className={foundRow}>
             <ObjectIdTag>{item.object}</ObjectIdTag>
             <span className="grid">
-              <span>Tumor region</span>
+              <span>
+                <Trans>Tumor region</Trans>
+              </span>
               <small className="inline-flex items-center gap-1.5 text-caption text-fg-dim">
                 <i aria-hidden="true" className="size-2 rounded-full border border-fg-dim" />
-                just found
+                <Trans>just found</Trans>
               </small>
             </span>
             <span className="font-mono text-fg-dim">{item.score.toFixed(2)}</span>
@@ -113,9 +123,11 @@ export function TellMeWhenReady({
   return (
     <label className="flex cursor-pointer items-center justify-between gap-4">
       <span className="grid">
-        <span className="text-body-sm font-semibold">Tell me when it is ready</span>
+        <span className="text-body-sm font-semibold">
+          <Trans>Tell me when it is ready</Trans>
+        </span>
         <small className="text-caption text-fg-dim">
-          A notification when every region is found
+          <Trans>A notification when every region is found</Trans>
         </small>
       </span>
       <Switch checked={on} onCheckedChange={onChange} />
@@ -180,7 +192,7 @@ export function NoteBlock({
         className="inline-flex w-fit cursor-pointer items-center gap-1.5 border-0 bg-transparent p-0 text-body-sm font-medium text-fg-dim hover:text-fg"
       >
         <Icon name="comment" />
-        Add a note
+        <Trans>Add a note</Trans>
         <Keycap action={noteAction} size="sm" />
       </button>
     );
@@ -219,11 +231,10 @@ export function ObjectFoot({
   onAnswer,
   onClose,
 }: ObjectFootProps) {
+  const { t } = useLingui();
   const format = useFormat();
-  const sub =
-    object.kind === "cell"
-      ? "Cell in your sample"
-      : `Tumor region · ${object.size_mm == null ? "" : format.size(object.size_mm)}`;
+  const regionSize = object.size_mm == null ? "" : format.size(object.size_mm);
+  const sub = object.kind === "cell" ? t`Cell in your sample` : t`Tumor region · ${regionSize}`;
   const noteBlock = (
     <NoteBlock
       object={object}
@@ -245,8 +256,8 @@ export function ObjectFoot({
         <Button
           variant="ghost"
           size="icon-sm"
-          aria-label="Close"
-          title="Close (Esc)"
+          aria-label={t`Close`}
+          title={t`Close (Esc)`}
           onClick={onClose}
         >
           <Icon name="close" />
@@ -259,7 +270,9 @@ export function ObjectFoot({
         </small>
       ) : null}
       {text.above ? (
-        <small className="text-caption text-fg-dim">AI says: {text.above}</small>
+        <small className="text-caption text-fg-dim">
+          <Trans>AI says: {text.above}</Trans>
+        </small>
       ) : null}
       <ConfidenceByColour chip={text.chip} />
       <b className="text-body font-semibold">{text.question}</b>
@@ -274,7 +287,7 @@ export function ObjectFoot({
           aiClass={object.class_name}
           disabled={disabledReason !== undefined}
           title={disabledReason}
-          label={`Your answer on ${object.object}`}
+          label={t`Your answer on ${object.object}`}
         />
       )}
       {noteBlock}
@@ -293,19 +306,21 @@ export function AddedFoot({
   note: string | null;
   onClose: () => void;
 }) {
+  const { t } = useLingui();
+  const reason = note ? `${note.charAt(0).toLowerCase()}${note.slice(1)}` : t`missed by the AI`;
   return (
     <div className="grid gap-2.5" data-slot="object-foot">
       <div className="flex items-center gap-2">
         <ObjectIdTag>{object}</ObjectIdTag>
-        <span className="flex-1 text-body-sm text-fg-dim">Tumor region · {size}</span>
-        <Button variant="ghost" size="icon-sm" aria-label="Close" onClick={onClose}>
+        <span className="flex-1 text-body-sm text-fg-dim">
+          <Trans>Tumor region · {size}</Trans>
+        </span>
+        <Button variant="ghost" size="icon-sm" aria-label={t`Close`} onClick={onClose}>
           <Icon name="close" />
         </Button>
       </div>
       <p className="m-0 text-body-sm leading-[1.5] text-fg-dim">
-        Added by you:{" "}
-        {note ? `${note.charAt(0).toLowerCase()}${note.slice(1)}` : "missed by the AI"}. It sits
-        outside the scope and is counted apart.
+        <Trans>Added by you: {reason}. It sits outside the scope and is counted apart.</Trans>
       </p>
     </div>
   );
@@ -324,23 +339,25 @@ export function MeasurementFoot({
   onClose: () => void;
   onRemove: () => void;
 }) {
+  const { t } = useLingui();
   useLengthUnits();
+  const length = formatMillimetres(mm, 2);
   return (
     <div className="grid gap-2.5" data-slot="object-foot">
       <div className="flex items-center gap-2">
         <ObjectIdTag>{object}</ObjectIdTag>
         <span className="flex-1 text-body-sm text-fg-dim">
-          Measurement · {formatMillimetres(mm, 2)}
+          <Trans>Measurement · {length}</Trans>
         </span>
-        <Button variant="ghost" size="icon-sm" aria-label="Close" onClick={onClose}>
+        <Button variant="ghost" size="icon-sm" aria-label={t`Close`} onClick={onClose}>
           <Icon name="close" />
         </Button>
       </div>
       <p className="m-0 text-body-sm leading-[1.5] text-fg-dim">
-        Drawn with the ruler across {across}. It is yours only and is not a decision.
+        <Trans>Drawn with the ruler across {across}. It is yours only and is not a decision.</Trans>
       </p>
       <Button className="w-full" onClick={onRemove}>
-        Remove {object}
+        <Trans>Remove {object}</Trans>
       </Button>
     </div>
   );
