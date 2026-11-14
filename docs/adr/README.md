@@ -268,3 +268,5 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0302](0302-renderer-routes-switch-inside-the-engine-behind-lazy-loaders.md) | Renderer routes switch inside the engine, and a registry loads each route lazily | Accepted | 2026-11-14 |
 | [0303](0303-a-new-workspace-saves-no-mail-domain.md) | A new workspace saves no mail domain, and only an admin turns joining by domain on in the join settings | Accepted | 2026-11-14 |
 | [0304](0304-a-shared-cursor-is-a-second-capped-frame-in-shares-of-the-slide.md) | A shared cursor is a second capped client frame, sent as shares of the slide, with its own rate cap | Accepted | 2026-11-14 |
+| [XXXX](0305-jpeg-chunks-in-ome-zarr-and-absent-inner-chunks.md) | OME-Zarr JPEG chunks are a zarrita codec named `imagecodecs_jpeg`, and absent inner chunks of a shard come from the slide index | Proposed | 2026-11-14 |
+| [0305](0305-jpeg-chunks-in-ome-zarr-and-absent-inner-chunks.md) | OME-Zarr JPEG chunks are a zarrita codec named `imagecodecs_jpeg`, and absent inner chunks of a shard come from the slide index | Accepted | 2026-11-14 |

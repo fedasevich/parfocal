@@ -1,7 +1,12 @@
 import assert from "node:assert/strict";
 import { mock, test } from "node:test";
 import type { RoomSignal } from "@parfocal/edge/room-client";
-import { onPointer, reportPointer } from "../src/presence/cursor-bridge.ts";
+import {
+  onPointer,
+  reportPointer,
+  showCursors,
+  shownCursors,
+} from "../src/presence/cursor-bridge.ts";
 import {
   cursorFrame,
   cursorSender,
@@ -9,9 +14,10 @@ import {
   heardCursorOf,
   pointOfShare,
   shareOfPoint,
+  shownOnStage,
   withCursor,
 } from "../src/presence/shared-cursor.ts";
-import { pointOnPane, screenOfPoint } from "../src/screens/viewer-tools/cursor-map.ts";
+import { pointOnHome, pointOnPane, screenOfPoint } from "../src/screens/viewer-tools/cursor-map.ts";
 
 const slide = { width: 80_000, height: 40_000 };
 const at = { x: 0.25, y: 0.75 };
@@ -145,4 +151,47 @@ test("in compare the cursor is drawn on the room's slide and carried by the pane
   const view = { x: 800, y: 500, zoom: -1, rotation: 0 };
   const box = { width: 800, height: 500 };
   assert.deepEqual(screenOfPoint(view, box, { x: 400, y: 750 }), { x: 200, y: 375 });
+});
+
+test("the live slide draws the followed sharer and everyone who shares only a cursor", () => {
+  const cursors = new Map([
+    ["ben", { x: 0.1, y: 0.2 }],
+    ["cara", { x: 0.3, y: 0.4 }],
+    ["dan", { x: 0.5, y: 0.6 }],
+  ]);
+  const sharesView = (user: string) => user === "ben" || user === "cara";
+  assert.deepEqual(shownOnStage(cursors, sharesView, null), [
+    { user: "dan", at: { x: 0.5, y: 0.6 } },
+  ]);
+  assert.deepEqual(
+    shownOnStage(cursors, sharesView, "cara").map((cursor) => cursor.user),
+    ["cara", "dan"],
+  );
+  assert.deepEqual(shownOnStage(new Map(), sharesView, "ben"), []);
+});
+
+test("a compare pointer is carried back to the pane of the session slide before it is sent", () => {
+  const offsets = {
+    left: { x: 0, y: 0, zoom: 0, rotation: 0 },
+    right: { x: 120, y: -40, zoom: 0, rotation: 0 },
+  };
+  const point = { x: 800, y: 500 };
+  assert.deepEqual(pointOnHome(point, "left", "left", offsets), point);
+  const home = pointOnHome(point, "right", "left", offsets);
+  assert.deepEqual(home, { x: 680, y: 540 });
+  assert.deepEqual(pointOnPane(home, "left", "right", offsets), point);
+  assert.deepEqual(shareOfPoint(home, { width: 1600, height: 1000 }), { x: 0.425, y: 0.54 });
+});
+
+test("the stage shows several cursors for a slide and none after they are cleared", () => {
+  const drawn = [
+    { user: "ben", at: { x: 0.1, y: 0.2 } },
+    { user: "dan", at: { x: 0.5, y: 0.6 } },
+  ];
+  showCursors("slide-a", drawn);
+  assert.deepEqual(shownCursors("slide-a"), drawn);
+  assert.deepEqual(shownCursors("slide-b"), []);
+  showCursors("slide-a", []);
+  assert.deepEqual(shownCursors("slide-a"), []);
+  assert.equal(shownCursors("slide-a"), shownCursors("slide-b"));
 });

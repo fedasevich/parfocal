@@ -1,0 +1,1 @@
+{"zarr_format": 2, "shape": [3, 192, 256], "chunks": [3, 256, 256], "dtype": "|u1", "compressor": {"id": "imagecodecs_jpeg", "level": 90}, "fill_value": 255, "order": "C", "filters": null, "dimension_separator": "/"}

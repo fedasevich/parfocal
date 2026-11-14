@@ -47,6 +47,15 @@ export function pointOnPane<Side extends string>(
   return home === side ? point : carryPoint(point, offsets[home], offsets[side]);
 }
 
+export function pointOnHome<Side extends string>(
+  point: SlidePoint,
+  side: Side,
+  home: Side,
+  offsets: Readonly<Record<Side, ViewOffset>>,
+): SlidePoint {
+  return home === side ? point : carryPoint(point, offsets[side], offsets[home]);
+}
+
 export function carryPoint(point: SlidePoint, from: ViewOffset, to: ViewOffset): SlidePoint {
   return { x: point.x + to.x - from.x, y: point.y + to.y - from.y };
 }

@@ -1,6 +1,7 @@
 import { createRootRoute, Outlet, useMatches } from "@tanstack/react-router";
 import { lazy, Suspense } from "react";
 import { FeedbackHost } from "../feedback/feedback-host.tsx";
+import { useAppliedLocale } from "../i18n/app-i18n.tsx";
 import { KeyBindingsProvider } from "../keys/keycap-bindings.tsx";
 import { LabKey } from "../lab/lab-key.tsx";
 import { SessionLock } from "../session/session-lock.tsx";
@@ -31,6 +32,7 @@ function Root() {
     select: (matches) => matches.some(inGlobalShell),
   });
   useAppliedDensity();
+  useAppliedLocale();
   useAppliedLengthUnits();
   useAppliedOutlineMode();
   useReadingReport();

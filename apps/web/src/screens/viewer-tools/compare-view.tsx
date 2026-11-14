@@ -30,13 +30,15 @@ import {
   Fragment,
   type PointerEvent,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
 import { useBindings } from "../../keys/personal-keys.ts";
 import { useHotkeys } from "../../keys/use-hotkeys.ts";
 import { LiveCursor } from "../../presence/live-cursor.tsx";
-import { pointOfShare } from "../../presence/shared-cursor.ts";
+import { cursorSender, pointOfShare, shareOfPoint } from "../../presence/shared-cursor.ts";
+import { useBlindedOn } from "../../presence/use-blinded.ts";
 import { useRoomCursors } from "../../presence/use-room-cursors.ts";
 import { okData } from "../placeholder.tsx";
 import { type Camera, midSize, SlideStill } from "../review/slide-still.tsx";
@@ -57,6 +59,7 @@ import {
 import {
   carryPoint,
   pointOfScreen,
+  pointOnHome,
   pointOnPane,
   type SlidePoint,
   screenOfPoint,
@@ -148,8 +151,24 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
     chosen,
     { left: session.slideId, right: fallbackRight?.id },
   );
-  const liveCursors = useRoomCursors(session.slideId, okData(useGetMe().data)?.user_id);
+  const blinded = useBlindedOn(session.taskId, session.slideId);
+  const { cursors: liveCursors, send: sendCursor } = useRoomCursors(
+    session.slideId,
+    okData(useGetMe().data)?.user_id,
+    blinded,
+  );
   const homeSide = paneSides.find((side) => ids[side] === session.slideId);
+  const [shareCursor, setShareCursor] = useState(false);
+  const canShareCursor = !blinded && homeSide !== undefined;
+  const sendingCursor = shareCursor && canShareCursor;
+  const sender = useMemo(() => cursorSender(sendCursor), [sendCursor]);
+  useEffect(() => {
+    if (!sendingCursor) return;
+    return () => {
+      sender.leave();
+      sender.cancel();
+    };
+  }, [sendingCursor, sender]);
   const slideOn = (side: PaneSide) => caseSlides.find((slide) => slide.id === ids[side]);
   const show = (next: PaneSlideIds) => setChosen({ ...next });
   const pick = (side: PaneSide, id: string) => {
@@ -252,7 +271,7 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
   });
   const onPaneMove = (side: PaneSide, flip: boolean, event: PointerEvent<HTMLElement>) => {
     const last = shown.current[side];
-    if (!cursor || last === undefined) return;
+    if ((!cursor && !sendingCursor) || last === undefined) return;
     const rect = event.currentTarget.getBoundingClientRect();
     const point = pointOfScreen(
       viewOn(side, last.camera),
@@ -260,7 +279,10 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
       { x: event.clientX - rect.left, y: event.clientY - rect.top },
       flip,
     );
-    setCursorAt({ side, point });
+    if (cursor) setCursorAt({ side, point });
+    if (sendingCursor && homeSide !== undefined) {
+      sender.move(shareOfPoint(pointOnHome(point, side, homeSide, link.offsets), midSize));
+    }
   };
   const cursorOn = (side: PaneSide, camera: Camera, box: { width: number; height: number }) => {
     shown.current[side] = { camera, ...box };
@@ -285,7 +307,15 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
           const carried = pointOnPane(pointOfShare(live.at, midSize), homeSide, side, link.offsets);
           if (carried === null) return null;
           const spot = screenOfPoint(own, box, carried);
-          return <LiveCursor key={live.user} x={spot.x} y={spot.y} user={live.user} />;
+          return (
+            <LiveCursor
+              key={live.user}
+              x={spot.x}
+              y={spot.y}
+              user={live.user}
+              mirrored={slideOn(side)?.flip === true}
+            />
+          );
         })}
       </>
     );
@@ -498,6 +528,7 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
     >
       <div
         data-layout={layout}
+        onPointerLeave={() => sender.leave()}
         className={`relative grid min-h-0 min-w-0 flex-1 gap-0.5 bg-line-strong ${gridOf(layout)}`}
       >
         {visible.map((side) => (
@@ -508,6 +539,22 @@ export function CompareView({ tools, scene, rightSlideId, onLeave }: CompareView
           <span>Linked: pan, zoom and rotation move both</span>
           <Switch aria-label="Linked" checked={linked} onCheckedChange={setLinked} />
           <Keycap action="linkviews" keys="⇧L" size="sm" />
+          {canShareCursor ? (
+            <>
+              <span>Share my cursor</span>
+              <Switch
+                aria-label="Share my cursor"
+                data-testid="share-cursor"
+                title={
+                  shareCursor
+                    ? "Others on this slide see where you point. Click to stop"
+                    : "Let others on this slide see where you point"
+                }
+                checked={shareCursor}
+                onCheckedChange={setShareCursor}
+              />
+            </>
+          ) : null}
         </FloatingPill>
       </div>
     </ViewerFrame>

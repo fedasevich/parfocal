@@ -172,6 +172,7 @@ export async function renderVivFrame(
     view: scene.view,
     breakage,
     ...(scene.tissue === undefined ? {} : { tissue: scene.tissue }),
+    ...(scene.index === undefined ? {} : { index: scene.index }),
     ...routing,
   });
   const ms = performance.now() - started;

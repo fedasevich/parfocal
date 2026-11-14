@@ -1,6 +1,7 @@
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
+import { gzipSync, zstdCompressSync } from "node:zlib";
 
 export interface ZarrFixtureOptions {
   readonly version: 2 | 3;
@@ -14,6 +15,7 @@ export interface ZarrFixtureOptions {
   readonly shard?: number;
   readonly scales?: boolean;
   readonly axisOrder?: "yx" | "xy";
+  readonly codec?: "zstd" | "gzip";
 }
 
 export interface ZarrFixture {
@@ -64,7 +66,16 @@ function chunkBytes(
       }
     }
   }
-  return new Uint8Array(values.buffer);
+  const raw = new Uint8Array(values.buffer);
+  if (options.codec === "zstd") return zstdCompressSync(raw);
+  if (options.codec === "gzip") return gzipSync(raw);
+  return raw;
+}
+
+function compression(options: ZarrFixtureOptions) {
+  if (options.codec === "zstd") return [{ name: "zstd", configuration: { level: 3 } }];
+  if (options.codec === "gzip") return [{ name: "gzip", configuration: { level: 6 } }];
+  return [];
 }
 
 function axes(options: ZarrFixtureOptions) {
@@ -109,12 +120,12 @@ async function put(path: string, content: string | Uint8Array): Promise<void> {
 
 const littleEndian = { name: "bytes", configuration: { endian: "little" } };
 
-function shardingCodec(chunks: readonly number[]) {
+function shardingCodec(options: ZarrFixtureOptions, chunks: readonly number[]) {
   return {
     name: "sharding_indexed",
     configuration: {
       chunk_shape: chunks,
-      codecs: [littleEndian],
+      codecs: [littleEndian, ...compression(options)],
       index_codecs: [littleEndian],
       index_location: "end",
     },
@@ -193,7 +204,7 @@ export async function writeZarrFixture(options: ZarrFixtureOptions): Promise<Zar
           shape,
           chunks,
           dtype: options.dtype === "uint16" ? "<u2" : "|u1",
-          compressor: null,
+          compressor: options.codec === undefined ? null : { id: options.codec, level: 3 },
           fill_value: 0,
           order: "C",
           filters: null,
@@ -214,7 +225,10 @@ export async function writeZarrFixture(options: ZarrFixtureOptions): Promise<Zar
           },
           chunk_key_encoding: { name: "default", configuration: { separator: "/" } },
           fill_value: 0,
-          codecs: options.shard === undefined ? [littleEndian] : [shardingCodec(chunks)],
+          codecs:
+            options.shard === undefined
+              ? [littleEndian, ...compression(options)]
+              : [shardingCodec(options, chunks)],
           attributes: {},
           dimension_names: options.channels === 3 ? ["c", "y", "x"] : ["y", "x"],
         }),

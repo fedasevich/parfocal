@@ -80,6 +80,7 @@ export function createDefaultPixelSourceRegistry(): PixelSourceRegistry {
   const registry = createPixelSourceRegistry();
   registry.register(tiffTileGridFormats, openTiffSource);
   registry.register(["hamamatsu-ndpi"], openNdpiSource);
+  registry.register(["ventana-bif"], openTiffSource);
   registry.register(["ome-zarr"], openOmeZarrSource);
   return registry;
 }

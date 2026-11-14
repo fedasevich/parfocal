@@ -3,6 +3,7 @@ import { checkTile, checkWindow, levelAt, tileColumns, tileWindow } from "../geo
 import { isAbsentTile, TileIndexError } from "../tile-index.ts";
 import type {
   ChannelInfo,
+  DecodeReport,
   MicronsPerPixel,
   OpenRequest,
   Photometric,
@@ -19,7 +20,19 @@ import type {
 } from "../types.ts";
 import { SourceClosedError } from "../types.ts";
 import { absoluteUrl } from "../url.ts";
+import { createJpegChunkDecoding, type JpegChunkDecoding, tagJpegChunks } from "./jpeg-chunk.ts";
 import { AbsentChunkError, slideStore } from "./store.ts";
+
+const probeTiles = 16;
+
+const notJpeg: DecodeReport = {
+  jpeg: "none",
+  reason: "not-jpeg",
+  meanAbsoluteError: null,
+  nativeReads: 0,
+  scriptReads: 0,
+  nativeFallbacks: 0,
+};
 
 interface Axis {
   readonly name: string;
@@ -246,6 +259,8 @@ function tilesIn(level: PixelLevel, window: PixelWindow): number[] {
 export async function openOmeZarrSource(request: OpenRequest): Promise<PixelSource> {
   const url = absoluteUrl(request.url, request.baseUrl);
   const fetcher = request.fetch;
+  const jpegChunks = createJpegChunkDecoding(request.nativeJpeg);
+  let storesJpeg = false;
   const store = slideStore(
     zarr.withRangeCoalescing(
       new zarr.FetchStore(url.href, {
@@ -253,7 +268,26 @@ export async function openOmeZarrSource(request: OpenRequest): Promise<PixelSour
         ...(fetcher === undefined ? {} : { fetch: (inner: Request) => fetcher(inner) }),
       }),
     ),
+    (metadata) => {
+      const tagged = tagJpegChunks(metadata, jpegChunks.token);
+      storesJpeg ||= tagged !== null;
+      return tagged;
+    },
   );
+  try {
+    return await openStore(request, store, jpegChunks, () => storesJpeg);
+  } catch (error) {
+    jpegChunks.release();
+    throw error;
+  }
+}
+
+async function openStore(
+  request: OpenRequest,
+  store: zarr.AsyncReadable,
+  jpegChunks: JpegChunkDecoding,
+  storesJpeg: () => boolean,
+): Promise<PixelSource> {
   const root = await openRoot(store, request.index?.zarrVersion);
   const attributes = root.attrs as OmeAttributes;
   const multiscale = (attributes.ome?.multiscales ?? attributes.multiscales)?.[0];
@@ -396,8 +430,24 @@ export async function openOmeZarrSource(request: OpenRequest): Promise<PixelSour
       if (!whole.absent) return whole;
       return compose(level, window, raster.signal);
     },
+    async decodeReport(): Promise<DecodeReport> {
+      if (!storesJpeg()) return notJpeg;
+      const made = await jpegChunks.report();
+      if (made !== null) return made;
+      const coarsest = levelAt(levels, levels.length - 1);
+      const tiles = tileColumns(coarsest) * Math.ceil(coarsest.height / coarsest.tileHeight);
+      for (let number = 0; number < Math.min(tiles, probeTiles); number++) {
+        if (isAbsentTile(coarsest.absentTiles, number)) continue;
+        const columns = tileColumns(coarsest);
+        const window = tileWindow(coarsest, number % columns, Math.floor(number / columns));
+        const tile = await readWindow(coarsest, window);
+        if (!tile.absent) break;
+      }
+      return (await jpegChunks.report()) ?? { ...notJpeg, reason: "no-probe-tile" };
+    },
     close() {
       closed = true;
+      jpegChunks.release();
     },
   };
 }
