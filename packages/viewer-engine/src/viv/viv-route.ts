@@ -22,6 +22,7 @@ import {
   systemTimers,
 } from "../engine/scheduling.ts";
 import type { EngineContainer, OverlayLayer, RendererRoute } from "../engine/types.ts";
+import { cameraViewRect, type ViewRect } from "../overlay/cull-grid.ts";
 import { createOverlayLayerBuilder } from "../overlay/deck/overlay-layers.ts";
 import type { DecodeReport } from "../pixel-source/types.ts";
 import { absoluteUrl } from "../pixel-source/url.ts";
@@ -293,11 +294,18 @@ export function createVivRoute(
     sleep?.wake("change");
   };
 
+  const viewRect = (): ViewRect | undefined =>
+    cameraViewRect(camera, canvas.clientWidth, canvas.clientHeight);
+
+  const overlayDetailMoved = (): boolean =>
+    overlayBuilder.lodKey(overlays, 2 ** camera.zoom, viewRect()) !== overlayLod;
+
   const applyLayers = () => {
     if (failure !== null) return;
     const pixelsPerUnit = 2 ** camera.zoom;
-    overlayLod = overlayBuilder.lodKey(overlays, pixelsPerUnit);
-    overlayLayers = overlayBuilder.build(overlays, pixelsPerUnit);
+    const rect = viewRect();
+    overlayLod = overlayBuilder.lodKey(overlays, pixelsPerUnit, rect);
+    overlayLayers = overlayBuilder.build(overlays, pixelsPerUnit, rect);
     if (gpuUsable()) deck.setProps({ layers: shown ? [shown.layer, ...overlayLayers] : [] });
     changed();
   };
@@ -393,9 +401,13 @@ export function createVivRoute(
     shown?.reader?.setFocus({ x: camera.x, y: camera.y });
     shown?.prefetcher?.update(camera);
     if (gpuUsable()) deck.setProps({ viewState: vivViewState(camera) });
-    const lodMoved = overlayBuilder.lodKey(overlays, 2 ** camera.zoom) !== overlayLod;
-    if (lodMoved && failure === null) applyLayers();
+    if (overlayDetailMoved() && failure === null) applyLayers();
     else changed();
+  };
+
+  const resized = () => {
+    sleep?.wake("resize");
+    if (overlayDetailMoved()) applyLayers();
   };
 
   let fadeWasActive = false;
@@ -440,7 +452,7 @@ export function createVivRoute(
           now: systemClock,
         });
   if (sleep) installFrameProvider(deck as unknown as Deck, sleep);
-  let stopObservingCanvas = observeCanvasSize(canvas, () => sleep?.wake("resize"));
+  let stopObservingCanvas = observeCanvasSize(canvas, resized);
   const stopObservingPixelRatio = observePixelRatio(() => sleep?.wake("resize"));
 
   let deckDisposed = false;
@@ -468,7 +480,7 @@ export function createVivRoute(
     disposeDeck(previous.deck as unknown as Deck, previous.canvas);
     deck = createDeck(next);
     if (sleep) installFrameProvider(deck as unknown as Deck, sleep);
-    stopObservingCanvas = observeCanvasSize(next, () => sleep?.wake("resize"));
+    stopObservingCanvas = observeCanvasSize(next, resized);
     if (shown) shown = { ...shown, layer: slideLayer(shown) };
     applyLayers();
   };

@@ -411,6 +411,26 @@ export {
   type OverlayHost,
 } from "./overlay/controller.ts";
 export {
+  buildCullGrid,
+  type CellRect as CullCells,
+  type CullGrid,
+  cameraViewRect,
+  cellCount as cullCellCount,
+  cellsIn,
+  containsCells,
+  cullCellDiameters,
+  cullWindow,
+  cullWindowMaxExcess,
+  cullWindowPadCells,
+  pointSubset,
+  polygonSubset,
+  rangeTotal,
+  rowRanges,
+  triangleStarts,
+  type ViewRect,
+  windowMembers,
+} from "./overlay/cull-grid.ts";
+export {
   belowCutoffAlpha,
   belowCutoffDash,
   type ColourMode,
@@ -491,6 +511,7 @@ export {
   lodStats,
   shapeDiagonals,
   smallShapeCentres,
+  smallShapeIds,
 } from "./overlay/lod.ts";
 export {
   createObjectDrawing,
