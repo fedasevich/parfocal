@@ -40,7 +40,9 @@ test("an expired access token is refreshed on the server without the page notici
 test("logout ends the session here and at Zitadel", async ({ page }) => {
   await signIn(page, "/cases/S26-0003");
   await page.goto("/api/auth/logout");
-  await expect.poll(() => new URL(page.url()).pathname).toBe("/");
+  await expect.poll(() => new URL(page.url()).pathname, { timeout: 15_000 }).toBe("/sign-in");
+  expect(new URL(page.url()).searchParams.get("return_to")).toBe("/");
+  await expect(page.getByLabel("Work email")).toBeVisible();
   expect(await sessionStatus(page)).toBe(401);
   await page.goto("/api/auth/login?return_to=/cases/S26-0003");
   expect(new URL(page.url()).origin).toBe(new URL(zitadelIssuer).origin);
