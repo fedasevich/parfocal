@@ -1,4 +1,4 @@
-# 0307. An imported heatmap is kept as a gzip byte grid with a facts file under its result set
+# 0308. An imported heatmap is kept as a gzip byte grid with a facts file under its result set
 
 - Date: 2026-11-14
 - Status: Accepted
