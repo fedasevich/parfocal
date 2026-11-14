@@ -1445,6 +1445,10 @@ export interface ClassProbability {
   probability: number;
 }
 
+export interface ClinicalNoteChange {
+  note: string | null;
+}
+
 export type Code = (typeof Code)[keyof typeof Code];
 
 export const Code = {
@@ -19011,6 +19015,178 @@ export const useReorderCaseSlides = <TError = Problem, TContext = unknown>(
   TContext
 > => {
   return useMutation(getReorderCaseSlidesMutationOptions(options), queryClient);
+};
+
+export type setCaseClinicalNoteResponse200 = {
+  data: CaseDetail;
+  status: 200;
+};
+
+export type setCaseClinicalNoteResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type setCaseClinicalNoteResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type setCaseClinicalNoteResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type setCaseClinicalNoteResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type setCaseClinicalNoteResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type setCaseClinicalNoteResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type setCaseClinicalNoteResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type setCaseClinicalNoteResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type setCaseClinicalNoteResponseSuccess = setCaseClinicalNoteResponse200 & {
+  headers: Headers;
+};
+export type setCaseClinicalNoteResponseError = (
+  | setCaseClinicalNoteResponse400
+  | setCaseClinicalNoteResponse401
+  | setCaseClinicalNoteResponse403
+  | setCaseClinicalNoteResponse404
+  | setCaseClinicalNoteResponse409
+  | setCaseClinicalNoteResponse422
+  | setCaseClinicalNoteResponse429
+  | setCaseClinicalNoteResponse500
+) & {
+  headers: Headers;
+};
+
+export type setCaseClinicalNoteResponse =
+  | setCaseClinicalNoteResponseSuccess
+  | setCaseClinicalNoteResponseError;
+
+export const getSetCaseClinicalNoteUrl = (caseId: string) => {
+  return `/api/cases/${caseId}/clinical-note`;
+};
+
+/**
+ * @summary Set Case Clinical Note
+ */
+export const setCaseClinicalNote = async (
+  caseId: string,
+  clinicalNoteChange: ClinicalNoteChange,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<setCaseClinicalNoteResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<setCaseClinicalNoteResponse>(getSetCaseClinicalNoteUrl(caseId), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(clinicalNoteChange),
+  });
+};
+
+export const getSetCaseClinicalNoteMutationKey = () => ["setCaseClinicalNote"] as const;
+
+export const getSetCaseClinicalNoteMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof setCaseClinicalNote>>,
+    TError,
+    SetCaseClinicalNoteMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof setCaseClinicalNote>>,
+  TError,
+  SetCaseClinicalNoteMutationVariables,
+  TContext
+> => {
+  const mutationKey = getSetCaseClinicalNoteMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof setCaseClinicalNote>>,
+    SetCaseClinicalNoteMutationVariables
+  > = (props) => {
+    const { caseId, data } = props ?? {};
+
+    return setCaseClinicalNote(caseId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SetCaseClinicalNoteMutationResult = NonNullable<
+  Awaited<ReturnType<typeof setCaseClinicalNote>>
+>;
+export type SetCaseClinicalNoteMutationBody = ClinicalNoteChange;
+export type SetCaseClinicalNoteMutationError = Problem;
+export type SetCaseClinicalNoteMutationVariables = { caseId: string; data: ClinicalNoteChange };
+
+/**
+ * @summary Set Case Clinical Note
+ */
+export const useSetCaseClinicalNote = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof setCaseClinicalNote>>,
+      TError,
+      SetCaseClinicalNoteMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof setCaseClinicalNote>>,
+  TError,
+  SetCaseClinicalNoteMutationVariables,
+  TContext
+> => {
+  return useMutation(getSetCaseClinicalNoteMutationOptions(options), queryClient);
 };
 
 export type moveSlideResponse200 = {

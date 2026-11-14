@@ -1,4 +1,4 @@
-# 0308. The clinical note returns, sealed
+# XXXX. The clinical note returns, sealed
 
 - Date: 2026-11-14
 - Status: Accepted

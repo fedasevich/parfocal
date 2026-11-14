@@ -4394,6 +4394,10 @@ export const getGetCaseResponseMock = (
     },
     null,
   ]),
+  clinical_note: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
   specimens: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
     () => ({
       id: faker.string.uuid(),
@@ -4477,6 +4481,10 @@ export const getCreateCaseResponseMock = (
       sex: faker.helpers.arrayElement(Object.values(Sex)),
       age_years: faker.helpers.arrayElement([faker.number.int(), null]),
     },
+    null,
+  ]),
+  clinical_note: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
     null,
   ]),
   specimens: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
@@ -4567,6 +4575,91 @@ export const getReorderCaseSlidesResponseMock = (
       sex: faker.helpers.arrayElement(Object.values(Sex)),
       age_years: faker.helpers.arrayElement([faker.number.int(), null]),
     },
+    null,
+  ]),
+  clinical_note: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  specimens: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      id: faker.string.uuid(),
+      letter: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      type: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      site: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      laterality: faker.helpers.arrayElement(Object.values(Laterality)),
+      procedure: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      collected_at: faker.helpers.arrayElement([
+        faker.date.past().toISOString().slice(0, 19) + "Z",
+        null,
+      ]),
+      received_at: faker.helpers.arrayElement([
+        faker.date.past().toISOString().slice(0, 19) + "Z",
+        null,
+      ]),
+      blocks: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () => ({
+          id: faker.string.uuid(),
+          number: faker.number.int(),
+          description: faker.helpers.arrayElement([
+            faker.string.alpha({ length: { min: 10, max: 20 } }),
+            null,
+          ]),
+          stains: Array.from(
+            { length: faker.number.int({ min: 1, max: 10 }) },
+            (_, i) => i + 1,
+          ).map(() => faker.string.alpha({ length: { min: 10, max: 20 } })),
+          levels: faker.number.int(),
+        }),
+      ),
+    }),
+  ),
+  slides: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      id: faker.string.uuid(),
+      label: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      block_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      barcode: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      stain: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      level: faker.helpers.arrayElement([faker.number.int(), null]),
+      restricted_images: faker.helpers.arrayElements(Object.values(RestrictedImage)),
+    }),
+  ),
+  ...overrideResponse,
+});
+
+export const getSetCaseClinicalNoteResponseMock = (
+  overrideResponse: Partial<Extract<CaseDetail, object>> = {},
+): CaseDetail => ({
+  id: faker.string.uuid(),
+  project_id: faker.string.uuid(),
+  label: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  source: faker.helpers.arrayElement(Object.values(CaseSource)),
+  patient: faker.helpers.arrayElement([
+    {
+      id: faker.string.uuid(),
+      name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      mrn: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
+      birth_date: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), null]),
+      sex: faker.helpers.arrayElement(Object.values(Sex)),
+      age_years: faker.helpers.arrayElement([faker.number.int(), null]),
+    },
+    null,
+  ]),
+  clinical_note: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
     null,
   ]),
   specimens: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
@@ -17584,6 +17677,28 @@ export const getReorderCaseSlidesMockHandler = (
   );
 };
 
+export const getSetCaseClinicalNoteMockHandler = (
+  overrideResponse?:
+    | CaseDetail
+    | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<CaseDetail> | CaseDetail),
+  options?: RequestHandlerOptions,
+) => {
+  return http.put(
+    "*/api/cases/:caseId/clinical-note",
+    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getSetCaseClinicalNoteResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getMoveSlideMockHandler = (
   overrideResponse?:
     | SlideMoved
@@ -23319,6 +23434,7 @@ export const getParfocalAPIMock = () => [
   getCreateCaseMockHandler(),
   getChangeSlideDetailsMockHandler(),
   getReorderCaseSlidesMockHandler(),
+  getSetCaseClinicalNoteMockHandler(),
   getMoveSlideMockHandler(),
   getListAnnotationsMockHandler(),
   getCreateAnnotationMockHandler(),

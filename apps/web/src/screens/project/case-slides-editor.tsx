@@ -2,20 +2,24 @@ import {
   type CaseDetail,
   changeSlideDetails,
   reorderCaseSlides,
+  setCaseClinicalNote,
   useGetCase,
 } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Input } from "@parfocal/ui/components/input";
 import { SmallModal } from "@parfocal/ui/components/small-modal";
+import { Textarea } from "@parfocal/ui/components/textarea";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { okData } from "../placeholder.tsx";
 import { failureText } from "./new-forms-model.ts";
 import {
   blockChoices,
+  CLINICAL_NOTE_MAX,
   draftOf,
   moveSlide,
+  noteChange,
   orderChanged,
   type SlideDraft,
   slideChange,
@@ -28,29 +32,34 @@ const fieldClass =
 export function CaseSlidesEditor({
   caseId,
   caseLabel,
+  clinical,
   onClose,
 }: {
   caseId: string;
   caseLabel: string;
+  clinical: boolean;
   onClose: () => void;
 }) {
   const detail = okData(useGetCase(caseId).data);
   return detail === undefined ? null : (
-    <EditorBody detail={detail} caseLabel={caseLabel} onClose={onClose} />
+    <EditorBody detail={detail} caseLabel={caseLabel} clinical={clinical} onClose={onClose} />
   );
 }
 
 function EditorBody({
   detail,
   caseLabel,
+  clinical,
   onClose,
 }: {
   detail: CaseDetail;
   caseLabel: string;
+  clinical: boolean;
   onClose: () => void;
 }) {
   const queryClient = useQueryClient();
   const [drafts, setDrafts] = useState<SlideDraft[]>(() => detail.slides.map(draftOf));
+  const [note, setNote] = useState(detail.clinical_note ?? "");
   const [tried, setTried] = useState(false);
   const [busy, setBusy] = useState(false);
   const [failure, setFailure] = useState<string | undefined>();
@@ -77,6 +86,8 @@ function EditorBody({
       }
       if (orderChanged(detail.slides, drafts))
         await reorderCaseSlides(detail.id, { slide_ids: drafts.map((draft) => draft.id) });
+      const changedNote = clinical ? noteChange(detail.clinical_note, note) : null;
+      if (changedNote) await setCaseClinicalNote(detail.id, changedNote);
       await queryClient.invalidateQueries();
       onClose();
     } catch (error) {
@@ -166,6 +177,20 @@ function EditorBody({
           </li>
         ))}
       </ol>
+      {clinical ? (
+        <div className="mt-3 grid gap-1 text-body-sm text-fg">
+          <label htmlFor="case-clinical-note">Clinical note</label>
+          <Textarea
+            id="case-clinical-note"
+            value={note}
+            maxLength={CLINICAL_NOTE_MAX}
+            rows={3}
+            placeholder="No clinical note"
+            className="text-body-sm"
+            onChange={(event) => setNote(event.target.value)}
+          />
+        </div>
+      ) : null}
     </SmallModal>
   );
 }
