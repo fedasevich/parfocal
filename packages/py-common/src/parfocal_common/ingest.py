@@ -102,7 +102,7 @@ NOTICES = {
     Notice.LEVEL_SKIPPED: (
         "A stored resolution level does not halve the one above it and is not used."
     ),
-    Notice.FIRST_PLANE_ONLY: "The slide has several focal planes. Only the first is shown.",
+    Notice.FIRST_PLANE_ONLY: "The slide has several focal planes. Only the one in focus is shown.",
 }
 
 

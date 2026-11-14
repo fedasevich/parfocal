@@ -15,6 +15,7 @@ from parfocal_ingest.pyramid import Pyramid, main_series
 VERSION = 1
 XMP_TAG = 700
 JPEG_TABLES_TAG = 347
+ARGOS_METADATA_TAG = 65000
 
 TIFF_FAMILY = frozenset(
     {
@@ -32,6 +33,8 @@ TIFF_FAMILY = frozenset(
 
 IMAGE_INFO = re.compile(r"<ImageInfo\s[^>]*>")
 TILE_JOINT = re.compile(r"<TileJointInfo\s([^>]*?)/>")
+ARGOS_LOWEST_PLANE = re.compile(r"<MinZ>\s*(-?\d+)\s*</MinZ>")
+ARGOS_HIGHEST_PLANE = re.compile(r"<MaxZ>\s*(-?\d+)\s*</MaxZ>")
 
 
 type PageName = tuple[int, int | None]
@@ -67,6 +70,30 @@ def offset_gaps(offsets: Sequence[int], counts: Sequence[int]) -> list[int]:
 def header_of(page: tifffile.TiffPage, found: Format) -> str | None:
     header = page.jpegheader if found is Format.HAMAMATSU_NDPI else page.jpegtables
     return base64.b64encode(header).decode() if header else None
+
+
+def argos_focused_plane(metadata: str) -> int:
+    lowest = ARGOS_LOWEST_PLANE.search(metadata)
+    highest = ARGOS_HIGHEST_PLANE.search(metadata)
+    if "<Argos.Scan.Metadata>" not in metadata or lowest is None or highest is None:
+        return 0
+    if int(lowest.group(1)) > 0 or int(highest.group(1)) < 0:
+        return 0
+    return -int(lowest.group(1))
+
+
+def shown_pages(
+    tiff: tifffile.TiffFile, chosen: Format, pages: list[tifffile.TiffPage | tifffile.TiffFrame]
+) -> list[tifffile.TiffPage | tifffile.TiffFrame]:
+    if chosen is not Format.ARGOS_AVS or len(pages) < 2:
+        return pages
+    first = tiff.pages[0]
+    assert isinstance(first, tifffile.TiffPage)
+    tag = first.tags.get(ARGOS_METADATA_TAG)
+    value = None if tag is None else tag.value
+    metadata = value.decode("utf-8", "replace") if isinstance(value, bytes) else str(value or "")
+    plane = argos_focused_plane(metadata)
+    return [pages[plane] if plane < len(pages) else pages[0]]
 
 
 def page_entry(
@@ -200,7 +227,8 @@ def tile_index(path: Path, identified: Identified, found: Pyramid) -> dict[str, 
         names = page_names(tiff)
         levels: list[dict[str, Any]] = []
         for level in found.levels:
-            pages = [page for page in series.levels[level.index].pages if page is not None]
+            stored = [page for page in series.levels[level.index].pages if page is not None]
+            pages = shown_pages(tiff, chosen, stored)
             keyframe = pages[0]
             assert isinstance(keyframe, tifffile.TiffPage)
             levels.append(

@@ -1,0 +1,24 @@
+{
+  "fixture": "Philips-3.tiff",
+  "reader": "openslide",
+  "windows": [
+    {
+      "level": 0,
+      "downsample": 1,
+      "x": 87424,
+      "y": 33152,
+      "width": 256,
+      "height": 256,
+      "file": "level-0-87424-33152.png"
+    },
+    {
+      "level": 1,
+      "downsample": 2,
+      "x": 32640,
+      "y": 16768,
+      "width": 256,
+      "height": 256,
+      "file": "level-1-32640-16768.png"
+    }
+  ]
+}

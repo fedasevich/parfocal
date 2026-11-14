@@ -1,0 +1,24 @@
+{
+  "fixture": "Argos-1.avs",
+  "reader": "openslide",
+  "windows": [
+    {
+      "level": 0,
+      "downsample": 1,
+      "x": 65408,
+      "y": 28544,
+      "width": 256,
+      "height": 256,
+      "file": "level-0-65408-28544.png"
+    },
+    {
+      "level": 1,
+      "downsample": 2,
+      "x": 43392,
+      "y": 4992,
+      "width": 256,
+      "height": 256,
+      "file": "level-1-43392-4992.png"
+    }
+  ]
+}

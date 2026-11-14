@@ -244,7 +244,7 @@ const cachedSlides: readonly (readonly [string, SlideFormatId, Expected])[] = [
     {
       ...rgb8,
       levels: 10,
-      micronsPerPixel: null,
+      micronsPerPixel: 0.243094,
       levelSizes: [
         "1 97792x217088",
         "2 48896x108544",
@@ -265,7 +265,7 @@ const cachedSlides: readonly (readonly [string, SlideFormatId, Expected])[] = [
     {
       ...rgb8,
       levels: 9,
-      micronsPerPixel: null,
+      micronsPerPixel: 0.25,
       levelSizes: [
         "1 91136x68096",
         "2 45568x34048",
