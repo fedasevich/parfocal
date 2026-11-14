@@ -12,6 +12,7 @@ from wsidicom import WsiDicom
 from wsidicom.errors import WsiDicomError
 
 from parfocal_common.ingest import Notice
+from parfocal_ingest.bif_frames import frame_placement
 from parfocal_ingest.identify import Format, Identified, Refusal
 
 USABLE_MPP = 100.0
@@ -285,6 +286,15 @@ def stitched(levels: tuple[Level, ...], slide: openslide.OpenSlide) -> tuple[Lev
     )
 
 
+def frames_placed(path: Path, level: int, openslide_size: tuple[int, int]) -> bool:
+    with tifffile.TiffFile(path) as tiff:
+        series = main_series(tiff)
+        keyframe = None if series is None else series.levels[level].keyframe
+        if not isinstance(keyframe, tifffile.TiffPage):
+            return False
+        return frame_placement(keyframe, openslide_size) is not None
+
+
 def tiff_pyramid(path: Path, found: Format) -> Pyramid | Refusal:
     try:
         with tifffile.TiffFile(path) as tiff:
@@ -308,6 +318,8 @@ def tiff_pyramid(path: Path, found: Format) -> Pyramid | Refusal:
     with slide:
         scale = openslide_scale(slide)
         if found is Format.VENTANA_BIF:
+            if not frames_placed(path, levels[0].index, slide.dimensions):
+                return Refusal.UNREADABLE
             levels = stitched(levels, slide)
     return pyramid(Reader.OPENSLIDE, levels, scale, planes, skipped)
 

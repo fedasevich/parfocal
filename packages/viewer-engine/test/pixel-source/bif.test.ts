@@ -120,4 +120,33 @@ describe("Ventana BIF through the default registry", () => {
     assert.equal(markedPixels(whole), 4 * tissueSpot.width * tissueSpot.height);
     source.close();
   });
+
+  it("draws frames that ingest declared an exact grid as the stored grid", async () => {
+    const { stitching, levels = [] } = file.index;
+    assert.ok(stitching);
+    const source = await registry.open({
+      formatId: "ventana-bif",
+      url: "http://slides.test/virtual.bif",
+      fetch: file.fetch,
+      index: {
+        ...file.index,
+        stitching: {
+          ...stitching,
+          advanceX: bifFrames.frameWidth,
+          advanceY: bifFrames.frameHeight,
+          width: storedSize.width,
+          height: storedSize.height,
+        },
+        levels: levels.map((level) => ({
+          ...level,
+          width: storedSize.width / level.downsample,
+          height: storedSize.height / level.downsample,
+        })),
+      },
+    });
+    assert.equal(source.levels[0]?.width, storedSize.width);
+    const whole = await source.getRaster({ level: 0 });
+    assert.equal(markedPixels(whole), 4 * tissueSpot.width * tissueSpot.height);
+    source.close();
+  });
 });
