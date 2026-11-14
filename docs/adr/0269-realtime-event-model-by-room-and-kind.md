@@ -39,6 +39,10 @@ A case is a slide in a project, so it has no room of its own. What happens on a 
 | `worklist.changed` | user, one per affected person | Task and related ids | Task, assignment, review state, ingest and change routes through `announce_worklist` |
 | `layer.object-changed` | task | task, slide, annotation | The annotate layer routes through `announce` |
 
+### Presence in a blinded task
+
+Added on 2026-11-14 by SEC-040 (presence in a blinded task), after decision 85 (presence in a blinded review) chose 85a. Presence travels in slide and project rooms only, never in task or user rooms. A slide room token carries the optional claim `q: true` when the holder is an assigned reviewer who has not submitted that slide in a blinded task and does not read the whole project, which is `blinding.blinded_on`. The room never tells such a quiet seat who is present, never announces it in the slide room or the project room, and relays it no shared view or cursor and takes none from it. It still receives every API event, because those are ids the refetch blinds. The claim is set at each token, so submitting lifts it at the next renewal, within five minutes, and the room then announces the arrival. A renewal that adds the claim announces the departure.
+
 ### Added by the remaining tasks
 
 - Threads on task slides and mentions (COLLAB-002 and COLLAB-006, both done) do not publish yet. Their only path is the notification row, which the inbox reads by refetching.

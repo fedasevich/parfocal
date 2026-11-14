@@ -239,6 +239,60 @@ def test_removal_from_a_project_closes_the_person_s_sockets_after_commit(
     assert refused_as_outsider(lab.access("colleague", f"slide:{lab.slide}"))
 
 
+@pytest.mark.db
+def test_a_reviewer_with_an_unsubmitted_assignment_in_a_blinded_task_gets_a_quiet_token(
+    database: str, lab: Lab
+) -> None:
+    workspace = make_workspace(
+        database, {"owner": Role.RESEARCHER, "reader": Role.REVIEWER, "open": Role.REVIEWER}
+    )
+    people, tenant = workspace.people, workspace.tenant_id
+    project = make_project(database, tenant)
+    join_project(database, project, people["owner"], "owner")
+    slide = make_slide(database, tenant, project, "B1")
+    result_set = owner(
+        database,
+        "INSERT INTO result_sets (tenant_id, project_id, slide_id, name, source) "
+        f"VALUES ('{tenant}', '{project}', '{slide}', 'Model', 'import') RETURNING id",
+    )[0][0]
+    tasks: dict[str, object] = {}
+    for number, blinded in ((1, "true"), (2, "false")):
+        tasks[blinded] = owner(
+            database,
+            "INSERT INTO review_tasks (tenant_id, project_id, number, name, split, scope, "
+            "opinion_form_version, start_mode, blinded) "
+            f"VALUES ('{tenant}', '{project}', {number}, 'Quiet', 'everyone', "
+            f"'all-regions', 1, 'guided', {blinded}) RETURNING id",
+        )[0][0]
+        owner(
+            database,
+            "INSERT INTO review_task_slides (tenant_id, project_id, task_id, slide_id, position, "
+            f"result_set_id) VALUES ('{tenant}', '{project}', '{tasks[blinded]}', '{slide}', 0, "
+            f"'{result_set}')",
+        )
+    for who, task in (("reader", tasks["true"]), ("open", tasks["false"])):
+        join_project(database, project, people[who], "reviewer")
+        owner(
+            database,
+            "INSERT INTO review_assignments (tenant_id, task_id, slide_id, user_id) "
+            f"VALUES ('{tenant}', '{task}', '{slide}', '{people[who].user_id}')",
+        )
+
+    def claims(who: str, room: str) -> dict[str, Any]:
+        response = lab.api(people[who]).get(f"/api/rooms/{room}/access")
+        return claims_of(lab, response)
+
+    assert claims("reader", f"slide:{slide}")["q"] is True
+    assert "q" not in claims("reader", f"task:{tasks['true']}")
+    assert "q" not in claims("open", f"slide:{slide}")
+    assert "q" not in claims("owner", f"slide:{slide}")
+    owner(
+        database,
+        f"UPDATE review_assignments SET submitted_at = now() WHERE task_id = '{tasks['true']}'",
+    )
+    assert "q" not in claims("reader", f"slide:{slide}")
+
+
 def test_the_room_token_differs_from_a_tile_token() -> None:
     payload = VECTOR["token"].split(".")[0]
     claims = json.loads(base64.urlsafe_b64decode(payload + "=" * (-len(payload) % 4)))
