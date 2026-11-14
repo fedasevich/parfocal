@@ -64,6 +64,7 @@ import { SharedCursorLayer } from "../presence/live-cursor.tsx";
 import { registerStageEngine } from "../presence/stage-engines.ts";
 import { AddResultSet } from "../results/add-result-set.tsx";
 import type { ParsedResults, Placement } from "../results/geojson-placement.ts";
+import { HeatmapLayers, useHeatmapChoices } from "../results/heatmap-layer.tsx";
 import { PreviewLayer } from "../results/preview-layer.tsx";
 import { ResultSetLayers } from "../results/result-set-layers.tsx";
 import { areaRoleText, areaRows } from "../screens/viewer/area-nav.ts";
@@ -314,6 +315,7 @@ function OpenedSlide({
   const restingTool: ViewerTool = setup.restingTool;
   const [tool, setTool] = useState<ViewerTool>(restingTool);
   const [addingResults, setAddingResults] = useState(false);
+  const heatmapChoices = useHeatmapChoices();
   const [resultPreview, setResultPreview] = useState<{
     results: ParsedResults;
     placement: Placement;
@@ -747,6 +749,12 @@ function OpenedSlide({
               onDocumentChange={setAnnotations}
             />
             <ProposalLayer engine={session.engine} stage={hostNode} proposals={proposals.pending} />
+            <HeatmapLayers
+              engine={session.engine}
+              stage={hostNode}
+              slideId={slideId}
+              choices={heatmapChoices}
+            />
             {resultPreview === null ? null : (
               <PreviewLayer
                 engine={session.engine}
@@ -846,6 +854,7 @@ function OpenedSlide({
                         slideId={slideId}
                         adding={addingResults}
                         onAdd={() => setAddingResults(true)}
+                        heatmaps={heatmapChoices}
                       />
                     )
                   }

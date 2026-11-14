@@ -1732,6 +1732,12 @@ GET_ROUTES = {
     "getCellSummary": Route(
         Exposure.TENANT, lambda a: f"/api/result-sets/{a.ids['summary_set']}/cell-summary"
     ),
+    "getHeatmap": Route(
+        Exposure.TENANT, lambda a: f"/api/result-sets/{a.ids['summary_set']}/heatmap"
+    ),
+    "getHeatmapGrid": Route(
+        Exposure.TENANT, lambda a: f"/api/result-sets/{a.ids['summary_set']}/heatmap/grid"
+    ),
     "listAnnotations": Route(
         Exposure.TENANT, lambda a: f"/api/slides/{a.ids['slide']}/annotations"
     ),

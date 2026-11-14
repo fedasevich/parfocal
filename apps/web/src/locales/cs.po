@@ -132,6 +132,11 @@ msgstr ""
 msgid "{0}. Draw the objects by hand."
 msgstr ""
 
+#. placeholder {0}: Math.round(guess.tissue_share * 100)
+#: src/screens/upload/result-problems.tsx
+msgid "{0}% on tissue"
+msgstr ""
+
 #. placeholder {0}: magnification.toFixed(1)
 #. placeholder {1}: Math.round(viewport[0])
 #. placeholder {2}: Math.round(viewport[1])
@@ -613,6 +618,11 @@ msgstr ""
 msgid "Cohen's kappa {0} on regions. Shown only after both submitted."
 msgstr ""
 
+#. placeholder {0}: set.name
+#: src/results/result-set-layers.tsx
+msgid "Colour map of {0}"
+msgstr ""
+
 #: src/screens/review/guided-review.tsx
 msgid "Comment added on {currentId}. It shows in the full viewer too, and the people you mention are told."
 msgstr ""
@@ -843,6 +853,10 @@ msgstr ""
 msgid "Has a note"
 msgstr ""
 
+#: src/screens/upload/result-problems.tsx
+msgid "Heatmap scale guess"
+msgstr ""
+
 #: src/annotations/layers-panel.tsx
 msgid "Hide overlays"
 msgstr ""
@@ -931,6 +945,12 @@ msgstr ""
 
 #: src/screens/viewer-tools/compare-view.tsx
 msgid "Let others on this slide see where you point"
+msgstr ""
+
+#. placeholder {0}: guess.level
+#. placeholder {1}: guess.downsample
+#: src/screens/upload/result-problems.tsx
+msgid "Level {0}, scaled by {1}, {share}"
 msgstr ""
 
 #: src/screens/viewer-tools/compare-view.tsx
@@ -1090,6 +1110,10 @@ msgstr ""
 
 #: src/screens/viewer/object-table.tsx
 msgid "no score"
+msgstr ""
+
+#: src/screens/upload/result-problems.tsx
+msgid "no tissue mask"
 msgstr ""
 
 #: src/screens/review/first-read.tsx
@@ -1437,6 +1461,11 @@ msgstr ""
 msgid "Scale"
 msgstr ""
 
+#. placeholder {0}: guess.downsample
+#: src/screens/upload/result-problems.tsx
+msgid "Scaled by {0}, {share}"
+msgstr ""
+
 #: src/screens/annotate-task/annotate-task-view.tsx
 msgid "Scope: all AI objects, least sure first"
 msgstr ""
@@ -1491,6 +1520,11 @@ msgstr ""
 
 #: src/screens/viewer/layer-views.tsx
 msgid "Show from"
+msgstr ""
+
+#. placeholder {0}: set.name
+#: src/results/result-set-layers.tsx
+msgid "Show heatmap {0}"
 msgstr ""
 
 #: src/annotations/layers-panel.tsx

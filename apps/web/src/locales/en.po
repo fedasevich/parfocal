@@ -132,6 +132,11 @@ msgstr "{0}, key {1}"
 msgid "{0}. Draw the objects by hand."
 msgstr "{0}. Draw the objects by hand."
 
+#. placeholder {0}: Math.round(guess.tissue_share * 100)
+#: src/screens/upload/result-problems.tsx
+msgid "{0}% on tissue"
+msgstr "{0}% on tissue"
+
 #. placeholder {0}: magnification.toFixed(1)
 #. placeholder {1}: Math.round(viewport[0])
 #. placeholder {2}: Math.round(viewport[1])
@@ -613,6 +618,11 @@ msgstr "Close the thread"
 msgid "Cohen's kappa {0} on regions. Shown only after both submitted."
 msgstr "Cohen's kappa {0} on regions. Shown only after both submitted."
 
+#. placeholder {0}: set.name
+#: src/results/result-set-layers.tsx
+msgid "Colour map of {0}"
+msgstr "Colour map of {0}"
+
 #: src/screens/review/guided-review.tsx
 msgid "Comment added on {currentId}. It shows in the full viewer too, and the people you mention are told."
 msgstr "Comment added on {currentId}. It shows in the full viewer too, and the people you mention are told."
@@ -843,6 +853,10 @@ msgstr "Guided check"
 msgid "Has a note"
 msgstr "Has a note"
 
+#: src/screens/upload/result-problems.tsx
+msgid "Heatmap scale guess"
+msgstr "Heatmap scale guess"
+
 #: src/annotations/layers-panel.tsx
 msgid "Hide overlays"
 msgstr "Hide overlays"
@@ -932,6 +946,12 @@ msgstr "Left out of the export"
 #: src/screens/viewer-tools/compare-view.tsx
 msgid "Let others on this slide see where you point"
 msgstr "Let others on this slide see where you point"
+
+#. placeholder {0}: guess.level
+#. placeholder {1}: guess.downsample
+#: src/screens/upload/result-problems.tsx
+msgid "Level {0}, scaled by {1}, {share}"
+msgstr "Level {0}, scaled by {1}, {share}"
 
 #: src/screens/viewer-tools/compare-view.tsx
 msgid "Line up automatically"
@@ -1091,6 +1111,10 @@ msgstr "No review task asks about {slideLabel}. Look at it here, and write what 
 #: src/screens/viewer/object-table.tsx
 msgid "no score"
 msgstr "no score"
+
+#: src/screens/upload/result-problems.tsx
+msgid "no tissue mask"
+msgstr "no tissue mask"
 
 #: src/screens/review/first-read.tsx
 msgid "None added yet."
@@ -1437,6 +1461,11 @@ msgstr "Save a preset"
 msgid "Scale"
 msgstr "Scale"
 
+#. placeholder {0}: guess.downsample
+#: src/screens/upload/result-problems.tsx
+msgid "Scaled by {0}, {share}"
+msgstr "Scaled by {0}, {share}"
+
 #: src/screens/annotate-task/annotate-task-view.tsx
 msgid "Scope: all AI objects, least sure first"
 msgstr "Scope: all AI objects, least sure first"
@@ -1492,6 +1521,11 @@ msgstr "Show activity"
 #: src/screens/viewer/layer-views.tsx
 msgid "Show from"
 msgstr "Show from"
+
+#. placeholder {0}: set.name
+#: src/results/result-set-layers.tsx
+msgid "Show heatmap {0}"
+msgstr "Show heatmap {0}"
 
 #: src/annotations/layers-panel.tsx
 msgid "Show overlays"

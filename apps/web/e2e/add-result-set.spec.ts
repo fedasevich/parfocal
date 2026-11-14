@@ -185,3 +185,65 @@ test("a GeoJSON is previewed on the slide, shifted and scaled, saved and listed 
   await expect(preview).toHaveCount(0);
   await expect(stage).toHaveAttribute("data-state", "ready");
 });
+
+test("a stored heatmap is drawn on the slide and listed in Layers with colour maps", async ({
+  page,
+}) => {
+  test.setTimeout(90_000);
+  await openSlide(page);
+  const slideId = /slides\/([^/]+)\//.exec(page.url())?.[1] ?? "";
+  const setId = "00000000-0000-4000-8009-0000000000b1";
+  await page.addInitScript(
+    ({ id, slide }) => {
+      const grid = Array.from({ length: 64 }, (_, index) => (index % 8) * 30);
+      (window as unknown as { __parfocalFake: unknown }).__parfocalFake = {
+        statuses: {
+          "up-heat": { kind: "result", status: "ready", slide_id: slide, result_set_id: id },
+        },
+        chosen: [],
+        left: [],
+        sets: [
+          {
+            id,
+            project_id: "00000000-0000-4000-8003-000000000007",
+            slide_id: slide,
+            name: "Heatmap import",
+            model_version: null,
+            source: "import",
+            source_file: "tumor_044_heat.tif",
+            produced_at: null,
+            status: "ready",
+            error_code: null,
+            cell_count: 0,
+            region_count: 0,
+            zone_count: 0,
+            created_by_user_id: null,
+            created_at: "2026-11-15T09:00:00+01:00",
+          },
+        ],
+        heatmaps: {
+          [id]: {
+            facts: { width: 8, height: 8, level: 0, downsample: 100, mpp: null, tissue_share: 0.9 },
+            grid,
+          },
+        },
+      };
+    },
+    { id: setId, slide: slideId },
+  );
+  await page.reload();
+  await expect(page.getByTestId("slide-stage")).toHaveAttribute("data-state", "ready", {
+    timeout: 15_000,
+  });
+  const layer = page.getByTestId("heatmap-layer");
+  await expect(layer).toHaveAttribute("data-colormap", "viridis");
+  const box = await layer.boundingBox();
+  expect(box?.width).toBeGreaterThan(0);
+  expect(Math.abs((box?.width ?? 0) - (box?.height ?? 1))).toBeLessThan(1);
+  const controls = page.getByTestId("heatmap-controls");
+  await expect(controls).toBeVisible();
+  await controls.getByRole("radio", { name: "inferno" }).click();
+  await expect(layer).toHaveAttribute("data-colormap", "inferno");
+  await controls.getByRole("switch").click();
+  await expect(layer).toHaveCount(0);
+});

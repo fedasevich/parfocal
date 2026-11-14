@@ -1,3 +1,4 @@
+import json
 import uuid
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
@@ -34,7 +35,7 @@ from parfocal_api.tables import (
 )
 from parfocal_api.taxonomy import resolve_names
 from parfocal_common.chunk_store import ChunkEntry, summary_key
-from parfocal_common.result_imports import result_set_prefix
+from parfocal_common.result_imports import HEATMAP_FACTS, HEATMAP_GRID, result_set_prefix
 from parfocal_common.result_store import MissingObjectError
 
 MAX_CLASSES = 255
@@ -550,6 +551,90 @@ async def get_cell_summary(
     return Response(
         body,
         media_type=CELL_SUMMARY_TYPE,
+        headers={
+            "Content-Encoding": "gzip",
+            "Cache-Control": "private, max-age=31536000, immutable",
+            "ETag": f'"{result_set_id}"',
+            "X-Content-Type-Options": "nosniff",
+        },
+    )
+
+
+HEATMAP_GRID_TYPE = "application/vnd.parfocal.heatmap-grid"
+HEATMAP_GRID_RESPONSE: dict[int | str, dict[str, Any]] = {
+    200: {
+        "description": "The heatmap's byte grid, row by row, sent gzip-encoded",
+        "content": {HEATMAP_GRID_TYPE: {"schema": {"type": "string", "format": "binary"}}},
+    }
+}
+
+
+class HeatmapFacts(BaseModel):
+    width: int
+    height: int
+    level: int | None
+    downsample: float
+    mpp: float | None
+    tissue_share: float | None
+
+
+class NoHeatmapError(NotFoundError):
+    code = "no-heatmap"
+    title = "This result set has no heatmap"
+
+
+async def heatmap_row(
+    connection: AsyncConnection, principal: Principal, result_set_id: uuid.UUID
+) -> Any:
+    row = await set_row(connection, principal, result_set_id)
+    await require_ai_shown(connection, principal, row.project_id, row.slide_id)
+    if row.status != ResultStatus.READY:
+        raise NoHeatmapError
+    return row
+
+
+@router.get(
+    "/{result_set_id}/heatmap",
+    operation_id="getHeatmap",
+    **require(Permission.SEE_SLIDES, emergency=True),
+)
+async def get_heatmap(
+    result_set_id: uuid.UUID,
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
+    results: Results,
+) -> HeatmapFacts:
+    row = await heatmap_row(connection, principal, result_set_id)
+    prefix = result_set_prefix(row.tenant_id, row.slide_id, result_set_id)
+    try:
+        stored = json.loads(await results.get(f"{prefix}{HEATMAP_FACTS}"))
+    except MissingObjectError as error:
+        raise NoHeatmapError from error
+    return HeatmapFacts.model_validate(stored)
+
+
+@router.get(
+    "/{result_set_id}/heatmap/grid",
+    operation_id="getHeatmapGrid",
+    response_class=Response,
+    responses=HEATMAP_GRID_RESPONSE,
+    **require(Permission.SEE_SLIDES, emergency=True),
+)
+async def get_heatmap_grid(
+    result_set_id: uuid.UUID,
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
+    results: Results,
+) -> Response:
+    row = await heatmap_row(connection, principal, result_set_id)
+    prefix = result_set_prefix(row.tenant_id, row.slide_id, result_set_id)
+    try:
+        body = await results.get_packed(f"{prefix}{HEATMAP_GRID}")
+    except MissingObjectError as error:
+        raise NoHeatmapError from error
+    return Response(
+        body,
+        media_type=HEATMAP_GRID_TYPE,
         headers={
             "Content-Encoding": "gzip",
             "Cache-Control": "private, max-age=31536000, immutable",

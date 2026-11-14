@@ -1,6 +1,8 @@
+import { useLingui } from "@lingui/react/macro";
 import {
   getGetImportProblemsQueryOptions,
   getGetUploadStatusQueryKey,
+  type HeatmapGuess,
   type ImportProblem,
   type ProjectClass,
   ScoreDefault,
@@ -35,9 +37,16 @@ type Choices = {
   score: ScoreDefault;
   classId: string | null;
   mappings: Record<string, string>;
+  heatmapLevel: number | null;
 };
 
-const noChoices: Choices = { fixed: {}, score: ScoreDefault.none, classId: null, mappings: {} };
+const noChoices: Choices = {
+  fixed: {},
+  score: ScoreDefault.none,
+  classId: null,
+  mappings: {},
+  heatmapLevel: null,
+};
 
 const known = {
   unreadable: "objects-unreadable",
@@ -103,6 +112,44 @@ const fixLabel: Record<string, string> = {
   [known.outside]: "Leave them out",
   [known.scale]: "Use this guess",
 };
+
+function GuessPicker({
+  problem,
+  choices,
+  change,
+}: {
+  problem: ImportProblem;
+  choices: Choices;
+  change: (next: Partial<Choices>) => void;
+}) {
+  const { t } = useLingui();
+  const keyOf = (level: number | null) => (level === null ? "fitted" : String(level));
+  const picked = choices.heatmapLevel ?? problem.guess?.level ?? null;
+  const label = (guess: HeatmapGuess) => {
+    const share =
+      guess.tissue_share === null
+        ? t`no tissue mask`
+        : t`${Math.round(guess.tissue_share * 100)}% on tissue`;
+    return guess.level === null
+      ? t`Scaled by ${guess.downsample}, ${share}`
+      : t`Level ${guess.level}, scaled by ${guess.downsample}, ${share}`;
+  };
+  return (
+    <div className="grid gap-1" data-testid="heatmap-guesses">
+      <SegmentedControl
+        aria-label={t`Heatmap scale guess`}
+        value={keyOf(picked)}
+        onValueChange={(value) =>
+          change({ heatmapLevel: value === "fitted" ? null : Number(value) })
+        }
+        options={problem.guesses.map((guess) => ({
+          value: keyOf(guess.level),
+          label: label(guess),
+        }))}
+      />
+    </div>
+  );
+}
 
 function ProblemFix({
   uploadId,
@@ -192,6 +239,8 @@ function ProblemFix({
           { value: ScoreDefault.one, label: "Count as 1.0" },
         ]}
       />
+    ) : problem.code === known.scale && problem.guesses.length > 1 ? (
+      <GuessPicker problem={problem} choices={choices} change={change} />
     ) : problem.code === known.scale && guess !== null ? (
       <span className="text-body-sm text-fg-dim">
         Guess: level {guess.level ?? "unknown"}, scaled by {guess.downsample}
@@ -253,6 +302,7 @@ function ResultChoices({ upload, projectId }: { upload: ResultUpload; projectId:
         data: {
           score_default: choices.score,
           unclassified_class_id: choices.classId,
+          ...(choices.heatmapLevel === null ? {} : { heatmap_level: choices.heatmapLevel }),
           class_mappings: Object.entries(choices.mappings).map(([source_name, class_id]) => ({
             source_name,
             class_id,
