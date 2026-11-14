@@ -269,6 +269,17 @@ def group_metadata(
     }
 
 
+def slide_of(source: Path) -> tuple[Format, Pyramid]:
+    with source.open("rb") as handle:
+        found = identify(handle, source.name)
+    if found.format is None:
+        raise UnconvertibleError(f"{source.name} is not a readable slide")
+    pyramid = read_pyramid(source, found)
+    if not isinstance(pyramid, Pyramid):
+        raise UnconvertibleError(f"{source.name} has no pyramid: {pyramid}")
+    return found.format, pyramid
+
+
 def write_store(
     source: Path,
     store: Path,
@@ -277,18 +288,12 @@ def write_store(
     trigger: Trigger | None = None,
     chunk: int = CHUNK,
 ) -> Converted:
-    with source.open("rb") as handle:
-        found = identify(handle, source.name)
-    if found.format is None:
-        raise UnconvertibleError(f"{source.name} is not a readable slide")
-    pyramid = read_pyramid(source, found)
-    if not isinstance(pyramid, Pyramid):
-        raise UnconvertibleError(f"{source.name} has no pyramid: {pyramid}")
+    found, pyramid = slide_of(source)
     work.mkdir(parents=True, exist_ok=True)
     names: list[str] = []
     match pyramid.reader:
         case Reader.OPENSLIDE:
-            level = openslide_level_zero(source, found.format, work / "level-0.npy")
+            level = openslide_level_zero(source, found, work / "level-0.npy")
         case Reader.TIFFFILE:
             level, names = tifffile_level_zero(source, work / "level-0.npy")
         case Reader.WSIDICOM:
@@ -328,6 +333,8 @@ def convert(
 ) -> Converted:
     if trigger not in fired:
         raise NotTriggeredError(f"the {trigger} conversion trigger has not fired")
+    if trigger_for(slide_of(source)[1], fired) is not trigger:
+        raise NotTriggeredError(f"the {trigger} conversion trigger does not apply to this slide")
     return write_store(source, store, work, trigger=trigger, chunk=chunk)
 
 

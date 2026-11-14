@@ -166,6 +166,18 @@ def test_nothing_converts_until_a_trigger_fires(tmp_path: Path) -> None:
     assert not (tmp_path / "out.ome.zarr").exists()
 
 
+def test_a_fired_trigger_refuses_a_slide_it_does_not_cover(tmp_path: Path) -> None:
+    with pytest.raises(NotTriggeredError):
+        convert(
+            fixture_path("synthetic-jpeg.tiff"),
+            tmp_path / "out.ome.zarr",
+            tmp_path / "work",
+            Trigger.JPEG2000_DECODE_BUDGET,
+            FIRED,
+        )
+    assert not (tmp_path / "out.ome.zarr").exists()
+
+
 def test_the_jpeg2000_trigger_picks_only_jpeg2000_slides() -> None:
     assert trigger_for(opened(TRIGGER_FIXTURE)[2], FIRED) is Trigger.JPEG2000_DECODE_BUDGET
     assert trigger_for(opened(TRIGGER_FIXTURE)[2]) is None
