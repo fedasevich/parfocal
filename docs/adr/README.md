@@ -275,3 +275,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0308](0308-imported-heatmaps-as-a-byte-grid-beside-the-result-set.md) | An imported heatmap is kept as a gzip byte grid with a facts file under its result set | Accepted | 2026-11-14 |
 | [0309](0309-the-clinical-note-returns-sealed.md) | The clinical note returns, sealed | Accepted | 2026-11-14 |
 | [0310](0310-converted-jpeg-2000-slides-are-lossless-and-keep-the-source-levels.md) | Converted JPEG 2000 slides are lossless zstd, and each store level is the source's own level where it has one | Accepted | 2026-11-14 |
+| [0311](0311-click-decoder-runs-on-a-window-of-the-embedding.md) | The click decoder runs on a 32 token window of the embedding around the prompt | Accepted | 2026-11-14 |
