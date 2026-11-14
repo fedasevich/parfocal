@@ -2,6 +2,7 @@ import { useListProjectResultSets } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
 import { DecisionButtons } from "@parfocal/ui/components/decision-buttons";
 import { Icon } from "@parfocal/ui/components/icon";
+import { Loader } from "@parfocal/ui/components/loader";
 import { MagnificationBar } from "@parfocal/ui/components/magnification-bar";
 import { ObjectIdTag } from "@parfocal/ui/components/tag";
 import { useState } from "react";
@@ -36,9 +37,7 @@ type CellsOnSlideProps = {
 export function CellsOnSlide(props: CellsOnSlideProps) {
   const session = useReviewSession(props.taskId, props.slideId);
   if (!session.ready) {
-    return (
-      <main className="grid h-dvh place-items-center bg-page text-fg-dim">Loading the slide…</main>
-    );
+    return <Loader label="Loading the slide" size="page" />;
   }
   return <CellsBody key={props.scene ?? "grid"} session={session} scene={props.scene} />;
 }

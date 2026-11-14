@@ -21,6 +21,7 @@ import {
 import { FlowBar, FlowPage } from "@parfocal/ui/components/flow-page";
 import { FormField, TextFieldInput } from "@parfocal/ui/components/form-field";
 import { Icon } from "@parfocal/ui/components/icon";
+import { Loader } from "@parfocal/ui/components/loader";
 import { ModelChips } from "@parfocal/ui/components/model-picker";
 import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
 import {
@@ -305,7 +306,13 @@ function ConnectModelBody({
         renderLink={renderLink}
         crumbs={crumbs}
         title="Connect your own model"
-        subtitle={query.isError ? "The server's details could not be loaded." : "Loading…"}
+        subtitle={
+          query.isError ? (
+            "The server's details could not be loaded."
+          ) : (
+            <Loader label="Loading the server details" size="inline" />
+          )
+        }
         steps={[{ label: "Connect and test" }, { label: "Classes and access" }]}
         current={page}
         bar={<FlowBar next={null} />}

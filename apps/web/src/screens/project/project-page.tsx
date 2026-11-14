@@ -15,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@parfocal/ui/components/dropdown-menu";
 import { Icon } from "@parfocal/ui/components/icon";
+import { Loader } from "@parfocal/ui/components/loader";
 import { AvatarStack } from "@parfocal/ui/components/person";
 import { TabCount, Tabs, TabsList, TabsTrigger } from "@parfocal/ui/components/tabs";
 import { StatusTag } from "@parfocal/ui/components/tag";
@@ -74,8 +75,8 @@ export function ProjectPage({
 
   if (project === undefined) {
     return (
-      <main className="grid flex-1 place-items-center p-8 text-body-sm text-fg-dim">
-        Loading the project…
+      <main className="grid flex-1 place-items-center p-8">
+        <Loader label="Loading the project" />
       </main>
     );
   }

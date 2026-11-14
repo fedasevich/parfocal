@@ -1,6 +1,7 @@
 import { Button } from "@parfocal/ui/components/button";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Keycap } from "@parfocal/ui/components/keycap";
+import { Loader } from "@parfocal/ui/components/loader";
 import { MagnificationBar } from "@parfocal/ui/components/magnification-bar";
 import { Person, PersonAvatar } from "@parfocal/ui/components/person";
 import { ObjectIdTag } from "@parfocal/ui/components/tag";
@@ -29,9 +30,7 @@ type CommentsOnIdsProps = {
 export function CommentsOnIds(props: CommentsOnIdsProps) {
   const session = useReviewSession(props.taskId, props.slideId);
   if (!session.ready) {
-    return (
-      <main className="grid h-dvh place-items-center bg-page text-fg-dim">Loading the slide…</main>
-    );
+    return <Loader label="Loading the slide" size="page" />;
   }
   return <CommentsBody session={session} {...props} />;
 }
