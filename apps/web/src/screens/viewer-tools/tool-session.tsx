@@ -1,4 +1,5 @@
 import { useGetMyHome, useGetProject } from "@parfocal/api-client";
+import { Loader } from "@parfocal/ui/components/loader";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { okData } from "../placeholder.tsx";
@@ -24,9 +25,7 @@ export type ToolSession = {
   counts: SlideCounts;
 };
 
-const loading = (
-  <main className="grid h-dvh place-items-center bg-page text-fg-dim">Loading the slide…</main>
-);
+const loading = <Loader label="Loading the slide" size="page" />;
 
 export function WithToolSession({
   projectId,

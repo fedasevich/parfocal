@@ -16,6 +16,7 @@ import {
 } from "@parfocal/ui/components/annotate-task";
 import { Button } from "@parfocal/ui/components/button";
 import { Keycap } from "@parfocal/ui/components/keycap";
+import { Loader } from "@parfocal/ui/components/loader";
 import { useQueries, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AiLayer } from "../annotations/ai-layer.tsx";
@@ -342,9 +343,9 @@ export function AnnotateTaskPanel({
         {guidedAvailable(view.shown, ai.length, locked) ? (
           guided ? (
             orderQuery.isPending ? (
-              <p className="m-0 text-body-sm text-fg-dim" data-testid="guided-loading">
-                Loading the check order.
-              </p>
+              <div data-testid="guided-loading">
+                <Loader label="Loading the check order" />
+              </div>
             ) : (
               <GuidedCheck
                 engine={engine}

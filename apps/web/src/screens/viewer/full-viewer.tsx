@@ -21,6 +21,7 @@ import type { DisplaySettings } from "@parfocal/ui/components/display-panel";
 import { FindingsPanel } from "@parfocal/ui/components/findings-panel";
 import { Icon } from "@parfocal/ui/components/icon";
 import { InspectorPanel } from "@parfocal/ui/components/inspector-panel";
+import { Loader } from "@parfocal/ui/components/loader";
 import { MagnificationBar } from "@parfocal/ui/components/magnification-bar";
 import { ModelWarningsBlock } from "@parfocal/ui/components/model-warnings";
 import { type OpinionQuestion, SlideDoneCard } from "@parfocal/ui/components/slide-done-card";
@@ -208,9 +209,7 @@ type FullViewerProps = {
 
 const netOff = "The connection is lost. It saves when the connection is back.";
 
-const loading = (
-  <main className="grid h-dvh place-items-center bg-page text-fg-dim">Loading the slide…</main>
-);
+const loading = <Loader label="Loading the slide" size="page" />;
 
 export function FullViewer(props: FullViewerProps) {
   const home = okData(useGetMyHome().data);
