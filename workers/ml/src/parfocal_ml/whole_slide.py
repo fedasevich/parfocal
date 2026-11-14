@@ -17,8 +17,9 @@ from parfocal_common.chunk_store import (
     problem_of,
 )
 from parfocal_common.jobs import JobStoppedError, StepFunction, StepRun
-from parfocal_common.model_runs import Area, Ordering, mark_area, tile_key
+from parfocal_common.model_runs import Area, Ordering, mark_area
 from parfocal_common.model_runs import run_prefix as run_prefix
+from parfocal_common.model_runs import tile_key as tile_key
 from parfocal_common.result_store import ResultStore
 
 TISSUE_CELL = 64

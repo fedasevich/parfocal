@@ -739,7 +739,6 @@ function OpenedSlide({
                 engine={session.engine}
                 projectId={projectId}
                 slideId={slideId}
-                taskId={taskId ?? null}
               />
             ) : null}
             {annotateTask ? (

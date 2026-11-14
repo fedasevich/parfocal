@@ -1,7 +1,8 @@
 import type { PolygonBatch } from "../overlay/batch-types.ts";
 import { type PolygonInput, polygonBatchFromRings } from "../overlay/batches.ts";
 
-export const BLOCK_POLYGONS = 16_384;
+export const BLOCK_POLYGONS = 8192;
+export const BLOCK_SPREAD = 2;
 
 export type Lineage = string;
 
@@ -11,12 +12,44 @@ export interface SceneBlock {
   readonly batch: PolygonBatch;
 }
 
+type Box = readonly [left: number, top: number, right: number, bottom: number];
+
 interface Block {
   readonly index: number;
   readonly units: number[];
   polygons: number;
   dirty: boolean;
   built: PolygonBatch | null;
+  box: Box | null;
+  covered: number;
+}
+
+function boxOf(batch: PolygonBatch): Box | null {
+  const { positions } = batch;
+  if (positions.length < 2) return null;
+  let left = Infinity;
+  let top = Infinity;
+  let right = -Infinity;
+  let bottom = -Infinity;
+  for (let index = 0; index < positions.length; index += 2) {
+    const x = positions[index] ?? 0;
+    const y = positions[index + 1] ?? 0;
+    if (x < left) left = x;
+    if (x > right) right = x;
+    if (y < top) top = y;
+    if (y > bottom) bottom = y;
+  }
+  return [left, top, right, bottom];
+}
+
+function areaOf(box: Box | null): number {
+  return box === null ? 0 : (box[2] - box[0]) * (box[3] - box[1]);
+}
+
+function union(a: Box | null, b: Box | null): Box | null {
+  if (a === null) return b;
+  if (b === null) return a;
+  return [Math.min(a[0], b[0]), Math.min(a[1], b[1]), Math.max(a[2], b[2]), Math.max(a[3], b[3])];
 }
 
 interface Segment {
@@ -113,10 +146,13 @@ export class StreamedScene {
     const run = this.runOf(lineage);
     const batch = polygonBatchFromRings(polygons);
     const existing = run.segments.get(unit);
+    const box = boxOf(batch);
     if (existing === undefined) {
-      const block = this.openBlock(run);
+      const block = this.openBlock(run, box);
       block.units.push(unit);
       block.polygons += batch.count;
+      block.box = union(block.box, box);
+      block.covered += areaOf(box);
       block.dirty = true;
       run.segments.set(unit, { block: block.index, parts: [batch], seq });
     } else {
@@ -127,6 +163,7 @@ export class StreamedScene {
       existing.seq = Math.max(existing.seq, seq);
       const after = existing.parts.reduce((sum, item) => sum + item.count, 0);
       block.polygons += after - before;
+      block.box = union(block.box, box);
       block.dirty = true;
     }
     this.changes++;
@@ -200,15 +237,21 @@ export class StreamedScene {
     return created;
   }
 
-  private openBlock(run: Run): Block {
+  private openBlock(run: Run, box: Box | null): Block {
     const last = run.blocks[run.blocks.length - 1];
-    if (last !== undefined && last.polygons < this.blockPolygons) return last;
+    if (last !== undefined && last.polygons < this.blockPolygons) {
+      const spread = areaOf(union(last.box, box));
+      if (last.box === null || box === null) return last;
+      if (spread <= BLOCK_SPREAD * (last.covered + areaOf(box))) return last;
+    }
     const created: Block = {
       index: run.blocks.length,
       units: [],
       polygons: 0,
       dirty: true,
       built: null,
+      box: null,
+      covered: 0,
     };
     run.blocks.push(created);
     return created;

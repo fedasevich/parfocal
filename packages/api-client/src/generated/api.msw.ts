@@ -4263,8 +4263,12 @@ export const getListModelRunAreasResponseMock = (
   })),
   after: faker.number.int(),
   more: faker.datatype.boolean(),
+  total: faker.helpers.arrayElement([faker.number.int(), null]),
   ...overrideResponse,
 });
+
+export const getGetModelRunTileResponseMock = (): Blob =>
+  new Blob([new Uint8Array(faker.number.int({ min: 1, max: 64 }))]);
 
 export const getListNotificationPreferencesResponseMock = (): Preference[] =>
   Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
@@ -17378,6 +17382,30 @@ export const getListModelRunAreasMockHandler = (
   );
 };
 
+export const getGetModelRunTileMockHandler = (
+  overrideResponse?:
+    | Blob
+    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<Blob> | Blob),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/projects/:projectId/model-runs/:runId/tiles/:unit",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      const binaryBody =
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetModelRunTileResponseMock();
+      return new HttpResponse(binaryBody, {
+        status: 200,
+        headers: { "Content-Type": "application/octet-stream" },
+      });
+    },
+    options,
+  );
+};
+
 export const getListNotificationPreferencesMockHandler = (
   overrideResponse?:
     | Preference[]
@@ -23310,6 +23338,7 @@ export const getParfocalAPIMock = () => [
   getGetLabModelMockHandler(),
   getTestConnectedLabModelMockHandler(),
   getListModelRunAreasMockHandler(),
+  getGetModelRunTileMockHandler(),
   getListNotificationPreferencesMockHandler(),
   getSetNotificationPreferencesMockHandler(),
   getGetOpinionFormTemplateMockHandler(),

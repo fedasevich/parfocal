@@ -1,6 +1,6 @@
 import { Deck, OrthographicView } from "@deck.gl/core";
-import { SolidPolygonLayer } from "@deck.gl/layers";
 import {
+  createVectorOverlay,
   finishedTileMarks,
   httpRunStreamSource,
   type PolygonBatch,
@@ -9,9 +9,10 @@ import {
   RunStream,
   type SceneBlock,
   StreamedScene,
+  type VectorOverlay,
 } from "../../src/index.ts";
-import { polygonFillData } from "../../src/overlay/deck/binary-data.ts";
-import { deckDeviceProps, unpickableLayerProps } from "../../src/viv/deck-settings.ts";
+import { createOverlayLayerBuilder } from "../../src/overlay/deck/overlay-layers.ts";
+import { deckDeviceProps } from "../../src/viv/deck-settings.ts";
 
 export interface StreamConfig {
   readonly origin: string;
@@ -38,6 +39,9 @@ export interface StreamState {
   readonly longestFrameMs: number;
   readonly framesOver: number;
   readonly longestTaskMs: number;
+  readonly longestDrawMs: number;
+  readonly longestBuildMs: number;
+  readonly buildTimes: readonly number[];
   readonly error: string | null;
 }
 
@@ -75,12 +79,18 @@ let drawn = 0;
 let marks = 0;
 let error: string | null = null;
 const rebuilds: RebuildEntry[] = [];
-const fillData = new WeakMap<PolygonBatch, ReturnType<typeof polygonFillData>>();
+const overlaysOf = new WeakMap<PolygonBatch, VectorOverlay>();
+const builder = createOverlayLayerBuilder();
+let pixelsPerUnit = 1;
+let viewRect: readonly [number, number, number, number] = [0, 0, 1, 1];
 
 let frames = 0;
 let longestFrameMs = 0;
 let framesOver = 0;
 let longestTaskMs = 0;
+let longestDrawMs = 0;
+let longestBuildMs = 0;
+const buildTimes: number[] = [];
 let watching = false;
 
 function watchFrames(): void {
@@ -103,24 +113,12 @@ function watchFrames(): void {
   }).observe({ type: "longtask", buffered: false });
 }
 
-function dataOf(batch: PolygonBatch): ReturnType<typeof polygonFillData> {
-  const found = fillData.get(batch);
+function overlayOf(id: string, batch: PolygonBatch): VectorOverlay {
+  const found = overlaysOf.get(batch);
   if (found) return found;
-  const created = polygonFillData(batch);
-  fillData.set(batch, created);
+  const created = createVectorOverlay({ id, kind: "nuclei", shapes: { polygons: batch } });
+  overlaysOf.set(batch, created);
   return created;
-}
-
-function fillLayer(id: string, batch: PolygonBatch) {
-  return new SolidPolygonLayer({
-    id,
-    data: dataOf(batch),
-    _normalize: false,
-    positionFormat: "XY",
-    filled: true,
-    extruded: false,
-    ...unpickableLayerProps,
-  } as never);
 }
 
 function draw(blocks: readonly SceneBlock[]): void {
@@ -135,12 +133,17 @@ function draw(blocks: readonly SceneBlock[]): void {
     pass: stream?.progress().rebuilds ?? 0,
     at: performance.now(),
   });
-  deck?.setProps({
-    layers: [
-      fillLayer("finished-tiles", tileMarks),
-      ...blocks.map((block) => fillLayer(block.id, block.batch)),
-    ],
-  });
+  const overlays = [
+    overlayOf("finished-tiles", tileMarks),
+    ...blocks.map((block) => overlayOf(block.id, block.batch)),
+  ];
+  const before = performance.now();
+  const layers = builder.build(overlays, pixelsPerUnit, viewRect);
+  const built = performance.now();
+  deck?.setProps({ layers });
+  longestDrawMs = Math.max(longestDrawMs, performance.now() - before);
+  longestBuildMs = Math.max(longestBuildMs, built - before);
+  buildTimes.push(Math.round(built - before));
 }
 
 async function openDeck(config: StreamConfig): Promise<void> {
@@ -150,6 +153,13 @@ async function openDeck(config: StreamConfig): Promise<void> {
   canvas.style.display = "block";
   document.body.append(canvas);
   const side = Math.max(config.slideWidth, config.slideHeight);
+  pixelsPerUnit = viewSize / side;
+  viewRect = [
+    config.slideWidth / 2 - side / 2,
+    config.slideHeight / 2 - side / 2,
+    config.slideWidth / 2 + side / 2,
+    config.slideHeight / 2 + side / 2,
+  ];
   await new Promise<void>((resolve) => {
     deck = new Deck<OrthographicView>({
       canvas,
@@ -210,6 +220,9 @@ function state(): StreamState {
     longestFrameMs,
     framesOver,
     longestTaskMs,
+    longestDrawMs,
+    longestBuildMs,
+    buildTimes,
     error,
   };
 }

@@ -1073,7 +1073,8 @@ async def seed_model_runs(connection: AsyncConnection, seeded: Seeded) -> None:
     )
     tile = tile_key(run_prefix(seeded.tenant_id, seeded.ids["slide"], job_id), 0)
     async with httpx2.AsyncClient(timeout=30) as http:
-        await ObjectResultStore(ObjectStore(TEST_STORAGE, http)).put(tile, packed(b"tile"))
+        store = ObjectResultStore(ObjectStore(TEST_STORAGE, http))
+        await store.put(tile, packed(str(job_id).encode()))
     await connection.execute(
         insert(gpu_usage).values(
             tenant_id=seeded.tenant_id,

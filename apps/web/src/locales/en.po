@@ -7,9 +7,17 @@ msgstr ""
 "X-Generator: @lingui/cli\n"
 "Language: en\n"
 
+#: src/viewer/run-stream-layer.tsx
+msgid "{done} of {total} tiles, {drawn} objects"
+msgstr "{done} of {total} tiles, {drawn} objects"
+
 #: src/shell/not-available.tsx
 msgid "{what} is not available yet. This part of Parfocal is still being built."
 msgstr "{what} is not available yet. This part of Parfocal is still being built."
+
+#: src/viewer/run-stream-layer.tsx
+msgid "about {minutes} min left"
+msgstr "about {minutes} min left"
 
 #: src/shell/issue-pages.tsx
 msgid "Ask for access"
@@ -18,6 +26,18 @@ msgstr "Ask for access"
 #: src/shell/issue-pages.tsx
 msgid "Asked {ownerName}"
 msgstr "Asked {ownerName}"
+
+#: src/viewer/run-stream-layer.tsx
+msgid "Cancel run"
+msgstr "Cancel run"
+
+#: src/viewer/run-stream-layer.tsx
+msgid "Cancelled. Kept {drawn} objects from {done} finished tiles"
+msgstr "Cancelled. Kept {drawn} objects from {done} finished tiles"
+
+#: src/viewer/run-stream-layer.tsx
+msgid "Cancelling, keeping the finished tiles"
+msgstr "Cancelling, keeping the finished tiles"
 
 #: src/shell/issue-pages.tsx
 msgid "Everything else in Parfocal works and nothing was changed."
@@ -55,6 +75,10 @@ msgstr "The page could not be shown."
 msgid "The page could not be shown. Reference {reference}."
 msgstr "The page could not be shown. Reference {reference}."
 
+#: src/viewer/run-stream-layer.tsx
+msgid "The run could not stream onto this slide"
+msgstr "The run could not stream onto this slide"
+
 #: src/shell/issue-pages.tsx
 msgid "This page does not exist, or it was moved or deleted."
 msgstr "This page does not exist, or it was moved or deleted."
@@ -63,9 +87,17 @@ msgstr "This page does not exist, or it was moved or deleted."
 msgid "Try again"
 msgstr "Try again"
 
+#: src/viewer/run-stream-layer.tsx
+msgid "Waiting for the first tile"
+msgstr "Waiting for the first tile"
+
 #: src/shell/issue-pages.tsx
 msgid "What you already saved is safe, and other pages still work."
 msgstr "What you already saved is safe, and other pages still work."
+
+#: src/viewer/run-stream-layer.tsx
+msgid "Whole-slide run"
+msgstr "Whole-slide run"
 
 #: src/shell/issue-pages.tsx
 msgid "You are not a member of {projectName}. Its owner is {ownerName}."

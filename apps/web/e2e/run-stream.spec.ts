@@ -1,11 +1,11 @@
-import { expect, type Page, test } from "./a11y.ts";
+import { expect, type Locator, type Page, test } from "./a11y.ts";
 
 const p07 = "00000000-0000-4000-8003-000000000007";
 const rt14 = "00000000-0000-4000-8007-000000000014";
 const tiles = 12;
 const cellsPerTile = 36;
 
-async function openStreamingSlide(page: Page) {
+async function openStreamingSlide(page: Page): Promise<string> {
   await page.goto(`/projects/${p07}?tab=slides`);
   await page.getByTestId("slide-row").filter({ hasText: "tumor_044" }).click();
   await page.waitForURL(/\/slides\//);
@@ -13,19 +13,40 @@ async function openStreamingSlide(page: Page) {
   await page.goto(`${url.pathname}?task=${rt14}&workspace=annotate&scene=streaming`);
   const stage = page.getByTestId("slide-stage");
   await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 30_000 });
-  return page.getByTestId("run-stream");
+  const slideId = /\/slides\/([^/]+)/.exec(url.pathname)?.[1];
+  if (slideId === undefined) throw new Error("No slide in the address");
+  return slideId;
 }
 
-const numberOf = async (panel: ReturnType<Page["getByTestId"]>, name: string) =>
-  Number(await panel.getAttribute(name));
+async function startRun(page: Page, slideId: string): Promise<void> {
+  const status = await page.evaluate(
+    async ({ project, slide }) => {
+      const response = await fetch(`/api/projects/${project}/model-runs`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          slide_ids: [slide],
+          scope: { kind: "slide" },
+          parameters: { detector: { name: "hovernet" } },
+        }),
+      });
+      return response.status;
+    },
+    { project: p07, slide: slideId },
+  );
+  expect(status).toBe(201);
+}
+
+const numberOf = async (panel: Locator, name: string) => Number(await panel.getAttribute(name));
 
 test("a whole-slide run streams objects before it ends, and cancel keeps them", async ({
   page,
 }) => {
-  const panel = await openStreamingSlide(page);
-  await expect(panel).toHaveAttribute("data-phase", "idle");
-  await page.getByTestId("run-stream-start").click();
+  const slideId = await openStreamingSlide(page);
+  const panel = page.getByTestId("run-stream");
+  await expect(panel).toHaveCount(0);
 
+  await startRun(page, slideId);
   await expect(panel).toHaveAttribute("data-status", "running", { timeout: 15_000 });
   await expect.poll(() => numberOf(panel, "data-drawn"), { timeout: 15_000 }).toBeGreaterThan(0);
   expect(await numberOf(panel, "data-done")).toBeLessThan(tiles);
@@ -44,5 +65,11 @@ test("a whole-slide run streams objects before it ends, and cancel keeps them", 
 
   await page.waitForTimeout(2000);
   expect(await numberOf(panel, "data-drawn")).toBe(drawn);
-  await expect(page.getByTestId("run-stream-start")).toBeVisible();
+  await expect(page.getByTestId("run-stream-cancel")).toHaveCount(0);
+});
+
+test("an annotate slide with no run shows no run panel", async ({ page }) => {
+  await openStreamingSlide(page);
+  await page.waitForTimeout(1000);
+  await expect(page.getByTestId("run-stream")).toHaveCount(0);
 });

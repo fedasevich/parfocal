@@ -170,6 +170,17 @@ type RunParams = { projectId: string; runId: string };
 
 export function runStreamHandlers(): RequestHandler[] {
   return [
+    http.get<{ projectId: string }>("*/api/projects/:projectId/model-runs", ({ request }) => {
+      if (fakeViewerScene() !== "streaming") return undefined;
+      const query = new URL(request.url).searchParams;
+      const slideId = query.get("slide_id");
+      const statuses = query.getAll("status");
+      const listed = [...runs.values()]
+        .filter((run) => slideId === null || run.slideId === slideId)
+        .map(modelRunOf)
+        .filter((run) => statuses.length === 0 || statuses.includes(run.status));
+      return HttpResponse.json(listed);
+    }),
     http.post<{ projectId: string }>(
       "*/api/projects/:projectId/model-runs",
       async ({ params, request }) => {

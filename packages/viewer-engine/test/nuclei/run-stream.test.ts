@@ -175,12 +175,13 @@ describe("RunStream", () => {
       onRebuild: () => times.push(clock.now),
     });
     await recorder.start();
-    const during = times.slice(0, -1);
+    const passes = [...new Set(times)];
+    const during = passes.slice(0, -1);
     for (let index = 1; index < during.length; index++) {
       assert.ok((during[index] ?? 0) - (during[index - 1] ?? 0) >= 3000);
     }
-    assert.ok(times.length >= 3);
-    assert.ok(times.length < tiles.length);
+    assert.ok(passes.length >= 3);
+    assert.ok(passes.length < tiles.length);
   });
 
   it("keeps what is finished when the run is cancelled", async () => {

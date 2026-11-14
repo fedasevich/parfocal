@@ -7,8 +7,16 @@ msgstr ""
 "X-Generator: @lingui/cli\n"
 "Language: en-XA\n"
 
+#: src/viewer/run-stream-layer.tsx
+msgid "{done} of {total} tiles, {drawn} objects"
+msgstr ""
+
 #: src/shell/not-available.tsx
 msgid "{what} is not available yet. This part of Parfocal is still being built."
+msgstr ""
+
+#: src/viewer/run-stream-layer.tsx
+msgid "about {minutes} min left"
 msgstr ""
 
 #: src/shell/issue-pages.tsx
@@ -17,6 +25,18 @@ msgstr ""
 
 #: src/shell/issue-pages.tsx
 msgid "Asked {ownerName}"
+msgstr ""
+
+#: src/viewer/run-stream-layer.tsx
+msgid "Cancel run"
+msgstr ""
+
+#: src/viewer/run-stream-layer.tsx
+msgid "Cancelled. Kept {drawn} objects from {done} finished tiles"
+msgstr ""
+
+#: src/viewer/run-stream-layer.tsx
+msgid "Cancelling, keeping the finished tiles"
 msgstr ""
 
 #: src/shell/issue-pages.tsx
@@ -55,6 +75,10 @@ msgstr ""
 msgid "The page could not be shown. Reference {reference}."
 msgstr ""
 
+#: src/viewer/run-stream-layer.tsx
+msgid "The run could not stream onto this slide"
+msgstr ""
+
 #: src/shell/issue-pages.tsx
 msgid "This page does not exist, or it was moved or deleted."
 msgstr ""
@@ -63,8 +87,16 @@ msgstr ""
 msgid "Try again"
 msgstr ""
 
+#: src/viewer/run-stream-layer.tsx
+msgid "Waiting for the first tile"
+msgstr ""
+
 #: src/shell/issue-pages.tsx
 msgid "What you already saved is safe, and other pages still work."
+msgstr ""
+
+#: src/viewer/run-stream-layer.tsx
+msgid "Whole-slide run"
 msgstr ""
 
 #: src/shell/issue-pages.tsx

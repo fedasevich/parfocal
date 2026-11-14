@@ -267,6 +267,7 @@ export class RunStream {
   }
 
   private async rebuildIfDue(signal: AbortSignal): Promise<void> {
+    if (signal.aborted) return;
     if (this.options.scene.dirtyBlocks() > 0 && this.gate.due()) await this.rebuild(signal);
   }
 

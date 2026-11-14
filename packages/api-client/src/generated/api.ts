@@ -4741,6 +4741,7 @@ export interface RunAreas {
   areas: RunArea[];
   after: number;
   more: boolean;
+  total?: number | null;
 }
 
 export interface RunJoin {
@@ -17396,6 +17397,211 @@ export function useListModelRunAreas<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getListModelRunAreasQueryOptions(projectId, runId, params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type getModelRunTileResponse200 = {
+  data: Blob;
+  status: 200;
+};
+
+export type getModelRunTileResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getModelRunTileResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getModelRunTileResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getModelRunTileResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getModelRunTileResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getModelRunTileResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getModelRunTileResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getModelRunTileResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getModelRunTileResponseSuccess = getModelRunTileResponse200 & {
+  headers: Headers;
+};
+export type getModelRunTileResponseError = (
+  | getModelRunTileResponse400
+  | getModelRunTileResponse401
+  | getModelRunTileResponse403
+  | getModelRunTileResponse404
+  | getModelRunTileResponse409
+  | getModelRunTileResponse422
+  | getModelRunTileResponse429
+  | getModelRunTileResponse500
+) & {
+  headers: Headers;
+};
+
+export type getModelRunTileResponse = getModelRunTileResponseSuccess | getModelRunTileResponseError;
+
+export const getGetModelRunTileUrl = (projectId: string, runId: string, unit: number) => {
+  return `/api/projects/${projectId}/model-runs/${runId}/tiles/${unit}`;
+};
+
+/**
+ * @summary Get Model Run Tile
+ */
+export const getModelRunTile = async (
+  projectId: string,
+  runId: string,
+  unit: number,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getModelRunTileResponse> => {
+  return apiFetch<getModelRunTileResponse>(getGetModelRunTileUrl(projectId, runId, unit), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetModelRunTileQueryKey = (projectId: string, runId: string, unit: number) => {
+  return [`/api/projects/${projectId}/model-runs/${runId}/tiles/${unit}`] as const;
+};
+
+export const getGetModelRunTileQueryOptions = <
+  TData = Awaited<ReturnType<typeof getModelRunTile>>,
+  TError = Problem,
+>(
+  projectId: string,
+  runId: string,
+  unit: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getModelRunTile>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetModelRunTileQueryKey(projectId, runId, unit);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getModelRunTile>>> = ({ signal }) =>
+    getModelRunTile(projectId, runId, unit, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled:
+      projectId !== null &&
+      projectId !== undefined &&
+      runId !== null &&
+      runId !== undefined &&
+      unit !== null &&
+      unit !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getModelRunTile>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetModelRunTileQueryResult = NonNullable<Awaited<ReturnType<typeof getModelRunTile>>>;
+export type GetModelRunTileQueryError = Problem;
+
+export function useGetModelRunTile<
+  TData = Awaited<ReturnType<typeof getModelRunTile>>,
+  TError = Problem,
+>(
+  projectId: string,
+  runId: string,
+  unit: number,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getModelRunTile>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getModelRunTile>>,
+          TError,
+          Awaited<ReturnType<typeof getModelRunTile>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetModelRunTile<
+  TData = Awaited<ReturnType<typeof getModelRunTile>>,
+  TError = Problem,
+>(
+  projectId: string,
+  runId: string,
+  unit: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getModelRunTile>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getModelRunTile>>,
+          TError,
+          Awaited<ReturnType<typeof getModelRunTile>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetModelRunTile<
+  TData = Awaited<ReturnType<typeof getModelRunTile>>,
+  TError = Problem,
+>(
+  projectId: string,
+  runId: string,
+  unit: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getModelRunTile>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Model Run Tile
+ */
+
+export function useGetModelRunTile<
+  TData = Awaited<ReturnType<typeof getModelRunTile>>,
+  TError = Problem,
+>(
+  projectId: string,
+  runId: string,
+  unit: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getModelRunTile>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetModelRunTileQueryOptions(projectId, runId, unit, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;

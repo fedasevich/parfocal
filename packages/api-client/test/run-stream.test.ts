@@ -16,7 +16,7 @@ const project = "11111111-1111-4111-8111-111111111111";
 const slide = "22222222-2222-4222-8222-222222222222";
 
 before(() => {
-  server.listen({ onUnhandledRequest: "error" });
+  server.listen({ onUnhandledFrame: "error" });
   patchedFetch = globalThis.fetch;
   globalThis.fetch = (input, init) =>
     patchedFetch(new URL(input instanceof Request ? input.url : input, "http://app.test"), init);
@@ -44,7 +44,8 @@ async function startRun(): Promise<string> {
   });
   assert.equal(response.status, 201);
   const [run] = (await response.json()) as { id: string }[];
-  assert.ok(run?.id.startsWith(streamRunPrefix));
+  if (run === undefined) throw new Error("No run started");
+  assert.ok(run.id.startsWith(streamRunPrefix));
   return run.id;
 }
 
@@ -80,6 +81,22 @@ test("a streamed run finishes one tile per read and serves each finished tile", 
     second.areas.map((area) => area.unit),
     [1],
   );
+});
+
+test("the slide's running stream run is listed and a finished one is not", async () => {
+  setFakeViewerScene("streaming");
+  const run = await startRun();
+  const listed = async () =>
+    (
+      (await (
+        await fetch(
+          `/api/projects/${project}/model-runs?slide_id=${slide}&status=queued&status=running`,
+        )
+      ).json()) as { id: string }[]
+    ).map((item) => item.id);
+  assert.deepEqual(await listed(), [run]);
+  for (let read = 0; read < streamTiles; read++) await areas(run, 0);
+  assert.deepEqual(await listed(), []);
 });
 
 test("cancel freezes the finished tiles and the run ends cancelled", async () => {

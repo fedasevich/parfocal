@@ -19,7 +19,7 @@ Where streamed objects live:
 How a rebuild reaches the GPU:
 
 1. One merged batch for the whole scene. Every rebuild copies and uploads everything, which is the POC's 241 ms.
-2. Sealed blocks of 16,384 polygons per lineage, each its own layer. A rebuild merges only the blocks that changed, and deck.gl skips layers whose data is the same object.
+2. Sealed blocks of up to 8,192 polygons per lineage, each its own layer. A tile that would spread a block's bounding box past twice the area its tiles cover starts a new block, because a block spanning two tile rows made the overlay builder's density raster and cull grid cost 50 ms ([result](../results/2026-11-15-streamed-run-frame-budget.md)). A rebuild merges only the blocks that changed, and deck.gl skips layers whose data is the same object.
 
 ## Decision
 
@@ -34,7 +34,7 @@ Option 1, then option 2.
 
 ## Consequences
 
-- `getModelRunTile` serves a finished tile's chunk while the run goes on, and the areas answer carries the model stage's total. In the app, `use-run-stream.ts` starts a slide run, streams it and registers one engine overlay per block plus one for the finished-tile marks. `run-stream-layer.tsx` shows progress, the estimate and cancel, and the annotate workspace mounts it from one line in `slide-stage.tsx`. The fake scene `scene=streaming` serves a run that finishes one tile per poll. AINUC-010 (whole-slide nuclei job UI) owns the fuller job controls.
+- `getModelRunTile` serves a finished tile's chunk while the run goes on, and the areas answer carries the model stage's total. In the app, `use-run-stream.ts` looks every 5 s for a queued or running run on the open slide, streams it and registers one engine overlay per block plus one for the finished-tile marks. `run-stream-layer.tsx` shows progress, the estimate and cancel only while such a run streams or has just been cancelled, and the annotate workspace mounts it from one line in `slide-stage.tsx`. The fake scene `scene=streaming` serves a run that finishes one tile per poll. AINUC-010 (whole-slide nuclei job UI) owns the fuller job controls.
 - Cell edits through `CellEdits` do not apply to streamed tiles, because tile chunks number their cells inside the tile. Once the run ends, the finished result set opens through `PagedCells` as before.
 - The scene has no vertex budget and holds each tile twice, as its parts and inside its merged block. A 250,000 nucleus run fits, but a 1.6 million nucleus run would sit far above the 4,000,000 vertices that ADR 0242 allows resident. TODO: hand a finished run over to `PagedCells`, or drop parts once their block is sealed, before streaming runs of that size.
 - The engine tests are `test/nuclei/streamed-scene.test.ts` and `test/nuclei/run-stream.test.ts`, and `browser/nuclei-stream.spec.ts` streams 250,000 nuclei through deck.gl and cancels a run in a browser.

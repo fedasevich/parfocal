@@ -199,6 +199,10 @@ test("streaming 250,000 nuclei never holds a frame over 33 ms", async ({ page, b
   const trace = summarizeMainThread(await browser.stopTracing());
   report("perf", ended);
   console.log(
+    JSON.stringify(trace.longest),
+    `longest draw ${ended.longestDrawMs.toFixed(1)} ms, layer build ${ended.longestBuildMs.toFixed(1)} ms`,
+  );
+  console.log(
     `longest main-thread task ${trace.longestPageMs.toFixed(1)} ms, frames ${ended.frames}, longest frame gap ${ended.longestFrameMs.toFixed(1)} ms, gaps over ${frameLimitMs} ms ${ended.framesOver}, passes ${ended.progress?.rebuilds}`,
   );
 

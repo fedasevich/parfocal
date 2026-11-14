@@ -121,6 +121,19 @@ describe("StreamedScene", () => {
     assert.equal(replaced[1]?.batch.count, 5);
   });
 
+  it("starts a new block when a tile lies far from the open block", () => {
+    const square = (x: number, y: number): PolygonInput => ({
+      ring: [x, y, x + 100, y, x + 100, y + 100, x, y + 100],
+      color: [1, 2, 3, 255],
+    });
+    const scene = new StreamedScene(1000);
+    scene.append("run-a", 0, [square(0, 0)]);
+    scene.append("run-a", 1, [square(100, 0)]);
+    assert.equal(scene.rebuild().length, 1);
+    scene.append("run-a", 2, [square(0, 5000)]);
+    assert.equal(scene.rebuild().length, 2);
+  });
+
   it("merges nothing into an empty batch and one batch into itself", () => {
     const empty = mergePolygonBatches([]);
     assert.equal(empty.count, 0);

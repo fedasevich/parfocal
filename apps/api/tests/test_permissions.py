@@ -50,6 +50,7 @@ from parfocal_api.tables import (
     clinical_reports,
     display_presets,
     invitations,
+    job_units,
     jobs,
     lab_models,
     legal_holds,
@@ -81,11 +82,19 @@ from parfocal_api.tables import (
     workspace_access_requests,
     workspace_settings,
 )
-from parfocal_common.chunk_store import Cell, build_cells
+from parfocal_common.chunk_store import Cell, build_cells, packed
 from parfocal_common.db import async_database_url, metadata
 from parfocal_common.ingest import RestrictedImage, slide_prefix
 from parfocal_common.jobs import enqueue
-from parfocal_common.model_runs import RunScopeKind, RunSettings, enqueue_model_run
+from parfocal_common.model_runs import (
+    MODEL_STAGE,
+    STAGES,
+    RunScopeKind,
+    RunSettings,
+    enqueue_model_run,
+    run_prefix,
+    tile_key,
+)
 from parfocal_common.object_store import ObjectStore, StorageLocation
 from parfocal_common.result_store import ObjectResultStore
 from parfocal_ingest.tissue import TissueMask
@@ -2309,6 +2318,20 @@ async def seed_runs(
         )
         for _ in range(3)
     ]
+    await connection.execute(
+        insert(job_units).values(
+            tenant_id=tenant_id,
+            job_id=runs[0],
+            ordinal=STAGES.index(MODEL_STAGE),
+            unit=0,
+            worker="matrix",
+            result={"x": 0, "y": 0, "width": 512, "height": 512, "objects": 1},
+        )
+    )
+    async with httpx2.AsyncClient(timeout=30) as http:
+        await ObjectResultStore(ObjectStore(TEST_STORAGE, http)).put(
+            tile_key(run_prefix(tenant_id, slide_id, runs[0]), 0), packed(b"matrix tile")
+        )
     await connection.execute(
         update(jobs).where(jobs.c.id == runs[1]).values(status="paused", pause_reason="matrix")
     )
