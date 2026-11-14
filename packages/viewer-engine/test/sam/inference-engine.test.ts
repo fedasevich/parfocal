@@ -25,6 +25,7 @@ function build(
     adapter?: boolean;
     capacity?: number;
     warm?: boolean;
+    windowDecoder?: boolean;
   } = {},
 ) {
   const runtime = new FakeRuntime(options);
@@ -36,6 +37,7 @@ function build(
     hasGpuAdapter: () => Promise.resolve(options.adapter ?? true),
     ...(options.capacity === undefined ? {} : { embeddingCapacity: options.capacity }),
     ...(options.warm === undefined ? {} : { warm: options.warm }),
+    ...(options.windowDecoder === undefined ? {} : { windowDecoder: options.windowDecoder }),
   });
   return { runtime, cache, engine };
 }
@@ -274,6 +276,101 @@ describe("inference engine stale answers", () => {
     await prompt;
     await encode;
     assert.equal(runtime.session(samGraphs.encoderQ4).feedsSeen.length, 2);
+  });
+});
+
+function windowAnswer(spills: boolean) {
+  return () => {
+    const lowSide = 128;
+    const lowRes = new Float32Array(lowSide * lowSide).fill(-4);
+    for (let y = 50; y < 70; y++) {
+      for (let x = spills ? 0 : 50; x < 70; x++) {
+        lowRes[y * lowSide + x] = 4;
+      }
+    }
+    return {
+      masks: new FakeTensor([1, 1, 512, 512], new Float32Array(512 * 512).fill(-4)),
+      iou_predictions: new FakeTensor([1, 1], Float32Array.of(0.5)),
+      low_res_masks: new FakeTensor([1, 1, lowSide, lowSide], lowRes),
+    };
+  };
+}
+
+describe("inference engine window decoder", () => {
+  it("loads no window graph unless asked", async () => {
+    const { cache, engine } = build();
+    const ready = await engine.init();
+    assert.equal(ready.windowed, false);
+    assert.ok(!cache.urls.includes(`/models/${samGraphs.windowDecoder}`));
+  });
+
+  it("loads the window graph after the click decoder and warms it", async () => {
+    const { runtime, engine } = build({ windowDecoder: true });
+    const ready = await engine.init();
+    assert.equal(ready.windowed, true);
+    assert.deepEqual(
+      runtime.created.map((entry) => entry.graph),
+      [samGraphs.decoder, samGraphs.encoderQ4, samGraphs.windowDecoder],
+    );
+    assert.equal(runtime.session(samGraphs.windowDecoder).feedsSeen.length, 1);
+  });
+
+  it("decodes a click on the window around it and pastes the masks back", async () => {
+    const { runtime, engine } = build({ windowDecoder: true, warm: false });
+    await started(engine);
+    const window = runtime.session(samGraphs.windowDecoder);
+    window.respond = windowAnswer(false);
+    const answer = await engine.prompt("view-a", click);
+    assert.equal(answer.status, "answer");
+    if (answer.status !== "answer") return;
+    assert.equal(answer.path, "window");
+    assert.deepEqual([...(window.feedsSeen[0]?.["window_origin"]?.data ?? [])], [3, 9]);
+    assert.equal(window.feedsSeen[0]?.["orig_im_size"], undefined);
+    assert.deepEqual(answer.outputs["low_res_masks"]?.dims, [1, 1, 256, 256]);
+    assert.deepEqual(answer.outputs["masks"]?.dims, [1, 1, 1024, 1024]);
+    assert.equal(runtime.session(decoderGraph).feedsSeen.length, 0);
+  });
+
+  it("reruns the full decoder when the window mask reaches the window edge", async () => {
+    const { runtime, engine } = build({ windowDecoder: true, warm: false });
+    await started(engine);
+    runtime.session(samGraphs.windowDecoder).respond = windowAnswer(true);
+    const answer = await engine.prompt("view-a", click);
+    assert.equal(answer.status === "answer" && answer.path, "window-edge");
+    assert.equal(runtime.session(decoderGraph).feedsSeen.length, 1);
+  });
+
+  it("sends a prompt too wide for the window to the full decoder", async () => {
+    const { runtime, engine } = build({ windowDecoder: true, warm: false });
+    await started(engine);
+    const answer = await engine.prompt("view-a", {
+      points: [
+        { x: 50, y: 50, positive: true },
+        { x: 900, y: 900, positive: false },
+      ],
+    });
+    assert.equal(answer.status === "answer" && answer.path, "full");
+    assert.equal(runtime.session(samGraphs.windowDecoder).feedsSeen.length, 0);
+  });
+
+  it("keeps working on the full decoder when the window graph is not published", async () => {
+    const { runtime, engine } = build({
+      windowDecoder: true,
+      missingGraphs: [samGraphs.windowDecoder],
+    });
+    const ready = await engine.init();
+    assert.equal(ready.windowed, false);
+    await engine.encode("view-a", new Float32Array(pixelCount));
+    const answer = await engine.prompt("view-a", click);
+    assert.equal(answer.status === "answer" && answer.path, "full");
+    assert.equal(runtime.session(decoderGraph).feedsSeen.length, 2);
+  });
+
+  it("releases the window session on close", async () => {
+    const { runtime, engine } = build({ windowDecoder: true });
+    await started(engine);
+    await engine.close();
+    assert.equal(runtime.session(samGraphs.windowDecoder).released, true);
   });
 });
 

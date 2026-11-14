@@ -657,12 +657,23 @@ export {
 export { type PatchWorkerScope, startPatchWorker } from "./patch/worker-runtime.ts";
 export * from "./pixel-source/index.ts";
 export {
+  type EmbeddingWindow,
+  embeddingWindow,
+  outsideWindowLogit,
+  pasteWindowOutputs,
+  samWindowMargin,
+  samWindowTokens,
+  touchesInnerEdge,
+  type WindowOptions,
+} from "./sam/embedding-window.ts";
+export {
   createInferenceEngine,
   defaultEmbeddingCapacity,
   EngineNotReadyError,
   type InferenceEngine,
   type InferenceEngineOptions,
   type SamBox,
+  type SamDecodePath,
   type SamEncoded,
   type SamGraphLoad,
   type SamOutput,

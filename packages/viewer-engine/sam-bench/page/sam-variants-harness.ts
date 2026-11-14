@@ -1,5 +1,6 @@
 import * as ort from "onnxruntime-web/webgpu";
 import type { SamProvider } from "../../src/index.ts";
+import { embeddingWindow } from "../../src/sam/embedding-window.ts";
 import { wasmMjsUrl, wasmUrl } from "./ort-wasm-urls.js";
 
 export interface SamBenchRequest {
@@ -7,6 +8,7 @@ export interface SamBenchRequest {
   readonly modelsUrl: string;
   readonly encoder: string;
   readonly decoder: string;
+  readonly windowDecoder?: string;
   readonly aisDecoders: readonly string[];
   readonly encodeRuns: number;
   readonly decodeRuns: number;
@@ -37,7 +39,16 @@ export interface SamBenchReport {
   readonly encoderSessionMs: number;
   readonly encodeMs: number[];
   readonly decodeMs: number[];
+  readonly window: WindowTiming | null;
   readonly ais: AisTiming[];
+}
+
+export interface WindowTiming {
+  readonly graph: string;
+  readonly bytes: number;
+  readonly sessionMs: number;
+  readonly runsMs: number[];
+  readonly lowResDims: readonly number[];
 }
 
 declare global {
@@ -86,9 +97,46 @@ interface GpuAdapter {
   readonly info: { vendor: string; architecture: string };
 }
 
+function clickAt(run: number): { x: number; y: number } {
+  return { x: 200 + ((run * 97) % 600), y: 300 + ((run * 53) % 500) };
+}
+
+function windowFeeds(embeddings: ort.Tensor, run: number): Record<string, ort.Tensor> {
+  const { x, y } = clickAt(run);
+  const window = embeddingWindow({ points: [{ x, y, positive: true }] });
+  if (window === null) throw new Error(`the bench click ${x}, ${y} has no window`);
+  const { orig_im_size: _, ...feeds } = clickFeeds(embeddings, run);
+  return {
+    ...feeds,
+    window_origin: new ort.Tensor("float32", Float32Array.from([window.x, window.y]), [2]),
+  };
+}
+
+async function timeWindow(
+  request: SamBenchRequest,
+  embeddings: ort.Tensor,
+  executionProviders: SamProvider[],
+): Promise<WindowTiming | null> {
+  const graph = request.windowDecoder;
+  if (graph === undefined) return null;
+  const bytes = await fetchBytes(`${request.modelsUrl}/${graph}`);
+  const [session, sessionMs] = await timed(() =>
+    ort.InferenceSession.create(bytes, { executionProviders }),
+  );
+  const runsMs: number[] = [];
+  let lowResDims: readonly number[] = [];
+  for (let index = 0; index < request.decodeRuns; index++) {
+    const feeds = windowFeeds(embeddings, index);
+    const [outputs, elapsed] = await timed(() => session.run(feeds));
+    lowResDims = outputs["low_res_masks"]?.dims ?? [];
+    runsMs.push(elapsed);
+  }
+  await session.release();
+  return { graph, bytes: bytes.byteLength, sessionMs, runsMs, lowResDims };
+}
+
 function clickFeeds(embeddings: ort.Tensor, run: number): Record<string, ort.Tensor> {
-  const x = 200 + ((run * 97) % 600);
-  const y = 300 + ((run * 53) % 500);
+  const { x, y } = clickAt(run);
   return {
     image_embeddings: embeddings,
     point_coords: new ort.Tensor("float32", Float32Array.from([x, y, 0, 0]), [1, 2, 2]),
@@ -155,6 +203,7 @@ async function run(request: SamBenchRequest): Promise<SamBenchReport> {
   }
   await encoder.release();
   await decoder.release();
+  const window = await timeWindow(request, embeddings, executionProviders);
 
   const ais: AisTiming[] = [];
   let firstMaps: Float32Array | undefined;
@@ -205,6 +254,7 @@ async function run(request: SamBenchRequest): Promise<SamBenchReport> {
     encoderSessionMs,
     encodeMs,
     decodeMs,
+    window,
     ais,
   };
 }
