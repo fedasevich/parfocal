@@ -1193,7 +1193,7 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
   Refs [`poc/src/slide/codecs/openjpeg.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/slide/codecs/openjpeg.ts), doc 03.
   Size: M.
 
-- [ ] INGEST-015 · Conversion fallback worker
+- [x] INGEST-015 · Conversion fallback worker
   Convert to OME-Zarr v0.5 with all RGB channels in one chunk and JPEG chunks at q90 for brightfield, or lossless zstd for 16-bit and fluorescence. Write NGFF metadata. Only invoked by a trigger.
   Done when converting each trigger fixture produces a store that passes INGEST-006 and INGEST-009 and opens in Viv.
   Refs doc 32, [`poc/scripts/tiff-to-zarr.mjs`](https://github.com/fedasevich/pathlogy-poc/blob/master/scripts/tiff-to-zarr.mjs), [`poc/server/tools/ome_tiff_to_zarr16.py`](https://github.com/fedasevich/pathlogy-poc/blob/master/server/tools/ome_tiff_to_zarr16.py).
