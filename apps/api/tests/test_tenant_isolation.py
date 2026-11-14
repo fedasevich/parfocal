@@ -1,6 +1,8 @@
 import asyncio
+import gzip
 import hashlib
 import io
+import json
 import threading
 import uuid
 import zipfile
@@ -108,6 +110,7 @@ from parfocal_common.db import SET_SCOPE, DatabaseScope, async_database_url, sco
 from parfocal_common.ingest import RestrictedImage, slide_prefix
 from parfocal_common.model_runs import RunScopeKind, RunSettings, enqueue_model_run
 from parfocal_common.object_store import ObjectStore, StorageLocation
+from parfocal_common.result_imports import result_set_prefix
 from parfocal_common.result_store import ObjectResultStore
 from parfocal_ingest.tissue import TissueMask
 
@@ -596,7 +599,18 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
         1,
     )
     async with httpx2.AsyncClient(timeout=30) as http:
-        entries = await write_cells(ObjectResultStore(ObjectStore(TEST_STORAGE, http)), built)
+        storage = ObjectStore(TEST_STORAGE, http)
+        entries = await write_cells(ObjectResultStore(storage), built)
+        heat_prefix = result_set_prefix(seeded.tenant_id, case.loose_slide_id, summary_set)
+        await ObjectResultStore(storage).put(
+            f"{heat_prefix}heatmap.bin", gzip.compress(str(cell_number).encode())
+        )
+        facts = {"width": 2, "height": 2, "level": 0, "downsample": float(cell_number), "mpp": None}
+        await storage.put_object(
+            f"{heat_prefix}heatmap.json",
+            json.dumps({**facts, "tissue_share": None}).encode(),
+            "application/json",
+        )
     await connection.execute(
         insert(result_chunks),
         [

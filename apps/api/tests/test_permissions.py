@@ -1,5 +1,7 @@
 import asyncio
+import gzip
 import io
+import json
 import threading
 import uuid
 import zipfile
@@ -87,6 +89,7 @@ from parfocal_common.ingest import RestrictedImage, slide_prefix
 from parfocal_common.jobs import enqueue
 from parfocal_common.model_runs import RunScopeKind, RunSettings, enqueue_model_run
 from parfocal_common.object_store import ObjectStore, StorageLocation
+from parfocal_common.result_imports import result_set_prefix
 from parfocal_common.result_store import ObjectResultStore
 from parfocal_ingest.tissue import TissueMask
 from parfocal_ingest.workflow import INGEST
@@ -2156,6 +2159,24 @@ async def seed(database: str, lead: Seat = RESEARCHER, presets_for: Seat = RESEA
                 )
                 await ObjectResultStore(store).put(
                     matrix_cells.summary.key, matrix_cells.summary.data
+                )
+                heat_prefix = result_set_prefix(tenant_id, case.loose_slide_id, result_set)
+                await ObjectResultStore(store).put(
+                    f"{heat_prefix}heatmap.bin", gzip.compress(bytes(4))
+                )
+                await store.put_object(
+                    f"{heat_prefix}heatmap.json",
+                    json.dumps(
+                        {
+                            "width": 2,
+                            "height": 2,
+                            "level": 0,
+                            "downsample": 1.0,
+                            "mpp": None,
+                            "tissue_share": None,
+                        }
+                    ).encode(),
+                    "application/json",
                 )
                 await put_restricted_images(
                     store,
