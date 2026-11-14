@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { appendFileSync } from "node:fs";
 import AxeBuilder from "@axe-core/playwright";
 import { test as base } from "@playwright/test";
@@ -7,7 +8,19 @@ export * from "@playwright/test";
 
 const wcagTags = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22a", "wcag22aa"];
 
-const scannedRoutes = new Set<string>();
+const scannedStates = new Set<string>();
+
+export function stateOfPage(): string[] {
+  const parts = new Set<string>();
+  for (const element of document.querySelectorAll("[data-slot], [data-testid]")) {
+    if (!element.checkVisibility()) continue;
+    const slot = element.getAttribute("data-slot");
+    const testId = element.getAttribute("data-testid");
+    if (slot !== null) parts.add(`slot:${slot}`);
+    if (testId !== null) parts.add(`testid:${testId}`);
+  }
+  return [...parts].sort();
+}
 
 export function routeOf(address: string): string | null {
   let url: URL;
@@ -33,8 +46,7 @@ export const test = base.extend<{ accessible: undefined }>({
       if (testInfo.annotations.some((note) => note.type === "skip-axe")) return;
       if (page.isClosed()) return;
       const route = routeOf(page.url());
-      if (route === null || scannedRoutes.has(route)) return;
-      scannedRoutes.add(route);
+      if (route === null) return;
       await page.mouse.move(0, 0);
       await page.evaluate(() =>
         Promise.race([
@@ -47,6 +59,10 @@ export const test = base.extend<{ accessible: undefined }>({
           new Promise((resolve) => setTimeout(resolve, 2000)),
         ]),
       );
+      const state = await page.evaluate(stateOfPage);
+      const scanKey = `${route} ${createHash("sha1").update(state.join("\n")).digest("hex")}`;
+      if (scannedStates.has(scanKey)) return;
+      scannedStates.add(scanKey);
       const results = await new AxeBuilder({ page })
         .withTags(wcagTags)
         .exclude("[data-base-ui-focus-guard]")

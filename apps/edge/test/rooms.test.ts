@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { describe, test } from "node:test";
-import { signCapability, signingKey } from "../src/capability.ts";
+import { signCapability, signingKey, toBase64Url } from "../src/capability.ts";
 import { handleRealtime, MAX_INTERNAL_BODY, PUBLISH_HEADER } from "../src/realtime.ts";
 import {
   CLOSE_EXPIRED,
@@ -278,6 +278,25 @@ describe("room tokens", () => {
     assert.deepEqual(await verifyRoomToken(tile, key, NOW), { ok: false, reason: "malformed" });
   });
 
+  test("a quiet token keeps its mark and any other quiet value is malformed", async () => {
+    const key = await roomKey(SECRET);
+    const grant: RoomGrant = {
+      tenant: TENANT,
+      room: SLIDE,
+      user: ANNA,
+      project: PROJECT,
+      expires: NOW + 60,
+      quiet: true,
+    };
+    const quiet = await signRoomToken(grant, key);
+    assert.deepEqual(await verifyRoomToken(quiet, key, NOW), { ok: true, grant });
+    const claims = { e: NOW + 60, p: PROJECT, q: false, r: SLIDE, t: TENANT, u: ANNA, v: 1 };
+    const payload = toBase64Url(new TextEncoder().encode(JSON.stringify(claims)));
+    const signature = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(payload));
+    const odd = `${payload}.${toBase64Url(new Uint8Array(signature))}`;
+    assert.deepEqual(await verifyRoomToken(odd, key, NOW), { ok: false, reason: "malformed" });
+  });
+
   test("the publish signature matches the shared vector and expires after a minute", async () => {
     const key = await roomKey(SECRET);
     const { stamp, body, signature } = vector.publish;
@@ -465,6 +484,67 @@ describe("presence", () => {
       ids: { slide: slideId, user: ANNA },
     });
     assert.deepEqual([...edge.state(`${TENANT}/${projectRoom}`).stored.keys()], []);
+  });
+
+  test("a quiet seat neither hears presence nor is announced", async () => {
+    const edge = new Edge();
+    const projectRoom = `project:${PROJECT}`;
+    const watcher = await edge.join({ room: projectRoom, user: BEN });
+    const anna = await edge.join({});
+    const quiet = await edge.join({ user: BEN, quiet: true });
+    assert.deepEqual(quiet.events(), []);
+    assert.deepEqual(anna.events(), []);
+    const slideId = SLIDE.slice(6);
+    assert.deepEqual(watcher.events(), [
+      { kind: "presence.joined", ids: { slide: slideId, user: ANNA } },
+    ]);
+    const room = edge.room(`${TENANT}/${SLIDE}`);
+    anna.close(1000, "left");
+    await room.webSocketClose(anna as unknown as WebSocket, 1000);
+    assert.deepEqual(quiet.events(), []);
+    const back = await edge.join({});
+    assert.deepEqual(back.events(), []);
+    const response = await edge.publish(TENANT, [SLIDE]);
+    assert.equal(response.status, 200);
+    assert.deepEqual(quiet.events(), [{ kind: "slide.changed", ids: { slide: slideId } }]);
+    quiet.close(1000, "left");
+    await room.webSocketClose(quiet as unknown as WebSocket, 1000);
+    assert.deepEqual(back.events(), [{ kind: "slide.changed", ids: { slide: slideId } }]);
+    assert.deepEqual(
+      watcher.events().filter((event) => event.ids["user"] === BEN),
+      [],
+    );
+  });
+
+  test("a renewal that ends or starts blinding announces the arrival or the departure", async () => {
+    const edge = new Edge();
+    const anna = await edge.join({});
+    const ben = await edge.join({ user: BEN, quiet: true });
+    const room = edge.room(`${TENANT}/${SLIDE}`);
+    const renew = async (quiet: boolean) =>
+      room.webSocketMessage(
+        ben as unknown as WebSocket,
+        JSON.stringify({
+          type: "renew",
+          token: await edge.token({ user: BEN, ...(quiet ? { quiet: true as const } : {}) }),
+        }),
+      );
+    await renew(false);
+    assert.deepEqual(anna.events(), [joined(BEN)]);
+    assert.deepEqual(ben.events(), [joined(ANNA)]);
+    await renew(true);
+    assert.deepEqual(anna.events(), [joined(BEN), left(BEN)]);
+    assert.equal(ben.closed, null);
+  });
+
+  test("task and user rooms carry no presence", async () => {
+    const edge = new Edge();
+    for (const room of [`task:${PROJECT}`, `user:${ANNA}`]) {
+      const first = await edge.join({ room });
+      const second = await edge.join({ room, user: BEN });
+      assert.deepEqual(first.events(), [], room);
+      assert.deepEqual(second.events(), [], room);
+    }
   });
 
   test("presence stays inside its tenant", async () => {
@@ -778,6 +858,21 @@ describe("follow my view", () => {
     await say(view({ ...camera, padding: "p".repeat(200) }));
     assert.deepEqual(ben.sent, []);
     assert.equal(anna.closed, null);
+  });
+
+  test("a quiet seat neither sends nor receives a view or a cursor", async () => {
+    const { edge, anna, room, say } = await pair();
+    const quiet = await edge.join({ user: BEN, quiet: true });
+    quiet.sent.length = 0;
+    await say(view(camera));
+    await say(JSON.stringify({ type: "cursor", x: 1, y: 2 }));
+    assert.deepEqual(quiet.sent, []);
+    await room.webSocketMessage(quiet as unknown as WebSocket, view(camera));
+    await room.webSocketMessage(
+      quiet as unknown as WebSocket,
+      JSON.stringify({ type: "cursor", x: 1, y: 2 }),
+    );
+    assert.deepEqual(anna.sent, []);
   });
 
   test("a room that is not a slide room passes no view on", async () => {

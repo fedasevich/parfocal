@@ -7,6 +7,8 @@ import {
   LevelTableError,
   parseLevelTable,
   SlideBytesError,
+  SlideHasSeveralScanAreasError,
+  SlideNeedsReingestError,
   signedOpenRequest,
   slideFormatFromName,
   slideIndexFromLevelTable,
@@ -157,14 +159,53 @@ describe("signedOpenRequest for a Ventana BIF", () => {
     assert.deepEqual(request.index?.stitching, STITCHING);
   });
 
-  test("keeps the plain level table when the slide has no sidecar or no stitching", async () => {
-    const missing = await openBif(bifFetcher([], () => new Response(null, { status: 404 })));
-    assert.equal(missing.index?.stitching, undefined);
-    assert.equal(missing.index?.tileKind, undefined);
-    const unstitched = await openBif(
-      bifFetcher([], () => Response.json({ version: 1, tileKind: "bif-frames", stitching: null })),
+  test("opens frames that ingest declared an exact grid with their placement", async () => {
+    const grid = {
+      ...STITCHING,
+      columnX: [0, 1024, 2048],
+      rowY: [0, 1360],
+      advanceX: 1024,
+      advanceY: 1360,
+      width: 3072,
+      height: 2720,
+    };
+    const request = await openBif(
+      bifFetcher([], () => Response.json({ tileKind: "bif-frames", stitching: grid })),
     );
-    assert.equal(unstitched.index?.stitching, undefined);
+    assert.deepEqual(request.index?.stitching, grid);
+  });
+
+  test("asks for re-ingest when the sidecar is missing", async () => {
+    await assert.rejects(
+      openBif(bifFetcher([], () => new Response(null, { status: 404 }))),
+      SlideNeedsReingestError,
+    );
+  });
+
+  test("asks for re-ingest when the sidecar holds no frame placement", async () => {
+    for (const stitching of [null, undefined, { columns: 3, rows: 0 }]) {
+      await assert.rejects(
+        openBif(bifFetcher([], () => Response.json({ tileKind: "bif-frames", stitching }))),
+        SlideNeedsReingestError,
+      );
+    }
+    await assert.rejects(
+      openBif(bifFetcher([], () => Response.json({ tileKind: "grid", stitching: STITCHING }))),
+      SlideNeedsReingestError,
+    );
+  });
+
+  test("names several scan areas instead of asking for re-ingest", async () => {
+    const sidecar = { tileKind: "bif-frames", stitching: null, unplaced: "several-scan-areas" };
+    await assert.rejects(
+      openBif(bifFetcher([], () => Response.json(sidecar))),
+      SlideHasSeveralScanAreasError,
+    );
+    const unknown = { ...sidecar, unplaced: "unknown-overlap" };
+    await assert.rejects(
+      openBif(bifFetcher([], () => Response.json(unknown))),
+      SlideNeedsReingestError,
+    );
   });
 
   test("reports a sidecar the server refuses", async () => {

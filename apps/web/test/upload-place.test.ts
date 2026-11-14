@@ -1,7 +1,12 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import type { Sorting } from "@parfocal/api-client";
-import { compareSorting, type PlaceInput, sortingRequestOf } from "../src/upload/place.ts";
+import {
+  compareSorting,
+  duplicatesOf,
+  type PlaceInput,
+  sortingRequestOf,
+} from "../src/upload/place.ts";
 
 const record = (path: string, size = 10) => ({ path, size });
 
@@ -16,6 +21,8 @@ const input: PlaceInput = {
   caseLabels: ["S1", null],
   pair: "auto",
   cases: "names",
+  duplicates: {},
+  heldBack: [],
 };
 
 const agreeing: Sorting = {
@@ -59,7 +66,7 @@ test("the sorting request lists slides and kept results, a pick as a decision, a
   );
   assert.equal(request.files[1]?.size, undefined);
   assert.deepEqual(request.result_decisions, [{ path: "B/x.png", slide_path: "B/loose.tif" }]);
-  assert.equal(request.slide_decisions, undefined);
+  assert.deepEqual(request.slide_decisions, []);
 });
 
 test("the final request carries the browser's case for every slide", () => {
@@ -95,4 +102,21 @@ test("a case or pairing the server sees differently is listed", () => {
 test("results are not compared when pairing by the ID inside, which only the server can read", () => {
   const server: Sorting = { ...agreeing, results: [] };
   assert.deepEqual(compareSorting({ ...input, pair: "id" }, server), []);
+});
+
+test("a duplicate is listed from the server, and the choice goes out as a keep decision", () => {
+  const [first, second] = agreeing.slides;
+  assert.ok(first && second);
+  const server: Sorting = { ...agreeing, slides: [{ ...first, duplicate_of: "slide-1" }, second] };
+  assert.deepEqual(duplicatesOf(server), [{ path: "B/S1/A1.svs", of: "slide-1" }]);
+  assert.deepEqual(compareSorting(input, server), []);
+  assert.deepEqual(
+    sortingRequestOf({ ...input, duplicates: { "B/S1/A1.svs": "keep" } }).slide_decisions,
+    [{ path: "B/S1/A1.svs", keep: true }],
+  );
+  assert.deepEqual(
+    sortingRequestOf({ ...input, duplicates: { "B/S1/A1.svs": "skip" } }, true)
+      .slide_decisions?.[0],
+    { path: "B/S1/A1.svs", case: "S1", keep: false },
+  );
 });

@@ -33,6 +33,19 @@ export function describeOpenFailure(error: unknown): OpenFailure {
       detail: "The original is stored safely. It will open once the format is supported.",
     };
   }
+  if (name === "SlideNeedsReingestError") {
+    return {
+      title: "This slide needs re-ingest",
+      detail:
+        "The saved positions of its camera frames are missing, so tissue would show twice. The original is stored safely. Upload it again or ask your administrator to re-ingest it.",
+    };
+  }
+  if (name === "SlideHasSeveralScanAreasError") {
+    return {
+      title: "This slide holds several scan areas, which Parfocal cannot place yet",
+      detail: "The original is stored safely. It will open once several scan areas are supported.",
+    };
+  }
   const status = statusOf(error);
   if (name === "ApiError" || name === "SlideBytesError") {
     if (status === 404) {

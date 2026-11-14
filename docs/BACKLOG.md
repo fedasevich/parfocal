@@ -1041,7 +1041,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when an edge test shows a malformed room path answered as a 404 problem and any throw answered as a 500 problem, both with the headers.
   Size: S.
 
-- [ ] SEC-040 · Presence in a blinded task
+- [x] SEC-040 · Presence in a blinded task
   A reviewer in a blinded task receives `presence.joined` and `presence.left` with the other reviewers' user ids, and presence is also announced in task and user rooms, which ADR 0269 (realtime event model by room and kind) does not list ([edge token review](results/2026-11-09-edge-token-review.md), finding C5). Decision 85 (presence in a blinded review) chose 85a on 2026-11-13: a reviewer who has not submitted in a blinded task neither receives presence nor is announced.
   Done when the chosen rule has an API test and an edge test, and presence is sent only in the room kinds the record lists.
   Size: S.
@@ -1232,7 +1232,7 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
   Depends on INGEST-002, INGEST-011, RSET-004, CASES-024. Refs mock: upload, doc 38, doc 39, doc 42, [ADR 0053](adr/0053-ai-results-review-direction.md).
   Size: L.
 
-- [ ] INGEST-022 · Per-file problems in the Check step
+- [x] INGEST-022 · Per-file problems in the Check step
   One zone per problem, each with its fix: a slide that cannot be read, an MRXS without its data folder (add the folder), a duplicate already in the project (skip or keep both), and a result file with parse errors, a scale mismatch or new classes (RSET-005). Files with a problem wait and the rest upload. The step counts the open problems down to "Nothing needs you".
   Done when component tests resolve each problem class, and an E2E uploads a mixed set and ends with the fixed files uploaded and the others waiting.
   Depends on INGEST-021, INGEST-018, RSET-005. Refs mock: upload/check, doc 40 R3.
@@ -1415,6 +1415,12 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
 - [x] VIEW-014 · Ventana BIF with frame stitching
   Done when the BIF fixture shows no duplicated tissue and matches the golden image.
   Refs [`poc/src/slide/ventana.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/slide/ventana.ts), doc 06.
+  Size: M.
+
+- [x] VIEW-069 · Ventana BIF with several scan areas, research first
+  Since [ADR 0307](adr/0307-a-bif-is-refused-only-when-its-frame-overlap-is-unknown.md) (a BIF is refused only when its frame overlap is unknown), a BIF with several scan areas is refused because the reader cannot place them, while OpenSlide opens such files. First research how common such files are from Roche DP 200, DP 600 and iScan output, OpenSlide's Ventana test data and public datasets, and what OpenSlide does with them. Then decide: place each area by its own joints and origin in ingest and the browser reader through the one `frame_placement` rule, or keep the refusal with a clear message. The owner asked for research before any build (2026-11-14).
+  Done when a result file records the sources, how often the files occur and a recommendation, and either the placement is built (a synthetic two-area BIF matches an OpenSlide reference window, with the refusal kept for areas of unknown overlap) or the refusal stays and its message says why.
+  Depends on VIEW-014.
   Size: M.
 
 - [x] VIEW-015 · Leica SCN multi-pyramid
@@ -1754,13 +1760,13 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Done when Tailwind CSS v4, shadcn/ui on Base UI and Storybook are set up as [ADR 0130](adr/0130-shadcn-ui-on-base-ui-with-tailwind-v4.md) says, and axe passes over the stories of the controls in its table, which ticks STACK-007 (component primitives and styling) in the same change.
   Refs [ADR 0129](adr/0129-the-prototype-moves-into-react-as-the-design-source.md), [ADR 0130](adr/0130-shadcn-ui-on-base-ui-with-tailwind-v4.md).
 
-- [ ] DS-001 · Design tokens package
+- [x] DS-001 · Design tokens package
   Product tokens from the frozen kit's Design system page ([docs/design/](design/README.md)) for dark and light: surf-page, surf-panel, surf-section, surf-field, chrome-3, canvas, line, line-strong, fg, fg-dim, fg-faint, accent, accent-fill, ok, warn, bad, research-fg, the decision colours v-agree, v-disagree, v-unsure and v-open, plus class colours, the proposal colour and `unsure` (#cbd5e1 dark, #475569 light, used as a hatch or with a pattern, never as a fill alone). Sizes are space-zone 28, space-in 10, pad-zone 18, pad-modal 24 (20 in a small modal), r-zone 12, r-ctl 8, control heights 28, 32 and 40, tag height 20 and count height 16. The kit's pink mock marker colour is left out. Exported as CSS variables and TS constants.
   Done when unit tests assert every token exists in both themes and a visual test renders the specimen page.
   Depends on PROTO-011. Refs kit Design system page, mock token block, [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
   Size: M.
 
-- [ ] DS-002 · Colour measurement scripts in CI
+- [x] DS-002 · Colour measurement scripts in CI
   WCAG 2 contrast and APCA Lc 60 or more for every text pair, CIEDE2000 between classes after protan, deutan and tritan simulation (Machado), outline contrast over sampled real H&E pixels. Start from the POC's `scripts/color-check.mjs`, which already implements all four.
   Done when CI fails if a token change breaks any threshold, with the doc 35 numbers as the baseline (closest class pair 15.1 under deuteranopia, proposals at least 40 from every class, unsure marks at least 13 from every class on the slide and 15 in the panel).
   Depends on PROTO-011. Refs doc 35, kit decision D12, [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md). Use the limits that the API applies to class colours ([ADR 0067](adr/0067-class-taxonomy-and-colour-check.md)) so tokens and taxonomies never disagree.
@@ -2064,7 +2070,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on SHELL-010.
   Size: M.
 
-- [ ] SHELL-011 · Second-monitor pop-out windows
+- [x] SHELL-011 · Second-monitor pop-out windows
   The minimap and the inspector can pop out into a second window that stays in sync (BroadcastChannel), using the Window Management API where available.
   Done when an E2E test with two pages confirms camera sync both ways.
   Refs doc 35, mock 7 pop-out icon.
@@ -4409,7 +4415,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when both tests pass locally with no retries and neither appears in a `flaky-*` artifact of the next three ci runs on main.
   Size: S.
 
-- [ ] TEST-030 · Find why the table Tab order test fails on its first ci attempt
+- [x] TEST-030 · Find why the table Tab order test fails on its first ci attempt
   "Tab reaches every row's checkbox and action, and Space picks a row" in `packages/ui/e2e/table.spec.ts` failed its first attempt and passed its retry in three ci runs on 2026-11-09. It did not fail on the Mac in 10 plain runs, with the CPU slowed 6 and 20 times, or with the story script delayed 400 ms, so the cause is unknown. The test now reports every Tab stop it reached instead of one `false`, so the next failure names the element that took focus.
   Done when a ci failure has shown which stop was wrong, the cause is fixed in the table or the spec, and the test stays out of the `flaky-*` artifacts for a week of main.
   Size: S.
@@ -4434,7 +4440,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when the spec passes locally with no retries and the test stays out of the `flaky-*` artifacts of the next three ci runs on main.
   Size: S.
 
-- [ ] TEST-035 · Find why two axe scans fail on a first attempt
+- [x] TEST-035 · Find why two axe scans fail on a first attempt
   Two tests failed once and passed their retry on 2026-11-10. "the open modal passes axe in light" in `packages/ui/e2e/small-modal.spec.ts` threw "Axe is already running" (ci run on commit 1f61523d), so something else on the story page runs axe while the spec does. "an email that already has an account says so" in `apps/web/e2e/sign-up.spec.ts` got a `color-contrast` violation on the primary button of `/sign-up` (ci run on commit fc1723ce), right after the click that submits the form.
   Done when each has a named cause, a fix in the spec, the fixture or the component, and neither test sits in a `flaky-*` artifact for a week of main.
   Size: S.
@@ -4451,7 +4457,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Depends on TEST-020.
   Size: M.
 
-- [ ] TEST-038 · Draft call ratchet
+- [x] TEST-038 · Draft call ratchet
   Screens built on draft calls work in every test and are empty in production, because only the fake API answers them (`docs/knowledge/draft-calls.md`). While the UI is built on fakes the count may grow ([ADR 0295](adr/0295-ui-first-on-fakes-then-switch-each-area-to-the-real-api.md), UI first on fakes, then each area switches), so add a script that counts the operations in `packages/api-client/src/draft` per area and prints the count in `pnpm verify` without failing it. OPS-017 (switch each area to the real API) uses the count of an area to show it is fully switched.
   Done when `pnpm verify` prints the draft count per area and the total, a test checks the count against a fixture folder, and `knowledge/draft-calls.md` points to the script.
   Size: S.
@@ -4682,10 +4688,16 @@ Importing AI results made elsewhere is first class. A result set is one import o
   Depends on RSET-011. Split from RSET-011 by [ADR 0127](adr/0127-imported-cells-keep-numbers-by-centre-and-take-the-innermost-region.md) (imported cells keep their numbers by centre distance and take the innermost region).
   Decided in [ADR 0128](adr/0128-result-files-stream-through-a-byte-scanner-into-cell-columns.md) (result files stream through a byte scanner into cell columns): JSON arrays are read in batches by a byte scanner and msgspec, cells are kept as numpy columns spilled to the work folder, and the worker writes chunks from those columns. The [bounded cell import result](results/2026-11-01-bounded-cell-import.md) measured 824 to 1,025 MiB and 42 to 45 s per import, claimed once.
 
-- [ ] RSET-013 · Heatmap storage and the import check leftovers
+- [x] RSET-013 · Heatmap storage and the import check leftovers
   An imported heatmap is stored and shown after the uploader accepts the level and scale guess, instead of ending with `result-heatmap-not-stored`. Each scale guess carries its share on tissue, an unreadable `.png` or `.tif` heatmap is refused with a named problem, and uploads left waiting on the uploader's choices in quarantine are swept after a set time.
   Done when the RSET-005 test of a heatmap at level 2 scaled by 4 ends in a ready set, a test refuses a corrupt `.png` with its named problem, a test checks the share on tissue of each guess, and a test sweeps a waiting upload past its time.
   Depends on RSET-005. Split from RSET-005 on 2026-11-14.
+  Size: M.
+
+- [ ] RSET-014 · Imported heatmaps on the slide, and a choice of scale guess
+  RSET-013 stores an accepted heatmap as a byte grid beside its result set, but the viewer does not draw it yet, and the uploader can accept only the first level and scale guess. The viewer fetches the stored grid and draws it as a heatmap layer in Layers with the VIZ colour maps, and the import choices take a `heatmap_level` so the uploader can pick any guess, each shown with its share on tissue.
+  Done when a component test picks the second guess and the import ends ready at that level, and an E2E imports a heatmap, opens the slide and sees it in Layers over the right tissue.
+  Depends on RSET-013, VIZ-001.
   Size: M.
 
 ---
