@@ -4415,7 +4415,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when both tests pass locally with no retries and neither appears in a `flaky-*` artifact of the next three ci runs on main.
   Size: S.
 
-- [ ] TEST-030 · Find why the table Tab order test fails on its first ci attempt
+- [x] TEST-030 · Find why the table Tab order test fails on its first ci attempt
   "Tab reaches every row's checkbox and action, and Space picks a row" in `packages/ui/e2e/table.spec.ts` failed its first attempt and passed its retry in three ci runs on 2026-11-09. It did not fail on the Mac in 10 plain runs, with the CPU slowed 6 and 20 times, or with the story script delayed 400 ms, so the cause is unknown. The test now reports every Tab stop it reached instead of one `false`, so the next failure names the element that took focus.
   Done when a ci failure has shown which stop was wrong, the cause is fixed in the table or the spec, and the test stays out of the `flaky-*` artifacts for a week of main.
   Size: S.
