@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-14
 
+- A new workspace saves no mail domain, so it is listed or joinable only after an admin saves one (ADR 0303). Tests show a stranger on onet.pl, btinternet.com and comcast.net cannot list, join or ask. Workspaces created earlier keep their saved domain, no migration clears it.
 - IAM-026 A new workspace saves no mail domain (decision 84a, ADR 0303). createWorkspace no longer writes email_domain, so a workspace is listed or joinable only after an admin saves a domain in the join settings. Tests in test_workspace_access.py show a stranger on onet.pl, btinternet.com and comcast.net neither listing, joining nor asking. Workspaces made earlier keep their saved domain, no migration clears it. No production touch.
 - Zoom to selection fed: the live stage passes selected shapes to the key hook and falls back to the focused AI area. zoom-to-selection.spec.ts (3) and viewer-keys.test.ts (17) pass. The focused-area test checks only that the camera moves. Closes the NAV epic.
 - Renderer interface and in-engine route switch built (ADR 0302, routes switch behind lazy loaders). Viv goldens pass and a 10x switch still matches, 15 switches grow the heap 5.3%. The two WebGPU routes are skipped until VIEW-037 and VIEW-038.
