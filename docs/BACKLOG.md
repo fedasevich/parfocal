@@ -3741,7 +3741,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Done when tests confirm the map extends as the user pans and asks again.
   Size: M.
 
-- [ ] AITUM-005 · Painted maps
+- [x] AITUM-005 · Painted maps
   User-painted maps from the brush are stored, versioned and exportable.
   Done when tests round-trip a painted map.
   Size: M.
@@ -3749,6 +3749,12 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
 - [x] AITUM-006 · Heatmap persistence and export
   Done when tests export a heatmap as an image pyramid and re-import it.
   Refs doc 25.
+  Size: M.
+
+- [ ] AITUM-007 · Paint a map with the brush
+  AITUM-005 stores painted maps as versioned `.pfmap` tile files ([ADR 0332](adr/0332-painted-maps-as-whole-versions-of-one-tile-file.md), painted maps as whole versions of one tile file), but nothing in the viewer paints one yet. Let the brush paint into and erase from a painted map on the view map tile grid, save it with the version check, list and open versions, and export it. Add fake API handlers for the painted map routes, and cover `painted_maps` and `painted_map_versions` in the retention purge.
+  Done when component tests paint, save, reopen and export a map, an E2E spec paints and reloads, and a retention test purges both tables.
+  Depends on AITUM-005.
   Size: M.
 
 ---

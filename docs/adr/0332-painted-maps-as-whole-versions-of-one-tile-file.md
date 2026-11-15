@@ -1,4 +1,4 @@
-# XXXX. A painted map is saved as whole versions of one binary tile file
+# 0332. A painted map is saved as whole versions of one binary tile file
 
 - Date: 2026-11-15
 - Status: Accepted

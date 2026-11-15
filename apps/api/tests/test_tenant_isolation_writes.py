@@ -606,6 +606,10 @@ UNAIMED_WRITES: dict[str, str] = {
         "answers the anonymous caller about their own account and names no other row",
     ),
     "recordActivity": "stamps the caller's own session",
+    **dict.fromkeys(
+        ("startMaintenance", "endMaintenance"),
+        "switches the one platform-wide maintenance row, for platform operators only",
+    ),
     "endOtherSessions": "ends the caller's own other sessions",
     "sendFeedback": "files feedback under the caller's workspace",
     "acceptInvitation": "takes a secret token, which is the invitation itself",
