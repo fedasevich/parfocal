@@ -74,6 +74,7 @@ import type { ParsedResults, Placement } from "../results/geojson-placement.ts";
 import { HeatmapLayers, useHeatmapChoices } from "../results/heatmap-layer.tsx";
 import { PreviewLayer } from "../results/preview-layer.tsx";
 import { ResultSetLayers } from "../results/result-set-layers.tsx";
+import { ViewMapLayer } from "../results/view-map-layer.tsx";
 import { areaRoleText, areaRows } from "../screens/viewer/area-nav.ts";
 import { annotateRail } from "../screens/viewer-tools/rails.ts";
 import { useDeveloperMode } from "../shell/developer-mode.ts";
@@ -903,6 +904,9 @@ function OpenedSlide({
               slideId={slideId}
               choices={heatmapChoices}
             />
+            {workspace === "annotate" ? null : (
+              <ViewMapLayer engine={session.engine} stage={hostNode} slideId={slideId} />
+            )}
             {workspace === "annotate" ? (
               <RunStreamLayer
                 key={slideId}

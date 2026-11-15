@@ -6667,6 +6667,10 @@ msgstr ""
 msgid "Exported marked as not checked"
 msgstr ""
 
+#: src/results/view-map-layer.tsx
+msgid "Extend the map"
+msgstr ""
+
 #: src/screens/clinical-report/cosign-screen.tsx
 #: src/screens/clinical-report/steps.tsx
 msgid "Extranodal extension"
@@ -8901,6 +8905,14 @@ msgstr ""
 #: src/screens/admin/overview.tsx
 #: src/screens/project/settings-tab.tsx
 msgid "Manage"
+msgstr ""
+
+#: src/results/view-map-layer.tsx
+msgid "Map this view"
+msgstr ""
+
+#: src/results/view-map-layer.tsx
+msgid "Mapping this view"
 msgstr ""
 
 #: ../../packages/ui/src/components/connect-model.tsx
@@ -15829,6 +15841,10 @@ msgstr ""
 msgid "This text block is empty."
 msgstr ""
 
+#: src/results/view-map-layer.tsx
+msgid "This view could not be mapped"
+msgstr ""
+
 #: src/screens/home/home-screen.tsx
 msgid "This week in your projects"
 msgstr ""
@@ -16135,6 +16151,10 @@ msgstr ""
 
 #: src/screens/developer/developer-screen.tsx
 msgid "Tumor map"
+msgstr ""
+
+#: src/results/view-map-layer.tsx
+msgid "Tumor map for this view"
 msgstr ""
 
 #: src/screens/viewer/layer-views.tsx
@@ -17561,6 +17581,10 @@ msgstr ""
 
 #: src/screens/settings/settings-screen.tsx
 msgid "Zoom in 2×"
+msgstr ""
+
+#: src/results/view-map-layer.tsx
+msgid "Zoom in to map this view"
 msgstr ""
 
 #: ../../packages/ui/src/components/report-templates.tsx

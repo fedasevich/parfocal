@@ -6672,6 +6672,10 @@ msgstr "Exported {0}, signed with {1}."
 msgid "Exported marked as not checked"
 msgstr "Exported marked as not checked"
 
+#: src/results/view-map-layer.tsx
+msgid "Extend the map"
+msgstr "Extend the map"
+
 #: src/screens/clinical-report/cosign-screen.tsx
 #: src/screens/clinical-report/steps.tsx
 msgid "Extranodal extension"
@@ -8907,6 +8911,14 @@ msgstr "Making the preview"
 #: src/screens/project/settings-tab.tsx
 msgid "Manage"
 msgstr "Manage"
+
+#: src/results/view-map-layer.tsx
+msgid "Map this view"
+msgstr "Map this view"
+
+#: src/results/view-map-layer.tsx
+msgid "Mapping this view"
+msgstr "Mapping this view"
 
 #: ../../packages/ui/src/components/connect-model.tsx
 msgid "Maps to"
@@ -15838,6 +15850,10 @@ msgstr "This task is signed off, so the mapping is locked."
 msgid "This text block is empty."
 msgstr "This text block is empty."
 
+#: src/results/view-map-layer.tsx
+msgid "This view could not be mapped"
+msgstr "This view could not be mapped"
+
 #: src/screens/home/home-screen.tsx
 msgid "This week in your projects"
 msgstr "This week in your projects"
@@ -16145,6 +16161,10 @@ msgstr "Tumor first"
 #: src/screens/developer/developer-screen.tsx
 msgid "Tumor map"
 msgstr "Tumor map"
+
+#: src/results/view-map-layer.tsx
+msgid "Tumor map for this view"
+msgstr "Tumor map for this view"
 
 #: src/screens/viewer/layer-views.tsx
 msgid "Tumor probability"
@@ -17571,6 +17591,10 @@ msgstr "Zoom in (+)"
 #: src/screens/settings/settings-screen.tsx
 msgid "Zoom in 2×"
 msgstr "Zoom in 2×"
+
+#: src/results/view-map-layer.tsx
+msgid "Zoom in to map this view"
+msgstr "Zoom in to map this view"
 
 #: ../../packages/ui/src/components/report-templates.tsx
 #: src/screens/review/guided-review.tsx
