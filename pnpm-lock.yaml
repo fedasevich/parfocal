@@ -245,6 +245,9 @@ importers:
       '@lingui/core':
         specifier: 6.11.0
         version: 6.11.0(@babel/core@8.0.10)
+      '@lingui/message-utils':
+        specifier: 6.11.0
+        version: 6.11.0
       '@lingui/react':
         specifier: 6.11.0
         version: 6.11.0(@babel/core@8.0.10)(react@19.3.1)
@@ -456,6 +459,9 @@ importers:
       '@lingui/core':
         specifier: 6.11.0
         version: 6.11.0(@babel/core@8.0.10)
+      '@lingui/message-utils':
+        specifier: 6.11.0
+        version: 6.11.0
       '@lingui/react':
         specifier: 6.11.0
         version: 6.11.0(@babel/core@8.0.10)(react@19.3.1)

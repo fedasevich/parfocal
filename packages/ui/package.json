@@ -25,6 +25,7 @@
   "dependencies": {
     "@base-ui/react": "1.9.0",
     "@lingui/core": "6.11.0",
+    "@lingui/message-utils": "6.11.0",
     "@lingui/react": "6.11.0",
     "@parfocal/tokens": "workspace:*",
     "@xstate/react": "6.1.0",

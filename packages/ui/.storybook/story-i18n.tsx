@@ -1,9 +1,10 @@
 import { i18n } from "@lingui/core";
+import { compileMessage } from "@lingui/message-utils/compileMessage";
 import { I18nProvider } from "@lingui/react";
 import type { ReactNode } from "react";
-import { messages } from "../../../apps/web/src/locales/en.po";
 
-i18n.load("en", messages);
+i18n.setMessagesCompiler(compileMessage);
+i18n.load("en", {});
 i18n.activate("en");
 
 export function StoryI18n({ children }: { children: ReactNode }) {

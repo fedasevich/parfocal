@@ -77,7 +77,10 @@ export default defineConfig(({ mode }) => ({
     react(),
     lingui(),
     babel({
-      presets: [linguiTransformerBabelPreset(), reactCompilerPreset()],
+      presets: [
+        linguiTransformerBabelPreset({ descriptorFields: "message" }),
+        reactCompilerPreset(),
+      ],
       exclude: [/\/generated\//, /node_modules/],
     }),
     tailwindcss(),

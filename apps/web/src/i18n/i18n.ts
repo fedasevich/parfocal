@@ -1,5 +1,5 @@
 import { i18n, type Messages } from "@lingui/core";
-import { messages as english } from "../locales/en.po";
+import { compileMessage } from "@lingui/message-utils/compileMessage";
 import { type AppLocale, sourceLocale } from "./locale.ts";
 
 const loaders: Record<Exclude<AppLocale, "en">, () => Promise<{ messages: Messages }>> = {
@@ -7,7 +7,8 @@ const loaders: Record<Exclude<AppLocale, "en">, () => Promise<{ messages: Messag
   "en-XA": () => import("../locales/en-XA.po"),
 };
 
-i18n.load(sourceLocale, english);
+i18n.setMessagesCompiler(compileMessage);
+i18n.load(sourceLocale, {});
 i18n.activate(sourceLocale);
 
 const loaded = new Set<string>([sourceLocale]);
