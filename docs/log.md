@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-15
 
+- AILEARN-004 training_rounds.run_round fine-tunes the typer head per tenant from the pretrained typer outputs, recalibrates each view count, promotes only when every ECE is at most 0.05 and held-out accuracy does not fall, names versions base-round-n and rolls back by moving latest.json. Promotion uses a stand-in until MLEVAL-006 (promotion gate) exists.
 - CI fix: the overlay controller skips updates with equal geometry and style, so model outlines and task objects are no longer rebuilt about 9 times after ready on a slide opened with a task. The four slow specs never draw them; they did not fail in the 5e5a5286 CI run, so they are left as flakes for now.
 - CI fix: the AI corrections tenant isolation seed adds an AI-edited cell with a month marker, and the minimap fade spec waits for a settled box before measuring.
 - VIEW-055 (JPEG 2000 coarse level differences from OpenSlide) found the 45 to 47 differences came from OpenSlide resampling the reference, so coarse Aperio reference windows, JPEG 2000 and JPEG, now come from the stored tiles. The reader check bounds the largest difference at 3 on both JP2K slides and at 1 on every level of CMU-1.svs.
