@@ -43,3 +43,6 @@ New allow-listed keys are `ok`, `renderer`, `frames`, `p50_ms`, `p95_ms`, `long_
 - Traces are not exported. Each request leaves as one `sli.api.request` log record with route, status and duration, which covers latency by route. If spans are needed, the SDK question comes back as a new ADR.
 - The dashboard is not imported into Grafana and the production export is not proven. Both wait for the owner to create the Grafana Cloud stack, and the 70 percent quota alerts of ADR 0040 need its real limits.
 - Realtime rooms emit no SLI yet. Their panel waits for a room event.
+- A database outage stops the cycle before any page goes out, and mail is sent before the state is saved, so a failed save repeats the mail next cycle. Both are known limits.
+- Every `model-run` job counts as a pre-read, including runs a person started by hand. Narrowing it to automatic whole-slide runs is a follow-up.
+- Until the cycle is scheduled, deployed API containers and the edge write batches to the bucket that nothing folds or prunes.

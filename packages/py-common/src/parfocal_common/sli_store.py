@@ -24,6 +24,8 @@ type Clock = Callable[[], datetime]
 
 BATCH_PREFIX = "ops/sli/batches/"
 STATE_KEY = "ops/alerting/state.json"
+FRAMES_EVENT = "rum.viewer.frames"
+SLO_STATUS_EVENT = "slo.status"
 BUCKET_SECONDS = 60
 RETAINED = max(rule.long for rule in BURN_RULES) + timedelta(hours=1)
 SLO_BY_SLI: dict[SliName, Slo] = {slo.sli: slo for slo in SLOS}
@@ -262,7 +264,7 @@ class AlertStateStore:
             if raw is not None:
                 state.counts.merge(SliCounts.from_json(json.loads(raw)))
         state.counts.prune(now - RETAINED)
-        state.folded = fresh
+        state.folded = [*leftover, *fresh]
         return [*leftover, *fresh]
 
     async def save(self, state: AlertState, folded: Iterable[str]) -> None:

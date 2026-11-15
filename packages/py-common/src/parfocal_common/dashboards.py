@@ -5,10 +5,9 @@ from pathlib import Path
 
 from parfocal_common.alerting import SLOS, SliName
 from parfocal_common.repository import repository_root
+from parfocal_common.sli_store import FRAMES_EVENT, SLO_STATUS_EVENT
 
-FRAMES_EVENT = "rum.viewer.frames"
-SLO_STATUS_EVENT = "slo.status"
-EMITTED_EVENTS = frozenset({*(sli.value for sli in SliName), FRAMES_EVENT, SLO_STATUS_EVENT})
+EMITTED_EVENTS = frozenset({SliName.AVAILABILITY.value, FRAMES_EVENT, SLO_STATUS_EVENT})
 DASHBOARD_PATH = repository_root(__file__) / "infra" / "grafana" / "parfocal-overview.json"
 LOGS = {"type": "loki", "uid": "${logs}"}
 
@@ -62,9 +61,9 @@ PANELS: tuple[Panel, ...] = (
     Panel(
         "Tiles within 60 ms",
         "tiles",
-        SliName.TILE_LATENCY.value,
-        good_share(SliName.TILE_LATENCY.value),
-        "percentunit",
+        SLO_STATUS_EVENT,
+        slo_good("tile-latency"),
+        "short",
     ),
     Panel(
         "Slides ready within 10 minutes",

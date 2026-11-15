@@ -88,7 +88,7 @@
       "id": 3,
       "type": "timeseries",
       "title": "Tiles within 60 ms",
-      "description": "tiles: sli.tile.fetch",
+      "description": "tiles: slo.status",
       "datasource": {
         "type": "loki",
         "uid": "${logs}"
@@ -101,7 +101,7 @@
       },
       "fieldConfig": {
         "defaults": {
-          "unit": "percentunit"
+          "unit": "short"
         },
         "overrides": []
       },
@@ -112,7 +112,7 @@
             "type": "loki",
             "uid": "${logs}"
           },
-          "expr": "sum(count_over_time({service_name=~\".+\"} | event=\"sli.tile.fetch\" | ok=`true` [5m])) / sum(count_over_time({service_name=~\".+\"} | event=\"sli.tile.fetch\" [5m]))"
+          "expr": "max by (slo) ({service_name=~\".+\"} | event=\"slo.status\" | slo=`tile-latency` | unwrap good_permille [15m])"
         }
       ]
     },

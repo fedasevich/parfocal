@@ -19,9 +19,14 @@ from parfocal_api.openapi import PLACEHOLDER_SETTINGS
 from parfocal_api.principals import PlatformOperator
 from parfocal_common.alerting import INGEST_TIME, SLOS, OnCall, SliName
 from parfocal_common.clients import MemoryEmailSender, ProductionFactories
-from parfocal_common.dashboards import FRAMES_EVENT, SLO_STATUS_EVENT
 from parfocal_common.scrubbing import ALLOWED_FIELDS
-from parfocal_common.sli_store import BATCH_PREFIX, AlertStateStore, MemoryBlobs
+from parfocal_common.sli_store import (
+    BATCH_PREFIX,
+    FRAMES_EVENT,
+    SLO_STATUS_EVENT,
+    AlertStateStore,
+    MemoryBlobs,
+)
 
 START = datetime(2026, 11, 15, 9, 0, tzinfo=UTC)
 PAGES = "pages@example.test"

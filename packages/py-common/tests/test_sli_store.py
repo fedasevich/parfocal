@@ -150,7 +150,9 @@ def test_a_batch_whose_delete_failed_is_not_counted_twice() -> None:
     kept = blobs.objects[batch]
     cold_cycle(blobs, MemoryEmailSender(), START + timedelta(minutes=1))
     blobs.objects[batch] = kept
-    state = cold_cycle(blobs, MemoryEmailSender(), START + timedelta(minutes=2))
+    cold_cycle(blobs, MemoryEmailSender(), START + timedelta(minutes=2))
+    blobs.objects[batch] = kept
+    state = cold_cycle(blobs, MemoryEmailSender(), START + timedelta(minutes=3))
     tally = state.counts.tally(AVAILABILITY, START - timedelta(hours=1), START + timedelta(hours=1))
     assert (tally.total, tally.bad) == (2, 2)
     assert batch not in blobs.objects

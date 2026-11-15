@@ -25,13 +25,14 @@ from parfocal_common.alerting import (
     evaluate_slos,
 )
 from parfocal_common.clients import Clients, TelemetryExporter
-from parfocal_common.dashboards import FRAMES_EVENT, SLO_STATUS_EVENT
 from parfocal_common.db import tenant_transaction
 from parfocal_common.jobs import jobs
 from parfocal_common.object_store import ObjectStore
 from parfocal_common.settings import AppEnv, ServiceSettings
 from parfocal_common.sli_store import (
+    FRAMES_EVENT,
     RETAINED,
+    SLO_STATUS_EVENT,
     AlertStateStore,
     CombinedSource,
     ObjectBlobs,
