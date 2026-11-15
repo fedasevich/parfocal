@@ -111,6 +111,26 @@ export function polygonOutlineData(batch: PolygonBatch): BinaryData {
   };
 }
 
+export function startingMidFirstEdge(data: BinaryData): BinaryData {
+  const starts = data.startIndices;
+  const path = data.attributes.getPath;
+  if (starts === undefined || path === undefined || path instanceof Uint32Array) return data;
+  const { size, value } = path;
+  const positions = Float32Array.from(value);
+  for (let ring = 0; ring + 1 < starts.length; ring++) {
+    const from = starts[ring] ?? 0;
+    const to = starts[ring + 1] ?? 0;
+    if (to - from < 3 + loopClosingVertices) continue;
+    for (let axis = 0; axis < size; axis++) {
+      const middle =
+        ((value[from * size + axis] ?? 0) + (value[(from + 1) * size + axis] ?? 0)) / 2;
+      positions[from * size + axis] = middle;
+      positions[(to - 1) * size + axis] = middle;
+    }
+  }
+  return { ...data, attributes: { ...data.attributes, getPath: { ...path, value: positions } } };
+}
+
 export function withCasingColor(data: BinaryData, casing: Rgba): BinaryData {
   const source = data.attributes.getColor;
   if (source === undefined || source instanceof Uint32Array) return data;

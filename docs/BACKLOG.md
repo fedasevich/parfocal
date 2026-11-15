@@ -1704,7 +1704,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on VIEW-037.
   Size: M.
 
-- [ ] VIEW-072 · Draw the first edge of a dashed ring once on Viv
+- [x] VIEW-072 · Draw the first edge of a dashed ring once on Viv
   The shared overlay builder draws the first edge of each dashed AI proposal ring twice at two dash phases on Viv, which is the whole 0.085% left between the WebGPU route and the Viv golden (VIEW-070).
   Done when each dashed ring edge is drawn once, the AI proposals golden is regenerated and the WebGPU route's difference from it falls below 0.02%.
   Depends on VIEW-070.
@@ -3476,7 +3476,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Depends on AIP-000.
   Size: S.
 
-- [ ] AIP-020 · Runtime model registration and model parts in the registry
+- [x] AIP-020 · Runtime model registration and model parts in the registry
   AIP-002 (model registry) keeps the registry in code. A migration moves it into a table so an admin can register a model while the app runs, adds licence fields for lab models connected through their own endpoint (JOBS-005), and adds rows with versions for the separate model parts in ADR 0202's line-up, such as the PathoSAM encoder and decoder.
   Done when an API test registers a model at run time and reads it back with its licence fields, a lab model row carries its licence, and every part in ADR 0202's line-up has a registry row with a version.
   Depends on AIP-002.
@@ -3767,7 +3767,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Refs mock 6 "After learning", [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
   Size: M.
 
-- [ ] AILEARN-004 · Server training rounds per tenant
+- [x] AILEARN-004 · Server training rounds per tenant
   Fine-tune the typer head from pretrained weights on the tenant's reviewed examples, versioned rounds with a latest pointer, rollback by pointer.
   Done when tests run a round on seeded data, promote it through MLEVAL and roll back.
   Size: L.
@@ -3796,6 +3796,18 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Done when a test opens the review viewer, uses smart select and corrects a type, and counts one SAM worker and one model load.
   Depends on AILEARN-008.
   Size: S.
+
+- [x] AILEARN-010 · Collect pooled features of reviewed nuclei for training rounds
+  AILEARN-004's training rounds take pooled features and typer outputs from the caller, because nothing on the server stores them for reviewed nuclei yet. Add a job that gathers them per tenant from the reviewed examples and feeds `run_round`.
+  Done when a test seeds reviewed nuclei, runs the job and a round trains from what it stored, with no PHI in the stored files.
+  Depends on AILEARN-004.
+  Size: M.
+
+- [x] AILEARN-011 · Pool reviewed nuclei on the server from review decisions
+  AILEARN-010 collects pooled features through a pooler the caller passes in, and only the browser pools SAM features today. Add a server pooler in the ML worker and API wiring that turns a tenant's review decisions into the nuclei `collect` takes, and re-pool a nucleus whose outline was reshaped.
+  Done when a local test turns seeded review decisions into stored features through the server pooler with fake weights, a reshaped outline is pooled again, and no cloud job runs in tests.
+  Depends on AILEARN-010.
+  Size: M.
 
 ---
 
@@ -3831,7 +3843,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Done when the harness runs on at least three test slides on demand, before a tumor-map model is promoted ([ADR 0011](adr/0011-hosted-ci-only.md)).
   Size: L.
 
-- [ ] MLEVAL-006 · Promotion gate
+- [x] MLEVAL-006 · Promotion gate
   A model version is promoted to a tier only when it meets thresholds per task, with the evaluation report stored in the registry.
   Done when a test promotion fails on a degraded model and passes on the reference one.
   Size: M.

@@ -227,6 +227,34 @@ def test_a_connected_model_keeps_its_class_map_projects_and_a_sealed_token(
     assert "lab-hovernet" not in caplog.text
 
 
+LAB_LICENCE = {
+    "weights": "Lab weights, internal research use only",
+    "weights_class": "own",
+    "code": "Lab fork of HoVer-Net, MIT",
+    "data": [
+        {"dataset": "Lab sentinel nodes", "licence": "Own data", "licence_class": "own"},
+        {"dataset": "PanNuke", "licence": "CC BY-NC-SA 4.0", "licence_class": "restricted"},
+    ],
+    "source": "Lab model card",
+    "read_on": "2026-11-15",
+}
+
+
+def test_a_connected_model_carries_its_licence(
+    linked: ApiAs, lab: Lab, site: Site, database: str
+) -> None:
+    acting = linked(lab.people["owner"])
+    model = ok(acting.post(MODELS, json=draft(site, lab, licence=LAB_LICENCE)))
+    assert model["licence"] == LAB_LICENCE
+    assert ok(acting.get(f"{MODELS}/{model['id']}"))["licence"] == LAB_LICENCE
+    [(weights_class,)] = owner(
+        database, f"SELECT licence_weights_class FROM lab_models WHERE id = '{model['id']}'"
+    )
+    assert weights_class == "own"
+    bare = ok(acting.post(MODELS, json=draft(site, lab, version="v2.2")))
+    assert bare["licence"] is None
+
+
 def test_a_header_sign_in_sends_the_named_header(linked: ApiAs, lab: Lab, site: Site) -> None:
     site.json(INFER, ANSWER)
     body = draft(site, lab, sign_in="header", header_name="X-Api-Key")

@@ -103,6 +103,7 @@ export function toConnectedModel(draft: LabModelDraft): LabModel {
     class_map: draft.class_map,
     who_can_run: draft.who_can_run,
     project_ids: draft.project_ids,
+    licence: draft.licence ?? null,
     created_at: "2026-11-08T09:00:00Z",
   };
 }

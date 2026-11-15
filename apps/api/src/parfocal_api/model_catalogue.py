@@ -19,6 +19,27 @@ class ModelHost(StrEnum):
     LAB = "lab"
 
 
+class ModelTask(StrEnum):
+    TUMOR_MAP = "tumor-map"
+    DETECTOR = "detector"
+    TYPER = "typer"
+    INTERACTIVE_ENCODER = "interactive-encoder"
+    DECODER = "decoder"
+
+
+class ModelStatus(StrEnum):
+    CANDIDATE = "candidate"
+    VALIDATED = "validated"
+    RETIRED = "retired"
+
+
+class LicenceClass(StrEnum):
+    PERMITTED = "permitted"
+    RESTRICTED = "restricted"
+    UNCONFIRMED = "unconfirmed"
+    OWN = "own"
+
+
 type ModelName = Annotated[
     str,
     StringConstraints(min_length=1, max_length=80, pattern=r"^[A-Za-z0-9][A-Za-z0-9._/-]*$"),

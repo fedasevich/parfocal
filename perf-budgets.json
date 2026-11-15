@@ -113,7 +113,7 @@
       "rttMs": 200,
       "environment": "Chrome headless with SwiftShader on a GitHub hosted ubuntu runner, 1280 x 720, latency proxy at 200 ms RTT",
       "check": "packages/viewer-engine/browser/budgets.spec.ts",
-      "adr": "docs/adr/XXXX-viewer-performance-budgets.md",
+      "adr": "docs/adr/0317-viewer-performance-budgets.md",
       "result": "docs/results/2026-11-15-viewer-performance-budgets.md"
     },
     {
@@ -158,7 +158,7 @@
       "rttMs": 0,
       "environment": "Chrome headless with SwiftShader, 1280 x 720, latency proxy at 0 ms RTT",
       "check": "packages/viewer-engine/browser/budgets.spec.ts",
-      "adr": "docs/adr/XXXX-viewer-performance-budgets.md",
+      "adr": "docs/adr/0317-viewer-performance-budgets.md",
       "result": "docs/results/2026-11-15-viewer-performance-budgets.md",
       "todo": "Record the hosted-runner number from the first browser CI run and tighten the headroom."
     },
@@ -171,7 +171,7 @@
       "limit": 88050000,
       "environment": "Chrome headless with SwiftShader, 1280 x 720, six decode workers, latency proxy at 0 ms RTT",
       "check": "packages/viewer-engine/browser/budgets.spec.ts",
-      "adr": "docs/adr/XXXX-viewer-performance-budgets.md",
+      "adr": "docs/adr/0317-viewer-performance-budgets.md",
       "result": "docs/results/2026-11-15-viewer-performance-budgets.md"
     },
     {
@@ -186,7 +186,7 @@
       "rttMs": 0,
       "environment": "Chrome headless with SwiftShader, loopback server, no latency proxy",
       "check": "packages/viewer-engine/browser/decode-budget.spec.ts",
-      "adr": "docs/adr/XXXX-viewer-performance-budgets.md",
+      "adr": "docs/adr/0317-viewer-performance-budgets.md",
       "result": "docs/results/2026-11-15-viewer-performance-budgets.md",
       "todo": "Record the hosted-runner number from the first browser CI run and tighten the headroom."
     },
@@ -199,7 +199,7 @@
       "limit": 4,
       "environment": "Chrome headless with SwiftShader, 1280 x 720, latency proxy at every RTT of the matrix",
       "check": "packages/viewer-engine/browser/budgets.spec.ts",
-      "adr": "docs/adr/XXXX-viewer-performance-budgets.md",
+      "adr": "docs/adr/0317-viewer-performance-budgets.md",
       "result": "docs/results/2026-11-15-viewer-performance-budgets.md"
     },
     {
@@ -211,7 +211,7 @@
       "limit": 4308000,
       "environment": "Chrome headless with SwiftShader, 1280 x 720, latency proxy at every RTT of the matrix",
       "check": "packages/viewer-engine/browser/budgets.spec.ts",
-      "adr": "docs/adr/XXXX-viewer-performance-budgets.md",
+      "adr": "docs/adr/0317-viewer-performance-budgets.md",
       "result": "docs/results/2026-11-15-viewer-performance-budgets.md"
     },
     {
@@ -226,7 +226,7 @@
       "rttMs": 200,
       "environment": "Chrome headless with SwiftShader, 1280 x 720, latency proxy at 200 ms RTT",
       "check": "packages/viewer-engine/browser/budgets.spec.ts",
-      "adr": "docs/adr/XXXX-viewer-performance-budgets.md",
+      "adr": "docs/adr/0317-viewer-performance-budgets.md",
       "result": "docs/results/2026-11-15-viewer-performance-budgets.md",
       "todo": "Record the hosted-runner number from the first browser CI run and tighten the headroom."
     },
@@ -239,7 +239,7 @@
       "limit": 8,
       "environment": "Chrome headless with SwiftShader, 1280 x 720, latency proxy at every RTT of the matrix",
       "check": "packages/viewer-engine/browser/budgets.spec.ts",
-      "adr": "docs/adr/XXXX-viewer-performance-budgets.md",
+      "adr": "docs/adr/0317-viewer-performance-budgets.md",
       "result": "docs/results/2026-11-15-viewer-performance-budgets.md"
     },
     {
@@ -251,7 +251,7 @@
       "limit": 8808000,
       "environment": "Chrome headless with SwiftShader, 1280 x 720, latency proxy at every RTT of the matrix",
       "check": "packages/viewer-engine/browser/budgets.spec.ts",
-      "adr": "docs/adr/XXXX-viewer-performance-budgets.md",
+      "adr": "docs/adr/0317-viewer-performance-budgets.md",
       "result": "docs/results/2026-11-15-viewer-performance-budgets.md"
     },
     {
@@ -266,7 +266,7 @@
       "rttMs": 200,
       "environment": "Chrome headless with SwiftShader, 1280 x 720, latency proxy at 200 ms RTT",
       "check": "packages/viewer-engine/browser/budgets.spec.ts",
-      "adr": "docs/adr/XXXX-viewer-performance-budgets.md",
+      "adr": "docs/adr/0317-viewer-performance-budgets.md",
       "result": "docs/results/2026-11-15-viewer-performance-budgets.md",
       "todo": "Record the hosted-runner number from the first browser CI run and tighten the headroom."
     },
@@ -282,7 +282,7 @@
       "rttMs": 0,
       "environment": "Chrome headless with SwiftShader, 1280 x 720, latency proxy at 0 ms RTT",
       "check": "packages/viewer-engine/browser/budgets.spec.ts",
-      "adr": "docs/adr/XXXX-viewer-performance-budgets.md",
+      "adr": "docs/adr/0317-viewer-performance-budgets.md",
       "result": "docs/results/2026-11-15-viewer-performance-budgets.md",
       "todo": "Record the hosted-runner number from the first browser CI run and tighten the headroom."
     },
@@ -295,7 +295,7 @@
       "limit": 74780000,
       "environment": "Chrome headless with SwiftShader, 1280 x 720, six decode workers, latency proxy at 0 ms RTT",
       "check": "packages/viewer-engine/browser/budgets.spec.ts",
-      "adr": "docs/adr/XXXX-viewer-performance-budgets.md",
+      "adr": "docs/adr/0317-viewer-performance-budgets.md",
       "result": "docs/results/2026-11-15-viewer-performance-budgets.md"
     },
     {
@@ -310,7 +310,7 @@
       "rttMs": 0,
       "environment": "Chrome headless with SwiftShader, loopback server, no latency proxy",
       "check": "packages/viewer-engine/browser/decode-budget.spec.ts",
-      "adr": "docs/adr/XXXX-viewer-performance-budgets.md",
+      "adr": "docs/adr/0317-viewer-performance-budgets.md",
       "result": "docs/results/2026-11-15-viewer-performance-budgets.md",
       "todo": "Record the hosted-runner number from the first browser CI run and tighten the headroom."
     },
@@ -323,7 +323,7 @@
       "limit": 8,
       "environment": "Chrome headless with SwiftShader, 1280 x 720, latency proxy at every RTT of the matrix",
       "check": "packages/viewer-engine/browser/budgets.spec.ts",
-      "adr": "docs/adr/XXXX-viewer-performance-budgets.md",
+      "adr": "docs/adr/0317-viewer-performance-budgets.md",
       "result": "docs/results/2026-11-15-viewer-performance-budgets.md"
     },
     {
@@ -335,7 +335,7 @@
       "limit": 8382000,
       "environment": "Chrome headless with SwiftShader, 1280 x 720, latency proxy at every RTT of the matrix",
       "check": "packages/viewer-engine/browser/budgets.spec.ts",
-      "adr": "docs/adr/XXXX-viewer-performance-budgets.md",
+      "adr": "docs/adr/0317-viewer-performance-budgets.md",
       "result": "docs/results/2026-11-15-viewer-performance-budgets.md"
     },
     {
@@ -350,7 +350,7 @@
       "rttMs": 200,
       "environment": "Chrome headless with SwiftShader, 1280 x 720, latency proxy at 200 ms RTT",
       "check": "packages/viewer-engine/browser/budgets.spec.ts",
-      "adr": "docs/adr/XXXX-viewer-performance-budgets.md",
+      "adr": "docs/adr/0317-viewer-performance-budgets.md",
       "result": "docs/results/2026-11-15-viewer-performance-budgets.md",
       "todo": "Record the hosted-runner number from the first browser CI run and tighten the headroom."
     },
@@ -363,7 +363,7 @@
       "limit": 4,
       "environment": "Chrome headless with SwiftShader, 1280 x 720, latency proxy at every RTT of the matrix",
       "check": "packages/viewer-engine/browser/budgets.spec.ts",
-      "adr": "docs/adr/XXXX-viewer-performance-budgets.md",
+      "adr": "docs/adr/0317-viewer-performance-budgets.md",
       "result": "docs/results/2026-11-15-viewer-performance-budgets.md"
     },
     {
@@ -375,7 +375,7 @@
       "limit": 5033000,
       "environment": "Chrome headless with SwiftShader, 1280 x 720, latency proxy at every RTT of the matrix",
       "check": "packages/viewer-engine/browser/budgets.spec.ts",
-      "adr": "docs/adr/XXXX-viewer-performance-budgets.md",
+      "adr": "docs/adr/0317-viewer-performance-budgets.md",
       "result": "docs/results/2026-11-15-viewer-performance-budgets.md"
     },
     {
@@ -390,7 +390,7 @@
       "rttMs": 200,
       "environment": "Chrome headless with SwiftShader, 1280 x 720, latency proxy at 200 ms RTT",
       "check": "packages/viewer-engine/browser/budgets.spec.ts",
-      "adr": "docs/adr/XXXX-viewer-performance-budgets.md",
+      "adr": "docs/adr/0317-viewer-performance-budgets.md",
       "result": "docs/results/2026-11-15-viewer-performance-budgets.md",
       "todo": "Record the hosted-runner number from the first browser CI run and tighten the headroom."
     },
@@ -406,7 +406,7 @@
       "rttMs": 0,
       "environment": "Chrome headless with SwiftShader, 1280 x 720, latency proxy at 0 ms RTT",
       "check": "packages/viewer-engine/browser/budgets.spec.ts",
-      "adr": "docs/adr/XXXX-viewer-performance-budgets.md",
+      "adr": "docs/adr/0317-viewer-performance-budgets.md",
       "result": "docs/results/2026-11-15-viewer-performance-budgets.md",
       "todo": "Record the hosted-runner number from the first browser CI run and tighten the headroom."
     },
@@ -419,7 +419,7 @@
       "limit": 76190000,
       "environment": "Chrome headless with SwiftShader, 1280 x 720, six decode workers, latency proxy at 0 ms RTT",
       "check": "packages/viewer-engine/browser/budgets.spec.ts",
-      "adr": "docs/adr/XXXX-viewer-performance-budgets.md",
+      "adr": "docs/adr/0317-viewer-performance-budgets.md",
       "result": "docs/results/2026-11-15-viewer-performance-budgets.md"
     },
     {
@@ -434,7 +434,7 @@
       "rttMs": 0,
       "environment": "Chrome headless with SwiftShader, loopback server, no latency proxy",
       "check": "packages/viewer-engine/browser/decode-budget.spec.ts",
-      "adr": "docs/adr/XXXX-viewer-performance-budgets.md",
+      "adr": "docs/adr/0317-viewer-performance-budgets.md",
       "result": "docs/results/2026-11-15-viewer-performance-budgets.md",
       "todo": "Record the hosted-runner number from the first browser CI run and tighten the headroom."
     },
@@ -447,7 +447,7 @@
       "limit": 20.0,
       "environment": "The owner's Mac, Chrome headed on the hardware GPU, 1280 x 720 at a device pixel ratio of 1, loopback server",
       "check": "packages/viewer-engine/frame-bench/frame-budgets.spec.ts",
-      "adr": "docs/adr/XXXX-viewer-performance-budgets.md",
+      "adr": "docs/adr/0317-viewer-performance-budgets.md",
       "result": "docs/results/2026-11-15-viewer-performance-budgets.md"
     },
     {
@@ -459,7 +459,7 @@
       "limit": 20.0,
       "environment": "The owner's Mac, Chrome headed on the hardware GPU, 1280 x 720 at a device pixel ratio of 1, loopback server",
       "check": "packages/viewer-engine/frame-bench/frame-budgets.spec.ts",
-      "adr": "docs/adr/XXXX-viewer-performance-budgets.md",
+      "adr": "docs/adr/0317-viewer-performance-budgets.md",
       "result": "docs/results/2026-11-15-viewer-performance-budgets.md"
     },
     {
@@ -471,7 +471,7 @@
       "limit": 1.35,
       "environment": "The owner's Mac, Chrome headed on the hardware GPU, 1280 x 720 at a device pixel ratio of 1, loopback server",
       "check": "packages/viewer-engine/frame-bench/frame-budgets.spec.ts",
-      "adr": "docs/adr/XXXX-viewer-performance-budgets.md",
+      "adr": "docs/adr/0317-viewer-performance-budgets.md",
       "result": "docs/results/2026-11-15-viewer-performance-budgets.md"
     },
     {
@@ -483,7 +483,7 @@
       "limit": 1.35,
       "environment": "The owner's Mac, Chrome headed on the hardware GPU, 1280 x 720 at a device pixel ratio of 1, loopback server",
       "check": "packages/viewer-engine/frame-bench/frame-budgets.spec.ts",
-      "adr": "docs/adr/XXXX-viewer-performance-budgets.md",
+      "adr": "docs/adr/0317-viewer-performance-budgets.md",
       "result": "docs/results/2026-11-15-viewer-performance-budgets.md"
     },
     {
@@ -495,7 +495,7 @@
       "limit": 1.35,
       "environment": "The owner's Mac, Chrome headed on the hardware GPU, 1280 x 720 at a device pixel ratio of 1, loopback server",
       "check": "packages/viewer-engine/frame-bench/frame-budgets.spec.ts",
-      "adr": "docs/adr/XXXX-viewer-performance-budgets.md",
+      "adr": "docs/adr/0317-viewer-performance-budgets.md",
       "result": "docs/results/2026-11-15-viewer-performance-budgets.md"
     },
     {
@@ -522,7 +522,7 @@
       "limit": 20.0,
       "environment": "The owner's Mac, Chrome headed on the hardware GPU, 1280 x 720 at a device pixel ratio of 1, loopback server",
       "check": "packages/viewer-engine/frame-bench/frame-budgets.spec.ts",
-      "adr": "docs/adr/XXXX-viewer-performance-budgets.md",
+      "adr": "docs/adr/0317-viewer-performance-budgets.md",
       "result": "docs/results/2026-11-15-viewer-performance-budgets.md"
     },
     {
