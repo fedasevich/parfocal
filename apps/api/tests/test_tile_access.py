@@ -21,6 +21,7 @@ from parfocal_api.tile_access import (
     REFRESH_GRACE_SECONDS,
     TOKEN_SECONDS,
     sign_capability,
+    verified_claims,
     viewer_of,
 )
 from parfocal_common.ingest import original_key, restricted_ranges_key
@@ -257,6 +258,29 @@ def test_a_previous_token_that_does_not_continue_the_open_records_a_new_one(
     before = len(opens(database, lab, lab.bare))
     mint(lab, "colleague", lab.bare, previous=held)
     assert len(opens(database, lab, lab.bare)) == before + 1
+
+
+@pytest.mark.db
+def test_a_token_signed_with_the_previous_key_continues_the_open_while_it_is_listed(
+    database: str, lab: Lab
+) -> None:
+    newer = base64.b64encode(b"n" * 32).decode()
+    held = mint(lab, "owner", lab.bare)
+    configured = lab.api.app.settings
+    try:
+        lab.api.app.settings = configured.model_copy(
+            update={"tile_token_key": SecretStr(f"{newer},{SECRET}")}
+        )
+        before = len(opens(database, lab, lab.bare))
+        renewed = mint(lab, "owner", lab.bare, previous=held)
+        assert len(opens(database, lab, lab.bare)) == before
+        assert verified_claims(newer, renewed) is not None
+        assert verified_claims(SECRET, renewed) is None
+        lab.api.app.settings = configured.model_copy(update={"tile_token_key": SecretStr(newer)})
+        mint(lab, "owner", lab.bare, previous=held)
+        assert len(opens(database, lab, lab.bare)) == before + 1
+    finally:
+        lab.api.app.settings = configured
 
 
 @pytest.mark.db

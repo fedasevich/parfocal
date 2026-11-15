@@ -19,7 +19,7 @@ from parfocal_api.problems import NotFoundError, ProblemError
 from parfocal_api.project_access import require_slide_reading
 from parfocal_api.restricted_images import sees_restricted
 from parfocal_api.tables import PrivacyMode, projects, slides
-from parfocal_api.token_keys import decoded_key, usable_secret
+from parfocal_api.token_keys import decoded_key, usable_keys
 from parfocal_api.uploads import Settings
 from parfocal_common.ingest import RESTRICTED_RANGES_NAME, folder_of, slide_prefix
 from parfocal_common.object_store import ObjectStore, StorageError
@@ -91,12 +91,20 @@ def viewer_of(actor: Actor) -> str:
     return base64url(hashlib.sha256(identity.encode()).digest()[:12])
 
 
+def claims_under_any(keys: list[str], token: str) -> dict[str, Any] | None:
+    for secret in keys:
+        claims = verified_claims(secret, token)
+        if claims is not None:
+            return claims
+    return None
+
+
 def continues_an_open(
-    secret: str, previous: str | None, expected: dict[str, Any], now: int
+    keys: list[str], previous: str | None, expected: dict[str, Any], now: int
 ) -> bool:
     if previous is None:
         return False
-    claims = verified_claims(secret, previous)
+    claims = claims_under_any(keys, previous)
     if claims is None or not isinstance(claims.get("e"), int):
         return False
     same = all(claims.get(name) == value for name, value in expected.items())
@@ -176,8 +184,8 @@ async def get_tile_access(
     )
     if row.original_key is None or row.file_bytes is None:
         raise SlideFileNotFoundError
-    secret = usable_secret(settings.tile_token_key)
-    if secret is None:
+    keys = usable_keys(settings.tile_token_key)
+    if keys is None:
         raise TileAccessNotConfiguredError
     response.headers["Cache-Control"] = "private, no-store"
     actor = actor_of(principal)
@@ -188,7 +196,7 @@ async def get_tile_access(
         "s": str(slide_id),
         "a": viewer_of(actor),
     }
-    if not continues_an_open(secret, previous_tile_token, viewer, now):
+    if not continues_an_open(keys, previous_tile_token, viewer, now):
         await record(
             connection,
             actor,
@@ -216,7 +224,7 @@ async def get_tile_access(
     if folder != slide_prefix(row.tenant_id, slide_id):
         claims["p"] = folder
     return TileAccess(
-        token=sign_capability(secret, claims),
+        token=sign_capability(keys[0], claims),
         expires_at=datetime.fromtimestamp(expires, UTC),
         lifetime_seconds=TOKEN_SECONDS,
         base_path=f"/tiles/{slide_id}/",

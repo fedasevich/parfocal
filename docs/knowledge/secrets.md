@@ -13,9 +13,9 @@ Deployed code reads secrets only from its environment, which Modal fills from th
 | Secret | Store | Written by | Rotation |
 |---|---|---|---|
 | `MASTER_KEYS` | Modal `parfocal-api-keys` | bootstrap, once | [Master keyring](#master-keyring), no downtime |
-| `SESSION_KEY` | Modal `parfocal-api-keys` | bootstrap, once | Replace and redeploy. Sealed session tokens fail to open, so everyone is signed out once |
-| `TILE_TOKEN_KEY` | Modal `parfocal-api-keys` and the Worker | bootstrap, once | [Shared token keys](#shared-token-keys) |
-| `ROOM_TOKEN_KEY` | Modal `parfocal-api-keys` and the Worker | bootstrap, once | [Shared token keys](#shared-token-keys) |
+| `SESSION_KEY` | Modal `parfocal-api-keys` | bootstrap, once | [Session and token key overlap](#session-and-token-key-overlap), no sign-out |
+| `TILE_TOKEN_KEY` | Modal `parfocal-api-keys` and the Worker | bootstrap, once | [Session and token key overlap](#session-and-token-key-overlap), no broken viewer |
+| `ROOM_TOKEN_KEY` | Modal `parfocal-api-keys` and the Worker | bootstrap, once | [Session and token key overlap](#session-and-token-key-overlap), no dropped room |
 | `DATABASE_URL` | Modal `parfocal-api-keys` | bootstrap, once | [Database role password](#database-role-password) |
 | `ZITADEL_CLIENT_SECRET` | Modal `parfocal-api-config` | bootstrap from the OpenTofu output | Regenerate the client secret through the identity module, rerun bootstrap, which always rewrites the config secret, then redeploy |
 | `STORAGE_SECRET_ACCESS_KEY` | Modal `parfocal-api-config` | bootstrap from `R2_SECRET_ACCESS_KEY` | Make a new R2 token, rerun bootstrap with it in the shell, redeploy, update the GitHub copies, then delete the old token |
@@ -49,9 +49,15 @@ Bootstrap writes `parfocal-api-keys` only when it is missing, and it then genera
 
 Removing `k1` before step 3 passes locks every tenant out of its encrypted fields until `k1` is put back. Audit exports signed before the rotation carry the key id `k1`, and `GET` on the audit signing keys stops listing its public key once `k1` is gone. TODO: keep the old public key with the audit evidence before step 4.
 
-## Shared token keys
+## Session and token key overlap
 
-The API signs tile and room tokens and the Worker checks them, each with a single key. Rotating means writing the new key to the Worker and to `parfocal-api-keys`, then redeploying the API. Tokens signed in between fail until the viewer asks for a fresh one, at most 10 minutes for tiles and 5 minutes for rooms. SEC-049 (an overlap window for session and token keys) lets both sides accept the old key for a while.
+`SESSION_KEY`, `TILE_TOKEN_KEY` and `ROOM_TOKEN_KEY` each take one key or a comma-separated list, newest first, as SEC-049 (an overlap window for session and token keys) built. The first key seals sessions and signs tile tokens, room tokens and the API's publish calls to the Worker. Any listed key opens or verifies. One bad entry turns the whole value off: the API refuses to start on a bad `SESSION_KEY` and answers 503 for tile and room access, and the Worker answers 503 `signing-key-not-configured`. A single key works as before. `apps/api/tests/test_token_keys.py`, `test_tile_access.py`, `test_realtime.py` and `apps/edge/test/tiles.test.ts` and `rooms.test.ts` show an old-key session or token opening while it is listed and failing once it is removed.
+
+1. For a token key, write `new,old` to the Worker first, then to `parfocal-api-keys`, and redeploy the API. In this order the Worker already knows the new key when the API starts signing with it. `SESSION_KEY` lives only in the API.
+2. Wait out the longest lifetime signed with `old`: 10 minutes for tile tokens, 5 minutes for room tokens. For `SESSION_KEY`, a session is sealed again with the first key whenever its access token refreshes, but an idle one keeps `old` until it ends, so wait the session lifetime, 12 hours by default.
+3. Write `new` alone to `parfocal-api-keys`, redeploy the API, then write it to the Worker.
+
+Removing `old` early drops only what it signed: viewers ask for a fresh tile or room token, and idle sessions sign in again. TODO: untried against the deployed Worker and API.
 
 ## Database role password
 

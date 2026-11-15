@@ -7,6 +7,7 @@ import {
   signCapability,
   signingKey,
   verifyCapability,
+  WeakSigningKeyError,
 } from "../src/capability.ts";
 import {
   consoleTileLog,
@@ -679,5 +680,39 @@ describe("the same-origin data path", () => {
     assert.equal(response.status, 206);
     assert.equal(response.headers.get("Access-Control-Allow-Origin"), null);
     assert.equal(response.headers.get("Cross-Origin-Resource-Policy"), "same-origin");
+  });
+});
+
+describe("a tile key overlap window", () => {
+  function readWith(key: string, token: string): Promise<Response> {
+    const env = { SLIDES: lab() as unknown as R2Bucket, TILE_TOKEN_KEY: key } satisfies TileEnv;
+    return handleTiles(
+      new Request(`https://parfocal.test${ORIGINAL}`, {
+        headers: { Authorization: `Bearer ${token}`, Range: "bytes=0-9" },
+      }),
+      env,
+      () => NOW,
+      () => undefined,
+    );
+  }
+
+  test("a token signed with the previous key opens while it is listed and stops once removed", async () => {
+    const previous = await tokenFor({}, SECRET);
+    const current = await tokenFor({}, OTHER_SECRET);
+    assert.equal((await readWith(`${OTHER_SECRET},${SECRET}`, previous)).status, 206);
+    assert.equal((await readWith(`${OTHER_SECRET}, ${SECRET}`, current)).status, 206);
+    const removed = await readWith(OTHER_SECRET, previous);
+    assert.equal(removed.status, 401);
+    assert.equal(await code(removed), "tile-token-invalid");
+  });
+
+  test("an expired token signed with the previous key still reads as expired", async () => {
+    const expired = await tokenFor({ expires: NOW }, SECRET);
+    const response = await readWith(`${OTHER_SECRET},${SECRET}`, expired);
+    assert.equal(await code(response), "tile-token-expired");
+  });
+
+  test("a weak key anywhere in the list is refused", async () => {
+    await assert.rejects(readWith(`${SECRET},change-me`, await tokenFor()), WeakSigningKeyError);
   });
 });

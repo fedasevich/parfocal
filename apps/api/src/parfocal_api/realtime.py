@@ -15,7 +15,7 @@ from pydantic import AnyHttpUrl, BaseModel, Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from parfocal_api.settings import ApiSettings
-from parfocal_api.token_keys import decoded_key, usable_secret
+from parfocal_api.token_keys import decoded_key, usable_keys
 
 PUBLISH_HEADER = "X-Room-Signature"
 MAX_PUBLISH_ROOMS = 100
@@ -124,10 +124,10 @@ class RealtimeSettings(BaseSettings):
 
 
 def realtime_for(settings: ApiSettings | RealtimeSettings, http: httpx2.AsyncClient) -> Realtime:
-    secret = usable_secret(settings.room_token_key)
-    if secret is None or settings.realtime_internal_url is None:
+    keys = usable_keys(settings.room_token_key)
+    if keys is None or settings.realtime_internal_url is None:
         return NoRealtime()
-    return EdgeRealtime(str(settings.realtime_internal_url).rstrip("/"), secret, http)
+    return EdgeRealtime(str(settings.realtime_internal_url).rstrip("/"), keys[0], http)
 
 
 def realtime_of(request: Request) -> Realtime:

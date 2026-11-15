@@ -3,8 +3,8 @@ import {
   blankedBytes,
   type Capability,
   overlapsRestricted,
-  signingKey,
   verifyCapability,
+  verifyingKeys,
 } from "#capability.ts";
 
 export type TileEnv = {
@@ -39,17 +39,6 @@ const BASE_HEADERS = {
   "Cross-Origin-Resource-Policy": "same-origin",
   "X-Content-Type-Options": "nosniff",
 };
-
-const keys = new Map<string, Promise<CryptoKey>>();
-
-function keyFor(secret: string): Promise<CryptoKey> {
-  let key = keys.get(secret);
-  if (key === undefined) {
-    key = signingKey(secret);
-    keys.set(secret, key);
-  }
-  return key;
-}
 
 export function problem(status: number, code: string, title: string): Response {
   return Response.json(
@@ -280,7 +269,7 @@ export async function handleTiles(
   if (token === null) {
     return problem(401, "tile-token-missing", "A tile request needs a capability token");
   }
-  const access = await verifyCapability(token, await keyFor(env.TILE_TOKEN_KEY), now());
+  const access = await verifyCapability(token, await verifyingKeys(env.TILE_TOKEN_KEY), now());
   if (!access.ok) {
     return access.reason === "expired"
       ? problem(401, "tile-token-expired", "The capability token has expired")

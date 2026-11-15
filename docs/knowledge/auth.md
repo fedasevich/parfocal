@@ -26,7 +26,7 @@ The next login shows an account picker with the previous user. Choosing it asks 
 
 Login creates the `users` row on first sign-in and later only refreshes its email, which it stores only when the ID token says `email_verified` is true, so a profile edited in the app is never overwritten by the IdP. The session's `active_tenant_id` starts at the user's last workspace if they are still a member, or their only workspace, and `PUT /api/me/workspace` changes it. `authenticate` returns a `MemberPrincipal` only while the membership exists.
 
-`SESSION_KEY` is 32 random bytes in URL-safe base64. Changing it signs everyone out and has no other effect.
+`SESSION_KEY` is 32 random bytes in URL-safe base64, or a comma-separated list of them, newest first. The first seals and any opens, so prepending a new key signs nobody out, and removing the old one signs out only sessions not refreshed since ([knowledge/secrets.md](secrets.md#session-and-token-key-overlap)).
 
 ## Running the login end to end
 
