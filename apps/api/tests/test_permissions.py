@@ -108,6 +108,7 @@ from parfocal_ingest.workflow import INGEST
 
 OPEN_OPERATIONS = {
     "getHealth": "public",
+    "getPlatformStatus": "public",
     "getSharedReport": "public",
     **dict.fromkeys(
         (
@@ -146,6 +147,8 @@ OPEN_OPERATIONS = {
     "createOrganisation": "platform",
     "registerModel": "platform",
     "promoteRegisteredModel": "platform",
+    "startMaintenance": "platform",
+    "endMaintenance": "platform",
     "listOrganisations": "platform",
     "createTenant": "platform",
     "listTenants": "platform",

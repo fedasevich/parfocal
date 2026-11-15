@@ -2552,6 +2552,20 @@ registered_models = Table(
 )
 
 
+maintenance = Table(
+    "maintenance",
+    metadata,
+    Column("id", SmallInteger, primary_key=True, autoincrement=False, info=OPERATIONAL),
+    Column("message", String(300), nullable=True, info=OPERATIONAL),
+    Column("started_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
+    Column("expected_end_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
+    *timestamps(),
+    CheckConstraint("id = 1", name="single_row"),
+    CheckConstraint("(message IS NULL) = (started_at IS NULL)", name="started_at"),
+    CheckConstraint("expected_end_at IS NULL OR started_at IS NOT NULL", name="expected_end_at"),
+)
+
+
 lab_models = Table(
     "lab_models",
     metadata,

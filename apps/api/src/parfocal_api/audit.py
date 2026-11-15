@@ -148,6 +148,8 @@ class AuditAction(StrEnum):
     LAB_MODEL_CONNECTED = "lab-model.connected"
     MODEL_REGISTERED = "model.registered"
     MODEL_EVALUATED = "model.evaluated"
+    MAINTENANCE_STARTED = "maintenance.started"
+    MAINTENANCE_ENDED = "maintenance.ended"
     RETENTION_POLICY_SET = "retention.policy-set"
     RETENTION_PURGED = "retention.purged"
     LEGAL_HOLD_PLACED = "legal-hold.placed"
@@ -204,6 +206,7 @@ class AuditTarget(StrEnum):
     CLINICAL_REPORT = "clinical-report"
     LAB_MODEL = "lab-model"
     REGISTERED_MODEL = "registered-model"
+    MAINTENANCE = "maintenance"
     FEEDBACK = "feedback"
     ACCESS_REQUEST = "access-request"
 

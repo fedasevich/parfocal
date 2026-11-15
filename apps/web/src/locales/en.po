@@ -2317,6 +2317,10 @@ msgstr "<0>Evaluation v{0} · draft</0>, started from v{1}"
 msgid "<0>Going to area 3</0> · {nextMm} mm"
 msgstr "<0>Going to area 3</0> · {nextMm} mm"
 
+#: src/shell/maintenance-banner.tsx
+msgid "<0>Maintenance.</0> Changes are paused and you can still read everything."
+msgstr "<0>Maintenance.</0> Changes are paused and you can still read everything."
+
 #. placeholder {0}: batch.storage.needed_gb
 #. placeholder {1}: batch.storage.left_gb
 #. placeholder {2}: batch.storage.allowance_gb
@@ -6588,6 +6592,10 @@ msgstr "Example: {0}"
 #: ../../packages/ui/src/components/icon.tsx
 msgid "Expand"
 msgstr "Expand"
+
+#: src/shell/maintenance-banner.tsx
+msgid "Expected back at {until}."
+msgstr "Expected back at {until}."
 
 #: ../../packages/ui/src/components/annotate-task.tsx
 #: src/screens/annotate-task/new-annotate-task.tsx
