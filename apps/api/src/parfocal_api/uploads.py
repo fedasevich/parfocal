@@ -25,7 +25,16 @@ from parfocal_api.result_imports import (
 )
 from parfocal_api.result_sets import require_uploading
 from parfocal_api.settings import ApiSettings
-from parfocal_api.tables import UploadStatus, cases, job_steps, jobs, projects, slides, uploads
+from parfocal_api.tables import (
+    UploadStatus,
+    cases,
+    job_steps,
+    jobs,
+    projects,
+    result_sets,
+    slides,
+    uploads,
+)
 from parfocal_common.ingest import (
     NOTICES,
     Failure,
@@ -569,7 +578,26 @@ async def find_sent_uploads(
             .limit(SENT_LIMIT)
         )
     ).all()
-    return [await state_of(connection, row) for row in rows]
+    return [await state_of(connection, row) for row in rows if await still_held(connection, row)]
+
+
+async def still_held(connection: AsyncConnection, row: Any) -> bool:
+    if row.kind == UploadKind.RESULT:
+        if row.result_set_id is None:
+            return True
+        kept = await connection.scalar(
+            select(result_sets.c.id).where(
+                result_sets.c.id == row.result_set_id, result_sets.c.deleted_at.is_(None)
+            )
+        )
+        return kept is not None
+    slide = (
+        await connection.execute(select(slides.c.deleted_at).where(slides.c.upload_id == row.id))
+    ).one_or_none()
+    if slide is not None:
+        return slide.deleted_at is None
+    status = await connection.scalar(select(jobs.c.status).where(jobs.c.id == row.job_id))
+    return status != JobStatus.DONE
 
 
 def failed(reason: str) -> tuple[IngestStatus, str | None, str | None]:

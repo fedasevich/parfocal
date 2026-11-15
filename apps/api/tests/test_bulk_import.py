@@ -271,3 +271,19 @@ def test_slides_and_results_land_in_cases_named_by_their_folders_and_files(
         [Outcome.ALREADY_IN_CASE] * 2 + [Outcome.ALREADY_IMPORTED] * 2
     )
     assert uploads_in(database, lab.project) == 4
+
+    owner(database, "UPDATE slides SET deleted_at = now() WHERE label = 'S26-302_B1'")
+    owner(
+        database,
+        "UPDATE result_sets SET deleted_at = now() FROM slides "
+        "WHERE slides.id = result_sets.slide_id AND slides.label = 'A1_HE'",
+    )
+    with httpx2.Client(timeout=30) as storage:
+        deleted = import_named(api(lab.lead), storage, lab.project, folder)
+    assert sorted((item.file, item.outcome) for item in deleted.files) == [
+        ("pilot/S26-301/A1_HE.geojson", Outcome.UPLOADED),
+        ("pilot/S26-301/A1_HE.tiff", Outcome.ALREADY_IN_CASE),
+        ("pilot/S26-302_B1.geojson", Outcome.UPLOADED),
+        ("pilot/S26-302_B1.tiff", Outcome.UPLOADED),
+    ]
+    assert uploads_in(database, lab.project) == 7
