@@ -200,9 +200,9 @@ OPS-007 (alerting and on-call) set four SLOs in [ADR 0340](adr/0340-slos-and-ale
 
 Your choice:
 
-### 112. How often the alert cycle runs in production
+### 113. How often the alert cycle runs in production
 
-OPS-006 (observability stack) built `python -m parfocal_api.alert_cycle`, which folds SLI counts from the bucket, pages on burn and checks for audit events that cross workspaces ([ADR 0342](adr/0342-sli-counts-in-the-slide-bucket-and-otlp-logs-over-http.md), SLI counts in the slide bucket). Nothing runs it yet, because the deploy has no cron by design. Reading the bucket costs almost nothing, but each run that reads jobs and the audit trail wakes Neon, and Neon stays awake about 5 minutes after each wake.
+OPS-006 (observability stack) built `python -m parfocal_api.alert_cycle`, which folds SLI counts from the bucket, pages on burn and checks for audit events that cross workspaces ([ADR 0343](adr/0343-sli-counts-in-the-slide-bucket-and-otlp-logs-over-http.md), SLI counts in the slide bucket). Nothing runs it yet, because the deploy has no cron by design. Reading the bucket costs almost nothing, but each run that reads jobs and the audit trail wakes Neon, and Neon stays awake about 5 minutes after each wake.
 
 - **A. A Modal cron every 5 minutes that reads only the bucket, plus the job and audit checks once an hour. About 8,600 short runs a month, estimated at a few cents of Modal compute (not measured, TODO), and Neon wakes about 720 times a month. A stuck ingest or an audit crossing can wait up to an hour before mail (recommended).**
 - B. Everything every 5 minutes. Fastest mail, but Neon stays awake around the clock, about 180 compute hours a month, near the free plan limit.

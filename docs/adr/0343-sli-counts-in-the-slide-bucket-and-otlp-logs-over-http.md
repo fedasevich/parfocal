@@ -1,4 +1,4 @@
-# 0342. SLI counts and alert state live in the slide bucket, and telemetry leaves as OTLP logs over plain HTTP
+# 0343. SLI counts and alert state live in the slide bucket, and telemetry leaves as OTLP logs over plain HTTP
 
 - Date: 2026-11-15
 - Status: Accepted
