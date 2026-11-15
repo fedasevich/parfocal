@@ -30,7 +30,7 @@ import { type ViewerEngine, viewArea } from "./viewer-engine.ts";
 
 const watchMs = 2000;
 
-type Phase = "idle" | "starting" | "running" | "joining" | "joined" | "ended" | "failed";
+type Phase = "idle" | "starting" | "running" | "joining" | "joined" | "scoped" | "ended" | "failed";
 
 type AnnotateRunPanelProps = {
   readonly engine: ViewerEngine;
@@ -49,6 +49,7 @@ function Status({ phase, status, code }: { phase: Phase; status: JobStatus | nul
   if (phase === "running") return <Trans>The run is streaming onto the slide</Trans>;
   if (phase === "joining") return <Trans>Adding the run to the task</Trans>;
   if (phase === "joined") return <Trans>Its objects are AI objects of this task now</Trans>;
+  if (phase === "scoped") return <Trans>The run joined the task's check scope</Trans>;
   if (phase === "ended") return <Trans>The run ended as {status}, nothing was added</Trans>;
   if (phase === "failed") return <Trans>The server refused it ({code})</Trans>;
   return <Trans>Draw or select a shape to run on it, or run on this view</Trans>;
@@ -135,9 +136,9 @@ export function AnnotateRunPanel(props: AnnotateRunPanelProps) {
           return;
         }
         setPhase("joining");
-        await addRun(current.taskId, current.slideId, setId);
+        const joined = await addRun(current.taskId, current.slideId, setId);
         await reload();
-        setPhase("joined");
+        setPhase(joined.data.result_set_id === setId ? "joined" : "scoped");
       } catch (error) {
         stopped = true;
         latest.current.fail(error);
@@ -159,7 +160,7 @@ export function AnnotateRunPanel(props: AnnotateRunPanelProps) {
       data-phase={phase}
       data-scope={scope ?? "none"}
       data-run={runId ?? ""}
-      className="pointer-events-auto absolute right-4 bottom-16 z-10 grid w-72 gap-2 rounded-ctl border border-line bg-chrome p-3 text-caption shadow-sm"
+      className="pointer-events-auto grid gap-2 rounded-ctl border border-line bg-chrome p-3 text-caption shadow-sm"
     >
       <p role="status" className="m-0 text-body-sm text-fg-dim" data-testid="annotate-run-status">
         <Status phase={phase} status={status} code={code} />

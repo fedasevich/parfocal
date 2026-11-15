@@ -1799,6 +1799,10 @@ msgid "The run is streaming onto the slide"
 msgstr ""
 
 #: src/viewer/annotate-run-panel.tsx
+msgid "The run joined the task's check scope"
+msgstr ""
+
+#: src/viewer/annotate-run-panel.tsx
 msgid "The server refused it ({code})"
 msgstr ""
 

@@ -759,7 +759,7 @@ function OpenedSlide({
             />
             {workspace === "annotate" ? (
               <RunStreamLayer
-                key={slideId}
+                key={`${slideId}:${annotateTask?.resultSetId ?? ""}`}
                 engine={session.engine}
                 projectId={projectId}
                 slideId={slideId}
@@ -779,16 +779,6 @@ function OpenedSlide({
                 slideId={slideId}
                 onClose={closeAddResults}
                 onPreview={setResultPreview}
-              />
-            ) : null}
-            {annotateTask && projectId !== undefined ? (
-              <AnnotateRunPanel
-                engine={session.engine}
-                stage={hostNode}
-                projectId={projectId}
-                task={annotateTask}
-                shapes={annotations.shapes}
-                selectedIds={selectedIds}
               />
             ) : null}
             {annotateTask ? (
@@ -860,6 +850,17 @@ function OpenedSlide({
               ))}
             </div>
             <div className="absolute right-4 bottom-4 grid w-72 max-w-[calc(100%-2rem)] gap-2">
+              {workspace === "annotate" && annotateTask && projectId !== undefined ? (
+                <AnnotateRunPanel
+                  key={slideId}
+                  engine={session.engine}
+                  stage={hostNode}
+                  projectId={projectId}
+                  task={annotateTask}
+                  shapes={annotations.shapes}
+                  selectedIds={selectedIds}
+                />
+              ) : null}
               {workspace === "annotate" ? (
                 <LayersPanel
                   document={annotations}
