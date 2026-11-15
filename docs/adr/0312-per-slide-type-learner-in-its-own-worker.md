@@ -1,7 +1,7 @@
-# XXXX. The per-slide type learner reads the typer's answer as features and runs in its own worker
+# 0312. The per-slide type learner reads the typer's answer as features and runs in its own worker
 
 - Date: 2026-11-15
-- Status: Proposed
+- Status: Accepted
 - Deciders: Yurii Fedas (to confirm)
 - Backlog: AILEARN-002 (browser per-slide learner). Builds on [ADR 0253](0253-sam-inference-worker.md) (the SAM inference worker)
 
