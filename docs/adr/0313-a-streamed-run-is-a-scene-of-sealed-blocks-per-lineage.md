@@ -1,4 +1,4 @@
-# XXXX. A streamed run is a scene of sealed blocks per lineage
+# 0313. A streamed run is a scene of sealed blocks per lineage
 
 - Date: 2026-11-14
 - Status: Accepted
