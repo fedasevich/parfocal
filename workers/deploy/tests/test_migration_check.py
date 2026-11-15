@@ -140,7 +140,10 @@ def test_the_real_migrations_form_one_chain_and_the_latest_only_adds() -> None:
     newest = migrations.head(revisions)
     assert newest is not None
     oldest = min(revisions)
-    assert [step.revision for step in migrations.pending(revisions, oldest)][-1] == newest.revision
-    assert len(migrations.pending(revisions, oldest)) == len(revisions) - 1
-    assert revisions["0110"].findings == ()
+    assert revisions[oldest].down_revision is None
+    later = [step.revision for step in migrations.pending(revisions, oldest)]
+    assert later == sorted(set(revisions) - {oldest})
+    assert newest.revision == (later or [oldest])[-1]
+    assert revisions[oldest].findings == ()
+    assert newest.findings == ()
     assert migrations.VERSIONS == REPOSITORY / "apps/api/migrations/versions"
