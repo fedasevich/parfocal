@@ -284,3 +284,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0317](0317-viewer-performance-budgets.md) | Viewer performance budgets per format, CPU-side in CI and frame and GPU time by hand | Accepted | 2026-11-15 |
 | [0318](0318-aperio-coarse-levels-match-the-stored-tiles.md) | Aperio coarse levels match the stored tiles, not OpenSlide's resampled read | Accepted | 2026-11-15 |
 | [0319](0319-training-rounds-start-from-the-typer-and-roll-back-by-pointer.md) | Training rounds start from the typer and roll back by a pointer | Accepted | 2026-11-15 |
+| [0320](0320-pooled-features-of-reviewed-nuclei-are-files-per-slide.md) | Pooled features of reviewed nuclei are files per slide | Accepted | 2026-11-15 |

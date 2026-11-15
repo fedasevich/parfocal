@@ -1,4 +1,4 @@
-# XXXX. Pooled features of reviewed nuclei are files per slide
+# 0320. Pooled features of reviewed nuclei are files per slide
 
 - Date: 2026-11-15
 - Status: Accepted
