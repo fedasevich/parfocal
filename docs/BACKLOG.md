@@ -3803,7 +3803,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Depends on AILEARN-004.
   Size: M.
 
-- [ ] AILEARN-011 · Pool reviewed nuclei on the server from review decisions
+- [x] AILEARN-011 · Pool reviewed nuclei on the server from review decisions
   AILEARN-010 collects pooled features through a pooler the caller passes in, and only the browser pools SAM features today. Add a server pooler in the ML worker and API wiring that turns a tenant's review decisions into the nuclei `collect` takes, and re-pool a nucleus whose outline was reshaped.
   Done when a local test turns seeded review decisions into stored features through the server pooler with fake weights, a reshaped outline is pooled again, and no cloud job runs in tests.
   Depends on AILEARN-010.
