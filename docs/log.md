@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-15
 
+- I18N-005 converts the remaining screens, deletes the string baseline so the lint rule has no exceptions, and passes the pseudo-locale specs for shell, home, settings, admin, viewer, review, annotate and compare (12 of 12). First page 367,337 gzip bytes under 380,000, axe green on 455 stories. Module-level constants, the dev worklist spike, lab- palette entries and most settings help text stay English; Czech is not written.
 - Consolidated the docs after the night run of 2026-11-14 to 2026-11-15: README state and next steps rewritten, roadmap rows and risks R18 and R19 updated, merge lessons (unstaged renumber links, lead HEAD merges, load-driven timing flakes, locked screen) moved into knowledge/agent-workflow.md.
 - AITUM-006 adds export_heatmap_pyramid, which writes a stored heatmap grid as a tiled deflate pyramidal TIFF with sub-IFD levels that the existing heatmap reader re-imports value for value, with round-trip tests. No API route or download button yet.
 - AIP-012 adds a CPU patch service over Aperio SVS stored tiles, OpenSlide and OME-Zarr with LRU caching and sparse skipping. The same 128 um patch matches between SVS and its lossless OME-Zarr; NDPI is a different scan, so it is checked against its reference tile and its own coarse level instead. Sharded and v2 Zarr, DICOM and the Leica SCN origin offset are left.

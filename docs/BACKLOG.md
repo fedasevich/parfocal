@@ -1094,7 +1094,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Depends on I18N-001.
   Size: M.
 
-- [ ] I18N-005 · Convert the remaining screens and empty the baseline
+- [x] I18N-005 · Convert the remaining screens and empty the baseline
   Convert every other file still on the I18N-001 baseline list, then delete the list so the lint rule covers the whole app.
   Done when the baseline list is gone, the lint rule passes with no exceptions and the pseudo-locale test renders the shell, home, settings and admin screens with every string translated.
   Depends on I18N-004.
