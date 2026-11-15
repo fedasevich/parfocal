@@ -13,7 +13,7 @@ pre-commit:
       run: uv run ruff check --fix {staged_files} && uv run ruff format {staged_files}
       stage_fixed: true
     - name: secrets
-      run: betterleaks git . --pre-commit --staged --redact --no-banner
+      run: betterleaks git . --pre-commit --staged --redact --no-banner --config .betterleaks.toml
 
 commit-msg:
   jobs:
