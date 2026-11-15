@@ -11,6 +11,11 @@ msgstr ""
 msgid " or $1"
 msgstr ""
 
+#. placeholder {0}: learnerView.examples
+#: src/screens/viewer/full-viewer.tsx
+msgid "{0, plural, one {# example} other {# examples}}"
+msgstr ""
+
 #. placeholder {0}: counts.open
 #: src/screens/review/guided-review.tsx
 #: src/screens/review/viewer-frame.tsx
@@ -839,6 +844,10 @@ msgstr ""
 msgid "For example, Fill by score"
 msgstr ""
 
+#: src/screens/viewer/full-viewer.tsx
+msgid "Forget"
+msgstr ""
+
 #: src/screens/viewer/objects-panel.tsx
 msgid "Found so far"
 msgstr ""
@@ -949,6 +958,10 @@ msgstr ""
 
 #: src/screens/viewer-tools/compare-view.tsx
 msgid "Layout"
+msgstr ""
+
+#: src/screens/viewer/full-viewer.tsx
+msgid "Learned on this slide"
 msgstr ""
 
 #: src/viewer/guided-check.tsx
@@ -1786,6 +1799,11 @@ msgstr ""
 msgid "The thread did not save. Try again."
 msgstr ""
 
+#. placeholder {0}: learnerView.corrections
+#: src/screens/viewer/full-viewer.tsx
+msgid "The typer learned from your {0} corrections and changed {changedNow} similar cells. They are in a new zone."
+msgstr ""
+
 #: src/screens/review/slide-still.tsx
 msgid "The whole slide"
 msgstr ""
@@ -1877,6 +1895,10 @@ msgstr ""
 
 #: src/screens/annotate-task/new-annotate-task.tsx
 msgid "Unchecked AI cells"
+msgstr ""
+
+#: src/screens/viewer/full-viewer.tsx
+msgid "Undo all"
 msgstr ""
 
 #: src/annotations/layers-panel.tsx
