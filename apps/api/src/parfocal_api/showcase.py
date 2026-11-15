@@ -168,6 +168,7 @@ RESULT_FILES = ("cells.geojson", "regions.parfocal.json", "cells.csv", "heatmap.
 class Seeded:
     tenant_id: uuid.UUID
     people: dict[str, uuid.UUID]
+    owner: uuid.UUID | None = None
 
 
 def fixture_facts(manifest: Path = FIXTURES_MANIFEST) -> dict[str, Mapping[str, Any]]:
@@ -673,6 +674,17 @@ async def seed_gallery(
         connection,
     )
     await join(connection, seeded, project.id, {"rhea": ProjectRole.VIEWER})
+    if seeded.owner is not None:
+        await connection.execute(
+            upsert(project_members)
+            .values(
+                tenant_id=seeded.tenant_id,
+                project_id=project.id,
+                user_id=seeded.owner,
+                role=ProjectRole.OWNER,
+            )
+            .on_conflict_do_nothing()
+        )
     for slide in FORMAT_GALLERY:
         await add_slide(connection, seeded, project.id, slide.file, gallery_facts(slide, manifest))
 
@@ -750,6 +762,7 @@ async def seed(
             await lock(connection)
             organisation_id = await organisation(connection)
             tenant_ids: list[uuid.UUID] = []
+            owners: dict[uuid.UUID, uuid.UUID] = {}
             created: list[tuple[uuid.UUID, Workspace]] = []
             for workspace in WORKSPACES:
                 tenant_id = await existing_tenant(connection, workspace.slug)
@@ -761,7 +774,7 @@ async def seed(
                 tenant_ids.append(tenant_id)
             if owner_email:
                 for tenant_id in reversed(tenant_ids):
-                    await add_owner(connection, tenant_id, owner_email)
+                    owners[tenant_id] = await add_owner(connection, tenant_id, owner_email)
         for tenant_id, workspace in created:
             people = await people_of(engine, tenant_id)
             ada = people["ada"]
@@ -771,7 +784,7 @@ async def seed(
                 await seed_projects(
                     connection,
                     workspace,
-                    Seeded(tenant_id, people),
+                    Seeded(tenant_id, people, owners.get(tenant_id)),
                     store,
                     results,
                     manifest if manifest is not None else fixture_facts(),

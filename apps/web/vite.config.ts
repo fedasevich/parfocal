@@ -19,6 +19,7 @@ import {
   productionRouteTree,
   routeTreeWithoutDeveloperPages,
 } from "./vite/dev-tools.ts";
+import { edgeDevFor, edgeWorker, edgeWorkerPrefixes } from "./vite/edge-dev.ts";
 import { fontPreloadInBuildOnly } from "./vite/font-preload.ts";
 import { assetsWithinWorkersLimit } from "./vite/large-assets.ts";
 import { publicEnvOnly, publicEnvPrefix } from "./vite/public-env.ts";
@@ -92,6 +93,7 @@ export default defineConfig(({ command, mode, isPreview }) => {
     env: loadEnv(mode, root, publicEnvPrefix),
   });
   const withoutDeveloperPages = command === "build" && !devTools;
+  const edgeDev = edgeDevFor({ command, isPreview: isPreview === true, env: process.env });
   return {
     envPrefix: publicEnvPrefix,
     define: devToolsDefine(devTools),
@@ -125,9 +127,10 @@ export default defineConfig(({ command, mode, isPreview }) => {
       fakeApiWorkerWithDevTools(devTools),
       mockAssetsWithDevTools(devTools),
       fontPreloadInBuildOnly(),
-      fixtureTilesWithDevTools(devTools),
-      noAppPageForMissingData(),
+      ...(edgeDev ? [] : [fixtureTilesWithDevTools(devTools)]),
+      noAppPageForMissingData(edgeDev ? edgeWorkerPrefixes : []),
       assetsWithinWorkersLimit(),
+      edgeWorker(edgeDev, process.env),
       ...(mode === "analyze" ? bundleReport() : []),
     ],
     resolve: { dedupe: ["react", "react-dom", "@tanstack/react-query"] },

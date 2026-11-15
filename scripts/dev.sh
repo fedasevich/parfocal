@@ -85,6 +85,15 @@ step "Seeding the ČVUT workspaces"
 DATABASE_URL="$MIGRATION_DATABASE_URL" SEED_OWNER_EMAIL="${SEED_OWNER_EMAIL:-${ZITADEL_TEST_USERNAME:-}}" \
   uv run --frozen --package parfocal-api python -m parfocal_api.showcase
 
+export PARFOCAL_EDGE_DEV="${PARFOCAL_EDGE_DEV:-on}"
+if [ "$PARFOCAL_EDGE_DEV" = on ]; then
+  step "Checking the Cloudflare login for the parfocal-dev bucket"
+  if ! pnpm --filter @parfocal/edge exec wrangler whoami 2>/dev/null | grep -q "logged in"; then
+    echo "Wrangler is not logged in, so slides use the fixture tiles. Run pnpm --filter @parfocal/edge exec wrangler login for the real bucket."
+    PARFOCAL_EDGE_DEV=off
+  fi
+fi
+
 step "Starting the API and the web app"
 uv run --frozen --package parfocal-api uvicorn parfocal_api.app:create_app --factory --port "$PARFOCAL_API_PORT" &
 api=$!
