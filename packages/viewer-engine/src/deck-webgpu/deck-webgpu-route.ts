@@ -48,6 +48,7 @@ import {
 import { splitByBufferLimit } from "./buffer-limit.ts";
 import { isLoopPathData, type LoopPathData, withThirdClosingVertex } from "./loop-data.ts";
 import { rgbToRgba } from "./rgba.ts";
+import { wgslDashExtensionFor } from "./wgsl-dash-extension.ts";
 
 export const deckWebGpuViewId = "slide";
 
@@ -196,7 +197,7 @@ export function createDeckWebGpuRoute(
   const overlayBuilder = createOverlayLayerBuilder();
   const reportedLimits = new Set<string>();
   let overlayTextures = new Map<ImageData, Texture>();
-  let dashesReported = false;
+  let extensionsReported = false;
   const loopData = new WeakMap<LoopPathData, LoopPathData>();
   let changes = 0;
   let renderedChanges = -1;
@@ -365,10 +366,13 @@ export function createDeckWebGpuRoute(
       }
       const extensions = props["extensions"];
       if (Array.isArray(extensions) && extensions.length > 0) {
-        replaced["extensions"] = [];
-        if (!dashesReported) {
-          dashesReported = true;
-          reportError(new DeckWebGpuUnsupportedOverlayError("dashed outlines are drawn solid"));
+        const drawable = extensions.map(wgslDashExtensionFor).filter((entry) => entry !== null);
+        replaced["extensions"] = drawable;
+        if (drawable.length < extensions.length && !extensionsReported) {
+          extensionsReported = true;
+          reportError(
+            new DeckWebGpuUnsupportedOverlayError("a layer extension without WGSL is left out"),
+          );
         }
       }
       const data = props["data"];
