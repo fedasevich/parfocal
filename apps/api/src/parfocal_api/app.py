@@ -42,6 +42,7 @@ from parfocal_api import (
     invitations,
     lab_models,
     link_imports,
+    maintenance,
     model_registry,
     model_run_progress,
     model_runs,
@@ -167,6 +168,7 @@ class ParfocalApi(FastAPI):
         self.results: ResultStore = ObjectResultStore(self.state.storage)
         self.keyring = MasterKeyring.from_setting(settings.master_keys.get_secret_value())
         self.state.engine = create_engine(str(settings.database_url))
+        self.state.maintenance = maintenance.MaintenanceState(self.state.engine)
         self.state.realtime_http = httpx2.AsyncClient(timeout=5)
         self.state.realtime = realtime_for(settings, self.state.realtime_http)
         self.state.auth = auth.AuthState(
@@ -194,6 +196,7 @@ def create_app(
     )
     install_problem_handlers(app, app.clients.errors)
     configure_logging("api", resolved.app_env)
+    app.add_middleware(maintenance.MaintenanceGate, state=app.state.maintenance)
     app.add_middleware(OriginCheck, origin=public_origin(resolved))
     app.add_middleware(RequestLogging)
 
@@ -201,6 +204,8 @@ def create_app(
     async def health() -> Health:
         return Health(status="ok")
 
+    app.include_router(maintenance.router)
+    app.include_router(maintenance.platform_router)
     app.include_router(auth.router)
     app.include_router(password_login.router)
     app.include_router(sessions_api.router)

@@ -200,7 +200,14 @@ def prepared(api: ApiAs, route: Route, monkeypatch: pytest.MonkeyPatch) -> ApiAs
     return api
 
 
-BASE_TABLES = {"organisations", "tenants", "users", "memberships", "registered_models"}
+BASE_TABLES = {
+    "organisations",
+    "tenants",
+    "users",
+    "memberships",
+    "registered_models",
+    "maintenance",
+}
 CASE_TABLES = {
     "opinions",
     "disagreement_decisions",
@@ -1496,6 +1503,7 @@ GET_ROUTES = {
         Exposure.TENANT, lambda a: f"/api/uploads/{a.ids['upload']}/problems/report"
     ),
     "getHealth": Route(Exposure.PUBLIC, lambda _: "/api/health"),
+    "getPlatformStatus": Route(Exposure.PUBLIC, lambda _: "/api/status"),
     "listStudyTemplates": Route(Exposure.TENANT, lambda _: "/api/study-templates"),
     "getStudyTemplate": Route(
         Exposure.TENANT, lambda a: f"/api/study-templates/{a.ids['study_template']}"
