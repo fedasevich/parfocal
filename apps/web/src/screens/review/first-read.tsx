@@ -1,3 +1,5 @@
+import { plural } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { useAddReviewObject, useSubmitFirstRead } from "@parfocal/api-client";
 import { InlineError } from "@parfocal/ui/components/banner";
 import { Button } from "@parfocal/ui/components/button";
@@ -19,6 +21,7 @@ import { useOpinionDraft } from "./use-opinion-draft.ts";
 const asksInFirstRead = (asked: string | undefined) => asked !== "aided";
 
 export function FirstReadStep({ session }: { session: ReviewSession }) {
+  const { t } = useLingui();
   const queryClient = useQueryClient();
   const { answers, change, saving } = useOpinionDraft(session);
   const [camera, setCamera] = useState<Camera | null>(null);
@@ -59,7 +62,7 @@ export function FirstReadStep({ session }: { session: ReviewSession }) {
     });
     setDrawn((now) => [...now, { id: crypto.randomUUID(), shape: draft }]);
     setDraft(null);
-    showUndoToast({ message: "Object added to your first read." });
+    showUndoToast({ message: t`Object added to your first read.` });
   };
   const pickPoint = (point: Point) => {
     if (draft === null) return;
@@ -76,10 +79,14 @@ export function FirstReadStep({ session }: { session: ReviewSession }) {
     <div className="flex min-h-full flex-col gap-5" data-testid="first-read-panel">
       <div className="grid justify-items-start gap-2">
         <Icon name="eye-off" size="lg" className="text-fg-dim" />
-        <h2 className="m-0 text-title-sm font-semibold">Read the slide without the AI</h2>
+        <h2 className="m-0 text-title-sm font-semibold">
+          <Trans>Read the slide without the AI</Trans>
+        </h2>
         <p className="m-0 text-body-sm leading-[1.45] text-fg-dim">
-          The AI result is hidden until you record your first read. Answer the questions, add what
-          you find, then record. Your first read stays as it is after that.
+          <Trans>
+            The AI result is hidden until you record your first read. Answer the questions, add what
+            you find, then record. Your first read stays as it is after that.
+          </Trans>
         </p>
       </div>
       <div className="grid gap-4">
@@ -90,7 +97,9 @@ export function FirstReadStep({ session }: { session: ReviewSession }) {
                 {index + 1} · {question.question}
               </b>
               {question.required ? (
-                <span className="shrink-0 text-caption text-fg-dim">Required</span>
+                <span className="shrink-0 text-caption text-fg-dim">
+                  <Trans>Required</Trans>
+                </span>
               ) : null}
             </div>
             <QuestionControl question={question} onAnswerChange={change} />
@@ -98,26 +107,28 @@ export function FirstReadStep({ session }: { session: ReviewSession }) {
         ))}
       </div>
       <div className="grid justify-items-start gap-2">
-        <b className="text-body font-semibold">Objects you found</b>
+        <b className="text-body font-semibold">
+          <Trans>Objects you found</Trans>
+        </b>
         <span data-testid="first-read-added" className="text-body-sm text-fg-dim">
-          {added === 0 ? "None added yet." : `${added} added.`}
+          {added === 0 ? t`None added yet.` : t`${added} added.`}
         </span>
         {draft === null ? (
           <Button onClick={() => setDraft([])}>
             <Icon name="plus" />
-            Add an object
+            <Trans>Add an object</Trans>
           </Button>
         ) : (
           <div data-testid="add-panel" className="grid gap-2">
             <span className="text-body-sm text-fg-dim">
-              Click around the object on the slide to outline it.
+              <Trans>Click around the object on the slide to outline it.</Trans>
             </span>
             <div className="flex gap-2">
               <Button variant="primary" disabled={draft.length < 3} onClick={finishOutline}>
-                Finish outline
+                <Trans>Finish outline</Trans>
               </Button>
               <Button variant="ghost" onClick={() => setDraft(null)}>
-                Cancel
+                <Trans>Cancel</Trans>
               </Button>
             </div>
           </div>
@@ -125,7 +136,7 @@ export function FirstReadStep({ session }: { session: ReviewSession }) {
       </div>
       {failed ? (
         <InlineError>
-          Your first read could not be recorded. Nothing was lost. Try again.
+          <Trans>Your first read could not be recorded. Nothing was lost. Try again.</Trans>
         </InlineError>
       ) : null}
       <div className="mt-auto grid gap-2.5">
@@ -137,12 +148,15 @@ export function FirstReadStep({ session }: { session: ReviewSession }) {
           }
           onClick={record}
         >
-          Record my first read
+          <Trans>Record my first read</Trans>
         </Button>
         <span className="text-center text-body-sm text-fg-dim">
           {missing.length > 0
-            ? `${missing.length} required question${missing.length === 1 ? " is" : "s are"} not answered.`
-            : "After this the AI result appears and you can give your decisions."}
+            ? plural(missing.length, {
+                one: "# required question is not answered.",
+                other: "# required questions are not answered.",
+              })
+            : t`After this the AI result appears and you can give your decisions.`}
         </span>
       </div>
     </div>
@@ -155,7 +169,7 @@ export function FirstReadStep({ session }: { session: ReviewSession }) {
         session={session}
         counts={undefined}
         nothingToDecide
-        submitReason="Record your first read first"
+        submitReason={t`Record your first read first`}
       />
       <div className="flex min-h-0 flex-1">
         <SlideStill
@@ -195,7 +209,7 @@ export function FirstReadStep({ session }: { session: ReviewSession }) {
           variant="quiet"
           value="first-read"
           onValueChange={() => {}}
-          tabs={[{ value: "first-read", label: "First read", body }]}
+          tabs={[{ value: "first-read", label: t`First read`, body }]}
         />
       </div>
     </main>

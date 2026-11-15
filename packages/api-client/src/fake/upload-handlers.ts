@@ -4,10 +4,12 @@ import {
   CasesFrom,
   Certainty,
   FileKind,
+  type ImportCheck,
   IngestStatus,
   Outcome,
   PairBy,
   type ResultPairing,
+  type ResultSet,
   Rule,
   type SlideChoice,
   SlideOutcome,
@@ -131,12 +133,19 @@ const sortFiles = (request: SortingRequest): Sorting => {
       label === null
         ? undefined
         : cases.find((item) => item.label === label && item.project === project?.code);
+    const copy = stemOf(path).startsWith("dup-");
+    const keep = request.slide_decisions?.find((item) => item.path === path)?.keep;
+    const skipped = copy ? keep !== true : keep === false;
     return {
       path,
-      outcome: label === null ? SlideOutcome.loose : SlideOutcome["in-case"],
+      outcome: skipped
+        ? SlideOutcome["left-out"]
+        : label === null
+          ? SlideOutcome.loose
+          : SlideOutcome["in-case"],
       case: label === null ? null : { label, case_id: known?.id ?? null },
       rule: label === null ? null : CaseRule.folder,
-      duplicate_of: null,
+      duplicate_of: copy ? uuid(5, 1) : null,
     };
   });
   const results: ResultPairing[] = paths
@@ -222,7 +231,41 @@ const ingestLadder: { status: IngestStatus; step: string | null }[] = [
 
 const polls = new Map<string, number>();
 
+export type FakeOverrides = {
+  statuses?: Record<string, Partial<UploadState>>;
+  problems?: ImportCheck;
+  chosen?: unknown[];
+  left?: string[];
+  sets?: ResultSet[];
+};
+
+const overrides = (): FakeOverrides =>
+  (globalThis as { __parfocalFake?: FakeOverrides }).__parfocalFake ?? {};
+
+export const addedResultSets = (slideId: string): ResultSet[] => {
+  const fake = overrides();
+  const ready = new Set(
+    Object.values(fake.statuses ?? {})
+      .filter((state) => state.status === IngestStatus.ready)
+      .map((state) => state.result_set_id),
+  );
+  return (fake.sets ?? []).filter((set) => set.slide_id === slideId && ready.has(set.id));
+};
+
+const overriddenState = (uploadId: string): UploadState | null => {
+  const found = overrides().statuses?.[uploadId];
+  return found === undefined
+    ? null
+    : {
+        ...stateOf(uploadId, {}),
+        upload_status: UploadStatus.completed,
+        ...found,
+      };
+};
+
 const statusOf = (uploadId: string): UploadState => {
+  const forced = overriddenState(uploadId);
+  if (forced !== null) return forced;
   const count = polls.get(uploadId) ?? 0;
   polls.set(uploadId, count + 1);
   const rung = ingestLadder[Math.min(count, ingestLadder.length - 1)];
@@ -240,6 +283,40 @@ export const uploadHandlers = (): RequestHandler[] => [
   http.get<{ uploadId: string }>("*/api/uploads/:uploadId/status", ({ params }) =>
     HttpResponse.json(statusOf(params.uploadId)),
   ),
+  http.get<{ uploadId: string }>("*/api/uploads/:uploadId/problems", ({ params }) =>
+    HttpResponse.json(
+      overrides().problems ?? { upload_id: params.uploadId, readable: null, problems: [] },
+    ),
+  ),
+  http.put<{ uploadId: string }>(
+    "*/api/uploads/:uploadId/import-choices",
+    async ({ params, request }) => {
+      const fake = overrides();
+      fake.chosen?.push(await request.json());
+      if (fake.statuses !== undefined) {
+        fake.statuses[params.uploadId] = {
+          kind: UploadKind.result,
+          status: IngestStatus.processing,
+          reason: null,
+          message: null,
+        };
+      }
+      return HttpResponse.json(overriddenState(params.uploadId) ?? stateOf(params.uploadId, {}));
+    },
+  ),
+  http.post<{ uploadId: string }>("*/api/uploads/:uploadId/leave-out", ({ params }) => {
+    const fake = overrides();
+    fake.left?.push(params.uploadId);
+    if (fake.statuses !== undefined) {
+      fake.statuses[params.uploadId] = {
+        kind: UploadKind.result,
+        status: IngestStatus.failed,
+        reason: "upload-aborted",
+        message: "Left out",
+      };
+    }
+    return HttpResponse.json(overriddenState(params.uploadId) ?? stateOf(params.uploadId, {}));
+  }),
   http.post("*/api/uploads/sorting", async ({ request }) =>
     HttpResponse.json(sortFiles((await request.json()) as SortingRequest)),
   ),

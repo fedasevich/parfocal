@@ -7,7 +7,7 @@ import {
   useMarkNotificationsRead,
 } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
-import { Icon, type IconName } from "@parfocal/ui/components/icon";
+import { Icon } from "@parfocal/ui/components/icon";
 import type { NotificationItem } from "@parfocal/ui/components/notifications-panel";
 import { Popover, PopoverContent, PopoverTrigger } from "@parfocal/ui/components/popover";
 import { useQueryClient } from "@tanstack/react-query";
@@ -16,6 +16,7 @@ import { now } from "../clock.ts";
 import { relativeTime } from "../screens/format.ts";
 import { okData } from "../screens/placeholder.tsx";
 import { defaultIdleLockMinutes } from "../session/lock-rules.ts";
+import { inFilter, kindIcons, payloadText } from "./activity.ts";
 import { destinations } from "./destinations.ts";
 import { chimeUnlessHeld, playChime, readStatNotice, shownInBell } from "./notification-gate.ts";
 import { useOverlay } from "./overlays.ts";
@@ -26,31 +27,7 @@ const NotificationsPanel = lazy(async () => ({
   default: (await import("@parfocal/ui/components/notifications-panel")).NotificationsPanel,
 }));
 
-type BellTab = "all" | "mentions" | "jobs";
-
-const tabKinds: Record<BellTab, readonly string[] | null> = {
-  all: null,
-  mentions: ["mention", "reply"],
-  jobs: ["model-run-finished", "model-run-paused", "upload-done", "upload-refused"],
-};
-
-const kindIcons: Record<string, IconName> = {
-  mention: "comment",
-  reply: "comment",
-  "model-run-finished": "smart",
-  "model-run-paused": "warn",
-  "upload-done": "upload",
-  "upload-refused": "warn",
-  "task-signed-off": "check",
-  "task-assigned": "users",
-  "workspace-access-asked": "users",
-  "template-offered": "file",
-};
-
-export const payloadText = (item: InboxItem, key: string): string | undefined => {
-  const value = item.payload[key];
-  return typeof value === "string" ? value : undefined;
-};
+export { payloadText };
 
 export function useInboxRefresh() {
   const queryClient = useQueryClient();
@@ -61,8 +38,8 @@ export function useInboxRefresh() {
 }
 
 const groupOf = (item: InboxItem): NotificationItem["group"] => {
-  if (tabKinds.mentions?.includes(item.kind)) return "mentions";
-  if (tabKinds.jobs?.includes(item.kind)) return "jobs";
+  if (inFilter(item, "mentions")) return "mentions";
+  if (inFilter(item, "jobs")) return "jobs";
   return "other";
 };
 

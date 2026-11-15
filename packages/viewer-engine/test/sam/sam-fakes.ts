@@ -54,6 +54,8 @@ export class FakeSession implements SamSession {
   hold = false;
   readonly gates: Deferred<void>[] = [];
   failWith: Error | null = null;
+  respond: ((feeds: Readonly<Record<string, SamTensor>>) => Record<string, SamTensor>) | null =
+    null;
 
   readonly options: FakeSessionOptions;
 
@@ -79,6 +81,9 @@ export class FakeSession implements SamSession {
       this.gates.push(gate);
       await gate.promise;
     }
+    if (this.respond !== null) {
+      return this.respond(feeds);
+    }
     const outputs: Record<string, SamTensor> = {};
     for (const name of this.options.outputNames) {
       outputs[name] = new FakeTensor([1, 1], Float32Array.of(this.feedsSeen.length));
@@ -96,7 +101,17 @@ export interface FakeRuntimeOptions {
   readonly decoderInputs?: readonly string[];
   readonly createDelayMs?: number;
   readonly failProviders?: readonly SamProvider[];
+  readonly missingGraphs?: readonly string[];
 }
+
+export const windowDecoderInputs = [
+  "image_embeddings",
+  "point_coords",
+  "point_labels",
+  "mask_input",
+  "has_mask_input",
+  "window_origin",
+] as const;
 
 export const defaultDecoderInputs = [
   "image_embeddings",
@@ -128,15 +143,21 @@ export class FakeRuntime implements SamRuntime {
         throw new Error(`no ${provider}`);
       }
       const graph = new TextDecoder().decode(bytes);
-      const isDecoder = graph === "pathosam.decoder.onnx";
+      if (this.options.missingGraphs?.includes(graph)) {
+        throw new Error(`no graph ${graph}`);
+      }
+      const isWindow = graph.includes("decoder_window");
+      const isDecoder = graph === "pathosam.decoder.onnx" || isWindow;
       const isAis = graph.includes("ais_decoder");
       const session = new FakeSession({
         graph,
-        inputNames: isDecoder
-          ? (this.options.decoderInputs ?? defaultDecoderInputs)
-          : isAis
-            ? ["image_embeddings"]
-            : ["pixel_values"],
+        inputNames: isWindow
+          ? windowDecoderInputs
+          : isDecoder
+            ? (this.options.decoderInputs ?? defaultDecoderInputs)
+            : isAis
+              ? ["image_embeddings"]
+              : ["pixel_values"],
         outputNames: isDecoder
           ? ["masks", "iou_predictions", "low_res_masks"]
           : isAis

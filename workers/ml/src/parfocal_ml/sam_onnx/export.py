@@ -29,10 +29,18 @@ from parfocal_ml.sam_contract import (
     MASK_INPUT_SIZE,
     OPSET,
     SAM,
+    WINDOW_SIZE,
     checkpoint_path,
     onnx_dir,
+    window_decoder_graph,
 )
 from parfocal_ml.sam_onnx.instance_decoder import InstanceDecoder
+from parfocal_ml.sam_onnx.window_decoder import (
+    WINDOW_INPUTS,
+    WINDOW_OUTPUTS,
+    WindowDecoder,
+    window_dummies,
+)
 
 
 @dataclass(frozen=True)
@@ -154,6 +162,17 @@ def export_decoder(sam: Sam, folder: Path) -> Exported:
         folder / GRAPHS.decoder,
         input_names=list(feeds),
         output_names=["masks", "iou_predictions", "low_res_masks"],
+        dynamic_axes={"point_coords": {1: "num_points"}, "point_labels": {1: "num_points"}},
+    )
+
+
+def export_window_decoder(sam: Sam, folder: Path, size: int = WINDOW_SIZE) -> Exported:
+    return trace(
+        WindowDecoder(sam, size),
+        window_dummies(),
+        folder / window_decoder_graph(size),
+        input_names=list(WINDOW_INPUTS),
+        output_names=list(WINDOW_OUTPUTS),
         dynamic_axes={"point_coords": {1: "num_points"}, "point_labels": {1: "num_points"}},
     )
 
@@ -293,6 +312,7 @@ def export_all(folder: Path) -> list[Exported]:
         exported = [
             export_encoder(sam, folder),
             export_decoder(sam, folder),
+            export_window_decoder(sam, folder),
             export_batch_decoder(sam, folder),
             export_ais_decoder(load_instance_decoder(), folder),
             export_ais_decoder_full(load_instance_decoder(), folder),
@@ -313,8 +333,15 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Export PathoSAM to the browser ONNX graphs")
     parser.add_argument("--out", type=Path, default=onnx_dir())
     parser.add_argument("--ais-only", action="store_true")
+    parser.add_argument("--window-sizes", type=int, nargs="+")
     args = parser.parse_args()
-    graphs = quantise_ais(args.out) if args.ais_only else export_all(args.out)
+    if args.window_sizes:
+        sam = load_sam()
+        graphs = [export_window_decoder(sam, args.out, size) for size in args.window_sizes]
+    elif args.ais_only:
+        graphs = quantise_ais(args.out)
+    else:
+        graphs = export_all(args.out)
     for graph in graphs:
         print(f"{graph.name:<32} {graph.megabytes:7.1f} MB {graph.seconds:6.1f} s")
     return 0

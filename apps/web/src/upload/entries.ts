@@ -3,6 +3,7 @@ export type UploadStatus = "uploading" | "paused" | "retrying" | "failed" | "don
 export type FileIdentity = {
   projectId: string;
   caseId: string | null;
+  slideId?: string;
   name: string;
   size: number;
   lastModified: number;

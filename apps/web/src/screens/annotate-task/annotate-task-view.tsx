@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   AiResultToggle,
   ChangesByMarker,
@@ -112,6 +113,7 @@ const startSlide = (scene: TaskScene): SlideState =>
 type TaskWorkspaceProps = { tools: ToolSession; scene: TaskScene; people: TaskPeople };
 
 function TaskWorkspace({ tools, scene, people }: TaskWorkspaceProps) {
+  const { t } = useLingui();
   const { session } = tools;
   const liveChanges = liveChangesOf(people);
   const running = scene === "run" || scene === "run-cancelled";
@@ -233,10 +235,10 @@ function TaskWorkspace({ tools, scene, people }: TaskWorkspaceProps) {
           history={selectedObject.history}
         />
       ) : null}
-      <Zone title="Objects" sub={`${visible.length} on the slide`}>
+      <Zone title={t`Objects`} sub={t`${visible.length} on the slide`}>
         {visible.length === 0 ? (
           <p className="m-0 text-body-sm text-fg-dim">
-            {empty ? "This slide has no objects." : "Nothing is shown. Turn the AI result on."}
+            {empty ? t`This slide has no objects.` : t`Nothing is shown. Turn the AI result on.`}
           </p>
         ) : (
           <ul className="m-0 grid max-h-[46vh] list-none gap-0.5 overflow-auto p-0">
@@ -276,11 +278,11 @@ function TaskWorkspace({ tools, scene, people }: TaskWorkspaceProps) {
         count={running ? runTileTotal * cellsPerTile : aiObjectCount}
       />
       {empty ? null : (
-        <Zone title="Check progress" sub="Scope: all AI objects, least sure first">
+        <Zone title={t`Check progress`} sub={t`Scope: all AI objects, least sure first`}>
           <CheckProgress counts={counts} scope="AI objects" />
         </Zone>
       )}
-      <Zone title="Per class">
+      <Zone title={t`Per class`}>
         <ul className="m-0 grid list-none gap-1.5 p-0 text-body-sm">
           {(["tumor", "immune"] as const).map((key) => (
             <li key={key} className="flex items-center gap-2">
@@ -393,18 +395,18 @@ function TaskWorkspace({ tools, scene, people }: TaskWorkspaceProps) {
         )}
         overlay={() => (
           <>
-            <ContextBar label="Annotate task">
+            <ContextBar label={t`Annotate task`}>
               <ContextPill>
-                {showAi ? `AI result on · ${resultName}` : "AI result hidden"}
+                {showAi ? t`AI result on · ${resultName}` : t`AI result hidden`}
               </ContextPill>
               <ContextDivider />
               <label className="flex cursor-pointer items-center gap-1.5 whitespace-nowrap">
                 <Checkbox
                   checked={showOrigins}
                   onCheckedChange={(value) => setShowOrigins(value)}
-                  aria-label="Who made it"
+                  aria-label={t`Who made it`}
                 />
-                Who made it
+                <Trans>Who made it</Trans>
               </label>
               {empty ? null : (
                 <>
@@ -418,11 +420,11 @@ function TaskWorkspace({ tools, scene, people }: TaskWorkspaceProps) {
                 <>
                   <ContextDivider />
                   <Button size="sm" variant="primary" onClick={confirmSelected}>
-                    Confirm {selectedObject?.id}{" "}
+                    <Trans>Confirm {selectedObject?.id}</Trans>{" "}
                     <Keycap action={confirmAction} keys="D" size="sm" />
                   </Button>
                   <Button size="sm" onClick={() => setCheck(selectedObject?.id ?? "", "deleted")}>
-                    Delete
+                    <Trans>Delete</Trans>
                   </Button>
                 </>
               ) : null}
@@ -499,9 +501,10 @@ function TaskWorkspace({ tools, scene, people }: TaskWorkspaceProps) {
 }
 
 export function AnnotateTaskView({ tools, scene }: { tools: ToolSession; scene: TaskScene }) {
+  const { t } = useLingui();
   const people = useTaskPeople();
   if (people === undefined) {
-    return <Loader label="Loading the slide" size="page" />;
+    return <Loader label={t`Loading the slide`} size="page" />;
   }
   return <TaskWorkspace key={scene} tools={tools} scene={scene} people={people} />;
 }

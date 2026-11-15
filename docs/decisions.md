@@ -8,8 +8,9 @@ To take every recommendation at once, write "all recommended" here:
 
 ## What you need to do next, in order
 
-1. The checks on your Mac listed under "The review column" below, when you have a few minutes.
-2. When the app is ready for production, say so, and the lead books the deploy session of decisions 93, 94 and 95.
+1. Decisions 105 (older Ventana archives with several scan areas), 106 (who reads the sealed clinical note) and 107 (how CI gets the model files for the parity test) below.
+2. The checks on your Mac listed under "The review column" below, when you have a few minutes.
+3. When the app is ready for production, say so, and the lead books the deploy session of decisions 93, 94 and 95.
 
 ## What your answers of 2026-11-04 changed
 
@@ -124,6 +125,39 @@ IAM-027 (real sign-up and sign-in from the app's own screens) is built and teste
 - Other.
 
 Your choice: a
+
+## Open decisions from the night run of 2026-11-14
+
+### 105. Whether older Ventana iScan archives with several scan areas open
+
+You asked to research before building. VIEW-069 (BIF with several scan areas) found, in [the research result](results/2026-11-14-bif-several-scan-areas.md), that a BIF holds one scan area per tissue piece, so such files are common. Today's DP 200 and DP 600 scanners join frames in a direction OpenSlide itself refuses, so neither OpenSlide nor Parfocal opens their files with or without several areas. Only older iScan files would gain, and Roche says those cannot be rebuilt exactly from their metadata. The refusal now has its own message instead of "unreadable".
+
+- **A. Keep the refusal with its own message, and build area placement later together with support for the DP 200 and DP 600 join direction (recommended).** Building it now helps only older archives that cannot be rebuilt exactly anyway.
+- B. Build area placement now against the public OpenSlide test file `OS-2.bif`.
+- Other.
+
+Your choice:
+
+### 106. Who can read the sealed clinical note of a case
+
+CASES-026 (encrypted clinical note per case) brought the note back sealed, writable only by project owners in clinical projects. As built, everyone who can see the case reads it, the same as the patient name, which includes a reviewer who only has slides of that case assigned.
+
+- **A. Everyone who can see the case, the same as the patient name (recommended).** A reviewer reading the slide usually needs the clinical context, and it keeps one rule for patient details.
+- B. Only project owners and the reviewers of that case's slides who have already submitted.
+- Other.
+
+Your choice:
+
+### 107. How CI gets the model files for the browser parity test
+
+MLEVAL-007 (browser parity tests) checks that the browser PathoSAM models match PyTorch, and it passes on the Mac (click mask IoU 0.9625 on WebGPU and 0.9822 on WebAssembly against a 0.96 bar, see [the result](results/2026-11-15-browser-parity-with-pytorch.md)). Its Done line asks CI to run it, but CI has none of the roughly 250 MB of model files and 200 MB fixture, so there it skips.
+
+- **A. Publish the files once to R2 as ADR 0276 (model files stored once with a checksum list) describes, and add a WebAssembly-only CI job that downloads them with a read-only token (recommended).** This is a production write of about 450 MB, well under a cent a month of storage, plus a new read-only secret, so it waits for your yes and the deploy session.
+- B. Run the test on a self-hosted GitHub runner on the Mac.
+- C. Keep the Mac run and the switch that makes a skip fail when required, and tick MLEVAL-007 without CI.
+- Other.
+
+Your choice:
 
 ## The review column, what each task waits for
 

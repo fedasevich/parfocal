@@ -1,8 +1,10 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { BottomSheet } from "@parfocal/ui/components/bottom-sheet";
 import { TabCount } from "@parfocal/ui/components/tabs";
 import type { SheetHeight, SheetPixels } from "@parfocal/ui/lib/sheet-gesture";
 import { cn } from "@parfocal/ui/lib/utils";
 import { type KeyboardEvent, type PointerEvent, type ReactNode, useRef, useState } from "react";
+import { openPopout } from "../../popout/popout-channel.ts";
 import {
   dragInspector,
   type InspectorLayout,
@@ -42,6 +44,7 @@ export function InspectorDock({
   tabCount,
   children,
 }: InspectorDockProps) {
+  const { t } = useLingui();
   const [dragWidth, setDragWidth] = useState<number | null>(null);
   const edge = useRef<number>(0);
   const width = dragWidth ?? layout.width;
@@ -57,7 +60,9 @@ export function InspectorDock({
         onClick={() => onLayout({ hidden: false })}
         className="absolute top-3 right-0 z-10 flex cursor-pointer items-center gap-1.5 rounded-l-ctl border border-r-0 border-line bg-chrome px-2.5 py-2 text-body-sm font-semibold text-fg shadow-sm hover:bg-chrome-2"
       >
-        <span className="sr-only">Show the side panel, </span>
+        <span className="sr-only">
+          <Trans>Show the side panel,</Trans>{" "}
+        </span>
         <span>{tabLabel}</span>
         {tabCount ? " " : null}
         {tabCount ? <TabCount>{tabCount}</TabCount> : null}
@@ -68,7 +73,7 @@ export function InspectorDock({
   if (coarse) {
     return (
       <BottomSheet
-        label="Side panel"
+        label={t`Side panel`}
         height={sheetHeight}
         onHeightChange={setSheetHeight}
         pixels={sheetPixels()}
@@ -123,7 +128,7 @@ export function InspectorDock({
     >
       <hr
         aria-orientation="vertical"
-        aria-label="Resize the side panel"
+        aria-label={t`Resize the side panel`}
         aria-valuemin={inspectorMinWidth}
         aria-valuemax={inspectorMaxWidth}
         aria-valuenow={width}
@@ -144,8 +149,16 @@ export function InspectorDock({
             checked={layout.hideWhilePanning}
             onChange={(event) => onLayout({ hideWhilePanning: event.currentTarget.checked })}
           />
-          Hide while panning
+          <Trans>Hide while panning</Trans>
         </label>
+        <button
+          type="button"
+          data-testid="inspector-popout"
+          onClick={() => void openPopout("inspector")}
+          className="cursor-pointer border-t border-l border-line bg-chrome px-3 py-1.5 text-left text-caption text-fg-dim hover:text-fg"
+        >
+          <Trans>Open the side panel on the second monitor</Trans>
+        </button>
       </div>
     </div>
   );

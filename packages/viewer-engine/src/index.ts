@@ -12,6 +12,7 @@ export {
   type SignedSlideOptions,
   type SlideAccess,
   SlideBytesError,
+  SlideHasSeveralScanAreasError,
   SlideNeedsReingestError,
   signedOpenRequest,
   slideFormatFromName,
@@ -348,6 +349,65 @@ export {
   wheelPan,
   wheelPixels,
 } from "./input/wheel.ts";
+export {
+  cellCoverage,
+  contextRingCells,
+  type EmbeddingPlanes,
+  learnerInput,
+  pooledFeatureDims,
+  poolNucleusFeature,
+  typerLogProbabilities,
+} from "./learner/features.ts";
+export {
+  learnerStateVersion,
+  learnerVariant,
+  readSavedLearner,
+  restoreLearner,
+  type SavedLearner,
+  saveLearner,
+} from "./learner/learner-state.ts";
+export type {
+  LearnerReply,
+  LearnerRequest,
+  LearnerStatus,
+  LearnerTaught,
+} from "./learner/protocol.ts";
+export {
+  balancedAccuracy,
+  type ProtocolOptions,
+  type ProtocolScore,
+  protocolCorrections,
+  protocolDraws,
+  protocolHeld,
+  sameImageProtocol,
+  sameImageTrial,
+  seededRandom,
+  summarise,
+  type TrialScore,
+  type TypingSet,
+} from "./learner/same-image-protocol.ts";
+export {
+  argmax,
+  createTypeLearner,
+  type LearnerExample,
+  type LearnerSettings,
+  learnerDefaults,
+  type TypeLearner,
+} from "./learner/type-learner.ts";
+export {
+  createLearnerClient,
+  type LearnerClient,
+  LearnerClientClosedError,
+  type LearnerOpened,
+  type LearnerWorker,
+  LearnerWorkerError,
+  spawnLearnerWorker,
+} from "./learner/worker-client.ts";
+export {
+  type LearnerWorkerOptions,
+  type LearnerWorkerScope,
+  startLearnerWorker,
+} from "./learner/worker-runtime.ts";
 export type { CellChunk } from "./nuclei/cell-chunk.ts";
 export { readCellChunk } from "./nuclei/cell-chunk.ts";
 export type { CellConfidence } from "./nuclei/cell-confidence.ts";
@@ -689,12 +749,23 @@ export {
 export { type PatchWorkerScope, startPatchWorker } from "./patch/worker-runtime.ts";
 export * from "./pixel-source/index.ts";
 export {
+  type EmbeddingWindow,
+  embeddingWindow,
+  outsideWindowLogit,
+  pasteWindowOutputs,
+  samWindowMargin,
+  samWindowTokens,
+  touchesInnerEdge,
+  type WindowOptions,
+} from "./sam/embedding-window.ts";
+export {
   createInferenceEngine,
   defaultEmbeddingCapacity,
   EngineNotReadyError,
   type InferenceEngine,
   type InferenceEngineOptions,
   type SamBox,
+  type SamDecodePath,
   type SamEncoded,
   type SamGraphLoad,
   type SamOutput,

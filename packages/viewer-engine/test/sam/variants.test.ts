@@ -28,6 +28,8 @@ describe("PathoSAM variants per execution provider", () => {
   it("shares one decoder and one AIS decoder across providers and loads no fp16 graph", () => {
     assert.equal(samVariant("webgpu").decoder, samVariant("wasm").decoder);
     assert.equal(samVariant("webgpu").aisDecoder, samVariant("wasm").aisDecoder);
+    assert.equal(samVariant("webgpu").windowDecoder, samVariant("wasm").windowDecoder);
+    assert.equal(samVariant("wasm").windowDecoder, samGraphs.windowDecoder);
     for (const provider of providers) {
       const variant = samVariant(provider);
       assert.equal(variant.provider, provider);

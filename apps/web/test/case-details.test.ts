@@ -52,6 +52,15 @@ test("missing data stays undefined so the picker says it is missing", () => {
   assert.equal(details.clinicalNote, undefined);
 });
 
+test("a clinical case carries its clinical note into the details", () => {
+  const details = caseDetailsOf({
+    clinical: true,
+    specimens: [],
+    clinicalNote: "Fake note for a test. Lesion growing over three months.",
+  });
+  assert.equal(details.clinicalNote, "Fake note for a test. Lesion growing over three months.");
+});
+
 test("a specimen without words shows only its letter", () => {
   assert.equal(
     specimenText({ letter: "C", type: " ", site: null, laterality: "not-applicable" }),

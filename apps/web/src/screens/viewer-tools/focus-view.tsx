@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Keycap } from "@parfocal/ui/components/keycap";
 import { MagnificationBar } from "@parfocal/ui/components/magnification-bar";
 import { MapTrail, MapViewport, SmartMinimap } from "@parfocal/ui/components/smart-minimap";
@@ -43,6 +44,7 @@ export function FocusView(props: FocusViewProps) {
 }
 
 function RegionFocus({ tools, object, onShowUi, peekOpen, onPeekChange }: FocusViewProps) {
+  const { t } = useLingui();
   const [held, setHeld] = useState(false);
   usePeekKey(
     peekOpen,
@@ -124,7 +126,7 @@ function RegionFocus({ tools, object, onShowUi, peekOpen, onPeekChange }: FocusV
                 <button
                   type="button"
                   onClick={onShowUi}
-                  aria-label="Show the interface"
+                  aria-label={t`Show the interface`}
                   className="cursor-pointer border-0 bg-transparent p-0"
                 >
                   <Keycap action="hideui" keys="⌘\" size="sm" />
@@ -133,13 +135,17 @@ function RegionFocus({ tools, object, onShowUi, peekOpen, onPeekChange }: FocusV
               {current ? (
                 <FocusCard
                   className="right-3.5 bottom-3.5"
-                  title={`${current.object} · Tumor region`}
+                  title={t`${current.object} · Tumor region`}
                   status={
                     <StatusTag tone={decided ? tone[decided.value] : "neutral"}>
-                      {decided ? countWord[decided.value].toLowerCase() : "open"}
+                      {decided ? countWord[decided.value].toLowerCase() : t`open`}
                     </StatusTag>
                   }
-                  text={`${current.size_mm?.toFixed(2) ?? ""} mm across. ${decided ? "Decided. Press a key again to change it." : "Still open."}`}
+                  text={
+                    decided
+                      ? t`${current.size_mm?.toFixed(2) ?? ""} mm across. Decided. Press a key again to change it.`
+                      : t`${current.size_mm?.toFixed(2) ?? ""} mm across. Still open.`
+                  }
                   keys={[
                     ...keys.map((item) => ({
                       key: item.key,
@@ -156,9 +162,9 @@ function RegionFocus({ tools, object, onShowUi, peekOpen, onPeekChange }: FocusV
                     data-corner={place.corner}
                     image={overviewImage}
                     title={
-                      <>
+                      <Trans>
                         <b>Whole slide</b> · {seenPercent.reading}% seen
-                      </>
+                      </Trans>
                     }
                     foot={`T2 of ${areas.length}`}
                     footEnd={`10× · ${regions.filter((region) => answer(region.object)).length} of ${areas.length} decided`}

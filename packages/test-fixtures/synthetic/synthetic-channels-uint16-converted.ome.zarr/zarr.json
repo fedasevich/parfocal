@@ -63,7 +63,7 @@
             "color": "00FF00",
             "active": true,
             "window": {
-              "start": 128,
+              "start": 129,
               "end": 52428,
               "min": 0,
               "max": 65535

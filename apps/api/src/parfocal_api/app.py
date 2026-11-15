@@ -23,6 +23,7 @@ from parfocal_api import (
     case_sorting,
     cases,
     checklist,
+    clinical_notes,
     clinical_reports,
     decision_notes,
     disagreements,
@@ -40,6 +41,7 @@ from parfocal_api import (
     invitations,
     lab_models,
     link_imports,
+    model_registry,
     model_run_progress,
     model_runs,
     model_tiers,
@@ -212,6 +214,7 @@ def create_app(
     app.include_router(model_runs.router)
     app.include_router(model_tiers.router)
     app.include_router(hidden_models.router)
+    app.include_router(model_registry.router)
     app.include_router(lab_models.router)
     app.include_router(model_run_progress.router)
     app.include_router(notifications.router)
@@ -219,6 +222,7 @@ def create_app(
     app.include_router(taxonomy.templates_router)
     app.include_router(cases.router)
     app.include_router(slide_details.router)
+    app.include_router(clinical_notes.router)
     app.include_router(slide_moves.router)
     app.include_router(annotations.router)
     app.include_router(result_sets.slide_router)

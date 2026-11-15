@@ -199,6 +199,7 @@ export function useReviewTopPopovers({
     specimens: caseDetail?.specimens,
     taskTitle: task ? `${task.code} · ${task.name}` : undefined,
     researcher: person(task?.created_by_user_id)?.name,
+    clinicalNote: caseDetail?.clinical_note ?? undefined,
   });
   const compareStub = "Opens the compare view with the right side picker open";
   const compareTo = (scene: "picking" | "picked") => {

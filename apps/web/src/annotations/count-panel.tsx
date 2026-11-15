@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import type { ProjectClass } from "@parfocal/api-client";
 import { countByClass, unclassedKey } from "./count-markers.ts";
 import type { AnnotationDocument } from "./document.ts";
@@ -10,6 +11,7 @@ type CountPanelProps = {
 };
 
 export function CountPanel({ document: doc, classes, activeClass, onPick }: CountPanelProps) {
+  const { t } = useLingui();
   const counts = countByClass(doc, [...classes.map((item) => item.id), unclassedKey]);
   const total = counts.reduce((sum, row) => sum + row.count, 0);
   const rows = counts.filter(
@@ -17,13 +19,13 @@ export function CountPanel({ document: doc, classes, activeClass, onPick }: Coun
   );
   return (
     <section
-      aria-label="Counts"
+      aria-label={t`Counts`}
       data-testid="count-panel"
       data-total={total}
       className="grid gap-1.5 rounded-ctl border border-line bg-chrome p-2"
     >
       <h2 className="m-0 text-body-sm font-semibold">
-        Counts <span className="font-mono text-fg-dim">{total}</span>
+        <Trans>Counts</Trans> <span className="font-mono text-fg-dim">{total}</span>
       </h2>
       <ul className="m-0 grid list-none gap-1 p-0">
         {rows.map((row, index) => {
@@ -45,7 +47,7 @@ export function CountPanel({ document: doc, classes, activeClass, onPick }: Coun
                   className="size-2.5 rounded-full"
                   style={{ background: info?.colour ?? "var(--color-accent)" }}
                 />
-                <span className="flex-1">{info?.name ?? "Marker"}</span>
+                <span className="flex-1">{info?.name ?? t`Marker`}</span>
                 {index < 9 && info ? (
                   <kbd className="font-mono text-fg-dim">{index + 1}</kbd>
                 ) : null}
@@ -56,7 +58,7 @@ export function CountPanel({ document: doc, classes, activeClass, onPick }: Coun
         })}
       </ul>
       <p className="m-0 text-body-sm text-fg-dim">
-        Click to drop a marker. Shift-click removes one.
+        <Trans>Click to drop a marker. Shift-click removes one.</Trans>
       </p>
     </section>
   );
