@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-15
 
+- SEC-035 merged into the train: migration 0120 makes all 35 single-column keys between workspace tables carry tenant_id, with a parfocal_app probe and a guard test. New SEC-046 (composite foreign keys carry the tenant) covers the 44 composite keys left.
 - FOUND-015 merged into the train: API Dockerfile with pinned digests and a non-root user, Modal images installing hashed locks exported from uv.lock, a lock check test, and a new images job in CI. Resolved the ci.yml clash with FOUND-028 by pinning the images job to ubuntu-24.04. Review waits for the first images job run on GitHub.
 - FOUND-039 merged into the train: full-viewer.tsx down from 1,870 to about 500 lines behind useViewerModel, no longer a length exception. The axe target-size failure on the Hide while panning checkbox in G then n fails with and without the split under load, so it predates the split.
 - EXP-008 partly merged into the train: /study page with timed tasks, frozen rounds, a task set editable as JSON in the browser and a JSON results download. The ten tasks are agent-written stand-ins for the kit plan.

@@ -1033,6 +1033,12 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Depends on FOUND-035.
   Size: M.
 
+- [ ] SEC-046 · Composite foreign keys to tenant tables carry the tenant
+  SEC-035 made every single-column key between workspace tables include `tenant_id`, but 44 composite keys of the form `(x_id, project_id)` or `(task_id, slide_id)` still leave it out, so a row can still name a parent pair in another workspace when a route skips the parent check. The list is in `docs/knowledge/database.md`.
+  Done when the SEC-035 probe as `parfocal_app` also covers every composite key and fails each cross-workspace insert, the guard test rejects a new composite key without `tenant_id`, and the db tests pass.
+  Depends on SEC-035.
+  Size: M.
+
 - [x] SEC-036 · A removed person cannot rejoin a room
   After a revoke closes the socket, the same room token joins again until it expires, and an older token that joins later overwrites the index entry so a revoke can miss a newer socket ([edge token review](results/2026-11-09-edge-token-review.md), finding C1). ADR 0140 (realtime rooms and room tokens) says a removed person stops receiving events at once.
   Done when edge tests show a refused rejoin with the token held before the revoke and a revoke that closes the newer socket after an older token joined.
