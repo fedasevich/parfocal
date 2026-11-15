@@ -68,11 +68,13 @@ export function buildRunDraft(input: {
   readonly options: RunOptions;
   readonly view: ViewRect | null;
   readonly selection?: ViewRect | null;
+  readonly taskId?: string | null;
 }): ModelRunDraft | null {
   const scope: RunScope | null = scopeOf(input.options, input.view, input.selection ?? null);
   if (scope === null) return null;
   return {
     slide_ids: [input.slideId],
+    ...(input.taskId ? { task_id: input.taskId } : {}),
     scope,
     parameters: {
       detector: { name: nucleiDetector },
@@ -86,4 +88,11 @@ export function canTuneRun(input: {
   readonly projectRole: string | null | undefined;
 }): boolean {
   return input.tenantRole === "researcher" || input.projectRole === "owner";
+}
+
+export function canRunModels(input: {
+  readonly tenantRole: string | undefined;
+  readonly projectRole: string | null | undefined;
+}): boolean {
+  return input.tenantRole === "researcher" && input.projectRole === "owner";
 }

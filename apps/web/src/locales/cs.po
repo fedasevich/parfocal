@@ -384,7 +384,7 @@ msgstr ""
 msgid "Adding the result set to the slide"
 msgstr ""
 
-#: src/viewer/annotate-run-panel.tsx
+#: src/viewer/run-stream-layer.tsx
 msgid "Adding the run to the task"
 msgstr ""
 
@@ -745,10 +745,6 @@ msgstr ""
 msgid "Drag to move, scroll to zoom"
 msgstr ""
 
-#: src/viewer/annotate-run-panel.tsx
-msgid "Draw or select a shape to run on it, or run on this view"
-msgstr ""
-
 #. placeholder {0}: object.object
 #: src/screens/review/object-card.tsx
 msgid "Draw the new outline of {0}"
@@ -827,9 +823,17 @@ msgstr ""
 msgid "Find an ID"
 msgstr ""
 
+#: src/viewer/start-run-panel.tsx
+msgid "Find nuclei"
+msgstr ""
+
 #: src/screens/review/first-read.tsx
 #: src/screens/review/object-card.tsx
 msgid "Finish outline"
+msgstr ""
+
+#: src/viewer/run-tiles-map.tsx
+msgid "Finished tiles"
 msgstr ""
 
 #: src/screens/annotate-task/new-annotate-task.tsx
@@ -934,7 +938,7 @@ msgstr ""
 msgid "into \"{targetName}\""
 msgstr ""
 
-#: src/viewer/annotate-run-panel.tsx
+#: src/viewer/run-stream-layer.tsx
 msgid "Its objects are AI objects of this task now"
 msgstr ""
 
@@ -988,6 +992,10 @@ msgstr ""
 msgid "Left out of the export"
 msgstr ""
 
+#: src/viewer/start-run-panel.tsx
+msgid "Left to right"
+msgstr ""
+
 #: src/screens/viewer-tools/compare-view.tsx
 msgid "Let others on this slide see where you point"
 msgstr ""
@@ -1012,6 +1020,10 @@ msgstr ""
 
 #: src/screens/viewer-tools/compare-view.tsx
 msgid "Linked: pan, zoom and rotation move both"
+msgstr ""
+
+#: src/viewer/start-run-panel.tsx
+msgid "Load last run"
 msgstr ""
 
 #: src/screens/viewer/full-viewer.tsx
@@ -1143,6 +1155,10 @@ msgstr ""
 
 #: src/screens/review/object-comments.tsx
 msgid "No comments on {object} yet. Write the first one below."
+msgstr ""
+
+#: src/viewer/start-run-panel.tsx
+msgid "No earlier run on this slide"
 msgstr ""
 
 #: src/screens/annotate-task/new-annotate-task.tsx
@@ -1299,6 +1315,14 @@ msgstr ""
 
 #: src/screens/review/object-card.tsx
 msgid "Optional"
+msgstr ""
+
+#: src/viewer/start-run-panel.tsx
+msgid "Options"
+msgstr ""
+
+#: src/viewer/start-run-panel.tsx
+msgid "Order"
 msgstr ""
 
 #: src/screens/viewer-tools/compare-view.tsx
@@ -1485,18 +1509,6 @@ msgstr ""
 msgid "ruler, across {0}"
 msgstr ""
 
-#: src/viewer/annotate-run-panel.tsx
-msgid "Run a model"
-msgstr ""
-
-#: src/viewer/annotate-run-panel.tsx
-msgid "Run on the selection"
-msgstr ""
-
-#: src/viewer/annotate-run-panel.tsx
-msgid "Run on this view"
-msgstr ""
-
 #: src/viewer/annotate-task-panel.tsx
 msgid "Runs to add"
 msgstr ""
@@ -1521,6 +1533,10 @@ msgstr ""
 #. placeholder {0}: guess.downsample
 #: src/screens/upload/result-problems.tsx
 msgid "Scaled by {0}, {share}"
+msgstr ""
+
+#: src/viewer/start-run-panel.tsx
+msgid "Scope"
 msgstr ""
 
 #: src/screens/annotate-task/annotate-task-view.tsx
@@ -1673,10 +1689,6 @@ msgstr ""
 msgid "Starting point"
 msgstr ""
 
-#: src/viewer/annotate-run-panel.tsx
-msgid "Starting the run"
-msgstr ""
-
 #: src/screens/review/slide-submitted.tsx
 msgid "Stays open until you pick. Your review can be changed until sign-off."
 msgstr ""
@@ -1799,23 +1811,31 @@ msgstr ""
 msgid "The run {0} joins this slide"
 msgstr ""
 
+#: src/viewer/start-run-panel.tsx
+msgid "The run could not start"
+msgstr ""
+
 #: src/viewer/run-stream-layer.tsx
 msgid "The run could not stream onto this slide"
 msgstr ""
 
-#: src/viewer/annotate-run-panel.tsx
+#: src/viewer/run-stream-layer.tsx
 msgid "The run ended as {status}, nothing was added"
 msgstr ""
 
-#: src/viewer/annotate-run-panel.tsx
+#: src/viewer/run-stream-layer.tsx
 msgid "The run is streaming onto the slide"
 msgstr ""
 
-#: src/viewer/annotate-run-panel.tsx
+#: src/viewer/run-stream-layer.tsx
 msgid "The run joined the task's check scope"
 msgstr ""
 
-#: src/viewer/annotate-run-panel.tsx
+#: src/viewer/start-run-panel.tsx
+msgid "The selected shapes"
+msgstr ""
+
+#: src/viewer/run-stream-layer.tsx
 msgid "The server refused it ({code})"
 msgstr ""
 
@@ -1908,6 +1928,10 @@ msgstr ""
 msgid "tumor"
 msgstr ""
 
+#: src/viewer/start-run-panel.tsx
+msgid "Tumor first"
+msgstr ""
+
 #: src/screens/viewer/layer-views.tsx
 msgid "Tumor probability"
 msgstr ""
@@ -1989,6 +2013,10 @@ msgstr ""
 msgid "What changes"
 msgstr ""
 
+#: src/viewer/start-run-panel.tsx
+msgid "What I see now"
+msgstr ""
+
 #: src/screens/review/object-card.tsx
 msgid "What is wrong"
 msgstr ""
@@ -2013,6 +2041,7 @@ msgstr ""
 #: src/screens/review/cells-on-slide.tsx
 #: src/screens/review/guided-review.tsx
 #: src/screens/viewer/full-viewer.tsx
+#: src/viewer/start-run-panel.tsx
 msgid "Whole slide"
 msgstr ""
 
@@ -2117,4 +2146,8 @@ msgstr ""
 
 #: src/screens/review/guided-review.tsx
 msgid "Zoom out (−)"
+msgstr ""
+
+#: src/viewer/start-run-panel.tsx
+msgid "Zoom to a part of the slide first"
 msgstr ""

@@ -2,17 +2,20 @@ import { Trans, useLingui } from "@lingui/react/macro";
 import { useGetMe, useGetProject } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
 import { useCallback } from "react";
+import type { AnnotateTask } from "../annotations/annotate-task.ts";
 import { okData } from "../screens/placeholder.tsx";
-import { canTuneRun, type ViewRect, viewScopeOf } from "./run-options.ts";
+import { canRunModels, canTuneRun, type ViewRect, viewScopeOf } from "./run-options.ts";
 import { RunTilesMap } from "./run-tiles-map.tsx";
 import { StartRunPanel } from "./start-run-panel.tsx";
 import { type RunStreamControls, runStreamVisible, useRunStream } from "./use-run-stream.ts";
+import { type TaskRunJoin, useTaskRunJoin } from "./use-task-run-join.ts";
 import { type ViewerEngine, viewArea } from "./viewer-engine.ts";
 
 type RunStreamLayerProps = {
   readonly engine: ViewerEngine;
   readonly stage: HTMLElement | null;
   readonly selection: ViewRect | null;
+  readonly task: AnnotateTask | null;
   readonly projectId: string | undefined;
   readonly slideId: string;
 };
@@ -94,14 +97,19 @@ function RunStreamPanel({
 }
 
 function ProjectRunStreamLayer(props: RunStreamLayerProps & { readonly projectId: string }) {
-  const { engine, stage, projectId, slideId, selection } = props;
+  const { engine, stage, projectId, slideId, selection, task } = props;
   const me = okData(useGetMe().data);
   const project = okData(useGetProject(projectId).data);
   const canTune = canTuneRun({
     tenantRole: me?.workspaces.find((item) => item.tenant_id === me.active_tenant_id)?.role,
     projectRole: project?.my_role,
   });
+  const runner = canRunModels({
+    tenantRole: me?.workspaces.find((item) => item.tenant_id === me.active_tenant_id)?.role,
+    projectRole: project?.my_role,
+  });
   const controls = useRunStream({ engine, projectId, slideId });
+  const join = useTaskRunJoin({ projectId, task, onJoined: controls.release });
   const currentView = useCallback((): ViewRect | null => {
     const slide = engine.getSlide();
     if (slide === null || stage === null) return null;
@@ -113,18 +121,51 @@ function ProjectRunStreamLayer(props: RunStreamLayerProps & { readonly projectId
       {runStreamVisible(controls) ? (
         <RunStreamPanel controls={controls} slide={engine.getSlide()} />
       ) : null}
-      {controls.phase === "streaming" ? null : (
+      {task === null ? null : <TaskRunStatus join={join} streamed={controls.drawn} />}
+      {controls.phase === "streaming" || !runner ? null : (
         <StartRunPanel
           projectId={projectId}
           slideId={slideId}
           currentView={currentView}
           selection={selection}
           canTune={canTune}
-          onStarted={() => void controls.watchNow()}
+          taskId={task?.taskId ?? null}
+          onStarted={(runIds) => {
+            const [first] = runIds;
+            if (task !== null && first !== undefined) join.watch(first);
+            void controls.watchNow();
+          }}
           onLoadLast={controls.loadLast}
         />
       )}
     </>
+  );
+}
+
+function TaskRunLine({ join }: { join: TaskRunJoin }) {
+  const status = join.status ?? "";
+  const code = join.code;
+  if (join.phase === "running") return <Trans>The run is streaming onto the slide</Trans>;
+  if (join.phase === "joining") return <Trans>Adding the run to the task</Trans>;
+  if (join.phase === "joined") return <Trans>Its objects are AI objects of this task now</Trans>;
+  if (join.phase === "scoped") return <Trans>The run joined the task's check scope</Trans>;
+  if (join.phase === "ended") return <Trans>The run ended as {status}, nothing was added</Trans>;
+  if (join.phase === "failed") return <Trans>The server refused it ({code})</Trans>;
+  return null;
+}
+
+function TaskRunStatus({ join, streamed }: { join: TaskRunJoin; streamed: number }) {
+  return (
+    <p
+      role="status"
+      data-testid="annotate-run"
+      data-phase={join.phase}
+      data-run={join.runId ?? ""}
+      data-streamed={streamed}
+      className="pointer-events-none absolute bottom-28 left-3 z-10 m-0 rounded-md bg-chrome px-2 py-1 text-caption text-fg-dim empty:hidden"
+    >
+      <TaskRunLine join={join} />
+    </p>
   );
 }
 

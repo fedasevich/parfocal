@@ -1,109 +1,77 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import type { ModelRun } from "@parfocal/api-client";
-import {
-  annotateRunDraft,
-  joinableSetOf,
-  runEnded,
-  selectionScopeOf,
-  viewScopeOf,
-} from "../src/annotations/annotate-run.ts";
-import { addShape, createDocument } from "../src/annotations/document.ts";
+import { joinableSetOf, runEnded } from "../src/annotations/annotate-run.ts";
+import { buildRunDraft, canRunModels, viewScopeOf } from "../src/viewer/run-options.ts";
 
 const task = { taskId: "task-1", slideId: "slide-1" };
 
-function drawn() {
-  const polygon = addShape(createDocument(), {
-    kind: "polygon",
-    points: Float32Array.of(100, 100, 400, 120, 380, 360),
+test("a run on the selection from an annotate task carries the task and the selected box", () => {
+  const draft = buildRunDraft({
+    slideId: "slide-1",
+    options: { scope: "selection", ordering: "raster" },
+    view: null,
+    selection: { x: 100, y: 100, width: 300, height: 260 },
+    taskId: "task-1",
   });
-  const rectangle = addShape(polygon.document, {
-    kind: "rectangle",
-    points: Float32Array.of(600, 500, 800, 700),
-  });
-  const marker = addShape(rectangle.document, { kind: "point", points: Float32Array.of(50, 50) });
-  return {
-    shapes: marker.document.shapes,
-    polygon: polygon.shape.id,
-    rectangle: rectangle.shape.id,
-    marker: marker.shape.id,
-  };
-}
-
-test("a selected polygon becomes the selection scope with its own closed outline", () => {
-  const { shapes, polygon } = drawn();
-  assert.deepEqual(selectionScopeOf(shapes, [polygon]), {
-    kind: "selection",
-    geometry: {
-      type: "Polygon",
-      coordinates: [
-        [
-          [100, 100],
-          [400, 120],
-          [380, 360],
-          [100, 100],
+  assert.deepEqual(draft, {
+    slide_ids: ["slide-1"],
+    task_id: "task-1",
+    scope: {
+      kind: "selection",
+      geometry: {
+        type: "Polygon",
+        coordinates: [
+          [
+            [100, 100],
+            [400, 100],
+            [400, 360],
+            [100, 360],
+            [100, 100],
+          ],
         ],
-      ],
+      },
     },
+    parameters: { detector: { name: "hovernet" }, ordering: "raster" },
   });
 });
 
-test("several selected shapes run on the box around them, and open shapes are left out", () => {
-  const { shapes, polygon, rectangle, marker } = drawn();
-  assert.deepEqual(selectionScopeOf(shapes, [polygon, marker, rectangle])?.geometry, {
-    type: "Polygon",
-    coordinates: [
-      [
-        [100, 100],
-        [800, 100],
-        [800, 700],
-        [100, 700],
-        [100, 100],
-      ],
-    ],
+test("a run on the view from an annotate task carries the task and the view", () => {
+  const view = viewScopeOf(
+    { x: -40.4, y: 200.6, width: 1000, height: 400 },
+    { width: 2048, height: 1536 },
+  );
+  const draft = buildRunDraft({
+    slideId: "slide-1",
+    options: { scope: "view", ordering: "raster" },
+    view,
+    taskId: "task-1",
   });
-  assert.equal(selectionScopeOf(shapes, [marker]), null);
-  assert.equal(selectionScopeOf(shapes, []), null);
+  assert.equal(draft?.task_id, "task-1");
+  assert.deepEqual(draft?.scope, { kind: "view", x: 0, y: 201, width: 960, height: 400 });
+  const outside = buildRunDraft({
+    slideId: "slide-1",
+    options: { scope: "view", ordering: "raster" },
+    view: null,
+  });
+  assert.equal(outside, null);
 });
 
-test("the current view becomes a view scope clamped to the slide in whole pixels", () => {
-  const slide = { width: 2048, height: 1536 };
-  assert.deepEqual(viewScopeOf({ x: -40.4, y: 200.6, width: 1000, height: 400 }, slide), {
-    kind: "view",
-    x: 0,
-    y: 201,
-    width: 960,
-    height: 400,
+test("a run outside a task carries no task", () => {
+  const draft = buildRunDraft({
+    slideId: "slide-1",
+    options: { scope: "slide", ordering: "raster" },
+    view: null,
+    taskId: null,
   });
-  assert.deepEqual(viewScopeOf({ x: 1800, y: 1400, width: 900, height: 900 }, slide), {
-    kind: "view",
-    x: 1800,
-    y: 1400,
-    width: 248,
-    height: 136,
-  });
-  assert.equal(viewScopeOf({ x: 3000, y: 0, width: 100, height: 100 }, slide), null);
+  assert.equal(draft !== null && "task_id" in draft, false);
 });
 
-test("a run from the Annotate workspace carries the task and one slide", () => {
-  const { shapes, polygon } = drawn();
-  const selection = selectionScopeOf(shapes, [polygon]);
-  assert.ok(selection);
-  const fromSelection = annotateRunDraft({ ...task, scope: selection });
-  assert.deepEqual(fromSelection.slide_ids, ["slide-1"]);
-  assert.equal(fromSelection.task_id, "task-1");
-  assert.equal(fromSelection.scope.kind, "selection");
-  assert.deepEqual(fromSelection.parameters, { detector: { name: "hovernet" } });
-
-  const view = viewScopeOf({ x: 10, y: 20, width: 300, height: 200 }, { width: 999, height: 999 });
-  assert.ok(view);
-  assert.deepEqual(annotateRunDraft({ ...task, scope: view }).scope, {
-    kind: "view",
-    x: 10,
-    y: 20,
-    width: 300,
-    height: 200,
-  });
+test("only a researcher who owns the project may run models, as the API's matrix says", () => {
+  assert.equal(canRunModels({ tenantRole: "researcher", projectRole: "owner" }), true);
+  assert.equal(canRunModels({ tenantRole: "researcher", projectRole: "reviewer" }), false);
+  assert.equal(canRunModels({ tenantRole: "reviewer", projectRole: "owner" }), false);
+  assert.equal(canRunModels({ tenantRole: undefined, projectRole: undefined }), false);
 });
 
 const run = (patch: Partial<ModelRun>) =>

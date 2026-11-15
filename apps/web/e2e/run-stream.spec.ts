@@ -10,7 +10,7 @@ async function openStreamingSlide(page: Page): Promise<string> {
   await page.getByTestId("slide-row").filter({ hasText: "tumor_044" }).click();
   await page.waitForURL(/\/slides\//);
   const url = new URL(page.url());
-  await page.goto(`${url.pathname}?task=${rt14}&workspace=annotate&scene=streaming`);
+  await page.goto(`${url.pathname}?task=${rt14}&workspace=annotate&scene=streaming&as=DH`);
   const stage = page.getByTestId("slide-stage");
   await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 30_000 });
   const slideId = /\/slides\/([^/]+)/.exec(url.pathname)?.[1];

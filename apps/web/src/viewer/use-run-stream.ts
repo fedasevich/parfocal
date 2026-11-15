@@ -42,6 +42,7 @@ export type RunStreamControls = RunStreamState & {
   readonly cancel: () => void;
   readonly watchNow: () => Promise<void>;
   readonly loadLast: () => Promise<boolean>;
+  readonly release: () => void;
 };
 
 const idle: RunStreamState = { phase: "idle", runId: null, progress: null, drawn: 0, tiles: [] };
@@ -200,7 +201,14 @@ export function useRunStream(options: {
     void stream.current?.cancel();
   }, []);
 
-  return { ...state, cancel, watchNow, loadLast };
+  const release = useCallback(() => {
+    stream.current?.close();
+    stream.current = null;
+    clear();
+    setState(idle);
+  }, [clear]);
+
+  return { ...state, cancel, watchNow, loadLast, release };
 }
 
 type ListedRun = { id: string; slide_id: string; status: string };

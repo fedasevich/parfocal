@@ -16,7 +16,8 @@ type StartRunPanelProps = {
   readonly currentView: () => ViewRect | null;
   readonly selection: ViewRect | null;
   readonly canTune: boolean;
-  readonly onStarted: () => void;
+  readonly taskId?: string | null;
+  readonly onStarted: (runIds: readonly string[]) => void;
   readonly onLoadLast: () => Promise<boolean>;
 };
 
@@ -49,6 +50,7 @@ export function StartRunPanel(props: StartRunPanelProps) {
       options: used,
       view: used.scope === "view" ? props.currentView() : null,
       selection: props.selection,
+      taskId: props.taskId ?? null,
     });
     if (draft === null) {
       setNotice("no-view");
@@ -58,7 +60,7 @@ export function StartRunPanel(props: StartRunPanelProps) {
     setNotice("none");
     try {
       const response = await startModelRuns(props.projectId, draft);
-      if (response.status === 201) props.onStarted();
+      if (response.status === 201) props.onStarted(response.data.map((run) => run.id));
       else setNotice("failed");
     } catch {
       setNotice("failed");
@@ -119,6 +121,11 @@ export function StartRunPanel(props: StartRunPanelProps) {
               <option value="view">
                 <Trans>What I see now</Trans>
               </option>
+              {props.taskId ? (
+                <option value="selection" disabled={props.selection === null}>
+                  <Trans>The selected shapes</Trans>
+                </option>
+              ) : null}
             </select>
           </label>
           <label className="flex items-center justify-between gap-2">

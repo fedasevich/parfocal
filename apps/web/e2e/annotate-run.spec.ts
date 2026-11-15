@@ -24,14 +24,18 @@ const corners = [
   [530, 450],
 ] as const;
 
+const runPosted = (page: Page) =>
+  page.waitForRequest(
+    (request) => request.method() === "POST" && request.url().endsWith(`/model-runs`),
+  );
+
 test("a model run on a drawn selection streams onto the slide, joins the task and is fixed", async ({
   page,
 }) => {
   test.setTimeout(90_000);
   const stage = await openByHandSlide(page);
   await expect(page.getByTestId("no-result-set")).toBeVisible();
-  const panel = page.getByTestId("annotate-run");
-  await expect(page.getByTestId("annotate-run-selection")).toBeDisabled();
+  await expect(page.getByTestId("start-run")).toHaveCount(1);
 
   const box = (await stage.boundingBox()) ?? { x: 0, y: 0 };
   await page.keyboard.press("p");
@@ -41,12 +45,11 @@ test("a model run on a drawn selection streams onto the slide, joins the task an
   await expect(stage).toHaveAttribute("data-save-state", "saved");
   await page.keyboard.press("Escape");
   await page.mouse.click(box.x + 640, box.y + 360);
-  await expect(page.getByTestId("annotate-run-selection")).toBeEnabled();
 
-  const posted = page.waitForRequest(
-    (request) => request.method() === "POST" && request.url().endsWith(`/model-runs`),
-  );
-  await page.getByTestId("annotate-run-selection").click();
+  await page.getByTestId("start-run-options").click();
+  await page.getByTestId("start-run-scope").selectOption("selection");
+  const posted = runPosted(page);
+  await page.getByTestId("start-run-find").click();
   const draft = (await posted).postDataJSON() as {
     task_id: string;
     slide_ids: string[];
@@ -56,12 +59,17 @@ test("a model run on a drawn selection streams onto the slide, joins the task an
   expect(draft.slide_ids).toEqual([byHand]);
   expect(draft.scope.kind).toBe("selection");
   expect(draft.scope.geometry.type).toBe("Polygon");
-  expect(draft.scope.geometry.coordinates[0]).toHaveLength(corners.length + 1);
 
-  await expect(page.getByTestId("run-stream")).toHaveAttribute("data-status", "running", {
-    timeout: 15_000,
-  });
-  await expect(panel).toHaveAttribute("data-phase", "joined", { timeout: 30_000 });
+  const streaming = page.getByTestId("run-stream");
+  await expect(streaming).toHaveAttribute("data-status", "running", { timeout: 15_000 });
+  await expect
+    .poll(async () => Number(await streaming.getAttribute("data-drawn")), { timeout: 15_000 })
+    .toBeGreaterThan(0);
+
+  const joined = page.getByTestId("annotate-run");
+  await expect(joined).toHaveAttribute("data-phase", "joined", { timeout: 30_000 });
+  await expect(joined).toHaveAttribute("data-streamed", "0");
+  await expect(streaming).toHaveCount(0);
   await expect(page.getByTestId("no-result-set")).toHaveCount(0);
   const objects = page.getByTestId("ai-object");
   await expect.poll(() => objects.count(), { timeout: 15_000 }).toBeGreaterThan(0);
@@ -81,17 +89,28 @@ test("a model run on a drawn selection streams onto the slide, joins the task an
 
 test("a model run on the current view sends the view scope with the task", async ({ page }) => {
   await openByHandSlide(page);
-  const posted = page.waitForRequest(
-    (request) => request.method() === "POST" && request.url().endsWith(`/model-runs`),
-  );
-  await page.getByTestId("annotate-run-view").click();
+  await page.getByTestId("start-run-options").click();
+  await page.getByTestId("start-run-scope").selectOption("view");
+  const posted = runPosted(page);
+  await page.getByTestId("start-run-find").click();
   const draft = (await posted).postDataJSON() as {
     task_id: string;
-    scope: { kind: string; x: number; y: number; width: number; height: number };
+    scope: { kind: string; width: number; height: number };
   };
   expect(draft.task_id).toBe(annotateTask);
   expect(draft.scope.kind).toBe("view");
   expect(draft.scope.width).toBeGreaterThan(0);
   expect(draft.scope.height).toBeGreaterThan(0);
   await expect(page.getByTestId("annotate-run")).toHaveAttribute("data-phase", "running");
+});
+
+test("an expert without the right to run models sees no run panel", async ({ page }) => {
+  await page.goto(
+    `/projects/${p07}/slides/${byHand}/live?task=${annotateTask}&as=AK&scene=streaming`,
+  );
+  const stage = page.getByTestId("slide-stage");
+  await expect(stage).toHaveAttribute("data-state", "ready", { timeout: 30_000 });
+  await expect(stage).toHaveAttribute("data-annotations", "loaded");
+  await page.waitForTimeout(1000);
+  await expect(page.getByTestId("start-run")).toHaveCount(0);
 });

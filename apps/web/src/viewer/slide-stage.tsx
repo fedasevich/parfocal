@@ -75,7 +75,6 @@ import { useMagnificationLabel } from "../shell/magnification-label-setting.ts";
 import { useSavedOutlineMode } from "../shell/outline-mode-setting.ts";
 import { useResolvedSettings } from "../shell/resolved-settings.ts";
 import { useToolsLayout } from "../shell/tools-layout.ts";
-import { AnnotateRunPanel } from "./annotate-run-panel.tsx";
 import { AnnotateTaskPanel } from "./annotate-task-panel.tsx";
 import { followLabPrefetch, labRouteOptions } from "./lab-route.ts";
 import { loadViewerEngine } from "./load-engine.ts";
@@ -769,10 +768,11 @@ function OpenedSlide({
             />
             {workspace === "annotate" ? (
               <RunStreamLayer
-                key={`${slideId}:${annotateTask?.resultSetId ?? ""}`}
+                key={slideId}
                 engine={session.engine}
                 stage={hostNode}
                 selection={selectedBox}
+                task={annotateTask}
                 projectId={projectId}
                 slideId={slideId}
               />
@@ -862,17 +862,6 @@ function OpenedSlide({
               ))}
             </div>
             <div className="absolute right-4 bottom-4 grid w-72 max-w-[calc(100%-2rem)] gap-2">
-              {workspace === "annotate" && annotateTask && projectId !== undefined ? (
-                <AnnotateRunPanel
-                  key={slideId}
-                  engine={session.engine}
-                  stage={hostNode}
-                  projectId={projectId}
-                  task={annotateTask}
-                  shapes={annotations.shapes}
-                  selectedIds={selectedIds}
-                />
-              ) : null}
               {workspace === "annotate" ? (
                 <LayersPanel
                   document={annotations}
