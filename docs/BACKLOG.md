@@ -1704,7 +1704,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on VIEW-037.
   Size: M.
 
-- [ ] VIEW-072 · Draw the first edge of a dashed ring once on Viv
+- [x] VIEW-072 · Draw the first edge of a dashed ring once on Viv
   The shared overlay builder draws the first edge of each dashed AI proposal ring twice at two dash phases on Viv, which is the whole 0.085% left between the WebGPU route and the Viv golden (VIEW-070).
   Done when each dashed ring edge is drawn once, the AI proposals golden is regenerated and the WebGPU route's difference from it falls below 0.02%.
   Depends on VIEW-070.
