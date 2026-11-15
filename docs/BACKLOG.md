@@ -3670,7 +3670,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
 
 ---
 
-- [ ] AINUC-013 · Stream a whole-slide run onto the open slide
+- [x] AINUC-013 · Stream a whole-slide run onto the open slide
   While a run on the open slide is going, each new chunk is appended to the result layer without rebuilding earlier ones, keyed by run lineage, with a full rebuild at most every 3 s. Finished tiles are marked on the slide, with progress and an estimate, and cancel keeps what is finished. This follows the POC's streamed whole-slide job.
   Done when a test proves a streamed scene equals one built from scratch, a perf test streams 250,000 nuclei with no frame over 33 ms, and E2E starts a run, sees objects appear before it ends, cancels it and keeps them.
   Depends on AIP-011, AINUC-005, PROTO-020. Refs docs 19, 31, [ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md).
@@ -4473,6 +4473,11 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when the `e2e` job passes with no `ZITADEL_*` secret and no request to `zitadel.cloud`, and a sign-up spec creates and removes a user on the local instance.
   Size: M.
 
+- [x] TEST-042 · Real-slide tests survive a dropped download
+  `packages/viewer-engine/test/pixel-source/ndpi-real.test.ts` and `reader-check.test.ts` fetch public test slides over HTTP, and on the night of 2026-11-14 three merge checks failed on `read ECONNRESET` for Hamamatsu-1.ndpi and CMU-1.ndpi, each passing on rerun. The shared fetch helper retries a reset or a dropped range read a few times with a short backoff and names the slide and range when it finally gives up.
+  Done when a unit test makes the helper's first two reads reset and the third succeed, and the real-slide tests pass with that helper.
+  Size: S.
+
 - [ ] TEST-040 · API container under the end-to-end suite
   The 6 real-API specs in `apps/e2e` run the API with `uv run uvicorn`, so the deploy image, migrations on start and production-like settings never run under a browser before a deploy. Run `apps/e2e` against the API container from FOUND-015 (container images) and the local Zitadel from TEST-039 (local Zitadel for the end-to-end suite), behind one `pnpm stack:up`, with the web app still on vite dev. Seed with the showcase seed and the small fixtures copied into MinIO. Confirm how an upload starts ingest, since `upload-into-project.spec.ts` now starts it by hand. Nothing in the stack reaches a cloud service. The edge Worker stays out until a tile, realtime or header bug escapes to production because it was missing, and then a new task adds it with a local S3 adapter for its `SLIDES` binding.
   Done when the 6 specs in `apps/e2e` pass against the API container locally and in one CI job with no secrets, and an upload is ingested with no manual ingest call.
@@ -4700,7 +4705,7 @@ Importing AI results made elsewhere is first class. A result set is one import o
   Depends on RSET-005. Split from RSET-005 on 2026-11-14.
   Size: M.
 
-- [ ] RSET-014 · Imported heatmaps on the slide, and a choice of scale guess
+- [x] RSET-014 · Imported heatmaps on the slide, and a choice of scale guess
   RSET-013 stores an accepted heatmap as a byte grid beside its result set, but the viewer does not draw it yet, and the uploader can accept only the first level and scale guess. The viewer fetches the stored grid and draws it as a heatmap layer in Layers with the VIZ colour maps, and the import choices take a `heatmap_level` so the uploader can pick any guess, each shown with its share on tissue.
   Done when a component test picks the second guess and the import ends ready at that level, and an E2E imports a heatmap, opens the slide and sees it in Layers over the right tissue.
   Depends on RSET-013, VIZ-001.

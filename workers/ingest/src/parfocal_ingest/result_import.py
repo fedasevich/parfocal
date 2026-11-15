@@ -650,7 +650,9 @@ async def check_heatmap(context: Context, path: Path, setting: Setting) -> Mappi
     upload = context.upload.row
     values = await asyncio.to_thread(heatmap_values, path, upload.file_name)
     if upload.import_choices is not None:
-        return await store_heatmap(context, values, accepted_guess(upload.import_problems))
+        level = cast("dict[str, Any]", upload.import_choices).get("heatmap_level")
+        guess = accepted_guess(upload.import_problems, level)
+        return await store_heatmap(context, values, guess)
     tissue = await tissue_of(context, upload.slide_id)
     found = await asyncio.to_thread(heatmap_problems, values, setting.frame, tissue)
     await ask_for_choices(context, found, 1)

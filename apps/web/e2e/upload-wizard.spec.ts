@@ -504,6 +504,7 @@ const problem = (code: string, message: string, extra: Record<string, unknown> =
   places: [],
   names: [],
   guess: null,
+  guesses: [],
   ...extra,
 });
 
@@ -525,7 +526,11 @@ const problems = {
     }),
     problem("partly-outside", "These objects lie outside the slide.", { count: 2 }),
     problem("heatmap-scale", "Parfocal guessed the slide level and scale of this heatmap.", {
-      guess: { level: 2, downsample: 4, mpp: null },
+      guess: { level: 2, downsample: 4, mpp: null, tissue_share: 0.31 },
+      guesses: [
+        { level: 2, downsample: 4, mpp: null, tissue_share: 0.31 },
+        { level: 0, downsample: 1, mpp: null, tissue_share: 0.92 },
+      ],
     }),
   ],
 };
@@ -594,7 +599,10 @@ test("a result file with problems waits, each problem is fixed in its zone, and 
   await zoneOf("have no score").getByRole("button", { name: "Use this choice" }).click();
   await zoneOf("lie outside the slide").getByRole("button", { name: "Leave them out" }).click();
   await expect(importButton).toBeDisabled();
-  await zoneOf("guessed the slide level").getByRole("button", { name: "Use this guess" }).click();
+  const guesses = zoneOf("guessed the slide level");
+  await expect(guesses.getByRole("radio", { name: /Level 2.*31% on tissue/ })).toBeChecked();
+  await guesses.getByRole("radio", { name: /Level 0.*92% on tissue/ }).click();
+  await guesses.getByRole("button", { name: "Use this guess" }).click();
   await expect(importButton).toBeEnabled();
   await importButton.click();
   await expect(summary).toContainText("1 result file needs you", { timeout: 20_000 });
@@ -603,6 +611,7 @@ test("a result file with problems waits, each problem is fixed in its zone, and 
     {
       score_default: "one",
       unclassified_class_id: tumorId,
+      heatmap_level: 0,
       class_mappings: [{ source_name: "Epithelium", class_id: stromaId }],
     },
   ]);

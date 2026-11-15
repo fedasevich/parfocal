@@ -447,6 +447,38 @@ export {
 export type { PfcFile, PfcHeader } from "./nuclei/pfc.ts";
 export { decodePfc, PfcError, readPfc, UnknownPfcVersionError } from "./nuclei/pfc.ts";
 export {
+  REBUILD_EVERY_MS,
+  REBUILD_SHARE,
+  RebuildGate,
+  type RebuildGateOptions,
+} from "./nuclei/rebuild-gate.ts";
+export {
+  APPEND_SLICE,
+  areaRect,
+  chunkPolygons,
+  endedStatuses,
+  estimateRemainingMs,
+  finishedTileMarks,
+  type HttpRunStreamOptions,
+  httpRunStreamSource,
+  POLL_MS,
+  type RunProgress,
+  type RunStatus,
+  RunStream,
+  type RunStreamOptions,
+  type RunStreamSource,
+  runStatuses,
+  type StreamArea,
+  type StreamPage,
+} from "./nuclei/run-stream.ts";
+export {
+  BLOCK_POLYGONS,
+  type Lineage,
+  mergePolygonBatches,
+  type SceneBlock,
+  StreamedScene,
+} from "./nuclei/streamed-scene.ts";
+export {
   type AgreementCue,
   type AgreementKind,
   type AgreementObject,

@@ -57,6 +57,7 @@ import type {
   GetResultsTemplate200,
   HeadlineNumbers,
   Health,
+  HeatmapFacts,
   Home,
   ImportCheck,
   ImportReport,
@@ -4343,8 +4344,12 @@ export const getListModelRunAreasResponseMock = (
   })),
   after: faker.number.int(),
   more: faker.datatype.boolean(),
+  total: faker.helpers.arrayElement([faker.number.int(), null]),
   ...overrideResponse,
 });
+
+export const getGetModelRunTileResponseMock = (): Blob =>
+  new Blob([new Uint8Array(faker.number.int({ min: 1, max: 64 }))]);
 
 export const getListNotificationPreferencesResponseMock = (): Preference[] =>
   Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
@@ -5107,6 +5112,21 @@ export const getDeleteResultSetResponseMock = (
 });
 
 export const getGetCellSummaryResponseMock = (): Blob =>
+  new Blob([new Uint8Array(faker.number.int({ min: 1, max: 64 }))]);
+
+export const getGetHeatmapResponseMock = (
+  overrideResponse: Partial<Extract<HeatmapFacts, object>> = {},
+): HeatmapFacts => ({
+  width: faker.number.int(),
+  height: faker.number.int(),
+  level: faker.helpers.arrayElement([faker.number.int(), null]),
+  downsample: faker.number.float({ fractionDigits: 2 }),
+  mpp: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+  tissue_share: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+  ...overrideResponse,
+});
+
+export const getGetHeatmapGridResponseMock = (): Blob =>
   new Blob([new Uint8Array(faker.number.int({ min: 1, max: 64 }))]);
 
 export const getGetResultsSchemaResponseMock = (): GetResultsSchema200 => ({});
@@ -17614,6 +17634,30 @@ export const getListModelRunAreasMockHandler = (
   );
 };
 
+export const getGetModelRunTileMockHandler = (
+  overrideResponse?:
+    | Blob
+    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<Blob> | Blob),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/projects/:projectId/model-runs/:runId/tiles/:unit",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      const binaryBody =
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetModelRunTileResponseMock();
+      return new HttpResponse(binaryBody, {
+        status: 200,
+        headers: { "Content-Type": "application/octet-stream" },
+      });
+    },
+    options,
+  );
+};
+
 export const getListNotificationPreferencesMockHandler = (
   overrideResponse?:
     | Preference[]
@@ -18174,6 +18218,54 @@ export const getGetCellSummaryMockHandler = (
             ? await overrideResponse(info)
             : overrideResponse
           : getGetCellSummaryResponseMock();
+      return new HttpResponse(binaryBody, {
+        status: 200,
+        headers: { "Content-Type": "application/octet-stream" },
+      });
+    },
+    options,
+  );
+};
+
+export const getGetHeatmapMockHandler = (
+  overrideResponse?:
+    | HeatmapFacts
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<HeatmapFacts> | HeatmapFacts),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/result-sets/:resultSetId/heatmap",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetHeatmapResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getGetHeatmapGridMockHandler = (
+  overrideResponse?:
+    | Blob
+    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<Blob> | Blob),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/result-sets/:resultSetId/heatmap/grid",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      const binaryBody =
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetHeatmapGridResponseMock();
       return new HttpResponse(binaryBody, {
         status: 200,
         headers: { "Content-Type": "application/octet-stream" },
@@ -23570,6 +23662,7 @@ export const getParfocalAPIMock = () => [
   getGetLabModelMockHandler(),
   getTestConnectedLabModelMockHandler(),
   getListModelRunAreasMockHandler(),
+  getGetModelRunTileMockHandler(),
   getListNotificationPreferencesMockHandler(),
   getSetNotificationPreferencesMockHandler(),
   getGetOpinionFormTemplateMockHandler(),
@@ -23595,6 +23688,8 @@ export const getParfocalAPIMock = () => [
   getGetResultSetMockHandler(),
   getDeleteResultSetMockHandler(),
   getGetCellSummaryMockHandler(),
+  getGetHeatmapMockHandler(),
+  getGetHeatmapGridMockHandler(),
   getGetResultsSchemaMockHandler(),
   getGetResultsTemplateMockHandler(),
   getValidateResultsFileMockHandler(),

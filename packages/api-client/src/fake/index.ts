@@ -18,6 +18,7 @@ import { reportLinkHandlers } from "./report-link-handlers.ts";
 import { reportPreviewHandlers } from "./report-preview-handlers.ts";
 import { resumeHandlers } from "./resume-handlers.ts";
 import { reviewHandlers } from "./review-handlers.ts";
+import { runStreamHandlers } from "./run-stream-handlers.ts";
 import { scenarioHandlers } from "./scenario-handlers.ts";
 import { settingsHandlers } from "./settings-handlers.ts";
 import { sharedLayerHandlers } from "./shared-layer-handlers.ts";
@@ -38,6 +39,7 @@ export function fakeApiHandlers(scope: FakeApiScope): RequestHandler[] {
   if (scope === "drafts") return draftHandlers();
   faker.seed(fakeDataSeed);
   return [
+    ...runStreamHandlers(),
     ...draftHandlers(),
     ...signUpHandlers(),
     ...passwordSignInHandlers(),
@@ -148,6 +150,13 @@ export {
 } from "./report-link-handlers.ts";
 export { resetFakeResume, resumeHandlers } from "./resume-handlers.ts";
 export { resetFakeThreads } from "./review-handlers.ts";
+export {
+  resetFakeRunStreams,
+  runStreamHandlers,
+  streamCellsPerTile,
+  streamRunPrefix,
+  streamTiles,
+} from "./run-stream-handlers.ts";
 export * as scenario from "./scenario.ts";
 export * as scenarioAdjudication from "./scenario-adjudication.ts";
 export * as scenarioAdmin from "./scenario-admin.ts";

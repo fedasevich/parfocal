@@ -137,6 +137,11 @@ msgstr "{0}, key {1}"
 msgid "{0}. Draw the objects by hand."
 msgstr "{0}. Draw the objects by hand."
 
+#. placeholder {0}: Math.round(guess.tissue_share * 100)
+#: src/screens/upload/result-problems.tsx
+msgid "{0}% on tissue"
+msgstr "{0}% on tissue"
+
 #. placeholder {0}: magnification.toFixed(1)
 #. placeholder {1}: Math.round(viewport[0])
 #. placeholder {2}: Math.round(viewport[1])
@@ -166,6 +171,10 @@ msgstr "{comments} comments on {object}"
 #: src/screens/viewer-tools/cell-focus.tsx
 msgid "{decidedCount} of {0} cells decided"
 msgstr "{decidedCount} of {0} cells decided"
+
+#: src/viewer/run-stream-layer.tsx
+msgid "{done} of {total} tiles, {drawn} objects"
+msgstr "{done} of {total} tiles, {drawn} objects"
 
 #. placeholder {0}: lensWords[lens]
 #. placeholder {1}: lensWords[lens]
@@ -299,6 +308,10 @@ msgstr "A random sample of AI cells"
 #: src/screens/annotate-task/new-annotate-task.tsx
 msgid "A suggestion only. It fills in the next steps, and you can change every setting there."
 msgstr "A suggestion only. It fills in the next steps, and you can change every setting there."
+
+#: src/viewer/run-stream-layer.tsx
+msgid "about {minutes} min left"
+msgstr "about {minutes} min left"
 
 #: src/screens/annotate-task/new-annotate-task.tsx
 msgid "About {toCheck} objects to check, roughly {minutes} min per expert"
@@ -518,6 +531,18 @@ msgstr "Calibration details"
 msgid "Cancel"
 msgstr "Cancel"
 
+#: src/viewer/run-stream-layer.tsx
+msgid "Cancel run"
+msgstr "Cancel run"
+
+#: src/viewer/run-stream-layer.tsx
+msgid "Cancelled. Kept {drawn} objects from {done} finished tiles"
+msgstr "Cancelled. Kept {drawn} objects from {done} finished tiles"
+
+#: src/viewer/run-stream-layer.tsx
+msgid "Cancelling, keeping the finished tiles"
+msgstr "Cancelling, keeping the finished tiles"
+
 #: src/screens/viewer-tools/navigator-canvas.tsx
 msgid "Cell 6 of 12 · AI says \"tumor or immune\""
 msgstr "Cell 6 of 12 · AI says \"tumor or immune\""
@@ -617,6 +642,11 @@ msgstr "Close the thread"
 #: src/screens/viewer/layer-views.tsx
 msgid "Cohen's kappa {0} on regions. Shown only after both submitted."
 msgstr "Cohen's kappa {0} on regions. Shown only after both submitted."
+
+#. placeholder {0}: set.name
+#: src/results/result-set-layers.tsx
+msgid "Colour map of {0}"
+msgstr "Colour map of {0}"
 
 #: src/screens/review/guided-review.tsx
 msgid "Comment added on {currentId}. It shows in the full viewer too, and the people you mention are told."
@@ -852,6 +882,10 @@ msgstr "Guided check"
 msgid "Has a note"
 msgstr "Has a note"
 
+#: src/screens/upload/result-problems.tsx
+msgid "Heatmap scale guess"
+msgstr "Heatmap scale guess"
+
 #: src/annotations/layers-panel.tsx
 msgid "Hide overlays"
 msgstr "Hide overlays"
@@ -945,6 +979,12 @@ msgstr "Left out of the export"
 #: src/screens/viewer-tools/compare-view.tsx
 msgid "Let others on this slide see where you point"
 msgstr "Let others on this slide see where you point"
+
+#. placeholder {0}: guess.level
+#. placeholder {1}: guess.downsample
+#: src/screens/upload/result-problems.tsx
+msgid "Level {0}, scaled by {1}, {share}"
+msgstr "Level {0}, scaled by {1}, {share}"
 
 #: src/screens/viewer-tools/compare-view.tsx
 msgid "Line up automatically"
@@ -1104,6 +1144,10 @@ msgstr "No review task asks about {slideLabel}. Look at it here, and write what 
 #: src/screens/viewer/object-table.tsx
 msgid "no score"
 msgstr "no score"
+
+#: src/screens/upload/result-problems.tsx
+msgid "no tissue mask"
+msgstr "no tissue mask"
 
 #: src/screens/review/first-read.tsx
 msgid "None added yet."
@@ -1450,6 +1494,11 @@ msgstr "Save a preset"
 msgid "Scale"
 msgstr "Scale"
 
+#. placeholder {0}: guess.downsample
+#: src/screens/upload/result-problems.tsx
+msgid "Scaled by {0}, {share}"
+msgstr "Scaled by {0}, {share}"
+
 #: src/screens/annotate-task/annotate-task-view.tsx
 msgid "Scope: all AI objects, least sure first"
 msgstr "Scope: all AI objects, least sure first"
@@ -1505,6 +1554,11 @@ msgstr "Show activity"
 #: src/screens/viewer/layer-views.tsx
 msgid "Show from"
 msgstr "Show from"
+
+#. placeholder {0}: set.name
+#: src/results/result-set-layers.tsx
+msgid "Show heatmap {0}"
+msgstr "Show heatmap {0}"
 
 #: src/annotations/layers-panel.tsx
 msgid "Show overlays"
@@ -1717,6 +1771,10 @@ msgstr "The researcher"
 msgid "The run {0} joins this slide"
 msgstr "The run {0} joins this slide"
 
+#: src/viewer/run-stream-layer.tsx
+msgid "The run could not stream onto this slide"
+msgstr "The run could not stream onto this slide"
+
 #: src/screens/review/slide-still.tsx
 msgid "The slide around {target}"
 msgstr "The slide around {target}"
@@ -1867,6 +1925,10 @@ msgstr "View"
 msgid "Views"
 msgstr "Views"
 
+#: src/viewer/run-stream-layer.tsx
+msgid "Waiting for the first tile"
+msgstr "Waiting for the first tile"
+
 #: src/popout/popout-screen.tsx
 msgid "Waiting for the main window"
 msgstr "Waiting for the main window"
@@ -1909,6 +1971,10 @@ msgstr "Who made it"
 #: src/screens/viewer/full-viewer.tsx
 msgid "Whole slide"
 msgstr "Whole slide"
+
+#: src/viewer/run-stream-layer.tsx
+msgid "Whole-slide run"
+msgstr "Whole-slide run"
 
 #. placeholder {0}: name.trim()
 #: src/screens/viewer/save-preset-modal.tsx

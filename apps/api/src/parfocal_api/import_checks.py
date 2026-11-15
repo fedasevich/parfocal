@@ -13,7 +13,7 @@ from parfocal_api.audit import AuditAction
 from parfocal_api.context import CurrentPrincipal, Store, TenantConnection
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import Principal
-from parfocal_api.problems import ConflictError
+from parfocal_api.problems import BadRequestError, ConflictError
 from parfocal_api.result_pairing import (
     NotAResultUploadError,
     ResultAlreadyImportedError,
@@ -87,9 +87,15 @@ class ImportCheck(BaseModel):
 class ImportChoices(BaseModel):
     score_default: ScoreDefault = ScoreDefault.NONE
     unclassified_class_id: uuid.UUID | None = None
+    heatmap_level: Annotated[int, Field(ge=0, le=40)] | None = None
     class_mappings: Annotated[list[ClassMapping], Field(max_length=200)] = Field(
         default_factory=list[ClassMapping]
     )
+
+
+class UnknownHeatmapLevelError(BadRequestError):
+    code = "unknown-heatmap-level"
+    title = "This heatmap has no scale guess at that level"
 
 
 class NothingToChooseError(ConflictError):
@@ -221,6 +227,14 @@ async def project_class(
         raise UnknownClassError
 
 
+def require_offered_level(row: Any, level: int | None) -> None:
+    if level is None:
+        return
+    offered = {guess.level for item in problems_of(row).problems for guess in item.guesses}
+    if level not in offered:
+        raise UnknownHeatmapLevelError
+
+
 @router.put(
     "/{upload_id}/import-choices",
     operation_id="chooseHowToImport",
@@ -236,6 +250,7 @@ async def choose_how_to_import(
     await require_uploading(connection, principal, row.project_id, row.archived_at is not None)
     await waiting_for_choices(connection, row)
     await project_class(connection, row.project_id, choices.unclassified_class_id)
+    require_offered_level(row, choices.heatmap_level)
     if choices.class_mappings:
         await remember_class_mappings(
             row.project_id, MappingChange(mappings=choices.class_mappings), principal, connection

@@ -197,7 +197,7 @@ def test_rows_without_a_score_count_as_the_chosen_default(
     assert status_of(api, lab.lead, started)["status"] == "ready"
     assert owner(
         database, f"SELECT import_choices FROM uploads WHERE id = '{started['uploadId']}'"
-    ) == [({"score_default": "one", "unclassified_class_id": None},)]
+    ) == [({"score_default": "one", "unclassified_class_id": None, "heatmap_level": None},)]
 
 
 def test_unreadable_rows_are_in_the_error_report_and_the_others_import(
@@ -264,6 +264,61 @@ def test_a_heatmap_at_level_2_scaled_by_4_reports_the_guess(
     detail = api(lab.lead).get(f"/api/result-sets/{set_id}")
     assert detail.status_code == 200, detail.text
     assert detail.json()["status"] == "ready"
+    facts_response = api(lab.lead).get(f"/api/result-sets/{set_id}/heatmap")
+    assert facts_response.status_code == 200, facts_response.text
+    assert facts_response.json() == {
+        "width": 32,
+        "height": 32,
+        "level": 2,
+        "downsample": 4.0,
+        "mpp": 1.0,
+        "tissue_share": None,
+    }
+    grid = api(lab.lead).get(f"/api/result-sets/{set_id}/heatmap/grid")
+    assert grid.status_code == 200, grid.text
+    assert grid.headers["content-encoding"] == "gzip"
+    assert grid.headers["content-type"] == "application/vnd.parfocal.heatmap-grid"
+    assert len(grid.content) == 32 * 32
+
+
+def test_the_uploader_can_pick_another_scale_guess(
+    api: ApiAs, database: str, lab: Lab, tmp_path: Path
+) -> None:
+    slide_id = sized_slide(database, lab, width=128, height=128)
+    started, found = checked(
+        api, database, lab, tmp_path, "heat.tif", HEATMAP, slide_id=str(slide_id)
+    )
+    assert [item["level"] for item in found["problems"][0]["guesses"]] == [2, 0, 1]
+    unknown = choose(api, lab, started, heatmap_level=7)
+    assert (unknown.status_code, unknown.json()["code"]) == (400, "unknown-heatmap-level")
+    assert choose(api, lab, started, heatmap_level=1).status_code == 200
+    run_worker(database, lab.tenant_id, tmp_path)
+    state = status_of(api, lab.lead, started)
+    assert state["status"] == "ready", state
+    facts = api(lab.lead).get(f"/api/result-sets/{state['result_set_id']}/heatmap").json()
+    assert (facts["level"], facts["downsample"]) == (1, 2.0)
+
+
+def test_a_set_without_a_heatmap_has_none_to_serve(
+    api: ApiAs, database: str, lab: Lab, tmp_path: Path
+) -> None:
+    ids = project_classes(api, lab, "Tumor")
+    slide_id = sized_slide(database, lab)
+    started, _ = checked(
+        api,
+        database,
+        lab,
+        tmp_path,
+        "regions.geojson",
+        fixture("objects-without-class.geojson"),
+        slide_id=str(slide_id),
+    )
+    assert choose(api, lab, started, unclassified_class_id=ids["Tumor"]).status_code == 200
+    run_worker(database, lab.tenant_id, tmp_path)
+    set_id = status_of(api, lab.lead, started)["result_set_id"]
+    for tail in ("heatmap", "heatmap/grid"):
+        missing = api(lab.lead).get(f"/api/result-sets/{set_id}/{tail}")
+        assert (missing.status_code, missing.json()["code"]) == (404, "no-heatmap")
 
 
 def test_a_corrupt_png_heatmap_is_refused_with_its_named_problem(
