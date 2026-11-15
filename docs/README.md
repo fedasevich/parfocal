@@ -2,42 +2,41 @@
 
 Start here. Every file in `docs/` is listed below, and agents keep this index current. See [AGENTS.md](../AGENTS.md) for how these files are maintained.
 
-Last consolidated: 2026-11-09
+Last consolidated: 2026-11-15
 
 ## In progress
 
-The production slice comes first and no other new task starts until the real end-to-end specs pass on production: OPS-002 (deploy definitions), SKEL-001 (production environment exists), OPS-005 (continuous deployment) and SKEL-009 (CI deploys main to production). The owner cut staging on 2026-11-13, so production is the only cloud environment until the first real user ([ADR 0293](adr/0293-production-only-until-the-first-real-user.md), production only until the first real user). After it come the annotation path (milestone MA) in the order [ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md) (annotate tasks on one shared layer) lists and the follow-up tasks of the four reviews of 2026-11-09: the [project review](results/2026-11-09-project-review.md), the [tenant isolation review](results/2026-11-09-tenant-isolation-review.md), the [edge token review](results/2026-11-09-edge-token-review.md) and the [viewer engine review](results/2026-11-09-viewer-engine-review.md). `python3 scripts/board.py brief` lists the claimed tasks and the review column.
+The night run of 2026-11-14 to 2026-11-15 built locally and touched no production. Two things come first now: SKEL-001 (production environment exists), which waits for the owner's readiness signal, and TEST-044 (web specs green on the built app), because main's CI is red in the web shards since the suite moved to a built app. `python3 scripts/board.py brief` lists the claimed tasks and the review column.
 
-The owner's open questions, from the deploy credentials to the unused staging leftovers, are in [decisions.md](decisions.md), which starts with what to do next in order.
+The owner's open questions are decisions 105 to 109 and the Mac checks in [decisions.md](decisions.md), which starts with what to do next in order.
 
 ## Where we are now
 
-Parfocal is an app for reviewing AI results on whole slides and annotating slides for training data ([ADR 0053](adr/0053-ai-results-review-direction.md), the AI results review direction). No count is written here. `python3 scripts/board.py counts` prints tasks and ticks in total, per milestone gate and per epic.
+Parfocal is an app for reviewing AI results on whole slides and annotating slides for training data ([ADR 0053](adr/0053-ai-results-review-direction.md), the AI results review direction). No count is written here. `python3 scripts/board.py counts` prints tasks and ticks per milestone gate and per epic.
 
 | Area | State |
 |---|---|
-| Cloud | Open, with a standing yes for additive production writes inside $30 a month ([ADR 0151](adr/0151-standing-approval-for-production-within-30-dollars.md)). Production is the only cloud environment until the first real user ([ADR 0293](adr/0293-production-only-until-the-first-real-user.md)), and no environment serves the app yet. SKEL-001 (production environment exists) and OPS-002 (deploy definitions) are open, and the cloud has run only spikes and checks so far, such as the [upload protocol check on the R2 dev bucket](results/2026-11-02-upload-protocol-check-on-r2.md) ([knowledge/platform.md](knowledge/platform.md)) |
-| Repository and CI | pnpm and Turborepo with TypeScript and Biome, Python 3.14 with uv. `ci` with the docs checks under `ci-ok`, and `security`, run on every push to `main`, and `bash scripts/lead/ci.sh` prints the result ([knowledge/tooling.md](knowledge/tooling.md)) |
-| Viewer, tiles and ingest (M2) | Viv draws the formats built so far through decode workers and a byte cache, checked by golden images, with signed tile access through the Worker. The format tasks still open are VIEW-013 (NDPI including above 4 GB), VIEW-014 (Ventana BIF with frame stitching), VIEW-016 (Philips TIFF, Huron and ARGOS) and VIEW-017 (OME-Zarr v0.4 and v0.5 sharded), and the alternate renderers are not started ([knowledge/viewer-build.md](knowledge/viewer-build.md), [knowledge/slide-formats.md](knowledge/slide-formats.md), [knowledge/uploads.md](knowledge/uploads.md)) |
-| Annotation path (MA) | Of the tasks [ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md) lists, the annotate task, the shared layer, drawing, threads and the one-click tools are ticked. Open are COLLAB-016 (calm live updates on a shared layer, in progress), AINUC-013 (stream a whole-slide run onto the open slide), AINUC-010 (whole-slide nuclei job UI), JOBS-007 (run a model on a selection in Annotate) and PILOT-005 (moderated usability study, second round) |
-| Review loop (M3) | Backend and screens are built, from result sets and review tasks to guided review, decisions, opinion forms, My work and settings. The screens run on fake data through MSW ([ADR 0135](adr/0135-fake-data-through-the-api-client-with-msw.md)), and TEST-026 (core browser specs against the real API) is open |
-| AI runs (M4) | Model runs with the jobs tray, layers, heatmaps and the object table, interactive segmentation and nuclei work, with the ML pool as the only Modal app. Tumor maps have barely started |
-| Collaboration and evaluation (M5) | Threads, presence, compare, the disagreement queue with sign-off, the evaluation report and the admin screens are built ([knowledge/evaluation.md](knowledge/evaluation.md)). Remote sources are not started |
-| Security and pilot (M6) | Forced row-level security with a role check at startup, a hash-chained audit log, encrypted patient identifiers, retention and erasure, and the [threat model](security/threat-model.md). The cloud parts of the controls and the OPS epic (infrastructure and operations) are open |
-| Agent workflow | `board.py` is the way into the backlog and log. Parallel runs build in worktrees and land through the lead worktree with `scripts/lead/` ([knowledge/agent-workflow.md](knowledge/agent-workflow.md)) |
+| Cloud | Open, with a standing yes for additive production writes inside $30 a month ([ADR 0151](adr/0151-standing-approval-for-production-within-30-dollars.md)). Production is the only cloud environment until the first real user ([ADR 0293](adr/0293-production-only-until-the-first-real-user.md)). SKEL-001 is open, and SEC-031's guard now refuses agents' destructive cloud actions ([knowledge/platform.md](knowledge/platform.md), [knowledge/agent-tooling.md](knowledge/agent-tooling.md)) |
+| Repository and CI | pnpm and Turborepo with TypeScript and Biome, Python 3.14 with uv, tooling pins raised by FOUND-027. The web suite runs on a built app (FOUND-026), and `bash scripts/lead/ci.sh` prints the result ([knowledge/tooling.md](knowledge/tooling.md)) |
+| Viewer, tiles and ingest (M2) | Viv reads every POC format natively, including NDPI, BIF, Philips, OME-Zarr and JPEG 2000, which stays native ([knowledge/slide-formats.md](knowledge/slide-formats.md)). The deck.gl WebGPU route matches Viv's goldens and a developer setting picks the route. The custom WebGPU route lacks culling and detail tiers (VIEW-073), and per-format CI budgets exist ([knowledge/viewer-build.md](knowledge/viewer-build.md)) |
+| Annotation path (MA) | The tasks [ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md) lists are ticked except PILOT-005 (moderated usability study, second round) |
+| Review loop (M3) | Built, from result sets and heatmaps to guided review and decisions. The screens run on fake data through MSW ([ADR 0135](adr/0135-fake-data-through-the-api-client-with-msw.md)), and every screen string is translatable (I18N) |
+| AI runs (M4) | Model runs, layers, heatmaps with pyramid export, interactive segmentation, streamed nuclei, a registry table with a per-task promotion gate and a server patch service. Tumor maps are barely started |
+| Learning and evaluation (M5, M6) | The learner corrects types in the browser, and per-tenant training rounds pool reviewed nuclei on the server and promote through the gate. The Modal pooling job is not built ([knowledge/evaluation.md](knowledge/evaluation.md)) |
+| Security and pilot (M6) | Row-level security, a hash-chained audit log, isolated parsing of uploads in a child process (SEC-026, sandbox in SEC-045) and the [threat model](security/threat-model.md). The OPS cloud parts are open |
 
-Tasks in the review column wait for an owner look or a cloud step, and [decisions.md](decisions.md) says what each one waits for.
+Tasks in the review column wait for an owner look, a cloud step or another task, and [decisions.md](decisions.md) says what each one waits for.
 
 ## Next up
 
-1. The production slice: OPS-002 (deploy definitions), then SKEL-001 (production environment exists), OPS-005 (continuous deployment) and SKEL-009 (CI deploys main to production), until the real end-to-end specs pass on production.
-2. IAM-026 (a workspace on a shared mail domain is not open to strangers) and SEC-040 (presence in a blinded task), whose rules decisions 84a and 85a chose.
-3. The annotation path (milestone MA) in the order ADR 0237 (annotate tasks on one shared layer) lists.
-4. SEC-031 (hard stops for destructive agent actions), then the open VIEW and SEC tasks from the reviews of 2026-11-09.
-5. FOUND-024 (rename verdict to decision everywhere), then FOUND-035 (squash the migrations into one baseline), both before any shared database.
-6. TEST-026 (core browser specs against the real API).
-7. The cloud numbers STACK-019 (web framework, Modal cold starts) and STACK-020 (database hosting, the Neon measurement) still wait for.
-8. PILOT-004 (pilot data onboarding) and PROTO-010 (make the React app the design source) for the thesis slice.
+1. TEST-044 (web specs green on the built app) and TEST-043 (the sidecar open check does not depend on machine load).
+2. SKEL-001 (production environment exists) once the owner gives the readiness signal, then SKEL-009 (CI deploys main to production).
+3. VIEW-073 (finish the custom WebGPU route): compute culling and detail tiers.
+4. SEC-045 (isolate the remaining parse steps and run them in a Modal sandbox).
+5. FOUND-035 (squash the migrations into one baseline) before any shared database.
+6. FOUND-036 (split the largest source files) while no agent works in them.
+7. AITUM-001 (tumor map job) and MLEVAL-005 (tumor map evaluation), which the promotion gate waits for.
+8. PILOT-004 (pilot data onboarding) for the thesis slice.
 
 ## Index
 
