@@ -3797,7 +3797,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Depends on AILEARN-008.
   Size: S.
 
-- [ ] AILEARN-010 · Collect pooled features of reviewed nuclei for training rounds
+- [x] AILEARN-010 · Collect pooled features of reviewed nuclei for training rounds
   AILEARN-004's training rounds take pooled features and typer outputs from the caller, because nothing on the server stores them for reviewed nuclei yet. Add a job that gathers them per tenant from the reviewed examples and feeds `run_round`.
   Done when a test seeds reviewed nuclei, runs the job and a round trains from what it stored, with no PHI in the stored files.
   Depends on AILEARN-004.
