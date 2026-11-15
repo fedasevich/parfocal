@@ -1,5 +1,6 @@
 import argparse
 import json
+import subprocess
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Any
@@ -81,8 +82,12 @@ class Recorder:
     statements: list[str] = field(default_factory=list)
     neon_paths: list[str] = field(default_factory=list)
     journal: list[str] = field(default_factory=list)
+    failures: int = 0
 
     def run(self, argv: Sequence[str], stdin: str | None, extra: Mapping[str, str] | None) -> None:
+        if self.failures:
+            self.failures -= 1
+            raise subprocess.CalledProcessError(1, list(argv))
         self.argv.append(list(argv))
         self.journal.append("worker")
         if stdin is not None:
@@ -263,7 +268,7 @@ def test_replacing_a_token_key_writes_the_worker_before_the_secret() -> None:
 
 
 @pytest.mark.parametrize("name", ["SESSION_KEY", "TILE_TOKEN_KEY", "ROOM_TOKEN_KEY"])
-def test_replacing_a_key_puts_the_new_one_first_and_keeps_only_the_previous(name: str) -> None:
+def test_replacing_a_key_puts_the_new_one_first_and_keeps_every_listed_key(name: str) -> None:
     store = FakeStore()
     assert store.values is not None
     previous, older, newer = new_key(), new_key(), new_key()
@@ -271,11 +276,11 @@ def test_replacing_a_key_puts_the_new_one_first_and_keeps_only_the_previous(name
 
     replace_key(store, Recorder().tools(), TARGET, name, make=lambda: newer)
 
-    assert store.values[name] == f"{newer},{previous}"
+    assert store.values[name] == f"{newer},{previous},{older}"
 
 
 @pytest.mark.parametrize("name", ["TILE_TOKEN_KEY", "ROOM_TOKEN_KEY"])
-def test_dropping_old_token_keys_changes_the_secret_before_the_worker(name: str) -> None:
+def test_dropping_old_token_keys_changes_the_worker_before_the_secret(name: str) -> None:
     store = FakeStore()
     assert store.values is not None
     newer, previous = new_key(), new_key()
@@ -286,12 +291,28 @@ def test_dropping_old_token_keys_changes_the_secret_before_the_worker(name: str)
     drop_old_keys(store, recorder.tools(), TARGET, name)
 
     assert store.values[name] == newer
-    assert store.journal == ["secret", "worker"]
+    assert store.journal == ["worker", "secret"]
     assert [json.loads(stdin) for stdin in recorder.stdin] == [{name: newer}]
     assert {key: value for key, value in store.values.items() if key != name} == {
         key: value for key, value in before.items() if key != name
     }
     assert_no_secret_in_argv(recorder, before, store.values)
+
+
+def test_a_drop_that_fails_at_the_worker_changes_nothing_and_can_be_run_again() -> None:
+    store = FakeStore()
+    assert store.values is not None
+    newer = new_key()
+    store.values["TILE_TOKEN_KEY"] = f"{newer},{new_key()}"
+    recorder = Recorder(failures=1)
+
+    with pytest.raises(subprocess.CalledProcessError):
+        drop_old_keys(store, recorder.tools(), TARGET, "TILE_TOKEN_KEY")
+    assert store.merges == []
+
+    drop_old_keys(store, recorder.tools(), TARGET, "TILE_TOKEN_KEY")
+    assert store.values["TILE_TOKEN_KEY"] == newer
+    assert [json.loads(stdin) for stdin in recorder.stdin] == [{"TILE_TOKEN_KEY": newer}]
 
 
 def test_dropping_old_session_keys_never_touches_the_worker() -> None:

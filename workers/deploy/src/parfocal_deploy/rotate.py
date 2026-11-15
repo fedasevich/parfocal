@@ -123,19 +123,20 @@ def replace_key(
     make: Callable[[], str] = new_key,
 ) -> None:
     current = stored_keys(store, name)
-    value = KEY_SEPARATOR.join([make(), current[0]])
-    if name in SHARED_TOKEN_KEYS:
-        write_worker_secrets(tools, target.wrangler_env, {name: value})
-    store.merge({name: value})
+    write_both(store, tools, target, name, KEY_SEPARATOR.join([make(), *current]))
 
 
 def drop_old_keys(store: KeysStore, tools: Tools, target: Environment, name: str) -> None:
     current = stored_keys(store, name)
     if len(current) == 1:
         raise RotationRefusedError(f"{name} holds one key only, so there is no old key to drop")
-    store.merge({name: current[0]})
+    write_both(store, tools, target, name, current[0])
+
+
+def write_both(store: KeysStore, tools: Tools, target: Environment, name: str, value: str) -> None:
     if name in SHARED_TOKEN_KEYS:
-        write_worker_secrets(tools, target.wrangler_env, {name: current[0]})
+        write_worker_secrets(tools, target.wrangler_env, {name: value})
+    store.merge({name: value})
 
 
 def reset_app_password(
