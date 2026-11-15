@@ -3,5 +3,15 @@
     "arms": ["control", "status_board"],
     "default": "control",
     "mode": "split"
+  },
+  "viewer_tools_layout": {
+    "arms": ["rail", "dock"],
+    "default": "rail",
+    "mode": "split"
+  },
+  "minimap_motion": {
+    "arms": ["moving", "pinned"],
+    "default": "moving",
+    "mode": "split"
   }
 }

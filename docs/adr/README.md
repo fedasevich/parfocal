@@ -301,3 +301,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0334](0334-evaluation-dashboard-built-from-result-files.md) | The evaluation dashboard is a static page built in Python from the committed result files through a series file | Accepted | 2026-11-15 |
 | [0335](0335-identifying-text-is-blanked-by-the-edge-from-the-token.md) | Identifying text and barcodes in an original are blanked by the edge from ranges in the token | Accepted | 2026-11-15 |
 | [0336](0336-flag-targeting-rules-and-posthog-over-http.md) | Flags target by workspace, role and user in one shared file, and PostHog answers over plain HTTP | Accepted | 2026-11-15 |
+| [0337](0337-layout-experiments-split-only-unchosen-production-users.md) | Layout experiments split only production users who have not chosen, and pinned means bottom right | Accepted | 2026-11-15 |
