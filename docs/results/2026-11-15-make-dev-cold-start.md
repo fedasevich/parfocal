@@ -47,4 +47,4 @@ With warm caches the budget holds by a wide margin, and the 10 minutes are left 
 
 ## Follow-ups
 
-[ADR XXXX](../adr/XXXX-make-dev-signs-in-through-the-local-zitadel.md) (make dev signs in through the local Zitadel) records why identity runs locally. The edge Worker under `vite dev` with a remote R2 binding to `parfocal-dev` is still not wired, and this run did not open a slide in the viewer.
+[ADR 0342](../adr/0342-make-dev-signs-in-through-the-local-zitadel.md) (make dev signs in through the local Zitadel) records why identity runs locally. The edge Worker under `vite dev` with a remote R2 binding to `parfocal-dev` is still not wired, and this run did not open a slide in the viewer.

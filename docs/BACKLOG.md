@@ -443,7 +443,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Done when a contract test proves the served schema equals the committed one.
   Depends on STACK-008, STACK-019.
 
-- [x] FOUND-009 · Local development environment
+- [ ] FOUND-009 · Local development environment
   Docker Compose with Postgres plus PostGIS and a PgBouncer in transaction mode like Neon's (the compose file exists since FOUND-013). The Vite dev server runs the edge Worker and Durable Objects through the Cloudflare Vite plugin with a remote binding to the `parfocal-dev` R2 bucket, FastAPI runs under uvicorn and jobs run in-process behind the same runner interface as Modal. Zitadel Cloud and the dev bucket are real cloud resources configured through `.env` ([ADR 0004](adr/0004-cloud-dev-resources.md)). One command starts everything. Seeded dev tenant. See [knowledge/local-dev.md](knowledge/local-dev.md).
   Done when a new machine runs `make dev` (or equivalent) and reaches the logged-in home screen in under 10 minutes, documented in the README.
   Size: L.
@@ -594,6 +594,12 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   FOUND-036 cut `apps/web/src/screens/viewer/full-viewer.tsx` from 2,131 to 1,870 lines, but `ViewerBody` is still one component of about 1,700 lines whose blocks share 20 to 50 locals each, so moving parts out safely needs a view-model hook that owns the viewer state and hands each panel only what it reads. Keep behaviour identical and take the file out of the exceptions of `scripts/guard_file_length.py`.
   Done when the file is under 1,200 lines, it is no longer an exception, and the viewer specs stay green.
   Depends on FOUND-036.
+  Size: M.
+
+- [ ] FOUND-040 · The edge Worker and the dev bucket under make dev
+  FOUND-009 made `make dev` start the stack and sign in through the local Zitadel, but the Vite dev server does not yet run the edge Worker and its Durable Objects through the Cloudflare Vite plugin, and there is no remote binding to the `parfocal-dev` R2 bucket, so no slide opens in the viewer under `make dev`.
+  Done when `make dev` opens a slide in the viewer through the edge Worker, the README says how, and the dev check signs in and draws a tile.
+  Depends on FOUND-009.
   Size: M.
 
 - [x] FOUND-037 · Docs memory that cannot go stale
@@ -4632,6 +4638,12 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   In-app feedback with screenshot (PHI-blurred) routed to the team.
   Done when tests confirm screenshots are blurred over slide and patient areas.
   Size: M.
+
+- [ ] PILOT-009 · A bulk import rerun never sends a slide twice
+  PILOT-004's `--cases-from-names` rerun skips slides already in their case, but a rerun while files are still processing would send them again. The run now fails and warns, and the runbook says to wait.
+  Done when a test reruns the import while slides are still processing and no slide or result is sent twice.
+  Depends on PILOT-004.
+  Size: S.
 
 - [ ] PILOT-008 · Owner walkthrough of the whole app
   A guided walkthrough for the owner on production that visits every screen and flow built so far, so the owner can try each one and list fixes and dislikes. The point is to see the UX of everything possible, not only the main paths, so the script covers every variant a user can meet: each role, state, option and setting, the loading, empty and error states, long and short data, keyboard paths, and the edge cases such as a huge slide, a failed job or a refused action. It is a written script in `docs/knowledge/` with one step per screen or flow, in the order a user meets them: sign up and setup, the sample project, Home and My work, upload with AI results, the slide view with decisions and the opinion form, guided review, navigation aids and measurement, Annotate with its tools, model runs on a selection and the whole slide, threads and live updates, compare, notifications, the disagreement queue and sign-off, the evaluation report and exports, settings, the palette and the admin page. Each step names the URL, the seeded account and data to use, what to do and what should happen, and leaves room for the owner's notes. It runs over the TEST-020 showcase seed (every feature over the real fixture slides), which resets staging between runs. Agents run the script first and fix what is plainly broken before handing it over. The owner's notes become backlog tasks, one per fix, grouped by screen.
