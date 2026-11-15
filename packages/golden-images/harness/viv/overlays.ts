@@ -12,6 +12,7 @@ import {
   zoomForMagnification,
 } from "@parfocal/viewer-engine";
 import {
+  type CustomWebGpuRoute,
   type DeckWebGpuRoute,
   type PixelSlide,
   pixelRendererRoutes,
@@ -61,7 +62,7 @@ interface InspectableLayer {
 
 let watching: Destroyable[] = [];
 let engine: ViewerEngine | null = null;
-let route: VivRoute | DeckWebGpuRoute | null = null;
+let route: VivRoute | DeckWebGpuRoute | CustomWebGpuRoute | null = null;
 let layers: OverlayController | null = null;
 let shown: OverlayGeometry | null = null;
 const errors: string[] = [];
@@ -85,6 +86,7 @@ const reset = () => {
 
 const watch = (id: string): ResourceWatch => {
   if (route === null) throw new Error("Nothing is rendered yet");
+  if (!("deck" in route)) throw new Error("This route has no deck.gl layers to watch");
   const manager = (route.deck as unknown as { layerManager: { getLayers(): InspectableLayer[] } })
     .layerManager;
   watching = [];
@@ -123,12 +125,16 @@ const render = async (request: OverlayRenderRequest): Promise<OverlayRenderResul
     },
   };
   const id = request.route ?? "viv";
-  const load = pixelRendererRoutes({ viv: routeOptions, deckWebGpu: routeOptions })[id];
+  const load = pixelRendererRoutes({
+    viv: routeOptions,
+    deckWebGpu: routeOptions,
+    customWebGpu: routeOptions,
+  })[id];
   if (load === undefined) throw new RendererRouteUnavailableError(id);
   const factory: RendererFactory<PixelSlide> = await load();
   const current = createViewerEngine<PixelSlide>({
     createRenderer: (container) => {
-      const created = factory(container) as VivRoute | DeckWebGpuRoute;
+      const created = factory(container) as VivRoute | DeckWebGpuRoute | CustomWebGpuRoute;
       route = created;
       return created;
     },

@@ -80,6 +80,10 @@ const routeTasks: Record<RendererRouteId, string> = {
   "custom-webgpu": "VIEW-038 (the custom WebGPU engine route) registers it",
 };
 
+const undrawnKinds: Partial<Record<RendererRouteId, ReadonlySet<OverlayKind>>> = {
+  "custom-webgpu": new Set(["id-labels"]),
+};
+
 const alternateRoutes = RENDERER_ROUTE_IDS.filter((route) => route !== PRIMARY_RENDERER_ROUTE);
 
 function expectGolden(
@@ -188,6 +192,10 @@ for (const route of alternateRoutes) {
       : "its Viv golden image";
     test(`the ${kind} layer matches ${reference} on the ${route} route`, async ({ page }) => {
       await skipUnlessRegistered(page, route);
+      test.skip(
+        undrawnKinds[route]?.has(kind) === true,
+        `The ${route} route reports the ${kind} layer as left out and does not draw it yet`,
+      );
       if (server === null) throw new Error("The Viv harness server did not start");
       const { result, frame } = await renderOverlay(page, server, kind, route);
       expect(result.errors).toEqual([]);

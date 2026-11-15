@@ -1,4 +1,8 @@
 export type {
+  CustomWebGpuRoute,
+  CustomWebGpuRouteOptions,
+} from "../custom-webgpu/custom-webgpu-route.ts";
+export type {
   DeckWebGpuRoute,
   DeckWebGpuRouteOptions,
 } from "../deck-webgpu/deck-webgpu-route.ts";

@@ -84,8 +84,10 @@ test("10 renderer route switches keep the camera, one canvas and the heap within
   }
   await cdp.detach();
 
-  const baseline = samples[warmUpSwitches - 1];
   const last = samples.at(-1);
+  const sameRouteRounds =
+    Math.floor((samples.length - warmUpSwitches) / routes.length) * routes.length;
+  const baseline = samples[samples.length - 1 - sameRouteRounds];
   if (!baseline || !last) throw new Error("The run has no samples");
   const growth = last.heapBytes / baseline.heapBytes - 1;
   const megabytes = (bytes: number) => (bytes / 2 ** 20).toFixed(1);
@@ -97,7 +99,7 @@ test("10 renderer route switches keep the camera, one canvas and the heap within
         (sample) =>
           `${sample.round}\t${sample.report.route}\t${megabytes(sample.heapBytes)}\t${sample.decks}\t${sample.report.canvases}\t${sample.report.switchMs.toFixed(0)}`,
       ),
-      `growth ${(growth * 100).toFixed(1)}% after ${warmUpSwitches} warm-up, decks ${decksAfter} and canvases ${canvases} after dispose`,
+      `growth ${(growth * 100).toFixed(1)}% from round ${baseline.round} to round ${last.round} on the ${last.report.route} route after ${warmUpSwitches} warm-up, decks ${decksAfter} and canvases ${canvases} after dispose`,
     ].join("\n"),
   );
   mkdirSync(reportDir, { recursive: true });

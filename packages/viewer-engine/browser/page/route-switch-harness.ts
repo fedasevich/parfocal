@@ -62,7 +62,11 @@ const routeOptions = {
   },
 };
 
-const loaders = pixelRendererRoutes({ viv: routeOptions, deckWebGpu: routeOptions });
+const loaders = pixelRendererRoutes({
+  viv: routeOptions,
+  deckWebGpu: routeOptions,
+  customWebGpu: routeOptions,
+});
 
 function viewer(): HTMLElement {
   const element = document.getElementById("viewer");
