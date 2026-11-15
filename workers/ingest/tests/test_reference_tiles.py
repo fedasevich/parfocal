@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 
 import numpy as np
+import openslide
 import pytest
 import tifffile
 from fixture_support import ROOT, fixture_path
@@ -11,6 +12,7 @@ from PIL import Image
 from parfocal_ingest.identify import Format, identify
 from parfocal_ingest.pyramid import Pyramid, main_series, read_pyramid
 from parfocal_ingest.reference_tiles import Window, read_window, write_reference
+from parfocal_ingest.source_levels import aperio_jpeg2000_window
 
 REFERENCE = ROOT / "packages" / "test-fixtures" / "reference-tiles"
 FIXTURES = [
@@ -19,6 +21,7 @@ FIXTURES = [
     "synthetic-big-endian.tiff",
     "CMU-1-Small-Region.svs",
     "JP2K-33003-1.svs",
+    "JP2K-33003-2.svs",
     "CMU-1.svs",
     "Philips-4.tiff",
     "Philips-3.tiff",
@@ -30,6 +33,11 @@ FIXTURES = [
     "Hamamatsu-1.ndpi",
 ]
 TOLERANCE = 1.0
+JPEG2000_FIXTURES = ["JP2K-33003-1.svs", "JP2K-33003-2.svs"]
+DIFFERING_TILES = [(1, 8, 5), (2, 3, 2)]
+TILE = 256
+ORIGIN_SIDE = 512
+RESAMPLED_FLOOR = 5
 
 
 def pixels(image: Image.Image) -> np.ndarray:
@@ -69,6 +77,50 @@ def test_a_coarser_window_matches_the_finest_level_averaged() -> None:
     finest = stored_level(path, 0)[64:256, 128:384].astype(np.float64)
     averaged = finest.reshape(96, 2, 128, 2, 3).mean(axis=(1, 3))
     assert float(np.abs(read - averaged).mean()) <= TOLERANCE
+
+
+def codestream(path: Path, level: int, x: int, y: int, size: int) -> np.ndarray:
+    stored = aperio_jpeg2000_window(path, level, x, y, size, size)
+    assert stored is not None
+    return stored.astype(np.int16)
+
+
+def openslide_read(path: Path, level: int, location: tuple[int, int], size: int) -> np.ndarray:
+    with openslide.OpenSlide(path) as slide:
+        region = slide.read_region(location, level, (size, size))
+    return np.asarray(region.convert("RGB"), dtype=np.int16)
+
+
+@pytest.mark.parametrize("name", JPEG2000_FIXTURES)
+def test_openslide_decodes_a_jpeg2000_level_like_the_codestream_at_its_origin(name: str) -> None:
+    path = fixture_path(name)
+    with openslide.OpenSlide(path) as slide:
+        levels = slide.level_count
+    for level in range(levels):
+        read = openslide_read(path, level, (0, 0), ORIGIN_SIDE)
+        assert np.array_equal(read, codestream(path, level, 0, 0, ORIGIN_SIDE)), level
+
+
+@pytest.mark.parametrize("name", JPEG2000_FIXTURES)
+def test_openslide_resamples_a_coarse_jpeg2000_level_away_from_its_origin(name: str) -> None:
+    path = fixture_path(name)
+    _, pyramid = opened(name)
+    with openslide.OpenSlide(path) as slide:
+        downsamples = slide.level_downsamples
+    for level, column, row in DIFFERING_TILES:
+        x, y = column * TILE, row * TILE
+        stored = codestream(path, level, x, y, TILE)
+        exact = downsamples[level]
+        assert exact != round(exact)
+        for location in [
+            (round(x * exact), round(y * exact)),
+            (x * round(exact), y * round(exact)),
+        ]:
+            resampled = openslide_read(path, level, location, TILE)
+            assert int(np.abs(resampled - stored).max()) >= RESAMPLED_FLOOR, (level, location)
+        window = Window(level, pyramid.levels[level].downsample, x, y, TILE, TILE)
+        read = pixels(read_window(path, Format.APERIO_SVS, pyramid, window))
+        assert np.array_equal(read, stored), level
 
 
 @pytest.mark.parametrize("name", FIXTURES)

@@ -27,6 +27,8 @@ import {
 import { retryingFetch } from "./retrying-fetch.ts";
 import { serve } from "./serve.ts";
 
+const JPEG2000_LARGEST_DIFFERENCE = 3;
+
 const served = await serve({ "/synthetic": syntheticDir, "/cache": fixturesDir() });
 after(() => served.close());
 
@@ -43,6 +45,7 @@ const slides: readonly Slide[] = [
   { name: "synthetic-big-endian.tiff", formatId: "generic-tiff", cached: false },
   { name: "CMU-1-Small-Region.svs", formatId: "aperio-svs", cached: true },
   { name: "JP2K-33003-1.svs", formatId: "aperio-svs", cached: true },
+  { name: "JP2K-33003-2.svs", formatId: "aperio-svs", cached: true },
   { name: "CMU-1.svs", formatId: "aperio-svs", cached: true },
   { name: "OS-1.bif", formatId: "ventana-bif", cached: true, indexed: true },
   { name: "CMU-1.ndpi", formatId: "hamamatsu-ndpi", cached: true },
@@ -225,7 +228,7 @@ async function kinds(source: PixelSource, name: string): Promise<(ReaderFindingK
   if (process.env.READER_CHECK_MEASURE === "1")
     console.log(
       name,
-      checks.map((c) => [c.window.level, c.meanError, c.finding?.detail]),
+      checks.map((c) => [c.window.level, c.meanError, c.largestDifference, c.finding?.detail]),
     );
   return checks.map((check) => check.finding?.kind ?? null);
 }
@@ -279,13 +282,43 @@ describe("reader check: a misread pyramid ladder is caught", () => {
     source.close();
   });
 
-  for (const name of ["CMU-1.svs", "JP2K-33003-1.svs"]) {
+  for (const [name, expected] of [
+    ["CMU-1.svs", [null, "unreadable"]],
+    ["JP2K-33003-1.svs", [null, "unreadable", "missing-level"]],
+  ] as const) {
     it(`a coarser level labelled 4x is caught (${name})`, skipUnless(slide(name)), async () => {
       const source = await open(slide(name));
       const found = await kinds(relabelled(source, [1, 0.5, 4]), name);
-      assert.deepEqual(found, [null, "unreadable"]);
+      assert.deepEqual(found, expected);
       source.close();
     });
+  }
+});
+
+describe("reader check: JPEG 2000 coarse levels are the stored codestream", () => {
+  for (const name of ["JP2K-33003-1.svs", "JP2K-33003-2.svs"]) {
+    it(
+      `every level agrees with the decoded codestream within ${JPEG2000_LARGEST_DIFFERENCE} grey levels (${name})`,
+      skipUnless(slide(name)),
+      async () => {
+        const source = await open(slide(name));
+        const checks = await checkAgainstReference(source, reference(name));
+        assert.deepEqual(
+          checks.map((check) => check.window.level),
+          source.levels.map((_, level) => level),
+        );
+        for (const check of checks) {
+          const { level } = check.window;
+          assert.ok(check.meanError !== null && check.meanError <= 0.5, `level ${level} mean`);
+          assert.ok(
+            check.largestDifference !== null &&
+              check.largestDifference <= JPEG2000_LARGEST_DIFFERENCE,
+            `level ${level} largest ${check.largestDifference}`,
+          );
+        }
+        source.close();
+      },
+    );
   }
 });
 

@@ -10,6 +10,7 @@ from PIL import Image
 
 from parfocal_ingest.identify import Format, identify
 from parfocal_ingest.pyramid import Level, Pyramid, Reader, main_series, read_pyramid
+from parfocal_ingest.source_levels import aperio_jpeg2000_page, aperio_jpeg2000_window
 from parfocal_ingest.thumbnail import background_of, flattened
 
 SAMPLED_LEVELS = 2
@@ -70,7 +71,16 @@ def texture(image: Image.Image) -> float:
     return float(np.asarray(image.convert("L"), dtype=np.float64).std())
 
 
+def sampled_levels(path: Path, found: Format, pyramid: Pyramid) -> int:
+    if found is not Format.APERIO_SVS:
+        return SAMPLED_LEVELS
+    with tifffile.TiffFile(path) as tiff:
+        stored_jpeg2000 = aperio_jpeg2000_page(tiff, 0) is not None
+    return len(pyramid.levels) if stored_jpeg2000 else SAMPLED_LEVELS
+
+
 def sample_windows(path: Path, found: Format, pyramid: Pyramid) -> list[tuple[Window, Image.Image]]:
+    wanted = sampled_levels(path, found, pyramid)
     chosen: list[tuple[Window, Image.Image]] = []
     for level in pyramid.levels:
         candidates = [
@@ -78,7 +88,7 @@ def sample_windows(path: Path, found: Format, pyramid: Pyramid) -> list[tuple[Wi
         ]
         if candidates:
             chosen.append(max(candidates, key=lambda pair: texture(pair[1])))
-        if len(chosen) == SAMPLED_LEVELS:
+        if len(chosen) == wanted:
             break
     return chosen
 
@@ -94,6 +104,12 @@ def openslide_window(path: Path, found: Format, window: Window) -> Image.Image:
             key=lambda k: abs(slide.level_downsamples[k] - window.downsample),
         )
         exact = slide.level_downsamples[index]
+        if found is Format.APERIO_SVS and exact != window.downsample:
+            stored = aperio_jpeg2000_window(
+                path, window.level, window.x, window.y, window.width, window.height
+            )
+            if stored is not None:
+                return Image.fromarray(stored)
         location = (origin_x + round(window.x * exact), origin_y + round(window.y * exact))
         region = slide.read_region(location, index, (window.width, window.height))
         return flattened(region, background_of(slide))
