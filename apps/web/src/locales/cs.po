@@ -3518,6 +3518,10 @@ msgstr ""
 msgid "Answer with one of the buttons, or press {answerKeyList}."
 msgstr ""
 
+#: src/study/study-screen.tsx
+msgid "Answered"
+msgstr ""
+
 #: src/screens/admin/connect-model.tsx
 msgid "Answered in"
 msgstr ""
@@ -5950,6 +5954,7 @@ msgstr ""
 #: src/screens/upload/live-wizard.tsx
 #: src/screens/upload/overlays.tsx
 #: src/screens/upload/upload-page.tsx
+#: src/study/study-screen.tsx
 msgid "Done"
 msgstr ""
 
@@ -6007,6 +6012,10 @@ msgstr ""
 #: src/screens/clinical-report/cosign-screen.tsx
 #: src/screens/clinical-report/report-screen.tsx
 msgid "Download PDF"
+msgstr ""
+
+#: src/study/study-screen.tsx
+msgid "Download results"
 msgstr ""
 
 #: src/screens/input-traces/input-traces.tsx
@@ -7216,6 +7225,10 @@ msgstr ""
 #: src/screens/onboarding/setup-screen.tsx
 #: src/screens/settings/settings-screen.tsx
 msgid "Gamepad"
+msgstr ""
+
+#: src/study/study-screen.tsx
+msgid "Gave up"
 msgstr ""
 
 #: src/screens/developer/developer-screen.tsx
@@ -9077,6 +9090,10 @@ msgstr ""
 msgid "Median"
 msgstr ""
 
+#: src/study/study-screen.tsx
+msgid "Median seconds"
+msgstr ""
+
 #: src/screens/kpi/kpi-screen.tsx
 msgid "Median time per area visit"
 msgstr ""
@@ -10770,6 +10787,10 @@ msgstr ""
 msgid "Open slide {0}"
 msgstr ""
 
+#: src/study/study-screen.tsx
+msgid "Open start screen"
+msgstr ""
+
 #. placeholder {0}: stepIndex + 1
 #: src/routes/flow-map.walkthrough.$chapter.tsx
 msgid "Open step {0}"
@@ -11032,6 +11053,10 @@ msgstr ""
 msgid "Owners can switch a project later. Clinical projects need a security contact."
 msgstr ""
 
+#: src/study/study-screen.tsx
+msgid "P1"
+msgstr ""
+
 #: ../../packages/ui/src/components/report-templates.tsx
 msgid "Page"
 msgstr ""
@@ -11213,6 +11238,10 @@ msgstr ""
 
 #: src/screens/admin/admin-shell.tsx
 msgid "Parfocal's models are always here. Connect your lab's own models next to them"
+msgstr ""
+
+#: src/study/study-screen.tsx
+msgid "Participant code"
 msgstr ""
 
 #: ../../packages/ui/src/components/auth.tsx
@@ -12474,7 +12503,12 @@ msgid "Result sets"
 msgstr ""
 
 #: src/screens/sign-off/sign-off-screen.tsx
+#: src/study/study-screen.tsx
 msgid "Results"
+msgstr ""
+
+#: src/study/study-screen.tsx
+msgid "Results for this round"
 msgstr ""
 
 #: src/screens/upload/live-wizard.tsx
@@ -12833,6 +12867,16 @@ msgstr ""
 msgid "Rotate {0} pane right"
 msgstr ""
 
+#. placeholder {0}: round.number
+#: src/study/study-screen.tsx
+msgid "Round {0}. Its screens and tasks are frozen so sessions compare."
+msgstr ""
+
+#. placeholder {0}: round.number
+#: src/study/study-screen.tsx
+msgid "Round {0}. No session has run yet, so the tasks can change."
+msgstr ""
+
 #: src/screens/upload/check-step.tsx
 msgid "Rows with no score"
 msgstr ""
@@ -12883,6 +12927,10 @@ msgstr ""
 
 #: src/screens/viewer/viewer-result-sets.tsx
 msgid "Run a model on this slide"
+msgstr ""
+
+#: src/study/study-screen.tsx
+msgid "Run a session"
 msgstr ""
 
 #: src/screens/viewer/viewer-result-sets.tsx
@@ -13095,6 +13143,10 @@ msgstr ""
 
 #: src/screens/project/case-slides-editor.tsx
 msgid "Save slides"
+msgstr ""
+
+#: src/study/study-screen.tsx
+msgid "Save tasks"
 msgstr ""
 
 #: src/screens/admin/template-editor.tsx
@@ -13482,6 +13534,11 @@ msgstr ""
 
 #: src/screens/admin/connect-model.tsx
 msgid "Server"
+msgstr ""
+
+#. placeholder {0}: active.participant
+#: src/study/study-screen.tsx
+msgid "Session {0} finished."
 msgstr ""
 
 #: src/routes/issue-states.tsx
@@ -14106,6 +14163,7 @@ msgid "Skin"
 msgstr ""
 
 #: src/screens/upload/files-step.tsx
+#: src/study/study-screen.tsx
 #: src/viewer/guided-check.tsx
 msgid "Skip"
 msgstr ""
@@ -14516,9 +14574,17 @@ msgstr ""
 msgid "Start in guided review"
 msgstr ""
 
+#: src/study/study-screen.tsx
+msgid "Start next round"
+msgstr ""
+
 #: ../../packages/ui/src/components/report-editor.tsx
 #: ../../packages/ui/src/components/report-templates.tsx
 msgid "Start on a new page"
+msgstr ""
+
+#: src/study/study-screen.tsx
+msgid "Start session"
 msgstr ""
 
 #: src/screens/home/home-screen.tsx
@@ -14527,6 +14593,10 @@ msgstr ""
 
 #: ../../packages/ui/src/components/systematic-scan.tsx
 msgid "Start systematic scan"
+msgstr ""
+
+#: src/study/study-screen.tsx
+msgid "Start task"
 msgstr ""
 
 #: src/screens/sign-off/sign-off-screen.tsx
@@ -14670,6 +14740,10 @@ msgstr ""
 
 #: ../../packages/ui/src/components/icon.tsx
 msgid "Study"
+msgstr ""
+
+#: src/study/study-screen.tsx
+msgid "Study mode"
 msgstr ""
 
 #: src/screens/new-task/steps.tsx
@@ -14860,6 +14934,7 @@ msgstr ""
 #: src/screens/my-work/to-review-tab.tsx
 #: src/screens/onboarding/invite-screen.tsx
 #: src/screens/project/tasks-tab.tsx
+#: src/study/study-screen.tsx
 msgid "Task"
 msgstr ""
 
@@ -14880,6 +14955,14 @@ msgstr ""
 
 #: ../../packages/ui/src/components/report-editor.tsx
 msgid "Task presets"
+msgstr ""
+
+#: src/study/study-screen.tsx
+msgid "Task set"
+msgstr ""
+
+#: src/study/study-screen.tsx
+msgid "Task set JSON"
 msgstr ""
 
 #: src/screens/project/task-settings-drawer.tsx
