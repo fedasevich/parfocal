@@ -6,7 +6,7 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from typing import Protocol
 
-from parfocal_api.key_rotation import KeyringStatus, check_retire
+from parfocal_api.key_rotation import KeyringStatus, RetireRefusedError, check_retire
 from parfocal_common.envelope import MasterKeyring
 from parfocal_deploy import neon
 from parfocal_deploy.bootstrap import new_key
@@ -184,7 +184,7 @@ def main(argv: list[str] | None = None) -> None:
     store = ModalKeysStore(tools, target.modal_environment)
     try:
         message = dispatch(arguments, store, tools, target)
-    except RotationRefusedError as error:
+    except (RotationRefusedError, RetireRefusedError) as error:
         raise SystemExit(f"Nothing changed: {error}") from error
     sys.stdout.write(f"{target.name}: {message}\n")
 

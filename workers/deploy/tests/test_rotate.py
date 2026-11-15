@@ -8,6 +8,7 @@ import pytest
 
 from parfocal_api.key_rotation import RetireRefusedError
 from parfocal_common.envelope import InvalidMasterKeysError
+from parfocal_deploy import rotate
 from parfocal_deploy.bootstrap import new_key
 from parfocal_deploy.environments import environment
 from parfocal_deploy.rotate import (
@@ -314,3 +315,27 @@ def test_the_commands_take_names_and_never_key_material() -> None:
     assert store.values["MASTER_KEYS"].startswith("k2:")
     assert store.values["UNRELATED"] == before["UNRELATED"]
     assert_no_secret_in_argv(recorder, before, store.values)
+
+
+def test_the_command_line_reports_a_refused_retire_without_changing_anything(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    store = FakeStore()
+    monkeypatch.setattr(rotate, "ModalKeysStore", lambda tools, modal_environment: store)
+
+    rotate.main(["add-master-key"])
+    with pytest.raises(SystemExit, match="Nothing changed: 3 tenant keys are still wrapped by k1"):
+        rotate.main(["retire-master-key", "k1"])
+
+    assert capsys.readouterr().out.startswith("production: k2 is the current master key")
+    assert len(store.merges) == 1
+
+
+def test_the_command_line_refuses_a_missing_keys_secret(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    store = FakeStore(values=None)
+    monkeypatch.setattr(rotate, "ModalKeysStore", lambda tools, modal_environment: store)
+
+    with pytest.raises(SystemExit, match="Nothing changed: the Modal secret parfocal-api-keys"):
+        rotate.main(["replace-key", "SESSION_KEY"])

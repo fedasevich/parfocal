@@ -47,7 +47,7 @@ Bootstrap writes `parfocal-api-keys` only when it is missing, and it then genera
 | `replace-key TILE_TOKEN_KEY` or `ROOM_TOKEN_KEY` | That key in the Worker through `wrangler secret bulk` on stdin, then in the secret |
 | `reset-app-password` | The `parfocal_app` password on the direct owner connection, then `DATABASE_URL` |
 
-Every command that changes the secret needs a redeploy afterwards. `rewrap` and `retire-master-key` read the stored keyring and the tenant key counts in a short-lived Modal app, `parfocal-key-rotation`, which mounts the three API secrets and returns only `MASTER_KEYS` and the counts.
+Every command that changes the secret needs a redeploy afterwards. `add-master-key`, `rewrap` and `retire-master-key` read the stored keyring and the tenant key counts in a short-lived Modal app, `parfocal-key-rotation`, which mounts the three API secrets and returns only `MASTER_KEYS` and the counts.
 
 ## Master keyring
 
@@ -55,7 +55,7 @@ Every command that changes the secret needs a redeploy afterwards. `rewrap` and 
 
 1. Run `rotate add-master-key`, which makes `MASTER_KEYS` `k2:<new>,k1:<old>`, and redeploy. New tenant keys are wrapped with `k2`, and `k1` still unwraps the old ones.
 2. Run `rotate rewrap`, which runs `python -m parfocal_api.key_rotation rewrap` in the API's environment and rewraps every tenant key still under an older master key. Encrypted fields are not touched.
-3. Run `rotate retire-master-key k1`. It runs the `check-retire` rules first and refuses while a tenant key is still wrapped by `k1`, when `k1` is the current key and when a key hangs on a master id that is not listed. Only then does it remove `k1`.
+3. Run `rotate retire-master-key k1`. It runs the `check-retire` rules first and refuses while a tenant key is still wrapped by `k1`, when `k1` is the current key and when a key hangs on a master id that is not listed. Only then does it remove `k1`. Run it only after the redeploy in step 1 has finished, because a container still on the old keyring can wrap a new tenant key with `k1` after the check passes.
 4. Redeploy.
 
 Removing `k1` before step 3 passes locks every tenant out of its encrypted fields until `k1` is put back. Audit exports signed before the rotation carry the key id `k1`, and `GET` on the audit signing keys stops listing its public key once `k1` is gone. TODO: keep the old public key with the audit evidence before step 4.
