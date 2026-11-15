@@ -1,4 +1,4 @@
-# XXXX. Training rounds start from the typer and roll back by a pointer
+# 0319. Training rounds start from the typer and roll back by a pointer
 
 - Date: 2026-11-15
 - Status: Accepted

@@ -4,6 +4,9 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-15
 
+- AILEARN-004 training_rounds.run_round fine-tunes the typer head per tenant from the pretrained typer outputs, recalibrates each view count, promotes only when every ECE is at most 0.05 and held-out accuracy does not fall, names versions base-round-n and rolls back by moving latest.json. Promotion uses a stand-in until MLEVAL-006 (promotion gate) exists.
+- CI fix: the overlay controller skips updates with equal geometry and style, so model outlines and task objects are no longer rebuilt about 9 times after ready on a slide opened with a task. The four slow specs never draw them; they did not fail in the 5e5a5286 CI run, so they are left as flakes for now.
+- CI fix: the AI corrections tenant isolation seed adds an AI-edited cell with a month marker, and the minimap fade spec waits for a settled box before measuring.
 - VIEW-055 (JPEG 2000 coarse level differences from OpenSlide) found the 45 to 47 differences came from OpenSlide resampling the reference, so coarse Aperio reference windows, JPEG 2000 and JPEG, now come from the stored tiles. The reader check bounds the largest difference at 3 on both JP2K slides and at 1 on every level of CMU-1.svs.
 - VIEW-040 (viewer performance budgets) adds per-format CI budgets on the three CMU-1 encodings, tightens the jump budget from 5390 to 4390 ms from hosted numbers, and records frame p95 of 18.4 ms and raster GPU time of 0.4 ms on the Mac.
 - CI fix: run-stream.spec.ts start, cancel and reload opens the slide by its address, one page load fewer inside 30 s. The annotate scene rebuilds its model-outlines and task-objects overlays about 10 times in 5 s after ready, the likely cause of the remaining slow specs.
