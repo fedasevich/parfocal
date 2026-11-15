@@ -48,17 +48,32 @@ export const test = base.extend<{ accessible: undefined }>({
       const route = routeOf(page.url());
       if (route === null) return;
       await page.mouse.move(0, 0);
-      await page.evaluate(() =>
-        Promise.race([
-          Promise.allSettled(
-            document
-              .getAnimations()
-              .filter((animation) => Number.isFinite(animation.effect?.getComputedTiming().endTime))
-              .map((animation) => animation.finished),
-          ),
-          new Promise((resolve) => setTimeout(resolve, 2000)),
-        ]),
-      );
+      await page.evaluate(async () => {
+        const frame = () => new Promise((resolve) => requestAnimationFrame(resolve));
+        const running = () =>
+          document
+            .getAnimations()
+            .filter(
+              (animation) =>
+                animation.playState === "running" &&
+                Number.isFinite(animation.effect?.getComputedTiming().endTime),
+            );
+        const deadline = performance.now() + 5000;
+        let quiet = 0;
+        while (quiet < 2 && performance.now() < deadline) {
+          const busy = running();
+          if (busy.length === 0) {
+            quiet += 1;
+          } else {
+            quiet = 0;
+            await Promise.race([
+              Promise.allSettled(busy.map((animation) => animation.finished)),
+              new Promise((resolve) => setTimeout(resolve, 500)),
+            ]);
+          }
+          await frame();
+        }
+      });
       const state = await page.evaluate(stateOfPage);
       const scanKey = `${route} ${createHash("sha1").update(state.join("\n")).digest("hex")}`;
       if (scannedStates.has(scanKey)) return;
