@@ -280,3 +280,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0313](0313-a-streamed-run-is-a-scene-of-sealed-blocks-per-lineage.md) | A streamed run is a scene of sealed blocks per lineage | Accepted | 2026-11-14 |
 | [0314](0314-deck-webgpu-route-mirrors-the-viv-tile-pipeline.md) | The deck.gl WebGPU route mirrors the Viv tile pipeline and owns its tile textures | Accepted | 2026-11-15 |
 | [0315](0315-a-round-is-recalibrated-on-held-out-slides-before-promotion.md) | A training round is recalibrated on held-out slides before it can be promoted | Accepted | 2026-11-15 |
+| [0316](0316-jpeg-2000-slides-stay-native.md) | JPEG 2000 slides stay native, and the decode budget trigger has not fired | Accepted | 2026-11-15 |

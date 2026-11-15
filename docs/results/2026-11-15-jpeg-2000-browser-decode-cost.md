@@ -124,7 +124,7 @@ Limits. Two JPEG 2000 slides, both Aperio, one machine, one run of three repetit
 
 ## Follow-ups
 
-- The ADR for INGEST-014 (JPEG 2000 slides stay native, `docs/adr/XXXX-jpeg-2000-slides-stay-native.md`) records the decision, and ADR 0306 is updated: the `jpeg2000-decode-budget` trigger has not fired.
+- The ADR for INGEST-014 (JPEG 2000 slides stay native, `docs/adr/0316-jpeg-2000-slides-stay-native.md`) records the decision, and ADR 0306 is updated: the `jpeg2000-decode-budget` trigger has not fired.
 - A cheap gain is left unused: decoding one or two wavelet levels less is 2.4 to 6.7 times faster and would suit views between two stored levels, such as 20x on a 40x slide with levels at 1, 4 and 8. It is not needed for the budgets.
 - TODO: repeat on a slower machine and on a 100,000 px wide JPEG 2000 slide when one is available.
 - TODO: VIEW-040 can take the JPEG pan numbers here (p95 18.3 ms at 60 Hz) as a first value for `viewer.pan-frame-p95-ms`.

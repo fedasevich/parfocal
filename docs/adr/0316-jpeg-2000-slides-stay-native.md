@@ -1,4 +1,4 @@
-# XXXX. JPEG 2000 slides stay native, and the decode budget trigger has not fired
+# 0316. JPEG 2000 slides stay native, and the decode budget trigger has not fired
 
 - Date: 2026-11-15
 - Status: Accepted
