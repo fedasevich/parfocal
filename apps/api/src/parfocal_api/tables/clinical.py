@@ -133,7 +133,9 @@ clinical_reports = Table(
     person_column("created_by_user_id"),
     *timestamps(),
     ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),
-    ForeignKeyConstraint(["case_id", "project_id"], ["cases.id", "cases.project_id"]),
+    ForeignKeyConstraint(
+        ["case_id", "project_id", "tenant_id"], ["cases.id", "cases.project_id", "cases.tenant_id"]
+    ),
     tenant_unique(),
     one_of("template", ClinicalTemplate),
     one_of("state", CaseReportState),

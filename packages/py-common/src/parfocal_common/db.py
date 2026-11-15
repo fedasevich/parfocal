@@ -49,8 +49,8 @@ def tenant_foreign_key(
     )
 
 
-def tenant_unique() -> UniqueConstraint:
-    return UniqueConstraint("id", "tenant_id")
+def tenant_unique(*columns: str) -> UniqueConstraint:
+    return UniqueConstraint(*(columns or ("id",)), "tenant_id")
 
 
 class Base(DeclarativeBase):

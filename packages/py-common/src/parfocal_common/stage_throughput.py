@@ -58,7 +58,9 @@ stage_throughput = Table(
         info=OPERATIONAL,
     ),
     ForeignKeyConstraint(
-        ["job_id", "ordinal"], ["job_steps.job_id", "job_steps.ordinal"], ondelete="CASCADE"
+        ["job_id", "ordinal", "tenant_id"],
+        ["job_steps.job_id", "job_steps.ordinal", "job_steps.tenant_id"],
+        ondelete="CASCADE",
     ),
     Index("ix_stage_throughput_model", "model", "model_version", "stage"),
 )

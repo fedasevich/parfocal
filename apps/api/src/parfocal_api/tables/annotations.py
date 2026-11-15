@@ -107,12 +107,21 @@ annotations = Table(
     CheckConstraint("(origin <> 'human') = (source_number IS NOT NULL)", name="source"),
     CheckConstraint("origin = 'human' OR task_id IS NOT NULL", name="source_task"),
     ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),
-    ForeignKeyConstraint(["slide_id", "project_id"], ["slides.id", "slides.project_id"]),
     ForeignKeyConstraint(
-        ["class_id", "project_id"], ["project_classes.id", "project_classes.project_id"]
+        ["slide_id", "project_id", "tenant_id"],
+        ["slides.id", "slides.project_id", "slides.tenant_id"],
     ),
     ForeignKeyConstraint(
-        ["task_id", "slide_id"], ["review_task_slides.task_id", "review_task_slides.slide_id"]
+        ["class_id", "project_id", "tenant_id"],
+        ["project_classes.id", "project_classes.project_id", "project_classes.tenant_id"],
+    ),
+    ForeignKeyConstraint(
+        ["task_id", "slide_id", "tenant_id"],
+        [
+            "review_task_slides.task_id",
+            "review_task_slides.slide_id",
+            "review_task_slides.tenant_id",
+        ],
     ),
     tenant_unique(),
     Index("ix_annotations_geometry", "geometry", postgresql_using="gist"),
@@ -177,7 +186,10 @@ painted_maps = Table(
     *timestamps(),
     UniqueConstraint("id", "tenant_id"),
     ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),
-    ForeignKeyConstraint(["slide_id", "project_id"], ["slides.id", "slides.project_id"]),
+    ForeignKeyConstraint(
+        ["slide_id", "project_id", "tenant_id"],
+        ["slides.id", "slides.project_id", "slides.tenant_id"],
+    ),
     CheckConstraint("version > 0", name="version"),
     CheckConstraint("cell > 0", name="cell"),
     CheckConstraint("tile_cells > 0", name="tile_cells"),

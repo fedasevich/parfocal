@@ -108,8 +108,14 @@ model_runs = Table(
     timestamp("created_at", nullable=False),
     tenant_foreign_key("job_id", "jobs"),
     ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),
-    ForeignKeyConstraint(["slide_id", "project_id"], ["slides.id", "slides.project_id"]),
-    ForeignKeyConstraint(["task_id", "project_id"], ["review_tasks.id", "review_tasks.project_id"]),
+    ForeignKeyConstraint(
+        ["slide_id", "project_id", "tenant_id"],
+        ["slides.id", "slides.project_id", "slides.tenant_id"],
+    ),
+    ForeignKeyConstraint(
+        ["task_id", "project_id", "tenant_id"],
+        ["review_tasks.id", "review_tasks.project_id", "review_tasks.tenant_id"],
+    ),
     one_of("scope_kind", tuple(RunScopeKind)),
     one_of("ordering", tuple(Ordering)),
     one_of("tier", tuple(ModelTier)),
