@@ -1432,7 +1432,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Refs doc 24.
   Size: M.
 
-- [ ] VIEW-017 · OME-Zarr v0.4 and v0.5 sharded with JPEG and lossless codecs
+- [x] VIEW-017 · OME-Zarr v0.4 and v0.5 sharded with JPEG and lossless codecs
   zarrita store, the `imagecodecs_jpeg` codec registered in workers, NGFF 0.5 `ome` nesting, absent chunks from INGEST-008.
   Done when the converted fixtures from INGEST-015 and public IDR samples pass.
   Refs [`poc/src/slide/omezarr.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/slide/omezarr.ts), [`poc/src/slide/codecs/jpeg-chunk.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/slide/codecs/jpeg-chunk.ts).
