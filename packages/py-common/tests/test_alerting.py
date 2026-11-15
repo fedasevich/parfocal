@@ -8,6 +8,7 @@ from parfocal_common.alerting import (
     AVAILABILITY,
     INGEST_TIME,
     PRE_READ_TIME,
+    REALTIME,
     SLOS,
     TILE_LATENCY,
     Alert,
@@ -64,6 +65,15 @@ class FakeApi:
         status = 503 if self.fault else 200
         self.instrument.observe(SliName.AVAILABILITY, ok=status < 500)
         return status
+
+
+@dataclass
+class FakeRoomEdge:
+    instrument: Instrument
+    fault: bool = False
+
+    def publish(self) -> None:
+        self.instrument.observe(SliName.REALTIME, ok=not self.fault)
 
 
 @dataclass
@@ -180,11 +190,26 @@ def pre_read_drill(
     return gpu_queue.submit, inject, heal
 
 
+def realtime_drill(
+    rig: Rig,
+) -> tuple[Callable[[], object], Callable[[], None], Callable[[], None]]:
+    edge = FakeRoomEdge(rig.instrument)
+
+    def inject() -> None:
+        edge.fault = True
+
+    def heal() -> None:
+        edge.fault = False
+
+    return edge.publish, inject, heal
+
+
 DRILLS = [
     Drill(AVAILABILITY, timedelta(seconds=10), api_drill),
     Drill(TILE_LATENCY, timedelta(seconds=5), tile_drill),
     Drill(INGEST_TIME, timedelta(minutes=2), ingest_drill),
     Drill(PRE_READ_TIME, timedelta(minutes=2), pre_read_drill),
+    Drill(REALTIME, timedelta(seconds=10), realtime_drill),
 ]
 
 

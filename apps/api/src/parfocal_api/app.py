@@ -175,8 +175,8 @@ class ParfocalApi(FastAPI):
         self.state.engine = create_engine(str(settings.database_url))
         self.state.maintenance = maintenance.MaintenanceState(self.state.engine)
         self.state.realtime_http = httpx2.AsyncClient(timeout=5)
-        self.state.realtime = realtime_for(settings, self.state.realtime_http)
         self.state.sli = sli_emitter(settings, clients, self.state.storage)
+        self.state.realtime = realtime_for(settings, self.state.realtime_http, self.state.sli)
         self.state.auth = auth.AuthState(
             engine=self.state.engine,
             identity=identity,

@@ -658,6 +658,28 @@ async def tell_finished(on_finished: JobFinished, job: Claimed) -> None:
         )
 
 
+async def drive_job(
+    engine: AsyncEngine,
+    job: Claimed,
+    workflow: Workflow,
+    worker: str,
+    labels: RunLabels | None,
+) -> JobStatus | None:
+    heartbeat = asyncio.create_task(renew(engine, job, worker, workflow.lease_seconds))
+    try:
+        for ordinal, step in enumerate(workflow.steps):
+            if not await still_held(engine, job, worker):
+                await finish(engine, job, worker, JobStatus.CANCELLED)
+                return None
+            if not await run_step(engine, job, step, ordinal, worker, labels):
+                return None
+        return await finish(engine, job, worker, JobStatus.DONE)
+    finally:
+        heartbeat.cancel()
+        with suppress(asyncio.CancelledError):
+            await heartbeat
+
+
 async def run_job(
     engine: AsyncEngine,
     job: Claimed,
@@ -665,22 +687,13 @@ async def run_job(
     worker: str,
     labels: RunLabels | None = None,
     on_finished: JobFinished | None = None,
+    on_settled: JobFinished | None = None,
 ) -> None:
-    heartbeat = asyncio.create_task(renew(engine, job, worker, workflow.lease_seconds))
-    try:
-        for ordinal, step in enumerate(workflow.steps):
-            if not await still_held(engine, job, worker):
-                await finish(engine, job, worker, JobStatus.CANCELLED)
-                return
-            if not await run_step(engine, job, step, ordinal, worker, labels):
-                return
-        final = await finish(engine, job, worker, JobStatus.DONE)
-    finally:
-        heartbeat.cancel()
-        with suppress(asyncio.CancelledError):
-            await heartbeat
+    final = await drive_job(engine, job, workflow, worker, labels)
     if final is JobStatus.DONE and on_finished is not None:
         await tell_finished(on_finished, job)
+    if on_settled is not None:
+        await tell_finished(on_settled, job)
 
 
 async def work(
@@ -691,6 +704,7 @@ async def work(
     poll_seconds: float = 1.0,
     tenant_id: uuid.UUID | None = None,
     on_finished: JobFinished | None = None,
+    on_settled: JobFinished | None = None,
 ) -> int:
     await require_row_security(engine)
     kinds = {workflow.kind: workflow for workflow in workflows}
@@ -704,7 +718,7 @@ async def work(
             continue
         idle = 0.0
         job, workflow = claimed
-        await run_job(engine, job, workflow, worker, on_finished=on_finished)
+        await run_job(engine, job, workflow, worker, on_finished=on_finished, on_settled=on_settled)
         finished += 1
     return finished
 

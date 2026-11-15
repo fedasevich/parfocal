@@ -18,7 +18,7 @@
       }
     ]
   },
-  "description": "availability: 99.5 percent of API requests end without a server error; tile-latency: 95 percent of tile fetches finish within 60 ms at the edge; ingest-time: 95 percent of uploaded slides are ready to view within 10 minutes; pre-read-time: 95 percent of AI pre-reads are ready within 60 minutes of the slide being ready",
+  "description": "availability: 99.5 percent of API requests end without a server error; tile-latency: 95 percent of tile fetches finish within 60 ms at the edge; ingest-time: 95 percent of uploaded slides are ready to view within 10 minutes; pre-read-time: 95 percent of AI pre-reads are ready within 60 minutes of the slide being ready; realtime: 99 percent of room events and revokes reach the realtime edge",
   "panels": [
     {
       "id": 1,
@@ -183,8 +183,8 @@
     {
       "id": 6,
       "type": "timeseries",
-      "title": "Error budget burn over 1 hour",
-      "description": "workers: slo.status",
+      "title": "Room events that reached the edge",
+      "description": "realtime: slo.status",
       "datasource": {
         "type": "loki",
         "uid": "${logs}"
@@ -208,12 +208,44 @@
             "type": "loki",
             "uid": "${logs}"
           },
-          "expr": "max by (slo) ({service_name=~\".+\"} | event=\"slo.status\" | unwrap burn_tenths [15m])"
+          "expr": "max by (slo) ({service_name=~\".+\"} | event=\"slo.status\" | slo=`realtime` | unwrap good_permille [15m])"
         }
       ]
     },
     {
       "id": 7,
+      "type": "timeseries",
+      "title": "Error budget burn over 1 hour",
+      "description": "workers: slo.status",
+      "datasource": {
+        "type": "loki",
+        "uid": "${logs}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 24
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "${logs}"
+          },
+          "expr": "max by (slo) ({service_name=~\".+\"} | event=\"slo.status\" | unwrap burn_tenths [15m])"
+        }
+      ]
+    },
+    {
+      "id": 8,
       "type": "timeseries",
       "title": "Viewer frame time p95",
       "description": "viewer: rum.viewer.frames",
@@ -224,7 +256,7 @@
       "gridPos": {
         "h": 8,
         "w": 12,
-        "x": 0,
+        "x": 12,
         "y": 24
       },
       "fieldConfig": {
@@ -245,7 +277,7 @@
       ]
     },
     {
-      "id": 8,
+      "id": 9,
       "type": "timeseries",
       "title": "Long frames per minute",
       "description": "viewer: rum.viewer.frames",
@@ -256,8 +288,8 @@
       "gridPos": {
         "h": 8,
         "w": 12,
-        "x": 12,
-        "y": 24
+        "x": 0,
+        "y": 32
       },
       "fieldConfig": {
         "defaults": {

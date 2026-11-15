@@ -80,6 +80,13 @@ PANELS: tuple[Panel, ...] = (
         "short",
     ),
     Panel(
+        "Room events that reached the edge",
+        "realtime",
+        SLO_STATUS_EVENT,
+        slo_good("realtime"),
+        "short",
+    ),
+    Panel(
         "Error budget burn over 1 hour",
         "workers",
         SLO_STATUS_EVENT,

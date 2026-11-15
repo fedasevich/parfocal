@@ -24,6 +24,7 @@ class SliName(StrEnum):
     TILE_LATENCY = "sli.tile.fetch"
     INGEST_TIME = "sli.ingest.slide"
     PRE_READ_TIME = "sli.pre-read.slide"
+    REALTIME = "sli.realtime.send"
 
 
 @dataclass(frozen=True)
@@ -77,7 +78,13 @@ PRE_READ_TIME = Slo(
     "95 percent of AI pre-reads are ready within 60 minutes of the slide being ready",
     threshold=timedelta(minutes=60),
 )
-SLOS: tuple[Slo, ...] = (AVAILABILITY, TILE_LATENCY, INGEST_TIME, PRE_READ_TIME)
+REALTIME = Slo(
+    "realtime",
+    SliName.REALTIME,
+    0.99,
+    "99 percent of room events and revokes reach the realtime edge",
+)
+SLOS: tuple[Slo, ...] = (AVAILABILITY, TILE_LATENCY, INGEST_TIME, PRE_READ_TIME, REALTIME)
 
 
 @dataclass(frozen=True)

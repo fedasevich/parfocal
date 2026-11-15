@@ -4,6 +4,7 @@ import time
 import uuid
 from collections.abc import Iterator
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -26,6 +27,8 @@ from parfocal_api.realtime import (
 from parfocal_api.room_access import ROOM_PROTOCOL, ROOM_TOKEN_SECONDS
 from parfocal_api.tables import Role
 from parfocal_api.tile_access import sign_capability, verified_claims
+from parfocal_common.alerting import SliName, Tally
+from parfocal_common.sli_store import SliEmitter
 
 VECTOR = json.loads(
     (Path(__file__).resolve().parents[2] / "edge" / "test" / "room-token-vector.json").read_text()
@@ -37,6 +40,31 @@ def test_the_api_signs_the_room_token_and_publish_call_the_edge_expects() -> Non
     assert sign_capability(SECRET, VECTOR["claims"]) == VECTOR["token"]
     publish = VECTOR["publish"]
     assert sign_publish(SECRET, publish["stamp"], publish["body"]) == publish["signature"]
+
+
+async def test_each_call_to_the_edge_counts_toward_the_realtime_slo() -> None:
+    answers = iter([200, 503])
+
+    def answer(_: httpx2.Request) -> httpx2.Response:
+        return httpx2.Response(next(answers))
+
+    now = datetime(2026, 11, 15, 9, 0, tzinfo=UTC)
+    sli = SliEmitter(lambda: now)
+    tenant, user, slide = (uuid.uuid4() for _ in range(3))
+    async with httpx2.AsyncClient(transport=httpx2.MockTransport(answer)) as http:
+        edge = realtime_for(
+            RealtimeSettings(
+                room_token_key=SecretStr(SECRET),
+                realtime_internal_url=AnyHttpUrl("https://edge.test"),
+            ),
+            http,
+            sli,
+        )
+        await edge.publish(
+            tenant, [f"slide:{slide}"], RoomEvent(kind="slide.changed", ids={"slide": slide})
+        )
+        await edge.revoke(tenant, user, None)
+    assert list(sli.pending.buckets[SliName.REALTIME].values()) == [Tally(2, 1)]
 
 
 def test_events_carry_ids_and_kinds_only() -> None:
