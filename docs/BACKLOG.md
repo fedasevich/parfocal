@@ -3743,7 +3743,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Refs doc 22, [`poc/src/segment/type-learner.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/segment/type-learner.ts).
   Size: M.
 
-- [ ] AILEARN-003 · Learner UI
+- [x] AILEARN-003 · Learner UI
   After a few corrections on a slide (10 by default) the learner re-checks the slide. The cells it changed form a zone in findings, "Changed after your corrections", reviewed with the same type bar and keys, with Undo all that restores the typer's first calls and keeps the doctor's own corrections. Learning applies to that slide only. A collapsed row shows how many examples the learner has, with forget.
   Done when component tests cover the zone, undo and forget, and an E2E sees the zone appear after the set number of corrections.
   Refs mock 6 "After learning", [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
