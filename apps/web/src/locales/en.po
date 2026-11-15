@@ -2147,6 +2147,10 @@ msgid "{workspaceName} at a glance"
 msgstr "{workspaceName} at a glance"
 
 #: src/screens/onboarding/setup-screen.tsx
+msgid "+ and -"
+msgstr "+ and -"
+
+#: src/screens/onboarding/setup-screen.tsx
 msgid "+ Other"
 msgstr "+ Other"
 
@@ -2294,6 +2298,10 @@ msgstr "<0>Whole slide</0> · {openThreads} threads"
 msgid "⌘K with a search typed"
 msgstr "⌘K with a search typed"
 
+#: ../../packages/ui/src/components/viewer-tools.tsx
+msgid "0 0 0 1.5px #ffffff"
+msgstr "0 0 0 1.5px #ffffff"
+
 #: src/screens/upload/check-step.tsx
 msgid "1 case, {loose} loose"
 msgstr "1 case, {loose} loose"
@@ -2307,6 +2315,10 @@ msgid "1 file waits for a slide. Without one it stays out."
 msgstr "1 file waits for a slide. Without one it stays out."
 
 #: ../../packages/ui/src/components/display-panel.tsx
+msgid "1 px"
+msgstr "1 px"
+
+#: ../../packages/ui/src/components/display-panel.tsx
 msgid "1 setting"
 msgstr "1 setting"
 
@@ -2315,8 +2327,16 @@ msgid "1 thread is still open."
 msgstr "1 thread is still open."
 
 #: src/screens/project/settings-tab.tsx
+msgid "1 to 5"
+msgstr "1 to 5"
+
+#: src/screens/project/settings-tab.tsx
 msgid "1 webhook connected"
 msgstr "1 webhook connected"
+
+#: ../../packages/ui/src/components/smart-minimap.tsx
+msgid "1.5px solid #e5484d"
+msgstr "1.5px solid #e5484d"
 
 #: src/screens/viewer-tools/navigator-canvas.tsx
 msgid "1.62 mm"
@@ -2353,13 +2373,25 @@ msgstr "2 CSV files saved to Downloads"
 msgid "2 of 3"
 msgstr "2 of 3"
 
+#: ../../packages/ui/src/components/display-panel.tsx
+msgid "2 px"
+msgstr "2 px"
+
 #: src/screens/developer/developer-screen.tsx
 msgid "2.1 ms · 412 tile loads"
 msgstr "2.1 ms · 412 tile loads"
 
+#: ../../packages/ui/src/components/smart-minimap.tsx
+msgid "2.5px solid #2563eb"
+msgstr "2.5px solid #2563eb"
+
 #: src/screens/developer/developer-screen.tsx
 msgid "20 samples"
 msgstr "20 samples"
+
+#: ../../packages/ui/src/components/visualize.tsx
+msgid "2px dashed {color}"
+msgstr "2px dashed {color}"
 
 #: src/screens/annotate-task/new-annotate-task.tsx
 msgid "3 experts"
@@ -2369,9 +2401,17 @@ msgstr "3 experts"
 msgid "3 of 3"
 msgstr "3 of 3"
 
+#: ../../packages/ui/src/components/display-panel.tsx
+msgid "3 px"
+msgstr "3 px"
+
 #: ../../packages/ui/src/components/icon.tsx
 msgid "3D mouse"
 msgstr "3D mouse"
+
+#: src/screens/onboarding/setup-screen.tsx
+msgid "4 CAMELYON16 slides with two AI result sets and a review task for you, to try everything safely"
+msgstr "4 CAMELYON16 slides with two AI result sets and a review task for you, to try everything safely"
 
 #: src/screens/developer/developer-screen.tsx
 msgid "41,220 cells so far · 3.1 tiles a second · about 6 min left"
@@ -2442,6 +2482,10 @@ msgstr "A copy to change. Name, paper and format are on the right."
 msgid "A deposit of {0} is a {1}. Confirm the size or pick {2}"
 msgstr "A deposit of {0} is a {1}. Confirm the size or pick {2}"
 
+#: src/screens/upload/formats-drawer.tsx
+msgid "A field the schema does not define. Remove or rename it."
+msgstr "A field the schema does not define. Remove or rename it."
+
 #: src/screens/upload/files-step.tsx
 msgid "A folder is a case, and its name becomes the case number."
 msgstr "A folder is a case, and its name becomes the case number."
@@ -2450,11 +2494,16 @@ msgstr "A folder is a case, and its name becomes the case number."
 msgid "A key, or a key with ⌘, ⌃, ⌥ or ⇧. Keys are matched by their position, so this works on a Czech keyboard too."
 msgstr "A key, or a key with ⌘, ⌃, ⌥ or ⇧. Keys are matched by their position, so this works on a Czech keyboard too."
 
+#: src/screens/upload/live-wizard.tsx
+msgid "a loose slide"
+msgstr "a loose slide"
+
 #: src/screens/admin/audit.tsx
 msgid "A member"
 msgstr "A member"
 
 #: src/screens/settings/settings-screen.tsx
+#: src/shell/palette-labels.tsx
 msgid "A model run finishes"
 msgstr "A model run finishes"
 
@@ -2494,6 +2543,10 @@ msgstr "A notification when every region is found"
 msgid "A number from 1 to 9. Reviewers press it to give a cell this class."
 msgstr "A number from 1 to 9. Reviewers press it to give a cell this class."
 
+#: src/screens/upload/formats-drawer.tsx
+msgid "A number is outside its allowed range, such as a score above 1."
+msgstr "A number is outside its allowed range, such as a score above 1."
+
 #: ../../packages/ui/src/components/annotate-task.tsx
 msgid "A preset only fills in the options. You can change each of them on the next step."
 msgstr "A preset only fills in the options. You can change each of them on the next step."
@@ -2501,6 +2554,10 @@ msgstr "A preset only fills in the options. You can change each of them on the n
 #: src/screens/onboarding/setup-screen.tsx
 msgid "A project holds slides, AI results and review tasks. Cases and patient details are optional."
 msgstr "A project holds slides, AI results and review tasks. Cases and patient details are optional."
+
+#: ../../packages/ui/src/components/annotate-task.tsx
+msgid "A random sample is checked, the rest stays unchecked and out of the export."
+msgstr "A random sample is checked, the rest stays unchecked and out of the export."
 
 #. placeholder {0}: values.sampleSize
 #: ../../packages/ui/src/components/annotate-task.tsx
@@ -2520,8 +2577,13 @@ msgid "A read-only link"
 msgstr "A read-only link"
 
 #: src/screens/settings/settings-screen.tsx
+#: src/shell/palette-labels.tsx
 msgid "A reminder before a due date"
 msgstr "A reminder before a due date"
+
+#: src/screens/upload/formats-drawer.tsx
+msgid "A required field is absent."
+msgstr "A required field is absent."
 
 #: src/screens/admin/template-offers.tsx
 msgid "A researcher"
@@ -2548,6 +2610,7 @@ msgid "A reviewer of {taskCode}"
 msgstr "A reviewer of {taskCode}"
 
 #: src/screens/settings/settings-screen.tsx
+#: src/shell/palette-labels.tsx
 msgid "A reviewer submits a slide of my task"
 msgstr "A reviewer submits a slide of my task"
 
@@ -2592,6 +2655,7 @@ msgid "A slide, a case or an ID like T2·C145"
 msgstr "A slide, a case or an ID like T2·C145"
 
 #: src/screens/settings/settings-screen.tsx
+#: src/shell/palette-labels.tsx
 msgid "A STAT task is given to me"
 msgstr "A STAT task is given to me"
 
@@ -2601,12 +2665,29 @@ msgid "A suggestion only. It fills in the next steps, and you can change every s
 msgstr "A suggestion only. It fills in the next steps, and you can change every setting there."
 
 #: src/screens/settings/settings-screen.tsx
+#: src/shell/palette-labels.tsx
 msgid "A task is given to me"
 msgstr "A task is given to me"
 
 #: src/screens/admin/templates.tsx
 msgid "A template lays out the evaluation report as blocks on pages and fills in what a new review task checks, its opinion form and how it runs. Researchers pick one when they create a task, and can still arrange one task's report on its own."
 msgstr "A template lays out the evaluation report as blocks on pages and fills in what a new review task checks, its opinion form and how it runs. Researchers pick one when they create a task, and can still arrange one task's report on its own."
+
+#: src/screens/upload/formats-drawer.tsx
+msgid "A text or list is too short or too long."
+msgstr "A text or list is too short or too long."
+
+#: src/screens/upload/formats-drawer.tsx
+msgid "A text, such as an ID, does not match the expected pattern."
+msgstr "A text, such as an ID, does not match the expected pattern."
+
+#: src/screens/upload/formats-drawer.tsx
+msgid "A value has the wrong type, such as text where a number goes."
+msgstr "A value has the wrong type, such as text where a number goes."
+
+#: src/screens/upload/formats-drawer.tsx
+msgid "A value is not one of the allowed choices."
+msgstr "A value is not one of the allowed choices."
 
 #: src/routes/prototype.tsx
 msgid "A1 opened in the preview on the right"
@@ -3042,6 +3123,10 @@ msgstr "AI and reviewer agree"
 msgid "AI cells inside the areas you draw"
 msgstr "AI cells inside the areas you draw"
 
+#: ../../packages/ui/src/components/annotate-task.tsx
+msgid "AI is checked least sure first, and experts draw what it missed."
+msgstr "AI is checked least sure first, and experts draw what it missed."
+
 #: src/screens/admin/admin-shell.tsx
 #: src/screens/admin/overview.tsx
 msgid "AI models"
@@ -3050,6 +3135,10 @@ msgstr "AI models"
 #: src/screens/viewer/layer-views.tsx
 msgid "AI only, reviewer disagreed"
 msgstr "AI only, reviewer disagreed"
+
+#: ../../packages/ui/src/components/display-panel.tsx
+msgid "AI order"
+msgstr "AI order"
 
 #: src/viewer/annotate-task-panel.tsx
 msgid "AI result"
@@ -3198,6 +3287,10 @@ msgstr "Also viewing now: {0}"
 msgid "Alt+{0}"
 msgstr "Alt+{0}"
 
+#: src/screens/onboarding/setup-screen.tsx
+msgid "Alt+1 to Alt+6"
+msgstr "Alt+1 to Alt+6"
+
 #: src/screens/settings/settings-screen.tsx
 msgid "Always"
 msgstr "Always"
@@ -3263,6 +3356,7 @@ msgid "Analysis template"
 msgstr "Analysis template"
 
 #: src/screens/settings/settings-screen.tsx
+#: src/shell/palette-labels.tsx
 msgid "Animated jumps"
 msgstr "Animated jumps"
 
@@ -3276,10 +3370,18 @@ msgstr "Anna Kopecká with three objects to adjudicate on RT-14"
 msgid "Annotate"
 msgstr "Annotate"
 
+#: ../../packages/ui/src/components/annotate-task.tsx
+msgid "Annotate by hand"
+msgstr "Annotate by hand"
+
 #: src/screens/annotate-task/annotate-task-view.tsx
 #: src/viewer/annotate-task-panel.tsx
 msgid "Annotate task"
 msgstr "Annotate task"
+
+#: src/routes/issue-states.tsx
+msgid "Annotate workspace"
+msgstr "Annotate workspace"
 
 #: src/screens/developer/developer-screen.tsx
 msgid "Annotations"
@@ -3360,6 +3462,10 @@ msgstr "Anything else lands in Not matched yet, and you pick its slide."
 msgid "Anything the clinician should know"
 msgstr "Anything the clinician should know"
 
+#: src/screens/onboarding/setup-screen.tsx
+msgid "Aperio"
+msgstr "Aperio"
+
 #: src/screens/admin/admin-shell.tsx
 msgid "API and webhooks"
 msgstr "API and webhooks"
@@ -3410,6 +3516,10 @@ msgstr "Archived"
 msgid "are"
 msgstr "are"
 
+#: src/screens/onboarding/setup-screen.tsx
+msgid "Area"
+msgstr "Area"
+
 #. placeholder {0}: position + 1
 #: ../../packages/ui/src/components/findings-panel.tsx
 msgid "Area {0}"
@@ -3451,6 +3561,14 @@ msgstr "Arranging · {0} blocks"
 #: ../../packages/ui/src/components/icon.tsx
 msgid "Arrow"
 msgstr "Arrow"
+
+#: src/screens/onboarding/setup-screen.tsx
+msgid "Arrows, Shift for 3x"
+msgstr "Arrows, Shift for 3x"
+
+#: src/screens/new-task/modals.tsx
+msgid "Artefact or fold"
+msgstr "Artefact or fold"
 
 #: src/routes/flow-map.walkthrough.index.tsx
 msgid "As"
@@ -3586,6 +3704,15 @@ msgstr "Automatic imports"
 #: src/screens/upload/overlays.tsx
 msgid "Automatic imports settings"
 msgstr "Automatic imports settings"
+
+#: ../../packages/ui/src/components/person.tsx
+msgid "Available"
+msgstr "Available"
+
+#: ../../packages/ui/src/components/person.tsx
+#: ../../packages/ui/src/components/team.tsx
+msgid "Away"
+msgstr "Away"
 
 #. placeholder {0}: formatDayMonth(parseDay(absence.until))
 #. placeholder {0}: person.awayUntil
@@ -3768,6 +3895,10 @@ msgstr "Before you can sign"
 msgid "Before you submit"
 msgstr "Before you submit"
 
+#: ../../packages/ui/src/components/team.tsx
+msgid "Behind"
+msgstr "Behind"
+
 #: src/screens/settings/settings-screen.tsx
 msgid "Bell"
 msgstr "Bell"
@@ -3818,6 +3949,10 @@ msgstr "Blind review"
 #: src/screens/review/object-comments.tsx
 msgid "Blind review. Other reviewers see it after they submit."
 msgstr "Blind review. Other reviewers see it after they submit."
+
+#: ../../packages/ui/src/components/auth.tsx
+msgid "Blind reviews, a disagreement queue and a signed evaluation"
+msgstr "Blind reviews, a disagreement queue and a signed evaluation"
 
 #: src/screens/new-task/steps.tsx
 msgid "Blind until they submit"
@@ -3873,6 +4008,14 @@ msgstr "Blocks and format come from the template."
 msgid "Board"
 msgstr "Board"
 
+#: src/screens/new-task/modals.tsx
+msgid "Border unclear"
+msgstr "Border unclear"
+
+#: src/screens/onboarding/setup-screen.tsx
+msgid "Both"
+msgstr "Both"
+
 #: ../../packages/ui/src/components/team.tsx
 msgid "Both are told by email."
 msgstr "Both are told by email."
@@ -3904,9 +4047,18 @@ msgstr "Both vs AI {0}"
 msgid "Bottom dock"
 msgstr "Bottom dock"
 
+#: ../../packages/ui/src/components/viewer-tools.tsx
 #: src/screens/developer/developer-screen.tsx
 msgid "Bottom left"
 msgstr "Bottom left"
+
+#: ../../packages/ui/src/components/viewer-tools.tsx
+msgid "Bottom right"
+msgstr "Bottom right"
+
+#: src/screens/new-task/modals.tsx
+msgid "Boundary is off"
+msgstr "Boundary is off"
 
 #: ../../packages/ui/src/components/breadcrumb.tsx
 msgid "breadcrumb"
@@ -3937,9 +4089,21 @@ msgstr "Brush"
 msgid "Built-in lists: {0}. Each project can change its own classes."
 msgstr "Built-in lists: {0}. Each project can change its own classes."
 
+#: ../../packages/ui/src/components/person.tsx
+msgid "Busy"
+msgstr "Busy"
+
+#: src/screens/new-task/steps.tsx
+msgid "Buttons"
+msgstr "Buttons"
+
 #: ../../packages/ui/src/components/annotate-task.tsx
 msgid "by {names}<0>Show</0>"
 msgstr "by {names}<0>Show</0>"
+
+#: ../../packages/ui/src/components/annotate-task.tsx
+msgid "By hand"
+msgstr "By hand"
 
 #: ../../packages/ui/src/components/clinical-report.tsx
 msgid "by hand on"
@@ -3970,6 +4134,7 @@ msgid "Calibration details"
 msgstr "Calibration details"
 
 #: src/screens/settings/settings-screen.tsx
+#: src/shell/palette-labels.tsx
 msgid "Calibration details block"
 msgstr "Calibration details block"
 
@@ -3984,6 +4149,7 @@ msgid "CAMELYON16 annotations"
 msgstr "CAMELYON16 annotations"
 
 #: src/screens/settings/settings-screen.tsx
+#: src/shell/palette-labels.tsx
 msgid "Camera feel"
 msgstr "Camera feel"
 
@@ -4162,7 +4328,9 @@ msgstr "Cell typing"
 #: ../../packages/ui/src/components/findings-panel.tsx
 #: ../../packages/ui/src/components/report-editor-pages.tsx
 #: src/screens/developer/developer-screen.tsx
+#: src/screens/project/settings-tab.tsx
 #: src/screens/review/object-card.tsx
+#: src/screens/shared-report/shared-report-screen.tsx
 #: src/screens/upload/check-step.tsx
 msgid "Cells"
 msgstr "Cells"
@@ -4324,6 +4492,8 @@ msgstr "Chapters"
 
 #: src/screens/upload/files-step.tsx
 #: src/screens/upload/link-import.tsx
+#: src/screens/upload/live-wizard.tsx
+#: src/screens/upload/upload-page.tsx
 #: src/screens/upload/viewer-flow.tsx
 msgid "Check"
 msgstr "Check"
@@ -4335,6 +4505,14 @@ msgstr "Check a file"
 #: ../../packages/ui/src/components/annotate-task.tsx
 msgid "Check a random sample"
 msgstr "Check a random sample"
+
+#: ../../packages/ui/src/components/annotate-task.tsx
+msgid "Check a sample"
+msgstr "Check a sample"
+
+#: ../../packages/ui/src/components/annotate-task.tsx
+msgid "Check a whole-slide run"
+msgstr "Check a whole-slide run"
 
 #: src/screens/upload/files-step.tsx
 #: src/screens/upload/link-import.tsx
@@ -4381,11 +4559,16 @@ msgstr "Check the address to list what is there. Nothing is fetched yet."
 msgid "Check your email"
 msgstr "Check your email"
 
+#: src/screens/onboarding/setup-screen.tsx
+msgid "Check, fix and comment on AI results, give your opinion"
+msgstr "Check, fix and comment on AI results, give your opinion"
+
 #: src/screens/onboarding/sign-up-screen.tsx
 msgid "Check, fix and comment on what the AI found"
 msgstr "Check, fix and comment on what the AI found"
 
 #: ../../packages/ui/src/components/annotate-task.tsx
+#: ../../packages/ui/src/components/smart-minimap.tsx
 msgid "Checked"
 msgstr "Checked"
 
@@ -4492,8 +4675,10 @@ msgstr "Choose slides or result files"
 msgid "Choose the data folder"
 msgstr "Choose the data folder"
 
+#: ../../packages/ui/src/components/display-panel.tsx
 #: ../../packages/ui/src/components/report-editor-pages.tsx
 #: src/screens/evaluation/report-pages.tsx
+#: src/screens/new-task/steps.tsx
 #: src/screens/shared-report/shared-report-screen.tsx
 msgid "Class"
 msgstr "Class"
@@ -4637,6 +4822,7 @@ msgstr "Clinical"
 msgid "Clinical note"
 msgstr "Clinical note"
 
+#: src/routes/issue-states.tsx
 #: src/screens/clinical-report/cosign-screen.tsx
 #: src/screens/clinical-report/report-screen.tsx
 msgid "Clinical report"
@@ -4749,6 +4935,7 @@ msgid "Co-signed and signed out. The report names you both."
 msgstr "Co-signed and signed out. The report names you both."
 
 #: src/screens/settings/settings-screen.tsx
+#: src/shell/palette-labels.tsx
 msgid "Coasting"
 msgstr "Coasting"
 
@@ -4765,11 +4952,14 @@ msgstr "Cohen kappa"
 msgid "Cohen's kappa {0} on regions. Shown only after both submitted."
 msgstr "Cohen's kappa {0} on regions. Shown only after both submitted."
 
+#: ../../packages/ui/src/components/display-panel.tsx
+#: src/screens/new-task/steps.tsx
 #: src/screens/project/add-class-modal.tsx
 msgid "Color"
 msgstr "Color"
 
 #: ../../packages/ui/src/components/display-panel.tsx
+#: src/screens/new-task/steps.tsx
 msgid "Color by"
 msgstr "Color by"
 
@@ -4842,6 +5032,7 @@ msgid "Compare and share"
 msgstr "Compare and share"
 
 #: ../../packages/ui/src/components/review-popovers.tsx
+#: src/routes/issue-states.tsx
 #: src/screens/review/viewer-frame.tsx
 msgid "Compare slides"
 msgstr "Compare slides"
@@ -4870,6 +5061,7 @@ msgstr "Comparison"
 
 #: ../../packages/ui/src/components/display-panel.tsx
 #: src/screens/developer/developer-screen.tsx
+#: src/screens/new-task/steps.tsx
 #: src/screens/review/confidence-chip.tsx
 msgid "Confidence"
 msgstr "Confidence"
@@ -4891,6 +5083,7 @@ msgid "Confidence display"
 msgstr "Confidence display"
 
 #: src/screens/settings/settings-screen.tsx
+#: src/shell/palette-labels.tsx
 msgid "Confidence wording"
 msgstr "Confidence wording"
 
@@ -4934,10 +5127,15 @@ msgstr "Confirm your email first. Setup starts after the code."
 msgid "Confirmation code"
 msgstr "Confirmation code"
 
+#: ../../packages/ui/src/components/annotate-task.tsx
+msgid "Confirmed"
+msgstr "Confirmed"
+
 #: ../../packages/ui/src/components/shortcut-editor.tsx
 msgid "conflict"
 msgstr "conflict"
 
+#: src/routes/issue-states.tsx
 #: src/screens/admin/connect-model.tsx
 msgid "Connect a model"
 msgstr "Connect a model"
@@ -4988,6 +5186,11 @@ msgstr "Consensus of the reviewers"
 #: ../../packages/ui/src/components/ingest-failure.tsx
 msgid "Contact support"
 msgstr "Contact support"
+
+#: ../../packages/ui/src/components/display-panel.tsx
+#: src/screens/new-task/steps.tsx
+msgid "Context"
+msgstr "Context"
 
 #: ../../packages/ui/src/components/auth.tsx
 #: src/screens/my-work/to-review-tab.tsx
@@ -5164,6 +5367,10 @@ msgstr "Counts per class"
 msgid "Create a new workspace"
 msgstr "Create a new workspace"
 
+#: src/screens/onboarding/setup-screen.tsx
+msgid "Create a project"
+msgstr "Create a project"
+
 #: src/screens/upload/upload-page.tsx
 msgid "Create a review task"
 msgstr "Create a review task"
@@ -5263,6 +5470,10 @@ msgstr "Cutoff"
 msgid "Cutoff restored."
 msgstr "Cutoff restored."
 
+#: src/screens/onboarding/setup-screen.tsx
+msgid "Cytology"
+msgstr "Cytology"
+
 #: src/screens/project/settings-tab.tsx
 msgid "Danger zone"
 msgstr "Danger zone"
@@ -5271,6 +5482,7 @@ msgstr "Danger zone"
 msgid "Daniel Hruška's tasks with their reviewers"
 msgstr "Daniel Hruška's tasks with their reviewers"
 
+#: ../../packages/ui/src/components/account-menu.tsx
 #: src/screens/onboarding/setup-screen.tsx
 #: src/screens/settings/settings-screen.tsx
 msgid "Dark"
@@ -5302,6 +5514,7 @@ msgid "De-identified, so labels and patient names are removed on upload"
 msgstr "De-identified, so labels and patient names are removed on upload"
 
 #: src/screens/settings/settings-screen.tsx
+#: src/shell/palette-labels.tsx
 msgid "Dead zone"
 msgstr "Dead zone"
 
@@ -5318,6 +5531,10 @@ msgstr "Decide"
 msgid "Decide {total} objects on {0}"
 msgstr "Decide {total} objects on {0}"
 
+#: src/routes/issue-states.tsx
+msgid "Decide objects"
+msgstr "Decide objects"
+
 #: src/screens/disagreements/queue-screen.tsx
 msgid "Decided by"
 msgstr "Decided by"
@@ -5330,12 +5547,15 @@ msgstr "Decides what the review panel adds."
 msgid "Decimals"
 msgstr "Decimals"
 
+#: ../../packages/ui/src/components/display-panel.tsx
 #: src/screens/disagreements/queue-screen.tsx
 #: src/screens/evaluation/report-pages.tsx
+#: src/screens/new-task/steps.tsx
 msgid "Decision"
 msgstr "Decision"
 
 #: src/screens/admin/workspace-settings.tsx
+#: src/shell/palette-labels.tsx
 msgid "Decision cutoff"
 msgstr "Decision cutoff"
 
@@ -5363,6 +5583,10 @@ msgstr "Decisions"
 #: src/screens/disagreements/queue-screen.tsx
 msgid "Decisions open here once both reviews are in."
 msgstr "Decisions open here once both reviews are in."
+
+#: src/screens/sign-off/sign-off-screen.tsx
+msgid "Decisions per object"
+msgstr "Decisions per object"
 
 #: src/screens/developer/developer-screen.tsx
 msgid "deck.gl backend"
@@ -5400,6 +5624,10 @@ msgstr "Default"
 msgid "default {0}"
 msgstr "default {0}"
 
+#: src/shell/palette-labels.tsx
+msgid "Default display preset"
+msgstr "Default display preset"
+
 #: src/screens/settings/settings-screen.tsx
 msgid "Default preset"
 msgstr "Default preset"
@@ -5433,6 +5661,7 @@ msgstr "Delete {0}"
 msgid "Delete project"
 msgstr "Delete project"
 
+#: ../../packages/ui/src/components/annotate-task.tsx
 #: ../../packages/ui/src/components/report-editor-pages.tsx
 #: src/screens/admin/deleted-projects.tsx
 msgid "Deleted"
@@ -5451,6 +5680,7 @@ msgid "Deleting hides the project from every list and link. Nothing is erased, a
 msgstr "Deleting hides the project from every list and link. Nothing is erased, and an owner can restore it."
 
 #: src/screens/settings/settings-screen.tsx
+#: src/shell/palette-labels.tsx
 msgid "Density"
 msgstr "Density"
 
@@ -5504,6 +5734,7 @@ msgid "Device name (optional, such as Logitech MX Master 3)"
 msgstr "Device name (optional, such as Logitech MX Master 3)"
 
 #: ../../packages/ui/src/components/report-editor-pages.tsx
+#: src/screens/evaluation/report-pages.tsx
 #: src/screens/shared-report/shared-report-screen.tsx
 msgid "Dice"
 msgstr "Dice"
@@ -5537,6 +5768,7 @@ msgid "Disagreed"
 msgstr "Disagreed"
 
 #: ../../packages/ui/src/components/report-editor-pages.tsx
+#: src/routes/issue-states.tsx
 #: src/screens/disagreements/queue-screen.tsx
 #: src/screens/evaluation/report-pages.tsx
 msgid "Disagreements"
@@ -5580,10 +5812,16 @@ msgstr "Display defaults for reviewers"
 msgid "Doctors pick wording and outlines in Settings. These override them while testing."
 msgstr "Doctors pick wording and outlines in Settings. These override them while testing."
 
+#: src/screens/upload/check-step.tsx
+msgid "Does not line up"
+msgstr "Does not line up"
+
 #: ../../packages/ui/src/components/icon.tsx
+#: ../../packages/ui/src/components/team.tsx
 #: src/feedback/feedback-dialog.tsx
 #: src/help/tour-host.tsx
 #: src/screens/new-task/modals.tsx
+#: src/screens/onboarding/setup-screen.tsx
 #: src/screens/team/team-screen.tsx
 #: src/screens/upload/files-step.tsx
 #: src/screens/upload/live-wizard.tsx
@@ -5601,7 +5839,17 @@ msgstr "Done for now"
 msgid "Done in {0} min"
 msgstr "Done in {0} min"
 
+#: ../../packages/ui/src/components/display-panel.tsx
+#: src/screens/new-task/steps.tsx
+msgid "Dots"
+msgstr "Dots"
+
+#: src/screens/onboarding/setup-screen.tsx
+msgid "Double tap"
+msgstr "Double tap"
+
 #: src/screens/settings/settings-screen.tsx
+#: src/shell/palette-labels.tsx
 msgid "Double-click"
 msgstr "Double-click"
 
@@ -5698,7 +5946,12 @@ msgstr "Drag to move, scroll to zoom"
 msgid "Drag to swipe between the two sets"
 msgstr "Drag to swipe between the two sets"
 
+#: src/screens/onboarding/setup-screen.tsx
+msgid "Drag, or middle-drag"
+msgstr "Drag, or middle-drag"
+
 #: ../../packages/ui/src/components/display-panel.tsx
+#: src/screens/new-task/steps.tsx
 msgid "Draw as"
 msgstr "Draw as"
 
@@ -5706,6 +5959,14 @@ msgstr "Draw as"
 #: src/screens/review/object-card.tsx
 msgid "Draw the new outline of {0}"
 msgstr "Draw the new outline of {0}"
+
+#: ../../packages/ui/src/components/annotate-task.tsx
+msgid "Drawn by"
+msgstr "Drawn by"
+
+#: ../../packages/ui/src/components/annotate-task.tsx
+msgid "Drawn or imported by an expert"
+msgstr "Drawn or imported by an expert"
 
 #: src/screens/viewer/objects-panel.tsx
 msgid "Drawn with the ruler across {across}. It is yours only and is not a decision."
@@ -5851,9 +6112,14 @@ msgstr "Edit slides"
 msgid "Edit the form"
 msgstr "Edit the form"
 
+#: ../../packages/ui/src/components/annotate-task.tsx
 #: ../../packages/ui/src/components/report-editor-pages.tsx
 msgid "Edited"
 msgstr "Edited"
+
+#: ../../packages/ui/src/components/annotate-task.tsx
+msgid "Edited by"
+msgstr "Edited by"
 
 #: src/screens/developer/developer-screen.tsx
 msgid "Eight averages rotated and flipped copies of each tile"
@@ -5867,6 +6133,7 @@ msgstr "Ellipse"
 #: src/screens/admin/people.tsx
 #: src/screens/onboarding/invite-screen.tsx
 #: src/screens/settings/settings-screen.tsx
+#: src/shell/palette-labels.tsx
 msgid "Email"
 msgstr "Email"
 
@@ -5919,6 +6186,10 @@ msgstr "Ended {0}"
 msgid "English"
 msgstr "English"
 
+#: ../../packages/ui/src/components/comment-thread.tsx
+msgid "Enter"
+msgstr "Enter"
+
 #: src/screens/clinical-report/steps.tsx
 msgid "Enter a deposit size to get a suggestion."
 msgstr "Enter a deposit size to get a suggestion."
@@ -5961,6 +6232,10 @@ msgstr "Error report"
 msgid "Esc, leave focus mode"
 msgstr "Esc, leave focus mode"
 
+#: ../../packages/ui/src/components/comment-thread.tsx
+msgid "Escape"
+msgstr "Escape"
+
 #: src/screens/new-task/steps.tsx
 msgid "Estimate"
 msgstr "Estimate"
@@ -5970,8 +6245,10 @@ msgid "Evaluation"
 msgstr "Evaluation"
 
 #: ../../packages/ui/src/components/report-templates.tsx
+#: src/routes/issue-states.tsx
 #: src/screens/evaluation/evaluation-screen.tsx
 #: src/screens/evaluation/report-pages.tsx
+#: src/screens/sign-off/sign-off-screen.tsx
 msgid "Evaluation report"
 msgstr "Evaluation report"
 
@@ -6027,6 +6304,10 @@ msgstr "every AI cell"
 #: src/screens/annotate-task/new-annotate-task.tsx
 msgid "Every AI cell"
 msgstr "Every AI cell"
+
+#: ../../packages/ui/src/components/annotate-task.tsx
+msgid "Every AI object is checked, least sure first, and all must be checked."
+msgstr "Every AI object is checked, least sure first, and all must be checked."
 
 #: src/viewer/guided-check.tsx
 msgid "Every AI object is checked."
@@ -6128,6 +6409,10 @@ msgstr "Every slide of the project is in the task."
 #: src/screens/project/task-settings-drawer.tsx
 msgid "Every stored decision is counted again from the raw answers. The report's Methods block says that Counts as changed, who changed it and when."
 msgstr "Every stored decision is counted again from the raw answers. The report's Methods block says that Counts as changed, who changed it and when."
+
+#: ../../packages/ui/src/components/auth.tsx
+msgid "Every tumor, cell and region has an ID you can cite"
+msgstr "Every tumor, cell and region has an ID you can cite"
 
 #: src/screens/admin/audit.tsx
 msgid "Everyone"
@@ -6308,6 +6593,10 @@ msgstr "Fewer than the {positive} nodes with a deposit."
 msgid "Field {0} of {1}"
 msgstr "Field {0} of {1}"
 
+#: ../../packages/ui/src/components/shortcut-editor.tsx
+msgid "Figma"
+msgstr "Figma"
+
 #: src/screens/kpi/kpi-screen.tsx
 msgid "Figures from the ids-only timing events recorded on this device."
 msgstr "Figures from the ids-only timing events recorded on this device."
@@ -6323,9 +6612,16 @@ msgid "File slide"
 msgstr "File slide"
 
 #: src/screens/developer/developer-screen.tsx
+#: src/screens/upload/live-wizard.tsx
 #: src/screens/upload/progress-step.tsx
+#: src/screens/upload/upload-page.tsx
 msgid "Files"
 msgstr "Files"
+
+#: ../../packages/ui/src/components/display-panel.tsx
+#: src/screens/new-task/steps.tsx
+msgid "Fill"
+msgstr "Fill"
 
 #: src/screens/developer/developer-screen.tsx
 msgid "Fill opacity"
@@ -6449,9 +6745,17 @@ msgstr "First read without the AI"
 msgid "First slide"
 msgstr "First slide"
 
+#: ../../packages/ui/src/components/display-panel.tsx
+msgid "Fit"
+msgstr "Fit"
+
 #: ../../packages/ui/src/components/icon.tsx
 msgid "Fit to screen"
 msgstr "Fit to screen"
+
+#: ../../packages/ui/src/components/annotate-task.tsx
+msgid "Fix AI on selected areas"
+msgstr "Fix AI on selected areas"
 
 #: ../../packages/ui/src/components/icon.tsx
 msgid "Flag"
@@ -6469,6 +6773,10 @@ msgstr "Float textures"
 msgid "Flood fill"
 msgstr "Flood fill"
 
+#: src/routes/issue-states.tsx
+msgid "Focus mode"
+msgstr "Focus mode"
+
 #: ../../packages/ui/src/components/analysis-cards.tsx
 msgid "Fold the staging card"
 msgstr "Fold the staging card"
@@ -6485,6 +6793,11 @@ msgstr "Folder"
 #: src/screens/upload/files-step.tsx
 msgid "Folder shape: case folders, results next to slides"
 msgstr "Folder shape: case folders, results next to slides"
+
+#: src/screens/upload/files-step.tsx
+#: src/screens/upload/live-wizard.tsx
+msgid "Folder, then name, then ID"
+msgstr "Folder, then name, then ID"
 
 #. placeholder {0}: firstName(person)
 #: src/presence/viewing-now.tsx
@@ -6739,7 +7052,16 @@ msgstr "Full viewer"
 msgid "Full width"
 msgstr "Full width"
 
+#: src/screens/hotkeys-spike/hotkeys-spike.tsx
+msgid "G then 2"
+msgstr "G then 2"
+
+#: src/screens/onboarding/setup-screen.tsx
+msgid "G then a number"
+msgstr "G then a number"
+
 #: ../../packages/ui/src/components/icon.tsx
+#: src/screens/onboarding/setup-screen.tsx
 #: src/screens/settings/settings-screen.tsx
 msgid "Gamepad"
 msgstr "Gamepad"
@@ -6896,6 +7218,11 @@ msgstr "Grid"
 msgid "Group by"
 msgstr "Group by"
 
+#: src/screens/upload/files-step.tsx
+#: src/screens/upload/live-wizard.tsx
+msgid "Grouped by folder, then name, then the slide ID inside"
+msgstr "Grouped by folder, then name, then the slide ID inside"
+
 #. placeholder {0}: guess.level ?? t`unknown`
 #. placeholder {1}: guess.downsample
 #: src/screens/upload/result-problems.tsx
@@ -6912,6 +7239,7 @@ msgstr "Guided"
 msgid "Guided check"
 msgstr "Guided check"
 
+#: src/routes/issue-states.tsx
 #: src/screens/admin/template-editor.tsx
 #: src/screens/new-task/steps.tsx
 msgid "Guided review"
@@ -6969,14 +7297,20 @@ msgstr "Heatmap not kept"
 msgid "Help"
 msgstr "Help"
 
+#: src/screens/onboarding/setup-screen.tsx
+msgid "Hematopathology"
+msgstr "Hematopathology"
+
 #. placeholder {0}: lockedName.split(" ")[0]
 #. placeholder {1}: locked.slides_left
 #: src/screens/disagreements/queue-screen.tsx
 msgid "Hi {0}, {taskCode} is waiting on your last {1} slides before its disagreements can be decided. Could you fit them in this week?"
 msgstr "Hi {0}, {taskCode} is waiting on your last {1} slides before its disagreements can be decided. Could you fit them in this week?"
 
+#: ../../packages/ui/src/components/display-panel.tsx
 #: ../../packages/ui/src/components/visualize.tsx
 #: src/screens/admin/workspace-settings.tsx
+#: src/screens/new-task/steps.tsx
 msgid "Hidden"
 msgstr "Hidden"
 
@@ -7025,6 +7359,7 @@ msgstr "Hide the panel"
 
 #: ../../packages/ui/src/components/review-top-bar.tsx
 #: src/screens/review/viewer-frame.tsx
+#: src/shell/palette-labels.tsx
 msgid "Hide the side panel"
 msgstr "Hide the side panel"
 
@@ -7063,9 +7398,11 @@ msgstr "Hold Z to see the whole slide"
 
 #: ../../packages/ui/src/components/flow-page.tsx
 #: ../../packages/ui/src/components/icon.tsx
+#: src/routes/issue-states.tsx
 #: src/routes/prototype.tsx
 #: src/screens/settings/settings-screen.tsx
 #: src/shell/global-shell.tsx
+#: src/shell/palette-labels.tsx
 msgid "Home"
 msgstr "Home"
 
@@ -7076,6 +7413,18 @@ msgstr "Home · first week"
 #: src/screens/home/home-screen.tsx
 msgid "Home did not load"
 msgstr "Home did not load"
+
+#: src/screens/onboarding/setup-screen.tsx
+msgid "Home opens on My work, with Continue reviewing first."
+msgstr "Home opens on My work, with Continue reviewing first."
+
+#: src/screens/onboarding/setup-screen.tsx
+msgid "Home opens on your projects, with Upload and New review task first."
+msgstr "Home opens on your projects, with Upload and New review task first."
+
+#: src/screens/onboarding/setup-screen.tsx
+msgid "Home shows your review tasks and your projects side by side."
+msgstr "Home shows your review tasks and your projects side by side."
 
 #: src/screens/admin/join-settings.tsx
 msgid "hospital.example"
@@ -7231,6 +7580,10 @@ msgstr "Import"
 msgid "Import {0}"
 msgstr "Import {0}"
 
+#: ../../packages/ui/src/components/auth.tsx
+msgid "Import results from any model, or run one here"
+msgstr "Import results from any model, or run one here"
+
 #: src/screens/settings/shortcuts-section.tsx
 msgid "Import shortcuts file"
 msgstr "Import shortcuts file"
@@ -7293,6 +7646,11 @@ msgstr "In the bell at the top, with a link to the slides."
 msgid "In the browser console as <0>{debugHandleName}</0>"
 msgstr "In the browser console as <0>{debugHandleName}</0>"
 
+#: ../../packages/ui/src/components/display-panel.tsx
+#: src/screens/new-task/steps.tsx
+msgid "In the card"
+msgstr "In the card"
+
 #: src/screens/upload/check-step.tsx
 msgid "In the file"
 msgstr "In the file"
@@ -7350,12 +7708,17 @@ msgid "Initials show only the first letter of each name."
 msgstr "Initials show only the first letter of each name."
 
 #: src/screens/settings/settings-screen.tsx
+#: src/shell/palette-labels.tsx
 msgid "Initials while sharing"
 msgstr "Initials while sharing"
 
 #: src/screens/onboarding/setup-screen.tsx
 msgid "Input device"
 msgstr "Input device"
+
+#: src/screens/onboarding/setup-screen.tsx
+msgid "Input device and theme"
+msgstr "Input device and theme"
 
 #: src/screens/input-traces/input-traces.tsx
 msgid "Input trace recorder"
@@ -7373,6 +7736,10 @@ msgstr "Inserted into {0}"
 #: src/screens/clinical-report/steps.tsx
 msgid "Inserts the value with its source where you were last typing."
 msgstr "Inserts the value with its source where you were last typing."
+
+#: ../../packages/ui/src/components/visualize.tsx
+msgid "inset 0 0 0 3px #0b0b0b, inset 0 0 0 4px {color}"
+msgstr "inset 0 0 0 3px #0b0b0b, inset 0 0 0 4px {color}"
 
 #: src/screens/settings/settings-screen.tsx
 msgid "Instant"
@@ -7405,6 +7772,7 @@ msgid "Into {0}"
 msgstr "Into {0}"
 
 #: src/screens/settings/settings-screen.tsx
+#: src/shell/palette-labels.tsx
 msgid "Invert zoom direction"
 msgstr "Invert zoom direction"
 
@@ -7449,6 +7817,10 @@ msgstr "invited"
 #: src/screens/onboarding/sign-in-forms.tsx
 msgid "Invited? Open the link in your email"
 msgstr "Invited? Open the link in your email"
+
+#: src/screens/onboarding/setup-screen.tsx
+msgid "Invites show on your home and in the bell. The sample project is there meanwhile if you want to try things."
+msgstr "Invites show on your home and in the bell. The sample project is there meanwhile if you want to try things."
 
 #: src/screens/upload/live-wizard.tsx
 #: src/screens/upload/progress-step.tsx
@@ -7514,6 +7886,10 @@ msgstr "It sends"
 msgid "It sits near the 0.2 mm line, so both its size and its tumor cell count decide between isolated tumor cells and a micrometastasis. To settle it, {0}."
 msgstr "It sits near the 0.2 mm line, so both its size and its tumor cell count decide between isolated tumor cells and a micrometastasis. To settle it, {0}."
 
+#: ../../packages/ui/src/components/analysis-cards.tsx
+msgid "ITC if confirmed"
+msgstr "ITC if confirmed"
+
 #: ../../packages/ui/src/components/issue-index.tsx
 msgid "Its screen is not built yet"
 msgstr "Its screen is not built yet"
@@ -7569,6 +7945,10 @@ msgstr "Join and open my first slide"
 #: src/screens/onboarding/invite-screen.tsx
 msgid "Join first. Your first slide opens after that."
 msgstr "Join first. Your first slide opens after that."
+
+#: src/screens/onboarding/setup-screen.tsx
+msgid "Join or create one"
+msgstr "Join or create one"
 
 #: src/screens/admin/join-requests.tsx
 msgid "Join requests"
@@ -7652,6 +8032,10 @@ msgstr "Keeps the AI call on every open unsure cell in this zone"
 msgid "Kept"
 msgstr "Kept"
 
+#: ../../packages/ui/src/components/annotate-task.tsx
+msgid "Kept as it is by"
+msgstr "Kept as it is by"
+
 #: src/screens/settings/shortcuts-section.tsx
 msgid "Kept fixed so there is always a way back"
 msgstr "Kept fixed so there is always a way back"
@@ -7670,8 +8054,13 @@ msgid "Key"
 msgstr "Key"
 
 #: ../../packages/ui/src/components/icon.tsx
+#: src/screens/onboarding/setup-screen.tsx
 msgid "Keyboard"
 msgstr "Keyboard"
+
+#: src/shell/palette-labels.tsx
+msgid "Keyboard shortcuts"
+msgstr "Keyboard shortcuts"
 
 #. placeholder {0}: u.keys
 #: src/screens/onboarding/setup-screen.tsx
@@ -7719,6 +8108,7 @@ msgid "Landscape"
 msgstr "Landscape"
 
 #: src/screens/settings/settings-screen.tsx
+#: src/shell/palette-labels.tsx
 msgid "Language"
 msgstr "Language"
 
@@ -7733,6 +8123,11 @@ msgstr "Large"
 #: src/screens/clinical-report/cosign-screen.tsx
 msgid "Largest deposit"
 msgstr "Largest deposit"
+
+#: ../../packages/ui/src/components/display-panel.tsx
+#: src/screens/new-task/steps.tsx
+msgid "Largest first"
+msgstr "Largest first"
 
 #: src/screens/clinical-report/steps.tsx
 msgid "largest, sets the category"
@@ -7815,6 +8210,11 @@ msgstr "Learned"
 msgid "least sure first"
 msgstr "least sure first"
 
+#: ../../packages/ui/src/components/display-panel.tsx
+#: src/screens/new-task/steps.tsx
+msgid "Least sure first"
+msgstr "Least sure first"
+
 #: src/screens/upload/progress-step.tsx
 msgid "Leave {them}"
 msgstr "Leave {them}"
@@ -7851,9 +8251,14 @@ msgid "Leave them"
 msgstr "Leave them"
 
 #: ../../packages/ui/src/components/annotate-task.tsx
+#: src/screens/upload/result-problems.tsx
 #: src/screens/upload/upload-page.tsx
 msgid "Leave them out"
 msgstr "Leave them out"
+
+#: ../../packages/ui/src/components/viewer-tools.tsx
+msgid "Left"
+msgstr "Left"
 
 #: src/screens/viewer-tools/compare-view.tsx
 msgid "Left · Right"
@@ -7884,7 +8289,12 @@ msgstr "Left out of this upload"
 msgid "Left rail"
 msgstr "Left rail"
 
+#: src/screens/onboarding/setup-screen.tsx
+msgid "Left stick"
+msgstr "Left stick"
+
 #: src/screens/settings/settings-screen.tsx
+#: src/shell/palette-labels.tsx
 msgid "Lengths"
 msgstr "Lengths"
 
@@ -7925,6 +8335,7 @@ msgstr "Level of detail"
 msgid "Level of slide {0}"
 msgstr "Level of slide {0}"
 
+#: ../../packages/ui/src/components/account-menu.tsx
 #: src/screens/onboarding/setup-screen.tsx
 #: src/screens/settings/settings-screen.tsx
 msgid "Light"
@@ -7946,6 +8357,18 @@ msgstr "Line up automatically"
 #: src/screens/developer/developer-screen.tsx
 msgid "Linear"
 msgstr "Linear"
+
+#: ../../packages/ui/src/components/visualize.tsx
+msgid "linear-gradient(90deg, #1e1b4b, #0ea5e9, #e0f2fe)"
+msgstr "linear-gradient(90deg, #1e1b4b, #0ea5e9, #e0f2fe)"
+
+#: ../../packages/ui/src/components/visualize.tsx
+msgid "linear-gradient(90deg, #7c3aed, #f97316, #facc15)"
+msgstr "linear-gradient(90deg, #7c3aed, #f97316, #facc15)"
+
+#: ../../packages/ui/src/components/visualize.tsx
+msgid "linear-gradient(90deg, rgb(239 68 68 / 0), rgb(239 68 68 / 0.45), #dc2626)"
+msgstr "linear-gradient(90deg, rgb(239 68 68 / 0), rgb(239 68 68 / 0.45), #dc2626)"
 
 #: src/screens/viewer-tools/compare-view.tsx
 msgid "Lines the right pane up with the left. The two bottom panes keep their own view."
@@ -8068,6 +8491,10 @@ msgstr "Lock"
 #: src/screens/new-task/steps.tsx
 msgid "Lock a setting to keep it the same for every reviewer. Confidence, the heatmap, the score cutoff, other layers and the order can be locked."
 msgstr "Lock a setting to keep it the same for every reviewer. Confidence, the heatmap, the score cutoff, other layers and the order can be locked."
+
+#: src/shell/palette-labels.tsx
+msgid "Lock after"
+msgstr "Lock after"
 
 #: src/screens/admin/sections.tsx
 #: src/screens/admin/shared-settings.tsx
@@ -8199,6 +8626,14 @@ msgstr "Lymph nodes"
 msgid "Lymph nodes, sentinel, left axilla, excision: METASTATIC CARCINOMA, macrometastasis, 3 deposits, largest 8.0 mm (1/2)."
 msgstr "Lymph nodes, sentinel, left axilla, excision: METASTATIC CARCINOMA, macrometastasis, 3 deposits, largest 8.0 mm (1/2)."
 
+#: ../../packages/ui/src/components/analysis-cards.tsx
+msgid "Macro"
+msgstr "Macro"
+
+#: ../../packages/ui/src/components/analysis-cards.tsx
+msgid "Macro if confirmed"
+msgstr "Macro if confirmed"
+
 #: ../../packages/ui/src/components/clinical-report.tsx
 #: src/screens/clinical-report/cosign-screen.tsx
 msgid "Macrometastasis"
@@ -8208,6 +8643,10 @@ msgstr "Macrometastasis"
 #: src/screens/evaluation/share-links.tsx
 msgid "Made {0}"
 msgstr "Made {0}"
+
+#: ../../packages/ui/src/components/annotate-task.tsx
+msgid "Made by"
+msgstr "Made by"
 
 #. placeholder {0}: modelLabel(model)
 #: ../../packages/ui/src/components/annotate-task.tsx
@@ -8220,8 +8659,20 @@ msgid "Made by <0>{0}</0>, nobody has changed it."
 msgstr "Made by <0>{0}</0>, nobody has changed it."
 
 #: ../../packages/ui/src/components/annotate-task.tsx
+msgid "Made by the model and kept as it is by an expert"
+msgstr "Made by the model and kept as it is by an expert"
+
+#: ../../packages/ui/src/components/annotate-task.tsx
+msgid "Made by the model and not checked yet"
+msgstr "Made by the model and not checked yet"
+
+#: ../../packages/ui/src/components/annotate-task.tsx
 msgid "Made by the model, nobody has changed it."
 msgstr "Made by the model, nobody has changed it."
+
+#: ../../packages/ui/src/components/annotate-task.tsx
+msgid "Made by the model, then fixed by an expert"
+msgstr "Made by the model, then fixed by an expert"
 
 #: src/screens/admin/connect-model.tsx
 msgid "Magnification"
@@ -8232,6 +8683,7 @@ msgid "Magnification {current}, scale {scaleLabel}. Hover or Alt+1 to Alt+6 for 
 msgstr "Magnification {current}, scale {scaleLabel}. Hover or Alt+1 to Alt+6 for the presets"
 
 #: src/screens/settings/settings-screen.tsx
+#: src/shell/palette-labels.tsx
 msgid "Magnification label"
 msgstr "Magnification label"
 
@@ -8244,6 +8696,7 @@ msgid "Main"
 msgstr "Main"
 
 #: src/screens/settings/settings-screen.tsx
+#: src/shell/palette-labels.tsx
 msgid "Main input device"
 msgstr "Main input device"
 
@@ -8338,6 +8791,7 @@ msgstr "Mean κ {0} · Fleiss κ {1} · cells agreed between reviewers {2}"
 
 #: src/screens/evaluation/report-pages.tsx
 #: src/screens/kpi/kpi-screen.tsx
+#: src/shell/palette-labels.tsx
 msgid "Measure"
 msgstr "Measure"
 
@@ -8350,6 +8804,10 @@ msgstr "Measure it"
 #: src/screens/clinical-report/steps.tsx
 msgid "Measure on {0}"
 msgstr "Measure on {0}"
+
+#: src/screens/clinical-report/cosign-screen.tsx
+msgid "Measure the widest extent across the capsule, not inside the node. D1 is 8.0 mm, the largest deposit."
+msgstr "Measure the widest extent across the capsule, not inside the node. D1 is 8.0 mm, the largest deposit."
 
 #: ../../packages/ui/src/components/viewer-tools.tsx
 msgid "Measured {label}"
@@ -8383,6 +8841,10 @@ msgstr "Measurements"
 #: src/measure/measurement-list.tsx
 msgid "Measurements <0>{0}</0>"
 msgstr "Measurements <0>{0}</0>"
+
+#: src/routes/issue-states.tsx
+msgid "Measuring"
+msgstr "Measuring"
 
 #: src/screens/kpi/kpi-screen.tsx
 msgid "Median"
@@ -8428,6 +8890,14 @@ msgstr "Metastasis likely, {0}"
 msgid "Metric"
 msgstr "Metric"
 
+#: ../../packages/ui/src/components/analysis-cards.tsx
+msgid "Micro"
+msgstr "Micro"
+
+#: ../../packages/ui/src/components/analysis-cards.tsx
+msgid "Micro if confirmed"
+msgstr "Micro if confirmed"
+
 #: ../../packages/ui/src/components/clinical-report.tsx
 #: src/screens/clinical-report/cosign-screen.tsx
 msgid "Micrometastasis"
@@ -8439,12 +8909,17 @@ msgid "Microscopic"
 msgstr "Microscopic"
 
 #: src/screens/settings/settings-screen.tsx
+#: src/shell/palette-labels.tsx
 msgid "Minimap"
 msgstr "Minimap"
 
 #: src/screens/viewer/objects-panel.tsx
 msgid "missed by the AI"
 msgstr "missed by the AI"
+
+#: ../../packages/ui/src/components/annotate-task.tsx
+msgid "Mixed"
+msgstr "Mixed"
 
 #: ../../packages/ui/src/components/clinical-report.tsx
 #: src/screens/clinical-report/cosign-screen.tsx
@@ -8485,6 +8960,7 @@ msgstr "Model tiers"
 
 #: ../../packages/ui/src/components/model-warnings.tsx
 #: src/screens/settings/settings-screen.tsx
+#: src/shell/palette-labels.tsx
 msgid "Model warnings"
 msgstr "Model warnings"
 
@@ -8541,12 +9017,14 @@ msgid "Most unsure first. Open a zone to go through its cells."
 msgstr "Most unsure first. Open a zone to go through its cells."
 
 #: ../../packages/ui/src/components/icon.tsx
+#: src/screens/onboarding/setup-screen.tsx
 #: src/screens/settings/settings-screen.tsx
 msgid "Mouse"
 msgstr "Mouse"
 
 #: src/screens/developer/developer-screen.tsx
 #: src/screens/settings/settings-screen.tsx
+#: src/shell/palette-labels.tsx
 msgid "Mouse wheel"
 msgstr "Mouse wheel"
 
@@ -8604,6 +9082,7 @@ msgid "My presets"
 msgstr "My presets"
 
 #: ../../packages/ui/src/components/review-top-bar.tsx
+#: src/routes/issue-states.tsx
 #: src/screens/disagreements/queue-screen.tsx
 #: src/screens/home/home-screen.tsx
 #: src/screens/my-work/my-work-screen.tsx
@@ -8643,12 +9122,17 @@ msgstr "My work · To review"
 #: src/screens/project/add-class-modal.tsx
 #: src/screens/settings/settings-screen.tsx
 #: src/screens/viewer/save-preset-modal.tsx
+#: src/shell/palette-labels.tsx
 msgid "Name"
 msgstr "Name"
 
 #: src/screens/evaluation/arrange-editor.tsx
 msgid "Name if saved as a template"
 msgstr "Name if saved as a template"
+
+#: src/screens/onboarding/setup-screen.tsx
+msgid "Name it, choose de-identified or clinical, pick a class list and an analysis template"
+msgstr "Name it, choose de-identified or clinical, pick a class list and an analysis template"
 
 #: src/screens/settings/settings-screen.tsx
 msgid "Name saved"
@@ -8673,6 +9157,14 @@ msgstr "Navigation and devices"
 #: src/screens/developer/developer-screen.tsx
 msgid "Nearest"
 msgstr "Nearest"
+
+#: src/screens/new-task/modals.tsx
+msgid "Need a deeper level"
+msgstr "Need a deeper level"
+
+#: src/screens/new-task/modals.tsx
+msgid "Need a second look"
+msgstr "Need a second look"
 
 #: src/screens/admin/workspace-settings.tsx
 msgid "Needed before any project holds clinical data."
@@ -8707,6 +9199,10 @@ msgstr "New annotate task"
 #: src/screens/project/project-page.tsx
 msgid "New case"
 msgstr "New case"
+
+#: src/screens/upload/check-step.tsx
+msgid "New classes"
+msgstr "New classes"
 
 #: ../../packages/ui/src/components/comments-tab.tsx
 msgid "New comment <0/>"
@@ -8743,6 +9239,7 @@ msgstr "New pinned thread"
 #: src/screens/admin/admin-screen.tsx
 #: src/screens/home/home-screen.tsx
 #: src/shell/global-shell.tsx
+#: src/shell/palette-labels.tsx
 msgid "New project"
 msgstr "New project"
 
@@ -8760,10 +9257,12 @@ msgstr "New projects start {0}."
 msgid "New projects start as"
 msgstr "New projects start as"
 
+#: src/routes/issue-states.tsx
 #: src/screens/home/home-screen.tsx
 #: src/screens/my-work/assigned-tab.tsx
 #: src/screens/new-task/new-task-screen.tsx
 #: src/screens/project/project-page.tsx
+#: src/shell/palette-labels.tsx
 msgid "New review task"
 msgstr "New review task"
 
@@ -8827,6 +9326,10 @@ msgstr "New workspace"
 #: src/screens/upload/viewer-flow.tsx
 msgid "Next"
 msgstr "Next"
+
+#: src/screens/onboarding/setup-screen.tsx
+msgid "Next area"
+msgstr "Next area"
 
 #: src/viewer/guided-check.tsx
 msgid "Next class"
@@ -9014,6 +9517,10 @@ msgstr "No patient fields, names are stripped on upload."
 msgid "No result set"
 msgstr "No result set"
 
+#: ../../packages/ui/src/components/annotate-task.tsx
+msgid "No result set. Experts draw with the fast tools."
+msgstr "No result set. Experts draw with the fast tools."
+
 #: src/screens/new-task/steps.tsx
 msgid "no result sets"
 msgstr "no result sets"
@@ -9099,6 +9606,10 @@ msgstr "No slides yet."
 msgid "No template"
 msgstr "No template"
 
+#: src/screens/onboarding/setup-screen.tsx
+msgid "No title"
+msgstr "No title"
+
 #: ../../packages/ui/src/components/systematic-scan.tsx
 msgid "No tumor flagged"
 msgstr "No tumor flagged"
@@ -9161,6 +9672,7 @@ msgid "none"
 msgstr "none"
 
 #: ../../packages/ui/src/components/clinical-report.tsx
+#: src/screens/admin/connect-model.tsx
 #: src/screens/admin/join-requests.tsx
 #: src/screens/clinical-report/cosign-screen.tsx
 #: src/screens/clinical-report/steps.tsx
@@ -9215,6 +9727,10 @@ msgstr "Not built yet, {waiting} builds it"
 #: src/routes/flow-map.index.tsx
 msgid "Not built yet, opens its placeholder"
 msgstr "Not built yet, opens its placeholder"
+
+#: ../../packages/ui/src/components/annotate-task.tsx
+msgid "Not checked"
+msgstr "Not checked"
 
 #: src/screens/upload/live-wizard.tsx
 msgid "Not chosen yet"
@@ -9324,6 +9840,7 @@ msgstr "Not signed"
 msgid "Not signed yet."
 msgstr "Not signed yet."
 
+#: ../../packages/ui/src/components/team.tsx
 #: src/screens/my-work/assigned-tab.tsx
 #: src/screens/upload/server-check.tsx
 msgid "Not started"
@@ -9335,6 +9852,7 @@ msgid "Not sure"
 msgstr "Not sure"
 
 #: ../../packages/ui/src/components/analysis-cards.tsx
+#: src/screens/new-task/modals.tsx
 msgid "Not tumor"
 msgstr "Not tumor"
 
@@ -9569,6 +10087,7 @@ msgstr "Nothing, experts only draw"
 #: src/routes/prototype.tsx
 #: src/screens/settings/settings-screen.tsx
 #: src/shell/bell.tsx
+#: src/shell/palette-labels.tsx
 msgid "Notifications"
 msgstr "Notifications"
 
@@ -9620,6 +10139,11 @@ msgstr "Nudge sent to {0}"
 msgid "Nudges {0}"
 msgstr "Nudges {0}"
 
+#: ../../packages/ui/src/components/display-panel.tsx
+#: src/screens/new-task/steps.tsx
+msgid "Number"
+msgstr "Number"
+
 #: ../../packages/ui/src/components/evaluation-report.tsx
 #: ../../packages/ui/src/components/report-editor-pages.tsx
 #: src/screens/clinical-report/modals.tsx
@@ -9649,6 +10173,7 @@ msgid "Objective"
 msgstr "Objective"
 
 #: src/screens/settings/settings-screen.tsx
+#: src/shell/palette-labels.tsx
 msgid "Objective detents"
 msgstr "Objective detents"
 
@@ -9788,6 +10313,10 @@ msgstr "on <0>{0}</0>"
 msgid "On target"
 msgstr "On target"
 
+#: ../../packages/ui/src/components/team.tsx
+msgid "On track"
+msgstr "On track"
+
 #: src/screens/onboarding/setup-screen.tsx
 msgid "on your home"
 msgstr "on your home"
@@ -9795,6 +10324,10 @@ msgstr "on your home"
 #: src/screens/viewer/layer-views.tsx
 msgid "One agrees, one disagrees"
 msgstr "One agrees, one disagrees"
+
+#: src/screens/onboarding/setup-screen.tsx
+msgid "One finger"
+msgstr "One finger"
 
 #: src/screens/settings/shortcuts-section.tsx
 msgid "One key can only do one thing in the same place. Choose what happens to {otherName}."
@@ -9856,6 +10389,10 @@ msgstr "Only inside"
 msgid "Only members who can sign out this case can be picked."
 msgstr "Only members who can sign out this case can be picked."
 
+#: ../../packages/ui/src/components/annotate-task.tsx
+msgid "Only objects inside the regions you draw are checked."
+msgstr "Only objects inside the regions you draw are checked."
+
 #: src/screens/developer/developer-screen.tsx
 msgid "Only on the WebGPU route"
 msgstr "Only on the WebGPU route"
@@ -9880,6 +10417,10 @@ msgstr "Only this task"
 #: src/screens/annotate-task/new-annotate-task.tsx
 msgid "Only when every cell in scope is checked"
 msgstr "Only when every cell in scope is checked"
+
+#: src/screens/settings/shortcuts-section.tsx
+msgid "only while held"
+msgstr "only while held"
 
 #: ../../packages/ui/src/components/display-panel.tsx
 #: src/screens/developer/developer-screen.tsx
@@ -9926,6 +10467,10 @@ msgstr "open again"
 msgid "Open comments"
 msgstr "Open comments"
 
+#: src/shell/palette-labels.tsx
+msgid "Open Home"
+msgstr "Open Home"
+
 #: ../../packages/ui/src/components/icon.tsx
 msgid "Open in a new window"
 msgstr "Open in a new window"
@@ -9939,6 +10484,10 @@ msgstr "Open in the full viewer"
 msgid "Open my work"
 msgstr "Open my work"
 
+#: src/shell/palette-labels.tsx
+msgid "Open My work"
+msgstr "Open My work"
+
 #: src/screens/jobs/job-window-screen.tsx
 #: src/screens/upload/progress-step.tsx
 msgid "Open now with what is ready"
@@ -9951,6 +10500,10 @@ msgstr "Open on the second monitor"
 #: src/screens/clinical-report/steps.tsx
 msgid "Open on the slide"
 msgstr "Open on the slide"
+
+#: src/shell/palette-labels.tsx
+msgid "Open Settings"
+msgstr "Open Settings"
 
 #. placeholder {0}: position + 1
 #: src/screens/review/slide-submitted.tsx
@@ -10034,6 +10587,10 @@ msgstr "Opened from {mapTitle}, as"
 msgid "Opens {0} in this state"
 msgstr "Opens {0} in this state"
 
+#: src/screens/admin/people.tsx
+msgid "Opens a project without a project role. Clinical projects open only with a reason"
+msgstr "Opens a project without a project role. Clinical projects open only with a reason"
+
 #. placeholder {0}: step.index - 1
 #: ../../packages/ui/src/components/findings-panel.tsx
 msgid "Opens after step {0}"
@@ -10061,6 +10618,10 @@ msgstr "Opens the API reference in the docs (mock)"
 msgid "Opinion form"
 msgstr "Opinion form"
 
+#: src/screens/sign-off/sign-off-screen.tsx
+msgid "Opinion forms"
+msgstr "Opinion forms"
+
 #: src/screens/shared-report/shared-report-screen.tsx
 msgid "Opinion scores"
 msgstr "Opinion scores"
@@ -10083,6 +10644,10 @@ msgstr "Optional"
 msgid "or"
 msgstr "or"
 
+#: src/screens/upload/live-wizard.tsx
+msgid "or in a folder named like the slide"
+msgstr "or in a folder named like the slide"
+
 #: ../../packages/ui/src/components/auth.tsx
 msgid "Or plug in your security key and touch it."
 msgstr "Or plug in your security key and touch it."
@@ -10094,6 +10659,7 @@ msgstr "or with your email"
 
 #: ../../packages/ui/src/components/display-panel.tsx
 #: src/screens/developer/developer-screen.tsx
+#: src/screens/new-task/steps.tsx
 msgid "Order"
 msgstr "Order"
 
@@ -10102,8 +10668,13 @@ msgid "Orientation"
 msgstr "Orientation"
 
 #: ../../packages/ui/src/components/report-editor-pages.tsx
+#: src/screens/project/settings-tab.tsx
 msgid "Other"
 msgstr "Other"
+
+#: src/shell/palette-labels.tsx
+msgid "Other devices"
+msgstr "Other devices"
 
 #: src/screens/new-task/steps.tsx
 msgid "Other layers"
@@ -10117,22 +10688,37 @@ msgstr "Others on this slide can follow where you look. Click to stop"
 msgid "Others on this slide see where you point. Click to stop"
 msgstr "Others on this slide see where you point. Click to stop"
 
+#: src/screens/new-task/modals.tsx
+msgid "Out of focus"
+msgstr "Out of focus"
+
 #: src/screens/admin/sections.tsx
 msgid "Outgoing"
 msgstr "Outgoing"
 
+#: ../../packages/ui/src/components/display-panel.tsx
+#: src/screens/new-task/steps.tsx
+msgid "Outline"
+msgstr "Outline"
+
 #: src/screens/settings/settings-screen.tsx
+#: src/shell/palette-labels.tsx
 #: src/viewer/slide-stage.tsx
 msgid "Outline display"
 msgstr "Outline display"
 
 #: src/screens/settings/settings-screen.tsx
+#: src/shell/palette-labels.tsx
 msgid "Outline model tier"
 msgstr "Outline model tier"
 
 #: ../../packages/ui/src/components/disagreements.tsx
 msgid "outline-2 outline-solid outline-offset-2 outline-accent"
 msgstr "outline-2 outline-solid outline-offset-2 outline-accent"
+
+#: src/screens/project/settings-tab.tsx
+msgid "Outlines"
+msgstr "Outlines"
 
 #: src/annotations/smart-layer.tsx
 msgid "Outlining"
@@ -10246,6 +10832,7 @@ msgid "Pan"
 msgstr "Pan"
 
 #: src/screens/settings/settings-screen.tsx
+#: src/shell/palette-labels.tsx
 msgid "Pan and zoom speed"
 msgstr "Pan and zoom speed"
 
@@ -10254,6 +10841,7 @@ msgid "Pan sweep"
 msgstr "Pan sweep"
 
 #: src/screens/settings/settings-screen.tsx
+#: src/shell/palette-labels.tsx
 msgid "Panel while moving"
 msgstr "Panel while moving"
 
@@ -10271,6 +10859,7 @@ msgstr "Paper"
 #: ../../packages/ui/src/components/icon.tsx
 #: ../../packages/ui/src/components/report-editor-pages.tsx
 #: ../../packages/ui/src/components/report-templates.tsx
+#: src/screens/onboarding/setup-screen.tsx
 msgid "Parfocal"
 msgstr "Parfocal"
 
@@ -10385,6 +10974,7 @@ msgid "Patient"
 msgstr "Patient"
 
 #: src/screens/admin/workspace-settings.tsx
+#: src/shell/palette-labels.tsx
 msgid "Patient banner"
 msgstr "Patient banner"
 
@@ -10398,6 +10988,7 @@ msgstr "Patient fields allowed, every view of them is logged."
 
 #: src/screens/admin/workspace-settings.tsx
 #: src/screens/settings/settings-screen.tsx
+#: src/shell/palette-labels.tsx
 msgid "Patient names"
 msgstr "Patient names"
 
@@ -10472,6 +11063,10 @@ msgstr "People unlock with their password or passkey."
 msgid "People who can run it"
 msgstr "People who can run it"
 
+#: src/screens/admin/connect-model.tsx
+msgid "People with admin rights"
+msgstr "People with admin rights"
+
 #: src/screens/admin/sections.tsx
 msgid "People with two factors"
 msgstr "People with two factors"
@@ -10521,6 +11116,10 @@ msgstr "Personal: they follow you to any workstation."
 #: src/screens/admin/sections.tsx
 msgid "pf_live_…{0}"
 msgstr "pf_live_…{0}"
+
+#: src/screens/onboarding/setup-screen.tsx
+msgid "Philips"
+msgstr "Philips"
 
 #: src/screens/project/slide-move-dialog.tsx
 msgid "Pick a case"
@@ -10622,6 +11221,7 @@ msgid "Pin"
 msgstr "Pin"
 
 #: ../../packages/ui/src/components/icon.tsx
+#: src/screens/onboarding/setup-screen.tsx
 msgid "Pinch"
 msgstr "Pinch"
 
@@ -10634,6 +11234,7 @@ msgid "Pinned at {pinX}, {pinY} on the slide. Click the slide again to move the 
 msgstr "Pinned at {pinX}, {pinY} on the slide. Click the slide again to move the pin."
 
 #: src/screens/settings/settings-screen.tsx
+#: src/shell/palette-labels.tsx
 msgid "Pinned slide strip"
 msgstr "Pinned slide strip"
 
@@ -10727,6 +11328,7 @@ msgid "Precise"
 msgstr "Precise"
 
 #: ../../packages/ui/src/components/report-editor-pages.tsx
+#: src/screens/evaluation/report-pages.tsx
 #: src/screens/shared-report/shared-report-screen.tsx
 msgid "Precision"
 msgstr "Precision"
@@ -10746,6 +11348,7 @@ msgstr "Prefetch ahead of motion"
 #: ../../packages/ui/src/components/annotate-task.tsx
 #: ../../packages/ui/src/components/display-panel.tsx
 #: src/screens/annotate-task/new-annotate-task.tsx
+#: src/screens/onboarding/setup-screen.tsx
 #: src/screens/settings/shortcuts-section.tsx
 msgid "Preset"
 msgstr "Preset"
@@ -10754,6 +11357,10 @@ msgstr "Preset"
 #: src/screens/settings/shortcuts-section.tsx
 msgid "Preset {0}. Your own changes stay on top of it."
 msgstr "Preset {0}. Your own changes stay on top of it."
+
+#: src/shell/palette-labels.tsx
+msgid "Preset keys"
+msgstr "Preset keys"
 
 #: ../../packages/ui/src/components/smart-minimap.tsx
 msgid "press <0/> or <1/>"
@@ -10877,6 +11484,7 @@ msgid "Progress on this slide and in the whole task"
 msgstr "Progress on this slide and in the whole task"
 
 #: ../../packages/ui/src/components/review-popovers.tsx
+#: src/routes/issue-states.tsx
 #: src/screens/admin/audit.tsx
 #: src/screens/admin/deleted-projects.tsx
 #: src/screens/admin/sections.tsx
@@ -10949,6 +11557,14 @@ msgstr "Prototype index"
 msgid "Provider"
 msgstr "Provider"
 
+#: src/screens/onboarding/setup-screen.tsx
+msgid "Pull fully"
+msgstr "Pull fully"
+
+#: src/screens/onboarding/setup-screen.tsx
+msgid "Push or pull"
+msgstr "Push or pull"
+
 #. placeholder {0}: className(choices.classId)
 #: src/screens/upload/result-problems.tsx
 msgid "Put in {0}"
@@ -11001,6 +11617,11 @@ msgstr "Quiet"
 msgid "Raise {label}"
 msgstr "Raise {label}"
 
+#: ../../packages/ui/src/components/display-panel.tsx
+#: src/screens/new-task/steps.tsx
+msgid "Random"
+msgstr "Random"
+
 #: src/screens/developer/developer-screen.tsx
 msgid "Raster"
 msgstr "Raster"
@@ -11008,6 +11629,10 @@ msgstr "Raster"
 #: src/screens/onboarding/setup-screen.tsx
 msgid "Read an evaluation report"
 msgstr "Read an evaluation report"
+
+#: src/screens/upload/check-step.tsx
+msgid "Read error"
+msgstr "Read error"
 
 #: src/screens/admin/connect-model.tsx
 msgid "Read from the server. Result sets it makes carry this name and version."
@@ -11186,6 +11811,8 @@ msgid "Region overlap"
 msgstr "Region overlap"
 
 #: ../../packages/ui/src/components/report-editor-pages.tsx
+#: src/screens/project/settings-tab.tsx
+#: src/screens/shared-report/shared-report-screen.tsx
 msgid "Regions"
 msgstr "Regions"
 
@@ -11201,6 +11828,7 @@ msgstr "Regions {0} fade out above {1}."
 msgid "Regions {0} fade out below {1}."
 msgstr "Regions {0} fade out below {1}."
 
+#: src/screens/project/settings-tab.tsx
 #: src/screens/viewer/object-table.tsx
 msgid "Regions and cells"
 msgstr "Regions and cells"
@@ -11224,6 +11852,10 @@ msgstr "Rejected"
 #: ../../packages/ui/src/components/smart-minimap.tsx
 msgid "release <0/>"
 msgstr "release <0/>"
+
+#: ../../packages/ui/src/components/error-toast.tsx
+msgid "Reload"
+msgstr "Reload"
 
 #: src/screens/project/settings-tab.tsx
 msgid "Remembered from imports: {remembered}"
@@ -11391,9 +12023,11 @@ msgstr "Research projects never show it."
 #: ../../packages/ui/src/components/comment-thread.tsx
 #: ../../packages/ui/src/components/review-popovers.tsx
 #: src/screens/admin/people.tsx
+#: src/screens/onboarding/setup-screen.tsx
 msgid "Researcher"
 msgstr "Researcher"
 
+#: src/screens/admin/connect-model.tsx
 #: src/screens/admin/overview.tsx
 #: src/screens/admin/people.tsx
 msgid "Researchers"
@@ -11410,6 +12044,10 @@ msgstr "Researchers see it when they create a review task."
 #: src/screens/admin/overview.tsx
 msgid "Researchers who also set up this page"
 msgstr "Researchers who also set up this page"
+
+#: src/screens/onboarding/setup-screen.tsx
+msgid "Researchers will add you to their projects, and invites show on your home"
+msgstr "Researchers will add you to their projects, and invites show on your home"
 
 #: src/screens/developer/developer-screen.tsx
 msgid "Reseed"
@@ -11545,6 +12183,10 @@ msgstr "Result sets"
 #: src/screens/sign-off/sign-off-screen.tsx
 msgid "Results"
 msgstr "Results"
+
+#: src/screens/upload/live-wizard.tsx
+msgid "results next to their slide"
+msgstr "results next to their slide"
 
 #: src/screens/upload/case-upload-drawer.tsx
 #: src/shell/jobs-tray.tsx
@@ -11696,6 +12338,10 @@ msgstr "Review your first slide in RT-S1"
 msgid "Reviewed"
 msgstr "Reviewed"
 
+#: src/screens/sign-off/sign-off-screen.tsx
+msgid "Reviewed annotations"
+msgstr "Reviewed annotations"
+
 #: ../../packages/ui/src/components/report-editor-pages.tsx
 msgid "Reviewed layer"
 msgstr "Reviewed layer"
@@ -11703,6 +12349,7 @@ msgstr "Reviewed layer"
 #: src/screens/admin/people.tsx
 #: src/screens/evaluation/report-pages.tsx
 #: src/screens/my-work/all-slides-tab.tsx
+#: src/screens/onboarding/setup-screen.tsx
 #: src/screens/project/settings-tab.tsx
 #: src/screens/team/team-screen.tsx
 msgid "Reviewer"
@@ -11739,6 +12386,10 @@ msgstr "Reviewers decide whether the AI result is right, without drawing."
 #: src/screens/disagreements/queue-screen.tsx
 msgid "Reviewers differ {0}"
 msgstr "Reviewers differ {0}"
+
+#: src/screens/project/settings-tab.tsx
+msgid "Reviewers first"
+msgstr "Reviewers first"
 
 #: src/screens/project/settings-tab.tsx
 msgid "Reviewers mark the slide first, then the AI result is shown."
@@ -11802,6 +12453,10 @@ msgstr "Reviews"
 msgid "Reviews the slides of the tasks they are given."
 msgstr "Reviews the slides of the tasks they are given."
 
+#: src/screens/admin/people.tsx
+msgid "Reviews the slides of their tasks. Agree, Disagree or Unsure on each object with optional reasons and a note, fixes outlines and types, adds what the AI missed, comments, fills the opinion form and submits each slide. Decides queued objects when asked to adjudicate"
+msgstr "Reviews the slides of their tasks. Agree, Disagree or Unsure on each object with optional reasons and a note, fixes outlines and types, adds what the AI missed, comments, fills the opinion form and submits each slide. Decides queued objects when asked to adjudicate"
+
 #: src/screens/team/team-screen.tsx
 msgid "Reviews this task"
 msgstr "Reviews this task"
@@ -11819,14 +12474,47 @@ msgstr "Revoked"
 msgid "rewritten"
 msgstr "rewritten"
 
+#: ../../packages/ui/src/components/smart-minimap.tsx
+msgid "rgb(248 113 113 / 0.3)"
+msgstr "rgb(248 113 113 / 0.3)"
+
+#: ../../packages/ui/src/components/annotate-task.tsx
+msgid "rgb(255 255 255 / 0.12)"
+msgstr "rgb(255 255 255 / 0.12)"
+
+#: ../../packages/ui/src/components/annotate-task.tsx
+msgid "rgb(255 255 255 / 0.28)"
+msgstr "rgb(255 255 255 / 0.28)"
+
+#: ../../packages/ui/src/components/smart-minimap.tsx
+msgid "rgb(37 99 235 / 0.35)"
+msgstr "rgb(37 99 235 / 0.35)"
+
+#: ../../packages/ui/src/components/annotate-task.tsx
+msgid "rgb(52 211 153 / 0.10)"
+msgstr "rgb(52 211 153 / 0.10)"
+
+#: ../../packages/ui/src/components/annotate-task.tsx
+msgid "rgb(52 211 153 / 0.7)"
+msgstr "rgb(52 211 153 / 0.7)"
+
+#: ../../packages/ui/src/components/viewer-tools.tsx
+msgid "Right"
+msgstr "Right"
+
 #: ../../packages/ui/src/components/cells-panel.tsx
 msgid "Ringed on the slide and in the grid. Nothing changes until you apply."
 msgstr "Ringed on the slide and in the grid. Nothing changes until you apply."
 
 #: src/screens/admin/people.tsx
 #: src/screens/onboarding/setup-screen.tsx
+#: src/shell/palette-labels.tsx
 msgid "Role"
 msgstr "Role"
+
+#: src/screens/onboarding/setup-screen.tsx
+msgid "Role and specialty"
+msgstr "Role and specialty"
 
 #. placeholder {0}: member.display_name
 #: src/screens/admin/people.tsx
@@ -11885,12 +12573,14 @@ msgstr "Rules for sources"
 msgid "Run"
 msgstr "Run"
 
+#: src/routes/issue-states.tsx
 #: src/screens/home/home-screen.tsx
 #: src/screens/jobs/run-model-window.tsx
 #: src/screens/project/project-page.tsx
 #: src/screens/project/slides-tab.tsx
 #: src/screens/upload/live-wizard.tsx
 #: src/screens/upload/progress-step.tsx
+#: src/shell/palette-labels.tsx
 msgid "Run a model"
 msgstr "Run a model"
 
@@ -11927,6 +12617,10 @@ msgstr "Run on {0} slide{1}"
 #: src/screens/developer/bench-section.tsx
 msgid "Run pan sweep"
 msgstr "Run pan sweep"
+
+#: src/screens/onboarding/setup-screen.tsx
+msgid "Run your own evaluations and review for others"
+msgstr "Run your own evaluations and review for others"
 
 #: src/screens/developer/developer-screen.tsx
 msgid "Running"
@@ -11969,6 +12663,10 @@ msgstr "Runs on"
 msgid "Runs studies, uploads, creates review tasks and signs off."
 msgstr "Runs studies, uploads, creates review tasks and signs off."
 
+#: src/screens/admin/people.tsx
+msgid "Runs studies. Creates projects and owns them, uploads slides and AI results, runs models, sets a project's classes, opinion form and study template, creates review tasks and invites reviewers, resolves disagreements or asks an adjudicator, signs off, and arranges, exports and shares the report. Reviews too when a task names them"
+msgstr "Runs studies. Creates projects and owns them, uploads slides and AI results, runs models, sets a project's classes, opinion form and study template, creates review tasks and invites reviewers, resolves disagreements or asks an adjudicator, signs off, and arranges, exports and shares the report. Reviews too when a task names them"
+
 #: src/viewer/annotate-task-panel.tsx
 msgid "Runs to add"
 msgstr "Runs to add"
@@ -11995,6 +12693,11 @@ msgstr "Same decision"
 msgid "Same folder, same name"
 msgstr "Same folder, same name"
 
+#: src/screens/upload/files-step.tsx
+#: src/screens/upload/live-wizard.tsx
+msgid "Same name only"
+msgstr "Same name only"
+
 #: src/screens/developer/developer-screen.tsx
 #: src/screens/home/home-screen.tsx
 msgid "Sample"
@@ -12007,6 +12710,10 @@ msgstr "Sample · not a real evaluation"
 #: src/screens/shared-report/shared-report-screen.tsx
 msgid "Sample data"
 msgstr "Sample data"
+
+#: src/screens/onboarding/setup-screen.tsx
+msgid "Sample or your own"
+msgstr "Sample or your own"
 
 #: ../../packages/ui/src/components/report-editor-pages.tsx
 msgid "Sample project · sample numbers"
@@ -12137,6 +12844,11 @@ msgstr "Scope: all AI objects, least sure first"
 
 #: ../../packages/ui/src/components/display-panel.tsx
 #: src/screens/new-task/steps.tsx
+msgid "Score"
+msgstr "Score"
+
+#: ../../packages/ui/src/components/display-panel.tsx
+#: src/screens/new-task/steps.tsx
 msgid "Score cutoff"
 msgstr "Score cutoff"
 
@@ -12209,6 +12921,11 @@ msgstr "Searching…"
 msgid "Second monitor"
 msgstr "Second monitor"
 
+#: ../../packages/ui/src/components/shortcut-editor.tsx
+#: src/screens/onboarding/setup-screen.tsx
+msgid "Sectra"
+msgstr "Sectra"
+
 #: ../../packages/ui/src/components/icon.tsx
 #: src/screens/admin/admin-shell.tsx
 msgid "Security"
@@ -12275,6 +12992,14 @@ msgstr "Seeded sample data. Real figures come from ids-only events of people who
 msgid "Seeds from a detector"
 msgstr "Seeds from a detector"
 
+#: ../../packages/ui/src/components/smart-minimap.tsx
+msgid "Seen at 10x or more"
+msgstr "Seen at 10x or more"
+
+#: src/screens/admin/people.tsx
+msgid "Sees project data because of the right. The last researcher with it cannot lose it"
+msgstr "Sees project data because of the right. The last researcher with it cannot lose it"
+
 #: src/screens/developer/developer-screen.tsx
 msgid "Segmentation model"
 msgstr "Segmentation model"
@@ -12313,6 +13038,7 @@ msgid "Send {count} object{0}"
 msgstr "Send {count} object{0}"
 
 #: src/feedback/feedback-dialog.tsx
+#: src/shell/palette-labels.tsx
 msgid "Send feedback"
 msgstr "Send feedback"
 
@@ -12354,6 +13080,10 @@ msgstr "Send to experts"
 msgid "Send to someone else"
 msgstr "Send to someone else"
 
+#: ../../packages/ui/src/components/ingest-failure.tsx
+msgid "Sending this file again will not change the result. If it should work, tell support."
+msgstr "Sending this file again will not change the result. If it should work, tell support."
+
 #: src/screens/onboarding/sign-in-forms.tsx
 msgid "Sends a new link. The old one stops working"
 msgstr "Sends a new link. The old one stops working"
@@ -12364,6 +13094,7 @@ msgid "Sends one sample tile from {0} and shows what comes back."
 msgstr "Sends one sample tile from {0} and shows what comes back."
 
 #: ../../packages/ui/src/components/report-editor-pages.tsx
+#: src/screens/evaluation/report-pages.tsx
 #: src/screens/shared-report/shared-report-screen.tsx
 msgid "Sensitivity"
 msgstr "Sensitivity"
@@ -12412,6 +13143,7 @@ msgstr "Sent to {reviewerCount} on {0}"
 msgid "Sentinel lymph node, left"
 msgstr "Sentinel lymph node, left"
 
+#: src/screens/admin/connect-model.tsx
 #: src/screens/project/settings-tab.tsx
 msgid "Sentinel node"
 msgstr "Sentinel node"
@@ -12477,6 +13209,10 @@ msgstr "Sets the category"
 msgid "Sets the wheel, drag and key defaults. Change any of it later in Settings."
 msgstr "Sets the wheel, drag and key defaults. Change any of it later in Settings."
 
+#: src/screens/admin/people.tsx
+msgid "Sets up the workspace on this page: people and their roles, projects, AI models, report templates, storage and sources, API and webhooks, the audit log and security"
+msgstr "Sets up the workspace on this page: people and their roles, projects, AI models, report templates, storage and sources, API and webhooks, the audit log and security"
+
 #: src/screens/admin/workspace-settings.tsx
 msgid "Setting restored."
 msgstr "Setting restored."
@@ -12484,6 +13220,7 @@ msgstr "Setting restored."
 #: ../../packages/ui/src/components/command-palette.tsx
 #: ../../packages/ui/src/components/icon.tsx
 #: ../../packages/ui/src/components/settings-dialog.tsx
+#: src/routes/issue-states.tsx
 #: src/screens/project/project-page.tsx
 #: src/screens/settings/settings-screen.tsx
 msgid "Settings"
@@ -12533,6 +13270,7 @@ msgid "Share my view"
 msgstr "Share my view"
 
 #: src/screens/settings/settings-screen.tsx
+#: src/shell/palette-labels.tsx
 msgid "Share usage statistics"
 msgstr "Share usage statistics"
 
@@ -12575,6 +13313,10 @@ msgstr "Short answers, the shortcut sheet and the tour."
 #: src/screens/settings/settings-screen.tsx
 msgid "Shortcuts"
 msgstr "Shortcuts"
+
+#: src/screens/onboarding/setup-screen.tsx
+msgid "Shoulder buttons"
+msgstr "Shoulder buttons"
 
 #: ../../packages/ui/src/components/icon.tsx
 #: ../../packages/ui/src/components/notifications-panel.tsx
@@ -12750,6 +13492,10 @@ msgstr "Shows on the slide which open cells it would mark agree, before anything
 msgid "Shows the outline before you click"
 msgstr "Shows the outline before you click"
 
+#: src/screens/onboarding/setup-screen.tsx
+msgid "Side buttons"
+msgstr "Side buttons"
+
 #: ../../packages/ui/src/components/review-popovers.tsx
 msgid "Side by side"
 msgstr "Side by side"
@@ -12767,13 +13513,19 @@ msgid "Side panel"
 msgstr "Side panel"
 
 #: src/screens/settings/settings-screen.tsx
+#: src/shell/palette-labels.tsx
 msgid "Side panel width"
 msgstr "Side panel width"
 
+#: src/routes/issue-states.tsx
 #: src/screens/onboarding/sign-in-forms.tsx
 #: src/screens/onboarding/sign-up-screen.tsx
 msgid "Sign in"
 msgstr "Sign in"
+
+#: ../../packages/ui/src/components/error-toast.tsx
+msgid "Sign in again"
+msgstr "Sign in again"
 
 #: src/shell/issue-pages.tsx
 msgid "Sign in to go on"
@@ -12810,6 +13562,10 @@ msgstr "Sign off {taskCode} · v{0}"
 msgid "Sign off anyway"
 msgstr "Sign off anyway"
 
+#: src/routes/issue-states.tsx
+msgid "Sign off the evaluation"
+msgstr "Sign off the evaluation"
+
 #: ../../packages/ui/src/components/annotate-task.tsx
 msgid "Sign off this slide"
 msgstr "Sign off this slide"
@@ -12841,6 +13597,14 @@ msgstr "Sign up with {ssoName} single sign-on"
 #: src/screens/sign-off/sign-off-screen.tsx
 msgid "Sign v{0}"
 msgstr "Sign v{0}"
+
+#: src/screens/clinical-report/modals.tsx
+msgid "Sign with password"
+msgstr "Sign with password"
+
+#: src/screens/clinical-report/modals.tsx
+msgid "Sign with Vltava SSO"
+msgstr "Sign with Vltava SSO"
 
 #: src/screens/clinical-report/modals.tsx
 msgid "Sign with your password"
@@ -12880,6 +13644,10 @@ msgstr "Signature"
 #: src/screens/settings/settings-screen.tsx
 msgid "Signature block"
 msgstr "Signature block"
+
+#: src/shell/palette-labels.tsx
+msgid "Signature block on reports"
+msgstr "Signature block on reports"
 
 #: src/screens/clinical-report/cosign-screen.tsx
 #: src/screens/clinical-report/report-screen.tsx
@@ -12951,6 +13719,14 @@ msgstr "Signing locks this version. A change after it is an amendment with a rea
 msgid "Signing secret"
 msgstr "Signing secret"
 
+#: src/screens/admin/people.tsx
+msgid "Signs out in a de-identified project, where there is no clinical report. Signs out a research evaluation, which is the researcher's sign-off"
+msgstr "Signs out in a de-identified project, where there is no clinical report. Signs out a research evaluation, which is the researcher's sign-off"
+
+#: src/screens/admin/people.tsx
+msgid "Signs out the clinical report of a case in that project. On by default for the case's assigned pathologist, set by the project owner. A member without it sends the report for co-sign to someone who has it"
+msgstr "Signs out the clinical report of a case in that project. On by default for the case's assigned pathologist, set by the project owner. A member without it sends the report for co-sign to someone who has it"
+
 #. placeholder {0}: me?.title ? `, ${me.title}` : ""
 #: src/screens/settings/settings-screen.tsx
 msgid "Signs reports as {shownName}{0}."
@@ -12991,6 +13767,10 @@ msgstr "Size of {id} in mm"
 msgid "Sizes in µm are kept in mm."
 msgstr "Sizes in µm are kept in mm."
 
+#: src/screens/onboarding/setup-screen.tsx
+msgid "Skin"
+msgstr "Skin"
+
 #: src/screens/upload/files-step.tsx
 #: src/viewer/guided-check.tsx
 msgid "Skip"
@@ -13004,6 +13784,10 @@ msgstr "Skip for now"
 #: src/screens/upload/server-check.tsx
 msgid "Skip it"
 msgstr "Skip it"
+
+#: src/screens/upload/result-problems.tsx
+msgid "Skip them"
+msgstr "Skip them"
 
 #: src/screens/onboarding/setup-screen.tsx
 msgid "Skip this step"
@@ -13081,6 +13865,7 @@ msgstr "Slide and source"
 
 #: ../../packages/ui/src/components/brightness-popover.tsx
 #: src/screens/settings/settings-screen.tsx
+#: src/shell/palette-labels.tsx
 msgid "Slide brightness"
 msgstr "Slide brightness"
 
@@ -13100,6 +13885,11 @@ msgstr "Slide checked"
 #: ../../packages/ui/src/components/viewer-tools.tsx
 msgid "Slide for the {0} side"
 msgstr "Slide for the {0} side"
+
+#: src/screens/upload/files-step.tsx
+#: src/screens/upload/live-wizard.tsx
+msgid "Slide ID inside only"
+msgstr "Slide ID inside only"
 
 #: src/screens/home/home-screen.tsx
 msgid "slides"
@@ -13209,6 +13999,10 @@ msgstr "Small tumor cluster, about {0}"
 msgid "Smallest outline"
 msgstr "Smallest outline"
 
+#: src/routes/issue-states.tsx
+msgid "Smart minimap"
+msgstr "Smart minimap"
+
 #: ../../packages/ui/src/components/icon.tsx
 msgid "Smart select"
 msgstr "Smart select"
@@ -13246,10 +14040,12 @@ msgid "someone"
 msgstr "someone"
 
 #: src/screens/settings/settings-screen.tsx
+#: src/shell/palette-labels.tsx
 msgid "Someone mentions me"
 msgstr "Someone mentions me"
 
 #: src/screens/settings/settings-screen.tsx
+#: src/shell/palette-labels.tsx
 msgid "Someone replies to me"
 msgstr "Someone replies to me"
 
@@ -13270,6 +14066,7 @@ msgid "Sorted differently"
 msgstr "Sorted differently"
 
 #: src/screens/settings/settings-screen.tsx
+#: src/shell/palette-labels.tsx
 msgid "Sound for STAT tasks"
 msgstr "Sound for STAT tasks"
 
@@ -13301,6 +14098,10 @@ msgstr "Space"
 #: src/screens/admin/admin-shell.tsx
 msgid "Space used, and the servers slides are read from"
 msgstr "Space used, and the servers slides are read from"
+
+#: src/shell/palette-labels.tsx
+msgid "SpaceMouse rotation"
+msgstr "SpaceMouse rotation"
 
 #: src/screens/onboarding/setup-screen.tsx
 msgid "Specialties"
@@ -13351,6 +14152,7 @@ msgstr "Stain of slide {0}"
 #: ../../packages/ui/src/components/analysis-cards.tsx
 #: src/screens/developer/developer-screen.tsx
 #: src/screens/my-work/to-review-tab.tsx
+#: src/screens/onboarding/setup-screen.tsx
 msgid "Start"
 msgstr "Start"
 
@@ -13561,6 +14363,10 @@ msgstr "Submit opens the next slide"
 msgid "Submit your opinion form"
 msgstr "Submit your opinion form"
 
+#: src/routes/issue-states.tsx
+msgid "Submitted"
+msgstr "Submitted"
+
 #: ../../packages/ui/src/components/report-editor.tsx
 msgid "Subtitle"
 msgstr "Subtitle"
@@ -13644,6 +14450,7 @@ msgstr "Synthetic field"
 msgid "Synthetic nuclei"
 msgstr "Synthetic nuclei"
 
+#: ../../packages/ui/src/components/account-menu.tsx
 #: src/screens/onboarding/setup-screen.tsx
 #: src/screens/settings/settings-screen.tsx
 msgid "System"
@@ -13665,6 +14472,10 @@ msgstr "T2"
 msgid "T2 on A1 · {name}"
 msgstr "T2 on A1 · {name}"
 
+#: src/screens/onboarding/setup-screen.tsx
+msgid "Tablet and pen"
+msgstr "Tablet and pen"
+
 #: ../../packages/ui/src/components/slide-submitted-dialog.tsx
 msgid "Take a break"
 msgstr "Take a break"
@@ -13673,6 +14484,14 @@ msgstr "Take a break"
 #: src/help/tour-host.tsx
 msgid "Take the tour"
 msgstr "Take the tour"
+
+#: src/screens/settings/shortcuts-section.tsx
+msgid "tap keeps it open, hold shows it while held"
+msgstr "tap keeps it open, hold shows it while held"
+
+#: src/screens/settings/shortcuts-section.tsx
+msgid "tap opens and closes"
+msgstr "tap opens and closes"
 
 #: src/screens/settings/shortcuts-section.tsx
 msgid "Tap or hold"
@@ -13738,6 +14557,7 @@ msgstr "Tasks"
 msgid "Teach MONAI"
 msgstr "Teach MONAI"
 
+#: src/routes/issue-states.tsx
 #: src/screens/team/team-screen.tsx
 #: src/shell/global-shell.tsx
 msgid "Team"
@@ -13841,6 +14661,14 @@ msgstr "That file has no shapes Parfocal can draw. Choose a GeoJSON file."
 #: src/annotations/layers-panel.tsx
 msgid "that layer is hidden or locked"
 msgstr "that layer is hidden or locked"
+
+#: src/screens/upload/formats-drawer.tsx
+msgid "The \"format\" field must be \"parfocal-results\"."
+msgstr "The \"format\" field must be \"parfocal-results\"."
+
+#: src/screens/upload/formats-drawer.tsx
+msgid "The \"version\" field must be 1."
+msgstr "The \"version\" field must be 1."
 
 #: ../../packages/ui/src/components/team.tsx
 msgid "The {left} slides not started"
@@ -14072,6 +14900,10 @@ msgstr "The file could not be added."
 msgid "The file is 0 bytes, so there is nothing to read. It waits until you take it out or choose it again."
 msgstr "The file is 0 bytes, so there is nothing to read. It waits until you take it out or choose it again."
 
+#: src/screens/upload/formats-drawer.tsx
+msgid "The file is not valid JSON. The line shows where reading stopped."
+msgstr "The file is not valid JSON. The line shows where reading stopped."
+
 #: src/routes/prototype.tsx
 msgid "the first object"
 msgstr "the first object"
@@ -14195,6 +15027,10 @@ msgstr "The pages every flow falls back to, shown on their own."
 #: src/screens/developer/bench-section.tsx
 msgid "The pan sweep stopped"
 msgstr "The pan sweep stopped"
+
+#: src/screens/admin/connect-model.tsx
+msgid "the Parfocal sample tile"
+msgstr "the Parfocal sample tile"
 
 #: src/screens/upload/files-step.tsx
 #: src/screens/upload/link-import.tsx
@@ -14322,6 +15158,10 @@ msgstr "The reviewers of {taskCode} cannot be picked. The adjudicator sees them 
 #: src/viewer/annotate-task-panel.tsx
 msgid "The run {0} joins this slide"
 msgstr "The run {0} joins this slide"
+
+#: src/screens/onboarding/setup-screen.tsx
+msgid "The sample project stays in your workspace as Sample · sentinel nodes and can be deleted at any time."
+msgstr "The sample project stays in your workspace as Sample · sentinel nodes and can be deleted at any time."
 
 #: src/screens/admin/workspace-settings.tsx
 msgid "The score below which the viewer fades an outline for everyone in the lab. Reviewers see it in their settings but cannot change it."
@@ -14496,6 +15336,7 @@ msgstr "The workspace"
 #: ../../packages/ui/src/components/account-menu.tsx
 #: src/screens/onboarding/setup-screen.tsx
 #: src/screens/settings/settings-screen.tsx
+#: src/shell/palette-labels.tsx
 msgid "Theme"
 msgstr "Theme"
 
@@ -14571,6 +15412,10 @@ msgstr "This is a clinical project. Names can be hidden for everyone in Settings
 #: src/screens/review/guided-review.tsx
 msgid "This is the first object"
 msgstr "This is the first object"
+
+#: ../../packages/ui/src/components/ingest-failure.tsx
+msgid "This is usually temporary. Sending the file again often works."
+msgstr "This is usually temporary. Sending the file again often works."
 
 #: src/screens/shared-report/shared-report-screen.tsx
 msgid "This link does not lead to a report"
@@ -14694,6 +15539,11 @@ msgstr "Threads on {slideLabel}"
 msgid "Threshold"
 msgstr "Threshold"
 
+#: ../../packages/ui/src/components/display-panel.tsx
+#: src/screens/new-task/steps.tsx
+msgid "Tight"
+msgstr "Tight"
+
 #. placeholder {0}: Math.min(progress.done + 1, progress.total)
 #. placeholder {1}: progress.total
 #. placeholder {2}: progress.found
@@ -14725,6 +15575,10 @@ msgstr "Tiles it gets"
 #: src/screens/upload/files-step.tsx
 msgid "Tiles stream from the source when someone looks. Nothing is copied and the slide shows a remote badge."
 msgstr "Tiles stream from the source when someone looks. Nothing is copied and the slide shows a remote badge."
+
+#: src/screens/onboarding/setup-screen.tsx
+msgid "Tilt the cap"
+msgstr "Tilt the cap"
 
 #: ../../packages/ui/src/components/icon.tsx
 #: src/screens/admin/audit.tsx
@@ -14830,6 +15684,7 @@ msgstr "Told just now"
 
 #: ../../packages/ui/src/components/tool-rail-button.tsx
 #: src/screens/settings/settings-screen.tsx
+#: src/shell/palette-labels.tsx
 msgid "Tools"
 msgstr "Tools"
 
@@ -14864,18 +15719,25 @@ msgid "Track it in Team"
 msgstr "Track it in Team"
 
 #: src/screens/settings/settings-screen.tsx
+#: src/shell/palette-labels.tsx
 msgid "Track record block"
 msgstr "Track record block"
 
 #: ../../packages/ui/src/components/icon.tsx
+#: src/screens/onboarding/setup-screen.tsx
 #: src/screens/settings/settings-screen.tsx
 msgid "Trackpad"
 msgstr "Trackpad"
+
+#: src/screens/onboarding/setup-screen.tsx
+msgid "Triggers"
+msgstr "Triggers"
 
 #: src/screens/shared-report/shared-report-screen.tsx
 msgid "True positives"
 msgstr "True positives"
 
+#: ../../packages/ui/src/components/error-toast.tsx
 #: ../../packages/ui/src/components/ingest-failure.tsx
 #: ../../packages/ui/src/components/slide-done-card.tsx
 #: src/feedback/feedback-dialog.tsx
@@ -14904,6 +15766,10 @@ msgstr "Try another tile"
 #: ../../packages/ui/src/components/settings-dialog.tsx
 msgid "Try another word, for example zoom, names or preset."
 msgstr "Try another word, for example zoom, names or preset."
+
+#: src/shell/palette-labels.tsx
+msgid "Try it"
+msgstr "Try it"
 
 #. placeholder {0}: device?.keys[1]?.[1].toLowerCase() ?? "the wheel"
 #: src/screens/onboarding/setup-screen.tsx
@@ -14973,9 +15839,25 @@ msgstr "Tumor share result"
 msgid "Turbo"
 msgstr "Turbo"
 
+#: src/shell/palette-labels.tsx
+msgid "Turn developer mode off"
+msgstr "Turn developer mode off"
+
+#: src/shell/palette-labels.tsx
+msgid "Turn developer mode on"
+msgstr "Turn developer mode on"
+
 #: src/screens/settings/shortcuts-section.tsx
 msgid "Turn off if keys fire by accident, for example with speech input. Keys with ⌘, ⌃ or ⌥ keep working."
 msgstr "Turn off if keys fire by accident, for example with speech input. Keys with ⌘, ⌃ or ⌥ keep working."
+
+#: src/screens/onboarding/setup-screen.tsx
+msgid "Two fingers"
+msgstr "Two fingers"
+
+#: src/screens/new-task/modals.tsx
+msgid "Two regions, not one"
+msgstr "Two regions, not one"
 
 #: src/screens/viewer/layer-views.tsx
 msgid "Two result sets"
@@ -14988,6 +15870,10 @@ msgstr "Two reviewers"
 #: src/screens/admin/people.tsx
 msgid "Two roles apply in the whole workspace. Admin rights are a switch on a researcher, not a third role, and add no access to project data. Inside a project people are also owner, reviewer or viewer. The server enforces all of it, the screens only hide what someone cannot use."
 msgstr "Two roles apply in the whole workspace. Admin rights are a switch on a researcher, not a third role, and add no access to project data. Inside a project people are also owner, reviewer or viewer. The server enforces all of it, the screens only hide what someone cannot use."
+
+#: src/screens/onboarding/setup-screen.tsx
+msgid "Two-finger double tap"
+msgstr "Two-finger double tap"
 
 #. placeholder {0}: project.name
 #: src/screens/project/project-delete-dialog.tsx
@@ -15055,6 +15941,11 @@ msgstr "Unchecked AI cells in the export"
 #: ../../packages/ui/src/components/analysis-cards.tsx
 msgid "Under 200 tumor cells"
 msgstr "Under 200 tumor cells"
+
+#: ../../packages/ui/src/components/display-panel.tsx
+#: src/screens/new-task/steps.tsx
+msgid "Under the slide"
+msgstr "Under the slide"
 
 #: ../../packages/ui/src/components/clinical-report.tsx
 #: ../../packages/ui/src/components/findings-panel.tsx
@@ -15142,6 +16033,7 @@ msgstr "up, and as disagree from"
 
 #: ../../packages/ui/src/components/app-shell.tsx
 #: ../../packages/ui/src/components/icon.tsx
+#: src/routes/issue-states.tsx
 #: src/screens/home/home-screen.tsx
 #: src/screens/project/project-page.tsx
 #: src/screens/upload/live-wizard.tsx
@@ -15198,8 +16090,13 @@ msgstr "Upload slides"
 msgid "Upload slides and AI results, assign reviews"
 msgstr "Upload slides and AI results, assign reviews"
 
+#: src/screens/onboarding/setup-screen.tsx
+msgid "Upload slides and AI results, assign reviews, sign off evaluations"
+msgstr "Upload slides and AI results, assign reviews, sign off evaluations"
+
 #: src/screens/upload/live-wizard.tsx
 #: src/screens/upload/upload-page.tsx
+#: src/shell/palette-labels.tsx
 msgid "Upload slides and results"
 msgstr "Upload slides and results"
 
@@ -15227,6 +16124,10 @@ msgstr "Uploading · 8%"
 #: ../../packages/ui/src/components/jobs.tsx
 msgid "Uploads and model runs · click one for its steps"
 msgstr "Uploads and model runs · click one for its steps"
+
+#: src/screens/admin/people.tsx
+msgid "Uploads, runs models, creates projects or tasks, signs off, sees other decisions before submitting in a blind task, opens Admin"
+msgstr "Uploads, runs models, creates projects or tasks, signs off, sees other decisions before submitting in a blind task, opens Admin"
 
 #: src/screens/developer/developer-screen.tsx
 msgid "URL parameters"
@@ -15299,6 +16200,14 @@ msgstr "Use my password instead"
 msgid "Use single sign-on instead"
 msgstr "Use single sign-on instead"
 
+#: src/screens/upload/result-problems.tsx
+msgid "Use this choice"
+msgstr "Use this choice"
+
+#: src/screens/upload/result-problems.tsx
+msgid "Use this guess"
+msgstr "Use this guess"
+
 #: src/screens/onboarding/invite-screen.tsx
 msgid "Use Vltava single sign-on instead"
 msgstr "Use Vltava single sign-on instead"
@@ -15362,6 +16271,10 @@ msgid "View centre"
 msgstr "View centre"
 
 #: src/screens/onboarding/setup-screen.tsx
+msgid "Viewer"
+msgstr "Viewer"
+
+#: src/screens/onboarding/setup-screen.tsx
 msgid "Viewer you are used to"
 msgstr "Viewer you are used to"
 
@@ -15406,6 +16319,10 @@ msgstr "Vltava single sign-on did not answer. Nothing was signed."
 #: src/screens/shared-report/shared-report-screen.tsx
 msgid "Wait a minute and open it again."
 msgstr "Wait a minute and open it again."
+
+#: src/screens/onboarding/setup-screen.tsx
+msgid "Wait for an invite"
+msgstr "Wait for an invite"
 
 #: src/screens/onboarding/setup-screen.tsx
 msgid "Wait for an invite from a researcher"
@@ -15663,6 +16580,10 @@ msgstr "What you sent"
 msgid "What you sign"
 msgstr "What you sign"
 
+#: src/screens/onboarding/setup-screen.tsx
+msgid "Wheel, to the cursor"
+msgstr "Wheel, to the cursor"
+
 #: src/screens/admin/audit.tsx
 #: src/screens/disagreements/queue-screen.tsx
 #: src/screens/new-task/steps.tsx
@@ -15673,6 +16594,10 @@ msgstr "When"
 #: src/screens/admin/workspace-settings.tsx
 msgid "When a screen locks, how long a sign-in lasts and how long emergency access lasts."
 msgstr "When a screen locks, how long a sign-in lasts and how long emergency access lasts."
+
+#: src/screens/onboarding/setup-screen.tsx
+msgid "When setup ends, New project opens with the name, the privacy mode and the class list to fill in."
+msgstr "When setup ends, New project opens with the name, the privacy mode and the class list to fill in."
 
 #: src/screens/settings/settings-screen.tsx
 msgid "When useful"
@@ -15789,6 +16714,7 @@ msgstr "Who reviews"
 #: ../../packages/ui/src/components/review-popovers.tsx
 #: ../../packages/ui/src/components/smart-minimap.tsx
 #: src/popout/popout-screen.tsx
+#: src/screens/onboarding/setup-screen.tsx
 #: src/screens/review/cells-on-slide.tsx
 #: src/screens/review/guided-review.tsx
 #: src/screens/viewer/full-viewer.tsx
@@ -15835,6 +16761,7 @@ msgstr "Wide"
 #: ../../packages/ui/src/components/display-panel.tsx
 #: ../../packages/ui/src/components/report-editor.tsx
 #: ../../packages/ui/src/components/report-templates.tsx
+#: src/screens/new-task/steps.tsx
 msgid "Width"
 msgstr "Width"
 
@@ -15860,6 +16787,11 @@ msgstr "With graph"
 msgid "Withdraw the request"
 msgstr "Withdraw the request"
 
+#: ../../packages/ui/src/components/display-panel.tsx
+#: src/screens/new-task/steps.tsx
+msgid "Word"
+msgstr "Word"
+
 #: src/screens/developer/developer-screen.tsx
 msgid "Words"
 msgstr "Words"
@@ -15884,6 +16816,7 @@ msgstr "Worklist rows"
 #: src/routes/projects.$projectId.slides.$slideId_.live.tsx
 #: src/screens/onboarding/setup-screen.tsx
 #: src/shell/global-shell.tsx
+#: src/shell/palette-labels.tsx
 msgid "Workspace"
 msgstr "Workspace"
 
@@ -15944,6 +16877,10 @@ msgstr "Wrong outline"
 msgid "Yes"
 msgstr "Yes"
 
+#: src/screens/project/settings-tab.tsx
+msgid "yes or no"
+msgstr "yes or no"
+
 #: src/screens/admin/decision-preset.tsx
 msgid "Yes or no"
 msgstr "Yes or no"
@@ -15958,6 +16895,10 @@ msgstr "You already have a preset called {0}."
 #: src/screens/review/slide-submitted.tsx
 msgid "You and {other} agree on {0} of {1} objects. You can look at the differences later, or go on."
 msgstr "You and {other} agree on {0} of {1} objects. You can look at the differences later, or go on."
+
+#: ../../packages/ui/src/components/smart-minimap.tsx
+msgid "You are here"
+msgstr "You are here"
 
 #: src/shell/issue-pages.tsx
 msgid "You are not a member of {projectName}. Its owner is {ownerName}."
@@ -16025,6 +16966,10 @@ msgstr "You have not handed out any review tasks yet. New review task starts one
 #: src/screens/onboarding/setup-screen.tsx
 msgid "You join at once"
 msgstr "You join at once"
+
+#: src/screens/upload/live-wizard.tsx
+msgid "you pick its slide"
+msgstr "you pick its slide"
 
 #. placeholder {0}: person.name
 #: src/presence/viewing-now.tsx
@@ -16165,6 +17110,10 @@ msgstr "Your outline in blue and your colleague's outline in orange"
 msgid "Your pipeline posts a link to a slide, its results or both. Parfocal fetches them, runs the same checks and answers with what it did."
 msgstr "Your pipeline posts a link to a slide, its results or both. Parfocal fetches them, runs the same checks and answers with what it did."
 
+#: src/shell/palette-labels.tsx
+msgid "Your presets"
+msgstr "Your presets"
+
 #: src/screens/my-work/parts.tsx
 msgid "Your progress on this slide"
 msgstr "Your progress on this slide"
@@ -16236,16 +17185,19 @@ msgstr "Zones where the AI is unsure"
 #: ../../packages/ui/src/components/report-templates.tsx
 #: src/screens/developer/bench-section.tsx
 #: src/screens/developer/developer-screen.tsx
+#: src/screens/onboarding/setup-screen.tsx
 #: src/screens/review/guided-review.tsx
 #: src/screens/settings/settings-screen.tsx
 msgid "Zoom"
 msgstr "Zoom"
 
 #: src/screens/settings/settings-screen.tsx
+#: src/shell/palette-labels.tsx
 msgid "Zoom anchor"
 msgstr "Zoom anchor"
 
 #: ../../packages/ui/src/components/display-panel.tsx
+#: src/screens/new-task/steps.tsx
 msgid "Zoom around the object"
 msgstr "Zoom around the object"
 

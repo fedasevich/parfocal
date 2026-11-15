@@ -1,13 +1,15 @@
+import { t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
+import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import { useState } from "react";
 import { type Binding, type Fired, parseKeys } from "../../keys/registry.ts";
 import { useHotkeys } from "../../keys/use-hotkeys.ts";
 
-const bindings: Binding[] = [
-  { action: "Go to AI area 2", keys: parseKeys("G then 2") },
+const bindings: Binding[] = lazyText(() => [
+  { action: "Go to AI area 2", keys: parseKeys(t`G then 2`) },
   { action: "Whole slide", keys: ["Z"], hold: true },
   { action: "Slide brighter", keys: ["⌥↑"], inInputs: true },
-];
+]);
 
 type Log = { last: string; taps: number; holds: number; peek: boolean; closing: boolean };
 

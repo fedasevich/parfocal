@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import type { UploadBatch, UploadProblem } from "@parfocal/api-client";
 import { Banner } from "@parfocal/ui/components/banner";
@@ -14,6 +15,7 @@ import {
 } from "@parfocal/ui/components/select";
 import { StatusTag } from "@parfocal/ui/components/tag";
 import { Hint, Zone } from "@parfocal/ui/components/zone";
+import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import { cn } from "@parfocal/ui/lib/utils";
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
@@ -24,11 +26,11 @@ import { gb, plural, type UploadModel, type UploadScene, type UploadState } from
 const problemLook: Record<
   UploadProblem["kind"],
   { icon: IconName; tag: string; tone: "bad" | "warn" }
-> = {
-  "read-error": { icon: "x-circle", tag: "Read error", tone: "bad" },
-  scale: { icon: "expand", tag: "Does not line up", tone: "warn" },
-  "new-classes": { icon: "flag", tag: "New classes", tone: "warn" },
-};
+> = lazyText(() => ({
+  "read-error": { icon: "x-circle", tag: t`Read error`, tone: "bad" },
+  scale: { icon: "expand", tag: t`Does not line up`, tone: "warn" },
+  "new-classes": { icon: "flag", tag: t`New classes`, tone: "warn" },
+}));
 
 const classColours: Record<string, string> = {
   Tumor: "var(--c-tumor)",

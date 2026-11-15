@@ -2,6 +2,7 @@ import { t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Keycap } from "@parfocal/ui/components/keycap";
+import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import { type MapRect, type MinimapSize, minimapBox } from "@parfocal/ui/lib/minimap-box";
 import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
@@ -388,15 +389,15 @@ function useWidth(ref: React.RefObject<Element | null>) {
 
 type PeekLegendItem = { label: string; swatch: React.CSSProperties };
 
-const peekLegend: PeekLegendItem[] = [
-  { label: "Seen at 10x or more", swatch: { background: "rgb(37 99 235 / 0.35)" } },
+const peekLegend: PeekLegendItem[] = lazyText(() => [
+  { label: t`Seen at 10x or more`, swatch: { background: t`rgb(37 99 235 / 0.35)` } },
   {
     label: "AI area",
-    swatch: { background: "rgb(248 113 113 / 0.3)", border: "1.5px solid #e5484d" },
+    swatch: { background: t`rgb(248 113 113 / 0.3)`, border: t`1.5px solid #e5484d` },
   },
-  { label: "Checked", swatch: { background: "#15803d", borderRadius: "50%" } },
-  { label: "You are here", swatch: { border: "2.5px solid #2563eb" } },
-];
+  { label: t`Checked`, swatch: { background: "#15803d", borderRadius: "50%" } },
+  { label: t`You are here`, swatch: { border: t`2.5px solid #2563eb` } },
+]);
 
 type WholeSlidePeekProps = Omit<React.ComponentProps<"div">, "title"> & {
   image: MapImage;

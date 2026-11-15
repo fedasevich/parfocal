@@ -10,6 +10,7 @@ import { destinations } from "./destinations.ts";
 import { setDeveloperMode, useDeveloperMode } from "./developer-mode.ts";
 import { useOverlay } from "./overlays.ts";
 import { type PaletteGroup, paletteEntries, paletteGroups } from "./palette-commands.ts";
+import { usePaletteLabels } from "./palette-labels.tsx";
 import { matchCommand, matchText } from "./palette-match.ts";
 import { useGoTo } from "./router-link.tsx";
 import { searchHandoff } from "./search-handoff.ts";
@@ -65,6 +66,7 @@ function usePlaces(query: string, close: () => void): Row[] {
 
 function PaletteBody({ initial, close }: { initial: string; close: () => void }) {
   const { t } = useLingui();
+  const paletteLabels = usePaletteLabels();
 
   const [query, setQuery] = useState(initial);
   const [active, setActive] = useState(0);
@@ -101,7 +103,16 @@ function PaletteBody({ initial, close }: { initial: string; close: () => void })
       close();
     },
   });
-  const local = entries.flatMap((entry): Row[] => {
+  const translatedEntries = entries.map((entry) => {
+    const key =
+      entry.id === "setting-developer-mode"
+        ? entry.label.endsWith("off")
+          ? "setting-developer-mode-off"
+          : "setting-developer-mode-on"
+        : entry.id;
+    return { ...entry, label: paletteLabels[key] ?? entry.label };
+  });
+  const local = translatedEntries.flatMap((entry): Row[] => {
     if (!trimmed) {
       return entry.group === "Settings" && !entry.featured
         ? []

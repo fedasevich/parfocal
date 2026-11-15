@@ -1,14 +1,16 @@
+import { t } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react/macro";
 import { Icon } from "@parfocal/ui/components/icon";
 import type { ErrorAction, ErrorNotice } from "@parfocal/ui/lib/api-error";
+import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
 
-const actionLabels: Record<ErrorAction, string> = {
-  retry: "Try again",
-  "sign-in": "Sign in again",
-  reload: "Reload",
-};
+const actionLabels: Record<ErrorAction, string> = lazyText(() => ({
+  retry: t`Try again`,
+  "sign-in": t`Sign in again`,
+  reload: t`Reload`,
+}));
 
 const toneClasses = {
   bad: "border-bad [&>svg]:text-bad",

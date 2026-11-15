@@ -41,6 +41,7 @@ import {
 import { StatusTag } from "@parfocal/ui/components/tag";
 import { TokenField } from "@parfocal/ui/components/token-field";
 import { Zone } from "@parfocal/ui/components/zone";
+import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import { useState } from "react";
 import { toPersonInfo } from "../people.ts";
 import { okData } from "../placeholder.tsx";
@@ -50,36 +51,37 @@ import { adminSwitchOf, type PeopleFilter, shownInvitations, takenEmails } from 
 
 type Filter = PeopleFilter;
 
-const roleText = { researcher: "Researcher", reviewer: "Reviewer" } as const;
+const roleText = lazyText(() => ({ researcher: t`Researcher`, reviewer: t`Reviewer` }) as const);
 
-const roleDefinitions = [
-  {
-    name: msg`Researcher`,
-    does: "Runs studies. Creates projects and owns them, uploads slides and AI results, runs models, sets a project's classes, opinion form and study template, creates review tasks and invites reviewers, resolves disagreements or asks an adjudicator, signs off, and arranges, exports and shares the report. Reviews too when a task names them",
-    never: "Opens a project without a project role. Clinical projects open only with a reason",
-    who: "researcher",
-  },
-  {
-    name: msg`Reviewer`,
-    does: "Reviews the slides of their tasks. Agree, Disagree or Unsure on each object with optional reasons and a note, fixes outlines and types, adds what the AI missed, comments, fills the opinion form and submits each slide. Decides queued objects when asked to adjudicate",
-    never:
-      "Uploads, runs models, creates projects or tasks, signs off, sees other decisions before submitting in a blind task, opens Admin",
-    who: "reviewer",
-  },
-  {
-    name: msg`Admin rights, on a researcher`,
-    does: "Sets up the workspace on this page: people and their roles, projects, AI models, report templates, storage and sources, API and webhooks, the audit log and security",
-    never: "Sees project data because of the right. The last researcher with it cannot lose it",
-    who: "admin",
-  },
-  {
-    name: msg`Can sign out, a project right in a clinical project`,
-    does: "Signs out the clinical report of a case in that project. On by default for the case's assigned pathologist, set by the project owner. A member without it sends the report for co-sign to someone who has it",
-    never:
-      "Signs out in a de-identified project, where there is no clinical report. Signs out a research evaluation, which is the researcher's sign-off",
-    who: "sign-out",
-  },
-] as const;
+const roleDefinitions = lazyText(
+  () =>
+    [
+      {
+        name: msg`Researcher`,
+        does: t`Runs studies. Creates projects and owns them, uploads slides and AI results, runs models, sets a project's classes, opinion form and study template, creates review tasks and invites reviewers, resolves disagreements or asks an adjudicator, signs off, and arranges, exports and shares the report. Reviews too when a task names them`,
+        never: t`Opens a project without a project role. Clinical projects open only with a reason`,
+        who: "researcher",
+      },
+      {
+        name: msg`Reviewer`,
+        does: t`Reviews the slides of their tasks. Agree, Disagree or Unsure on each object with optional reasons and a note, fixes outlines and types, adds what the AI missed, comments, fills the opinion form and submits each slide. Decides queued objects when asked to adjudicate`,
+        never: t`Uploads, runs models, creates projects or tasks, signs off, sees other decisions before submitting in a blind task, opens Admin`,
+        who: "reviewer",
+      },
+      {
+        name: msg`Admin rights, on a researcher`,
+        does: t`Sets up the workspace on this page: people and their roles, projects, AI models, report templates, storage and sources, API and webhooks, the audit log and security`,
+        never: t`Sees project data because of the right. The last researcher with it cannot lose it`,
+        who: "admin",
+      },
+      {
+        name: msg`Can sign out, a project right in a clinical project`,
+        does: t`Signs out the clinical report of a case in that project. On by default for the case's assigned pathologist, set by the project owner. A member without it sends the report for co-sign to someone who has it`,
+        never: t`Signs out in a de-identified project, where there is no clinical report. Signs out a research evaluation, which is the researcher's sign-off`,
+        who: "sign-out",
+      },
+    ] as const,
+);
 
 export function PeopleSection({
   notify,

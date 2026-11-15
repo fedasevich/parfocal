@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { type UploadBatch, useListSourceFiles } from "@parfocal/api-client";
 import { Button, buttonVariants } from "@parfocal/ui/components/button";
@@ -15,6 +16,7 @@ import {
 } from "@parfocal/ui/components/select";
 import { StatusTag } from "@parfocal/ui/components/tag";
 import { Hint, Zone } from "@parfocal/ui/components/zone";
+import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import type { ReactNode } from "react";
 import { okData } from "../placeholder.tsx";
 import { FileIcon, FileList, FileName, FileRow, TextLink, Thumb } from "./parts.tsx";
@@ -28,17 +30,17 @@ import {
   type UploadState,
 } from "./state.ts";
 
-const ruleText: Record<PairRule, string> = {
-  auto: "Grouped by folder, then name, then the slide ID inside",
+const ruleText: Record<PairRule, string> = lazyText(() => ({
+  auto: t`Grouped by folder, then name, then the slide ID inside`,
   name: "Grouped by same name only",
   id: "Grouped by the slide ID inside each file",
-};
+}));
 
-const ruleOptions = [
-  { value: "auto", label: "Folder, then name, then ID" },
-  { value: "name", label: "Same name only" },
-  { value: "id", label: "Slide ID inside only" },
-];
+const ruleOptions = lazyText(() => [
+  { value: "auto", label: t`Folder, then name, then ID` },
+  { value: "name", label: t`Same name only` },
+  { value: "id", label: t`Slide ID inside only` },
+]);
 
 type StepProps = {
   batch: UploadBatch;

@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import type { Project } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
@@ -15,6 +16,7 @@ import {
   SelectValue,
 } from "@parfocal/ui/components/select";
 import { Hint, Zone } from "@parfocal/ui/components/zone";
+import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import { cn } from "@parfocal/ui/lib/utils";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { type DragEvent, lazy, type ReactNode, Suspense, useRef, useState } from "react";
@@ -47,31 +49,31 @@ import { plural } from "./state.ts";
 
 export type LiveScene = "empty" | "files" | "check" | "progress" | "done";
 
-const stepLabels = ["Files", "Check", "Upload"];
+const stepLabels = lazyText(() => [t`Files`, t`Check`, t`Upload`]);
 const stepScenes: LiveScene[] = ["files", "check", "progress"];
 
-const shapeTree = [
+const shapeTree = lazyText(() => [
   { name: "P07-upload/", note: "", depth: 0 },
   { name: "S26-04812/", note: "a case", depth: 1 },
   { name: "A1_HE.svs", note: "", depth: 2 },
-  { name: "A1_HE.geojson", note: "results next to their slide", depth: 2 },
+  { name: "A1_HE.geojson", note: t`results next to their slide`, depth: 2 },
   { name: "A2_HE.svs", note: "", depth: 2 },
-  { name: "A2_HE/cells.csv", note: "or in a folder named like the slide", depth: 2 },
-  { name: "tumor_031.tif", note: "a loose slide", depth: 1 },
-  { name: "results/tumor_031_prob.png", note: "you pick its slide", depth: 1 },
-];
+  { name: "A2_HE/cells.csv", note: t`or in a folder named like the slide`, depth: 2 },
+  { name: "tumor_031.tif", note: t`a loose slide`, depth: 1 },
+  { name: "results/tumor_031_prob.png", note: t`you pick its slide`, depth: 1 },
+]);
 
-const ruleText: Record<PairMode, string> = {
-  auto: "Grouped by folder, then name, then the slide ID inside",
+const ruleText: Record<PairMode, string> = lazyText(() => ({
+  auto: t`Grouped by folder, then name, then the slide ID inside`,
   name: "Grouped by same name only",
   id: "Grouped by the slide ID inside each file",
-};
+}));
 
-const ruleOptions = [
-  { value: "auto", label: "Folder, then name, then ID" },
-  { value: "name", label: "Same name only" },
-  { value: "id", label: "Slide ID inside only" },
-];
+const ruleOptions = lazyText(() => [
+  { value: "auto", label: t`Folder, then name, then ID` },
+  { value: "name", label: t`Same name only` },
+  { value: "id", label: t`Slide ID inside only` },
+]);
 
 const stepOfScene = (scene: LiveScene) =>
   scene === "check" ? 1 : scene === "progress" || scene === "done" ? 2 : 0;

@@ -1,8 +1,10 @@
+import { t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Keycap } from "@parfocal/ui/components/keycap";
 import { Zone } from "@parfocal/ui/components/zone";
+import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
 import { useState } from "react";
@@ -389,7 +391,7 @@ function LayerList({
             className="size-2.5 rounded-[3px]"
             style={
               row.proposal
-                ? { background: "var(--c-prop)", boxShadow: `0 0 0 1.5px #ffffff` }
+                ? { background: "var(--c-prop)", boxShadow: t`0 0 0 1.5px #ffffff` }
                 : { background: row.colour }
             }
           />
@@ -517,12 +519,12 @@ function SimulatedTag() {
 type PaneSide = "left" | "right" | "bottomLeft" | "bottomRight";
 type LayerSide = "left" | "right";
 
-const sideWord: Record<PaneSide, string> = {
-  left: "Left",
-  right: "Right",
-  bottomLeft: "Bottom left",
-  bottomRight: "Bottom right",
-};
+const sideWord: Record<PaneSide, string> = lazyText(() => ({
+  left: t`Left`,
+  right: t`Right`,
+  bottomLeft: t`Bottom left`,
+  bottomRight: t`Bottom right`,
+}));
 const sideName: Record<PaneSide, string> = {
   left: "left",
   right: "right",

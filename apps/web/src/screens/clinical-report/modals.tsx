@@ -13,6 +13,7 @@ import {
 import { SmallModal, SmallModalZone } from "@parfocal/ui/components/small-modal";
 import { Textarea } from "@parfocal/ui/components/textarea";
 import { TokenField } from "@parfocal/ui/components/token-field";
+import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import { useEffect, useRef, useState } from "react";
 import { FieldNote } from "../new-task/parts.tsx";
 import { type Dep, mmText, parseNumber, type ReportData } from "./model.ts";
@@ -265,7 +266,7 @@ export function DepositModal({
   );
 }
 
-const signLabel = { sso: "Sign with Vltava SSO", typed: "Sign with password" };
+const signLabel = lazyText(() => ({ sso: t`Sign with Vltava SSO`, typed: t`Sign with password` }));
 
 export function useSignature({
   failed,

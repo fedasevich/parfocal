@@ -1,23 +1,26 @@
 import type { MessageDescriptor } from "@lingui/core";
-import { msg } from "@lingui/core/macro";
+import { msg, t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import { Icon } from "@parfocal/ui/components/icon";
+import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
 
 type IngestFailureClass = "transient" | "permanent";
 
-const classCopy: Record<IngestFailureClass, { title: MessageDescriptor; next: string }> = {
-  transient: {
-    title: msg`did not finish`,
-    next: "This is usually temporary. Sending the file again often works.",
-  },
-  permanent: {
-    title: msg`was refused`,
-    next: "Sending this file again will not change the result. If it should work, tell support.",
-  },
-};
+const classCopy: Record<IngestFailureClass, { title: MessageDescriptor; next: string }> = lazyText(
+  () => ({
+    transient: {
+      title: msg`did not finish`,
+      next: t`This is usually temporary. Sending the file again often works.`,
+    },
+    permanent: {
+      title: msg`was refused`,
+      next: t`Sending this file again will not change the result. If it should work, tell support.`,
+    },
+  }),
+);
 
 type IngestFailureProps = Omit<React.ComponentProps<"div">, "title"> & {
   fileName: string;

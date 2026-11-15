@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import {
   type Project,
@@ -17,6 +18,7 @@ import {
 import { Icon } from "@parfocal/ui/components/icon";
 import { Loader } from "@parfocal/ui/components/loader";
 import { CategoryTag } from "@parfocal/ui/components/tag";
+import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import { useNavigate } from "@tanstack/react-router";
 import { lazy, type ReactNode, Suspense, useState } from "react";
 import { useOpenJobsTray } from "../../shell/jobs-tray.tsx";
@@ -50,7 +52,7 @@ type UploadPageProps = {
   formats: FormatsScene | undefined;
 };
 
-const stepLabels = ["Files", "Check", "Upload"];
+const stepLabels = lazyText(() => [t`Files`, t`Check`, t`Upload`]);
 const stepScenes: UploadScene[] = ["files", "check", "progress"];
 const behindFormats: UploadScene[] = ["drop", "tray", "viewer", "api"];
 

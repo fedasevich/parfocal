@@ -10,6 +10,7 @@ import {
 import { Icon, type IconName } from "@parfocal/ui/components/icon";
 import { Keycap } from "@parfocal/ui/components/keycap";
 import { Switch } from "@parfocal/ui/components/switch";
+import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
 
@@ -49,6 +50,8 @@ type VizKeyProps = React.ComponentProps<"div"> & {
 };
 
 function VizKey({ color, label, count, cue = "solid", className, ...props }: VizKeyProps) {
+  const { t } = useLingui();
+
   return (
     <div
       data-slot="viz-key"
@@ -63,10 +66,10 @@ function VizKey({ color, label, count, cue = "solid", className, ...props }: Viz
           cue === "solid"
             ? { background: color }
             : cue === "dashed"
-              ? { border: `2px dashed ${color}` }
+              ? { border: t`2px dashed ${color}` }
               : {
                   background: color,
-                  boxShadow: `inset 0 0 0 3px #0b0b0b, inset 0 0 0 4px ${color}`,
+                  boxShadow: t`inset 0 0 0 3px #0b0b0b, inset 0 0 0 4px ${color}`,
                 }
         }
       />
@@ -136,11 +139,14 @@ function ClassVisibility({ rows, onVisibleChange, className, ...props }: ClassVi
   );
 }
 
-const ramps = {
-  heat: "linear-gradient(90deg, rgb(239 68 68 / 0), rgb(239 68 68 / 0.45), #dc2626)",
-  density: "linear-gradient(90deg, #7c3aed, #f97316, #facc15)",
-  confidence: "linear-gradient(90deg, #1e1b4b, #0ea5e9, #e0f2fe)",
-} as const;
+const ramps = lazyText(
+  () =>
+    ({
+      heat: t`linear-gradient(90deg, rgb(239 68 68 / 0), rgb(239 68 68 / 0.45), #dc2626)`,
+      density: t`linear-gradient(90deg, #7c3aed, #f97316, #facc15)`,
+      confidence: t`linear-gradient(90deg, #1e1b4b, #0ea5e9, #e0f2fe)`,
+    }) as const,
+);
 
 type VizRampProps = React.ComponentProps<"div"> & {
   ramp: keyof typeof ramps;

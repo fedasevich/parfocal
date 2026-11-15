@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import {
   type Project,
@@ -17,6 +18,7 @@ import { Person } from "@parfocal/ui/components/person";
 import { RadioGroup, RadioGroupItem } from "@parfocal/ui/components/radio-group";
 import { Switch } from "@parfocal/ui/components/switch";
 import { Hint, Zone, Zones } from "@parfocal/ui/components/zone";
+import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { type ReactNode, useState } from "react";
 import { okData } from "../placeholder.tsx";
@@ -31,16 +33,18 @@ import {
   useProjectChange,
 } from "./settings-zones.tsx";
 
-const kindText = { scale: "1 to 5", choice: "choice", yesno: "yes or no", text: "text" } as const;
+const kindText = lazyText(
+  () => ({ scale: t`1 to 5`, choice: "choice", yesno: t`yes or no`, text: "text" }) as const,
+);
 
-const studyKindText: Record<string, string> = {
-  "regions-and-cells": "Regions and cells",
-  regions: "Regions",
-  outlines: "Outlines",
-  cells: "Cells",
-  "reviewers-first": "Reviewers first",
-  other: "Other",
-};
+const studyKindText: Record<string, string> = lazyText(() => ({
+  "regions-and-cells": t`Regions and cells`,
+  regions: t`Regions`,
+  outlines: t`Outlines`,
+  cells: t`Cells`,
+  "reviewers-first": t`Reviewers first`,
+  other: t`Other`,
+}));
 
 function ToggleRow({
   title,

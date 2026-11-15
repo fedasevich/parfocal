@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import { Icon } from "@parfocal/ui/components/icon";
@@ -14,6 +15,7 @@ import {
   UnboundKey,
 } from "@parfocal/ui/components/shortcut-editor";
 import { Switch } from "@parfocal/ui/components/switch";
+import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import { type ReactNode, useEffect, useRef } from "react";
 import {
   directionSets,
@@ -51,11 +53,11 @@ import {
 
 const presetOrder: PresetKey[] = ["default", "qupath", "figma"];
 
-const holdNotes: Record<WholeSlide, string> = {
-  both: "tap keeps it open, hold shows it while held",
-  hold: "only while held",
-  tap: "tap opens and closes",
-};
+const holdNotes: Record<WholeSlide, string> = lazyText(() => ({
+  both: t`tap keeps it open, hold shows it while held`,
+  hold: t`only while held`,
+  tap: t`tap opens and closes`,
+}));
 
 export const isListening = (state: ShortcutState) =>
   state.finding || (state.recording !== null && !keyAction(state.recording.id).direction);

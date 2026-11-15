@@ -1,9 +1,11 @@
+import { t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { DecisionButtons } from "@parfocal/ui/components/decision-buttons";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Input } from "@parfocal/ui/components/input";
 import { SmallModal, SmallModalZone } from "@parfocal/ui/components/small-modal";
 import { FilterChip, ObjectIdTag } from "@parfocal/ui/components/tag";
+import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import { useState } from "react";
 import { type Draft, decisionKinds, mapping, type TaskData } from "./model.ts";
 import { CheckRow, RowText, SlideThumb } from "./parts.tsx";
@@ -106,14 +108,19 @@ export function AddSlidesModal({
   );
 }
 
-const regionReasons = ["Not tumor", "Boundary is off", "Two regions, not one", "Artefact or fold"];
-const unsureReasons = [
-  "Need a deeper level",
+const regionReasons = lazyText(() => [
+  t`Not tumor`,
+  t`Boundary is off`,
+  t`Two regions, not one`,
+  t`Artefact or fold`,
+]);
+const unsureReasons = lazyText(() => [
+  t`Need a deeper level`,
   "Need IHC",
-  "Border unclear",
-  "Out of focus",
-  "Need a second look",
-];
+  t`Border unclear`,
+  t`Out of focus`,
+  t`Need a second look`,
+]);
 
 function countsAsFor(draft: Draft, raw: string) {
   if (raw === "unsure") return "unsure";

@@ -1,8 +1,10 @@
+import { t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import { Icon, type IconName } from "@parfocal/ui/components/icon";
 import { Person, PersonAvatar, type PersonInfo } from "@parfocal/ui/components/person";
 import { StatusTag } from "@parfocal/ui/components/tag";
+import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
 
@@ -70,11 +72,11 @@ type AuthPitchSideProps = {
   ids?: PitchId[];
 };
 
-const defaultPoints: { icon: IconName; text: string }[] = [
-  { icon: "upload", text: "Import results from any model, or run one here" },
-  { icon: "flag", text: "Every tumor, cell and region has an ID you can cite" },
-  { icon: "users", text: "Blind reviews, a disagreement queue and a signed evaluation" },
-];
+const defaultPoints: { icon: IconName; text: string }[] = lazyText(() => [
+  { icon: "upload", text: t`Import results from any model, or run one here` },
+  { icon: "flag", text: t`Every tumor, cell and region has an ID you can cite` },
+  { icon: "users", text: t`Blind reviews, a disagreement queue and a signed evaluation` },
+]);
 
 function AuthPitchSide({
   workspace,

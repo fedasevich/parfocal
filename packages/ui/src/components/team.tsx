@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import { FormField } from "@parfocal/ui/components/form-field";
@@ -8,19 +9,20 @@ import { RadioGroup, RadioGroupItem } from "@parfocal/ui/components/radio-group"
 import { SmallModal } from "@parfocal/ui/components/small-modal";
 import { StatusTag, type StatusTone } from "@parfocal/ui/components/tag";
 import { TokenField, type TokenItem } from "@parfocal/ui/components/token-field";
+import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
 import { useState } from "react";
 
 type ReviewerStatus = "on-track" | "behind" | "not-started" | "away" | "done";
 
-const statusWords: Record<ReviewerStatus, string> = {
-  "on-track": "On track",
-  behind: "Behind",
-  "not-started": "Not started",
-  away: "Away",
-  done: "Done",
-};
+const statusWords: Record<ReviewerStatus, string> = lazyText(() => ({
+  "on-track": t`On track`,
+  behind: t`Behind`,
+  "not-started": t`Not started`,
+  away: t`Away`,
+  done: t`Done`,
+}));
 
 const statusTones: Record<ReviewerStatus, StatusTone> = {
   "on-track": "ok",

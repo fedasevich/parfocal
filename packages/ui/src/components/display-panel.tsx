@@ -1,4 +1,5 @@
-import { t } from "@lingui/core/macro";
+import { i18n, type MessageDescriptor } from "@lingui/core";
+import { msg, t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import { ControlRow } from "@parfocal/ui/components/control-row";
@@ -16,7 +17,7 @@ import {
 } from "@parfocal/ui/components/dropdown-menu";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Keycap } from "@parfocal/ui/components/keycap";
-import { SegmentedControl, type SegmentOption } from "@parfocal/ui/components/segmented-control";
+import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
 import { Slider } from "@parfocal/ui/components/slider";
 import { Switch } from "@parfocal/ui/components/switch";
 import { FoldingZone, Zone, Zones } from "@parfocal/ui/components/zone";
@@ -40,42 +41,42 @@ type DisplaySettings = {
   buttons: string;
 };
 
-const displayOptions: Record<string, SegmentOption[]> = {
+const displayOptions: Record<string, { value: string; label: MessageDescriptor }[]> = {
   draw: [
-    { value: "outline", label: "Outline" },
-    { value: "fill", label: "Fill" },
-    { value: "dots", label: "Dots" },
+    { value: "outline", label: msg`Outline` },
+    { value: "fill", label: msg`Fill` },
+    { value: "dots", label: msg`Dots` },
   ],
   width: [
-    { value: "1", label: "1 px" },
-    { value: "2", label: "2 px" },
-    { value: "3", label: "3 px" },
+    { value: "1", label: msg`1 px` },
+    { value: "2", label: msg`2 px` },
+    { value: "3", label: msg`3 px` },
   ],
   colorBy: [
-    { value: "class", label: "Class" },
-    { value: "score", label: "Score" },
-    { value: "decision", label: "Decision" },
+    { value: "class", label: msg`Class` },
+    { value: "score", label: msg`Score` },
+    { value: "decision", label: msg`Decision` },
   ],
   confidence: [
-    { value: "number", label: "Number" },
-    { value: "word", label: "Word" },
-    { value: "color", label: "Color" },
-    { value: "hidden", label: "Hidden" },
+    { value: "number", label: msg`Number` },
+    { value: "word", label: msg`Word` },
+    { value: "color", label: msg`Color` },
+    { value: "hidden", label: msg`Hidden` },
   ],
   order: [
-    { value: "ai", label: "AI order" },
-    { value: "size", label: "Largest first" },
-    { value: "leastsure", label: "Least sure first" },
-    { value: "random", label: "Random" },
+    { value: "ai", label: msg`AI order` },
+    { value: "size", label: msg`Largest first` },
+    { value: "leastsure", label: msg`Least sure first` },
+    { value: "random", label: msg`Random` },
   ],
   zoom: [
-    { value: "fit", label: "Fit" },
-    { value: "tight", label: "Tight" },
-    { value: "context", label: "Context" },
+    { value: "fit", label: msg`Fit` },
+    { value: "tight", label: msg`Tight` },
+    { value: "context", label: msg`Context` },
   ],
   buttons: [
-    { value: "right", label: "In the card" },
-    { value: "bottom", label: "Under the slide" },
+    { value: "right", label: msg`In the card` },
+    { value: "bottom", label: msg`Under the slide` },
   ],
 };
 
@@ -101,7 +102,7 @@ const defaultDisplaySettings: DisplaySettings = {
 
 function word(key: string, value: string): string {
   const label = displayOptions[key]?.find((option) => option.value === value)?.label;
-  return typeof label === "string" ? label : value;
+  return label ? i18n._(label) : value;
 }
 
 function displaySummary(zone: "draw" | "ai" | "move", settings: DisplaySettings) {
@@ -143,7 +144,10 @@ function SegRow({
                   onChange(name as keyof DisplaySettings, String(next)),
               }
             : { defaultValue: value })}
-          options={displayOptions[name] ?? []}
+          options={(displayOptions[name] ?? []).map((option) => ({
+            ...option,
+            label: i18n._(option.label),
+          }))}
         />
       )}
     </ControlRow>

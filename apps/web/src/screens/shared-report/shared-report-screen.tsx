@@ -1,11 +1,12 @@
 import type { MessageDescriptor } from "@lingui/core";
-import { msg } from "@lingui/core/macro";
+import { msg, t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { ApiError, type SharedReport, useGetSharedReport } from "@parfocal/api-client";
 import { Banner } from "@parfocal/ui/components/banner";
 import { CountBars, MetricTiles } from "@parfocal/ui/components/evaluation-report";
 import { Loader } from "@parfocal/ui/components/loader";
 import { StatusTag } from "@parfocal/ui/components/tag";
+import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import type { ReactNode } from "react";
 import {
   answerSpread,
@@ -19,7 +20,7 @@ import { okData } from "../placeholder.tsx";
 const longDay = (iso: string) =>
   new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
 
-const kindName: Record<string, string> = { region: "Regions", cell: "Cells" };
+const kindName: Record<string, string> = lazyText(() => ({ region: t`Regions`, cell: t`Cells` }));
 
 const refusals: Record<number, { title: MessageDescriptor; body: MessageDescriptor }> = {
   404: {

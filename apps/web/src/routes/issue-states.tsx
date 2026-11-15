@@ -1,7 +1,8 @@
 import type { MessageDescriptor } from "@lingui/core";
-import { msg } from "@lingui/core/macro";
+import { msg, t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
+import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import { cn } from "@parfocal/ui/lib/utils";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useEffect } from "react";
@@ -24,34 +25,34 @@ export const Route = createFileRoute("/issue-states")({
   component: IssueStatesPage,
 });
 
-const screenTitles: Record<PrototypeScreen, string> = {
-  home: "Home",
-  project: "Project",
-  upload: "Upload",
-  runmodel: "Run a model",
-  task: "New review task",
-  team: "Team",
-  disagree: "Disagreements",
-  signoff: "Sign off the evaluation",
-  evaluation: "Evaluation report",
-  worklist: "My work",
-  guided: "Guided review",
-  case: "Full viewer",
-  gallery: "Decide objects",
-  next: "Submitted",
-  creport: "Clinical report",
+const screenTitles: Record<PrototypeScreen, string> = lazyText(() => ({
+  home: t`Home`,
+  project: t`Project`,
+  upload: t`Upload`,
+  runmodel: t`Run a model`,
+  task: t`New review task`,
+  team: t`Team`,
+  disagree: t`Disagreements`,
+  signoff: t`Sign off the evaluation`,
+  evaluation: t`Evaluation report`,
+  worklist: t`My work`,
+  guided: t`Guided review`,
+  case: t`Full viewer`,
+  gallery: t`Decide objects`,
+  next: t`Submitted`,
+  creport: t`Clinical report`,
   cosign: "Co-sign review",
-  settings: "Settings",
-  signin: "Sign in",
-  connectmodel: "Connect a model",
-  layers: "Display",
-  navigator: "Smart minimap",
-  measure: "Measuring",
-  annotate: "Annotate workspace",
-  compare: "Compare slides",
-  focus: "Focus mode",
+  settings: t`Settings`,
+  signin: t`Sign in`,
+  connectmodel: t`Connect a model`,
+  layers: t`Display`,
+  navigator: t`Smart minimap`,
+  measure: t`Measuring`,
+  annotate: t`Annotate workspace`,
+  compare: t`Compare slides`,
+  focus: t`Focus mode`,
   peek: "Whole-slide peek",
-};
+}));
 
 function StateButton({
   screen,

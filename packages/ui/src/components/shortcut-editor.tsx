@@ -1,5 +1,7 @@
+import { t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { Icon } from "@parfocal/ui/components/icon";
+import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import { cn } from "@parfocal/ui/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
 import type * as React from "react";
@@ -72,12 +74,12 @@ function UnboundKey({ className, ...props }: React.ComponentProps<"span">) {
 
 type ShortcutSource = "clin" | "fig" | "qp" | "new";
 
-const sourceNames: Record<ShortcutSource, string> = {
-  clin: "Sectra",
-  fig: "Figma",
+const sourceNames: Record<ShortcutSource, string> = lazyText(() => ({
+  clin: t`Sectra`,
+  fig: t`Figma`,
   qp: "QuPath",
   new: "ours",
-};
+}));
 
 type ShortcutRowProps = Omit<React.ComponentProps<"div">, "children"> & {
   name: React.ReactNode;

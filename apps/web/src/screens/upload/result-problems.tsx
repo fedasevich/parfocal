@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from "@parfocal/ui/components/select";
 import { Zone } from "@parfocal/ui/components/zone";
+import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { DoneRow, ProblemZone } from "./check-step.tsx";
@@ -101,12 +102,12 @@ const isFixed = (problem: ImportProblem, choices: Choices) => {
   return choices.fixed[problem.code] === true;
 };
 
-const fixLabel: Record<string, string> = {
-  [known.unreadable]: "Skip them",
-  [known.noScore]: "Use this choice",
-  [known.outside]: "Leave them out",
-  [known.scale]: "Use this guess",
-};
+const fixLabel: Record<string, string> = lazyText(() => ({
+  [known.unreadable]: t`Skip them`,
+  [known.noScore]: t`Use this choice`,
+  [known.outside]: t`Leave them out`,
+  [known.scale]: t`Use this guess`,
+}));
 
 function ProblemFix({
   uploadId,

@@ -1,4 +1,5 @@
 import { Menu as MenuPrimitive } from "@base-ui/react/menu";
+import { t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import {
@@ -11,6 +12,7 @@ import {
 import { Icon, type IconName } from "@parfocal/ui/components/icon";
 import { Keycap } from "@parfocal/ui/components/keycap";
 import { PersonAvatar, type PersonInfo, type Presence } from "@parfocal/ui/components/person";
+import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import type { ReactNode } from "react";
 
 type AccountPresence = { key: Presence; label: string; hint: string; tone: string };
@@ -41,11 +43,11 @@ type AccountMenuProps = {
   defaultOpen?: boolean;
 };
 
-const themes: readonly [AccountTheme, string][] = [
-  ["dark", "Dark"],
-  ["light", "Light"],
-  ["system", "System"],
-];
+const themes: readonly [AccountTheme, string][] = lazyText(() => [
+  ["dark", t`Dark`],
+  ["light", t`Light`],
+  ["system", t`System`],
+]);
 
 const rowClass = "grid grid-cols-[18px_1fr_auto] items-center gap-2.5";
 

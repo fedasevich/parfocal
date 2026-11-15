@@ -9,6 +9,7 @@ import { ProgressBar } from "@parfocal/ui/components/progress-meter";
 import { RadioGroup, RadioRow } from "@parfocal/ui/components/radio-group";
 import { Switch } from "@parfocal/ui/components/switch";
 import type { PersonInfo } from "@parfocal/ui/lib/avatar-colours";
+import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import { defaultSampleSize, sampleSizeLimit, validSampleSize } from "@parfocal/ui/lib/sample-size";
 import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
@@ -16,19 +17,19 @@ import { useId } from "react";
 
 type Origin = "ai" | "ai-edited" | "ai-confirmed" | "human";
 
-const originNames: Record<Origin, string> = {
+const originNames: Record<Origin, string> = lazyText(() => ({
   ai: "AI",
   "ai-edited": "AI, edited",
   "ai-confirmed": "AI, confirmed",
-  human: "By hand",
-};
+  human: t`By hand`,
+}));
 
-const originHints: Record<Origin, string> = {
-  ai: "Made by the model and not checked yet",
-  "ai-edited": "Made by the model, then fixed by an expert",
-  "ai-confirmed": "Made by the model and kept as it is by an expert",
-  human: "Drawn or imported by an expert",
-};
+const originHints: Record<Origin, string> = lazyText(() => ({
+  ai: t`Made by the model and not checked yet`,
+  "ai-edited": t`Made by the model, then fixed by an expert`,
+  "ai-confirmed": t`Made by the model and kept as it is by an expert`,
+  human: t`Drawn or imported by an expert`,
+}));
 
 const originTone: Record<Origin, string> = {
   ai: "bg-chrome-3 text-fg-dim",
@@ -91,12 +92,12 @@ type OriginCardProps = React.ComponentProps<"section"> & {
 const modelLabel = (model: ModelInfo) =>
   model.version ? `${model.name} ${model.version}` : model.name;
 
-const authorVerbs: Record<Origin, string> = {
-  ai: "Made by",
-  "ai-edited": "Edited by",
-  "ai-confirmed": "Kept as it is by",
-  human: "Drawn by",
-};
+const authorVerbs: Record<Origin, string> = lazyText(() => ({
+  ai: t`Made by`,
+  "ai-edited": t`Edited by`,
+  "ai-confirmed": t`Kept as it is by`,
+  human: t`Drawn by`,
+}));
 
 function OriginLines({
   origin,
@@ -281,12 +282,12 @@ function CheckProgress({ counts, scope, className, ...props }: CheckProgressProp
 
 type CheckState = "unchecked" | "confirmed" | "edited" | "deleted";
 
-const checkNames: Record<CheckState, string> = {
-  unchecked: "Not checked",
-  confirmed: "Confirmed",
-  edited: "Edited",
-  deleted: "Deleted",
-};
+const checkNames: Record<CheckState, string> = lazyText(() => ({
+  unchecked: t`Not checked`,
+  confirmed: t`Confirmed`,
+  edited: t`Edited`,
+  deleted: t`Deleted`,
+}));
 
 function CheckStateTag({
   state,
@@ -497,11 +498,11 @@ type CheckOptionValues = {
 
 type Preset = { key: PresetKey; title: string; text: string; options: CheckOptionValues };
 
-const annotatePresets: Preset[] = [
+const annotatePresets: Preset[] = lazyText(() => [
   {
     key: "hand",
-    title: "Annotate by hand",
-    text: "No result set. Experts draw with the fast tools.",
+    title: t`Annotate by hand`,
+    text: t`No result set. Experts draw with the fast tools.`,
     options: {
       scope: "none",
       order: "least-sure",
@@ -513,8 +514,8 @@ const annotatePresets: Preset[] = [
   },
   {
     key: "run",
-    title: "Check a whole-slide run",
-    text: "Every AI object is checked, least sure first, and all must be checked.",
+    title: t`Check a whole-slide run`,
+    text: t`Every AI object is checked, least sure first, and all must be checked.`,
     options: {
       scope: "all",
       order: "least-sure",
@@ -526,8 +527,8 @@ const annotatePresets: Preset[] = [
   },
   {
     key: "sample",
-    title: "Check a sample",
-    text: "A random sample is checked, the rest stays unchecked and out of the export.",
+    title: t`Check a sample`,
+    text: t`A random sample is checked, the rest stays unchecked and out of the export.`,
     options: {
       scope: "sample",
       order: "least-sure",
@@ -539,8 +540,8 @@ const annotatePresets: Preset[] = [
   },
   {
     key: "regions",
-    title: "Fix AI on selected areas",
-    text: "Only objects inside the regions you draw are checked.",
+    title: t`Fix AI on selected areas`,
+    text: t`Only objects inside the regions you draw are checked.`,
     options: {
       scope: "regions",
       order: "position",
@@ -552,8 +553,8 @@ const annotatePresets: Preset[] = [
   },
   {
     key: "mixed",
-    title: "Mixed",
-    text: "AI is checked least sure first, and experts draw what it missed.",
+    title: t`Mixed`,
+    text: t`AI is checked least sure first, and experts draw what it missed.`,
     options: {
       scope: "all",
       order: "least-sure",
@@ -563,7 +564,7 @@ const annotatePresets: Preset[] = [
       sampleSize: defaultSampleSize,
     },
   },
-];
+]);
 
 type PresetPickerProps = Omit<React.ComponentProps<"div">, "onChange"> & {
   value: PresetKey;
@@ -925,6 +926,8 @@ function RunTiles({
   runningTile,
   ...props
 }: RunTilesProps) {
+  const { t } = useLingui();
+
   const tileWidth = width / columns;
   const tileHeight = height / rows;
   const tiles = Array.from({ length: columns * rows }, (_, index) => index);
@@ -942,8 +945,8 @@ function RunTiles({
             y={Math.floor(index / columns) * tileHeight}
             width={tileWidth}
             height={tileHeight}
-            fill={done ? `rgb(52 211 153 / 0.10)` : active ? `rgb(255 255 255 / 0.12)` : "none"}
-            stroke={done ? `rgb(52 211 153 / 0.7)` : `rgb(255 255 255 / 0.28)`}
+            fill={done ? t`rgb(52 211 153 / 0.10)` : active ? t`rgb(255 255 255 / 0.12)` : "none"}
+            stroke={done ? t`rgb(52 211 153 / 0.7)` : t`rgb(255 255 255 / 0.28)`}
             strokeWidth={done ? 3 : 2}
             strokeDasharray={done ? undefined : "10 8"}
           />

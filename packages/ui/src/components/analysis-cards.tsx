@@ -28,23 +28,24 @@ import {
   type ViewerPartName,
 } from "@parfocal/ui/lib/analysis-parts";
 import type { TyperEvidence, WordingMode } from "@parfocal/ui/lib/confidence-words";
+import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import type { ModelWarning } from "@parfocal/ui/lib/model-warnings";
 import type { ScanSummary } from "@parfocal/ui/lib/systematic-scan";
 import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
 import { useId } from "react";
 
-const categoryIfConfirmed: Record<StagingCategory, string> = {
-  macro: "Macro if confirmed",
-  micro: "Micro if confirmed",
-  ITC: "ITC if confirmed",
-};
+const categoryIfConfirmed: Record<StagingCategory, string> = lazyText(() => ({
+  macro: t`Macro if confirmed`,
+  micro: t`Micro if confirmed`,
+  ITC: t`ITC if confirmed`,
+}));
 
-const categoryShort: Record<StagingCategory, string> = {
-  macro: "Macro",
-  micro: "Micro",
+const categoryShort: Record<StagingCategory, string> = lazyText(() => ({
+  macro: t`Macro`,
+  micro: t`Micro`,
   ITC: "ITC",
-};
+}));
 
 const formatMm = (mm: number) => `${mm.toFixed(mm < 1 ? 2 : 1)} mm`;
 

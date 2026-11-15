@@ -30,6 +30,7 @@ import { StatusTag } from "@parfocal/ui/components/tag";
 import { Textarea } from "@parfocal/ui/components/textarea";
 import { TokenField, type TokenItem } from "@parfocal/ui/components/token-field";
 import { Zone } from "@parfocal/ui/components/zone";
+import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import { cn } from "@parfocal/ui/lib/utils";
 import { type ReactNode, useState } from "react";
 import { LazySavedTemplatePdf } from "../evaluation/pdf-overlay-lazy.tsx";
@@ -1070,65 +1071,68 @@ function ReviewCheckStep({ draft, data, update, errors, openModal }: StepProps) 
   );
 }
 
-const displayRows = {
-  draw: {
-    label: "Draw as",
-    options: [
-      ["outline", "Outline"],
-      ["fill", "Fill"],
-      ["dots", "Dots"],
-    ],
-  },
-  width: {
-    label: "Width",
-    options: [
-      ["1", "1"],
-      ["2", "2"],
-      ["3", "3"],
-    ],
-  },
-  colorBy: {
-    label: "Color by",
-    options: [
-      ["class", "Class"],
-      ["score", "Score"],
-      ["decision", "Decision"],
-    ],
-  },
-  conf: {
-    label: "Confidence",
-    options: [
-      ["number", "Number"],
-      ["word", "Word"],
-      ["color", "Color"],
-      ["hidden", "Hidden"],
-    ],
-  },
-  order: {
-    label: "Order",
-    options: [
-      ["ai", "AI order"],
-      ["size", "Largest first"],
-      ["leastsure", "Least sure first"],
-      ["random", "Random"],
-    ],
-  },
-  zoom: {
-    label: "Zoom around the object",
-    options: [
-      ["fit", "Fit"],
-      ["tight", "Tight"],
-      ["context", "Context"],
-    ],
-  },
-  buttons: {
-    label: "Buttons",
-    options: [
-      ["right", "In the card"],
-      ["bottom", "Under the slide"],
-    ],
-  },
-} as const;
+const displayRows = lazyText(
+  () =>
+    ({
+      draw: {
+        label: t`Draw as`,
+        options: [
+          ["outline", t`Outline`],
+          ["fill", t`Fill`],
+          ["dots", t`Dots`],
+        ],
+      },
+      width: {
+        label: t`Width`,
+        options: [
+          ["1", "1"],
+          ["2", "2"],
+          ["3", "3"],
+        ],
+      },
+      colorBy: {
+        label: t`Color by`,
+        options: [
+          ["class", t`Class`],
+          ["score", t`Score`],
+          ["decision", t`Decision`],
+        ],
+      },
+      conf: {
+        label: t`Confidence`,
+        options: [
+          ["number", t`Number`],
+          ["word", t`Word`],
+          ["color", t`Color`],
+          ["hidden", t`Hidden`],
+        ],
+      },
+      order: {
+        label: t`Order`,
+        options: [
+          ["ai", "AI order"],
+          ["size", t`Largest first`],
+          ["leastsure", t`Least sure first`],
+          ["random", t`Random`],
+        ],
+      },
+      zoom: {
+        label: t`Zoom around the object`,
+        options: [
+          ["fit", "Fit"],
+          ["tight", t`Tight`],
+          ["context", t`Context`],
+        ],
+      },
+      buttons: {
+        label: t`Buttons`,
+        options: [
+          ["right", t`In the card`],
+          ["bottom", t`Under the slide`],
+        ],
+      },
+    }) as const,
+);
 
 type SegKey = keyof typeof displayRows;
 

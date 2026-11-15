@@ -159,8 +159,8 @@ function cosignIssues(data: ReportData, values: Values) {
   return out;
 }
 
-const returnedNote =
-  "Measure the widest extent across the capsule, not inside the node. D1 is 8.0 mm, the largest deposit.";
+const returnedNote = () =>
+  t`Measure the widest extent across the capsule, not inside the node. D1 is 8.0 mm, the largest deposit.`;
 
 const sceneValues = (from: Values): Values => ({
   ...from,
@@ -185,7 +185,7 @@ function CosignFlow({
   const from = sentValues(loaded);
   const [values, setValues] = useState<Values>(() => (live ? loaded.values : sceneValues(from)));
   const [returned, setReturned] = useState<{ note: string; at: string } | null>(() => {
-    if (scene === "returned") return { note: returnedNote, at: t`15 Oct 11:35` };
+    if (scene === "returned") return { note: returnedNote(), at: t`15 Oct 11:35` };
     if (live && server.state === "returned") return { note: server.return_note ?? "", at: "" };
     return null;
   });

@@ -24,6 +24,7 @@ import {
   ReportObjectsTable,
   ReportSheet,
 } from "@parfocal/ui/components/evaluation-report";
+import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import type { ReactNode } from "react";
 import { answerOf, answerWord } from "../disagreements/text.ts";
 import { okData } from "../placeholder.tsx";
@@ -66,11 +67,11 @@ export const changedLine = (count: number, version: number) =>
 const time = (iso: string) =>
   new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
 
-const metricName: Record<string, string> = {
-  sensitivity: "Sensitivity",
-  precision: "Precision",
-  dice: "Dice",
-};
+const metricName: Record<string, string> = lazyText(() => ({
+  sensitivity: t`Sensitivity`,
+  precision: t`Precision`,
+  dice: t`Dice`,
+}));
 
 function Empty({ children }: { children: ReactNode }) {
   return (

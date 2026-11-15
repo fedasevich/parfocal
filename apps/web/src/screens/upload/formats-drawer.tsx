@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import {
   getGetResultsSchemaUrl,
@@ -8,21 +9,22 @@ import { Button, buttonVariants } from "@parfocal/ui/components/button";
 import { DrawerPanel } from "@parfocal/ui/components/drawer-panel";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Hint, Zone } from "@parfocal/ui/components/zone";
+import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import type { ReactNode } from "react";
 import { CheckRow, FileIcon, FileList, FileRow } from "./parts.tsx";
 
-const errorCodes = [
-  ["not-json", "The file is not valid JSON. The line shows where reading stopped."],
-  ["wrong-format", 'The "format" field must be "parfocal-results".'],
-  ["wrong-version", 'The "version" field must be 1.'],
-  ["missing-field", "A required field is absent."],
-  ["unknown-field", "A field the schema does not define. Remove or rename it."],
-  ["wrong-type", "A value has the wrong type, such as text where a number goes."],
-  ["out-of-range", "A number is outside its allowed range, such as a score above 1."],
-  ["bad-length", "A text or list is too short or too long."],
-  ["not-allowed", "A value is not one of the allowed choices."],
-  ["bad-pattern", "A text, such as an ID, does not match the expected pattern."],
-];
+const errorCodes = lazyText(() => [
+  ["not-json", t`The file is not valid JSON. The line shows where reading stopped.`],
+  ["wrong-format", t`The "format" field must be "parfocal-results".`],
+  ["wrong-version", t`The "version" field must be 1.`],
+  ["missing-field", t`A required field is absent.`],
+  ["unknown-field", t`A field the schema does not define. Remove or rename it.`],
+  ["wrong-type", t`A value has the wrong type, such as text where a number goes.`],
+  ["out-of-range", t`A number is outside its allowed range, such as a score above 1.`],
+  ["bad-length", t`A text or list is too short or too long.`],
+  ["not-allowed", t`A value is not one of the allowed choices.`],
+  ["bad-pattern", t`A text, such as an ID, does not match the expected pattern.`],
+]);
 
 export default function FormatsDrawer({
   batch,

@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import {
   getGetMySettingLayersQueryKey,
@@ -36,6 +37,7 @@ import {
   SelectValue,
 } from "@parfocal/ui/components/select";
 import { FilterChip, StatusTag } from "@parfocal/ui/components/tag";
+import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import { cn } from "@parfocal/ui/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -62,123 +64,139 @@ import {
   workspaceMoveOf,
 } from "./setup-rules.ts";
 
-const roles: Record<Role, { icon: IconName; title: string; detail: string; effect: string }> = {
-  res: {
-    icon: "flask",
-    title: "Researcher",
-    detail: "Upload slides and AI results, assign reviews, sign off evaluations",
-    effect: "Home opens on your projects, with Upload and New review task first.",
-  },
-  rev: {
-    icon: "check",
-    title: "Reviewer",
-    detail: "Check, fix and comment on AI results, give your opinion",
-    effect: "Home opens on My work, with Continue reviewing first.",
-  },
-  both: {
-    icon: "users",
-    title: "Both",
-    detail: "Run your own evaluations and review for others",
-    effect: "Home shows your review tasks and your projects side by side.",
-  },
-};
+const roles: Record<Role, { icon: IconName; title: string; detail: string; effect: string }> =
+  lazyText(() => ({
+    res: {
+      icon: "flask",
+      title: t`Researcher`,
+      detail: t`Upload slides and AI results, assign reviews, sign off evaluations`,
+      effect: t`Home opens on your projects, with Upload and New review task first.`,
+    },
+    rev: {
+      icon: "check",
+      title: t`Reviewer`,
+      detail: t`Check, fix and comment on AI results, give your opinion`,
+      effect: t`Home opens on My work, with Continue reviewing first.`,
+    },
+    both: {
+      icon: "users",
+      title: t`Both`,
+      detail: t`Run your own evaluations and review for others`,
+      effect: t`Home shows your review tasks and your projects side by side.`,
+    },
+  }));
 
-const firsts: Record<First, { icon: IconName; title: string; detail: string; note: string }> = {
-  sample: {
-    icon: "slides",
-    title: "Open the sample project",
-    detail:
-      "4 CAMELYON16 slides with two AI result sets and a review task for you, to try everything safely",
-    note: "The sample project stays in your workspace as Sample · sentinel nodes and can be deleted at any time.",
-  },
-  create: {
-    icon: "folder",
-    title: "Create a project",
-    detail: "Name it, choose de-identified or clinical, pick a class list and an analysis template",
-    note: "When setup ends, New project opens with the name, the privacy mode and the class list to fill in.",
-  },
-  wait: {
-    icon: "bell",
-    title: "Wait for an invite",
-    detail: "Researchers will add you to their projects, and invites show on your home",
-    note: "Invites show on your home and in the bell. The sample project is there meanwhile if you want to try things.",
-  },
-};
+const firsts: Record<First, { icon: IconName; title: string; detail: string; note: string }> =
+  lazyText(() => ({
+    sample: {
+      icon: "slides",
+      title: t`Open the sample project`,
+      detail: t`4 CAMELYON16 slides with two AI result sets and a review task for you, to try everything safely`,
+      note: t`The sample project stays in your workspace as Sample · sentinel nodes and can be deleted at any time.`,
+    },
+    create: {
+      icon: "folder",
+      title: t`Create a project`,
+      detail: t`Name it, choose de-identified or clinical, pick a class list and an analysis template`,
+      note: t`When setup ends, New project opens with the name, the privacy mode and the class list to fill in.`,
+    },
+    wait: {
+      icon: "bell",
+      title: t`Wait for an invite`,
+      detail: t`Researchers will add you to their projects, and invites show on your home`,
+      note: t`Invites show on your home and in the bell. The sample project is there meanwhile if you want to try things.`,
+    },
+  }));
 
-const devices: { key: Device; label: string; keys: [string, string][] }[] = [
+const devices: { key: Device; label: string; keys: [string, string][] }[] = lazyText(() => [
   {
     key: "mouse",
-    label: "Mouse",
+    label: t`Mouse`,
     keys: [
-      ["Pan", "Drag, or middle-drag"],
-      ["Zoom", "Wheel, to the cursor"],
-      ["Preset", "Alt+1 to Alt+6"],
-      ["Next area", "]"],
+      ["Pan", t`Drag, or middle-drag`],
+      [t`Zoom`, t`Wheel, to the cursor`],
+      [t`Preset`, t`Alt+1 to Alt+6`],
+      [t`Next area`, "]"],
     ],
   },
   {
     key: "trackpad",
-    label: "Trackpad",
+    label: t`Trackpad`,
     keys: [
-      ["Pan", "Two fingers"],
-      ["Zoom", "Pinch"],
-      ["Preset", "Alt+1 to Alt+6"],
-      ["Whole slide", "Hold Z"],
+      ["Pan", t`Two fingers`],
+      [t`Zoom`, t`Pinch`],
+      [t`Preset`, t`Alt+1 to Alt+6`],
+      [t`Whole slide`, "Hold Z"],
     ],
   },
   {
     key: "spacemouse",
     label: "SpaceMouse",
     keys: [
-      ["Pan", "Tilt the cap"],
-      ["Zoom", "Push or pull"],
-      ["Preset", "Side buttons"],
-      ["Whole slide", "Pull fully"],
+      ["Pan", t`Tilt the cap`],
+      [t`Zoom`, t`Push or pull`],
+      [t`Preset`, t`Side buttons`],
+      [t`Whole slide`, t`Pull fully`],
     ],
   },
   {
     key: "gamepad",
-    label: "Gamepad",
+    label: t`Gamepad`,
     keys: [
-      ["Pan", "Left stick"],
-      ["Zoom", "Triggers"],
-      ["Preset", "Shoulder buttons"],
-      ["Next area", "Start"],
+      ["Pan", t`Left stick`],
+      [t`Zoom`, t`Triggers`],
+      [t`Preset`, t`Shoulder buttons`],
+      [t`Next area`, t`Start`],
     ],
   },
   {
     key: "pen",
-    label: "Tablet and pen",
+    label: t`Tablet and pen`,
     keys: [
-      ["Pan", "One finger"],
-      ["Zoom", "Pinch"],
-      ["To 40x", "Double tap"],
-      ["Whole slide", "Two-finger double tap"],
+      ["Pan", t`One finger`],
+      [t`Zoom`, t`Pinch`],
+      ["To 40x", t`Double tap`],
+      [t`Whole slide`, t`Two-finger double tap`],
     ],
   },
   {
     key: "keyboard",
-    label: "Keyboard",
+    label: t`Keyboard`,
     keys: [
-      ["Pan", "Arrows, Shift for 3x"],
-      ["Zoom", "+ and -"],
-      ["Preset", "Alt+1 to Alt+6"],
-      ["Area", "G then a number"],
+      ["Pan", t`Arrows, Shift for 3x`],
+      [t`Zoom`, t`+ and -`],
+      [t`Preset`, t`Alt+1 to Alt+6`],
+      [t`Area`, t`G then a number`],
     ],
   },
-];
+]);
 
-const specialties = ["Breast", "Lymph nodes", "GI", "Skin", "Hematopathology", "Cytology"];
-const titles = ["MUDr.", "Dr.", "Prof. MUDr.", "doc. MUDr.", "Mgr.", "Ing.", "No title"];
-const viewers = ["Parfocal", "Sectra", "Aperio", "QuPath", "Philips"];
-const stepNames = ["You", "Workspace", "First project", "Viewer", "Done"];
-const stepHints = [
-  "Role and specialty",
-  "Join or create one",
-  "Sample or your own",
-  "Input device and theme",
-  "Getting started",
-];
+const specialties = lazyText(() => [
+  t`Breast`,
+  t`Lymph nodes`,
+  "GI",
+  t`Skin`,
+  t`Hematopathology`,
+  t`Cytology`,
+]);
+const titles = lazyText(() => [
+  "MUDr.",
+  "Dr.",
+  "Prof. MUDr.",
+  "doc. MUDr.",
+  "Mgr.",
+  "Ing.",
+  t`No title`,
+]);
+const viewers = lazyText(() => [t`Parfocal`, t`Sectra`, t`Aperio`, "QuPath", t`Philips`]);
+const stepNames = lazyText(() => ["You", t`Workspace`, t`First project`, t`Viewer`, t`Done`]);
+const stepHints = lazyText(() => [
+  t`Role and specialty`,
+  t`Join or create one`,
+  t`Sample or your own`,
+  t`Input device and theme`,
+  t`Getting started`,
+]);
 
 type Choices = {
   role: Role;

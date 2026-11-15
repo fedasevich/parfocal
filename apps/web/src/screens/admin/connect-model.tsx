@@ -36,6 +36,7 @@ import {
 import { SmallModal, SmallModalZone } from "@parfocal/ui/components/small-modal";
 import { StatusTag } from "@parfocal/ui/components/tag";
 import { Hint, Zone } from "@parfocal/ui/components/zone";
+import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { useFlowOwner, useKeptFlow } from "../../session/kept-flow.ts";
 import { useRouterLink } from "../../shell/router-link.tsx";
@@ -64,7 +65,11 @@ type Form = {
 
 const leaveOut = "out";
 
-const signInLabels: Record<SignIn, string> = { none: "None", token: "Token", header: "Header" };
+const signInLabels: Record<SignIn, string> = lazyText(() => ({
+  none: t`None`,
+  token: t`Token`,
+  header: t`Header`,
+}));
 
 const tileSizes = [256, 512, 1024];
 const magnifications = [10, 20, 40];
@@ -85,7 +90,7 @@ function startForm(data: LabModelConnection): Form {
   };
 }
 
-const blankConnection: LabModelConnection = {
+const blankConnection: LabModelConnection = lazyText(() => ({
   address: "",
   host: "",
   sign_in: "token",
@@ -99,7 +104,7 @@ const blankConnection: LabModelConnection = {
   project_ids: [],
   test: {
     outcome: "untested",
-    sample_slide: "the Parfocal sample tile",
+    sample_slide: t`the Parfocal sample tile`,
     returns: [],
     answered_ms: null,
     server_software: null,
@@ -108,7 +113,7 @@ const blankConnection: LabModelConnection = {
     model: null,
     classes: [],
   },
-};
+}));
 
 const typedSecrets = new Map<string, string>();
 
@@ -126,10 +131,10 @@ function signInOf(form: Form) {
   };
 }
 
-const runnerLabels: Record<WhoCanRun, string> = {
-  admins: "People with admin rights",
-  researchers: "Researchers",
-};
+const runnerLabels: Record<WhoCanRun, string> = lazyText(() => ({
+  admins: t`People with admin rights`,
+  researchers: t`Researchers`,
+}));
 
 function problemText(data: unknown, fallback: string) {
   const problem = data as Problem | undefined;
@@ -722,10 +727,10 @@ function useClassColours(data: LabModelConnection, form: Form) {
     options.find((option) => option.value === map[sent])?.colour ?? "var(--c-other)";
 }
 
-const taxonomyNames: Record<string, string> = {
-  "sentinel-node": "Sentinel node",
+const taxonomyNames: Record<string, string> = lazyText(() => ({
+  "sentinel-node": t`Sentinel node`,
   pannuke: "PanNuke",
-};
+}));
 
 const taxonomyLabel = (template: string) => `${taxonomyNames[template] ?? template} classes`;
 

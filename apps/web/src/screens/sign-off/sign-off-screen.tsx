@@ -21,6 +21,7 @@ import { Icon } from "@parfocal/ui/components/icon";
 import { Person } from "@parfocal/ui/components/person";
 import { SmallModal, SmallModalZone } from "@parfocal/ui/components/small-modal";
 import { StatusTag } from "@parfocal/ui/components/tag";
+import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { type ReactNode, useState } from "react";
@@ -35,12 +36,12 @@ import { useMockToast } from "../project/mock-toast.tsx";
 
 export type SignOffScene = "blocked" | "ready" | "ssofail" | "signed" | "amend";
 
-const exportsList = [
-  { key: "pdf", label: "Evaluation report", format: "PDF" },
-  { key: "csv", label: "Decisions per object", format: "CSV" },
-  { key: "json", label: "Reviewed annotations", format: "Parfocal JSON and GeoJSON" },
-  { key: "forms", label: "Opinion forms", format: "CSV" },
-];
+const exportsList = lazyText(() => [
+  { key: "pdf", label: t`Evaluation report`, format: "PDF" },
+  { key: "csv", label: t`Decisions per object`, format: "CSV" },
+  { key: "json", label: t`Reviewed annotations`, format: "Parfocal JSON and GeoJSON" },
+  { key: "forms", label: t`Opinion forms`, format: "CSV" },
+]);
 
 const longDate = (iso: string) => {
   const date = new Date(iso);

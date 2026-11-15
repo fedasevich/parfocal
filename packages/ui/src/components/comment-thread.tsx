@@ -3,6 +3,7 @@ import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import { Keycap } from "@parfocal/ui/components/keycap";
 import { PersonAvatar, type PersonInfo } from "@parfocal/ui/components/person";
+import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
 
@@ -200,7 +201,7 @@ type CommentComposerProps = Omit<React.ComponentProps<"div">, "onChange"> & {
 
 type PickerKey = "ArrowDown" | "ArrowUp" | "Enter" | "Tab" | "Escape";
 
-const pickerKeys: string[] = ["ArrowDown", "ArrowUp", "Enter", "Tab", "Escape"];
+const pickerKeys: string[] = lazyText(() => ["ArrowDown", "ArrowUp", t`Enter`, "Tab", t`Escape`]);
 
 function CommentComposer({
   value,

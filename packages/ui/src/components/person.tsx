@@ -1,4 +1,5 @@
 import { Avatar as AvatarPrimitive } from "@base-ui/react/avatar";
+import { t } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react/macro";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@parfocal/ui/components/tooltip";
@@ -8,6 +9,7 @@ import {
   personFromProfile,
   readableOn,
 } from "@parfocal/ui/lib/avatar-colours";
+import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
 
@@ -19,11 +21,11 @@ const presenceColors: Record<Presence, string> = {
   away: "bg-fg-faint",
 };
 
-const presenceLabels: Record<Presence, string> = {
-  available: "Available",
-  busy: "Busy",
-  away: "Away",
-};
+const presenceLabels: Record<Presence, string> = lazyText(() => ({
+  available: t`Available`,
+  busy: t`Busy`,
+  away: t`Away`,
+}));
 
 type PersonAvatarProps = Omit<AvatarPrimitive.Root.Props, "children" | "style"> & {
   style?: React.CSSProperties | undefined;
