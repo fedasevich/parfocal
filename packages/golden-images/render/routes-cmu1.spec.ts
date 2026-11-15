@@ -42,18 +42,7 @@ const overlayTolerance: Tolerance = {
   maxMeanChannelError: 0.5,
 };
 
-const knownOverlayDifference: Partial<Record<OverlayKind, number>> = {
-  "ai-proposals": 0.02,
-};
-
 const platformGoldenKinds: ReadonlySet<OverlayKind> = new Set(["id-labels"]);
-
-const dashedOutlinesMessage =
-  "The deck.gl WebGPU route cannot draw every overlay style: dashed outlines are drawn solid";
-
-const expectedOverlayErrors: Partial<Record<OverlayKind, readonly string[]>> = {
-  "ai-proposals": [dashedOutlinesMessage],
-};
 
 const goldenDirectory = fileURLToPath(new URL("../goldens", import.meta.url));
 const availability = fixtureAvailability("CMU-1.svs");
@@ -194,31 +183,21 @@ for (const route of alternateRoutes) {
   }
 
   for (const kind of overlayStack) {
-    const allowed = knownOverlayDifference[kind];
     const reference = platformGoldenKinds.has(kind)
       ? "the Viv frame of the same browser"
       : "its Viv golden image";
-    const title =
-      allowed === undefined
-        ? `the ${kind} layer matches ${reference} on the ${route} route`
-        : `the ${kind} layer stays within ${allowed * 100}% of ${reference} on the ${route} route`;
-    test(title, async ({ page }) => {
+    test(`the ${kind} layer matches ${reference} on the ${route} route`, async ({ page }) => {
       await skipUnlessRegistered(page, route);
       if (server === null) throw new Error("The Viv harness server did not start");
       const { result, frame } = await renderOverlay(page, server, kind, route);
-      expect(result.errors).toEqual(expectedOverlayErrors[kind] ?? []);
+      expect(result.errors).toEqual([]);
       expect(result.uncapturedGpuErrors).toBe(0);
       expect(result.layerIds).toEqual([kind]);
       expect(contentProblems(frame)).toEqual([]);
       const expected = platformGoldenKinds.has(kind)
         ? (await renderOverlay(page, server, kind, PRIMARY_RENDERER_ROUTE)).frame
         : readPng(goldenPath(goldenDirectory, `viv-overlay-${kind}`));
-      const comparison = compareFrames(frame, expected, {
-        ...overlayTolerance,
-        ...(allowed === undefined
-          ? {}
-          : { maxDifferingFraction: allowed, maxMeanChannelError: 255 }),
-      });
+      const comparison = compareFrames(frame, expected, overlayTolerance);
       console.log(
         `overlay ${kind} on ${route}: differing ${(comparison.differingFraction * 100).toFixed(3)}% maxDelta ${comparison.maxDelta.join(",")} mean ${comparison.meanError.map((error) => error.toFixed(3)).join(",")}`,
       );
