@@ -109,6 +109,21 @@ def test_span_attributes_keep_only_allow_listed_keys(sensitive: SensitiveValues)
     assert scrubbed == {"route": "/cases/{case_id}", "http.url": REDACTED, "status_code": 200}
 
 
+def test_sli_and_frame_time_numbers_pass_and_other_keys_do_not(
+    sensitive: SensitiveValues,
+) -> None:
+    numbers = {
+        "ok": "true",
+        "renderer": "viv",
+        "frames": "120",
+        "p50_ms": "16.7",
+        "p95_ms": "33.4",
+        "long_frames": "2",
+    }
+    scrubbed = scrub_attributes({**numbers, "slide_label": PATIENT_NAME}, sensitive)
+    assert scrubbed == {**numbers, "slide_label": REDACTED}
+
+
 def test_span_attributes_may_be_missing(sensitive: SensitiveValues) -> None:
     assert scrub_attributes(None, sensitive) == {}
 

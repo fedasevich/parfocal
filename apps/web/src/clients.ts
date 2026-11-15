@@ -1,5 +1,6 @@
 import type { WebConfig } from "./config.ts";
 import { consentedAnalytics } from "./telemetry/consent.ts";
+import { beaconFrames, consoleFrames, type FrameReporter } from "./telemetry/frame-monitor.ts";
 import { SensitiveValues, scrubError, scrubFields } from "./telemetry/scrubbing.ts";
 
 export type ErrorReporter = { capture(error: unknown): void };
@@ -10,10 +11,13 @@ export type WebClients = {
   errors: ErrorReporter;
   analytics: Analytics;
   flags: FlagClient;
+  frames: FrameReporter;
   sensitive: SensitiveValues;
 };
 
-type ProductionClients = Omit<WebClients, "sensitive">;
+type ProductionClients = Omit<WebClients, "sensitive" | "frames">;
+
+export const sendBeacon = (path: string, body: Blob): boolean => navigator.sendBeacon(path, body);
 
 export type ProductionFactories = {
   [Concern in keyof ProductionClients]?: (config: WebConfig) => ProductionClients[Concern];
@@ -47,6 +51,7 @@ export function selectWebClients(
   factories: ProductionFactories,
   flagDefaults: Record<string, string> = {},
   sensitive: SensitiveValues = new SensitiveValues(),
+  beacon: (path: string, body: Blob) => boolean = sendBeacon,
 ): WebClients {
   const switchedOn = config.appEnv === "prod" ? factories : {};
   const errors = switchedOn.errors?.(config) ?? consoleErrors;
@@ -55,6 +60,7 @@ export function selectWebClients(
     errors: scrubbedErrors(errors, sensitive),
     analytics: consentedAnalytics(scrubbedAnalytics(analytics, sensitive)),
     flags: switchedOn.flags?.(config) ?? fileFlags(flagDefaults),
+    frames: config.appEnv === "prod" ? beaconFrames(beacon) : consoleFrames,
     sensitive,
   };
 }

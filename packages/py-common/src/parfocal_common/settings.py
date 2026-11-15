@@ -67,6 +67,8 @@ class ServiceSettings(BaseSettings):
     email_outbox: str = ".outbox/email.jsonl"
     alert_page_email: str = "security@parfocal.eu"
     alert_ticket_email: str = "security@parfocal.eu"
+    otlp_endpoint: str | None = None
+    otlp_headers: SecretStr | None = None
 
     def backends(self) -> Backends:
         defaults = default_backends(self.app_env)
