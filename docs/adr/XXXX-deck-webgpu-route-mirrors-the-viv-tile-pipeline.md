@@ -34,16 +34,22 @@ The route draws 8-bit RGB slides only, as [ADR 0098](0098-viv-and-deck-gl-versio
 
 Measured on this Mac under SwiftShader ([result](../results/2026-11-15-deck-webgpu-route-goldens-and-switch-memory.md)): the three CMU-1.svs goldens match on the route with zero uncaptured GPU errors, a switch from Viv to the route and back still matches the 10x golden, and 15 switches between the two routes grow the heap 3.5% with one deck and one canvas each round.
 
-Overlays needed three more things, all inside the route so that the shared builder and Viv do not change:
+Overlays needed four more things, all inside the route so that the shared builder and Viv do not change:
 
 - The route uploads every overlay `ImageData` (rasters and the pin atlas) into its own texture. On a software adapter luma.gl 9.4.2 uploads an `ImageData` through a 2D canvas, which zeroes the colour under transparent texels and put a dark fringe around the heatmap.
 - The pin atlas keeps a mip chain, as deck.gl gives it on WebGL.
 - deck.gl's `PathStyleExtension` has no WGSL, and a dashed layer invalidates the whole frame. The route removes the extension, draws the outline solid and reports `DeckWebGpuUnsupportedOverlayError` once.
 
-Rasters, pins and ID labels then match Viv. Polygon outlines differ from the Viv goldens in 0.24% to 0.33% of pixels, at the point where each closed path joins, and solid AI proposals differ in 0.96%. `render/routes-cmu1.spec.ts` bounds these at 1% and 2% and holds every other kind to the Viv tolerance. The route is therefore fit for comparing renderers on slide pixels, which is what ADR 0098 keeps it for, and not yet for reviewing dashed proposals.
+- The shared builder closes a ring with two wrapped vertices. deck.gl's WebGPU `PathLayer` left a mark on every ring with that buffer, so the route copies the data of loop layers and adds a third wrapped vertex (`src/deck-webgpu/loop-data.ts`).
+
+Rasters, pins, ID labels and polygon outlines then match Viv at the Viv tolerance. Solid AI proposals differ from their golden in 0.63% of pixels, and `render/routes-cmu1.spec.ts` bounds that one kind at 2%. The route is therefore fit for comparing renderers, which is what ADR 0098 keeps it for, and not yet for reviewing dashed proposals.
+
+`switchRenderer` in the engine now treats the first replay as part of starting a route. A route that throws while it is created or while it is handed the open slide is destroyed, and the previous route is created again. Before, only a throwing factory was covered, and this route throws for a slide that is not 8-bit RGB.
+
+The pan and budget specs run on a named route with `PARFOCAL_RENDERER_ROUTE=deck-webgpu`, and pass their existing budgets on this route.
 
 Tests that need WebGL and WebGPU in one browser set `WEBGPU_SWIFTSHADER_ARGS` at the top of their file, because Playwright does not allow launch options inside a `describe`. The alternate route goldens therefore live in `render/routes-cmu1.spec.ts`, and `render/viv-cmu1.spec.ts` keeps the primary route on the unchanged flags. This replaces the single loop that ADR 0302 describes.
 
 The ADR 0098 question about Vite is answered: with one deck.gl and luma.gl install the route loads through a plain dynamic import in both harness servers, with no `optimizeDeps` exclusions.
 
-Not done here: a route picker in `mountSlideViewport`, which ADR 0302 leaves to the first alternate route, and a run on a real GPU. TODO: add both as backlog tasks, together with dashes on WebGPU and the loop join difference.
+Not done here: a route picker in `mountSlideViewport`, which ADR 0302 leaves to the first alternate route, and a run on a real GPU. TODO: add both as backlog tasks, together with dashes on WebGPU.

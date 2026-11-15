@@ -7,6 +7,9 @@ import {
   createViewerEngine,
   type MotionVector,
   type PrefetchStats,
+  type RendererFactory,
+  type RendererRouteId,
+  RendererRouteUnavailableError,
   type SlideFormatId,
   type ViewerEngine,
   type ViewerInputBinding,
@@ -15,11 +18,12 @@ import {
 } from "../../src/index.ts";
 import {
   createPixelSlideOpener,
+  type DeckWebGpuRoute,
   type DecodeStats,
   type PixelSlide,
+  pixelRendererRoutes,
   pixelSlide,
   type VivRoute,
-  vivRendererFactory,
 } from "../../src/viv/index.ts";
 
 export interface PanSlide {
@@ -29,6 +33,7 @@ export interface PanSlide {
   readonly reader: "shared-bytes" | "geotiff-direct";
   readonly magnification: number | null;
   readonly prefetch?: boolean;
+  readonly route?: RendererRouteId;
   readonly x: number;
   readonly y: number;
 }
@@ -107,7 +112,7 @@ declare global {
 
 const errors: string[] = [];
 let engine: ViewerEngine | null = null;
-let route: VivRoute | null = null;
+let route: VivRoute | DeckWebGpuRoute | null = null;
 let history: BoundViewHistory | null = null;
 let wheel: ViewerInputBinding | null = null;
 let frameTimes: number[] | null = null;
@@ -127,7 +132,7 @@ function nextFrame(): Promise<number> {
   return new Promise((resolve) => requestAnimationFrame(resolve));
 }
 
-function mounted(): { engine: ViewerEngine; route: VivRoute } {
+function mounted(): { engine: ViewerEngine; route: VivRoute | DeckWebGpuRoute } {
   if (engine === null || route === null) throw new Error("No slide is open");
   return { engine, route };
 }
@@ -135,18 +140,28 @@ function mounted(): { engine: ViewerEngine; route: VivRoute } {
 async function open(slide: PanSlide): Promise<Opened> {
   close();
   const started = performance.now();
-  const factory = vivRendererFactory({
+  const routeOptions = {
     decodeWorkers: slide.workers,
     useDevicePixels: 1,
-    ...(slide.prefetch === undefined ? {} : { prefetch: slide.prefetch }),
-    onError: (error) => {
+    onError: (error: Error) => {
       errors.push(error.message);
     },
-  });
+  };
+  const id = slide.route ?? "viv";
+  const load = pixelRendererRoutes({
+    viv: {
+      ...routeOptions,
+      ...(slide.prefetch === undefined ? {} : { prefetch: slide.prefetch }),
+    },
+    deckWebGpu: routeOptions,
+  })[id];
+  if (load === undefined) throw new RendererRouteUnavailableError(id);
+  const factory: RendererFactory<PixelSlide> = await load();
   const current = createViewerEngine<PixelSlide>({
     createRenderer: (container) => {
-      route = factory(container);
-      return route;
+      const created = factory(container) as VivRoute | DeckWebGpuRoute;
+      route = created;
+      return created;
     },
     openSlide:
       slide.reader === "shared-bytes"
@@ -244,7 +259,7 @@ async function drive(plan: Drive, settleTimeoutMs: number): Promise<DriveReport>
     const dy = plan.vertical ? along : across;
     current.setCamera({ x: camera.x + dx / scale, y: camera.y + dy / scale, zoom: camera.zoom });
     frames++;
-    const vector = shown.prefetchVector();
+    const vector = "prefetchVector" in shown ? shown.prefetchVector() : null;
     if (vector !== null && (maxVector === null || vector.speed > maxVector.speed)) {
       maxVector = vector;
     }
@@ -259,7 +274,7 @@ async function drive(plan: Drive, settleTimeoutMs: number): Promise<DriveReport>
     camera: current.getCamera(),
     decode: shown.decodeStats(),
     errors: [...errors],
-    prefetch: shown.prefetchStats(),
+    prefetch: "prefetchStats" in shown ? shown.prefetchStats() : null,
     vector: maxVector,
   };
 }

@@ -43,10 +43,7 @@ const overlayTolerance: Tolerance = {
 };
 
 const knownOverlayDifference: Partial<Record<OverlayKind, number>> = {
-  nuclei: 0.01,
   "ai-proposals": 0.02,
-  "human-annotations": 0.01,
-  measurements: 0.01,
 };
 
 const platformGoldenKinds: ReadonlySet<OverlayKind> = new Set(["id-labels"]);

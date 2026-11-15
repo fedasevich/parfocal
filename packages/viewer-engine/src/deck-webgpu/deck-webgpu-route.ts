@@ -46,6 +46,7 @@ import {
   watchWebGpuDevice,
 } from "../viv/webgpu-errors.ts";
 import { splitByBufferLimit } from "./buffer-limit.ts";
+import { isLoopPathData, type LoopPathData, withThirdClosingVertex } from "./loop-data.ts";
 import { rgbToRgba } from "./rgba.ts";
 
 export const deckWebGpuViewId = "slide";
@@ -196,6 +197,7 @@ export function createDeckWebGpuRoute(
   const reportedLimits = new Set<string>();
   let overlayTextures = new Map<ImageData, Texture>();
   let dashesReported = false;
+  const loopData = new WeakMap<LoopPathData, LoopPathData>();
   let changes = 0;
   let renderedChanges = -1;
   let destroyed = false;
@@ -368,6 +370,12 @@ export function createDeckWebGpuRoute(
           dashesReported = true;
           reportError(new DeckWebGpuUnsupportedOverlayError("dashed outlines are drawn solid"));
         }
+      }
+      const data = props["data"];
+      if (props["_pathType"] === "loop" && isLoopPathData(data)) {
+        const closed = loopData.get(data) ?? withThirdClosingVertex(data);
+        loopData.set(data, closed);
+        if (closed !== data) replaced["data"] = closed;
       }
       return Object.keys(replaced).length === 0 ? layer : (layer.clone(replaced) as Layer);
     });
