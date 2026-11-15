@@ -1,3 +1,4 @@
+import { poolNucleusFeature } from "../learner/features.ts";
 import {
   type EmbeddingWindow,
   embeddingWindow,
@@ -85,6 +86,7 @@ export interface InferenceEngine {
   encode(id: string, pixels: Float32Array): Promise<SamEncoded>;
   prompt(id: string, prompt: SamPrompt): Promise<SamPromptOutcome>;
   segmentAll(id: string): Promise<SamOutputs>;
+  pool(id: string, outlines: readonly Float32Array[]): Float32Array[];
   drop(id: string): void;
   hasEmbedding(id: string): boolean;
   close(): Promise<void>;
@@ -459,6 +461,13 @@ export function createInferenceEngine(options: InferenceEngineOptions): Inferenc
         }
         return toOutputs(await session.run({ image_embeddings: embedding }));
       });
+    },
+
+    pool(id, outlines) {
+      const embedding = embeddingFor(id);
+      const [, channels = 0, grid = 0] = embedding.dims;
+      const planes = { data: embedding.data, channels, grid };
+      return outlines.map((outline) => poolNucleusFeature(planes, outline, samImageSize));
     },
 
     drop(id) {

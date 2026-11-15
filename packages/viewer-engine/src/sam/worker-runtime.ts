@@ -72,6 +72,19 @@ export function startSamWorker(scope: SamWorkerScope, dependencies: SamWorkerDep
       });
       return;
     }
+    if (message.type === "pool") {
+      const { requestId, id, outlines } = message;
+      withEngine(requestId, (active) =>
+        Promise.resolve().then(() => {
+          const features = active.pool(id, outlines) as Float32Array<ArrayBuffer>[];
+          scope.postMessage(
+            { type: "pooled", requestId, features },
+            features.map((feature) => feature.buffer),
+          );
+        }),
+      );
+      return;
+    }
     engine?.drop(message.id);
   });
 }

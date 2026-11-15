@@ -4,6 +4,7 @@ import {
   CasesFrom,
   Certainty,
   FileKind,
+  type HeatmapFacts,
   type ImportCheck,
   IngestStatus,
   Outcome,
@@ -237,6 +238,7 @@ export type FakeOverrides = {
   chosen?: unknown[];
   left?: string[];
   sets?: ResultSet[];
+  heatmaps?: Record<string, { facts: HeatmapFacts; grid: number[] }>;
 };
 
 const overrides = (): FakeOverrides =>
@@ -279,7 +281,30 @@ const statusOf = (uploadId: string): UploadState => {
   };
 };
 
+const noHeatmap = () =>
+  HttpResponse.json(
+    {
+      type: "no-heatmap",
+      code: "no-heatmap",
+      title: "This result set has no heatmap",
+      status: 404,
+    },
+    { status: 404 },
+  );
+
 export const uploadHandlers = (): RequestHandler[] => [
+  http.get<{ setId: string }>("*/api/result-sets/:setId/heatmap", ({ params }) => {
+    const found = overrides().heatmaps?.[params.setId];
+    return found === undefined ? noHeatmap() : HttpResponse.json(found.facts);
+  }),
+  http.get<{ setId: string }>("*/api/result-sets/:setId/heatmap/grid", ({ params }) => {
+    const found = overrides().heatmaps?.[params.setId];
+    return found === undefined
+      ? noHeatmap()
+      : new HttpResponse(new Uint8Array(found.grid), {
+          headers: { "content-type": "application/vnd.parfocal.heatmap-grid" },
+        });
+  }),
   http.get<{ uploadId: string }>("*/api/uploads/:uploadId/status", ({ params }) =>
     HttpResponse.json(statusOf(params.uploadId)),
   ),

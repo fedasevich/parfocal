@@ -2280,6 +2280,15 @@ export interface Health {
   status: string;
 }
 
+export interface HeatmapFacts {
+  width: number;
+  height: number;
+  level: number | null;
+  downsample: number;
+  mpp: number | null;
+  tissue_share: number | null;
+}
+
 export interface HeatmapGuess {
   level: number | null;
   downsample: number;
@@ -2431,6 +2440,7 @@ export const ScoreDefault = {
 export interface ImportChoices {
   score_default?: ScoreDefault;
   unclassified_class_id?: string | null;
+  heatmap_level?: number | null;
   /** @maxItems 200 */
   class_mappings?: ClassMapping[];
 }
@@ -4810,6 +4820,7 @@ export interface RunAreas {
   areas: RunArea[];
   after: number;
   more: boolean;
+  total?: number | null;
 }
 
 export interface RunJoin {
@@ -17860,6 +17871,211 @@ export function useListModelRunAreas<
   return withQueryKey(query, queryOptions.queryKey);
 }
 
+export type getModelRunTileResponse200 = {
+  data: Blob;
+  status: 200;
+};
+
+export type getModelRunTileResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getModelRunTileResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getModelRunTileResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getModelRunTileResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getModelRunTileResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getModelRunTileResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getModelRunTileResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getModelRunTileResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getModelRunTileResponseSuccess = getModelRunTileResponse200 & {
+  headers: Headers;
+};
+export type getModelRunTileResponseError = (
+  | getModelRunTileResponse400
+  | getModelRunTileResponse401
+  | getModelRunTileResponse403
+  | getModelRunTileResponse404
+  | getModelRunTileResponse409
+  | getModelRunTileResponse422
+  | getModelRunTileResponse429
+  | getModelRunTileResponse500
+) & {
+  headers: Headers;
+};
+
+export type getModelRunTileResponse = getModelRunTileResponseSuccess | getModelRunTileResponseError;
+
+export const getGetModelRunTileUrl = (projectId: string, runId: string, unit: number) => {
+  return `/api/projects/${projectId}/model-runs/${runId}/tiles/${unit}`;
+};
+
+/**
+ * @summary Get Model Run Tile
+ */
+export const getModelRunTile = async (
+  projectId: string,
+  runId: string,
+  unit: number,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getModelRunTileResponse> => {
+  return apiFetch<getModelRunTileResponse>(getGetModelRunTileUrl(projectId, runId, unit), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetModelRunTileQueryKey = (projectId: string, runId: string, unit: number) => {
+  return [`/api/projects/${projectId}/model-runs/${runId}/tiles/${unit}`] as const;
+};
+
+export const getGetModelRunTileQueryOptions = <
+  TData = Awaited<ReturnType<typeof getModelRunTile>>,
+  TError = Problem,
+>(
+  projectId: string,
+  runId: string,
+  unit: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getModelRunTile>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetModelRunTileQueryKey(projectId, runId, unit);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getModelRunTile>>> = ({ signal }) =>
+    getModelRunTile(projectId, runId, unit, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled:
+      projectId !== null &&
+      projectId !== undefined &&
+      runId !== null &&
+      runId !== undefined &&
+      unit !== null &&
+      unit !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getModelRunTile>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetModelRunTileQueryResult = NonNullable<Awaited<ReturnType<typeof getModelRunTile>>>;
+export type GetModelRunTileQueryError = Problem;
+
+export function useGetModelRunTile<
+  TData = Awaited<ReturnType<typeof getModelRunTile>>,
+  TError = Problem,
+>(
+  projectId: string,
+  runId: string,
+  unit: number,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getModelRunTile>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getModelRunTile>>,
+          TError,
+          Awaited<ReturnType<typeof getModelRunTile>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetModelRunTile<
+  TData = Awaited<ReturnType<typeof getModelRunTile>>,
+  TError = Problem,
+>(
+  projectId: string,
+  runId: string,
+  unit: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getModelRunTile>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getModelRunTile>>,
+          TError,
+          Awaited<ReturnType<typeof getModelRunTile>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetModelRunTile<
+  TData = Awaited<ReturnType<typeof getModelRunTile>>,
+  TError = Problem,
+>(
+  projectId: string,
+  runId: string,
+  unit: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getModelRunTile>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Model Run Tile
+ */
+
+export function useGetModelRunTile<
+  TData = Awaited<ReturnType<typeof getModelRunTile>>,
+  TError = Problem,
+>(
+  projectId: string,
+  runId: string,
+  unit: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getModelRunTile>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetModelRunTileQueryOptions(projectId, runId, unit, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
 export type listNotificationPreferencesResponse200 = {
   data: Preference[];
   status: 200;
@@ -22376,6 +22592,368 @@ export function useGetCellSummary<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getGetCellSummaryQueryOptions(resultSetId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type getHeatmapResponse200 = {
+  data: HeatmapFacts;
+  status: 200;
+};
+
+export type getHeatmapResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getHeatmapResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getHeatmapResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getHeatmapResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getHeatmapResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getHeatmapResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getHeatmapResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getHeatmapResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getHeatmapResponseSuccess = getHeatmapResponse200 & {
+  headers: Headers;
+};
+export type getHeatmapResponseError = (
+  | getHeatmapResponse400
+  | getHeatmapResponse401
+  | getHeatmapResponse403
+  | getHeatmapResponse404
+  | getHeatmapResponse409
+  | getHeatmapResponse422
+  | getHeatmapResponse429
+  | getHeatmapResponse500
+) & {
+  headers: Headers;
+};
+
+export type getHeatmapResponse = getHeatmapResponseSuccess | getHeatmapResponseError;
+
+export const getGetHeatmapUrl = (resultSetId: string) => {
+  return `/api/result-sets/${resultSetId}/heatmap`;
+};
+
+/**
+ * @summary Get Heatmap
+ */
+export const getHeatmap = async (
+  resultSetId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getHeatmapResponse> => {
+  return apiFetch<getHeatmapResponse>(getGetHeatmapUrl(resultSetId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetHeatmapQueryKey = (resultSetId: string) => {
+  return [`/api/result-sets/${resultSetId}/heatmap`] as const;
+};
+
+export const getGetHeatmapQueryOptions = <
+  TData = Awaited<ReturnType<typeof getHeatmap>>,
+  TError = Problem,
+>(
+  resultSetId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getHeatmap>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetHeatmapQueryKey(resultSetId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getHeatmap>>> = ({ signal }) =>
+    getHeatmap(resultSetId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: resultSetId !== null && resultSetId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getHeatmap>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetHeatmapQueryResult = NonNullable<Awaited<ReturnType<typeof getHeatmap>>>;
+export type GetHeatmapQueryError = Problem;
+
+export function useGetHeatmap<TData = Awaited<ReturnType<typeof getHeatmap>>, TError = Problem>(
+  resultSetId: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getHeatmap>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getHeatmap>>,
+          TError,
+          Awaited<ReturnType<typeof getHeatmap>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetHeatmap<TData = Awaited<ReturnType<typeof getHeatmap>>, TError = Problem>(
+  resultSetId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getHeatmap>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getHeatmap>>,
+          TError,
+          Awaited<ReturnType<typeof getHeatmap>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetHeatmap<TData = Awaited<ReturnType<typeof getHeatmap>>, TError = Problem>(
+  resultSetId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getHeatmap>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Heatmap
+ */
+
+export function useGetHeatmap<TData = Awaited<ReturnType<typeof getHeatmap>>, TError = Problem>(
+  resultSetId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getHeatmap>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetHeatmapQueryOptions(resultSetId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type getHeatmapGridResponse200 = {
+  data: Blob;
+  status: 200;
+};
+
+export type getHeatmapGridResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getHeatmapGridResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getHeatmapGridResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getHeatmapGridResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getHeatmapGridResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getHeatmapGridResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getHeatmapGridResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getHeatmapGridResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getHeatmapGridResponseSuccess = getHeatmapGridResponse200 & {
+  headers: Headers;
+};
+export type getHeatmapGridResponseError = (
+  | getHeatmapGridResponse400
+  | getHeatmapGridResponse401
+  | getHeatmapGridResponse403
+  | getHeatmapGridResponse404
+  | getHeatmapGridResponse409
+  | getHeatmapGridResponse422
+  | getHeatmapGridResponse429
+  | getHeatmapGridResponse500
+) & {
+  headers: Headers;
+};
+
+export type getHeatmapGridResponse = getHeatmapGridResponseSuccess | getHeatmapGridResponseError;
+
+export const getGetHeatmapGridUrl = (resultSetId: string) => {
+  return `/api/result-sets/${resultSetId}/heatmap/grid`;
+};
+
+/**
+ * @summary Get Heatmap Grid
+ */
+export const getHeatmapGrid = async (
+  resultSetId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getHeatmapGridResponse> => {
+  return apiFetch<getHeatmapGridResponse>(getGetHeatmapGridUrl(resultSetId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetHeatmapGridQueryKey = (resultSetId: string) => {
+  return [`/api/result-sets/${resultSetId}/heatmap/grid`] as const;
+};
+
+export const getGetHeatmapGridQueryOptions = <
+  TData = Awaited<ReturnType<typeof getHeatmapGrid>>,
+  TError = Problem,
+>(
+  resultSetId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getHeatmapGrid>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetHeatmapGridQueryKey(resultSetId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getHeatmapGrid>>> = ({ signal }) =>
+    getHeatmapGrid(resultSetId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: resultSetId !== null && resultSetId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getHeatmapGrid>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetHeatmapGridQueryResult = NonNullable<Awaited<ReturnType<typeof getHeatmapGrid>>>;
+export type GetHeatmapGridQueryError = Problem;
+
+export function useGetHeatmapGrid<
+  TData = Awaited<ReturnType<typeof getHeatmapGrid>>,
+  TError = Problem,
+>(
+  resultSetId: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getHeatmapGrid>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getHeatmapGrid>>,
+          TError,
+          Awaited<ReturnType<typeof getHeatmapGrid>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetHeatmapGrid<
+  TData = Awaited<ReturnType<typeof getHeatmapGrid>>,
+  TError = Problem,
+>(
+  resultSetId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getHeatmapGrid>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getHeatmapGrid>>,
+          TError,
+          Awaited<ReturnType<typeof getHeatmapGrid>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetHeatmapGrid<
+  TData = Awaited<ReturnType<typeof getHeatmapGrid>>,
+  TError = Problem,
+>(
+  resultSetId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getHeatmapGrid>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Heatmap Grid
+ */
+
+export function useGetHeatmapGrid<
+  TData = Awaited<ReturnType<typeof getHeatmapGrid>>,
+  TError = Problem,
+>(
+  resultSetId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getHeatmapGrid>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetHeatmapGridQueryOptions(resultSetId, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;

@@ -64,6 +64,7 @@ import { SharedCursorLayer } from "../presence/live-cursor.tsx";
 import { registerStageEngine } from "../presence/stage-engines.ts";
 import { AddResultSet } from "../results/add-result-set.tsx";
 import type { ParsedResults, Placement } from "../results/geojson-placement.ts";
+import { HeatmapLayers, useHeatmapChoices } from "../results/heatmap-layer.tsx";
 import { PreviewLayer } from "../results/preview-layer.tsx";
 import { ResultSetLayers } from "../results/result-set-layers.tsx";
 import { areaRoleText, areaRows } from "../screens/viewer/area-nav.ts";
@@ -82,6 +83,7 @@ import { ObjectDrawLayer } from "./object-draw-layer.tsx";
 import { describeOpenFailure, type OpenFailure } from "./open-failure.ts";
 import { OutlineLayer } from "./outline-layer.tsx";
 import { type OutlineModeChoice, outlineModeChoices, outlineModeLabels } from "./outline-mode.ts";
+import { RunStreamLayer } from "./run-stream-layer.tsx";
 import type { SlideAreaEntry } from "./slide-areas.ts";
 import { useSlideBrightness } from "./slide-brightness.ts";
 import { useSlideCoverage } from "./slide-coverage.ts";
@@ -314,6 +316,7 @@ function OpenedSlide({
   const restingTool: ViewerTool = setup.restingTool;
   const [tool, setTool] = useState<ViewerTool>(restingTool);
   const [addingResults, setAddingResults] = useState(false);
+  const heatmapChoices = useHeatmapChoices();
   const [resultPreview, setResultPreview] = useState<{
     results: ParsedResults;
     placement: Placement;
@@ -747,6 +750,20 @@ function OpenedSlide({
               onDocumentChange={setAnnotations}
             />
             <ProposalLayer engine={session.engine} stage={hostNode} proposals={proposals.pending} />
+            <HeatmapLayers
+              engine={session.engine}
+              stage={hostNode}
+              slideId={slideId}
+              choices={heatmapChoices}
+            />
+            {workspace === "annotate" ? (
+              <RunStreamLayer
+                key={slideId}
+                engine={session.engine}
+                projectId={projectId}
+                slideId={slideId}
+              />
+            ) : null}
             {resultPreview === null ? null : (
               <PreviewLayer
                 engine={session.engine}
@@ -846,6 +863,7 @@ function OpenedSlide({
                         slideId={slideId}
                         adding={addingResults}
                         onAdd={() => setAddingResults(true)}
+                        heatmaps={heatmapChoices}
                       />
                     )
                   }
@@ -866,7 +884,7 @@ function OpenedSlide({
                 document={annotations}
                 micronsPerPixel={session.engine.getSlide()?.micronsPerPixel ?? null}
                 onRemove={(id) =>
-                  saved.apply(deleteShapes(annotations, [id]).document, "Delete shape")
+                  saved.apply(deleteShapes(annotations, [id]).document, t`Delete shape`)
                 }
               />
               {annotations.shapes.size > 0 ? (
@@ -877,7 +895,7 @@ function OpenedSlide({
                     const count = annotations.shapes.size;
                     if (needsClearConfirmation(count) && !window.confirm(clearPrompt(count)))
                       return;
-                    saved.apply(clearAll(annotations).document, "Clear all");
+                    saved.apply(clearAll(annotations).document, t`Clear all`);
                   }}
                 >
                   <Trans>Clear all</Trans>

@@ -21,5 +21,5 @@ A heatmap upload (`.png`, `.tif`, `.tiff`) was checked against its slide and the
 ## Consequences
 
 - One object per heatmap is cheap and matches the engine's grid. A very large heatmap is fetched whole, so a later task may tile it if real files grow past a few megabytes.
-- The uploader can accept only the first guess. Picking another guess needs a choice field in `ImportChoices`.
-- The viewer does not yet fetch `heatmap.json` or draw imported heatmaps. That wiring is a follow-up.
+- The uploader can pick any guess. `ImportChoices` has `heatmap_level`, checked against the guesses the check offered, and each guess is shown with its tissue share. Without a choice the first guess is taken.
+- The viewer draws imported heatmaps (RSET-014, imported heatmaps on the slide). `GET /api/result-sets/{id}/heatmap` serves the facts and `/heatmap/grid` serves the gzip grid. The layer uses the colormaps of ADR 0158 and has a colour map choice and a show switch in Layers. The slide camera has no rotation, so the layer and the result preview need none.

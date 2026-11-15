@@ -7,9 +7,56 @@ const blindedSlide = "00000000-0000-4000-8005-000000000001";
 const budgetMs = 300;
 const leaderSteps = 5;
 
-test.use({ viewport: { width: 1440, height: 900 } });
+test.use({ viewport: { width: 1024, height: 640 } });
 
 type Sample = { at: number; camera: string };
+type Relayed = {
+  type?: unknown;
+  frame?: { type?: unknown; x?: unknown; y?: unknown; zoom?: unknown };
+};
+type RelayStamps = { relaySent: Sample[]; relayApplied: Sample[] };
+
+function stampRelayedViews() {
+  const stamps: RelayStamps = { relaySent: [], relayApplied: [] };
+  Object.assign(window, stamps);
+  const viewCameraOf = (data: Relayed) => {
+    const frame = data?.frame;
+    if (data?.type !== "relay" || frame?.type !== "view") return null;
+    const { x, y, zoom } = frame;
+    if (typeof x !== "number" || typeof y !== "number" || typeof zoom !== "number") return null;
+    return `${x.toFixed(3)},${y.toFixed(3)},${zoom.toFixed(4)}`;
+  };
+  const Native = window.BroadcastChannel;
+  window.BroadcastChannel = class extends Native {
+    override postMessage(data: Relayed) {
+      const camera = viewCameraOf(data);
+      if (camera !== null) stamps.relaySent.push({ at: Date.now(), camera });
+      super.postMessage(data);
+    }
+    override get onmessage() {
+      return super.onmessage;
+    }
+    override set onmessage(handler: ((event: MessageEvent) => void) | null) {
+      super.onmessage =
+        handler === null
+          ? null
+          : (event: MessageEvent<Relayed>) => {
+              const camera = viewCameraOf(event.data);
+              if (camera !== null) stamps.relayApplied.push({ at: Date.now(), camera });
+              handler.call(this, event);
+            };
+    }
+  };
+}
+
+const stampsOf = (page: Page) =>
+  page.evaluate((): RelayStamps => {
+    const { relaySent, relayApplied } = window as unknown as RelayStamps;
+    return { relaySent, relayApplied };
+  });
+
+const firstAt = (samples: Sample[], camera: string) =>
+  samples.find((sample) => sample.camera === camera)?.at;
 
 async function openAs(page: Page, persona: string, slide = byHand, task?: string) {
   const inTask = task === undefined ? "" : `task=${task}&`;
@@ -47,6 +94,7 @@ test("a follower's camera tracks the shared view within 300 ms until the followe
   context,
 }) => {
   test.setTimeout(90_000);
+  await context.addInitScript(stampRelayedViews);
   const lenka = await context.newPage();
   const anna = await context.newPage();
   const lenkaHost = await openAs(lenka, "LM");
@@ -81,12 +129,25 @@ test("a follower's camera tracks the shared view within 300 ms until the followe
   const followed = await samplesOf(lenka);
   const moves = led.filter((sample) => sample.at > leadingFrom);
   expect(moves.length).toBeGreaterThan(3);
-  const lags = moves.flatMap((move) => {
-    const arrival = followed.find((sample) => sample.camera === move.camera);
-    return arrival === undefined ? [] : [arrival.at - move.at];
+  const { relaySent } = await stampsOf(anna);
+  const { relayApplied } = await stampsOf(lenka);
+  const legs = moves.flatMap((move) => {
+    const shown = firstAt(followed, move.camera);
+    const sentAt = firstAt(relaySent, move.camera);
+    const appliedAt = firstAt(relayApplied, move.camera);
+    if (shown === undefined || sentAt === undefined || appliedAt === undefined) return [];
+    return [
+      {
+        total: shown - move.at,
+        changeToSend: sentAt - move.at,
+        sendToApply: appliedAt - sentAt,
+        applyToShown: shown - appliedAt,
+      },
+    ];
   });
-  expect(lags.length).toBeGreaterThan(3);
-  expect(Math.max(...lags)).toBeLessThan(budgetMs);
+  expect(legs.length).toBeGreaterThan(3);
+  const slowest = legs.reduce((worst, leg) => (leg.total > worst.total ? leg : worst));
+  expect(slowest.total, `slowest follow step ${JSON.stringify(slowest)}`).toBeLessThan(budgetMs);
   const last = led.at(-1);
   const landed = followed.find((sample) => sample.camera === last?.camera);
   expect((landed?.at ?? Number.POSITIVE_INFINITY) - (last?.at ?? 0)).toBeLessThan(budgetMs);

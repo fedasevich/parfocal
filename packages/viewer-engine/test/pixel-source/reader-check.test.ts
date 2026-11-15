@@ -24,6 +24,7 @@ import {
   type SlideFormatId,
   type SlideIndex,
 } from "../../src/index.ts";
+import { retryingFetch } from "./retrying-fetch.ts";
 import { serve } from "./serve.ts";
 
 const served = await serve({ "/synthetic": syntheticDir, "/cache": fixturesDir() });
@@ -68,7 +69,13 @@ async function open(entry: Slide, withIndex = true): Promise<PixelSource> {
   const url = served.url(`/${entry.cached ? "cache" : "synthetic"}/${entry.name}`);
   const index = entry.indexed && withIndex ? { index: sidecar(entry.name) } : {};
   const opener = entry.formatId === "hamamatsu-ndpi" ? openNdpiSource : openTiffSource;
-  return opener({ formatId: entry.formatId, url, nativeJpeg: "off", ...index });
+  return opener({
+    formatId: entry.formatId,
+    url,
+    fetch: retryingFetch(entry.name),
+    nativeJpeg: "off",
+    ...index,
+  });
 }
 
 function reference(name: string): ReferenceWindow[] {

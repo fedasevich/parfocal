@@ -65,6 +65,10 @@ msgstr ""
 msgid " · signed {0}"
 msgstr ""
 
+#: src/screens/viewer/full-viewer.tsx
+msgid " · the result this task checks"
+msgstr ""
+
 #: ../../packages/ui/src/components/viewer-tools.tsx
 msgid " (offline)"
 msgstr ""
@@ -259,6 +263,11 @@ msgstr ""
 
 #: src/screens/admin/connect-model.tsx
 msgid "\"version\""
+msgstr ""
+
+#. placeholder {0}: learnerView.examples
+#: src/screens/viewer/full-viewer.tsx
+msgid "{0, plural, one {# example} other {# examples}}"
 msgstr ""
 
 #. placeholder {0}: counts.open
@@ -560,9 +569,27 @@ msgstr ""
 msgid "{0} cell"
 msgstr ""
 
+#. placeholder {0}: openCells.length
+#. placeholder {1}: openCells.length === 1 ? "" : "s"
+#. placeholder {2}: openCells.length === 1 ? "is" : "are"
+#: src/screens/viewer/full-viewer.tsx
+msgid "{0} cell{1} in the sample {2} still open"
+msgstr ""
+
 #. placeholder {0}: test.missing_geometry
 #: src/screens/admin/connect-model.tsx
 msgid "{0} cells came back without a <0>geometry</0>"
+msgstr ""
+
+#. placeholder {0}: openZoneCells.length
+#. placeholder {1}: openZone.name
+#: src/screens/viewer/full-viewer.tsx
+msgid "{0} cells in {1} marked agree"
+msgstr ""
+
+#. placeholder {0}: openCells.length
+#: src/screens/viewer/full-viewer.tsx
+msgid "{0} cells marked agree"
 msgstr ""
 
 #. placeholder {0}: zone.cells
@@ -797,6 +824,11 @@ msgstr ""
 msgid "{0} is signed out. It goes to the clinician."
 msgstr ""
 
+#. placeholder {0}: region.object
+#: src/screens/viewer/full-viewer.tsx
+msgid "{0} is still open"
+msgstr ""
+
 #. placeholder {0}: now.id
 #: src/screens/clinical-report/report-screen.tsx
 msgid "{0} is still the largest."
@@ -933,6 +965,12 @@ msgstr ""
 #. placeholder {2}: nameOf(adjudicatorId) ?? "the adjudicator"
 #: src/screens/disagreements/queue-screen.tsx
 msgid "{0} object{1} sent to {2}"
+msgstr ""
+
+#. placeholder {0}: counts.open
+#. placeholder {1}: counts.open === 1 ? " is" : "s are"
+#: src/screens/viewer/full-viewer.tsx
+msgid "{0} object{1} still open."
 msgstr ""
 
 #. placeholder {0}: summary.queue.left_open.length
@@ -1657,6 +1695,11 @@ msgstr ""
 msgid "{0}) · task {1}"
 msgstr ""
 
+#. placeholder {0}: Math.round(guess.tissue_share * 100)
+#: src/screens/upload/result-problems.tsx
+msgid "{0}% on tissue"
+msgstr ""
+
 #. placeholder {0}: overview.reviewed_percent
 #: src/screens/project/project-page.tsx
 msgid "{0}% reviewed"
@@ -1791,6 +1834,10 @@ msgstr ""
 msgid "{done} of {of} slides done"
 msgstr ""
 
+#: src/viewer/run-stream-layer.tsx
+msgid "{done} of {total} tiles, {drawn} objects"
+msgstr ""
+
 #: ../../packages/ui/src/components/team.tsx
 msgid "{done} slides already have {first}'s decisions. They stay under {first}'s name and the new reviewer starts fresh on them."
 msgstr ""
@@ -1877,6 +1924,10 @@ msgstr ""
 
 #: src/annotations/conflict-notice.tsx
 msgid "{more} more waiting."
+msgstr ""
+
+#: src/screens/viewer/full-viewer.tsx
+msgid "{object}: not a nucleus, counts as disagree"
 msgstr ""
 
 #: ../../packages/ui/src/components/gallery-tile.tsx
@@ -1982,6 +2033,10 @@ msgstr ""
 
 #: src/screens/clinical-report/cosign-screen.tsx
 msgid "{senderFirst} sees your changes and the note. He sends it again when it is fixed."
+msgstr ""
+
+#: src/screens/viewer/full-viewer.tsx
+msgid "{setName}, imported 12 Oct"
 msgstr ""
 
 #. placeholder {0}: changedCount ? t`your ${changedCount} changed key${changedCount > 1 ? "s" : ""}` : t`the default keys`
@@ -2724,6 +2779,10 @@ msgstr ""
 msgid "about {hours} h left"
 msgstr ""
 
+#: src/viewer/run-stream-layer.tsx
+msgid "about {minutes} min left"
+msgstr ""
+
 #: src/screens/my-work/to-review-tab.tsx
 msgid "about {rest} min left"
 msgstr ""
@@ -2876,6 +2935,10 @@ msgstr ""
 
 #: ../../packages/ui/src/components/shortcut-editor.tsx
 msgid "Add another key for this action"
+msgstr ""
+
+#: src/screens/viewer/full-viewer.tsx
+msgid "Add another result set"
 msgstr ""
 
 #. placeholder {0}: slide.label
@@ -3424,6 +3487,10 @@ msgstr ""
 
 #: src/screens/new-task/modals.tsx
 msgid "Answer in the preview"
+msgstr ""
+
+#: src/screens/viewer/full-viewer.tsx
+msgid "Answer it"
 msgstr ""
 
 #: src/screens/review/guided-review.tsx
@@ -4214,11 +4281,20 @@ msgid "Cancel <0/>"
 msgstr ""
 
 #: ../../packages/ui/src/components/annotate-task.tsx
+#: src/viewer/run-stream-layer.tsx
 msgid "Cancel run"
 msgstr ""
 
 #: src/screens/jobs/job-window-screen.tsx
 msgid "Cancel the run"
+msgstr ""
+
+#: src/viewer/run-stream-layer.tsx
+msgid "Cancelled. Kept {drawn} objects from {done} finished tiles"
+msgstr ""
+
+#: src/viewer/run-stream-layer.tsx
+msgid "Cancelling, keeping the finished tiles"
 msgstr ""
 
 #: ../../packages/ui/src/components/analysis-cards.tsx
@@ -4348,6 +4424,10 @@ msgstr ""
 
 #: src/screens/project/settings-zones.tsx
 msgid "Cells match when their centres are at most this many µm apart"
+msgstr ""
+
+#: src/screens/viewer/full-viewer.tsx
+msgid "Cells on {slideLabel}"
 msgstr ""
 
 #: ../../packages/ui/src/components/annotate-task.tsx
@@ -4965,6 +5045,11 @@ msgstr ""
 msgid "Colormap"
 msgstr ""
 
+#. placeholder {0}: set.name
+#: src/results/result-set-layers.tsx
+msgid "Colour map of {0}"
+msgstr ""
+
 #. placeholder {0}: row.name
 #: ../../packages/ui/src/components/viewer-tools.tsx
 msgid "Colour of {0}"
@@ -5041,8 +5126,16 @@ msgstr ""
 msgid "Compare with {0}, {1}"
 msgstr ""
 
+#: src/screens/viewer/full-viewer.tsx
+msgid "Compare with another set"
+msgstr ""
+
 #: ../../packages/ui/src/components/report-editor.tsx
 msgid "Compare with task"
+msgstr ""
+
+#: src/screens/viewer/full-viewer.tsx
+msgid "Compare with the AI"
 msgstr ""
 
 #: ../../packages/ui/src/components/visualize.tsx
@@ -5656,6 +5749,10 @@ msgstr ""
 msgid "Delete project"
 msgstr ""
 
+#: src/viewer/slide-stage.tsx
+msgid "Delete shape"
+msgstr ""
+
 #: ../../packages/ui/src/components/annotate-task.tsx
 #: ../../packages/ui/src/components/report-editor-pages.tsx
 #: src/screens/admin/deleted-projects.tsx
@@ -5883,6 +5980,10 @@ msgstr ""
 
 #: src/screens/input-traces/input-traces.tsx
 msgid "Download trackpad fixture"
+msgstr ""
+
+#: src/screens/viewer/full-viewer.tsx
+msgid "Downloaded the table as CSV with full IDs"
 msgstr ""
 
 #: src/screens/upload/formats-drawer.tsx
@@ -6910,6 +7011,10 @@ msgstr ""
 msgid "For the file formats, see"
 msgstr ""
 
+#: src/screens/viewer/full-viewer.tsx
+msgid "Forget"
+msgstr ""
+
 #: src/screens/developer/developer-screen.tsx
 msgid "Forget learned"
 msgstr ""
@@ -7101,10 +7206,12 @@ msgstr ""
 msgid "Go to"
 msgstr ""
 
+#. placeholder {0}: region.object
 #. placeholder {0}: stepLabel(data, issue.step)
 #. placeholder {0}: thread.anchor
 #: ../../packages/ui/src/components/comments-tab.tsx
 #: src/screens/clinical-report/report-screen.tsx
+#: src/screens/viewer/full-viewer.tsx
 msgid "Go to {0}"
 msgstr ""
 
@@ -7153,6 +7260,10 @@ msgstr ""
 
 #: src/screens/disagreements/queue-screen.tsx
 msgid "Go to sign-off"
+msgstr ""
+
+#: src/screens/viewer/full-viewer.tsx
+msgid "Go to the cells"
 msgstr ""
 
 #: src/screens/admin/people.tsx
@@ -7285,6 +7396,10 @@ msgstr ""
 
 #: src/screens/upload/result-problems.tsx
 msgid "Heatmap not kept"
+msgstr ""
+
+#: src/screens/upload/result-problems.tsx
+msgid "Heatmap scale guess"
 msgstr ""
 
 #: ../../packages/ui/src/components/icon.tsx
@@ -7583,6 +7698,10 @@ msgstr ""
 msgid "Import shortcuts file"
 msgstr ""
 
+#: src/screens/viewer/full-viewer.tsx
+msgid "Imported"
+msgstr ""
+
 #. placeholder {0}: set.source_file ?? "a file"
 #: src/screens/project/slides-tab.tsx
 msgid "imported from {0}"
@@ -7631,6 +7750,10 @@ msgstr ""
 
 #: src/screens/my-work/assigned-tab.tsx
 msgid "In review"
+msgstr ""
+
+#: src/screens/viewer/full-viewer.tsx
+msgid "In sets"
 msgstr ""
 
 #: src/screens/jobs/run-model-window.tsx
@@ -8201,6 +8324,10 @@ msgstr ""
 msgid "Learned"
 msgstr ""
 
+#: src/screens/viewer/full-viewer.tsx
+msgid "Learned on this slide"
+msgstr ""
+
 #: ../../packages/ui/src/components/annotate-task.tsx
 msgid "least sure first"
 msgstr ""
@@ -8311,6 +8438,12 @@ msgstr ""
 
 #: src/screens/project/case-slides-editor.tsx
 msgid "Level"
+msgstr ""
+
+#. placeholder {0}: guess.level
+#. placeholder {1}: guess.downsample
+#: src/screens/upload/result-problems.tsx
+msgid "Level {0}, scaled by {1}, {share}"
 msgstr ""
 
 #: src/screens/upload/check-step.tsx
@@ -8533,6 +8666,13 @@ msgstr ""
 
 #: src/screens/clinical-report/cosign-screen.tsx
 msgid "Locked as version 1. A change is an amendment with a reason."
+msgstr ""
+
+#. placeholder {0}: session.display?.task_code ?? "the task"
+#. placeholder {1}: setsLock.reason.charAt(0).toLowerCase()
+#. placeholder {2}: setsLock.reason.slice(1)
+#: src/screens/viewer/full-viewer.tsx
+msgid "Locked by {0}: {1}{2}"
 msgstr ""
 
 #: src/screens/admin/workspace-settings.tsx
@@ -9601,6 +9741,10 @@ msgstr ""
 msgid "No template"
 msgstr ""
 
+#: src/screens/upload/result-problems.tsx
+msgid "no tissue mask"
+msgstr ""
+
 #: src/screens/onboarding/setup-screen.tsx
 msgid "No title"
 msgstr ""
@@ -9688,6 +9832,7 @@ msgstr ""
 #: src/screens/admin/connect-model.tsx
 #: src/screens/admin/people.tsx
 #: src/screens/my-work/all-slides-tab.tsx
+#: src/screens/viewer/full-viewer.tsx
 msgid "None yet"
 msgstr ""
 
@@ -9701,6 +9846,10 @@ msgstr ""
 
 #: ../../packages/ui/src/components/auth.tsx
 msgid "Not {first}"
+msgstr ""
+
+#: src/screens/viewer/full-viewer.tsx
+msgid "Not a cell"
 msgstr ""
 
 #: ../../packages/ui/src/components/report-editor-pages.tsx
@@ -9843,6 +9992,7 @@ msgstr ""
 
 #: ../../packages/ui/src/components/review-popovers.tsx
 #: src/screens/shared-report/shared-report-screen.tsx
+#: src/screens/viewer/full-viewer.tsx
 msgid "Not sure"
 msgstr ""
 
@@ -10038,6 +10188,10 @@ msgstr ""
 
 #: src/screens/viewer/full-viewer.tsx
 msgid "Nothing to decide here yet. {slideLabel} has no {setName} result in {taskCodeOrThis}."
+msgstr ""
+
+#: src/screens/viewer/full-viewer.tsx
+msgid "Nothing to decide on this slide"
 msgstr ""
 
 #: src/screens/disagreements/queue-screen.tsx
@@ -10441,6 +10595,7 @@ msgstr ""
 #: src/screens/my-work/to-review-tab.tsx
 #: src/screens/new-task/steps.tsx
 #: src/screens/project/slides-tab.tsx
+#: src/screens/viewer/full-viewer.tsx
 #: src/shell/jobs-tray.tsx
 msgid "Open"
 msgstr ""
@@ -10496,6 +10651,10 @@ msgstr ""
 msgid "Open on the slide"
 msgstr ""
 
+#: src/screens/viewer/full-viewer.tsx
+msgid "Open report"
+msgstr ""
+
 #: src/shell/palette-labels.tsx
 msgid "Open Settings"
 msgstr ""
@@ -10516,6 +10675,10 @@ msgstr ""
 
 #: ../../packages/ui/src/components/review-popovers.tsx
 msgid "Open the case"
+msgstr ""
+
+#: src/screens/viewer/full-viewer.tsx
+msgid "Open the clinical report of this case"
 msgstr ""
 
 #: src/screens/sign-off/sign-off-screen.tsx
@@ -10605,6 +10768,10 @@ msgstr ""
 
 #: src/screens/admin/sections.tsx
 msgid "Opens the API reference in the docs (mock)"
+msgstr ""
+
+#: src/screens/viewer/full-viewer.tsx
+msgid "Opens the whole slide on the second monitor"
 msgstr ""
 
 #: ../../packages/ui/src/components/report-editor-pages.tsx
@@ -11341,12 +11508,17 @@ msgstr ""
 #: src/screens/annotate-task/new-annotate-task.tsx
 #: src/screens/onboarding/setup-screen.tsx
 #: src/screens/settings/shortcuts-section.tsx
+#: src/screens/viewer/full-viewer.tsx
 msgid "Preset"
 msgstr ""
 
 #. placeholder {0}: shortcutPresetNames[nextPreset]
 #: src/screens/settings/shortcuts-section.tsx
 msgid "Preset {0}. Your own changes stay on top of it."
+msgstr ""
+
+#: src/screens/viewer/full-viewer.tsx
+msgid "Preset {name} saved."
 msgstr ""
 
 #: src/shell/palette-labels.tsx
@@ -11575,6 +11747,11 @@ msgstr ""
 
 #: src/screens/project/task-settings-drawer.tsx
 msgid "Question"
+msgstr ""
+
+#. placeholder {0}: position + 1
+#: src/screens/viewer/full-viewer.tsx
+msgid "Question {0} is not answered"
 msgstr ""
 
 #. placeholder {0}: step + 1
@@ -12579,6 +12756,14 @@ msgstr ""
 msgid "Run a model on them now, or leave them and add results later."
 msgstr ""
 
+#: src/screens/viewer/full-viewer.tsx
+msgid "Run a model on this slide"
+msgstr ""
+
+#: src/screens/viewer/full-viewer.tsx
+msgid "Run again"
+msgstr ""
+
 #: ../../packages/ui/src/components/annotate-task.tsx
 msgid "Run cancelled, finished tiles kept"
 msgstr ""
@@ -12593,6 +12778,10 @@ msgstr ""
 
 #: ../../packages/ui/src/components/annotate-task.tsx
 msgid "Run finished"
+msgstr ""
+
+#: src/screens/viewer/full-viewer.tsx
+msgid "Run here"
 msgstr ""
 
 #: src/screens/project/slides-tab.tsx
@@ -12817,6 +13006,11 @@ msgstr ""
 msgid "Scale"
 msgstr ""
 
+#. placeholder {0}: guess.downsample
+#: src/screens/upload/result-problems.tsx
+msgid "Scaled by {0}, {share}"
+msgstr ""
+
 #: ../../packages/ui/src/components/auth.tsx
 msgid "Scan this with the phone or tablet that has your passkey for parfocal.eu."
 msgstr ""
@@ -12835,6 +13029,7 @@ msgstr ""
 
 #: ../../packages/ui/src/components/display-panel.tsx
 #: src/screens/new-task/steps.tsx
+#: src/screens/viewer/full-viewer.tsx
 msgid "Score"
 msgstr ""
 
@@ -13354,6 +13549,11 @@ msgstr ""
 msgid "Show from"
 msgstr ""
 
+#. placeholder {0}: set.name
+#: src/results/result-set-layers.tsx
+msgid "Show heatmap {0}"
+msgstr ""
+
 #: src/screens/clinical-report/report-screen.tsx
 msgid "Show me"
 msgstr ""
@@ -13673,8 +13873,16 @@ msgstr ""
 msgid "Signed off {signedOn}"
 msgstr ""
 
+#: src/screens/viewer/full-viewer.tsx
+msgid "Signed off 15 Oct. Changes need an amendment."
+msgstr ""
+
 #: ../../packages/ui/src/components/report-editor-pages.tsx
 msgid "Signed off by: ____________  Date: ________"
+msgstr ""
+
+#: src/screens/viewer/full-viewer.tsx
+msgid "Signed off. Ask the researcher to amend."
 msgstr ""
 
 #. placeholder {0}: signature.at
@@ -13742,6 +13950,7 @@ msgstr ""
 
 #: ../../packages/ui/src/components/clinical-report.tsx
 #: src/screens/clinical-report/modals.tsx
+#: src/screens/viewer/full-viewer.tsx
 msgid "Size"
 msgstr ""
 
@@ -14343,6 +14552,7 @@ msgstr ""
 #: ../../packages/ui/src/components/analysis-cards.tsx
 #: ../../packages/ui/src/components/review-top-bar.tsx
 #: ../../packages/ui/src/components/systematic-scan.tsx
+#: src/screens/viewer/full-viewer.tsx
 msgid "Submit"
 msgstr ""
 
@@ -14519,6 +14729,7 @@ msgstr ""
 
 #: ../../packages/ui/src/components/display-panel.tsx
 #: src/screens/settings/settings-screen.tsx
+#: src/screens/viewer/full-viewer.tsx
 msgid "Task default"
 msgstr ""
 
@@ -14689,6 +14900,10 @@ msgstr ""
 
 #: src/screens/review/guided-review.tsx
 msgid "The AI found this. It is outlined in white."
+msgstr ""
+
+#: src/screens/viewer/full-viewer.tsx
+msgid "The AI is still reading"
 msgstr ""
 
 #: ../../packages/ui/src/components/findings-panel.tsx
@@ -14991,6 +15206,10 @@ msgstr ""
 msgid "The objects of finished tiles are in the layer and join the check scope."
 msgstr ""
 
+#: src/screens/viewer/full-viewer.tsx
+msgid "the other set"
+msgstr ""
+
 #: src/screens/admin/connect-model.tsx
 msgid "The outlines your server sends back show here, on the sample tile"
 msgstr ""
@@ -15137,6 +15356,10 @@ msgstr ""
 msgid "The reviewed layer, as the reviewer edits it"
 msgstr ""
 
+#: src/screens/viewer/full-viewer.tsx
+msgid "The reviewed layer, as you edit it"
+msgstr ""
+
 #: src/screens/admin/decision-preset.tsx
 msgid "The reviewer picks the class without seeing the AI's, then Parfocal compares."
 msgstr ""
@@ -15148,6 +15371,10 @@ msgstr ""
 #. placeholder {0}: addingSet.name
 #: src/viewer/annotate-task-panel.tsx
 msgid "The run {0} joins this slide"
+msgstr ""
+
+#: src/viewer/run-stream-layer.tsx
+msgid "The run could not stream onto this slide"
 msgstr ""
 
 #: src/screens/onboarding/setup-screen.tsx
@@ -15285,6 +15512,11 @@ msgstr ""
 
 #: src/screens/onboarding/sign-in-forms.tsx
 msgid "The two passwords are not the same."
+msgstr ""
+
+#. placeholder {0}: learnerView.corrections
+#: src/screens/viewer/full-viewer.tsx
+msgid "The typer learned from your {0} corrections and changed {changedNow} similar cells. They are in a new zone."
 msgstr ""
 
 #: src/screens/upload/live-wizard.tsx
@@ -15428,6 +15660,10 @@ msgstr ""
 msgid "This page does not exist, or it was moved or deleted."
 msgstr ""
 
+#: src/screens/viewer/full-viewer.tsx
+msgid "This part of the slide can't be read yet"
+msgstr ""
+
 #: src/screens/onboarding/invite-screen.tsx
 msgid "This project is de-identified. You will not see patient names or numbers."
 msgstr ""
@@ -15508,6 +15744,10 @@ msgstr ""
 
 #: src/screens/review/comments-on-ids.tsx
 msgid "Thread on {anchor}"
+msgstr ""
+
+#: src/screens/viewer/full-viewer.tsx
+msgid "Thread pinned on the slide."
 msgstr ""
 
 #: ../../packages/ui/src/components/thread-popover.tsx
@@ -15737,6 +15977,7 @@ msgstr ""
 #: src/screens/home/announcements.tsx
 #: src/screens/home/home-screen.tsx
 #: src/screens/review/guided-review.tsx
+#: src/screens/viewer/full-viewer.tsx
 #: src/shell/issue-pages.tsx
 #: src/viewer/slide-stage.tsx
 msgid "Try again"
@@ -15939,7 +16180,6 @@ msgid "Under the slide"
 msgstr ""
 
 #: ../../packages/ui/src/components/clinical-report.tsx
-#: ../../packages/ui/src/components/findings-panel.tsx
 #: ../../packages/ui/src/components/icon.tsx
 #: ../../packages/ui/src/components/undo-toast.tsx
 #: src/screens/clinical-report/parts.tsx
@@ -15947,6 +16187,11 @@ msgstr ""
 #: src/screens/upload/live-wizard.tsx
 #: src/screens/upload/progress-step.tsx
 msgid "Undo"
+msgstr ""
+
+#: ../../packages/ui/src/components/findings-panel.tsx
+#: src/screens/viewer/full-viewer.tsx
+msgid "Undo all"
 msgstr ""
 
 #: src/annotations/layers-panel.tsx
@@ -16330,6 +16575,10 @@ msgstr ""
 
 #: src/screens/clinical-report/modals.tsx
 msgid "Waiting for single sign-on…"
+msgstr ""
+
+#: src/viewer/run-stream-layer.tsx
+msgid "Waiting for the first tile"
 msgstr ""
 
 #: src/popout/popout-screen.tsx
@@ -16728,6 +16977,10 @@ msgstr ""
 msgid "Whole-slide job"
 msgstr ""
 
+#: src/viewer/run-stream-layer.tsx
+msgid "Whole-slide run"
+msgstr ""
+
 #: ../../packages/ui/src/components/lockable-row.tsx
 msgid "Why it is locked"
 msgstr ""
@@ -17015,6 +17268,10 @@ msgstr ""
 
 #: ../../packages/ui/src/components/area-call.tsx
 msgid "Your call on {area}"
+msgstr ""
+
+#: src/screens/viewer/full-viewer.tsx
+msgid "Your decision"
 msgstr ""
 
 #: src/screens/review/comments-on-ids.tsx

@@ -69,7 +69,16 @@ export interface SyntheticSlide {
   readonly chunks: number;
   readonly vertices: number;
   readonly summary: Uint8Array<ArrayBuffer>;
+  readonly tiles: readonly SyntheticTile[];
   chunk(index: number): Uint8Array<ArrayBuffer>;
+}
+
+export interface SyntheticTile {
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+  readonly count: number;
 }
 
 function random(seed: number): () => number {
@@ -239,6 +248,13 @@ export function syntheticSlide(options: SyntheticOptions): SyntheticSlide {
     chunks: entries.length,
     vertices: count * sides,
     summary,
+    tiles: entries.map((entry) => ({
+      x: entry.tile[0] ?? 0,
+      y: entry.tile[1] ?? 0,
+      width: entry.tile[2] ?? 0,
+      height: entry.tile[3] ?? 0,
+      count: entry.count,
+    })),
     chunk,
   };
 }

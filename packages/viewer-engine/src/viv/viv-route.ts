@@ -24,6 +24,7 @@ import {
 import type { EngineContainer, OverlayLayer, RendererRoute } from "../engine/types.ts";
 import { cameraViewRect, type ViewRect } from "../overlay/cull-grid.ts";
 import { createOverlayLayerBuilder } from "../overlay/deck/overlay-layers.ts";
+import { nucleiWarmupLayers } from "../overlay/deck/shader-warmup.ts";
 import type { DecodeReport } from "../pixel-source/types.ts";
 import { absoluteUrl } from "../pixel-source/url.ts";
 import { observeCanvasSize, observePixelRatio } from "./canvas-observers.ts";
@@ -219,6 +220,9 @@ export function createVivRoute(
   let renderedChanges = -1;
   let destroyed = false;
   let failure: GpuUnrecoverableError | null = null;
+  let warmup: "cold" | "warming" | "done" = "cold";
+  let warmLayers: Layer[] = [];
+  let afterRender = () => {};
 
   const deviceIsLost = (candidate: Deck<OrthographicView>): boolean => {
     const device = (candidate as unknown as { device?: { isLost?: boolean } | null }).device;
@@ -246,6 +250,7 @@ export function createVivRoute(
       },
       onAfterRender: () => {
         renderedChanges = changes;
+        afterRender();
       },
     });
     return created;
@@ -306,8 +311,41 @@ export function createVivRoute(
     const rect = viewRect();
     overlayLod = overlayBuilder.lodKey(overlays, pixelsPerUnit, rect);
     overlayLayers = overlayBuilder.build(overlays, pixelsPerUnit, rect);
-    if (gpuUsable()) deck.setProps({ layers: shown ? [shown.layer, ...overlayLayers] : [] });
+    if (gpuUsable()) deck.setProps({ layers: stackedLayers() });
     changed();
+  };
+
+  const stackedLayers = (): Layer[] =>
+    shown ? [shown.layer, ...overlayLayers, ...warmLayers] : [];
+
+  afterRender = () => {
+    if (warmup === "warming") {
+      if (warmLayers.length === 0) return;
+      warmup = "done";
+      warmLayers = [];
+      setTimeout(() => {
+        if (!gpuUsable()) return;
+        deck.setProps({ layers: stackedLayers() });
+        changed();
+      }, 0);
+      return;
+    }
+    if (warmup !== "cold" || shown === null) return;
+    warmup = "warming";
+    whenIdle().then(
+      () => {
+        if (!gpuUsable() || shown === null) {
+          warmup = "cold";
+          return;
+        }
+        warmLayers = nucleiWarmupLayers();
+        deck.setProps({ layers: stackedLayers() });
+        changed();
+      },
+      () => {
+        warmup = "cold";
+      },
+    );
   };
 
   const slideLayer = (current: Pick<Shown, "slide" | "rgb" | "channelLevels">): Layer => {
