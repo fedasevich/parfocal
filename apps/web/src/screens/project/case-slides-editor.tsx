@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   type CaseDetail,
   changeSlideDetails,
@@ -57,6 +58,8 @@ function EditorBody({
   clinical: boolean;
   onClose: () => void;
 }) {
+  const { t } = useLingui();
+
   const queryClient = useQueryClient();
   const [drafts, setDrafts] = useState<SlideDraft[]>(() => detail.slides.map(draftOf));
   const [note, setNote] = useState(detail.clinical_note ?? "");
@@ -68,7 +71,7 @@ function EditorBody({
     slideErrors(draft, drafts).map((text, index) => ({
       id: `${draft.id}-${index}`,
       text,
-      goTo: "Go to the slide",
+      goTo: t`Go to the slide`,
     })),
   );
   const edit = (id: string, patch: Partial<SlideDraft>) =>
@@ -102,17 +105,17 @@ function EditorBody({
       onOpenChange={(next) => {
         if (!next) onClose();
       }}
-      title="Edit slides"
-      subtitle={`Case ${caseLabel}. Labels, stains, blocks, levels and the order of the slides.`}
+      title={t`Edit slides`}
+      subtitle={t`Case ${caseLabel}. Labels, stains, blocks, levels and the order of the slides.`}
       width={560}
-      hint={failure ?? "Every change is kept in the audit log."}
-      primaryLabel="Save slides"
+      hint={failure ?? t`Every change is kept in the audit log.`}
+      primaryLabel={t`Save slides`}
       primaryBusy={busy}
       blockers={tried ? blockers : []}
-      blockersTitle="Before you can save"
+      blockersTitle={t`Before you can save`}
       onPrimary={() => void save()}
     >
-      <ol aria-label="Slides in order" className="grid gap-2">
+      <ol aria-label={t`Slides in order`} className="grid gap-2">
         {drafts.map((draft, index) => (
           <li
             key={draft.id}
@@ -123,7 +126,7 @@ function EditorBody({
               <Button
                 size="icon-xs"
                 variant="ghost"
-                aria-label={`Move ${draft.label} up`}
+                aria-label={t`Move ${draft.label} up`}
                 disabled={index === 0}
                 onClick={() => setDrafts(moveSlide(drafts, draft.id, -1))}
               >
@@ -132,7 +135,7 @@ function EditorBody({
               <Button
                 size="icon-xs"
                 variant="ghost"
-                aria-label={`Move ${draft.label} down`}
+                aria-label={t`Move ${draft.label} down`}
                 disabled={index === drafts.length - 1}
                 onClick={() => setDrafts(moveSlide(drafts, draft.id, 1))}
               >
@@ -140,37 +143,39 @@ function EditorBody({
               </Button>
             </span>
             <Input
-              aria-label={`Label of slide ${index + 1}`}
+              aria-label={t`Label of slide ${index + 1}`}
               value={draft.label}
               maxLength={200}
               className="h-7 text-body-sm"
               onChange={(event) => edit(draft.id, { label: event.target.value })}
             />
             <Input
-              aria-label={`Stain of slide ${index + 1}`}
+              aria-label={t`Stain of slide ${index + 1}`}
               value={draft.stain}
               maxLength={60}
               className="h-7 text-body-sm"
               onChange={(event) => edit(draft.id, { stain: event.target.value })}
             />
             <select
-              aria-label={`Block of slide ${index + 1}`}
+              aria-label={t`Block of slide ${index + 1}`}
               value={draft.blockId ?? ""}
               className={fieldClass}
               onChange={(event) => edit(draft.id, { blockId: event.target.value || null })}
             >
-              <option value="">No block</option>
+              <option value="">
+                <Trans>No block</Trans>
+              </option>
               {blocks.map((block) => (
                 <option key={block.id} value={block.id}>
-                  Block {block.name}
+                  <Trans>Block {block.name}</Trans>
                 </option>
               ))}
             </select>
             <Input
-              aria-label={`Level of slide ${index + 1}`}
+              aria-label={t`Level of slide ${index + 1}`}
               value={draft.level}
               inputMode="numeric"
-              placeholder="Level"
+              placeholder={t`Level`}
               className="h-7 text-body-sm"
               onChange={(event) => edit(draft.id, { level: event.target.value })}
             />
@@ -179,13 +184,15 @@ function EditorBody({
       </ol>
       {clinical ? (
         <div className="mt-3 grid gap-1 text-body-sm text-fg">
-          <label htmlFor="case-clinical-note">Clinical note</label>
+          <label htmlFor="case-clinical-note">
+            <Trans>Clinical note</Trans>
+          </label>
           <Textarea
             id="case-clinical-note"
             value={note}
             maxLength={CLINICAL_NOTE_MAX}
             rows={3}
-            placeholder="No clinical note"
+            placeholder={t`No clinical note`}
             className="text-body-sm"
             onChange={(event) => setNote(event.target.value)}
           />

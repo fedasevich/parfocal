@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import {
   DropdownMenu,
@@ -8,6 +10,7 @@ import {
 import { Icon, type IconName } from "@parfocal/ui/components/icon";
 import { Keycap } from "@parfocal/ui/components/keycap";
 import { Switch } from "@parfocal/ui/components/switch";
+import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
 
@@ -47,6 +50,8 @@ type VizKeyProps = React.ComponentProps<"div"> & {
 };
 
 function VizKey({ color, label, count, cue = "solid", className, ...props }: VizKeyProps) {
+  const { t } = useLingui();
+
   return (
     <div
       data-slot="viz-key"
@@ -61,10 +66,10 @@ function VizKey({ color, label, count, cue = "solid", className, ...props }: Viz
           cue === "solid"
             ? { background: color }
             : cue === "dashed"
-              ? { border: `2px dashed ${color}` }
+              ? { border: t`2px dashed ${color}` }
               : {
                   background: color,
-                  boxShadow: `inset 0 0 0 3px #0b0b0b, inset 0 0 0 4px ${color}`,
+                  boxShadow: t`inset 0 0 0 3px #0b0b0b, inset 0 0 0 4px ${color}`,
                 }
         }
       />
@@ -88,6 +93,8 @@ type ClassVisibilityProps = Omit<React.ComponentProps<"div">, "onChange" | "onTo
 };
 
 function ClassVisibility({ rows, onVisibleChange, className, ...props }: ClassVisibilityProps) {
+  const { t } = useLingui();
+
   const toggleByKey = (event: React.KeyboardEvent<HTMLDivElement>) => {
     if (event.ctrlKey || event.metaKey || event.altKey) return;
     const row = rows.find((item) => item.key === event.key);
@@ -99,7 +106,7 @@ function ClassVisibility({ rows, onVisibleChange, className, ...props }: ClassVi
     <div
       data-slot="class-visibility"
       role="group"
-      aria-label="Show or hide a class"
+      aria-label={t`Show or hide a class`}
       className={cn("grid gap-1.5", className)}
       onKeyDown={toggleByKey}
       {...props}
@@ -122,7 +129,7 @@ function ClassVisibility({ rows, onVisibleChange, className, ...props }: ClassVi
           <b className="font-mono font-semibold text-fg">{row.count.toLocaleString("en-US")}</b>
           {row.key ? <Keycap keys={row.key} size="sm" /> : null}
           <Switch
-            aria-label={`Show ${row.name}`}
+            aria-label={t`Show ${row.name}`}
             checked={row.visible}
             onCheckedChange={(on) => onVisibleChange?.(row.name, on)}
           />
@@ -132,11 +139,14 @@ function ClassVisibility({ rows, onVisibleChange, className, ...props }: ClassVi
   );
 }
 
-const ramps = {
-  heat: "linear-gradient(90deg, rgb(239 68 68 / 0), rgb(239 68 68 / 0.45), #dc2626)",
-  density: "linear-gradient(90deg, #7c3aed, #f97316, #facc15)",
-  confidence: "linear-gradient(90deg, #1e1b4b, #0ea5e9, #e0f2fe)",
-} as const;
+const ramps = lazyText(
+  () =>
+    ({
+      heat: t`linear-gradient(90deg, rgb(239 68 68 / 0), rgb(239 68 68 / 0.45), #dc2626)`,
+      density: t`linear-gradient(90deg, #7c3aed, #f97316, #facc15)`,
+      confidence: t`linear-gradient(90deg, #1e1b4b, #0ea5e9, #e0f2fe)`,
+    }) as const,
+);
 
 type VizRampProps = React.ComponentProps<"div"> & {
   ramp: keyof typeof ramps;
@@ -177,10 +187,12 @@ function SetChip({ color, className, children, ...props }: SetChipProps) {
 type SwipeHandleProps = React.ComponentProps<"div"> & { label?: string };
 
 function SwipeHandle({
-  label = "Drag to swipe between the two sets",
+  label = t`Drag to swipe between the two sets`,
   className,
   ...props
 }: SwipeHandleProps) {
+  const { t } = useLingui();
+
   return (
     <div
       data-slot="swipe-handle"
@@ -208,11 +220,13 @@ type ViewPickerProps = Omit<React.ComponentProps<"div">, "onChange"> & {
 };
 
 function ViewPicker({ views, value, onValueChange, className, ...props }: ViewPickerProps) {
+  const { t } = useLingui();
+
   return (
     <div
       data-slot="view-picker"
       role="radiogroup"
-      aria-label="Ways to show results"
+      aria-label={t`Ways to show results`}
       className={cn("grid gap-0.5", className)}
       {...props}
     >
@@ -262,6 +276,8 @@ type ResultSetRowsProps = Omit<React.ComponentProps<"div">, "onToggle"> & {
 };
 
 function ResultSetRows({ sets, locked, onToggle, className, ...props }: ResultSetRowsProps) {
+  const { t } = useLingui();
+
   return (
     <div
       data-slot="result-set-rows"
@@ -296,7 +312,7 @@ function ResultSetRows({ sets, locked, onToggle, className, ...props }: ResultSe
             ) : locked && set.key !== "reviewed" ? (
               <div className="flex min-w-0 flex-1 items-center gap-2.5 px-1 py-1">
                 {body}
-                <span className="text-caption text-fg-dim">{set.on ? "Shown" : "Hidden"}</span>
+                <span className="text-caption text-fg-dim">{set.on ? t`Shown` : t`Hidden`}</span>
               </div>
             ) : (
               <label className="flex min-w-0 flex-1 cursor-pointer items-center gap-2.5 px-1 py-1">
@@ -317,8 +333,8 @@ function ResultSetRows({ sets, locked, onToggle, className, ...props }: ResultSe
                     <Button
                       variant="ghost"
                       size="icon-sm"
-                      aria-label={`More for ${set.name}`}
-                      title="Compare, run again or add another"
+                      aria-label={t`More for ${set.name}`}
+                      title={t`Compare, run again or add another`}
                     />
                   }
                 >
@@ -347,12 +363,14 @@ type ScoreHistogramProps = React.ComponentProps<"div"> & {
 };
 
 function ScoreHistogram({ bins, cutoff, className, ...props }: ScoreHistogramProps) {
+  const { t } = useLingui();
+
   const top = Math.max(1, ...bins);
   return (
     <div data-slot="score-histogram" className={cn("grid gap-1.5", className)} {...props}>
       <div
         role="img"
-        aria-label={`Scores in ${bins.length} bins from 0 to 1, cutoff ${cutoff.toFixed(2)}`}
+        aria-label={t`Scores in ${bins.length} bins from 0 to 1, cutoff ${cutoff.toFixed(2)}`}
         className="flex h-16 items-end gap-1"
       >
         {bins.map((count, index) => (
@@ -368,7 +386,9 @@ function ScoreHistogram({ bins, cutoff, className, ...props }: ScoreHistogramPro
       </div>
       <div className="flex justify-between font-mono text-caption text-fg-dim">
         <span>0</span>
-        <span>{cutoff.toFixed(2)} cutoff</span>
+        <span>
+          <Trans>{cutoff.toFixed(2)} cutoff</Trans>
+        </span>
         <span>1</span>
       </div>
     </div>

@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import { Icon } from "@parfocal/ui/components/icon";
 import {
@@ -20,18 +22,18 @@ export const dragType = "application/x-parfocal-block";
 
 export const filled = (text: string) =>
   text
-    .replaceAll("{task}", "RT-14 · Round 2")
+    .replaceAll("{task}", t`RT-14 · Round 2`)
     .replaceAll("{model}", "CAMELYON")
     .replaceAll("{version}", "v1.0")
     .replaceAll("{slides}", "12 slides");
 
 const metricLabel = (metric: string) =>
   ({
-    sensitivity: "Sensitivity",
-    precision: "Precision",
-    dice: "Dice",
+    sensitivity: t`Sensitivity`,
+    precision: t`Precision`,
+    dice: t`Dice`,
     kappa: "Cohen's κ",
-    "cell-agreement": "Cells agreed",
+    "cell-agreement": t`Cells agreed`,
   })[metric] ?? metric;
 
 function SampleTable({ head, rows }: { head: string[]; rows: string[][] }) {
@@ -81,6 +83,8 @@ function SampleBars({ rows }: { rows: [string, number][] }) {
 }
 
 function SampleBody({ block, decimals }: { block: EditorBlock; decimals: number }) {
+  const { t } = useLingui();
+
   const list = (key: string) => (Array.isArray(block[key]) ? (block[key] as string[]) : []);
   switch (block.kind) {
     case "headline-numbers":
@@ -98,7 +102,7 @@ function SampleBody({ block, decimals }: { block: EditorBlock; decimals: number 
       const columns = list("columns");
       return (
         <SampleTable
-          head={["Slide", ...columns.map(metricLabel)]}
+          head={[t`Slide`, ...columns.map(metricLabel)]}
           rows={["A1", "A2", "B1"].map((slide, index) => [
             slide,
             ...columns.map((metric) =>
@@ -112,11 +116,11 @@ function SampleBody({ block, decimals }: { block: EditorBlock; decimals: number 
       const share = block["values"] === "share";
       return (
         <SampleTable
-          head={["AI said", "Tumor", "Inflammatory", "Other"]}
+          head={["AI said", t`Tumor`, t`Inflammatory`, t`Other`]}
           rows={[
-            ["Tumor", share ? "88%" : "412", share ? "8%" : "37", share ? "4%" : "19"],
-            ["Inflammatory", share ? "9%" : "28", share ? "84%" : "261", share ? "7%" : "22"],
-            ["Other", share ? "6%" : "11", share ? "5%" : "9", share ? "89%" : "140"],
+            [t`Tumor`, share ? "88%" : "412", share ? "8%" : "37", share ? "4%" : "19"],
+            [t`Inflammatory`, share ? "9%" : "28", share ? "84%" : "261", share ? "7%" : "22"],
+            [t`Other`, share ? "6%" : "11", share ? "5%" : "9", share ? "89%" : "140"],
           ]}
         />
       );
@@ -124,9 +128,9 @@ function SampleBody({ block, decimals }: { block: EditorBlock; decimals: number 
     case "reviewer-agreement":
       return (
         <SampleTable
-          head={["Agreement on", "Cohen's κ"]}
+          head={[t`Agreement on`, "Cohen's κ"]}
           rows={list("parts").map((part) => [
-            part === "form" ? "Opinion form" : part === "cells" ? "Cells" : "Regions",
+            part === "form" ? t`Opinion form` : part === "cells" ? t`Cells` : t`Regions`,
             sampleValue("kappa", decimals),
           ])}
         />
@@ -134,30 +138,30 @@ function SampleBody({ block, decimals }: { block: EditorBlock; decimals: number 
     case "disagreement-reasons":
       return block["style"] === "table" ? (
         <SampleTable
-          head={["Reason", "Share"]}
+          head={[t`Reason`, t`Share`]}
           rows={[
-            ["Wrong class", "41%"],
-            ["Wrong outline", "33%"],
-            ["Not a nucleus", "26%"],
+            [t`Wrong class`, "41%"],
+            [t`Wrong outline`, "33%"],
+            [t`Not a nucleus`, "26%"],
           ]}
         />
       ) : (
         <SampleBars
           rows={[
-            ["Wrong class", 41],
-            ["Wrong outline", 33],
-            ["Not a nucleus", 26],
+            [t`Wrong class`, 41],
+            [t`Wrong outline`, 33],
+            [t`Not a nucleus`, 26],
           ]}
         />
       );
     case "opinion-answers":
       return block["style"] === "table" ? (
         <SampleTable
-          head={["Answer", "Share"]}
+          head={[t`Answer`, t`Share`]}
           rows={[
             ["Yes", "64%"],
             ["No", "22%"],
-            ["Unsure", "14%"],
+            [t`Unsure`, "14%"],
           ]}
         />
       ) : (
@@ -165,25 +169,25 @@ function SampleBody({ block, decimals }: { block: EditorBlock; decimals: number 
           rows={[
             ["Yes", 64],
             ["No", 22],
-            ["Unsure", 14],
+            [t`Unsure`, 14],
           ]}
         />
       );
     case "worst-objects":
       return (
         <SampleTable
-          head={["Object", "Disagreed"]}
+          head={[t`Object`, t`Disagreed`]}
           rows={[
-            ["T2·C145", "3 of 3"],
-            ["T1·R12", "3 of 3"],
-            ["T4·C88", "2 of 3"],
+            ["T2·C145", t`3 of 3`],
+            ["T1·R12", t`3 of 3`],
+            ["T4·C88", t`2 of 3`],
           ]}
         />
       );
     case "slide-table": {
       const columns = list("columns");
       const label = (column: string) =>
-        column === "time" ? "Review time" : column === "objects" ? "Objects" : "Disagreements";
+        column === "time" ? t`Review time` : column === "objects" ? t`Objects` : t`Disagreements`;
       const value = (column: string, index: number) =>
         column === "time"
           ? `${14 + index} min`
@@ -192,7 +196,7 @@ function SampleBody({ block, decimals }: { block: EditorBlock; decimals: number 
             : String(9 - index * 2);
       return (
         <SampleTable
-          head={["Slide", ...columns.map(label)]}
+          head={[t`Slide`, ...columns.map(label)]}
           rows={["A1", "A2", "B1"].map((slide, index) => [
             slide,
             ...columns.map((column) => value(column, index)),
@@ -205,7 +209,7 @@ function SampleBody({ block, decimals }: { block: EditorBlock; decimals: number 
         <div className="grid gap-0.5">
           <span className="grid h-14 place-items-center bg-[#efe9dc] text-[9px] text-[#555]">
             {list("layers")
-              .map((layer) => (layer === "ai" ? "AI result" : "Reviewed layer"))
+              .map((layer) => (layer === "ai" ? "AI result" : t`Reviewed layer`))
               .join(" + ")}
           </span>
           {typeof block["caption"] === "string" && block["caption"] ? (
@@ -218,13 +222,13 @@ function SampleBody({ block, decimals }: { block: EditorBlock; decimals: number 
         <p className="m-0 whitespace-pre-wrap text-[10px]">
           {typeof block["body"] === "string" && block["body"]
             ? filled(block["body"])
-            : "Your text appears here."}
+            : t`Your text appears here.`}
         </p>
       );
     case "comparison":
       return (
         <SampleTable
-          head={["Metric", "RT-14", "RT-15"]}
+          head={[t`Metric`, "RT-14", "RT-15"]}
           rows={list("metrics").map((metric) => [
             metricLabel(metric),
             sampleValue(metric, decimals),
@@ -235,10 +239,15 @@ function SampleBody({ block, decimals }: { block: EditorBlock; decimals: number 
     case "ai-changes":
       return (
         <SampleTable
-          head={[block["group_by"] === "slide" ? "Slide" : "Class", "Kept", "Edited", "Deleted"]}
+          head={[
+            block["group_by"] === "slide" ? t`Slide` : t`Class`,
+            t`Kept`,
+            t`Edited`,
+            t`Deleted`,
+          ]}
           rows={[
-            ["Tumor", "331", "52", "29"],
-            ["Inflammatory", "204", "31", "26"],
+            [t`Tumor`, "331", "52", "29"],
+            [t`Inflammatory`, "204", "31", "26"],
           ]}
         />
       );
@@ -266,17 +275,19 @@ function BlockToolbar({
   onBlocksChange: (blocks: EditorBlock[]) => void;
   onSelectedChange: (id: string | null) => void;
 }) {
+  const { t } = useLingui();
+
   const index = blocks.findIndex((item) => item.id === block.id);
   return (
     <div
       role="toolbar"
-      aria-label={`Tools for ${block.title}`}
+      aria-label={t`Tools for ${block.title}`}
       className="absolute -top-3 right-1 z-10 flex gap-0.5 rounded-ctl border border-line bg-chrome p-0.5 shadow-pop"
     >
       <Button
         size="icon-sm"
         variant="ghost"
-        aria-label="Move up"
+        aria-label={t`Move up`}
         disabled={index <= 0}
         onClick={() => onBlocksChange(moveBlock(blocks, block.id, -1))}
       >
@@ -285,7 +296,7 @@ function BlockToolbar({
       <Button
         size="icon-sm"
         variant="ghost"
-        aria-label="Move down"
+        aria-label={t`Move down`}
         disabled={index >= blocks.length - 1}
         onClick={() => onBlocksChange(moveBlock(blocks, block.id, 1))}
       >
@@ -294,7 +305,7 @@ function BlockToolbar({
       <Button
         size="icon-sm"
         variant="ghost"
-        aria-label="Duplicate"
+        aria-label={t`Duplicate`}
         onClick={() => {
           const result = duplicateBlock(blocks, block.id);
           onBlocksChange(result.blocks);
@@ -306,7 +317,7 @@ function BlockToolbar({
       <Button
         size="icon-sm"
         variant="ghost"
-        aria-label="Remove"
+        aria-label={t`Remove`}
         onClick={() => {
           onBlocksChange(removeBlock(blocks, block.id));
           onSelectedChange(null);
@@ -327,6 +338,8 @@ export function ReportPages({
   onBlocksChange,
   onSelectedChange,
 }: PageViewProps) {
+  const { t } = useLingui();
+
   const [over, setOver] = React.useState<{ id: string; after: boolean } | "end" | null>(null);
   const size = paperSize(format);
   const pages = paginate(blocks);
@@ -353,7 +366,7 @@ export function ReportPages({
       {pages.map((page, pageIndex) => (
         <section
           key={`${page.blocks[0]?.id ?? "empty"}-${pageIndex}`}
-          aria-label={`Page ${pageIndex + 1} of ${pages.length}`}
+          aria-label={t`Page ${pageIndex + 1} of ${pages.length}`}
           data-page={pageIndex + 1}
           className="relative grid w-full max-w-130 grid-rows-[auto_minmax(0,1fr)_auto] gap-3 rounded-sm bg-white p-7 text-[#111] shadow-pop"
           style={{ aspectRatio: `${size.w} / ${size.h}`, fontSize: textSize }}
@@ -372,8 +385,14 @@ export function ReportPages({
           {pageIndex === 0 ? (
             <div className="flex justify-between border-b-[1.5px] border-[#222] pb-2">
               <div className="grid">
-                {format.logo ? <b className="text-[1.15em]">Parfocal</b> : null}
-                <span className="text-[0.8em] text-[#555]">Sample project · sample numbers</span>
+                {format.logo ? (
+                  <b className="text-[1.15em]">
+                    <Trans>Parfocal</Trans>
+                  </b>
+                ) : null}
+                <span className="text-[0.8em] text-[#555]">
+                  <Trans>Sample project · sample numbers</Trans>
+                </span>
               </div>
               <div className="grid justify-items-end text-right">
                 <b className="text-[1.15em]">{filled(format.title)}</b>
@@ -399,7 +418,7 @@ export function ReportPages({
                 <div
                   key={block.id}
                   role="group"
-                  aria-label={`Block ${at + 1}, ${block.title}`}
+                  aria-label={t`Block ${at + 1}, ${block.title}`}
                   data-block={block.id}
                   data-kind={block.kind}
                   className={cn(
@@ -468,22 +487,22 @@ export function ReportPages({
                   over === "end" && "border-[#1d5fd1]",
                 )}
               >
-                An empty page. Drag a block here or click one on the left.
+                <Trans>An empty page. Drag a block here or click one on the left.</Trans>
               </span>
             ) : null}
           </div>
           <div className="relative flex items-end justify-between text-[0.8em] text-[#555]">
             <span>
               {pageIndex === pages.length - 1 && format.signature
-                ? "Signed off by: ____________  Date: ________"
-                : "Sample · not a real evaluation"}
+                ? t`Signed off by: ____________  Date: ________`
+                : t`Sample · not a real evaluation`}
             </span>
             <span>
               {format.page_numbers === "none"
                 ? ""
                 : format.page_numbers === "page"
                   ? `${pageIndex + 1}`
-                  : `Page ${pageIndex + 1} of ${pages.length}`}
+                  : t`Page ${pageIndex + 1} of ${pages.length}`}
             </span>
           </div>
           {format.draft_watermark ? (

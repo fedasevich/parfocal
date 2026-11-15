@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   type Project,
   type ProjectClass,
@@ -16,6 +18,7 @@ import { Person } from "@parfocal/ui/components/person";
 import { RadioGroup, RadioGroupItem } from "@parfocal/ui/components/radio-group";
 import { Switch } from "@parfocal/ui/components/switch";
 import { Hint, Zone, Zones } from "@parfocal/ui/components/zone";
+import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { type ReactNode, useState } from "react";
 import { okData } from "../placeholder.tsx";
@@ -30,16 +33,18 @@ import {
   useProjectChange,
 } from "./settings-zones.tsx";
 
-const kindText = { scale: "1 to 5", choice: "choice", yesno: "yes or no", text: "text" } as const;
+const kindText = lazyText(
+  () => ({ scale: t`1 to 5`, choice: "choice", yesno: t`yes or no`, text: "text" }) as const,
+);
 
-const studyKindText: Record<string, string> = {
-  "regions-and-cells": "Regions and cells",
-  regions: "Regions",
-  outlines: "Outlines",
-  cells: "Cells",
-  "reviewers-first": "Reviewers first",
-  other: "Other",
-};
+const studyKindText: Record<string, string> = lazyText(() => ({
+  "regions-and-cells": t`Regions and cells`,
+  regions: t`Regions`,
+  outlines: t`Outlines`,
+  cells: t`Cells`,
+  "reviewers-first": t`Reviewers first`,
+  other: t`Other`,
+}));
 
 function ToggleRow({
   title,
@@ -89,6 +94,8 @@ export function SettingsTab({
   addClass: boolean;
   toast: (message: ReactNode, onUndo?: () => void) => void;
 }) {
+  const { t } = useLingui();
+
   const navigate = useNavigate();
   const people = usePeople();
   const overview = useGetProjectOverview(project.id).data?.data;
@@ -105,7 +112,7 @@ export function SettingsTab({
   const tasks = okData(useListReviewTasks(project.id).data) ?? [];
   const chosen = value.study_template_id ?? overview?.study_template_id ?? templates[0]?.id ?? "";
   const clinical = project.privacy_mode === "clinical";
-  const taxonomy = project.template === "cell-review" ? "PanNuke" : "Sentinel node";
+  const taxonomy = project.template === "cell-review" ? "PanNuke" : t`Sentinel node`;
   const owner = project.members.find((member) => member.role === "owner");
   const closeModal = () =>
     void navigate({
@@ -126,37 +133,49 @@ export function SettingsTab({
       data-testid="project-settings"
     >
       <Zones>
-        <Zone title="Privacy">
+        <Zone title={t`Privacy`}>
           <div className="flex items-start gap-2 text-body-sm text-fg">
             <Icon name="shield" className="mt-0.5 text-fg-dim" />
             <span>
-              <b>{clinical ? "Clinical" : "De-identified"}</b> ·{" "}
+              <b>{clinical ? t`Clinical` : t`De-identified`}</b> ·{" "}
               {clinical
-                ? "Patient fields allowed, all optional. Every access is logged."
-                : "No patient fields anywhere. Names are removed from file metadata and labels on upload."}
+                ? t`Patient fields allowed, all optional. Every access is logged.`
+                : t`No patient fields anywhere. Names are removed from file metadata and labels on upload.`}
             </span>
           </div>
-          <Hint>Set when the project was created.</Hint>
+          <Hint>
+            <Trans>Set when the project was created.</Trans>
+          </Hint>
         </Zone>
-        <Zone title="Review defaults" end={<Hint>each task can change them</Hint>}>
+        <Zone
+          title={t`Review defaults`}
+          end={
+            <Hint>
+              <Trans>each task can change them</Trans>
+            </Hint>
+          }
+        >
           <div className="grid">
             <ToggleRow
-              title="Blind review"
-              detail="Reviewers see each other only after they submit."
+              title={t`Blind review`}
+              detail={t`Reviewers see each other only after they submit.`}
               on={value.blinded}
               onChange={(blinded) => change({ blinded })}
             />
             <ToggleRow
-              title="Hide the AI for a first read"
-              detail="Reviewers mark the slide first, then the AI result is shown."
+              title={t`Hide the AI for a first read`}
+              detail={t`Reviewers mark the slide first, then the AI result is shown.`}
               on={value.ai_hidden_first_read}
               onChange={(hidden) => change({ ai_hidden_first_read: hidden })}
             />
           </div>
         </Zone>
-        <Zone title="Study template" sub="Fills in a new review task and lays out its report.">
+        <Zone
+          title={t`Study template`}
+          sub={t`Fills in a new review task and lays out its report.`}
+        >
           <RadioGroup
-            aria-label="Study template"
+            aria-label={t`Study template`}
             value={chosen}
             onValueChange={(next) => change({ study_template_id: String(next) })}
           >
@@ -167,7 +186,9 @@ export function SettingsTab({
               >
                 <RadioGroupItem value={item.id} />
                 <span>
-                  {item.name} v{item.version}
+                  <Trans>
+                    {item.name} v{item.version}
+                  </Trans>
                   <small className="ml-2 text-caption text-fg-faint">
                     {studyKindText[item.study_kind] ?? ""}
                   </small>
@@ -178,18 +199,20 @@ export function SettingsTab({
         </Zone>
         {clinical ? <ReportTemplateZone value={value.clinical_template} onChange={change} /> : null}
         <Zone
-          title="Automatic imports"
-          sub="Slides and results can arrive from a webhook, the API or a watched folder, with the same checks as an upload."
+          title={t`Automatic imports`}
+          sub={t`Slides and results can arrive from a webhook, the API or a watched folder, with the same checks as an upload.`}
         >
           <div className="grid grid-cols-[16px_minmax(0,1fr)_auto] items-center gap-3 rounded-ctl border border-line bg-surf-field px-3.5 py-3">
             <Icon name="link" className="text-fg-dim" />
             <span>
               <b className="block text-body-sm">
-                {imports?.webhook.on ? "1 webhook connected" : "Nothing connected"}
+                {imports?.webhook.on ? t`1 webhook connected` : t`Nothing connected`}
               </b>
               {imports?.last_arrival ? (
                 <small className="block text-body-sm leading-[1.45] text-fg-dim">
-                  Last arrival today {imports.last_arrival.at}, {imports.last_arrival.what}
+                  <Trans>
+                    Last arrival today {imports.last_arrival.at}, {imports.last_arrival.what}
+                  </Trans>
                 </small>
               ) : null}
             </span>
@@ -204,7 +227,7 @@ export function SettingsTab({
                 />
               }
             >
-              Manage
+              <Trans>Manage</Trans>
             </Button>
           </div>
         </Zone>
@@ -218,7 +241,9 @@ export function SettingsTab({
         <Zone
           title={
             <>
-              Classes <span className="ml-2 font-normal text-fg-dim">{taxonomy}</span>
+              <Trans>
+                Classes <span className="ml-2 font-normal text-fg-dim">{taxonomy}</span>
+              </Trans>
             </>
           }
           end={
@@ -228,7 +253,7 @@ export function SettingsTab({
               search={{ tab: "settings", modal: "addcls" }}
               className="text-body-sm font-medium text-accent hover:underline"
             >
-              Add a class
+              <Trans>Add a class</Trans>
             </Link>
           }
         >
@@ -237,21 +262,25 @@ export function SettingsTab({
               <ClassRow
                 key={item.id}
                 item={item}
-                note={item.name === "Tumor" ? "T regions, C cells" : "C cells"}
+                note={item.name === "Tumor" ? t`T regions, C cells` : "C cells"}
               />
             ))}
             {extra.map((item) => (
-              <ClassRow key={item.name} item={item} note="C cells · added by you" />
+              <ClassRow key={item.name} item={item} note={t`C cells · added by you`} />
             ))}
           </div>
-          {remembered ? <Hint>Remembered from imports: {remembered}</Hint> : null}
+          {remembered ? (
+            <Hint>
+              <Trans>Remembered from imports: {remembered}</Trans>
+            </Hint>
+          ) : null}
         </Zone>
         <Zone
-          title="Opinion form"
-          sub="Asked once per slide, after the objects."
+          title={t`Opinion form`}
+          sub={t`Asked once per slide, after the objects.`}
           end={
             <Link to="/admin" className="text-body-sm font-medium text-accent hover:underline">
-              Edit the form
+              <Trans>Edit the form</Trans>
             </Link>
           }
         >
@@ -272,10 +301,10 @@ export function SettingsTab({
           <ClinicalMembersZone project={project} toast={toast} />
         ) : (
           <Zone
-            title="Members"
+            title={t`Members`}
             end={
               <Link to="/admin" className="text-body-sm font-medium text-accent hover:underline">
-                Invite people
+                <Trans>Invite people</Trans>
               </Link>
             }
           >
@@ -285,7 +314,7 @@ export function SettingsTab({
                   key={member.user_id}
                   person={people.byId(member.user_id)}
                   size={28}
-                  sub={member.user_id === owner?.user_id ? "Owner" : "Reviewer"}
+                  sub={member.user_id === owner?.user_id ? t`Owner` : t`Reviewer`}
                 />
               ))}
             </div>
@@ -293,15 +322,15 @@ export function SettingsTab({
         )}
         {project.my_role === "owner" ? (
           <Zone
-            title="Danger zone"
-            sub="Deleting hides the project from every list and link. Nothing is erased, and an owner can restore it."
+            title={t`Danger zone`}
+            sub={t`Deleting hides the project from every list and link. Nothing is erased, and an owner can restore it.`}
           >
             <div className="flex items-center justify-between gap-4">
               <span className="text-body-sm text-fg-dim">
-                Asks you to type the project name first.
+                <Trans>Asks you to type the project name first.</Trans>
               </span>
               <Button size="sm" variant="destructive" onClick={() => setDeleting(true)}>
-                Delete project
+                <Trans>Delete project</Trans>
               </Button>
             </div>
           </Zone>
@@ -329,7 +358,7 @@ export function SettingsTab({
           const before = extra;
           setExtra([...extra, item]);
           closeModal();
-          toast(`${item.name} is a class in ${project.code}, on key ${item.key}`, () =>
+          toast(t`${item.name} is a class in ${project.code}, on key ${item.key}`, () =>
             setExtra(before),
           );
         }}

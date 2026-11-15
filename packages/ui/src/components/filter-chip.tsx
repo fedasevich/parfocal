@@ -1,3 +1,4 @@
+import { useLingui } from "@lingui/react/macro";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Popover, PopoverContent, PopoverTrigger } from "@parfocal/ui/components/popover";
 import { cn } from "@parfocal/ui/lib/utils";
@@ -36,6 +37,8 @@ function FilterChip({
   defaultOpen = false,
   className,
 }: FilterChipProps) {
+  const { t } = useLingui();
+
   const [open, setOpen] = useState(defaultOpen);
   const [search, setSearch] = useState("");
   const listRef = useRef<HTMLDivElement>(null);
@@ -115,14 +118,14 @@ function FilterChip({
       </PopoverTrigger>
       <PopoverContent
         align="start"
-        aria-label={`Filter by ${label.toLowerCase()}`}
+        aria-label={t`Filter by ${label.toLowerCase()}`}
         className="w-64 gap-1.5 p-1.5"
       >
         {searchable ? (
           <input
-            aria-label={`Find a ${label.toLowerCase()}`}
+            aria-label={t`Find a ${label.toLowerCase()}`}
             aria-controls={listId}
-            placeholder={`Find a ${label.toLowerCase()}`}
+            placeholder={t`Find a ${label.toLowerCase()}`}
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             onKeyDown={(event) => {
@@ -147,7 +150,7 @@ function FilterChip({
         </div>
         {matches.length === 0 ? (
           <p className="m-0 px-2 py-1.5 text-body-sm text-fg-dim">
-            {options.length === 0 ? "Nothing to filter by yet." : "Nothing matches that."}
+            {options.length === 0 ? t`Nothing to filter by yet.` : t`Nothing matches that.`}
           </p>
         ) : null}
       </PopoverContent>

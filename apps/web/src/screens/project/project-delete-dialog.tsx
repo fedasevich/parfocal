@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { deleteProject, type Project } from "@parfocal/api-client";
 import { Input } from "@parfocal/ui/components/input";
 import { SmallModal } from "@parfocal/ui/components/small-modal";
@@ -25,6 +26,8 @@ export function ProjectDeleteDialog({
   toast: (message: ReactNode) => void;
   onClose: () => void;
 }) {
+  const { t } = useLingui();
+
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [typed, setTyped] = useState("");
@@ -35,7 +38,7 @@ export function ProjectDeleteDialog({
   const blockers = deleteBlockers(typed, project.name).map((text, index) => ({
     id: `delete-${index}`,
     text,
-    goTo: "Go to the field",
+    goTo: t`Go to the field`,
   }));
   const confirm = async () => {
     setTried(true);
@@ -61,26 +64,28 @@ export function ProjectDeleteDialog({
         if (!next) onClose();
       }}
       title={deleteTitle(project.code)}
-      subtitle={`${project.name} leaves every list and link for every member.`}
+      subtitle={t`${project.name} leaves every list and link for every member.`}
       hint={
         failure ? (
           <span role="alert" className="text-bad">
             {failure}
           </span>
         ) : (
-          "The delete is kept in the audit log."
+          t`The delete is kept in the audit log.`
         )
       }
-      primaryLabel="Delete project"
+      primaryLabel={t`Delete project`}
       primaryBusy={busy}
       blockers={tried ? blockers : []}
-      blockersTitle="Before you can delete it"
+      blockersTitle={t`Before you can delete it`}
       onPrimary={() => void confirm()}
     >
       <div className="grid gap-3 text-body-sm text-fg">
         {lines.length > 0 ? (
           <div className="grid gap-1">
-            <span className="text-fg-dim">Hidden with it</span>
+            <span className="text-fg-dim">
+              <Trans>Hidden with it</Trans>
+            </span>
             <ul className="m-0 grid list-disc gap-0.5 pl-5" data-testid="project-delete-goes">
               {lines.map((line) => (
                 <li key={line}>{line}</li>
@@ -91,7 +96,9 @@ export function ProjectDeleteDialog({
         <p className="m-0 text-fg-dim">{keptNote}</p>
         <div className="grid gap-1 text-fg-dim">
           <label htmlFor="project-delete-name">
-            Type <b className="text-fg">{project.name}</b> to confirm
+            <Trans>
+              Type <b className="text-fg">{project.name}</b> to confirm
+            </Trans>
           </label>
           <Input
             id="project-delete-name"

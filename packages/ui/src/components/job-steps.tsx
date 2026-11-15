@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Icon } from "@parfocal/ui/components/icon";
 import { ProgressBar, type ProgressTone } from "@parfocal/ui/components/progress-meter";
 import { cn } from "@parfocal/ui/lib/utils";
@@ -108,6 +109,8 @@ function JobSlideRow({
   children,
   ...props
 }: JobSlideRowProps) {
+  const { t } = useLingui();
+
   return (
     <div
       data-slot="job-slide-row"
@@ -135,12 +138,14 @@ function JobSlideRow({
         <button
           type="button"
           aria-expanded={open}
-          title={open ? "Hide the steps" : "Show the steps"}
+          title={open ? t`Hide the steps` : t`Show the steps`}
           onClick={() => onOpenChange(!open)}
           className="inline-flex h-6.5 cursor-pointer items-center gap-1.5 rounded-md border border-line bg-transparent px-2 text-caption text-fg-dim hover:border-line-strong hover:text-fg focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent"
         >
           <span className="tabular-nums">
-            {stepsDone} of {stepsTotal}
+            <Trans>
+              {stepsDone} of {stepsTotal}
+            </Trans>
           </span>
           <Icon name="down" className={cn("transition-transform", open && "rotate-180")} />
         </button>

@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   type CreatedReportLink,
   type ReportLink,
@@ -20,12 +22,14 @@ const day = (iso: string) =>
 const times = (count: number) => (count === 1 ? "once" : `${count} times`);
 
 function stateOf(link: ReportLink) {
-  if (link.revoked_at !== null) return { tone: "neutral", label: "Revoked" } as const;
-  if (link.expired) return { tone: "neutral", label: "Expired" } as const;
-  return { tone: "ok", label: "Active" } as const;
+  if (link.revoked_at !== null) return { tone: "neutral", label: t`Revoked` } as const;
+  if (link.expired) return { tone: "neutral", label: t`Expired` } as const;
+  return { tone: "ok", label: t`Active` } as const;
 }
 
 export function ShareLinks({ taskId, taskCode }: { taskId: string; taskCode: string }) {
+  const { t } = useLingui();
+
   const [open, setOpen] = useState(false);
   const listed = useListReportLinks(taskId, { query: { enabled: open, staleTime: 0 } });
   const links = okData(listed.data) ?? [];
@@ -71,41 +75,47 @@ export function ShareLinks({ taskId, taskCode }: { taskId: string; taskCode: str
       open={open}
       onOpenChange={setOpen}
       width={560}
-      title={`Share ${taskCode} read-only`}
-      subtitle="Anyone with the link sees the numbers of this report without signing in. No slides, no names and no free text. A link lasts 30 days."
+      title={t`Share ${taskCode} read-only`}
+      subtitle={t`Anyone with the link sees the numbers of this report without signing in. No slides, no names and no free text. A link lasts 30 days.`}
       trigger={
         <Button>
           <Icon name="link" />
-          Read-only link
+          <Trans>Read-only link</Trans>
         </Button>
       }
-      primaryLabel="Make a link"
+      primaryLabel={t`Make a link`}
       onPrimary={make}
       primaryBusy={create.isPending}
-      cancelLabel="Close"
+      cancelLabel={t`Close`}
     >
       {fresh ? (
-        <SmallModalZone title="New link">
+        <SmallModalZone title={t`New link`}>
           <div className="flex gap-2">
             <Input
               readOnly
-              aria-label="New link"
+              aria-label={t`New link`}
               value={fresh.url}
               onFocus={(event) => event.currentTarget.select()}
             />
-            <Button onClick={copy}>{copied ? "Copied" : "Copy"}</Button>
+            <Button onClick={copy}>{copied ? t`Copied` : t`Copy`}</Button>
           </div>
           <span className="text-body-sm text-fg-dim">
-            Copy it now. Parfocal keeps only a fingerprint and cannot show it again.
+            <Trans>Copy it now. Parfocal keeps only a fingerprint and cannot show it again.</Trans>
           </span>
         </SmallModalZone>
       ) : null}
-      {failed ? <InlineError>The link could not be changed. Try again.</InlineError> : null}
-      <SmallModalZone title="Links to this report">
+      {failed ? (
+        <InlineError>
+          <Trans>The link could not be changed. Try again.</Trans>
+        </InlineError>
+      ) : null}
+      <SmallModalZone title={t`Links to this report`}>
         {links.length === 0 ? (
-          <span className="text-body-sm text-fg-dim">No links yet.</span>
+          <span className="text-body-sm text-fg-dim">
+            <Trans>No links yet.</Trans>
+          </span>
         ) : (
-          <ul aria-label="Report links" className="m-0 grid list-none gap-2 p-0">
+          <ul aria-label={t`Report links`} className="m-0 grid list-none gap-2 p-0">
             {links.map((link) => {
               const state = stateOf(link);
               const active = state.label === "Active";
@@ -116,17 +126,17 @@ export function ShareLinks({ taskId, taskCode }: { taskId: string; taskCode: str
                 >
                   <span className="grid min-w-0 flex-1">
                     <span className="flex items-center gap-2 font-medium text-fg">
-                      Made {day(link.created_at)}
+                      <Trans>Made {day(link.created_at)}</Trans>
                       <StatusTag tone={state.tone}>{state.label}</StatusTag>
                     </span>
                     <small className="text-caption text-fg-dim">
                       {active
-                        ? `Until ${day(link.expires_at)}`
-                        : `Ended ${day(link.revoked_at ?? link.expires_at)}`}
+                        ? t`Until ${day(link.expires_at)}`
+                        : t`Ended ${day(link.revoked_at ?? link.expires_at)}`}
                       {" · "}
                       {link.opened_count === 0
-                        ? "Not opened"
-                        : `Opened ${times(link.opened_count)}`}
+                        ? t`Not opened`
+                        : t`Opened ${times(link.opened_count)}`}
                     </small>
                   </span>
                   {active ? (
@@ -136,7 +146,7 @@ export function ShareLinks({ taskId, taskCode }: { taskId: string; taskCode: str
                       disabled={revoke.isPending}
                       onClick={() => withdraw(link)}
                     >
-                      Revoke
+                      <Trans>Revoke</Trans>
                     </Button>
                   ) : null}
                 </li>

@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   type CaseReport,
   getDownloadCaseReportPdfUrl,
@@ -90,6 +91,8 @@ type ReportScreenProps = {
 };
 
 export function ReportScreen(props: ReportScreenProps) {
+  const { t } = useLingui();
+
   useLengthUnits();
   const owner = useFlowOwner();
   const cases = useListCases(
@@ -102,7 +105,7 @@ export function ReportScreen(props: ReportScreenProps) {
   if (!loaded) {
     return (
       <main className="p-8">
-        <QueryState label="the clinical report" isPending={pending} error={failed || !pending}>
+        <QueryState label={t`the clinical report`} isPending={pending} error={failed || !pending}>
           {null}
         </QueryState>
       </main>
@@ -130,6 +133,8 @@ function ReportFlow({
   onNavigate,
   keep = false,
 }: ReportScreenProps & { loaded: LoadedReport; owner: string | undefined }) {
+  const { t } = useLingui();
+
   const data: ReportData = loaded.data;
   const live = scene === undefined;
   const mock: ReportScene = scene ?? "findings";
@@ -210,10 +215,10 @@ function ReportFlow({
     latest.current = report.values;
     if (!live || done || sent) return;
     const timer = window.setTimeout(() => {
-      flush().catch(() => toast.show({ text: "The draft could not be saved. Try again." }));
+      flush().catch(() => toast.show({ text: t`The draft could not be saved. Try again.` }));
     }, 700);
     return () => window.clearTimeout(timer);
-  }, [live, done, sent, report.values, flush, toast.show]);
+  }, [live, done, sent, report.values, flush, toast.show, t]);
 
   useEffect(
     () => () => {
@@ -323,7 +328,7 @@ function ReportFlow({
           values: followDiagnosis(data, { ...current.values, ack: false, deposits }),
         };
       });
-      toast.show({ text: `${removed.deposit.id} is back in the list` });
+      toast.show({ text: t`${removed.deposit.id} is back in the list` });
     },
     onMeasure: () => {
       const pending = report.values.deposits.find(
@@ -344,7 +349,7 @@ function ReportFlow({
         ),
       });
       toast.show({
-        text: `${pending.objectId} on ${slideOf(data, pending.slide).short} measured ${formatMillimetres(object.size_mm)} with the ruler`,
+        text: t`${pending.objectId} on ${slideOf(data, pending.slide).short} measured ${formatMillimetres(object.size_mm)} with the ruler`,
       });
     },
     onInsert: (text) => {
@@ -354,7 +359,7 @@ function ReportFlow({
       setValues({ [key]: current ? `${current} ${text}` : text });
       touch(lastText);
       setFocus(lastText);
-      toast.show({ text: `Inserted into ${fieldNames[lastText]}` });
+      toast.show({ text: t`Inserted into ${fieldNames[lastText]}` });
     },
     onFocusText: setLastText,
   };
@@ -388,7 +393,7 @@ function ReportFlow({
     touchAll(issues.map((issue) => issue.field));
     const first = issues[0];
     if (first) goTo(first.step, first.field);
-    toast.show({ text: "Some things need finishing first." });
+    toast.show({ text: t`Some things need finishing first.` });
     return true;
   };
   const sendNow = () => {
@@ -401,9 +406,9 @@ function ReportFlow({
     const to = report.cosigner;
     if (!to) return;
     const sentTo = () =>
-      toast.show({ text: `Sent to ${person(to)?.name ?? "the co-signer"} for co-sign` });
+      toast.show({ text: t`Sent to ${person(to)?.name ?? "the co-signer"} for co-sign` });
     if (!live) {
-      setReport((current) => ({ ...current, sent: { to, at: "15 Oct 11:20", id: "" } }));
+      setReport((current) => ({ ...current, sent: { to, at: t`15 Oct 11:20`, id: "" } }));
       sentTo();
       return;
     }
@@ -422,11 +427,11 @@ function ReportFlow({
               }));
               sentTo();
             },
-            onError: (error) => complain(error, "The report could not be sent. Try again."),
+            onError: (error) => complain(error, t`The report could not be sent. Try again.`),
           },
         );
       })
-      .catch((error: unknown) => complain(error, "The draft could not be saved. Try again."));
+      .catch((error: unknown) => complain(error, t`The draft could not be saved. Try again.`));
   };
 
   let bar: ReactNode;
@@ -439,15 +444,17 @@ function ReportFlow({
   if (done) {
     bar = (
       <FlowBar
-        back={back("Back to the project")}
+        back={back(t`Back to the project`)}
         hint={
           report.amend
-            ? "Both versions stay in the case. The clinician has version 2."
-            : "A change from now on is an amendment with a reason."
+            ? t`Both versions stay in the case. The clinician has version 2.`
+            : t`A change from now on is an amendment with a reason.`
         }
         next={
           <span className="flex gap-3">
-            <Button onClick={() => onNavigate({ step: page, modal: "amend" })}>Amend</Button>
+            <Button onClick={() => onNavigate({ step: page, modal: "amend" })}>
+              <Trans>Amend</Trans>
+            </Button>
             <Button
               variant="primary"
               onClick={() => {
@@ -457,11 +464,13 @@ function ReportFlow({
                   link.href = getDownloadCaseReportPdfUrl(projectId, caseId, number);
                   link.click();
                 }
-                toast.show({ text: `${data.case.label}_report_v${number}.pdf saved to Downloads` });
+                toast.show({
+                  text: t`${data.case.label}_report_v${number}.pdf saved to Downloads`,
+                });
               }}
             >
               <Icon name="download" />
-              Download PDF
+              <Trans>Download PDF</Trans>
             </Button>
           </span>
         }
@@ -479,7 +488,7 @@ function ReportFlow({
               const withdrawn = () => {
                 setReport((current) => ({ ...current, sent: null }));
                 toast.show({
-                  text: "The request is withdrawn. The report is a draft again.",
+                  text: t`The request is withdrawn. The report is a draft again.`,
                   ...(live
                     ? {}
                     : { undo: () => setReport((current) => ({ ...current, sent: was })) }),
@@ -498,19 +507,19 @@ function ReportFlow({
                     withdrawn();
                   },
                   onError: (error) =>
-                    complain(error, "The request could not be withdrawn. Try again."),
+                    complain(error, t`The request could not be withdrawn. Try again.`),
                 },
               );
             }}
           >
-            Withdraw the request
+            <Trans>Withdraw the request</Trans>
           </Button>
         }
-        hint="You are told when it is signed or returned."
+        hint={t`You are told when it is signed or returned.`}
         next={renderLink({
           href: live ? destinations.myWork() : `${projectHref}?tab=slides`,
           className: buttonVariants({ variant: "primary" }),
-          children: live ? "Open my work" : "Back to the project",
+          children: live ? t`Open my work` : t`Back to the project`,
         })}
       />
     );
@@ -518,18 +527,20 @@ function ReportFlow({
     const index = steps.findIndex((candidate) => candidate.key === page);
     const before = steps[index - 1];
     const backButton = before ? (
-      <Button onClick={() => goTo(before.key)}>Back</Button>
+      <Button onClick={() => goTo(before.key)}>
+        <Trans>Back</Trans>
+      </Button>
     ) : (
-      back("Cancel")
+      back(t`Cancel`)
     );
     if (page !== "sign") {
       bar = (
         <FlowBar
           back={backButton}
-          hint="The draft is saved as you go."
+          hint={t`The draft is saved as you go.`}
           next={
             <Button variant="primary" onClick={next}>
-              Next
+              <Trans>Next</Trans>
             </Button>
           }
         />
@@ -540,29 +551,29 @@ function ReportFlow({
       const can = canSign(data);
       const me = person(data.author_user_id);
       const hint = !can
-        ? `You cannot sign out in this project. ${signers.length ? `${andJoin(signers.map((member) => person(member.user_id)?.name ?? ""))} can.` : "Nobody can yet."}`
+        ? t`You cannot sign out in this project. ${signers.length ? `${andJoin(signers.map((member) => person(member.user_id)?.name ?? ""))} can.` : t`Nobody can yet.`}`
         : blockers.length
-          ? `${plural(blockers.length, "thing")} to finish first.`
+          ? t`${plural(blockers.length, "thing")} to finish first.`
           : mode === "sign"
-            ? `Signed by ${me?.name ?? "you"}, MUDr. The report leaves for the clinician.`
-            : `${person(report.cosigner)?.name ?? "The co-signer"} gets it in My work.`;
+            ? t`Signed by ${me?.name ?? "you"}, MUDr. The report leaves for the clinician.`
+            : t`${person(report.cosigner)?.name ?? t`The co-signer`} gets it in My work.`;
       bar = (
         <FlowBar
           blockers={
             blockers.length ? (
               <BeforeYouList
                 showSingle
-                title={`Before you can ${mode === "sign" ? "sign out" : "send"}`}
+                title={t`Before you can ${mode === "sign" ? "sign out" : "send"}`}
                 className="rounded-none border-0 bg-transparent p-0"
                 blockers={blockers.map((issue) => ({
                   id: issue.field,
                   text: issue.blockText,
                   goTo:
                     issue.step !== page
-                      ? `Go to ${stepLabel(data, issue.step)}`
+                      ? t`Go to ${stepLabel(data, issue.step)}`
                       : issue.field === "cosigner"
-                        ? "Pick who co-signs"
-                        : "Show me",
+                        ? t`Pick who co-signs`
+                        : t`Show me`,
                   onGoTo: () => goTo(issue.step, issue.field, true),
                 }))}
               />
@@ -574,17 +585,17 @@ function ReportFlow({
             mode === "sign" ? (
               <span className="flex gap-3">
                 <Button onClick={() => update((current) => ({ ...current, mode: "cosign" }))}>
-                  Send for co-sign instead
+                  <Trans>Send for co-sign instead</Trans>
                 </Button>
                 <Button variant="primary" aria-disabled={blockers.length > 0} onClick={signNow}>
-                  Sign out
+                  <Trans>Sign out</Trans>
                 </Button>
               </span>
             ) : (
               <span className="flex gap-3">
                 {can ? (
                   <Button onClick={() => update((current) => ({ ...current, mode: "sign" }))}>
-                    Sign out myself
+                    <Trans>Sign out myself</Trans>
                   </Button>
                 ) : null}
                 <Button
@@ -593,7 +604,7 @@ function ReportFlow({
                   onClick={sendNow}
                 >
                   <Icon name="mail" />
-                  Send for co-sign
+                  <Trans>Send for co-sign</Trans>
                 </Button>
               </span>
             )
@@ -612,22 +623,27 @@ function ReportFlow({
       state,
       why:
         state === "todo"
-          ? `Not reached yet. Finish ${stepLabel(data, page)} first, then use Next.`
-          : `Go to ${candidate.label}${count ? `. ${plural(count, "thing")} to fix` : ""}`,
+          ? t`Not reached yet. Finish ${stepLabel(data, page)} first, then use Next.`
+          : t`Go to ${candidate.label}${count ? t`. ${plural(count, "thing")} to fix` : ""}`,
     };
   });
 
   const status = done ? (
     <p className="m-0 mt-1.5 flex items-center gap-2 text-body-sm text-fg">
       <Icon name="lock" className="text-fg-dim" />
-      <span>Locked as version {report.amend ? 2 : 1}. A change is an amendment with a reason.</span>
+      <span>
+        <Trans>
+          Locked as version {report.amend ? 2 : 1}. A change is an amendment with a reason.
+        </Trans>
+      </span>
     </p>
   ) : sent ? (
     <p className="m-0 mt-1.5 flex items-center gap-2 text-body-sm text-fg">
       <Icon name="clock" className="text-fg-dim" />
       <span>
-        Sent to {person(report.sent?.to)?.name}
-        {report.sent?.at ? `, ${report.sent.at}` : ""} · waiting
+        {report.sent?.at
+          ? t`Sent to ${person(report.sent?.to)?.name}, ${report.sent.at} · waiting`
+          : t`Sent to ${person(report.sent?.to)?.name} · waiting`}
       </span>
     </p>
   ) : undefined;
@@ -646,16 +662,16 @@ function ReportFlow({
         crumbs={[
           { label: data.project.name, href: `${projectHref}?tab=slides` },
           { label: `Case ${data.case.label}`, href: `${projectHref}?tab=slides` },
-          { label: "Clinical report" },
+          { label: t`Clinical report` },
         ]}
-        title="Clinical report"
+        title={t`Clinical report`}
         subtitle={
           <>
             <span className="font-mono" data-phi="">
               {data.case.label}
             </span>{" "}
             · {data.template.name} {data.template.version}
-            {assigned ? ` · assigned to ${assigned}` : ""}
+            {assigned ? t` · assigned to ${assigned}` : ""}
           </>
         }
         steps={stepStates}
@@ -683,10 +699,10 @@ function ReportFlow({
       </FlowPage>
       {report.preview && !done ? (
         <PreviewOverlay
-          label="Preview of the report"
-          title={`${data.case.label}_draft.pdf`}
-          meta="A4 · draft, from what you typed"
-          closeLabel="Close the preview"
+          label={t`Preview of the report`}
+          title={t`${data.case.label}_draft.pdf`}
+          meta={t`A4 · draft, from what you typed`}
+          closeLabel={t`Close the preview`}
           onClose={() => update((current) => ({ ...current, preview: false }))}
         >
           <ReportDocument model={documentOf(data, report, "draft", nameOf)} />
@@ -719,30 +735,30 @@ function ReportFlow({
             toast.show({
               text:
                 now?.id === id && was?.id !== id
-                  ? `${id} added. It is the largest now and sets the category.`
-                  : `${id} added. ${now ? `${now.id} is still the largest.` : ""}`,
+                  ? t`${id} added. It is the largest now and sets the category.`
+                  : t`${id} added. ${now ? t`${now.id} is still the largest.` : ""}`,
             });
           }}
         />
       ) : null}
       {openModal === "sign" && !done && !sent ? (
         <SignModal
-          title={`Sign out ${data.case.label}`}
-          subtitle={`${data.template.name} ${data.template.version} · version 1`}
+          title={t`Sign out ${data.case.label}`}
+          subtitle={t`${data.template.name} ${data.template.version} · version 1`}
           rows={[
             {
               icon: "user",
-              label: "Signed by",
+              label: t`Signed by`,
               value: `${person(data.author_user_id)?.name ?? ""}, MUDr.`,
             },
             {
               icon: "mail",
-              label: "Goes to",
+              label: t`Goes to`,
               value: data.case.requested_by
-                ? `${data.case.requested_by}, who requested it`
-                : "The clinician who requested it",
+                ? t`${data.case.requested_by}, who requested it`
+                : t`The clinician who requested it`,
             },
-            { icon: "file", label: "What you sign", value: "The report as it reads now" },
+            { icon: "file", label: t`What you sign`, value: "The report as it reads now" },
           ]}
           email={workEmail(person(data.author_user_id)?.name ?? "")}
           failed={mock === "ssofail" && sceneModalOpen}
@@ -760,7 +776,7 @@ function ReportFlow({
               }));
               closeModal();
               toast.show({
-                text: `${data.case.label} is signed out. It goes to the clinician.`,
+                text: t`${data.case.label} is signed out. It goes to the clinician.`,
               });
             };
             if (!live) {
@@ -790,21 +806,21 @@ function ReportFlow({
       ) : null}
       {openModal === "amend" && done ? (
         <ReasonModal
-          title="Amend the report"
-          subtitle={`${data.case.label} · signed out ${(report.signed?.at ?? "").replace(/^(\d+ \w+) /, "$1 2026, ")}`}
-          whatLabel="What changes"
-          what="Version 2 of the report, with your reason on top"
+          title={t`Amend the report`}
+          subtitle={t`${data.case.label} · signed out ${(report.signed?.at ?? "").replace(/^(\d+ \w+) /, "$1 2026, ")}`}
+          whatLabel={t`What changes`}
+          what={t`Version 2 of the report, with your reason on top`}
           told={
             report.signed?.co
-              ? `The clinician and ${nameOf(report.signed.co)}, the co-signer`
-              : "The clinician"
+              ? t`The clinician and ${nameOf(report.signed.co)}, the co-signer`
+              : t`The clinician`
           }
-          label="Reason"
-          placeholder="For example, measured again on deeper levels of A1"
-          help="The reason goes into the report."
-          hint="v1 stays readable."
-          primary="Amend and sign again"
-          tooShort="Give a reason of at least 10 characters."
+          label={t`Reason`}
+          placeholder={t`For example, measured again on deeper levels of A1`}
+          help={t`The reason goes into the report.`}
+          hint={t`v1 stays readable.`}
+          primary={t`Amend and sign again`}
+          tooShort={t`Give a reason of at least 10 characters.`}
           tried={mock === "amend" && sceneModalOpen}
           onClose={closeModal}
           onSubmit={(why) => {
@@ -817,7 +833,7 @@ function ReportFlow({
               }));
               closeModal();
               toast.show({
-                text: "Amended and signed again. Version 1 stays readable.",
+                text: t`Amended and signed again. Version 1 stays readable.`,
                 ...(live
                   ? {}
                   : { undo: () => setReport((current) => ({ ...current, amend: was })) }),
@@ -837,7 +853,7 @@ function ReportFlow({
                 onSuccess: (response) => {
                   if (response.status === 200) finish(remember(response));
                 },
-                onError: (error) => complain(error, "The amendment could not be saved."),
+                onError: (error) => complain(error, t`The amendment could not be saved.`),
               },
             );
           }}
@@ -860,15 +876,17 @@ const changeNames: Record<string, string> = {
 };
 
 function ReturnedNote({ server, name }: { server: CaseReport; name: (id: string) => string }) {
-  const from = server.cosigner_user_id ? name(server.cosigner_user_id) : "The co-signer";
+  const { t } = useLingui();
+
+  const from = server.cosigner_user_id ? name(server.cosigner_user_id) : t`The co-signer`;
   const changes = server.changes.map((key) => changeNames[key] ?? key);
   return (
     <Zone
-      title={`Returned by ${from}`}
+      title={t`Returned by ${from}`}
       sub={
         changes.length
-          ? `Changed by ${from.split(" ")[0]}: ${andJoin(changes)}. Fix it and send it again.`
-          : "No values changed. Fix it and send it again."
+          ? t`Changed by ${from.split(" ")[0]}: ${andJoin(changes)}. Fix it and send it again.`
+          : t`No values changed. Fix it and send it again.`
       }
     >
       <blockquote className="m-0 border-l-2 border-line-strong pl-3 text-body-sm text-fg">

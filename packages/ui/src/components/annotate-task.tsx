@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Banner } from "@parfocal/ui/components/banner";
 import { Button } from "@parfocal/ui/components/button";
 import { Icon } from "@parfocal/ui/components/icon";
@@ -7,6 +9,7 @@ import { ProgressBar } from "@parfocal/ui/components/progress-meter";
 import { RadioGroup, RadioRow } from "@parfocal/ui/components/radio-group";
 import { Switch } from "@parfocal/ui/components/switch";
 import type { PersonInfo } from "@parfocal/ui/lib/avatar-colours";
+import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import { defaultSampleSize, sampleSizeLimit, validSampleSize } from "@parfocal/ui/lib/sample-size";
 import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
@@ -14,19 +17,19 @@ import { useId } from "react";
 
 type Origin = "ai" | "ai-edited" | "ai-confirmed" | "human";
 
-const originNames: Record<Origin, string> = {
+const originNames: Record<Origin, string> = lazyText(() => ({
   ai: "AI",
   "ai-edited": "AI, edited",
   "ai-confirmed": "AI, confirmed",
-  human: "By hand",
-};
+  human: t`By hand`,
+}));
 
-const originHints: Record<Origin, string> = {
-  ai: "Made by the model and not checked yet",
-  "ai-edited": "Made by the model, then fixed by an expert",
-  "ai-confirmed": "Made by the model and kept as it is by an expert",
-  human: "Drawn or imported by an expert",
-};
+const originHints: Record<Origin, string> = lazyText(() => ({
+  ai: t`Made by the model and not checked yet`,
+  "ai-edited": t`Made by the model, then fixed by an expert`,
+  "ai-confirmed": t`Made by the model and kept as it is by an expert`,
+  human: t`Drawn or imported by an expert`,
+}));
 
 const originTone: Record<Origin, string> = {
   ai: "bg-chrome-3 text-fg-dim",
@@ -89,12 +92,12 @@ type OriginCardProps = React.ComponentProps<"section"> & {
 const modelLabel = (model: ModelInfo) =>
   model.version ? `${model.name} ${model.version}` : model.name;
 
-const authorVerbs: Record<Origin, string> = {
-  ai: "Made by",
-  "ai-edited": "Edited by",
-  "ai-confirmed": "Kept as it is by",
-  human: "Drawn by",
-};
+const authorVerbs: Record<Origin, string> = lazyText(() => ({
+  ai: t`Made by`,
+  "ai-edited": t`Edited by`,
+  "ai-confirmed": t`Kept as it is by`,
+  human: t`Drawn by`,
+}));
 
 function OriginLines({
   origin,
@@ -104,16 +107,23 @@ function OriginLines({
   const made =
     model && origin !== "human" ? (
       <p data-slot="origin-model" className="m-0 text-body-sm text-fg-dim">
-        Made by <b className="font-semibold text-fg">{modelLabel(model)}</b>
+        <Trans>
+          Made by <b className="font-semibold text-fg">{modelLabel(model)}</b>
+        </Trans>
       </p>
     ) : null;
   if (!author) {
     return model ? (
       <p data-slot="origin-model" className="m-0 text-body-sm text-fg-dim">
-        Made by <b className="font-semibold text-fg">{modelLabel(model)}</b>, nobody has changed it.
+        <Trans>
+          Made by <b className="font-semibold text-fg">{modelLabel(model)}</b>, nobody has changed
+          it.
+        </Trans>
       </p>
     ) : (
-      <p className="m-0 text-body-sm text-fg-dim">Made by the model, nobody has changed it.</p>
+      <p className="m-0 text-body-sm text-fg-dim">
+        <Trans>Made by the model, nobody has changed it.</Trans>
+      </p>
     );
   }
   return (
@@ -137,10 +147,12 @@ function OriginCard({
   className,
   ...props
 }: OriginCardProps) {
+  const { t } = useLingui();
+
   return (
     <section
       data-slot="origin-card"
-      aria-label={`${objectId} origin and history`}
+      aria-label={t`${objectId} origin and history`}
       className={cn("grid gap-3 rounded-zone border border-line bg-surf-panel p-3.5", className)}
       {...props}
     >
@@ -157,7 +169,7 @@ function OriginCard({
         <OriginMark origin={origin} author={author} />
       </header>
       <OriginLines origin={origin} author={author} model={model} />
-      <ol aria-label="History" className="m-0 grid list-none gap-2 p-0">
+      <ol aria-label={t`History`} className="m-0 grid list-none gap-2 p-0">
         {history.map((entry) => (
           <li key={entry.id} className="grid grid-cols-[auto_1fr_auto] items-center gap-2">
             {entry.who ? (
@@ -208,10 +220,12 @@ function AiResultToggle({
     >
       <span className="grid min-w-0 gap-0.5">
         <b id={`${id}-name`} className="text-body-sm font-semibold text-fg">
-          Show the AI result
+          <Trans>Show the AI result</Trans>
         </b>
         <small id={`${id}-sub`} className="text-caption text-fg-dim">
-          {resultName} · {count} objects
+          <Trans>
+            {resultName} · {count} objects
+          </Trans>
         </small>
       </span>
       <Switch
@@ -236,21 +250,31 @@ type CheckProgressProps = React.ComponentProps<"div"> & {
 };
 
 function CheckProgress({ counts, scope, className, ...props }: CheckProgressProps) {
+  const { t } = useLingui();
+
   const done = checkedOf(counts);
   return (
     <div data-slot="check-progress" className={cn("grid gap-2", className)} {...props}>
       <ProgressBar
-        label={`${done} of ${counts.total} ${scope} checked`}
+        label={t`${done} of ${counts.total} ${scope} checked`}
         valueText={`${counts.total === 0 ? 0 : Math.round((done / counts.total) * 100)}%`}
         value={done}
         max={Math.max(counts.total, 1)}
         tone={done === counts.total && counts.total > 0 ? "ok" : "accent"}
       />
       <ul className="m-0 flex list-none flex-wrap gap-x-3 gap-y-1 p-0 text-caption text-fg-dim">
-        <li>{counts.confirmed} confirmed</li>
-        <li>{counts.edited} edited</li>
-        <li>{counts.deleted} deleted</li>
-        <li>{counts.total - done} left</li>
+        <li>
+          <Trans>{counts.confirmed} confirmed</Trans>
+        </li>
+        <li>
+          <Trans>{counts.edited} edited</Trans>
+        </li>
+        <li>
+          <Trans>{counts.deleted} deleted</Trans>
+        </li>
+        <li>
+          <Trans>{counts.total - done} left</Trans>
+        </li>
       </ul>
     </div>
   );
@@ -258,12 +282,12 @@ function CheckProgress({ counts, scope, className, ...props }: CheckProgressProp
 
 type CheckState = "unchecked" | "confirmed" | "edited" | "deleted";
 
-const checkNames: Record<CheckState, string> = {
-  unchecked: "Not checked",
-  confirmed: "Confirmed",
-  edited: "Edited",
-  deleted: "Deleted",
-};
+const checkNames: Record<CheckState, string> = lazyText(() => ({
+  unchecked: t`Not checked`,
+  confirmed: t`Confirmed`,
+  edited: t`Edited`,
+  deleted: t`Deleted`,
+}));
 
 function CheckStateTag({
   state,
@@ -308,15 +332,17 @@ function CheckedCard({
   summary,
   onUndo,
   onNext,
-  nextLabel = "Next slide",
+  nextLabel = t`Next slide`,
   className,
   ...props
 }: CheckedCardProps) {
+  const { t } = useLingui();
+
   return (
     <section
       data-slot="checked-card"
       data-nothing={nothingToMark || undefined}
-      aria-label="Slide checked"
+      aria-label={t`Slide checked`}
       className={cn(
         "grid w-88 gap-3 rounded-zone border border-line-strong bg-surf-panel p-4 shadow-[0_8px_24px_rgb(0_0_0/0.35)]",
         className,
@@ -331,14 +357,14 @@ function CheckedCard({
           <Icon name="check" />
         </span>
         <h3 className="m-0 text-lead font-semibold text-fg">
-          {nothingToMark ? "Nothing to mark" : "You checked this slide"}
+          {nothingToMark ? t`Nothing to mark` : t`You checked this slide`}
         </h3>
       </header>
       <p className="m-0 text-body-sm text-fg-dim">{summary}</p>
       <footer className="flex items-center justify-between gap-2">
         {onUndo ? (
           <Button size="sm" variant="ghost" onClick={onUndo}>
-            Reopen for changes
+            <Trans>Reopen for changes</Trans>
           </Button>
         ) : (
           <span />
@@ -374,16 +400,18 @@ function SignOffCard({
   className,
   ...props
 }: SignOffCardProps) {
+  const { t } = useLingui();
+
   const waiting = experts.filter((expert) => !expert.checked);
   const reason =
     waiting.length > 0
-      ? `${waiting.map((expert) => expert.person.name).join(" and ")} ${waiting.length > 1 ? "have" : "has"} not checked this slide yet`
+      ? t`${waiting.map((expert) => expert.person.name).join(" and ")} ${waiting.length > 1 ? "have" : "has"} not checked this slide yet`
       : undefined;
   return (
     <section
       data-slot="sign-off-card"
       data-signed={signedOff || undefined}
-      aria-label="Sign off"
+      aria-label={t`Sign off`}
       className={cn(
         "grid w-104 gap-3.5 rounded-zone border border-line-strong bg-surf-panel p-4 shadow-[0_8px_24px_rgb(0_0_0/0.35)]",
         className,
@@ -392,15 +420,15 @@ function SignOffCard({
     >
       <header className="grid gap-0.5">
         <h3 className="m-0 text-lead font-semibold text-fg">
-          {signedOff ? "Signed off" : "Sign off this slide"}
+          {signedOff ? t`Signed off` : t`Sign off this slide`}
         </h3>
         <p className="m-0 text-body-sm text-fg-dim" data-phi="">
           {signedOff
-            ? `${slideName} is locked. Later changes go to the change log.`
-            : `${slideName} locks for everyone once you sign it off.`}
+            ? t`${slideName} is locked. Later changes go to the change log.`
+            : t`${slideName} locks for everyone once you sign it off.`}
         </p>
       </header>
-      <ul aria-label="Experts" className="m-0 grid list-none gap-2 p-0">
+      <ul aria-label={t`Experts`} className="m-0 grid list-none gap-2 p-0">
         {experts.map((expert) => (
           <li key={expert.person.name} className="flex items-center gap-2.5">
             <PersonAvatar person={expert.person} size={22} />
@@ -412,7 +440,7 @@ function SignOffCard({
               )}
             >
               <Icon name={expert.checked ? "check" : "clock"} size="xs" />
-              {expert.checked ? (expert.sub ?? "Checked") : "Not yet"}
+              {expert.checked ? (expert.sub ?? t`Checked`) : t`Not yet`}
             </span>
           </li>
         ))}
@@ -424,13 +452,15 @@ function SignOffCard({
           actions={
             onShowThreads ? (
               <Button size="sm" onClick={onShowThreads}>
-                Show threads
+                <Trans>Show threads</Trans>
               </Button>
             ) : undefined
           }
         >
-          {openThreads === 1 ? "1 thread is still open." : `${openThreads} threads are still open.`}{" "}
-          They stay open after the sign-off.
+          {openThreads === 1
+            ? t`1 thread is still open.`
+            : t`${openThreads} threads are still open.`}{" "}
+          <Trans>They stay open after the sign-off.</Trans>
         </Banner>
       ) : null}
       {signedOff ? null : (
@@ -443,7 +473,7 @@ function SignOffCard({
             onClick={onSignOff}
             title={reason}
           >
-            {openThreads > 0 ? "Sign off anyway" : "Sign off"}
+            {openThreads > 0 ? t`Sign off anyway` : t`Sign off`}
           </Button>
         </footer>
       )}
@@ -468,11 +498,11 @@ type CheckOptionValues = {
 
 type Preset = { key: PresetKey; title: string; text: string; options: CheckOptionValues };
 
-const annotatePresets: Preset[] = [
+const annotatePresets: Preset[] = lazyText(() => [
   {
     key: "hand",
-    title: "Annotate by hand",
-    text: "No result set. Experts draw with the fast tools.",
+    title: t`Annotate by hand`,
+    text: t`No result set. Experts draw with the fast tools.`,
     options: {
       scope: "none",
       order: "least-sure",
@@ -484,8 +514,8 @@ const annotatePresets: Preset[] = [
   },
   {
     key: "run",
-    title: "Check a whole-slide run",
-    text: "Every AI object is checked, least sure first, and all must be checked.",
+    title: t`Check a whole-slide run`,
+    text: t`Every AI object is checked, least sure first, and all must be checked.`,
     options: {
       scope: "all",
       order: "least-sure",
@@ -497,8 +527,8 @@ const annotatePresets: Preset[] = [
   },
   {
     key: "sample",
-    title: "Check a sample",
-    text: "A random sample is checked, the rest stays unchecked and out of the export.",
+    title: t`Check a sample`,
+    text: t`A random sample is checked, the rest stays unchecked and out of the export.`,
     options: {
       scope: "sample",
       order: "least-sure",
@@ -510,8 +540,8 @@ const annotatePresets: Preset[] = [
   },
   {
     key: "regions",
-    title: "Fix AI on selected areas",
-    text: "Only objects inside the regions you draw are checked.",
+    title: t`Fix AI on selected areas`,
+    text: t`Only objects inside the regions you draw are checked.`,
     options: {
       scope: "regions",
       order: "position",
@@ -523,8 +553,8 @@ const annotatePresets: Preset[] = [
   },
   {
     key: "mixed",
-    title: "Mixed",
-    text: "AI is checked least sure first, and experts draw what it missed.",
+    title: t`Mixed`,
+    text: t`AI is checked least sure first, and experts draw what it missed.`,
     options: {
       scope: "all",
       order: "least-sure",
@@ -534,7 +564,7 @@ const annotatePresets: Preset[] = [
       sampleSize: defaultSampleSize,
     },
   },
-];
+]);
 
 type PresetPickerProps = Omit<React.ComponentProps<"div">, "onChange"> & {
   value: PresetKey;
@@ -542,10 +572,12 @@ type PresetPickerProps = Omit<React.ComponentProps<"div">, "onChange"> & {
 };
 
 function PresetPicker({ value, onValueChange, className, ...props }: PresetPickerProps) {
+  const { t } = useLingui();
+
   return (
     <div data-slot="preset-picker" className={cn("grid gap-2", className)} {...props}>
       <RadioGroup
-        aria-label="Preset"
+        aria-label={t`Preset`}
         value={value}
         onValueChange={(next) => onValueChange(next as PresetKey)}
         className="grid gap-2"
@@ -564,7 +596,9 @@ function PresetPicker({ value, onValueChange, className, ...props }: PresetPicke
         ))}
       </RadioGroup>
       <small className="text-caption text-fg-dim">
-        A preset only fills in the options. You can change each of them on the next step.
+        <Trans>
+          A preset only fills in the options. You can change each of them on the next step.
+        </Trans>
       </small>
     </div>
   );
@@ -624,62 +658,64 @@ function ChoiceCards({
 }
 
 const scopePhrase = (values: CheckOptionValues) => {
-  if (values.scope === "all") return "every AI cell";
-  if (values.scope === "sample") return `a random sample of ${values.sampleSize} AI cells`;
-  if (values.scope === "regions") return "the AI cells inside the areas you draw";
+  if (values.scope === "all") return t`every AI cell`;
+  if (values.scope === "sample") return t`a random sample of ${values.sampleSize} AI cells`;
+  if (values.scope === "regions") return t`the AI cells inside the areas you draw`;
   return "";
 };
 
 function checkSummary(values: CheckOptionValues) {
   const exported = values.exportUnchecked
-    ? "unchecked AI cells are exported marked as not checked"
-    : "unchecked AI cells are left out of the export";
-  if (!values.hasResult) return "There is no AI result, so experts only draw.";
+    ? t`unchecked AI cells are exported marked as not checked`
+    : t`unchecked AI cells are left out of the export`;
+  if (!values.hasResult) return t`There is no AI result, so experts only draw.`;
   if (values.scope === "none")
-    return `Experts only draw, nobody checks the AI cells, and ${exported}.`;
+    return t`Experts only draw, nobody checks the AI cells, and ${exported}.`;
   const order =
-    values.order === "least-sure" ? "least sure first" : "from top left to bottom right";
+    values.order === "least-sure" ? t`least sure first` : t`from top left to bottom right`;
   const finish =
     values.rule === "require"
-      ? "a slide cannot finish until they are all checked"
-      : "a slide can finish with some left unchecked";
-  return `Experts check ${scopePhrase(values)}, ${order}, ${finish}, and ${exported}.`;
+      ? t`a slide cannot finish until they are all checked`
+      : t`a slide can finish with some left unchecked`;
+  return t`Experts check ${scopePhrase(values)}, ${order}, ${finish}, and ${exported}.`;
 }
 
 function CheckOptions({ values, onValuesChange, className, ...props }: CheckOptionsProps) {
+  const { t } = useLingui();
+
   const set = (patch: Partial<CheckOptionValues>) => onValuesChange({ ...values, ...patch });
   const noResult = !values.hasResult;
   return (
     <div data-slot="check-options" className={cn("grid gap-5", className)} {...props}>
       <ChoiceCards
-        legend="What experts check"
+        legend={t`What experts check`}
         value={values.scope}
         onValueChange={(next) => set({ scope: next as CheckScopeKind })}
         choices={[
-          { value: "none", title: "Check nothing", text: "Experts only draw." },
+          { value: "none", title: t`Check nothing`, text: t`Experts only draw.` },
           {
             value: "all",
-            title: "Check every AI cell",
-            text: "Each cell is confirmed, fixed or deleted.",
+            title: t`Check every AI cell`,
+            text: t`Each cell is confirmed, fixed or deleted.`,
             disabled: noResult,
           },
           {
             value: "sample",
-            title: "Check a random sample",
-            text: "A random sample of cells is checked, the rest stays unchecked.",
+            title: t`Check a random sample`,
+            text: t`A random sample of cells is checked, the rest stays unchecked.`,
             disabled: noResult,
           },
           {
             value: "regions",
-            title: "Check inside areas I draw",
-            text: "Only the cells inside those areas.",
+            title: t`Check inside areas I draw`,
+            text: t`Only the cells inside those areas.`,
             disabled: noResult,
           },
         ]}
       />
       {values.scope === "sample" ? (
         <label className="grid gap-1.5 text-body-sm font-semibold text-fg">
-          Sample size
+          <Trans>Sample size</Trans>
           <Input
             type="number"
             inputMode="numeric"
@@ -693,68 +729,68 @@ function CheckOptions({ values, onValuesChange, className, ...props }: CheckOpti
           />
           <small className="font-normal text-fg-dim">
             {validSampleSize(values.sampleSize)
-              ? "How many AI cells each slide checks. The sample is the same for every expert."
-              : `Use a whole number from 1 to ${sampleSizeLimit}.`}
+              ? t`How many AI cells each slide checks. The sample is the same for every expert.`
+              : t`Use a whole number from 1 to ${sampleSizeLimit}.`}
           </small>
         </label>
       ) : null}
       {values.scope === "none" ? (
         <p className="m-0 text-body-sm text-fg-dim">
-          Nothing to check, so the order and the finishing rule do not apply.
+          <Trans>Nothing to check, so the order and the finishing rule do not apply.</Trans>
         </p>
       ) : (
         <>
           <ChoiceCards
-            legend="Start with"
+            legend={t`Start with`}
             value={values.order}
             onValueChange={(next) => set({ order: next as CheckOrder })}
             choices={[
               {
                 value: "least-sure",
-                title: "The cells the AI was least sure of",
-                text: "The doubtful cells are seen first, while experts are fresh.",
+                title: t`The cells the AI was least sure of`,
+                text: t`The doubtful cells are seen first, while experts are fresh.`,
               },
               {
                 value: "position",
-                title: "Top left to bottom right",
-                text: "Experts sweep the slide in reading order.",
+                title: t`Top left to bottom right`,
+                text: t`Experts sweep the slide in reading order.`,
               },
             ]}
           />
           <ChoiceCards
-            legend="Finishing a slide"
+            legend={t`Finishing a slide`}
             value={values.rule}
             onValueChange={(next) => set({ rule: next as SignOffRule })}
             choices={[
               {
                 value: "require",
-                title: "Only when every cell in scope is checked",
-                text: "The owner cannot sign a slide off while checks are missing.",
+                title: t`Only when every cell in scope is checked`,
+                text: t`The owner cannot sign a slide off while checks are missing.`,
               },
               {
                 value: "warn",
-                title: "Allowed with cells left unchecked",
-                text: "The owner sees a warning and can still sign off.",
+                title: t`Allowed with cells left unchecked`,
+                text: t`The owner sees a warning and can still sign off.`,
               },
             ]}
           />
         </>
       )}
       <ChoiceCards
-        legend="Unchecked AI cells in the export"
+        legend={t`Unchecked AI cells in the export`}
         value={values.exportUnchecked ? "include" : "leave-out"}
         onValueChange={(next) => set({ exportUnchecked: next === "include" })}
         choices={[
           {
             value: "leave-out",
-            title: "Leave them out",
-            text: "The training data holds only cells a person checked or drew.",
+            title: t`Leave them out`,
+            text: t`The training data holds only cells a person checked or drew.`,
             disabled: noResult,
           },
           {
             value: "include",
-            title: "Export them marked as not checked",
-            text: "Cells outside the sample or areas are kept, labelled so you can filter them.",
+            title: t`Export them marked as not checked`,
+            text: t`Cells outside the sample or areas are kept, labelled so you can filter them.`,
             disabled: noResult,
           },
         ]}
@@ -774,6 +810,8 @@ function BlindFirstSwitch({
   className,
   ...props
 }: BlindFirstSwitchProps) {
+  const { t } = useLingui();
+
   const id = useId();
   return (
     <label
@@ -786,12 +824,12 @@ function BlindFirstSwitch({
     >
       <span className="grid gap-0.5">
         <b id={`${id}-name`} className="text-body-sm font-semibold text-fg">
-          Blind first
+          <Trans>Blind first</Trans>
         </b>
         <small id={`${id}-sub`} className="text-body-sm text-fg-dim">
           {checked
-            ? "Each expert's new objects stay hidden from colleagues until that expert marks the slide checked. Turning it off later shows everything at once."
-            : "Experts see each other's work from the start. Turn this on to keep first opinions independent. Turning it on later hides only objects drawn after that, and what is already shown stays shown."}
+            ? t`Each expert's new objects stay hidden from colleagues until that expert marks the slide checked. Turning it off later shows everything at once.`
+            : t`Experts see each other's work from the start. Turn this on to keep first opinions independent. Turning it on later hides only objects drawn after that, and what is already shown stays shown.`}
         </small>
       </span>
       <Switch
@@ -826,12 +864,14 @@ function RunProgress({
   className,
   ...props
 }: RunProgressProps) {
+  const { t } = useLingui();
+
   const heading =
     state === "running"
-      ? "Running on the whole slide"
+      ? t`Running on the whole slide`
       : state === "cancelled"
-        ? "Run cancelled, finished tiles kept"
-        : "Run finished";
+        ? t`Run cancelled, finished tiles kept`
+        : t`Run finished`;
   return (
     <div
       data-slot="run-progress"
@@ -846,12 +886,12 @@ function RunProgress({
         <b className="text-body-sm font-semibold text-fg">{heading}</b>
         {state === "running" && onCancel ? (
           <Button size="sm" onClick={onCancel}>
-            Cancel run
+            <Trans>Cancel run</Trans>
           </Button>
         ) : null}
       </div>
       <ProgressBar
-        label={`${tilesDone} of ${tilesTotal} tiles finished`}
+        label={t`${tilesDone} of ${tilesTotal} tiles finished`}
         valueText={`${objects.toLocaleString("en-US")} objects`}
         value={tilesDone}
         max={tilesTotal}
@@ -859,10 +899,10 @@ function RunProgress({
       />
       <small className="text-caption text-fg-dim">
         {state === "running"
-          ? `About ${estimate ?? "a few minutes"} left. Objects appear as each tile finishes.`
+          ? t`About ${estimate ?? "a few minutes"} left. Objects appear as each tile finishes.`
           : state === "cancelled"
-            ? "The objects of finished tiles are in the layer and join the check scope."
-            : "All objects are in the layer and join the check scope."}
+            ? t`The objects of finished tiles are in the layer and join the check scope.`
+            : t`All objects are in the layer and join the check scope.`}
       </small>
     </div>
   );
@@ -886,6 +926,8 @@ function RunTiles({
   runningTile,
   ...props
 }: RunTilesProps) {
+  const { t } = useLingui();
+
   const tileWidth = width / columns;
   const tileHeight = height / rows;
   const tiles = Array.from({ length: columns * rows }, (_, index) => index);
@@ -903,8 +945,8 @@ function RunTiles({
             y={Math.floor(index / columns) * tileHeight}
             width={tileWidth}
             height={tileHeight}
-            fill={done ? "rgb(52 211 153 / 0.10)" : active ? "rgb(255 255 255 / 0.12)" : "none"}
-            stroke={done ? "rgb(52 211 153 / 0.7)" : "rgb(255 255 255 / 0.28)"}
+            fill={done ? t`rgb(52 211 153 / 0.10)` : active ? t`rgb(255 255 255 / 0.12)` : "none"}
+            stroke={done ? t`rgb(52 211 153 / 0.7)` : t`rgb(255 255 255 / 0.28)`}
             strokeWidth={done ? 3 : 2}
             strokeDasharray={done ? undefined : "10 8"}
           />
@@ -920,6 +962,8 @@ type ChangesByMarkerProps = Omit<React.ComponentProps<"button">, "children"> & {
 };
 
 function ChangesByMarker({ people, count, className, ...props }: ChangesByMarkerProps) {
+  const { t } = useLingui();
+
   const names = people.map((person) => person.name).join(" and ");
   return (
     <button
@@ -936,8 +980,11 @@ function ChangesByMarker({ people, count, className, ...props }: ChangesByMarker
           <PersonAvatar key={person.name} person={person} size={18} />
         ))}
       </span>
-      {count === 1 ? "1 change" : `${count} changes`} by {names}
-      <span className="text-accent">Show</span>
+      {count === 1 ? t`1 change` : t`${count} changes`}{" "}
+      <Trans>
+        by {names}
+        <span className="text-accent">Show</span>
+      </Trans>
     </button>
   );
 }

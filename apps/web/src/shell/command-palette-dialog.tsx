@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { type SearchHit, useListProjects, useSearch } from "@parfocal/api-client";
 import { CommandPaletteView, type PaletteCommand } from "@parfocal/ui/components/command-palette";
 import { Dialog, DialogContent, DialogTitle } from "@parfocal/ui/components/dialog";
@@ -8,6 +10,7 @@ import { destinations } from "./destinations.ts";
 import { setDeveloperMode, useDeveloperMode } from "./developer-mode.ts";
 import { useOverlay } from "./overlays.ts";
 import { type PaletteGroup, paletteEntries, paletteGroups } from "./palette-commands.ts";
+import { usePaletteLabels } from "./palette-labels.tsx";
 import { matchCommand, matchText } from "./palette-match.ts";
 import { useGoTo } from "./router-link.tsx";
 import { searchHandoff } from "./search-handoff.ts";
@@ -62,6 +65,9 @@ function usePlaces(query: string, close: () => void): Row[] {
 }
 
 function PaletteBody({ initial, close }: { initial: string; close: () => void }) {
+  const { t } = useLingui();
+  const paletteLabels = usePaletteLabels();
+
   const [query, setQuery] = useState(initial);
   const [active, setActive] = useState(0);
   const goTo = useGoTo();
@@ -97,7 +103,16 @@ function PaletteBody({ initial, close }: { initial: string; close: () => void })
       close();
     },
   });
-  const local = entries.flatMap((entry): Row[] => {
+  const translatedEntries = entries.map((entry) => {
+    const key =
+      entry.id === "setting-developer-mode"
+        ? entry.label.endsWith("off")
+          ? "setting-developer-mode-off"
+          : "setting-developer-mode-on"
+        : entry.id;
+    return { ...entry, label: paletteLabels[key] ?? entry.label };
+  });
+  const local = translatedEntries.flatMap((entry): Row[] => {
     if (!trimmed) {
       return entry.group === "Settings" && !entry.featured
         ? []
@@ -128,7 +143,7 @@ function PaletteBody({ initial, close }: { initial: string; close: () => void })
             id: "all-results",
             group: "Go to",
             icon: "search",
-            label: `All results for "${trimmed}"`,
+            label: t`All results for "${trimmed}"`,
             matched: [],
             score: 0,
             run: () => {
@@ -178,7 +193,9 @@ export default function PaletteDialog() {
         showCloseButton={false}
         className="top-[110px] translate-y-0 gap-0 overflow-hidden bg-chrome p-0 sm:max-w-[640px]"
       >
-        <DialogTitle className="sr-only">Command palette</DialogTitle>
+        <DialogTitle className="sr-only">
+          <Trans>Command palette</Trans>
+        </DialogTitle>
         <PaletteBody initial={overlay.find ?? ""} close={close} />
       </DialogContent>
     </Dialog>

@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   ApiError,
   type SignInOptions,
@@ -61,10 +62,12 @@ export type Flow = {
 };
 
 function EmailField({ flow }: { flow: Flow }) {
+  const { t } = useLingui();
+
   return (
-    <AuthField label="Work email">
+    <AuthField label={t`Work email`}>
       <Input
-        aria-label="Work email"
+        aria-label={t`Work email`}
         type="email"
         autoComplete="username"
         value={flow.email}
@@ -80,25 +83,29 @@ function DeepLinkLine({ options }: { options: SignInOptions | undefined }) {
   if (link === null) return null;
   return (
     <DeepLinkNote>
-      After you sign in:{" "}
+      <Trans>After you sign in:</Trans>{" "}
       {link.task_code ? (
         <>
           <b>{link.task_code}</b>,{" "}
         </>
       ) : null}
-      slide{" "}
-      <b className="font-mono" data-phi="">
-        {link.slide_label}
-      </b>{" "}
-      of{" "}
-      <b className="font-mono" data-phi="">
-        {link.case_label}
-      </b>
+      <Trans>
+        slide{" "}
+        <b className="font-mono" data-phi="">
+          {link.slide_label}
+        </b>{" "}
+        of{" "}
+        <b className="font-mono" data-phi="">
+          {link.case_label}
+        </b>
+      </Trans>
     </DeepLinkNote>
   );
 }
 
 export function EmailForm({ flow }: { flow: Flow }) {
+  const { t } = useLingui();
+
   const { options, email } = flow;
   const [password, setPassword] = useState("");
   const [keep, setKeep] = useState(true);
@@ -116,7 +123,7 @@ export function EmailForm({ flow }: { flow: Flow }) {
         onSuccess: (response) => {
           if (response.status === 200) flow.land(response.data);
         },
-        onError: (error) => setFailure(problemText(error, "Could not sign in. Try again.")),
+        onError: (error) => setFailure(problemText(error, t`Could not sign in. Try again.`)),
       },
     );
   };
@@ -127,13 +134,15 @@ export function EmailForm({ flow }: { flow: Flow }) {
       { data: { workspace_id: matched.workspace_id, return_to: flow.returnTo } },
       {
         onSuccess: (response) => flow.land(response.data),
-        onError: (error) => setFailure(problemText(error, "Single sign-on did not answer.")),
+        onError: (error) => setFailure(problemText(error, t`Single sign-on did not answer.`)),
       },
     );
   };
   return (
     <AuthForm>
-      <AuthHeading title="Sign in to Parfocal">{flow.workspace.name} workspace</AuthHeading>
+      <AuthHeading title={t`Sign in to Parfocal`}>
+        <Trans>{flow.workspace.name} workspace</Trans>
+      </AuthHeading>
       <DeepLinkLine options={options} />
       {showsSso ? (
         <SsoButton
@@ -141,19 +150,27 @@ export function EmailForm({ flow }: { flow: Flow }) {
           onClick={continueWithSso}
           disabled={sso.isPending}
         >
-          Continue with {matched.short_name} single sign-on
+          <Trans>Continue with {matched.short_name} single sign-on</Trans>
         </SsoButton>
       ) : null}
-      {showsSso ? <OrDivider>or with your email</OrDivider> : null}
+      {showsSso ? (
+        <OrDivider>
+          <Trans>or with your email</Trans>
+        </OrDivider>
+      ) : null}
       <EmailField flow={flow} />
       {methods?.password === false ? null : (
         <AuthField
-          label="Password"
-          aside={<AuthLink onClick={() => flow.change("forgot")}>Forgot password?</AuthLink>}
+          label={t`Password`}
+          aside={
+            <AuthLink onClick={() => flow.change("forgot")}>
+              <Trans>Forgot password?</Trans>
+            </AuthLink>
+          }
         >
           <PasswordInput
             id="sign-in-password"
-            label="Password"
+            label={t`Password`}
             value={password}
             onChange={setPassword}
             onSubmit={submit}
@@ -172,36 +189,38 @@ export function EmailForm({ flow }: { flow: Flow }) {
             checked={keep}
             onCheckedChange={(checked) => setKeep(checked === true)}
           />
-          <label htmlFor="keep-signed-in">Keep me signed in on this computer</label>
+          <label htmlFor="keep-signed-in">
+            <Trans>Keep me signed in on this computer</Trans>
+          </label>
         </span>
       )}
       {methods?.password === false ? null : (
         <Button variant="primary" size="lg" block onClick={submit} disabled={signIn.isPending}>
-          Sign in
+          <Trans>Sign in</Trans>
         </Button>
       )}
       {methods?.sso !== false && matched === undefined ? (
         <Button size="lg" block onClick={() => flow.change("sso")}>
           <Icon name="shield" />
-          Use single sign-on instead
+          <Trans>Use single sign-on instead</Trans>
         </Button>
       ) : null}
       {methods?.link === false ? null : (
         <Button size="lg" block onClick={() => flow.change("magic")}>
           <Icon name="mail" />
-          Email me a sign-in link instead
+          <Trans>Email me a sign-in link instead</Trans>
         </Button>
       )}
       {methods?.passkey === false ? null : (
         <Button size="lg" block onClick={() => flow.change("passkey")}>
           <Icon name="key" />
-          Sign in with a passkey
+          <Trans>Sign in with a passkey</Trans>
         </Button>
       )}
       <AuthFoot>
-        New to Parfocal? <SignUpLink />
+        <Trans>New to Parfocal?</Trans> <SignUpLink />
         <DotSeparator />
-        Invited? Open the link in your email
+        <Trans>Invited? Open the link in your email</Trans>
       </AuthFoot>
     </AuthForm>
   );
@@ -209,10 +228,16 @@ export function EmailForm({ flow }: { flow: Flow }) {
 
 function SignUpLink() {
   const goTo = useGoTo();
-  return <AuthLink onClick={() => void goTo("/sign-up")}>Create an account</AuthLink>;
+  return (
+    <AuthLink onClick={() => void goTo("/sign-up")}>
+      <Trans>Create an account</Trans>
+    </AuthLink>
+  );
 }
 
 export function MagicForm({ flow }: { flow: Flow }) {
+  const { t } = useLingui();
+
   const { options, email } = flow;
   const [code, setCode] = useState("");
   const [failure, setFailure] = useState<string | null>(null);
@@ -227,9 +252,9 @@ export function MagicForm({ flow }: { flow: Flow }) {
           setCode("");
           setFailure(null);
           setSecondsLeft(response.data.resend_seconds);
-          flow.toast("Sends a new link. The old one stops working");
+          flow.toast(t`Sends a new link. The old one stops working`);
         },
-        onError: (error) => setFailure(problemText(error, "Could not send the link.")),
+        onError: (error) => setFailure(problemText(error, t`Could not send the link.`)),
       },
     );
   };
@@ -240,7 +265,7 @@ export function MagicForm({ flow }: { flow: Flow }) {
       {
         onSuccess: (response) => flow.land(response.data),
         onError: (error) => {
-          setFailure(problemText(error, "Could not check the code."));
+          setFailure(problemText(error, t`Could not check the code.`));
           setCode("");
         },
       },
@@ -249,11 +274,13 @@ export function MagicForm({ flow }: { flow: Flow }) {
   return (
     <AuthForm center>
       <AuthBadge icon="mail" />
-      <AuthHeading title="Check your email">
-        We sent a sign-in link and a code to <b>{email}</b>. Both work once, for{" "}
-        {options?.link_minutes ?? 15} minutes.
+      <AuthHeading title={t`Check your email`}>
+        <Trans>
+          We sent a sign-in link and a code to <b>{email}</b>. Both work once, for{" "}
+          {options?.link_minutes ?? 15} minutes.
+        </Trans>
       </AuthHeading>
-      <CodeInput label="Sign-in code" value={code} onChange={setCode} onSubmit={submit} />
+      <CodeInput label={t`Sign-in code`} value={code} onChange={setCode} onSubmit={submit} />
       {failure === null ? null : (
         <Banner inline tone="bad" icon="warn">
           {failure}
@@ -266,21 +293,25 @@ export function MagicForm({ flow }: { flow: Flow }) {
         onClick={submit}
         disabled={code.length < codeLength || signIn.isPending}
       >
-        Sign in with the code
+        <Trans>Sign in with the code</Trans>
       </Button>
       <AuthFoot>
-        No email?{" "}
+        <Trans>No email?</Trans>{" "}
         <AuthLink onClick={resend}>
-          {secondsLeft > 0 ? `Resend in ${clock(secondsLeft)}` : "Resend the link"}
+          {secondsLeft > 0 ? t`Resend in ${clock(secondsLeft)}` : t`Resend the link`}
         </AuthLink>
         <DotSeparator />
-        <AuthLink onClick={() => flow.change("email")}>Use a password</AuthLink>
+        <AuthLink onClick={() => flow.change("email")}>
+          <Trans>Use a password</Trans>
+        </AuthLink>
       </AuthFoot>
     </AuthForm>
   );
 }
 
 export function SsoForm({ flow }: { flow: Flow }) {
+  const { t } = useLingui();
+
   const institutions = flow.options?.institutions ?? [];
   const [text, setText] = useState("");
   const [picked, setPicked] = useState<string | null>(null);
@@ -298,24 +329,24 @@ export function SsoForm({ flow }: { flow: Flow }) {
       { data: { workspace_id: chosen.workspace_id, return_to: flow.returnTo } },
       {
         onSuccess: (response) => flow.land(response.data),
-        onError: (error) => setFailure(problemText(error, "Single sign-on did not answer.")),
+        onError: (error) => setFailure(problemText(error, t`Single sign-on did not answer.`)),
       },
     );
   };
   return (
     <AuthForm>
-      <AuthHeading title="Continue with your institution">
-        Your institution checks who you are, so Parfocal never sees your password.
+      <AuthHeading title={t`Continue with your institution`}>
+        <Trans>Your institution checks who you are, so Parfocal never sees your password.</Trans>
       </AuthHeading>
-      <AuthField label="Institution or email domain">
+      <AuthField label={t`Institution or email domain`}>
         <Input
-          aria-label="Institution or email domain"
+          aria-label={t`Institution or email domain`}
           value={text}
           onChange={(event) => setText(event.target.value)}
           className="h-9"
         />
       </AuthField>
-      <div role="radiogroup" aria-label="Institutions" className="grid gap-2">
+      <div role="radiogroup" aria-label={t`Institutions`} className="grid gap-2">
         {listed.map((item) => (
           <ChoiceOption
             key={item.workspace_id}
@@ -330,7 +361,9 @@ export function SsoForm({ flow }: { flow: Flow }) {
             onClick={() => setPicked(item.workspace_id)}
             end={
               institutionFor(flow.email, [item]) ? (
-                <StatusTag tone="ok">Matches your email</StatusTag>
+                <StatusTag tone="ok">
+                  <Trans>Matches your email</Trans>
+                </StatusTag>
               ) : null
             }
           />
@@ -348,12 +381,14 @@ export function SsoForm({ flow }: { flow: Flow }) {
         onClick={go}
         disabled={chosen === undefined || sso.isPending}
       >
-        Continue to {chosen?.short_name ?? "your institution"} sign-in
+        <Trans>Continue to {chosen?.short_name ?? t`your institution`} sign-in</Trans>
       </Button>
       <AuthFoot>
-        Not listed? Your admin can connect it in <AdminSecurityLink />
+        <Trans>Not listed? Your admin can connect it in</Trans> <AdminSecurityLink />
         <DotSeparator />
-        <AuthLink onClick={() => flow.change("email")}>Back</AuthLink>
+        <AuthLink onClick={() => flow.change("email")}>
+          <Trans>Back</Trans>
+        </AuthLink>
       </AuthFoot>
     </AuthForm>
   );
@@ -361,10 +396,16 @@ export function SsoForm({ flow }: { flow: Flow }) {
 
 function AdminSecurityLink() {
   const goTo = useGoTo();
-  return <AuthLink onClick={() => void goTo("/admin?scene=security")}>Admin · Security</AuthLink>;
+  return (
+    <AuthLink onClick={() => void goTo("/admin?scene=security")}>
+      <Trans>Admin · Security</Trans>
+    </AuthLink>
+  );
 }
 
 export function ForgotForm({ flow }: { flow: Flow }) {
+  const { t } = useLingui();
+
   const [failure, setFailure] = useState<string | null>(null);
   const reset = useRequestPasswordReset(handled);
   const send = () => {
@@ -373,17 +414,19 @@ export function ForgotForm({ flow }: { flow: Flow }) {
       { data: { email: flow.email } },
       {
         onSuccess: (response) => {
-          flow.toast(`Reset link sent to ${response.data.email}`);
+          flow.toast(t`Reset link sent to ${response.data.email}`);
           flow.change("reset");
         },
-        onError: (error) => setFailure(problemText(error, "Could not send the link.")),
+        onError: (error) => setFailure(problemText(error, t`Could not send the link.`)),
       },
     );
   };
   return (
     <AuthForm>
-      <AuthHeading title="Reset your password">
-        Enter your work email. If it has an account, a reset link arrives in a minute.
+      <AuthHeading title={t`Reset your password`}>
+        <Trans>
+          Enter your work email. If it has an account, a reset link arrives in a minute.
+        </Trans>
       </AuthHeading>
       <EmailField flow={flow} />
       {failure === null ? null : (
@@ -392,20 +435,26 @@ export function ForgotForm({ flow }: { flow: Flow }) {
         </Banner>
       )}
       <Button variant="primary" size="lg" block onClick={send} disabled={reset.isPending}>
-        Send reset link
+        <Trans>Send reset link</Trans>
       </Button>
       <Banner inline tone="info">
-        Signing in with {institutionFor(flow.email, flow.options?.institutions ?? [])?.short_name}{" "}
-        single sign-on? Reset that password with hospital IT instead.
+        <Trans>
+          Signing in with {institutionFor(flow.email, flow.options?.institutions ?? [])?.short_name}{" "}
+          single sign-on? Reset that password with hospital IT instead.
+        </Trans>
       </Banner>
       <AuthFoot>
-        <AuthLink onClick={() => flow.change("email")}>Back to sign in</AuthLink>
+        <AuthLink onClick={() => flow.change("email")}>
+          <Trans>Back to sign in</Trans>
+        </AuthLink>
       </AuthFoot>
     </AuthForm>
   );
 }
 
 export function ResetForm({ flow }: { flow: Flow }) {
+  const { t } = useLingui();
+
   const [password, setPassword] = useState("");
   const [repeat, setRepeat] = useState("");
   const [flags, setFlags] = useState<PasswordFlag[]>([]);
@@ -414,7 +463,7 @@ export function ResetForm({ flow }: { flow: Flow }) {
   const check = checkPassword(password, flags);
   const submit = () => {
     if (password !== repeat) {
-      setFailure("The two passwords are not the same.");
+      setFailure(t`The two passwords are not the same.`);
       return;
     }
     setFailure(null);
@@ -430,7 +479,7 @@ export function ResetForm({ flow }: { flow: Flow }) {
                   .fieldErrors()
                   .map((item) => item.message)
                   .join(". ")
-              : problemText(error, "Could not save the password."),
+              : problemText(error, t`Could not save the password.`),
           );
         },
       },
@@ -438,13 +487,15 @@ export function ResetForm({ flow }: { flow: Flow }) {
   };
   return (
     <AuthForm>
-      <AuthHeading title="Choose a new password">
-        For <b>{flow.email}</b>. Other devices are signed out after the change.
+      <AuthHeading title={t`Choose a new password`}>
+        <Trans>
+          For <b>{flow.email}</b>. Other devices are signed out after the change.
+        </Trans>
       </AuthHeading>
-      <AuthField label="New password">
+      <AuthField label={t`New password`}>
         <PasswordInput
           id="new-password"
-          label="New password"
+          label={t`New password`}
           fresh
           value={password}
           onChange={(value) => {
@@ -455,10 +506,10 @@ export function ResetForm({ flow }: { flow: Flow }) {
       </AuthField>
       <PasswordMeter strength={check.strength} label={check.label} />
       <RequirementList items={check.requirements} />
-      <AuthField label="Repeat it">
+      <AuthField label={t`Repeat it`}>
         <PasswordInput
           id="repeat-password"
-          label="Repeat it"
+          label={t`Repeat it`}
           fresh
           value={repeat}
           onChange={setRepeat}
@@ -471,7 +522,7 @@ export function ResetForm({ flow }: { flow: Flow }) {
         </Banner>
       )}
       <Button variant="primary" size="lg" block onClick={submit} disabled={save.isPending}>
-        Save and sign in
+        <Trans>Save and sign in</Trans>
       </Button>
     </AuthForm>
   );

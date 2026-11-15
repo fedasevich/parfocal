@@ -1,3 +1,5 @@
+import { plural } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   getGetDisagreementQueueQueryKey,
   type QueueRow,
@@ -82,6 +84,8 @@ const typing = (target: EventTarget | null) =>
   (target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName));
 
 export function QueueScreen({ taskId, scene }: { taskId: string; scene: QueueScene }) {
+  const { t } = useLingui();
+
   const queue = okData(useGetDisagreementQueue(taskId).data);
   const task = okData(useGetReviewTask(taskId).data);
   const project = okData(
@@ -173,8 +177,8 @@ export function QueueScreen({ taskId, scene }: { taskId: string; scene: QueueSce
   const everyClosed = allClosed(rows);
   const lockedName = nameOf(locked?.user_id) ?? "A reviewer";
   const sub = locked
-    ? `The queue opens when every reviewer has submitted. ${lockedName} has ${locked.slides_left} slides left.`
-    : `${task?.name ?? ""} · ${rows.length} objects need a decision out of ${queue?.total_objects ?? 0} · ${resolved} resolved${withAdjudicator ? ` · ${withAdjudicator} with the adjudicator` : ""}`;
+    ? t`The queue opens when every reviewer has submitted. ${lockedName} has ${locked.slides_left} slides left.`
+    : t`${task?.name ?? ""} · ${rows.length} objects need a decision out of ${queue?.total_objects ?? 0} · ${resolved} resolved${withAdjudicator ? t` · ${withAdjudicator} with the adjudicator` : ""}`;
   const checkedRows = rows.filter((item) => checked.includes(item.key));
 
   const sendObjects = (keys: string[], adjudicatorId: string, note: string | null) => {
@@ -191,7 +195,7 @@ export function QueueScreen({ taskId, scene }: { taskId: string; scene: QueueSce
       {
         onSuccess: () =>
           toast.show(
-            `${picked.length} object${picked.length === 1 ? "" : "s"} sent to ${nameOf(adjudicatorId) ?? "the adjudicator"}`,
+            t`${picked.length} object${picked.length === 1 ? "" : "s"} sent to ${nameOf(adjudicatorId) ?? "the adjudicator"}`,
           ),
       },
     );
@@ -206,20 +210,20 @@ export function QueueScreen({ taskId, scene }: { taskId: string; scene: QueueSce
           <Breadcrumbs
             renderLink={renderLink}
             items={[
-              { label: "My work", href: destinations.myWork() },
+              { label: t`My work`, href: destinations.myWork() },
               {
-                label: project?.name ?? "Project",
+                label: project?.name ?? t`Project`,
                 ...(task ? { href: destinations.project(task.project_id) } : {}),
               },
               {
                 label: `${taskCode} · ${task?.name.split(" · ")[0] ?? ""}`,
                 ...(task ? { href: `${destinations.project(task.project_id)}?tab=tasks` } : {}),
               },
-              { label: "Disagreements" },
+              { label: t`Disagreements` },
             ]}
           />
           <h1 className="m-0 text-page-title font-semibold tracking-[-0.01em] text-fg">
-            Disagreements in {taskCode}
+            <Trans>Disagreements in {taskCode}</Trans>
           </h1>
           <p className="m-0 flex items-center gap-1.5 text-body-sm text-fg-dim">
             {locked ? <Icon name="lock" /> : null}
@@ -233,18 +237,18 @@ export function QueueScreen({ taskId, scene }: { taskId: string; scene: QueueSce
               onClick={() =>
                 setNudging({
                   userId: locked.user_id,
-                  message: `Hi ${lockedName.split(" ")[0]}, ${taskCode} is waiting on your last ${locked.slides_left} slides before its disagreements can be decided. Could you fit them in this week?`,
+                  message: t`Hi ${lockedName.split(" ")[0]}, ${taskCode} is waiting on your last ${locked.slides_left} slides before its disagreements can be decided. Could you fit them in this week?`,
                 })
               }
             >
               <Icon name="bell" />
-              Nudge {lockedName.split(" ")[0]}
+              <Trans>Nudge {lockedName.split(" ")[0]}</Trans>
             </Button>
           ) : (
             <>
               <Button
                 className="outline-1 outline-dashed outline-[#d946ef]"
-                title="Mock persona switch"
+                title={t`Mock persona switch`}
                 onClick={() =>
                   void navigate({
                     to: "/tasks/$taskId/disagreements",
@@ -254,38 +258,38 @@ export function QueueScreen({ taskId, scene }: { taskId: string; scene: QueueSce
                 }
               >
                 <Icon name="users" />
-                Preview the adjudicator view
+                <Trans>Preview the adjudicator view</Trans>
               </Button>
               <Button
                 variant={everyClosed ? "primary" : "default"}
                 title={
                   everyClosed
-                    ? "Every object is decided, left open or with the adjudicator"
-                    : "Sign-off lists what is still open"
+                    ? t`Every object is decided, left open or with the adjudicator`
+                    : t`Sign-off lists what is still open`
                 }
                 onClick={() => void navigate({ to: "/tasks/$taskId/sign-off", params: { taskId } })}
               >
-                Go to sign-off
+                <Trans>Go to sign-off</Trans>
               </Button>
             </>
           )}
         </div>
       </header>
       <div className="grid min-h-0 grid-cols-[320px_minmax(0,1fr)_minmax(300px,300px)] items-start gap-5">
-        <section aria-label="Queued objects" className="grid gap-1">
+        <section aria-label={t`Queued objects`} className="grid gap-1">
           <SegmentedControl
-            aria-label="Show"
+            aria-label={t`Show`}
             className="mb-2"
             value={filter}
             disabled={Boolean(locked)}
             onValueChange={(value) => setFilter(value as QueueFilter)}
             options={[
               { value: "all", label: `All ${counts.all}` },
-              { value: "rev", label: `Reviewers differ ${counts.rev}` },
-              { value: "ai", label: `Both vs AI ${counts.ai}` },
+              { value: "rev", label: t`Reviewers differ ${counts.rev}` },
+              { value: "ai", label: t`Both vs AI ${counts.ai}` },
             ]}
           />
-          <QueueTable aria-label="Queued objects">
+          <QueueTable aria-label={t`Queued objects`}>
             {shown.map((item) => {
               const tag = rowTag(item, nameOf, look);
               return (
@@ -315,13 +319,17 @@ export function QueueScreen({ taskId, scene }: { taskId: string; scene: QueueSce
           <section className="col-span-2 grid min-h-60 place-items-center rounded-zone bg-surf-panel p-8 text-center">
             <div className="grid justify-items-center gap-2 text-body-sm text-fg-dim">
               <Icon name="lock" size="md" />
-              <b className="text-fg">Nothing to decide yet</b>
-              <span>Decisions open here once both reviews are in.</span>
+              <b className="text-fg">
+                <Trans>Nothing to decide yet</Trans>
+              </b>
+              <span>
+                <Trans>Decisions open here once both reviews are in.</Trans>
+              </span>
             </div>
           </section>
         ) : row ? (
           <>
-            <section aria-label={`Evidence for ${rowLabel(row)}`} className="grid gap-3">
+            <section aria-label={t`Evidence for ${rowLabel(row)}`} className="grid gap-3">
               <div className="relative h-[360px] overflow-hidden rounded-zone bg-canvas">
                 <SlideStill
                   view={stillOf(row)}
@@ -335,7 +343,7 @@ export function QueueScreen({ taskId, scene }: { taskId: string; scene: QueueSce
                 />
               </div>
               <EvidenceList>
-                <EvidenceRow icon="smart" title="AI · CAMELYON v1.0">
+                <EvidenceRow icon="smart" title={t`AI · CAMELYON v1.0`}>
                   {claimText(row.ai)}
                 </EvidenceRow>
                 {row.answers.map((answer) => (
@@ -344,7 +352,9 @@ export function QueueScreen({ taskId, scene }: { taskId: string; scene: QueueSce
                     title={<Person {...personProp(person(answer.user_id))} size={20} />}
                   >
                     {row.state === "look-again" ? (
-                      <StatusTag tone="accent">open again</StatusTag>
+                      <StatusTag tone="accent">
+                        <Trans>open again</Trans>
+                      </StatusTag>
                     ) : (
                       <>
                         <StatusTag tone={answerTone[countOf(style, answer.raw, row.ai.class_name)]}>
@@ -359,7 +369,7 @@ export function QueueScreen({ taskId, scene }: { taskId: string; scene: QueueSce
                     )}
                   </EvidenceRow>
                 ))}
-                <EvidenceRow icon="check" title="Decision">
+                <EvidenceRow icon="check" title={t`Decision`}>
                   {row.decision ? (
                     <>
                       <StatusTag
@@ -369,27 +379,32 @@ export function QueueScreen({ taskId, scene }: { taskId: string; scene: QueueSce
                       </StatusTag>
                       {row.state === "adjudicated" ? (
                         <small className="text-caption text-fg-dim">
-                          {nameOf(row.decision.by_user_id)}, adjudicator
+                          <Trans>{nameOf(row.decision.by_user_id)}, adjudicator</Trans>
                         </small>
                       ) : row.decision.note ? (
                         <QuotedNote>{row.decision.note}</QuotedNote>
                       ) : null}
                     </>
                   ) : (
-                    <span className="text-fg-dim">Not decided yet</span>
+                    <span className="text-fg-dim">
+                      <Trans>Not decided yet</Trans>
+                    </span>
                   )}
                 </EvidenceRow>
               </EvidenceList>
             </section>
-            <aside aria-label="Decide" className="rounded-zone bg-surf-panel p-4">
+            <aside aria-label={t`Decide`} className="rounded-zone bg-surf-panel p-4">
               {checkedRows.length > 0 ? (
                 <div className="grid gap-3">
                   <div className="flex items-center justify-between">
                     <b className="text-body font-semibold">
-                      {checkedRows.length} object{checkedRows.length > 1 ? "s" : ""} selected
+                      {plural(checkedRows.length, {
+                        one: "# object selected",
+                        other: "# objects selected",
+                      })}
                     </b>
                     <Button size="sm" variant="ghost" onClick={() => setChecked([])}>
-                      Clear
+                      <Trans>Clear</Trans>
                     </Button>
                   </div>
                   <div className="flex flex-wrap gap-1.5">
@@ -402,11 +417,13 @@ export function QueueScreen({ taskId, scene }: { taskId: string; scene: QueueSce
                     onClick={() => setSend({ keys: checked, excluded: reviewerIds })}
                   >
                     <Icon name="user" />
-                    Send to an adjudicator
+                    <Trans>Send to an adjudicator</Trans>
                   </Button>
                   <p className="m-0 text-body-sm text-fg-dim">
-                    The reviewers of {taskCode} cannot be picked. The adjudicator sees them as
-                    Reviewer A and Reviewer B.
+                    <Trans>
+                      The reviewers of {taskCode} cannot be picked. The adjudicator sees them as
+                      Reviewer A and Reviewer B.
+                    </Trans>
                   </p>
                 </div>
               ) : (
@@ -426,7 +443,7 @@ export function QueueScreen({ taskId, scene }: { taskId: string; scene: QueueSce
                       object: row.object,
                       data: { action: "leave-open", note: notes[row.key]?.trim() || null },
                     });
-                    toast.show(`${rowLabel(row)} is left open. Sign-off counts it on purpose.`);
+                    toast.show(t`${rowLabel(row)} is left open. Sign-off counts it on purpose.`);
                   }}
                   onSend={(keys, excluded) => setSend({ keys, excluded })}
                   onEdit={() =>
@@ -446,7 +463,7 @@ export function QueueScreen({ taskId, scene }: { taskId: string; scene: QueueSce
                       object: row.object,
                       data: { action: "look-again" },
                     });
-                    toast.show(`Both reviewers have ${row.object} open again`);
+                    toast.show(t`Both reviewers have ${row.object} open again`);
                   }}
                   onKeep={() =>
                     update.mutate({
@@ -490,7 +507,7 @@ export function QueueScreen({ taskId, scene }: { taskId: string; scene: QueueSce
               data: { user_id: nudging.userId, message: nudging.message },
             });
             setNudging(null);
-            toast.show(`Nudge sent to ${nameOf(nudging.userId) ?? "the reviewer"}`);
+            toast.show(t`Nudge sent to ${nameOf(nudging.userId) ?? "the reviewer"}`);
           }}
         />
       ) : null}
@@ -535,12 +552,14 @@ function DecidePanel({
   onLookAgain,
   onKeep,
 }: DecidePanelProps) {
+  const { t } = useLingui();
+
   const tag = rowTag(row, nameOf, look);
   const label = rowLabel(row);
   const head = (
     <div className="flex items-center justify-between gap-2">
       <b className="flex items-center gap-2 text-body font-semibold">
-        Decide <ObjectIdTag>{label}</ObjectIdTag>
+        <Trans>Decide</Trans> <ObjectIdTag>{label}</ObjectIdTag>
       </b>
       <StatusTag tone={tag.tone}>{tag.label}</StatusTag>
     </div>
@@ -550,8 +569,10 @@ function DecidePanel({
       <div className="grid gap-3">
         {head}
         <p className="m-0 text-body-sm text-fg-dim">
-          Both reviewers have {row.object} open again with your note. It comes back here when they
-          decide.
+          <Trans>
+            Both reviewers have {row.object} open again with your note. It comes back here when they
+            decide.
+          </Trans>
         </p>
       </div>
     );
@@ -561,8 +582,10 @@ function DecidePanel({
       <div className="grid gap-3">
         {head}
         <p className="m-0 text-body-sm text-fg-dim">
-          {nameOf(row.adjudicator?.user_id)} decides {row.object}. Her decision shows here next to
-          the reviewers' answers.
+          <Trans>
+            {nameOf(row.adjudicator?.user_id)} decides {row.object}. Her decision shows here next to
+            the reviewers' answers.
+          </Trans>
         </p>
       </div>
     );
@@ -574,15 +597,15 @@ function DecidePanel({
         <KeyValueList
           tight
           rows={[
-            { icon: "user", label: "Decided by", value: nameOf(row.decision.by_user_id) ?? "" },
+            { icon: "user", label: t`Decided by`, value: nameOf(row.decision.by_user_id) ?? "" },
             {
               icon: "check",
-              label: "Decision",
+              label: t`Decision`,
               value: styledWord(look.style, row.decision.raw, look.classes, row.ai.class_name),
             },
             {
               icon: "clock",
-              label: "When",
+              label: t`When`,
               value: new Date(row.decision.at).toLocaleString("en-GB", {
                 day: "numeric",
                 month: "short",
@@ -598,9 +621,9 @@ function DecidePanel({
   const disagreeing = row.answers
     .filter((answer) => answer.raw === "disagree")
     .map((answer) => nameOf(answer.user_id) ?? "");
-  const mapping = `Agree keeps the AI's call.${
+  const mapping = t`Agree keeps the AI's call.${
     disagreeing.length
-      ? ` Disagree goes with ${disagreeing.length === 2 ? "both reviewers" : disagreeing[0]}.`
+      ? t` Disagree goes with ${disagreeing.length === 2 ? "both reviewers" : disagreeing[0]}.`
       : ""
   }`;
   const declinedKeys = rows.filter((item) => item.state === "declined").map((item) => item.key);
@@ -611,17 +634,23 @@ function DecidePanel({
         <div className="grid gap-2.5 rounded-zone bg-[color-mix(in_srgb,var(--warn)_14%,transparent)] p-3 text-body-sm text-fg">
           <Icon name="warn" className="text-warn" />
           <span>
-            {row.object} was redrawn by {nameOf(row.edited.by_user_id)} on{" "}
+            <Trans>
+              {row.object} was redrawn by {nameOf(row.edited.by_user_id)} on{" "}
+            </Trans>
             {new Date(`${row.edited.on}T12:00:00`).toLocaleDateString("en-GB", {
               day: "numeric",
               month: "short",
             })}
-            , after both reviewers decided. Their decisions are about the old outline.
+            <Trans>
+              , after both reviewers decided. Their decisions are about the old outline.
+            </Trans>
           </span>
           <div className="flex flex-wrap gap-2">
-            <Button onClick={onLookAgain}>Ask both to look again</Button>
+            <Button onClick={onLookAgain}>
+              <Trans>Ask both to look again</Trans>
+            </Button>
             <Button variant="ghost" onClick={onKeep}>
-              Keep the decisions
+              <Trans>Keep the decisions</Trans>
             </Button>
           </div>
         </div>
@@ -631,7 +660,7 @@ function DecidePanel({
         classes={look.classes}
         aiClass={row.ai.class_name}
         range={{ agreeFrom: look.style.agreeFrom, disagreeTo: look.style.disagreeTo }}
-        label={`Your decision on ${row.object}`}
+        label={t`Your decision on ${row.object}`}
         value={row.state === "decided" ? row.decision?.raw : undefined}
         onValueChange={onDecide}
       />
@@ -642,20 +671,20 @@ function DecidePanel({
         <div className="grid gap-2 rounded-zone bg-[color-mix(in_srgb,var(--warn)_14%,transparent)] p-3 text-body-sm text-fg">
           <Person {...personProp(person(row.adjudicator.user_id))} size={20} />
           <span>
-            Declined: <q>{row.adjudicator.note}</q>
+            <Trans>Declined:</Trans> <q>{row.adjudicator.note}</q>
           </span>
           <Button
             className="justify-self-start"
             onClick={() => onSend(declinedKeys, row.adjudicator ? [row.adjudicator.user_id] : [])}
           >
-            Send to someone else
+            <Trans>Send to someone else</Trans>
           </Button>
         </div>
       ) : null}
       <div className="grid justify-items-start gap-2">
         <button type="button" className={linkClass} onClick={onEdit}>
           <Icon name="pen" />
-          Edit {row.object} myself in the viewer
+          <Trans>Edit {row.object} myself in the viewer</Trans>
         </button>
         {row.state === "decided" ? null : (
           <>
@@ -665,12 +694,12 @@ function DecidePanel({
               onClick={() => onSend([row.key], reviewerIds)}
             >
               <Icon name="user" />
-              Send to an adjudicator
+              <Trans>Send to an adjudicator</Trans>
             </button>
             {row.state === "left-open" ? null : (
               <button type="button" className={linkClass} onClick={onLeaveOpen}>
                 <Icon name="clock" />
-                Leave open
+                <Trans>Leave open</Trans>
               </button>
             )}
           </>
@@ -678,19 +707,23 @@ function DecidePanel({
       </div>
       <div className="grid gap-1.5">
         <label htmlFor="queue-note" className="text-body-sm font-semibold">
-          Note for the record <span className="font-normal text-fg-dim">Optional</span>
+          <Trans>
+            Note for the record <span className="font-normal text-fg-dim">Optional</span>
+          </Trans>
         </label>
         <Textarea
           id="queue-note"
           rows={2}
-          placeholder="Why you decided this"
+          placeholder={t`Why you decided this`}
           value={note}
           onChange={(event) => onNote(event.target.value)}
         />
       </div>
       <p className="m-0 text-body-sm text-fg-dim">
-        What you decide here is stored next to what the reviewers decided. Nothing they said is
-        overwritten.
+        <Trans>
+          What you decide here is stored next to what the reviewers decided. Nothing they said is
+          overwritten.
+        </Trans>
       </p>
     </div>
   );

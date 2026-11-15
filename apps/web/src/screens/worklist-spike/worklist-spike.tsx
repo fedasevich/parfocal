@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Person } from "@parfocal/ui/components/person";
 import { StatusTag } from "@parfocal/ui/components/tag";
 import { scrollRegionProps } from "@parfocal/ui/lib/scroll-region";
@@ -45,7 +46,9 @@ const columns = helper.columns([
       info.getValue() > 0 ? (
         <span className="text-fg">{info.getValue()}</span>
       ) : (
-        <span className="text-fg-dim">none</span>
+        <span className="text-fg-dim">
+          <Trans>none</Trans>
+        </span>
       ),
   }),
   helper.accessor("reviewer", {
@@ -118,6 +121,8 @@ function WorklistLine({
 }
 
 export function WorklistSpike({ data, mode }: { data: WorklistRow[]; mode: WorklistMode }) {
+  const { t } = useLingui();
+
   const table = useWorklistTable(data);
   const rows = table.getRowModel().rows;
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -150,15 +155,17 @@ export function WorklistSpike({ data, mode }: { data: WorklistRow[]; mode: Workl
   return (
     <div className="flex h-full min-h-0 flex-col p-4">
       <p className="mb-2 text-caption text-fg-dim">
-        {rows.length.toLocaleString("en-GB")} rows, {mode}. J and K move, Home and End jump.
+        <Trans>
+          {rows.length.toLocaleString("en-GB")} rows, {mode}. J and K move, Home and End jump.
+        </Trans>
       </p>
       <div
         ref={scrollRef}
-        {...scrollRegionProps("Worklist rows")}
+        {...scrollRegionProps(t`Worklist rows`)}
         className="relative min-h-0 flex-1 overflow-auto rounded-md border border-line focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent focus-visible:outline-solid"
       >
         <table
-          aria-label="Worklist"
+          aria-label={t`Worklist`}
           aria-rowcount={rows.length + 1}
           data-active-index={active}
           className="grid w-full"

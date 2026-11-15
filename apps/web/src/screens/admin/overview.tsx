@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   useGetAdminOverview,
   useGetStorageUsage,
@@ -31,7 +32,9 @@ export function SystemActor({ sub, size = 20 }: { sub?: string; size?: number })
         <Icon name="link" size="xs" />
       </span>
       <span className="grid min-w-0 leading-tight">
-        <span className="font-medium text-fg">Webhook</span>
+        <span className="font-medium text-fg">
+          <Trans>Webhook</Trans>
+        </span>
         {sub ? <small className="truncate text-caption text-fg-faint">{sub}</small> : null}
       </span>
     </span>
@@ -39,6 +42,8 @@ export function SystemActor({ sub, size = 20 }: { sub?: string; size?: number })
 }
 
 export function OverviewSection({ open }: { open: (section: AdminSection) => void }) {
+  const { t } = useLingui();
+
   const overview = useGetAdminOverview().data?.data;
   const members = okData(useListTenantMembers().data) ?? [];
   const models = useListAiModels().data?.data;
@@ -53,50 +58,56 @@ export function OverviewSection({ open }: { open: (section: AdminSection) => voi
         stats={[
           {
             value: overview.people,
-            label: "People",
-            detail: `${overview.invites_waiting} invites waiting`,
+            label: t`People`,
+            detail: t`${overview.invites_waiting} invites waiting`,
           },
           {
             value: overview.models,
             label: "AI models",
-            detail: `${overview.runs_now} runs going now`,
+            detail: t`${overview.runs_now} runs going now`,
           },
           {
             value: tb(overview.stored_tb),
-            label: `Stored, of ${tb(overview.capacity_tb)}`,
-            detail: `${tb(overview.in_place_tb)} more read in place`,
+            label: t`Stored, of ${tb(overview.capacity_tb)}`,
+            detail: t`${tb(overview.in_place_tb)} more read in place`,
           },
           {
             value: overview.webhook_calls_today,
-            label: "Webhook calls today",
+            label: t`Webhook calls today`,
             detail: `${overview.webhook_rejected_today} rejected`,
           },
         ]}
       />
       <div className="grid grid-cols-2 gap-(--space-zone)">
         <Zone
-          title="People and roles"
-          end={<TextLink onClick={() => open("people")}>Manage</TextLink>}
+          title={t`People and roles`}
+          end={
+            <TextLink onClick={() => open("people")}>
+              <Trans>Manage</Trans>
+            </TextLink>
+          }
         >
           <div className="flex items-center gap-3 text-body-sm text-fg-dim">
             <AvatarStack
               people={researchersShown}
               max={6}
               size={28}
-              aria-label={`${overview.people} people`}
+              aria-label={t`${overview.people} people`}
             />
             <span>
-              {overview.people} people in {overview.projects} projects
+              <Trans>
+                {overview.people} people in {overview.projects} projects
+              </Trans>
             </span>
           </div>
           <div>
             {[
-              ["Researchers", overview.researchers, "Upload, run models, create tasks, sign off"],
-              ["Reviewers", overview.reviewers, "Review the slides they are given"],
+              [t`Researchers`, overview.researchers, t`Upload, run models, create tasks, sign off`],
+              [t`Reviewers`, overview.reviewers, t`Review the slides they are given`],
               [
-                "With admin rights",
+                t`With admin rights`,
                 overview.with_admin_rights,
-                "Researchers who also set up this page",
+                t`Researchers who also set up this page`,
               ],
             ].map(([label, count, detail]) => (
               <SummaryRow key={String(label)}>
@@ -110,8 +121,12 @@ export function OverviewSection({ open }: { open: (section: AdminSection) => voi
           </div>
         </Zone>
         <Zone
-          title="AI models"
-          end={<TextLink onClick={() => open("models")}>All {overview.models}</TextLink>}
+          title={t`AI models`}
+          end={
+            <TextLink onClick={() => open("models")}>
+              <Trans>All {overview.models}</Trans>
+            </TextLink>
+          }
         >
           <div>
             {[
@@ -131,8 +146,12 @@ export function OverviewSection({ open }: { open: (section: AdminSection) => voi
           </div>
         </Zone>
         <Zone
-          title="Storage and sources"
-          end={<TextLink onClick={() => open("storage")}>Open</TextLink>}
+          title={t`Storage and sources`}
+          end={
+            <TextLink onClick={() => open("storage")}>
+              <Trans>Open</Trans>
+            </TextLink>
+          }
         >
           {storage ? (
             <StorageBar size="sm" totalTb={storage.total_tb} parts={storageParts(storage)} />
@@ -156,17 +175,25 @@ export function OverviewSection({ open }: { open: (section: AdminSection) => voi
                   sub={source.access}
                 />
                 {source.health === "expiring" ? (
-                  <StatusTag tone="warn">Expires in {source.expires_in_days} days</StatusTag>
+                  <StatusTag tone="warn">
+                    <Trans>Expires in {source.expires_in_days} days</Trans>
+                  </StatusTag>
                 ) : (
-                  <StatusTag tone="ok">Answering</StatusTag>
+                  <StatusTag tone="ok">
+                    <Trans>Answering</Trans>
+                  </StatusTag>
                 )}
               </SummaryRow>
             ))}
           </div>
         </Zone>
         <Zone
-          title="Recent activity"
-          end={<TextLink onClick={() => open("audit")}>Audit log</TextLink>}
+          title={t`Recent activity`}
+          end={
+            <TextLink onClick={() => open("audit")}>
+              <Trans>Audit log</Trans>
+            </TextLink>
+          }
         >
           <div>
             {events

@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   type InboxItem,
   type MyAdjudication,
@@ -49,11 +51,13 @@ const timeLeft = (slides: number) => {
   const minutes = slides * minutesPerSlide;
   const hours = Math.floor(minutes / 60);
   const rest = minutes % 60;
-  if (hours === 0) return `about ${rest} min left`;
-  return rest === 0 ? `about ${hours} h left` : `about ${hours} h ${rest} min left`;
+  if (hours === 0) return t`about ${rest} min left`;
+  return rest === 0 ? t`about ${hours} h left` : t`about ${hours} h ${rest} min left`;
 };
 
 function ContinueHero({ task, resume }: { task: MyTask; resume: ResumeTarget }) {
+  const { t } = useLingui();
+
   const goTo = useGoTo();
   const open = () => void goTo(continuePath(task, resume));
   const left = task.slides_assigned - task.slides_submitted;
@@ -68,19 +72,26 @@ function ContinueHero({ task, resume }: { task: MyTask; resume: ResumeTarget }) 
         style={{ backgroundImage: "url(/mock-assets/overview.jpg)" }}
       />
       <div className="grid gap-1.5">
-        <SectionLabel>Continue where you left off</SectionLabel>
+        <SectionLabel>
+          <Trans>Continue where you left off</Trans>
+        </SectionLabel>
         <h3 className="m-0 text-title font-semibold text-fg">{task.name}</h3>
         <p className="m-0 text-body-sm text-fg-dim">
-          Slide {resume.position + 1} of {resume.slides_assigned} · {timeLeft(left)}
-          {task.due_on ? ` · due ${formatDue(task.due_on)}` : ""}
+          <Trans>
+            Slide {resume.position + 1} of {resume.slides_assigned}
+          </Trans>{" "}
+          · {timeLeft(left)}
+          {task.due_on ? t` · due ${formatDue(task.due_on)}` : ""}
         </p>
         <ProgressBar
           value={percent(task.slides_submitted, task.slides_assigned)}
-          aria-label={`${task.slides_submitted} of ${task.slides_assigned} slides`}
+          aria-label={t`${task.slides_submitted} of ${task.slides_assigned} slides`}
         />
       </div>
       <Button variant="primary" size="lg" onClick={open}>
-        Continue reviewing <Keycap keys="↵" />
+        <Trans>
+          Continue reviewing <Keycap keys="↵" />
+        </Trans>
       </Button>
     </div>
   );
@@ -148,12 +159,15 @@ function MentionRow({ item }: { item: InboxItem }) {
         <b className="text-fg">{actor?.name}</b>{" "}
         {item.kind === "mention" ? (
           <>
-            asked about <ObjectIdTag>{objectId}</ObjectIdTag> on{" "}
-            <span data-phi="">{payloadText(item, "slide_label")}</span>: {said}
+            <Trans>asked about</Trans> <ObjectIdTag>{objectId}</ObjectIdTag>{" "}
+            <Trans>
+              on <span data-phi="">{payloadText(item, "slide_label")}</span>
+            </Trans>
+            : {said}
           </>
         ) : (
           <>
-            replied on <ObjectIdTag>{objectId}</ObjectIdTag>: {said}
+            <Trans>replied on</Trans> <ObjectIdTag>{objectId}</ObjectIdTag>: {said}
           </>
         )}
         <small className="mt-0.75 block text-caption text-fg-faint">
@@ -171,7 +185,9 @@ function AsksForYou() {
   if (asks.length === 0) return null;
   return (
     <>
-      <SectionLabel>Asks for you</SectionLabel>
+      <SectionLabel>
+        <Trans>Asks for you</Trans>
+      </SectionLabel>
       {asks.map((ask) => {
         const from = people(ask.from_user_id);
         const sent = new Date(ask.sent_at);
@@ -183,16 +199,18 @@ function AsksForYou() {
           >
             <PersonAvatar person={from} size={26} />
             <div>
-              <b className="text-fg">{from?.name}</b> asks you to co-sign{" "}
-              <span className="font-mono text-fg" data-phi="">
-                {ask.case_label}
-              </span>
-              <small className="mt-0.75 block text-caption text-fg-faint">
-                {ask.project.name} · {formatDayMonth(sent)} {formatClock(sent)}
-              </small>
+              <Trans>
+                <b className="text-fg">{from?.name}</b> asks you to co-sign{" "}
+                <span className="font-mono text-fg" data-phi="">
+                  {ask.case_label}
+                </span>
+                <small className="mt-0.75 block text-caption text-fg-faint">
+                  {ask.project.name} · {formatDayMonth(sent)} {formatClock(sent)}
+                </small>
+              </Trans>
             </div>
             <Button size="sm" onClick={open}>
-              Open
+              <Trans>Open</Trans>
             </Button>
           </div>
         );
@@ -202,21 +220,27 @@ function AsksForYou() {
 }
 
 function SideColumn({ hasAdjudications }: { hasAdjudications: boolean }) {
+  const { t } = useLingui();
+
   const mentions =
     okData(useListNotifications({ kind: ["mention", "reply"] }).data)?.notifications ?? [];
   return (
     <div className="flex flex-col gap-3">
       <AsksForYou />
-      <SectionLabel>Mentions and replies</SectionLabel>
+      <SectionLabel>
+        <Trans>Mentions and replies</Trans>
+      </SectionLabel>
       {mentions.length > 0 ? (
         mentions.map((item) => <MentionRow key={item.id} item={item} />)
       ) : (
-        <span className="text-body-sm text-fg-dim">Nothing new for you.</span>
+        <span className="text-body-sm text-fg-dim">
+          <Trans>Nothing new for you.</Trans>
+        </span>
       )}
       <Callout>
         {hasAdjudications
-          ? "Reviewers stay anonymous to you in the adjudicator view, so each decision is about the tissue."
-          : "Each slide saves as you go. Nothing is lost if you close the tab or get called away."}
+          ? t`Reviewers stay anonymous to you in the adjudicator view, so each decision is about the tissue.`
+          : t`Each slide saves as you go. Nothing is lost if you close the tab or get called away.`}
       </Callout>
     </div>
   );
@@ -231,6 +255,8 @@ function TaskPreview({
   resume: ResumeTarget | null;
   onClose: () => void;
 }) {
+  const { t } = useLingui();
+
   const goTo = useGoTo();
   const here = resume?.task_id === task.id ? resume : null;
   const slideId = here?.slide_id ?? task.next_slide_id ?? undefined;
@@ -244,26 +270,26 @@ function TaskPreview({
       subtitle={task.project.name}
       progress={progress}
       facts={[
-        { icon: "users", label: "Task", value: `${task.code} · ${task.name}` },
+        { icon: "users", label: t`Task`, value: `${task.code} · ${task.name}` },
         ...(task.due_on
           ? [{ icon: "calendar" as const, label: "Due", value: formatDue(task.due_on) }]
           : []),
-        { icon: "target", label: "To check", value: scopeWords[task.scope] },
+        { icon: "target", label: t`To check`, value: scopeWords[task.scope] },
         {
           icon: "slides",
-          label: "Where",
+          label: t`Where`,
           value: here
-            ? `Slide ${here.position + 1} of ${here.slides_assigned}, case ${here.case_label}`
-            : `Slide 1 of ${task.slides_assigned}, not started`,
+            ? t`Slide ${here.position + 1} of ${here.slides_assigned}, case ${here.case_label}`
+            : t`Slide 1 of ${task.slides_assigned}, not started`,
         },
         {
           icon: "comment",
-          label: "Open comments",
+          label: t`Open comments`,
           value: <ThreadsValue anchors={threads.map((thread) => thread.anchor)} />,
         },
       ]}
       main={{
-        label: task.slides_submitted > 0 ? "Continue in guided review" : "Start in guided review",
+        label: task.slides_submitted > 0 ? t`Continue in guided review` : t`Start in guided review`,
         run: guided,
       }}
       full={
@@ -275,21 +301,23 @@ function TaskPreview({
 }
 
 function AdjudicationPreview({ item, onClose }: { item: MyAdjudication; onClose: () => void }) {
+  const { t } = useLingui();
+
   const goTo = useGoTo();
   return (
     <PreviewPanel
       title={item.slide_label}
       subtitle={item.project.name}
       facts={[
-        { icon: "users", label: "Task", value: `${item.task_code} · ${item.task_name}` },
+        { icon: "users", label: t`Task`, value: `${item.task_code} · ${item.task_name}` },
         {
           icon: "slides",
-          label: "Where",
+          label: t`Where`,
           value: `${andJoin(item.objects)} queued for you`,
         },
       ]}
       main={{
-        label: item.decided > 0 ? "Continue deciding" : "Start deciding",
+        label: item.decided > 0 ? t`Continue deciding` : t`Start deciding`,
         run: () => void goTo(destinations.disagreements(item.task_id, "adjudicate")),
       }}
       onClose={onClose}
@@ -308,6 +336,8 @@ export function ToReviewTab({
   selected: string | undefined;
   onSelect: (key: string | undefined) => void;
 }) {
+  const { t } = useLingui();
+
   const goTo = useGoTo();
   const people = usePeople();
   const resume = okData(useGetMyHome().data)?.resume ?? null;
@@ -328,11 +358,15 @@ export function ToReviewTab({
     <div className={`grid gap-6 ${preview ? "grid-cols-[1fr_360px]" : "grid-cols-[1fr_340px]"}`}>
       <div className="flex flex-col gap-3">
         {heroTask && resume ? <ContinueHero task={heroTask} resume={resume} /> : null}
-        <SectionLabel>Your tasks</SectionLabel>
+        <SectionLabel>
+          <Trans>Your tasks</Trans>
+        </SectionLabel>
         {active.length === 0 && adjudications.length === 0 ? (
-          <span className="text-body-sm text-fg-dim">Nothing to review. New tasks show here.</span>
+          <span className="text-body-sm text-fg-dim">
+            <Trans>Nothing to review. New tasks show here.</Trans>
+          </span>
         ) : (
-          <ul aria-label="Your tasks" className="m-0 flex list-none flex-col gap-3 p-0">
+          <ul aria-label={t`Your tasks`} className="m-0 flex list-none flex-col gap-3 p-0">
             {adjudications.map((item) => {
               const asker = people(item.asked_by_user_id)?.name ?? "the researcher";
               const total = item.objects.length;
@@ -342,19 +376,19 @@ export function ToReviewTab({
                   key={item.id}
                   selected={selected === adjudicationKey(item)}
                   colour={colourOf(item.project.id)}
-                  title={`Decide ${total} objects on ${item.task_code}`}
-                  sub={`${item.project.name} · asked by ${asker} · ${andJoin(item.objects)} on ${item.slide_label}`}
+                  title={t`Decide ${total} objects on ${item.task_code}`}
+                  sub={t`${item.project.name} · asked by ${asker} · ${andJoin(item.objects)} on ${item.slide_label}`}
                   progress={{
                     value: percent(item.decided, total),
-                    label: `${item.decided} of ${total} objects decided`,
+                    label: t`${item.decided} of ${total} objects decided`,
                   }}
                   tags={
                     <StatusTag tone={allDone ? "ok" : "accent"}>
-                      {allDone ? "All decided" : "Adjudication"}
+                      {allDone ? t`All decided` : t`Adjudication`}
                     </StatusTag>
                   }
                   action={{
-                    label: allDone ? "Open" : item.decided > 0 ? "Continue" : "Start",
+                    label: allDone ? t`Open` : item.decided > 0 ? t`Continue` : t`Start`,
                     primary: !allDone,
                     run: () => void goTo(destinations.disagreements(item.task_id, "adjudicate")),
                   }}

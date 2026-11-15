@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
 
@@ -23,11 +25,13 @@ function ReportSheet({
   children,
   ...props
 }: ReportSheetProps) {
+  const { t } = useLingui();
+
   return (
     <article
       data-slot="report-sheet"
       data-orientation={landscape ? "landscape" : "portrait"}
-      aria-label={`Page ${page} of ${pages}`}
+      aria-label={t`Page ${page} of ${pages}`}
       className={cn(
         "relative flex shrink-0 flex-col gap-5 overflow-hidden bg-white px-11 pt-9 pb-6 text-[10px] leading-[1.4] text-[#111] shadow-pop",
         landscape ? "min-h-155 w-[877px]" : "min-h-[877px] w-155",
@@ -54,7 +58,7 @@ function ReportSheet({
         <span>{footer}</span>
         {numbering === "none" ? null : (
           <span data-slot="report-page-number">
-            {numbering === "page" ? `Page ${page}` : `Page ${page} of ${pages}`}
+            {numbering === "page" ? t`Page ${page}` : t`Page ${page} of ${pages}`}
           </span>
         )}
       </div>
@@ -140,6 +144,8 @@ function ReportBlock({
   children,
   ...props
 }: ReportBlockProps) {
+  const { t } = useLingui();
+
   return (
     <section
       data-slot="report-block"
@@ -147,7 +153,7 @@ function ReportBlock({
       className={cn(
         "relative grid content-start gap-2 rounded-[3px] outline-offset-4",
         half ? "col-span-1" : "col-span-2",
-        onSelect && "hover:outline-1 hover:outline-dashed hover:outline-[#1a56be]/50",
+        onSelect && `hover:outline-1 hover:outline-dashed hover:outline-[#1a56be]/50`,
         selected && "outline-2 outline-[#1a56be]",
         className,
       )}
@@ -158,7 +164,7 @@ function ReportBlock({
       {onSelect ? (
         <button
           type="button"
-          aria-label={`Select the block ${typeof title === "string" ? title : ""}`.trim()}
+          aria-label={t`Select the block ${typeof title === "string" ? title : ""}`.trim()}
           aria-pressed={selected}
           onClick={onSelect}
           className="absolute -inset-1 cursor-pointer border-0 bg-transparent focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-[#1a56be]"
@@ -236,11 +242,13 @@ function ConfusionMatrix({
   classes,
   counts,
   caption,
-  rowTitle = "The AI said",
-  columnTitle = "Consensus of the reviewers",
+  rowTitle = t`The AI said`,
+  columnTitle = t`Consensus of the reviewers`,
   className,
   ...props
 }: ConfusionMatrixProps) {
+  const { t } = useLingui();
+
   const max = Math.max(1, ...counts.flat());
   return (
     <figure data-slot="confusion-matrix" className={cn("m-0 grid gap-2", className)} {...props}>
@@ -259,7 +267,9 @@ function ConfusionMatrix({
         </span>
         <table className="col-start-2 row-start-2 w-fit border-separate border-spacing-0.5 text-[8.5px]">
           <caption className="sr-only">
-            Rows: {rowTitle}. Columns: {columnTitle}.
+            <Trans>
+              Rows: {rowTitle}. Columns: {columnTitle}.
+            </Trans>
           </caption>
           <thead>
             <tr>
@@ -346,6 +356,8 @@ type ReportObjectsTableProps = React.ComponentProps<"table"> & {
 };
 
 function ReportObjectsTable({ people, rows, className, ...props }: ReportObjectsTableProps) {
+  const { t } = useLingui();
+
   return (
     <table
       data-slot="report-objects-table"
@@ -355,10 +367,16 @@ function ReportObjectsTable({ people, rows, className, ...props }: ReportObjects
       <thead>
         <tr className="border-b border-[#222] text-left [&>th]:pb-1 [&>th]:font-semibold">
           <th scope="col" className="w-12">
-            <span className="sr-only">Crop</span>
+            <span className="sr-only">
+              <Trans>Crop</Trans>
+            </span>
           </th>
-          <th scope="col">ID</th>
-          <th scope="col">Object</th>
+          <th scope="col">
+            <Trans>ID</Trans>
+          </th>
+          <th scope="col">
+            <Trans>Object</Trans>
+          </th>
           {people.map((name, index) => (
             <th key={`person-${index}`} scope="col">
               {name}
@@ -386,7 +404,7 @@ function ReportObjectsTable({ people, rows, className, ...props }: ReportObjects
                 className="font-semibold"
                 style={{ color: answerColour[answer] }}
               >
-                {answer === "unsure" ? "unsure" : answer}
+                {answer === "unsure" ? t`unsure` : answer}
               </td>
             ))}
           </tr>

@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { useGetMe, useListStudyTemplates } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
 import { Breadcrumbs } from "@parfocal/ui/components/flow-page";
@@ -40,6 +41,8 @@ type Props = {
 };
 
 export function AdminScreen({ section, scene, modal, request, change }: Props) {
+  const { t } = useLingui();
+
   const me = okData(useGetMe().data);
   const templates = okData(useListStudyTemplates().data) ?? [];
   const renderLink = useRouterLink();
@@ -48,14 +51,16 @@ export function AdminScreen({ section, scene, modal, request, change }: Props) {
   const [source, setSource] = useState<TemplateSource | null>(null);
   const [auditFilter, setAuditFilter] = useState<AuditFilter>(defaultAuditFilter);
   const workspaceName =
-    me?.workspaces.find((item) => item.tenant_id === me.active_tenant_id)?.name ?? "The workspace";
+    me?.workspaces.find((item) => item.tenant_id === me.active_tenant_id)?.name ?? t`The workspace`;
   const open = (next: AdminSection) =>
     change({ section: next, scene: undefined, modal: undefined });
 
   if (me === undefined) {
     return (
       <AdminShell section={section} folded>
-        <p className="p-8 text-body-sm text-fg-dim">Checking your access…</p>
+        <p className="p-8 text-body-sm text-fg-dim">
+          <Trans>Checking your access…</Trans>
+        </p>
       </AdminShell>
     );
   }
@@ -94,8 +99,8 @@ export function AdminScreen({ section, scene, modal, request, change }: Props) {
           <header className="grid gap-1 border-b border-line px-6 pt-4 pb-3">
             <Breadcrumbs
               items={[
-                { label: "Admin", href: adminHref("overview") },
-                { label: "Report templates", href: adminHref("templates") },
+                { label: t`Admin`, href: adminHref("overview") },
+                { label: t`Report templates`, href: adminHref("templates") },
                 { label: head.title },
               ]}
               renderLink={renderLink}
@@ -123,25 +128,25 @@ export function AdminScreen({ section, scene, modal, request, change }: Props) {
     people: (
       <Button variant="primary" onClick={() => change({ modal: "invite" })}>
         <Icon name="mail" />
-        Invite people
+        <Trans>Invite people</Trans>
       </Button>
     ),
     projects: (
       <Button onClick={() => void goTo(destinations.newProject())}>
         <Icon name="folder" />
-        New project
+        <Trans>New project</Trans>
       </Button>
     ),
     models: (
       <Button variant="primary" onClick={() => change({ scene: "addmodel" })}>
         <Icon name="plus" />
-        Connect your own model
+        <Trans>Connect your own model</Trans>
       </Button>
     ),
     templates: (
       <Button variant="primary" onClick={() => change({ scene: "tplnew" })}>
         <Icon name="plus" />
-        New template
+        <Trans>New template</Trans>
       </Button>
     ),
     storage: (
@@ -149,12 +154,12 @@ export function AdminScreen({ section, scene, modal, request, change }: Props) {
         variant="primary"
         onClick={() =>
           notify(
-            "Connect a source: S3, Azure, DICOMweb or HTTPS with range requests. Read-only keys only (mock)",
+            t`Connect a source: S3, Azure, DICOMweb or HTTPS with range requests. Read-only keys only (mock)`,
           )
         }
       >
         <Icon name="link" />
-        Connect a source
+        <Trans>Connect a source</Trans>
       </Button>
     ),
     audit: <AuditExportButton filter={auditFilter} notify={notify} />,
@@ -193,9 +198,11 @@ export function AdminScreen({ section, scene, modal, request, change }: Props) {
       <main className="flex min-h-full flex-col gap-(--space-zone) bg-surf-panel px-(--pad-modal) pb-(--pad-modal)">
         <header className="sticky top-0 z-2 flex items-center justify-between gap-4 bg-surf-panel pt-5 pb-1">
           <div>
-            <h1 className="m-0 text-title-sm font-semibold text-fg">{info?.label}</h1>
+            <h1 className="m-0 text-title-sm font-semibold text-fg">
+              {info ? t(info.label) : null}
+            </h1>
             <p className="mt-0.75 mb-0 text-body-sm text-fg-dim">
-              {section === "overview" ? `${workspaceName} at a glance` : info?.sub}
+              {section === "overview" ? t`${workspaceName} at a glance` : info ? t(info.sub) : null}
             </p>
           </div>
           {actions[section] ? <div className="flex flex-none gap-2">{actions[section]}</div> : null}
@@ -208,6 +215,8 @@ export function AdminScreen({ section, scene, modal, request, change }: Props) {
 }
 
 export function AdminRefusal({ access }: { access: Exclude<AdminAccess, "granted"> }) {
+  const { t } = useLingui();
+
   const renderLink = useRouterLink();
   const refusal = refusalOf(access);
   return (
@@ -225,7 +234,7 @@ export function AdminRefusal({ access }: { access: Exclude<AdminAccess, "granted
         {renderLink({
           href: destinations.home(),
           className: "text-body-sm font-medium text-accent hover:underline",
-          children: "Back to Parfocal",
+          children: t`Back to Parfocal`,
         })}
       </div>
     </main>

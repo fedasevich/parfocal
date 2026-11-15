@@ -1,3 +1,4 @@
+import { Trans } from "@lingui/react/macro";
 import { AnalysisCards, type AnalysisCardsProps } from "@parfocal/ui/components/analysis-cards";
 import { Icon } from "@parfocal/ui/components/icon";
 import {
@@ -38,7 +39,9 @@ function TemplateLine({ template, className, ...props }: TemplateLineProps) {
         <span>{templateName(template)}</span>
       ) : (
         <>
-          <span>Analysis template</span>
+          <span>
+            <Trans>Analysis template</Trans>
+          </span>
           <b className="truncate font-semibold text-fg">{templateName(template)}</b>
         </>
       )}

@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { useListTenantMembers } from "@parfocal/api-client";
 import { Icon } from "@parfocal/ui/components/icon";
 import { SmallModal } from "@parfocal/ui/components/small-modal";
@@ -23,11 +24,13 @@ export function SendToAdjudicatorModal({
   onClose: () => void;
   onSend: (adjudicatorId: string, note: string | null) => void;
 }) {
+  const { t } = useLingui();
+
   const members = okData(useListTenantMembers().data) ?? [];
   const [picked, setPicked] = useState<string | null>(null);
   const [note, setNote] = useState("");
   const [tried, setTried] = useState(false);
-  const error = tried && picked === null ? "Pick who decides." : undefined;
+  const error = tried && picked === null ? t`Pick who decides.` : undefined;
   const items = members
     .filter((member) => member.role === "reviewer")
     .map((member) => {
@@ -37,7 +40,7 @@ export function SendToAdjudicatorModal({
         name: member.display_name,
         person: toPersonInfo(member),
         ...(member.title ? { sub: member.title } : {}),
-        ...(blocked ? { dim: `A reviewer of ${taskCode}` } : {}),
+        ...(blocked ? { dim: t`A reviewer of ${taskCode}` } : {}),
       };
     });
   const count = labels.length;
@@ -45,10 +48,10 @@ export function SendToAdjudicatorModal({
     <SmallModal
       open
       onOpenChange={closeOn(onClose)}
-      title="Send to an adjudicator"
+      title={t`Send to an adjudicator`}
       subtitle={`${andJoin(labels)} · ${taskCode}`}
-      hint={picked === null ? "Pick who decides." : "They see it in My work."}
-      primaryLabel={`Send ${count} object${count === 1 ? "" : "s"}`}
+      hint={picked === null ? t`Pick who decides.` : t`They see it in My work.`}
+      primaryLabel={t`Send ${count} object${count === 1 ? "" : "s"}`}
       onPrimary={() => {
         setTried(true);
         if (picked === null) {
@@ -60,14 +63,14 @@ export function SendToAdjudicatorModal({
     >
       <div className="grid gap-1.5">
         <span id="adjudicator-who-label" className="text-body-sm font-semibold">
-          Who decides
+          <Trans>Who decides</Trans>
         </span>
         <TokenField
           id="adjudicator-who"
           aria-labelledby="adjudicator-who-label"
-          label="Who decides"
+          label={t`Who decides`}
           single
-          placeholder="Type a name"
+          placeholder={t`Type a name`}
           items={items}
           picked={picked ? [picked] : []}
           invalid={Boolean(error)}
@@ -77,21 +80,23 @@ export function SendToAdjudicatorModal({
       </div>
       <div className="grid gap-1.5">
         <label htmlFor="adjudicator-note" className="text-body-sm font-semibold">
-          Note to them <span className="font-normal text-fg-dim">optional</span>
+          <Trans>
+            Note to them <span className="font-normal text-fg-dim">optional</span>
+          </Trans>
         </label>
         <Textarea
           id="adjudicator-note"
           rows={3}
           maxLength={300}
-          placeholder="For example, the CK slide is in the case"
+          placeholder={t`For example, the CK slide is in the case`}
           value={note}
           onChange={(event) => setNote(event.target.value)}
         />
-        <FieldNote count={`${note.length} of 300`} />
+        <FieldNote count={t`${note.length} of 300`} />
       </div>
       <p className="m-0 flex items-start gap-2 text-body-sm text-fg">
         <Icon name="shield" className="mt-0.5 text-fg-dim" />
-        Reviewers stay anonymous. The adjudicator sees Reviewer A and Reviewer B.
+        <Trans>Reviewers stay anonymous. The adjudicator sees Reviewer A and Reviewer B.</Trans>
       </p>
     </SmallModal>
   );

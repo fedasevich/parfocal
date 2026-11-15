@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { fixtureFileName, fixtureFromTrace } from "./fixture.ts";
 import {
@@ -54,6 +55,8 @@ function StepList({ profile }: { profile: DeviceProfile }) {
 }
 
 export function InputTraces() {
+  const { t } = useLingui();
+
   const timing = useMemo(() => timingFromSearch(window.location.search), []);
   const [session, setSession] = useState<Session | null>(null);
   const [finished, setFinished] = useState(false);
@@ -197,19 +200,26 @@ export function InputTraces() {
   if (session === null) {
     return (
       <main className="grid max-w-3xl gap-6 p-8 text-fg">
-        <h1 className="text-title-sm font-semibold">Input trace recorder</h1>
+        <h1 className="text-title-sm font-semibold">
+          <Trans>Input trace recorder</Trans>
+        </h1>
         <p className="text-fg-2">
-          Each device has a short list of gestures. For every gesture the page names it, counts down{" "}
-          {timing.countdownMs / 1000} seconds, records {timing.recordMs / 1000} seconds of raw
-          wheel, pointer and gesture events over a pad and moves to the next one. At the end you
-          download one JSON file for the device. Put it in{" "}
-          <code>packages/viewer-engine/test/input/traces</code> and the replay tests pick it up. The
-          file holds event types, deltas, positions, modifier keys and the user agent, nothing else.
+          <Trans>
+            Each device has a short list of gestures. For every gesture the page names it, counts
+            down {timing.countdownMs / 1000} seconds, records {timing.recordMs / 1000} seconds of
+            raw wheel, pointer and gesture events over a pad and moves to the next one. At the end
+            you download one JSON file for the device. Put it in{" "}
+            <code>packages/viewer-engine/test/input/traces</code> and the replay tests pick it up.
+            The file holds event types, deltas, positions, modifier keys and the user agent, nothing
+            else.
+          </Trans>
         </p>
         <label className="grid gap-1">
-          <span>Device name (optional, such as Logitech MX Master 3)</span>
+          <span>
+            <Trans>Device name (optional, such as Logitech MX Master 3)</Trans>
+          </span>
           <input
-            aria-label="Device name"
+            aria-label={t`Device name`}
             value={deviceName}
             onChange={(event) => setDeviceName(event.target.value)}
             className="rounded-md border border-line bg-chrome-2 px-2 py-1"
@@ -224,12 +234,16 @@ export function InputTraces() {
           >
             <h2 className="font-semibold">
               {profile.title}
-              {profile.optional ? " (optional)" : ""}
+              {profile.optional ? t` (optional)` : ""}
             </h2>
             <p className="text-fg-2">
-              {profile.summary} {profile.steps.length} steps, about{" "}
-              {Math.ceil((profile.steps.length * (timing.countdownMs + timing.recordMs)) / 60_000)}{" "}
-              minutes.
+              <Trans>
+                {profile.summary} {profile.steps.length} steps, about{" "}
+                {Math.ceil(
+                  (profile.steps.length * (timing.countdownMs + timing.recordMs)) / 60_000,
+                )}{" "}
+                minutes.
+              </Trans>
             </p>
             <StepList profile={profile} />
             <div>
@@ -238,7 +252,7 @@ export function InputTraces() {
                 onClick={() => begin(profile)}
                 className="rounded-md border border-line bg-chrome-2 px-3 py-1"
               >
-                Start {profile.title}
+                <Trans>Start {profile.title}</Trans>
               </button>
             </div>
           </section>
@@ -250,14 +264,16 @@ export function InputTraces() {
   if (finished) {
     return (
       <main className="grid max-w-3xl gap-4 p-8 text-fg">
-        <h1 className="text-title-sm font-semibold">{session.profile.title} recorded</h1>
-        <ul aria-label="Recorded steps" className="grid gap-1 font-mono text-body">
+        <h1 className="text-title-sm font-semibold">
+          <Trans>{session.profile.title} recorded</Trans>
+        </h1>
+        <ul aria-label={t`Recorded steps`} className="grid gap-1 font-mono text-body">
           {session.profile.steps.map((step, index) => {
             const gesture = session.gestures[index];
             const total = (gesture?.events.length ?? 0) + (gesture?.gestureEvents?.length ?? 0);
             return (
               <li key={step.id} data-step={step.id} data-events={total}>
-                {step.title}: {total === 0 ? "no events, run it again" : `${total} events`}
+                {step.title}: {total === 0 ? t`no events, run it again` : t`${total} events`}
               </li>
             );
           })}
@@ -269,7 +285,7 @@ export function InputTraces() {
             disabled={session.gestures.every((gesture) => gesture === null)}
             className="rounded-md border border-line bg-chrome-2 px-3 py-1"
           >
-            Download JSON
+            <Trans>Download JSON</Trans>
           </button>
           {session.profile.device === "trackpad" ? (
             <button
@@ -278,7 +294,7 @@ export function InputTraces() {
               disabled={session.gestures.every((gesture) => gesture === null)}
               className="rounded-md border border-line bg-chrome-2 px-3 py-1"
             >
-              Download trackpad fixture
+              <Trans>Download trackpad fixture</Trans>
             </button>
           ) : null}
           <button
@@ -286,14 +302,14 @@ export function InputTraces() {
             onClick={() => begin(session.profile)}
             className="rounded-md border border-line bg-chrome-2 px-3 py-1"
           >
-            Record again
+            <Trans>Record again</Trans>
           </button>
           <button
             type="button"
             onClick={leave}
             className="rounded-md border border-line bg-chrome-2 px-3 py-1"
           >
-            Back to the devices
+            <Trans>Back to the devices</Trans>
           </button>
         </div>
       </main>
@@ -306,12 +322,14 @@ export function InputTraces() {
   return (
     <main className="grid max-w-3xl gap-4 p-8 text-fg">
       <h1 className="text-title-sm font-semibold">
-        {session.profile.title}, step {session.index + 1} of {session.profile.steps.length}
+        <Trans>
+          {session.profile.title}, step {session.index + 1} of {session.profile.steps.length}
+        </Trans>
       </h1>
       <h2 className="font-semibold">{step?.title}</h2>
       <p className="text-fg-2">{step?.instruction}</p>
       <output
-        aria-label="Recorder status"
+        aria-label={t`Recorder status`}
         data-phase={moment.kind}
         data-step={step?.id ?? ""}
         data-index={session.index}
@@ -320,19 +338,19 @@ export function InputTraces() {
       >
         <span>
           {moment.kind === "countdown"
-            ? `Get ready: ${Math.ceil(moment.remainingMs / 1000)}`
+            ? t`Get ready: ${Math.ceil(moment.remainingMs / 1000)}`
             : moment.kind === "recording"
-              ? `Recording: ${seconds(moment.remainingMs)} s left, ${count} events`
-              : "Saving"}
+              ? t`Recording: ${seconds(moment.remainingMs)} s left, ${count} events`
+              : t`Saving`}
         </span>
-        <progress value={progress} max={1} className="w-full" aria-label="Recording progress" />
+        <progress value={progress} max={1} className="w-full" aria-label={t`Recording progress`} />
       </output>
       <div
         ref={padRef}
         data-armed={moment.kind === "recording"}
         className="grid h-80 w-full touch-none select-none place-items-center rounded-lg border border-line bg-chrome-2 data-[armed=true]:border-fg"
       >
-        {moment.kind === "recording" ? "Recording, go ahead" : "Keep the pointer over this pad"}
+        {moment.kind === "recording" ? t`Recording, go ahead` : t`Keep the pointer over this pad`}
       </div>
       <div className="flex gap-3">
         <button
@@ -340,14 +358,14 @@ export function InputTraces() {
           onClick={finishStep}
           className="rounded-md border border-line bg-chrome-2 px-3 py-1"
         >
-          Next step
+          <Trans>Next step</Trans>
         </button>
         <button
           type="button"
           onClick={leave}
           className="rounded-md border border-line bg-chrome-2 px-3 py-1"
         >
-          Cancel
+          <Trans>Cancel</Trans>
         </button>
       </div>
     </main>

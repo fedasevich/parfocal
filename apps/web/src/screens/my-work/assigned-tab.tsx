@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { type AssignedTask, useGetReviewTask, useGetReviewTaskStates } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
 import { Icon } from "@parfocal/ui/components/icon";
@@ -24,13 +26,13 @@ function statusOf(task: AssignedTask, signedOn: string | null): [string, StatusT
     case "disagreements":
       return [`${task.open_disagreements} disagreements`, "warn"];
     case "ready-to-sign-off":
-      return ["Ready to sign off", "ok"];
+      return [t`Ready to sign off`, "ok"];
     case "signed-off":
-      return [signedOn ? `Signed off ${signedOn}` : "Signed off", "ok"];
+      return [signedOn ? t`Signed off ${signedOn}` : t`Signed off`, "ok"];
     case "in-review":
-      return ["In review", "accent"];
+      return [t`In review`, "accent"];
     case "not-started":
-      return ["Not started", "neutral"];
+      return [t`Not started`, "neutral"];
   }
 }
 
@@ -43,6 +45,8 @@ function AssignedRow({
   selected: boolean;
   onSelect: () => void;
 }) {
+  const { t } = useLingui();
+
   const goTo = useGoTo();
   const people = usePeople();
   const detail = okData(useGetReviewTask(task.id).data);
@@ -79,7 +83,7 @@ function AssignedRow({
         <b className="font-medium text-fg">{task.name}</b>
         <small className="block text-caption text-fg-dim">
           {task.project.name}
-          {detail ? ` · ${detail.slide_count} slides${detail.blinded ? " · blind" : ""}` : ""}
+          {detail ? t` · ${detail.slide_count} slides${detail.blinded ? " · blind" : ""}` : ""}
         </small>
       </TableCell>
       <TableCell className="whitespace-normal">
@@ -93,7 +97,7 @@ function AssignedRow({
               <ProgressBar
                 className="w-17.5"
                 value={percent(reviewer.slides_submitted, reviewer.slides_assigned)}
-                aria-label={`${people(reviewer.user_id)?.name ?? "Reviewer"}, ${reviewer.slides_submitted} of ${reviewer.slides_assigned} slides`}
+                aria-label={t`${people(reviewer.user_id)?.name ?? "Reviewer"}, ${reviewer.slides_submitted} of ${reviewer.slides_assigned} slides`}
               />
               <span className="font-mono text-fg-dim">
                 {reviewer.slides_submitted}/{reviewer.slides_assigned}
@@ -103,7 +107,7 @@ function AssignedRow({
         </div>
       </TableCell>
       <TableCell className="whitespace-normal">
-        {task.due_on ? formatDue(task.due_on) : "No due date"}
+        {task.due_on ? formatDue(task.due_on) : t`No due date`}
       </TableCell>
       <TableCell className="whitespace-normal">
         <StatusTag tone={tone}>{label}</StatusTag>
@@ -115,29 +119,29 @@ function AssignedRow({
               variant="primary"
               onClick={() => void goTo(destinations.disagreements(task.id))}
             >
-              Resolve
+              <Trans>Resolve</Trans>
             </Button>
           ) : null}
           {task.status === "ready-to-sign-off" ? (
             <Button variant="primary" onClick={() => void goTo(destinations.signOff(task.id))}>
-              Sign off
+              <Trans>Sign off</Trans>
             </Button>
           ) : null}
           {busy ? (
             <>
               <Button onClick={() => void goTo(teamRow("nudge"))}>
                 <Icon name="bell" />
-                Nudge
+                <Trans>Nudge</Trans>
               </Button>
               <Button
                 onClick={() => void goTo(teamRow("reassign"))}
                 title={
                   behindmost
-                    ? `Reassign from ${people(behindmost)?.name ?? "a reviewer"}`
+                    ? t`Reassign from ${people(behindmost)?.name ?? "a reviewer"}`
                     : undefined
                 }
               >
-                Reassign
+                <Trans>Reassign</Trans>
               </Button>
             </>
           ) : null}
@@ -156,6 +160,8 @@ export function AssignedTab({
   selected: string | undefined;
   onSelect: (key: string | undefined) => void;
 }) {
+  const { t } = useLingui();
+
   const goTo = useGoTo();
   const firstProject = tasks[0]?.project.id;
   return (
@@ -168,13 +174,13 @@ export function AssignedTab({
           }
         >
           <Icon name="users" />
-          New review task
+          <Trans>New review task</Trans>
         </Button>
       </div>
       <Table>
         <TableHeader>
           <TableRow>
-            {["Task", "Result set", "Reviewers", "Due", "Status", ""].map((heading) => (
+            {[t`Task`, t`Result set`, t`Reviewers`, "Due", t`Status`, ""].map((heading) => (
               <TableHead key={heading || "actions"}>{heading}</TableHead>
             ))}
           </TableRow>
@@ -192,7 +198,7 @@ export function AssignedTab({
       </Table>
       {tasks.length === 0 ? (
         <p className="text-body-sm text-fg-dim">
-          You have not handed out any review tasks yet. New review task starts one.
+          <Trans>You have not handed out any review tasks yet. New review task starts one.</Trans>
         </p>
       ) : null}
     </div>

@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   getListModelRunsQueryKey,
   getListMyJobsQueryKey,
@@ -74,8 +76,8 @@ export function useResumeJob() {
 }
 
 export function resumedMessage({ tile, left }: { tile: number | undefined; left: number | null }) {
-  const from = tile === undefined ? "Resumed." : `Resumed from tile ${tile}.`;
-  return left === null ? from : `${from} About ${left} min left.`;
+  const from = tile === undefined ? t`Resumed.` : t`Resumed from tile ${tile}.`;
+  return left === null ? from : t`${from} About ${left} min left.`;
 }
 
 function useGoToTarget() {
@@ -128,6 +130,8 @@ function browserUploads(entries: readonly UploadEntry[]): BrowserUpload[] {
 }
 
 export function ShellJobs() {
+  const { t } = useLingui();
+
   const tray = useJobsTray();
   const jobs = okData(useListMyJobs().data) ?? [];
   const resume = useResumeJob();
@@ -153,8 +157,8 @@ export function ShellJobs() {
       key={`browser-${upload.projectId}`}
       data-testid="browser-upload-job"
       icon="upload"
-      title={`${upload.finished ? "Uploaded" : "Uploading"} ${upload.count} ${upload.count === 1 ? "file" : "files"}`}
-      detail={`${formatBytes(upload.sent)} of ${formatBytes(upload.total)}`}
+      title={`${upload.finished ? t`Uploaded` : t`Uploading`} ${upload.count} ${upload.count === 1 ? "file" : "files"}`}
+      detail={t`${formatBytes(upload.sent)} of ${formatBytes(upload.total)}`}
       percent={upload.percent}
       valueText={`${upload.percent}%`}
       onOpen={() => {
@@ -184,9 +188,13 @@ export function ShellJobs() {
       onOpen={() => open(job)}
       action={
         job.status === "done" ? (
-          <JobRowLink onClick={() => openProject(job)}>Open</JobRowLink>
+          <JobRowLink onClick={() => openProject(job)}>
+            <Trans>Open</Trans>
+          </JobRowLink>
         ) : job.status === "paused" ? (
-          <JobRowLink onClick={() => void resumeFromTray(job)}>Resume</JobRowLink>
+          <JobRowLink onClick={() => void resumeFromTray(job)}>
+            <Trans>Resume</Trans>
+          </JobRowLink>
         ) : undefined
       }
     />
@@ -202,7 +210,7 @@ export function ShellJobs() {
           />
         }
       />
-      <PopoverContent align="end" aria-label="Jobs" className="w-95 gap-0 overflow-hidden p-0">
+      <PopoverContent align="end" aria-label={t`Jobs`} className="w-95 gap-0 overflow-hidden p-0">
         <JobsTray
           running={[...uploadsRunning.map(uploadRow), ...running.map(row)]}
           finished={[...uploadsDone.map(uploadRow), ...finished.map(row)]}

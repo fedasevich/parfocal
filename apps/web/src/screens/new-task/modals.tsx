@@ -1,8 +1,11 @@
+import { t } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { DecisionButtons } from "@parfocal/ui/components/decision-buttons";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Input } from "@parfocal/ui/components/input";
 import { SmallModal, SmallModalZone } from "@parfocal/ui/components/small-modal";
 import { FilterChip, ObjectIdTag } from "@parfocal/ui/components/tag";
+import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import { useState } from "react";
 import { type Draft, decisionKinds, mapping, type TaskData } from "./model.ts";
 import { CheckRow, RowText, SlideThumb } from "./parts.tsx";
@@ -20,6 +23,8 @@ export function AddSlidesModal({
   onClose,
   onAdd,
 }: ModalProps & { onAdd: (ids: string[]) => void }) {
+  const { t } = useLingui();
+
   const [picked, setPicked] = useState<string[]>([]);
   const [query, setQuery] = useState("");
   const needle = query.trim().toLowerCase();
@@ -30,7 +35,7 @@ export function AddSlidesModal({
       return slide ? [slide] : [];
     });
   const where = (slide: (typeof pool)[number]) =>
-    slide.caseLabel ? `Case ${slide.caseLabel}` : "Loose";
+    slide.caseLabel ? `Case ${slide.caseLabel}` : t`Loose`;
   const shown = pool.filter((slide) =>
     `${slide.name} ${where(slide)}`.toLowerCase().includes(needle),
   );
@@ -43,18 +48,18 @@ export function AddSlidesModal({
         if (!open) onClose();
       }}
       width={560}
-      title="Add slides"
-      subtitle={`To ${draft.name.trim() || "the new task"} · from P07`}
+      title={t`Add slides`}
+      subtitle={t`To ${draft.name.trim() || t`the new task`} · from P07`}
       hint={`${count} picked`}
-      primaryLabel={count ? `Add ${count} slide${count > 1 ? "s" : ""}` : "Add slides"}
-      blockers={count ? [] : [{ id: "pick", text: "Pick at least one slide", goTo: "" }]}
+      primaryLabel={count ? t`Add ${count} slide${count > 1 ? "s" : ""}` : t`Add slides`}
+      blockers={count ? [] : [{ id: "pick", text: t`Pick at least one slide`, goTo: "" }]}
       onPrimary={() => onAdd(picked)}
     >
       <div className="relative">
         <Icon name="search" className="absolute top-2 left-2.5 text-fg-dim" />
         <Input
-          aria-label="Find a slide or case"
-          placeholder="Find a slide or case"
+          aria-label={t`Find a slide or case`}
+          placeholder={t`Find a slide or case`}
           className="pl-8"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
@@ -78,7 +83,9 @@ export function AddSlidesModal({
                 ok ? (
                   <SetTags data={data} ids={slide.sets} />
                 ) : (
-                  <span className="text-body-sm text-fg-dim">no {short}</span>
+                  <span className="text-body-sm text-fg-dim">
+                    <Trans>no {short}</Trans>
+                  </span>
                 )
               }
             >
@@ -89,24 +96,31 @@ export function AddSlidesModal({
         })}
         {!pool.length ? (
           <span className="text-body-sm text-fg-dim">
-            Every slide of the project is in the task.
+            <Trans>Every slide of the project is in the task.</Trans>
           </span>
         ) : !shown.length ? (
-          <span className="text-body-sm text-fg-dim">Nothing matches "{query.trim()}".</span>
+          <span className="text-body-sm text-fg-dim">
+            <Trans>Nothing matches "{query.trim()}</Trans>".
+          </span>
         ) : null}
       </div>
     </SmallModal>
   );
 }
 
-const regionReasons = ["Not tumor", "Boundary is off", "Two regions, not one", "Artefact or fold"];
-const unsureReasons = [
-  "Need a deeper level",
+const regionReasons = lazyText(() => [
+  t`Not tumor`,
+  t`Boundary is off`,
+  t`Two regions, not one`,
+  t`Artefact or fold`,
+]);
+const unsureReasons = lazyText(() => [
+  t`Need a deeper level`,
   "Need IHC",
-  "Border unclear",
-  "Out of focus",
-  "Need a second look",
-];
+  t`Border unclear`,
+  t`Out of focus`,
+  t`Need a second look`,
+]);
 
 function countsAsFor(draft: Draft, raw: string) {
   if (raw === "unsure") return "unsure";
@@ -140,6 +154,8 @@ const projectClasses = [
 ];
 
 export function PreviewQuestionModal({ draft, onClose }: ModalProps) {
+  const { t } = useLingui();
+
   const [raw, setRaw] = useState<string | undefined>(undefined);
   const [reasons, setReasons] = useState<string[]>([]);
   const kind = draft.decision.kind;
@@ -148,12 +164,12 @@ export function PreviewQuestionModal({ draft, onClose }: ModalProps) {
   const offered = counts === "disagree" ? regionReasons : counts === "unsure" ? unsureReasons : [];
   const question =
     kind === "certainty5"
-      ? "How sure are you that T2 is tumor?"
+      ? t`How sure are you that T2 is tumor?`
       : kind === "agree"
-        ? "The AI says T2 is tumor, 91% sure."
+        ? t`The AI says T2 is tumor, 91% sure.`
         : kind === "yesno"
-          ? "Is this tumor?"
-          : "What is T2?";
+          ? t`Is this tumor?`
+          : t`What is T2?`;
   return (
     <SmallModal
       open
@@ -161,32 +177,38 @@ export function PreviewQuestionModal({ draft, onClose }: ModalProps) {
         if (!open) onClose();
       }}
       width={560}
-      title="Preview the question"
-      subtitle={`T2 on A1 · ${name}`}
-      hint="Nothing is saved. Reviewers get this card for every object."
-      primaryLabel="Done"
+      title={t`Preview the question`}
+      subtitle={t`T2 on A1 · ${name}`}
+      hint={t`Nothing is saved. Reviewers get this card for every object.`}
+      primaryLabel={t`Done`}
       showCancel={false}
       onPrimary={onClose}
     >
       <SmallModalZone>
         <div className="grid gap-3.5">
           <div className="flex items-center gap-1 text-body-sm text-fg-dim">
-            <ObjectIdTag>T2</ObjectIdTag>
+            <ObjectIdTag>
+              <Trans>T2</Trans>
+            </ObjectIdTag>
             {kind === "certainty5" ? (
               <span>
-                AI says: <b className="font-semibold text-fg">Tumor, 91% sure</b>
+                <Trans>
+                  AI says: <b className="font-semibold text-fg">Tumor, 91% sure</b>
+                </Trans>
               </span>
             ) : kind === "agree" ? null : (
-              <span>The AI's claim is hidden in this style</span>
+              <span>
+                <Trans>The AI's claim is hidden in this style</Trans>
+              </span>
             )}
           </div>
           <p className="m-0 text-lead leading-[1.35] font-semibold text-fg">{question}</p>
           <DecisionButtons
-            label="Answer in the preview"
+            label={t`Answer in the preview`}
             decisionStyle={styleOf[kind]}
             range={{ agreeFrom: draft.decision.agreeFrom, disagreeTo: draft.decision.disagreeTo }}
             classes={projectClasses}
-            aiClass="Tumor"
+            aiClass={t`Tumor`}
             value={raw}
             onValueChange={(next) => {
               setRaw(next);
@@ -201,14 +223,16 @@ export function PreviewQuestionModal({ draft, onClose }: ModalProps) {
                 style={{ background: countsColours[counts] }}
               />
               <span>
-                Counts as <b className="text-fg">{countsWords[counts]}</b>
+                <Trans>
+                  Counts as <b className="text-fg">{countsWords[counts]}</b>
+                </Trans>
               </span>
             </div>
           ) : null}
           {offered.length ? (
             <div className="grid gap-2">
               <span className="text-body-sm font-semibold text-fg">
-                {counts === "disagree" ? "What is wrong" : "Why not sure"}
+                {counts === "disagree" ? t`What is wrong` : t`Why not sure`}
               </span>
               <div className="flex flex-wrap gap-2">
                 {offered.map((reason) => (

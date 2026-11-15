@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Banner, InlineError } from "@parfocal/ui/components/banner";
 import { Button } from "@parfocal/ui/components/button";
 import { createFileRoute, notFound } from "@tanstack/react-router";
@@ -17,6 +18,8 @@ export const Route = createFileRoute("/issue-pages/$kind")({
 });
 
 function IssuePagePreview() {
+  const { t } = useLingui();
+
   const { kind } = Route.useParams();
   const [asked, setAsked] = useState(false);
   if (kind === "not-found") return <NotFoundPage />;
@@ -27,7 +30,7 @@ function IssuePagePreview() {
   if (kind === "no-access") {
     return (
       <NoAccessPage
-        projectName="Lung biopsies"
+        projectName={t`Lung biopsies`}
         ownerName="Dana Reyes"
         asked={asked}
         onAsk={() => setAsked(true)}
@@ -37,22 +40,42 @@ function IssuePagePreview() {
   if (kind === "styles") {
     return (
       <main className="grid max-w-xl gap-4 p-8">
-        <h1 className="m-0 text-page-title">Issue styles</h1>
-        <Banner tone="warn" actions={<Button size="sm">Retry now</Button>}>
-          <b>Connection lost.</b> Saving is paused.
+        <h1 className="m-0 text-page-title">
+          <Trans>Issue styles</Trans>
+        </h1>
+        <Banner
+          tone="warn"
+          actions={
+            <Button size="sm">
+              <Trans>Retry now</Trans>
+            </Button>
+          }
+        >
+          <Trans>
+            <b>Connection lost.</b> Saving is paused.
+          </Trans>
         </Banner>
         <Banner inline tone="info" icon="lock">
-          <b>Signed off.</b> Changes need an amendment.
+          <Trans>
+            <b>Signed off.</b> Changes need an amendment.
+          </Trans>
         </Banner>
         <Banner inline tone="bad">
-          The export failed.
+          <Trans>The export failed.</Trans>
         </Banner>
         <label className="grid gap-1 text-body-sm">
-          Due date
+          <Trans>Due date</Trans>
           <input aria-describedby="due-error" aria-invalid defaultValue="2020-01-01" />
         </label>
-        <InlineError id="due-error" actions={<Button variant="link">Pick a later date</Button>}>
-          The due date is in the past.
+        <InlineError
+          id="due-error"
+          actions={
+            <Button variant="link">
+              <Trans>Pick a later date</Trans>
+            </Button>
+          }
+        >
+          <Trans>The due date is in the past.</Trans>
         </InlineError>
       </main>
     );

@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { undeleteProject, useListDeletedProjects } from "@parfocal/api-client";
 import { NameCell } from "@parfocal/ui/components/admin";
 import { Button } from "@parfocal/ui/components/button";
@@ -19,6 +20,8 @@ import { failureText } from "../project/new-forms-model.ts";
 import { type Notify, tableClass } from "./common.tsx";
 
 export function DeletedProjectsZone({ notify }: { notify: Notify }) {
+  const { t } = useLingui();
+
   const queryClient = useQueryClient();
   const deleted = okData(useListDeletedProjects().data) ?? [];
   const [busy, setBusy] = useState<string | null>(null);
@@ -27,7 +30,7 @@ export function DeletedProjectsZone({ notify }: { notify: Notify }) {
     try {
       await undeleteProject(id);
       await queryClient.invalidateQueries();
-      notify(`${code} ${name} is back in every list.`);
+      notify(t`${code} ${name} is back in every list.`);
     } catch (error) {
       notify(failureText(error).failure);
     } finally {
@@ -36,19 +39,29 @@ export function DeletedProjectsZone({ notify }: { notify: Notify }) {
   };
   return (
     <Zone
-      title="Deleted projects"
-      end={<span className="text-body-sm text-fg-dim">{deleted.length} deleted</span>}
+      title={t`Deleted projects`}
+      end={
+        <span className="text-body-sm text-fg-dim">
+          <Trans>{deleted.length} deleted</Trans>
+        </span>
+      }
     >
       {deleted.length === 0 ? (
         <p className="m-0 px-4 py-3 text-body-sm text-fg-dim" data-testid="deleted-projects-empty">
-          Projects you delete wait here until you restore them. Only owners see this list.
+          <Trans>
+            Projects you delete wait here until you restore them. Only owners see this list.
+          </Trans>
         </p>
       ) : (
         <Table className={tableClass} data-testid="deleted-projects">
           <TableHeader>
             <TableRow>
-              <TableHead>Project</TableHead>
-              <TableHead>Deleted</TableHead>
+              <TableHead>
+                <Trans>Project</Trans>
+              </TableHead>
+              <TableHead>
+                <Trans>Deleted</Trans>
+              </TableHead>
               <TableHead />
             </TableRow>
           </TableHeader>
@@ -74,10 +87,10 @@ export function DeletedProjectsZone({ notify }: { notify: Notify }) {
                     <Button
                       size="sm"
                       disabled={busy === project.id}
-                      aria-label={`Restore ${project.name}`}
+                      aria-label={t`Restore ${project.name}`}
                       onClick={() => void restore(project.id, project.code, project.name)}
                     >
-                      Restore
+                      <Trans>Restore</Trans>
                     </Button>
                   </span>
                 </TableCell>

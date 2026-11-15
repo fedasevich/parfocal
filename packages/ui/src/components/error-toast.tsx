@@ -1,13 +1,16 @@
+import { t } from "@lingui/core/macro";
+import { useLingui } from "@lingui/react/macro";
 import { Icon } from "@parfocal/ui/components/icon";
 import type { ErrorAction, ErrorNotice } from "@parfocal/ui/lib/api-error";
+import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
 
-const actionLabels: Record<ErrorAction, string> = {
-  retry: "Try again",
-  "sign-in": "Sign in again",
-  reload: "Reload",
-};
+const actionLabels: Record<ErrorAction, string> = lazyText(() => ({
+  retry: t`Try again`,
+  "sign-in": t`Sign in again`,
+  reload: t`Reload`,
+}));
 
 const toneClasses = {
   bad: "border-bad [&>svg]:text-bad",
@@ -21,6 +24,8 @@ type ErrorToastProps = Omit<React.ComponentProps<"div">, "title"> & {
 };
 
 function ErrorToast({ notice, onAction, onDismiss, className, ...props }: ErrorToastProps) {
+  const { t } = useLingui();
+
   return (
     <div
       data-slot="error-toast"
@@ -50,7 +55,7 @@ function ErrorToast({ notice, onAction, onDismiss, className, ...props }: ErrorT
       {onDismiss ? (
         <button
           type="button"
-          aria-label="Dismiss"
+          aria-label={t`Dismiss`}
           onClick={onDismiss}
           className="-mt-0.5 -mr-1 inline-flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-ctl border-0 bg-transparent p-0 text-fg-dim hover:bg-[color-mix(in_srgb,var(--fg)_8%,transparent)] hover:text-fg focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent"
         >

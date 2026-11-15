@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   getListStudyTemplatesQueryKey,
   getListTemplateOffersQueryKey,
@@ -25,6 +26,8 @@ import { type Notify, tableClass } from "./common.tsx";
 import { kindLabel, problemTitle } from "./template-model.ts";
 
 export function TemplateOffers({ notify }: { notify: Notify }) {
+  const { t } = useLingui();
+
   const offers = okData(useListTemplateOffers().data) ?? [];
   const queryClient = useQueryClient();
   const person = usePeople();
@@ -40,7 +43,7 @@ export function TemplateOffers({ notify }: { notify: Notify }) {
     run.mutate(
       { offerId: offer.id },
       {
-        onError: () => notify("That did not work. Try again."),
+        onError: () => notify(t`That did not work. Try again.`),
         onSuccess: (response) => {
           if (response.status >= 300) {
             notify(problemTitle(response.data));
@@ -49,8 +52,8 @@ export function TemplateOffers({ notify }: { notify: Notify }) {
           refresh();
           notify(
             accepting
-              ? `${offer.name} is now in the library`
-              : `${offer.name} was declined and is not in the library`,
+              ? t`${offer.name} is now in the library`
+              : t`${offer.name} was declined and is not in the library`,
           );
         },
       },
@@ -58,14 +61,18 @@ export function TemplateOffers({ notify }: { notify: Notify }) {
   };
   return (
     <Zone
-      title="Offered by researchers"
-      sub="A researcher arranged a report and offered the layout to the library. Accept adds it as a template, decline leaves the library as it is."
+      title={t`Offered by researchers`}
+      sub={t`A researcher arranged a report and offered the layout to the library. Accept adds it as a template, decline leaves the library as it is.`}
     >
-      <Table className={tableClass} aria-label="Offered report layouts">
+      <Table className={tableClass} aria-label={t`Offered report layouts`}>
         <TableHeader>
           <TableRow>
-            <TableHead>Layout</TableHead>
-            <TableHead>Offered by</TableHead>
+            <TableHead>
+              <Trans>Layout</Trans>
+            </TableHead>
+            <TableHead>
+              <Trans>Offered by</Trans>
+            </TableHead>
             <TableHead />
           </TableRow>
         </TableHeader>
@@ -76,10 +83,10 @@ export function TemplateOffers({ notify }: { notify: Notify }) {
                 <NameCell
                   lead={<Icon name="file" />}
                   title={offer.name}
-                  sub={`${kindLabel(offer.study_kind)} · ${offer.blocks.length} blocks`}
+                  sub={t`${kindLabel(offer.study_kind)} · ${offer.blocks.length} blocks`}
                 />
               </TableCell>
-              <TableCell>{person(offer.offered_by_user_id)?.name ?? "A researcher"}</TableCell>
+              <TableCell>{person(offer.offered_by_user_id)?.name ?? t`A researcher`}</TableCell>
               <TableCell className="text-right">
                 <span className="inline-flex gap-2">
                   <Button
@@ -87,14 +94,14 @@ export function TemplateOffers({ notify }: { notify: Notify }) {
                     disabled={decline.isPending || accept.isPending}
                     onClick={() => decide(offer, false)}
                   >
-                    Decline {offer.name}
+                    <Trans>Decline {offer.name}</Trans>
                   </Button>
                   <Button
                     variant="primary"
                     disabled={decline.isPending || accept.isPending}
                     onClick={() => decide(offer, true)}
                   >
-                    Accept {offer.name}
+                    <Trans>Accept {offer.name}</Trans>
                   </Button>
                 </span>
               </TableCell>

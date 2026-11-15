@@ -1,3 +1,4 @@
+import { useLingui } from "@lingui/react/macro";
 import { BrightnessPopover } from "@parfocal/ui/components/brightness-popover";
 import {
   type BarSignals,
@@ -100,6 +101,8 @@ function MagnificationBar({
   tabIndex = 0,
   ...props
 }: MagnificationBarProps) {
+  const { t } = useLingui();
+
   const { shown, patch } = useBarSignals(
     {
       ...(altHeld === undefined ? {} : { altHeld }),
@@ -121,7 +124,7 @@ function MagnificationBar({
       data-open={shown || undefined}
       role="toolbar"
       tabIndex={tabIndex}
-      aria-label={`Magnification ${current}, scale ${scaleLabel}. Hover or Alt+1 to Alt+6 for the presets`}
+      aria-label={t`Magnification ${current}, scale ${scaleLabel}. Hover or Alt+1 to Alt+6 for the presets`}
       className={cn(
         "inline-flex min-h-9 items-center rounded-zone border border-line bg-chrome py-1 pr-2.5 whitespace-nowrap text-fg shadow-pop outline-none focus-visible:ring-2 focus-visible:ring-accent motion-safe:transition-[padding] motion-safe:duration-(--motion-slow)",
         shown ? "pl-1.5" : "pl-2.5",
@@ -155,7 +158,7 @@ function MagnificationBar({
             <button
               key={preset}
               type="button"
-              title={`Alt+${index + 1}`}
+              title={t`Alt+${index + 1}`}
               aria-pressed={preset === near}
               onClick={() => onPreset?.(preset)}
               className="cursor-pointer rounded-md border-0 bg-transparent px-1.5 py-1 font-mono text-caption text-fg-dim hover:text-fg aria-pressed:bg-accent-soft aria-pressed:text-fg"
@@ -170,7 +173,7 @@ function MagnificationBar({
         data-part="current"
         className={cn(
           "overflow-hidden font-mono text-caption font-semibold motion-safe:transition-[max-width,opacity,margin] motion-safe:duration-(--motion-slow)",
-          shown ? "mr-0 max-w-0 opacity-0" : "mr-2.5 max-w-[90px] opacity-100",
+          shown ? t`mr-0 max-w-0 opacity-0` : `mr-2.5 max-w-[90px] opacity-100`,
         )}
       >
         {current}

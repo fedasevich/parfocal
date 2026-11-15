@@ -1,4 +1,6 @@
 import { Avatar as AvatarPrimitive } from "@base-ui/react/avatar";
+import { t } from "@lingui/core/macro";
+import { useLingui } from "@lingui/react/macro";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@parfocal/ui/components/tooltip";
 import {
@@ -7,6 +9,7 @@ import {
   personFromProfile,
   readableOn,
 } from "@parfocal/ui/lib/avatar-colours";
+import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
 
@@ -18,11 +21,11 @@ const presenceColors: Record<Presence, string> = {
   away: "bg-fg-faint",
 };
 
-const presenceLabels: Record<Presence, string> = {
-  available: "Available",
-  busy: "Busy",
-  away: "Away",
-};
+const presenceLabels: Record<Presence, string> = lazyText(() => ({
+  available: t`Available`,
+  busy: t`Busy`,
+  away: t`Away`,
+}));
 
 type PersonAvatarProps = Omit<AvatarPrimitive.Root.Props, "children" | "style"> & {
   style?: React.CSSProperties | undefined;
@@ -39,6 +42,8 @@ function PersonAvatar({
   style,
   ...props
 }: PersonAvatarProps) {
+  const { t } = useLingui();
+
   return (
     <AvatarPrimitive.Root
       data-slot="person-avatar"
@@ -55,7 +60,7 @@ function PersonAvatar({
         color: person ? readableOn(person.color) : undefined,
         ...style,
       }}
-      title={person?.name ?? "Unassigned"}
+      title={person?.name ?? t`Unassigned`}
       {...props}
     >
       <AvatarPrimitive.Fallback>
@@ -110,7 +115,9 @@ function Person({
   className,
   ...props
 }: PersonProps) {
-  const name = person ? (short ? shortName(person.name) : person.name) : "Unassigned";
+  const { t } = useLingui();
+
+  const name = person ? (short ? shortName(person.name) : person.name) : t`Unassigned`;
   const subLine = sub === true ? person?.role : sub || undefined;
   return (
     <span
@@ -126,7 +133,7 @@ function Person({
       <span className="grid min-w-0 leading-tight">
         <span className="font-medium whitespace-nowrap text-fg">
           {name}
-          {you ? " (you)" : ""}
+          {you ? t` (you)` : ""}
         </span>
         {subLine ? (
           <small className="text-caption whitespace-nowrap text-fg-faint">{subLine}</small>

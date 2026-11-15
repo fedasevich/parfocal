@@ -1,3 +1,4 @@
+import { useLingui } from "@lingui/react/macro";
 import {
   type Me,
   useGetMe,
@@ -57,6 +58,8 @@ function useActiveItem(): string | undefined {
 }
 
 export function GlobalShell({ children }: { children: ReactNode }) {
+  const { t } = useLingui();
+
   const me = okData(useGetMe().data);
   const projects = okData(useListProjects().data) ?? [];
   const homeProjects = okData(useGetMyHome().data)?.projects ?? [];
@@ -75,19 +78,19 @@ export function GlobalShell({ children }: { children: ReactNode }) {
   const sections: SidebarSection[] = [
     {
       items: [
-        { id: "home", href: destinations.home(), label: "Home", icon: "home" },
+        { id: "home", href: destinations.home(), label: t`Home`, icon: "home" },
         {
           id: "my-work",
           href: destinations.myWork(),
-          label: "My work",
+          label: t`My work`,
           icon: "slides",
           ...(toReview > 0 ? { count: toReview } : {}),
         },
-        { id: "search", href: destinations.search(), label: "Search", icon: "search" },
+        { id: "search", href: destinations.search(), label: t`Search`, icon: "search" },
       ],
     },
     {
-      title: "Projects",
+      title: t`Projects`,
       items: [
         ...projects.map((project) => {
           const slides = slidesIn(project.id);
@@ -102,17 +105,17 @@ export function GlobalShell({ children }: { children: ReactNode }) {
         {
           id: "new-project",
           href: destinations.newProject(),
-          label: "New project",
+          label: t`New project`,
           icon: "folder",
         },
       ],
     },
     {
-      title: "Workspace",
+      title: t`Workspace`,
       items: [
-        { id: "team", href: destinations.team(), label: "Team", icon: "users" },
+        { id: "team", href: destinations.team(), label: t`Team`, icon: "users" },
         ...(canOpenAdmin(me)
-          ? [{ id: "admin", href: destinations.admin(), label: "Admin", icon: "sliders" as const }]
+          ? [{ id: "admin", href: destinations.admin(), label: t`Admin`, icon: "sliders" as const }]
           : []),
       ],
     },

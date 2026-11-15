@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   getGetMySettingLayersQueryKey,
   getListStudyTemplatesQueryKey,
@@ -83,6 +84,8 @@ export function TemplatesSection({
   setCreating: (open: boolean) => void;
   onOpen: (template: StudyTemplateSummary | TemplateDraft) => void;
 }) {
+  const { t } = useLingui();
+
   const templates = okData(useListStudyTemplates().data) ?? [];
   const lab = okData(useGetMySettingLayers().data)?.lab ?? emptyLab;
   const queryClient = useQueryClient();
@@ -98,14 +101,14 @@ export function TemplatesSection({
   const retireOrRestore = (template: StudyTemplateSummary) => {
     const off = template.retired_at !== null;
     if (!off && defaultId === template.id) {
-      notify(`${template.name} is the default for new projects. Pick another default first.`);
+      notify(t`${template.name} is the default for new projects. Pick another default first.`);
       return;
     }
     const run = off ? restore : retire;
     run.mutate(
       { templateId: template.id },
       {
-        onError: () => notify("That did not work. Try again."),
+        onError: () => notify(t`That did not work. Try again.`),
         onSuccess: (response) => {
           if (response.status >= 300) {
             notify(problemTitle(response.data));
@@ -114,8 +117,8 @@ export function TemplatesSection({
           void refresh();
           notify(
             off
-              ? `${template.name} is back`
-              : `${template.name} is retired. New tasks can't pick it, tasks that use it keep it.`,
+              ? t`${template.name} is back`
+              : t`${template.name} is retired. New tasks can't pick it, tasks that use it keep it.`,
             () => {
               (off ? retire : restore).mutate(
                 { templateId: template.id },
@@ -127,7 +130,7 @@ export function TemplatesSection({
                     }
                     void refresh();
                   },
-                  onError: () => notify("That did not work. Try again."),
+                  onError: () => notify(t`That did not work. Try again.`),
                 },
               );
             },
@@ -152,27 +155,37 @@ export function TemplatesSection({
           },
         },
       );
-    apply(template.id, `${template.name} is now the default for new projects`, () => apply(was));
+    apply(template.id, t`${template.name} is now the default for new projects`, () => apply(was));
   };
   return (
     <>
       <TemplateOffers notify={notify} />
       <Zone
-        title="Study templates"
-        sub="A template lays out the evaluation report as blocks on pages and fills in what a new review task checks, its opinion form and how it runs. Researchers pick one when they create a task, and can still arrange one task's report on its own."
+        title={t`Study templates`}
+        sub={t`A template lays out the evaluation report as blocks on pages and fills in what a new review task checks, its opinion form and how it runs. Researchers pick one when they create a task, and can still arrange one task's report on its own.`}
         end={
           <span className="text-body-sm text-fg-dim">
-            {builtIn} come with Parfocal, {templates.length - builtIn} made here
+            <Trans>
+              {builtIn} come with Parfocal, {templates.length - builtIn} made here
+            </Trans>
           </span>
         }
       >
         <Table className={tableClass}>
           <TableHeader>
             <TableRow>
-              <TableHead>Template</TableHead>
-              <TableHead>Report blocks, in order</TableHead>
-              <TableHead>Fills in for a new task</TableHead>
-              <TableHead className="text-right">Tasks</TableHead>
+              <TableHead>
+                <Trans>Template</Trans>
+              </TableHead>
+              <TableHead>
+                <Trans>Report blocks, in order</Trans>
+              </TableHead>
+              <TableHead>
+                <Trans>Fills in for a new task</Trans>
+              </TableHead>
+              <TableHead className="text-right">
+                <Trans>Tasks</Trans>
+              </TableHead>
               <TableHead />
             </TableRow>
           </TableHeader>
@@ -191,12 +204,18 @@ export function TemplatesSection({
                         lead={<Icon name="file" />}
                         title={template.name}
                         version={`v${template.version}`}
-                        sub={`${kindLabel(template.study_kind)} · ${own ? "made here" : "comes with Parfocal"}`}
+                        sub={`${kindLabel(template.study_kind)} · ${own ? "made here" : t`comes with Parfocal`}`}
                       />
                       {defaultId === template.id ? (
-                        <StatusTag tone="accent">Default</StatusTag>
+                        <StatusTag tone="accent">
+                          <Trans>Default</Trans>
+                        </StatusTag>
                       ) : null}
-                      {off ? <StatusTag>Retired</StatusTag> : null}
+                      {off ? (
+                        <StatusTag>
+                          <Trans>Retired</Trans>
+                        </StatusTag>
+                      ) : null}
                     </span>
                   </TableCell>
                   <TableCell>
@@ -217,18 +236,18 @@ export function TemplatesSection({
                       <Button
                         size="sm"
                         variant="ghost"
-                        aria-label={`Preview ${template.name}`}
+                        aria-label={t`Preview ${template.name}`}
                         onClick={() => setPreview(template)}
                       >
                         <Icon name="eye" />
-                        Preview
+                        <Trans>Preview</Trans>
                       </Button>
                       <Button
                         size="sm"
-                        aria-label={`${own ? "Edit" : "Duplicate"} ${template.name}`}
+                        aria-label={`${own ? t`Edit` : t`Duplicate`} ${template.name}`}
                         onClick={() => onOpen(template)}
                       >
-                        {own ? "Edit" : "Duplicate"}
+                        {own ? t`Edit` : t`Duplicate`}
                       </Button>
                       <DropdownMenu>
                         <DropdownMenuTrigger
@@ -236,7 +255,7 @@ export function TemplatesSection({
                             <Button
                               variant="ghost"
                               size="icon-sm"
-                              aria-label={`More for ${template.name}`}
+                              aria-label={t`More for ${template.name}`}
                             />
                           }
                         >
@@ -244,19 +263,19 @@ export function TemplatesSection({
                         </DropdownMenuTrigger>
                         <DropdownMenuContent>
                           <DropdownMenuItem onClick={() => setPreview(template)}>
-                            Preview the PDF
+                            <Trans>Preview the PDF</Trans>
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => onOpen(template)}>
-                            {own ? "Edit" : "Duplicate and edit"}
+                            {own ? t`Edit` : t`Duplicate and edit`}
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             disabled={off || defaultId === template.id}
                             onClick={() => makeDefault(template)}
                           >
-                            Use for new projects
+                            <Trans>Use for new projects</Trans>
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => retireOrRestore(template)}>
-                            {off ? "Restore" : "Retire"}
+                            {off ? t`Restore` : t`Retire`}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -269,8 +288,10 @@ export function TemplatesSection({
         </Table>
       </Zone>
       <InfoLine>
-        Templates that come with Parfocal stay as they are. Duplicate one to change it. A task keeps
-        the version it was created with, and a signed report keeps its layout.
+        <Trans>
+          Templates that come with Parfocal stay as they are. Duplicate one to change it. A task
+          keeps the version it was created with, and a signed report keeps its layout.
+        </Trans>
       </InfoLine>
       <PdfDialog template={preview} onClose={() => setPreview(null)} />
       <NewTemplateModal
@@ -282,8 +303,8 @@ export function TemplatesSection({
           onOpen(draft);
           notify(
             draft.from === null
-              ? "An empty template. Drag blocks onto the page."
-              : "A copy to change. Name, paper and format are on the right.",
+              ? t`An empty template. Drag blocks onto the page.`
+              : t`A copy to change. Name, paper and format are on the right.`,
           );
         }}
       />
@@ -302,6 +323,8 @@ function NewTemplateModal({
   onClose: () => void;
   onCreate: (draft: TemplateDraft) => void;
 }) {
+  const { t } = useLingui();
+
   const [name, setName] = useState("");
   const [kind, setKind] = useState<StudyKind>("regions-and-cells");
   const [from, setFrom] = useState<"blank" | "tpl">("blank");
@@ -325,12 +348,12 @@ function NewTemplateModal({
           onClose();
         }
       }}
-      title="New study template"
+      title={t`New study template`}
       width={560}
-      hint="Opens in the editor."
-      primaryLabel="Create and open"
-      blockers={tried && error ? [{ id: "name", text: error, goTo: "Go to the name" }] : []}
-      blockersTitle="Before you can create it"
+      hint={t`Opens in the editor.`}
+      primaryLabel={t`Create and open`}
+      blockers={tried && error ? [{ id: "name", text: error, goTo: t`Go to the name` }] : []}
+      blockersTitle={t`Before you can create it`}
       onPrimary={() => {
         setTried(true);
         if (error) return;
@@ -339,21 +362,23 @@ function NewTemplateModal({
       }}
     >
       <FormField
-        label="Name"
-        help="Researchers see it when they create a review task."
+        label={t`Name`}
+        help={t`Researchers see it when they create a review task.`}
         error={tried ? error : undefined}
       >
         <TextFieldInput
-          placeholder="For example, Lymph node detection"
+          placeholder={t`For example, Lymph node detection`}
           maxLength={60}
           value={name}
           onChange={(event) => setName(event.target.value)}
         />
       </FormField>
       <div className="grid gap-1.5">
-        <span className="text-body-sm font-semibold">Kind of study</span>
+        <span className="text-body-sm font-semibold">
+          <Trans>Kind of study</Trans>
+        </span>
         <Select value={kind} onValueChange={(value) => setKind(value as StudyKind)}>
-          <SelectTrigger aria-label="Kind of study" className="w-full">
+          <SelectTrigger aria-label={t`Kind of study`} className="w-full">
             <SelectValue>{kindLabel(kind)}</SelectValue>
           </SelectTrigger>
           <SelectContent>
@@ -367,7 +392,7 @@ function NewTemplateModal({
       </div>
       <div className="grid gap-2">
         <span id="template-from" className="text-body-sm font-semibold">
-          Start from
+          <Trans>Start from</Trans>
         </span>
         <RadioGroup
           aria-labelledby="template-from"
@@ -376,8 +401,8 @@ function NewTemplateModal({
           className="grid gap-2"
         >
           {[
-            ["blank", "An empty page", "Only the header and footer. You add the blocks."],
-            ["tpl", "A template", "A copy of one from the library, to change."],
+            ["blank", t`An empty page`, t`Only the header and footer. You add the blocks.`],
+            ["tpl", "A template", t`A copy of one from the library, to change.`],
           ].map(([value, label, detail]) => (
             <label key={value} className="flex cursor-pointer items-start gap-2.5 text-body-sm">
               <RadioGroupItem value={String(value)} className="mt-0.5" />
@@ -390,7 +415,7 @@ function NewTemplateModal({
         </RadioGroup>
         {from === "tpl" ? (
           <Select value={basis} onValueChange={(value) => setBase(String(value))}>
-            <SelectTrigger aria-label="Template to copy" className="w-full">
+            <SelectTrigger aria-label={t`Template to copy`} className="w-full">
               <SelectValue>
                 {templates.find((item) => item.id === basis)?.name ?? "Pick a template"}
               </SelectValue>
@@ -407,7 +432,7 @@ function NewTemplateModal({
       </div>
       <div className="grid gap-1.5">
         <span id="template-paper" className="text-body-sm font-semibold">
-          Paper
+          <Trans>Paper</Trans>
         </span>
         <SegmentedControl
           aria-labelledby="template-paper"

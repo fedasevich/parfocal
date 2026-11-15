@@ -1,3 +1,6 @@
+import type { MessageDescriptor } from "@lingui/core";
+import { msg, t } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import { Icon, type IconName } from "@parfocal/ui/components/icon";
 import { Keycap } from "@parfocal/ui/components/keycap";
@@ -32,17 +35,19 @@ type ProgressPopoverProps = {
 };
 
 const legendRows = [
-  { key: "agree", label: "Agree", dot: "bg-decision-agree" },
-  { key: "disagree", label: "Disagree", dot: "bg-decision-disagree" },
-  { key: "unsure", label: "Not sure", dot: "bg-decision-unsure" },
+  { key: "agree", label: msg`Agree`, dot: "bg-decision-agree" },
+  { key: "disagree", label: msg`Disagree`, dot: "bg-decision-disagree" },
+  { key: "unsure", label: msg`Not sure`, dot: "bg-decision-unsure" },
   {
     key: "open",
-    label: "Still open",
+    label: msg`Still open`,
     dot: "bg-transparent shadow-[inset_0_0_0_1.5px_var(--line-strong)]",
   },
 ] as const;
 
 function DecisionLegend({ split }: { split: DecisionSplit }) {
+  const { t } = useLingui();
+
   return (
     <dl className="m-0 grid grid-cols-2 gap-x-4.5 gap-y-2">
       {legendRows.map((row) => (
@@ -51,7 +56,7 @@ function DecisionLegend({ split }: { split: DecisionSplit }) {
           className="grid grid-cols-[10px_minmax(0,1fr)_auto] items-center gap-2 text-body-sm text-fg-dim"
         >
           <i aria-hidden="true" className={cn("size-2.5 rounded-full", row.dot)} />
-          <dt>{row.label}</dt>
+          <dt>{t(row.label)}</dt>
           <dd className="m-0 font-semibold text-fg tabular-nums">{split[row.key]}</dd>
         </div>
       ))}
@@ -78,11 +83,13 @@ function ReviewProgressPopover({
   onNext,
   className,
 }: ProgressPopoverProps) {
+  const { t } = useLingui();
+
   const taskPercent = slideTotal === 0 ? 0 : Math.round((100 * (position - 1)) / slideTotal);
   return (
     <div
       role="dialog"
-      aria-label="Review progress"
+      aria-label={t`Review progress`}
       data-slot="review-progress-popover"
       className={cn("grid w-85 gap-3.5 p-0.5", className)}
     >
@@ -90,7 +97,7 @@ function ReviewProgressPopover({
         <ProgressRing split={slide} size={64} />
         <div className="min-w-0">
           <span className="block text-label font-semibold tracking-wide text-fg-faint uppercase">
-            Task {taskCode}
+            <Trans>Task {taskCode}</Trans>
           </span>
           <b className="block text-body font-semibold leading-snug">{taskName}</b>
           <small className="block text-caption text-fg-faint" data-phi="">
@@ -99,10 +106,12 @@ function ReviewProgressPopover({
         </div>
       </div>
       <Zone
-        title={`This slide, ${slideName}`}
+        title={t`This slide, ${slideName}`}
         end={
           <span className="text-caption text-fg-dim tabular-nums">
-            {slide.decided} of {slide.total}
+            <Trans>
+              {slide.decided} of {slide.total}
+            </Trans>
           </span>
         }
       >
@@ -110,7 +119,9 @@ function ReviewProgressPopover({
         {seenPercent === undefined ? null : (
           <div className="flex items-center gap-2 border-t border-line pt-2.5 text-body-sm leading-snug text-fg-dim">
             <Icon name="eye" className="text-fg-faint" />
-            <span>{seenPercent}% of the tissue seen at 10x or more</span>
+            <span>
+              <Trans>{seenPercent}% of the tissue seen at 10x or more</Trans>
+            </span>
             <Button
               variant="ghost"
               size="sm"
@@ -119,16 +130,18 @@ function ReviewProgressPopover({
               title={wholeSlideTitle}
               data-closes-popover={onWholeSlide ? "" : undefined}
             >
-              Whole slide
+              <Trans>Whole slide</Trans>
             </Button>
           </div>
         )}
       </Zone>
       <Zone
-        title="Whole task"
+        title={t`Whole task`}
         end={
           <span className="text-caption text-fg-dim tabular-nums">
-            {submittedCount} of {slideTotal} submitted
+            <Trans>
+              {submittedCount} of {slideTotal} submitted
+            </Trans>
           </span>
         }
       >
@@ -136,7 +149,9 @@ function ReviewProgressPopover({
           value={taskPercent}
           label={
             <>
-              Slide <b>{position}</b> of {slideTotal}
+              <Trans>
+                Slide <b>{position}</b> of {slideTotal}
+              </Trans>
             </>
           }
           valueText={`${taskPercent}%`}
@@ -144,25 +159,27 @@ function ReviewProgressPopover({
         <dl className="m-0 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-body-sm">
           <dt className="flex items-center gap-1.5 text-fg-dim">
             <Icon name="calendar" className="text-fg-faint" />
-            Due
+            <Trans>Due</Trans>
           </dt>
           <dd className="m-0 text-right">{dueText}</dd>
           <dt className="flex items-center gap-1.5 text-fg-dim">
             <Icon name="clock" className="text-fg-faint" />
-            Time left
+            <Trans>Time left</Trans>
           </dt>
           <dd className="m-0 text-right">{timeLeft}</dd>
         </dl>
       </Zone>
       <div className="flex items-center justify-between gap-2.5">
-        <span className="text-caption text-fg-dim">Saved as you go</span>
+        <span className="text-caption text-fg-dim">
+          <Trans>Saved as you go</Trans>
+        </span>
         <Button onClick={onPrevious} disabled={!onPrevious}>
           <Icon name="back" />
-          Previous slide
+          <Trans>Previous slide</Trans>
         </Button>
         {guided ? null : (
           <Button variant="primary" onClick={onNext} disabled={!onNext}>
-            Next slide
+            <Trans>Next slide</Trans>
             <Icon name="next" />
           </Button>
         )}
@@ -197,21 +214,23 @@ type CaseDetailsData = {
 };
 
 function CaseDetails({ details }: { details: CaseDetailsData }) {
+  const { t } = useLingui();
+
   const blocks = details.blocks ?? [];
   const rows: [string, string, string | undefined, string][] = [
-    ["project", "Project", details.project, "Not known"],
-    ["case", "Case", details.caseLabel, "No case attached"],
-    ["specimen", "Specimen", details.specimen, "Not recorded"],
-    ["blocks", "Blocks", blocks.length > 0 ? blocks.join(", ") : undefined, "No blocks recorded"],
-    ["task", "Task", details.task, "Not part of a task"],
-    ["researcher", "Researcher", details.researcher, "Not known"],
+    ["project", t`Project`, details.project, t`Not known`],
+    ["case", t`Case`, details.caseLabel, t`No case attached`],
+    ["specimen", t`Specimen`, details.specimen, t`Not recorded`],
+    ["blocks", t`Blocks`, blocks.length > 0 ? blocks.join(", ") : undefined, t`No blocks recorded`],
+    ["task", t`Task`, details.task, t`Not part of a task`],
+    ["researcher", t`Researcher`, details.researcher, t`Not known`],
   ];
   if (details.clinical) {
-    rows.push(["clinical-note", "Clinical note", details.clinicalNote, "No clinical note"]);
+    rows.push(["clinical-note", t`Clinical note`, details.clinicalNote, t`No clinical note`]);
   }
   return (
     <dl
-      aria-label="Case details"
+      aria-label={t`Case details`}
       data-slot="case-details"
       className="m-0 grid grid-cols-[88px_minmax(0,1fr)] gap-x-3 gap-y-1 border-b border-surf-edge px-4 py-3 text-caption"
     >
@@ -271,6 +290,8 @@ function SlideRowView({
   onPick?: (id: string) => void;
   sideBySide?: SideBySide | undefined;
 }) {
+  const { t } = useLingui();
+
   const offersSideBySide = sideBySide !== undefined && !row.current && !row.disabledReason;
   return (
     <div className="relative" data-slot="slide-row-group">
@@ -311,7 +332,7 @@ function SlideRowView({
             "inline-flex items-center gap-1 text-caption text-fg-dim",
             row.resultSets === 0 && "opacity-50",
           )}
-          title={`${row.resultSets} result set${row.resultSets === 1 ? "" : "s"}`}
+          title={t`${row.resultSets} result set${row.resultSets === 1 ? "" : "s"}`}
         >
           <Icon name="layers" size="xs" />
           <span className="tabular-nums">{row.resultSets}</span>
@@ -325,13 +346,14 @@ function SlideRowView({
           size="sm"
           variant="ghost"
           className="absolute right-2 bottom-1.5"
-          aria-label={`Side by side with ${row.name}`}
+          data-slot="side-by-side"
+          aria-label={t`Side by side with ${row.name}`}
           title={sideBySide.title}
           disabled={sideBySide.onOpen === undefined}
           onClick={() => sideBySide.onOpen?.(row.id)}
         >
           <Icon name="slides" />
-          Side by side
+          <Trans>Side by side</Trans>
         </Button>
       ) : null}
     </div>
@@ -343,7 +365,7 @@ function SlidesPopover({
   caseSub,
   onOpenCase,
   details,
-  caseHeading = "Slides in this case",
+  caseHeading = t`Slides in this case`,
   caseSlides,
   looseHeading,
   looseSlides = [],
@@ -352,9 +374,11 @@ function SlidesPopover({
   onSideBySide,
   sideBySideTitle,
   footer,
-  ariaLabel = "Slides in this case and task",
+  ariaLabel = t`Slides in this case and task`,
   className,
 }: SlidesPopoverProps) {
+  const { t } = useLingui();
+
   const heading =
     "flex items-center justify-between px-2 pt-3 pb-1.5 text-caption font-semibold text-fg-dim";
   const sideBySide =
@@ -376,7 +400,7 @@ function SlidesPopover({
             <small className="block truncate text-caption text-fg-faint">{caseSub}</small>
           </div>
           <Button size="sm" onClick={onOpenCase} disabled={!onOpenCase}>
-            Open the case
+            <Trans>Open the case</Trans>
           </Button>
         </div>
       ) : null}
@@ -421,7 +445,7 @@ function SlidesPopover({
             <Button
               variant="ghost"
               onClick={footer.onResultSets}
-              title="Show, hide, compare and style the result sets of this slide"
+              title={t`Show, hide, compare and style the result sets of this slide`}
             >
               <Icon name="layers" />
               {footer.resultSetsLabel}
@@ -435,7 +459,7 @@ function SlidesPopover({
               title={footer.compareTitle}
             >
               <Icon name="slides" />
-              Compare slides
+              <Trans>Compare slides</Trans>
             </Button>
           ) : null}
           {footer.onAddSlides || footer.addSlidesTitle ? (
@@ -445,7 +469,7 @@ function SlidesPopover({
               title={footer.addSlidesTitle}
             >
               <Icon name="upload" />
-              Add slides
+              <Trans>Add slides</Trans>
             </Button>
           ) : null}
         </div>
@@ -461,9 +485,11 @@ type PinnedSlideStripProps = {
 };
 
 function PinnedSlideStrip({ slides, onPick, className }: PinnedSlideStripProps) {
+  const { t } = useLingui();
+
   return (
     <nav
-      aria-label="Slides of this case"
+      aria-label={t`Slides of this case`}
       data-slot="pinned-slide-strip"
       className={cn(
         "flex shrink-0 items-center gap-1.5 overflow-x-auto border-b border-line bg-chrome px-3 py-1.5",

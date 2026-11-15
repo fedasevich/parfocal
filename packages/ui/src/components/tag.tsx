@@ -1,4 +1,5 @@
 import { Toggle as TogglePrimitive } from "@base-ui/react/toggle";
+import { useLingui } from "@lingui/react/macro";
 import { Icon, type IconName } from "@parfocal/ui/components/icon";
 import { copyObjectId } from "@parfocal/ui/lib/object-id";
 import type { CategoryTone, ResultSetSource, StatusTone } from "@parfocal/ui/lib/tag-sets";
@@ -83,6 +84,8 @@ function CopyableObjectIdTag({
   onClick,
   ...props
 }: Omit<React.ComponentProps<"button">, "size"> & { size: "md" | "lg"; copyText: string }) {
+  const { t } = useLingui();
+
   const [copied, setCopied] = React.useState(false);
   const timer = React.useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   React.useEffect(() => () => clearTimeout(timer.current), []);
@@ -100,8 +103,8 @@ function CopyableObjectIdTag({
         data-size={size}
         data-copyable=""
         data-copied={copied || undefined}
-        title={`Copy ${copyText}`}
-        aria-label={`Copy ID ${copyText}`}
+        title={t`Copy ${copyText}`}
+        aria-label={t`Copy ID ${copyText}`}
         onClick={(event) => {
           onClick?.(event);
           void copy();
@@ -117,7 +120,7 @@ function CopyableObjectIdTag({
         {children}
       </button>
       <span role="status" className="sr-only">
-        {copied ? `Copied ${copyText}` : ""}
+        {copied ? t`Copied ${copyText}` : ""}
       </span>
     </span>
   );

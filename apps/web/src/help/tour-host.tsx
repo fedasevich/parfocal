@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   getGetMySettingLayersQueryKey,
   useGetMySettingLayers,
@@ -65,6 +66,8 @@ function useTargetBox(selector: string | undefined, key: number | null): Box | n
 }
 
 function TourCard({ index }: { index: number }) {
+  const { t } = useLingui();
+
   const router = useRouter();
   const saved = useSavedTour();
   const projectId = okData(useListProjects().data)?.[0]?.id;
@@ -111,26 +114,28 @@ function TourCard({ index }: { index: number }) {
       ) : null}
       <section
         role="dialog"
-        aria-label="Guided tour"
+        aria-label={t`Guided tour`}
         className="fixed right-4 bottom-4 z-[60] flex w-80 flex-col gap-2 rounded-card border border-line bg-surf-raised p-3 shadow-lg"
       >
         <p className="text-caption text-ink-2">
-          Step {index + 1} of {tourLength}
+          <Trans>
+            Step {index + 1} of {tourLength}
+          </Trans>
         </p>
         <h2 className="text-body font-semibold text-ink">{step.title}</h2>
         <p className="text-body-sm text-ink">{step.text}</p>
         <div className="flex items-center justify-between gap-2">
           <Button size="xs" variant="ghost" onClick={stop}>
-            Stop tour
+            <Trans>Stop tour</Trans>
           </Button>
           <div className="flex gap-2">
             {index > 0 ? (
               <Button size="xs" variant="secondary" onClick={() => startTour(index - 1)}>
-                Back
+                <Trans>Back</Trans>
               </Button>
             ) : null}
             <Button size="xs" onClick={next}>
-              {last ? "Done" : "Next"}
+              {last ? t`Done` : t`Next`}
             </Button>
           </div>
         </div>
@@ -145,23 +150,27 @@ function TourOffer() {
 }
 
 function TourOfferCard() {
+  const { t } = useLingui();
+
   const saved = useSavedTour();
   if (!saved.loaded || !offerShows(saved)) return null;
   return (
     <section
-      aria-label="Tour offer"
+      aria-label={t`Tour offer`}
       className="fixed right-4 bottom-4 z-40 flex w-80 flex-col gap-2 rounded-card border border-line bg-surf-raised p-3 shadow-lg"
     >
-      <p className="font-medium text-ink">New here?</p>
+      <p className="font-medium text-ink">
+        <Trans>New here?</Trans>
+      </p>
       <p className="text-body-sm text-ink-2">
-        A short tour walks through the ten steps from upload to the signed report.
+        <Trans>A short tour walks through the ten steps from upload to the signed report.</Trans>
       </p>
       <div className="flex justify-between gap-2">
         <Button size="xs" variant="ghost" onClick={saved.dismiss}>
-          Not now
+          <Trans>Not now</Trans>
         </Button>
         <Button size="xs" onClick={() => startTour(resumeIndex(saved.progress))}>
-          Take the tour
+          <Trans>Take the tour</Trans>
         </Button>
       </div>
     </section>

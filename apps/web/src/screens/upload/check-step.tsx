@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import type { UploadBatch, UploadProblem } from "@parfocal/api-client";
 import { Banner } from "@parfocal/ui/components/banner";
 import { Button } from "@parfocal/ui/components/button";
@@ -13,6 +15,7 @@ import {
 } from "@parfocal/ui/components/select";
 import { StatusTag } from "@parfocal/ui/components/tag";
 import { Hint, Zone } from "@parfocal/ui/components/zone";
+import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import { cn } from "@parfocal/ui/lib/utils";
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
@@ -23,11 +26,11 @@ import { gb, plural, type UploadModel, type UploadScene, type UploadState } from
 const problemLook: Record<
   UploadProblem["kind"],
   { icon: IconName; tag: string; tone: "bad" | "warn" }
-> = {
-  "read-error": { icon: "x-circle", tag: "Read error", tone: "bad" },
-  scale: { icon: "expand", tag: "Does not line up", tone: "warn" },
-  "new-classes": { icon: "flag", tag: "New classes", tone: "warn" },
-};
+> = lazyText(() => ({
+  "read-error": { icon: "x-circle", tag: t`Read error`, tone: "bad" },
+  scale: { icon: "expand", tag: t`Does not line up`, tone: "warn" },
+  "new-classes": { icon: "flag", tag: t`New classes`, tone: "warn" },
+}));
 
 const classColours: Record<string, string> = {
   Tumor: "var(--c-tumor)",
@@ -97,7 +100,7 @@ export function DoneRow({
         <small className="text-body-sm text-fg-dim">{what}</small>
       </span>
       <Button size="sm" variant="ghost" onClick={onUndo}>
-        Undo
+        <Trans>Undo</Trans>
       </Button>
     </Zone>
   );
@@ -122,6 +125,8 @@ export function CheckStep({
   projectCode: string;
   toast: (message: ReactNode) => void;
 }) {
+  const { t } = useLingui();
+
   const open = model.openIn(scene);
   const full = scene === "storagefull" && !state.trimmed;
   const unmatchedScene = scene === "unmatched";
@@ -129,53 +134,53 @@ export function CheckStep({
   const others = model.files - open;
   const lead =
     scene === "storagefull"
-      ? "Every file reads cleanly. Only the space is short, and nothing uploads until it fits."
+      ? t`Every file reads cleanly. Only the space is short, and nothing uploads until it fits.`
       : open
-        ? `${open} file${open > 1 ? "s need" : " needs"} a look. The other ${plural(others, "file")} ${others === 1 ? "is" : "are"} fine. A file with a problem waits until it is fixed, the rest upload.`
+        ? t`${open} file${open > 1 ? "s need" : " needs"} a look. The other ${plural(others, "file")} ${others === 1 ? "is" : "are"} fine. A file with a problem waits until it is fixed, the rest upload.`
         : left
-          ? `${left} file${left > 1 ? "s are" : " is"} left out. The other ${plural(model.files - left, "file")} read cleanly and upload.`
-          : "Every file reads cleanly and lines up with its slide. Nothing needs you.";
+          ? t`${left} file${left > 1 ? "s are" : " is"} left out. The other ${plural(model.files - left, "file")} read cleanly and upload.`
+          : t`Every file reads cleanly and lines up with its slide. Nothing needs you.`;
   const loose = model.slides.length - model.inCase.length;
   const rows = [
     {
       icon: "slides" as const,
-      label: "Slides",
+      label: t`Slides`,
       value:
         scene === "storagefull" && state.trimmed
-          ? `${batch.storage.trimmed_slides} · ${gb(batch.storage.trimmed_gb)}, ${model.slides.length - batch.storage.trimmed_slides} left out`
+          ? t`${batch.storage.trimmed_slides} · ${gb(batch.storage.trimmed_gb)}, ${model.slides.length - batch.storage.trimmed_slides} left out`
           : `${model.slides.length} · ${gb(model.sizeGb)}`,
     },
     {
       icon: "layers" as const,
       label: "AI results",
       value: left
-        ? `${plural(model.resultCount - left, "file")}, ${left} left out`
+        ? t`${plural(model.resultCount - left, "file")}, ${left} left out`
         : plural(model.resultCount, "file"),
     },
-    { icon: "link" as const, label: "Matched", value: `${model.matched} of ${model.resultCount}` },
+    { icon: "link" as const, label: t`Matched`, value: `${model.matched} of ${model.resultCount}` },
     {
       icon: "folder" as const,
-      label: "Cases",
+      label: t`Cases`,
       value:
         state.cases === "names" && model.inCase.length > 0
-          ? `1 case, ${loose} loose`
+          ? t`1 case, ${loose} loose`
           : plural(model.slides.length, "loose slide"),
     },
     ...(scene === "storagefull"
       ? [
           {
             icon: "database" as const,
-            label: "Space",
+            label: t`Space`,
             value: full
-              ? `${batch.storage.needed_gb} GB needed, ${batch.storage.left_gb} GB left in ${projectCode}`
-              : `${batch.storage.trimmed_gb} GB needed, ${batch.storage.left_gb} GB left in ${projectCode}`,
+              ? t`${batch.storage.needed_gb} GB needed, ${batch.storage.left_gb} GB left in ${projectCode}`
+              : t`${batch.storage.trimmed_gb} GB needed, ${batch.storage.left_gb} GB left in ${projectCode}`,
           },
         ]
       : []),
     {
       icon: "warn" as const,
-      label: "To fix",
-      value: open ? `${open} file${open > 1 ? "s" : ""}` : "Nothing",
+      label: t`To fix`,
+      value: open ? `${open} file${open > 1 ? "s" : ""}` : t`Nothing`,
     },
   ];
   const heatmap = batch.results[2];
@@ -189,7 +194,7 @@ export function CheckStep({
           <DoneRow
             key={file}
             file={file}
-            what="Left out of this upload"
+            what={t`Left out of this upload`}
             out
             onUndo={() => set({ unmatchedOut: false })}
           />
@@ -199,11 +204,11 @@ export function CheckStep({
         <ProblemZone
           key={file}
           icon="link"
-          tag="No slide yet"
+          tag={t`No slide yet`}
           tone="warn"
-          title="This heatmap has no slide yet"
+          title={t`This heatmap has no slide yet`}
           file={file}
-          text="It sat in results/ and a PNG has no slide ID inside. Pick its slide and Parfocal checks how it lines up."
+          text={t`It sat in results/ and a PNG has no slide ID inside. Pick its slide and Parfocal checks how it lines up.`}
           actions={
             <>
               <SlidePicker
@@ -213,7 +218,7 @@ export function CheckStep({
                 onPick={(slide) => set({ placed: { ...state.placed, 2: slide } })}
               />
               <Button variant="ghost" onClick={() => set({ unmatchedOut: true })}>
-                Leave it out
+                <Trans>Leave it out</Trans>
               </Button>
             </>
           }
@@ -225,7 +230,7 @@ export function CheckStep({
         <DoneRow
           key={file}
           file={heatmap?.name ?? file}
-          what={`Goes with ${batch.slides[model.resultTo(2).slide ?? 2]?.name ?? ""}, placed at level 2, scaled ×4`}
+          what={t`Goes with ${batch.slides[model.resultTo(2).slide ?? 2]?.name ?? ""}, placed at level 2, scaled ×4`}
           onUndo={() => {
             const placed = { ...state.placed };
             delete placed[2];
@@ -250,7 +255,7 @@ export function CheckStep({
         <DoneRow
           key={file}
           file={file}
-          what="Left out of this upload"
+          what={t`Left out of this upload`}
           out
           onUndo={() => set({ left: { ...state.left, [index]: false } })}
         />
@@ -265,8 +270,12 @@ export function CheckStep({
               key={line.line}
               className="grid grid-cols-[92px_92px_1fr] gap-2.5 border-line py-2.25 font-mono text-caption text-fg-dim [&+&]:border-t"
             >
-              <span>line {line.line}</span>
-              <span>object {line.object}</span>
+              <span>
+                <Trans>line {line.line}</Trans>
+              </span>
+              <span>
+                <Trans>object {line.object}</Trans>
+              </span>
               <b className="font-medium text-bad">{line.error}</b>
             </div>
           ))}
@@ -275,22 +284,32 @@ export function CheckStep({
         <div className="flex gap-4 py-3.5">
           <figure className="m-0 grid justify-items-start gap-2 text-caption text-fg-dim">
             <SlideOverlay kind="off" height={128} />
-            <figcaption>Level 0 · 4% on tissue</figcaption>
+            <figcaption>
+              <Trans>Level 0 · 4% on tissue</Trans>
+            </figcaption>
           </figure>
           <figure className="m-0 grid justify-items-start gap-2 text-caption">
             <span className="rounded-md outline-2 outline-offset-1 outline-accent">
               <SlideOverlay kind="heat" height={128} />
             </span>
-            <figcaption className="font-medium text-fg">Level 2, ×4 · 97% on tissue</figcaption>
+            <figcaption className="font-medium text-fg">
+              <Trans>Level 2, ×4 · 97% on tissue</Trans>
+            </figcaption>
           </figure>
         </div>
       ) : (
         <div className="grid">
           <div className="grid min-h-8 grid-cols-[minmax(0,1fr)_56px_16px_minmax(0,1.1fr)] items-center gap-2.5 border-b border-line-strong text-caption font-semibold text-fg-dim">
-            <span>In the file</span>
-            <span>Cells</span>
+            <span>
+              <Trans>In the file</Trans>
+            </span>
+            <span>
+              <Trans>Cells</Trans>
+            </span>
             <span />
-            <span>Class in {projectCode}</span>
+            <span>
+              <Trans>Class in {projectCode}</Trans>
+            </span>
           </div>
           {batch.new_classes.map((item) => (
             <div
@@ -301,8 +320,8 @@ export function CheckStep({
               <span className="font-mono text-fg-dim">{item.cells.toLocaleString("en-US")}</span>
               <Icon name="next" className="text-fg-faint" />
               <Select defaultValue={item.to ?? undefined}>
-                <SelectTrigger size="sm" aria-label={`Class for ${item.name}`} className="w-full">
-                  <SelectValue placeholder="Choose a class" />
+                <SelectTrigger size="sm" aria-label={t`Class for ${item.name}`} className="w-full">
+                  <SelectValue placeholder={t`Choose a class`} />
                 </SelectTrigger>
                 <SelectContent>
                   {Object.entries(classColours).map(([name, colour]) => (
@@ -332,13 +351,15 @@ export function CheckStep({
         extra={
           problem.kind === "new-classes" ? (
             <div className="flex flex-wrap items-center justify-between gap-3 text-body-sm text-fg-dim">
-              <span>{batch.unscored_rows} rows have no score</span>
+              <span>
+                <Trans>{batch.unscored_rows} rows have no score</Trans>
+              </span>
               <SegmentedControl
-                aria-label="Rows with no score"
+                aria-label={t`Rows with no score`}
                 defaultValue="keep"
                 options={[
-                  { value: "keep", label: "Keep with no score" },
-                  { value: "one", label: "Count as 1.0" },
+                  { value: "keep", label: t`Keep with no score` },
+                  { value: "one", label: t`Count as 1.0` },
                 ]}
               />
             </div>
@@ -349,9 +370,9 @@ export function CheckStep({
             <Button onClick={fix}>{problem.fix}</Button>
             {problem.kind === "read-error" ? (
               <>
-                <Button onClick={() => toast("Downloads the error report as a CSV (mock)")}>
+                <Button onClick={() => toast(t`Downloads the error report as a CSV (mock)`)}>
                   <Icon name="download" />
-                  Error report
+                  <Trans>Error report</Trans>
                 </Button>
                 <Button
                   variant="ghost"
@@ -364,7 +385,7 @@ export function CheckStep({
                     />
                   }
                 >
-                  What files work?
+                  <Trans>What files work?</Trans>
                 </Button>
               </>
             ) : null}
@@ -382,19 +403,22 @@ export function CheckStep({
           actions={
             <>
               <Link to="/admin" className="text-body-sm font-medium text-accent hover:underline">
-                Storage and sources
+                <Trans>Storage and sources</Trans>
               </Link>
               <Button size="sm" onClick={() => set({ trimmed: true })}>
-                Remove the 4 largest slides from this upload
+                <Trans>Remove the 4 largest slides from this upload</Trans>
               </Button>
             </>
           }
         >
-          <b>Not enough space.</b> This upload needs {batch.storage.needed_gb} GB and {projectCode}{" "}
-          has {batch.storage.left_gb} GB left of its {batch.storage.allowance_gb} GB allowance.
+          <Trans>
+            <b>Not enough space.</b> This upload needs {batch.storage.needed_gb} GB and{" "}
+            {projectCode} has {batch.storage.left_gb} GB left of its {batch.storage.allowance_gb} GB
+            allowance.
+          </Trans>
         </Banner>
       ) : null}
-      <Zone title="In this upload" sub={lead}>
+      <Zone title={t`In this upload`} sub={lead}>
         <FactList rows={rows} />
       </Zone>
       {problems}

@@ -1,3 +1,6 @@
+import type { MessageDescriptor } from "@lingui/core";
+import { msg } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   exportAuditEvents,
   type NamedAuditEvent,
@@ -37,10 +40,10 @@ import {
 import { type Notify, tableClass } from "./common.tsx";
 import { SystemActor } from "./overview.tsx";
 
-const auditFlags: Record<string, { text: string; tone: "warn" | "bad" }> = {
-  "decision.changed-after-sign-off": { text: "After sign-off", tone: "warn" },
-  "project.emergency-access": { text: "Emergency", tone: "bad" },
-  "webhook.rejected": { text: "Rejected", tone: "bad" },
+const auditFlags: Record<string, { text: MessageDescriptor; tone: "warn" | "bad" }> = {
+  "decision.changed-after-sign-off": { text: msg`After sign-off`, tone: "warn" },
+  "project.emergency-access": { text: msg`Emergency`, tone: "bad" },
+  "webhook.rejected": { text: msg`Rejected`, tone: "bad" },
 };
 
 type FilterProps = { filter: AuditFilter; onFilter: (next: AuditFilter) => void };
@@ -56,12 +59,18 @@ function Actor({ event }: { event: NamedAuditEvent }) {
   if (person) return <Person person={person} size={20} />;
   if (event.actor_name) return <span>{event.actor_name}</span>;
   if (event.actor_kind === "member" || event.actor_kind === "user") {
-    return <span className="text-fg-dim">A member</span>;
+    return (
+      <span className="text-fg-dim">
+        <Trans>A member</Trans>
+      </span>
+    );
   }
   return <SystemActor />;
 }
 
 export function AuditSection({ filter, onFilter }: FilterProps) {
+  const { t } = useLingui();
+
   const today = now();
   const events = okData(useListAuditEvents(auditParams(filter, today)).data) ?? [];
   const members = okData(useListTenantMembers().data) ?? [];
@@ -74,15 +83,15 @@ export function AuditSection({ filter, onFilter }: FilterProps) {
     >
       <div className="flex flex-wrap gap-2.5">
         <FilterChip
-          label="Person"
-          anyLabel="Everyone"
+          label={t`Person`}
+          anyLabel={t`Everyone`}
           options={members.map((member) => ({ value: member.user_id, label: member.display_name }))}
           value={filter.person}
           onValueChange={(person) => onFilter({ ...filter, person })}
         />
         <FilterChip
-          label="Project"
-          anyLabel="All projects"
+          label={t`Project`}
+          anyLabel={t`All projects`}
           options={projects.map((project) => ({
             value: project.id,
             label: project.name,
@@ -92,8 +101,8 @@ export function AuditSection({ filter, onFilter }: FilterProps) {
           onValueChange={(project) => onFilter({ ...filter, project })}
         />
         <FilterChip
-          label="Time"
-          anyLabel="Any time"
+          label={t`Time`}
+          anyLabel={t`Any time`}
           options={auditPeriods.map(({ value, label }) => ({ value, label }))}
           value={filter.period}
           onValueChange={(period) =>
@@ -101,8 +110,8 @@ export function AuditSection({ filter, onFilter }: FilterProps) {
           }
         />
         <FilterChip
-          label="Action"
-          anyLabel="All actions"
+          label={t`Action`}
+          anyLabel={t`All actions`}
           options={auditGroups}
           value={filter.group}
           onValueChange={(group) => onFilter({ ...filter, group })}
@@ -111,10 +120,18 @@ export function AuditSection({ filter, onFilter }: FilterProps) {
       <Table className={tableClass}>
         <TableHeader>
           <TableRow>
-            <TableHead>When</TableHead>
-            <TableHead>Who</TableHead>
-            <TableHead>What</TableHead>
-            <TableHead>Project</TableHead>
+            <TableHead>
+              <Trans>When</Trans>
+            </TableHead>
+            <TableHead>
+              <Trans>Who</Trans>
+            </TableHead>
+            <TableHead>
+              <Trans>What</Trans>
+            </TableHead>
+            <TableHead>
+              <Trans>Project</Trans>
+            </TableHead>
             <TableHead />
           </TableRow>
         </TableHeader>
@@ -136,7 +153,7 @@ export function AuditSection({ filter, onFilter }: FilterProps) {
                 <TableCell>{auditLabel(event.action)}</TableCell>
                 <TableCell className="font-mono">{project ?? ""}</TableCell>
                 <TableCell>
-                  {flag ? <StatusTag tone={flag.tone}>{flag.text}</StatusTag> : null}
+                  {flag ? <StatusTag tone={flag.tone}>{t(flag.text)}</StatusTag> : null}
                 </TableCell>
               </TableRow>
             );
@@ -144,7 +161,9 @@ export function AuditSection({ filter, onFilter }: FilterProps) {
         </TableBody>
       </Table>
       {events.length === 0 ? (
-        <p className="m-0 text-body-sm text-fg-dim">No events match these filters.</p>
+        <p className="m-0 text-body-sm text-fg-dim">
+          <Trans>No events match these filters.</Trans>
+        </p>
       ) : null}
     </Zone>
   );
@@ -161,6 +180,8 @@ function downloadJson(document: unknown, fileName: string) {
 }
 
 export function AuditExportButton({ filter, notify }: { filter: AuditFilter; notify: Notify }) {
+  const { t } = useLingui();
+
   const [busy, setBusy] = useState(false);
   const run = async () => {
     setBusy(true);
@@ -168,15 +189,15 @@ export function AuditExportButton({ filter, notify }: { filter: AuditFilter; not
       const today = now();
       const answer = await exportAuditEvents(auditParams(filter, today));
       if (answer.status !== 200) {
-        notify("The audit log could not be exported. Try again.");
+        notify(t`The audit log could not be exported. Try again.`);
         return;
       }
       downloadJson(answer.data, auditFileName(today));
       notify(
-        `Exported ${plural(answer.data.events.length, "event")}, signed with ${answer.data.signature.key_id}.`,
+        t`Exported ${plural(answer.data.events.length, "event")}, signed with ${answer.data.signature.key_id}.`,
       );
     } catch {
-      notify("The audit log could not be exported. Try again.");
+      notify(t`The audit log could not be exported. Try again.`);
     } finally {
       setBusy(false);
     }
@@ -184,7 +205,7 @@ export function AuditExportButton({ filter, notify }: { filter: AuditFilter; not
   return (
     <Button disabled={busy} onClick={() => void run()}>
       <Icon name="download" />
-      Export signed log
+      <Trans>Export signed log</Trans>
     </Button>
   );
 }

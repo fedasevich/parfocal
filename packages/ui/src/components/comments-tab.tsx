@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Keycap } from "@parfocal/ui/components/keycap";
@@ -48,6 +49,8 @@ function ThreadCardRow({
   onSelect: (() => void) | undefined;
   onGoTo: (() => void) | undefined;
 }) {
+  const { t } = useLingui();
+
   return (
     <li
       data-slot="thread-card"
@@ -78,7 +81,7 @@ function ThreadCardRow({
           {thread.resolved ? (
             <span className="inline-flex items-center gap-1 text-caption text-ok">
               <Icon name="check" size="xs" />
-              Resolved
+              <Trans>Resolved</Trans>
             </span>
           ) : null}
         </span>
@@ -97,8 +100,8 @@ function ThreadCardRow({
       <Button
         variant="ghost"
         size="icon-sm"
-        aria-label={`Go to ${thread.anchor}`}
-        title={`Go to ${thread.anchor}`}
+        aria-label={t`Go to ${thread.anchor}`}
+        title={t`Go to ${thread.anchor}`}
         onClick={onGoTo}
       >
         <Icon name="target" />
@@ -120,6 +123,8 @@ function CommentsTab({
   className,
   ...props
 }: CommentsTabProps) {
+  const { t } = useLingui();
+
   const [own, setOwn] = React.useState<ThreadFilter>(defaultFilter);
   const filter = controlled ?? own;
   const counts = countThreads(threads);
@@ -136,10 +141,10 @@ function CommentsTab({
     >
       <div className="flex items-center justify-between gap-2">
         <span className="text-body-sm font-semibold" data-phi="">
-          {slideLabel ? `Threads on ${slideLabel}` : "Threads"}
+          {slideLabel ? t`Threads on ${slideLabel}` : t`Threads`}
         </span>
         <SegmentedControl
-          aria-label="Show threads"
+          aria-label={t`Show threads`}
           value={filter}
           onValueChange={(next) => change(next === "resolved" ? "resolved" : "open")}
           options={[
@@ -167,7 +172,9 @@ function CommentsTab({
       )}
       <Button block onClick={onNewComment}>
         <Icon name="comment" />
-        New comment <Keycap keys="C" size="sm" />
+        <Trans>
+          New comment <Keycap keys="C" size="sm" />
+        </Trans>
       </Button>
     </div>
   );

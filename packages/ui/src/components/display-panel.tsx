@@ -1,3 +1,6 @@
+import { i18n, type MessageDescriptor } from "@lingui/core";
+import { msg, t } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import { ControlRow } from "@parfocal/ui/components/control-row";
 import {
@@ -14,7 +17,7 @@ import {
 } from "@parfocal/ui/components/dropdown-menu";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Keycap } from "@parfocal/ui/components/keycap";
-import { SegmentedControl, type SegmentOption } from "@parfocal/ui/components/segmented-control";
+import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
 import { Slider } from "@parfocal/ui/components/slider";
 import { Switch } from "@parfocal/ui/components/switch";
 import { FoldingZone, Zone, Zones } from "@parfocal/ui/components/zone";
@@ -38,42 +41,42 @@ type DisplaySettings = {
   buttons: string;
 };
 
-const displayOptions: Record<string, SegmentOption[]> = {
+const displayOptions: Record<string, { value: string; label: MessageDescriptor }[]> = {
   draw: [
-    { value: "outline", label: "Outline" },
-    { value: "fill", label: "Fill" },
-    { value: "dots", label: "Dots" },
+    { value: "outline", label: msg`Outline` },
+    { value: "fill", label: msg`Fill` },
+    { value: "dots", label: msg`Dots` },
   ],
   width: [
-    { value: "1", label: "1 px" },
-    { value: "2", label: "2 px" },
-    { value: "3", label: "3 px" },
+    { value: "1", label: msg`1 px` },
+    { value: "2", label: msg`2 px` },
+    { value: "3", label: msg`3 px` },
   ],
   colorBy: [
-    { value: "class", label: "Class" },
-    { value: "score", label: "Score" },
-    { value: "decision", label: "Decision" },
+    { value: "class", label: msg`Class` },
+    { value: "score", label: msg`Score` },
+    { value: "decision", label: msg`Decision` },
   ],
   confidence: [
-    { value: "number", label: "Number" },
-    { value: "word", label: "Word" },
-    { value: "color", label: "Color" },
-    { value: "hidden", label: "Hidden" },
+    { value: "number", label: msg`Number` },
+    { value: "word", label: msg`Word` },
+    { value: "color", label: msg`Color` },
+    { value: "hidden", label: msg`Hidden` },
   ],
   order: [
-    { value: "ai", label: "AI order" },
-    { value: "size", label: "Largest first" },
-    { value: "leastsure", label: "Least sure first" },
-    { value: "random", label: "Random" },
+    { value: "ai", label: msg`AI order` },
+    { value: "size", label: msg`Largest first` },
+    { value: "leastsure", label: msg`Least sure first` },
+    { value: "random", label: msg`Random` },
   ],
   zoom: [
-    { value: "fit", label: "Fit" },
-    { value: "tight", label: "Tight" },
-    { value: "context", label: "Context" },
+    { value: "fit", label: msg`Fit` },
+    { value: "tight", label: msg`Tight` },
+    { value: "context", label: msg`Context` },
   ],
   buttons: [
-    { value: "right", label: "In the card" },
-    { value: "bottom", label: "Under the slide" },
+    { value: "right", label: msg`In the card` },
+    { value: "bottom", label: msg`Under the slide` },
   ],
 };
 
@@ -99,17 +102,17 @@ const defaultDisplaySettings: DisplaySettings = {
 
 function word(key: string, value: string): string {
   const label = displayOptions[key]?.find((option) => option.value === value)?.label;
-  return typeof label === "string" ? label : value;
+  return label ? i18n._(label) : value;
 }
 
 function displaySummary(zone: "draw" | "ai" | "move", settings: DisplaySettings) {
   if (zone === "draw") {
-    return `${word("draw", settings.draw)} ${settings.width} px · by ${settings.colorBy}${settings.opacity < 100 ? ` · ${settings.opacity}%` : ""} · IDs ${settings.ids ? "on" : "off"}`;
+    return t`${word("draw", settings.draw)} ${settings.width} px · by ${settings.colorBy}${settings.opacity < 100 ? ` · ${settings.opacity}%` : ""} · IDs ${settings.ids ? "on" : "off"}`;
   }
   if (zone === "ai") {
-    return `Confidence as a ${settings.confidence} · ${settings.heatmap ? `heatmap ${settings.heatmap}%` : "heatmap off"} · cutoff ${settings.cutoff.toFixed(2)}`;
+    return t`Confidence as a ${settings.confidence} · ${settings.heatmap ? `heatmap ${settings.heatmap}%` : "heatmap off"} · cutoff ${settings.cutoff.toFixed(2)}`;
   }
-  return `${word("order", settings.order)} · ${settings.zoom} · ${settings.auto ? "moves on by itself" : "stays after an answer"}`;
+  return `${word("order", settings.order)} · ${settings.zoom} · ${settings.auto ? t`moves on by itself` : t`stays after an answer`}`;
 }
 
 type SettingChange = (key: keyof DisplaySettings, value: string | number | boolean) => void;
@@ -141,7 +144,10 @@ function SegRow({
                   onChange(name as keyof DisplaySettings, String(next)),
               }
             : { defaultValue: value })}
-          options={displayOptions[name] ?? []}
+          options={(displayOptions[name] ?? []).map((option) => ({
+            ...option,
+            label: i18n._(option.label),
+          }))}
         />
       )}
     </ControlRow>
@@ -247,10 +253,14 @@ function PresetMenu({
   onSaveAs,
   onReset,
 }: PresetMenuProps) {
-  const saveReason = saveBlocked ?? (changed ? undefined : "Nothing changed");
+  const { t } = useLingui();
+
+  const saveReason = saveBlocked ?? (changed ? undefined : t`Nothing changed`);
   return (
     <div className="grid gap-1.5">
-      <span className="text-caption font-semibold text-fg-dim">Preset</span>
+      <span className="text-caption font-semibold text-fg-dim">
+        <Trans>Preset</Trans>
+      </span>
       <DropdownMenu {...(defaultOpen === undefined ? {} : { defaultOpen })}>
         <DropdownMenuTrigger render={<Button className="w-full justify-between font-medium" />}>
           <span className="min-w-0 truncate">
@@ -258,14 +268,15 @@ function PresetMenu({
             {lockedCount ? (
               <span className="text-fg-dim">
                 {" "}
-                · {lockedCount === 1 ? "1 setting" : `${lockedCount} settings`} locked by the task
+                · {lockedCount === 1 ? t`1 setting` : t`${lockedCount} settings`}{" "}
+                <Trans>locked by the task</Trans>
               </span>
             ) : null}
           </span>
           {changed ? (
             <i
-              title="Changed since you picked it"
-              aria-label="Changed since you picked it"
+              title={t`Changed since you picked it`}
+              aria-label={t`Changed since you picked it`}
               role="img"
               className="ml-auto size-2 rounded-full bg-(--accent)"
             />
@@ -274,14 +285,16 @@ function PresetMenu({
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-72">
           <DropdownMenuRadioGroup value={current} onValueChange={(name) => onPick?.(String(name))}>
-            <DropdownMenuRadioItem value="Task default">
-              Task default
+            <DropdownMenuRadioItem value={t`Task default`}>
+              <Trans>Task default</Trans>
               <DropdownMenuShortcut>
                 <Keycap keys="⇧1" size="sm" />
               </DropdownMenuShortcut>
             </DropdownMenuRadioItem>
             <DropdownMenuGroup>
-              <DropdownMenuLabel>My presets</DropdownMenuLabel>
+              <DropdownMenuLabel>
+                <Trans>My presets</Trans>
+              </DropdownMenuLabel>
               {presets.map((preset) => (
                 <DropdownMenuRadioItem key={preset.name} value={preset.name}>
                   {preset.name}
@@ -297,19 +310,23 @@ function PresetMenu({
           <DropdownMenuSeparator />
           <DropdownMenuItem disabled={saveReason !== undefined} onClick={onSave}>
             <span className="grid">
-              Save
+              <Trans>Save</Trans>
               {saveReason === undefined ? null : (
                 <small className="text-caption text-fg-dim">{saveReason}</small>
               )}
             </span>
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={onSaveAs}>Save as</DropdownMenuItem>
-          <DropdownMenuItem onClick={onReset}>Reset to the task default</DropdownMenuItem>
+          <DropdownMenuItem onClick={onSaveAs}>
+            <Trans>Save as</Trans>
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={onReset}>
+            <Trans>Reset to the task default</Trans>
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
       {changed ? (
         <small className="text-caption text-fg-dim">
-          Changed since you picked {current}. Save as keeps it as a preset.
+          <Trans>Changed since you picked {current}. Save as keeps it as a preset.</Trans>
         </small>
       ) : null}
     </div>
@@ -333,7 +350,7 @@ function DisplayPanel({
   settings = defaultDisplaySettings,
   locks = {},
   folded = [],
-  preset = { current: "Task default", presets: [{ name: "Tumor first", key: "⇧2" }] },
+  preset = { current: t`Task default`, presets: [{ name: "Tumor first", key: "⇧2" }] },
   viewer = false,
   resultSets,
   after,
@@ -343,32 +360,34 @@ function DisplayPanel({
   className,
   ...props
 }: DisplayPanelProps) {
+  const { t } = useLingui();
+
   return (
     <Zones data-slot="display-panel" className={cn("gap-3", className)} {...props}>
       <Zone>
         <PresetMenu {...preset} />
       </Zone>
       <FoldingZone
-        title="How objects draw"
+        title={t`How objects draw`}
         summary={displaySummary("draw", settings)}
         defaultOpen={!folded.includes("draw")}
       >
         <SegRow
-          label="Draw as"
+          label={t`Draw as`}
           name="draw"
           value={settings.draw}
           lock={locks.draw}
           onChange={onChange}
         />
         <SegRow
-          label="Width"
+          label={t`Width`}
           name="width"
           value={settings.width}
           lock={locks.width}
           onChange={onChange}
         />
         <RangeRow
-          label="Opacity"
+          label={t`Opacity`}
           value={settings.opacity}
           min={20}
           max={100}
@@ -377,34 +396,34 @@ function DisplayPanel({
           onChange={onChange && ((value) => onChange("opacity", value))}
         />
         <SegRow
-          label="Color by"
+          label={t`Color by`}
           name="colorBy"
           value={settings.colorBy}
           lock={locks.colorBy}
           onChange={onChange}
         />
         <SwitchRow
-          label="ID labels"
-          sub="The ID tags on the slide"
+          label={t`ID labels`}
+          sub={t`The ID tags on the slide`}
           checked={settings.ids}
           onChange={onIdsChange}
         />
         {classVisibility}
       </FoldingZone>
       <FoldingZone
-        title="What the AI shows"
+        title={t`What the AI shows`}
         summary={displaySummary("ai", settings)}
         defaultOpen={!folded.includes("ai")}
       >
         <SegRow
-          label="Confidence"
+          label={t`Confidence`}
           name="confidence"
           value={settings.confidence}
           lock={locks.confidence}
           onChange={onChange}
         />
         <RangeRow
-          label="Heatmap"
+          label={t`Heatmap`}
           value={settings.heatmap}
           min={0}
           max={100}
@@ -414,53 +433,57 @@ function DisplayPanel({
           onChange={onChange && ((value) => onChange("heatmap", snapHeatmapStrength(value)))}
         />
         <RangeRow
-          label="Score cutoff"
+          label={t`Score cutoff`}
           value={settings.cutoff}
           min={0}
           max={1}
           step={0.05}
           format={(value) => value.toFixed(2)}
-          help="Objects under it draw dashed and faint"
+          help={t`Objects under it draw dashed and faint`}
           lock={locks.cutoff}
           onChange={onChange && ((value) => onChange("cutoff", value))}
         />
         {resultSets ? (
           <div className="grid gap-2">
-            <span className="text-caption font-semibold text-fg-dim">Result sets</span>
+            <span className="text-caption font-semibold text-fg-dim">
+              <Trans>Result sets</Trans>
+            </span>
             {resultSets}
           </div>
         ) : null}
       </FoldingZone>
       <FoldingZone
-        title="How the review moves"
+        title={t`How the review moves`}
         summary={displaySummary("move", settings)}
         defaultOpen={!folded.includes("move")}
       >
         {viewer ? (
-          <p className="m-0 text-body-sm text-fg-dim">These apply in guided review.</p>
+          <p className="m-0 text-body-sm text-fg-dim">
+            <Trans>These apply in guided review.</Trans>
+          </p>
         ) : null}
         <SegRow
-          label="Order"
+          label={t`Order`}
           name="order"
           value={settings.order}
           lock={locks.order}
           onChange={onChange}
         />
         <SegRow
-          label="Zoom around the object"
+          label={t`Zoom around the object`}
           name="zoom"
           value={settings.zoom}
           lock={locks.zoom}
           onChange={onChange}
         />
         <SwitchRow
-          label="Move on by itself"
-          sub="The next object comes after an answer"
+          label={t`Move on by itself`}
+          sub={t`The next object comes after an answer`}
           checked={settings.auto}
           onChange={onChange && ((on) => onChange("auto", on))}
         />
         <SegRow
-          label="Answer buttons"
+          label={t`Answer buttons`}
           name="buttons"
           value={settings.buttons}
           lock={locks.buttons}

@@ -1094,7 +1094,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Depends on I18N-001.
   Size: M.
 
-- [ ] I18N-005 · Convert the remaining screens and empty the baseline
+- [x] I18N-005 · Convert the remaining screens and empty the baseline
   Convert every other file still on the I18N-001 baseline list, then delete the list so the lint rule covers the whole app.
   Done when the baseline list is gone, the lint rule passes with no exceptions and the pseudo-locale test renders the shell, home, settings and admin screens with every string translated.
   Depends on I18N-004.
@@ -4531,6 +4531,17 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   `packages/viewer-engine/test/pixel-source/ndpi-real.test.ts` and `reader-check.test.ts` fetch public test slides over HTTP, and on the night of 2026-11-14 three merge checks failed on `read ECONNRESET` for Hamamatsu-1.ndpi and CMU-1.ndpi, each passing on rerun. The shared fetch helper retries a reset or a dropped range read a few times with a short backoff and names the slide and range when it finally gives up.
   Done when a unit test makes the helper's first two reads reset and the third succeed, and the real-slide tests pass with that helper.
   Size: S.
+
+- [ ] TEST-043 · The sidecar open check does not depend on machine load
+  `packages/viewer-engine/test/pixel-source/tile-index.test.ts` asserts that opening with the sidecar takes under 1,000 ms, and on 2026-11-15 it failed on almost every merge check while several agents shared the Mac (1,035 to 11,615 ms), each time passing alone. Compare the sidecar open with the walk it replaces in the same run, or count the reads it saves, instead of a fixed wall time.
+  Done when the check asserts a ratio or a read count, passes ten runs in a row under a parallel verify, and still fails when the sidecar is ignored.
+  Size: S.
+
+- [ ] TEST-044 · Web specs green on the built app
+  FOUND-026 moved the apps/web suite to a built app, and the first CI run on it (8c148200) failed in all three web shards: measure.spec.ts:49 (Measure shows only on a slide), the Guided and Full viewer switch at :213, the follow-view camera within 300 ms at :93, an accessibility check on the slide page, and a sign-out timing spec that sends slide, area and cell times. Session-lock, smart-hover, autosave and run-stream also failed after a reload on the dev server, where a viewer open takes 5 to 6 s on software graphics.
+  Done when two CI runs in a row are green in every web shard with no retry needed, and each fix names its cause in the log.
+  Depends on FOUND-026.
+  Size: M.
 
 - [ ] TEST-040 · API container under the end-to-end suite
   The 6 real-API specs in `apps/e2e` run the API with `uv run uvicorn`, so the deploy image, migrations on start and production-like settings never run under a browser before a deploy. Run `apps/e2e` against the API container from FOUND-015 (container images) and the local Zitadel from TEST-039 (local Zitadel for the end-to-end suite), behind one `pnpm stack:up`, with the web app still on vite dev. Seed with the showcase seed and the small fixtures copied into MinIO. Confirm how an upload starts ingest, since `upload-into-project.spec.ts` now starts it by hand. Nothing in the stack reaches a cloud service. The edge Worker stays out until a tile, realtime or header bug escapes to production because it was missing, and then a new task adds it with a local S3 adapter for its `SLIDES` binding.

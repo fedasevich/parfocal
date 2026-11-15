@@ -1,4 +1,7 @@
+import { t } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Icon } from "@parfocal/ui/components/icon";
+import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import { cn } from "@parfocal/ui/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
 import type * as React from "react";
@@ -35,12 +38,14 @@ function KeyBinding({ state, size, className, type = "button", ...props }: KeyBi
 }
 
 function AddKeyButton({ className, ...props }: React.ComponentProps<"button">) {
+  const { t } = useLingui();
+
   return (
     <button
       type="button"
       data-slot="add-key"
-      title="Add another key for this action"
-      aria-label="Add another key"
+      title={t`Add another key for this action`}
+      aria-label={t`Add another key`}
       className={cn(
         "size-6 cursor-pointer rounded-md border border-dashed border-line-strong bg-transparent text-body leading-none text-fg-faint opacity-0 group-hover/shortcut:opacity-100 focus-visible:opacity-100",
         className,
@@ -62,19 +67,19 @@ function UnboundKey({ className, ...props }: React.ComponentProps<"span">) {
       )}
       {...props}
     >
-      no key
+      <Trans>no key</Trans>
     </span>
   );
 }
 
 type ShortcutSource = "clin" | "fig" | "qp" | "new";
 
-const sourceNames: Record<ShortcutSource, string> = {
-  clin: "Sectra",
-  fig: "Figma",
+const sourceNames: Record<ShortcutSource, string> = lazyText(() => ({
+  clin: t`Sectra`,
+  fig: t`Figma`,
   qp: "QuPath",
   new: "ours",
-};
+}));
 
 type ShortcutRowProps = Omit<React.ComponentProps<"div">, "children"> & {
   name: React.ReactNode;
@@ -191,17 +196,17 @@ function KeyLegend({ className, ...props }: React.ComponentProps<"span">) {
       {...props}
     >
       <KeyBinding size="sm" tabIndex={-1} aria-hidden>
-        J
+        <Trans>J</Trans>
       </KeyBinding>
-      default
+      <Trans>default</Trans>
       <KeyBinding size="sm" state="mine" tabIndex={-1} aria-hidden>
-        J
+        <Trans>J</Trans>
       </KeyBinding>
-      changed by you
+      <Trans>changed by you</Trans>
       <KeyBinding size="sm" state="conflict" tabIndex={-1} aria-hidden>
-        J
+        <Trans>J</Trans>
       </KeyBinding>
-      conflict
+      <Trans>conflict</Trans>
     </span>
   );
 }
@@ -213,6 +218,8 @@ type KeyFinderProps = Omit<React.ComponentProps<"button">, "children"> & {
 };
 
 function KeyFinder({ listening, found, onClear, className, ...props }: KeyFinderProps) {
+  const { t } = useLingui();
+
   return (
     <span className={cn("relative flex min-w-0 flex-1", className)}>
       <button
@@ -228,18 +235,18 @@ function KeyFinder({ listening, found, onClear, className, ...props }: KeyFinder
         <Icon name="search" />
         <span className="flex-1 truncate">
           {listening
-            ? "Press any key to see what it does…"
+            ? t`Press any key to see what it does…`
             : found
-              ? `What ${found} does`
-              : "Search, or press a key to see what it does"}
+              ? t`What ${found} does`
+              : t`Search, or press a key to see what it does`}
         </span>
       </button>
       {found && onClear ? (
         <button
           type="button"
           onClick={onClear}
-          title="Clear"
-          aria-label="Clear the key"
+          title={t`Clear`}
+          aria-label={t`Clear the key`}
           className="absolute top-1/2 right-1 grid size-6 -translate-y-1/2 cursor-pointer place-items-center border-0 bg-transparent p-0 text-fg-dim"
         >
           ×

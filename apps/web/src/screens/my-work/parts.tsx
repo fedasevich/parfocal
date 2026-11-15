@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { type SetRef, useListProjectResultSets, useListSlideThreads } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
 import { Icon } from "@parfocal/ui/components/icon";
@@ -77,19 +78,21 @@ export function SetChip({
 }
 
 export function ProgressSummary({ progress }: { progress: SlideProgress }) {
+  const { t } = useLingui();
+
   return (
     <div className="grid grid-cols-[auto_1fr] items-center gap-3 rounded-lg bg-chrome-2 px-3 py-2.5">
       <ProgressRing split={progress} size={44} />
       <div>
         <b className="block text-body font-semibold text-fg">
           {progress.decided
-            ? `${progress.decided} of ${progress.total} objects decided`
-            : `${progress.total} objects, none decided yet`}
+            ? t`${progress.decided} of ${progress.total} objects decided`
+            : t`${progress.total} objects, none decided yet`}
         </b>
         <small className="mt-0.5 block text-caption text-fg-dim">
           {progress.decided
-            ? `${progress.agree} agree, ${progress.disagree} disagree, ${progress.unsure} not sure, ${progress.open} open`
-            : "Your progress on this slide"}
+            ? t`${progress.agree} agree, ${progress.disagree} disagree, ${progress.unsure} not sure, ${progress.open} open`
+            : t`Your progress on this slide`}
         </small>
       </div>
     </div>
@@ -104,10 +107,17 @@ export function useOpenThreads(slideId: string | undefined) {
 }
 
 export function ThreadsValue({ anchors }: { anchors: string[] }) {
-  if (anchors.length === 0) return <>None</>;
+  const { t } = useLingui();
+
+  if (anchors.length === 0)
+    return (
+      <>
+        <Trans>None</Trans>
+      </>
+    );
   return (
     <>
-      {anchors.length} {anchors.length === 1 ? "thread" : "threads"}
+      {anchors.length} {anchors.length === 1 ? t`thread` : t`threads`}
       <span className="mt-1 flex flex-wrap gap-1">
         {anchors.map((anchor) => (
           <ObjectIdTag key={anchor}>{anchor}</ObjectIdTag>
@@ -136,15 +146,19 @@ export function PreviewPanel({
   full,
   onClose,
 }: PreviewProps) {
+  const { t } = useLingui();
+
   return (
     <aside
-      aria-label={`Preview of ${title}`}
+      aria-label={t`Preview of ${title}`}
       data-phi=""
       className="flex flex-col gap-3.5 rounded-[14px] border border-line bg-chrome px-4 pt-3.5 pb-4"
     >
       <div className="-mb-1.5 flex items-center justify-between">
-        <SectionLabel>Preview</SectionLabel>
-        <Button variant="ghost" size="icon-sm" aria-label="Close the preview" onClick={onClose}>
+        <SectionLabel>
+          <Trans>Preview</Trans>
+        </SectionLabel>
+        <Button variant="ghost" size="icon-sm" aria-label={t`Close the preview`} onClick={onClose}>
           <Icon name="close" />
         </Button>
       </div>
@@ -167,13 +181,15 @@ export function PreviewPanel({
         </Button>
         {full ? (
           <Button block onClick={full}>
-            Open in the full viewer
+            <Trans>Open in the full viewer</Trans>
           </Button>
         ) : null}
       </div>
       <span className="flex items-center gap-1.5 text-caption text-fg-faint">
-        <Keycap keys="↑" />
-        <Keycap keys="↓" /> next row <Keycap action="esc" keys="Esc" className="ml-2" /> close
+        <Trans>
+          <Keycap keys="↑" />
+          <Keycap keys="↓" /> next row <Keycap action="esc" keys="Esc" className="ml-2" /> close
+        </Trans>
       </span>
     </aside>
   );

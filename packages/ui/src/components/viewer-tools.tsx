@@ -1,7 +1,10 @@
+import { t } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Keycap } from "@parfocal/ui/components/keycap";
 import { Zone } from "@parfocal/ui/components/zone";
+import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
 import { useState } from "react";
@@ -37,7 +40,7 @@ function DistanceCue({
       {direction === "back" ? <Icon name="back" /> : null}
       <Icon name="flag" />
       <span>
-        <b className="font-semibold">{label}</b> · {distance} away
+        <b className="font-semibold">{label}</b> · <Trans>{distance} away</Trans>
       </span>
       {direction === "next" ? <Icon name="next" /> : null}
     </button>
@@ -59,13 +62,15 @@ function RulerLine({
   dashed?: boolean;
   className?: string;
 }) {
+  const { t } = useLingui();
+
   const mid = { x: (from.x + to.x) / 2, y: (from.y + to.y) / 2 };
   const boxWidth = dashed ? 92 : 68;
   return (
     <svg
       data-slot="ruler-line"
       role="img"
-      aria-label={`Measured ${label}`}
+      aria-label={t`Measured ${label}`}
       className={cn("pointer-events-none absolute inset-0 size-full overflow-visible", className)}
     >
       <line
@@ -111,7 +116,7 @@ function RulerLine({
         textAnchor="middle"
         fill="#fff"
         fontSize={dashed ? 14 : 12}
-        fontFamily="IBM Plex Mono, monospace"
+        fontFamily={t`IBM Plex Mono, monospace`}
       >
         {label}
       </text>
@@ -125,11 +130,13 @@ function ContextBar({
   children,
   ...props
 }: React.ComponentProps<"div"> & { label: string }) {
+  const { t } = useLingui();
+
   return (
     <div
       data-slot="context-bar"
       role="toolbar"
-      aria-label={`${label} options`}
+      aria-label={t`${label} options`}
       className={cn(
         "absolute top-3 left-1/2 z-4 flex -translate-x-1/2 items-center gap-2.5 py-1.5 pr-2 pl-3 text-caption whitespace-nowrap",
         floatSurface,
@@ -172,13 +179,15 @@ function TierPill({
   className,
   ...props
 }: Omit<React.ComponentProps<"button">, "children"> & { tier: Tier; open?: boolean }) {
+  const { t } = useLingui();
+
   return (
     <button
       type="button"
       data-slot="tier-pill"
       aria-haspopup="dialog"
       aria-expanded={open}
-      title={tier.offline ? `${tier.model} - offline` : tier.model}
+      title={tier.offline ? t`${tier.model} - offline` : tier.model}
       data-offline={tier.offline || undefined}
       className={cn(
         "inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-line bg-chrome-2 px-2 py-0.75 text-caption text-fg hover:border-accent aria-expanded:border-accent data-offline:text-fg-faint",
@@ -192,18 +201,20 @@ function TierPill({
         style={{ background: tier.offline ? "var(--fg-faint)" : tier.colour }}
       />
       {tier.name}
-      {tier.offline ? " (offline)" : null}
+      {tier.offline ? t` (offline)` : null}
       <Icon name="down" size="xs" />
     </button>
   );
 }
 
 function SpeedBars({ speed }: { speed: number }) {
+  const { t } = useLingui();
+
   return (
     <span
       role="img"
-      aria-label={`Speed ${speed} of 3`}
-      title="speed"
+      aria-label={t`Speed ${speed} of 3`}
+      title={t`speed`}
       className="inline-flex gap-0.5"
     >
       {[1, 2, 3].map((step) => (
@@ -235,12 +246,14 @@ function TierPicker({
   className,
   ...props
 }: TierPickerProps) {
+  const { t } = useLingui();
+
   const [pointed, setPointed] = useState<string | null>(null);
   return (
     <div
       data-slot="tier-picker"
       role="dialog"
-      aria-label="Choose a model"
+      aria-label={t`Choose a model`}
       className={cn("absolute z-20 grid w-105 gap-0.5 p-2", floatSurface, className)}
       onKeyDown={(event) => {
         if (event.key === "Escape") onClose();
@@ -251,8 +264,8 @@ function TierPicker({
         <span className="text-caption font-semibold text-fg-dim">{title}</span>
         <button
           type="button"
-          aria-label="Close"
-          title="Close (Esc)"
+          aria-label={t`Close`}
+          title={t`Close (Esc)`}
           onClick={onClose}
           className="grid size-7 cursor-pointer place-items-center rounded-ctl border-0 bg-transparent text-fg-dim hover:bg-chrome-2 hover:text-fg"
         >
@@ -297,18 +310,18 @@ function TierPicker({
                   {tier.name}
                   {offline ? (
                     <span className="inline-flex h-4.5 items-center rounded-full bg-chrome-3 px-1.5 text-label font-medium text-fg-dim">
-                      offline
+                      <Trans>offline</Trans>
                     </span>
                   ) : null}
                   {selected ? (
                     <span className="inline-flex h-4.5 items-center rounded-full bg-[#15803d] px-1.5 text-label font-medium text-white">
-                      selected
+                      <Trans>selected</Trans>
                     </span>
                   ) : null}
                 </b>
                 <small className="mt-0.5 text-body-sm leading-[1.45] text-fg-dim">
                   {offline
-                    ? "The server that runs this model is not answering. Pick another tier or try again later."
+                    ? t`The server that runs this model is not answering. Pick another tier or try again later.`
                     : tier.description}
                 </small>
                 {shown ? (
@@ -362,10 +375,12 @@ function LayerList({
   onPick?: (key: string) => void;
   className?: string;
 }) {
+  const { t } = useLingui();
+
   return (
     <ul
       data-slot="layer-list"
-      aria-label="Layers"
+      aria-label={t`Layers`}
       className={cn("m-0 grid list-none gap-0.5 p-0", className)}
     >
       {rows.map((row) => {
@@ -376,7 +391,7 @@ function LayerList({
             className="size-2.5 rounded-[3px]"
             style={
               row.proposal
-                ? { background: "var(--c-prop)", boxShadow: "0 0 0 1.5px #ffffff" }
+                ? { background: "var(--c-prop)", boxShadow: t`0 0 0 1.5px #ffffff` }
                 : { background: row.colour }
             }
           />
@@ -412,7 +427,7 @@ function LayerList({
                 {swatch}
                 <input
                   type="color"
-                  aria-label={`Colour of ${row.name}`}
+                  aria-label={t`Colour of ${row.name}`}
                   value={row.colour.startsWith("#") ? row.colour : "#888888"}
                   onChange={(event) => onColour(row.key, event.target.value)}
                   className="absolute inset-0 size-full cursor-pointer opacity-0"
@@ -425,8 +440,8 @@ function LayerList({
               <button
                 type="button"
                 aria-pressed={row.target ?? false}
-                aria-label={`New shapes go to ${row.name}`}
-                title="New shapes go here"
+                aria-label={t`New shapes go to ${row.name}`}
+                title={t`New shapes go here`}
                 onClick={() => onPick(row.key)}
                 className="min-w-0 cursor-pointer truncate border-0 bg-transparent p-0 text-left text-inherit"
               >
@@ -442,7 +457,7 @@ function LayerList({
               <button
                 type="button"
                 aria-pressed={!off}
-                aria-label={`${off ? "Show" : "Hide"} ${row.name}`}
+                aria-label={`${off ? t`Show` : t`Hide`} ${row.name}`}
                 onClick={() => onToggle?.(row.key)}
                 className="grid size-6 cursor-pointer place-items-center rounded-md border-0 bg-transparent text-fg-faint hover:bg-chrome-2 hover:text-fg"
               >
@@ -455,14 +470,14 @@ function LayerList({
               <button
                 type="button"
                 aria-pressed={row.locked ?? false}
-                aria-label={`${row.locked ? "Unlock" : "Lock"} ${row.name}`}
+                aria-label={`${row.locked ? t`Unlock` : t`Lock`} ${row.name}`}
                 onClick={() => onLock(row.key)}
                 className="grid size-6 cursor-pointer place-items-center rounded-md border-0 bg-transparent text-fg-faint hover:bg-chrome-2 hover:text-fg"
               >
                 <Icon name={row.locked ? "lock" : "unlock"} />
               </button>
             ) : row.locked ? (
-              <Icon name="lock" label="Locked" className="text-fg-faint" />
+              <Icon name="lock" label={t`Locked`} className="text-fg-faint" />
             ) : (
               <span />
             )}
@@ -496,7 +511,7 @@ function SlideThumb({ slide, large = false }: { slide: PaneSlide; large?: boolea
 function SimulatedTag() {
   return (
     <span className="inline-flex h-4.5 items-center rounded-full bg-chrome-3 px-1.5 text-label font-medium text-fg-dim">
-      simulated
+      <Trans>simulated</Trans>
     </span>
   );
 }
@@ -504,12 +519,12 @@ function SimulatedTag() {
 type PaneSide = "left" | "right" | "bottomLeft" | "bottomRight";
 type LayerSide = "left" | "right";
 
-const sideWord: Record<PaneSide, string> = {
-  left: "Left",
-  right: "Right",
-  bottomLeft: "Bottom left",
-  bottomRight: "Bottom right",
-};
+const sideWord: Record<PaneSide, string> = lazyText(() => ({
+  left: t`Left`,
+  right: t`Right`,
+  bottomLeft: t`Bottom left`,
+  bottomRight: t`Bottom right`,
+}));
 const sideName: Record<PaneSide, string> = {
   left: "left",
   right: "right",
@@ -530,6 +545,8 @@ function PaneHeader({
   onOpenChange?: (open: boolean) => void;
   className?: string;
 }) {
+  const { t } = useLingui();
+
   return (
     <div
       data-slot="pane-header"
@@ -542,7 +559,7 @@ function PaneHeader({
         type="button"
         aria-haspopup="listbox"
         aria-expanded={open}
-        title="Change the slide on this side"
+        title={t`Change the slide on this side`}
         onClick={() => onOpenChange?.(!open)}
         className="inline-flex h-8.5 cursor-pointer items-center gap-2 rounded-ctl border border-line-strong bg-chrome py-0 pr-2.5 pl-1.25 text-body-sm text-fg shadow-pop hover:border-accent aria-expanded:border-accent"
       >
@@ -568,11 +585,13 @@ function PanePicker({
   onPick: (key: string) => void;
   className?: string;
 }) {
+  const { t } = useLingui();
+
   return (
     <div
       data-slot="pane-picker"
       role="listbox"
-      aria-label={`Slide for the ${sideName[side]} side`}
+      aria-label={t`Slide for the ${sideName[side]} side`}
       className={cn(
         "absolute top-13.5 left-3 z-20 grid w-82.5 gap-0.5 p-2",
         floatSurface,
@@ -580,7 +599,7 @@ function PanePicker({
       )}
     >
       <div className="px-2 pt-1 pb-2 text-caption font-semibold text-fg-dim">
-        Show on the {sideName[side]}
+        <Trans>Show on the {sideName[side]}</Trans>
       </div>
       {slides.map((slide) => (
         <div
@@ -623,6 +642,8 @@ function SlideSlot({
   note: string;
   onChange: () => void;
 }) {
+  const { t } = useLingui();
+
   return (
     <div
       data-slot="slide-slot"
@@ -637,10 +658,10 @@ function SlideSlot({
       <button
         type="button"
         onClick={onChange}
-        aria-label={`Change the ${sideName[side]} slide`}
+        aria-label={t`Change the ${sideName[side]} slide`}
         className="h-8 cursor-pointer rounded-ctl border border-line-strong bg-btn-bg px-2.5 text-body-sm font-medium text-fg hover:bg-chrome-3"
       >
-        Change
+        <Trans>Change</Trans>
       </button>
     </div>
   );
@@ -655,8 +676,10 @@ function SlidesOnScreenPanel({
   onChange: (side: PaneSide) => void;
   onSwap?: (() => void) | undefined;
 }) {
+  const { t } = useLingui();
+
   return (
-    <Zone title="Slides on screen">
+    <Zone title={t`Slides on screen`}>
       <div className="grid gap-2">
         {slots.map((slot) => (
           <SlideSlot
@@ -670,7 +693,7 @@ function SlidesOnScreenPanel({
         {onSwap ? (
           <Button className="w-full" onClick={onSwap}>
             <Icon name="slides" />
-            Swap sides
+            <Trans>Swap sides</Trans>
           </Button>
         ) : null}
       </div>
@@ -687,6 +710,8 @@ function SideToggles({
   rows: SideToggleRow[];
   onToggle: (key: string, side: LayerSide) => void;
 }) {
+  const { t } = useLingui();
+
   return (
     <div data-slot="side-toggles" className="grid gap-0.5">
       {rows.map((row) => (
@@ -700,7 +725,7 @@ function SideToggles({
               key={side}
               type="button"
               aria-pressed={row[side]}
-              aria-label={`${row.name} on the ${side}`}
+              aria-label={t`${row.name} on the ${side}`}
               onClick={() => onToggle(row.key, side)}
               className="grid size-5 cursor-pointer place-items-center justify-self-center rounded-[5px] border-[1.5px] border-line-strong bg-transparent p-0 text-white aria-pressed:border-accent-fill aria-pressed:bg-accent-fill"
             >
@@ -772,10 +797,12 @@ function FocusCard({
   keys: AnswerKey[];
   className?: string;
 }) {
+  const { t } = useLingui();
+
   return (
     <section
       data-slot="focus-card"
-      aria-label="The object in focus"
+      aria-label={t`The object in focus`}
       className={cn("absolute z-4 flex w-79 flex-col gap-2 p-3", floatSurface, className)}
     >
       <div className="flex items-center justify-between gap-2 text-body-sm">
@@ -799,10 +826,12 @@ function CellHud({
   keys: AnswerKey[];
   className?: string;
 }) {
+  const { t } = useLingui();
+
   return (
     <section
       data-slot="cell-hud"
-      aria-label="The cell under review"
+      aria-label={t`The cell under review`}
       className={cn(
         "absolute bottom-18 left-1/2 z-4 flex w-140 -translate-x-1/2 flex-col gap-2.5 px-3.5 py-3",
         floatSurface,

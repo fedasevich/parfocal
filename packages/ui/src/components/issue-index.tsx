@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Icon } from "@parfocal/ui/components/icon";
 import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
@@ -12,11 +13,15 @@ type IssueIndexProps = Omit<React.ComponentProps<"div">, "onSelect"> & {
 };
 
 function IssueIndex({ groups, onOpen, className, ...props }: IssueIndexProps) {
+  const { t } = useLingui();
+
   const total = groups.reduce((sum, group) => sum + group.states.length, 0);
   return (
     <div data-slot="issue-index" className={cn("grid gap-5", className)} {...props}>
       <p className="m-0 text-body-sm text-fg-dim">
-        {total} states in {groups.length} flows.
+        <Trans>
+          {total} states in {groups.length} flows.
+        </Trans>
       </p>
       {groups.map((group) => (
         <section key={group.flow} className="grid gap-2">
@@ -27,7 +32,7 @@ function IssueIndex({ groups, onOpen, className, ...props }: IssueIndexProps) {
                 key={state.id}
                 type="button"
                 aria-disabled={state.ready === false || undefined}
-                title={state.ready === false ? "Its screen is not built yet" : undefined}
+                title={state.ready === false ? t`Its screen is not built yet` : undefined}
                 onClick={() => (state.ready === false ? undefined : onOpen?.(state.id))}
                 className={cn(
                   "grid cursor-pointer grid-cols-[16px_minmax(0,1fr)_16px] items-center gap-2.5 rounded-ctl border border-line bg-surf-section px-3 py-2 text-left text-body-sm text-fg hover:border-line-strong focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent",

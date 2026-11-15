@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   type CaseReport,
   getDownloadCaseReportPdfUrl,
@@ -57,12 +59,14 @@ import { DonePanel } from "./steps.tsx";
 type CosignScreenProps = { projectId: string; caseId: string; scene: CosignScene | undefined };
 
 export function CosignScreen(props: CosignScreenProps) {
+  const { t } = useLingui();
+
   useLengthUnits();
   const { loaded, pending, failed } = useCaseReportData(props.projectId, props.caseId);
   if (!loaded) {
     return (
       <main className="p-8">
-        <QueryState label="the co-sign request" isPending={pending} error={failed || !pending}>
+        <QueryState label={t`the co-sign request`} isPending={pending} error={failed || !pending}>
           {null}
         </QueryState>
       </main>
@@ -77,9 +81,9 @@ type Row = { field: string; label: string; icon: IconName };
 
 function sections(data: ReportData, from: Values): [string, Row[]][] {
   return [
-    ["Findings", [{ field: "specimen", label: "Specimen", icon: "file" }]],
+    [t`Findings`, [{ field: "specimen", label: t`Specimen`, icon: "file" }]],
     [
-      "Deposits",
+      t`Deposits`,
       from.deposits.map((deposit) => ({
         field: `deps.${deposit.id}`,
         label: `${deposit.id} · ${depositSource(data, deposit)}`,
@@ -87,21 +91,21 @@ function sections(data: ReportData, from: Values): [string, Row[]][] {
       })),
     ],
     [
-      "Staging",
+      t`Staging`,
       [
-        { field: "size", label: "Largest deposit", icon: "ruler" },
-        { field: "cat", label: "Category", icon: "flag" },
-        { field: "pos", label: "Nodes positive", icon: "list" },
-        { field: "exam", label: "Nodes examined", icon: "list" },
-        { field: "ene", label: "Extranodal extension", icon: "target" },
-        { field: "pn", label: "Suggested pN", icon: "shield" },
+        { field: "size", label: t`Largest deposit`, icon: "ruler" },
+        { field: "cat", label: t`Category`, icon: "flag" },
+        { field: "pos", label: t`Nodes positive`, icon: "list" },
+        { field: "exam", label: t`Nodes examined`, icon: "list" },
+        { field: "ene", label: t`Extranodal extension`, icon: "target" },
+        { field: "pn", label: t`Suggested pN`, icon: "shield" },
       ],
     ],
     [
-      "Report text",
+      t`Report text`,
       [
-        { field: "diag", label: "Final diagnosis", icon: "text" },
-        { field: "micro", label: "Microscopic", icon: "text" },
+        { field: "diag", label: t`Final diagnosis`, icon: "text" },
+        { field: "micro", label: t`Microscopic`, icon: "text" },
       ],
     ],
   ];
@@ -113,7 +117,7 @@ const aiValues = (data: ReportData, from: Values) => {
   if (sizes.length) {
     const largest = Math.max(...sizes);
     out["size"] = mmText(largest);
-    out["cat"] = largest > 2 ? "Macrometastasis" : "Micrometastasis";
+    out["cat"] = largest > 2 ? t`Macrometastasis` : t`Micrometastasis`;
   }
   for (const deposit of from.deposits) {
     const ai = data.objects.find(
@@ -137,26 +141,26 @@ const clockOf = (iso: string | null | undefined) => {
 
 function cosignIssues(data: ReportData, values: Values) {
   const out: { field: string; text: string }[] = [];
-  if (!values.specimen.trim()) out.push({ field: "specimen", text: "Name the specimen." });
+  if (!values.specimen.trim()) out.push({ field: "specimen", text: t`Name the specimen.` });
   for (const deposit of values.deposits) {
     if (depositMm(deposit) === null) {
-      out.push({ field: `deps.${deposit.id}`, text: "Use a size in mm from 0.1 to 100." });
+      out.push({ field: `deps.${deposit.id}`, text: t`Use a size in mm from 0.1 to 100.` });
     }
   }
   const positive = positiveNodes(data, values.deposits);
   const examined = parseNumber(values.examined, true);
-  if (examined === null || examined < 1) out.push({ field: "exam", text: "Enter at least 1." });
+  if (examined === null || examined < 1) out.push({ field: "exam", text: t`Enter at least 1.` });
   else if (positive > examined) {
-    out.push({ field: "exam", text: `Fewer than the ${positive} nodes with a deposit.` });
+    out.push({ field: "exam", text: t`Fewer than the ${positive} nodes with a deposit.` });
   }
   const diagnosis = values.diagnosis.trim();
-  if (!diagnosis) out.push({ field: "diag", text: "Write the final diagnosis." });
-  else if (diagnosis.length < 10) out.push({ field: "diag", text: "Use at least 10 characters." });
+  if (!diagnosis) out.push({ field: "diag", text: t`Write the final diagnosis.` });
+  else if (diagnosis.length < 10) out.push({ field: "diag", text: t`Use at least 10 characters.` });
   return out;
 }
 
-const returnedNote =
-  "Measure the widest extent across the capsule, not inside the node. D1 is 8.0 mm, the largest deposit.";
+const returnedNote = () =>
+  t`Measure the widest extent across the capsule, not inside the node. D1 is 8.0 mm, the largest deposit.`;
 
 const sceneValues = (from: Values): Values => ({
   ...from,
@@ -164,8 +168,7 @@ const sceneValues = (from: Values): Values => ({
     index === 0 ? { ...deposit, size: "8.0" } : deposit,
   ),
   category: "macro",
-  diagnosis:
-    "Lymph nodes, sentinel, left axilla, excision: METASTATIC CARCINOMA, macrometastasis, 3 deposits, largest 8.0 mm (1/2).",
+  diagnosis: t`Lymph nodes, sentinel, left axilla, excision: METASTATIC CARCINOMA, macrometastasis, 3 deposits, largest 8.0 mm (1/2).`,
 });
 
 function CosignFlow({
@@ -174,13 +177,15 @@ function CosignFlow({
   caseId,
   scene,
 }: CosignScreenProps & { loaded: LoadedReport }) {
+  const { t } = useLingui();
+
   const data: ReportData = loaded.data;
   const server = loaded.server;
   const live = scene === undefined;
   const from = sentValues(loaded);
   const [values, setValues] = useState<Values>(() => (live ? loaded.values : sceneValues(from)));
   const [returned, setReturned] = useState<{ note: string; at: string } | null>(() => {
-    if (scene === "returned") return { note: returnedNote, at: "15 Oct 11:35" };
+    if (scene === "returned") return { note: returnedNote(), at: t`15 Oct 11:35` };
     if (live && server.state === "returned") return { note: server.return_note ?? "", at: "" };
     return null;
   });
@@ -198,7 +203,7 @@ function CosignFlow({
   const senderId = server.sent_by_user_id;
   const sender = person(senderId);
   const me = person(meId);
-  const senderFirst = sender?.name.split(" ")[0] ?? "The sender";
+  const senderFirst = sender?.name.split(" ")[0] ?? t`The sender`;
   const ai = aiValues(data, from);
   const flush = async (): Promise<void> => {
     const result = await pushValues(writer, saved.current, values);
@@ -226,7 +231,13 @@ function CosignFlow({
     const text = formatField(data, field, values);
     if (returned || readOnly.includes(field)) {
       return (
-        <span className="block pt-1">{text || <span className="text-fg-faint">None</span>}</span>
+        <span className="block pt-1">
+          {text || (
+            <span className="text-fg-faint">
+              <Trans>None</Trans>
+            </span>
+          )}
+        </span>
       );
     }
     const error = errors[field];
@@ -240,7 +251,7 @@ function CosignFlow({
             <Input
               id={fieldId(field)}
               inputMode="decimal"
-              aria-label={`Size of ${id} in mm`}
+              aria-label={t`Size of ${id} in mm`}
               aria-invalid={error ? true : undefined}
               className="w-22 text-center font-mono"
               value={deposit?.size ?? ""}
@@ -253,7 +264,9 @@ function CosignFlow({
               }
               onBlur={() => touch(field)}
             />
-            <span className="text-body-sm text-fg-dim">mm</span>
+            <span className="text-body-sm text-fg-dim">
+              <Trans>mm</Trans>
+            </span>
           </span>
           {note}
         </div>
@@ -262,7 +275,7 @@ function CosignFlow({
     if (field === "cat") {
       return (
         <Select value={values.category} onValueChange={(next) => set({ category: next })}>
-          <SelectTrigger aria-label="Category" className="w-56">
+          <SelectTrigger aria-label={t`Category`} className="w-56">
             <SelectValue>{text || "Pick a category"}</SelectValue>
           </SelectTrigger>
           <SelectContent>
@@ -278,7 +291,7 @@ function CosignFlow({
     if (field === "ene") {
       return (
         <SegmentedControl
-          aria-label="Extranodal extension"
+          aria-label={t`Extranodal extension`}
           value={values.extranodal ?? ""}
           onValueChange={(next) => set({ extranodal: next as Extranodal })}
           options={(["present", "absent", "na"] as const).map((key) => ({
@@ -294,7 +307,7 @@ function CosignFlow({
         <div className="grid gap-1">
           <Textarea
             id={fieldId(field)}
-            aria-label={field === "diag" ? "Final diagnosis" : "Microscopic"}
+            aria-label={field === "diag" ? t`Final diagnosis` : t`Microscopic`}
             aria-invalid={error ? true : undefined}
             rows={field === "diag" ? 3 : 2}
             maxLength={field === "diag" ? 600 : 2000}
@@ -311,7 +324,7 @@ function CosignFlow({
       <div className="grid gap-1">
         <Input
           id={fieldId(field)}
-          aria-label={field === "exam" ? "Nodes examined" : "Specimen"}
+          aria-label={field === "exam" ? t`Nodes examined` : t`Specimen`}
           aria-invalid={error ? true : undefined}
           inputMode={field === "exam" ? "numeric" : undefined}
           className={field === "exam" ? "w-18 font-mono" : undefined}
@@ -356,9 +369,9 @@ function CosignFlow({
           crumbs={[
             { label: data.project.name, href: `${projectHref}?tab=slides` },
             { label: `Case ${data.case.label}`, href: `${projectHref}?tab=slides` },
-            { label: "Clinical report" },
+            { label: t`Clinical report` },
           ]}
-          title="Clinical report"
+          title={t`Clinical report`}
           subtitle={
             <>
               <span className="font-mono" data-phi="">
@@ -372,7 +385,9 @@ function CosignFlow({
           status={
             <p className="m-0 mt-1.5 flex items-center gap-2 text-body-sm text-fg">
               <Icon name="lock" className="text-fg-dim" />
-              <span>Locked as version 1. A change is an amendment with a reason.</span>
+              <span>
+                <Trans>Locked as version 1. A change is an amendment with a reason.</Trans>
+              </span>
             </p>
           }
           bar={
@@ -380,9 +395,9 @@ function CosignFlow({
               back={renderLink({
                 href: `${projectHref}?tab=slides`,
                 className: buttonVariants({}),
-                children: "Back to the project",
+                children: t`Back to the project`,
               })}
-              hint="A change from now on is an amendment with a reason."
+              hint={t`A change from now on is an amendment with a reason.`}
               next={
                 <Button
                   variant="primary"
@@ -392,11 +407,11 @@ function CosignFlow({
                       link.href = getDownloadCaseReportPdfUrl(projectId, caseId, 1);
                       link.click();
                     }
-                    toast.show({ text: `${data.case.label}_report_v1.pdf saved to Downloads` });
+                    toast.show({ text: t`${data.case.label}_report_v1.pdf saved to Downloads` });
                   }}
                 >
                   <Icon name="download" />
-                  Download PDF
+                  <Trans>Download PDF</Trans>
                 </Button>
               }
             />
@@ -426,20 +441,20 @@ function CosignFlow({
   }
 
   const hint = returned
-    ? `${senderFirst} sees your changes and the note. He sends it again when it is fixed.`
+    ? t`${senderFirst} sees your changes and the note. He sends it again when it is fixed.`
     : waiting
-      ? "This report is not waiting for your co-sign."
+      ? t`This report is not waiting for your co-sign.`
       : !can
-        ? "You cannot sign out in this project. Ask the owner for the right."
+        ? t`You cannot sign out in this project. Ask the owner for the right.`
         : issues.length
-          ? `${plural(issues.length, "value")} to fix first.`
+          ? t`${plural(issues.length, "value")} to fix first.`
           : changed.length
-            ? `${plural(changed.length, "change")}, highlighted. ${senderFirst} sees each one.`
-            : `No changes yet. Co-signing keeps ${senderFirst}'s values.`;
+            ? t`${plural(changed.length, "change")}, highlighted. ${senderFirst} sees each one.`
+            : t`No changes yet. Co-signing keeps ${senderFirst}'s values.`;
 
-  const sentText = scene ? "15 Oct 11:20" : clockOf(server.sent_at);
+  const sentText = scene ? t`15 Oct 11:20` : clockOf(server.sent_at);
   const returnedTo = returned
-    ? `Returned to ${sender?.name}${returned.at ? `, ${returned.at}` : ""}`
+    ? t`Returned to ${sender?.name}${returned.at ? `, ${returned.at}` : ""}`
     : "";
 
   return (
@@ -455,13 +470,16 @@ function CosignFlow({
           { label: `Case ${data.case.label}`, href: `${projectHref}?tab=slides` },
           { label: "Co-sign" },
         ]}
-        title="Co-sign the report"
+        title={t`Co-sign the report`}
         subtitle={
           <>
             <span className="font-mono" data-phi="">
               {data.case.label}
             </span>{" "}
-            · {data.template.name} {data.template.version} · drafted by {sender?.name}
+            ·{" "}
+            <Trans>
+              {data.template.name} {data.template.version} · drafted by {sender?.name}
+            </Trans>
           </>
         }
         steps={[]}
@@ -470,7 +488,7 @@ function CosignFlow({
           <p className="m-0 mt-1.5 flex items-center gap-2 text-body-sm text-fg">
             <Icon name={returned ? "back" : "users"} className="text-fg-dim" />
             <span>
-              {returned ? returnedTo : `${sender?.name} asks you to co-sign · sent ${sentText}`}
+              {returned ? returnedTo : t`${sender?.name} asks you to co-sign · sent ${sentText}`}
             </span>
           </p>
         }
@@ -478,7 +496,9 @@ function CosignFlow({
           <FlowBar
             back={
               returned ? undefined : (
-                <Button onClick={() => setModal("return")}>Return with a note</Button>
+                <Button onClick={() => setModal("return")}>
+                  <Trans>Return with a note</Trans>
+                </Button>
               )
             }
             hint={<span className={!can || issues.length ? "text-fg" : undefined}>{hint}</span>}
@@ -487,7 +507,7 @@ function CosignFlow({
                 renderLink({
                   href: destinations.myWork(),
                   className: buttonVariants({ variant: "primary" }),
-                  children: "Back to My work",
+                  children: t`Back to My work`,
                 })
               ) : (
                 <Button
@@ -495,7 +515,7 @@ function CosignFlow({
                   aria-disabled={!can || issues.length > 0}
                   onClick={coSignNow}
                 >
-                  Co-sign and sign out
+                  <Trans>Co-sign and sign out</Trans>
                 </Button>
               )
             }
@@ -509,7 +529,7 @@ function CosignFlow({
               <div className="grid">
                 <b className="text-body font-semibold">{returnedTo}</b>
                 <small className="text-body-sm text-fg-dim">
-                  With {plural(changed.length, "change")} and your note
+                  <Trans>With {plural(changed.length, "change")} and your note</Trans>
                 </small>
               </div>
             </div>
@@ -539,28 +559,28 @@ function CosignFlow({
       </FlowPage>
       {modal === "return" ? (
         <ReasonModal
-          title={`Return to ${sender?.name}`}
+          title={t`Return to ${sender?.name}`}
           subtitle={`${data.case.label} · ${changed.length ? `${plural(changed.length, "change")} highlighted` : "no changes"}`}
-          whatLabel="What he gets back"
+          whatLabel={t`What he gets back`}
           what={
             changed.length
-              ? `${andJoin(changed.map((row, index) => (index ? row.label.charAt(0).toLowerCase() + row.label.slice(1) : row.label)))}, changed by you`
-              : "The report as he sent it"
+              ? t`${andJoin(changed.map((row, index) => (index ? row.label.charAt(0).toLowerCase() + row.label.slice(1) : row.label)))}, changed by you`
+              : t`The report as he sent it`
           }
-          label={`Note to ${senderFirst}`}
-          placeholder="For example, measure the widest extent across the capsule."
-          help={`${senderFirst} sees your changes and the note.`}
-          hint="He can fix it and send it again."
-          primary="Return with the note"
-          empty={`Write a note. ${senderFirst} sees it with your changes.`}
-          tooShort="Use at least 10 characters."
+          label={t`Note to ${senderFirst}`}
+          placeholder={t`For example, measure the widest extent across the capsule.`}
+          help={t`${senderFirst} sees your changes and the note.`}
+          hint={t`He can fix it and send it again.`}
+          primary={t`Return with the note`}
+          empty={t`Write a note. ${senderFirst} sees it with your changes.`}
+          tooShort={t`Use at least 10 characters.`}
           onClose={() => setModal(null)}
           onSubmit={(note) => {
             setModal(null);
             const done = () => {
-              setReturned({ note, at: live ? clockOf(new Date().toISOString()) : "15 Oct 11:35" });
+              setReturned({ note, at: live ? clockOf(new Date().toISOString()) : t`15 Oct 11:35` });
               toast.show({
-                text: `Returned to ${sender?.name} with your note`,
+                text: t`Returned to ${sender?.name} with your note`,
                 ...(live ? {} : { undo: () => setReturned(null) }),
               });
             };
@@ -578,28 +598,28 @@ function CosignFlow({
                     done();
                   }),
               )
-              .catch(() => toast.show({ text: "The report could not be returned. Try again." }));
+              .catch(() => toast.show({ text: t`The report could not be returned. Try again.` }));
           }}
         />
       ) : null}
       {modal === "sign" ? (
         <SignModal
-          title={`Co-sign and sign out ${data.case.label}`}
-          subtitle={`Reported by ${sender?.name}, verified by you`}
+          title={t`Co-sign and sign out ${data.case.label}`}
+          subtitle={t`Reported by ${sender?.name}, verified by you`}
           rows={[
             {
               icon: "user",
-              label: "Signed by",
+              label: t`Signed by`,
               value: `${me?.name}, MUDr. ${sender?.name} is named as the reporter`,
             },
             {
               icon: "mail",
-              label: "Goes to",
+              label: t`Goes to`,
               value: data.case.requested_by
-                ? `${data.case.requested_by}, who requested it`
-                : "The clinician who requested it",
+                ? t`${data.case.requested_by}, who requested it`
+                : t`The clinician who requested it`,
             },
-            { icon: "file", label: "What you sign", value: "The report with your changes" },
+            { icon: "file", label: t`What you sign`, value: "The report with your changes" },
           ]}
           email={workEmail(me?.name ?? "")}
           failed={false}
@@ -624,7 +644,7 @@ function CosignFlow({
                 showV1: false,
                 preview: false,
               });
-              toast.show({ text: "Co-signed and signed out. The report names you both." });
+              toast.show({ text: t`Co-signed and signed out. The report names you both.` });
             };
             if (!live) {
               finish(null);

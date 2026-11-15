@@ -953,7 +953,7 @@ function OpenedSlide({
                 document={annotations}
                 micronsPerPixel={session.engine.getSlide()?.micronsPerPixel ?? null}
                 onRemove={(id) =>
-                  saved.apply(deleteShapes(annotations, [id]).document, "Delete shape")
+                  saved.apply(deleteShapes(annotations, [id]).document, t`Delete shape`)
                 }
               />
               {annotations.shapes.size > 0 ? (
@@ -964,7 +964,7 @@ function OpenedSlide({
                     const count = annotations.shapes.size;
                     if (needsClearConfirmation(count) && !window.confirm(clearPrompt(count)))
                       return;
-                    saved.apply(clearAll(annotations).document, "Clear all");
+                    saved.apply(clearAll(annotations).document, t`Clear all`);
                   }}
                 >
                   <Trans>Clear all</Trans>

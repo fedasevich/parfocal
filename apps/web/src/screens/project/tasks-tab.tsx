@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   type Project,
   type ReviewTask,
@@ -32,7 +34,7 @@ const dueText = (iso: string | null) =>
         day: "numeric",
         month: "short",
       })
-    : "No due date";
+    : t`No due date`;
 
 const headCell = "px-4 py-(--density-head-y)";
 
@@ -53,12 +55,22 @@ export function TasksTab({
         <Table containerClassName="overflow-visible">
           <TableHeader>
             <TableRow>
-              <TableHead className={headCell}>Task</TableHead>
-              <TableHead className={headCell}>Reviewers</TableHead>
-              <TableHead className={headCell}>Due</TableHead>
-              <TableHead className={headCell}>Status</TableHead>
               <TableHead className={headCell}>
-                <span className="sr-only">Action</span>
+                <Trans>Task</Trans>
+              </TableHead>
+              <TableHead className={headCell}>
+                <Trans>Reviewers</Trans>
+              </TableHead>
+              <TableHead className={headCell}>
+                <Trans>Due</Trans>
+              </TableHead>
+              <TableHead className={headCell}>
+                <Trans>Status</Trans>
+              </TableHead>
+              <TableHead className={headCell}>
+                <span className="sr-only">
+                  <Trans>Action</Trans>
+                </span>
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -90,6 +102,8 @@ function TaskRow({
   task: ReviewTask;
   onSettings: () => void;
 }) {
+  const { t } = useLingui();
+
   const states = okData(useGetReviewTaskStates(task.id).data);
   const detail = okData(useGetReviewTask(task.id).data);
   const sets = okData(useListProjectResultSets(project.id).data) ?? [];
@@ -99,7 +113,7 @@ function TaskRow({
   const set = sets.find((candidate) => candidate.id === detail?.slides[0]?.result_set_id);
   const facts = [
     set ? `${set.name.split(" ")[0]} ${set.model_version}` : null,
-    `${task.slide_count} slides${task.split === "even" ? ", split evenly" : ""}`,
+    `${task.slide_count} slides${task.split === "even" ? t`, split evenly` : ""}`,
     task.blinded ? "blind" : null,
   ].filter(Boolean);
   const behind = [...progress].sort((a, b) => b.total - b.done - (a.total - a.done))[0];
@@ -129,16 +143,19 @@ function TaskRow({
                 <Person person={people.byId(row.userId)} size={22} />
                 <ProgressBar
                   value={(100 * row.done) / Math.max(row.total, 1)}
-                  aria-label={`${people.byId(row.userId).name}, ${row.done} of ${row.total} slides`}
+                  aria-label={t`${people.byId(row.userId).name}, ${row.done} of ${row.total} slides`}
                 />
                 <span className="font-mono">
-                  {row.done} of {row.total}
+                  <Trans>
+                    {row.done} of {row.total}
+                  </Trans>
                 </span>
               </div>
             ))
           ) : (
             <span>
-              {task.reviewer_count} reviewer{task.reviewer_count === 1 ? "" : "s"}
+              <Trans>{task.reviewer_count} reviewer</Trans>
+              {task.reviewer_count === 1 ? "" : t`s`}
             </span>
           )}
         </div>
@@ -152,8 +169,8 @@ function TaskRow({
           <Button
             size="icon-sm"
             variant="ghost"
-            aria-label={`Settings for ${task.code}`}
-            title="Task settings"
+            aria-label={t`Settings for ${task.code}`}
+            title={t`Task settings`}
             onClick={onSettings}
           >
             <Icon name="gear" />
@@ -165,17 +182,17 @@ function TaskRow({
               nativeButton={false}
               render={<Link to="/tasks/$taskId/sign-off" params={{ taskId: task.id }} />}
             >
-              Sign off
+              <Trans>Sign off</Trans>
             </Button>
           ) : (
             <Button
               size="sm"
-              title={behind ? `Nudge ${people.byId(behind.userId).name}` : "Nudge"}
+              title={behind ? t`Nudge ${people.byId(behind.userId).name}` : t`Nudge`}
               nativeButton={false}
               render={<Link to="/team" search={{ scene: "nudge" }} />}
             >
               <Icon name="bell" />
-              Nudge
+              <Trans>Nudge</Trans>
             </Button>
           )}
         </span>

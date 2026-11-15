@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Keycap } from "@parfocal/ui/components/keycap";
@@ -13,6 +15,7 @@ import {
   UnboundKey,
 } from "@parfocal/ui/components/shortcut-editor";
 import { Switch } from "@parfocal/ui/components/switch";
+import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import { type ReactNode, useEffect, useRef } from "react";
 import {
   directionSets,
@@ -50,11 +53,11 @@ import {
 
 const presetOrder: PresetKey[] = ["default", "qupath", "figma"];
 
-const holdNotes: Record<WholeSlide, string> = {
-  both: "tap keeps it open, hold shows it while held",
-  hold: "only while held",
-  tap: "tap opens and closes",
-};
+const holdNotes: Record<WholeSlide, string> = lazyText(() => ({
+  both: t`tap keeps it open, hold shows it while held`,
+  hold: t`only while held`,
+  tap: t`tap opens and closes`,
+}));
 
 export const isListening = (state: ShortcutState) =>
   state.finding || (state.recording !== null && !keyAction(state.recording.id).direction);
@@ -82,11 +85,13 @@ function PendingCard({
   action: KeyAction;
   apply: (outcome: Outcome) => void;
 }) {
+  const { t } = useLingui();
+
   const pending = state.pending;
   const slot = state.recording?.slot ?? 0;
   const cancel = (
     <Button variant="ghost" onClick={() => apply({ state: cancelRecording(state) })}>
-      Cancel
+      <Trans>Cancel</Trans>
     </Button>
   );
   if (action.direction) {
@@ -94,7 +99,7 @@ function PendingCard({
     return (
       <KeyCard
         tone={clash ? "warn" : "recording"}
-        title={`Pick the keys for ${action.name.toLowerCase()}`}
+        title={t`Pick the keys for ${action.name.toLowerCase()}`}
         actions={directionSets.map(([value, label]) => (
           <Button
             key={value}
@@ -106,13 +111,15 @@ function PendingCard({
         ))}
         keys={
           <>
-            <Keycap keys="Esc" /> cancel
+            <Trans>
+              <Keycap keys="Esc" /> cancel
+            </Trans>
           </>
         }
       >
         {clash
-          ? `${clash.value.split("").join(" ")} would take keys from ${clash.names.join(" and ")}. Change those first, or keep the arrows.`
-          : "Directions come as a set of four."}
+          ? t`${clash.value.split("").join(" ")} would take keys from ${clash.names.join(" and ")}. Change those first, or keep the arrows.`
+          : t`Directions come as a set of four.`}
       </KeyCard>
     );
   }
@@ -120,18 +127,20 @@ function PendingCard({
     return (
       <KeyCard
         tone="recording"
-        title={`Press the new key for ${action.name.toLowerCase()}`}
+        title={t`Press the new key for ${action.name.toLowerCase()}`}
         keys={
           <>
-            <Keycap keys="Esc" /> cancel <Keycap keys="⌫" /> remove this key
+            <Trans>
+              <Keycap keys="Esc" /> cancel <Keycap keys="⌫" /> remove this key
+            </Trans>
           </>
         }
       >
         {action.range
-          ? `Press only the modifier, for example ⌥ or ⌘. The numbers ${rangeDigits(action)} stay the same.`
+          ? t`Press only the modifier, for example ⌥ or ⌘. The numbers ${rangeDigits(action)} stay the same.`
           : action.sequence
-            ? "Press the first key. A number from 1 to 9 always follows it."
-            : "A key, or a key with ⌘, ⌃, ⌥ or ⇧. Keys are matched by their position, so this works on a Czech keyboard too."}
+            ? t`Press the first key. A number from 1 to 9 always follows it.`
+            : t`A key, or a key with ⌘, ⌃, ⌥ or ⇧. Keys are matched by their position, so this works on a Czech keyboard too.`}
       </KeyCard>
     );
   }
@@ -142,22 +151,28 @@ function PendingCard({
     return (
       <KeyCard
         tone="warn"
-        title={`${pending.combo} is already ${otherName} in ${other.group.toLowerCase()}`}
+        title={t`${pending.combo} is already ${otherName} in ${other.group.toLowerCase()}`}
         actions={
           <>
             {old ? (
               <Button onClick={() => apply(swap(state))}>
-                Swap: {otherName} gets {old}
+                <Trans>
+                  Swap: {otherName} gets {old}
+                </Trans>
               </Button>
             ) : null}
             <Button onClick={() => apply(take(state))}>
-              Use {pending.combo} here, leave {otherName} without a key
+              <Trans>
+                Use {pending.combo} here, leave {otherName} without a key
+              </Trans>
             </Button>
             {cancel}
           </>
         }
       >
-        One key can only do one thing in the same place. Choose what happens to {otherName}.
+        <Trans>
+          One key can only do one thing in the same place. Choose what happens to {otherName}.
+        </Trans>
       </KeyCard>
     );
   }
@@ -166,18 +181,20 @@ function PendingCard({
     return (
       <KeyCard
         tone="warn"
-        title={`${pending.combo} overlaps ${other.name.toLowerCase()} (${pending.slot})`}
+        title={t`${pending.combo} overlaps ${other.name.toLowerCase()} (${pending.slot})`}
         actions={
           <>
             <Button onClick={() => apply({ state: startRecording(state, action.id, slot) })}>
-              Try another key
+              <Trans>Try another key</Trans>
             </Button>
             {cancel}
           </>
         }
       >
-        {other.name} uses {pending.slot} as a set or a chord, so one of its keys would stop working.
-        Change {other.name.toLowerCase()} first, or pick another key.
+        <Trans>
+          {other.name} uses {pending.slot} as a set or a chord, so one of its keys would stop
+          working. Change {other.name.toLowerCase()} first, or pick another key.
+        </Trans>
       </KeyCard>
     );
   }
@@ -185,17 +202,19 @@ function PendingCard({
     return (
       <KeyCard
         tone="bad"
-        title={`The browser keeps ${pending.combo}`}
+        title={t`The browser keeps ${pending.combo}`}
         actions={
           <>
             <Button onClick={() => apply({ state: startRecording(state, action.id, slot) })}>
-              Try another key
+              <Trans>Try another key</Trans>
             </Button>
             {cancel}
           </>
         }
       >
-        It {reservedKeys[pending.combo]}, before the viewer can see the key. Pick another key.
+        <Trans>
+          It {reservedKeys[pending.combo]}, before the viewer can see the key. Pick another key.
+        </Trans>
       </KeyCard>
     );
   }
@@ -203,18 +222,20 @@ function PendingCard({
     return (
       <KeyCard
         tone="warn"
-        title={`${action.name} needs ⌘ or ⌃`}
+        title={t`${action.name} needs ⌘ or ⌃`}
         actions={
           <>
             <Button onClick={() => apply({ state: applySafeCombo(state) })}>
-              Use {safeCombo(pending.combo)} instead
+              <Trans>Use {safeCombo(pending.combo)} instead</Trans>
             </Button>
             {cancel}
           </>
         }
       >
-        It changes the report, so a single key could be pressed by accident while reading. Your lab
-        requires a modifier for it.
+        <Trans>
+          It changes the report, so a single key could be pressed by accident while reading. Your
+          lab requires a modifier for it.
+        </Trans>
       </KeyCard>
     );
   }
@@ -232,6 +253,8 @@ function Row({
   clashes: [string, string, string, string][];
   apply: (outcome: Outcome) => void;
 }) {
+  const { t } = useLingui();
+
   const keys = currentKeys(state, action);
   const changed = isChanged(state, action);
   const recordingHere = state.recording?.id === action.id;
@@ -262,17 +285,17 @@ function Row({
                   : "default"
         }
         disabled={action.fixed ?? false}
-        aria-label={`${action.name}: ${recording ? "Press a key" : key}`}
+        aria-label={`${action.name}: ${recording ? t`Press a key` : key}`}
         title={
           action.fixed
-            ? "Kept fixed so there is always a way back"
+            ? t`Kept fixed so there is always a way back`
             : off
-              ? "Single-letter shortcuts are off"
-              : "Click, then press the new key"
+              ? t`Single-letter shortcuts are off`
+              : t`Click, then press the new key`
         }
         onClick={() => apply({ state: startRecording(state, action.id, slot) })}
       >
-        {recording ? "Press a key" : key}
+        {recording ? t`Press a key` : key}
       </KeyBinding>
     );
   };
@@ -302,17 +325,21 @@ function Row({
       standard={
         changed ? (
           <>
-            <span>default {action.keys.join(", ")}</span>
+            <span>
+              <Trans>default {action.keys.join(", ")}</Trans>
+            </span>
             <Button
               variant="link"
               size="xs"
               onClick={() => apply({ state: resetKey(state, action.id) })}
             >
-              Reset
+              <Trans>Reset</Trans>
             </Button>
           </>
         ) : action.fixed ? null : (
-          <span>default</span>
+          <span>
+            <Trans>default</Trans>
+          </span>
         )
       }
       card={recordingHere ? <PendingCard state={state} action={action} apply={apply} /> : undefined}
@@ -328,6 +355,8 @@ type ShortcutsSectionProps = {
 };
 
 export function ShortcutsSection({ state, query, apply, notify }: ShortcutsSectionProps) {
+  const { t } = useLingui();
+
   const clashes = conflicts(state);
   const changedCount = Object.keys(state.custom).length;
   const visible = visibleActions(state, query);
@@ -350,10 +379,10 @@ export function ShortcutsSection({ state, query, apply, notify }: ShortcutsSecti
     link.click();
     URL.revokeObjectURL(link.href);
     notify(
-      `${shortcutFileName} saved to Downloads, with ${
+      t`${shortcutFileName} saved to Downloads, with ${
         changedCount
-          ? `your ${changedCount} changed key${changedCount > 1 ? "s" : ""}`
-          : "the default keys"
+          ? t`your ${changedCount} changed key${changedCount > 1 ? "s" : ""}`
+          : t`the default keys`
       }`,
     );
   };
@@ -379,8 +408,8 @@ export function ShortcutsSection({ state, query, apply, notify }: ShortcutsSecti
     });
     notify(
       dropped.length === 0
-        ? `Loaded ${Object.keys(settings.custom).length} changed keys from ${file.name}`
-        : `Loaded ${file.name}. Left out ${dropped.length}: ${dropped.join("; ")}`,
+        ? t`Loaded ${Object.keys(settings.custom).length} changed keys from ${file.name}`
+        : t`Loaded ${file.name}. Left out ${dropped.length}: ${dropped.join("; ")}`,
     );
   };
   const nextPreset =
@@ -396,7 +425,7 @@ export function ShortcutsSection({ state, query, apply, notify }: ShortcutsSecti
         />
         <SegmentedControl
           fill
-          aria-label="Show"
+          aria-label={t`Show`}
           className="flex-none"
           value={state.filter}
           onValueChange={(value) => set({ filter: value as ShortcutFilter })}
@@ -412,7 +441,7 @@ export function ShortcutsSection({ state, query, apply, notify }: ShortcutsSecti
       </div>
       <div className="-mt-1.5 flex items-center justify-between gap-3 text-caption text-fg-faint">
         <span className="inline-flex items-center gap-1">
-          Preset
+          <Trans>Preset</Trans>
           <Button
             variant="ghost"
             size="xs"
@@ -420,7 +449,7 @@ export function ShortcutsSection({ state, query, apply, notify }: ShortcutsSecti
             onClick={() => {
               set({ preset: nextPreset });
               notify(
-                `Preset ${shortcutPresetNames[nextPreset]}. Your own changes stay on top of it.`,
+                t`Preset ${shortcutPresetNames[nextPreset]}. Your own changes stay on top of it.`,
               );
             }}
           >
@@ -432,19 +461,21 @@ export function ShortcutsSection({ state, query, apply, notify }: ShortcutsSecti
         <Button
           variant="ghost"
           disabled={changedCount === 0}
-          title={changedCount === 0 ? "Nothing changed" : undefined}
+          title={changedCount === 0 ? t`Nothing changed` : undefined}
           onClick={() => {
             set({ custom: {} });
-            notify("Every shortcut is back to the default");
+            notify(t`Every shortcut is back to the default`);
           }}
         >
-          Reset all
+          <Trans>Reset all</Trans>
         </Button>
       </div>
       {state.findKey !== null && groups.length === 0 ? (
         <div className="rounded-lg border border-line bg-chrome-2 px-3 py-2.5 text-body-sm text-fg-dim">
-          {state.findKey} does nothing yet. Click any action below, then press {state.findKey} to
-          give it that key.
+          <Trans>
+            {state.findKey} does nothing yet. Click any action below, then press {state.findKey} to
+            give it that key.
+          </Trans>
         </div>
       ) : null}
       <div className="grid gap-4">
@@ -455,7 +486,7 @@ export function ShortcutsSection({ state, query, apply, notify }: ShortcutsSecti
               title={group}
               where={
                 context === "review"
-                  ? "in a review. The answer keys follow the task's decision style"
+                  ? t`in a review. The answer keys follow the task's decision style`
                   : "everywhere"
               }
             >
@@ -472,56 +503,63 @@ export function ShortcutsSection({ state, query, apply, notify }: ShortcutsSecti
           ))
         ) : state.findKey === null ? (
           <div className="rounded-lg border border-line bg-chrome-2 px-3 py-2.5 text-body-sm text-fg-dim">
-            Nothing here.{" "}
+            <Trans>Nothing here.</Trans>{" "}
             {state.filter === "changed"
-              ? "You have not changed any key."
-              : "No two actions share a key."}
+              ? t`You have not changed any key.`
+              : t`No two actions share a key.`}
           </div>
         ) : null}
       </div>
       <div className="grid gap-3 border-t border-line pt-3.5">
         <OptionRow
-          label="Single-letter shortcuts"
-          help="Turn off if keys fire by accident, for example with speech input. Keys with ⌘, ⌃ or ⌥ keep working."
+          label={t`Single-letter shortcuts`}
+          help={t`Turn off if keys fire by accident, for example with speech input. Keys with ⌘, ⌃ or ⌥ keep working.`}
         >
           <Switch
-            aria-label="Single-letter shortcuts"
+            aria-label={t`Single-letter shortcuts`}
             checked={state.singleLetter}
             onCheckedChange={(checked) => set({ singleLetter: checked })}
           />
         </OptionRow>
         <OptionRow
-          label="Match keys by position, not by letter"
-          help="Keeps ⌥1 to ⌥6 and the type keys in place on Czech QWERTZ, where the number row types ě, š, č."
+          label={t`Match keys by position, not by letter`}
+          help={t`Keeps ⌥1 to ⌥6 and the type keys in place on Czech QWERTZ, where the number row types ě, š, č.`}
         >
           <Switch
-            aria-label="Match keys by position"
+            aria-label={t`Match keys by position`}
             checked={state.byPosition}
             onCheckedChange={(checked) => set({ byPosition: checked })}
           />
         </OptionRow>
-        <OptionRow label="Whole slide key" help="How Z behaves.">
+        <OptionRow label={t`Whole slide key`} help={t`How Z behaves.`}>
           <SegmentedControl
             fill
-            aria-label="Whole slide key"
+            aria-label={t`Whole slide key`}
             value={state.wholeSlide}
             onValueChange={(value) => set({ wholeSlide: value as WholeSlide })}
             options={[
-              { value: "both", label: "Tap or hold" },
-              { value: "hold", label: "Hold only" },
-              { value: "tap", label: "Tap toggles" },
+              { value: "both", label: t`Tap or hold` },
+              { value: "hold", label: t`Hold only` },
+              { value: "tap", label: t`Tap toggles` },
             ]}
           />
         </OptionRow>
-        <OptionRow label="Your shortcuts" help="Personal: they follow you to any workstation.">
+        <OptionRow
+          label={t`Your shortcuts`}
+          help={t`Personal: they follow you to any workstation.`}
+        >
           <div className="flex gap-2">
-            <Button onClick={() => fileInput.current?.click()}>Import</Button>
-            <Button onClick={download}>Export</Button>
+            <Button onClick={() => fileInput.current?.click()}>
+              <Trans>Import</Trans>
+            </Button>
+            <Button onClick={download}>
+              <Trans>Export</Trans>
+            </Button>
             <input
               ref={fileInput}
               type="file"
               accept="application/json,.json"
-              aria-label="Import shortcuts file"
+              aria-label={t`Import shortcuts file`}
               className="hidden"
               onChange={(event) => {
                 void upload(event.target.files?.[0]);

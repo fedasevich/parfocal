@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   getListStudyTemplatesQueryKey,
   type Presets,
@@ -61,15 +62,19 @@ function PresetsPanel({
   onPresets: (presets: Presets) => void;
   onDecision: (decision: DecisionPreset) => void;
 }) {
+  const { t } = useLingui();
+
   const scope = scopeChoices.find((item) => item.kind === presets.objects_to_check.kind);
   return (
     <div className="grid gap-4">
       <p className="m-0 text-caption text-fg-dim">
-        A review task made from this template starts with these. The researcher can change each one
-        in the task, and the report keeps the template.
+        <Trans>
+          A review task made from this template starts with these. The researcher can change each
+          one in the task, and the report keeps the template.
+        </Trans>
       </p>
       <div className="grid gap-1.5">
-        {choice("Objects to check", "preset-objects")}
+        {choice(t`Objects to check`, "preset-objects")}
         <Select
           value={presets.objects_to_check.kind}
           onValueChange={(value) =>
@@ -82,7 +87,7 @@ function PresetsPanel({
             })
           }
         >
-          <SelectTrigger aria-label="Objects to check" className="w-full">
+          <SelectTrigger aria-label={t`Objects to check`} className="w-full">
             <SelectValue>{scope?.label ?? presets.objects_to_check.kind}</SelectValue>
           </SelectTrigger>
           <SelectContent>
@@ -96,7 +101,7 @@ function PresetsPanel({
       </div>
       <DecisionPresetPicker value={decision} onChange={onDecision} />
       <div className="flex items-center justify-between gap-3 text-body-sm">
-        {choice("Blind review", "preset-blind")}
+        {choice(t`Blind review`, "preset-blind")}
         <Switch
           aria-labelledby="preset-blind"
           checked={presets.blinding ?? true}
@@ -104,7 +109,7 @@ function PresetsPanel({
         />
       </div>
       <div className="flex items-center justify-between gap-3 text-body-sm">
-        {choice("First read without the AI", "preset-first")}
+        {choice(t`First read without the AI`, "preset-first")}
         <Switch
           aria-labelledby="preset-first"
           checked={presets.first_read ?? false}
@@ -112,7 +117,7 @@ function PresetsPanel({
         />
       </div>
       <div className="grid gap-1.5">
-        {choice("Reviewers start in", "preset-start")}
+        {choice(t`Reviewers start in`, "preset-start")}
         <SegmentedControl
           aria-labelledby="preset-start"
           value={presets.start_mode ?? "guided"}
@@ -123,13 +128,13 @@ function PresetsPanel({
             })
           }
           options={[
-            { value: "guided", label: "Guided review" },
-            { value: "viewer", label: "Full viewer" },
+            { value: "guided", label: t`Guided review` },
+            { value: "viewer", label: t`Full viewer` },
           ]}
         />
       </div>
       <div className="grid gap-1.5">
-        {choice("The work", "preset-split")}
+        {choice(t`The work`, "preset-split")}
         <SegmentedControl
           aria-labelledby="preset-split"
           value={presets.split ?? "everyone"}
@@ -137,9 +142,9 @@ function PresetsPanel({
             onPresets({ ...presets, split: String(value) as NonNullable<Presets["split"]> })
           }
           options={[
-            { value: "everyone", label: "Everyone all" },
-            { value: "even", label: "Split" },
-            { value: "chosen", label: "Per slide" },
+            { value: "everyone", label: t`Everyone all` },
+            { value: "even", label: t`Split` },
+            { value: "chosen", label: t`Per slide` },
           ]}
         />
       </div>
@@ -158,6 +163,8 @@ function EditorBody({
   notify: Notify;
   onBack: () => void;
 }) {
+  const { t } = useLingui();
+
   const queryClient = useQueryClient();
   const create = useCreateStudyTemplate();
   const edit = useEditStudyTemplate();
@@ -203,8 +210,8 @@ function EditorBody({
       void queryClient.invalidateQueries({ queryKey: getListStudyTemplatesQueryKey() });
       notify(
         own
-          ? `Saved ${name.trim()} v${version}. Tasks made from the earlier version keep it.`
-          : `Saved ${name.trim()} v1. Researchers can pick it in a new review task.`,
+          ? t`Saved ${name.trim()} v${version}. Tasks made from the earlier version keep it.`
+          : t`Saved ${name.trim()} v1. Researchers can pick it in a new review task.`,
       );
       onBack();
     };
@@ -220,7 +227,7 @@ function EditorBody({
       onFormatChange={setFormat}
       formatHead={
         <>
-          <FormField label="Name" error={tried ? problem : undefined}>
+          <FormField label={t`Name`} error={tried ? problem : undefined}>
             <TextFieldInput
               value={name}
               maxLength={60}
@@ -228,9 +235,9 @@ function EditorBody({
             />
           </FormField>
           <div className="grid gap-1.5">
-            {choice("Kind of study", "template-kind")}
+            {choice(t`Kind of study`, "template-kind")}
             <Select value={kind} onValueChange={(value) => setKind(String(value) as StudyKind)}>
-              <SelectTrigger aria-label="Kind of study" className="w-full">
+              <SelectTrigger aria-label={t`Kind of study`} className="w-full">
                 <SelectValue>
                   {studyKinds.find((item) => item.value === kind)?.label ?? kind}
                 </SelectValue>
@@ -256,19 +263,21 @@ function EditorBody({
       }
       footer={
         <div className="flex items-center gap-2.5 border-t border-line bg-chrome px-5 py-3">
-          <Button onClick={onBack}>Back to the library</Button>
+          <Button onClick={onBack}>
+            <Trans>Back to the library</Trans>
+          </Button>
           <span className="flex-1 text-body-sm text-fg-dim">{saveHint(source)}</span>
           <Button onClick={() => setShowPdf(true)}>
             <Icon name="eye" />
-            Preview the PDF
+            <Trans>Preview the PDF</Trans>
           </Button>
           <Button variant="primary" onClick={save} disabled={create.isPending || edit.isPending}>
-            {own ? `Save as v${version}` : "Save template"}
+            {own ? t`Save as v${version}` : t`Save template`}
           </Button>
           {showPdf ? (
             <LazyTemplatePdf
               draft={{
-                name: name.trim() || "Untitled template",
+                name: name.trim() || t`Untitled template`,
                 blocks: toApiBlocks(blocks) as unknown as StudyTemplateSummary["blocks"],
                 format,
               }}

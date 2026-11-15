@@ -1,4 +1,5 @@
 import { Popover as PopoverPrimitive } from "@base-ui/react/popover";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Icon } from "@parfocal/ui/components/icon";
 import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
@@ -34,11 +35,13 @@ function ModelTitle({
 }: {
   option: Pick<ModelOption, "title" | "description" | "offline">;
 }) {
+  const { t } = useLingui();
+
   return (
     <span className="min-w-0">
       <b className="block text-body font-semibold text-fg">{option.title}</b>
       <small className="mt-px block text-body-sm leading-[1.45] text-fg-dim">
-        {option.offline ? "Offline. Its server is not answering." : option.description}
+        {option.offline ? t`Offline. Its server is not answering.` : option.description}
       </small>
     </span>
   );
@@ -69,6 +72,8 @@ function ModelPicker({
   invalid = false,
   className,
 }: ModelPickerProps) {
+  const { t } = useLingui();
+
   const chosen = groups.flatMap((group) => group.options).find((option) => option.id === value);
   return (
     <PopoverPrimitive.Root open={open} onOpenChange={onOpenChange}>
@@ -90,7 +95,9 @@ function ModelPicker({
           </>
         ) : (
           <>
-            <b className="text-body font-semibold">Pick a model</b>
+            <b className="text-body font-semibold">
+              <Trans>Pick a model</Trans>
+            </b>
             <span />
           </>
         )}
@@ -104,7 +111,7 @@ function ModelPicker({
           className="isolate z-60 w-(--anchor-width)"
         >
           <PopoverPrimitive.Popup className="grid gap-px rounded-zone border border-line-strong bg-popover p-1.5 text-body-sm text-fg shadow-[0_18px_48px_rgba(0,0,0,.45)] outline-hidden">
-            <div role="listbox" aria-label="Models" className="grid gap-px">
+            <div role="listbox" aria-label={t`Models`} className="grid gap-px">
               {groups.map((group) => (
                 <div
                   key={group.title}
@@ -145,7 +152,7 @@ function ModelPicker({
                         <ModelTitle option={option} />
                         <ModelChips makes={option.makes} />
                         <span className="text-right text-caption whitespace-nowrap text-fg-dim">
-                          {option.offline ? "offline" : option.perSlide}
+                          {option.offline ? t`offline` : option.perSlide}
                         </span>
                         {on ? <Icon name="check" className="text-accent" /> : <span />}
                       </div>

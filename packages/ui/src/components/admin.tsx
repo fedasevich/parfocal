@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Switch } from "@parfocal/ui/components/switch";
 import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
@@ -46,9 +47,11 @@ type StorageBarProps = React.ComponentProps<"div"> & {
 };
 
 function StorageBar({ parts, totalTb, size = "md", foot, className, ...props }: StorageBarProps) {
+  const { t } = useLingui();
+
   const used = parts.reduce((sum, part) => sum + part.tb, 0);
   const free = Math.max(0, totalTb - used);
-  const label = `${tb(used)} of ${tb(totalTb)} used. ${parts
+  const label = t`${tb(used)} of ${tb(totalTb)} used. ${parts
     .map((part) => `${part.label} ${tb(part.tb)}`)
     .join(", ")}, free ${tb(free)}`;
   return (
@@ -67,7 +70,9 @@ function StorageBar({ parts, totalTb, size = "md", foot, className, ...props }: 
         >
           {tb(used)}
         </b>
-        <span>of {tb(totalTb)} used</span>
+        <span>
+          <Trans>of {tb(totalTb)} used</Trans>
+        </span>
       </div>
       <div
         role="img"
@@ -92,7 +97,7 @@ function StorageBar({ parts, totalTb, size = "md", foot, className, ...props }: 
           size === "sm" ? "gap-x-3.5 gap-y-1 text-caption" : "gap-x-4.5 gap-y-1.5 text-body-sm",
         )}
       >
-        {[...parts, { label: "Free", tb: free, colour: "" }].map((part) => (
+        {[...parts, { label: t`Free`, tb: free, colour: "" }].map((part) => (
           <span key={part.label} className="inline-flex items-center gap-1.75">
             <i
               className={cn(

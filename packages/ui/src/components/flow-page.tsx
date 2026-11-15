@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import type { LinkRenderer } from "@parfocal/ui/components/app-shell";
 import {
   BeforeYouList,
@@ -26,9 +28,11 @@ function Breadcrumbs({
   renderLink?: LinkRenderer | undefined;
   start?: React.ReactNode;
 }) {
+  const { t } = useLingui();
+
   return (
     <nav
-      aria-label="Breadcrumb"
+      aria-label={t`Breadcrumb`}
       className={cn(
         "flex min-h-6 flex-wrap items-center gap-1.5 text-body-sm text-fg-faint",
         className,
@@ -82,7 +86,7 @@ const stepButton =
   "inline-flex min-h-6 items-center gap-1.75 rounded-sm border-0 bg-transparent p-0 text-body-sm text-fg-dim focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent";
 
 function moveStepFocus(event: React.KeyboardEvent<HTMLOListElement>) {
-  const keys = ["ArrowRight", "ArrowLeft", "Home", "End"];
+  const keys = ["ArrowRight", "ArrowLeft", t`Home`, "End"];
   if (!keys.includes(event.key)) return;
   const buttons = Array.from(event.currentTarget.querySelectorAll<HTMLButtonElement>("button"));
   const at = buttons.indexOf(document.activeElement as HTMLButtonElement);
@@ -108,12 +112,14 @@ function Stepper({
   className,
   ...props
 }: StepperProps) {
+  const { t } = useLingui();
+
   const id = React.useId();
   const furthest = Math.max(reached, current);
   return (
     <ol
       data-slot="stepper"
-      aria-label="Steps"
+      aria-label={t`Steps`}
       onKeyDown={moveStepFocus}
       className={cn(
         "m-0 flex list-none flex-wrap items-center gap-2.5 p-0 text-body-sm text-fg-dim",
@@ -139,7 +145,7 @@ function Stepper({
         );
         const why =
           step.why ??
-          `Not reached yet. Finish ${steps[current]?.label ?? "this step"} first, then use Next.`;
+          t`Not reached yet. Finish ${steps[current]?.label ?? "this step"} first, then use Next.`;
         const whyId = `${id}-why-${index}`;
         return (
           <li
@@ -291,6 +297,8 @@ function FlowPage({
   children,
   ...props
 }: FlowPageProps) {
+  const { t } = useLingui();
+
   const [scrollRef, scroll] = useScrollState();
   const more = moreBelow ?? scroll.more;
   return (
@@ -324,7 +332,9 @@ function FlowPage({
       <div
         ref={scrollRef}
         data-slot="flow-body"
-        {...(scroll.overflows ? { tabIndex: 0, role: "region", "aria-label": "Step content" } : {})}
+        {...(scroll.overflows
+          ? { tabIndex: 0, role: "region", "aria-label": t`Step content` }
+          : {})}
         className="min-h-0 overflow-auto focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-solid focus-visible:outline-accent"
       >
         <div className="mx-auto grid w-full max-w-208 grid-cols-[minmax(0,760px)] justify-center px-9 pt-6 pb-10">
@@ -440,6 +450,8 @@ type SummaryRowsProps = React.ComponentProps<"dl"> & {
 };
 
 function SummaryRows({ rows, className, ...props }: SummaryRowsProps) {
+  const { t } = useLingui();
+
   return (
     <dl
       data-slot="summary-rows"
@@ -457,10 +469,10 @@ function SummaryRows({ rows, className, ...props }: SummaryRowsProps) {
             <button
               type="button"
               onClick={row.onChange}
-              aria-label={`Change ${row.label}`}
+              aria-label={t`Change ${row.label}`}
               className="cursor-pointer border-0 bg-transparent p-0 text-body-sm font-medium text-accent hover:underline"
             >
-              Change
+              <Trans>Change</Trans>
             </button>
           </dd>
         </div>

@@ -1,3 +1,4 @@
+import { useLingui } from "@lingui/react/macro";
 import { Icon } from "@parfocal/ui/components/icon";
 import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
@@ -11,6 +12,8 @@ type ControlRowProps = Omit<React.ComponentProps<"div">, "children"> & {
 };
 
 function ControlRow({ label, help, locked, children, className, ...props }: ControlRowProps) {
+  const { t } = useLingui();
+
   const labelId = useId();
   return (
     <div
@@ -25,7 +28,7 @@ function ControlRow({ label, help, locked, children, className, ...props }: Cont
       {locked ? (
         <>
           <span className="inline-flex items-center gap-1.5 text-body-sm text-fg-dim">
-            <Icon name="lock" label="Locked" />
+            <Icon name="lock" label={t`Locked`} />
             <span>{locked.value}</span>
           </span>
           <small className="text-caption text-fg-faint">{locked.reason}</small>

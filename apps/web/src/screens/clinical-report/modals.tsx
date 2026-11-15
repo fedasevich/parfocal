@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { InlineError } from "@parfocal/ui/components/banner";
 import { Input } from "@parfocal/ui/components/input";
 import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
@@ -11,6 +13,7 @@ import {
 import { SmallModal, SmallModalZone } from "@parfocal/ui/components/small-modal";
 import { Textarea } from "@parfocal/ui/components/textarea";
 import { TokenField } from "@parfocal/ui/components/token-field";
+import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import { useEffect, useRef, useState } from "react";
 import { FieldNote } from "../new-task/parts.tsx";
 import { type Dep, mmText, parseNumber, type ReportData } from "./model.ts";
@@ -32,17 +35,17 @@ type DepositDraft = {
 export function depositErrors(draft: DepositDraft) {
   const errors: Record<string, string> = {};
   if (draft.source === "object") {
-    if (!draft.object) errors["obj"] = "Pick an object, or measure the deposit by hand.";
+    if (!draft.object) errors["obj"] = t`Pick an object, or measure the deposit by hand.`;
     return errors;
   }
   const number = parseNumber(draft.size);
   const mm = number === null ? null : draft.unit === "um" ? number / 1000 : number;
-  if (!draft.size.trim()) errors["mm"] = "Enter the size.";
-  else if (number === null || number <= 0) errors["mm"] = "Use a number above 0, for example 1.5.";
-  else if (draft.unit && mm !== null && mm > 100) errors["mm"] = "Use a size up to 100 mm.";
-  else if (draft.unit && mm !== null && mm < 0.01) errors["mm"] = "Use a size of at least 10 µm.";
-  if (!draft.unit) errors["unit"] = "Pick mm or µm.";
-  if (!draft.slide) errors["slide"] = "Pick the slide you measured on.";
+  if (!draft.size.trim()) errors["mm"] = t`Enter the size.`;
+  else if (number === null || number <= 0) errors["mm"] = t`Use a number above 0, for example 1.5.`;
+  else if (draft.unit && mm !== null && mm > 100) errors["mm"] = t`Use a size up to 100 mm.`;
+  else if (draft.unit && mm !== null && mm < 0.01) errors["mm"] = t`Use a size of at least 10 µm.`;
+  if (!draft.unit) errors["unit"] = t`Pick mm or µm.`;
+  if (!draft.slide) errors["slide"] = t`Pick the slide you measured on.`;
   return errors;
 }
 
@@ -61,6 +64,8 @@ export function DepositModal({
   onClose: () => void;
   onAdd: (deposit: Omit<Dep, "id">) => void;
 }) {
+  const { t } = useLingui();
+
   const [draft, setDraft] = useState<DepositDraft>(
     hand
       ? { source: "hand", object: null, size: "0", unit: null, slide: null, note: "" }
@@ -80,12 +85,12 @@ export function DepositModal({
       item: {
         id: `${object.slide}:${object.object_id}`,
         name: `${object.object_id} on ${slide?.label ?? object.slide}`,
-        sub: `Node ${slide?.node ?? 1} · ${mmText(object.size_mm)}, ${object.measured_by === "you" ? "measured by you" : "AI outline"}`,
+        sub: t`Node ${slide?.node ?? 1} · ${mmText(object.size_mm)}, ${object.measured_by === "you" ? t`measured by you` : "AI outline"}`,
         find: `${object.object_id} ${object.slide} ${slide?.label ?? ""} ${slide?.short ?? ""}`,
         ...(used
-          ? { dim: "Already listed" }
+          ? { dim: t`Already listed` }
           : object.state === "disagree"
-            ? { dim: "Marked not tumor by you" }
+            ? { dim: t`Marked not tumor by you` }
             : {}),
       },
     };
@@ -122,47 +127,47 @@ export function DepositModal({
       open
       onOpenChange={closeOn(onClose)}
       width={560}
-      title="Add a deposit"
+      title={t`Add a deposit`}
       subtitle={
         <>
-          <span className="font-mono">{caseLabel}</span> · {deposits.length} listed. The largest
-          sets the category.
+          <span className="font-mono">{caseLabel}</span> ·{" "}
+          <Trans>{deposits.length} listed. The largest sets the category.</Trans>
         </>
       }
       hint={
         draft.source === "object"
-          ? "The size comes from the object."
-          : "Sizes in µm are kept in mm."
+          ? t`The size comes from the object.`
+          : t`Sizes in µm are kept in mm.`
       }
-      primaryLabel="Add the deposit"
+      primaryLabel={t`Add the deposit`}
       onPrimary={submit}
     >
       <div className="grid gap-1.5">
         <span id="dep-source-label" className="text-body-sm font-semibold">
-          Where it comes from
+          <Trans>Where it comes from</Trans>
         </span>
         <SegmentedControl
           aria-labelledby="dep-source-label"
           value={draft.source}
           onValueChange={(next) => set({ source: next as DepositDraft["source"] })}
           options={[
-            { value: "object", label: "An object on a slide" },
-            { value: "hand", label: "Measured by hand" },
+            { value: "object", label: t`An object on a slide` },
+            { value: "hand", label: t`Measured by hand` },
           ]}
         />
       </div>
       {draft.source === "object" ? (
         <div className="grid gap-1.5">
           <span id="dep-obj-label" className="text-body-sm font-semibold">
-            Object
+            <Trans>Object</Trans>
           </span>
           <TokenField
             id={fieldId("dep-obj")}
             aria-labelledby="dep-obj-label"
-            label="Object"
+            label={t`Object`}
             single
             defaultOpen={!hand}
-            placeholder="Type an object ID or a slide"
+            placeholder={t`Type an object ID or a slide`}
             items={objects.map((entry) => entry.item)}
             picked={draft.object ? [draft.object] : []}
             invalid={Boolean(shown["obj"])}
@@ -172,8 +177,8 @@ export function DepositModal({
             error={shown["obj"]}
             help={
               picked
-                ? `${mmText(picked.size_mm)}, ${picked.measured_by === "you" ? "measured by you" : "from the AI outline"}. You can change the size in the list.`
-                : "Type an object ID or a slide, for example T4 or A2."
+                ? t`${mmText(picked.size_mm)}, ${picked.measured_by === "you" ? t`measured by you` : t`from the AI outline`}. You can change the size in the list.`
+                : t`Type an object ID or a slide, for example T4 or A2.`
             }
           />
         </div>
@@ -182,7 +187,7 @@ export function DepositModal({
           <div className="grid grid-cols-[auto_1fr] items-start gap-4">
             <div className="grid gap-1.5">
               <label htmlFor={fieldId("dep-mm")} className="text-body-sm font-semibold">
-                Size
+                <Trans>Size</Trans>
               </label>
               <Input
                 id={fieldId("dep-mm")}
@@ -195,7 +200,7 @@ export function DepositModal({
             </div>
             <div className="grid gap-1.5">
               <span id="dep-unit-label" className="text-body-sm font-semibold">
-                Unit
+                <Trans>Unit</Trans>
               </span>
               <SegmentedControl
                 id={fieldId("dep-unit")}
@@ -217,7 +222,7 @@ export function DepositModal({
           ) : null}
           <div className="grid gap-1.5">
             <span id="dep-slide-label" className="text-body-sm font-semibold">
-              Slide
+              <Trans>Slide</Trans>
             </span>
             <Select value={draft.slide} onValueChange={(next) => set({ slide: next })}>
               <SelectTrigger
@@ -244,12 +249,14 @@ export function DepositModal({
       )}
       <div className="grid gap-1.5">
         <label htmlFor={fieldId("dep-note")} className="text-body-sm font-semibold">
-          Note <span className="font-normal text-fg-dim">optional</span>
+          <Trans>
+            Note <span className="font-normal text-fg-dim">optional</span>
+          </Trans>
         </label>
         <Input
           id={fieldId("dep-note")}
           maxLength={120}
-          placeholder="For example, subcapsular sinus"
+          placeholder={t`For example, subcapsular sinus`}
           value={draft.note}
           onChange={(event) => set({ note: event.target.value })}
         />
@@ -259,7 +266,7 @@ export function DepositModal({
   );
 }
 
-const signLabel = { sso: "Sign with Vltava SSO", typed: "Sign with password" };
+const signLabel = lazyText(() => ({ sso: t`Sign with Vltava SSO`, typed: t`Sign with password` }));
 
 export function useSignature({
   failed,
@@ -270,13 +277,15 @@ export function useSignature({
   email: string;
   onSign: (method: "sso" | "password", done: (ok: boolean) => void) => void;
 }) {
+  const { t } = useLingui();
+
   const [state, setState] = useState<"idle" | "busy" | "fail">(failed ? "fail" : "idle");
   const [password, setPassword] = useState<string | null>(null);
   const [tried, setTried] = useState(false);
   const timer = useRef<number | undefined>(undefined);
   useEffect(() => () => window.clearTimeout(timer.current), []);
   const withPassword = password !== null;
-  const passwordError = tried && withPassword && !password ? "Enter your password." : undefined;
+  const passwordError = tried && withPassword && !password ? t`Enter your password.` : undefined;
   const run = () => {
     if (withPassword && !password) {
       setTried(true);
@@ -289,10 +298,10 @@ export function useSignature({
   };
   const busy = state === "busy";
   const zone = busy ? null : withPassword ? (
-    <SmallModalZone title="Sign with your password">
+    <SmallModalZone title={t`Sign with your password`}>
       <div className="grid gap-1.5">
         <label htmlFor={fieldId("pass")} className="text-body-sm font-semibold">
-          Password for {email}
+          <Trans>Password for {email}</Trans>
         </label>
         <Input
           id={fieldId("pass")}
@@ -302,7 +311,7 @@ export function useSignature({
           value={password}
           onChange={(event) => setPassword(event.target.value)}
         />
-        <FieldNote error={passwordError} help="Your Vltava password" />
+        <FieldNote error={passwordError} help={t`Your Vltava password`} />
       </div>
     </SmallModalZone>
   ) : state === "fail" ? (
@@ -310,7 +319,7 @@ export function useSignature({
       actions={
         <>
           <button type="button" className={linkButton} onClick={run}>
-            Try again
+            <Trans>Try again</Trans>
           </button>
           <button
             type="button"
@@ -320,12 +329,12 @@ export function useSignature({
               setPassword("");
             }}
           >
-            Use my password instead
+            <Trans>Use my password instead</Trans>
           </button>
         </>
       }
     >
-      Vltava single sign-on did not answer. Nothing was signed.
+      <Trans>Vltava single sign-on did not answer. Nothing was signed.</Trans>
     </InlineError>
   ) : null;
   return {
@@ -333,7 +342,7 @@ export function useSignature({
     run,
     zone,
     label: signLabel[withPassword ? "typed" : "sso"],
-    busyHint: withPassword ? "Checking your password…" : "Waiting for single sign-on…",
+    busyHint: withPassword ? t`Checking your password…` : t`Waiting for single sign-on…`,
   };
 }
 
@@ -356,6 +365,8 @@ export function SignModal({
   onClose: () => void;
   onSign: (method: "sso" | "password", done: (ok: boolean) => void) => void;
 }) {
+  const { t } = useLingui();
+
   const signature = useSignature({ failed, email, onSign });
   const busy = signature.busy || pending;
   return (
@@ -364,7 +375,7 @@ export function SignModal({
       onOpenChange={closeOn(onClose)}
       title={title}
       subtitle={subtitle}
-      hint={busy ? signature.busyHint : "Signing locks this version."}
+      hint={busy ? signature.busyHint : t`Signing locks this version.`}
       primaryLabel={signature.label}
       primaryBusy={busy}
       onPrimary={signature.run}
@@ -453,7 +464,9 @@ export function ReasonModal({
       </div>
       {told ? (
         <div className="grid gap-1.5">
-          <span className="text-body-sm font-semibold">Who is told</span>
+          <span className="text-body-sm font-semibold">
+            <Trans>Who is told</Trans>
+          </span>
           <p className="m-0 text-body-sm text-fg">{told}</p>
         </div>
       ) : null}

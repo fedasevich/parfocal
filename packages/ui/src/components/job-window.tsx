@@ -1,4 +1,5 @@
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
+import { useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import { Icon } from "@parfocal/ui/components/icon";
 import { cn } from "@parfocal/ui/lib/utils";
@@ -22,6 +23,8 @@ function JobWindow({
   children,
   ...props
 }: JobWindowProps) {
+  const { t } = useLingui();
+
   return (
     <DialogPrimitive.Root {...props}>
       <DialogPrimitive.Portal>
@@ -47,7 +50,7 @@ function JobWindow({
             </div>
             <DialogPrimitive.Close
               render={<Button variant="ghost" size="icon" className="-mr-2" />}
-              aria-label="Close"
+              aria-label={t`Close`}
             >
               <Icon name="close" />
             </DialogPrimitive.Close>

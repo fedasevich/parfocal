@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Icon } from "@parfocal/ui/components/icon";
 import { Person } from "@parfocal/ui/components/person";
 import { Link, useRouterState } from "@tanstack/react-router";
@@ -76,11 +77,15 @@ function MapOrigin({ box }: { box: string }) {
     <>
       <Link to="/flow-map" className={barButtonClass} onClick={() => originStore.set(null)}>
         <Icon name="back" size="sm" />
-        Back to the map
+        <Trans>Back to the map</Trans>
       </Link>
-      <span>Opened from {mapTitle}, as</span>
+      <span>
+        <Trans>Opened from {mapTitle}, as</Trans>
+      </span>
       <PersonaChip persona={people(who)} role={personaRoles[who]} />
-      <span>· mock control, not in the app</span>
+      <span>
+        <Trans>· mock control, not in the app</Trans>
+      </span>
     </>
   );
 }
@@ -91,11 +96,15 @@ function StatesOrigin({ who }: { who: PersonaKey }) {
     <>
       <Link to="/issue-states" className={barButtonClass} onClick={() => originStore.set(null)}>
         <Icon name="back" size="sm" />
-        Back to the index
+        <Trans>Back to the index</Trans>
       </Link>
-      <span>Opened from {issueStatesTitle}, as</span>
+      <span>
+        <Trans>Opened from {issueStatesTitle}, as</Trans>
+      </span>
       <PersonaChip persona={people(who)} role={personaRoles[who]} />
-      <span>· mock control, not in the app</span>
+      <span>
+        <Trans>· mock control, not in the app</Trans>
+      </span>
     </>
   );
 }
@@ -117,10 +126,13 @@ function WalkOrigin({ at, ids }: { at: StepRef; ids: ScenarioIds }) {
         onClick={() => originStore.set(null)}
       >
         <Icon name="back" size="sm" />
-        Back to the chapter
+        <Trans>Back to the chapter</Trans>
       </Link>
       <span className="font-semibold text-fg" data-testid="walk-position">
-        {at.chapter + 1} · {chapter.title}, step {at.step + 1} of {chapter.steps.length}
+        {at.chapter + 1} ·{" "}
+        <Trans>
+          {chapter.title}, step {at.step + 1} of {chapter.steps.length}
+        </Trans>
       </span>
       <PersonaChip persona={people(who)} role={stepRole(at, personaRoles)} />
       <p className="m-0 basis-full text-fg" data-testid="walk-text">
@@ -128,12 +140,12 @@ function WalkOrigin({ at, ids }: { at: StepRef; ids: ScenarioIds }) {
       </p>
       {previous ? (
         <WalkControl to={previous} ids={ids}>
-          Previous step
+          <Trans>Previous step</Trans>
         </WalkControl>
       ) : null}
       {next ? (
         <WalkControl to={next} ids={ids}>
-          Next step
+          <Trans>Next step</Trans>
           <Icon name="next" size="sm" />
         </WalkControl>
       ) : (
@@ -142,17 +154,21 @@ function WalkOrigin({ at, ids }: { at: StepRef; ids: ScenarioIds }) {
           className={barButtonClass}
           onClick={() => originStore.set(null)}
         >
-          Finish the walkthrough
+          <Trans>Finish the walkthrough</Trans>
         </Link>
       )}
-      <span>· mock control, not in the app</span>
+      <span>
+        <Trans>· mock control, not in the app</Trans>
+      </span>
     </>
   );
 }
 
 function OriginBar({ origin }: { origin: Origin }) {
+  const { t } = useLingui();
+
   return (
-    <section aria-label="Prototype controls" className={barClass} data-testid="prototype-bar">
+    <section aria-label={t`Prototype controls`} className={barClass} data-testid="prototype-bar">
       {origin.kind === "map" ? (
         <MapOrigin box={origin.box} />
       ) : origin.kind === "states" ? (

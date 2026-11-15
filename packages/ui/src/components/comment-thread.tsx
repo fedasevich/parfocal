@@ -1,6 +1,9 @@
+import { t } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import { Keycap } from "@parfocal/ui/components/keycap";
 import { PersonAvatar, type PersonInfo } from "@parfocal/ui/components/person";
+import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
 
@@ -40,6 +43,8 @@ type CommentItemProps = React.ComponentProps<"div"> & {
 };
 
 function CommentItem({ message, reply = false, onReply, className, ...props }: CommentItemProps) {
+  const { t } = useLingui();
+
   return (
     <div
       data-slot="comment"
@@ -52,9 +57,13 @@ function CommentItem({ message, reply = false, onReply, className, ...props }: C
         <div className="flex flex-wrap items-baseline gap-x-2 text-body-sm">
           <b className="font-semibold text-fg">
             {message.author.name}
-            {message.you ? " (you)" : ""}
+            {message.you ? t` (you)` : ""}
           </b>
-          {message.researcher ? <span className="text-caption text-fg-dim">Researcher</span> : null}
+          {message.researcher ? (
+            <span className="text-caption text-fg-dim">
+              <Trans>Researcher</Trans>
+            </span>
+          ) : null}
           <span className="text-caption text-fg-dim">{message.at}</span>
         </div>
         <p className="m-0 text-body-sm leading-[1.45] text-fg">
@@ -66,7 +75,7 @@ function CommentItem({ message, reply = false, onReply, className, ...props }: C
             onClick={onReply}
             className="w-fit cursor-pointer border-0 bg-transparent p-0 text-body-sm font-medium text-accent hover:underline focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent"
           >
-            Reply
+            <Trans>Reply</Trans>
           </button>
         ) : null}
       </div>
@@ -115,6 +124,8 @@ function MentionPicker({
   className,
   ...props
 }: MentionPickerProps) {
+  const { t } = useLingui();
+
   const frame = cn(
     "grid gap-0.5 rounded-zone border border-line-strong bg-chrome p-1 shadow-pop",
     className,
@@ -123,7 +134,7 @@ function MentionPicker({
     return (
       <div data-slot="mention-picker" role="status" className={frame} {...props}>
         <span className="px-3 py-2 text-body-sm text-fg-dim">
-          Nobody called "{query}" in this project.
+          <Trans>Nobody called "{query}" in this project.</Trans>
         </span>
       </div>
     );
@@ -132,7 +143,7 @@ function MentionPicker({
     <div
       data-slot="mention-picker"
       role="listbox"
-      aria-label="Mention someone"
+      aria-label={t`Mention someone`}
       className={frame}
       {...props}
     >
@@ -190,16 +201,16 @@ type CommentComposerProps = Omit<React.ComponentProps<"div">, "onChange"> & {
 
 type PickerKey = "ArrowDown" | "ArrowUp" | "Enter" | "Tab" | "Escape";
 
-const pickerKeys: string[] = ["ArrowDown", "ArrowUp", "Enter", "Tab", "Escape"];
+const pickerKeys: string[] = lazyText(() => ["ArrowDown", "ArrowUp", t`Enter`, "Tab", t`Escape`]);
 
 function CommentComposer({
   value,
   onValueChange,
   onSend,
   label,
-  placeholder = "Write a comment. Type @ to mention someone",
+  placeholder = t`Write a comment. Type @ to mention someone`,
   hint,
-  sendLabel = "Send",
+  sendLabel = t`Send`,
   offReason,
   replyingTo,
   onCancelReply,
@@ -208,18 +219,22 @@ function CommentComposer({
   className,
   ...props
 }: CommentComposerProps) {
+  const { t } = useLingui();
+
   const empty = value.trim() === "";
   return (
     <div data-slot="comment-composer" className={cn("grid gap-2", className)} {...props}>
       {replyingTo ? (
         <div className="flex items-center justify-between text-caption text-fg-dim">
-          <span>Replying to {replyingTo}</span>
+          <span>
+            <Trans>Replying to {replyingTo}</Trans>
+          </span>
           <button
             type="button"
             onClick={onCancelReply}
             className="cursor-pointer border-0 bg-transparent p-0 text-caption font-medium text-accent"
           >
-            Cancel
+            <Trans>Cancel</Trans>
           </button>
         </div>
       ) : null}
@@ -228,7 +243,7 @@ function CommentComposer({
           aria-label={label}
           rows={2}
           value={value}
-          placeholder={replyingTo ? "Write a reply" : placeholder}
+          placeholder={replyingTo ? t`Write a reply` : placeholder}
           onChange={(event) => onValueChange(event.target.value)}
           onKeyDown={(event) => {
             if (picker && pickerKeys.includes(event.key)) {
@@ -251,10 +266,10 @@ function CommentComposer({
           variant="primary"
           size="sm"
           disabled={empty || Boolean(offReason)}
-          title={offReason ?? (empty ? "Write a comment first" : undefined)}
+          title={offReason ?? (empty ? t`Write a comment first` : undefined)}
           onClick={onSend}
         >
-          {replyingTo ? "Reply" : sendLabel} <Keycap keys="↵" size="sm" />
+          {replyingTo ? t`Reply` : sendLabel} <Keycap keys="↵" size="sm" />
         </Button>
       </div>
     </div>

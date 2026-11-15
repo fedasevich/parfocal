@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   type AiModel,
   type AiModelRun,
@@ -79,6 +80,8 @@ import {
 const right = "text-right";
 
 export function ProjectsSection({ notify }: { notify: Notify }) {
+  const { t } = useLingui();
+
   const [view, setView] = useState<ProjectView>("active");
   const projects = okData(useListProjects({ archived: view === "archived" }).data) ?? [];
   const queryClient = useQueryClient();
@@ -107,16 +110,16 @@ export function ProjectsSection({ notify }: { notify: Notify }) {
   return (
     <>
       <Zone
-        title="Projects"
+        title={t`Projects`}
         end={
           <span className="flex items-center gap-3">
             <SegmentedControl
-              aria-label="Which projects to list"
+              aria-label={t`Which projects to list`}
               value={view}
               onValueChange={(value) => setView(value === "archived" ? "archived" : "active")}
               options={[
-                { value: "active", label: "Active" },
-                { value: "archived", label: "Archived" },
+                { value: "active", label: t`Active` },
+                { value: "archived", label: t`Archived` },
               ]}
             />
             <span className="text-body-sm text-fg-dim">
@@ -128,12 +131,24 @@ export function ProjectsSection({ notify }: { notify: Notify }) {
         <Table className={tableClass}>
           <TableHeader>
             <TableRow>
-              <TableHead>Project</TableHead>
-              <TableHead>Privacy</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Owner</TableHead>
-              <TableHead>Members</TableHead>
-              <TableHead className={right}>Space</TableHead>
+              <TableHead>
+                <Trans>Project</Trans>
+              </TableHead>
+              <TableHead>
+                <Trans>Privacy</Trans>
+              </TableHead>
+              <TableHead>
+                <Trans>Status</Trans>
+              </TableHead>
+              <TableHead>
+                <Trans>Owner</Trans>
+              </TableHead>
+              <TableHead>
+                <Trans>Members</Trans>
+              </TableHead>
+              <TableHead className={right}>
+                <Trans>Space</Trans>
+              </TableHead>
               <TableHead />
             </TableRow>
           </TableHeader>
@@ -159,7 +174,7 @@ export function ProjectsSection({ notify }: { notify: Notify }) {
                   </TableCell>
                   <TableCell>
                     <StatusTag tone={project.privacy_mode === "clinical" ? "warn" : "accent"}>
-                      {project.privacy_mode === "clinical" ? "Clinical" : "De-identified"}
+                      {project.privacy_mode === "clinical" ? t`Clinical` : t`De-identified`}
                     </StatusTag>
                   </TableCell>
                   <TableCell>
@@ -182,14 +197,14 @@ export function ProjectsSection({ notify }: { notify: Notify }) {
                   <TableCell className={cn(right, "font-mono")}>
                     {space
                       ? space.cap_gb
-                        ? `${space.gb} of ${space.cap_gb} GB`
-                        : `${space.gb} GB`
+                        ? t`${space.gb} of ${space.cap_gb} GB`
+                        : t`${space.gb} GB`
                       : ""}
                   </TableCell>
                   <TableCell>
                     <span className="flex items-center justify-end gap-1.5">
                       <Button size="sm" onClick={() => void goTo(destinations.project(project.id))}>
-                        Open
+                        <Trans>Open</Trans>
                       </Button>
                       <Button
                         size="sm"
@@ -210,24 +225,33 @@ export function ProjectsSection({ notify }: { notify: Notify }) {
         </Table>
       </Zone>
       <DeletedProjectsZone notify={notify} />
-      <Zone title="New projects">
+      <Zone title={t`New projects`}>
         <div className="grid grid-cols-[180px_minmax(0,1fr)] items-start gap-x-4 gap-y-4 text-body-sm">
-          <span className="pt-1 text-fg-dim">Privacy</span>
+          <span className="pt-1 text-fg-dim">
+            <Trans>Privacy</Trans>
+          </span>
           <div className="grid justify-items-start gap-1.5">
             {lab ? (
-              <PrivacyChoice lab={lab} notify={notify} label="Privacy of new projects" />
+              <PrivacyChoice lab={lab} notify={notify} label={t`Privacy of new projects`} />
             ) : null}
             <small className="text-caption text-fg-dim">
-              Owners can switch a project later. Clinical projects need a security contact.
+              <Trans>
+                Owners can switch a project later. Clinical projects need a security contact.
+              </Trans>
             </small>
           </div>
-          <span className="text-fg-dim">Class lists</span>
+          <span className="text-fg-dim">
+            <Trans>Class lists</Trans>
+          </span>
           <div className="grid justify-items-start gap-1.5">
             {lab ? (
-              <ClassListChoice lab={lab} notify={notify} label="Class list of new projects" />
+              <ClassListChoice lab={lab} notify={notify} label={t`Class list of new projects`} />
             ) : null}
             <small className="text-caption text-fg-dim">
-              Built-in lists: {classListNames(taxonomies)}. Each project can change its own classes.
+              <Trans>
+                Built-in lists: {classListNames(taxonomies)}. Each project can change its own
+                classes.
+              </Trans>
             </small>
           </div>
         </div>
@@ -240,6 +264,8 @@ const modelLists = (key: readonly unknown[]) =>
   typeof key[0] === "string" && key[0].endsWith("/models");
 
 function useModelVisibility(notify: Notify) {
+  const { t } = useLingui();
+
   const queryClient = useQueryClient();
   const hide = useHideModel();
   const show = useShowModel();
@@ -254,7 +280,7 @@ function useModelVisibility(notify: Notify) {
           void queryClient.invalidateQueries({ predicate: (query) => modelLists(query.queryKey) }),
         onError: (error) => {
           setShown((current) => ({ ...current, [model.id]: !next }));
-          notify(error instanceof Error ? error.message : "That did not save. Try again.");
+          notify(error instanceof Error ? error.message : t`That did not save. Try again.`);
         },
       },
     );
@@ -263,8 +289,8 @@ function useModelVisibility(notify: Notify) {
     apply(model, next);
     notify(
       next
-        ? `${model.name} shows in every model list again.`
-        : `${model.name} is hidden from every model list. Result sets it made stay.`,
+        ? t`${model.name} shows in every model list again.`
+        : t`${model.name} is hidden from every model list. Result sets it made stay.`,
       () => apply(model, !next),
     );
   };
@@ -274,6 +300,8 @@ function useModelVisibility(notify: Notify) {
 const cancelDelayMs = 6000;
 
 function useRunCancellation(notify: Notify) {
+  const { t } = useLingui();
+
   const queryClient = useQueryClient();
   const cancel = useCancelModelRun();
   const [cancelled, setCancelled] = useState<string[]>([]);
@@ -287,7 +315,7 @@ function useRunCancellation(notify: Notify) {
           void queryClient.invalidateQueries({ predicate: (query) => modelLists(query.queryKey) }),
         onError: (error) => {
           setCancelled((current) => current.filter((id) => id !== run.id));
-          notify(error instanceof Error ? error.message : "That did not cancel. Try again.");
+          notify(error instanceof Error ? error.message : t`That did not cancel. Try again.`);
         },
       },
     );
@@ -307,7 +335,7 @@ function useRunCancellation(notify: Notify) {
     setCancelled((current) => [...current, run.id]);
     const timer = window.setTimeout(() => commit(run), cancelDelayMs);
     pending.current.set(run.id, { run, timer });
-    notify(`${run.model} run cancelled. Slides already done keep their results.`, () => {
+    notify(t`${run.model} run cancelled. Slides already done keep their results.`, () => {
       window.clearTimeout(timer);
       pending.current.delete(run.id);
       setCancelled((current) => current.filter((id) => id !== run.id));
@@ -317,6 +345,8 @@ function useRunCancellation(notify: Notify) {
 }
 
 export function ModelsSection({ notify }: { notify: Notify }) {
+  const { t } = useLingui();
+
   const data = useListAiModels().data?.data;
   const personOf = usePeople();
   const visibility = useModelVisibility(notify);
@@ -328,17 +358,27 @@ export function ModelsSection({ notify }: { notify: Notify }) {
   return (
     <>
       <Zone
-        title="Parfocal models"
-        sub="Always ready and kept up to date by Parfocal. They run on the Parfocal GPU in Prague, so slides stay in the EU. Hide one to take it out of every model list."
+        title={t`Parfocal models`}
+        sub={t`Always ready and kept up to date by Parfocal. They run on the Parfocal GPU in Prague, so slides stay in the EU. Hide one to take it out of every model list.`}
       >
         <Table className={tableClass}>
           <TableHeader>
             <TableRow>
-              <TableHead>Model</TableHead>
-              <TableHead>Makes</TableHead>
-              <TableHead>Who can run it</TableHead>
-              <TableHead className={right}>Result sets</TableHead>
-              <TableHead className={right}>Shown</TableHead>
+              <TableHead>
+                <Trans>Model</Trans>
+              </TableHead>
+              <TableHead>
+                <Trans>Makes</Trans>
+              </TableHead>
+              <TableHead>
+                <Trans>Who can run it</Trans>
+              </TableHead>
+              <TableHead className={right}>
+                <Trans>Result sets</Trans>
+              </TableHead>
+              <TableHead className={right}>
+                <Trans>Shown</Trans>
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -367,7 +407,7 @@ export function ModelsSection({ notify }: { notify: Notify }) {
                   <TableCell className={cn(right, "font-mono")}>{model.result_sets}</TableCell>
                   <TableCell className={right}>
                     <Switch
-                      aria-label={`Show ${model.name}`}
+                      aria-label={t`Show ${model.name}`}
                       checked={on}
                       onCheckedChange={(next) => visibility.change(model, next)}
                     />
@@ -379,17 +419,27 @@ export function ModelsSection({ notify }: { notify: Notify }) {
         </Table>
       </Zone>
       <Zone
-        title="Your lab's models"
-        sub="Models your lab runs on its own server. They show in every model list next to Parfocal's."
+        title={t`Your lab's models`}
+        sub={t`Models your lab runs on its own server. They show in every model list next to Parfocal's.`}
       >
         <Table className={tableClass}>
           <TableHeader>
             <TableRow>
-              <TableHead>Model</TableHead>
-              <TableHead>Runs on</TableHead>
-              <TableHead>Who can run it</TableHead>
-              <TableHead className={right}>Result sets</TableHead>
-              <TableHead>Status</TableHead>
+              <TableHead>
+                <Trans>Model</Trans>
+              </TableHead>
+              <TableHead>
+                <Trans>Runs on</Trans>
+              </TableHead>
+              <TableHead>
+                <Trans>Who can run it</Trans>
+              </TableHead>
+              <TableHead className={right}>
+                <Trans>Result sets</Trans>
+              </TableHead>
+              <TableHead>
+                <Trans>Status</Trans>
+              </TableHead>
               <TableHead />
             </TableRow>
           </TableHeader>
@@ -417,14 +467,14 @@ export function ModelsSection({ notify }: { notify: Notify }) {
                         size="sm"
                         onClick={() =>
                           notify(
-                            `Sent one sample tile: answered in ${model.latency_ms ?? 0} ms, 38 cells (mock)`,
+                            t`Sent one sample tile: answered in ${model.latency_ms ?? 0} ms, 38 cells (mock)`,
                           )
                         }
                       >
-                        Test
+                        <Trans>Test</Trans>
                       </Button>
                     ) : null}
-                    <MoreButton label={`More for ${model.name}`} />
+                    <MoreButton label={t`More for ${model.name}`} />
                   </span>
                 </TableCell>
               </TableRow>
@@ -432,10 +482,12 @@ export function ModelsSection({ notify }: { notify: Notify }) {
           </TableBody>
         </Table>
       </Zone>
-      <Zone title="Running now">
+      <Zone title={t`Running now`}>
         <div>
           {running.length === 0 ? (
-            <span className="text-body-sm text-fg-dim">Nothing is running.</span>
+            <span className="text-body-sm text-fg-dim">
+              <Trans>Nothing is running.</Trans>
+            </span>
           ) : (
             running.map((run) => {
               const by = personOf(run.started_by);
@@ -447,20 +499,20 @@ export function ModelsSection({ notify }: { notify: Notify }) {
                   <NameCell
                     lead={<Icon name="smart" />}
                     title={run.model}
-                    sub={`${run.project.code} · ${run.slides} slides`}
+                    sub={t`${run.project.code} · ${run.slides} slides`}
                   />
                   {by ? <Person person={by} size={20} /> : <span />}
                   <ProgressBar
                     value={percent(run.slides_done, run.slides)}
-                    label={`${run.slides_done} of ${run.slides} slides`}
+                    label={t`${run.slides_done} of ${run.slides} slides`}
                   />
                   <Button
                     size="sm"
                     variant="ghost"
-                    aria-label={`Cancel ${run.model} run`}
+                    aria-label={t`Cancel ${run.model} run`}
                     onClick={() => start(run)}
                   >
-                    Cancel
+                    <Trans>Cancel</Trans>
                   </Button>
                 </div>
               );
@@ -469,38 +521,48 @@ export function ModelsSection({ notify }: { notify: Notify }) {
         </div>
       </Zone>
       <InfoLine>
-        A model that runs somewhere else can still bring its results in as files, like Lab model
-        v3.0.
+        <Trans>
+          A model that runs somewhere else can still bring its results in as files, like Lab model
+          v3.0.
+        </Trans>
       </InfoLine>
     </>
   );
 }
 
 export function ApiSection({ notify }: { notify: Notify }) {
+  const { t } = useLingui();
+
   const accounts = okData(useListServiceAccounts().data) ?? [];
   const hooks = useListWebhooks().data?.data ?? [];
   const [revoked, setRevoked] = useState<string[]>([]);
   return (
     <>
       <Zone
-        title="Tokens"
+        title={t`Tokens`}
         end={
           <Button
             size="sm"
             onClick={() =>
-              notify("New token: pick a project and what it can do. Shown once (mock)")
+              notify(t`New token: pick a project and what it can do. Shown once (mock)`)
             }
           >
-            New token
+            <Trans>New token</Trans>
           </Button>
         }
       >
         <Table className={tableClass}>
           <TableHeader>
             <TableRow>
-              <TableHead>Token</TableHead>
-              <TableHead>Can</TableHead>
-              <TableHead>Last used</TableHead>
+              <TableHead>
+                <Trans>Token</Trans>
+              </TableHead>
+              <TableHead>
+                <Trans>Can</Trans>
+              </TableHead>
+              <TableHead>
+                <Trans>Last used</Trans>
+              </TableHead>
               <TableHead />
             </TableRow>
           </TableHeader>
@@ -511,11 +573,14 @@ export function ApiSection({ notify }: { notify: Notify }) {
                 .map((token) => (
                   <TableRow key={token.id}>
                     <TableCell className="font-mono font-semibold">
-                      pf_live_…{token.id.slice(-4)}
+                      <Trans>
+                        pf_live_…
+                        {token.id.slice(-4)}
+                      </Trans>
                     </TableCell>
                     <TableCell>{account.name}</TableCell>
                     <TableCell>
-                      {token.last_used_at ? lastActive(token.last_used_at) : "Never"}
+                      {token.last_used_at ? lastActive(token.last_used_at) : t`Never`}
                     </TableCell>
                     <TableCell>
                       <span className="flex justify-end">
@@ -524,10 +589,10 @@ export function ApiSection({ notify }: { notify: Notify }) {
                           variant="ghost"
                           onClick={() => {
                             setRevoked([...revoked, token.id]);
-                            notify("Token revoked. Pipelines using it stop at once (mock)");
+                            notify(t`Token revoked. Pipelines using it stop at once (mock)`);
                           }}
                         >
-                          Revoke
+                          <Trans>Revoke</Trans>
                         </Button>
                       </span>
                     </TableCell>
@@ -538,26 +603,36 @@ export function ApiSection({ notify }: { notify: Notify }) {
         </Table>
       </Zone>
       <Zone
-        title="Webhooks"
+        title={t`Webhooks`}
         end={
           <Button
             size="sm"
             onClick={() =>
-              notify("Add a webhook: incoming for a project, or outgoing to your server (mock)")
+              notify(t`Add a webhook: incoming for a project, or outgoing to your server (mock)`)
             }
           >
-            Add webhook
+            <Trans>Add webhook</Trans>
           </Button>
         }
       >
         <Table className={tableClass}>
           <TableHeader>
             <TableRow>
-              <TableHead>Webhook</TableHead>
-              <TableHead>Direction</TableHead>
-              <TableHead>Events</TableHead>
-              <TableHead className={right}>Today</TableHead>
-              <TableHead>Status</TableHead>
+              <TableHead>
+                <Trans>Webhook</Trans>
+              </TableHead>
+              <TableHead>
+                <Trans>Direction</Trans>
+              </TableHead>
+              <TableHead>
+                <Trans>Events</Trans>
+              </TableHead>
+              <TableHead className={right}>
+                <Trans>Today</Trans>
+              </TableHead>
+              <TableHead>
+                <Trans>Status</Trans>
+              </TableHead>
               <TableHead />
             </TableRow>
           </TableHeader>
@@ -567,19 +642,23 @@ export function ApiSection({ notify }: { notify: Notify }) {
                 <TableCell>
                   <b>{hook.name}</b>
                 </TableCell>
-                <TableCell>{hook.direction === "incoming" ? "Incoming" : "Outgoing"}</TableCell>
+                <TableCell>{hook.direction === "incoming" ? t`Incoming` : t`Outgoing`}</TableCell>
                 <TableCell className="font-mono">{hook.events.join(", ")}</TableCell>
                 <TableCell className={cn(right, "font-mono")}>{hook.calls_today}</TableCell>
                 <TableCell>
                   {hook.rejected_today > 0 ? (
-                    <StatusTag tone="warn">{hook.rejected_today} rejected</StatusTag>
+                    <StatusTag tone="warn">
+                      <Trans>{hook.rejected_today} rejected</Trans>
+                    </StatusTag>
                   ) : (
-                    <StatusTag tone="ok">Answering</StatusTag>
+                    <StatusTag tone="ok">
+                      <Trans>Answering</Trans>
+                    </StatusTag>
                   )}
                 </TableCell>
                 <TableCell>
                   <span className="flex justify-end">
-                    <MoreButton label={`More for ${hook.name}`} />
+                    <MoreButton label={t`More for ${hook.name}`} />
                   </span>
                 </TableCell>
               </TableRow>
@@ -588,9 +667,11 @@ export function ApiSection({ notify }: { notify: Notify }) {
         </Table>
       </Zone>
       <InfoLine>
-        Pipelines post result files to a project's incoming webhook, signed with its token.
-        <TextLink onClick={() => notify("Opens the API reference in the docs (mock)")}>
-          API reference
+        <Trans>
+          Pipelines post result files to a project's incoming webhook, signed with its token.
+        </Trans>
+        <TextLink onClick={() => notify(t`Opens the API reference in the docs (mock)`)}>
+          <Trans>API reference</Trans>
         </TextLink>
       </InfoLine>
     </>
@@ -606,9 +687,11 @@ function IdleLockRow({ notify }: { notify: Notify }) {
       className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 py-(--density-list-row-y) text-body-sm first:pt-0.5 [&+&]:border-t [&+&]:border-line"
     >
       <span>
-        <b className="block font-semibold text-fg">Lock after inactivity</b>
+        <b className="block font-semibold text-fg">
+          <Trans>Lock after inactivity</Trans>
+        </b>
         <small className="mt-0.5 block text-body-sm leading-[1.45] text-fg-dim">
-          Slides and names hide until people sign in again
+          <Trans>Slides and names hide until people sign in again</Trans>
         </small>
       </span>
       <IdleLockChoice minutes={policy.idle_lock_minutes} save={save} />
@@ -617,6 +700,8 @@ function IdleLockRow({ notify }: { notify: Notify }) {
 }
 
 export function SecuritySection({ notify }: { notify: Notify }) {
+  const { t } = useLingui();
+
   const queryClient = useQueryClient();
   const settings = useGetSecuritySettings().data?.data;
   const lab = okData(useGetMySettingLayers().data)?.lab;
@@ -630,11 +715,11 @@ export function SecuritySection({ notify }: { notify: Notify }) {
           void queryClient.invalidateQueries({ queryKey: getGetMySettingLayersQueryKey() });
           notify(
             on
-              ? "Saved. Sign-in does not ask for a second factor yet."
-              : "Saved. Two factors are no longer required for everyone.",
+              ? t`Saved. Sign-in does not ask for a second factor yet.`
+              : t`Saved. Two factors are no longer required for everyone.`,
           );
         },
-        onError: () => notify("The two factor setting did not save. Try again."),
+        onError: () => notify(t`The two factor setting did not save. Try again.`),
       },
     );
   const row = (item: SecuritySetting) => (
@@ -651,17 +736,17 @@ export function SecuritySection({ notify }: { notify: Notify }) {
   );
   return (
     <div className="grid grid-cols-2 gap-(--space-zone)">
-      <Zone title="Sign-in">
+      <Zone title={t`Sign-in`}>
         <div>{signInRows(settings?.sign_in, lab).map(row)}</div>
         {settings ? (
           <ProgressBar
             value={percent(settings.two_factor.people, settings.two_factor.of)}
-            label="People with two factors"
-            valueText={`${settings.two_factor.people} of ${settings.two_factor.of}`}
+            label={t`People with two factors`}
+            valueText={t`${settings.two_factor.people} of ${settings.two_factor.of}`}
           />
         ) : null}
       </Zone>
-      <Zone title="Sessions and data">
+      <Zone title={t`Sessions and data`}>
         <div>
           <IdleLockRow notify={notify} />
         </div>

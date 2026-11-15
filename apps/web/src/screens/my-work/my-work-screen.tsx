@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   useGetMe,
   useGetMyHome,
@@ -40,6 +41,8 @@ export function MyWorkScreen({
   state: MyWorkState;
   change: (next: Change) => void;
 }) {
+  const { t } = useLingui();
+
   const goTo = useGoTo();
   const tasks = okData(useListMyReviewTasks().data) ?? [];
   const adjudications = okData(useListMyAdjudications().data) ?? [];
@@ -112,8 +115,8 @@ export function MyWorkScreen({
   const toDecide = adjudications.reduce((sum, item) => sum + item.objects.length - item.decided, 0);
   const subtitle =
     state.tab === "assigned"
-      ? `${today} · ${plural(assigned.length, "task")} you assigned${waiting ? ` · ${waiting} waiting for you to resolve` : ""}`
-      : `${today} · ${plural(active.length, "task")} to review${toDecide ? ` · ${plural(toDecide, "object")} to decide` : ""}`;
+      ? t`${today} · ${plural(assigned.length, "task")} you assigned${waiting ? t` · ${waiting} waiting for you to resolve` : ""}`
+      : t`${today} · ${plural(active.length, "task")} to review${toDecide ? t` · ${plural(toDecide, "object")} to decide` : ""}`;
   const tabLabel = (label: string, count: number) => (
     <>
       {label}
@@ -123,7 +126,9 @@ export function MyWorkScreen({
   return (
     <main className="flex min-h-0 flex-col gap-(--density-flow-gap) px-8 pt-5.5 pb-4.5 pl-7">
       <header>
-        <h1 className="m-0 text-page-title font-semibold tracking-[-0.01em] text-fg">My work</h1>
+        <h1 className="m-0 text-page-title font-semibold tracking-[-0.01em] text-fg">
+          <Trans>My work</Trans>
+        </h1>
         <p className="mt-0.75 mb-0 text-body-sm leading-[1.45] text-fg-dim">{subtitle}</p>
       </header>
       <Tabs
@@ -137,9 +142,9 @@ export function MyWorkScreen({
         }
       >
         <TabsList variant="page">
-          <TabsTrigger value="review">{tabLabel("To review", toReview)}</TabsTrigger>
-          <TabsTrigger value="assigned">{tabLabel("Assigned by me", assigned.length)}</TabsTrigger>
-          <TabsTrigger value="all">{tabLabel("All slides", slides.length)}</TabsTrigger>
+          <TabsTrigger value="review">{tabLabel(t`To review`, toReview)}</TabsTrigger>
+          <TabsTrigger value="assigned">{tabLabel(t`Assigned by me`, assigned.length)}</TabsTrigger>
+          <TabsTrigger value="all">{tabLabel(t`All slides`, slides.length)}</TabsTrigger>
         </TabsList>
       </Tabs>
       <div className="flex min-h-0 flex-col gap-3">

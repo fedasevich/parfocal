@@ -1,4 +1,5 @@
-import { useLingui } from "@lingui/react/macro";
+import { t } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   getGetImportProblemsQueryOptions,
   getGetUploadStatusQueryKey,
@@ -21,6 +22,7 @@ import {
   SelectValue,
 } from "@parfocal/ui/components/select";
 import { Zone } from "@parfocal/ui/components/zone";
+import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { DoneRow, ProblemZone } from "./check-step.tsx";
@@ -68,10 +70,12 @@ function ClassSelect({
   label: string;
   onChange: (id: string | null) => void;
 }) {
+  const { t } = useLingui();
+
   return (
     <Select value={value ?? ""} onValueChange={(next) => onChange(next === "" ? null : next)}>
       <SelectTrigger size="sm" aria-label={label} className="w-full max-w-64">
-        <SelectValue placeholder="Choose a class" />
+        <SelectValue placeholder={t`Choose a class`} />
       </SelectTrigger>
       <SelectContent>
         {classes.map((item) => (
@@ -89,14 +93,14 @@ function ClassSelect({
 
 const fixedText = (problem: ImportProblem, choices: Choices, classes: readonly ProjectClass[]) => {
   const className = (id: string | null) => classes.find((item) => item.id === id)?.name ?? "";
-  if (problem.code === known.noClass) return `Put in ${className(choices.classId)}`;
+  if (problem.code === known.noClass) return t`Put in ${className(choices.classId)}`;
   if (problem.code === known.unknownClasses)
     return `${plural(problem.names.length, "class")} mapped`;
   if (problem.code === known.noScore)
-    return choices.score === ScoreDefault.one ? "Counted as 1.0" : "Kept with no score";
-  if (problem.code === known.outside) return "Left out of the import";
-  if (problem.code === known.scale) return "Placed at the guessed level";
-  return "Left out of the import";
+    return choices.score === ScoreDefault.one ? t`Counted as 1.0` : t`Kept with no score`;
+  if (problem.code === known.outside) return t`Left out of the import`;
+  if (problem.code === known.scale) return t`Placed at the guessed level`;
+  return t`Left out of the import`;
 };
 
 const isFixed = (problem: ImportProblem, choices: Choices) => {
@@ -106,12 +110,12 @@ const isFixed = (problem: ImportProblem, choices: Choices) => {
   return choices.fixed[problem.code] === true;
 };
 
-const fixLabel: Record<string, string> = {
-  [known.unreadable]: "Skip them",
-  [known.noScore]: "Use this choice",
-  [known.outside]: "Leave them out",
-  [known.scale]: "Use this guess",
-};
+const fixLabel: Record<string, string> = lazyText(() => ({
+  [known.unreadable]: t`Skip them`,
+  [known.noScore]: t`Use this choice`,
+  [known.outside]: t`Leave them out`,
+  [known.scale]: t`Use this guess`,
+}));
 
 function GuessPicker({
   problem,
@@ -166,6 +170,8 @@ function ProblemFix({
   classes: readonly ProjectClass[];
   change: (next: Partial<Choices>) => void;
 }) {
+  const { t } = useLingui();
+
   if (isFixed(problem, choices)) {
     return (
       <DoneRow
@@ -198,7 +204,7 @@ function ProblemFix({
             <ClassSelect
               classes={classes}
               value={choices.mappings[source] ?? null}
-              label={`Class for ${source}`}
+              label={t`Class for ${source}`}
               onChange={(id) => {
                 const mappings = { ...choices.mappings };
                 if (id === null) delete mappings[source];
@@ -226,45 +232,47 @@ function ProblemFix({
       <ClassSelect
         classes={classes}
         value={choices.classId}
-        label="Class for objects with none"
+        label={t`Class for objects with none`}
         onChange={(id) => change({ classId: id })}
       />
     ) : problem.code === known.noScore ? (
       <SegmentedControl
-        aria-label="Objects with no score"
+        aria-label={t`Objects with no score`}
         value={choices.score}
         onValueChange={(value) => change({ score: value as ScoreDefault })}
         options={[
-          { value: ScoreDefault.none, label: "Keep with no score" },
-          { value: ScoreDefault.one, label: "Count as 1.0" },
+          { value: ScoreDefault.none, label: t`Keep with no score` },
+          { value: ScoreDefault.one, label: t`Count as 1.0` },
         ]}
       />
     ) : problem.code === known.scale && problem.guesses.length > 1 ? (
       <GuessPicker problem={problem} choices={choices} change={change} />
     ) : problem.code === known.scale && guess !== null ? (
       <span className="text-body-sm text-fg-dim">
-        Guess: level {guess.level ?? "unknown"}, scaled by {guess.downsample}
+        <Trans>
+          Guess: level {guess.level ?? t`unknown`}, scaled by {guess.downsample}
+        </Trans>
       </span>
     ) : null;
   const selectsOnly = problem.code === known.noClass || problem.code === known.unknownClasses;
   return (
     <ProblemZone
       icon={problem.code === known.unreadable ? "x-circle" : "warn"}
-      tag={problem.count > 0 ? plural(problem.count, "object") : "To check"}
+      tag={problem.count > 0 ? plural(problem.count, "object") : t`To check`}
       tone={problem.code === known.unreadable ? "bad" : "warn"}
       title={problem.message}
       file={name}
       text={
         selectsOnly
-          ? "Choose a class and the file imports with it."
-          : "Confirm what to do and the file imports with your choice."
+          ? t`Choose a class and the file imports with it.`
+          : t`Confirm what to do and the file imports with your choice.`
       }
       evidence={evidence}
       extra={extra}
       actions={
         <>
           {selectsOnly ? null : (
-            <Button onClick={confirm}>{fixLabel[problem.code] ?? "Confirm"}</Button>
+            <Button onClick={confirm}>{fixLabel[problem.code] ?? t`Confirm`}</Button>
           )}
           {problem.code === known.unreadable ? (
             <Button
@@ -272,7 +280,7 @@ function ProblemFix({
               render={<a href={`/api/uploads/${uploadId}/problems/report`} download />}
             >
               <Icon name="download" />
-              Error report
+              <Trans>Error report</Trans>
             </Button>
           ) : null}
         </>
@@ -332,18 +340,18 @@ function ResultChoices({ upload, projectId }: { upload: ResultUpload; projectId:
             disabled={open.length > 0 || choose.isPending}
             onClick={send}
           >
-            Import {upload.name}
+            <Trans>Import {upload.name}</Trans>
           </Button>
           <Button
             variant="ghost"
             disabled={leave.isPending}
             onClick={() => leave.mutate({ uploadId: upload.uploadId }, { onSuccess: refresh })}
           >
-            Leave it out
+            <Trans>Leave it out</Trans>
           </Button>
           {open.length > 0 ? (
             <span className="text-body-sm text-fg-dim">
-              {plural(open.length, "problem")} left in this file
+              <Trans>{plural(open.length, "problem")} left in this file</Trans>
             </span>
           ) : null}
         </div>
@@ -359,6 +367,8 @@ export function ResultProblems({
   uploads: readonly ResultUpload[];
   projectId: string;
 }) {
+  const { t } = useLingui();
+
   const open = openResultProblems(uploads);
   const waiting = uploads.filter(waitsForChoices);
   const heatmaps = uploads.filter(notStored);
@@ -366,11 +376,11 @@ export function ResultProblems({
   return (
     <>
       <Zone
-        title="Result files"
+        title={t`Result files`}
         sub={
           open > 0
-            ? `${plural(open, "result file")} need${open === 1 ? "s" : ""} you. A file with a problem waits, the rest import.`
-            : "Nothing needs you."
+            ? t`${plural(open, "result file")} need${open === 1 ? "s" : ""} you. A file with a problem waits, the rest import.`
+            : t`Nothing needs you.`
         }
         data-testid="result-problems-summary"
       />
@@ -381,13 +391,13 @@ export function ResultProblems({
         <ProblemZone
           key={upload.uploadId}
           icon="layers"
-          tag="Heatmap not kept"
+          tag={t`Heatmap not kept`}
           tone="warn"
-          title="Parfocal cannot keep heatmaps yet"
+          title={t`Parfocal cannot keep heatmaps yet`}
           file={upload.name}
           text={
             upload.message ??
-            "Parfocal checked this heatmap against its slide but cannot keep heatmaps yet."
+            t`Parfocal checked this heatmap against its slide but cannot keep heatmaps yet.`
           }
           actions={null}
         />

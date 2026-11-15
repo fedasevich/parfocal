@@ -1,20 +1,26 @@
+import type { MessageDescriptor } from "@lingui/core";
+import { msg, t } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import { Icon } from "@parfocal/ui/components/icon";
+import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
 
 type IngestFailureClass = "transient" | "permanent";
 
-const classCopy: Record<IngestFailureClass, { title: string; next: string }> = {
-  transient: {
-    title: "did not finish",
-    next: "This is usually temporary. Sending the file again often works.",
-  },
-  permanent: {
-    title: "was refused",
-    next: "Sending this file again will not change the result. If it should work, tell support.",
-  },
-};
+const classCopy: Record<IngestFailureClass, { title: MessageDescriptor; next: string }> = lazyText(
+  () => ({
+    transient: {
+      title: msg`did not finish`,
+      next: t`This is usually temporary. Sending the file again often works.`,
+    },
+    permanent: {
+      title: msg`was refused`,
+      next: t`Sending this file again will not change the result. If it should work, tell support.`,
+    },
+  }),
+);
 
 type IngestFailureProps = Omit<React.ComponentProps<"div">, "title"> & {
   fileName: string;
@@ -33,6 +39,8 @@ function IngestFailure({
   className,
   ...props
 }: IngestFailureProps) {
+  const { t } = useLingui();
+
   const copy = classCopy[failureClass];
   return (
     <div
@@ -51,13 +59,13 @@ function IngestFailure({
       <Icon name="warn" className="mt-0.5" />
       <div className="grid min-w-0 flex-1 gap-1">
         <p className="m-0 font-semibold">
-          <span className="font-mono font-medium">{fileName}</span> {copy.title}
+          <span className="font-mono font-medium">{fileName}</span> {t(copy.title)}
         </p>
         <p className="m-0 leading-[1.45]">{message}</p>
         <p className="m-0 leading-[1.45] text-fg-dim">{copy.next}</p>
         {failureClass === "transient" && onRetry ? (
           <Button size="sm" className="mt-1 w-fit" onClick={onRetry}>
-            Try again
+            <Trans>Try again</Trans>
           </Button>
         ) : null}
         {failureClass === "permanent" && supportHref ? (
@@ -65,7 +73,7 @@ function IngestFailure({
             href={supportHref}
             className="mt-1 w-fit font-semibold text-accent hover:underline focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent"
           >
-            Contact support
+            <Trans>Contact support</Trans>
           </a>
         ) : null}
       </div>

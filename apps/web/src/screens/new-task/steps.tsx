@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   annotatePresets,
   BlindFirstSwitch,
@@ -28,6 +30,7 @@ import { StatusTag } from "@parfocal/ui/components/tag";
 import { Textarea } from "@parfocal/ui/components/textarea";
 import { TokenField, type TokenItem } from "@parfocal/ui/components/token-field";
 import { Zone } from "@parfocal/ui/components/zone";
+import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import { cn } from "@parfocal/ui/lib/utils";
 import { type ReactNode, useState } from "react";
 import { LazySavedTemplatePdf } from "../evaluation/pdf-overlay-lazy.tsx";
@@ -102,7 +105,7 @@ export const styleOf: Record<DecisionKindKey, DecisionStyle> = {
 const setColours = { cam: "var(--c-tumor)", sam: "#a3e635", rev: "#38bdf8" } as const;
 
 const rsShort = (data: TaskData, id: string) =>
-  data.resultSets.find((set) => set.id === id)?.short ?? "this result set";
+  data.resultSets.find((set) => set.id === id)?.short ?? t`this result set`;
 
 function TextLink({ children, onClick }: { children: ReactNode; onClick?: () => void }) {
   return (
@@ -117,11 +120,13 @@ function TextLink({ children, onClick }: { children: ReactNode; onClick?: () => 
 }
 
 export function KindStep({ draft, update }: StepProps) {
+  const { t } = useLingui();
+
   return (
     <>
-      <Zone title="Kind">
+      <Zone title={t`Kind`}>
         <ChoiceCards
-          legend="What the experts do"
+          legend={t`What the experts do`}
           value={draft.kind}
           onValueChange={(kind) =>
             update((current) => ({ ...current, kind: kind as Draft["kind"] }))
@@ -129,21 +134,21 @@ export function KindStep({ draft, update }: StepProps) {
           choices={[
             {
               value: "review",
-              title: "Review AI results",
-              text: "Reviewers decide whether the AI result is right, without drawing.",
+              title: t`Review AI results`,
+              text: t`Reviewers decide whether the AI result is right, without drawing.`,
             },
             {
               value: "annotate",
-              title: "Annotate",
-              text: "Experts draw cells and fix what the AI found. The output is training data.",
+              title: t`Annotate`,
+              text: t`Experts draw cells and fix what the AI found. The output is training data.`,
             },
           ]}
         />
       </Zone>
       {isAnnotate(draft) ? (
         <Zone
-          title="Starting point"
-          sub="A suggestion only. It fills in the next steps, and you can change every setting there."
+          title={t`Starting point`}
+          sub={t`A suggestion only. It fills in the next steps, and you can change every setting there.`}
         >
           <PresetPicker
             value={draft.preset}
@@ -163,6 +168,8 @@ export function KindStep({ draft, update }: StepProps) {
 }
 
 export function SlidesStep({ draft, data, update, errors, onTemplate, openModal }: StepProps) {
+  const { t } = useLingui();
+
   const [previewing, setPreviewing] = useState(false);
   const sum = summary(draft, data);
   const all = pickedSlides(draft, data);
@@ -181,7 +188,7 @@ export function SlidesStep({ draft, data, update, errors, onTemplate, openModal 
   return (
     <>
       {annotate ? null : (
-        <Zone title="Study template">
+        <Zone title={t`Study template`}>
           <div className="grid gap-1.5">
             <div className="flex items-center gap-4">
               <Select
@@ -193,7 +200,7 @@ export function SlidesStep({ draft, data, update, errors, onTemplate, openModal 
               >
                 <SelectTrigger
                   id={fieldId("tpl")}
-                  aria-label="Study template"
+                  aria-label={t`Study template`}
                   aria-invalid={errors.get("tpl") ? true : undefined}
                   className="h-9.5 w-102 font-semibold"
                 >
@@ -226,7 +233,9 @@ export function SlidesStep({ draft, data, update, errors, onTemplate, openModal 
                   ))}
                 </SelectContent>
               </Select>
-              <TextLink onClick={() => setPreviewing(true)}>Preview the report</TextLink>
+              <TextLink onClick={() => setPreviewing(true)}>
+                <Trans>Preview the report</Trans>
+              </TextLink>
               {previewing && template ? (
                 <LazySavedTemplatePdf
                   templateId={template.id}
@@ -236,13 +245,13 @@ export function SlidesStep({ draft, data, update, errors, onTemplate, openModal 
             </div>
             <FieldNote
               error={errors.get("tpl")}
-              help="It fills in what to check, how it runs and the display defaults. You can still change each of them."
+              help={t`It fills in what to check, how it runs and the display defaults. You can still change each of them.`}
             />
           </div>
         </Zone>
       )}
       <Zone
-        title="Slides"
+        title={t`Slides`}
         sub={annotate ? annotateSlideLine(sum, withResult, short) : slideLine(sum, short)}
       >
         <div id={fieldId("groups")} tabIndex={-1} className="grid gap-0.5 outline-none">
@@ -277,14 +286,14 @@ export function SlidesStep({ draft, data, update, errors, onTemplate, openModal 
                   <SlideThumb />
                   <RowText
                     title={slide.name}
-                    sub={`${slide.caseLabel ? `Case ${slide.caseLabel}` : "Loose"} · added`}
+                    sub={t`${slide.caseLabel ? `Case ${slide.caseLabel}` : t`Loose`} · added`}
                   />
                 </span>
                 <SetTags data={data} ids={slide.sets} />
                 <Button
                   variant="ghost"
                   size="icon-sm"
-                  aria-label={`Remove ${slide.name}`}
+                  aria-label={t`Remove ${slide.name}`}
                   onClick={() =>
                     update((current) => ({
                       ...current,
@@ -302,17 +311,17 @@ export function SlidesStep({ draft, data, update, errors, onTemplate, openModal 
         <div className="flex gap-2">
           <Button size="sm" onClick={() => openModal("addslides")}>
             <Icon name="slides" />
-            Add slides
+            <Trans>Add slides</Trans>
           </Button>
         </div>
         <FieldNote error={errors.get("groups")} />
       </Zone>
       {annotate && !draft.check.hasResult ? null : (
-        <Zone title={annotate ? "AI result to start from" : "AI result to check"}>
+        <Zone title={annotate ? t`AI result to start from` : t`AI result to check`}>
           <div className="grid gap-1.5">
             <RadioRows
               id={fieldId("rset")}
-              label="AI result to check"
+              label={t`AI result to check`}
               value={draft.resultSetId}
               onChange={(value) =>
                 update((current) => ({
@@ -326,42 +335,55 @@ export function SlidesStep({ draft, data, update, errors, onTemplate, openModal 
                 value: set.id,
                 title: set.label,
                 sub: set.detail,
-                end: `on ${all.filter((slide) => slide.sets.includes(set.id)).length} of ${sum.all}`,
+                end: t`on ${all.filter((slide) => slide.sets.includes(set.id)).length} of ${sum.all}`,
               }))}
             />
             <FieldNote error={errors.get("rset")} />
             {!annotate && !sum.ns && all.length ? (
               <Warn icon="smart">
-                <a href="#run-model" className="text-accent">
-                  Run a model
-                </a>{" "}
-                on the picked slides, or pick another result set.
+                <Trans>
+                  <a href="#run-model" className="text-accent">
+                    Run a model
+                  </a>{" "}
+                  on the picked slides, or pick another result set.
+                </Trans>
               </Warn>
             ) : null}
             {sum.ns && !annotate
               ? leftOut.map(({ group, count }) => (
                   <Warn key={group.key}>
-                    {count} slide{count > 1 ? "s" : ""} in {group.title}{" "}
-                    {count > 1 ? "have" : "has"} no {short} and {count > 1 ? "are" : "is"} left out.{" "}
-                    <a href="#run-model" className="text-accent">
-                      Run a model
-                    </a>{" "}
-                    to include {count > 1 ? "them" : "it"}.
+                    {count > 1 ? (
+                      <Trans>
+                        {count} slides in {group.title} have no {short} and are left out.{" "}
+                        <a href="#run-model" className="text-accent">
+                          Run a model
+                        </a>{" "}
+                        to include them.
+                      </Trans>
+                    ) : (
+                      <Trans>
+                        {count} slide in {group.title} has no {short} and is left out.{" "}
+                        <a href="#run-model" className="text-accent">
+                          Run a model
+                        </a>{" "}
+                        to include it.
+                      </Trans>
+                    )}
                   </Warn>
                 ))
               : null}
           </div>
         </Zone>
       )}
-      <Zone title="Task name">
+      <Zone title={t`Task name`}>
         <div className="grid gap-1.5">
           <Input
             id={fieldId("name")}
-            aria-label="Task name"
+            aria-label={t`Task name`}
             aria-invalid={errors.get("name") ? true : undefined}
             value={draft.name}
             maxLength={80}
-            placeholder="For example, Round 3 · CAMELYON v1.0"
+            placeholder={t`For example, Round 3 · CAMELYON v1.0`}
             onChange={(event) => {
               const name = event.target.value;
               update((current) => ({ ...current, name, nameSet: true }));
@@ -372,8 +394,8 @@ export function SlidesStep({ draft, data, update, errors, onTemplate, openModal 
           />
           <FieldNote
             error={errors.get("name")}
-            help="Reviewers see this name in My work and in the email."
-            count={`${draft.name.length} of 80`}
+            help={t`Reviewers see this name in My work and in the email.`}
+            count={t`${draft.name.length} of 80`}
           />
         </div>
       </Zone>
@@ -382,7 +404,12 @@ export function SlidesStep({ draft, data, update, errors, onTemplate, openModal 
 }
 
 export function SetTags({ data, ids }: { data: TaskData; ids: string[] }) {
-  if (!ids.length) return <span className="text-body-sm text-fg-dim">no result sets</span>;
+  if (!ids.length)
+    return (
+      <span className="text-body-sm text-fg-dim">
+        <Trans>no result sets</Trans>
+      </span>
+    );
   return (
     <span className="flex gap-1.5">
       {ids.map((id) => {
@@ -410,10 +437,10 @@ function personItems(draft: Draft, data: TaskData): TokenItem[] {
       sub: person.title,
       person: { initials: person.initials, name: person.name, color: person.colour },
       end: person.awayUntil
-        ? `Away until ${person.awayUntil}`
+        ? t`Away until ${person.awayUntil}`
         : person.openTasks
-          ? `${person.openTasks} open task${person.openTasks > 1 ? "s" : ""}`
-          : "No open tasks",
+          ? t`${person.openTasks} open task${person.openTasks > 1 ? "s" : ""}`
+          : t`No open tasks`,
       ...(person.awayUntil ? { endTone: "warn" as const } : {}),
     })),
     ...draft.invites.map((email) => ({
@@ -427,6 +454,8 @@ function personItems(draft: Draft, data: TaskData): TokenItem[] {
 }
 
 export function ReviewersStep({ draft, data, update, errors }: StepProps) {
+  const { t } = useLingui();
+
   const sum = summary(draft, data);
   const awayPerson = data.people.find(
     (person) => person.awayUntil && draft.reviewers.includes(person.id),
@@ -445,12 +474,16 @@ export function ReviewersStep({ draft, data, update, errors }: StepProps) {
   return (
     <>
       <Zone
-        title={isAnnotate(draft) ? "Who annotates" : "Who reviews"}
-        end={<span className="text-body-sm text-fg-dim">{sum.n} picked</span>}
+        title={isAnnotate(draft) ? t`Who annotates` : t`Who reviews`}
+        end={
+          <span className="text-body-sm text-fg-dim">
+            <Trans>{sum.n} picked</Trans>
+          </span>
+        }
       >
         <div className="grid gap-1.5" id={fieldId("revs")}>
           <TokenField
-            label={isAnnotate(draft) ? "Who annotates" : "Who reviews"}
+            label={isAnnotate(draft) ? t`Who annotates` : t`Who reviews`}
             items={personItems(draft, data)}
             picked={whoReviews(draft)}
             invalid={Boolean(errors.get("revs"))}
@@ -485,26 +518,30 @@ export function ReviewersStep({ draft, data, update, errors }: StepProps) {
             <FieldNote error={errors.get("revs")} />
           ) : awayPerson ? (
             <Warn>
-              {awayPerson.name} is away until {awayPerson.awayUntil}. The task waits for them unless
-              you reassign.{" "}
-              <TextLink onClick={() => unpick(awayPerson.id)}>Pick someone else</TextLink>
+              <Trans>
+                {awayPerson.name} is away until {awayPerson.awayUntil}. The task waits for them
+                unless you reassign.{" "}
+              </Trans>
+              <TextLink onClick={() => unpick(awayPerson.id)}>
+                <Trans>Pick someone else</Trans>
+              </TextLink>
             </Warn>
           ) : (
-            <FieldNote help="Type a name, or an email to invite someone new." />
+            <FieldNote help={t`Type a name, or an email to invite someone new.`} />
           )}
         </div>
       </Zone>
       <Zone
-        title="How the work is split"
+        title={t`How the work is split`}
         sub={
           isAnnotate(draft)
-            ? `${plural(sum.ns, "slide")} in this task.`
-            : `${plural(sum.ns, "slide")} with ${short} in this task.`
+            ? t`${plural(sum.ns, "slide")} in this task.`
+            : t`${plural(sum.ns, "slide")} with ${short} in this task.`
         }
       >
         <div className="grid gap-1.5" id={fieldId("split")}>
           <RadioRows
-            label="How the work is split"
+            label={t`How the work is split`}
             value={draft.split}
             onChange={(value) =>
               update((current) => ({ ...current, split: value as Draft["split"] }))
@@ -512,26 +549,26 @@ export function ReviewersStep({ draft, data, update, errors }: StepProps) {
             options={[
               {
                 value: "all",
-                title: "Everyone reviews all",
-                sub: "Each reviewer gets every slide, which gives agreement between them.",
+                title: t`Everyone reviews all`,
+                sub: t`Each reviewer gets every slide, which gives agreement between them.`,
                 end: sum.n ? `${sum.ns} each` : "",
               },
               {
                 value: "even",
-                title: "Split evenly",
-                sub: "Faster, with no agreement numbers.",
-                end: `about ${ceil} each`,
-                ...(sum.n < 2 ? { disabled: "Needs two or more reviewers" } : {}),
+                title: t`Split evenly`,
+                sub: t`Faster, with no agreement numbers.`,
+                end: t`about ${ceil} each`,
+                ...(sum.n < 2 ? { disabled: t`Needs two or more reviewers` } : {}),
               },
               {
                 value: "per",
-                title: "Choose per slide",
-                sub: "For example an expert for the hard ones.",
+                title: t`Choose per slide`,
+                sub: t`For example an expert for the hard ones.`,
                 end:
                   sum.n && draft.split === "per" && counts.length
                     ? Math.min(...counts) === Math.max(...counts)
                       ? `${counts[0]} each`
-                      : `${Math.min(...counts)} to ${Math.max(...counts)} each`
+                      : t`${Math.min(...counts)} to ${Math.max(...counts)} each`
                     : "",
                 under: sum.n ? <PerSlideGrid {...{ draft, data, update }} /> : null,
               },
@@ -547,6 +584,8 @@ export function ReviewersStep({ draft, data, update, errors }: StepProps) {
 const plural = (count: number, word: string) => `${count} ${word}${count === 1 ? "" : "s"}`;
 
 function PerSlideGrid({ draft, data, update }: Pick<StepProps, "draft" | "data" | "update">) {
+  const { t } = useLingui();
+
   const who = whoReviews(draft);
   const slides = slidesInTask(draft, data);
   const nameOf = (id: string) => data.people.find((person) => person.id === id);
@@ -556,7 +595,9 @@ function PerSlideGrid({ draft, data, update }: Pick<StepProps, "draft" | "data" 
       <table className="w-full border-collapse text-body-sm">
         <thead>
           <tr className="text-left text-caption text-fg-dim">
-            <th className="px-2 py-1.5 font-semibold">Slide</th>
+            <th className="px-2 py-1.5 font-semibold">
+              <Trans>Slide</Trans>
+            </th>
             {who.map((id) => {
               const person = nameOf(id);
               return (
@@ -603,7 +644,11 @@ function PerSlideGrid({ draft, data, update }: Pick<StepProps, "draft" | "data" 
                   <span className="inline-flex items-center gap-1.5">
                     {none ? <Icon name="warn" /> : null}
                     {slide.name}
-                    {none ? <span className="ml-2 text-warn">no reviewer</span> : null}
+                    {none ? (
+                      <span className="ml-2 text-warn">
+                        <Trans>no reviewer</Trans>
+                      </span>
+                    ) : null}
                   </span>
                 </td>
                 {who.map((id) => {
@@ -615,7 +660,7 @@ function PerSlideGrid({ draft, data, update }: Pick<StepProps, "draft" | "data" 
                         type="checkbox"
                         className="size-4 accent-(--accent-fill)"
                         checked={on}
-                        aria-label={`${nameOf(id)?.name ?? id} reviews ${slide.name}`}
+                        aria-label={t`${nameOf(id)?.name ?? id} reviews ${slide.name}`}
                         onChange={() =>
                           update((current) => ({
                             ...current,
@@ -660,6 +705,8 @@ function NumberField({
   error?: string | undefined;
   onChange: (value: number | string) => void;
 }) {
+  const { t } = useLingui();
+
   const nudge = (direction: 1 | -1) => {
     const current = typeof value === "number" && Number.isFinite(value) ? value : lo;
     const next = Math.min(hi, Math.max(lo, Math.round((current + direction * step) / step) * step));
@@ -668,7 +715,7 @@ function NumberField({
   return (
     <div className="grid gap-1.5">
       <div className="flex items-center gap-1.5">
-        <Button variant="secondary" size="icon-sm" aria-label="Less" onClick={() => nudge(-1)}>
+        <Button variant="secondary" size="icon-sm" aria-label={t`Less`} onClick={() => nudge(-1)}>
           <Icon name="minus" />
         </Button>
         <Input
@@ -684,7 +731,7 @@ function NumberField({
             onChange(text !== "" && Number.isFinite(number) ? number : event.target.value);
           }}
         />
-        <Button variant="secondary" size="icon-sm" aria-label="More" onClick={() => nudge(1)}>
+        <Button variant="secondary" size="icon-sm" aria-label={t`More`} onClick={() => nudge(1)}>
           <Icon name="plus" />
         </Button>
         <span className="text-body-sm text-fg-dim">{unit}</span>
@@ -702,6 +749,8 @@ function ScopeControl({
   update,
   errors,
 }: { kind: ScopeKind; on: boolean } & Pick<StepProps, "draft" | "data" | "update" | "errors">) {
+  const { t } = useLingui();
+
   const options = draft.scopeOptions;
   const fixed = (text: string) => (
     <span className="block pt-1.5 text-body-sm leading-[1.45] text-fg-dim">{text}</span>
@@ -712,15 +761,15 @@ function ScopeControl({
       scopeOptions: { ...current.scopeOptions, [key]: value },
       touched: { ...current.touched, [`scopeOpts.${key}`]: true },
     }));
-  if (kind === "regions") return fixed("All regions");
+  if (kind === "regions") return fixed(t`All regions`);
   if (!on) {
     const low = Number(options.low);
     return fixed(
       {
-        cells: `${options.cells} per slide`,
+        cells: t`${options.cells} per slide`,
         low: `Under ${Number.isFinite(low) ? low.toFixed(2) : options.low}`,
-        roi: andJoin(options.roi) || "None picked",
-        unsure: andJoin(options.unsure) || "None picked",
+        roi: andJoin(options.roi) || t`None picked`,
+        unsure: andJoin(options.unsure) || t`None picked`,
       }[kind],
     );
   }
@@ -734,7 +783,7 @@ function ScopeControl({
         hi={500}
         decimals={0}
         unit="per slide"
-        label="Cells per slide"
+        label={t`Cells per slide`}
         error={errors.get("scopeOpts.cells")}
         onChange={(value) => setOption("cells", value)}
       />
@@ -750,7 +799,7 @@ function ScopeControl({
         hi={0.95}
         decimals={2}
         unit="or lower"
-        label="Score cutoff"
+        label={t`Score cutoff`}
         error={errors.get("scopeOpts.low")}
         onChange={(value) => setOption("low", value)}
       />
@@ -762,15 +811,15 @@ function ScopeControl({
       : data.zones.map((zone) => ({
           id: zone.key,
           name: zone.key,
-          sub: `${zone.cells} cells per slide on average`,
+          sub: t`${zone.cells} cells per slide on average`,
         }));
   const picked = kind === "roi" ? options.roi : options.unsure;
   const field = kind === "roi" ? "scopeOpts.roi" : "scopeOpts.unsure";
   return (
     <div className="grid gap-1.5" id={fieldId(field)}>
       <TokenField
-        label={kind === "roi" ? "Regions of interest" : "Unsure zones"}
-        placeholder={kind === "roi" ? "Add an ROI" : "Add a zone"}
+        label={kind === "roi" ? t`Regions of interest` : t`Unsure zones`}
+        placeholder={kind === "roi" ? t`Add an ROI` : t`Add a zone`}
         items={items}
         picked={picked}
         invalid={Boolean(errors.get(field))}
@@ -812,13 +861,15 @@ function ScopeRow({
 }
 
 function AnnotateCheckStep({ draft, data, update }: StepProps) {
+  const { t } = useLingui();
+
   return (
     <Zone
-      title="What to check"
+      title={t`What to check`}
       sub={
         draft.check.hasResult
-          ? `${checkSummary(draft.check)} The preset filled these in, change any of them.`
-          : "The preset Annotate by hand has no result set, so there is nothing to check."
+          ? t`${checkSummary(draft.check)} The preset filled these in, change any of them.`
+          : t`The preset Annotate by hand has no result set, so there is nothing to check.`
       }
     >
       <CheckOptions
@@ -847,35 +898,43 @@ function FromTemplate({
   template: TemplateChoice | undefined;
   changed: boolean;
 }) {
+  const { t } = useLingui();
+
   if (!template) return null;
   return (
     <span className="text-body-sm text-fg-dim" data-from-template={changed ? "changed" : "kept"}>
       {changed
-        ? `Changed from ${template.name}. The report still uses the template.`
-        : `Filled in by ${template.name}`}
+        ? t`Changed from ${template.name}. The report still uses the template.`
+        : t`Filled in by ${template.name}`}
     </span>
   );
 }
 
 function ReviewCheckStep({ draft, data, update, errors, openModal }: StepProps) {
+  const { t } = useLingui();
+
   const template = data.templates.find((candidate) => candidate.id === draft.templateId);
   const form = data.forms.find((candidate) => candidate.key === draft.form);
   const shared = { draft, data, update, errors };
   return (
     <>
       <Zone
-        title="Objects to check"
+        title={t`Objects to check`}
         end={<FromTemplate template={template} changed={templateChanges(draft, data).check} />}
       >
         <div className="grid gap-2" id={fieldId("scope")}>
-          <GroupTitle>What to check</GroupTitle>
+          <GroupTitle>
+            <Trans>What to check</Trans>
+          </GroupTitle>
           {scopeRows.map((row) => (
             <ScopeRow key={row.key} row={row} {...shared} />
           ))}
           <FieldNote error={errors.get("scope")} />
         </div>
         <div className="mt-3 grid gap-2">
-          <GroupTitle>Only inside</GroupTitle>
+          <GroupTitle>
+            <Trans>Only inside</Trans>
+          </GroupTitle>
           <ScopeRow row={roiRow} {...shared} />
         </div>
         <p className="m-0 mt-1 text-body-sm leading-[1.45] text-fg-dim">
@@ -883,13 +942,13 @@ function ReviewCheckStep({ draft, data, update, errors, openModal }: StepProps) 
         </p>
       </Zone>
       <Zone
-        title="Decision question"
+        title={t`Decision question`}
         end={<FromTemplate template={template} changed={templateChanges(draft, data).how} />}
-        sub="What reviewers answer for each object. Every answer keeps its raw value, so counts can be worked out again later."
+        sub={t`What reviewers answer for each object. Every answer keeps its raw value, so counts can be worked out again later.`}
       >
         <div className="grid gap-1.5">
           <RadioRows
-            label="Decision question"
+            label={t`Decision question`}
             value={draft.decision.kind}
             onChange={(value) =>
               update((current) => ({
@@ -925,13 +984,13 @@ function ReviewCheckStep({ draft, data, update, errors, openModal }: StepProps) 
         <div className="flex gap-2">
           <Button size="sm" onClick={() => openModal("dpreview")}>
             <Icon name="eye" />
-            Preview
+            <Trans>Preview</Trans>
           </Button>
         </div>
       </Zone>
       <Zone
-        title="Opinion form"
-        sub="Asked once per slide, after the objects."
+        title={t`Opinion form`}
+        sub={t`Asked once per slide, after the objects.`}
         end={<FromTemplate template={template} changed={templateChanges(draft, data).form} />}
       >
         <Select
@@ -951,7 +1010,7 @@ function ReviewCheckStep({ draft, data, update, errors, openModal }: StepProps) 
             }))
           }
         >
-          <SelectTrigger aria-label="Opinion form" className="h-9.5 w-102">
+          <SelectTrigger aria-label={t`Opinion form`} className="h-9.5 w-102">
             <SelectValue>{form ? form.name : "None"}</SelectValue>
           </SelectTrigger>
           <SelectContent>
@@ -984,7 +1043,7 @@ function ReviewCheckStep({ draft, data, update, errors, openModal }: StepProps) 
                   <StatusTag>{questionKinds[question.kind] ?? question.kind}</StatusTag>
                   <ToggleRow
                     inline
-                    title="Required"
+                    title={t`Required`}
                     checked={on}
                     onChange={() =>
                       update((current) => ({
@@ -1001,7 +1060,10 @@ function ReviewCheckStep({ draft, data, update, errors, openModal }: StepProps) 
           </div>
         ) : (
           <p className="m-0 text-body-sm text-fg-dim">
-            Reviewers submit each slide without a form, and the report leaves the opinion block out.
+            <Trans>
+              Reviewers submit each slide without a form, and the report leaves the opinion block
+              out.
+            </Trans>
           </p>
         )}
       </Zone>
@@ -1009,69 +1071,74 @@ function ReviewCheckStep({ draft, data, update, errors, openModal }: StepProps) 
   );
 }
 
-const displayRows = {
-  draw: {
-    label: "Draw as",
-    options: [
-      ["outline", "Outline"],
-      ["fill", "Fill"],
-      ["dots", "Dots"],
-    ],
-  },
-  width: {
-    label: "Width",
-    options: [
-      ["1", "1"],
-      ["2", "2"],
-      ["3", "3"],
-    ],
-  },
-  colorBy: {
-    label: "Color by",
-    options: [
-      ["class", "Class"],
-      ["score", "Score"],
-      ["decision", "Decision"],
-    ],
-  },
-  conf: {
-    label: "Confidence",
-    options: [
-      ["number", "Number"],
-      ["word", "Word"],
-      ["color", "Color"],
-      ["hidden", "Hidden"],
-    ],
-  },
-  order: {
-    label: "Order",
-    options: [
-      ["ai", "AI order"],
-      ["size", "Largest first"],
-      ["leastsure", "Least sure first"],
-      ["random", "Random"],
-    ],
-  },
-  zoom: {
-    label: "Zoom around the object",
-    options: [
-      ["fit", "Fit"],
-      ["tight", "Tight"],
-      ["context", "Context"],
-    ],
-  },
-  buttons: {
-    label: "Buttons",
-    options: [
-      ["right", "In the card"],
-      ["bottom", "Under the slide"],
-    ],
-  },
-} as const;
+const displayRows = lazyText(
+  () =>
+    ({
+      draw: {
+        label: t`Draw as`,
+        options: [
+          ["outline", t`Outline`],
+          ["fill", t`Fill`],
+          ["dots", t`Dots`],
+        ],
+      },
+      width: {
+        label: t`Width`,
+        options: [
+          ["1", "1"],
+          ["2", "2"],
+          ["3", "3"],
+        ],
+      },
+      colorBy: {
+        label: t`Color by`,
+        options: [
+          ["class", t`Class`],
+          ["score", t`Score`],
+          ["decision", t`Decision`],
+        ],
+      },
+      conf: {
+        label: t`Confidence`,
+        options: [
+          ["number", t`Number`],
+          ["word", t`Word`],
+          ["color", t`Color`],
+          ["hidden", t`Hidden`],
+        ],
+      },
+      order: {
+        label: t`Order`,
+        options: [
+          ["ai", "AI order"],
+          ["size", t`Largest first`],
+          ["leastsure", t`Least sure first`],
+          ["random", t`Random`],
+        ],
+      },
+      zoom: {
+        label: t`Zoom around the object`,
+        options: [
+          ["fit", "Fit"],
+          ["tight", t`Tight`],
+          ["context", t`Context`],
+        ],
+      },
+      buttons: {
+        label: t`Buttons`,
+        options: [
+          ["right", t`In the card`],
+          ["bottom", t`Under the slide`],
+        ],
+      },
+    }) as const,
+);
 
 type SegKey = keyof typeof displayRows;
 
 function DisplayZone({ draft, data, update, errors }: StepProps) {
+  const { t } = useLingui();
+
   const display = draft.display;
   const setDisplay = (change: Partial<Display>) =>
     update((current) => ({ ...current, display: { ...current.display, ...change } }));
@@ -1166,7 +1233,7 @@ function DisplayZone({ draft, data, update, errors }: StepProps) {
       title: set.label,
       sub: set.detail.replace(/^Imported/, "imported").replace(/^Run here/, "run here"),
     })),
-    { key: "rev", title: "Your review", sub: "The reviewed layer, as the reviewer edits it" },
+    { key: "rev", title: t`Your review`, sub: t`The reviewed layer, as the reviewer edits it` },
   ];
   return (
     <section className="grid gap-4 rounded-zone border border-surf-edge bg-surf-section p-(--pad-zone)">
@@ -1179,41 +1246,49 @@ function DisplayZone({ draft, data, update, errors }: StepProps) {
       >
         <Icon name={draft.dispOpen ? "down" : "next"} className="mt-0.5 text-fg-dim" />
         <span className="grid gap-0.5">
-          <b className="text-body font-semibold">Display defaults for reviewers</b>
+          <b className="text-body font-semibold">
+            <Trans>Display defaults for reviewers</Trans>
+          </b>
           <small className="text-caption text-fg-dim">{displaySummary(draft)}</small>
         </span>
       </button>
       {draft.dispOpen ? (
         <>
           <p className="m-0 -mt-1 ml-6.5 text-body-sm leading-[1.45] text-fg-dim">
-            Lock a setting to keep it the same for every reviewer. Confidence, the heatmap, the
-            score cutoff, other layers and the order can be locked.
+            <Trans>
+              Lock a setting to keep it the same for every reviewer. Confidence, the heatmap, the
+              score cutoff, other layers and the order can be locked.
+            </Trans>
           </p>
           <div className="grid gap-3 border-t border-line pt-4">
-            <GroupTitle>How objects draw</GroupTitle>
+            <GroupTitle>
+              <Trans>How objects draw</Trans>
+            </GroupTitle>
             {seg("draw")}
             {seg("width")}
-            {range("opacity", "Opacity", 20, 100, 10)}
+            {range("opacity", t`Opacity`, 20, 100, 10)}
             {seg("colorBy")}
             {row(
               "ids",
               "ID labels",
               <ToggleRow
                 inline
-                title="Show the ID tags on the slide"
+                title={t`Show the ID tags on the slide`}
                 checked={display.ids}
                 onChange={(ids) => setDisplay({ ids })}
               />,
             )}
           </div>
           <div className="grid gap-3 border-t border-line pt-4">
-            <GroupTitle>What the AI shows</GroupTitle>
+            <GroupTitle>
+              <Trans>What the AI shows</Trans>
+            </GroupTitle>
             {seg("conf")}
-            {range("heat", "Heatmap", 0, 100, 10)}
-            {range("cutoff", "Score cutoff", 0, 1, 0.05)}
+            {range("heat", t`Heatmap`, 0, 100, 10)}
+            {range("cutoff", t`Score cutoff`, 0, 1, 0.05)}
             {row(
               "sets",
-              "Other layers",
+              t`Other layers`,
               <div className="grid w-full max-w-110 gap-2.5">
                 {sets.map((set) => (
                   <div key={set.key} className="flex items-start gap-2.5">
@@ -1238,15 +1313,17 @@ function DisplayZone({ draft, data, update, errors }: StepProps) {
             )}
           </div>
           <div className="grid gap-3 border-t border-line pt-4">
-            <GroupTitle>How the review moves</GroupTitle>
+            <GroupTitle>
+              <Trans>How the review moves</Trans>
+            </GroupTitle>
             {seg("order")}
             {seg("zoom")}
             {row(
               "auto",
-              "Move on by itself",
+              t`Move on by itself`,
               <ToggleRow
                 inline
-                title="The next object comes after an answer"
+                title={t`The next object comes after an answer`}
                 checked={display.auto}
                 onChange={(auto) => setDisplay({ auto })}
               />,
@@ -1260,10 +1337,12 @@ function DisplayZone({ draft, data, update, errors }: StepProps) {
 }
 
 function WhenZone({ draft, data, update, errors }: StepProps) {
+  const { t } = useLingui();
+
   return (
-    <Zone title="When">
+    <Zone title={t`When`}>
       <div className="grid grid-cols-2 gap-4">
-        <FormField id={fieldId("due")} labelId="due-label" label="Due" error={errors.get("due")}>
+        <FormField id={fieldId("due")} labelId="due-label" label={t`Due`} error={errors.get("due")}>
           <DatePicker
             aria-labelledby="due-label"
             value={draft.due}
@@ -1279,14 +1358,16 @@ function WhenZone({ draft, data, update, errors }: StepProps) {
           />
         </FormField>
         <div className="grid content-start gap-1.5">
-          <span className="text-body-sm font-semibold text-fg">Reminders</span>
+          <span className="text-body-sm font-semibold text-fg">
+            <Trans>Reminders</Trans>
+          </span>
           <Select
             value={draft.reminders}
             onValueChange={(value) =>
               update((current) => ({ ...current, reminders: value as Draft["reminders"] }))
             }
           >
-            <SelectTrigger aria-label="Reminders" className="w-full">
+            <SelectTrigger aria-label={t`Reminders`} className="w-full">
               <SelectValue>
                 {reminderChoices.find((choice) => choice.key === draft.reminders)?.name}
               </SelectValue>
@@ -1306,10 +1387,12 @@ function WhenZone({ draft, data, update, errors }: StepProps) {
 }
 
 function AnnotateHowStep(props: StepProps) {
+  const { t } = useLingui();
+
   const { draft, update } = props;
   return (
     <>
-      <Zone title="How it runs">
+      <Zone title={t`How it runs`}>
         <BlindFirstSwitch
           checked={draft.blindFirst}
           onCheckedChange={(blindFirst) => update((current) => ({ ...current, blindFirst }))}
@@ -1325,37 +1408,41 @@ export function HowStep(props: StepProps) {
 }
 
 function ReviewHowStep(props: StepProps) {
+  const { t } = useLingui();
+
   const { draft, update } = props;
   const claimShown =
     draft.hide && (draft.decision.kind === "certainty5" || draft.decision.kind === "agree");
   return (
     <>
-      <Zone title="Blinding">
+      <Zone title={t`Blinding`}>
         <div className="grid gap-3.5">
           <ToggleRow
-            title="Blind review"
-            sub="Reviewers see each other's decisions only after they submit."
+            title={t`Blind review`}
+            sub={t`Reviewers see each other's decisions only after they submit.`}
             checked={draft.blind}
             onChange={(blind) => update((current) => ({ ...current, blind }))}
           />
           <ToggleRow
-            title="Hide the AI for a first read"
-            sub="Reviewers mark the slide on their own first, then the AI result is shown."
+            title={t`Hide the AI for a first read`}
+            sub={t`Reviewers mark the slide on their own first, then the AI result is shown.`}
             checked={draft.hide}
             onChange={(hide) => update((current) => ({ ...current, hide }))}
           />
         </div>
         {claimShown ? (
           <Warn>
-            These questions show the AI's claim. With the AI hidden the first read uses Pick the
-            class blind, then the claim is revealed.
+            <Trans>
+              These questions show the AI's claim. With the AI hidden the first read uses Pick the
+              class blind, then the claim is revealed.
+            </Trans>
           </Warn>
         ) : null}
       </Zone>
-      <Zone title="Reviewers start in">
+      <Zone title={t`Reviewers start in`}>
         <div className="grid gap-1.5">
           <SegmentedControl
-            aria-label="Reviewers start in"
+            aria-label={t`Reviewers start in`}
             size="lg"
             className="w-fit"
             value={draft.start}
@@ -1363,15 +1450,15 @@ function ReviewHowStep(props: StepProps) {
               update((current) => ({ ...current, start: value as Draft["start"] }))
             }
             options={[
-              { value: "guided", label: "Guided review" },
-              { value: "full", label: "Full viewer" },
+              { value: "guided", label: t`Guided review` },
+              { value: "full", label: t`Full viewer` },
             ]}
           />
           <FieldNote
             help={
               draft.start === "guided"
-                ? "One object at a time with big buttons. They can still zoom and pan."
-                : "The whole slide with every tool and the object list."
+                ? t`One object at a time with big buttons. They can still zoom and pan.`
+                : t`The whole slide with every tool and the object list.`
             }
           />
         </div>
@@ -1385,6 +1472,8 @@ function ReviewHowStep(props: StepProps) {
 type ReviewRow = [IconName, string, ReactNode];
 
 export function SendStep({ draft, data, update, goTo }: StepProps) {
+  const { t } = useLingui();
+
   const sum = summary(draft, data);
   const template = data.templates.find((candidate) => candidate.id === draft.templateId);
   const set = data.resultSets.find((candidate) => candidate.id === draft.resultSetId);
@@ -1413,7 +1502,10 @@ export function SendStep({ draft, data, update, goTo }: StepProps) {
       {draft.invites.map((email) => (
         <span key={email} className="inline-flex items-center gap-1.5">
           <Icon name="mail" />
-          {email} <small className="text-fg-dim">invited</small>
+          {email}{" "}
+          <small className="text-fg-dim">
+            <Trans>invited</Trans>
+          </small>
         </span>
       ))}
     </span>
@@ -1422,10 +1514,10 @@ export function SendStep({ draft, data, update, goTo }: StepProps) {
     [
       "kind",
       [
-        ["flag", "Kind", "Annotate"],
+        ["flag", t`Kind`, t`Annotate`],
         [
           "target",
-          "Starting point",
+          t`Starting point`,
           annotatePresets.find((item) => item.key === draft.preset)?.title ?? "",
         ],
       ],
@@ -1435,34 +1527,36 @@ export function SendStep({ draft, data, update, goTo }: StepProps) {
       [
         [
           "slides",
-          "Slides",
-          sum.all ? `${sum.all} slides, ${slidesWithResult(draft, data).length} with ${short}` : "",
+          t`Slides`,
+          sum.all
+            ? t`${sum.all} slides, ${slidesWithResult(draft, data).length} with ${short}`
+            : "",
         ],
-        ["text", "Task name", draft.name.trim()],
+        ["text", t`Task name`, draft.name.trim()],
       ],
     ],
     [
       "reviewers",
       [
-        ["users", "Experts", people],
-        ["list", "Split", splitText(sum, nameOf)],
+        ["users", t`Experts`, people],
+        ["list", t`Split`, splitText(sum, nameOf)],
       ],
     ],
     [
       "check",
       [
-        ["target", "Experts check", checkSummary(draft.check)],
-        ["sliders", "Estimate", estimateText(draft, data)],
+        ["target", t`Experts check`, checkSummary(draft.check)],
+        ["sliders", t`Estimate`, estimateText(draft, data)],
       ],
     ],
     [
       "how",
       [
-        ["eye", "Blind first", draft.blindFirst ? "On" : "Off"],
+        ["eye", t`Blind first`, draft.blindFirst ? "On" : "Off"],
         ["calendar", "Due", draft.due ? dueText(draft.due) : ""],
         [
           "bell",
-          "Reminders",
+          t`Reminders`,
           reminderChoices.find((choice) => choice.key === draft.reminders)?.name ?? "",
         ],
       ],
@@ -1472,21 +1566,21 @@ export function SendStep({ draft, data, update, goTo }: StepProps) {
     [
       "slides",
       [
-        ["file", "Template", template ? `${template.name} ${template.version}` : ""],
+        ["file", t`Template`, template ? `${template.name} ${template.version}` : ""],
         [
           "slides",
-          "Slides",
-          sum.ns ? `${sum.ns} of ${sum.all} slides${out ? `, ${out} without ${short}` : ""}` : "",
+          t`Slides`,
+          sum.ns ? t`${sum.ns} of ${sum.all} slides${out ? t`, ${out} without ${short}` : ""}` : "",
         ],
         ["layers", "AI result", set?.label ?? ""],
-        ["text", "Task name", draft.name.trim()],
+        ["text", t`Task name`, draft.name.trim()],
       ],
     ],
     [
       "reviewers",
       [
-        ["users", "Reviewers", people],
-        ["list", "Split", splitText(sum, nameOf)],
+        ["users", t`Reviewers`, people],
+        ["list", t`Split`, splitText(sum, nameOf)],
       ],
     ],
     [
@@ -1494,20 +1588,20 @@ export function SendStep({ draft, data, update, goTo }: StepProps) {
       [
         [
           "target",
-          "To check",
+          t`To check`,
           scopeKinds(draft).length
-            ? `${scopePhrase(draft)}${sum.ns && sum.n ? `. About ${hoursText(sum.hours)} each.` : ""}`
+            ? `${scopePhrase(draft)}${sum.ns && sum.n ? t`. About ${hoursText(sum.hours)} each.` : ""}`
             : "",
         ],
         [
           "flag",
-          "Decision question",
-          `${kind?.name ?? ""}${draft.decision.kind === "certainty5" && mappingOk(draft.decision) ? `, ${numberList(mappingOf(draft.decision).agree)} count as agree` : ""}`,
+          t`Decision question`,
+          `${kind?.name ?? ""}${draft.decision.kind === "certainty5" && mappingOk(draft.decision) ? t`, ${numberList(mappingOf(draft.decision).agree)} count as agree` : ""}`,
         ],
         [
           "comment",
-          "Opinion form",
-          draft.form === "none" ? "None" : `${form?.name ?? ""}, ${required} required`,
+          t`Opinion form`,
+          draft.form === "none" ? t`None` : t`${form?.name ?? ""}, ${required} required`,
         ],
       ],
     ],
@@ -1516,15 +1610,15 @@ export function SendStep({ draft, data, update, goTo }: StepProps) {
       [
         [
           "eye",
-          "Blinding",
-          `${draft.blind ? "Blind until they submit" : "Open"}${draft.hide ? ", first read without the AI" : ""}`,
+          t`Blinding`,
+          `${draft.blind ? t`Blind until they submit` : t`Open`}${draft.hide ? t`, first read without the AI` : ""}`,
         ],
-        ["monitor", "Starts in", draft.start === "guided" ? "Guided review" : "The full viewer"],
-        ["sliders", "Display", displaySummary(draft)],
+        ["monitor", t`Starts in`, draft.start === "guided" ? t`Guided review` : t`The full viewer`],
+        ["sliders", t`Display`, displaySummary(draft)],
         ["calendar", "Due", draft.due ? dueText(draft.due) : ""],
         [
           "bell",
-          "Reminders",
+          t`Reminders`,
           reminderChoices.find((choice) => choice.key === draft.reminders)?.name ?? "",
         ],
       ],
@@ -1533,13 +1627,15 @@ export function SendStep({ draft, data, update, goTo }: StepProps) {
   const groups = isAnnotate(draft) ? annotateGroups : reviewGroups;
   return (
     <>
-      <Zone title="Check before you send">
+      <Zone title={t`Check before you send`}>
         <div className="grid gap-6">
           {groups.map(([step, rows]) => (
             <div key={step} className="grid gap-2.5">
               <div className="flex items-center justify-between gap-3">
                 <GroupTitle>{stepNames[step]}</GroupTitle>
-                <TextLink onClick={() => goTo(step)}>Change</TextLink>
+                <TextLink onClick={() => goTo(step)}>
+                  <Trans>Change</Trans>
+                </TextLink>
               </div>
               <dl className="m-0 grid grid-cols-[168px_minmax(0,1fr)] gap-x-4 gap-y-2.5 text-body-sm leading-[1.45]">
                 {rows.map(([icon, label, value]) => (
@@ -1549,7 +1645,11 @@ export function SendStep({ draft, data, update, goTo }: StepProps) {
                       <span>{label}</span>
                     </dt>
                     <dd className="m-0 min-w-0 [overflow-wrap:anywhere] text-fg">
-                      {value || <span className="text-fg-dim">Not set</span>}
+                      {value || (
+                        <span className="text-fg-dim">
+                          <Trans>Not set</Trans>
+                        </span>
+                      )}
                     </dd>
                   </div>
                 ))}
@@ -1559,24 +1659,28 @@ export function SendStep({ draft, data, update, goTo }: StepProps) {
         </div>
       </Zone>
       <Zone
-        title="A note from you"
-        end={<span className="text-body-sm text-fg-dim">optional</span>}
+        title={t`A note from you`}
+        end={
+          <span className="text-body-sm text-fg-dim">
+            <Trans>optional</Trans>
+          </span>
+        }
       >
         <div className="grid gap-1.5">
           <Textarea
-            aria-label="A note from you"
+            aria-label={t`A note from you`}
             rows={3}
             maxLength={500}
             value={draft.note}
-            placeholder="For example, the boundaries in A1 matter most this round."
+            placeholder={t`For example, the boundaries in A1 matter most this round.`}
             onChange={(event) => {
               const note = event.target.value;
               update((current) => ({ ...current, note }));
             }}
           />
           <FieldNote
-            help="Added to the email the reviewers get."
-            count={`${draft.note.length} of 500`}
+            help={t`Added to the email the reviewers get.`}
+            count={t`${draft.note.length} of 500`}
           />
         </div>
       </Zone>
@@ -1585,6 +1689,8 @@ export function SendStep({ draft, data, update, goTo }: StepProps) {
 }
 
 export function SentPanel({ draft, data }: Pick<StepProps, "draft" | "data">) {
+  const { t } = useLingui();
+
   const people = draft.reviewers.flatMap((id) => {
     const person = data.people.find((candidate) => candidate.id === id);
     return person ? [person] : [];
@@ -1592,20 +1698,22 @@ export function SentPanel({ draft, data }: Pick<StepProps, "draft" | "data">) {
   return (
     <section className="grid justify-items-center gap-2.5 rounded-zone border border-surf-edge bg-surf-section px-10 py-15 text-center">
       <Icon name="check" size="xl" className="text-ok" />
-      <h2 className="m-0 text-page-title font-semibold">{data.code} is out</h2>
+      <h2 className="m-0 text-page-title font-semibold">
+        <Trans>{data.code} is out</Trans>
+      </h2>
       {people.length ? (
         <>
           <p className="m-0 mb-2 max-w-130 text-body-sm text-fg-dim">
-            {andJoin(people.map((person) => person.name))} {people.length > 1 ? "were" : "was"} told
-            by email. {people.length > 1 ? "Each sees" : "They see"} it at the top of My work, with
-            one button to start.
+            {people.length > 1
+              ? t`${andJoin(people.map((person) => person.name))} were told by email. Each sees it at the top of My work, with one button to start.`
+              : t`${andJoin(people.map((person) => person.name))} was told by email. They see it at the top of My work, with one button to start.`}
           </p>
           <div className="mt-2.5 flex justify-center gap-7">
             {people.map((person) => (
               <Person
                 key={person.id}
                 size={32}
-                sub="Told just now"
+                sub={t`Told just now`}
                 person={{ initials: person.initials, name: person.name, color: person.colour }}
               />
             ))}
@@ -1617,8 +1725,8 @@ export function SentPanel({ draft, data }: Pick<StepProps, "draft" | "data">) {
           <Icon name="mail" />
           <span>
             {andJoin(draft.invites)}{" "}
-            {draft.invites.length > 1 ? "were invited and get" : "was invited and gets"} the task
-            when they join.
+            {draft.invites.length > 1 ? t`were invited and get` : t`was invited and gets`}{" "}
+            <Trans>the task when they join.</Trans>
           </span>
         </p>
       ) : null}

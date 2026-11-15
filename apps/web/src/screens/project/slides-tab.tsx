@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   type Project,
   type ProjectOverview,
@@ -92,10 +94,12 @@ function groupSlides(slides: ProjectSlide[], overview: ProjectOverview | undefin
     key: item.label,
     label: (
       <>
-        Case <span className="font-mono">{item.label}</span>
+        <Trans>
+          Case <span className="font-mono">{item.label}</span>
+        </Trans>
       </>
     ),
-    sub: `${item.slide_count} slide${item.slide_count === 1 ? "" : "s"} · ${item.specimen.toLowerCase()}`,
+    sub: t`${item.slide_count} slide${item.slide_count === 1 ? "" : "s"} · ${item.specimen.toLowerCase()}`,
     count: item.slide_count,
     slides: slides.filter((slide) => slide.case_label === item.label),
   }));
@@ -107,7 +111,9 @@ function groupSlides(slides: ProjectSlide[], overview: ProjectOverview | undefin
       key: label,
       label: (
         <>
-          Case <span className="font-mono">{label}</span>
+          <Trans>
+            Case <span className="font-mono">{label}</span>
+          </Trans>
         </>
       ),
       sub: `${own.length} slide${own.length === 1 ? "" : "s"}`,
@@ -119,8 +125,8 @@ function groupSlides(slides: ProjectSlide[], overview: ProjectOverview | undefin
   if (loose.length > 0) {
     groups.push({
       key: "loose",
-      label: "Loose slides",
-      sub: `${loose.length} slide${loose.length === 1 ? "" : "s"}, no case`,
+      label: t`Loose slides`,
+      sub: t`${loose.length} slide${loose.length === 1 ? "" : "s"}, no case`,
       count: loose.length,
       slides: loose,
     });
@@ -137,6 +143,8 @@ export function SlidesTab({
   open: string | undefined;
   toast: (message: ReactNode) => void;
 }) {
+  const { t } = useLingui();
+
   const slides = useProjectSlides(project.id);
   const viewersOf = useProjectViewers(project.id);
   const overview = useGetProjectOverview(project.id).data?.data;
@@ -157,7 +165,7 @@ export function SlidesTab({
         ? {
             ...group,
             count: group.slides.length,
-            sub: `${group.slides.length} matching slide${group.slides.length === 1 ? "" : "s"}`,
+            sub: t`${group.slides.length} matching slide${group.slides.length === 1 ? "" : "s"}`,
           }
         : group,
     )
@@ -176,8 +184,8 @@ export function SlidesTab({
             className="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-fg-faint"
           />
           <Input
-            aria-label="Filter by slide, file or case"
-            placeholder="Filter by slide, file or case"
+            aria-label={t`Filter by slide, file or case`}
+            placeholder={t`Filter by slide, file or case`}
             value={filters.query}
             onChange={(event) => setFilters({ ...filters, query: event.target.value })}
             className="h-7 pl-8 text-caption"
@@ -191,7 +199,7 @@ export function SlidesTab({
             ...sets.map((set) => ({ value: set.id, label: setName(set) })),
           ]}
         >
-          <SelectTrigger size="sm" aria-label="Result set" className="w-40">
+          <SelectTrigger size="sm" aria-label={t`Result set`} className="w-40">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -207,29 +215,38 @@ export function SlidesTab({
           pressed={filters.needsReview}
           onPressedChange={(needsReview) => setFilters({ ...filters, needsReview })}
         >
-          Needs review <span className="font-mono">{overview?.needs_review ?? 0}</span>
+          <Trans>Needs review</Trans>{" "}
+          <span className="font-mono">{overview?.needs_review ?? 0}</span>
         </FilterChip>
         <FilterChip
           pressed={filters.noResults}
           onPressedChange={(noResults) => setFilters({ ...filters, noResults })}
         >
-          No results <span className="font-mono">{overview?.no_results ?? 0}</span>
+          <Trans>No results</Trans> <span className="font-mono">{overview?.no_results ?? 0}</span>
         </FilterChip>
         <span className="flex-1" />
         <span className="inline-flex items-center gap-1.5 text-body-sm text-fg-dim">
           <Icon name="upload" />
-          Drop files anywhere here to upload into {project.code}
+          <Trans>Drop files anywhere here to upload into {project.code}</Trans>
         </span>
       </div>
       <div className="min-h-0 flex-1 overflow-auto rounded-zone border border-line bg-surf-panel">
         <Table containerClassName="overflow-visible">
           <TableHeader>
             <TableRow className={headRow}>
-              <TableHead className={cn(headCell, "w-[27%]")}>Slide</TableHead>
-              <TableHead className={cn(headCell, "w-[33%]")}>Result sets</TableHead>
-              <TableHead className={headCell}>Reviews</TableHead>
+              <TableHead className={cn(headCell, "w-[27%]")}>
+                <Trans>Slide</Trans>
+              </TableHead>
+              <TableHead className={cn(headCell, "w-[33%]")}>
+                <Trans>Result sets</Trans>
+              </TableHead>
               <TableHead className={headCell}>
-                <span className="sr-only">Open</span>
+                <Trans>Reviews</Trans>
+              </TableHead>
+              <TableHead className={headCell}>
+                <span className="sr-only">
+                  <Trans>Open</Trans>
+                </span>
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -237,7 +254,7 @@ export function SlidesTab({
             {filtering && groups.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={4} className="px-4 py-6 text-center text-fg-dim">
-                  No slides match these filters.
+                  <Trans>No slides match these filters.</Trans>
                 </TableCell>
               </TableRow>
             ) : null}
@@ -279,7 +296,7 @@ export function SlidesTab({
                                 }
                               }}
                             >
-                              Upload slides
+                              <Trans>Upload slides</Trans>
                             </Button>
                             <Button
                               size="xs"
@@ -290,7 +307,7 @@ export function SlidesTab({
                                 if (id) setEditing({ id, label: group.key });
                               }}
                             >
-                              Edit slides
+                              <Trans>Edit slides</Trans>
                             </Button>
                           </span>
                         ) : null}
@@ -319,11 +336,11 @@ export function SlidesTab({
                           className="cursor-pointer border-0 bg-transparent p-0 text-body-sm font-medium text-accent hover:underline"
                           onClick={() =>
                             toast(
-                              `Loads the other ${group.count - group.slides.length} slides of ${group.key} (mock)`,
+                              t`Loads the other ${group.count - group.slides.length} slides of ${group.key} (mock)`,
                             )
                           }
                         >
-                          Show all {group.count} slides
+                          <Trans>Show all {group.count} slides</Trans>
                         </button>
                       </TableCell>
                     </TableRow>
@@ -374,6 +391,8 @@ function SlideRow({
   toast: (message: ReactNode) => void;
   onMove: (() => void) | undefined;
 }) {
+  const { t } = useLingui();
+
   const navigate = useNavigate();
   const people = usePeople();
   const own = slide.result_sets.flatMap((ref) => sets.filter((set) => set.id === ref.id));
@@ -414,11 +433,11 @@ function SlideRow({
             <SlideViewers viewers={viewers} />
             {slide.remote ? (
               <span
-                title={`Read in place from ${slide.remote}. Nothing copied.`}
+                title={t`Read in place from ${slide.remote}. Nothing copied.`}
                 className="ml-2 inline-flex h-4.5 items-center gap-1 rounded-sm bg-[rgb(56_189_248/0.14)] px-1.5 text-label font-semibold text-[#0369a1] dark:text-[#38bdf8]"
               >
                 <Icon name="link" size="xs" />
-                remote
+                <Trans>remote</Trans>
               </span>
             ) : null}
           </span>
@@ -427,7 +446,7 @@ function SlideRow({
           {own.length > 0 ? (
             <button
               type="button"
-              title={`${expanded ? "Hide" : "Show"} the result sets of this slide`}
+              title={t`${expanded ? "Hide" : "Show"} the result sets of this slide`}
               aria-expanded={expanded}
               onClick={(event) => {
                 event.stopPropagation();
@@ -438,7 +457,7 @@ function SlideRow({
               {own.map((set) => (
                 <span
                   key={set.id}
-                  title={`${withVersion(set.name, set.model_version)} · ${set.source === "import" ? `imported from ${set.source_file ?? "a file"}` : "run here"}`}
+                  title={`${withVersion(set.name, set.model_version)} · ${set.source === "import" ? t`imported from ${set.source_file ?? "a file"}` : "run here"}`}
                   className="inline-flex h-5.5 items-center gap-1.25 rounded-md border border-line bg-surf-section px-2 text-caption font-medium whitespace-nowrap text-fg"
                 >
                   <Icon name="layers" size="xs" />
@@ -449,7 +468,9 @@ function SlideRow({
             </button>
           ) : (
             <span className="inline-flex items-center gap-2.5">
-              <span>No results yet</span>
+              <span>
+                <Trans>No results yet</Trans>
+              </span>
               <Link
                 to="/projects/$projectId/run-model"
                 params={{ projectId: project.id }}
@@ -457,7 +478,7 @@ function SlideRow({
                 onClick={(event) => event.stopPropagation()}
                 className="inline-flex min-h-6 items-center font-medium text-accent hover:underline"
               >
-                Run a model
+                <Trans>Run a model</Trans>
               </Link>
             </span>
           )}
@@ -480,7 +501,9 @@ function SlideRow({
               ))}
             </span>
           ) : (
-            <span>Nobody yet</span>
+            <span>
+              <Trans>Nobody yet</Trans>
+            </span>
           )}
         </TableCell>
         <TableCell className="w-px text-right whitespace-nowrap">
@@ -498,7 +521,7 @@ function SlideRow({
             </Button>
           ) : null}
           <Button size="sm" onClick={open}>
-            Open
+            <Trans>Open</Trans>
           </Button>
         </TableCell>
       </TableRow>
@@ -516,6 +539,8 @@ function ResultSetDetail({
   slide: ProjectSlide;
   toast: (message: ReactNode) => void;
 }) {
+  const { t } = useLingui();
+
   const sets = okData(useListSlideResultSets(slide.id).data) ?? [];
   const people = usePeople();
   const format = useFormat();
@@ -541,13 +566,13 @@ function ResultSetDetail({
                 </b>
                 <small className="block truncate text-caption text-fg-dim">
                   {set.source === "import"
-                    ? `Imported from ${set.source_file ?? "a file"}`
-                    : "Run here on the lab server"}
+                    ? t`Imported from ${set.source_file ?? "a file"}`
+                    : t`Run here on the lab server`}
                 </small>
               </span>
               <span className="text-body-sm text-fg-dim">
-                {set.region_count} regions
-                {set.cell_count ? ` · ${format.integer(set.cell_count)} cells` : ""}
+                <Trans>{set.region_count} regions</Trans>
+                {set.cell_count ? t` · ${format.integer(set.cell_count)} cells` : ""}
               </span>
               <Person
                 person={people.byId(set.created_by_user_id)}
@@ -557,28 +582,28 @@ function ResultSetDetail({
               <span className="flex gap-0.5">
                 <Button size="sm" variant="ghost" onClick={view}>
                   <Icon name="eye" />
-                  Show
+                  <Trans>Show</Trans>
                 </Button>
                 <Button size="sm" variant="ghost" onClick={view}>
                   <Icon name="slides" />
-                  Compare
+                  <Trans>Compare</Trans>
                 </Button>
                 <Button
                   size="sm"
                   variant="ghost"
                   onClick={() =>
-                    toast("Downloads this result set as Parfocal JSON, GeoJSON or CSV (mock)")
+                    toast(t`Downloads this result set as Parfocal JSON, GeoJSON or CSV (mock)`)
                   }
                 >
                   <Icon name="download" />
-                  Export
+                  <Trans>Export</Trans>
                 </Button>
               </span>
             </div>
           ))}
           <div className="flex items-center gap-2 rounded-ctl border border-dashed border-line px-3 py-[calc(var(--density-cell-y)+1px)]">
             <span className="text-body-sm text-fg-dim">
-              Add another result set to {slide.label}
+              <Trans>Add another result set to {slide.label}</Trans>
             </span>
             <span className="flex-1" />
             <Button
@@ -593,7 +618,7 @@ function ResultSetDetail({
               }
             >
               <Icon name="upload" />
-              Upload a file
+              <Trans>Upload a file</Trans>
             </Button>
             <Button
               size="sm"
@@ -603,7 +628,7 @@ function ResultSetDetail({
               }
             >
               <Icon name="smart" />
-              Run a model
+              <Trans>Run a model</Trans>
             </Button>
           </div>
         </div>

@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   getGetMyAdjudicationQueryKey,
   resolveSetting,
@@ -62,6 +63,8 @@ const dueText = (iso: string | null | undefined) =>
     : "";
 
 export function AdjudicatorView({ taskId }: { taskId: string }) {
+  const { t } = useLingui();
+
   const adjudication = okData(useGetMyAdjudication(taskId).data);
   const task = okData(useGetReviewTask(taskId).data);
   const myDisplay = okData(useGetMyDisplay(taskId).data);
@@ -110,7 +113,7 @@ export function AdjudicatorView({ taskId }: { taskId: string }) {
   };
   const allDone = objects.length > 0 && counts.open === 0;
   const current = objects[Math.max(0, Math.min(objects.length - 1, index))];
-  const asker = person(adjudication?.asked_by_user_id)?.name.split(" ")[0] ?? "The researcher";
+  const asker = person(adjudication?.asked_by_user_id)?.name.split(" ")[0] ?? t`The researcher`;
   const goTo = (next: number) => {
     setIndex(((next % objects.length) + objects.length) % objects.length);
     setCamera(null);
@@ -158,7 +161,7 @@ export function AdjudicatorView({ taskId }: { taskId: string }) {
         {allDecidedHeading(objects.length, asker)}
       </h2>
       <p className="m-0 text-body-sm text-fg-dim">
-        Your decisions sit next to the reviewers' answers and never replace them.
+        <Trans>Your decisions sit next to the reviewers' answers and never replace them.</Trans>
       </p>
       <KeyValueList
         tight
@@ -177,20 +180,22 @@ export function AdjudicatorView({ taskId }: { taskId: string }) {
         className="justify-self-start"
         onClick={() => void navigate({ to: "/my-work", search: { scene: "anna" } })}
       >
-        Back to My work
+        <Trans>Back to My work</Trans>
       </Button>
     </div>
   ) : current && card ? (
     <div className="grid content-start gap-4">
       <div className="flex items-center justify-between">
-        <span className="text-body-sm text-fg-dim">{asker} asked you to decide</span>
+        <span className="text-body-sm text-fg-dim">
+          <Trans>{asker} asked you to decide</Trans>
+        </span>
         <ObjectIdTag size="lg">{current.object}</ObjectIdTag>
       </div>
       {sentLine ? <QuotedNote>{sentLine}</QuotedNote> : null}
       <ProgressDots
         current={objects.indexOf(current)}
         onJump={goTo}
-        summary={`${decided.length} of ${objects.length} decided`}
+        summary={t`${decided.length} of ${objects.length} decided`}
         items={objects.map((object) => ({
           key: object.key,
           label: object.object,
@@ -209,7 +214,7 @@ export function AdjudicatorView({ taskId }: { taskId: string }) {
       </div>
       <EvidenceList>
         {card.reviewers.map((line) => (
-          <EvidenceRow key={line.letter} icon="user" title={`Reviewer ${line.letter}`}>
+          <EvidenceRow key={line.letter} icon="user" title={t`Reviewer ${line.letter}`}>
             <StatusTag tone={line.tone}>{line.text}</StatusTag>
             {line.note ? (
               <QuotedNote>
@@ -224,28 +229,32 @@ export function AdjudicatorView({ taskId }: { taskId: string }) {
         classes={look.classes}
         aiClass={current.ai.class_name}
         range={{ agreeFrom: look.style.agreeFrom, disagreeTo: look.style.disagreeTo }}
-        label={`Your decision on ${current.object}`}
+        label={t`Your decision on ${current.object}`}
         value={current.decision ?? undefined}
         onValueChange={decide}
       />
       <div className="grid gap-1.5">
         <label htmlFor="adjudication-note" className="text-body-sm font-semibold">
-          Note for the record <span className="font-normal text-fg-dim">Optional</span>
+          <Trans>
+            Note for the record <span className="font-normal text-fg-dim">Optional</span>
+          </Trans>
         </label>
         <Textarea
           id="adjudication-note"
           rows={2}
-          placeholder="Why you decided this"
+          placeholder={t`Why you decided this`}
           value={notes[current.key] ?? current.decision_note ?? ""}
           onChange={(event) => setNotes({ ...notes, [current.key]: event.target.value })}
         />
       </div>
       <p className="m-0 text-center text-body-sm text-fg-dim">
-        Reviewers stay anonymous to you, so the decision is about the tissue.
+        <Trans>Reviewers stay anonymous to you, so the decision is about the tissue.</Trans>
       </p>
     </div>
   ) : (
-    <p className="m-0 text-body-sm text-fg-dim">Nothing is queued for you on this task.</p>
+    <p className="m-0 text-body-sm text-fg-dim">
+      <Trans>Nothing is queued for you on this task.</Trans>
+    </p>
   );
   const foot =
     allDone || !current ? undefined : (
@@ -253,14 +262,14 @@ export function AdjudicatorView({ taskId }: { taskId: string }) {
         <Button
           variant="ghost"
           disabled={objects.indexOf(current) === 0}
-          title={objects.indexOf(current) === 0 ? "This is the first object" : undefined}
+          title={objects.indexOf(current) === 0 ? t`This is the first object` : undefined}
           onClick={() => goTo(objects.indexOf(current) - 1)}
         >
           <Icon name="back" />
-          Previous
+          <Trans>Previous</Trans>
         </Button>
         <Button variant="ghost" onClick={() => goTo(objects.indexOf(current) + 1)}>
-          {current.decision ? "Next" : "Skip for now"}
+          {current.decision ? t`Next` : t`Skip for now`}
           <Icon name="next" />
         </Button>
       </div>
@@ -270,15 +279,15 @@ export function AdjudicatorView({ taskId }: { taskId: string }) {
     <div className="grid h-dvh grid-rows-[auto_minmax(0,1fr)] bg-page">
       <ReviewTopBar
         mode="adjudicate"
-        taskName={`Adjudication · ${task?.code ?? ""}`}
-        taskSub={`Sentinel node AI evaluation · due ${dueText(task?.due_on)}`}
+        taskName={t`Adjudication · ${task?.code ?? ""}`}
+        taskSub={t`Sentinel node AI evaluation · due ${dueText(task?.due_on)}`}
         slideName={`${shown?.slide_label ?? "A1"} · H&E`}
         slideThumb={lookUrl("overview")}
         progress={counts}
         slidesPopover={
           <SlidesPopover
-            ariaLabel="Slides with objects queued for you"
-            caseHeading="Slides with objects for you"
+            ariaLabel={t`Slides with objects queued for you`}
+            caseHeading={t`Slides with objects for you`}
             showKeys={false}
             caseSlides={slideLabels.map((label) => {
               const count = objects.filter((object) => object.slide_label === label).length;
@@ -286,13 +295,13 @@ export function AdjudicatorView({ taskId }: { taskId: string }) {
               return {
                 id: label,
                 name: `${label} · H&E`,
-                sub: `${count} object${count === 1 ? "" : "s"} · ${decided.length} decided`,
+                sub: t`${count} object${count === 1 ? "" : "s"} · ${decided.length} decided`,
                 thumb: lookUrl("overview"),
                 resultSets: count,
                 current: open,
                 status: open
-                  ? { label: "Open", tone: "accent" as const }
-                  : { label: "Queued", tone: "neutral" as const },
+                  ? { label: t`Open`, tone: "accent" as const }
+                  : { label: t`Queued`, tone: "neutral" as const },
               };
             })}
             onPick={(label) => {
@@ -301,8 +310,8 @@ export function AdjudicatorView({ taskId }: { taskId: string }) {
             }}
           />
         }
-        progressTitle={`${decided.length} of ${objects.length} decided`}
-        progressSub="Objects queued for you"
+        progressTitle={t`${decided.length} of ${objects.length} decided`}
+        progressSub={t`Objects queued for you`}
         primaryTitle={`${percent}% decided`}
         onPrimary={() => void navigate({ to: "/my-work", search: { scene: "anna" } })}
         backHref={destinations.myWork()}
@@ -328,10 +337,10 @@ export function AdjudicatorView({ taskId }: { taskId: string }) {
           value={tab}
           onValueChange={setTab}
           tabs={[
-            { value: "review", label: "Review", body: review, ...(foot ? { foot } : {}) },
+            { value: "review", label: t`Review`, body: review, ...(foot ? { foot } : {}) },
             {
               value: "display",
-              label: "Display",
+              label: t`Display`,
               body: (
                 <DisplayTab
                   display={display}

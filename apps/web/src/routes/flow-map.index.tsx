@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   LaneMap,
   LaneMapArrows,
@@ -34,6 +35,8 @@ export const Route = createFileRoute("/flow-map/")({
 const layout = mapLayout();
 
 function FlowMapPage() {
+  const { t } = useLingui();
+
   const ids = useScenarioIds();
   const people = usePeople();
   useEffect(() => originStore.set(null), []);
@@ -42,7 +45,7 @@ function FlowMapPage() {
       <div className="flex flex-wrap items-center gap-3">
         <WalkBar />
         <Link to="/prototype" className="ml-auto text-caption text-fg-faint underline">
-          Prototype index
+          <Trans>Prototype index</Trans>
         </Link>
       </div>
       <LaneMap
@@ -91,7 +94,7 @@ function FlowMapPage() {
               sub={box.sub}
               dim={!built}
               data-box={box.id}
-              aria-description={built ? undefined : "Not built yet, opens its placeholder"}
+              aria-description={built ? undefined : t`Not built yet, opens its placeholder`}
               render={
                 target ? (
                   <Link

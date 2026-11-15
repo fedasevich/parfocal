@@ -1,3 +1,4 @@
+import { useLingui } from "@lingui/react/macro";
 import { ScrollArea } from "@parfocal/ui/components/scroll-area";
 import { TabCount, Tabs, TabsContent, TabsList, TabsTrigger } from "@parfocal/ui/components/tabs";
 import { cn } from "@parfocal/ui/lib/utils";
@@ -34,10 +35,12 @@ function SidePanel({
   className,
   ...props
 }: SidePanelProps) {
+  const { t } = useLingui();
+
   return (
     <aside
       data-slot="side-panel"
-      aria-label="Side panel"
+      aria-label={t`Side panel`}
       className={cn("flex min-h-0 flex-col border-l border-line bg-chrome", className)}
       style={{ width }}
       {...props}

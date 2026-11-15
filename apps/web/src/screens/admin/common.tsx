@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import type { AiModel } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
 import { Icon } from "@parfocal/ui/components/icon";
@@ -26,7 +27,7 @@ export function ModelStatus({ model }: { model: AiModel }) {
   return <StatusTag tone={status.tone}>{status.text}</StatusTag>;
 }
 
-export function MoreButton({ label = "More" }: { label?: string }) {
+export function MoreButton({ label = t`More` }: { label?: string }) {
   return (
     <Button variant="ghost" size="icon-sm" aria-label={label} title={label}>
       <Icon name="more" />

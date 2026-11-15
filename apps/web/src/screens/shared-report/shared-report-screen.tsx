@@ -1,8 +1,12 @@
+import type { MessageDescriptor } from "@lingui/core";
+import { msg, t } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { ApiError, type SharedReport, useGetSharedReport } from "@parfocal/api-client";
 import { Banner } from "@parfocal/ui/components/banner";
 import { CountBars, MetricTiles } from "@parfocal/ui/components/evaluation-report";
 import { Loader } from "@parfocal/ui/components/loader";
 import { StatusTag } from "@parfocal/ui/components/tag";
+import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import type { ReactNode } from "react";
 import {
   answerSpread,
@@ -16,26 +20,26 @@ import { okData } from "../placeholder.tsx";
 const longDay = (iso: string) =>
   new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
 
-const kindName: Record<string, string> = { region: "Regions", cell: "Cells" };
+const kindName: Record<string, string> = lazyText(() => ({ region: t`Regions`, cell: t`Cells` }));
 
-const refusals: Record<number, { title: string; body: string }> = {
+const refusals: Record<number, { title: MessageDescriptor; body: MessageDescriptor }> = {
   404: {
-    title: "This link does not lead to a report",
-    body: "Check that the whole link was copied, or ask the person who shared it for a new one.",
+    title: msg`This link does not lead to a report`,
+    body: msg`Check that the whole link was copied, or ask the person who shared it for a new one.`,
   },
   410: {
-    title: "This link was revoked or has expired",
-    body: "Ask the person who shared it for a new link.",
+    title: msg`This link was revoked or has expired`,
+    body: msg`Ask the person who shared it for a new link.`,
   },
   429: {
-    title: "This link was opened too often just now",
-    body: "Wait a minute and open it again.",
+    title: msg`This link was opened too often just now`,
+    body: msg`Wait a minute and open it again.`,
   },
 };
 
 const unknownRefusal = {
-  title: "The report could not be loaded",
-  body: "Try again in a moment.",
+  title: msg`The report could not be loaded`,
+  body: msg`Try again in a moment.`,
 };
 
 function Shell({ children }: { children: ReactNode }) {
@@ -100,6 +104,8 @@ function NumberTable({
 }
 
 function Report({ shared }: { shared: SharedReport }) {
+  const { t } = useLingui();
+
   const evaluation = shared.evaluation;
   const reasons = reasonRows(evaluation);
   const opinions = opinionRows(evaluation);
@@ -119,33 +125,43 @@ function Report({ shared }: { shared: SharedReport }) {
     <Shell>
       <header className="grid gap-2">
         <div className="flex flex-wrap items-center gap-2">
-          <StatusTag tone="research">Research output</StatusTag>
-          <StatusTag>Read-only</StatusTag>
-          {evaluation.sample ? <StatusTag tone="warn">Sample data</StatusTag> : null}
+          <StatusTag tone="research">
+            <Trans>Research output</Trans>
+          </StatusTag>
+          <StatusTag>
+            <Trans>Read-only</Trans>
+          </StatusTag>
+          {evaluation.sample ? (
+            <StatusTag tone="warn">
+              <Trans>Sample data</Trans>
+            </StatusTag>
+          ) : null}
         </div>
         <h1 className="m-0 text-title font-semibold text-fg">{shared.task_name}</h1>
         <p className="m-0 text-body-sm text-fg-dim">
-          {shared.project_name} · evaluation report · this link works until{" "}
-          {longDay(shared.expires_at)}
+          <Trans>
+            {shared.project_name} · evaluation report · this link works until{" "}
+            {longDay(shared.expires_at)}
+          </Trans>
         </p>
       </header>
       <MetricTiles variant="panel" tiles={headlineTiles(evaluation)} />
-      <Section title="Decisions">
+      <Section title={t`Decisions`}>
         <p className="m-0 text-body-sm text-fg-dim">
-          {answerSpread(evaluation) || "No decisions yet."}
+          {answerSpread(evaluation) || t`No decisions yet.`}
         </p>
       </Section>
-      <Section title="Precision and sensitivity">
+      <Section title={t`Precision and sensitivity`}>
         <NumberTable
-          label="Precision and sensitivity"
+          label={t`Precision and sensitivity`}
           head={[
-            "Class",
-            "True positives",
-            "False positives",
-            "False negatives",
-            "Not sure",
-            "Precision",
-            "Sensitivity",
+            t`Class`,
+            t`True positives`,
+            t`False positives`,
+            t`False negatives`,
+            t`Not sure`,
+            t`Precision`,
+            t`Sensitivity`,
           ]}
           rows={classes.map(({ key, label, row }) => ({
             key,
@@ -161,25 +177,28 @@ function Report({ shared }: { shared: SharedReport }) {
           }))}
         />
       </Section>
-      <Section title="Agreement between reviewers">
+      <Section title={t`Agreement between reviewers`}>
         <NumberTable
-          label="Agreement between reviewers"
-          head={["Pair", "Cohen's κ", "Objects"]}
+          label={t`Agreement between reviewers`}
+          head={[t`Pair`, "Cohen's κ", t`Objects`]}
           rows={evaluation.kappa.map((pair) => ({
             key: `${pair.first}-${pair.second}`,
-            cells: [`${pair.first} and ${pair.second}`, fixed(pair.value), pair.objects],
+            cells: [t`${pair.first} and ${pair.second}`, fixed(pair.value), pair.objects],
           }))}
         />
         <p className="m-0 text-body-sm text-fg-dim">
-          Mean κ {fixed(evaluation.mean_kappa)} · Fleiss κ {fixed(evaluation.fleiss_kappa)} · cells
-          agreed between reviewers {fixed(evaluation.cell_agreement_between_reviewers.value)}
+          <Trans>
+            Mean κ {fixed(evaluation.mean_kappa)} · Fleiss κ {fixed(evaluation.fleiss_kappa)} ·
+            cells agreed between reviewers{" "}
+            {fixed(evaluation.cell_agreement_between_reviewers.value)}
+          </Trans>
         </p>
       </Section>
       {Object.keys(evaluation.dice).length ? (
-        <Section title="Dice">
+        <Section title={t`Dice`}>
           <NumberTable
-            label="Dice"
-            head={["Class", "Dice"]}
+            label={t`Dice`}
+            head={[t`Class`, t`Dice`]}
             rows={Object.entries(evaluation.dice).map(([name, rate]) => ({
               key: name,
               cells: [name, fixed(rate.value)],
@@ -188,30 +207,34 @@ function Report({ shared }: { shared: SharedReport }) {
         </Section>
       ) : null}
       {reasons.length ? (
-        <Section title="Why reviewers disagreed">
+        <Section title={t`Why reviewers disagreed`}>
           <CountBars rows={reasons} />
         </Section>
       ) : null}
       {opinions.length ? (
-        <Section title="Opinion scores">
+        <Section title={t`Opinion scores`}>
           <CountBars rows={opinions} />
         </Section>
       ) : null}
       <p className="m-0 text-caption text-fg-dim">
-        Shared from Parfocal. This page shows numbers only: no slides, images, names or comments.
+        <Trans>
+          Shared from Parfocal. This page shows numbers only: no slides, images, names or comments.
+        </Trans>
       </p>
     </Shell>
   );
 }
 
 export function SharedReportScreen({ token }: { token: string }) {
+  const { t } = useLingui();
+
   const query = useGetSharedReport(token, { query: { retry: false, refetchOnWindowFocus: false } });
   const shared = okData(query.data);
   if (shared) return <Report shared={shared} />;
   if (!query.error) {
     return (
       <Shell>
-        <Loader label="Loading the report" />
+        <Loader label={t`Loading the report`} />
       </Shell>
     );
   }
@@ -221,8 +244,8 @@ export function SharedReportScreen({ token }: { token: string }) {
     <Shell>
       <Banner tone="warn">
         <span className="grid gap-1">
-          <b>{refusal.title}</b>
-          <span>{refusal.body}</span>
+          <b>{t(refusal.title)}</b>
+          <span>{t(refusal.body)}</span>
         </span>
       </Banner>
     </Shell>

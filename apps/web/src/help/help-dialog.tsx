@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { useGetMySettingLayers } from "@parfocal/api-client";
 import { SmallModal } from "@parfocal/ui/components/small-modal";
 import { okData } from "../screens/placeholder.tsx";
@@ -8,6 +9,8 @@ import { closeHelp, startTour, useHelpOpen } from "./tour-state.ts";
 import { progressOf, resumeIndex, tourLength } from "./tour-steps.ts";
 
 export function HelpDialog() {
+  const { t } = useLingui();
+
   const open = useHelpOpen();
   const goTo = useGoTo();
   const progress = progressOf(okData(useGetMySettingLayers().data)?.personal.tour_progress);
@@ -18,13 +21,13 @@ export function HelpDialog() {
       onOpenChange={(next) => {
         if (!next) closeHelp();
       }}
-      title="Help"
-      subtitle="Short answers, the shortcut sheet and the tour."
-      primaryLabel={resuming ? "Resume the tour" : "Take the tour"}
+      title={t`Help`}
+      subtitle={t`Short answers, the shortcut sheet and the tour.`}
+      primaryLabel={resuming ? t`Resume the tour` : t`Take the tour`}
       onPrimary={() => startTour(resumeIndex(progress))}
-      cancelLabel="Close"
+      cancelLabel={t`Close`}
       onCancel={closeHelp}
-      hint={`The tour has ${tourLength} steps and you can stop at any time.`}
+      hint={t`The tour has ${tourLength} steps and you can stop at any time.`}
       secondaryAction={
         <button
           type="button"
@@ -34,7 +37,7 @@ export function HelpDialog() {
             void goTo(destinations.settings("shortcuts"));
           }}
         >
-          Open the shortcut sheet
+          <Trans>Open the shortcut sheet</Trans>
         </button>
       }
     >

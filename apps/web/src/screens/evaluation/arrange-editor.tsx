@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   type EvaluationReport,
   getGetTaskReportLayoutQueryKey,
@@ -76,6 +77,8 @@ function ArrangeBody({
   onSaved: (saved: Saved) => void;
   onBack: () => void;
 }) {
+  const { t } = useLingui();
+
   const queryClient = useQueryClient();
   const library = okData(useListStudyTemplates().data) ?? [];
   const compareChoices = (okData(useListReviewTasks(report.project.id).data) ?? [])
@@ -84,7 +87,7 @@ function ArrangeBody({
   const base = library.find((item) => item.id === report.template.id);
   const [blocks, setBlocks] = useState<EditorBlock[]>(start.blocks);
   const [format, setFormat] = useState<FormatSettings>(start.format);
-  const [name, setName] = useState(`${report.template.name} for ${report.task_code}`);
+  const [name, setName] = useState(t`${report.template.name} for ${report.task_code}`);
   const save = useSetTaskReportLayout();
   const create = useCreateStudyTemplate();
   const offer = useOfferStudyTemplate();
@@ -106,7 +109,7 @@ function ArrangeBody({
             return;
           }
           void queryClient.invalidateQueries({ queryKey: getGetTaskReportLayoutQueryKey(taskId) });
-          notify("Arranged for this task. The template itself has not changed.");
+          notify(t`Arranged for this task. The template itself has not changed.`);
           onSaved({ blocks: toApiBlocks(blocks), format });
         },
       },
@@ -129,7 +132,7 @@ function ArrangeBody({
             return;
           }
           void queryClient.invalidateQueries({ queryKey: getListStudyTemplatesQueryKey() });
-          notify(`Offered to the library as ${name.trim() || "Untitled template"}`);
+          notify(t`Offered to the library as ${name.trim() || t`Untitled template`}`);
         },
       },
     );
@@ -143,7 +146,7 @@ function ArrangeBody({
             return;
           }
           notify(
-            `Offered ${name.trim() || "Untitled template"} to the admins. They accept it into the library.`,
+            t`Offered ${name.trim() || t`Untitled template`} to the admins. They accept it into the library.`,
           );
         },
       },
@@ -154,14 +157,14 @@ function ArrangeBody({
   };
   return (
     <ReportEditor
-      name={`${report.task_code} evaluation report`}
+      name={t`${report.task_code} evaluation report`}
       blocks={blocks}
       onBlocksChange={setBlocks}
       format={format}
       onFormatChange={setFormat}
       compareChoices={compareChoices}
       formatHead={
-        <FormField label="Name if saved as a template">
+        <FormField label={t`Name if saved as a template`}>
           <TextFieldInput
             value={name}
             maxLength={60}
@@ -171,24 +174,26 @@ function ArrangeBody({
       }
       footer={
         <div className="flex items-center gap-2.5 border-t border-line bg-chrome px-5 py-3">
-          <Button onClick={onBack}>Back to the report</Button>
+          <Button onClick={onBack}>
+            <Trans>Back to the report</Trans>
+          </Button>
           <span className="flex-1 text-body-sm text-fg-dim">
-            Changes belong to this task. The template itself stays as it is.
+            <Trans>Changes belong to this task. The template itself stays as it is.</Trans>
           </span>
           <Button variant="ghost" onClick={reset}>
-            Reset to the template
+            <Trans>Reset to the template</Trans>
           </Button>
           {keepsLibrary ? (
             <Button onClick={saveAsTemplate} disabled={create.isPending || name.trim() === ""}>
-              Save as template
+              <Trans>Save as template</Trans>
             </Button>
           ) : (
             <Button onClick={offerToAdmin} disabled={offer.isPending || name.trim() === ""}>
-              Offer to an admin
+              <Trans>Offer to an admin</Trans>
             </Button>
           )}
           <Button variant="primary" onClick={saveForTask} disabled={save.isPending}>
-            Save for this task
+            <Trans>Save for this task</Trans>
           </Button>
         </div>
       }

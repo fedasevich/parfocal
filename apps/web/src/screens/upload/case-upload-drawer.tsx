@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import type { Project } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
 import { DrawerPanel } from "@parfocal/ui/components/drawer-panel";
@@ -19,21 +21,23 @@ function statusText(entry: UploadEntry): string {
   const total = formatBytes(entry.size);
   switch (entry.status) {
     case "uploading":
-      return `${formatBytes(entry.bytesUploaded)} of ${total}`;
+      return t`${formatBytes(entry.bytesUploaded)} of ${total}`;
     case "paused":
-      return `Paused at ${formatBytes(entry.bytesUploaded)} of ${total}`;
+      return t`Paused at ${formatBytes(entry.bytesUploaded)} of ${total}`;
     case "retrying":
-      return `Connection lost. Trying again, attempt ${entry.attempt} of 3`;
+      return t`Connection lost. Trying again, attempt ${entry.attempt} of 3`;
     case "failed":
-      return `Stopped at ${formatBytes(entry.bytesUploaded)} of ${total}. What was stored is kept`;
+      return t`Stopped at ${formatBytes(entry.bytesUploaded)} of ${total}. What was stored is kept`;
     case "done":
       return `${total}, uploaded`;
     case "interrupted":
-      return `${total}. Choose this file again to continue where it stopped`;
+      return t`${total}. Choose this file again to continue where it stopped`;
   }
 }
 
 function UploadRow({ entry, onChoose }: { entry: UploadEntry; onChoose: () => void }) {
+  const { t } = useLingui();
+
   const { engine } = useUploads();
   const showBar = entry.status !== "interrupted" && entry.status !== "done";
   return (
@@ -50,36 +54,36 @@ function UploadRow({ entry, onChoose }: { entry: UploadEntry; onChoose: () => vo
           <span className="flex items-center gap-1.5">
             {entry.status === "uploading" ? (
               <Button size="sm" onClick={() => engine.pause(entry.id)}>
-                Pause
+                <Trans>Pause</Trans>
               </Button>
             ) : null}
             {entry.status === "paused" ? (
               <Button size="sm" onClick={() => engine.resume(entry.id)}>
-                Resume
+                <Trans>Resume</Trans>
               </Button>
             ) : null}
             {entry.status === "failed" || entry.status === "retrying" ? (
               <Button size="sm" onClick={() => engine.retry(entry.id)}>
-                Retry
+                <Trans>Retry</Trans>
               </Button>
             ) : null}
             {entry.status === "interrupted" ? (
               <Button size="sm" onClick={onChoose}>
-                Choose file
+                <Trans>Choose file</Trans>
               </Button>
             ) : null}
             {entry.status === "done" || entry.status === "interrupted" ? (
               <Button
                 size="icon"
                 variant="ghost"
-                aria-label={`Remove ${entry.name}`}
+                aria-label={t`Remove ${entry.name}`}
                 onClick={() => engine.dismiss(entry.id)}
               >
                 <Icon name="close" />
               </Button>
             ) : (
               <Button size="sm" variant="ghost" onClick={() => void engine.cancel(entry.id)}>
-                Cancel
+                <Trans>Cancel</Trans>
               </Button>
             )}
           </span>
@@ -88,7 +92,7 @@ function UploadRow({ entry, onChoose }: { entry: UploadEntry; onChoose: () => vo
       {showBar ? (
         <Progress
           value={percent(entry)}
-          aria-label={`Upload of ${entry.name}`}
+          aria-label={t`Upload of ${entry.name}`}
           className="px-3 pb-2"
         />
       ) : null}
@@ -105,6 +109,8 @@ export function CaseUploadDrawer({
   caseId: string | null;
   onClose: () => void;
 }) {
+  const { t } = useLingui();
+
   const { engine, entries } = useUploads();
   const picker = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
@@ -122,16 +128,16 @@ export function CaseUploadDrawer({
 
   return (
     <DrawerPanel
-      label="Upload slides"
-      title="Upload slides"
-      hint={`to ${project.code} · ${project.name}`}
+      label={t`Upload slides`}
+      title={t`Upload slides`}
+      hint={t`to ${project.code} · ${project.name}`}
       width={560}
       testId="upload-drawer"
       onClose={onClose}
     >
       <section
         data-testid="drop-zone"
-        aria-label="Drop slides here"
+        aria-label={t`Drop slides here`}
         onDragOver={(event) => {
           event.preventDefault();
           setDragging(true);
@@ -144,17 +150,25 @@ export function CaseUploadDrawer({
         )}
       >
         <Icon name="upload" size="lg" className="text-accent" />
-        <b className="text-body text-fg">Drop slides here</b>
+        <b className="text-body text-fg">
+          <Trans>Drop slides here</Trans>
+        </b>
         <span className="text-body-sm text-fg-dim">
-          or <TextLink onClick={() => picker.current?.click()}>choose files</TextLink>. Large files
-          upload in parts, so a lost connection or a closed tab does not start them over.
+          <Trans>or</Trans>{" "}
+          <TextLink onClick={() => picker.current?.click()}>
+            <Trans>choose files</Trans>
+          </TextLink>
+          <Trans>
+            . Large files upload in parts, so a lost connection or a closed tab does not start them
+            over.
+          </Trans>
         </span>
         <input
           ref={picker}
           type="file"
           multiple
           data-testid="file-input"
-          aria-label="Choose slide files"
+          aria-label={t`Choose slide files`}
           className="sr-only"
           onChange={(event) => {
             take(event.currentTarget.files);
@@ -169,7 +183,9 @@ export function CaseUploadDrawer({
           ))}
         </FileList>
       ) : (
-        <Hint>No files yet.</Hint>
+        <Hint>
+          <Trans>No files yet.</Trans>
+        </Hint>
       )}
     </DrawerPanel>
   );

@@ -1,4 +1,6 @@
 import { Menu as MenuPrimitive } from "@base-ui/react/menu";
+import { t } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import {
   DropdownMenu,
@@ -10,6 +12,7 @@ import {
 import { Icon, type IconName } from "@parfocal/ui/components/icon";
 import { Keycap } from "@parfocal/ui/components/keycap";
 import { PersonAvatar, type PersonInfo, type Presence } from "@parfocal/ui/components/person";
+import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import type { ReactNode } from "react";
 
 type AccountPresence = { key: Presence; label: string; hint: string; tone: string };
@@ -40,11 +43,11 @@ type AccountMenuProps = {
   defaultOpen?: boolean;
 };
 
-const themes: readonly [AccountTheme, string][] = [
-  ["dark", "Dark"],
-  ["light", "Light"],
-  ["system", "System"],
-];
+const themes: readonly [AccountTheme, string][] = lazyText(() => [
+  ["dark", t`Dark`],
+  ["light", t`Light`],
+  ["system", t`System`],
+]);
 
 const rowClass = "grid grid-cols-[18px_1fr_auto] items-center gap-2.5";
 
@@ -63,6 +66,8 @@ function AccountMenu({
   onLogOut,
   defaultOpen,
 }: AccountMenuProps) {
+  const { t } = useLingui();
+
   return (
     <DropdownMenu {...(defaultOpen === undefined ? {} : { defaultOpen })}>
       <DropdownMenuTrigger
@@ -71,17 +76,19 @@ function AccountMenu({
             variant="ghost"
             size="icon"
             className="rounded-full"
-            title={`${person.name}: theme, settings, log out`}
+            title={t`${person.name}: theme, settings, log out`}
           />
         }
       >
         <PersonAvatar person={person} size={28} presence={presence.key} />
-        <span className="sr-only">Account menu</span>
+        <span className="sr-only">
+          <Trans>Account menu</Trans>
+        </span>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-[310px] p-1.5">
         <div
           role="group"
-          aria-label="Signed in as"
+          aria-label={t`Signed in as`}
           className="grid grid-cols-[40px_1fr] items-center gap-3 px-2.5 pt-2.5 pb-2"
         >
           <PersonAvatar person={person} size={40} />
@@ -111,7 +118,9 @@ function AccountMenu({
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <div className="flex items-center justify-between gap-2.5 px-2.5 py-1.5 text-fg-dim">
-          <span id="account-theme">Theme</span>
+          <span id="account-theme">
+            <Trans>Theme</Trans>
+          </span>
           <MenuPrimitive.RadioGroup
             aria-labelledby="account-theme"
             value={theme}
@@ -136,7 +145,9 @@ function AccountMenu({
           closeOnClick={false}
           className="flex cursor-pointer items-center justify-between gap-2.5 rounded-md px-2.5 py-1.5 text-fg-dim outline-none data-highlighted:bg-chrome-2"
         >
-          <span>Initials only, for screen sharing</span>
+          <span>
+            <Trans>Initials only, for screen sharing</Trans>
+          </span>
           <span
             aria-hidden="true"
             className="relative h-3.5 w-6 shrink-0 rounded-full bg-input data-[on=true]:bg-primary"
@@ -170,7 +181,9 @@ function AccountMenu({
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={onLogOut} className={rowClass}>
           <Icon name="logout" />
-          <span>Log out</span>
+          <span>
+            <Trans>Log out</Trans>
+          </span>
           <span />
         </DropdownMenuItem>
       </DropdownMenuContent>

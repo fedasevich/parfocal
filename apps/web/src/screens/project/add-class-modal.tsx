@@ -1,3 +1,4 @@
+import { useLingui } from "@lingui/react/macro";
 import { FormField, TextFieldInput } from "@parfocal/ui/components/form-field";
 import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
 import { SmallModal } from "@parfocal/ui/components/small-modal";
@@ -24,6 +25,8 @@ export function AddClassModal({
   onClose: () => void;
   onAdd: (item: NewClass) => void;
 }) {
+  const { t } = useLingui();
+
   const [name, setName] = useState("");
   const [colour, setColour] = useState(swatches[0]?.colour ?? "#f59e0b");
   const [key, setKey] = useState("");
@@ -32,7 +35,7 @@ export function AddClassModal({
   const blockers = Object.entries(errors).map(([field, text]) => ({
     id: field,
     text,
-    goTo: field === "name" ? "Go to Name" : "Go to Key",
+    goTo: field === "name" ? t`Go to Name` : t`Go to Key`,
   }));
   const reset = () => {
     setName("");
@@ -48,13 +51,13 @@ export function AddClassModal({
           onClose();
         }
       }}
-      title="Add a class"
-      subtitle={`To ${projectCode}. New imports and tasks can use it.`}
+      title={t`Add a class`}
+      subtitle={t`To ${projectCode}. New imports and tasks can use it.`}
       width={480}
-      hint="Classes from imports can map to it later."
-      primaryLabel="Add class"
+      hint={t`Classes from imports can map to it later.`}
+      primaryLabel={t`Add class`}
       blockers={tried ? blockers : []}
-      blockersTitle="Before you can add the class"
+      blockersTitle={t`Before you can add the class`}
       onPrimary={() => {
         setTried(true);
         if (blockers.length > 0) return;
@@ -62,17 +65,17 @@ export function AddClassModal({
         reset();
       }}
     >
-      <FormField label="Name" error={tried ? errors.name : undefined}>
+      <FormField label={t`Name`} error={tried ? errors.name : undefined}>
         <TextFieldInput
           value={name}
           maxLength={40}
-          placeholder="For example Necrosis"
+          placeholder={t`For example Necrosis`}
           onChange={(event) => setName(event.currentTarget.value)}
         />
       </FormField>
-      <FormField label="Color">
+      <FormField label={t`Color`}>
         <SegmentedControl
-          aria-label="Color"
+          aria-label={t`Color`}
           value={colour}
           onValueChange={(value) => setColour(String(value))}
           options={swatches.map((swatch) => ({
@@ -87,9 +90,9 @@ export function AddClassModal({
         />
       </FormField>
       <FormField
-        label="Key"
+        label={t`Key`}
         error={tried ? errors.key : undefined}
-        help="A number from 1 to 9. Reviewers press it to give a cell this class."
+        help={t`A number from 1 to 9. Reviewers press it to give a cell this class.`}
       >
         <TextFieldInput
           value={key}

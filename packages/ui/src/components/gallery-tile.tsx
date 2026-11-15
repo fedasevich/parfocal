@@ -1,3 +1,4 @@
+import { useLingui } from "@lingui/react/macro";
 import type { Decision } from "@parfocal/tokens";
 import {
   aiWording,
@@ -67,6 +68,8 @@ function GalleryTile({
   className,
   ...props
 }: GalleryTileProps) {
+  const { t } = useLingui();
+
   const crop = size === 40;
   const done = state === "done";
   const status = decision === "open" ? stateWords[state] : decision;
@@ -84,7 +87,7 @@ function GalleryTile({
       data-wording={wording?.mode ?? wording?.setting}
       data-band={wording?.band}
       data-flag={flagged ? "may-not-be-nucleus" : undefined}
-      aria-label={`${objectId} ${shown}, ${status}${flagged ? ", may not be a nucleus" : ""}`}
+      aria-label={`${objectId} ${shown}, ${status}${flagged ? t`, may not be a nucleus` : ""}`}
       className={cn(
         "group/tile relative block shrink-0 cursor-pointer rounded-md border-0 bg-transparent p-0 text-left text-fg focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-4 focus-visible:outline-solid",
         crop && "rounded-[5px]",
@@ -163,8 +166,8 @@ function GalleryTile({
         <button
           type="button"
           data-slot="gallery-tile-flag-action"
-          title="May not be a nucleus. Disagree (X)"
-          aria-label={`${objectId} may not be a nucleus, disagree`}
+          title={t`May not be a nucleus. Disagree (X)`}
+          aria-label={t`${objectId} may not be a nucleus, disagree`}
           className="absolute -top-2.25 -right-2.25 z-10 grid size-6 cursor-pointer place-items-center rounded-full border-0 bg-transparent p-0 focus-visible:outline-2 focus-visible:-outline-offset-3 focus-visible:outline-accent focus-visible:outline-solid"
           onClick={onFlagAction}
         >

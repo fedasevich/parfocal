@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   getListModelRunsQueryKey,
   getListMyJobsQueryKey,
@@ -41,6 +42,8 @@ export function RunModelWindow({
   onClose,
   onStarted,
 }: RunModelWindowProps) {
+  const { t } = useLingui();
+
   const project = okData(useGetProject(projectId).data);
   const slides = useListProjectSlides(projectId).data?.data;
   const models = okData(useListProjectModels(projectId).data);
@@ -51,7 +54,7 @@ export function RunModelWindow({
   return (
     <RunModelForm
       key={scene}
-      projectLabel={`In ${project.code} · ${project.name}`}
+      projectLabel={t`In ${project.code} · ${project.name}`}
       projectId={projectId}
       slides={slides}
       models={models}
@@ -90,6 +93,8 @@ function RunModelForm({
   onClose,
   onStarted,
 }: RunModelFormProps) {
+  const { t } = useLingui();
+
   const [picked, setPicked] = useState(initialSlides);
   const [modelId, setModelId] = useState<string | null>(initialModel);
   const [open, setOpen] = useState(menuOpen);
@@ -119,36 +124,44 @@ function RunModelForm({
       open
       onOpenChange={(next) => (next ? undefined : onClose())}
       width={560}
-      title="Run a model"
+      title={t`Run a model`}
       subtitle={projectLabel}
-      hint="You can close this window. Jobs in the top bar shows how far it is."
+      hint={t`You can close this window. Jobs in the top bar shows how far it is.`}
       blockers={blockers}
       primaryBusy={start.isPending}
       primaryLabel={
         <>
           <Icon name="smart" />
-          {picked.length ? `Run on ${picked.length} slide${picked.length === 1 ? "" : "s"}` : "Run"}
+          {picked.length
+            ? t`Run on ${picked.length} slide${picked.length === 1 ? "" : "s"}`
+            : t`Run`}
         </>
       }
       onPrimary={() => void run()}
     >
-      <SmallModalZone title="Slides">
+      <SmallModalZone title={t`Slides`}>
         <div className="grid gap-1.5">
           <TokenField
-            label="Slides"
+            label={t`Slides`}
             items={items}
             picked={picked}
             onPickedChange={setPicked}
-            placeholder="Add slides by name or case"
+            placeholder={t`Add slides by name or case`}
             invalid={picked.length === 0}
           />
           <small className="flex justify-between gap-3 text-caption text-fg-dim">
-            <span>The slides without results are picked for you.</span>
-            {again ? <span className="text-warn">Runs again and adds a second set</span> : null}
+            <span>
+              <Trans>The slides without results are picked for you.</Trans>
+            </span>
+            {again ? (
+              <span className="text-warn">
+                <Trans>Runs again and adds a second set</Trans>
+              </span>
+            ) : null}
           </small>
         </div>
       </SmallModalZone>
-      <SmallModalZone title="Model">
+      <SmallModalZone title={t`Model`}>
         <ModelPicker
           groups={modelGroups(models)}
           value={modelId}
@@ -163,27 +176,27 @@ function RunModelForm({
               className="flex items-center gap-2 p-2.5 text-accent no-underline hover:underline"
             >
               <Icon name="plus" />
-              Connect your own model
+              <Trans>Connect your own model</Trans>
             </Link>
           }
-          note="A run always uses the latest version, and the result set records which one."
+          note={t`A run always uses the latest version, and the result set records which one.`}
         />
       </SmallModalZone>
-      <SmallModalZone title="What happens">
+      <SmallModalZone title={t`What happens`}>
         <div className="grid gap-3">
           {model && estimate ? (
             <>
               <OutcomeRow
                 icon="layers"
-                title="A new result set on each slide"
-                detail={`Called ${model.title} · ${formatDayMonth(now())}. Result sets you already have stay as they are.`}
+                title={t`A new result set on each slide`}
+                detail={t`Called ${model.title} · ${formatDayMonth(now())}. Result sets you already have stay as they are.`}
               />
               <OutcomeRow
                 icon="calendar"
                 title={
                   picked.length
-                    ? `About ${estimate.total} min, done around ${estimate.doneAround}`
-                    : "No slides picked yet"
+                    ? t`About ${estimate.total} min, done around ${estimate.doneAround}`
+                    : t`No slides picked yet`
                 }
                 detail={estimate.perSlide}
               />
@@ -191,8 +204,8 @@ function RunModelForm({
           ) : null}
           <OutcomeRow
             icon="bell"
-            title="You get a notification when it is done"
-            detail="In the bell at the top, with a link to the slides."
+            title={t`You get a notification when it is done`}
+            detail={t`In the bell at the top, with a link to the slides.`}
           />
         </div>
       </SmallModalZone>

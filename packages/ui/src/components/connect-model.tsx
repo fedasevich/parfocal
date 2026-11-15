@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Icon, type IconName } from "@parfocal/ui/components/icon";
 import {
   Select,
@@ -11,10 +13,12 @@ import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
 
 function CodeBlock({ className, ...props }: React.ComponentProps<"pre">) {
+  const { t } = useLingui();
+
   return (
     <pre
       data-slot="code-block"
-      {...scrollRegionProps("Code example")}
+      {...scrollRegionProps(t`Code example`)}
       className={cn(
         "m-0 overflow-auto rounded-zone border border-line bg-chrome px-4 py-3.5 font-mono text-caption leading-[1.6] whitespace-pre text-fg-dim focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent focus-visible:outline-solid",
         className,
@@ -189,13 +193,15 @@ function ClassMapTable({
   rows,
   options,
   onValueChange,
-  sentLabel = "It sends",
-  becomesLabel = "Becomes",
-  countLabel = "In the test",
-  placeholder = "Choose a class",
+  sentLabel = t`It sends`,
+  becomesLabel = t`Becomes`,
+  countLabel = t`In the test`,
+  placeholder = t`Choose a class`,
   className,
   ...props
 }: ClassMapTableProps) {
+  const { t } = useLingui();
+
   return (
     <table
       data-slot="class-map-table"
@@ -206,7 +212,9 @@ function ClassMapTable({
         <tr className="border-b border-line-strong text-left text-caption font-semibold text-fg-dim">
           <th className="w-[34%] py-2 font-semibold">{sentLabel}</th>
           <th className="w-10">
-            <span className="sr-only">Maps to</span>
+            <span className="sr-only">
+              <Trans>Maps to</Trans>
+            </span>
           </th>
           <th className="py-2 font-semibold">{becomesLabel}</th>
           <th className="w-28 py-2 text-right font-semibold">{countLabel}</th>
@@ -228,7 +236,7 @@ function ClassMapTable({
                   value={row.value}
                   onValueChange={(value) => onValueChange?.(row.sent, String(value))}
                 >
-                  <SelectTrigger size="sm" aria-label={`Class for ${row.sent}`} className="w-55">
+                  <SelectTrigger size="sm" aria-label={t`Class for ${row.sent}`} className="w-55">
                     {chosen ? (
                       <SelectValue>
                         <OptionLabel option={chosen} />

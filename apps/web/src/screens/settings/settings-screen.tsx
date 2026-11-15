@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   getGetMeQueryKey,
   getGetMySettingLayersQueryKey,
@@ -161,10 +162,12 @@ function Stepper({
   unit: string;
   onChange: (value: number) => void;
 }) {
+  const { t } = useLingui();
+
   const step = (delta: number) => onChange(Math.max(20, Math.min(140, value + delta)));
   return (
     <div className="flex items-center gap-2.5">
-      <Button size="icon-sm" aria-label={`Lower ${label}`} onClick={() => step(-10)}>
+      <Button size="icon-sm" aria-label={t`Lower ${label}`} onClick={() => step(-10)}>
         <Icon name="minus" size="xs" />
       </Button>
       <Slider
@@ -178,7 +181,7 @@ function Stepper({
           onChange(typeof next === "number" ? next : (next[0] ?? value))
         }
       />
-      <Button size="icon-sm" aria-label={`Raise ${label}`} onClick={() => step(10)}>
+      <Button size="icon-sm" aria-label={t`Raise ${label}`} onClick={() => step(10)}>
         <Icon name="plus" size="xs" />
       </Button>
       <span className="min-w-10 font-mono text-body-sm text-fg">
@@ -224,6 +227,8 @@ function LoadedSettings({
   onClose,
   layers,
 }: SettingsScreenProps & { layers: MySettingLayers }) {
+  const { t } = useLingui();
+
   const touring = useActiveTourStep() !== null;
   const me = okData(useGetMe().data);
   const sessions = okData(useListSessions().data) ?? [];
@@ -313,10 +318,21 @@ function LoadedSettings({
   }, [message]);
 
   const query = normalQuery(typed);
+  const sectionTitles: Record<SettingsSection, string> = {
+    display: t`Display`,
+    review: t`Review`,
+    layout: t`Layout`,
+    ai: t`AI and confidence`,
+    navigation: t`Navigation and devices`,
+    shortcuts: t`Shortcuts`,
+    notifications: t`Notifications`,
+    privacy: t`Privacy and session`,
+    account: t`Account`,
+  };
   const shown = shownSection(section, query);
   const visible = visibleSections(query);
   const presetNames = ["task", ...values.presets.slice(0, 3)];
-  const presetName = (name: string) => (name === "task" ? "Task default" : name);
+  const presetName = (name: string) => (name === "task" ? t`Task default` : name);
   const others = sessions.filter((session) => !session.current);
   const setD = <Key extends keyof Device>(key: Key, value: Device[Key]) =>
     setDevice((previous) => ({ ...previous, [key]: value }));
@@ -362,7 +378,7 @@ function LoadedSettings({
   const controls: Record<RowKey, () => ReactNode> = {
     homeLayout: () => (
       <Segments
-        label="Home"
+        label={t`Home`}
         value={values.home_layout}
         pairs={homeLayoutOptions.map((option) => [option.value, option.label])}
         onChange={(value) => {
@@ -376,12 +392,12 @@ function LoadedSettings({
     ),
     theme: () => (
       <Segments
-        label="Theme"
+        label={t`Theme`}
         value={theme}
         pairs={[
-          ["dark", "Dark"],
-          ["light", "Light"],
-          ["system", "System"],
+          ["dark", t`Dark`],
+          ["light", t`Light`],
+          ["system", t`System`],
         ]}
         onChange={(value) => {
           setTheme(value as ThemeChoice);
@@ -391,7 +407,7 @@ function LoadedSettings({
     ),
     brightness: () => (
       <Stepper
-        label="Slide brightness"
+        label={t`Slide brightness`}
         value={slideBrightness}
         unit="%"
         onChange={setSlideBrightness}
@@ -399,11 +415,11 @@ function LoadedSettings({
     ),
     density: () => (
       <Segments
-        label="Density"
+        label={t`Density`}
         value={values.density}
         pairs={[
-          ["comfortable", "Comfortable"],
-          ["compact", "Compact"],
+          ["comfortable", t`Comfortable`],
+          ["compact", t`Compact`],
         ]}
         onChange={(value) => {
           const density = value as SettingValues["density"];
@@ -414,10 +430,10 @@ function LoadedSettings({
     ),
     lengths: () => (
       <Segments
-        label="Lengths"
+        label={t`Lengths`}
         value={values.length_unit}
         pairs={[
-          ["auto", "µm and mm"],
+          ["auto", t`µm and mm`],
           ["um", "Always µm"],
         ]}
         onChange={(value) => {
@@ -430,11 +446,11 @@ function LoadedSettings({
     language: () => (
       <SegmentedControl
         fill
-        aria-label="Language"
+        aria-label={t`Language`}
         value="en"
         onValueChange={() => undefined}
         options={[
-          { value: "en", label: "English" },
+          { value: "en", label: t`English` },
           { value: "cs", label: "Čeština", disabled: true },
         ]}
       />
@@ -442,27 +458,27 @@ function LoadedSettings({
     patientNames: () =>
       layers.lab.locked.includes("patient_names") ? (
         lockedValue(
-          values.patient_names === "initials" ? "Initials only" : "Full name",
-          "Set by your lab for everyone",
+          values.patient_names === "initials" ? t`Initials only` : t`Full name`,
+          t`Set by your lab for everyone`,
         )
       ) : (
         <Segments
-          label="Patient names"
+          label={t`Patient names`}
           value={values.patient_names}
           pairs={[
-            ["full", "Full name"],
-            ["initials", "Initials only"],
+            ["full", t`Full name`],
+            ["initials", t`Initials only`],
           ]}
           onChange={(value) => save({ patient_names: value as SettingValues["patient_names"] })}
         />
       ),
     magnificationLabel: () => (
       <Segments
-        label="Magnification label"
+        label={t`Magnification label`}
         value={values.magnification_label}
         pairs={[
-          ["objective", "Objective"],
-          ["microns-per-pixel", "µm per pixel"],
+          ["objective", t`Objective`],
+          ["microns-per-pixel", t`µm per pixel`],
         ]}
         onChange={(value) =>
           save({ magnification_label: value as SettingValues["magnification_label"] })
@@ -480,48 +496,50 @@ function LoadedSettings({
       <Button
         onClick={onEditPresets}
         disabled={onEditPresets === undefined}
-        title={onEditPresets === undefined ? "Open a review task first" : undefined}
+        title={onEditPresets === undefined ? t`Open a review task first` : undefined}
       >
         <Icon name="sliders" />
-        Edit in the Display panel
+        <Trans>Edit in the Display panel</Trans>
       </Button>
     ),
     signature: () =>
-      toggle("Signature block", values.signature_block, (value) =>
+      toggle(t`Signature block`, values.signature_block, (value) =>
         save({ signature_block: value }),
       ),
     tools: () => (
       <Segments
-        label="Tools"
+        label={t`Tools`}
         value={values.tools}
         pairs={[
-          ["rail", "Left rail"],
-          ["dock", "Bottom dock"],
+          ["rail", t`Left rail`],
+          ["dock", t`Bottom dock`],
         ]}
         onChange={(value) => save({ tools: value as SettingValues["tools"] })}
       />
     ),
     panelWidth: () => (
       <Segments
-        label="Side panel width"
+        label={t`Side panel width`}
         value={String(values.side_panel_width)}
         pairs={[
-          ["300", "Narrow"],
-          ["340", "Default"],
-          ["420", "Wide"],
+          ["300", t`Narrow`],
+          ["340", t`Default`],
+          ["420", t`Wide`],
         ]}
         onChange={(value) => save({ side_panel_width: Number(value), hide_side_panel: false })}
       />
     ),
     hidePanel: () =>
-      toggle("Hide the panel", values.hide_side_panel, (value) => save({ hide_side_panel: value })),
+      toggle(t`Hide the panel`, values.hide_side_panel, (value) =>
+        save({ hide_side_panel: value }),
+      ),
     panelMoving: () => (
       <Segments
-        label="Panel while moving"
+        label={t`Panel while moving`}
         value={values.panel_while_moving}
         pairs={[
-          ["pinned", "Stays put"],
-          ["auto", "Hides while panning"],
+          ["pinned", t`Stays put`],
+          ["auto", t`Hides while panning`],
         ]}
         onChange={(value) =>
           save({ panel_while_moving: value as SettingValues["panel_while_moving"] })
@@ -530,34 +548,34 @@ function LoadedSettings({
     ),
     minimap: () => (
       <Segments
-        label="Minimap"
+        label={t`Minimap`}
         value={values.minimap}
         pairs={[
-          ["useful", "When useful"],
-          ["always", "Always"],
-          ["never", "Never"],
+          ["useful", t`When useful`],
+          ["always", t`Always`],
+          ["never", t`Never`],
         ]}
         onChange={(value) => save({ minimap: value as SettingValues["minimap"] })}
       />
     ),
-    strip: () => toggle("Pinned slide strip", pinnedStrip, setPinnedStrip),
+    strip: () => toggle(t`Pinned slide strip`, pinnedStrip, setPinnedStrip),
     defaultPreset: () => (
       <Segments
-        label="Default preset"
+        label={t`Default preset`}
         value={String(values.default_preset < presetNames.length ? values.default_preset : 0)}
         pairs={presetNames.map((name, index) => [String(index), presetName(name)])}
         onChange={(value) => {
           const index = Number(value);
           save({ default_preset: index });
           notify(
-            `${presetName(presetNames[index] ?? "task")} is your default preset. Settings a task locks still follow the task.`,
+            t`${presetName(presetNames[index] ?? "task")} is your default preset. Settings a task locks still follow the task.`,
           );
         }}
       />
     ),
     outlineMode: () => (
       <Segments
-        label="Outline display"
+        label={t`Outline display`}
         value={values.outline_mode}
         pairs={outlineModeChoices.map((choice) => [choice, outlineModeLabels[choice]])}
         onChange={(value) => {
@@ -573,49 +591,50 @@ function LoadedSettings({
       return (
         <span className="grid gap-1.5">
           <Segments
-            label="Confidence wording"
+            label={t`Confidence wording`}
             value={current}
             pairs={wordingPairs}
             onChange={(value) => save({ confidence_wording: value as WordingSetting })}
           />
           <small className="text-caption text-fg-dim" data-slot="wording-example">
-            Example: {wordingExample(current)}
+            <Trans>Example: {wordingExample(current)}</Trans>
           </small>
         </span>
       );
     },
-    decisionCutoff: () => lockedValue(`${values.decision_cutoff}%`, "Set by your lab for everyone"),
+    decisionCutoff: () =>
+      lockedValue(`${values.decision_cutoff}%`, t`Set by your lab for everyone`),
     tierOutline: () => (
       <Segments
-        label="Outline model tier"
+        label={t`Outline model tier`}
         value={values.tier_outline}
         pairs={[
-          ["best", "Best"],
-          ["good", "Good"],
-          ["fast", "Fast"],
+          ["best", t`Best`],
+          ["good", t`Good`],
+          ["fast", t`Fast`],
         ]}
         onChange={(value) => save({ tier_outline: value as SettingValues["tier_outline"] })}
       />
     ),
     trackRecord: () =>
-      toggle("Track record block", values.inspector_track_record, (value) =>
+      toggle(t`Track record block`, values.inspector_track_record, (value) =>
         save({ inspector_track_record: value }),
       ),
     calibration: () =>
-      toggle("Calibration details block", values.inspector_calibration, (value) =>
+      toggle(t`Calibration details block`, values.inspector_calibration, (value) =>
         save({ inspector_calibration: value }),
       ),
     modelWarnings: () =>
-      toggle("Model warnings", values.model_warnings, (value) => save({ model_warnings: value })),
+      toggle(t`Model warnings`, values.model_warnings, (value) => save({ model_warnings: value })),
     device: () => (
       <Segments
-        label="Main input device"
+        label={t`Main input device`}
         value={device.device}
         pairs={[
-          ["mouse", "Mouse"],
-          ["trackpad", "Trackpad"],
+          ["mouse", t`Mouse`],
+          ["trackpad", t`Trackpad`],
           ["spacemouse", "SpaceMouse"],
-          ["gamepad", "Gamepad"],
+          ["gamepad", t`Gamepad`],
           ["pen", "Pen"],
         ]}
         onChange={(value) => {
@@ -627,30 +646,30 @@ function LoadedSettings({
     ),
     wheel: () => (
       <Segments
-        label="Mouse wheel"
+        label={t`Mouse wheel`}
         value={navigation.wheel}
         pairs={[
-          ["zoom", "Zoom"],
+          ["zoom", t`Zoom`],
           ["pan", "Pan"],
-          ["detect", "Detect device"],
+          ["detect", t`Detect device`],
         ]}
         onChange={(value) => changeNavigation({ wheel: value as WheelChoice })}
       />
     ),
     doubleClick: () => (
       <Segments
-        label="Double-click"
+        label={t`Double-click`}
         value={values.double_click}
         pairs={[
-          ["zoom", "Zoom in 2×"],
-          ["toggle", "Last two magnifications"],
+          ["zoom", t`Zoom in 2×`],
+          ["toggle", t`Last two magnifications`],
         ]}
         onChange={(value) => save({ double_click: value as SettingValues["double_click"] })}
       />
     ),
     speed: () => (
       <Stepper
-        label="Pan and zoom speed"
+        label={t`Pan and zoom speed`}
         value={device.speed}
         unit=""
         onChange={(value) => changeCalibration({ speed: value })}
@@ -658,14 +677,14 @@ function LoadedSettings({
     ),
     deadZone: () => (
       <Stepper
-        label="Dead zone"
+        label={t`Dead zone`}
         value={device.deadZone}
         unit="%"
         onChange={(value) => changeCalibration({ deadZone: value })}
       />
     ),
     invertZoom: () =>
-      toggle("Invert zoom direction", navigation.invertZoom, (value) =>
+      toggle(t`Invert zoom direction`, navigation.invertZoom, (value) =>
         changeNavigation({ invertZoom: value }),
       ),
     spaceMouseRotation: () =>
@@ -674,12 +693,12 @@ function LoadedSettings({
       ),
     feel: () => (
       <Segments
-        label="Camera feel"
+        label={t`Camera feel`}
         value={navigation.feel}
         pairs={[
-          ["smooth", "Smooth"],
-          ["precise", "Precise"],
-          ["instant", "Instant"],
+          ["smooth", t`Smooth`],
+          ["precise", t`Precise`],
+          ["instant", t`Instant`],
         ]}
         onChange={(value) => {
           chooseFeel(value as Navigation["feel"]);
@@ -688,57 +707,59 @@ function LoadedSettings({
       />
     ),
     coasting: () =>
-      toggle("Coasting", navigation.coasting, (value) => changeNavigation({ coasting: value })),
+      toggle(t`Coasting`, navigation.coasting, (value) => changeNavigation({ coasting: value })),
     animatedJumps: () =>
-      toggle("Animated jumps", navigation.animatedJumps, (value) =>
+      toggle(t`Animated jumps`, navigation.animatedJumps, (value) =>
         changeNavigation({ animatedJumps: value }),
       ),
     zoomAnchor: () => (
       <Segments
-        label="Zoom anchor"
+        label={t`Zoom anchor`}
         value={navigation.zoomAnchor}
         pairs={[
-          ["cursor", "Cursor"],
-          ["centre", "View centre"],
+          ["cursor", t`Cursor`],
+          ["centre", t`View centre`],
         ]}
         onChange={(value) => changeNavigation({ zoomAnchor: value as Navigation["zoomAnchor"] })}
       />
     ),
     objectiveDetents: () =>
-      toggle("Objective detents", navigation.objectiveDetents, (value) =>
+      toggle(t`Objective detents`, navigation.objectiveDetents, (value) =>
         changeNavigation({ objectiveDetents: value }),
       ),
     feelPreview: () => <FeelPreview navigation={navigation} />,
-    noticeTask: () => notice("noticeTask", "A task is given to me"),
-    noticeMention: () => notice("noticeMention", "Someone mentions me"),
-    noticeReply: () => notice("noticeReply", "Someone replies to me"),
-    noticeStat: () => notice("noticeStat", "A STAT task is given to me"),
+    noticeTask: () => notice("noticeTask", t`A task is given to me`),
+    noticeMention: () => notice("noticeMention", t`Someone mentions me`),
+    noticeReply: () => notice("noticeReply", t`Someone replies to me`),
+    noticeStat: () => notice("noticeStat", t`A STAT task is given to me`),
     statSound: () =>
-      toggle("Sound for STAT tasks", stat.sound, (value) => {
+      toggle(t`Sound for STAT tasks`, stat.sound, (value) => {
         writeStatSound(value);
         setStat((previous) => ({ ...previous, sound: value }));
       }),
-    noticeSubmit: () => notice("noticeSubmit", "A reviewer submits a slide of my task"),
-    noticeRun: () => notice("noticeRun", "A model run finishes"),
-    noticeDue: () => notice("noticeDue", "A reminder before a due date"),
+    noticeSubmit: () => notice("noticeSubmit", t`A reviewer submits a slide of my task`),
+    noticeRun: () => notice("noticeRun", t`A model run finishes`),
+    noticeDue: () => notice("noticeDue", t`A reminder before a due date`),
     initials: () =>
-      toggle("Initials while sharing", values.initials_while_sharing, (value) =>
+      toggle(t`Initials while sharing`, values.initials_while_sharing, (value) =>
         save({ initials_while_sharing: value }),
       ),
     analytics: () =>
       values.analytics_policy === "person"
-        ? toggle("Share usage statistics", !values.analytics_opt_out, (value) =>
+        ? toggle(t`Share usage statistics`, !values.analytics_opt_out, (value) =>
             save({ analytics_opt_out: !value }),
           )
         : lockedValue(
             values.analytics_policy === "on" ? "On" : "Off",
-            "Set by your lab for everyone",
+            t`Set by your lab for everyone`,
           ),
     lockAfter: () => lockAfterText(policy?.idle_lock_minutes),
     patientBanner: () => patientBannerText(layers.lab),
     otherDevices: () =>
       others.length === 0 ? (
-        <span className="text-body text-fg">Only this device</span>
+        <span className="text-body text-fg">
+          <Trans>Only this device</Trans>
+        </span>
       ) : (
         <Button
           disabled={endOthers.isPending}
@@ -747,20 +768,20 @@ function LoadedSettings({
               onSuccess: (response) => {
                 const count = response.status === 200 ? response.data.ended : others.length;
                 setSignedOutAt({ count, at: now() });
-                notify(`Signed out of the ${count} other devices`);
+                notify(t`Signed out of the ${count} other devices`);
                 void queryClient.invalidateQueries({ queryKey: getListSessionsQueryKey() });
               },
             })
           }
         >
-          Sign out on other devices
+          <Trans>Sign out on other devices</Trans>
         </Button>
       ),
     name: () => (
       <span className="inline-flex items-center gap-2">
         <PersonAvatar person={personOf(me)} size={20} />
         <input
-          aria-label="Name"
+          aria-label={t`Name`}
           maxLength={200}
           className="h-7 w-64 rounded-sm border border-line bg-surface px-2 text-body text-fg"
           value={nameDraft ?? shownName}
@@ -776,9 +797,9 @@ function LoadedSettings({
         />
       </span>
     ),
-    email: () => lockedValue(me?.email ?? "", "Comes from your sign-in", "font-mono"),
-    role: () => lockedValue(me?.title ?? "", "Set by your lab admin"),
-    workspace: () => lockedValue(workspace?.name ?? "", "Set by your lab admin"),
+    email: () => lockedValue(me?.email ?? "", t`Comes from your sign-in`, "font-mono"),
+    role: () => lockedValue(me?.title ?? "", t`Set by your lab admin`),
+    workspace: () => lockedValue(workspace?.name ?? "", t`Set by your lab admin`),
   };
 
   const shownName = savedName ?? me?.display_name ?? "";
@@ -788,7 +809,7 @@ function LoadedSettings({
     setNameDraft(null);
     if (next === shownName) return;
     if (next === "") {
-      notify("Your name can't be empty");
+      notify(t`Your name can't be empty`);
       return;
     }
     setSavedName(next);
@@ -796,12 +817,12 @@ function LoadedSettings({
       { data: { display_name: next } },
       {
         onSuccess: () => {
-          notify("Name saved");
+          notify(t`Name saved`);
           void queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
         },
         onError: () => {
           setSavedName(null);
-          notify("Your name was not saved. Try again.");
+          notify(t`Your name was not saved. Try again.`);
         },
       },
     );
@@ -810,7 +831,7 @@ function LoadedSettings({
   function lockedValue(value: string, reason: string, className?: string) {
     return (
       <span className="inline-flex items-center gap-2" data-locked>
-        <Icon name="lock" size="xs" label="Locked" className="text-fg-faint" />
+        <Icon name="lock" size="xs" label={t`Locked`} className="text-fg-faint" />
         <span className={className}>{value}</span>
         <small className="text-caption text-fg-faint">{reason}</small>
       </span>
@@ -823,9 +844,9 @@ function LoadedSettings({
         label={label}
         value={channel(key)}
         pairs={[
-          ["email", "Email"],
-          ["bell", "Bell"],
-          ["quiet", "Quiet"],
+          ["email", t`Email`],
+          ["bell", t`Bell`],
+          ["quiet", t`Quiet`],
         ]}
         onChange={(value) => chooseChannel(key, value as Channel)}
       />
@@ -835,10 +856,10 @@ function LoadedSettings({
   const help = (item: SettingRow): string => {
     if (item.key !== "otherDevices") return item.help;
     if (signedOutAt && others.length === 0) {
-      return `Signed out of ${signedOutAt.count} other devices at ${clockTime(signedOutAt.at)}. They ask for a sign-in next time.`;
+      return t`Signed out of ${signedOutAt.count} other devices at ${clockTime(signedOutAt.at)}. They ask for a sign-in next time.`;
     }
-    if (others.length === 0) return "No other device is signed in.";
-    return `${others.length === 2 ? "Two" : others.length} other devices are signed in: ${andJoin(
+    if (others.length === 0) return t`No other device is signed in.`;
+    return t`${others.length === 2 ? "Two" : others.length} other devices are signed in: ${andJoin(
       others.map((session) => withArticle(session.user_agent ?? "unknown device")),
     )}.`;
   };
@@ -868,8 +889,8 @@ function LoadedSettings({
           ))}
           <SettingsRows>
             <SettingsRow
-              label="Signature block"
-              help={`Signs reports as ${shownName}${me?.title ? `, ${me.title}` : ""}.`}
+              label={t`Signature block`}
+              help={t`Signs reports as ${shownName}${me?.title ? `, ${me.title}` : ""}.`}
               scope="personal"
             >
               {controls.signature()}
@@ -898,8 +919,8 @@ function LoadedSettings({
   return (
     <SettingsDialog
       modal={!touring}
-      title={shown?.title ?? "Settings"}
-      hint={query && shown ? `Matching "${typed.trim()}"` : undefined}
+      title={shown ? sectionTitles[shown.key] : t`Settings`}
+      hint={query && shown ? t`Matching "${typed.trim()}"` : undefined}
       onOpenChange={(open) => {
         if (open) return;
         if (shortcuts.recording !== null || shortcuts.finding) {
@@ -918,13 +939,13 @@ function LoadedSettings({
             event.stopPropagation();
             onQuery("");
           }}
-          empty={visible.length === 0 ? "No section matches" : undefined}
+          empty={visible.length === 0 ? t`No section matches` : undefined}
         >
           {visible.map((item) => (
             <SettingsNavItem
               key={item.key}
               icon={item.icon}
-              label={item.title}
+              label={sectionTitles[item.key]}
               current={item.key === shown?.key}
               count={query && item.key !== "shortcuts" ? matchCount(item.key, query) : undefined}
               onClick={() => (item.key === shown?.key ? undefined : onSection(item.key))}

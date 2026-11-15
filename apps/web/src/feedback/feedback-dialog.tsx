@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { useSendFeedback } from "@parfocal/api-client";
 import { FormField, TextAreaInput } from "@parfocal/ui/components/form-field";
 import { SmallModal } from "@parfocal/ui/components/small-modal";
@@ -17,6 +18,8 @@ export default function FeedbackDialog({
   route: string;
   onClose: () => void;
 }) {
+  const { t } = useLingui();
+
   const send = useSendFeedback();
   const [text, setText] = useState("");
   const [attach, setAttach] = useState(feedback.screenshot !== null);
@@ -26,9 +29,9 @@ export default function FeedbackDialog({
   const trimmed = text.trim();
   const problem =
     trimmed === ""
-      ? "Write what happened or what you would like"
+      ? t`Write what happened or what you would like`
       : trimmed.length > maxLength
-        ? `Keep it under ${maxLength} characters`
+        ? t`Keep it under ${maxLength} characters`
         : undefined;
   const screenshot = attach && feedback.screenshot ? feedback.screenshot : null;
   return (
@@ -37,24 +40,24 @@ export default function FeedbackDialog({
       onOpenChange={(next) => {
         if (!next) onClose();
       }}
-      title={sent ? "Thanks, the team has it" : "Send feedback"}
+      title={sent ? t`Thanks, the team has it` : t`Send feedback`}
       subtitle={
         sent
-          ? "We read every message. Nothing else from this screen was sent."
-          : "Goes to the Parfocal team. Slides, images, names and case details are blurred in your browser before anything is sent."
+          ? t`We read every message. Nothing else from this screen was sent.`
+          : t`Goes to the Parfocal team. Slides, images, names and case details are blurred in your browser before anything is sent.`
       }
       width={560}
-      primaryLabel={sent ? "Done" : "Send"}
+      primaryLabel={sent ? t`Done` : t`Send`}
       showCancel={!sent}
       primaryBusy={send.isPending}
       blockers={
         tried && problem
-          ? [{ id: "text", text: problem, goTo: "Go to the text" }]
+          ? [{ id: "text", text: problem, goTo: t`Go to the text` }]
           : failure
-            ? [{ id: "failure", text: failure, goTo: "Try again" }]
+            ? [{ id: "failure", text: failure, goTo: t`Try again` }]
             : []
       }
-      blockersTitle="Before you can send"
+      blockersTitle={t`Before you can send`}
       onPrimary={() => {
         if (sent) {
           onClose();
@@ -75,12 +78,12 @@ export default function FeedbackDialog({
           {
             onSuccess: (response) => {
               if (response.status !== 200) {
-                setFailure("The team did not get it. Try again in a moment.");
+                setFailure(t`The team did not get it. Try again in a moment.`);
                 return;
               }
               setSent(true);
             },
-            onError: () => setFailure("The team did not get it. Try again in a moment."),
+            onError: () => setFailure(t`The team did not get it. Try again in a moment.`),
           },
         );
       }}
@@ -88,15 +91,15 @@ export default function FeedbackDialog({
       {sent ? null : (
         <>
           <FormField
-            label="What happened, or what would help?"
+            label={t`What happened, or what would help?`}
             error={tried ? problem : undefined}
-            count={`${trimmed.length} of ${maxLength}`}
+            count={t`${trimmed.length} of ${maxLength}`}
           >
             <TextAreaInput
               rows={4}
               value={text}
               onChange={(event) => setText(event.target.value)}
-              placeholder="Leave out patient names and case numbers."
+              placeholder={t`Leave out patient names and case numbers.`}
             />
           </FormField>
           {feedback.screenshot ? (
@@ -107,12 +110,12 @@ export default function FeedbackDialog({
                   checked={attach}
                   onChange={(event) => setAttach(event.target.checked)}
                 />
-                Attach the blurred screenshot
+                <Trans>Attach the blurred screenshot</Trans>
               </label>
               {attach ? (
                 <img
                   src={feedback.screenshot}
-                  alt="The screenshot that will be sent, with slides and patient details blurred"
+                  alt={t`The screenshot that will be sent, with slides and patient details blurred`}
                   data-testid="feedback-screenshot"
                   className="max-h-56 w-full rounded-sm border border-line object-contain"
                 />
@@ -120,7 +123,7 @@ export default function FeedbackDialog({
             </>
           ) : (
             <p className="text-body-sm text-fg-dim">
-              This browser could not take a screenshot, so only your text is sent.
+              <Trans>This browser could not take a screenshot, so only your text is sent.</Trans>
             </p>
           )}
         </>

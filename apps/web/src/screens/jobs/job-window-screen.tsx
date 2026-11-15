@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   cancelModelRun,
   getListModelRunsQueryKey,
@@ -66,6 +67,8 @@ function JobWindowBody({
   projectId: string;
   onClose: () => void;
 }) {
+  const { t } = useLingui();
+
   const [open, setOpen] = useState<Record<string, boolean>>(() =>
     runs[0] ? { [runs[0].id]: true } : {},
   );
@@ -100,7 +103,7 @@ function JobWindowBody({
       .getQueryData<{ data: MyJob[] }>(getListMyJobsQueryKey())
       ?.data.find((item) => item.id === job.id)?.minutes_left;
     tray.notify(
-      `Moved to the ${parfocalGpu}. It picks up from tile ${tile ?? 0}, about ${left ?? 0} min left.`,
+      t`Moved to the ${parfocalGpu}. It picks up from tile ${tile ?? 0}, about ${left ?? 0} min left.`,
     );
   };
   const cancel = async () => {
@@ -109,7 +112,7 @@ function JobWindowBody({
     for (const run of stopped) await cancelModelRun(projectId, run.id);
     await refresh();
     onClose();
-    tray.notify("Run cancelled. Slides that finished keep their results.", () => {
+    tray.notify(t`Run cancelled. Slides that finished keep their results.`, () => {
       void Promise.all(stopped.map((run) => resumeModelRun(projectId, run.id))).then(refresh);
     });
   };
@@ -118,24 +121,24 @@ function JobWindowBody({
       <>
         <span className="flex-1" />
         <Button variant="ghost" onClick={onClose}>
-          Close
+          <Trans>Close</Trans>
         </Button>
         <Button
           variant="primary"
           nativeButton={false}
           render={<Link to="/projects/$projectId" params={{ projectId: job.project.id }} />}
         >
-          Open the project
+          <Trans>Open the project</Trans>
         </Button>
       </>
     ) : (
       <>
         <Button variant="ghost" onClick={() => void cancel()}>
-          Cancel the run
+          <Trans>Cancel the run</Trans>
         </Button>
         <span className="flex-1" />
         <Button variant={summary.state === "paused" ? "secondary" : "primary"} onClick={onClose}>
-          Close, it keeps going
+          <Trans>Close, it keeps going</Trans>
         </Button>
       </>
     );
@@ -153,16 +156,21 @@ function JobWindowBody({
           title={
             <span className="inline-flex items-center gap-2">
               <Icon name="pause" />
-              Paused at {job.percent}%: the lab server stopped answering
+              <Trans>
+                Paused at {job.percent}
+                %: the lab server stopped answering
+              </Trans>
             </span>
           }
-          sub={`${job.pause.server} has not answered for ${minutesSince(job.pause.since, today)} minutes. Nothing is lost. The run picks up from the last finished tile when it resumes.`}
+          sub={t`${job.pause.server} has not answered for ${minutesSince(job.pause.since, today)} minutes. Nothing is lost. The run picks up from the last finished tile when it resumes.`}
         >
           <div className="flex flex-wrap gap-2">
             <Button variant="primary" onClick={() => void resumeNow()}>
-              Resume now
+              <Trans>Resume now</Trans>
             </Button>
-            <Button onClick={() => void moveToGpu()}>Move it to the {parfocalGpu}</Button>
+            <Button onClick={() => void moveToGpu()}>
+              <Trans>Move it to the {parfocalGpu}</Trans>
+            </Button>
           </div>
         </Zone>
       ) : null}
@@ -196,7 +204,7 @@ function JobWindowBody({
                         />
                       }
                     >
-                      {run.status === "done" ? "Open the slide" : "Open now with what is ready"}
+                      {run.status === "done" ? t`Open the slide` : t`Open now with what is ready`}
                     </Button>
                   ) : undefined
                 }

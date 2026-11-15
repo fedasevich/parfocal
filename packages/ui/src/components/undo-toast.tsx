@@ -1,3 +1,4 @@
+import { Trans } from "@lingui/react/macro";
 import { Icon } from "@parfocal/ui/components/icon";
 import { cn } from "@parfocal/ui/lib/utils";
 import type * as React from "react";
@@ -27,7 +28,7 @@ function UndoButton({ onClick }: { onClick: () => void }) {
       className="inline-flex cursor-pointer items-center gap-1.25 border-0 bg-transparent p-0 font-semibold text-accent hover:underline focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-accent"
     >
       <Icon name="undo" />
-      Undo
+      <Trans>Undo</Trans>
     </button>
   );
 }

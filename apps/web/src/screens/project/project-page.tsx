@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   type Project,
   useGetProject,
@@ -43,9 +44,13 @@ export type ProjectView = {
 
 const privacyTag = (project: Project) =>
   project.privacy_mode === "clinical" ? (
-    <StatusTag tone="warn">Clinical</StatusTag>
+    <StatusTag tone="warn">
+      <Trans>Clinical</Trans>
+    </StatusTag>
   ) : (
-    <StatusTag tone="accent">De-identified</StatusTag>
+    <StatusTag tone="accent">
+      <Trans>De-identified</Trans>
+    </StatusTag>
   );
 
 const plural = (count: number, one: string, many = `${one}s`) =>
@@ -60,6 +65,8 @@ export function ProjectPage({
   view: ProjectView;
   overlay?: ReactNode;
 }) {
+  const { t } = useLingui();
+
   const project = okData(useGetProject(projectId).data);
   const format = useFormat();
   const overview = useGetProjectOverview(projectId).data?.data;
@@ -76,7 +83,7 @@ export function ProjectPage({
   if (project === undefined) {
     return (
       <main className="grid flex-1 place-items-center p-8">
-        <Loader label="Loading the project" />
+        <Loader label={t`Loading the project`} />
       </main>
     );
   }
@@ -127,13 +134,13 @@ export function ProjectPage({
                   />
                 }
               >
-                See the fix
+                <Trans>See the fix</Trans>
               </Button>
               <Button
                 size="icon-sm"
                 variant="ghost"
-                aria-label="Dismiss. The message stays in the bell"
-                title="Dismiss. The message stays in the bell"
+                aria-label={t`Dismiss. The message stays in the bell`}
+                title={t`Dismiss. The message stays in the bell`}
                 onClick={() => setBannerShut(true)}
               >
                 <Icon name="close" />
@@ -141,8 +148,11 @@ export function ProjectPage({
             </>
           }
         >
-          <b>{failure.file} was not imported.</b> All {failure.objects} objects fall outside slide{" "}
-          {failure.slide_label}, {failure.reason}. Nothing was changed.
+          <Trans>
+            <b>{failure.file} was not imported.</b> All {failure.objects} objects fall outside slide{" "}
+            {failure.slide_label}
+          </Trans>
+          , <Trans>{failure.reason}. Nothing was changed.</Trans>
         </Banner>
       ) : null}
       <div className="flex min-h-0 flex-1 flex-col pt-5.5 pr-8 pb-4.5 pl-7">
@@ -162,8 +172,16 @@ export function ProjectPage({
               ) : null}
               {overview ? <span>{plural(overview.slides, "slide")}</span> : null}
               {overview ? <span>{plural(overview.result_sets, "result set")}</span> : null}
-              {overview ? <span>{format.integer(overview.objects)} objects with an ID</span> : null}
-              {overview ? <span>{overview.reviewed_percent}% reviewed</span> : null}
+              {overview ? (
+                <span>
+                  <Trans>{format.integer(overview.objects)} objects with an ID</Trans>
+                </span>
+              ) : null}
+              {overview ? (
+                <span>
+                  <Trans>{overview.reviewed_percent}% reviewed</Trans>
+                </span>
+              ) : null}
             </p>
           </div>
           <div className="flex flex-none items-center gap-2">
@@ -172,7 +190,7 @@ export function ProjectPage({
               render={<Link to="/projects/$projectId/upload" params={{ projectId }} />}
             >
               <Icon name="upload" />
-              Upload
+              <Trans>Upload</Trans>
             </Button>
             <Button
               variant="primary"
@@ -180,12 +198,12 @@ export function ProjectPage({
               render={<Link to="/projects/$projectId/tasks/new" params={{ projectId }} />}
             >
               <Icon name="users" />
-              New review task
+              <Trans>New review task</Trans>
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger
                 render={
-                  <Button size="icon" aria-label="More project actions" title="More">
+                  <Button size="icon" aria-label={t`More project actions`} title={t`More`}>
                     <Icon name="more" />
                   </Button>
                 }
@@ -197,7 +215,7 @@ export function ProjectPage({
                   }
                 >
                   <Icon name="folder" />
-                  New case
+                  <Trans>New case</Trans>
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() =>
@@ -205,7 +223,7 @@ export function ProjectPage({
                   }
                 >
                   <Icon name="smart" />
-                  Run a model
+                  <Trans>Run a model</Trans>
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() =>
@@ -217,22 +235,22 @@ export function ProjectPage({
                   }
                 >
                   <Icon name="link" />
-                  Automatic imports
+                  <Trans>Automatic imports</Trans>
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() =>
                     toast.show(
-                      "Downloads decisions per object and every result set of the project (mock)",
+                      t`Downloads decisions per object and every result set of the project (mock)`,
                     )
                   }
                 >
                   <Icon name="download" />
-                  Export decisions and results
+                  <Trans>Export decisions and results</Trans>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => goTab("settings")}>
                   <Icon name="gear" />
-                  Project settings
+                  <Trans>Project settings</Trans>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -241,14 +259,16 @@ export function ProjectPage({
         <Tabs value={view.tab} onValueChange={(value) => goTab(value as ProjectTab)}>
           <TabsList variant="page">
             <TabsTrigger value="slides">
-              Slides
+              <Trans>Slides</Trans>
               {overview ? <TabCount>{overview.slides}</TabCount> : null}
             </TabsTrigger>
             <TabsTrigger value="tasks">
-              Review tasks
+              <Trans>Review tasks</Trans>
               <TabCount>{tasks.length}</TabCount>
             </TabsTrigger>
-            <TabsTrigger value="settings">Settings</TabsTrigger>
+            <TabsTrigger value="settings">
+              <Trans>Settings</Trans>
+            </TabsTrigger>
           </TabsList>
         </Tabs>
         <div

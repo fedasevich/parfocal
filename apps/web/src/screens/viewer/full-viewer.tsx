@@ -450,9 +450,9 @@ function ViewerBody({
   const confidence = settings.confidence as Confidence;
   const readOnly = setup.readOnly;
   const buttonsOff = readOnly
-    ? "Signed off. Ask the researcher to amend."
+    ? t`Signed off. Ask the researcher to amend.`
     : setup.issue === "slidefail"
-      ? "This part of the slide can't be read yet"
+      ? t`This part of the slide can't be read yet`
       : setup.connLost
         ? netOff
         : undefined;
@@ -481,7 +481,7 @@ function ViewerBody({
     ? []
     : slideSets.filter((set) => set.id !== taskSetId && setIsShown(set.id));
   const reviewedOn = setIsShown("reviewed");
-  const setB = shortName(stats?.model_vs_model.set_b_id ?? otherSet?.id) || "the other set";
+  const setB = shortName(stats?.model_vs_model.set_b_id ?? otherSet?.id) || t`the other set`;
   const pick = (object: string | undefined) => {
     setCamera(null);
     setNote({ open: false, reasons: [], text: "" });
@@ -542,7 +542,7 @@ function ViewerBody({
     const target = cells.find((item) => item.object === object);
     if (target === undefined || answer(object)) return;
     const raw = rawFor(style, "disagree", target);
-    const reasons = ["Not a cell"];
+    const reasons = [t`Not a cell`];
     const before = overrides;
     put(object, { value: "disagree", raw, reasons, note: null });
     decisions.save(
@@ -553,7 +553,7 @@ function ViewerBody({
     );
     setToast({
       id: Date.now(),
-      text: `${object}: not a nucleus, counts as disagree`,
+      text: t`${object}: not a nucleus, counts as disagree`,
       undo: () => {
         setOverrides(before);
         decisions.restore(object, undefined);
@@ -749,7 +749,7 @@ function ViewerBody({
     setOverrides(next);
     setToast({
       id: Date.now(),
-      text: `${openZoneCells.length} cells in ${openZone.name} marked agree`,
+      text: t`${openZoneCells.length} cells in ${openZone.name} marked agree`,
       undo: () => {
         setOverrides(before);
         for (const cell of openZoneCells) decisions.restore(cell.object, undefined);
@@ -989,8 +989,8 @@ function ViewerBody({
     ? [
         ...openRegions.map((region) => ({
           id: region.object,
-          text: `${region.object} is still open`,
-          goTo: `Go to ${region.object}`,
+          text: t`${region.object} is still open`,
+          goTo: t`Go to ${region.object}`,
           onGoTo: () => {
             pick(region.object);
             onSearch({ object: region.object, tab: "objects" });
@@ -1000,8 +1000,8 @@ function ViewerBody({
           ? [
               {
                 id: "cells",
-                text: `${openCells.length} cell${openCells.length === 1 ? "" : "s"} in the sample ${openCells.length === 1 ? "is" : "are"} still open`,
-                goTo: "Go to the cells",
+                text: t`${openCells.length} cell${openCells.length === 1 ? "" : "s"} in the sample ${openCells.length === 1 ? "is" : "are"} still open`,
+                goTo: t`Go to the cells`,
                 onGoTo: () => onSearch({ object: openCells[0]?.object, tab: "objects" }),
               },
             ]
@@ -1028,8 +1028,8 @@ function ViewerBody({
         .filter(({ question }) => question.required && !opinion[question.id])
         .map(({ question, position }) => ({
           id: question.id,
-          text: `Question ${position + 1} is not answered`,
-          goTo: "Answer it",
+          text: t`Question ${position + 1} is not answered`,
+          goTo: t`Answer it`,
         }));
   const submit = () => {
     if (failed) {
@@ -1103,7 +1103,7 @@ function ViewerBody({
             layout="cell-findings"
             image={lookUrl("hpf")}
             slide={{
-              label: `Cells on ${slideLabel}`,
+              label: t`Cells on ${slideLabel}`,
               classes: numberLineOf(cells, decidedObject, classColor, (cell) =>
                 unsureIds.has(cell.object),
               ),
@@ -1173,7 +1173,7 @@ function ViewerBody({
         ) : (
           <ModelWarningsBlock warnings={modelWarnings} />
         )}
-        <AiSays setName={`${setName}, imported 12 Oct`} objects={objects} />
+        <AiSays setName={t`${setName}, imported 12 Oct`} objects={objects} />
         <TrackRecordBlock
           enabled={personalSettings?.inspector_track_record ?? true}
           lines={trackRecordLines(trackRecord, typer?.name ?? "")}
@@ -1256,7 +1256,7 @@ function ViewerBody({
       locked={
         setsLock
           ? {
-              reason: `Locked by ${session.display?.task_code ?? "the task"}: ${setsLock.reason.charAt(0).toLowerCase()}${setsLock.reason.slice(1)}`,
+              reason: t`Locked by ${session.display?.task_code ?? "the task"}: ${setsLock.reason.charAt(0).toLowerCase()}${setsLock.reason.slice(1)}`,
             }
           : undefined
       }
@@ -1266,19 +1266,19 @@ function ViewerBody({
           return {
             key: set.id,
             name: `${set.name} ${set.model_version ?? ""}`.trim(),
-            sub: `${set.source === "run" ? "Run here" : "Imported"} ${formatDayMonth(new Date(set.produced_at ?? set.created_at))}${task ? " · the result this task checks" : ""}`,
+            sub: `${set.source === "run" ? t`Run here` : t`Imported`} ${formatDayMonth(new Date(set.produced_at ?? set.created_at))}${task ? t` · the result this task checks` : ""}`,
             color: task ? setColours.a : setColours.b,
             fixed: task,
             on: task ? false : setsLock ? false : setIsShown(set.id),
             menu: [
               {
                 icon: "slides" as const,
-                label: "Compare with another set",
+                label: t`Compare with another set`,
                 onSelect: (): void => goView("models"),
               },
               {
                 icon: "smart" as const,
-                label: set.source === "run" ? "Run again" : "Run a model on this slide",
+                label: set.source === "run" ? t`Run again` : t`Run a model on this slide`,
                 onSelect: (): void =>
                   void router.navigate({
                     href: `${destinations.runModel(projectId)}?slides=${encodeURIComponent(JSON.stringify([slideId]))}`,
@@ -1286,7 +1286,7 @@ function ViewerBody({
               },
               {
                 icon: "upload" as const,
-                label: "Add another result set",
+                label: t`Add another result set`,
                 onSelect: (): void =>
                   void navigate({
                     to: "/projects/$projectId/upload",
@@ -1300,13 +1300,13 @@ function ViewerBody({
         {
           key: "reviewed",
           name: "Your review",
-          sub: "The reviewed layer, as you edit it",
+          sub: t`The reviewed layer, as you edit it`,
           color: setColours.reviewed,
           on: reviewedOn,
           menu: [
             {
               icon: "slides" as const,
-              label: "Compare with the AI",
+              label: t`Compare with the AI`,
               onSelect: (): void => goView("diff"),
             },
           ],
@@ -1419,7 +1419,7 @@ function ViewerBody({
       onCancel={leaveComment}
       onPosted={() => {
         setPin(null);
-        setToast({ id: Date.now(), text: "Thread pinned on the slide." });
+        setToast({ id: Date.now(), text: t`Thread pinned on the slide.` });
       }}
     />
   ) : selected ? (
@@ -1453,10 +1453,10 @@ function ViewerBody({
       counts={{ ...counts, added: added.length }}
       questions={questions}
       blockers={doneBlockers}
-      submitLabel={failed ? "Try again" : "Submit"}
+      submitLabel={failed ? t`Try again` : t`Submit`}
       failed={failed}
       warning={threadsWarning}
-      {...(readOnly ? { lockedReason: "Signed off 15 Oct. Changes need an amendment." } : {})}
+      {...(readOnly ? { lockedReason: t`Signed off 15 Oct. Changes need an amendment.` } : {})}
       onSubmit={submit}
       onAnswerChange={changeOpinion}
     />
@@ -1605,11 +1605,11 @@ function ViewerBody({
       }
       counts={counts}
       nothingToDecide={running || nothing}
-      {...(running ? { progressSub: "The AI is still reading" } : {})}
+      {...(running ? { progressSub: t`The AI is still reading` } : {})}
       {...(clinical
         ? {
-            primaryLabel: "Open report",
-            primaryTitle: "Open the clinical report of this case",
+            primaryLabel: t`Open report`,
+            primaryTitle: t`Open the clinical report of this case`,
             onSubmit: () =>
               reportCaseId !== undefined &&
               void navigate({
@@ -1619,9 +1619,9 @@ function ViewerBody({
           }
         : {
             submitReason: nothing
-              ? "Nothing to decide on this slide"
+              ? t`Nothing to decide on this slide`
               : counts.open
-                ? `${counts.open} object${counts.open === 1 ? " is" : "s are"} still open.`
+                ? t`${counts.open} object${counts.open === 1 ? " is" : "s are"} still open.`
                 : undefined,
             onSubmit: () => onSearch({ tab: "opinion" }),
           })}
@@ -1740,7 +1740,7 @@ function ViewerBody({
                   ),
                   `objects-${slideLabel}.csv`,
                 );
-                setToast({ id: Date.now(), text: "Downloaded the table as CSV with full IDs" });
+                setToast({ id: Date.now(), text: t`Downloaded the table as CSV with full IDs` });
               }}
             />
           ) : null
@@ -1758,7 +1758,7 @@ function ViewerBody({
             onTravel={() => onSearch({ scene: "travel" })}
             onGoTo={(object) => onSearch({ scene: undefined, object })}
             onPopOut={() =>
-              setToast({ id: Date.now(), text: "Opens the whole slide on the second monitor" })
+              setToast({ id: Date.now(), text: t`Opens the whole slide on the second monitor` })
             }
           />
         ) : measurement ? (
@@ -1855,7 +1855,7 @@ function ViewerBody({
                         onPopOut={() =>
                           setToast({
                             id: Date.now(),
-                            text: "Opens the whole slide on the second monitor",
+                            text: t`Opens the whole slide on the second monitor`,
                           })
                         }
                       />
@@ -1901,7 +1901,7 @@ function ViewerBody({
                               setConfirmRest(false);
                               setToast({
                                 id: Date.now(),
-                                text: `${openCells.length} cells marked agree`,
+                                text: t`${openCells.length} cells marked agree`,
                                 undo: () => setOverrides(overrides),
                               });
                             }}
@@ -1998,7 +1998,7 @@ function ViewerBody({
             onSearch({ modal: undefined });
             setToast({
               id: Date.now(),
-              text: `Preset ${name} saved.`,
+              text: t`Preset ${name} saved.`,
               ...(result.undo ? { undo: result.undo } : {}),
             });
           }
@@ -2064,27 +2064,29 @@ function TableObjectFacts({
   comments: number;
   onComments: () => void;
 }) {
+  const { t } = useLingui();
+
   const format = useFormat();
   const rows: [string, ReactNode][] = [
     ...(score === null
       ? []
       : [
           [
-            "Score",
+            t`Score`,
             <span key="s" className="font-mono">
               {format.number(score, { decimals: 2 })}
             </span>,
           ] as [string, ReactNode],
         ]),
-    ["Size", size === null ? "" : `${format.size(size)} across`],
-    ["In sets", sets.join(", ")],
+    [t`Size`, size === null ? "" : `${format.size(size)} across`],
+    [t`In sets`, sets.join(", ")],
     [
-      "Your decision",
+      t`Your decision`,
       answer
-        ? `${answer.value === "unsure" ? "Not sure" : `${answer.value.charAt(0).toUpperCase()}${answer.value.slice(1)}`}${answer.reasons[0] ? `, ${answer.reasons[0].toLowerCase()}` : ""}`
-        : "Open",
+        ? `${answer.value === "unsure" ? t`Not sure` : `${answer.value.charAt(0).toUpperCase()}${answer.value.slice(1)}`}${answer.reasons[0] ? `, ${answer.reasons[0].toLowerCase()}` : ""}`
+        : t`Open`,
     ],
-    ["Preset", answer ? "Task default" : "None yet"],
+    [t`Preset`, answer ? t`Task default` : t`None yet`],
     [
       "Full ID",
       <ObjectIdTag key="f" copyText={fullId}>

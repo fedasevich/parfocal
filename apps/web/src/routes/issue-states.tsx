@@ -1,4 +1,8 @@
+import type { MessageDescriptor } from "@lingui/core";
+import { msg, t } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
+import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import { cn } from "@parfocal/ui/lib/utils";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useEffect } from "react";
@@ -21,34 +25,34 @@ export const Route = createFileRoute("/issue-states")({
   component: IssueStatesPage,
 });
 
-const screenTitles: Record<PrototypeScreen, string> = {
-  home: "Home",
-  project: "Project",
-  upload: "Upload",
-  runmodel: "Run a model",
-  task: "New review task",
-  team: "Team",
-  disagree: "Disagreements",
-  signoff: "Sign off the evaluation",
-  evaluation: "Evaluation report",
-  worklist: "My work",
-  guided: "Guided review",
-  case: "Full viewer",
-  gallery: "Decide objects",
-  next: "Submitted",
-  creport: "Clinical report",
+const screenTitles: Record<PrototypeScreen, string> = lazyText(() => ({
+  home: t`Home`,
+  project: t`Project`,
+  upload: t`Upload`,
+  runmodel: t`Run a model`,
+  task: t`New review task`,
+  team: t`Team`,
+  disagree: t`Disagreements`,
+  signoff: t`Sign off the evaluation`,
+  evaluation: t`Evaluation report`,
+  worklist: t`My work`,
+  guided: t`Guided review`,
+  case: t`Full viewer`,
+  gallery: t`Decide objects`,
+  next: t`Submitted`,
+  creport: t`Clinical report`,
   cosign: "Co-sign review",
-  settings: "Settings",
-  signin: "Sign in",
-  connectmodel: "Connect a model",
-  layers: "Display",
-  navigator: "Smart minimap",
-  measure: "Measuring",
-  annotate: "Annotate workspace",
-  compare: "Compare slides",
-  focus: "Focus mode",
+  settings: t`Settings`,
+  signin: t`Sign in`,
+  connectmodel: t`Connect a model`,
+  layers: t`Display`,
+  navigator: t`Smart minimap`,
+  measure: t`Measuring`,
+  annotate: t`Annotate workspace`,
+  compare: t`Compare slides`,
+  focus: t`Focus mode`,
   peek: "Whole-slide peek",
-};
+}));
 
 function StateButton({
   screen,
@@ -61,6 +65,8 @@ function StateButton({
   ids: ScenarioIds | undefined;
   children: string;
 }) {
+  const { t } = useLingui();
+
   const target = ids && isScreenBuilt(screen) ? issueTarget(screen, scene, ids) : null;
   if (target === null) {
     const waiting = pendingTask[screen];
@@ -70,7 +76,7 @@ function StateButton({
         disabled
         focusableWhenDisabled
         data-state-button={`${screen}:${scene}`}
-        title={waiting ? `Not built yet, ${waiting} builds it` : "Not built yet"}
+        title={waiting ? t`Not built yet, ${waiting} builds it` : t`Not built yet`}
       >
         {children}
       </Button>
@@ -81,7 +87,7 @@ function StateButton({
       size="sm"
       nativeButton={false}
       data-state-button={`${screen}:${scene}`}
-      title={`Opens ${screenTitles[screen]} in this state`}
+      title={t`Opens ${screenTitles[screen]} in this state`}
       render={
         <Link
           {...target}
@@ -95,6 +101,8 @@ function StateButton({
 }
 
 function StateRow({ row, ids }: { row: IssueRow; ids: ScenarioIds | undefined }) {
+  const { t } = useLingui();
+
   return (
     <div
       className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-0.5 border-line border-t py-2 first-of-type:border-t-0"
@@ -112,11 +120,11 @@ function StateRow({ row, ids }: { row: IssueRow; ids: ScenarioIds | undefined })
       </small>
       <span className="col-start-2 row-span-2 row-start-1 inline-flex gap-1.5">
         <StateButton screen={row.screen} scene={row.scene} ids={ids}>
-          {row.also ? "Guided" : "Show"}
+          {row.also ? t`Guided` : t`Show`}
         </StateButton>
         {row.also ? (
           <StateButton screen={row.also} scene={row.scene} ids={ids}>
-            {row.also === "layers" ? "Display" : "Full viewer"}
+            {row.also === "layers" ? t`Display` : t`Full viewer`}
           </StateButton>
         ) : null}
       </span>
@@ -125,22 +133,26 @@ function StateRow({ row, ids }: { row: IssueRow; ids: ScenarioIds | undefined })
 }
 
 const sharedPages = [
-  { kind: "not-found", label: "Page not found" },
-  { kind: "server-error", label: "Something went wrong" },
-  { kind: "expired", label: "Session expired" },
-  { kind: "no-access", label: "No access" },
-  { kind: "styles", label: "Banner and inline error styles" },
+  { kind: "not-found", label: msg`Page not found` },
+  { kind: "server-error", label: msg`Something went wrong` },
+  { kind: "expired", label: msg`Session expired` },
+  { kind: "no-access", label: msg`No access` },
+  { kind: "styles", label: msg`Banner and inline error styles` },
 ] as const;
 
 function SharedPages() {
+  const { t } = useLingui();
+
   return (
     <section
-      aria-label="Shared pages"
+      aria-label={t`Shared pages`}
       className="mb-5 break-inside-avoid rounded-zone border border-line bg-surf-section px-3.5 pt-3 pb-3"
     >
-      <h2 className="m-0 mb-1.5 font-semibold text-body text-fg leading-5">Shared pages</h2>
+      <h2 className="m-0 mb-1.5 font-semibold text-body text-fg leading-5">
+        <Trans>Shared pages</Trans>
+      </h2>
       <p className="m-0 mb-2 text-body-sm text-fg-dim leading-[18px]">
-        The pages every flow falls back to, shown on their own.
+        <Trans>The pages every flow falls back to, shown on their own.</Trans>
       </p>
       <span className="inline-flex flex-wrap gap-1.5">
         {sharedPages.map((page) => (
@@ -151,7 +163,7 @@ function SharedPages() {
             data-page-link={page.kind}
             render={<Link to="/issue-pages/$kind" params={{ kind: page.kind }} />}
           >
-            {page.label}
+            {t(page.label)}
           </Button>
         ))}
       </span>
@@ -170,13 +182,15 @@ function IssueStatesPage() {
             {issueStatesTitle}
           </h1>
           <p className="mt-1.5 mb-[18px] max-w-[860px] text-body text-fg-dim leading-5">
-            {issueStateCount} states, grouped by flow. Each one is a scene of its own screen, and
-            Show opens that screen in that state with its fix ready to try. Back to the index sits
-            above the frame.
+            <Trans>
+              {issueStateCount} states, grouped by flow. Each one is a scene of its own screen, and
+              Show opens that screen in that state with its fix ready to try. Back to the index sits
+              above the frame.
+            </Trans>
           </p>
         </div>
         <Link to="/prototype" className="text-caption text-fg-faint underline">
-          Prototype index
+          <Trans>Prototype index</Trans>
         </Link>
       </header>
       <div className="gap-5 md:columns-2" data-testid="issue-states">

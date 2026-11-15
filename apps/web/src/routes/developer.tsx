@@ -1,3 +1,4 @@
+import { Trans } from "@lingui/react/macro";
 import { useGetMe } from "@parfocal/api-client";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { z } from "zod";
@@ -33,12 +34,16 @@ function Developer() {
 function DeveloperRefused() {
   return (
     <main className="mx-auto flex max-w-3xl flex-col gap-2 p-8" data-testid="developer-refused">
-      <h1 className="font-semibold text-page-title text-fg">Developer mode is not available</h1>
+      <h1 className="font-semibold text-page-title text-fg">
+        <Trans>Developer mode is not available</Trans>
+      </h1>
       <p className="text-body text-fg-dim">
-        The developer drawer is for researchers. Reviewers and doctors review slides without it.
+        <Trans>
+          The developer drawer is for researchers. Reviewers and doctors review slides without it.
+        </Trans>
       </p>
       <Link to="/" className="text-accent underline">
-        Go home
+        <Trans>Go home</Trans>
       </Link>
     </main>
   );

@@ -1,3 +1,6 @@
+import type { MessageDescriptor } from "@lingui/core";
+import { msg, t } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   type Invitation,
   type Member,
@@ -38,6 +41,7 @@ import {
 import { StatusTag } from "@parfocal/ui/components/tag";
 import { TokenField } from "@parfocal/ui/components/token-field";
 import { Zone } from "@parfocal/ui/components/zone";
+import { lazyText } from "@parfocal/ui/lib/lazy-text";
 import { useState } from "react";
 import { toPersonInfo } from "../people.ts";
 import { okData } from "../placeholder.tsx";
@@ -47,36 +51,37 @@ import { adminSwitchOf, type PeopleFilter, shownInvitations, takenEmails } from 
 
 type Filter = PeopleFilter;
 
-const roleText = { researcher: "Researcher", reviewer: "Reviewer" } as const;
+const roleText = lazyText(() => ({ researcher: t`Researcher`, reviewer: t`Reviewer` }) as const);
 
-const roleDefinitions = [
-  {
-    name: "Researcher",
-    does: "Runs studies. Creates projects and owns them, uploads slides and AI results, runs models, sets a project's classes, opinion form and study template, creates review tasks and invites reviewers, resolves disagreements or asks an adjudicator, signs off, and arranges, exports and shares the report. Reviews too when a task names them",
-    never: "Opens a project without a project role. Clinical projects open only with a reason",
-    who: "researcher",
-  },
-  {
-    name: "Reviewer",
-    does: "Reviews the slides of their tasks. Agree, Disagree or Unsure on each object with optional reasons and a note, fixes outlines and types, adds what the AI missed, comments, fills the opinion form and submits each slide. Decides queued objects when asked to adjudicate",
-    never:
-      "Uploads, runs models, creates projects or tasks, signs off, sees other decisions before submitting in a blind task, opens Admin",
-    who: "reviewer",
-  },
-  {
-    name: "Admin rights, on a researcher",
-    does: "Sets up the workspace on this page: people and their roles, projects, AI models, report templates, storage and sources, API and webhooks, the audit log and security",
-    never: "Sees project data because of the right. The last researcher with it cannot lose it",
-    who: "admin",
-  },
-  {
-    name: "Can sign out, a project right in a clinical project",
-    does: "Signs out the clinical report of a case in that project. On by default for the case's assigned pathologist, set by the project owner. A member without it sends the report for co-sign to someone who has it",
-    never:
-      "Signs out in a de-identified project, where there is no clinical report. Signs out a research evaluation, which is the researcher's sign-off",
-    who: "sign-out",
-  },
-] as const;
+const roleDefinitions = lazyText(
+  () =>
+    [
+      {
+        name: msg`Researcher`,
+        does: t`Runs studies. Creates projects and owns them, uploads slides and AI results, runs models, sets a project's classes, opinion form and study template, creates review tasks and invites reviewers, resolves disagreements or asks an adjudicator, signs off, and arranges, exports and shares the report. Reviews too when a task names them`,
+        never: t`Opens a project without a project role. Clinical projects open only with a reason`,
+        who: "researcher",
+      },
+      {
+        name: msg`Reviewer`,
+        does: t`Reviews the slides of their tasks. Agree, Disagree or Unsure on each object with optional reasons and a note, fixes outlines and types, adds what the AI missed, comments, fills the opinion form and submits each slide. Decides queued objects when asked to adjudicate`,
+        never: t`Uploads, runs models, creates projects or tasks, signs off, sees other decisions before submitting in a blind task, opens Admin`,
+        who: "reviewer",
+      },
+      {
+        name: msg`Admin rights, on a researcher`,
+        does: t`Sets up the workspace on this page: people and their roles, projects, AI models, report templates, storage and sources, API and webhooks, the audit log and security`,
+        never: t`Sees project data because of the right. The last researcher with it cannot lose it`,
+        who: "admin",
+      },
+      {
+        name: msg`Can sign out, a project right in a clinical project`,
+        does: t`Signs out the clinical report of a case in that project. On by default for the case's assigned pathologist, set by the project owner. A member without it sends the report for co-sign to someone who has it`,
+        never: t`Signs out in a de-identified project, where there is no clinical report. Signs out a research evaluation, which is the researcher's sign-off`,
+        who: "sign-out",
+      },
+    ] as const,
+);
 
 export function PeopleSection({
   notify,
@@ -89,6 +94,8 @@ export function PeopleSection({
   inviting: boolean;
   setInviting: (open: boolean) => void;
 }) {
+  const { t } = useLingui();
+
   const members = okData(useListTenantMembers().data) ?? [];
   const activity = okData(useListMemberActivity().data) ?? [];
   const invitationList = useListInvitations();
@@ -136,8 +143,8 @@ export function PeopleSection({
     apply(!was);
     notify(
       was
-        ? `${member.display_name} no longer has admin rights and stays a researcher.`
-        : `${member.display_name} has admin rights now and can open Admin.`,
+        ? t`${member.display_name} no longer has admin rights and stays a researcher.`
+        : t`${member.display_name} has admin rights now and can open Admin.`,
       () => apply(was),
     );
   };
@@ -149,7 +156,7 @@ export function PeopleSection({
       {
         onSuccess: (response) => {
           if (response.status === 200) {
-            notify(`${member.display_name} is a ${roleText[next].toLowerCase()} now.`);
+            notify(t`${member.display_name} is a ${roleText[next].toLowerCase()} now.`);
             return;
           }
           setRoles((current) => ({ ...current, [member.user_id]: was }));
@@ -166,7 +173,7 @@ export function PeopleSection({
           void invitationList.refetch();
           notify(
             response.status === 201
-              ? `Invite sent again to ${invitation.email}. The earlier link no longer works.`
+              ? t`Invite sent again to ${invitation.email}. The earlier link no longer works.`
               : problemText(response.data),
           );
         },
@@ -195,41 +202,57 @@ export function PeopleSection({
     <>
       <JoinRequestsZone notify={notify} opened={request} />
       <Zone
-        title="People"
-        end={<span className="text-body-sm text-fg-dim">{waiting} invites waiting</span>}
+        title={t`People`}
+        end={
+          <span className="text-body-sm text-fg-dim">
+            <Trans>{waiting} invites waiting</Trans>
+          </span>
+        }
       >
         <div className="flex flex-wrap items-center gap-2.5">
           <span className="relative flex w-72 items-center">
             <Icon name="search" className="absolute left-2.5 text-fg-faint" />
             <Input
-              aria-label="Find by name or email"
-              placeholder="Find by name or email"
+              aria-label={t`Find by name or email`}
+              placeholder={t`Find by name or email`}
               value={find}
               onChange={(event) => setFind(event.target.value)}
               className="pl-8"
             />
           </span>
           <SegmentedControl
-            aria-label="Show"
+            aria-label={t`Show`}
             value={filter}
             onValueChange={(value) => setFilter(value as Filter)}
             options={[
               { value: "all", label: `All ${overview?.people ?? members.length}` },
-              { value: "res", label: "Researchers" },
-              { value: "rev", label: "Reviewers" },
-              { value: "adm", label: "With admin rights" },
+              { value: "res", label: t`Researchers` },
+              { value: "rev", label: t`Reviewers` },
+              { value: "adm", label: t`With admin rights` },
             ]}
           />
         </div>
         <Table className={tableClass}>
           <TableHeader>
             <TableRow>
-              <TableHead>Person</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Admin rights</TableHead>
-              <TableHead>Projects</TableHead>
-              <TableHead>Last active</TableHead>
-              <TableHead>Status</TableHead>
+              <TableHead>
+                <Trans>Person</Trans>
+              </TableHead>
+              <TableHead>
+                <Trans>Role</Trans>
+              </TableHead>
+              <TableHead>
+                <Trans>Admin rights</Trans>
+              </TableHead>
+              <TableHead>
+                <Trans>Projects</Trans>
+              </TableHead>
+              <TableHead>
+                <Trans>Last active</Trans>
+              </TableHead>
+              <TableHead>
+                <Trans>Status</Trans>
+              </TableHead>
               <TableHead />
             </TableRow>
           </TableHeader>
@@ -249,7 +272,7 @@ export function PeopleSection({
                     >
                       <SelectTrigger
                         size="sm"
-                        aria-label={`Role of ${member.display_name}`}
+                        aria-label={t`Role of ${member.display_name}`}
                         className="w-32"
                       >
                         <SelectValue>{roleText[role]}</SelectValue>
@@ -263,23 +286,27 @@ export function PeopleSection({
                   <TableCell>
                     {adminSwitchOf(role, rightOf(member), holders.length) !== "absent" ? (
                       <Switch
-                        aria-label={`Admin rights for ${member.display_name}`}
+                        aria-label={t`Admin rights for ${member.display_name}`}
                         checked={rightOf(member)}
                         disabled={adminSwitchOf(role, rightOf(member), holders.length) === "locked"}
                         onCheckedChange={() => toggleRight(member)}
                       />
                     ) : (
-                      <span className="text-fg-faint">Researchers only</span>
+                      <span className="text-fg-faint">
+                        <Trans>Researchers only</Trans>
+                      </span>
                     )}
                   </TableCell>
                   <TableCell className="font-mono">{row?.project_codes.join(", ")}</TableCell>
                   <TableCell>{lastActive(row?.last_active_at ?? null)}</TableCell>
                   <TableCell>
-                    <StatusTag tone="ok">Active</StatusTag>
+                    <StatusTag tone="ok">
+                      <Trans>Active</Trans>
+                    </StatusTag>
                   </TableCell>
                   <TableCell>
                     <span className="flex items-center justify-end gap-1.5">
-                      <MoreButton label={`More for ${member.display_name}`} />
+                      <MoreButton label={t`More for ${member.display_name}`} />
                     </span>
                   </TableCell>
                 </TableRow>
@@ -300,26 +327,36 @@ export function PeopleSection({
                 </TableCell>
                 <TableCell>{roleText[invitation.role]}</TableCell>
                 <TableCell>
-                  {invitation.admin_rights ? "Yes" : <span className="text-fg-faint">No</span>}
+                  {invitation.admin_rights ? (
+                    t`Yes`
+                  ) : (
+                    <span className="text-fg-faint">
+                      <Trans>No</Trans>
+                    </span>
+                  )}
                 </TableCell>
                 <TableCell>
-                  <span className="text-fg-faint">None yet</span>
+                  <span className="text-fg-faint">
+                    <Trans>None yet</Trans>
+                  </span>
                 </TableCell>
-                <TableCell>Not yet</TableCell>
+                <TableCell>
+                  <Trans>Not yet</Trans>
+                </TableCell>
                 <TableCell>
                   <StatusTag tone="warn">
-                    {invitation.expired ? "Invite expired" : "Invite sent"}
+                    {invitation.expired ? t`Invite expired` : t`Invite sent`}
                   </StatusTag>
                 </TableCell>
                 <TableCell>
                   <span className="flex items-center justify-end gap-1.5">
                     <Button
                       size="sm"
-                      aria-label={`Resend the invite to ${invitation.email}`}
+                      aria-label={t`Resend the invite to ${invitation.email}`}
                       disabled={resend.isPending}
                       onClick={() => resendTo(invitation)}
                     >
-                      Resend
+                      <Trans>Resend</Trans>
                     </Button>
                   </span>
                 </TableCell>
@@ -328,28 +365,38 @@ export function PeopleSection({
           </TableBody>
         </Table>
         <span className="text-body-sm text-fg-dim">
-          {rows.length} of {overview?.people ?? members.length} shown. At least one researcher keeps
-          admin rights, and giving or removing them is in the audit log.
+          <Trans>
+            {rows.length} of {overview?.people ?? members.length} shown. At least one researcher
+            keeps admin rights, and giving or removing them is in the audit log.
+          </Trans>
         </span>
       </Zone>
       <Zone
-        title="What each role is responsible for"
-        sub="Two roles apply in the whole workspace. Admin rights are a switch on a researcher, not a third role, and add no access to project data. Inside a project people are also owner, reviewer or viewer. The server enforces all of it, the screens only hide what someone cannot use."
+        title={t`What each role is responsible for`}
+        sub={t`Two roles apply in the whole workspace. Admin rights are a switch on a researcher, not a third role, and add no access to project data. Inside a project people are also owner, reviewer or viewer. The server enforces all of it, the screens only hide what someone cannot use.`}
       >
         <Table className={tableClass}>
           <TableHeader>
             <TableRow>
-              <TableHead>Role</TableHead>
-              <TableHead>Responsible for</TableHead>
-              <TableHead>Never</TableHead>
-              <TableHead>People</TableHead>
+              <TableHead>
+                <Trans>Role</Trans>
+              </TableHead>
+              <TableHead>
+                <Trans>Responsible for</Trans>
+              </TableHead>
+              <TableHead>
+                <Trans>Never</Trans>
+              </TableHead>
+              <TableHead>
+                <Trans>People</Trans>
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {roleDefinitions.map((definition) => (
-              <TableRow key={definition.name} className="align-top">
+              <TableRow key={t(definition.name)} className="align-top">
                 <TableCell className="w-44 py-3 whitespace-normal">
-                  <b>{definition.name}</b>
+                  <b>{t(definition.name)}</b>
                 </TableCell>
                 <TableCell className="py-3 whitespace-normal text-fg-dim">
                   {definition.does}
@@ -374,7 +421,7 @@ export function PeopleSection({
         onClose={() => setInviting(false)}
         onSent={(invitation) => {
           void invitationList.refetch();
-          notify(`Invite sent to ${invitation.email}`, () => withdraw(invitation));
+          notify(t`Invite sent to ${invitation.email}`, () => withdraw(invitation));
         }}
       />
     </>
@@ -383,7 +430,7 @@ export function PeopleSection({
 
 function problemText(body: unknown): string {
   const title = (body as { title?: unknown } | null)?.title;
-  return typeof title === "string" ? title : "That did not work. Try again.";
+  return typeof title === "string" ? title : t`That did not work. Try again.`;
 }
 
 const emailPattern = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
@@ -399,6 +446,8 @@ function InvitePeopleModal({
   onClose: () => void;
   onSent: (invitation: Invitation) => void;
 }) {
+  const { t } = useLingui();
+
   const projects = okData(useListProjects().data) ?? [];
   const create = useCreateInvitation();
   const [email, setEmail] = useState("");
@@ -408,9 +457,9 @@ function InvitePeopleModal({
   const [tried, setTried] = useState(false);
   const trimmed = email.trim().toLowerCase();
   const error = !emailPattern.test(trimmed)
-    ? "Enter an email address."
+    ? t`Enter an email address.`
     : taken.includes(trimmed)
-      ? `${trimmed} is already a member here.`
+      ? t`${trimmed} is already a member here.`
       : undefined;
   const reset = () => {
     setEmail("");
@@ -428,14 +477,14 @@ function InvitePeopleModal({
           onClose();
         }
       }}
-      title="Invite people"
-      subtitle="To Fakultní nemocnice Vltava"
+      title={t`Invite people`}
+      subtitle={t`To Fakultní nemocnice Vltava`}
       width={560}
-      hint="They get a one-step sign-up."
-      primaryLabel="Send invite"
+      hint={t`They get a one-step sign-up.`}
+      primaryLabel={t`Send invite`}
       primaryBusy={create.isPending}
-      blockers={tried && error ? [{ id: "email", text: error, goTo: "Go to the email" }] : []}
-      blockersTitle="Before you can invite"
+      blockers={tried && error ? [{ id: "email", text: error, goTo: t`Go to the email` }] : []}
+      blockersTitle={t`Before you can invite`}
       onPrimary={() => {
         setTried(true);
         if (error) return;
@@ -452,40 +501,40 @@ function InvitePeopleModal({
         );
       }}
     >
-      <FormField label="Email" error={tried ? error : undefined}>
+      <FormField label={t`Email`} error={tried ? error : undefined}>
         <TextFieldInput
           type="email"
-          placeholder="name@hospital.example"
+          placeholder={t`name@hospital.example`}
           value={email}
           onChange={(event) => setEmail(event.target.value)}
         />
       </FormField>
       <div className="grid gap-1.5">
         <span id="invite-role" className="text-caption font-semibold text-fg-dim">
-          Role
+          <Trans>Role</Trans>
         </span>
         <SegmentedControl
           aria-labelledby="invite-role"
           value={role}
           onValueChange={(value) => setRole(value as Member["role"])}
           options={[
-            { value: "researcher", label: "Researcher" },
-            { value: "reviewer", label: "Reviewer" },
+            { value: "researcher", label: t`Researcher` },
+            { value: "reviewer", label: t`Reviewer` },
           ]}
         />
         <small className="text-caption text-fg-dim">
           {role === "researcher"
-            ? "Runs studies, uploads, creates review tasks and signs off."
-            : "Reviews the slides of the tasks they are given."}
+            ? t`Runs studies, uploads, creates review tasks and signs off.`
+            : t`Reviews the slides of the tasks they are given.`}
         </small>
       </div>
       <TokenField
-        label="Projects, optional"
-        placeholder="Add projects by name"
+        label={t`Projects, optional`}
+        placeholder={t`Add projects by name`}
         items={projects.map((project) => ({
           id: project.id,
           name: `${project.code} · ${project.name}`,
-          sub: project.privacy_mode === "clinical" ? "Clinical" : "De-identified",
+          sub: project.privacy_mode === "clinical" ? t`Clinical` : "De-identified",
           find: project.name,
         }))}
         picked={picked}
@@ -494,9 +543,11 @@ function InvitePeopleModal({
       {role === "researcher" ? (
         <label className="flex cursor-pointer items-center justify-between gap-4 text-body-sm">
           <span>
-            <b className="block">Admin rights</b>
+            <b className="block">
+              <Trans>Admin rights</Trans>
+            </b>
             <small className="text-caption text-fg-dim">
-              People, models, storage and templates. Adds no access to project data.
+              <Trans>People, models, storage and templates. Adds no access to project data.</Trans>
             </small>
           </span>
           <Switch checked={admin} onCheckedChange={setAdmin} />
