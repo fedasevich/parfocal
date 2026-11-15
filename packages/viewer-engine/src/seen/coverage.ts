@@ -192,7 +192,7 @@ export function decodeBits(text: string, length: number): Uint8Array {
   for (let index = 0; index < clean.length && byte < length; index += 4) {
     const values = [0, 1, 2, 3].map((offset) => {
       const value = alphabet.indexOf(clean[index + offset] ?? "A");
-      return value < 0 ? 0 : value;
+      return Math.max(value, 0);
     });
     const word =
       ((values[0] ?? 0) << 18) |

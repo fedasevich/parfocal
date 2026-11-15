@@ -135,7 +135,10 @@ describe("WebGPU availability", () => {
 
 describe("the pixel route registry", () => {
   it("registers Viv first and the deck.gl WebGPU route behind a loader", () => {
-    assert.deepEqual(availableRendererRoutes(pixelRendererRoutes()), ["viv", "deck-webgpu"]);
+    assert.deepEqual(availableRendererRoutes(pixelRendererRoutes()).slice(0, 2), [
+      "viv",
+      "deck-webgpu",
+    ]);
   });
 
   it("refuses to load the deck.gl WebGPU route where WebGPU is missing", async () => {

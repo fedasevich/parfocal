@@ -2,7 +2,6 @@ import { expect, type Page, test } from "./a11y.ts";
 
 const p07 = "00000000-0000-4000-8003-000000000007";
 const p03 = "00000000-0000-4000-8003-000000000003";
-const a1 = "00000000-0000-4000-8005-000000000001";
 
 const current = (page: Page, testId: string) =>
   page.getByTestId(testId).locator('[aria-current="step"]');

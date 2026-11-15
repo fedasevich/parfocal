@@ -38,9 +38,9 @@ from parfocal_common.ingest import (
     restricted_ranges_key,
     slide_prefix,
 )
+from parfocal_ingest.parse_jobs import identify_file
 from parfocal_ingest.pyramid import Pyramid, read_pyramid
 from parfocal_ingest.thumbnail import THUMBNAIL_SIDE, previews
-from parfocal_ingest.workflow import identify_file
 
 pytestmark = [pytest.mark.db, pytest.mark.usefixtures("storage")]
 

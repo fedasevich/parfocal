@@ -5,7 +5,12 @@ from typing import Any
 import modal
 
 from parfocal_common.repository import repository_root
-from parfocal_ingest.settings import INGEST_MEMORY_LIMIT_MIB, INGEST_MEMORY_MIB
+from parfocal_ingest.settings import (
+    INGEST_MEMORY_LIMIT_MIB,
+    INGEST_MEMORY_MIB,
+    PARSE_MEMORY_MIB,
+    PARSE_SECONDS,
+)
 
 APP_NAME = "parfocal-api"
 WEB_FUNCTION = "web"
@@ -38,6 +43,11 @@ INGEST_OPTIONS: dict[str, Any] = {
     "max_containers": 2,
     "scaledown_window": 60,
     "timeout": 3600,
+}
+PARSE_SANDBOX_OPTIONS: dict[str, Any] = {
+    "block_network": True,
+    "memory": (PARSE_MEMORY_MIB, PARSE_MEMORY_MIB),
+    "timeout": int(PARSE_SECONDS),
 }
 
 

@@ -116,6 +116,8 @@ class Failure(StrEnum):
     UPLOAD_ABORTED = "upload-aborted"
     UPLOAD_EXPIRED = "upload-expired"
     CHECK_STOPPED = "check-stopped"
+    PARSE_TOO_LARGE = "parse-too-large"
+    PARSE_TOO_SLOW = "parse-too-slow"
 
 
 FAILURES: Mapping[str, str] = {
@@ -130,6 +132,14 @@ FAILURES: Mapping[str, str] = {
         "The upload stopped for more than a day and was cancelled. Start it again."
     ),
     Failure.CHECK_STOPPED: "Checking this file was stopped before it finished. Upload it again.",
+    Failure.PARSE_TOO_LARGE: (
+        "Reading this file needed more memory than Parfocal allows, so the check was stopped. "
+        "The file may be damaged."
+    ),
+    Failure.PARSE_TOO_SLOW: (
+        "Reading this file took longer than Parfocal allows, so the check was stopped. "
+        "The file may be damaged."
+    ),
     **IMPORT_FAILURES,
     **LINK_IMPORT_FAILURES,
 }

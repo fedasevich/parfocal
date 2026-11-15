@@ -2,7 +2,7 @@
   "name": "parfocal",
   "private": true,
   "type": "module",
-  "packageManager": "pnpm@12.9.1",
+  "packageManager": "pnpm@12.21.0",
   "engines": {
     "node": ">=26"
   },
@@ -35,16 +35,16 @@
     "load:token": "PYTHONPATH=scripts uv run --package parfocal-api --env-file .env python scripts/load/local_token.py"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.5.15",
-    "@commitlint/cli": "21.2.3",
-    "@commitlint/config-conventional": "21.2.3",
+    "@biomejs/biome": "2.6.7",
+    "@commitlint/cli": "21.2.4",
+    "@commitlint/config-conventional": "21.2.4",
     "@parfocal/typescript-config": "workspace:*",
     "@types/node": "^26.0.0",
     "git-cliff": "2.14.2",
-    "lefthook": "2.1.17",
-    "oxlint": "1.87.0",
-    "oxlint-tsgolint": "7.0.2003",
-    "turbo": "2.11.7",
+    "lefthook": "2.2.2",
+    "oxlint": "1.93.0",
+    "oxlint-tsgolint": "7.0.2007",
+    "turbo": "2.11.11",
     "typescript": "7.0.2"
   }
 }
