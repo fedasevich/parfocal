@@ -4041,7 +4041,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when unit tests with a simulated gamepad cover each mapping.
   Size: M.
 
-- [ ] DEV-004 · SpaceMouse over WebHID
+- [x] DEV-004 · SpaceMouse over WebHID
   Tilt pans, push and pull zoom, side buttons step presets or next cell and keep, full pull for peek, rotation off by default, permission prompt flow.
   Done when tests with recorded HID reports cover each mapping.
   Size: M.
