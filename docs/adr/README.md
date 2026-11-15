@@ -306,3 +306,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0339](0339-container-images-install-from-uv-lock.md) | Container images install from uv.lock, through exported lock files for Modal | Accepted | 2026-11-15 |
 | [0340](0340-slos-and-alerts-as-code-routed-by-email.md) | SLOs and alert rules live in code, burn by two windows and reach on-call by email | Accepted | 2026-11-15 |
 | [0341](0341-old-tenant-objects-tier-to-infrequent-access-and-budgets-live-in-a-cost-report.md) | Old tenant objects move to Infrequent Access after 90 days, and budgets per environment live in a cost report | Accepted | 2026-11-15 |
+| [XXXX](XXXX-make-dev-signs-in-through-the-local-zitadel.md) | make dev signs in through the local Zitadel by default, and Zitadel Cloud stays one setting away | Accepted | 2026-11-15 |

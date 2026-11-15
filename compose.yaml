@@ -7,7 +7,7 @@ services:
       POSTGRES_USER: parfocal
       POSTGRES_DB: parfocal
       POSTGRES_HOST_AUTH_METHOD: trust
-    ports: ["5432:5432"]
+    ports: ["${PARFOCAL_PG_PORT:-5432}:5432"]
     volumes:
       - ./infra/local/postgres-init.sql:/docker-entrypoint-initdb.d/10-roles.sql:ro
       - postgres18-data:/var/lib/postgresql
@@ -20,7 +20,7 @@ services:
     image: edoburu/pgbouncer:v1.26.0-p0
     volumes:
       - ./infra/local/pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini:ro
-    ports: ["6432:5432"]
+    ports: ["${PARFOCAL_POOLER_PORT:-6432}:5432"]
     depends_on:
       postgres:
         condition: service_healthy
@@ -31,8 +31,8 @@ services:
     environment:
       MINIO_ROOT_USER: parfocal
       MINIO_ROOT_PASSWORD: ${PARFOCAL_LOCAL_MINIO_PASSWORD:-parfocal-local-secret}
-      MINIO_API_CORS_ALLOW_ORIGIN: http://localhost:5173
-    ports: ["9000:9000"]
+      MINIO_API_CORS_ALLOW_ORIGIN: http://localhost:${PARFOCAL_WEB_PORT:-5173}
+    ports: ["${PARFOCAL_STORAGE_PORT:-9000}:9000"]
     volumes:
       - storage-data:/data
     healthcheck:

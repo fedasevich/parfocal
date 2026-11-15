@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "dev:check": "node dev-home.ts"
   },
   "devDependencies": {
     "@parfocal/test-fixtures": "workspace:*",
