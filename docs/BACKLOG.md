@@ -3444,7 +3444,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Done when tests confirm partial areas arrive before job completion and throughput is recorded per stage.
   Refs [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
 
-- [ ] AIP-012 · Patch service on the server
+- [x] AIP-012 · Patch service on the server
   Read patches at a requested microns per pixel from any supported format, with LRU caching and sparse-region awareness.
   Done when tests read the same 128 µm patch from SVS, NDPI and OME-Zarr fixtures and compare pixels.
   Refs docs 10, 11, 15.
