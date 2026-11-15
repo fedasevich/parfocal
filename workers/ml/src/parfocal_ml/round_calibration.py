@@ -155,13 +155,25 @@ def catalogue_row(row: RoundCalibration) -> dict[str, object]:
     }
 
 
-type Head = Callable[[NDArray[np.floating], NDArray[np.floating] | None], NDArray[np.float64]]
-
-
 def softmax(logits: NDArray[np.floating]) -> NDArray[np.float64]:
     shifted = np.asarray(logits, np.float64) - np.max(logits, axis=1, keepdims=True)
     found = np.exp(shifted)
     return found / found.sum(axis=1, keepdims=True)
+
+
+@dataclass(frozen=True, eq=False)
+class Head:
+    mean: NDArray[np.float64]
+    spread: NDArray[np.float64]
+    weights: NDArray[np.float64]
+    bias: NDArray[np.float64]
+
+    def __call__(
+        self, rows: NDArray[np.floating], at: NDArray[np.floating] | None = None
+    ) -> NDArray[np.float64]:
+        logits = ((np.asarray(rows, np.float64) - self.mean) / self.spread) @ self.weights
+        logits = logits + self.bias
+        return softmax(logits if at is None else logits + at)
 
 
 def train_head(
@@ -185,14 +197,7 @@ def train_head(
         error = (softmax(offset + inputs @ weights + bias) - truth) / len(inputs)
         weights -= rate * (inputs.T @ error + decay * weights)
         bias -= rate * error.sum(axis=0)
-
-    def predict(
-        rows: NDArray[np.floating], at: NDArray[np.floating] | None = None
-    ) -> NDArray[np.float64]:
-        logits = ((np.asarray(rows, np.float64) - mean) / spread) @ weights + bias
-        return softmax(logits if at is None else logits + at)
-
-    return predict
+    return Head(mean, spread, weights, bias)
 
 
 def log_probabilities(probabilities: Probabilities) -> NDArray[np.float64]:

@@ -34,12 +34,14 @@ export interface PanSlide {
   readonly magnification: number | null;
   readonly prefetch?: boolean;
   readonly route?: RendererRouteId;
+  readonly micronsPerPixel?: number;
   readonly x: number;
   readonly y: number;
 }
 
 export interface JumpTarget {
   readonly magnification: number;
+  readonly micronsPerPixel?: number;
   readonly x: number;
   readonly y: number;
 }
@@ -132,6 +134,10 @@ function nextFrame(): Promise<number> {
   return new Promise((resolve) => requestAnimationFrame(resolve));
 }
 
+export function shownRoute(): VivRoute | DeckWebGpuRoute | null {
+  return route;
+}
+
 function mounted(): { engine: ViewerEngine; route: VivRoute | DeckWebGpuRoute } {
   if (engine === null || route === null) throw new Error("No slide is open");
   return { engine, route };
@@ -180,11 +186,12 @@ async function open(slide: PanSlide): Promise<Opened> {
   current.mount(viewer());
   const opened = await current.openSlide({ id: slide.url });
   if (slide.magnification !== null) {
-    if (opened.micronsPerPixel === null) throw new Error("The slide has no pixel size");
+    const micronsPerPixel = opened.micronsPerPixel ?? slide.micronsPerPixel ?? null;
+    if (micronsPerPixel === null) throw new Error("The slide has no pixel size");
     current.setCamera({
       x: slide.x,
       y: slide.y,
-      zoom: zoomForMagnification(opened.micronsPerPixel, slide.magnification),
+      zoom: zoomForMagnification(micronsPerPixel, slide.magnification),
     });
   }
   await mounted().route.whenIdle();
@@ -193,7 +200,7 @@ async function open(slide: PanSlide): Promise<Opened> {
 
 async function jump(target: JumpTarget, settleTimeoutMs: number): Promise<JumpReport> {
   const { engine: current, route: shown } = mounted();
-  const micronsPerPixel = current.getSlide()?.micronsPerPixel ?? null;
+  const micronsPerPixel = current.getSlide()?.micronsPerPixel ?? target.micronsPerPixel ?? null;
   if (micronsPerPixel === null) throw new Error("The slide has no pixel size");
   const started = performance.now();
   current.setCamera({

@@ -39,6 +39,7 @@ export interface ReaderFinding {
 export interface WindowCheck {
   readonly window: ReferenceWindow;
   readonly meanError: number | null;
+  readonly largestDifference: number | null;
   readonly finding: ReaderFinding | null;
 }
 
@@ -98,6 +99,17 @@ function shiftedError(candidate: RgbImage, reference: RgbImage, dx: number, dy: 
 
 export function meanError(candidate: RgbImage, reference: RgbImage): number {
   return shiftedError(candidate, reference, 0, 0);
+}
+
+export function largestDifference(candidate: RgbImage, reference: RgbImage): number {
+  let largest = 0;
+  for (let channel = 0; channel < 3; channel++) {
+    const a = candidate.planes[channel] as Float32Array;
+    const b = reference.planes[channel] as Float32Array;
+    for (let index = 0; index < b.length; index++)
+      largest = Math.max(largest, Math.abs((a[index] ?? 0) - (b[index] ?? 0)));
+  }
+  return largest;
 }
 
 export function ycbcrToRgb(image: RgbImage): RgbImage {
@@ -201,7 +213,7 @@ export async function checkWindow(
   if (level < 0) {
     const detail = `no level at downsample ${window.downsample}`;
     const finding: ReaderFinding = { kind: "missing-level", level: window.level, detail };
-    return { window, meanError: null, finding };
+    return { window, meanError: null, largestDifference: null, finding };
   }
   const bounds: PixelWindow = [
     window.x,
@@ -214,15 +226,22 @@ export async function checkWindow(
     result = await source.getRaster({ level, window: bounds });
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
-    return { window, meanError: null, finding: { kind: "unreadable", level, detail } };
+    const finding: ReaderFinding = { kind: "unreadable", level, detail };
+    return { window, meanError: null, largestDifference: null, finding };
   }
   if (result.absent) {
     const detail = "the browser reader returned no pixels";
-    return { window, meanError: null, finding: { kind: "absent", level, detail } };
+    const finding: ReaderFinding = { kind: "absent", level, detail };
+    return { window, meanError: null, largestDifference: null, finding };
   }
   const candidate = rgbImage(result.width, result.height, result.planes);
   const finding = explainDisagreement(candidate, window, limit);
-  return { window, meanError: meanError(candidate, window.image), finding };
+  return {
+    window,
+    meanError: meanError(candidate, window.image),
+    largestDifference: largestDifference(candidate, window.image),
+    finding,
+  };
 }
 
 export async function checkAgainstReference(

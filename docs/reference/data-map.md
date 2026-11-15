@@ -15,7 +15,7 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `phi` | 47 |
 | `personal` | 91 |
 | `secret` | 11 |
-| `operational` | 739 |
+| `operational` | 768 |
 | `public` | 0 |
 
 ## adjudication_objects
@@ -451,6 +451,12 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `tenant_id` | operational |
 | `name` | operational |
 | `version` | operational |
+| `licence_weights` | operational |
+| `licence_weights_class` | operational |
+| `licence_code` | operational |
+| `licence_data` | operational |
+| `licence_source` | operational |
+| `licence_read_on` | operational |
 | `address` | operational |
 | `sign_in` | operational |
 | `header_name` | operational |
@@ -702,6 +708,34 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `key` | personal |
 | `window_start` | operational |
 | `count` | operational |
+
+## registered_models
+
+| Column | Class |
+|---|---|
+| `id` | operational |
+| `name` | operational |
+| `version` | operational |
+| `family` | operational |
+| `title` | operational |
+| `tasks` | operational |
+| `makes` | operational |
+| `host` | operational |
+| `licence_weights` | operational |
+| `licence_weights_class` | operational |
+| `licence_code` | operational |
+| `licence_data` | operational |
+| `licence_source` | operational |
+| `licence_read_on` | operational |
+| `allowed_tenant_kinds` | operational |
+| `input_mpp` | operational |
+| `status` | operational |
+| `evaluation_report` | operational |
+| `calibration_temperatures` | operational |
+| `part_of_name` | operational |
+| `part_of_version` | operational |
+| `created_at` | operational |
+| `updated_at` | operational |
 
 ## report_links
 

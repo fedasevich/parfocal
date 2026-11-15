@@ -8102,6 +8102,125 @@
         }
       }
     },
+    "/api/platform/model-registry": {
+      "post": {
+        "tags": [
+          "platform"
+        ],
+        "summary": "Register Model",
+        "operationId": "registerModel",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegistrationDraft"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegistryEntry"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in to continue",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "You do not have access to this",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "This changed since you loaded it",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests, try again shortly",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The request is not valid",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Something went wrong",
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/tenant/models/test": {
       "post": {
         "tags": [
@@ -45055,6 +45174,7 @@
           "report-link",
           "clinical-report",
           "lab-model",
+          "registered-model",
           "feedback",
           "access-request"
         ],
@@ -47704,6 +47824,26 @@
           "part_count"
         ],
         "title": "CreatedUpload"
+      },
+      "DatasetLicenceIn": {
+        "properties": {
+          "dataset": {
+            "$ref": "#/components/schemas/LicenceText"
+          },
+          "licence": {
+            "$ref": "#/components/schemas/LicenceText"
+          },
+          "licence_class": {
+            "$ref": "#/components/schemas/LicenceClass"
+          }
+        },
+        "type": "object",
+        "required": [
+          "dataset",
+          "licence",
+          "licence_class"
+        ],
+        "title": "DatasetLicenceIn"
       },
       "DatasetLicenceOut": {
         "properties": {
@@ -50580,6 +50720,16 @@
             "type": "array",
             "title": "Project Ids"
           },
+          "licence": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LicenceIn"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "created_at": {
             "type": "string",
             "format": "date-time",
@@ -50602,6 +50752,7 @@
           "class_map",
           "who_can_run",
           "project_ids",
+          "licence",
           "created_at"
         ],
         "title": "LabModel"
@@ -50670,6 +50821,16 @@
             "type": "array",
             "maxItems": 200,
             "title": "Project Ids"
+          },
+          "licence": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LicenceIn"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -51267,6 +51428,46 @@
         ],
         "title": "LicenceClass"
       },
+      "LicenceIn": {
+        "properties": {
+          "weights": {
+            "$ref": "#/components/schemas/LicenceText"
+          },
+          "weights_class": {
+            "$ref": "#/components/schemas/LicenceClass"
+          },
+          "code": {
+            "$ref": "#/components/schemas/LicenceText"
+          },
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/DatasetLicenceIn"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "minItems": 1,
+            "title": "Data"
+          },
+          "source": {
+            "$ref": "#/components/schemas/LicenceText"
+          },
+          "read_on": {
+            "type": "string",
+            "format": "date",
+            "title": "Read On"
+          }
+        },
+        "type": "object",
+        "required": [
+          "weights",
+          "weights_class",
+          "code",
+          "data",
+          "source",
+          "read_on"
+        ],
+        "title": "LicenceIn"
+      },
       "LicenceOut": {
         "properties": {
           "weights": {
@@ -51320,6 +51521,11 @@
           "enforced"
         ],
         "title": "LicenceOut"
+      },
+      "LicenceText": {
+        "type": "string",
+        "maxLength": 400,
+        "minLength": 1
       },
       "LineStringGeometry": {
         "properties": {
@@ -52042,6 +52248,22 @@
         ],
         "title": "ModelOfTest"
       },
+      "ModelRef": {
+        "properties": {
+          "name": {
+            "$ref": "#/components/schemas/ModelName"
+          },
+          "version": {
+            "$ref": "#/components/schemas/ModelVersion"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "version"
+        ],
+        "title": "ModelRef"
+      },
       "ModelReference": {
         "properties": {
           "name": {
@@ -52301,6 +52523,11 @@
           "decoder"
         ],
         "title": "ModelTask"
+      },
+      "ModelText": {
+        "type": "string",
+        "maxLength": 200,
+        "minLength": 1
       },
       "ModelTier": {
         "type": "string",
@@ -55843,6 +56070,109 @@
         ],
         "title": "RegionMetrics"
       },
+      "RegistrationDraft": {
+        "properties": {
+          "name": {
+            "$ref": "#/components/schemas/ModelName"
+          },
+          "version": {
+            "$ref": "#/components/schemas/ModelVersion"
+          },
+          "family": {
+            "$ref": "#/components/schemas/ModelText"
+          },
+          "title": {
+            "$ref": "#/components/schemas/ModelText"
+          },
+          "tasks": {
+            "items": {
+              "$ref": "#/components/schemas/ModelTask"
+            },
+            "type": "array",
+            "maxItems": 5,
+            "minItems": 1,
+            "title": "Tasks"
+          },
+          "makes": {
+            "items": {
+              "$ref": "#/components/schemas/ModelMakes"
+            },
+            "type": "array",
+            "maxItems": 3,
+            "title": "Makes"
+          },
+          "host": {
+            "$ref": "#/components/schemas/ModelHost"
+          },
+          "licence": {
+            "$ref": "#/components/schemas/LicenceIn"
+          },
+          "allowed_tenant_kinds": {
+            "items": {
+              "$ref": "#/components/schemas/TenantKind"
+            },
+            "type": "array",
+            "maxItems": 3,
+            "minItems": 1,
+            "title": "Allowed Tenant Kinds"
+          },
+          "input_mpp": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Input Mpp"
+          },
+          "calibration_temperatures": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Calibration Temperatures"
+          },
+          "evaluation_report": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LicenceText"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "$ref": "#/components/schemas/ModelStatus",
+            "default": "candidate"
+          },
+          "part_of": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ModelRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "version",
+          "family",
+          "title",
+          "tasks",
+          "makes",
+          "host",
+          "licence",
+          "allowed_tenant_kinds"
+        ],
+        "title": "RegistrationDraft"
+      },
       "RegistryEntry": {
         "properties": {
           "name": {
@@ -55919,6 +56249,16 @@
           },
           "status": {
             "$ref": "#/components/schemas/ModelStatus"
+          },
+          "part_of": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ModelRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -55935,7 +56275,8 @@
           "input_mpp",
           "calibration_temperatures",
           "evaluation_report",
-          "status"
+          "status",
+          "part_of"
         ],
         "title": "RegistryEntry"
       },

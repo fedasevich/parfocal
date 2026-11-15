@@ -1675,7 +1675,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on VIEW-011. Refs [ADR 0111](adr/0111-jpeg-2000-in-the-decode-workers-and-ome-channel-pages.md).
   The owner chose on 2026-10-31 to add both slides, about 510 MB for the whole group.
   Size: S.
-- [ ] VIEW-055 · JPEG 2000 coarse level differences from OpenSlide
+- [x] VIEW-055 · JPEG 2000 coarse level differences from OpenSlide
   On JP2K-33003-1.svs and JP2K-33003-2.svs one tile at each of levels 1 and 2 differs from OpenSlide by up to 47 while level 0 is within 0.5. Find out whether the cause is the reference, the level table or the decoder.
   Done when a result file names the cause and a test pins it.
   Depends on VIEW-011. Refs [result](results/2026-10-26-jpeg-2000-in-the-decode-workers.md).
@@ -1722,7 +1722,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Refs doc 23.
   Size: M.
 
-- [ ] VIEW-040 · Viewer performance budgets
+- [x] VIEW-040 · Viewer performance budgets
   Budgets per format and RTT: time to first fitted image, time to sharp viewport after a jump, frame p95 while panning, heap ceiling.
   Done when CI enforces the CPU-side budgets on hosted runners, the frame and GPU-time budgets are checked by a manual run recorded as a result file ([ADR 0011](adr/0011-hosted-ci-only.md)), and an ADR records the numbers derived from the POC.
   Depends on TEST-006.
@@ -3476,7 +3476,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Depends on AIP-000.
   Size: S.
 
-- [ ] AIP-020 · Runtime model registration and model parts in the registry
+- [x] AIP-020 · Runtime model registration and model parts in the registry
   AIP-002 (model registry) keeps the registry in code. A migration moves it into a table so an admin can register a model while the app runs, adds licence fields for lab models connected through their own endpoint (JOBS-005), and adds rows with versions for the separate model parts in ADR 0202's line-up, such as the PathoSAM encoder and decoder.
   Done when an API test registers a model at run time and reads it back with its licence fields, a lab model row carries its licence, and every part in ADR 0202's line-up has a registry row with a version.
   Depends on AIP-002.
@@ -3796,6 +3796,18 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Done when a test opens the review viewer, uses smart select and corrects a type, and counts one SAM worker and one model load.
   Depends on AILEARN-008.
   Size: S.
+
+- [x] AILEARN-010 · Collect pooled features of reviewed nuclei for training rounds
+  AILEARN-004's training rounds take pooled features and typer outputs from the caller, because nothing on the server stores them for reviewed nuclei yet. Add a job that gathers them per tenant from the reviewed examples and feeds `run_round`.
+  Done when a test seeds reviewed nuclei, runs the job and a round trains from what it stored, with no PHI in the stored files.
+  Depends on AILEARN-004.
+  Size: M.
+
+- [ ] AILEARN-011 · Pool reviewed nuclei on the server from review decisions
+  AILEARN-010 collects pooled features through a pooler the caller passes in, and only the browser pools SAM features today. Add a server pooler in the ML worker and API wiring that turns a tenant's review decisions into the nuclei `collect` takes, and re-pool a nucleus whose outline was reshaped.
+  Done when a local test turns seeded review decisions into stored features through the server pooler with fake weights, a reshaped outline is pooled again, and no cloud job runs in tests.
+  Depends on AILEARN-010.
+  Size: M.
 
 ---
 
