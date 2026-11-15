@@ -1,4 +1,5 @@
-import { t } from "@lingui/core/macro";
+import type { MessageDescriptor } from "@lingui/core";
+import { msg, t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import { Dialog, DialogClose, DialogContent } from "@parfocal/ui/components/dialog";
@@ -8,13 +9,15 @@ import type * as React from "react";
 
 type SettingScopeKind = "personal" | "device" | "lab";
 
-const scopes: Record<SettingScopeKind, { icon: IconName; label: string }> = {
-  personal: { icon: "flag", label: "Personal" },
-  device: { icon: "monitor", label: "This computer" },
-  lab: { icon: "lock", label: "Set by your lab" },
+const scopes: Record<SettingScopeKind, { icon: IconName; label: MessageDescriptor }> = {
+  personal: { icon: "flag", label: msg`Personal` },
+  device: { icon: "monitor", label: msg`This computer` },
+  lab: { icon: "lock", label: msg`Set by your lab` },
 };
 
 function SettingScope({ scope, className }: { scope: SettingScopeKind; className?: string }) {
+  const { t } = useLingui();
+
   const { icon, label } = scopes[scope];
   return (
     <span
@@ -25,7 +28,7 @@ function SettingScope({ scope, className }: { scope: SettingScopeKind; className
       )}
     >
       <Icon name={icon} size="xs" />
-      {label}
+      {t(label)}
     </span>
   );
 }

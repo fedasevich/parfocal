@@ -1,4 +1,5 @@
-import { t } from "@lingui/core/macro";
+import type { MessageDescriptor } from "@lingui/core";
+import { msg, t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import { Icon, type IconName } from "@parfocal/ui/components/icon";
@@ -34,17 +35,19 @@ type ProgressPopoverProps = {
 };
 
 const legendRows = [
-  { key: "agree", label: "Agree", dot: "bg-decision-agree" },
-  { key: "disagree", label: "Disagree", dot: "bg-decision-disagree" },
-  { key: "unsure", label: "Not sure", dot: "bg-decision-unsure" },
+  { key: "agree", label: msg`Agree`, dot: "bg-decision-agree" },
+  { key: "disagree", label: msg`Disagree`, dot: "bg-decision-disagree" },
+  { key: "unsure", label: msg`Not sure`, dot: "bg-decision-unsure" },
   {
     key: "open",
-    label: "Still open",
+    label: msg`Still open`,
     dot: "bg-transparent shadow-[inset_0_0_0_1.5px_var(--line-strong)]",
   },
 ] as const;
 
 function DecisionLegend({ split }: { split: DecisionSplit }) {
+  const { t } = useLingui();
+
   return (
     <dl className="m-0 grid grid-cols-2 gap-x-4.5 gap-y-2">
       {legendRows.map((row) => (
@@ -53,7 +56,7 @@ function DecisionLegend({ split }: { split: DecisionSplit }) {
           className="grid grid-cols-[10px_minmax(0,1fr)_auto] items-center gap-2 text-body-sm text-fg-dim"
         >
           <i aria-hidden="true" className={cn("size-2.5 rounded-full", row.dot)} />
-          <dt>{row.label}</dt>
+          <dt>{t(row.label)}</dt>
           <dd className="m-0 font-semibold text-fg tabular-nums">{split[row.key]}</dd>
         </div>
       ))}
@@ -343,6 +346,7 @@ function SlideRowView({
           size="sm"
           variant="ghost"
           className="absolute right-2 bottom-1.5"
+          data-slot="side-by-side"
           aria-label={t`Side by side with ${row.name}`}
           title={sideBySide.title}
           disabled={sideBySide.onOpen === undefined}

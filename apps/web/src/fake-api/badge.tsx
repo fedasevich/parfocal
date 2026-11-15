@@ -3,6 +3,7 @@ import { defaultFakeView, fakeView, scenario } from "@parfocal/api-client/fake";
 import type { QueryClient } from "@tanstack/react-query";
 import { useSyncExternalStore } from "react";
 import { createRoot } from "react-dom/client";
+import { AppI18n } from "../i18n/app-i18n.tsx";
 import { shellStore } from "../shell/shell-store.ts";
 import { type FakeScope, fakeBadgeLabel, subscribeToQueries } from "./badge-state.ts";
 
@@ -44,5 +45,9 @@ export function mountFakeDataBadge(scope: FakeScope, queryClient: QueryClient): 
   const host = document.createElement("div");
   host.dataset["fakeApi"] = scope;
   document.body.append(host);
-  createRoot(host).render(<FakeDataBadge scope={scope} queryClient={queryClient} />);
+  createRoot(host).render(
+    <AppI18n>
+      <FakeDataBadge scope={scope} queryClient={queryClient} />
+    </AppI18n>,
+  );
 }

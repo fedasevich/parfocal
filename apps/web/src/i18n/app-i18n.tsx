@@ -1,5 +1,5 @@
 import { I18nProvider } from "@lingui/react";
-import { type ReactNode, useEffect } from "react";
+import { Fragment, type ReactNode, useEffect, useSyncExternalStore } from "react";
 import { useSignedInArea } from "../session/signed-in-area.ts";
 import { useResolvedSettings } from "../shell/resolved-settings.ts";
 import { activateLocale, i18n } from "./i18n.ts";
@@ -7,8 +7,16 @@ import { localeFor, pseudoRequested } from "./locale.ts";
 
 const pseudo = import.meta.env.DEV && pseudoRequested(globalThis.localStorage);
 
+const subscribeToLocale = (onChange: () => void) => i18n.on("change", onChange);
+const activeLocale = () => i18n.locale;
+
 export function AppI18n({ children }: { children: ReactNode }) {
-  return <I18nProvider i18n={i18n}>{children}</I18nProvider>;
+  const locale = useSyncExternalStore(subscribeToLocale, activeLocale);
+  return (
+    <I18nProvider i18n={i18n}>
+      <Fragment key={locale}>{children}</Fragment>
+    </I18nProvider>
+  );
 }
 
 export function useAppliedLocale(): void {

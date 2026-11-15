@@ -1,4 +1,6 @@
-import { Trans } from "@lingui/react/macro";
+import type { MessageDescriptor } from "@lingui/core";
+import { msg } from "@lingui/core/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import { Icon } from "@parfocal/ui/components/icon";
 import { cn } from "@parfocal/ui/lib/utils";
@@ -6,13 +8,13 @@ import type * as React from "react";
 
 type IngestFailureClass = "transient" | "permanent";
 
-const classCopy: Record<IngestFailureClass, { title: string; next: string }> = {
+const classCopy: Record<IngestFailureClass, { title: MessageDescriptor; next: string }> = {
   transient: {
-    title: "did not finish",
+    title: msg`did not finish`,
     next: "This is usually temporary. Sending the file again often works.",
   },
   permanent: {
-    title: "was refused",
+    title: msg`was refused`,
     next: "Sending this file again will not change the result. If it should work, tell support.",
   },
 };
@@ -34,6 +36,8 @@ function IngestFailure({
   className,
   ...props
 }: IngestFailureProps) {
+  const { t } = useLingui();
+
   const copy = classCopy[failureClass];
   return (
     <div
@@ -52,7 +56,7 @@ function IngestFailure({
       <Icon name="warn" className="mt-0.5" />
       <div className="grid min-w-0 flex-1 gap-1">
         <p className="m-0 font-semibold">
-          <span className="font-mono font-medium">{fileName}</span> {copy.title}
+          <span className="font-mono font-medium">{fileName}</span> {t(copy.title)}
         </p>
         <p className="m-0 leading-[1.45]">{message}</p>
         <p className="m-0 leading-[1.45] text-fg-dim">{copy.next}</p>

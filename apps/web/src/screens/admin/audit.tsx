@@ -1,3 +1,5 @@
+import type { MessageDescriptor } from "@lingui/core";
+import { msg } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import {
   exportAuditEvents,
@@ -38,10 +40,10 @@ import {
 import { type Notify, tableClass } from "./common.tsx";
 import { SystemActor } from "./overview.tsx";
 
-const auditFlags: Record<string, { text: string; tone: "warn" | "bad" }> = {
-  "decision.changed-after-sign-off": { text: "After sign-off", tone: "warn" },
-  "project.emergency-access": { text: "Emergency", tone: "bad" },
-  "webhook.rejected": { text: "Rejected", tone: "bad" },
+const auditFlags: Record<string, { text: MessageDescriptor; tone: "warn" | "bad" }> = {
+  "decision.changed-after-sign-off": { text: msg`After sign-off`, tone: "warn" },
+  "project.emergency-access": { text: msg`Emergency`, tone: "bad" },
+  "webhook.rejected": { text: msg`Rejected`, tone: "bad" },
 };
 
 type FilterProps = { filter: AuditFilter; onFilter: (next: AuditFilter) => void };
@@ -151,7 +153,7 @@ export function AuditSection({ filter, onFilter }: FilterProps) {
                 <TableCell>{auditLabel(event.action)}</TableCell>
                 <TableCell className="font-mono">{project ?? ""}</TableCell>
                 <TableCell>
-                  {flag ? <StatusTag tone={flag.tone}>{flag.text}</StatusTag> : null}
+                  {flag ? <StatusTag tone={flag.tone}>{t(flag.text)}</StatusTag> : null}
                 </TableCell>
               </TableRow>
             );

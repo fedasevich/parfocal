@@ -2379,6 +2379,10 @@ msgstr ""
 msgid "46% · about 3 min left"
 msgstr ""
 
+#: src/screens/admin/decision-preset.tsx
+msgid "5-point certainty"
+msgstr ""
+
 #: src/screens/developer/developer-screen.tsx
 msgid "60 fps"
 msgstr ""
@@ -2673,6 +2677,7 @@ msgid "Accept to see the slides. Nothing is shared until you do."
 msgstr ""
 
 #: src/screens/onboarding/sign-up-screen.tsx
+#: src/screens/settings/settings-screen.tsx
 msgid "Account"
 msgstr ""
 
@@ -2941,12 +2946,20 @@ msgstr ""
 msgid "Admin rights only"
 msgstr ""
 
+#: src/screens/admin/people.tsx
+msgid "Admin rights, on a researcher"
+msgstr ""
+
 #: src/screens/admin/admin-shell.tsx
 msgid "Admin sections"
 msgstr ""
 
 #: src/screens/upload/viewer-flow.tsx
 msgid "After adding"
+msgstr ""
+
+#: src/screens/admin/audit.tsx
+msgid "After sign-off"
 msgstr ""
 
 #: src/screens/admin/workspace-settings.tsx
@@ -2959,6 +2972,10 @@ msgstr ""
 
 #: src/screens/onboarding/sign-in-forms.tsx
 msgid "After you sign in:"
+msgstr ""
+
+#: ../../packages/ui/src/components/review-popovers.tsx
+msgid "Agree"
 msgstr ""
 
 #. placeholder {0}: disagreeing.length ? t` Disagree goes with ${disagreeing.length === 2 ? "both reviewers" : disagreeing[0]}.` : ""
@@ -2980,6 +2997,10 @@ msgstr ""
 
 #: src/screens/home/home-screen.tsx
 msgid "agree with the AI"
+msgstr ""
+
+#: src/screens/admin/decision-preset.tsx
+msgid "Agree with the AI"
 msgstr ""
 
 #: ../../packages/ui/src/components/cells-panel.tsx
@@ -3007,6 +3028,10 @@ msgstr ""
 msgid "AI {0}"
 msgstr ""
 
+#: src/screens/settings/settings-screen.tsx
+msgid "AI and confidence"
+msgstr ""
+
 #: src/screens/viewer/layer-views.tsx
 msgid "AI and reviewer agree"
 msgstr ""
@@ -3015,6 +3040,7 @@ msgstr ""
 msgid "AI cells inside the areas you draw"
 msgstr ""
 
+#: src/screens/admin/admin-shell.tsx
 #: src/screens/admin/overview.tsx
 msgid "AI models"
 msgstr ""
@@ -3332,6 +3358,10 @@ msgstr ""
 msgid "Anything the clinician should know"
 msgstr ""
 
+#: src/screens/admin/admin-shell.tsx
+msgid "API and webhooks"
+msgstr ""
+
 #: src/screens/admin/sections.tsx
 msgid "API reference"
 msgstr ""
@@ -3449,6 +3479,10 @@ msgstr ""
 msgid "Ask for access"
 msgstr ""
 
+#: src/screens/shared-report/shared-report-screen.tsx
+msgid "Ask the person who shared it for a new link."
+msgstr ""
+
 #: src/screens/review/guided-review.tsx
 #: src/screens/viewer/full-viewer.tsx
 msgid "Ask the researcher"
@@ -3496,10 +3530,19 @@ msgstr ""
 msgid "Assigned by me"
 msgstr ""
 
+#: src/screens/admin/admin-shell.tsx
+msgid "at a glance"
+msgstr ""
+
+#: src/screens/admin/retention.tsx
+msgid "At least one year. The audit chain stays verifiable after a removal."
+msgstr ""
+
 #: src/feedback/feedback-dialog.tsx
 msgid "Attach the blurred screenshot"
 msgstr ""
 
+#: src/screens/admin/admin-shell.tsx
 #: src/screens/admin/overview.tsx
 msgid "Audit log"
 msgstr ""
@@ -3662,6 +3705,10 @@ msgstr ""
 
 #: src/screens/admin/workspace-settings.tsx
 msgid "Banner"
+msgstr ""
+
+#: src/routes/issue-states.tsx
+msgid "Banner and inline error styles"
 msgstr ""
 
 #: ../../packages/ui/src/components/connect-model.tsx
@@ -3958,6 +4005,10 @@ msgstr ""
 #. placeholder {0}: person.name
 #: src/screens/project/settings-zones.tsx
 msgid "Can sign out, {0}"
+msgstr ""
+
+#: src/screens/admin/people.tsx
+msgid "Can sign out, a project right in a clinical project"
 msgstr ""
 
 #: ../../packages/ui/src/components/cells-panel.tsx
@@ -4310,6 +4361,10 @@ msgstr ""
 
 #: src/screens/annotate-task/annotate-task-view.tsx
 msgid "Check progress"
+msgstr ""
+
+#: src/screens/shared-report/shared-report-screen.tsx
+msgid "Check that the whole link was copied, or ask the person who shared it for a new one."
 msgstr ""
 
 #: src/screens/upload/upload-page.tsx
@@ -5382,6 +5437,10 @@ msgstr ""
 msgid "Deleted projects"
 msgstr ""
 
+#: src/screens/admin/retention.tsx
+msgid "Deleted slides, annotations and results. Legal holds and review tasks keep them."
+msgstr ""
+
 #: src/screens/project/settings-tab.tsx
 msgid "Deleting hides the project from every list and link. Nothing is erased, and an owner can restore it."
 msgstr ""
@@ -5444,6 +5503,10 @@ msgstr ""
 msgid "Dice"
 msgstr ""
 
+#: ../../packages/ui/src/components/ingest-failure.tsx
+msgid "did not finish"
+msgstr ""
+
 #: ../../packages/ui/src/components/brightness-popover.tsx
 msgid "Dimmer"
 msgstr ""
@@ -5454,6 +5517,10 @@ msgstr ""
 
 #: src/screens/settings/shortcuts-section.tsx
 msgid "Directions come as a set of four."
+msgstr ""
+
+#: ../../packages/ui/src/components/review-popovers.tsx
+msgid "Disagree"
 msgstr ""
 
 #: ../../packages/ui/src/components/counts-as.tsx
@@ -5496,6 +5563,7 @@ msgstr ""
 #: src/screens/developer/developer-screen.tsx
 #: src/screens/disagreements/adjudicator-view.tsx
 #: src/screens/new-task/steps.tsx
+#: src/screens/settings/settings-screen.tsx
 msgid "Display"
 msgstr ""
 
@@ -5805,6 +5873,10 @@ msgstr ""
 msgid "Email me a sign-in link instead"
 msgstr ""
 
+#: src/screens/admin/audit.tsx
+msgid "Emergency"
+msgstr ""
+
 #: src/screens/admin/workspace-settings.tsx
 msgid "Emergency access lasts"
 msgstr ""
@@ -6005,6 +6077,10 @@ msgstr ""
 
 #: src/screens/admin/connect-model.tsx
 msgid "Every object needs a class and a polygon in level 0 pixels. A score is optional."
+msgstr ""
+
+#: src/screens/admin/admin-shell.tsx
+msgid "Every project in the workspace, its privacy and the space it uses"
 msgstr ""
 
 #: src/screens/evaluation/report-pages.tsx
@@ -7522,6 +7598,10 @@ msgstr ""
 msgid "Keep all loose"
 msgstr ""
 
+#: src/screens/admin/retention.tsx
+msgid "Keep audit events for"
+msgstr ""
+
 #: src/screens/upload/server-check.tsx
 msgid "Keep both"
 msgstr ""
@@ -7713,6 +7793,7 @@ msgstr ""
 
 #: src/screens/admin/template-offers.tsx
 #: src/screens/evaluation/evaluation-screen.tsx
+#: src/screens/settings/settings-screen.tsx
 #: src/screens/viewer-tools/compare-view.tsx
 msgid "Layout"
 msgstr ""
@@ -8001,6 +8082,10 @@ msgstr ""
 msgid "Lock times restored."
 msgstr ""
 
+#: src/screens/admin/admin-shell.tsx
+msgid "Lock times, model tiers, what new work starts with and announcements"
+msgstr ""
+
 #: ../../packages/ui/src/components/auth.tsx
 #: ../../packages/ui/src/components/control-row.tsx
 #: ../../packages/ui/src/components/icon.tsx
@@ -8228,6 +8313,11 @@ msgstr ""
 
 #: src/screens/onboarding/sign-in-forms.tsx
 msgid "Matches your email"
+msgstr ""
+
+#. placeholder {0}: typed.trim()
+#: src/screens/settings/settings-screen.tsx
+msgid "Matching \"{0}\""
 msgstr ""
 
 #: ../../packages/ui/src/components/gallery-tile.tsx
@@ -8571,6 +8661,10 @@ msgstr ""
 msgid "Narrow"
 msgstr ""
 
+#: src/screens/settings/settings-screen.tsx
+msgid "Navigation and devices"
+msgstr ""
+
 #: src/screens/developer/developer-screen.tsx
 msgid "Nearest"
 msgstr ""
@@ -8778,6 +8872,10 @@ msgstr ""
 
 #: src/screens/new-task/modals.tsx
 msgid "no {short}"
+msgstr ""
+
+#: src/routes/issue-states.tsx
+msgid "No access"
 msgstr ""
 
 #: src/shell/issue-pages.tsx
@@ -9226,6 +9324,7 @@ msgstr ""
 msgid "Not started"
 msgstr ""
 
+#: ../../packages/ui/src/components/review-popovers.tsx
 #: src/screens/shared-report/shared-report-screen.tsx
 msgid "Not sure"
 msgstr ""
@@ -9463,6 +9562,7 @@ msgstr ""
 #: ../../packages/ui/src/components/icon.tsx
 #: ../../packages/ui/src/components/notifications-panel.tsx
 #: src/routes/prototype.tsx
+#: src/screens/settings/settings-screen.tsx
 #: src/shell/bell.tsx
 msgid "Notifications"
 msgstr ""
@@ -9701,6 +9801,10 @@ msgstr ""
 
 #: src/screens/new-task/steps.tsx
 msgid "One object at a time with big buttons. They can still zoom and pan."
+msgstr ""
+
+#: src/screens/admin/decision-preset.tsx
+msgid "One question for every object. The AI's claim stays hidden."
 msgstr ""
 
 #: src/screens/upload/formats-drawer.tsx
@@ -10041,6 +10145,10 @@ msgstr ""
 msgid "Overrides the doctor's Settings while testing."
 msgstr ""
 
+#: src/screens/admin/admin-shell.tsx
+msgid "Overview"
+msgstr ""
+
 #. placeholder {0}: owner ? t` Set by ${people.byId(owner.user_id).name}, the owner.` : ""
 #: src/screens/project/settings-zones.tsx
 msgid "Own cases means the cases a member is assigned to. A member who cannot sign out sends the report for co-sign to one who can.{0}"
@@ -10098,6 +10206,7 @@ msgstr ""
 msgid "Page content"
 msgstr ""
 
+#: src/routes/issue-states.tsx
 #: src/shell/issue-pages.tsx
 msgid "Page not found"
 msgstr ""
@@ -10226,6 +10335,10 @@ msgstr ""
 msgid "parfocal.eu"
 msgstr ""
 
+#: src/screens/admin/admin-shell.tsx
+msgid "Parfocal's models are always here. Connect your lab's own models next to them"
+msgstr ""
+
 #: ../../packages/ui/src/components/auth.tsx
 #: src/screens/onboarding/invite-screen.tsx
 #: src/screens/onboarding/sign-in-forms.tsx
@@ -10333,6 +10446,7 @@ msgstr ""
 msgid "People"
 msgstr ""
 
+#: src/screens/admin/admin-shell.tsx
 #: src/screens/admin/overview.tsx
 msgid "People and roles"
 msgstr ""
@@ -10388,6 +10502,10 @@ msgstr ""
 #: src/screens/admin/join-requests.tsx
 #: src/screens/admin/people.tsx
 msgid "Person"
+msgstr ""
+
+#: ../../packages/ui/src/components/settings-dialog.tsx
+msgid "Personal"
 msgstr ""
 
 #: src/screens/settings/shortcuts-section.tsx
@@ -10449,6 +10567,10 @@ msgstr ""
 
 #: src/screens/new-task/steps.tsx
 msgid "Pick someone else"
+msgstr ""
+
+#: src/screens/admin/decision-preset.tsx
+msgid "Pick the class blind"
 msgstr ""
 
 #. placeholder {0}: action.name.toLowerCase()
@@ -10724,6 +10846,10 @@ msgstr ""
 msgid "Privacy"
 msgstr ""
 
+#: src/screens/settings/settings-screen.tsx
+msgid "Privacy and session"
+msgstr ""
+
 #: src/screens/admin/sections.tsx
 #: src/screens/admin/workspace-settings.tsx
 msgid "Privacy of new projects"
@@ -10763,6 +10889,7 @@ msgstr ""
 msgid "Project settings"
 msgstr ""
 
+#: src/screens/admin/admin-shell.tsx
 #: src/screens/admin/connect-model.tsx
 #: src/screens/admin/people.tsx
 #: src/screens/admin/sections.tsx
@@ -11081,6 +11208,10 @@ msgstr ""
 msgid "Regions, cells, classes, scores and IDs in one file. The native format."
 msgstr ""
 
+#: src/screens/admin/audit.tsx
+msgid "Rejected"
+msgstr ""
+
 #: ../../packages/ui/src/components/smart-minimap.tsx
 msgid "release <0/>"
 msgstr ""
@@ -11126,6 +11257,10 @@ msgstr ""
 
 #: ../../packages/ui/src/components/icon.tsx
 msgid "Remove all"
+msgstr ""
+
+#: src/screens/admin/retention.tsx
+msgid "Remove deleted items after"
 msgstr ""
 
 #: src/screens/upload/files-step.tsx
@@ -11201,6 +11336,7 @@ msgid "Report template"
 msgstr ""
 
 #: src/screens/admin/admin-screen.tsx
+#: src/screens/admin/admin-shell.tsx
 msgid "Report templates"
 msgstr ""
 
@@ -11498,6 +11634,7 @@ msgstr ""
 
 #: src/screens/disagreements/adjudicator-view.tsx
 #: src/screens/onboarding/invite-screen.tsx
+#: src/screens/settings/settings-screen.tsx
 msgid "Review"
 msgstr ""
 
@@ -12064,6 +12201,7 @@ msgid "Second monitor"
 msgstr ""
 
 #: ../../packages/ui/src/components/icon.tsx
+#: src/screens/admin/admin-shell.tsx
 msgid "Security"
 msgstr ""
 
@@ -12286,8 +12424,16 @@ msgstr ""
 msgid "Server"
 msgstr ""
 
+#: src/routes/issue-states.tsx
+msgid "Session expired"
+msgstr ""
+
 #: src/screens/admin/sections.tsx
 msgid "Sessions and data"
+msgstr ""
+
+#: ../../packages/ui/src/components/settings-dialog.tsx
+msgid "Set by your lab"
 msgstr ""
 
 #: src/screens/settings/settings-screen.tsx
@@ -12415,6 +12561,10 @@ msgstr ""
 
 #: src/help/help-dialog.tsx
 msgid "Short answers, the shortcut sheet and the tour."
+msgstr ""
+
+#: src/screens/settings/settings-screen.tsx
+msgid "Shortcuts"
 msgstr ""
 
 #: ../../packages/ui/src/components/icon.tsx
@@ -12698,6 +12848,10 @@ msgstr ""
 
 #: src/screens/admin/workspace-settings.tsx
 msgid "Sign-in lasts"
+msgstr ""
+
+#: src/screens/admin/admin-shell.tsx
+msgid "Sign-in, sessions and where data is kept"
 msgstr ""
 
 #. placeholder {0}: hoursText(value)
@@ -13094,6 +13248,10 @@ msgstr ""
 msgid "Someone with admin rights there gets your request and answers by email, usually within a day"
 msgstr ""
 
+#: src/routes/issue-states.tsx
+msgid "Something went wrong"
+msgstr ""
+
 #: src/shell/issue-pages.tsx
 msgid "Something went wrong on our side"
 msgstr ""
@@ -13129,6 +13287,10 @@ msgstr ""
 #: src/screens/admin/storage.tsx
 #: src/screens/upload/check-step.tsx
 msgid "Space"
+msgstr ""
+
+#: src/screens/admin/admin-shell.tsx
+msgid "Space used, and the servers slides are read from"
 msgstr ""
 
 #: src/screens/onboarding/setup-screen.tsx
@@ -13313,6 +13475,10 @@ msgstr ""
 msgid "Still offline"
 msgstr ""
 
+#: ../../packages/ui/src/components/review-popovers.tsx
+msgid "Still open"
+msgstr ""
+
 #. placeholder {0}: found.length
 #: src/screens/viewer/objects-panel.tsx
 msgid "Still reading this slide, {0} regions so far"
@@ -13336,6 +13502,7 @@ msgstr ""
 msgid "Stopped. What was stored is kept"
 msgstr ""
 
+#: src/screens/admin/admin-shell.tsx
 #: src/screens/admin/overview.tsx
 #: src/screens/upload/check-step.tsx
 msgid "Storage and sources"
@@ -13365,6 +13532,10 @@ msgstr ""
 
 #: src/screens/admin/templates.tsx
 msgid "Study templates"
+msgstr ""
+
+#: src/screens/admin/admin-shell.tsx
+msgid "Study templates build the evaluation report from blocks and fill in a new review task"
 msgstr ""
 
 #: ../../packages/ui/src/components/analysis-cards.tsx
@@ -13737,6 +13908,14 @@ msgstr ""
 msgid "The AI's claim is hidden in this style"
 msgstr ""
 
+#: src/screens/admin/decision-preset.tsx
+msgid "The AI's claim, then Agree, Disagree or Not sure."
+msgstr ""
+
+#: src/screens/admin/decision-preset.tsx
+msgid "The AI's claim, then how sure the reviewer is, from 1 Certainly not to 5 Certainly."
+msgstr ""
+
 #: src/screens/clinical-report/report-screen.tsx
 msgid "The amendment could not be saved."
 msgstr ""
@@ -14068,6 +14247,10 @@ msgstr ""
 msgid "The report as pages"
 msgstr ""
 
+#: src/screens/shared-report/shared-report-screen.tsx
+msgid "The report could not be loaded"
+msgstr ""
+
 #: src/screens/clinical-report/cosign-screen.tsx
 msgid "The report could not be returned. Try again."
 msgstr ""
@@ -14116,6 +14299,10 @@ msgstr ""
 
 #: src/screens/new-task/steps.tsx
 msgid "The reviewed layer, as the reviewer edits it"
+msgstr ""
+
+#: src/screens/admin/decision-preset.tsx
+msgid "The reviewer picks the class without seeing the AI's, then Parfocal compares."
 msgstr ""
 
 #: src/screens/disagreements/queue-screen.tsx
@@ -14351,6 +14538,10 @@ msgstr ""
 msgid "This browser could not take a screenshot, so only your text is sent."
 msgstr ""
 
+#: ../../packages/ui/src/components/settings-dialog.tsx
+msgid "This computer"
+msgstr ""
+
 #: src/screens/upload/live-wizard.tsx
 msgid "This file has nothing in it"
 msgstr ""
@@ -14370,6 +14561,18 @@ msgstr ""
 #: src/screens/disagreements/adjudicator-view.tsx
 #: src/screens/review/guided-review.tsx
 msgid "This is the first object"
+msgstr ""
+
+#: src/screens/shared-report/shared-report-screen.tsx
+msgid "This link does not lead to a report"
+msgstr ""
+
+#: src/screens/shared-report/shared-report-screen.tsx
+msgid "This link was opened too often just now"
+msgstr ""
+
+#: src/screens/shared-report/shared-report-screen.tsx
+msgid "This link was revoked or has expired"
 msgstr ""
 
 #: src/screens/upload/live-wizard.tsx
@@ -14608,6 +14811,10 @@ msgstr ""
 msgid "Tokens"
 msgstr ""
 
+#: src/screens/admin/admin-shell.tsx
+msgid "Tokens and webhooks for pipelines"
+msgstr ""
+
 #: src/screens/new-task/steps.tsx
 msgid "Told just now"
 msgstr ""
@@ -14671,6 +14878,10 @@ msgstr ""
 #: src/shell/issue-pages.tsx
 #: src/viewer/slide-stage.tsx
 msgid "Try again"
+msgstr ""
+
+#: src/screens/shared-report/shared-report-screen.tsx
+msgid "Try again in a moment."
 msgstr ""
 
 #: src/screens/settings/shortcuts-section.tsx
@@ -15183,6 +15394,10 @@ msgstr ""
 msgid "Vltava single sign-on did not answer. Nothing was signed."
 msgstr ""
 
+#: src/screens/shared-report/shared-report-screen.tsx
+msgid "Wait a minute and open it again."
+msgstr ""
+
 #: src/screens/onboarding/setup-screen.tsx
 msgid "Wait for an invite from a researcher"
 msgstr ""
@@ -15239,6 +15454,10 @@ msgstr ""
 
 #: src/screens/new-task/steps.tsx
 msgid "was invited and gets"
+msgstr ""
+
+#: ../../packages/ui/src/components/ingest-failure.tsx
+msgid "was refused"
 msgstr ""
 
 #: src/screens/upload/overlays.tsx
@@ -15517,6 +15736,10 @@ msgstr ""
 msgid "Who can run it"
 msgstr ""
 
+#: src/screens/admin/admin-shell.tsx
+msgid "Who can sign in and what each role can do"
+msgstr ""
+
 #: src/screens/admin/workspace-settings.tsx
 msgid "Who chooses names"
 msgstr ""
@@ -15531,6 +15754,10 @@ msgstr ""
 
 #: src/screens/disagreements/send-modal.tsx
 msgid "Who decides"
+msgstr ""
+
+#: src/screens/admin/admin-shell.tsx
+msgid "Who did what and when. Nobody can change it, people with admin rights included"
 msgstr ""
 
 #. placeholder {0}: headerLine(team)
@@ -15655,6 +15882,10 @@ msgstr ""
 msgid "Workspace logo"
 msgstr ""
 
+#: src/screens/admin/admin-shell.tsx
+msgid "Workspace settings"
+msgstr ""
+
 #: ../../packages/ui/src/components/comment-thread.tsx
 msgid "Write a comment first"
 msgstr ""
@@ -15702,6 +15933,10 @@ msgstr ""
 
 #: src/screens/admin/people.tsx
 msgid "Yes"
+msgstr ""
+
+#: src/screens/admin/decision-preset.tsx
+msgid "Yes or no"
 msgstr ""
 
 #. placeholder {0}: name.trim()

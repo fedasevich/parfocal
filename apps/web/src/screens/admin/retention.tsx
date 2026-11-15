@@ -1,3 +1,5 @@
+import type { MessageDescriptor } from "@lingui/core";
+import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react/macro";
 import {
   getGetRetentionPolicyQueryKey,
@@ -59,16 +61,16 @@ function DaysChoice({
   );
 }
 
-const rows: { key: RetentionKey; label: string; help: string }[] = [
+const rows: { key: RetentionKey; label: MessageDescriptor; help: MessageDescriptor }[] = [
   {
     key: "deleted_after_days",
-    label: "Remove deleted items after",
-    help: "Deleted slides, annotations and results. Legal holds and review tasks keep them.",
+    label: msg`Remove deleted items after`,
+    help: msg`Deleted slides, annotations and results. Legal holds and review tasks keep them.`,
   },
   {
     key: "audit_after_days",
-    label: "Keep audit events for",
-    help: "At least one year. The audit chain stays verifiable after a removal.",
+    label: msg`Keep audit events for`,
+    help: msg`At least one year. The audit chain stays verifiable after a removal.`,
   },
 ];
 
@@ -103,15 +105,15 @@ export function RetentionZone({ notify }: { notify: Notify }) {
           const days = retentionDays(policy, row.key);
           return (
             <div key={row.key} className="contents">
-              <span className="pt-1.5 text-fg-dim">{row.label}</span>
+              <span className="pt-1.5 text-fg-dim">{t(row.label)}</span>
               <div className="grid justify-items-start gap-1.5">
                 <DaysChoice
-                  label={row.label}
+                  label={t(row.label)}
                   days={days}
                   choices={retentionChoices(row.key, days)}
                   onChange={(next) => change(row.key, next)}
                 />
-                <small className="text-caption text-fg-dim">{row.help}</small>
+                <small className="text-caption text-fg-dim">{t(row.help)}</small>
               </div>
             </div>
           );

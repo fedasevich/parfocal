@@ -1,4 +1,5 @@
-import { t } from "@lingui/core/macro";
+import type { MessageDescriptor } from "@lingui/core";
+import { msg, t } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import {
   type Invitation,
@@ -53,26 +54,26 @@ const roleText = { researcher: "Researcher", reviewer: "Reviewer" } as const;
 
 const roleDefinitions = [
   {
-    name: "Researcher",
+    name: msg`Researcher`,
     does: "Runs studies. Creates projects and owns them, uploads slides and AI results, runs models, sets a project's classes, opinion form and study template, creates review tasks and invites reviewers, resolves disagreements or asks an adjudicator, signs off, and arranges, exports and shares the report. Reviews too when a task names them",
     never: "Opens a project without a project role. Clinical projects open only with a reason",
     who: "researcher",
   },
   {
-    name: "Reviewer",
+    name: msg`Reviewer`,
     does: "Reviews the slides of their tasks. Agree, Disagree or Unsure on each object with optional reasons and a note, fixes outlines and types, adds what the AI missed, comments, fills the opinion form and submits each slide. Decides queued objects when asked to adjudicate",
     never:
       "Uploads, runs models, creates projects or tasks, signs off, sees other decisions before submitting in a blind task, opens Admin",
     who: "reviewer",
   },
   {
-    name: "Admin rights, on a researcher",
+    name: msg`Admin rights, on a researcher`,
     does: "Sets up the workspace on this page: people and their roles, projects, AI models, report templates, storage and sources, API and webhooks, the audit log and security",
     never: "Sees project data because of the right. The last researcher with it cannot lose it",
     who: "admin",
   },
   {
-    name: "Can sign out, a project right in a clinical project",
+    name: msg`Can sign out, a project right in a clinical project`,
     does: "Signs out the clinical report of a case in that project. On by default for the case's assigned pathologist, set by the project owner. A member without it sends the report for co-sign to someone who has it",
     never:
       "Signs out in a de-identified project, where there is no clinical report. Signs out a research evaluation, which is the researcher's sign-off",
@@ -391,9 +392,9 @@ export function PeopleSection({
           </TableHeader>
           <TableBody>
             {roleDefinitions.map((definition) => (
-              <TableRow key={definition.name} className="align-top">
+              <TableRow key={t(definition.name)} className="align-top">
                 <TableCell className="w-44 py-3 whitespace-normal">
-                  <b>{definition.name}</b>
+                  <b>{t(definition.name)}</b>
                 </TableCell>
                 <TableCell className="py-3 whitespace-normal text-fg-dim">
                   {definition.does}

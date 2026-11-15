@@ -12,10 +12,13 @@ test.beforeEach(async ({ page }) => {
 });
 
 async function openFromPrototype(page: Page, name: string | RegExp) {
-  await page.goto("/prototype");
-  const link = page.getByRole("list", { name: "Screens" }).getByRole("link", { name }).first();
+  const probe = await page.context().newPage();
+  await probe.goto("/prototype");
+  const link = probe.getByRole("list", { name: "Screens" }).getByRole("link", { name }).first();
   await expect(link).toBeVisible({ timeout: 20_000 });
-  await page.goto((await link.getAttribute("href")) ?? "");
+  const href = (await link.getAttribute("href")) ?? "";
+  await probe.close();
+  await page.goto(href);
 }
 
 test("the review screen shows no English in the en-XA pseudo locale", async ({ page }) => {
@@ -48,10 +51,7 @@ test("the compare screen shows no English in the en-XA pseudo locale", async ({ 
   await openFromPrototype(page, "Full viewer · Objects tab");
   await page.getByRole("button", { name: /^A1/ }).first().click();
   const slides = page.getByRole("dialog");
-  await slides
-    .getByRole("button", { name: /Side by side with/ })
-    .first()
-    .click();
+  await slides.locator('[data-slot="side-by-side"]').first().click();
   await expect(page).toHaveURL(/scene=picked/);
   const viewer = page.getByTestId("full-viewer");
   await expect(viewer).toBeVisible({ timeout: 20_000 });

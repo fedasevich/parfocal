@@ -198,9 +198,11 @@ export function AdminScreen({ section, scene, modal, request, change }: Props) {
       <main className="flex min-h-full flex-col gap-(--space-zone) bg-surf-panel px-(--pad-modal) pb-(--pad-modal)">
         <header className="sticky top-0 z-2 flex items-center justify-between gap-4 bg-surf-panel pt-5 pb-1">
           <div>
-            <h1 className="m-0 text-title-sm font-semibold text-fg">{info?.label}</h1>
+            <h1 className="m-0 text-title-sm font-semibold text-fg">
+              {info ? t(info.label) : null}
+            </h1>
             <p className="mt-0.75 mb-0 text-body-sm text-fg-dim">
-              {section === "overview" ? t`${workspaceName} at a glance` : info?.sub}
+              {section === "overview" ? t`${workspaceName} at a glance` : info ? t(info.sub) : null}
             </p>
           </div>
           {actions[section] ? <div className="flex flex-none gap-2">{actions[section]}</div> : null}

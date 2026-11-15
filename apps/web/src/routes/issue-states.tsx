@@ -1,3 +1,5 @@
+import type { MessageDescriptor } from "@lingui/core";
+import { msg } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
 import { cn } from "@parfocal/ui/lib/utils";
@@ -130,11 +132,11 @@ function StateRow({ row, ids }: { row: IssueRow; ids: ScenarioIds | undefined })
 }
 
 const sharedPages = [
-  { kind: "not-found", label: "Page not found" },
-  { kind: "server-error", label: "Something went wrong" },
-  { kind: "expired", label: "Session expired" },
-  { kind: "no-access", label: "No access" },
-  { kind: "styles", label: "Banner and inline error styles" },
+  { kind: "not-found", label: msg`Page not found` },
+  { kind: "server-error", label: msg`Something went wrong` },
+  { kind: "expired", label: msg`Session expired` },
+  { kind: "no-access", label: msg`No access` },
+  { kind: "styles", label: msg`Banner and inline error styles` },
 ] as const;
 
 function SharedPages() {
@@ -160,7 +162,7 @@ function SharedPages() {
             data-page-link={page.kind}
             render={<Link to="/issue-pages/$kind" params={{ kind: page.kind }} />}
           >
-            {page.label}
+            {t(page.label)}
           </Button>
         ))}
       </span>

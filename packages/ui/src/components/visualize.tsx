@@ -49,8 +49,6 @@ type VizKeyProps = React.ComponentProps<"div"> & {
 };
 
 function VizKey({ color, label, count, cue = "solid", className, ...props }: VizKeyProps) {
-  const { t } = useLingui();
-
   return (
     <div
       data-slot="viz-key"

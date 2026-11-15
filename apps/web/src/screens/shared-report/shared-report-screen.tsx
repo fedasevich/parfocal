@@ -1,3 +1,5 @@
+import type { MessageDescriptor } from "@lingui/core";
+import { msg } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { ApiError, type SharedReport, useGetSharedReport } from "@parfocal/api-client";
 import { Banner } from "@parfocal/ui/components/banner";
@@ -19,24 +21,24 @@ const longDay = (iso: string) =>
 
 const kindName: Record<string, string> = { region: "Regions", cell: "Cells" };
 
-const refusals: Record<number, { title: string; body: string }> = {
+const refusals: Record<number, { title: MessageDescriptor; body: MessageDescriptor }> = {
   404: {
-    title: "This link does not lead to a report",
-    body: "Check that the whole link was copied, or ask the person who shared it for a new one.",
+    title: msg`This link does not lead to a report`,
+    body: msg`Check that the whole link was copied, or ask the person who shared it for a new one.`,
   },
   410: {
-    title: "This link was revoked or has expired",
-    body: "Ask the person who shared it for a new link.",
+    title: msg`This link was revoked or has expired`,
+    body: msg`Ask the person who shared it for a new link.`,
   },
   429: {
-    title: "This link was opened too often just now",
-    body: "Wait a minute and open it again.",
+    title: msg`This link was opened too often just now`,
+    body: msg`Wait a minute and open it again.`,
   },
 };
 
 const unknownRefusal = {
-  title: "The report could not be loaded",
-  body: "Try again in a moment.",
+  title: msg`The report could not be loaded`,
+  body: msg`Try again in a moment.`,
 };
 
 function Shell({ children }: { children: ReactNode }) {
@@ -241,8 +243,8 @@ export function SharedReportScreen({ token }: { token: string }) {
     <Shell>
       <Banner tone="warn">
         <span className="grid gap-1">
-          <b>{refusal.title}</b>
-          <span>{refusal.body}</span>
+          <b>{t(refusal.title)}</b>
+          <span>{t(refusal.body)}</span>
         </span>
       </Banner>
     </Shell>

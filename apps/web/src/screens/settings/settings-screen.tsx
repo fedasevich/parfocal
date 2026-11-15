@@ -318,6 +318,17 @@ function LoadedSettings({
   }, [message]);
 
   const query = normalQuery(typed);
+  const sectionTitles: Record<SettingsSection, string> = {
+    display: t`Display`,
+    review: t`Review`,
+    layout: t`Layout`,
+    ai: t`AI and confidence`,
+    navigation: t`Navigation and devices`,
+    shortcuts: t`Shortcuts`,
+    notifications: t`Notifications`,
+    privacy: t`Privacy and session`,
+    account: t`Account`,
+  };
   const shown = shownSection(section, query);
   const visible = visibleSections(query);
   const presetNames = ["task", ...values.presets.slice(0, 3)];
@@ -908,8 +919,8 @@ function LoadedSettings({
   return (
     <SettingsDialog
       modal={!touring}
-      title={shown?.title ?? t`Settings`}
-      hint={query && shown ? `Matching "${typed.trim()}"` : undefined}
+      title={shown ? sectionTitles[shown.key] : t`Settings`}
+      hint={query && shown ? t`Matching "${typed.trim()}"` : undefined}
       onOpenChange={(open) => {
         if (open) return;
         if (shortcuts.recording !== null || shortcuts.finding) {
@@ -934,7 +945,7 @@ function LoadedSettings({
             <SettingsNavItem
               key={item.key}
               icon={item.icon}
-              label={item.title}
+              label={sectionTitles[item.key]}
               current={item.key === shown?.key}
               count={query && item.key !== "shortcuts" ? matchCount(item.key, query) : undefined}
               onClick={() => (item.key === shown?.key ? undefined : onSection(item.key))}

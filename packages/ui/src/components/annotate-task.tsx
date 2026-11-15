@@ -925,8 +925,6 @@ function RunTiles({
   runningTile,
   ...props
 }: RunTilesProps) {
-  const { t } = useLingui();
-
   const tileWidth = width / columns;
   const tileHeight = height / rows;
   const tiles = Array.from({ length: columns * rows }, (_, index) => index);

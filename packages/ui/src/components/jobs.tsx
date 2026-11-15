@@ -24,8 +24,6 @@ function ValueRing({
   style,
   ...props
 }: ValueRingProps) {
-  const { t } = useLingui();
-
   const percent = Math.max(0, Math.min(100, Math.round(value)));
   const width = ((stroke ?? (size < 32 ? 3.5 : 4.5)) * 36) / size;
   const dash = Math.max(0.01, percent);

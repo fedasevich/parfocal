@@ -1,3 +1,5 @@
+import type { MessageDescriptor } from "@lingui/core";
+import { msg } from "@lingui/core/macro";
 import { useLingui } from "@lingui/react/macro";
 import { useGetMe, useListMyJobs, useListProjects } from "@parfocal/api-client";
 import { AppShell, Sidebar, type SidebarSection, TopBar } from "@parfocal/ui/components/app-shell";
@@ -14,59 +16,64 @@ import { okData } from "../placeholder.tsx";
 
 export const adminSectionList: {
   key: AdminSection;
-  label: string;
+  label: MessageDescriptor;
   icon: NonNullable<SidebarSection["items"][number]["icon"]>;
-  sub: string;
+  sub: MessageDescriptor;
 }[] = [
-  { key: "overview", label: "Overview", icon: "board", sub: "at a glance" },
+  { key: "overview", label: msg`Overview`, icon: "board", sub: msg`at a glance` },
   {
     key: "people",
-    label: "People and roles",
+    label: msg`People and roles`,
     icon: "users",
-    sub: "Who can sign in and what each role can do",
+    sub: msg`Who can sign in and what each role can do`,
   },
   {
     key: "projects",
-    label: "Projects",
+    label: msg`Projects`,
     icon: "folder",
-    sub: "Every project in the workspace, its privacy and the space it uses",
+    sub: msg`Every project in the workspace, its privacy and the space it uses`,
   },
   {
     key: "models",
-    label: "AI models",
+    label: msg`AI models`,
     icon: "smart",
-    sub: "Parfocal's models are always here. Connect your lab's own models next to them",
+    sub: msg`Parfocal's models are always here. Connect your lab's own models next to them`,
   },
   {
     key: "templates",
-    label: "Report templates",
+    label: msg`Report templates`,
     icon: "file",
-    sub: "Study templates build the evaluation report from blocks and fill in a new review task",
+    sub: msg`Study templates build the evaluation report from blocks and fill in a new review task`,
   },
   {
     key: "storage",
-    label: "Storage and sources",
+    label: msg`Storage and sources`,
     icon: "database",
-    sub: "Space used, and the servers slides are read from",
+    sub: msg`Space used, and the servers slides are read from`,
   },
-  { key: "api", label: "API and webhooks", icon: "link", sub: "Tokens and webhooks for pipelines" },
+  {
+    key: "api",
+    label: msg`API and webhooks`,
+    icon: "link",
+    sub: msg`Tokens and webhooks for pipelines`,
+  },
   {
     key: "audit",
-    label: "Audit log",
+    label: msg`Audit log`,
     icon: "list",
-    sub: "Who did what and when. Nobody can change it, people with admin rights included",
+    sub: msg`Who did what and when. Nobody can change it, people with admin rights included`,
   },
   {
     key: "security",
-    label: "Security",
+    label: msg`Security`,
     icon: "shield",
-    sub: "Sign-in, sessions and where data is kept",
+    sub: msg`Sign-in, sessions and where data is kept`,
   },
   {
     key: "settings",
-    label: "Workspace settings",
+    label: msg`Workspace settings`,
     icon: "sliders",
-    sub: "Lock times, model tiers, what new work starts with and announcements",
+    sub: msg`Lock times, model tiers, what new work starts with and announcements`,
   },
 ];
 
@@ -100,7 +107,7 @@ export function AdminShell({
       items: adminSectionList.map((item) => ({
         id: item.key,
         href: adminHref(item.key),
-        label: item.label,
+        label: t(item.label),
         icon: item.icon,
       })),
     },
