@@ -1,4 +1,4 @@
-# 0322. The server pools reviewed nuclei like the browser
+# 0323. The server pools reviewed nuclei like the browser
 
 - Date: 2026-11-15
 - Status: Accepted
