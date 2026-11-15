@@ -114,6 +114,7 @@ const settle = async (): Promise<OverlayRenderResult> => {
     errors: [...errors],
     layerIds: layers.list().map((layer) => layer.id),
     uncapturedGpuErrors: "uncapturedGpuErrors" in route ? route.uncapturedGpuErrors() : null,
+    deviceRecoveries: "deviceRecoveries" in route ? route.deviceRecoveries() : null,
   };
 };
 
@@ -179,6 +180,12 @@ const change = async (operation: OverlayChange): Promise<OverlayRenderResult> =>
   }
   if (operation.kind === "remove") layers.remove(operation.id);
   if (operation.kind === "invalidate") layers.invalidate(operation.id);
+  if (operation.kind === "lose-device") {
+    if (route === null || !("loseDevice" in route)) {
+      throw new Error("This route has no device to lose");
+    }
+    route.loseDevice();
+  }
   return settle();
 };
 

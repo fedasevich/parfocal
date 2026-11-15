@@ -123,6 +123,8 @@ export type RenderRequest =
     }
   | { readonly type: "drop"; readonly id: string }
   | { readonly type: "frame"; readonly id: number; readonly frame: FrameState }
+  | { readonly type: "lose" }
+  | { readonly type: "restore" }
   | { readonly type: "destroy" };
 
 export type RenderErrorSource = "start" | "uncaptured" | "device-lost";

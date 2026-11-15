@@ -28,6 +28,9 @@ function messageOf(error: unknown): string {
 export function createRenderHost(scope: RenderScope): RenderHost {
   let started: Started | null = null;
   let starting = false;
+  let lost = false;
+  let surface: OffscreenCanvas | null = null;
+  const losing = new WeakSet<GPUDevice>();
   let destroyed = false;
   let waiting: RenderRequest[] = [];
   let pending: { readonly id: number; readonly frame: FrameState } | null = null;
@@ -63,7 +66,12 @@ export function createRenderHost(scope: RenderScope): RenderHost {
     });
     device.lost.then(
       (info) => {
-        if (destroyed || info.reason === intentionalLossReason) return;
+        if (destroyed || started?.device !== device) return;
+        if (info.reason === intentionalLossReason && !losing.has(device)) return;
+        started = null;
+        pending = null;
+        waiting = [];
+        lost = true;
         scope.post({ type: "error", source: "device-lost", message: info.message });
       },
       () => {},
@@ -140,6 +148,20 @@ export function createRenderHost(scope: RenderScope): RenderHost {
     started = null;
   };
 
+  const begin = (canvas: OffscreenCanvas) => {
+    start(canvas).then(
+      () => {
+        const current = started;
+        const queued = waiting;
+        waiting = [];
+        if (current !== null) for (const next of queued) apply(current, next);
+      },
+      (error: unknown) => {
+        if (!destroyed) scope.post({ type: "error", source: "start", message: messageOf(error) });
+      },
+    );
+  };
+
   const handle = (request: RenderRequest) => {
     if (destroyed) return;
     if (request.type === "destroy") {
@@ -149,19 +171,23 @@ export function createRenderHost(scope: RenderScope): RenderHost {
     if (request.type === "init") {
       if (starting) return;
       starting = true;
-      start(request.canvas).then(
-        () => {
-          const current = started;
-          const queued = waiting;
-          waiting = [];
-          if (current !== null) for (const next of queued) apply(current, next);
-        },
-        (error: unknown) => {
-          if (!destroyed) scope.post({ type: "error", source: "start", message: messageOf(error) });
-        },
-      );
+      surface = request.canvas;
+      begin(request.canvas);
       return;
     }
+    if (request.type === "lose") {
+      if (started === null) return;
+      losing.add(started.device);
+      started.device.destroy();
+      return;
+    }
+    if (request.type === "restore") {
+      if (!lost || surface === null) return;
+      lost = false;
+      begin(surface);
+      return;
+    }
+    if (lost) return;
     if (started === null) {
       waiting.push(request);
       return;

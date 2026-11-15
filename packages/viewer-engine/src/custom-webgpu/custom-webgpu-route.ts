@@ -29,6 +29,7 @@ import type {
 } from "../overlay/types.ts";
 import { absoluteUrl } from "../pixel-source/url.ts";
 import { observeCanvasSize, observePixelRatio } from "../viv/canvas-observers.ts";
+import { defaultLossWindowMs, defaultMaxLossesInWindow } from "../viv/gpu-recovery.ts";
 import { defaultInterpolationRule, type InterpolationRule } from "../viv/interpolation.ts";
 import type { PixelSlide } from "../viv/pixel-slide.ts";
 import { createTileFade } from "../viv/tile-fade.ts";
@@ -124,6 +125,8 @@ export interface CustomWebGpuRoute extends RendererRoute<PixelSlide> {
   readonly uncapturedGpuErrors: () => number;
   readonly overlayBufferWrites: () => number;
   readonly failure: () => Error | null;
+  readonly deviceRecoveries: () => number;
+  readonly loseDevice: () => void;
 }
 
 interface TileEntry {
@@ -239,6 +242,9 @@ export function createCustomWebGpuRoute(
   let destroyed = false;
   let failure: Error | null = null;
   let uncaptured = 0;
+  let recoveries = 0;
+  let awaitingLoss = false;
+  let recentLosses: number[] = [];
 
   const worker = (options.spawnRenderWorker ?? spawnRenderWorker)();
   const post = (message: RenderRequest, transfer: Transferable[] = []) => {
@@ -637,6 +643,27 @@ export function createCustomWebGpuRoute(
     if (placed.some((tile) => tile.alpha < 1)) changed();
   };
 
+  const mayRecover = (): boolean => {
+    const time = now();
+    recentLosses = [...recentLosses.filter((at) => time - at < defaultLossWindowMs), time];
+    return recentLosses.length <= defaultMaxLossesInWindow;
+  };
+
+  const recover = () => {
+    recoveries += 1;
+    awaitingLoss = false;
+    maxLayers = null;
+    atlas = null;
+    if (shown !== null) dropTiles(shown);
+    sentLayers.clear();
+    pinAtlasSent = false;
+    glyphLayout = null;
+    post({ type: "restore" });
+    sendSize();
+    syncOverlays(null);
+    changed();
+  };
+
   worker.addEventListener("message", (event: MessageEvent<RenderResponse>) => {
     const response = event.data;
     if (destroyed) return;
@@ -652,6 +679,8 @@ export function createCustomWebGpuRoute(
       if (response.source === "uncaptured") {
         uncaptured += 1;
         reportError(new WebGpuError("uncaptured", response.message));
+      } else if (response.source === "device-lost" && mayRecover()) {
+        recover();
       } else {
         fail(
           new WebGpuError(
@@ -736,7 +765,7 @@ export function createCustomWebGpuRoute(
 
   const settled = (): boolean => {
     if (failure !== null) return true;
-    if (destroyed || maxLayers === null) return false;
+    if (destroyed || maxLayers === null || awaitingLoss) return false;
     if (dirty || frameHandle !== null || drawnFrame !== sentFrame || sentFrame === 0) return false;
     if (shown === null) return true;
     return loading === 0 && shown.levels.pending() === 0 && (shown.reader?.idle() ?? true);
@@ -786,6 +815,12 @@ export function createCustomWebGpuRoute(
     uncapturedGpuErrors: () => uncaptured,
     overlayBufferWrites: () => overlayWrites,
     failure: () => failure,
+    deviceRecoveries: () => recoveries,
+    loseDevice: () => {
+      if (!usable()) return;
+      awaitingLoss = true;
+      post({ type: "lose" });
+    },
     showSlide,
     setCamera: (next) => {
       camera = next;
