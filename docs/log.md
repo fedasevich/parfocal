@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-15
 
+- EXP-008 partly merged into the train: /study page with timed tasks, frozen rounds, a task set editable as JSON in the browser and a JSON results download. The ten tasks are agent-written stand-ins for the kit plan.
 - TEST-015 merged into the train: nightly browsers workflow runs four viewer checks on Chromium, Firefox and WebKit and publishes a summary table and JSON artifact.
 - FOUND-028 merged into the train: every CI job pinned to ubuntu-24.04 with a guard test against ubuntu-latest.
 - FOUND-028 Pinned every workflow job to ubuntu-24.04 and added scripts/runner-image.test.ts, which fails on any runs-on that is not an explicit ubuntu-NN.NN. A trial run on ubuntu-26.04 on GitHub is still owed before moving to it.
