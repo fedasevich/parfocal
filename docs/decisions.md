@@ -190,6 +190,16 @@ OPS-016 (a real browser checks the deployed app after every deploy) added a read
 
 Your choice:
 
+### 111. Targets for the ingest time and pre-read time SLOs
+
+OPS-007 (alerting and on-call) set four SLOs in [ADR 0340](adr/0340-slos-and-alerts-as-code-routed-by-email.md) (SLOs and alerts as code, routed by email). Availability (99.5 percent) and tile latency (95 percent within 60 ms, the budget of TILES-002, a CDN in front of slide storage) have a basis. Ingest time and pre-read time have no measurement yet, so their targets are guesses that decide when you get mail.
+
+- **A. Keep 95 percent of slides viewable within 10 minutes of upload and 95 percent of AI pre-reads ready within 60 minutes, and revisit after a month of real SLI data from OPS-006 (observability stack) (recommended).**
+- B. Start looser, 30 minutes for ingest and 3 hours for pre-read, so a cold GPU queue does not page.
+- C. Other numbers.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 The temporary review checklist of 2026-11-14 is handled and deleted. What still waits is below.
