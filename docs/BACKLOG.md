@@ -1686,7 +1686,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Refs [`poc/src/app/renderer.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/app/renderer.ts).
   Size: L.
 
-- [ ] VIEW-037 · deck.gl 9.4 WebGPU route
+- [x] VIEW-037 · deck.gl 9.4 WebGPU route
   TileLayer over BitmapLayer from the same PixelSources, SolidPolygonLayer for outlines, with known gotchas handled (redraw with a reason, minZoom, adapter limits for buffer size).
   Done when the route plugs into the VIEW-036 renderer interface, the same golden tests that Viv passes pass on this route, perf tests pass, and uncaptured errors are counted and zero. The error helpers are in `src/viv/webgpu-errors.ts` ([ADR 0112](adr/0112-finest-level-sampling-and-webgl-context-recovery.md)).
   Refs [`poc/src/deck94/*`](https://github.com/fedasevich/pathlogy-poc/tree/master/src/deck94), doc 23.
@@ -1703,6 +1703,12 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Done when the developer setting switches the route on an open slide, a result file records the real-GPU golden and perf numbers, and a translucent outline golden passes on both routes.
   Depends on VIEW-037.
   Size: M.
+
+- [ ] VIEW-072 · Draw the first edge of a dashed ring once on Viv
+  The shared overlay builder draws the first edge of each dashed AI proposal ring twice at two dash phases on Viv, which is the whole 0.085% left between the WebGPU route and the Viv golden (VIEW-070).
+  Done when each dashed ring edge is drawn once, the AI proposals golden is regenerated and the WebGPU route's difference from it falls below 0.02%.
+  Depends on VIEW-070.
+  Size: S.
 
 - [ ] VIEW-038 · Custom WebGPU engine route
   Render worker with OffscreenCanvas, tile atlas, compute culling, instanced polygons with instance-step attributes, 8-bit only.
