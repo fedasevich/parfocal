@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-15
 
+- SEC-026 parses each upload's identify, scan and validate steps in a child process with only a job token scoped to one tenant and slide, memory and time limits, storage only through the worker and an audit hook that blocks sockets and subprocesses. Overruns fail as parse-too-large or parse-too-slow. Modal side is config only (block_network sandbox options, not deployed). Index, derive, result parsing and patch export are not isolated yet (SEC-041).
 - FOUND-026 runs the web browser suite on a built app (vite build --mode e2e and vite preview) behind a PARFOCAL_PUBLIC_DEV_TOOLS flag that staging and prod builds refuse, with a bundle guard that fails if a production build holds the fake API or a developer route. A 20-file slice drops from 1578 s to 597 s and the first page load from 11052 ms to 744 ms on the Mac.
 - CI fix: the model registry writes are in the isolation suite, the jump longest-task budgets take a 52 ms hosted baseline with a 78 ms limit (ADR 0317 rule), the four-viewer memory spec keeps canvases alive until context loss, and the web shard timeouts are runner variance across seven runs, not a commit (left to FOUND-026).
 - VIEW-052 adds an opt-in real-Chrome hidden tab spec over CDP with a real tab switch and a real context loss while hidden (PARFOCAL_GPU=hardware). It could not run tonight because the Mac screen was locked, which makes Chrome report hidden from the start.

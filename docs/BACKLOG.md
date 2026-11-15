@@ -983,7 +983,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Requests with an unsafe method and the session cookie are refused unless their `Origin` header, or `Sec-Fetch-Site: same-origin` when it is absent, matches the app origin. SameSite=Strict does not stop a sibling subdomain of the same site ([threat model](security/threat-model.md) X1).
   Done when API tests refuse a write from another origin and from a same-site subdomain, accept one from the app origin, and leave service tokens and the login callback working.
 
-- [ ] SEC-026 · Isolated parsing of uploaded files
+- [x] SEC-026 · Isolated parsing of uploaded files
   Slide readers and result parsers run in a worker with no network egress except the job's own storage keys, no secrets beyond a job token scoped to one tenant and slide, a memory and time limit and a non-root user ([threat model](security/threat-model.md) U2).
   Done when a test shows a parser job cannot reach the network or read another key, and an oversized or slow parse is stopped and reported as a failed check.
   Depends on AIP-006, INGEST-003.
