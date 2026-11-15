@@ -6,10 +6,17 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from fixture_support import fixture_path
 
 from parfocal_common.ingest import Failure, Refusal, original_key
 from parfocal_common.jobs import StepFailedError
-from parfocal_ingest.isolation import JobScope, JobTokens, ParseLimits, parse_isolated
+from parfocal_ingest.isolation import (
+    JobScope,
+    JobTokens,
+    ParseLimits,
+    ParseNotStartedError,
+    parse_isolated,
+)
 
 PROBES = str(Path(__file__).parent)
 TENANT = uuid.UUID("00000000-0000-4000-8000-000000000001")
@@ -118,3 +125,37 @@ async def test_a_parser_refusal_passes_through_and_a_crash_is_unreadable(tmp_pat
         await probe("crash", {}, tmp_path)
     assert refused.value.code == Refusal.DAMAGED_TIFF
     assert crashed.value.code == Refusal.UNREADABLE
+
+
+async def test_a_child_that_cannot_load_its_parser_is_not_blamed_on_the_file(
+    tmp_path: Path,
+) -> None:
+    with pytest.raises(ParseNotStartedError):
+        await probe("no_such_parser", {}, tmp_path)
+
+
+async def test_the_slide_readers_identify_and_validate_a_slide_inside_the_child(
+    tmp_path: Path,
+) -> None:
+    slide = fixture_path("synthetic-jpeg.tiff")
+
+    async def fetcher(key: str) -> Path:
+        assert key == UPLOAD_KEY
+        return slide
+
+    async def parse(parser: str, arguments: Mapping[str, Any]) -> dict[str, Any]:
+        return await parse_isolated(
+            f"parfocal_ingest.parse_jobs:{parser}",
+            {"key": UPLOAD_KEY, **arguments},
+            SCOPE,
+            fetcher,
+            tmp_path / "work",
+        )
+
+    identified = await parse("identify_upload", {"name": slide.name})
+    scanned = await parse("scan_upload", identified)
+    validated = await parse("validate_upload", identified)
+    assert identified["format"]
+    assert scanned == {"clean": True}
+    assert validated["width"] > 0
+    assert validated["levels"] >= 1

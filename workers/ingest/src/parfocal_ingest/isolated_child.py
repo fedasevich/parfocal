@@ -83,8 +83,11 @@ def main() -> None:
     sys.addaudithook(guard)
     request = json.loads(sys.stdin.readline())
     sys.path.extend(request.get("paths", []))
+    parser = parser_of(request["target"])
+    requests.write(json.dumps({"ready": True}) + "\n")
+    requests.flush()
     storage = ScopedStorage(token, sys.stdin, requests)
-    message = outcome(parser_of(request["target"]), request["arguments"], storage)
+    message = outcome(parser, request["arguments"], storage)
     requests.write(json.dumps(message) + "\n")
     requests.flush()
 

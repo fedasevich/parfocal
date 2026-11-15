@@ -16,17 +16,26 @@ from typing import Any
 
 from parfocal_common.ingest import FAILURES, Failure, Refusal, slide_prefixes
 from parfocal_common.jobs import StepFailedError
+from parfocal_ingest import isolated_child
 from parfocal_ingest.isolated_child import TOKEN_VARIABLE
 from parfocal_ingest.settings import PARSE_MEMORY_MIB, PARSE_SECONDS
 
-__all__ = ["JobScope", "JobTokens", "ParseLimits", "parse_isolated"]
+__all__ = ["JobScope", "JobTokens", "ParseLimits", "ParseNotStartedError", "parse_isolated"]
 
-CHILD_MODULE = "parfocal_ingest.isolated_child"
+CHILD_SCRIPT = isolated_child.__file__
 MAX_MESSAGE_BYTES = 1024 * 1024
 MIB = 1024 * 1024
 KIB = 1024
 
 type Fetcher = Callable[[str], Awaitable[Path]]
+
+
+class ParseNotStartedError(RuntimeError):
+    pass
+
+
+def import_paths() -> list[str]:
+    return [str(Path(entry).resolve()) for entry in sys.path if entry]
 
 
 @dataclass(frozen=True)
@@ -156,22 +165,28 @@ class Conversation:
         self.reader = process.stdout
         self.tokens = tokens
         self.fetcher = fetcher
+        self.ready = False
+
+    def broken(self) -> Exception:
+        if self.ready:
+            return StepFailedError(Refusal.UNREADABLE)
+        return ParseNotStartedError("the parse process stopped before loading its parser")
 
     async def send(self, message: Mapping[str, Any]) -> None:
         try:
             self.writer.write((json.dumps(message) + "\n").encode())
             await self.writer.drain()
         except ConnectionError:
-            raise StepFailedError(Refusal.UNREADABLE) from None
+            raise self.broken() from None
 
     async def receive(self) -> dict[str, Any]:
         try:
             line = await self.reader.readline()
             message: object = json.loads(line) if line else None
         except ValueError:
-            raise StepFailedError(Refusal.UNREADABLE) from None
+            raise self.broken() from None
         if not isinstance(message, dict):
-            raise StepFailedError(Refusal.UNREADABLE)
+            raise self.broken()
         return {str(name): value for name, value in message.items()}
 
     async def serve(self, message: Mapping[str, Any]) -> None:
@@ -186,6 +201,11 @@ class Conversation:
         await self.send(request)
         while True:
             message = await self.receive()
+            if message.get("ready") is True:
+                self.ready = True
+                continue
+            if not self.ready:
+                raise self.broken()
             if "fetch" in message:
                 await self.serve(message)
                 continue
@@ -235,8 +255,7 @@ async def parse_isolated(
     process = await asyncio.create_subprocess_exec(
         sys.executable,
         "-I",
-        "-m",
-        CHILD_MODULE,
+        CHILD_SCRIPT,
         stdin=asyncio.subprocess.PIPE,
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.DEVNULL,
@@ -247,5 +266,9 @@ async def parse_isolated(
         user=chosen.user,
     )
     conversation = Conversation(process, issuer, fetcher)
-    request = {"target": target, "arguments": dict(arguments), "paths": list(paths)}
+    request = {
+        "target": target,
+        "arguments": dict(arguments),
+        "paths": [*import_paths(), *paths],
+    }
     return await supervised(process, conversation.run(request), chosen)
