@@ -2081,6 +2081,31 @@ export interface EvaluationChanges {
   changes: EvaluationChange[];
 }
 
+export type GateReportOutMeasured = { [key: string]: number };
+
+export type GateReportOutReference = { [key: string]: number };
+
+export type GateReportOutAllowedDrop = { [key: string]: number };
+
+export type GateReportOutCeilings = { [key: string]: number };
+
+export interface GateReportOut {
+  task: string;
+  benchmark: string;
+  source: string;
+  measured: GateReportOutMeasured;
+  reference: GateReportOutReference;
+  allowed_drop: GateReportOutAllowedDrop;
+  ceilings: GateReportOutCeilings;
+  refused: string[];
+  passed: boolean;
+}
+
+export interface EvaluationOut {
+  passed: boolean;
+  reports: GateReportOut[];
+}
+
 export interface EvaluationVersionStarted {
   version: number;
   reason: string;
@@ -3199,6 +3224,15 @@ export interface MessageCreate {
 }
 
 /**
+ * @pattern ^[a-z0-9-]{1,40}$
+ */
+export type MetricName = string;
+
+export interface Metrics {
+  [key: string]: number;
+}
+
+/**
  * @minLength 1
  * @maxLength 80
  * @pattern ^[A-Za-z0-9][A-Za-z0-9._/-]*$
@@ -4110,6 +4144,11 @@ export interface ProjectModel {
   serving?: Serving;
 }
 
+export interface PromotionRequest {
+  measured: Partial<Record<ModelTask, Metrics>>;
+  reference?: Partial<Record<ModelTask, Metrics>> | null;
+}
+
 export interface Proportion {
   value: number;
   numerator: number;
@@ -4284,6 +4323,7 @@ export interface RegistryEntry {
   evaluation_report: string | null;
   status: ModelStatus;
   part_of: ModelRef | null;
+  evaluation?: EvaluationOut | null;
 }
 
 /**
@@ -17241,6 +17281,183 @@ export const useRegisterModel = <TError = Problem, TContext = unknown>(
   TContext
 > => {
   return useMutation(getRegisterModelMutationOptions(options), queryClient);
+};
+
+export type promoteRegisteredModelResponse200 = {
+  data: RegistryEntry;
+  status: 200;
+};
+
+export type promoteRegisteredModelResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type promoteRegisteredModelResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type promoteRegisteredModelResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type promoteRegisteredModelResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type promoteRegisteredModelResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type promoteRegisteredModelResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type promoteRegisteredModelResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type promoteRegisteredModelResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type promoteRegisteredModelResponseSuccess = promoteRegisteredModelResponse200 & {
+  headers: Headers;
+};
+export type promoteRegisteredModelResponseError = (
+  | promoteRegisteredModelResponse400
+  | promoteRegisteredModelResponse401
+  | promoteRegisteredModelResponse403
+  | promoteRegisteredModelResponse404
+  | promoteRegisteredModelResponse409
+  | promoteRegisteredModelResponse422
+  | promoteRegisteredModelResponse429
+  | promoteRegisteredModelResponse500
+) & {
+  headers: Headers;
+};
+
+export type promoteRegisteredModelResponse =
+  | promoteRegisteredModelResponseSuccess
+  | promoteRegisteredModelResponseError;
+
+export const getPromoteRegisteredModelUrl = (name: string, version: string) => {
+  return `/api/platform/model-registry/${name}/${version}/promotion`;
+};
+
+/**
+ * @summary Promote Registered Model
+ */
+export const promoteRegisteredModel = async (
+  name: string,
+  version: string,
+  promotionRequest: PromotionRequest,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<promoteRegisteredModelResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<promoteRegisteredModelResponse>(getPromoteRegisteredModelUrl(name, version), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(promotionRequest),
+  });
+};
+
+export const getPromoteRegisteredModelMutationKey = () => ["promoteRegisteredModel"] as const;
+
+export const getPromoteRegisteredModelMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof promoteRegisteredModel>>,
+    TError,
+    PromoteRegisteredModelMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof promoteRegisteredModel>>,
+  TError,
+  PromoteRegisteredModelMutationVariables,
+  TContext
+> => {
+  const mutationKey = getPromoteRegisteredModelMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof promoteRegisteredModel>>,
+    PromoteRegisteredModelMutationVariables
+  > = (props) => {
+    const { name, version, data } = props ?? {};
+
+    return promoteRegisteredModel(name, version, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type PromoteRegisteredModelMutationResult = NonNullable<
+  Awaited<ReturnType<typeof promoteRegisteredModel>>
+>;
+export type PromoteRegisteredModelMutationBody = PromotionRequest;
+export type PromoteRegisteredModelMutationError = Problem;
+export type PromoteRegisteredModelMutationVariables = {
+  name: string;
+  version: string;
+  data: PromotionRequest;
+};
+
+/**
+ * @summary Promote Registered Model
+ */
+export const usePromoteRegisteredModel = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof promoteRegisteredModel>>,
+      TError,
+      PromoteRegisteredModelMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof promoteRegisteredModel>>,
+  TError,
+  PromoteRegisteredModelMutationVariables,
+  TContext
+> => {
+  return useMutation(getPromoteRegisteredModelMutationOptions(options), queryClient);
 };
 
 export type testLabModelResponse200 = {

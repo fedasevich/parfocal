@@ -3767,7 +3767,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Refs mock 6 "After learning", [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
   Size: M.
 
-- [ ] AILEARN-004 · Server training rounds per tenant
+- [x] AILEARN-004 · Server training rounds per tenant
   Fine-tune the typer head from pretrained weights on the tenant's reviewed examples, versioned rounds with a latest pointer, rollback by pointer.
   Done when tests run a round on seeded data, promote it through MLEVAL and roll back.
   Size: L.
@@ -3843,7 +3843,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Done when the harness runs on at least three test slides on demand, before a tumor-map model is promoted ([ADR 0011](adr/0011-hosted-ci-only.md)).
   Size: L.
 
-- [ ] MLEVAL-006 · Promotion gate
+- [x] MLEVAL-006 · Promotion gate
   A model version is promoted to a tier only when it meets thresholds per task, with the evaluation report stored in the registry.
   Done when a test promotion fails on a degraded model and passes on the reference one.
   Size: M.

@@ -147,6 +147,7 @@ class AuditAction(StrEnum):
     LAB_MODEL_TESTED = "lab-model.tested"
     LAB_MODEL_CONNECTED = "lab-model.connected"
     MODEL_REGISTERED = "model.registered"
+    MODEL_EVALUATED = "model.evaluated"
     RETENTION_POLICY_SET = "retention.policy-set"
     RETENTION_PURGED = "retention.purged"
     LEGAL_HOLD_PLACED = "legal-hold.placed"

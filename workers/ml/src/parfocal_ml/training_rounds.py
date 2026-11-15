@@ -9,6 +9,7 @@ from typing import Protocol
 import numpy as np
 from numpy.typing import NDArray
 
+from parfocal_common.promotion_gate import TENANT_TYPER_ROUND, GateReport, Thresholds, gate
 from parfocal_ml.round_calibration import (
     Head,
     RoundCalibration,
@@ -21,8 +22,8 @@ from parfocal_ml.round_calibration import (
 )
 from parfocal_ml.type_evaluation import Labels
 
-MAX_ECE = 0.05
-MIN_GAIN = 0.0
+MAX_ECE = TENANT_TYPER_ROUND.ceilings["ece"]
+MIN_GAIN = -TENANT_TYPER_ROUND.allowed_drop["accuracy"]
 ACCURACY_DIGITS = 4
 NAME = re.compile(r"^[a-z0-9][a-z0-9.-]{0,63}$")
 
@@ -48,6 +49,15 @@ class RoundGate:
     max_ece: float = MAX_ECE
     min_gain: float = MIN_GAIN
 
+    def thresholds(self) -> Thresholds:
+        return Thresholds(
+            task=TENANT_TYPER_ROUND.task,
+            benchmark=TENANT_TYPER_ROUND.benchmark,
+            source=TENANT_TYPER_ROUND.source,
+            allowed_drop={"accuracy": -self.min_gain},
+            ceilings={"ece": self.max_ece},
+        )
+
 
 DEFAULT_GATE = RoundGate()
 
@@ -62,6 +72,7 @@ class RoundReport:
     round_accuracy: float
     calibrations: tuple[dict[str, object], ...]
     refused: tuple[str, ...]
+    evaluation: dict[str, object] | None = None
 
 
 @dataclass(frozen=True)
@@ -214,7 +225,7 @@ def run_round(
     rows: ReviewedRows,
     held_out: Callable[[str], bool],
     served_views: Sequence[int],
-    gate: RoundGate = DEFAULT_GATE,
+    thresholds: RoundGate = DEFAULT_GATE,
 ) -> TrainingRound:
     checked_name(typer)
     checked_name(base_version)
@@ -263,12 +274,9 @@ def run_round(
         served_probabilities(current, measured_features, measured_start), measured_labels
     )
     round_accuracy = accuracy(head(measured_features, measured_start), measured_labels)
-    refused = refusals(typer, version, calibrations, served_views, gate)
-    if round_accuracy < served_accuracy + gate.min_gain:
-        refused.append(
-            f"held-out accuracy {round_accuracy} is below the served {served_accuracy}"
-            f" plus {gate.min_gain}"
-        )
+    evaluation = gated(
+        typer, version, calibrations, served_views, round_accuracy, served_accuracy, thresholds
+    )
     found = TrainingRound(
         tenant=tenant,
         typer=typer,
@@ -284,7 +292,8 @@ def run_round(
             served_version=base_version if current is None else current.version,
             round_accuracy=round_accuracy,
             calibrations=tuple(catalogue_row(row) for row in calibrations),
-            refused=tuple(refused),
+            refused=evaluation.refused,
+            evaluation=evaluation.as_json(),
         ),
     )
     store.save(found)
@@ -294,20 +303,23 @@ def run_round(
     return found
 
 
-def refusals(
+def gated(
     typer: str,
     version: str,
     calibrations: Sequence[RoundCalibration],
     served_views: Sequence[int],
-    gate: RoundGate,
-) -> list[str]:
+    round_accuracy: float,
+    served_accuracy: float,
+    thresholds: RoundGate,
+) -> GateReport:
     promote(typer, version, calibrations, served_views)
-    return [
-        f"ECE {row.calibration.ece_after:.4f} at {row.calibration.test_time_views} views"
-        f" is over {gate.max_ece}"
-        for row in calibrations
-        if row.calibration.ece_after > gate.max_ece
-    ]
+    worst = max(round(row.calibration.ece_after, ACCURACY_DIGITS) for row in calibrations)
+    return gate(
+        {"accuracy": round_accuracy, "ece": worst},
+        thresholds.thresholds(),
+        {"accuracy": served_accuracy},
+        "served",
+    )
 
 
 def roll_back(
