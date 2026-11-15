@@ -89,6 +89,18 @@ The route reports no error for this kind any more, and the 2% bound is gone from
 
 Only one shader variant was compiled and measured on a device: path mode, pixel units, butt caps, not justified and without `antialiasing`, which is what the overlay builder asks for. The segment mode, rounded cap, justified and antialiased branches of the WGSL are ported from deck.gl's GLSL and covered only by a unit test of their text anchors.
 
+## Each dashed ring edge drawn once (VIEW-072, draw the first edge of a dashed ring once on Viv)
+
+Measured later the same day on the same Mac and flags with `PARFOCAL_E2E_PORT=5199 pnpm exec playwright test --workers=1 routes-cmu1` in `packages/golden-images`, one run. It was not run on the Linux CI runner.
+
+The overlay builder now hands a dashed closed ring to deck.gl starting at the middle of its first edge, as M, P1, ..., Pn-1, P0, M, with the same vertex count as before (`startingMidFirstEdge` in `src/overlay/deck/binary-data.ts`). On WebGL deck.gl tesselates a binary ring as an open path, so every edge is now drawn once and every corner keeps its joint, and the two butt ends meet flush at M. The WebGPU route appends P1 and P2 to such a ring, so its closed tesselation draws the same segments in the same order, with dash phase 0 at M on both routes. Solid outlines and every casing keep the old two wrapped vertices and are byte for byte unchanged.
+
+| Kind | Pixels differing by more than 4 | Largest channel delta | Mean error R, G, B | Reference | Test bound | Uncaptured GPU errors |
+| --- | --- | --- | --- | --- | --- | --- |
+| ai-proposals, ring from mid first edge | 0.000% | 1 | 0.000, 0.000, 0.000 | regenerated Viv golden | 0.1% | 0 |
+
+All other kinds on the route gave the numbers in the first overlay table. Moving the dash origin from P0 to M shifts the whole pattern along each ring, so the new Viv AI proposals golden differs from the old one in 0.896% of pixels and the mark unsure outline mode golden (`viv-outline-mark-unsure.png`, the only other Viv golden with dashed rings) in 0.366%. Both were regenerated. The other `viv-overlays.spec.ts` and `viv-outline-modes.spec.ts` goldens matched without an update.
+
 ## Follow-ups
 
-[ADR 0314](../adr/0314-deck-webgpu-route-mirrors-the-viv-tile-pipeline.md) (the deck.gl WebGPU route mirrors the Viv tile pipeline and owns its tile textures). Dashed outlines were built in VIEW-070 (section above). TODO: the shared overlay builder draws the first edge of a dashed ring twice on Viv, at two dash phases, as the probe and the diff image show. Fixing it would regenerate the golden and should take this route's difference towards zero. TODO: a run on a real GPU, headed. TODO: check translucent outlines on this route, since the third closing vertex draws one edge of each ring more than once.
+[ADR 0314](../adr/0314-deck-webgpu-route-mirrors-the-viv-tile-pipeline.md) (the deck.gl WebGPU route mirrors the Viv tile pipeline and owns its tile textures). Dashed outlines were built in VIEW-070 (section above). The first edge of a dashed ring drawn twice on Viv was fixed in VIEW-072 (section above). Solid outlines on Viv still draw their first edge twice, which only shows with translucent outlines. TODO: a run on a real GPU, headed. TODO: check translucent outlines on this route, since the third closing vertex draws one edge of each ring more than once.

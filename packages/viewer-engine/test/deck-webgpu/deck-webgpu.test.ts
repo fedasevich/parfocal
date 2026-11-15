@@ -102,6 +102,21 @@ describe("loop outlines for the WebGPU path tesselator", () => {
     assert.equal(closed.length, 2);
   });
 
+  it("repeats the second and third vertex after a ring that starts mid edge", () => {
+    const midEdge = {
+      length: 1,
+      startIndices: new Uint32Array([0, 6]),
+      attributes: {
+        getPath: { value: new Float32Array([2, 0, 4, 0, 4, 4, 0, 4, 0, 0, 2, 0]), size: 2 },
+      },
+    };
+    const closed = withThirdClosingVertex(midEdge);
+    assert.deepEqual([...(closed.startIndices ?? [])], [0, 8]);
+    const path = closed.attributes.getPath;
+    assert.ok(path && !(path instanceof Uint32Array));
+    assert.deepEqual([...path.value], [2, 0, 4, 0, 4, 4, 0, 4, 0, 0, 2, 0, 4, 0, 4, 4]);
+  });
+
   it("returns the same object when no ring is closed", () => {
     const open = {
       length: 1,
