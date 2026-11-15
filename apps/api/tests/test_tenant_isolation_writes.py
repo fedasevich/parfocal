@@ -286,6 +286,10 @@ WRITE_ROUTES: dict[str, Write] = {
         body=lambda a: {"case_id": str(a.ids["case"]), "reason": "Filed under the wrong case"},
         owner=CONFLICT,
     ),
+    "copySlides": Write(
+        body=lambda a: {"slide_ids": [str(a.ids["slide"])]},
+        owner=BAD_REQUEST,
+    ),
     "createResultSet": Write(body=constant({"name": "Second run"})),
     "pairResultFiles": Write(body=dropped),
     "createUpload": Write(
