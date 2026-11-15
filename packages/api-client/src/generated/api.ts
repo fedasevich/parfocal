@@ -861,6 +861,7 @@ export const CaseSource = {
   manual: "manual",
   upload: "upload",
   import: "import",
+  copy: "copy",
 } as const;
 
 export type Sex = (typeof Sex)[keyof typeof Sex];
@@ -5338,6 +5339,25 @@ export interface SlideArea {
 export interface SlideChoice {
   slide_id?: string | null;
   slide_upload_id?: string | null;
+}
+
+export interface SlideCopy {
+  source_slide_id: string;
+  slide_id: string;
+  case_id: string | null;
+  case_label: string | null;
+}
+
+export interface SlideCopies {
+  copies: SlideCopy[];
+}
+
+export interface SlideCopyRequest {
+  /**
+   * @minItems 1
+   * @maxItems 20
+   */
+  slide_ids: string[];
 }
 
 export interface SlideCoverage {
@@ -21041,6 +21061,171 @@ export const useMoveSlide = <TError = Problem, TContext = unknown>(
   TContext
 > => {
   return useMutation(getMoveSlideMutationOptions(options), queryClient);
+};
+
+export type copySlidesResponse200 = {
+  data: SlideCopies;
+  status: 200;
+};
+
+export type copySlidesResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type copySlidesResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type copySlidesResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type copySlidesResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type copySlidesResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type copySlidesResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type copySlidesResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type copySlidesResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type copySlidesResponseSuccess = copySlidesResponse200 & {
+  headers: Headers;
+};
+export type copySlidesResponseError = (
+  | copySlidesResponse400
+  | copySlidesResponse401
+  | copySlidesResponse403
+  | copySlidesResponse404
+  | copySlidesResponse409
+  | copySlidesResponse422
+  | copySlidesResponse429
+  | copySlidesResponse500
+) & {
+  headers: Headers;
+};
+
+export type copySlidesResponse = copySlidesResponseSuccess | copySlidesResponseError;
+
+export const getCopySlidesUrl = (projectId: string) => {
+  return `/api/projects/${projectId}/slide-copies`;
+};
+
+/**
+ * @summary Copy Slides
+ */
+export const copySlides = async (
+  projectId: string,
+  slideCopyRequest: SlideCopyRequest,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<copySlidesResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<copySlidesResponse>(getCopySlidesUrl(projectId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(slideCopyRequest),
+  });
+};
+
+export const getCopySlidesMutationKey = () => ["copySlides"] as const;
+
+export const getCopySlidesMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof copySlides>>,
+    TError,
+    CopySlidesMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof copySlides>>,
+  TError,
+  CopySlidesMutationVariables,
+  TContext
+> => {
+  const mutationKey = getCopySlidesMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof copySlides>>,
+    CopySlidesMutationVariables
+  > = (props) => {
+    const { projectId, data } = props ?? {};
+
+    return copySlides(projectId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CopySlidesMutationResult = NonNullable<Awaited<ReturnType<typeof copySlides>>>;
+export type CopySlidesMutationBody = SlideCopyRequest;
+export type CopySlidesMutationError = Problem;
+export type CopySlidesMutationVariables = { projectId: string; data: SlideCopyRequest };
+
+/**
+ * @summary Copy Slides
+ */
+export const useCopySlides = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof copySlides>>,
+      TError,
+      CopySlidesMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof copySlides>>,
+  TError,
+  CopySlidesMutationVariables,
+  TContext
+> => {
+  return useMutation(getCopySlidesMutationOptions(options), queryClient);
 };
 
 export type listAnnotationsResponse200 = {

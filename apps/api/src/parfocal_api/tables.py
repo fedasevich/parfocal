@@ -660,6 +660,7 @@ class CaseSource(StrEnum):
     MANUAL = "manual"
     UPLOAD = "upload"
     IMPORT = "import"
+    COPY = "copy"
 
 
 class Laterality(StrEnum):
