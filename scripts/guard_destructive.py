@@ -42,6 +42,7 @@ GH_FOR_GOOD = (
     ["variable", "delete"],
     ["ruleset", "delete"],
 )
+GH_GROUPS = frozenset({"repo", "variable", "ruleset", "secret", "api"})
 MAX_SCRIPT_BYTES = 200_000
 MAX_DEPTH = 3
 
@@ -123,6 +124,23 @@ def drop_flags(argv: list[str]) -> list[str]:
     return argv
 
 
+def program_name(word: str) -> str:
+    name = Path(word).name
+    return name.split("@", 1)[0] if not name.startswith("@") else name
+
+
+def known(word: str) -> bool:
+    name = program_name(word)
+    return name in PROGRAMS or name in SHELLS or name in RUNNERS
+
+
+def after_runner(argv: list[str]) -> list[str]:
+    for index, word in enumerate(argv):
+        if known(word):
+            return argv[index:]
+    return drop_flags(argv)
+
+
 def unwrap(argv: list[str]) -> tuple[list[str], dict[str, str]]:
     env: dict[str, str] = {}
     while argv:
@@ -131,14 +149,14 @@ def unwrap(argv: list[str]) -> tuple[list[str], dict[str, str]]:
             key, _, value = head.partition("=")
             env[key] = value
             argv = argv[1:]
-        elif Path(head).name in RUNNERS:
-            argv = drop_flags(argv[1:])
-        elif Path(head).name in PACKAGE_RUNNERS and argv[1:2] in RUN_VERBS:
-            argv = drop_flags(argv[2:])
+        elif program_name(head) in RUNNERS:
+            argv = after_runner(argv[1:])
+        elif program_name(head) in PACKAGE_RUNNERS and argv[1:2] in RUN_VERBS:
+            argv = after_runner(argv[2:])
         else:
             break
     if argv:
-        argv = [Path(argv[0]).name, *argv[1:]]
+        argv = [program_name(argv[0]), *argv[1:]]
     return argv, env
 
 
@@ -146,12 +164,20 @@ def positional(args: list[str]) -> list[str]:
     return [arg.lower() for arg in args if not arg.startswith("-")]
 
 
+def following(plain: list[str], groups: frozenset[str]) -> list[str]:
+    for index, word in enumerate(plain):
+        if word in groups:
+            return plain[index:]
+    return []
+
+
 def refuse_tofu(args: list[str], _env: dict[str, str]) -> str | None:
     lowered = [arg.lower() for arg in args]
     plain = positional(args)
     if "destroy" in plain:
         return "tofu destroy removes cloud resources"
-    if any(arg.startswith(("-destroy", "-replace", "--destroy", "--replace")) for arg in lowered):
+    forcing = ("-destroy", "-replace", "--destroy", "--replace")
+    if "apply" in plain and any(arg.startswith(forcing) for arg in lowered):
         return "tofu with -destroy or -replace removes or recreates cloud resources"
     if plain[:1] == ["taint"] or plain[:1] == ["force-unlock"]:
         return f"tofu {plain[0]} forces a resource or the state"
@@ -202,21 +228,19 @@ def only_tenant_prefix(targets: list[str]) -> bool:
 
 
 def refuse_aws(args: list[str], _env: dict[str, str]) -> str | None:
-    plain = positional(args)
-    if plain[:2] == ["s3", "rb"]:
+    command = following(positional(args), frozenset({"s3", "s3api"}))
+    if command[:2] == ["s3", "rb"]:
         return "aws s3 rb deletes a bucket"
-    if plain[:2] == ["s3", "rm"] and not only_tenant_prefix(plain[2:]):
+    if command[:2] == ["s3", "rm"] and not only_tenant_prefix(command[2:]):
         return "aws s3 rm deletes objects outside the tenant prefix t/"
-    if plain[:1] == ["s3api"] and len(plain) > 1 and plain[1].startswith("delete-"):
-        return f"aws s3api {plain[1]} deletes bucket data or settings"
+    if command[:1] == ["s3api"] and len(command) > 1 and command[1].startswith("delete-"):
+        return f"aws s3api {command[1]} deletes bucket data or settings"
     return None
 
 
 def refuse_rclone(args: list[str], _env: dict[str, str]) -> str | None:
-    plain = positional(args)
-    if plain[:1] and plain[0] in {"purge", "delete", "deletefile", "rmdir", "rmdirs"}:
-        return f"rclone {plain[0]} deletes remote objects"
-    return None
+    hits = set(positional(args)) & {"purge", "delete", "deletefile", "rmdir", "rmdirs"}
+    return f"rclone {sorted(hits)[0]} deletes remote objects" if hits else None
 
 
 def http_method(args: list[str]) -> str:
@@ -235,12 +259,12 @@ def http_method(args: list[str]) -> str:
 
 
 def refuse_gh(args: list[str], _env: dict[str, str]) -> str | None:
-    plain = positional(args)
-    if plain[:2] in GH_FOR_GOOD:
-        return f"gh {' '.join(plain[:2])} changes the repository for good"
-    if plain[:1] == ["secret"] and len(plain) > 1 and plain[1] in ("delete", "remove"):
+    command = following(positional(args), GH_GROUPS)
+    if command[:2] in GH_FOR_GOOD:
+        return f"gh {' '.join(command[:2])} changes the repository for good"
+    if command[:1] == ["secret"] and len(command) > 1 and command[1] in ("delete", "remove"):
         return "gh secret delete removes a repository secret"
-    if plain[:1] == ["api"] and http_method(args) == "DELETE":
+    if command[:1] == ["api"] and http_method(args) == "DELETE":
         return "gh api DELETE removes a GitHub resource"
     return None
 
@@ -249,9 +273,9 @@ def refuse_curl(args: list[str], _env: dict[str, str]) -> str | None:
     if http_method(args) != "DELETE":
         return None
     urls = [arg for arg in args if re.match(r"https?://", arg)]
-    if urls and all(LOCAL_URL.match(url) for url in urls):
-        return None
-    return "curl DELETE against a remote service"
+    if any(not LOCAL_URL.match(url) for url in urls):
+        return "curl DELETE against a remote service"
+    return None
 
 
 Rule = Callable[[list[str], dict[str, str]], str | None]
@@ -290,7 +314,7 @@ def refuse_shell(args: list[str], depth: int) -> str | None:
         return None
     plain = drop_flags(args)
     if plain:
-        rule = PROGRAMS.get(Path(plain[0]).name)
+        rule = PROGRAMS.get(program_name(plain[0]))
         reason = rule(plain[1:], {}) if rule else None
         if reason:
             return reason
@@ -303,7 +327,7 @@ def refuse_shell(args: list[str], depth: int) -> str | None:
 def refuse_command(command: str, depth: int = 0) -> str | None:
     if depth > MAX_DEPTH:
         return None
-    text, bodies = split_heredocs(command)
+    text, bodies = split_heredocs(command.replace("\\\n", " "))
     for opener, body in bodies:
         if any(Path(word).name in SHELLS for word in words(opener)):
             reason = refuse_command(body, depth + 1)

@@ -34,7 +34,7 @@ It needs three things on the machine:
 
 | Item | Where | Notes |
 |---|---|---|
-| `CLOUDFLARE_API_TOKEN` | `.env` | Account token `parfocal-tofu` with Workers R2 Storage Write on the account, and DNS Write, Zone Read and Zone Settings Write on `parfocal.eu`. No Workers permission. SEC-031 (hard stops for destructive agent actions) moves `.env` to the limited token `parfocal-agent-dev-staging` once the owner makes it, and the owner then puts `parfocal-tofu` in `.env` only for their own `global` and `prod` runs |
+| `CLOUDFLARE_API_TOKEN` | `.env` | Account token `parfocal-tofu` with Workers R2 Storage Write on the account, and DNS Write, Zone Read and Zone Settings Write on `parfocal.eu`. No Workers permission. SEC-031 (hard stops for destructive agent actions) names a limited token `parfocal-agent-dev-staging` in `.env.example` for the owner to create. Its scopes and how `tofu.sh` then reaches `global` and `prod` are an open question (TODO) |
 | `TF_VAR_state_passphrase` | `.env` | Encrypts state and plans of every root. Keep a copy in a password manager. Losing it makes the state unreadable |
 | Zitadel key | `~/.config/parfocal/zitadel-sa.json` (mode 600) | JSON key of the service user `parfocal-tofu`, which is Org Owner of `Parfocal` |
 

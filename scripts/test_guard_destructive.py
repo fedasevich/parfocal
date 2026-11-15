@@ -10,6 +10,8 @@ from guard_destructive import refusal
 ROOT = Path(__file__).resolve().parent.parent
 SCRIPT = ROOT / "scripts" / "guard_destructive.py"
 
+KNOWN_REFUSED_SCRIPTS = {"infra/tofu/idp-scratch/run.sh"}
+
 REFUSED_TOOLS = (
     "mcp__neon__delete_project",
     "mcp__neon__delete_branch",
@@ -89,6 +91,15 @@ REFUSED_COMMANDS = (
     "bash -c 'tofu destroy -auto-approve'",
     "sudo env FOO=1 tofu destroy",
     "bash <<'EOF'\nnpx wrangler r2 bucket delete parfocal-dev\nEOF",
+    "npx wrangler r2 bucket \\\n  delete parfocal-dev",
+    "gh api \\\n  -X DELETE repos/fedasevich/parfocal/environments/staging",
+    "aws --endpoint-url https://a.r2.cloudflarestorage.com s3 rm s3://parfocal-dev --recursive",
+    "aws --profile r2 s3api delete-bucket --bucket parfocal-dev",
+    "rclone --config r2.conf purge r2:parfocal-dev",
+    "gh -R fedasevich/parfocal secret delete NEON_API_KEY",
+    "uv run --package parfocal-api modal app stop parfocal-api",
+    "npx wrangler@latest r2 bucket delete parfocal-dev",
+    "npx -y neonctl@2 branches delete br-main",
 )
 
 ALLOWED_COMMANDS = (
@@ -126,6 +137,12 @@ ALLOWED_COMMANDS = (
     "gh api repos/fedasevich/parfocal/actions/runs",
     "curl -X DELETE http://localhost:8000/api/slides/1",
     "curl -fsS https://app.parfocal.eu/api/health",
+    'curl -X DELETE "$API/slides/1"',
+    "curl -X DELETE localhost:8000/api/slides/1",
+    "tofu plan -destroy",
+    "bash infra/tofu/tofu.sh prod plan -replace=cloudflare_r2_bucket.prod",
+    "uv run --package parfocal-api pytest -k modal",
+    "pnpm exec playwright test e2e/home.spec.ts --workers=1",
     "echo 'unbalanced",
     "# tofu destroy",
 )
@@ -166,6 +183,18 @@ class GuardDestructiveTest(unittest.TestCase):
             self.assertIsNotNone(refusal(bash(f"bash {script}")))
             script.write_text("set -e\npnpm install\n")
             self.assertIsNone(refusal(bash(f"bash {script}")))
+
+    def test_allows_every_shell_script_in_the_repo(self) -> None:
+        tracked = subprocess.run(
+            ["git", "ls-files", "*.sh"],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout.split()
+        self.assertTrue(tracked)
+        refused = {path for path in tracked if refusal(bash(f"bash {ROOT / path}"))}
+        self.assertEqual(refused, KNOWN_REFUSED_SCRIPTS)
 
     def test_hook_exits_two_with_advice(self) -> None:
         result = subprocess.run(
