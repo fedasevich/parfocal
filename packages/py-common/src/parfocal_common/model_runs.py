@@ -44,8 +44,17 @@ STAGES = (
     "ids-given",
     "result-set-added",
 )
+MODEL_STAGE = "model-running"
 LEASE_SECONDS = 60.0
 TEST_TIME_VIEWS = (1, 8)
+
+
+def run_prefix(tenant_id: uuid.UUID, slide_id: uuid.UUID, job_id: uuid.UUID) -> str:
+    return f"t/{tenant_id}/s/{slide_id}/runs/{job_id}/"
+
+
+def tile_key(prefix: str, index: int) -> str:
+    return f"{prefix}tiles/tile-{index:06}.pfc"
 
 
 class RunScopeKind(StrEnum):

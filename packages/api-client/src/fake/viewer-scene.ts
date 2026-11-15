@@ -1,4 +1,4 @@
-export type FakeViewerScene = "ready" | "running";
+export type FakeViewerScene = "ready" | "running" | "streaming";
 
 let scene: FakeViewerScene = "ready";
 let reads = 0;

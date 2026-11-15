@@ -167,6 +167,10 @@ msgstr "{comments} comments on {object}"
 msgid "{decidedCount} of {0} cells decided"
 msgstr "{decidedCount} of {0} cells decided"
 
+#: src/viewer/run-stream-layer.tsx
+msgid "{done} of {total} tiles, {drawn} objects"
+msgstr "{done} of {total} tiles, {drawn} objects"
+
 #. placeholder {0}: lensWords[lens]
 #. placeholder {1}: lensWords[lens]
 #: src/annotations/layers-panel.tsx
@@ -299,6 +303,10 @@ msgstr "A random sample of AI cells"
 #: src/screens/annotate-task/new-annotate-task.tsx
 msgid "A suggestion only. It fills in the next steps, and you can change every setting there."
 msgstr "A suggestion only. It fills in the next steps, and you can change every setting there."
+
+#: src/viewer/run-stream-layer.tsx
+msgid "about {minutes} min left"
+msgstr "about {minutes} min left"
 
 #: src/screens/annotate-task/new-annotate-task.tsx
 msgid "About {toCheck} objects to check, roughly {minutes} min per expert"
@@ -517,6 +525,18 @@ msgstr "Calibration details"
 #: src/screens/review/pinned-thread.tsx
 msgid "Cancel"
 msgstr "Cancel"
+
+#: src/viewer/run-stream-layer.tsx
+msgid "Cancel run"
+msgstr "Cancel run"
+
+#: src/viewer/run-stream-layer.tsx
+msgid "Cancelled. Kept {drawn} objects from {done} finished tiles"
+msgstr "Cancelled. Kept {drawn} objects from {done} finished tiles"
+
+#: src/viewer/run-stream-layer.tsx
+msgid "Cancelling, keeping the finished tiles"
+msgstr "Cancelling, keeping the finished tiles"
 
 #: src/screens/viewer-tools/navigator-canvas.tsx
 msgid "Cell 6 of 12 · AI says \"tumor or immune\""
@@ -1738,6 +1758,10 @@ msgstr "The researcher"
 msgid "The run {0} joins this slide"
 msgstr "The run {0} joins this slide"
 
+#: src/viewer/run-stream-layer.tsx
+msgid "The run could not stream onto this slide"
+msgstr "The run could not stream onto this slide"
+
 #: src/screens/review/slide-still.tsx
 msgid "The slide around {target}"
 msgstr "The slide around {target}"
@@ -1879,6 +1903,10 @@ msgstr "View"
 msgid "Views"
 msgstr "Views"
 
+#: src/viewer/run-stream-layer.tsx
+msgid "Waiting for the first tile"
+msgstr "Waiting for the first tile"
+
 #: src/popout/popout-screen.tsx
 msgid "Waiting for the main window"
 msgstr "Waiting for the main window"
@@ -1921,6 +1949,10 @@ msgstr "Who made it"
 #: src/screens/viewer/full-viewer.tsx
 msgid "Whole slide"
 msgstr "Whole slide"
+
+#: src/viewer/run-stream-layer.tsx
+msgid "Whole-slide run"
+msgstr "Whole-slide run"
 
 #. placeholder {0}: name.trim()
 #: src/screens/viewer/save-preset-modal.tsx

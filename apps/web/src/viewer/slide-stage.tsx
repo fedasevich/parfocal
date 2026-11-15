@@ -83,6 +83,7 @@ import { ObjectDrawLayer } from "./object-draw-layer.tsx";
 import { describeOpenFailure, type OpenFailure } from "./open-failure.ts";
 import { OutlineLayer } from "./outline-layer.tsx";
 import { type OutlineModeChoice, outlineModeChoices, outlineModeLabels } from "./outline-mode.ts";
+import { RunStreamLayer } from "./run-stream-layer.tsx";
 import type { SlideAreaEntry } from "./slide-areas.ts";
 import { useSlideBrightness } from "./slide-brightness.ts";
 import { useSlideCoverage } from "./slide-coverage.ts";
@@ -755,6 +756,14 @@ function OpenedSlide({
               slideId={slideId}
               choices={heatmapChoices}
             />
+            {workspace === "annotate" ? (
+              <RunStreamLayer
+                key={slideId}
+                engine={session.engine}
+                projectId={projectId}
+                slideId={slideId}
+              />
+            ) : null}
             {resultPreview === null ? null : (
               <PreviewLayer
                 engine={session.engine}

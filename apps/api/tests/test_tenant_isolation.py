@@ -105,10 +105,18 @@ from parfocal_api.tables import (
     workspace_access_requests,
     workspace_settings,
 )
-from parfocal_common.chunk_store import Cell, build_cells, write_cells
+from parfocal_common.chunk_store import Cell, build_cells, packed, write_cells
 from parfocal_common.db import SET_SCOPE, DatabaseScope, async_database_url, scoped_transaction
 from parfocal_common.ingest import RestrictedImage, slide_prefix
-from parfocal_common.model_runs import RunScopeKind, RunSettings, enqueue_model_run
+from parfocal_common.model_runs import (
+    MODEL_STAGE,
+    STAGES,
+    RunScopeKind,
+    RunSettings,
+    enqueue_model_run,
+    run_prefix,
+    tile_key,
+)
 from parfocal_common.object_store import ObjectStore, StorageLocation
 from parfocal_common.result_imports import result_set_prefix
 from parfocal_common.result_store import ObjectResultStore
@@ -1068,6 +1076,20 @@ async def seed_model_runs(connection: AsyncConnection, seeded: Seeded) -> None:
     seeded.ids["model_run"] = job_id
     seeded.markers.update({str(job_id), detector})
     await connection.execute(
+        insert(job_units).values(
+            tenant_id=seeded.tenant_id,
+            job_id=job_id,
+            ordinal=STAGES.index(MODEL_STAGE),
+            unit=0,
+            worker="seed",
+            result={"x": 0, "y": 0, "width": 512, "height": 512, "objects": 1},
+        )
+    )
+    tile = tile_key(run_prefix(seeded.tenant_id, seeded.ids["slide"], job_id), 0)
+    async with httpx2.AsyncClient(timeout=30) as http:
+        store = ObjectResultStore(ObjectStore(TEST_STORAGE, http))
+        await store.put(tile, packed(str(job_id).encode()))
+    await connection.execute(
         insert(gpu_usage).values(
             tenant_id=seeded.tenant_id,
             job_id=job_id,
@@ -1583,6 +1605,10 @@ GET_ROUTES = {
     "listModelRunAreas": Route(
         Exposure.TENANT,
         lambda a: f"/api/projects/{a.ids['project']}/model-runs/{a.ids['model_run']}/areas",
+    ),
+    "getModelRunTile": Route(
+        Exposure.TENANT,
+        lambda a: f"/api/projects/{a.ids['project']}/model-runs/{a.ids['model_run']}/tiles/0",
     ),
     "getCase": Route(Exposure.TENANT, lambda a: f"/api/cases/{a.ids['case']}"),
     "getCaseReport": Route(Exposure.TENANT, lambda a: case_report(a)),

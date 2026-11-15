@@ -3670,7 +3670,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
 
 ---
 
-- [ ] AINUC-013 · Stream a whole-slide run onto the open slide
+- [x] AINUC-013 · Stream a whole-slide run onto the open slide
   While a run on the open slide is going, each new chunk is appended to the result layer without rebuilding earlier ones, keyed by run lineage, with a full rebuild at most every 3 s. Finished tiles are marked on the slide, with progress and an estimate, and cancel keeps what is finished. This follows the POC's streamed whole-slide job.
   Done when a test proves a streamed scene equals one built from scratch, a perf test streams 250,000 nuclei with no frame over 33 ms, and E2E starts a run, sees objects appear before it ends, cancels it and keeps them.
   Depends on AIP-011, AINUC-005, PROTO-020. Refs docs 19, 31, [ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md).
@@ -3737,7 +3737,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Refs doc 25.
   Size: S.
 
-- [ ] AILEARN-002 · Browser per-slide learner
+- [x] AILEARN-002 · Browser per-slide learner
   Softmax regression on pooled embedding features plus the typer's log-probabilities, retrained in a worker in milliseconds per correction, saved with the slide's annotation document.
   Done when a test on the doc 22 protocol improves same-image typing accuracy by at least 10 points after 200 corrections.
   Refs doc 22, [`poc/src/segment/type-learner.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/segment/type-learner.ts).

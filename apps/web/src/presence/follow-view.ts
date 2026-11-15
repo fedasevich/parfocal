@@ -47,10 +47,13 @@ export function throttle(
   };
   return {
     call: () => {
-      if (timer !== null) return;
       const wait = last + ms - now();
-      if (wait <= 0) fire();
-      else timer = setTimeout(fire, wait);
+      if (wait > 0) {
+        timer ??= setTimeout(fire, wait);
+        return;
+      }
+      if (timer !== null) clearTimeout(timer);
+      fire();
     },
     cancel: () => {
       if (timer !== null) clearTimeout(timer);

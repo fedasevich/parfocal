@@ -1,3 +1,4 @@
+import type { SavedLearner } from "@parfocal/viewer-engine";
 import { hasPiece, type ModelRun, pieceConfidence, pieceRing } from "./runs.ts";
 import {
   boundsOf,
@@ -34,6 +35,11 @@ export interface AnnotationDocument {
   readonly pins: ReadonlyMap<string, PinPlacement>;
   readonly nextShapeId: ShapeId;
   readonly nextGroupId: GroupId;
+  readonly learner?: SavedLearner;
+}
+
+export function withLearner(doc: AnnotationDocument, learner: SavedLearner): AnnotationDocument {
+  return { ...doc, learner };
 }
 
 export interface PinPlacement {

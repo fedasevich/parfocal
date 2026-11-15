@@ -8,7 +8,7 @@ To take every recommendation at once, write "all recommended" here:
 
 ## What you need to do next, in order
 
-1. Decisions 105 (older Ventana archives with several scan areas) and 106 (who reads the sealed clinical note) below.
+1. Decisions 105 (older Ventana archives with several scan areas), 106 (who reads the sealed clinical note) and 107 (how CI gets the model files for the parity test) below.
 2. The checks on your Mac listed under "The review column" below, when you have a few minutes.
 3. When the app is ready for production, say so, and the lead books the deploy session of decisions 93, 94 and 95.
 
@@ -144,6 +144,17 @@ CASES-026 (encrypted clinical note per case) brought the note back sealed, writa
 
 - **A. Everyone who can see the case, the same as the patient name (recommended).** A reviewer reading the slide usually needs the clinical context, and it keeps one rule for patient details.
 - B. Only project owners and the reviewers of that case's slides who have already submitted.
+- Other.
+
+Your choice:
+
+### 107. How CI gets the model files for the browser parity test
+
+MLEVAL-007 (browser parity tests) checks that the browser PathoSAM models match PyTorch, and it passes on the Mac (click mask IoU 0.9625 on WebGPU and 0.9822 on WebAssembly against a 0.96 bar, see [the result](results/2026-11-15-browser-parity-with-pytorch.md)). Its Done line asks CI to run it, but CI has none of the roughly 250 MB of model files and 200 MB fixture, so there it skips.
+
+- **A. Publish the files once to R2 as ADR 0276 (model files stored once with a checksum list) describes, and add a WebAssembly-only CI job that downloads them with a read-only token (recommended).** This is a production write of about 450 MB, well under a cent a month of storage, plus a new read-only secret, so it waits for your yes and the deploy session.
+- B. Run the test on a self-hosted GitHub runner on the Mac.
+- C. Keep the Mac run and the switch that makes a skip fail when required, and tick MLEVAL-007 without CI.
 - Other.
 
 Your choice:

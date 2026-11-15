@@ -22,6 +22,12 @@ export type SamRequest =
       readonly prompt: SamPrompt;
     }
   | { readonly type: "segmentAll"; readonly requestId: number; readonly id: string }
+  | {
+      readonly type: "pool";
+      readonly requestId: number;
+      readonly id: string;
+      readonly outlines: readonly Float32Array<ArrayBuffer>[];
+    }
   | { readonly type: "drop"; readonly id: string };
 
 export type SamReply =
@@ -30,4 +36,9 @@ export type SamReply =
   | { readonly type: "encoded"; readonly requestId: number; readonly encoded: SamEncoded }
   | { readonly type: "prompted"; readonly requestId: number; readonly outcome: SamPromptOutcome }
   | { readonly type: "segmented"; readonly requestId: number; readonly outputs: SamOutputs }
+  | {
+      readonly type: "pooled";
+      readonly requestId: number;
+      readonly features: readonly Float32Array<ArrayBuffer>[];
+    }
   | { readonly type: "failed"; readonly requestId: number | null; readonly message: string };

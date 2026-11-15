@@ -167,6 +167,10 @@ msgstr ""
 msgid "{decidedCount} of {0} cells decided"
 msgstr ""
 
+#: src/viewer/run-stream-layer.tsx
+msgid "{done} of {total} tiles, {drawn} objects"
+msgstr ""
+
 #. placeholder {0}: lensWords[lens]
 #. placeholder {1}: lensWords[lens]
 #: src/annotations/layers-panel.tsx
@@ -298,6 +302,10 @@ msgstr ""
 
 #: src/screens/annotate-task/new-annotate-task.tsx
 msgid "A suggestion only. It fills in the next steps, and you can change every setting there."
+msgstr ""
+
+#: src/viewer/run-stream-layer.tsx
+msgid "about {minutes} min left"
 msgstr ""
 
 #: src/screens/annotate-task/new-annotate-task.tsx
@@ -516,6 +524,18 @@ msgstr ""
 #: src/screens/review/object-card.tsx
 #: src/screens/review/pinned-thread.tsx
 msgid "Cancel"
+msgstr ""
+
+#: src/viewer/run-stream-layer.tsx
+msgid "Cancel run"
+msgstr ""
+
+#: src/viewer/run-stream-layer.tsx
+msgid "Cancelled. Kept {drawn} objects from {done} finished tiles"
+msgstr ""
+
+#: src/viewer/run-stream-layer.tsx
+msgid "Cancelling, keeping the finished tiles"
 msgstr ""
 
 #: src/screens/viewer-tools/navigator-canvas.tsx
@@ -1738,6 +1758,10 @@ msgstr ""
 msgid "The run {0} joins this slide"
 msgstr ""
 
+#: src/viewer/run-stream-layer.tsx
+msgid "The run could not stream onto this slide"
+msgstr ""
+
 #: src/screens/review/slide-still.tsx
 msgid "The slide around {target}"
 msgstr ""
@@ -1879,6 +1903,10 @@ msgstr ""
 msgid "Views"
 msgstr ""
 
+#: src/viewer/run-stream-layer.tsx
+msgid "Waiting for the first tile"
+msgstr ""
+
 #: src/popout/popout-screen.tsx
 msgid "Waiting for the main window"
 msgstr ""
@@ -1920,6 +1948,10 @@ msgstr ""
 #: src/screens/review/guided-review.tsx
 #: src/screens/viewer/full-viewer.tsx
 msgid "Whole slide"
+msgstr ""
+
+#: src/viewer/run-stream-layer.tsx
+msgid "Whole-slide run"
 msgstr ""
 
 #. placeholder {0}: name.trim()
