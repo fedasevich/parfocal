@@ -1,0 +1,57 @@
+name: Restore check
+
+on:
+  schedule:
+    - cron: "17 4 3 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: restore-check
+  cancel-in-progress: false
+
+env:
+  TURBO_TELEMETRY_DISABLED: "1"
+
+jobs:
+  restore:
+    runs-on: ubuntu-24.04
+    environment: production
+    timeout-minutes: 30
+    services:
+      scratch:
+        image: imresamu/postgis:18-3.6.1-alpine3.22
+        env:
+          POSTGRES_USER: scratch
+          POSTGRES_DB: scratch
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -h 127.0.0.1 -U scratch -d scratch"
+          --health-interval 2s
+          --health-retries 30
+    env:
+      NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+      NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-workspace
+        with:
+          cache-key: deploy
+      - name: Install the Postgres 18 client
+        run: |
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -fsSo /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt noble-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
+          sudo apt-get update -q
+          sudo apt-get install -yq postgresql-client-18
+          echo "/usr/lib/postgresql/18/bin" >> "$GITHUB_PATH"
+      - run: >-
+          uv run --package parfocal-deploy python -m parfocal_deploy.restore_check
+          --source-production
+          --scratch-admin-url postgresql://scratch@127.0.0.1:5432/scratch
+          --archive "${RUNNER_TEMP}/restore-check.dump"
+      - if: always()
+        run: rm -f "${RUNNER_TEMP}/restore-check.dump"
