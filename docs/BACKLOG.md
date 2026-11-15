@@ -3742,7 +3742,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Refs doc 36, [`poc/src/segment/tumor-areas.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/segment/tumor-areas.ts), [`poc/scripts/tumor-areas.mjs`](https://github.com/fedasevich/pathlogy-poc/blob/master/scripts/tumor-areas.mjs), [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md).
   Size: L.
 
-- [ ] AITUM-004 · View-scoped map on demand
+- [x] AITUM-004 · View-scoped map on demand
   Compute the map for the current view when no whole-slide map exists.
   Done when tests confirm the map extends as the user pans and asks again.
   Size: M.
@@ -3757,7 +3757,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Refs doc 25.
   Size: M.
 
-- [ ] AITUM-007 · Paint a map with the brush
+- [x] AITUM-007 · Paint a map with the brush
   AITUM-005 stores painted maps as versioned `.pfmap` tile files ([ADR 0332](adr/0332-painted-maps-as-whole-versions-of-one-tile-file.md), painted maps as whole versions of one tile file), but nothing in the viewer paints one yet. Let the brush paint into and erase from a painted map on the view map tile grid, save it with the version check, list and open versions, and export it. Add fake API handlers for the painted map routes, and cover `painted_maps` and `painted_map_versions` in the retention purge.
   Done when component tests paint, save, reopen and export a map, an E2E spec paints and reloads, and a retention test purges both tables.
   Depends on AITUM-005.
@@ -4079,7 +4079,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when visual tests at 1024×1366 match kit W8 and the mock tablet tab.
   Size: M.
 
-- [ ] DEV-009 · Pen and touch separation
+- [x] DEV-009 · Pen and touch separation
   The pen draws with the active tool, the finger pans, palm rejection by pointer type, double tap on the pen switches to the last tool, side button erases.
   Done when Playwright pointer-type tests confirm a finger never draws in Annotate.
   Size: M.
@@ -4292,7 +4292,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when a test provisions and deprovisions a tenant in a drill environment.
   Size: L.
 
-- [ ] OPS-011 · Status page and maintenance mode
+- [x] OPS-011 · Status page and maintenance mode
   Done when maintenance mode shows a banner and blocks writes, tested in local dev.
   Size: M.
 
