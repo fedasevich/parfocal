@@ -5262,7 +5262,7 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
 
 ---
 
-- [ ] JOBS-007 · Run a model on a selection in Annotate
+- [x] JOBS-007 · Run a model on a selection in Annotate
   In the Annotate workspace the selection or the current view can be sent to a model run (JOBS-001 already takes both scopes). The result streams onto the slide, and in an annotate task its objects are AI objects the experts can fix in the shared layer, and they join the task's check scope (TASK-015).
   Done when component tests cover the selection and view scopes from the Annotate workspace, and E2E runs a model on a drawn selection and fixes one of its objects.
   Depends on JOBS-001, ANN-031, AINUC-013. Refs [ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md), doc 19.
