@@ -4,6 +4,8 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-15
 
+- OPS-007 merged into the train: four SLOs with burn-rate alerts by email and a cross-workspace audit alert, each drilled by fault injection against fakes. ADR renumbered to 0340 (SLOs and alerts as code, sent by email) because FOUND-015 took 0339. Review waits for OPS-006 (observability stack) to feed the SLIs and a drill run. Decision 111 asks for the ingest and pre-read targets.
+- SEC-013 merged into the train: secret inventory with a test, betterleaks reads its config on the Mac, prod refuses the local storage secret, and a key_rotation command drilled on local Postgres. Its new tasks were renumbered to SEC-048 (rotation commands for the keys secret) and SEC-049 (overlap window for session and token keys) because SEC-046 was taken. Review waits for a drill environment rotation.
 - SEC-035 merged into the train: migration 0120 makes all 35 single-column keys between workspace tables carry tenant_id, with a parfocal_app probe and a guard test. New SEC-046 (composite foreign keys carry the tenant) covers the 44 composite keys left.
 - FOUND-015 merged into the train: API Dockerfile with pinned digests and a non-root user, Modal images installing hashed locks exported from uv.lock, a lock check test, and a new images job in CI. Resolved the ci.yml clash with FOUND-028 by pinning the images job to ubuntu-24.04. Review waits for the first images job run on GitHub.
 - FOUND-039 merged into the train: full-viewer.tsx down from 1,870 to about 500 lines behind useViewerModel, no longer a length exception. The axe target-size failure on the Hide while panning checkbox in G then n fails with and without the split under load, so it predates the split.
