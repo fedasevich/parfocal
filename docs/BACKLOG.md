@@ -579,7 +579,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Done when a test shows `check_adrs.py` failing on a duplicate number, every record has its own number and the check passes.
   Size: S.
 
-- [ ] FOUND-035 · Squash the migrations into one baseline
+- [x] FOUND-035 · Squash the migrations into one baseline
   There are 91 migration files, numbered up to `0110`, and no shared database yet, so replacing them with one baseline is free now and never again ([project review](results/2026-11-09-project-review.md)). Production may be reset while it holds only the owner's test data ([ADR 0293](adr/0293-production-only-until-the-first-real-user.md), production only until the first real user), so this must land before OPS-014 (bring back staging before the first real user) ends that, not before SKEL-001 (production environment exists). The baseline also freezes the built-in study templates that `0044` imports from `parfocal_api.study_templates`. Needs an ADR, because [knowledge/database.md](knowledge/database.md) says every change since `0020` is a new migration.
   Done when a test proves the baseline and the old chain give the same schema, the seed data imports no application code, the ADR is written and the db tests pass.
   Depends on FOUND-024.
