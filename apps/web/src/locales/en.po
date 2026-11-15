@@ -7434,6 +7434,10 @@ msgstr "Heatmap scale guess"
 msgid "Help"
 msgstr "Help"
 
+#: src/shell/account-menu.tsx
+msgid "Help and tour"
+msgstr "Help and tour"
+
 #: src/screens/onboarding/setup-screen.tsx
 msgid "Hematopathology"
 msgstr "Hematopathology"
@@ -8211,6 +8215,7 @@ msgstr "Key"
 msgid "Keyboard"
 msgstr "Keyboard"
 
+#: src/shell/account-menu.tsx
 #: src/shell/palette-labels.tsx
 msgid "Keyboard shortcuts"
 msgstr "Keyboard shortcuts"
@@ -8677,6 +8682,10 @@ msgstr "Lock after inactivity"
 msgid "Lock for every reviewer"
 msgstr "Lock for every reviewer"
 
+#: src/shell/account-menu.tsx
+msgid "Lock the screen"
+msgstr "Lock the screen"
+
 #: src/screens/admin/workspace-settings.tsx
 msgid "Lock times"
 msgstr "Lock times"
@@ -8729,6 +8738,10 @@ msgstr "locked by the task"
 #: src/screens/admin/workspace-settings.tsx
 msgid "Locked keeps the lab's choice for everyone."
 msgstr "Locked keeps the lab's choice for everyone."
+
+#: src/shell/account-menu.tsx
+msgid "Locks after a quiet spell for now"
+msgstr "Locks after a quiet spell for now"
 
 #: ../../packages/ui/src/components/account-menu.tsx
 #: ../../packages/ui/src/components/auth.tsx
@@ -11702,6 +11715,10 @@ msgstr "Privacy, classes and a template"
 msgid "Problems also show in notifications"
 msgstr "Problems also show in notifications"
 
+#: src/shell/account-menu.tsx
+msgid "Profile and signature"
+msgstr "Profile and signature"
+
 #: ../../packages/ui/src/components/review-top-bar.tsx
 msgid "Progress on this slide and in the whole task"
 msgstr "Progress on this slide and in the whole task"
@@ -13285,6 +13302,7 @@ msgid "Send {count} object{0}"
 msgstr "Send {count} object{0}"
 
 #: src/feedback/feedback-dialog.tsx
+#: src/shell/account-menu.tsx
 #: src/shell/palette-labels.tsx
 msgid "Send feedback"
 msgstr "Send feedback"
@@ -13470,6 +13488,7 @@ msgstr "Setting restored."
 #: src/routes/issue-states.tsx
 #: src/screens/project/project-page.tsx
 #: src/screens/settings/settings-screen.tsx
+#: src/shell/account-menu.tsx
 msgid "Settings"
 msgstr "Settings"
 

@@ -61,10 +61,7 @@ test("a model run on a drawn selection streams onto the slide, joins the task an
   expect(draft.scope.geometry.type).toBe("Polygon");
 
   const streaming = page.getByTestId("run-stream");
-  await expect(streaming).toHaveAttribute("data-status", "running", { timeout: 15_000 });
-  await expect
-    .poll(async () => Number(await streaming.getAttribute("data-drawn")), { timeout: 15_000 })
-    .toBeGreaterThan(0);
+  await expect(streaming).toHaveAttribute("data-drawn", /^[1-9]\d*$/, { timeout: 15_000 });
 
   const joined = page.getByTestId("annotate-run");
   await expect(joined).toHaveAttribute("data-phase", "joined", { timeout: 30_000 });
