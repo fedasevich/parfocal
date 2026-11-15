@@ -50,6 +50,18 @@ export function placeMinimap(
   return { ...best, ranked };
 }
 
+export function pinnedMinimap(
+  canvas: { width: number; height: number },
+  box: { width: number; height: number },
+): Placement {
+  return {
+    corner: "bottom-right",
+    x: canvas.width - box.width - margin,
+    y: canvas.height - box.height - margin,
+    score: 0,
+  };
+}
+
 export function pathPoints(path: string): [number, number][] {
   return path
     .replace(/^M/, "")

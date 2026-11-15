@@ -1,0 +1,58 @@
+WITH exposures AS (
+  SELECT
+    person_id,
+    properties.flag AS flag,
+    argMin(properties.arm, timestamp) AS arm,
+    min(timestamp) AS first_exposed
+  FROM events
+  WHERE event = 'experiment_exposed'
+    AND properties.flag IN ('viewer_tools_layout', 'minimap_motion')
+    AND timestamp > now() - INTERVAL 90 DAY
+  GROUP BY person_id, flag
+),
+outcomes AS (
+  SELECT
+    x.person_id AS person_id,
+    x.flag AS flag,
+    countIf(e.event = 'task_finished' AND e.properties.task_kind = 'review') AS reviews_finished,
+    countIf(e.event = 'task_abandoned' AND e.properties.task_kind = 'review') AS reviews_abandoned,
+    medianIf(
+      toFloat(e.properties.duration_ms),
+      e.event = 'task_finished' AND e.properties.task_kind = 'review'
+    ) AS review_ms,
+    medianIf(
+      toFloat(e.properties.coverage_permille),
+      e.event = 'chrome_coverage_measured' AND e.properties.area = 'viewer'
+    ) AS viewer_chrome_permille,
+    countIf(e.event = 'tool_selected') AS tools_selected,
+    avgIf(toFloat(e.properties.ease_score), e.event = 'seq_answered') AS seq_ease,
+    avgIf(toFloat(e.properties.sus_score_tenths), e.event = 'sus_answered') AS sus_tenths
+  FROM events AS e
+  INNER JOIN exposures AS x ON e.person_id = x.person_id
+  WHERE e.timestamp >= x.first_exposed
+    AND e.timestamp > now() - INTERVAL 90 DAY
+    AND e.event IN (
+      'task_finished',
+      'task_abandoned',
+      'chrome_coverage_measured',
+      'tool_selected',
+      'seq_answered',
+      'sus_answered'
+    )
+  GROUP BY person_id, flag
+)
+SELECT
+  x.flag AS flag,
+  x.arm AS arm,
+  count() AS people,
+  sum(coalesce(o.reviews_finished, 0)) AS reviews_finished,
+  sum(coalesce(o.reviews_abandoned, 0)) AS reviews_abandoned,
+  median(o.review_ms) AS median_review_ms,
+  median(o.viewer_chrome_permille) AS median_viewer_chrome_permille,
+  avg(coalesce(o.tools_selected, 0)) AS tools_selected_per_person,
+  avg(o.seq_ease) AS mean_seq_ease,
+  avg(o.sus_tenths) / 10 AS mean_sus
+FROM exposures AS x
+LEFT JOIN outcomes AS o ON o.person_id = x.person_id AND o.flag = x.flag
+GROUP BY flag, arm
+ORDER BY flag, arm

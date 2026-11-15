@@ -67,7 +67,7 @@ def test_non_pseudonymous_ids_and_unknown_flags_are_refused() -> None:
 
 
 def test_the_bundled_web_flag_file_parses_on_the_server() -> None:
-    assert set(BUNDLED) == {"lab_lead_default_home"}
+    assert set(BUNDLED) == {"lab_lead_default_home", "viewer_tools_layout", "minimap_motion"}
     client = RuleFlagClient.from_file(WEB_FLAGS)
     result = client.evaluate("lab_lead_default_home", FlagContext(user_id="usr_00000042x"))
     assert result.reason == "split"

@@ -12,6 +12,8 @@ const sink: EventSink = eventSink(
   loggingAnalytics({ capture: (event, properties) => delegate.capture(event, properties) }),
 );
 
+export const appEventSink: EventSink = sink;
+
 let surveyPrompter: Promise<SurveyPrompter> | undefined;
 
 export function loadSurveyPrompter(): Promise<SurveyPrompter> {

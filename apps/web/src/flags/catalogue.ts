@@ -1,5 +1,7 @@
 export const flagCatalogue = {
   lab_lead_default_home: ["control", "status_board"],
+  viewer_tools_layout: ["rail", "dock"],
+  minimap_motion: ["moving", "pinned"],
 } as const satisfies Record<string, readonly string[]>;
 
 export type FlagKey = keyof typeof flagCatalogue;
