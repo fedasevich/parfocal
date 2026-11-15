@@ -62,6 +62,30 @@ export function skipUnlessCached(
   return cachedFixture(file, env) === null ? notDownloaded(remoteFixture(file)) : false;
 }
 
+export const convertCommand =
+  "uv run --package parfocal-ingest python packages/test-fixtures/scripts/make_converted.py";
+
+export function convertedDir(env: NodeJS.ProcessEnv = process.env): string {
+  return join(fixturesDir(env), "converted");
+}
+
+export function convertedFixture(
+  store: string,
+  env: NodeJS.ProcessEnv = process.env,
+): string | null {
+  const path = join(convertedDir(env), store);
+  return existsSync(join(path, "zarr.json")) ? path : null;
+}
+
+export function skipUnlessConverted(
+  store: string,
+  env: NodeJS.ProcessEnv = process.env,
+): string | false {
+  return convertedFixture(store, env) === null
+    ? `${store} is not converted, run: pnpm fixtures small, then ${convertCommand}`
+    : false;
+}
+
 export function syntheticPath(file: string): string {
   if (!loadManifest().synthetic.some((entry) => entry.file === file)) {
     throw new Error(`${file} is not a synthetic fixture in fixtures.json`);

@@ -5,9 +5,11 @@
     "browser",
     "sam-bench",
     "gpu-bench/*.ts",
+    "j2k-bench/*.ts",
     "playwright.config.ts",
     "playwright.sam.config.ts",
-    "playwright.gpu.config.ts"
+    "playwright.gpu.config.ts",
+    "playwright.j2k.config.ts"
   ],
   "compilerOptions": {
     "lib": ["es2024", "dom", "dom.iterable"]

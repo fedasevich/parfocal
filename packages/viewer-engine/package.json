@@ -14,6 +14,7 @@
     "test": "node --test \"test/**/*.test.ts\"",
     "test:browser": "playwright test",
     "gpu-timing": "playwright test -c playwright.gpu.config.ts",
+    "bench:j2k": "playwright test -c playwright.j2k.config.ts",
     "bench:sam": "playwright test -c playwright.sam.config.ts sam-variants",
     "bench:type-learner": "node sam-bench/type-learner-same-images.ts",
     "parity:sam": "playwright test -c playwright.sam.config.ts sam-parity",
