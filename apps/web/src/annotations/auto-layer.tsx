@@ -1,6 +1,8 @@
 import { useLingui } from "@lingui/react/macro";
 import { startTransition, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { type AisOutliner, createAisOutliner } from "../aiseg/ais-outliner.ts";
+import { promptFallback } from "../aiseg/prompt-fallback.ts";
+import { promptPassOptionsFor } from "../aiseg/prompt-pass.ts";
 import {
   clickTile,
   planRegionTiles,
@@ -9,6 +11,7 @@ import {
   type RegionProgress,
   runRegionPass,
 } from "../aiseg/region-pass.ts";
+import { SCALE_PRESETS } from "../aiseg/scale-presets.ts";
 import { nextRunId } from "../aiseg/smart-run.ts";
 import type {
   SmartServices,
@@ -167,6 +170,10 @@ export function AutoLayer({
         signal: abort.signal,
         outline: outliner.current.outline,
         pixels: outliner.current.pixels,
+        fallback: promptFallback(
+          loaded.sam,
+          promptPassOptionsFor(SCALE_PRESETS.nuclei.micronsPerPixel, "fast"),
+        ),
         onProgress: (progress) => setStatus({ progress, message: null }),
         onTile: (nuclei) => {
           found.current = [...found.current, ...nuclei];
