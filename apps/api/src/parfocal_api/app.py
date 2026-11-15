@@ -216,6 +216,7 @@ def create_app(
     app.include_router(model_tiers.router)
     app.include_router(hidden_models.router)
     app.include_router(model_registry.router)
+    app.include_router(model_registry.platform_router)
     app.include_router(lab_models.router)
     app.include_router(model_run_progress.router)
     app.include_router(notifications.router)

@@ -1,6 +1,7 @@
 import uuid
 from datetime import datetime
 from enum import StrEnum
+from typing import Any
 
 from geoalchemy2 import Geometry
 from sqlalchemy import (
@@ -29,6 +30,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 
+from parfocal_api.model_catalogue import LicenceClass, ModelHost, ModelStatus
 from parfocal_common.data_classes import OPERATIONAL, PERSONAL, PHI, SECRET
 from parfocal_common.db import metadata
 from parfocal_common.gpu_usage import gpu_usage as gpu_usage
@@ -2443,12 +2445,63 @@ class LabModelRunners(StrEnum):
     RESEARCHERS = "researchers"
 
 
+def licence_columns(nullable: bool) -> list[Column[Any]]:
+    return [
+        Column("licence_weights", String(400), nullable=nullable, info=OPERATIONAL),
+        Column("licence_weights_class", String(20), nullable=nullable, info=OPERATIONAL),
+        Column("licence_code", String(400), nullable=nullable, info=OPERATIONAL),
+        Column("licence_data", JSONB, nullable=nullable, info=OPERATIONAL),
+        Column("licence_source", String(400), nullable=nullable, info=OPERATIONAL),
+        Column("licence_read_on", Date, nullable=nullable, info=OPERATIONAL),
+    ]
+
+
+registered_models = Table(
+    "registered_models",
+    metadata,
+    Column(
+        "id",
+        Uuid[uuid.UUID](),
+        primary_key=True,
+        server_default=text("gen_random_uuid()"),
+        info=OPERATIONAL,
+    ),
+    Column("name", String(80), nullable=False, info=OPERATIONAL),
+    Column("version", String(40), nullable=False, info=OPERATIONAL),
+    Column("family", String(120), nullable=False, info=OPERATIONAL),
+    Column("title", String(200), nullable=False, info=OPERATIONAL),
+    Column("tasks", JSONB, nullable=False, info=OPERATIONAL),
+    Column("makes", JSONB, nullable=False, info=OPERATIONAL),
+    Column("host", String(20), nullable=False, info=OPERATIONAL),
+    *licence_columns(nullable=False),
+    Column("allowed_tenant_kinds", JSONB, nullable=False, info=OPERATIONAL),
+    Column("input_mpp", Float[float](), nullable=True, info=OPERATIONAL),
+    Column("status", String(20), nullable=False, info=OPERATIONAL),
+    Column("evaluation_report", String(400), nullable=True, info=OPERATIONAL),
+    Column("calibration_temperatures", JSONB, nullable=False, info=OPERATIONAL),
+    Column("part_of_name", String(80), nullable=True, info=OPERATIONAL),
+    Column("part_of_version", String(40), nullable=True, info=OPERATIONAL),
+    *timestamps(),
+    UniqueConstraint("name", "version"),
+    ForeignKeyConstraint(
+        ["part_of_name", "part_of_version"],
+        ["registered_models.name", "registered_models.version"],
+        name="fk_registered_models_part_of",
+    ),
+    CheckConstraint("(part_of_name IS NULL) = (part_of_version IS NULL)", name="part_of"),
+    one_of("host", ModelHost),
+    one_of("status", ModelStatus),
+    one_of("licence_weights_class", LicenceClass),
+)
+
+
 lab_models = Table(
     "lab_models",
     metadata,
     *owned_ids(),
     Column("name", String(80), nullable=False, info=OPERATIONAL),
     Column("version", String(40), nullable=False, info=OPERATIONAL),
+    *licence_columns(nullable=True),
     Column("address", String(2048), nullable=False, info=OPERATIONAL),
     Column("sign_in", String(10), nullable=False, info=OPERATIONAL),
     Column("header_name", String(80), nullable=True, info=OPERATIONAL),

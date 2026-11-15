@@ -240,6 +240,24 @@
       []
     ],
     [
+      "registered_models",
+      "platform_read",
+      "r",
+      true,
+      "((COALESCE(current_setting('app.platform'::text, true), ''::text) = 'on'::text) OR true)",
+      null,
+      []
+    ],
+    [
+      "registered_models",
+      "platform_write",
+      "*",
+      true,
+      "(COALESCE(current_setting('app.platform'::text, true), ''::text) = 'on'::text)",
+      "(COALESCE(current_setting('app.platform'::text, true), ''::text) = 'on'::text)",
+      []
+    ],
+    [
       "report_links",
       "auth_read",
       "r",

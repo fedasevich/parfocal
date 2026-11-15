@@ -199,7 +199,7 @@ def prepared(api: ApiAs, route: Route, monkeypatch: pytest.MonkeyPatch) -> ApiAs
     return api
 
 
-BASE_TABLES = {"organisations", "tenants", "users", "memberships"}
+BASE_TABLES = {"organisations", "tenants", "users", "memberships", "registered_models"}
 CASE_TABLES = {
     "opinions",
     "disagreement_decisions",
