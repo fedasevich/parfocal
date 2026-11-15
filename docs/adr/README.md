@@ -288,3 +288,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0321](0321-the-model-registry-is-a-platform-table.md) | The model registry is a platform table that operators write and every workspace reads | Accepted | 2026-11-15 |
 | [0322](0322-the-promotion-gate-compares-with-a-reference-within-a-tolerance.md) | The promotion gate compares a candidate with a reference within a tolerance per task | Accepted | 2026-11-15 |
 | [0323](0323-the-server-pools-reviewed-nuclei-like-the-browser.md) | The server pools reviewed nuclei like the browser and pools a reshaped outline again | Accepted | 2026-11-15 |
+| [0324](0324-web-browser-tests-run-against-a-built-app.md) | Web browser tests run against a built app | Accepted | 2026-11-15 |

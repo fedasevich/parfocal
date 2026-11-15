@@ -1,4 +1,4 @@
-# XXXX. Web browser tests run against a built app
+# 0324. Web browser tests run against a built app
 
 - Date: 2026-11-15
 - Status: Accepted
