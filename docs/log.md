@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-15
 
+- SEC-046 merged into the train: migration 0121 adds tenant_id to all 44 composite keys between workspace tables with 14 parent unique constraints, and the parfocal_app probe refuses every cross-workspace insert. New worktrees need uv sync --all-packages --all-extras for the PDF tests.
 - SEC-048 merged into the train: rotate commands (add-master-key, rewrap, retire-master-key, replace-key, reset-app-password) change one value of parfocal-api-keys at a time, tested against fakes. Review waits for a first real Modal run. SEC-049 is told to make replace-key handle key lists.
 - PILOT-004 merged into the train: bulk import gains --cases-from-names and --import-as-is, stops on loose or unpaired files and skips what a rerun already sent. Rehearsed locally with four public slides and three results into three cases in 13.6 s. Service accounts may now create cases through the drop route. Review waits for the real pilot sample in a drill environment. PILOT-009 covers a rerun while files still process.
 - FOUND-009 merged into the train: make dev installs, writes .env keys, starts the stack and the local Zitadel, migrates, seeds and signs in, 62 s to the home screen with warm caches. ADR 0342 (make dev signs in through the local Zitadel). Moved back from ticked to review because a new-machine run is owed. Added FOUND-040 (edge Worker and dev bucket under make dev) and PILOT-009 (a bulk import rerun never sends a slide twice).
