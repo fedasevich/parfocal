@@ -3476,7 +3476,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Depends on AIP-000.
   Size: S.
 
-- [ ] AIP-020 · Runtime model registration and model parts in the registry
+- [x] AIP-020 · Runtime model registration and model parts in the registry
   AIP-002 (model registry) keeps the registry in code. A migration moves it into a table so an admin can register a model while the app runs, adds licence fields for lab models connected through their own endpoint (JOBS-005), and adds rows with versions for the separate model parts in ADR 0202's line-up, such as the PathoSAM encoder and decoder.
   Done when an API test registers a model at run time and reads it back with its licence fields, a lab model row carries its licence, and every part in ADR 0202's line-up has a registry row with a version.
   Depends on AIP-002.

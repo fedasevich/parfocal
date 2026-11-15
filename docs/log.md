@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-15
 
+- AIP-020 additive migration 0114 creates the platform table registered_models seeded from the code registry (3 models and 7 parts of ADR 0202's line-up, versions TODO beyond v1.2), adds nullable licence columns to lab_models, and POST /api/platform/model-registry lets a platform operator register a model at run time. Only platform operators register, because the table is shared by every workspace.
 - AILEARN-010 stores pooled features and typer outputs of reviewed nuclei as per-slide files and builds the rows a training round takes, with no migration. A server-side SAM pooler job and the API wiring from review decisions are still to build.
 - AILEARN-004 training_rounds.run_round fine-tunes the typer head per tenant from the pretrained typer outputs, recalibrates each view count, promotes only when every ECE is at most 0.05 and held-out accuracy does not fall, names versions base-round-n and rolls back by moving latest.json. Promotion uses a stand-in until MLEVAL-006 (promotion gate) exists.
 - CI fix: the overlay controller skips updates with equal geometry and style, so model outlines and task objects are no longer rebuilt about 9 times after ready on a slide opened with a task. The four slow specs never draw them; they did not fail in the 5e5a5286 CI run, so they are left as flakes for now.
