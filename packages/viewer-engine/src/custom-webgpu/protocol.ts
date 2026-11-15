@@ -84,7 +84,7 @@ export interface SetCounts {
 }
 
 export type RenderRequest =
-  | { readonly type: "init"; readonly canvas: OffscreenCanvas }
+  | { readonly type: "init"; readonly canvas: OffscreenCanvas; readonly timing?: boolean }
   | { readonly type: "resize"; readonly width: number; readonly height: number }
   | { readonly type: "atlas"; readonly tileSize: number; readonly layers: number }
   | {
@@ -132,6 +132,7 @@ export type RenderErrorSource = "start" | "uncaptured" | "device-lost";
 export type RenderResponse =
   | { readonly type: "ready"; readonly maxLayers: number }
   | { readonly type: "drawn"; readonly id: number }
+  | { readonly type: "gpuTime"; readonly ms: number }
   | {
       readonly type: "leftOut";
       readonly id: string;

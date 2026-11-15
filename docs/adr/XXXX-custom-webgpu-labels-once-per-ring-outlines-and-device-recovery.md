@@ -44,4 +44,4 @@ Measured under SwiftShader ([result](../results/2026-11-15-custom-webgpu-route-l
 
 A segment instance grew from 24 to 28 bytes for the ring id, and a closed ring carries two more instances for the repeated edge. Where two rings of one set cross, the later ring still blends over the earlier one, as in Viv. A ring that crosses itself blends once there, which Viv blends twice.
 
-Still not built: compute culling, the level of detail tiers, and a run on a real GPU with 1.6M nuclei. The route holds every instance of a set in one buffer and lets the GPU clip what is off screen.
+Still not built: culling and the level of detail tiers. The route holds every instance of a set in one buffer and lets the GPU clip what is off screen. The route option `gpuTiming` makes the worker time the render pass with `timestamp-query`, and `gpu-bench/custom-gpu-timing.spec.ts` measured 114.82 ms a frame for 1.6M nuclei at detail zoom and 21.12 ms of overlay time for 81k nuclei at overview on the Mac's GPU, against budgets of 6 ms and 1 ms. Both therefore have to be built before the route leaves the developer picker.

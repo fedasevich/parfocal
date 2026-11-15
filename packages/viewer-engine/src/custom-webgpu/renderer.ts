@@ -1,5 +1,5 @@
 import type { Rgba } from "../overlay/batch-types.ts";
-import { bufferUsage, shaderStage, textureUsage } from "./gpu-constants.ts";
+import { bufferUsage, mapModeRead, shaderStage, textureUsage } from "./gpu-constants.ts";
 import { mipChain } from "./mipmaps.ts";
 import { createOverlayBuffers } from "./overlay-buffers.ts";
 import {
@@ -39,6 +39,9 @@ const noStroke = [0, 0, 0, 0] as const;
 const ringDepthFormat: GPUTextureFormat = "depth32float";
 const bodyParts = [1, 3] as const;
 const onceVertices = 12;
+const timestampCount = 2;
+const timestampBytes = 16;
+const nanosecondsPerMs = 1e6;
 
 export interface Renderer {
   readonly setAtlas: (tileSize: number, layers: number) => void;
@@ -218,7 +221,19 @@ export function createRenderer(
   device: GPUDevice,
   context: GPUCanvasContext,
   format: GPUTextureFormat,
+  onGpuTime: ((ms: number) => void) | null = null,
 ): Renderer {
+  const timing =
+    onGpuTime === null
+      ? null
+      : {
+          report: onGpuTime,
+          querySet: device.createQuerySet({ type: "timestamp", count: timestampCount }),
+          resolved: device.createBuffer({
+            size: timestampBytes,
+            usage: bufferUsage.queryResolve | bufferUsage.copySrc,
+          }),
+        };
   const target: GPUColorTargetState = { format, blend: premultipliedBlend };
 
   const tileModule = device.createShaderModule({ code: tileShader });
@@ -572,6 +587,12 @@ export function createRenderer(
       device.queue.writeBuffer(styles.buffer, 0, values);
     }
 
+    const timed =
+      timing !== null &&
+      !drawable.some(
+        (layer) =>
+          layer.kind === "set" && layer.alpha < 1 && (overlays.get(layer.id)?.segments ?? 0) > 0,
+      );
     const encoder = device.createCommandEncoder();
     const frameTexture = context.getCurrentTexture();
     const frameView = frameTexture.createView();
@@ -583,6 +604,15 @@ export function createRenderer(
         colorAttachments: [
           { view: frameView, clearValue: { r: 0, g: 0, b: 0, a: 0 }, loadOp, storeOp: "store" },
         ],
+        ...(timed && timing
+          ? {
+              timestampWrites: {
+                querySet: timing.querySet,
+                beginningOfPassWriteIndex: 0,
+                endOfPassWriteIndex: 1,
+              },
+            }
+          : {}),
         ...(depth
           ? {
               depthStencilAttachment: {
@@ -692,7 +722,28 @@ export function createRenderer(
       });
     }
     pass.end();
+    let stamps: GPUBuffer | null = null;
+    if (timed && timing) {
+      encoder.resolveQuerySet(timing.querySet, 0, timestampCount, timing.resolved, 0);
+      stamps = device.createBuffer({
+        size: timestampBytes,
+        usage: bufferUsage.mapRead | bufferUsage.copyDst,
+      });
+      encoder.copyBufferToBuffer(timing.resolved, 0, stamps, 0, timestampBytes);
+    }
     device.queue.submit([encoder.finish()]);
+    if (stamps && timing) {
+      const buffer = stamps;
+      buffer.mapAsync(mapModeRead).then(
+        () => {
+          const [from = 0n, to = 0n] = new BigUint64Array(buffer.getMappedRange());
+          buffer.unmap();
+          buffer.destroy();
+          timing.report(Number(to - from) / nanosecondsPerMs);
+        },
+        () => {},
+      );
+    }
   };
 
   return {
@@ -724,6 +775,8 @@ export function createRenderer(
       glyphAtlas = null;
       ringDepth?.destroy();
       ringDepth = null;
+      timing?.querySet.destroy();
+      timing?.resolved.destroy();
       tileBuffer?.destroy();
       styleBuffer?.destroy();
       frameUniform.destroy();

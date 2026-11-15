@@ -115,6 +115,7 @@ export interface CustomWebGpuRouteOptions {
   readonly spawnDecodeWorker?: (index: number) => DecodeWorker;
   readonly spawnRenderWorker?: () => RenderWorkerLike;
   readonly interpolation?: InterpolationRule;
+  readonly gpuTiming?: boolean;
 }
 
 export interface CustomWebGpuRoute extends RendererRoute<PixelSlide> {
@@ -127,6 +128,8 @@ export interface CustomWebGpuRoute extends RendererRoute<PixelSlide> {
   readonly failure: () => Error | null;
   readonly deviceRecoveries: () => number;
   readonly loseDevice: () => void;
+  readonly redraw: () => void;
+  readonly takeGpuTimes: () => number[];
 }
 
 interface TileEntry {
@@ -243,6 +246,7 @@ export function createCustomWebGpuRoute(
   let failure: Error | null = null;
   let uncaptured = 0;
   let recoveries = 0;
+  let gpuTimes: number[] = [];
   let awaitingLoss = false;
   let recentLosses: number[] = [];
 
@@ -672,6 +676,7 @@ export function createCustomWebGpuRoute(
       changed();
     }
     if (response.type === "drawn") drawnFrame = Math.max(drawnFrame, response.id);
+    if (response.type === "gpuTime") gpuTimes.push(response.ms);
     if (response.type === "leftOut") {
       reportLeftOut(response.id, response.bytes, response.limit);
     }
@@ -698,7 +703,7 @@ export function createCustomWebGpuRoute(
   });
 
   const offscreen = canvas.transferControlToOffscreen();
-  post({ type: "init", canvas: offscreen }, [offscreen]);
+  post({ type: "init", canvas: offscreen, timing: options.gpuTiming === true }, [offscreen]);
   sendSize();
 
   const workerCount = options.decodeWorkers ?? defaultDecodeWorkers;
@@ -816,6 +821,12 @@ export function createCustomWebGpuRoute(
     overlayBufferWrites: () => overlayWrites,
     failure: () => failure,
     deviceRecoveries: () => recoveries,
+    redraw: changed,
+    takeGpuTimes: () => {
+      const taken = gpuTimes;
+      gpuTimes = [];
+      return taken;
+    },
     loseDevice: () => {
       if (!usable()) return;
       awaitingLoss = true;

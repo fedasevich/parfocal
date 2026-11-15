@@ -5,6 +5,8 @@ export const mostAtlasLayers = 1024;
 
 const intentionalLossReason = "destroyed";
 
+const timestampFeature: GPUFeatureName = "timestamp-query";
+
 export interface RenderScope {
   readonly post: (response: RenderResponse) => void;
   readonly requestFrame: (callback: () => void) => void;
@@ -29,6 +31,7 @@ export function createRenderHost(scope: RenderScope): RenderHost {
   let started: Started | null = null;
   let starting = false;
   let lost = false;
+  let timing = false;
   let surface: OffscreenCanvas | null = null;
   const losing = new WeakSet<GPUDevice>();
   let destroyed = false;
@@ -42,7 +45,9 @@ export function createRenderHost(scope: RenderScope): RenderHost {
     const adapter = await gpu.requestAdapter();
     if (adapter === null) throw new Error("the worker was offered no WebGPU adapter");
     const maxLayers = Math.min(mostAtlasLayers, adapter.limits.maxTextureArrayLayers);
+    const timed = timing && adapter.features.has(timestampFeature);
     const device = await adapter.requestDevice({
+      requiredFeatures: timed ? [timestampFeature] : [],
       requiredLimits: {
         maxTextureArrayLayers: maxLayers,
         maxBufferSize: adapter.limits.maxBufferSize,
@@ -76,7 +81,16 @@ export function createRenderHost(scope: RenderScope): RenderHost {
       },
       () => {},
     );
-    started = { device, canvas, renderer: createRenderer(device, context, format) };
+    started = {
+      device,
+      canvas,
+      renderer: createRenderer(
+        device,
+        context,
+        format,
+        timed ? (ms) => scope.post({ type: "gpuTime", ms }) : null,
+      ),
+    };
     scope.post({ type: "ready", maxLayers });
   };
 
@@ -172,6 +186,7 @@ export function createRenderHost(scope: RenderScope): RenderHost {
       if (starting) return;
       starting = true;
       surface = request.canvas;
+      timing = request.timing === true;
       begin(request.canvas);
       return;
     }
