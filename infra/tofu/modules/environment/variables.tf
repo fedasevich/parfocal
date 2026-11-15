@@ -35,6 +35,16 @@ variable "dev_mode" {
   }
 }
 
+variable "tier_after_days" {
+  type    = number
+  default = 90
+
+  validation {
+    condition     = var.tier_after_days >= 30 && floor(var.tier_after_days) == var.tier_after_days
+    error_message = "Tenant objects move to Infrequent Access after at least 30 whole days, its minimum storage duration."
+  }
+}
+
 variable "cloudflare_account_id" {
   type = string
 }

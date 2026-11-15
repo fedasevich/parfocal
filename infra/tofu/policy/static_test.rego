@@ -22,7 +22,24 @@ zone := {"locals": [{"zone_settings": {
 	"ssl": "strict",
 }}]}
 
-bucket := {"resource": {"cloudflare_r2_bucket": {"slides": [{"lifecycle": [{"prevent_destroy": true}]}]}}}
+tier_rule := {
+	"id": "tier-old-tenant-objects",
+	"conditions": {"prefix": "t/"},
+	"storage_class_transitions": [{
+		"condition": {"type": "Age", "max_age": "${var.tier_after_days * 86400}"},
+		"storage_class": "InfrequentAccess",
+	}],
+}
+
+bucket_only := {"resource": {"cloudflare_r2_bucket": {"slides": [{"lifecycle": [{"prevent_destroy": true}]}]}}}
+
+lifecycle(rule) := json.patch(bucket_only, [{
+	"op": "add",
+	"path": "/resource/cloudflare_r2_bucket_lifecycle",
+	"value": {"uploads": [{"rules": [rule]}]},
+}])
+
+bucket := lifecycle(tier_rule)
 
 good := [
 	{"path": "global/versions.tf", "contents": backend("global")},
@@ -99,4 +116,35 @@ test_wrong_environment_name_fails if {
 test_weak_tls_zone_setting_fails if {
 	contents := json.patch(zone, [{"op": "replace", "path": "/locals/0/zone_settings/ssl", "value": "flexible"}])
 	denied(with_file("global/zone.tf", contents), "zone setting ssl")
+}
+
+in_module(contents) := with_file("modules/environment/main.tf", contents)
+
+test_missing_tier_rule_fails if {
+	denied(in_module(bucket_only), "moves old tenant objects to Infrequent Access")
+}
+
+test_delete_transition_fails if {
+	rule := object.union(tier_rule, {"delete_objects_transition": {"condition": {"type": "Age", "max_age": 86400}}})
+	denied(in_module(lifecycle(rule)), "deletes objects")
+}
+
+test_empty_lifecycle_prefix_fails if {
+	rule := object.union(tier_rule, {"conditions": {"prefix": ""}})
+	denied(in_module(lifecycle(rule)), "must keep the prefix t/")
+}
+
+test_fixtures_lifecycle_prefix_fails if {
+	rule := object.union(tier_rule, {"conditions": {"prefix": "fixtures/"}})
+	denied(in_module(lifecycle(rule)), "must keep the prefix t/")
+}
+
+test_unknown_storage_class_fails if {
+	rule := json.patch(tier_rule, [{"op": "replace", "path": "/storage_class_transitions/0/storage_class", "value": "Glacier"}])
+	denied(in_module(lifecycle(rule)), "unknown storage class")
+}
+
+test_tier_age_below_minimum_fails if {
+	rule := json.patch(tier_rule, [{"op": "replace", "path": "/storage_class_transitions/0/condition/max_age", "value": 86400}])
+	denied(in_module(lifecycle(rule)), "30 day minimum storage duration")
 }

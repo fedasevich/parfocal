@@ -16,6 +16,12 @@ resource_type(type) if startswith(type, "zitadel_")
 
 provider_sources := {"cloudflare/cloudflare", "zitadel/zitadel"}
 
+lifecycle_prefix := "t/"
+
+storage_classes := {"InfrequentAccess"}
+
+minimum_tier_age_seconds := 30 * 86400
+
 roots := {"global", "dev", "staging", "prod"}
 
 wrangler_hostnames := {"staging", "app", "staging.parfocal.eu", "app.parfocal.eu"}

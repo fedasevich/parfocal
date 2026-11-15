@@ -62,6 +62,8 @@ Checked in each dashboard on 2026-10-31. A hard cap means the provider stops the
 
 Sentry, PostHog and Grafana have no accounts yet. Set a cap or an alert at the lowest amount on the day each is created and add a row here.
 
+Budgets per environment and the cost dashboard live in `workers/deploy/src/parfocal_deploy/costs.py` ([ADR 0340](../adr/0340-old-tenant-objects-tier-to-infrequent-access-and-budgets-live-in-a-cost-report.md), old tenant objects tier and budgets live in a cost report). `pnpm --filter @parfocal/deploy costs --out <file>` needs a Modal login, `R2_ACCOUNT_ID` and a `CLOUDFLARE_API_TOKEN` that can read account analytics, prints spend against budget for production, dev and the drill environment, and exits 1 when a line is over. Slide buckets move objects under `t/` to Infrequent Access after 90 days, which bills every read and at least 30 days, so never widen that prefix to `fixtures/`.
+
 How to check spend quickly: Modal at `modal.com/settings/fedasevich/usage`, Cloudflare at Manage account, Billing, Billable usage, Neon through the Vercel MCP tool `list_integration_configurations` (its `billingData`), Vercel at the team's Settings, Billing, and GitHub at Settings, Billing and licensing.
 
 ## Modal stops deploys at the workspace spend limit

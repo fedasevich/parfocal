@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-15
 
+- OPS-009 (storage lifecycle and cost controls) built, not applied. The environment module now moves objects under t/ to R2 Infrequent Access after 90 days (ADR 0340), conftest refuses delete rules, other prefixes and ages under 30 days, and pnpm --filter @parfocal/deploy costs prints spend against budgets per environment from Modal's billing report and R2 bucket sizes. GPU scale to zero was already enforced by gpu_pool.py; tofu validate passed, tofu plan was skipped because the worktree has no .env, and the apply and the R2 drill are owed.
 - SEC-035 merged into the train: migration 0120 makes all 35 single-column keys between workspace tables carry tenant_id, with a parfocal_app probe and a guard test. New SEC-046 (composite foreign keys carry the tenant) covers the 44 composite keys left.
 - FOUND-015 merged into the train: API Dockerfile with pinned digests and a non-root user, Modal images installing hashed locks exported from uv.lock, a lock check test, and a new images job in CI. Resolved the ci.yml clash with FOUND-028 by pinning the images job to ubuntu-24.04. Review waits for the first images job run on GitHub.
 - FOUND-039 merged into the train: full-viewer.tsx down from 1,870 to about 500 lines behind useViewerModel, no longer a length exception. The axe target-size failure on the Hide while panning checkbox in G then n fails with and without the split under load, so it predates the split.
