@@ -32,7 +32,7 @@ In the final run, the longest `requestAnimationFrame` gap was 150 ms, and 11 of 
 
 Without the warm-up, the only long frame ends 70 ms after the first draw. It is the frame where WebGL first links the programs of the nuclei layers, a one-time cost per page that does not grow with the run. Our layer build peaked at 12.0 ms.
 
-`src/overlay/deck/shader-warmup.ts` builds a nuclei overlay of 600 transparent squares a million pixels off the slide at the outline, dot and density levels of detail. The Viv route draws those layers for one frame after the slide's first frame and then drops them, so the cost lands at slide open instead of during a run. The harness does the same when its canvas opens, and `STREAM_COLD=1` skips it to reproduce the first row. In the software-GL run with the warm-up, the longest main-thread task was 16.0 ms.
+`src/overlay/deck/shader-warmup.ts` builds a nuclei overlay of 600 transparent squares a million pixels off the slide at the outline, dot and density levels of detail. The Viv route draws those layers for one frame once the open slide first settles and then drops them, so the cost lands just after slide open instead of during a run. Waiting for the slide to settle keeps the warm-up out of a slide that is still loading, which the late-tile hint test in `viv-loading.spec.ts` showed. The harness has no route, so it draws the same layers once when its canvas opens, and `STREAM_COLD=1` skips it to reproduce the first row. In the software-GL run with the warm-up, the longest main-thread task was 16.0 ms.
 
 ## Decision
 
