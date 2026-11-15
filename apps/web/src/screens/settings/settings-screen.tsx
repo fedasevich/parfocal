@@ -54,6 +54,7 @@ import {
   type WheelChoice,
   writeNavigation,
 } from "../../devices/navigation.ts";
+import { type HidLike, hasWebHid, requestSpaceMouse } from "../../devices/spacemouse-source.ts";
 import { useActiveTourStep } from "../../help/tour-state.ts";
 import { settingValuesOfShortcuts, shortcutsOfSettings } from "../../keys/shortcut-settings.ts";
 import { setLengthUnits } from "../../measure/length-units.ts";
@@ -639,6 +640,9 @@ function LoadedSettings({
         ]}
         onChange={(value) => {
           writeDeviceSetting("device", value);
+          if (value === "spacemouse" && hasWebHid(navigator)) {
+            void requestSpaceMouse((navigator as unknown as { hid: HidLike }).hid);
+          }
           writeNavigation({});
           setDevice((previous) => ({ ...previous, device: value, ...readCalibration(value) }));
         }}

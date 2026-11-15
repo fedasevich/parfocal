@@ -57,6 +57,7 @@ import { legendDeviceOf } from "../devices/device-legend.ts";
 import { DeviceLegend } from "../devices/device-legend.tsx";
 import { bindGamepadWhenConnected, deviceIntentEvent } from "../devices/gamepad-source.ts";
 import { engineWheelMode, navigationEvent, readNavigation } from "../devices/navigation.ts";
+import { bindSpaceMouse, type HidLike, hasWebHid } from "../devices/spacemouse-source.ts";
 import { applyMainCalibration, mainCalibration } from "../devices/stage-calibration.ts";
 import { bindTrackpadListeners } from "../devices/trackpad-listeners.ts";
 import { EscProvider, useEscOwner, useNewEscRegistry } from "../keys/esc-owner.tsx";
@@ -685,6 +686,25 @@ function OpenedSlide({
       },
       window,
     );
+  }, [session, chosenDevice, workspace]);
+
+  useEffect(() => {
+    if (session === null || typeof navigator === "undefined" || !hasWebHid(navigator)) return;
+    const input = createCameraInput({
+      device: () => legendDeviceOf(chosenDevice),
+      context: () => (workspace === "annotate" ? "annotate" : "review"),
+      calibration: mainCalibration,
+      camera: session.engine,
+      onIntent: (intent) => {
+        window.dispatchEvent(new CustomEvent(deviceIntentEvent, { detail: intent }));
+      },
+    });
+    return bindSpaceMouse(input, {
+      hid: (navigator as unknown as { hid: HidLike }).hid,
+      now: () => performance.now(),
+      focused: () => document.hasFocus() && document.visibilityState === "visible",
+      rotation: () => readDeviceSettings().spaceMouseRotation === true,
+    });
   }, [session, chosenDevice, workspace]);
 
   useEffect(() => {

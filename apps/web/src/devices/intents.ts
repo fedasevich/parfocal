@@ -259,6 +259,9 @@ export function mapInput(
     return axesIntents(raw, calibration, device === "spacemouse" && context === "read");
   }
   if (raw.kind === "button") {
+    if (device === "spacemouse" && raw.name === "pull") {
+      return context === "read" && raw.down === false ? [{ kind: "peek", held: false }] : none;
+    }
     if (device === "spacemouse") return lookup(spaceMouseButtons, raw.name, context);
     if (device === "gamepad") {
       if (raw.name === "select") {
