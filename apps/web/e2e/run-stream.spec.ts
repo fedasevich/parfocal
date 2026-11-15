@@ -77,6 +77,9 @@ test("a run starts from the app, cancels and reloads", async ({ page }) => {
   await expect(panel).toHaveAttribute("data-status", "running", { timeout: 20_000 });
   await expect.poll(() => numberOf(panel, "data-drawn"), { timeout: 15_000 }).toBeGreaterThan(0);
   await expect(page.getByTestId("start-run")).toHaveCount(0);
+  await expect
+    .poll(() => numberOf(page.getByTestId("run-tiles-map"), "data-tiles"), { timeout: 15_000 })
+    .toBeGreaterThan(0);
 
   await page.getByTestId("run-stream-cancel").click();
   await expect(panel).toHaveAttribute("data-status", "cancelled", { timeout: 15_000 });

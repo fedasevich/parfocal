@@ -1,10 +1,9 @@
-import type { ModelRunDraft, Ordering, TestTimeViews } from "@parfocal/api-client";
+import type { ModelRunDraft, Ordering, RunScope } from "@parfocal/api-client";
 
-export type RunScopeChoice = "slide" | "view";
+export type RunScopeChoice = "slide" | "view" | "selection";
 
 export type RunOptions = {
   readonly scope: RunScopeChoice;
-  readonly views: TestTimeViews;
   readonly ordering: Ordering;
 };
 
@@ -15,7 +14,7 @@ export type ViewRect = {
   readonly height: number;
 };
 
-export const defaultRunOptions: RunOptions = { scope: "slide", views: 1, ordering: "raster" };
+export const defaultRunOptions: RunOptions = { scope: "slide", ordering: "raster" };
 
 export const nucleiDetector = "hovernet";
 
@@ -35,21 +34,56 @@ export function viewScopeOf(
   return { x, y, width, height };
 }
 
+export function boxGeometry(box: ViewRect) {
+  const left = box.x;
+  const top = box.y;
+  const right = box.x + box.width;
+  const bottom = box.y + box.height;
+  return {
+    type: "Polygon",
+    coordinates: [
+      [
+        [left, top],
+        [right, top],
+        [right, bottom],
+        [left, bottom],
+        [left, top],
+      ],
+    ],
+  } as const;
+}
+
+function scopeOf(options: RunOptions, view: ViewRect | null, selection: ViewRect | null) {
+  if (options.scope === "view") return view === null ? null : ({ kind: "view", ...view } as const);
+  if (options.scope === "selection") {
+    return selection === null
+      ? null
+      : ({ kind: "selection", geometry: boxGeometry(selection) } as const);
+  }
+  return { kind: "slide" } as const;
+}
+
 export function buildRunDraft(input: {
   readonly slideId: string;
   readonly options: RunOptions;
   readonly view: ViewRect | null;
+  readonly selection?: ViewRect | null;
 }): ModelRunDraft | null {
-  const { slideId, options, view } = input;
-  if (options.scope === "view" && view === null) return null;
+  const scope: RunScope | null = scopeOf(input.options, input.view, input.selection ?? null);
+  if (scope === null) return null;
   return {
-    slide_ids: [slideId],
-    scope:
-      options.scope === "view" && view !== null ? { kind: "view", ...view } : { kind: "slide" },
+    slide_ids: [input.slideId],
+    scope,
     parameters: {
       detector: { name: nucleiDetector },
-      test_time_views: options.views,
-      ordering: options.ordering,
+      ordering: input.options.ordering,
     },
   };
+}
+
+export function canTuneRun(input: {
+  readonly tenantRole: string | undefined;
+  readonly projectRole: string | null | undefined;
+}): boolean {
+  return input.tenantRole === "researcher" || input.projectRole === "owner";
 }

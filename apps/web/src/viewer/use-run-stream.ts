@@ -35,6 +35,7 @@ export type RunStreamState = {
   readonly runId: string | null;
   readonly progress: RunProgress | null;
   readonly drawn: number;
+  readonly tiles: RunProgress["tiles"];
 };
 
 export type RunStreamControls = RunStreamState & {
@@ -43,7 +44,7 @@ export type RunStreamControls = RunStreamState & {
   readonly loadLast: () => Promise<boolean>;
 };
 
-const idle: RunStreamState = { phase: "idle", runId: null, progress: null, drawn: 0 };
+const idle: RunStreamState = { phase: "idle", runId: null, progress: null, drawn: 0, tiles: [] };
 
 type Shown = { registration: OverlayRegistration; batch: PolygonBatch };
 
@@ -104,7 +105,7 @@ export function useRunStream(options: {
       const tiles = stream.current?.progress().tiles ?? [];
       show(tilesOverlayId, finishedTileMarks(tiles, tileMarkColor));
       const drawn = blocks.reduce((sum, block) => sum + block.batch.count, 0);
-      setState((before) => ({ ...before, drawn }));
+      setState((before) => ({ ...before, drawn, tiles }));
     },
     [show],
   );

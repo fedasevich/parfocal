@@ -14,6 +14,8 @@ type StartRunPanelProps = {
   readonly projectId: string;
   readonly slideId: string;
   readonly currentView: () => ViewRect | null;
+  readonly selection: ViewRect | null;
+  readonly canTune: boolean;
   readonly onStarted: () => void;
   readonly onLoadLast: () => Promise<boolean>;
 };
@@ -34,11 +36,19 @@ export function StartRunPanel(props: StartRunPanelProps) {
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<Notice>("none");
 
+  const used: RunOptions = props.canTune
+    ? {
+        ...options,
+        scope: options.scope === "selection" && props.selection === null ? "slide" : options.scope,
+      }
+    : defaultRunOptions;
+
   const start = async () => {
     const draft: ModelRunDraft | null = buildRunDraft({
       slideId: props.slideId,
-      options,
-      view: options.scope === "view" ? props.currentView() : null,
+      options: used,
+      view: used.scope === "view" ? props.currentView() : null,
+      selection: props.selection,
     });
     if (draft === null) {
       setNotice("no-view");
@@ -80,23 +90,25 @@ export function StartRunPanel(props: StartRunPanelProps) {
         <Button size="sm" data-testid="start-run-load" onClick={() => void loadLast()}>
           <Trans>Load last run</Trans>
         </Button>
-        <Button
-          size="sm"
-          variant="ghost"
-          data-testid="start-run-options"
-          aria-expanded={open}
-          onClick={() => setOpen((before) => !before)}
-        >
-          <Trans>Options</Trans>
-        </Button>
+        {props.canTune ? (
+          <Button
+            size="sm"
+            variant="ghost"
+            data-testid="start-run-options"
+            aria-expanded={open}
+            onClick={() => setOpen((before) => !before)}
+          >
+            <Trans>Options</Trans>
+          </Button>
+        ) : null}
       </div>
-      {open ? (
+      {props.canTune && open ? (
         <div className="flex flex-col gap-2" data-testid="start-run-options-body">
           <label className="flex items-center justify-between gap-2">
             <Trans>Scope</Trans>
             <select
               data-testid="start-run-scope"
-              value={options.scope}
+              value={used.scope}
               onChange={(event) =>
                 setOptions({ ...options, scope: event.target.value as RunScopeChoice })
               }
@@ -107,19 +119,6 @@ export function StartRunPanel(props: StartRunPanelProps) {
               <option value="view">
                 <Trans>What I see now</Trans>
               </option>
-            </select>
-          </label>
-          <label className="flex items-center justify-between gap-2">
-            <Trans>Extra views</Trans>
-            <select
-              data-testid="start-run-views"
-              value={options.views}
-              onChange={(event) =>
-                setOptions({ ...options, views: event.target.value === "8" ? 8 : 1 })
-              }
-            >
-              <option value="1">1</option>
-              <option value="8">8</option>
             </select>
           </label>
           <label className="flex items-center justify-between gap-2">
