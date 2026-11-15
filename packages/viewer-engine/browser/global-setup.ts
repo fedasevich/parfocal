@@ -33,6 +33,7 @@ export default async function globalSetup(): Promise<() => Promise<void>> {
           input: fileURLToPath(new URL("./page/input.html", import.meta.url)),
           interaction: fileURLToPath(new URL("./page/interaction.html", import.meta.url)),
           "decode-count": fileURLToPath(new URL("./page/decode-count.html", import.meta.url)),
+          "decode-budget": fileURLToPath(new URL("./page/decode-budget.html", import.meta.url)),
           "native-jpeg": fileURLToPath(new URL("./page/native-jpeg.html", import.meta.url)),
           jpeg2000: fileURLToPath(new URL("./page/jpeg2000.html", import.meta.url)),
           channels: fileURLToPath(new URL("./page/channels.html", import.meta.url)),
