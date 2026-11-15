@@ -266,7 +266,7 @@ msgid "\"version\""
 msgstr ""
 
 #. placeholder {0}: learnerView.examples
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-panels.tsx
 msgid "{0, plural, one {# example} other {# examples}}"
 msgstr ""
 
@@ -436,7 +436,7 @@ msgstr ""
 
 #. placeholder {0}: current.object
 #: src/screens/viewer-tools/focus-view.tsx
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-panels.tsx
 msgid "{0} · Tumor region"
 msgstr ""
 
@@ -578,7 +578,7 @@ msgstr ""
 #. placeholder {0}: openCells.length
 #. placeholder {1}: openCells.length === 1 ? "" : "s"
 #. placeholder {2}: openCells.length === 1 ? "is" : "are"
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-scene.tsx
 msgid "{0} cell{1} in the sample {2} still open"
 msgstr ""
 
@@ -589,7 +589,7 @@ msgstr ""
 
 #. placeholder {0}: openZoneCells.length
 #. placeholder {1}: openZone.name
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-state.tsx
 msgid "{0} cells in {1} marked agree"
 msgstr ""
 
@@ -837,7 +837,7 @@ msgid "{0} is signed out. It goes to the clinician."
 msgstr ""
 
 #. placeholder {0}: region.object
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-scene.tsx
 msgid "{0} is still open"
 msgstr ""
 
@@ -981,7 +981,7 @@ msgstr ""
 
 #. placeholder {0}: counts.open
 #. placeholder {1}: counts.open === 1 ? " is" : "s are"
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-panels.tsx
 msgid "{0} object{1} still open."
 msgstr ""
 
@@ -1938,7 +1938,7 @@ msgstr ""
 msgid "{more} more waiting."
 msgstr ""
 
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-state.tsx
 msgid "{object}: not a nucleus, counts as disagree"
 msgstr ""
 
@@ -2047,7 +2047,7 @@ msgstr ""
 msgid "{senderFirst} sees your changes and the note. He sends it again when it is fixed."
 msgstr ""
 
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-panels.tsx
 msgid "{setName}, imported 12 Oct"
 msgstr ""
 
@@ -2120,7 +2120,7 @@ msgstr ""
 msgid "{taskCodeOrThe} was withdrawn"
 msgstr ""
 
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-panels.tsx
 msgid "{taskCodeOrThe} was withdrawn on 16 Oct. There is nothing left to decide."
 msgstr ""
 
@@ -3295,7 +3295,7 @@ msgstr ""
 msgid "All decided"
 msgstr ""
 
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-panels.tsx
 msgid "All decided. Open the Slide done card"
 msgstr ""
 
@@ -3510,7 +3510,7 @@ msgstr ""
 msgid "Answer in the preview"
 msgstr ""
 
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-scene.tsx
 msgid "Answer it"
 msgstr ""
 
@@ -4448,7 +4448,7 @@ msgstr ""
 msgid "Cells match when their centres are at most this many µm apart"
 msgstr ""
 
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-panels.tsx
 msgid "Cells on {slideLabel}"
 msgstr ""
 
@@ -7063,7 +7063,7 @@ msgstr ""
 msgid "For the file formats, see"
 msgstr ""
 
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-panels.tsx
 msgid "Forget"
 msgstr ""
 
@@ -7263,7 +7263,7 @@ msgstr ""
 #. placeholder {0}: thread.anchor
 #: ../../packages/ui/src/components/comments-tab.tsx
 #: src/screens/clinical-report/report-screen.tsx
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-scene.tsx
 msgid "Go to {0}"
 msgstr ""
 
@@ -7276,7 +7276,7 @@ msgstr ""
 msgid "Go to {0}{1}"
 msgstr ""
 
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-panels.tsx
 msgid "Go to {firstOpen}, the first open object"
 msgstr ""
 
@@ -7314,7 +7314,7 @@ msgstr ""
 msgid "Go to sign-off"
 msgstr ""
 
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-scene.tsx
 msgid "Go to the cells"
 msgstr ""
 
@@ -8391,7 +8391,7 @@ msgstr ""
 msgid "Learned"
 msgstr ""
 
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-panels.tsx
 msgid "Learned on this slide"
 msgstr ""
 
@@ -9773,7 +9773,7 @@ msgstr ""
 msgid "No results yet"
 msgstr ""
 
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-panels.tsx
 msgid "No review task asks about {slideLabel}. Look at it here, and write what you find in the clinical report."
 msgstr ""
 
@@ -9953,7 +9953,7 @@ msgstr ""
 msgid "Not {first}"
 msgstr ""
 
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-state.tsx
 msgid "Not a cell"
 msgstr ""
 
@@ -10291,11 +10291,11 @@ msgstr ""
 msgid "Nothing to decide here yet."
 msgstr ""
 
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-panels.tsx
 msgid "Nothing to decide here yet. {slideLabel} has no {setName} result in {taskCodeOrThis}."
 msgstr ""
 
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-panels.tsx
 msgid "Nothing to decide on this slide"
 msgstr ""
 
@@ -10441,8 +10441,8 @@ msgid "Objects"
 msgstr ""
 
 #: src/screens/review/viewer-frame.tsx
-#: src/screens/viewer/full-viewer.tsx
 #: src/screens/viewer/object-table.tsx
+#: src/screens/viewer/use-viewer-panels.tsx
 msgid "Objects on {slideLabel}"
 msgstr ""
 
@@ -10757,7 +10757,7 @@ msgstr ""
 msgid "Open on the slide"
 msgstr ""
 
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-panels.tsx
 msgid "Open report"
 msgstr ""
 
@@ -10783,7 +10783,7 @@ msgstr ""
 msgid "Open the case"
 msgstr ""
 
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-panels.tsx
 msgid "Open the clinical report of this case"
 msgstr ""
 
@@ -11874,7 +11874,7 @@ msgid "Question"
 msgstr ""
 
 #. placeholder {0}: position + 1
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-scene.tsx
 msgid "Question {0} is not answered"
 msgstr ""
 
@@ -14007,7 +14007,7 @@ msgstr ""
 msgid "Signed off {signedOn}"
 msgstr ""
 
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-panels.tsx
 msgid "Signed off 15 Oct. Changes need an amendment."
 msgstr ""
 
@@ -14015,7 +14015,7 @@ msgstr ""
 msgid "Signed off by: ____________  Date: ________"
 msgstr ""
 
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-state.tsx
 msgid "Signed off. Ask the researcher to amend."
 msgstr ""
 
@@ -14692,7 +14692,7 @@ msgstr ""
 #: ../../packages/ui/src/components/analysis-cards.tsx
 #: ../../packages/ui/src/components/review-top-bar.tsx
 #: ../../packages/ui/src/components/systematic-scan.tsx
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-panels.tsx
 msgid "Submit"
 msgstr ""
 
@@ -15047,7 +15047,7 @@ msgstr ""
 msgid "The AI found this. It is outlined in white."
 msgstr ""
 
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-panels.tsx
 msgid "The AI is still reading"
 msgstr ""
 
@@ -15186,7 +15186,7 @@ msgid "The comment did not save. Try again."
 msgstr ""
 
 #: src/screens/review/guided-review.tsx
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-state.tsx
 msgid "The connection is lost. It saves when the connection is back."
 msgstr ""
 
@@ -15351,7 +15351,7 @@ msgstr ""
 msgid "The objects of finished tiles are in the layer and join the check scope."
 msgstr ""
 
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-state.tsx
 msgid "the other set"
 msgstr ""
 
@@ -15485,7 +15485,7 @@ msgstr ""
 
 #: src/screens/disagreements/adjudicator-view.tsx
 #: src/screens/review/guided-review.tsx
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-panels.tsx
 msgid "The researcher"
 msgstr ""
 
@@ -15621,12 +15621,12 @@ msgid "The style cannot change once a decision exists."
 msgstr ""
 
 #: src/screens/review/guided-review.tsx
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-panels.tsx
 msgid "the task"
 msgstr ""
 
 #: src/screens/review/guided-review.tsx
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-scene.tsx
 msgid "The task"
 msgstr ""
 
@@ -15684,7 +15684,7 @@ msgid "The two passwords are not the same."
 msgstr ""
 
 #. placeholder {0}: learnerView.corrections
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-state.tsx
 msgid "The typer learned from your {0} corrections and changed {changedNow} similar cells. They are in a new zone."
 msgstr ""
 
@@ -15833,7 +15833,7 @@ msgstr ""
 msgid "This page does not exist, or it was moved or deleted."
 msgstr ""
 
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-state.tsx
 msgid "This part of the slide can't be read yet"
 msgstr ""
 
@@ -15883,7 +15883,7 @@ msgstr ""
 
 #: src/screens/review/display-tab.tsx
 #: src/screens/review/guided-review.tsx
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-scene.tsx
 msgid "this task"
 msgstr ""
 
@@ -15923,7 +15923,7 @@ msgstr ""
 msgid "Thread on {anchor}"
 msgstr ""
 
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-panels.tsx
 msgid "Thread pinned on the slide."
 msgstr ""
 
@@ -16154,7 +16154,7 @@ msgstr ""
 #: src/screens/home/announcements.tsx
 #: src/screens/home/home-screen.tsx
 #: src/screens/review/guided-review.tsx
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-panels.tsx
 #: src/shell/issue-pages.tsx
 #: src/viewer/slide-stage.tsx
 msgid "Try again"
@@ -16372,7 +16372,7 @@ msgid "Undo"
 msgstr ""
 
 #: ../../packages/ui/src/components/findings-panel.tsx
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-panels.tsx
 msgid "Undo all"
 msgstr ""
 
@@ -16686,7 +16686,7 @@ msgid "Version 2, replaces version 1"
 msgstr ""
 
 #: src/screens/developer/developer-screen.tsx
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-panels.tsx
 msgid "View"
 msgstr ""
 
@@ -16831,7 +16831,7 @@ msgid "Watershed"
 msgstr ""
 
 #: ../../packages/ui/src/components/visualize.tsx
-#: src/screens/viewer/full-viewer.tsx
+#: src/screens/viewer/use-viewer-panels.tsx
 msgid "Ways to show results"
 msgstr ""
 
