@@ -4,6 +4,7 @@ from collections.abc import Awaitable, Callable
 
 import pytest
 from db_support import APP_URL, ApiAs, with_database
+from sqlalchemy import delete
 from workspace_support import (
     give_security_contact,
     make_case,
@@ -20,7 +21,7 @@ from parfocal_api.security_alerts import (
     CrossWorkspaceEvent,
     CrossWorkspaceWatch,
 )
-from parfocal_api.tables import ActorKind, Role
+from parfocal_api.tables import ActorKind, Role, slides
 from parfocal_common.alerting import OnCall
 from parfocal_common.clients import MemoryEmailSender
 from parfocal_common.db import async_database_url, create_engine, tenant_transaction
@@ -136,4 +137,39 @@ def test_ordinary_workspace_activity_raises_no_security_alert(api: ApiAs, databa
         return await watch.check()
 
     raised = watched(database, outbox, check)
+    assert [event for event in raised if event.tenant_id == workspace.tenant_id] == []
+
+
+@pytest.mark.db
+def test_a_target_removed_with_its_removal_event_stays_quiet(api: ApiAs, database: str) -> None:
+    workspace = make_workspace(database, {"reviewer": Role.REVIEWER})
+    project = make_project(database, workspace.tenant_id)
+    gone = make_slide(database, workspace.tenant_id, project, "S26-4 A1")
+    reader = workspace.people["reviewer"]
+    outbox = MemoryEmailSender()
+
+    async def drill(watch: CrossWorkspaceWatch) -> list[CrossWorkspaceEvent]:
+        await watch.check()
+        async with tenant_transaction(watch.engine, reader.tenant_id) as connection:
+            await record(
+                connection,
+                Actor(ActorKind.MEMBER, reader.subject),
+                AuditAction.SLIDE_OPENED,
+                AuditTarget.SLIDE,
+                gone,
+                tenant_id=reader.tenant_id,
+            )
+            removed = await connection.execute(delete(slides).where(slides.c.id == gone))
+            assert removed.rowcount == 1
+            await record(
+                connection,
+                Actor(ActorKind.SYSTEM),
+                AuditAction.RETENTION_PURGED,
+                AuditTarget.SLIDE,
+                gone,
+                tenant_id=reader.tenant_id,
+            )
+        return await watch.check()
+
+    raised = watched(database, outbox, drill)
     assert [event for event in raised if event.tenant_id == workspace.tenant_id] == []

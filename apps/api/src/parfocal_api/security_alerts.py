@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from sqlalchemy import Table, exists, select
 from sqlalchemy.ext.asyncio import AsyncEngine
 
-from parfocal_api.audit import AuditTarget
+from parfocal_api.audit import AuditAction, AuditTarget
 from parfocal_api.tables import (
     ActorKind,
     annotations,
@@ -67,7 +67,16 @@ UNCHECKED_TARGETS: Mapping[AuditTarget, str] = {
     AuditTarget.FEEDBACK: "feedback is sent on to the platform and has no workspace row to check",
 }
 
-CHECKED_ACTORS = (ActorKind.MEMBER, ActorKind.SERVICE)
+UNCHECKED_ACTORS = (ActorKind.OPERATOR,)
+
+REMOVAL_ACTIONS = frozenset(
+    {
+        AuditAction.RETENTION_PURGED,
+        AuditAction.THREAD_DELETED,
+        AuditAction.PATIENT_ERASED,
+        AuditAction.DISPLAY_PRESET_DELETED,
+    }
+)
 
 
 @dataclass(frozen=True)
@@ -84,13 +93,9 @@ class CrossWorkspaceEvent:
             severity=Severity.PAGE,
             summary=(
                 f"Audit event {self.seq} of workspace {self.tenant_id} ({self.action}) "
-                f"targets {self.target_type} {self.target_id}, which is not in that workspace"
+                f"targets a {self.target_type} that is not in that workspace"
             ),
-            labels={
-                "tenant_id": str(self.tenant_id),
-                "target_type": self.target_type,
-                "target_id": str(self.target_id),
-            },
+            labels={"tenant_id": str(self.tenant_id), "target_type": self.target_type},
         )
 
 
@@ -103,6 +108,7 @@ async def events_outside(
     engine: AsyncEngine, tenant_id: uuid.UUID, after_seq: int
 ) -> list[CrossWorkspaceEvent]:
     found: list[CrossWorkspaceEvent] = []
+    removal = audit_events.alias("removal")
     async with tenant_transaction(engine, tenant_id) as connection:
         for target, table in TARGET_TABLES.items():
             rows = await connection.execute(
@@ -117,8 +123,14 @@ async def events_outside(
                     audit_events.c.seq > after_seq,
                     audit_events.c.target_type == target.value,
                     audit_events.c.target_id.is_not(None),
-                    audit_events.c.actor_kind.in_([kind.value for kind in CHECKED_ACTORS]),
+                    audit_events.c.actor_kind.not_in([kind.value for kind in UNCHECKED_ACTORS]),
                     ~exists().where(table.c.id == audit_events.c.target_id),
+                    ~exists().where(
+                        removal.c.tenant_id == audit_events.c.tenant_id,
+                        removal.c.target_type == audit_events.c.target_type,
+                        removal.c.target_id == audit_events.c.target_id,
+                        removal.c.action.in_([action.value for action in REMOVAL_ACTIONS]),
+                    ),
                 )
                 .order_by(audit_events.c.seq)
             )

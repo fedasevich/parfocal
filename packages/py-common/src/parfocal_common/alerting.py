@@ -43,6 +43,11 @@ class Slo:
             return False
         return self.threshold is None or sample.duration <= self.threshold
 
+    def counted_at(self, sample: Sample) -> datetime:
+        if self.threshold is not None and sample.duration > self.threshold:
+            return sample.at - sample.duration + self.threshold
+        return sample.at
+
 
 AVAILABILITY = Slo(
     "availability",
@@ -80,11 +85,12 @@ class BurnRule:
     long: timedelta
     short: timedelta
     factor: float
+    minimum_bad: int = 1
 
 
 BURN_RULES: tuple[BurnRule, ...] = (
-    BurnRule(Severity.PAGE, timedelta(hours=1), timedelta(minutes=5), 14.4),
-    BurnRule(Severity.PAGE, timedelta(hours=6), timedelta(minutes=30), 6.0),
+    BurnRule(Severity.PAGE, timedelta(hours=1), timedelta(minutes=5), 14.4, minimum_bad=3),
+    BurnRule(Severity.PAGE, timedelta(hours=6), timedelta(minutes=30), 6.0, minimum_bad=3),
     BurnRule(Severity.TICKET, timedelta(days=3), timedelta(hours=6), 1.0),
 )
 
@@ -104,15 +110,46 @@ class Alert:
     labels: Mapping[str, str] = field(default_factory=dict[str, str])
 
 
+@dataclass(frozen=True)
+class Pending:
+    sli: SliName
+    token: int
+    started: datetime
+
+
 @dataclass
 class SliRecorder:
     samples: dict[SliName, list[Sample]] = field(default_factory=dict[SliName, list[Sample]])
+    open: dict[SliName, dict[int, datetime]] = field(
+        default_factory=dict[SliName, dict[int, datetime]]
+    )
+    issued: int = 0
 
     def record(self, sli: SliName, sample: Sample) -> None:
         self.samples.setdefault(sli, []).append(sample)
 
-    def between(self, sli: SliName, start: datetime, end: datetime) -> list[Sample]:
-        return [sample for sample in self.samples.get(sli, []) if start < sample.at <= end]
+    def start(self, sli: SliName, at: datetime) -> Pending:
+        self.issued += 1
+        self.open.setdefault(sli, {})[self.issued] = at
+        return Pending(sli, self.issued, at)
+
+    def finish(self, pending: Pending) -> None:
+        self.open.get(pending.sli, {}).pop(pending.token, None)
+
+    def window(self, slo: Slo, start: datetime, end: datetime) -> list[Sample]:
+        finished = [
+            sample
+            for sample in self.samples.get(slo.sli, [])
+            if start < slo.counted_at(sample) <= end
+        ]
+        if slo.threshold is None:
+            return finished
+        overdue = [
+            Sample(started + slo.threshold, ok=False, duration=slo.threshold)
+            for started in self.open.get(slo.sli, {}).values()
+            if start < started + slo.threshold <= end
+        ]
+        return finished + overdue
 
 
 @dataclass
@@ -132,22 +169,42 @@ class Instrument:
                 },
             )
 
+    def start(self, sli: SliName) -> Pending:
+        return self.recorder.start(sli, self.clock())
+
+    def finish(self, pending: Pending, *, ok: bool = True) -> None:
+        self.recorder.finish(pending)
+        self.observe(pending.sli, ok=ok, duration=self.clock() - pending.started)
+
     @contextmanager
     def measure(self, sli: SliName) -> Generator[None]:
-        started = self.clock()
+        pending = self.start(sli)
         try:
             yield
         except Exception:
-            self.observe(sli, ok=False, duration=self.clock() - started)
+            self.finish(pending, ok=False)
             raise
-        self.observe(sli, ok=True, duration=self.clock() - started)
+        self.finish(pending)
+
+
+def bad_count(slo: Slo, samples: Sequence[Sample]) -> int:
+    return sum(1 for sample in samples if not slo.is_good(sample))
 
 
 def burn_rate(slo: Slo, samples: Sequence[Sample]) -> float:
     if not samples:
         return 0.0
-    bad = sum(1 for sample in samples if not slo.is_good(sample))
-    return (bad / len(samples)) / slo.error_budget
+    return (bad_count(slo, samples) / len(samples)) / slo.error_budget
+
+
+def burns(slo: Slo, rule: BurnRule, recorder: SliRecorder, now: datetime) -> bool:
+    long = recorder.window(slo, now - rule.long, now)
+    short = recorder.window(slo, now - rule.short, now)
+    return (
+        bad_count(slo, long) >= rule.minimum_bad
+        and burn_rate(slo, long) >= rule.factor
+        and burn_rate(slo, short) >= rule.factor
+    )
 
 
 def slo_alerts(
@@ -159,11 +216,7 @@ def slo_alerts(
     alerts: list[Alert] = []
     for severity in Severity:
         burning = [
-            rule
-            for rule in rules
-            if rule.severity is severity
-            and burn_rate(slo, recorder.between(slo.sli, now - rule.long, now)) >= rule.factor
-            and burn_rate(slo, recorder.between(slo.sli, now - rule.short, now)) >= rule.factor
+            rule for rule in rules if rule.severity is severity and burns(slo, rule, recorder, now)
         ]
         if burning:
             rule = burning[0]

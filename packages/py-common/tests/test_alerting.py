@@ -14,6 +14,7 @@ from parfocal_common.alerting import (
     Alerting,
     Instrument,
     OnCall,
+    Pending,
     QuotaRule,
     Severity,
     SliName,
@@ -78,26 +79,24 @@ class FakeTileEdge:
 
 
 @dataclass
-class FakeIngest:
+class FakeWorker:
     instrument: Instrument
-    convert_time: timedelta = timedelta(minutes=3)
-    broken: bool = False
+    clock: FakeClock
+    sli: SliName
+    takes: timedelta | None
+    running: list[tuple[datetime, Pending]] = field(default_factory=list[tuple[datetime, Pending]])
 
-    def ingest(self) -> None:
-        ok = not self.broken
-        self.instrument.observe(SliName.INGEST_TIME, ok=ok, duration=self.convert_time)
+    def submit(self) -> None:
+        self.finish_due()
+        pending = self.instrument.start(self.sli)
+        if self.takes is not None:
+            self.running.append((self.clock.now + self.takes, pending))
 
-
-@dataclass
-class FakePreRead:
-    instrument: Instrument
-    queue_wait: timedelta = timedelta(minutes=5)
-    run_time: timedelta = timedelta(minutes=20)
-
-    def pre_read(self) -> None:
-        self.instrument.observe(
-            SliName.PRE_READ_TIME, ok=True, duration=self.queue_wait + self.run_time
-        )
+    def finish_due(self) -> None:
+        due = [item for item in self.running if item[0] <= self.clock.now]
+        for item in due:
+            self.running.remove(item)
+            self.instrument.finish(item[1])
 
 
 @dataclass
@@ -156,29 +155,29 @@ def tile_drill(rig: Rig) -> tuple[Callable[[], object], Callable[[], None], Call
 
 
 def ingest_drill(rig: Rig) -> tuple[Callable[[], object], Callable[[], None], Callable[[], None]]:
-    ingest = FakeIngest(rig.instrument)
+    converter = FakeWorker(rig.instrument, rig.clock, SliName.INGEST_TIME, timedelta(minutes=3))
 
     def inject() -> None:
-        ingest.convert_time = timedelta(minutes=45)
+        converter.takes = timedelta(minutes=45)
 
     def heal() -> None:
-        ingest.convert_time = timedelta(minutes=3)
+        converter.takes = timedelta(minutes=3)
 
-    return ingest.ingest, inject, heal
+    return converter.submit, inject, heal
 
 
 def pre_read_drill(
     rig: Rig,
 ) -> tuple[Callable[[], object], Callable[[], None], Callable[[], None]]:
-    pre_read = FakePreRead(rig.instrument)
+    gpu_queue = FakeWorker(rig.instrument, rig.clock, SliName.PRE_READ_TIME, timedelta(minutes=25))
 
     def inject() -> None:
-        pre_read.queue_wait = timedelta(hours=3)
+        gpu_queue.takes = None
 
     def heal() -> None:
-        pre_read.queue_wait = timedelta(minutes=5)
+        gpu_queue.takes = timedelta(minutes=25)
 
-    return pre_read.pre_read, inject, heal
+    return gpu_queue.submit, inject, heal
 
 
 DRILLS = [
@@ -198,12 +197,13 @@ def test_injected_fault_pages_on_call_and_recovery_resolves(drill: Drill) -> Non
     rig = Rig()
     work, inject, heal = drill.build(rig)
     page = f"[page] slo:{drill.slo.name}:page"
+    phase = timedelta(hours=1) + (drill.slo.threshold or timedelta(0))
 
     rig.run(timedelta(hours=2), drill.every, work)
     assert rig.outbox.sent == []
 
     inject()
-    rig.run(timedelta(hours=1), drill.every, work)
+    rig.run(phase, drill.every, work)
     assert page in rig.subjects()
     fired = next(message for message in rig.outbox.sent if message.subject == page)
     assert fired.to == PAGES
@@ -211,7 +211,7 @@ def test_injected_fault_pages_on_call_and_recovery_resolves(drill: Drill) -> Non
     assert drill.slo.description in fired.text
 
     heal()
-    rig.run(timedelta(hours=1), drill.every, work)
+    rig.run(phase, drill.every, work)
     assert f"[resolved] slo:{drill.slo.name}:page" in rig.subjects()
     assert f"slo:{drill.slo.name}:page" not in rig.alerting.firing
 
@@ -237,6 +237,24 @@ def test_a_slow_burn_opens_a_ticket_without_paging(drill: Drill) -> None:
     assert f"[ticket] slo:{drill.slo.name}:ticket" in subjects
     assert all(not subject.startswith("[page]") for subject in subjects)
     assert all(message.to == TICKETS for message in rig.outbox.sent)
+
+
+def test_work_that_never_finishes_pages_once_it_is_overdue() -> None:
+    rig = Rig()
+    stuck = FakeWorker(rig.instrument, rig.clock, SliName.INGEST_TIME, None)
+    rig.run(timedelta(minutes=9), timedelta(minutes=1), stuck.submit)
+    assert rig.outbox.sent == []
+    assert rig.recorder.samples == {}
+    rig.run(timedelta(minutes=15), timedelta(minutes=1), lambda: None)
+    assert "[page] slo:ingest-time:page" in rig.subjects()
+
+
+def test_a_single_slow_slide_at_pilot_volume_does_not_page() -> None:
+    rig = Rig()
+    worker = FakeWorker(rig.instrument, rig.clock, SliName.INGEST_TIME, timedelta(minutes=45))
+    worker.submit()
+    rig.run(timedelta(hours=1), timedelta(minutes=5), worker.finish_due)
+    assert all(not subject.startswith("[page]") for subject in rig.subjects())
 
 
 def test_an_alert_fires_once_while_it_stays_firing() -> None:

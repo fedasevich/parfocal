@@ -154,7 +154,7 @@ SEC-018 asks that contacts be configured for alerting. That needs the owner's ac
 | CI secret scan with betterleaks in `.github/workflows/ci.yml` | A secret in a pull request | The failing CI check | Only on code that goes through CI |
 | Sentry, Grafana Cloud, PostHog, Resend | Nothing yet | No accounts exist | Errors, traces and email bounces are not watched. OPS-006 (observability stack) builds them |
 | SLO burn alerts in `parfocal_common.alerting` (OPS-007, alerting and on-call) | Availability, tile latency, ingest time or pre-read time burning its error budget | Email to `ALERT_PAGE_EMAIL` for pages and `ALERT_TICKET_EMAIL` for tickets, both `security@parfocal.eu` | Built and tested against fakes. Nothing runs them in production until OPS-006 emits the SLI events and schedules the check |
-| Cross-workspace audit watch in `parfocal_api.security_alerts` (OPS-007) | An audit event by a member or service account whose target is not in the actor's workspace | Page email to `ALERT_PAGE_EMAIL` | Same as above, it needs a scheduled run |
+| Cross-workspace audit watch in `parfocal_api.security_alerts` (OPS-007, alerting and on-call) | An audit event by anyone but a platform operator whose target is not in the actor's workspace | Page email to `ALERT_PAGE_EMAIL` | Same as above, it needs a scheduled run |
 
 The policy is [ADR 0339](../adr/0339-slos-and-alerts-as-code-routed-by-email.md) (SLOs and alerts as code, routed by email). Apart from the cross-workspace watch, no channel alerts on a security event in production, such as a burst of failed sign-ins, an emergency access grant or an audit chain break.
 
@@ -178,7 +178,7 @@ JOIN (
   UNION ALL SELECT 'thread', id, tenant_id FROM threads
   UNION ALL SELECT 'clinical-report', id, tenant_id FROM clinical_reports
 ) t ON t.kind = e.target_type AND t.id = e.target_id
-WHERE e.actor_kind IN ('member', 'service')
+WHERE e.actor_kind <> 'operator'
   AND e.tenant_id IS DISTINCT FROM t.tenant_id
   AND e.occurred_at >= TIMESTAMPTZ '2026-01-01 00:00Z'
 ORDER BY e.occurred_at;
