@@ -49,7 +49,7 @@ def render() -> str:
         [
             "# Data map",
             "",
-            "Generated from the table models in `apps/api/src/parfocal_api/tables.py` by "
+            "Generated from the table models in `apps/api/src/parfocal_api/tables/` by "
             "`pnpm data-map:doc`. Classify a column where it is declared, never on this page. "
             "[ADR 0028](../adr/0028-data-classes-on-columns.md) explains the classes.",
             "",
