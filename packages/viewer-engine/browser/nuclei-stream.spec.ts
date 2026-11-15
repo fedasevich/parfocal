@@ -140,7 +140,7 @@ async function openHarness(
   beforeStart: () => Promise<void> = () => Promise.resolve(),
 ): Promise<void> {
   await page.goto(
-    harnessUrl(`/app/nuclei-stream.html${process.env["STREAM_WARM"] ? "?warm" : ""}`),
+    harnessUrl(`/app/nuclei-stream.html${process.env["STREAM_COLD"] ? "?cold" : ""}`),
   );
   await page.waitForFunction(() => window.streamHarness !== undefined);
   const config = {

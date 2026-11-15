@@ -23,15 +23,17 @@ In the final run, the longest `requestAnimationFrame` gap was 150 ms, and 11 of 
 
 ## On the real GPU
 
-`playwright.stream-gpu.config.ts` runs the same spec headed in Chrome on the Mac's own GPU, with the 1-minute load at 15 to 16. Setting `STREAM_WARM=1` makes the harness draw a small nuclei overlay once before the run starts, so its shaders are compiled before the frames are measured.
+`playwright.stream-gpu.config.ts` runs the same spec headed in Chrome on the Mac's own GPU, with the 1-minute load between 15 and 23.
 
 | Run | Longest main-thread task | Longest frame gap | Gaps over 33 ms | Frames |
 | --- | --- | --- | --- | --- |
-| Cold, the first nuclei overlay drawn during the run | 60.6 ms | 68.4 ms | 1 | 479 |
-| Shaders compiled before the run (`STREAM_WARM=1`) | 27.7 ms | 18.7 ms | 0 | 489 |
+| Cold page, no shader warm-up | 60.6 ms | 68.4 ms | 1 | 479 |
+| Cold page, nuclei shaders warmed when the slide opens | 16.0 ms | 18.6 ms | 0 | 480 |
 
-The only long frame of the cold run ends 70 ms after the first draw. It is the frame where WebGL first links the programs of the nuclei layers, a one-time cost per page that does not grow with the run. Streaming itself never held a frame over 33 ms. Our layer build peaked at 12.0 ms.
+Without the warm-up, the only long frame ends 70 ms after the first draw. It is the frame where WebGL first links the programs of the nuclei layers, a one-time cost per page that does not grow with the run. Our layer build peaked at 12.0 ms.
+
+`src/overlay/deck/shader-warmup.ts` builds a nuclei overlay of 600 transparent squares a million pixels off the slide at the outline, dot and density levels of detail. The Viv route draws those layers for one frame after the slide's first frame and then drops them, so the cost lands at slide open instead of during a run. The harness does the same when its canvas opens, and `STREAM_COLD=1` skips it to reproduce the first row. In the software-GL run with the warm-up, the longest main-thread task was 16.0 ms.
 
 ## Decision
 
-The SwiftShader test asserts the longest main-thread task, and it passes. The app draws the stream through the same overlay builder (`engine.registerOverlay`). The first-use shader link is not streaming work, but the viewer pays it in the middle of a run when no nuclei overlay was drawn before. TODO: compile the overlay shaders when the slide opens, in the renderer route, so the first streamed tile does not pay for them.
+The SwiftShader test asserts the longest main-thread task, and the real-GPU run shows no frame gap over 33 ms. The app draws the stream through the same overlay builder (`engine.registerOverlay`), and the Viv route warms the nuclei shaders whenever a slide opens.

@@ -12,6 +12,7 @@ import {
   type VectorOverlay,
 } from "../../src/index.ts";
 import { createOverlayLayerBuilder } from "../../src/overlay/deck/overlay-layers.ts";
+import { nucleiWarmupLayers } from "../../src/overlay/deck/shader-warmup.ts";
 import { deckDeviceProps } from "../../src/viv/deck-settings.ts";
 
 export interface StreamConfig {
@@ -183,17 +184,11 @@ async function openDeck(config: StreamConfig): Promise<void> {
 
 async function prepare(config: StreamConfig): Promise<void> {
   if (deck === null) await openDeck(config);
-  if (new URLSearchParams(location.search).has("warm")) {
-    const scene = new StreamedScene();
-    const rings = Array.from({ length: 600 }, (_, item) => ({
-      ring: [item * 20, 0, item * 20 + 8, 0, item * 20 + 8, 8, item * 20, 8],
-      color: [10, 10, 10, 10] as const,
-    }));
-    scene.append("warm", 0, rings);
-    draw(scene.rebuild());
-    await new Promise<void>((resolve) => setTimeout(resolve, 500));
-    deck?.setProps({ layers: [] });
-  }
+  if (new URLSearchParams(location.search).has("cold")) return;
+  await new Promise<void>((resolve) => {
+    deck?.setProps({ layers: nucleiWarmupLayers(), onAfterRender: () => resolve() });
+  });
+  deck?.setProps({ layers: [], onAfterRender: () => {} });
 }
 
 async function start(config: StreamConfig): Promise<void> {
