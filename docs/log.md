@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-15
 
+- VIEW-040 (viewer performance budgets) adds per-format CI budgets on the three CMU-1 encodings, tightens the jump budget from 5390 to 4390 ms from hosted numbers, and records frame p95 of 18.4 ms and raster GPU time of 0.4 ms on the Mac.
 - CI fix: run-stream.spec.ts start, cancel and reload opens the slide by its address, one page load fewer inside 30 s. The annotate scene rebuilds its model-outlines and task-objects overlays about 10 times in 5 s after ready, the likely cause of the remaining slow specs.
 - AINUC-013 follow-up: nuclei streaming spec checks frame count only on a real GPU and holds the longest main-thread task to 100 ms on SwiftShader (CI measured 66 ms), 33 ms on a real GPU.
 - VIEW-070 dashed AI proposals on the deck.gl WebGPU route through a WGSL dash extension, golden differs from Viv in 0.085% of pixels against the 0.1% bound, the 2% bound removed. Residual is Viv drawing the first ring edge twice.

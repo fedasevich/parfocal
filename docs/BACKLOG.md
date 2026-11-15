@@ -1722,7 +1722,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Refs doc 23.
   Size: M.
 
-- [ ] VIEW-040 · Viewer performance budgets
+- [x] VIEW-040 · Viewer performance budgets
   Budgets per format and RTT: time to first fitted image, time to sharp viewport after a jump, frame p95 while panning, heap ceiling.
   Done when CI enforces the CPU-side budgets on hosted runners, the frame and GPU-time budgets are checked by a manual run recorded as a result file ([ADR 0011](adr/0011-hosted-ci-only.md)), and an ADR records the numbers derived from the POC.
   Depends on TEST-006.
