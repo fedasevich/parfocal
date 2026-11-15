@@ -1,5 +1,6 @@
 import { Trans, useLingui } from "@lingui/react/macro";
 import { BottomSheet } from "@parfocal/ui/components/bottom-sheet";
+import { Icon } from "@parfocal/ui/components/icon";
 import { TabCount } from "@parfocal/ui/components/tabs";
 import type { SheetHeight, SheetPixels } from "@parfocal/ui/lib/sheet-gesture";
 import { cn } from "@parfocal/ui/lib/utils";
@@ -45,6 +46,7 @@ export function InspectorDock({
   children,
 }: InspectorDockProps) {
   const { t } = useLingui();
+  const popoutLabel = t`Open the side panel on the second monitor`;
   const [dragWidth, setDragWidth] = useState<number | null>(null);
   const edge = useRef<number>(0);
   const width = dragWidth ?? layout.width;
@@ -143,22 +145,26 @@ export function InspectorDock({
       />
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <div className="flex min-h-0 flex-1 overflow-hidden [&>aside]:w-full!">{children}</div>
-        <label className="flex cursor-pointer items-center gap-2 border-t border-l border-line bg-chrome px-3 py-1.5 text-caption text-fg-dim">
-          <input
-            type="checkbox"
-            checked={layout.hideWhilePanning}
-            onChange={(event) => onLayout({ hideWhilePanning: event.currentTarget.checked })}
-          />
-          <Trans>Hide while panning</Trans>
-        </label>
-        <button
-          type="button"
-          data-testid="inspector-popout"
-          onClick={() => void openPopout("inspector")}
-          className="cursor-pointer border-t border-l border-line bg-chrome px-3 py-1.5 text-left text-caption text-fg-dim hover:text-fg"
-        >
-          <Trans>Open the side panel on the second monitor</Trans>
-        </button>
+        <div className="flex items-center gap-2 border-t border-l border-line bg-chrome px-3 py-1.5 text-caption text-fg-dim">
+          <label className="flex min-w-0 flex-1 cursor-pointer items-center gap-2">
+            <input
+              type="checkbox"
+              checked={layout.hideWhilePanning}
+              onChange={(event) => onLayout({ hideWhilePanning: event.currentTarget.checked })}
+            />
+            <Trans>Hide while panning</Trans>
+          </label>
+          <button
+            type="button"
+            data-testid="inspector-popout"
+            aria-label={popoutLabel}
+            title={popoutLabel}
+            onClick={() => void openPopout("inspector")}
+            className="-my-1 grid size-5 shrink-0 cursor-pointer place-items-center rounded-md border-0 bg-transparent text-fg-faint hover:bg-chrome-2 hover:text-fg"
+          >
+            <Icon name="popout" size="xs" />
+          </button>
+        </div>
       </div>
     </div>
   );

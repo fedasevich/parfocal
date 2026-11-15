@@ -17,6 +17,7 @@ import {
 const runStreamOverlayPrefix = "run-stream:";
 const watchMs = 5000;
 const watchedStatuses = ["queued", "running"] as const;
+const finishedStatuses = ["done", "cancelled", "cancelling"] as const;
 const tilesOverlayId = `${runStreamOverlayPrefix}finished-tiles`;
 const tileMarkColor: Rgba = [64, 160, 220, 48];
 const classColors: readonly Rgba[] = [
@@ -34,13 +35,16 @@ export type RunStreamState = {
   readonly runId: string | null;
   readonly progress: RunProgress | null;
   readonly drawn: number;
+  readonly tiles: RunProgress["tiles"];
 };
 
 export type RunStreamControls = RunStreamState & {
   readonly cancel: () => void;
+  readonly watchNow: () => Promise<void>;
+  readonly loadLast: () => Promise<boolean>;
 };
 
-const idle: RunStreamState = { phase: "idle", runId: null, progress: null, drawn: 0 };
+const idle: RunStreamState = { phase: "idle", runId: null, progress: null, drawn: 0, tiles: [] };
 
 type Shown = { registration: OverlayRegistration; batch: PolygonBatch };
 
@@ -101,7 +105,7 @@ export function useRunStream(options: {
       const tiles = stream.current?.progress().tiles ?? [];
       show(tilesOverlayId, finishedTileMarks(tiles, tileMarkColor));
       const drawn = blocks.reduce((sum, block) => sum + block.batch.count, 0);
-      setState((before) => ({ ...before, drawn }));
+      setState((before) => ({ ...before, drawn, tiles }));
     },
     [show],
   );
@@ -142,25 +146,38 @@ export function useRunStream(options: {
     [projectId, clear, draw],
   );
 
-  useEffect(() => {
-    let stopped = false;
-    const query = new URLSearchParams({ slide_id: slideId, limit: "1" });
-    for (const status of watchedStatuses) query.append("status", status);
-    const look = async () => {
-      if (stopped || stream.current !== null) return;
+  const find = useCallback(
+    async (statuses: readonly string[]): Promise<string | null> => {
+      const query = new URLSearchParams({ slide_id: slideId, limit: "1" });
+      for (const status of statuses) query.append("status", status);
       const response = await fetch(`/api/projects/${projectId}/model-runs?${query}`, {
         credentials: "same-origin",
       }).catch(() => null);
-      if (stopped || response === null || !response.ok) return;
+      if (response === null || !response.ok) return null;
       const runs = (await response.json().catch(() => [])) as unknown;
-      if (!Array.isArray(runs)) return;
+      if (!Array.isArray(runs)) return null;
       const found = (runs as readonly Partial<ListedRun>[]).find(
         (run) =>
           typeof run.id === "string" &&
           run.slide_id === slideId &&
-          watchedStatuses.some((status) => status === run.status),
+          statuses.some((status) => status === run.status),
       );
-      if (found?.id !== undefined) attach(found.id);
+      return found?.id ?? null;
+    },
+    [projectId, slideId],
+  );
+
+  const watchNow = useCallback(async () => {
+    if (stream.current !== null) return;
+    const id = await find(watchedStatuses);
+    if (id !== null) attach(id);
+  }, [find, attach]);
+
+  useEffect(() => {
+    let stopped = false;
+    const look = async () => {
+      if (stopped) return;
+      await watchNow();
     };
     void look();
     const timer = setInterval(() => void look(), watchMs);
@@ -168,13 +185,22 @@ export function useRunStream(options: {
       stopped = true;
       clearInterval(timer);
     };
-  }, [projectId, slideId, attach]);
+  }, [watchNow]);
+
+  const loadLast = useCallback(async (): Promise<boolean> => {
+    if (stream.current !== null) return true;
+    const id = await find(finishedStatuses);
+    if (id === null) return false;
+    attached.current.delete(id);
+    attach(id);
+    return true;
+  }, [find, attach]);
 
   const cancel = useCallback(() => {
     void stream.current?.cancel();
   }, []);
 
-  return { ...state, cancel };
+  return { ...state, cancel, watchNow, loadLast };
 }
 
 type ListedRun = { id: string; slide_id: string; status: string };
@@ -182,5 +208,5 @@ type ListedRun = { id: string; slide_id: string; status: string };
 export function runStreamVisible(state: RunStreamState): boolean {
   if (state.phase === "streaming") return true;
   if (state.phase === "failed") return state.progress !== null;
-  return state.phase === "ended" && state.progress?.status === "cancelled";
+  return state.phase === "ended" && state.progress !== null;
 }

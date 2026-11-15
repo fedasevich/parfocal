@@ -1,10 +1,18 @@
 import { Trans, useLingui } from "@lingui/react/macro";
+import { useGetMe, useGetProject } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
+import { useCallback } from "react";
+import { okData } from "../screens/placeholder.tsx";
+import { canTuneRun, type ViewRect, viewScopeOf } from "./run-options.ts";
+import { RunTilesMap } from "./run-tiles-map.tsx";
+import { StartRunPanel } from "./start-run-panel.tsx";
 import { type RunStreamControls, runStreamVisible, useRunStream } from "./use-run-stream.ts";
-import type { ViewerEngine } from "./viewer-engine.ts";
+import { type ViewerEngine, viewArea } from "./viewer-engine.ts";
 
 type RunStreamLayerProps = {
   readonly engine: ViewerEngine;
+  readonly stage: HTMLElement | null;
+  readonly selection: ViewRect | null;
   readonly projectId: string | undefined;
   readonly slideId: string;
 };
@@ -48,7 +56,13 @@ function Status({ controls }: { controls: RunStreamControls }) {
   );
 }
 
-function RunStreamPanel({ controls }: { controls: RunStreamControls }) {
+function RunStreamPanel({
+  controls,
+  slide,
+}: {
+  controls: RunStreamControls;
+  slide: { readonly width: number; readonly height: number } | null;
+}) {
   const { t } = useLingui();
   const cancelling = controls.progress?.cancelRequested === true;
   return (
@@ -61,6 +75,7 @@ function RunStreamPanel({ controls }: { controls: RunStreamControls }) {
       data-done={controls.progress?.done ?? 0}
       className="pointer-events-auto absolute bottom-3 left-3 z-10 flex items-center gap-2 rounded-md border border-line bg-chrome px-3 py-2 text-caption shadow-sm"
     >
+      <RunTilesMap tiles={controls.tiles} slide={slide} />
       <span role="status" data-testid="run-stream-status">
         <Status controls={controls} />
       </span>
@@ -79,12 +94,38 @@ function RunStreamPanel({ controls }: { controls: RunStreamControls }) {
 }
 
 function ProjectRunStreamLayer(props: RunStreamLayerProps & { readonly projectId: string }) {
-  const controls = useRunStream({
-    engine: props.engine,
-    projectId: props.projectId,
-    slideId: props.slideId,
+  const { engine, stage, projectId, slideId, selection } = props;
+  const me = okData(useGetMe().data);
+  const project = okData(useGetProject(projectId).data);
+  const canTune = canTuneRun({
+    tenantRole: me?.workspaces.find((item) => item.tenant_id === me.active_tenant_id)?.role,
+    projectRole: project?.my_role,
   });
-  return runStreamVisible(controls) ? <RunStreamPanel controls={controls} /> : null;
+  const controls = useRunStream({ engine, projectId, slideId });
+  const currentView = useCallback((): ViewRect | null => {
+    const slide = engine.getSlide();
+    if (slide === null || stage === null) return null;
+    const { width, height } = stage.getBoundingClientRect();
+    return viewScopeOf(viewArea(engine.getCamera(), { width, height }), slide);
+  }, [engine, stage]);
+  return (
+    <>
+      {runStreamVisible(controls) ? (
+        <RunStreamPanel controls={controls} slide={engine.getSlide()} />
+      ) : null}
+      {controls.phase === "streaming" ? null : (
+        <StartRunPanel
+          projectId={projectId}
+          slideId={slideId}
+          currentView={currentView}
+          selection={selection}
+          canTune={canTune}
+          onStarted={() => void controls.watchNow()}
+          onLoadLast={controls.loadLast}
+        />
+      )}
+    </>
+  );
 }
 
 export function RunStreamLayer(props: RunStreamLayerProps) {

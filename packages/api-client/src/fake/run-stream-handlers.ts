@@ -28,6 +28,7 @@ type StreamRun = {
   reads: number;
   frozen: number | null;
   cancelPolls: number;
+  readonly ordering: string;
 };
 
 export type FakeRunCell = {
@@ -37,12 +38,37 @@ export type FakeRunCell = {
   readonly ring: readonly (readonly [number, number])[];
 };
 
+const storageKey = "parfocal.fake.run-streams";
 const runs = new Map<string, StreamRun>();
 let started = 0;
+let loaded = false;
+
+const storage = (): Storage | null =>
+  typeof sessionStorage === "undefined" ? null : sessionStorage;
+
+function load(): void {
+  if (loaded) return;
+  loaded = true;
+  const raw = storage()?.getItem(storageKey) ?? null;
+  if (raw === null) return;
+  try {
+    const saved = JSON.parse(raw) as { started: number; runs: StreamRun[] };
+    started = saved.started;
+    for (const run of saved.runs) runs.set(run.id, run);
+  } catch {
+    storage()?.removeItem(storageKey);
+  }
+}
+
+function save(): void {
+  storage()?.setItem(storageKey, JSON.stringify({ started, runs: [...runs.values()] }));
+}
 
 export function resetFakeRunStreams(): void {
   runs.clear();
   started = 0;
+  loaded = true;
+  storage()?.removeItem(storageKey);
 }
 
 const streamSetOf = (index: number) => `00000000-0000-4000-8030-${String(index).padStart(12, "0")}`;
@@ -88,7 +114,10 @@ function modelRunOf(run: StreamRun): ModelRun {
     error_code: null,
     pause_reason: null,
     scope: run.scope,
-    parameters: { detector: { name: "hovernet", version: "1" } },
+    parameters: {
+      detector: { name: "hovernet", version: "1" },
+      ordering: run.ordering === "tumor-first" ? "tumor-first" : "raster",
+    },
     result_set_id: run.resultSetId,
     started_by_user_id: null,
     attempts: 1,
@@ -175,6 +204,7 @@ function tileCells(unit: number, box: Box | null): FakeRunCell[] {
 }
 
 export function fakeRunCells(resultSetId: string): FakeRunCell[] | null {
+  load();
   const run = [...runs.values()].find((item) => item.resultSetId === resultSetId);
   if (run === undefined || statusOf(run) !== "done") return null;
   return run.units.flatMap((unit) => tileCells(unit, run.box));
@@ -243,6 +273,7 @@ export function runStreamHandlers(): RequestHandler[] {
   return [
     http.get<{ projectId: string }>("*/api/projects/:projectId/model-runs", ({ request }) => {
       if (fakeViewerScene() !== "streaming") return undefined;
+      load();
       const query = new URL(request.url).searchParams;
       const slideId = query.get("slide_id");
       const statuses = query.getAll("status");
@@ -259,6 +290,7 @@ export function runStreamHandlers(): RequestHandler[] {
         const draft = (await request.clone().json()) as ModelRunDraft;
         const slideId = draft.slide_ids[0];
         if (slideId === undefined) return undefined;
+        load();
         started += 1;
         const box = boxOfScope(draft.scope);
         const run: StreamRun = {
@@ -273,18 +305,22 @@ export function runStreamHandlers(): RequestHandler[] {
           reads: 0,
           frozen: null,
           cancelPolls: 0,
+          ordering: draft.parameters.ordering ?? "raster",
         };
         runs.set(run.id, run);
+        save();
         return HttpResponse.json([modelRunOf(run)], { status: 201 });
       },
     ),
     http.get<RunParams>(
       "*/api/projects/:projectId/model-runs/:runId/areas",
       ({ params, request }) => {
+        load();
         const run = runs.get(String(params.runId));
         if (run === undefined) return undefined;
         if (run.frozen === null) run.reads += 1;
         else run.cancelPolls += 1;
+        save();
         const after = Number(new URL(request.url).searchParams.get("after") ?? 0) || 0;
         return HttpResponse.json(areasOf(run, after));
       },
@@ -292,6 +328,7 @@ export function runStreamHandlers(): RequestHandler[] {
     http.get<RunParams & { unit: string }>(
       "*/api/projects/:projectId/model-runs/:runId/tiles/:unit",
       ({ params }) => {
+        load();
         const run = runs.get(String(params.runId));
         if (run === undefined) return undefined;
         const unit = Number(params.unit);
@@ -312,12 +349,15 @@ export function runStreamHandlers(): RequestHandler[] {
       },
     ),
     http.post<RunParams>("*/api/projects/:projectId/model-runs/:runId/cancel", ({ params }) => {
+      load();
       const run = runs.get(String(params.runId));
       if (run === undefined) return undefined;
       if (run.frozen === null && statusOf(run) === "running") run.frozen = finished(run);
+      save();
       return HttpResponse.json(modelRunOf(run));
     }),
     http.get<RunParams>("*/api/projects/:projectId/model-runs/:runId", ({ params }) => {
+      load();
       const run = runs.get(String(params.runId));
       return run === undefined ? undefined : HttpResponse.json(modelRunOf(run));
     }),

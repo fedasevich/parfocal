@@ -198,3 +198,30 @@ test("a selection run of an annotate task streams only its tiles and joins as AI
   assert.equal(((await fixed.json()) as { origin: string }).origin, "ai-edited");
   resetFakeSharedLayer();
 });
+
+test("a view run echoes its scope and ordering and is listed by status", async () => {
+  setFakeViewerScene("streaming");
+  const scope = { kind: "view", x: 10, y: 20, width: 300, height: 200 };
+  const response = await fetch(`/api/projects/${project}/model-runs`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      slide_ids: [slide],
+      scope,
+      parameters: { detector: { name: "hovernet" }, ordering: "tumor-first" },
+    }),
+  });
+  const [run] = (await response.json()) as {
+    id: string;
+    scope: unknown;
+    parameters: { ordering: string };
+  }[];
+  assert.deepEqual(run?.scope, scope);
+  assert.equal(run?.parameters.ordering, "tumor-first");
+  const listed = (await (
+    await fetch(
+      `/api/projects/${project}/model-runs?slide_id=${slide}&status=done&status=cancelled`,
+    )
+  ).json()) as unknown[];
+  assert.deepEqual(listed, []);
+});
