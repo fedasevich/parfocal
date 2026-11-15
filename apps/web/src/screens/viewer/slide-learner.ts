@@ -37,11 +37,26 @@ export type LearnerInput = {
   decided: (object: string) => boolean;
 };
 
-export type PooledFeatureOf = (cell: LearnerCell) => Float32Array | null;
+export type PooledFeaturesOf = (
+  cells: readonly LearnerCell[],
+) => Promise<ReadonlyMap<string, Float32Array>>;
+
+export function syncFeatures(
+  featureOf: (cell: LearnerCell) => Float32Array | null,
+): PooledFeaturesOf {
+  return (cells) => {
+    const found = new Map<string, Float32Array>();
+    for (const cell of cells) {
+      const feature = featureOf(cell);
+      if (feature !== null) found.set(cell.object, feature);
+    }
+    return Promise.resolve(found);
+  };
+}
 
 export type SlideLearnerOptions = {
   client: LearnerClient;
-  pooledFeatureOf: PooledFeatureOf;
+  pooledFeaturesOf: PooledFeaturesOf;
   classKeys?: readonly string[];
   recheckAfter?: number;
 };
@@ -112,7 +127,8 @@ export function undoneChanges(
 }
 
 export function createSlideLearner(options: SlideLearnerOptions): SlideLearner {
-  const { client, pooledFeatureOf } = options;
+  const { client, pooledFeaturesOf } = options;
+  const pooled = new Map<string, Float32Array | null>();
   const classKeys = options.classKeys ?? learnerClassKeys;
   const threshold = options.recheckAfter ?? learnerRecheckAfter;
   const listeners = new Set<(view: LearnerView) => void>();
@@ -143,9 +159,16 @@ export function createSlideLearner(options: SlideLearnerOptions): SlideLearner {
   };
 
   const inputOf = (cell: LearnerCell): Float32Array | null => {
-    const pooled = pooledFeatureOf(cell);
-    if (pooled === null) return null;
-    return learnerInput(pooled, typerLogProbabilities(typerProbabilities(cell), classKeys));
+    const feature = pooled.get(cell.object);
+    if (feature === undefined || feature === null) return null;
+    return learnerInput(feature, typerLogProbabilities(typerProbabilities(cell), classKeys));
+  };
+
+  const ensureFeatures = async (wanted: readonly LearnerCell[]) => {
+    const missing = wanted.filter((cell) => !pooled.has(cell.object));
+    if (missing.length === 0) return;
+    const found = await pooledFeaturesOf(missing);
+    for (const cell of missing) pooled.set(cell.object, found.get(cell.object) ?? null);
   };
 
   const ensureOpen = async (width: number) => {
@@ -178,6 +201,12 @@ export function createSlideLearner(options: SlideLearnerOptions): SlideLearner {
         await client.forget(object);
         taught.delete(object);
       }
+      await ensureFeatures(
+        [...labels.keys()].flatMap((object) => {
+          const cell = byObject.get(object);
+          return cell === undefined ? [] : [cell];
+        }),
+      );
       for (const [object, label] of labels) {
         if (taught.get(object) === label) continue;
         const cell = byObject.get(object);
@@ -194,6 +223,7 @@ export function createSlideLearner(options: SlideLearnerOptions): SlideLearner {
       if (corrections - since >= threshold && opened !== null) {
         checkedAt = corrections;
         const open = input.cells.filter((cell) => !input.decided(cell.object));
+        await ensureFeatures(open);
         const features = open.map(inputOf);
         const ready = open.flatMap((cell, index) => {
           const feature = features[index];

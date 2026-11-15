@@ -14,6 +14,7 @@ import {
   type LearnerInput,
   learnerClassKeys,
   retypedCells,
+  syncFeatures,
 } from "../src/screens/viewer/slide-learner.ts";
 
 type Listener = (event: { data: never }) => void;
@@ -80,7 +81,10 @@ function inputOf(labels: Map<string, string>, decided: Set<string>): LearnerInpu
 }
 
 function fresh() {
-  return createSlideLearner({ client: createLearnerClient(() => linkedWorker()), pooledFeatureOf });
+  return createSlideLearner({
+    client: createLearnerClient(() => linkedWorker()),
+    pooledFeaturesOf: syncFeatures(pooledFeatureOf),
+  });
 }
 
 describe("the per-slide learner in the viewer", () => {

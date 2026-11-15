@@ -4,7 +4,7 @@ import {
   createSlideLearner,
   type LearnerInput,
   type LearnerView,
-  type PooledFeatureOf,
+  type PooledFeaturesOf,
   type SlideLearner,
 } from "./slide-learner.ts";
 
@@ -18,7 +18,7 @@ export const emptyLearnerView: LearnerView = {
 type UseSlideLearner = {
   slideKey: string;
   enabled: boolean;
-  pooledFeatureOf: PooledFeatureOf;
+  pooledFeaturesOf: PooledFeaturesOf;
   input: LearnerInput;
   onView: (view: LearnerView) => void;
   recheckAfter?: number;
@@ -28,21 +28,21 @@ type UseSlideLearner = {
 export function useSlideLearner({
   slideKey,
   enabled,
-  pooledFeatureOf,
+  pooledFeaturesOf,
   input,
   onView,
   recheckAfter,
   createClient = createLearnerClient,
 }: UseSlideLearner) {
   const [owned, setOwned] = useState<{ slideKey: string; learner: SlideLearner } | null>(null);
-  const latest = useRef({ onView, pooledFeatureOf, createClient });
-  latest.current = { onView, pooledFeatureOf, createClient };
+  const latest = useRef({ onView, pooledFeaturesOf, createClient });
+  latest.current = { onView, pooledFeaturesOf, createClient };
 
   useEffect(() => {
     if (!enabled) return;
     const made = createSlideLearner({
       client: latest.current.createClient(),
-      pooledFeatureOf: (cell) => latest.current.pooledFeatureOf(cell),
+      pooledFeaturesOf: (cells) => latest.current.pooledFeaturesOf(cells),
       ...(recheckAfter === undefined ? {} : { recheckAfter }),
     });
     const stop = made.subscribe((view) => latest.current.onView(view));

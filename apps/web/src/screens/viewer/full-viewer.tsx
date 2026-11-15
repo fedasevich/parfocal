@@ -167,7 +167,8 @@ import {
   viewerFindingsLayout,
 } from "./findings-data.ts";
 import { layerDrawing, setColours } from "./layer-views.tsx";
-import { fixturePooledFeature } from "./learner-fixture-features.ts";
+import { useLearnerEmbeddings } from "./learner-embeddings.ts";
+import { fixtureFeatures } from "./learner-fixture-features.ts";
 import { confidenceTintOf, objectStyle } from "./object-draw.ts";
 import { ObjectTablePanel } from "./object-table.tsx";
 import { tableColumns, tableCsv, tableRows } from "./object-table-rows.ts";
@@ -682,7 +683,9 @@ function ViewerBody({
   );
   const openCells = cells.filter((cell) => !answer(cell.object));
   const typerCells = typerObjects.filter((item) => item.kind === "cell");
-  const learning = paged === null && !setup.issue && typerCells.length > 0;
+  const embeddings = useLearnerEmbeddings();
+  const pooledFeaturesOf = paged === null ? fixtureFeatures : embeddings;
+  const learning = pooledFeaturesOf !== null && !setup.issue && typerCells.length > 0;
   const learnerLabels = new Map<string, string>();
   for (const cell of cells) {
     const picked = chosenType(style, cell, session.classes, answer(cell.object));
@@ -692,7 +695,7 @@ function ViewerBody({
   const learner = useSlideLearner({
     slideKey: slideId,
     enabled: learning,
-    pooledFeatureOf: fixturePooledFeature,
+    pooledFeaturesOf: pooledFeaturesOf ?? fixtureFeatures,
     input: {
       cells: typerCells,
       labels: learnerLabels,
