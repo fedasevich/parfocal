@@ -8,8 +8,19 @@ const plan = (change: Partial<LabSettings>) => labViewerPlan({ ...labDefaults, .
 test("the renderer choice keeps Viv without a note and falls back with one for unbuilt routes", () => {
   assert.equal(plan({ renderer: "viv" }).routeNote, null);
   assert.match(plan({ renderer: "webgpu" }).routeNote ?? "", /WebGPU route is not built yet/);
-  assert.match(plan({ renderer: "deck" }).routeNote ?? "", /deck\.gl route is not built yet/);
-  assert.equal(plan({ renderer: "deck" }).route, "viv");
+  assert.equal(plan({ renderer: "deck" }).routeNote, null);
+  assert.equal(plan({ renderer: "deck" }).route, "deck-webgpu");
+  assert.equal(plan({ renderer: "viv" }).route, "viv");
+});
+
+test("the deck.gl choice says so when the slide stays on Viv", () => {
+  const settings = { ...labDefaults, renderer: "deck" as const };
+  assert.equal(labViewerPlan(settings, "deck-webgpu").routeNote, null);
+  assert.match(
+    labViewerPlan(settings, "viv").routeNote ?? "",
+    /deck\.gl route could not show this slide\. Showing Viv/,
+  );
+  assert.equal(labViewerPlan({ ...labDefaults, renderer: "viv" }, "viv").routeNote, null);
 });
 
 test("the culling choice decides whether the viewer culls", () => {

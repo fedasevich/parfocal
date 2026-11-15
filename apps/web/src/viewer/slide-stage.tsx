@@ -51,6 +51,7 @@ import {
   type LiveGuard,
   useSavedAnnotations,
 } from "../annotations/use-saved-annotations.ts";
+import { provideDebug } from "../debug-handle.ts";
 import { legendDeviceOf } from "../devices/device-legend.ts";
 import { DeviceLegend } from "../devices/device-legend.tsx";
 import { engineWheelMode, navigationEvent, readNavigation } from "../devices/navigation.ts";
@@ -77,13 +78,14 @@ import { useSavedOutlineMode } from "../shell/outline-mode-setting.ts";
 import { useResolvedSettings } from "../shell/resolved-settings.ts";
 import { useToolsLayout } from "../shell/tools-layout.ts";
 import { AnnotateTaskPanel } from "./annotate-task-panel.tsx";
-import { followLabPrefetch, labRouteOptions } from "./lab-route.ts";
+import { followLabPrefetch, labRouteOptions, labRouteSource } from "./lab-route.ts";
 import { loadViewerEngine } from "./load-engine.ts";
 import { MagnificationControl, type ViewerModule } from "./magnification-control.tsx";
 import { ObjectDrawLayer } from "./object-draw-layer.tsx";
 import { describeOpenFailure, type OpenFailure } from "./open-failure.ts";
 import { OutlineLayer } from "./outline-layer.tsx";
 import { type OutlineModeChoice, outlineModeChoices, outlineModeLabels } from "./outline-mode.ts";
+import { type EngineRouteId, pickRoutes, type RoutePicker } from "./route-picker.ts";
 import { RunStreamLayer } from "./run-stream-layer.tsx";
 import type { SlideAreaEntry } from "./slide-areas.ts";
 import { useSlideBrightness } from "./slide-brightness.ts";
@@ -125,6 +127,7 @@ type Session = {
   readonly module: ViewerModule;
   readonly open: SmartServicesContext["open"];
   readonly route: VivRoute | null;
+  readonly shownRoute: EngineRouteId;
 };
 
 function ViewerKeys({
@@ -536,10 +539,17 @@ function OpenedSlide({
           identifiedFormat: grant.format ?? null,
         });
       };
+      let picker: RoutePicker | null = null;
+      const alternateError = (error: Error) => {
+        const live = viewport.liveRoute() as { failure?: () => Error | null } | null;
+        if (live?.failure?.() != null) void picker?.fallBack(error);
+        else console.warn(error);
+      };
       const viewport = engine.mountSlideViewport({
         container,
         slideId,
         route: { onError: fail, onTileError: () => {}, ...labRouteOptions() },
+        deckWebGpu: { onError: alternateError, onTileError: () => {} },
         input: {
           wheelMode: engineWheelMode(readNavigation().wheel),
           doubleClick: () => doubleClick.current,
@@ -553,20 +563,57 @@ function OpenedSlide({
       };
       window.addEventListener(navigationEvent, followNavigation);
       let unfollow = () => {};
+      const followRoute = () => {
+        unfollow();
+        unfollow = followLabPrefetch(viewport.route());
+        if (disposed) return;
+        setOpened({ engine: viewport.engine, route: viewport.route() });
+        setSession((previous) =>
+          previous === null
+            ? null
+            : { ...previous, route: viewport.route(), shownRoute: viewport.shownRoute() },
+        );
+      };
+      const unprovide = provideDebug({ getRoute: () => viewport.shownRoute() });
       dispose = () => {
         window.removeEventListener(navigationEvent, followNavigation);
+        unprovide();
+        picker?.dispose();
         unfollow();
         viewport.dispose();
       };
+      const settleShown = async (): Promise<void> => {
+        try {
+          await viewport.liveRoute()?.whenIdle();
+        } catch (error) {
+          if (viewport.shownRoute() === "viv") throw error;
+          await picker?.fallBack(error instanceof Error ? error : new Error(String(error)));
+          await viewport.liveRoute()?.whenIdle();
+        }
+      };
       viewport.ready
         .then(() => {
-          if (!disposed) setOpened({ engine: viewport.engine, route: viewport.route() });
-          unfollow = followLabPrefetch(viewport.route());
-          return viewport.route()?.whenIdle();
+          if (disposed) return;
+          picker = pickRoutes({
+            viewport,
+            source: labRouteSource,
+            onShown: (_shown, refused) => {
+              if (refused !== null) console.warn(refused);
+              followRoute();
+            },
+          });
+          followRoute();
+          return picker.settled.then(settleShown);
         })
         .then(() => {
           if (disposed) return;
-          setSession({ engine: viewport.engine, module: engine, open, route: viewport.route() });
+          setSession({
+            engine: viewport.engine,
+            module: engine,
+            open,
+            route: viewport.route(),
+            shownRoute: viewport.shownRoute(),
+          });
           setPhase({ state: "ready", fittedMs: performance.now() - startedAt });
         })
         .catch(fail);
@@ -620,6 +667,7 @@ function OpenedSlide({
         data-testid="slide-stage"
         data-state={phase.state}
         data-fitted-ms={phase.state === "ready" ? Math.round(phase.fittedMs) : undefined}
+        data-renderer-route={session?.shownRoute}
         data-tool={tool}
         data-workspace={workspace}
         data-tools={toolsLayout}
@@ -642,7 +690,11 @@ function OpenedSlide({
         {phase.state === "failed" ? null : <TileHintChip route={opened?.route ?? null} />}
         {session && developerMode ? (
           <Suspense fallback={null}>
-            <LabLayer engine={session.engine} route={session.route} />
+            <LabLayer
+              engine={session.engine}
+              route={session.route}
+              shownRoute={session.shownRoute}
+            />
           </Suspense>
         ) : null}
         {session && hostNode ? (

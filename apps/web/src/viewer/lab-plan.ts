@@ -1,6 +1,7 @@
 import { type LabSettings, nucleiCountOf } from "../lab/lab-settings.ts";
+import { type EngineRouteId, engineRouteOf } from "./route-picker.ts";
 
-export const builtRenderers: readonly LabSettings["renderer"][] = ["viv"];
+export const builtRenderers: readonly LabSettings["renderer"][] = ["viv", "deck"];
 
 const rendererNames: Record<LabSettings["renderer"], string> = {
   viv: "Viv",
@@ -8,8 +9,16 @@ const rendererNames: Record<LabSettings["renderer"], string> = {
   deck: "deck.gl",
 };
 
+const routeNoteOf = (settings: LabSettings, shown: EngineRouteId | null): string | null => {
+  if (!builtRenderers.includes(settings.renderer)) {
+    return `The ${rendererNames[settings.renderer]} route is not built yet. Showing Viv.`;
+  }
+  if (shown === null || shown === engineRouteOf[settings.renderer]) return null;
+  return `The ${rendererNames[settings.renderer]} route could not show this slide. Showing Viv.`;
+};
+
 export type LabViewerPlan = {
-  readonly route: "viv";
+  readonly route: EngineRouteId;
   readonly routeNote: string | null;
   readonly cull: boolean;
   readonly detailLevel: LabSettings["detailLevel"];
@@ -19,13 +28,13 @@ export type LabViewerPlan = {
   readonly pauseModels: boolean;
 };
 
-export function labViewerPlan(settings: LabSettings): LabViewerPlan {
-  const built = builtRenderers.includes(settings.renderer);
+export function labViewerPlan(
+  settings: LabSettings,
+  shown: EngineRouteId | null = null,
+): LabViewerPlan {
   return {
-    route: "viv",
-    routeNote: built
-      ? null
-      : `The ${rendererNames[settings.renderer]} route is not built yet. Showing Viv.`,
+    route: engineRouteOf[settings.renderer],
+    routeNote: routeNoteOf(settings, shown),
     cull: settings.culling !== "none",
     detailLevel: settings.detailLevel,
     nucleiCount: nucleiCountOf(settings),
