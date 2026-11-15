@@ -1,0 +1,40 @@
+name: browsers
+
+on:
+  schedule:
+    - cron: "47 2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: browsers-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  TURBO_TELEMETRY_DISABLED: "1"
+
+jobs:
+  viewer:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-workspace
+        with:
+          cache-key: browsers-viewer
+      - run: google-chrome --version
+      - name: Install Firefox and WebKit with their system libraries
+        run: pnpm --filter @parfocal/viewer-engine exec playwright install --with-deps firefox webkit
+      - name: Viewer on Chromium, Firefox and WebKit
+        run: pnpm --filter @parfocal/viewer-engine test:browsers
+      - if: always()
+        run: node packages/viewer-engine/browser-matrix/summary.ts packages/viewer-engine/test-results/browser-matrix.json >> "$GITHUB_STEP_SUMMARY"
+      - if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: browser-matrix
+          path: packages/viewer-engine/test-results/browser-matrix.json
+          retention-days: 30
+          if-no-files-found: ignore
