@@ -6,9 +6,9 @@ Last consolidated: 2026-11-15
 
 ## In progress
 
-The night run of 2026-11-14 to 2026-11-15 built locally and touched no production. Two things come first now: SKEL-001 (production environment exists), which waits for the owner's readiness signal, and TEST-044 (web specs green on the built app), because main's CI is red in the web shards since the suite moved to a built app. `python3 scripts/board.py brief` lists the claimed tasks and the review column.
+A cloud run on 2026-11-15 on the branch `claude/quirky-pascal-htseil` handed back 20 tasks without browser runs and touched no production, and the owner dropped staging for good ([ADR 0331](adr/0331-no-staging-environment.md), no staging environment). The branch is not merged to `main` yet. Two things come first now: SKEL-001 (production environment exists), which waits for the owner's readiness signal, and TEST-044 (web specs green on the built app), where `font-preload.spec.ts` still fails on the built app. Most of the run's tasks sit in review until a green ci run confirms the specs they wrote. `python3 scripts/board.py brief` lists the claimed tasks and the review column.
 
-The owner's open questions are decisions 105 to 109 and the Mac checks in [decisions.md](decisions.md), which starts with what to do next in order.
+The owner's open questions are decisions 105 to 110 and the Mac checks in [decisions.md](decisions.md), which starts with what to do next in order.
 
 ## Where we are now
 
