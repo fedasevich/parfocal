@@ -3,6 +3,7 @@ import { useLabSettings } from "../lab/lab-settings.ts";
 import { generateNuclei, nucleiChipFor } from "../lab/synthetic-data.ts";
 import { detailDraw, insideView, labViewerPlan } from "./lab-plan.ts";
 import PerformanceHud from "./performance-hud.tsx";
+import type { EngineRouteId } from "./route-picker.ts";
 import type { ViewerEngine, VivRoute } from "./viewer-engine.ts";
 
 const densityCell = 24;
@@ -16,12 +17,14 @@ const noReadout: Readout = { drawn: 0, zoom: 0, queued: 0, used: 0 };
 export default function LabLayer({
   engine,
   route,
+  shownRoute,
 }: {
   engine: ViewerEngine;
   route: VivRoute | null;
+  shownRoute: EngineRouteId | null;
 }) {
   const settings = useLabSettings();
-  const plan = useMemo(() => labViewerPlan(settings), [settings]);
+  const plan = useMemo(() => labViewerPlan(settings, shownRoute), [settings, shownRoute]);
   const canvas = useRef<HTMLCanvasElement>(null);
   const [readout, setReadout] = useState<Readout>(noReadout);
   const slide = engine.getSlide();

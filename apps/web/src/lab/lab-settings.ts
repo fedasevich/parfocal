@@ -99,10 +99,21 @@ export function resetLabSettings(): void {
   publish(labDefaults);
 }
 
+const followOtherTabs = (event: StorageEvent) => {
+  if (event.key !== storageKey && event.key !== null) return;
+  current = null;
+  for (const notify of listeners) notify();
+};
+
+const storageEvents = () =>
+  typeof window !== "undefined" && typeof window.addEventListener === "function" ? window : null;
+
 export function subscribeLabSettings(notify: () => void): () => void {
+  if (listeners.size === 0) storageEvents()?.addEventListener("storage", followOtherTabs);
   listeners.add(notify);
   return () => {
     listeners.delete(notify);
+    if (listeners.size === 0) storageEvents()?.removeEventListener("storage", followOtherTabs);
   };
 }
 

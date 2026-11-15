@@ -1,3 +1,4 @@
+import hashlib
 import uuid
 from collections import defaultdict
 from collections.abc import Callable, Mapping, Sequence
@@ -10,6 +11,9 @@ from numpy.typing import NDArray
 from parfocal_ml.training_rounds import ReviewedRows, checked_name
 
 STARTS = "starts-"
+SHAPES = "shapes"
+SHAPE_DIGITS = 2
+SHAPE_HEX = 16
 
 
 @dataclass(frozen=True)
@@ -21,10 +25,21 @@ class ReviewedNucleus:
     reviewer: str
     final_class: str | None
     rejected: bool = False
+    outline: tuple[float, ...] = ()
+    reshaped: bool = False
+    views: int = 1
+    probabilities: tuple[float, ...] | None = None
 
     @property
     def key(self) -> str:
         return f"{self.task}:{self.kind}:{self.number}"
+
+    @property
+    def shape(self) -> str:
+        if not self.outline:
+            return ""
+        rounded = np.round(np.asarray(self.outline, np.float64), SHAPE_DIGITS)
+        return hashlib.sha256(rounded.tobytes()).hexdigest()[:SHAPE_HEX]
 
 
 @dataclass(frozen=True)
@@ -41,6 +56,10 @@ class SlideFeatures:
     keys: tuple[str, ...]
     features: NDArray[np.float32]
     starts: Mapping[int, NDArray[np.float32]]
+    shapes: tuple[str, ...] = ()
+
+    def shape_of(self, row: int) -> str:
+        return self.shapes[row] if self.shapes else ""
 
 
 @dataclass(frozen=True)
@@ -92,6 +111,9 @@ class FeatureStore:
                     for name in stored.files
                     if name.startswith(STARTS)
                 },
+                shapes=tuple(str(shape) for shape in stored[SHAPES])
+                if SHAPES in stored.files
+                else (),
             )
 
     def save(
@@ -104,28 +126,91 @@ class FeatureStore:
         arrays: dict[str, NDArray[np.generic]] = {
             "keys": np.asarray(found.keys, dtype=np.str_),
             "features": found.features,
+            SHAPES: np.asarray(
+                [found.shape_of(row) for row in range(len(found.keys))], dtype=np.str_
+            ),
         }
         arrays.update({f"{STARTS}{views}": start for views, start in found.starts.items()})
         np.savez(draft, allow_pickle=False, **arrays)
         draft.replace(target)
 
 
-def merged(old: SlideFeatures | None, keys: Sequence[str], pooled: Pooled) -> SlideFeatures:
+def merged(
+    old: SlideFeatures | None,
+    keys: Sequence[str],
+    pooled: Pooled,
+    shapes: Sequence[str] | None = None,
+) -> SlideFeatures:
     features = np.asarray(pooled.features, np.float32)
     starts = {views: np.asarray(start, np.float32) for views, start in pooled.starts.items()}
-    if len(features) != len(keys) or any(len(start) != len(keys) for start in starts.values()):
+    fresh = tuple(shapes) if shapes is not None else ("",) * len(keys)
+    if (
+        len(features) != len(keys)
+        or len(fresh) != len(keys)
+        or any(len(start) != len(keys) for start in starts.values())
+    ):
         raise ValueError("the pooler must return one row per nucleus")
     if old is None:
-        return SlideFeatures(tuple(keys), features, starts)
+        return SlideFeatures(tuple(keys), features, starts, fresh)
     if set(old.starts) != set(starts):
         raise ValueError("the pooler returned other view counts than the stored ones")
     if old.features.shape[1] != features.shape[1]:
         raise ValueError("the pooler returned another feature width than the stored one")
+    rows = {key: row for row, key in enumerate(old.keys)}
+    all_features = old.features.copy()
+    all_starts = {views: old.starts[views].copy() for views in starts}
+    all_shapes = [old.shape_of(row) for row in range(len(old.keys))]
+    added: list[int] = []
+    for at, key in enumerate(keys):
+        row = rows.get(key)
+        if row is None:
+            added.append(at)
+            continue
+        all_features[row] = features[at]
+        for views, start in starts.items():
+            all_starts[views][row] = start[at]
+        all_shapes[row] = fresh[at]
     return SlideFeatures(
-        (*old.keys, *keys),
-        np.vstack([old.features, features]),
-        {views: np.vstack([old.starts[views], start]) for views, start in starts.items()},
+        (*old.keys, *(keys[at] for at in added)),
+        np.vstack([all_features, features[added]]),
+        {views: np.vstack([all_starts[views], start[added]]) for views, start in starts.items()},
+        (*all_shapes, *(fresh[at] for at in added)),
     )
+
+
+def chosen(nuclei: Sequence[ReviewedNucleus]) -> dict[str, dict[str, ReviewedNucleus]]:
+    by_slide: dict[str, dict[str, ReviewedNucleus]] = defaultdict(dict)
+    ordered = sorted(
+        (nucleus for nucleus in nuclei if not nucleus.rejected),
+        key=lambda nucleus: (not nucleus.reshaped, nucleus.reviewer),
+    )
+    for nucleus in ordered:
+        by_slide[nucleus.slide].setdefault(nucleus.key, nucleus)
+    return by_slide
+
+
+def waiting_of(
+    old: SlideFeatures | None, candidates: Mapping[str, ReviewedNucleus]
+) -> list[ReviewedNucleus]:
+    stored = {} if old is None else {key: old.shape_of(row) for row, key in enumerate(old.keys)}
+    return [
+        nucleus for key, nucleus in sorted(candidates.items()) if stored.get(key) != nucleus.shape
+    ]
+
+
+def waiting(
+    store: FeatureStore,
+    tenant: uuid.UUID,
+    typer: str,
+    base_version: str,
+    nuclei: Sequence[ReviewedNucleus],
+) -> dict[str, list[ReviewedNucleus]]:
+    found: dict[str, list[ReviewedNucleus]] = {}
+    for slide, candidates in sorted(chosen(nuclei).items()):
+        pending = waiting_of(store.load(tenant, typer, base_version, slide), candidates)
+        if pending:
+            found[slide] = pending
+    return found
 
 
 def collect(
@@ -136,20 +221,20 @@ def collect(
     nuclei: Sequence[ReviewedNucleus],
     pool: Pooler,
 ) -> Collected:
-    by_slide: dict[str, dict[str, ReviewedNucleus]] = defaultdict(dict)
-    for nucleus in nuclei:
-        if not nucleus.rejected:
-            by_slide[nucleus.slide].setdefault(nucleus.key, nucleus)
     pooled = 0
-    for slide in sorted(by_slide):
+    for slide, candidates in sorted(chosen(nuclei).items()):
         old = store.load(tenant, typer, base_version, slide)
-        known = set() if old is None else set(old.keys)
-        waiting = [nucleus for key, nucleus in sorted(by_slide[slide].items()) if key not in known]
-        if not waiting:
+        pending = waiting_of(old, candidates)
+        if not pending:
             continue
-        found = merged(old, [nucleus.key for nucleus in waiting], pool(slide, waiting))
+        found = merged(
+            old,
+            [nucleus.key for nucleus in pending],
+            pool(slide, pending),
+            [nucleus.shape for nucleus in pending],
+        )
         store.save(tenant, typer, base_version, slide, found)
-        pooled += len(waiting)
+        pooled += len(pending)
     stored = 0
     for slide in store.slides(tenant, typer, base_version):
         loaded = store.load(tenant, typer, base_version, slide)

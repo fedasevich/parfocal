@@ -8,10 +8,17 @@ import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import react, { reactCompilerPreset } from "@vitejs/plugin-react";
 import { msw } from "msw/vite";
 import { visualizer } from "rollup-plugin-visualizer";
-import { defineConfig, type Plugin } from "vite";
+import { type Connect, defineConfig, loadEnv, type Plugin } from "vite";
 import { bundleSummaryJson } from "./vite/bundle-summary.ts";
 import { noAppPageForMissingData } from "./vite/data-paths.ts";
-import { fixtureTilesInDevOnly } from "./vite/dev-tiles.ts";
+import { fixtureTilesWithDevTools } from "./vite/dev-tiles.ts";
+import {
+  developerRouteFiles,
+  devToolsDefine,
+  devToolsFor,
+  productionRouteTree,
+  routeTreeWithoutDeveloperPages,
+} from "./vite/dev-tools.ts";
 import { fontPreloadInBuildOnly } from "./vite/font-preload.ts";
 import { assetsWithinWorkersLimit } from "./vite/large-assets.ts";
 import { publicEnvOnly, publicEnvPrefix } from "./vite/public-env.ts";
@@ -21,8 +28,13 @@ const crossOriginIsolation = {
   "Cross-Origin-Embedder-Policy": "credentialless",
 };
 
-function fakeApiWorkerInDevOnly(): Plugin {
-  return { ...msw({ mode: "worker-only" }), apply: "serve" };
+const apiProxy = { "/api": `http://localhost:${process.env["PARFOCAL_API_PORT"] ?? "8000"}` };
+
+function fakeApiWorkerWithDevTools(devTools: boolean): Plugin {
+  return {
+    ...msw({ mode: "worker-only" }),
+    apply: (_, { command }) => command === "serve" || devTools,
+  };
 }
 
 const mockAssets = fileURLToPath(new URL("../../docs/design/ux-mock/assets", import.meta.url));
@@ -32,17 +44,22 @@ const imageTypes: Record<string, string> = {
   ".png": "image/png",
 };
 
-function mockAssetsInDevOnly(): Plugin {
+const serveMockAsset: Connect.NextHandleFunction = (request, response, next) => {
+  const file = join(mockAssets, normalize(request.url ?? "/").replace(/^(\.\.[/\\])+/, ""));
+  if (!file.startsWith(mockAssets) || !existsSync(file)) return next();
+  response.setHeader("Content-Type", imageTypes[extname(file)] ?? "application/octet-stream");
+  createReadStream(file).pipe(response);
+};
+
+function mockAssetsWithDevTools(devTools: boolean): Plugin {
   return {
     name: "parfocal-mock-assets",
     apply: "serve",
     configureServer(server) {
-      server.middlewares.use("/mock-assets", (request, response, next) => {
-        const file = join(mockAssets, normalize(request.url ?? "/").replace(/^(\.\.[/\\])+/, ""));
-        if (!file.startsWith(mockAssets) || !existsSync(file)) return next();
-        response.setHeader("Content-Type", imageTypes[extname(file)] ?? "application/octet-stream");
-        createReadStream(file).pipe(response);
-      });
+      server.middlewares.use("/mock-assets", serveMockAsset);
+    },
+    configurePreviewServer(server) {
+      if (devTools) server.middlewares.use("/mock-assets", serveMockAsset);
     },
   };
 }
@@ -62,43 +79,59 @@ function bundleReport(): Plugin[] {
   ];
 }
 
-export default defineConfig(({ mode }) => ({
-  envPrefix: publicEnvPrefix,
-  plugins: [
-    publicEnvOnly(),
-    tanstackRouter({
-      target: "react",
-      autoCodeSplitting: true,
-      addExtensions: true,
-      quoteStyle: "double",
-      semicolons: true,
-      disableLogging: true,
-    }),
-    react(),
-    lingui(),
-    babel({
-      presets: [linguiTransformerBabelPreset(), reactCompilerPreset()],
-      exclude: [/\/generated\//, /node_modules/],
-    }),
-    tailwindcss(),
-    fakeApiWorkerInDevOnly(),
-    mockAssetsInDevOnly(),
-    fontPreloadInBuildOnly(),
-    fixtureTilesInDevOnly(),
-    noAppPageForMissingData(),
-    assetsWithinWorkersLimit(),
-    ...(mode === "analyze" ? bundleReport() : []),
-  ],
-  resolve: { dedupe: ["react", "react-dom", "@tanstack/react-query"] },
-  server: {
-    headers: crossOriginIsolation,
-    proxy: { "/api": `http://localhost:${process.env["PARFOCAL_API_PORT"] ?? "8000"}` },
-  },
-  preview: { headers: crossOriginIsolation },
-  html: { cspNonce: "PARFOCAL_CSP_NONCE" },
-  worker: { format: "es" },
-  build: {
-    target: "es2024",
-    ...(mode === "analyze" ? { outDir: join(reportDir, "dist"), emptyOutDir: true } : {}),
-  },
-}));
+const outDirOf = (mode: string) => {
+  if (mode === "analyze") return { outDir: join(reportDir, "dist"), emptyOutDir: true };
+  if (mode === "e2e") return { outDir: join(root, "dist-e2e"), emptyOutDir: true };
+  return {};
+};
+
+export default defineConfig(({ command, mode, isPreview }) => {
+  const devTools = devToolsFor({
+    command,
+    isPreview: isPreview === true,
+    env: loadEnv(mode, root, publicEnvPrefix),
+  });
+  const withoutDeveloperPages = command === "build" && !devTools;
+  return {
+    envPrefix: publicEnvPrefix,
+    define: devToolsDefine(devTools),
+    plugins: [
+      publicEnvOnly(),
+      ...(withoutDeveloperPages ? [routeTreeWithoutDeveloperPages(root)] : []),
+      tanstackRouter({
+        ...(withoutDeveloperPages
+          ? {
+              routeFileIgnorePattern: developerRouteFiles,
+              generatedRouteTree: productionRouteTree(root),
+            }
+          : {}),
+        target: "react",
+        autoCodeSplitting: true,
+        addExtensions: true,
+        quoteStyle: "double",
+        semicolons: true,
+        disableLogging: true,
+      }),
+      react(),
+      lingui(),
+      babel({
+        presets: [linguiTransformerBabelPreset(), reactCompilerPreset()],
+        exclude: [/\/generated\//, /node_modules/],
+      }),
+      tailwindcss(),
+      fakeApiWorkerWithDevTools(devTools),
+      mockAssetsWithDevTools(devTools),
+      fontPreloadInBuildOnly(),
+      fixtureTilesWithDevTools(devTools),
+      noAppPageForMissingData(),
+      assetsWithinWorkersLimit(),
+      ...(mode === "analyze" ? bundleReport() : []),
+    ],
+    resolve: { dedupe: ["react", "react-dom", "@tanstack/react-query"] },
+    server: { headers: crossOriginIsolation, proxy: apiProxy },
+    preview: { headers: crossOriginIsolation, proxy: apiProxy },
+    html: { cspNonce: "PARFOCAL_CSP_NONCE" },
+    worker: { format: "es" },
+    build: { target: "es2024", ...outDirOf(mode) },
+  };
+});

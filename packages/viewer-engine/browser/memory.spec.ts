@@ -146,7 +146,12 @@ async function runSwitches(
     decksAtDispose,
     releaseMs,
   };
-  const contexts = await page.evaluate(() => ({ ...window.memoryHarness.contexts }));
+  const readContexts = () => page.evaluate(() => ({ ...window.memoryHarness.contexts }));
+  let contexts = await readContexts();
+  while (contexts.lost < contexts.created && Date.now() - disposedAt < releaseWaitMs) {
+    await page.waitForTimeout(25);
+    contexts = await readContexts();
+  }
   await cdp.detach();
   const run: RunReport = {
     release,

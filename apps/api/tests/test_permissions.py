@@ -142,6 +142,7 @@ OPEN_OPERATIONS = {
     "unmuteNotifications": "member",
     "createOrganisation": "platform",
     "registerModel": "platform",
+    "promoteRegisteredModel": "platform",
     "listOrganisations": "platform",
     "createTenant": "platform",
     "listTenants": "platform",

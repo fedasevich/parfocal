@@ -12,6 +12,40 @@ export const WEBGPU_SWIFTSHADER_ARGS = [
   "--enable-features=Vulkan",
 ];
 
+export const HARDWARE_GPU_ARGS = [
+  "--enable-unsafe-webgpu",
+  "--ignore-gpu-blocklist",
+  "--enable-gpu-rasterization",
+  "--force-color-profile=srgb",
+  "--disable-backgrounding-occluded-windows",
+  "--disable-renderer-backgrounding",
+  "--disable-background-timer-throttling",
+];
+
+export const onHardwareGpu = (): boolean => process.env["PARFOCAL_GPU"] === "hardware";
+
+export interface GpuLaunch {
+  readonly headless?: boolean;
+  readonly launchOptions: { readonly args: string[] };
+}
+
+export function gpuLaunch(softwareArgs: readonly string[]): GpuLaunch {
+  return onHardwareGpu()
+    ? { headless: false, launchOptions: { args: [...HARDWARE_GPU_ARGS] } }
+    : { launchOptions: { args: [...softwareArgs] } };
+}
+
+export async function assertGpuMode(page: Page): Promise<string> {
+  if (!onHardwareGpu()) return assertSwiftShader(page);
+  const renderer = await webglRendererName(page);
+  if (renderer.includes("SwiftShader") || renderer === "no WebGL2") {
+    throw new Error(
+      `PARFOCAL_GPU=hardware asks for the hardware GPU, but WebGL runs on "${renderer}"`,
+    );
+  }
+  return renderer;
+}
+
 export async function webglRendererName(page: Page): Promise<string> {
   return page.evaluate(() => {
     const gl = document.createElement("canvas").getContext("webgl2");

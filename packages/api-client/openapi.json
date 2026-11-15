@@ -8221,6 +8221,151 @@
         }
       }
     },
+    "/api/platform/model-registry/{name}/{version}/promotion": {
+      "post": {
+        "tags": [
+          "platform"
+        ],
+        "summary": "Promote Registered Model",
+        "operationId": "promoteRegisteredModel",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 80,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._/-]*$",
+              "title": "Name"
+            }
+          },
+          {
+            "name": "version",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 40,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._+-]*$",
+              "title": "Version"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PromotionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegistryEntry"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Sign in to continue"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "You do not have access to this"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "This changed since you loaded it"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Too many requests, try again shortly"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Something went wrong"
+          }
+        }
+      }
+    },
     "/api/tenant/models/test": {
       "post": {
         "tags": [
@@ -48860,6 +49005,27 @@
         ],
         "title": "EvaluationChanges"
       },
+      "EvaluationOut": {
+        "properties": {
+          "passed": {
+            "type": "boolean",
+            "title": "Passed"
+          },
+          "reports": {
+            "items": {
+              "$ref": "#/components/schemas/GateReportOut"
+            },
+            "type": "array",
+            "title": "Reports"
+          }
+        },
+        "type": "object",
+        "required": [
+          "passed",
+          "reports"
+        ],
+        "title": "EvaluationOut"
+      },
       "EvaluationVersionStarted": {
         "properties": {
           "version": {
@@ -49353,6 +49519,74 @@
           "created_at"
         ],
         "title": "FormVersion"
+      },
+      "GateReportOut": {
+        "properties": {
+          "task": {
+            "type": "string",
+            "title": "Task"
+          },
+          "benchmark": {
+            "type": "string",
+            "title": "Benchmark"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "measured": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Measured"
+          },
+          "reference": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Reference"
+          },
+          "allowed_drop": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Allowed Drop"
+          },
+          "ceilings": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Ceilings"
+          },
+          "refused": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Refused"
+          },
+          "passed": {
+            "type": "boolean",
+            "title": "Passed"
+          }
+        },
+        "type": "object",
+        "required": [
+          "task",
+          "benchmark",
+          "source",
+          "measured",
+          "reference",
+          "allowed_drop",
+          "ceilings",
+          "refused",
+          "passed"
+        ],
+        "title": "GateReportOut"
       },
       "Geometry": {
         "oneOf": [
@@ -52183,6 +52417,19 @@
           "kappa",
           "cell-agreement"
         ]
+      },
+      "MetricName": {
+        "type": "string",
+        "pattern": "^[a-z0-9-]{1,40}$"
+      },
+      "Metrics": {
+        "additionalProperties": {
+          "type": "number"
+        },
+        "propertyNames": {
+          "$ref": "#/components/schemas/MetricName"
+        },
+        "type": "object"
       },
       "ModelChoice": {
         "properties": {
@@ -55577,6 +55824,44 @@
         ],
         "title": "ProjectRole"
       },
+      "PromotionRequest": {
+        "properties": {
+          "measured": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Metrics"
+            },
+            "propertyNames": {
+              "$ref": "#/components/schemas/ModelTask"
+            },
+            "type": "object",
+            "maxProperties": 5,
+            "title": "Measured"
+          },
+          "reference": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/Metrics"
+                },
+                "propertyNames": {
+                  "$ref": "#/components/schemas/ModelTask"
+                },
+                "type": "object",
+                "maxProperties": 5
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference"
+          }
+        },
+        "type": "object",
+        "required": [
+          "measured"
+        ],
+        "title": "PromotionRequest"
+      },
       "Proportion": {
         "properties": {
           "value": {
@@ -56254,6 +56539,16 @@
             "anyOf": [
               {
                 "$ref": "#/components/schemas/ModelRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "evaluation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EvaluationOut"
               },
               {
                 "type": "null"

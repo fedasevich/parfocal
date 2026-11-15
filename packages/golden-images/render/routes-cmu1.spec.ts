@@ -21,8 +21,10 @@ import {
   type Tolerance,
 } from "../src/index.ts";
 import {
-  assertSwiftShader,
+  assertGpuMode,
   captureScreenshot,
+  gpuLaunch,
+  onHardwareGpu,
   WEBGPU_SWIFTSHADER_ARGS,
 } from "../src/playwright.ts";
 import {
@@ -34,7 +36,14 @@ import {
   startVivHarness,
   vivHarnessRoutes,
 } from "./viv-harness.ts";
-import { cmu1MicronsPerPixel, cmu1TissueCentre, VIV_SCENES } from "./viv-scenes.ts";
+import {
+  cmu1MicronsPerPixel,
+  cmu1TissueCentre,
+  translucentOutlineGolden,
+  translucentOutlineKinds,
+  translucentOutlineOpacity,
+  VIV_SCENES,
+} from "./viv-scenes.ts";
 
 const overlayTolerance: Tolerance = {
   maxChannelDelta: 4,
@@ -47,7 +56,9 @@ const platformGoldenKinds: ReadonlySet<OverlayKind> = new Set(["id-labels"]);
 const goldenDirectory = fileURLToPath(new URL("../goldens", import.meta.url));
 const availability = fixtureAvailability("CMU-1.svs");
 
-test.use({ launchOptions: { args: WEBGPU_SWIFTSHADER_ARGS } });
+const hardware = onHardwareGpu();
+
+test.use(gpuLaunch(WEBGPU_SWIFTSHADER_ARGS));
 test.describe.configure({ timeout: 180_000 });
 
 let server: ViteDevServer | null = null;
@@ -71,7 +82,7 @@ test.beforeEach(async ({ page }) => {
   );
   if (server === null) throw new Error("The Viv harness server did not start");
   await openHarness(page, server);
-  await assertSwiftShader(page);
+  await assertGpuMode(page);
 });
 
 const routeTasks: Record<RendererRouteId, string> = {
@@ -82,6 +93,19 @@ const routeTasks: Record<RendererRouteId, string> = {
 
 const alternateRoutes = RENDERER_ROUTE_IDS.filter((route) => route !== PRIMARY_RENDERER_ROUTE);
 
+function report(
+  label: string,
+  frame: Frame,
+  expected: Frame,
+  tolerance: Tolerance,
+): readonly string[] {
+  const comparison = compareFrames(frame, expected, tolerance);
+  console.log(
+    `${hardware ? "hardware" : "swiftshader"} ${label}: differing ${(comparison.differingFraction * 100).toFixed(3)}% maxDelta ${comparison.maxDelta.join(",")} mean ${comparison.meanError.map((error) => error.toFixed(3)).join(",")}`,
+  );
+  return comparison.failures;
+}
+
 function expectGolden(
   frame: Frame,
   name: string,
@@ -89,6 +113,13 @@ function expectGolden(
   outputDirectory: string,
   tolerance?: Tolerance,
 ) {
+  if (hardware) {
+    report(`${name} against the golden`, frame, readPng(goldenPath(goldenDirectory, name)), {
+      ...overlayTolerance,
+      ...tolerance,
+    });
+    return;
+  }
   const outcome = checkGolden(frame, {
     name,
     format,
@@ -111,25 +142,33 @@ async function skipUnlessRegistered(page: Page, route: RendererRouteId): Promise
 async function renderOverlay(
   page: Page,
   server: ViteDevServer,
-  kind: OverlayKind,
+  kinds: OverlayKind | readonly OverlayKind[],
   route: RendererRouteId,
+  opacity?: number,
 ): Promise<{ readonly result: OverlayRenderResult; readonly frame: Frame }> {
   await page.goto(`${harnessUrl(server)}overlays.html`);
   await page.waitForFunction((name) => name in globalThis, overlayHarnessGlobal, {
     timeout: 60_000,
   });
+  const layers = typeof kinds === "string" ? [kinds] : kinds;
   const result = await page.evaluate(
-    async ({ name, scene }) => {
+    async ({ name, scene, fade }) => {
       const harness = (globalThis as unknown as Record<string, OverlayHarness>)[name];
       if (harness === undefined) throw new Error("The overlay harness did not load");
-      return harness.render(scene);
+      let rendered = await harness.render(scene);
+      if (fade === null) return rendered;
+      for (const id of scene.layers) {
+        rendered = await harness.change({ kind: "opacity", id, opacity: fade });
+      }
+      return rendered;
     },
     {
       name: overlayHarnessGlobal,
+      fade: opacity ?? null,
       scene: {
         url: fixtureUrl("CMU-1.svs"),
         formatId: "aperio-svs" as const,
-        layers: [kind],
+        layers,
         registration: "before-mount" as const,
         reverse: false,
         viewport: { width: 400, height: 300 },
@@ -166,6 +205,25 @@ test("the Viv goldens still match when Chrome also offers a WebGPU adapter", asy
   }
 });
 
+test("translucent outlines match their golden image on the primary route", async ({ page }) => {
+  if (server === null) throw new Error("The Viv harness server did not start");
+  const { result, frame } = await renderOverlay(
+    page,
+    server,
+    translucentOutlineKinds,
+    PRIMARY_RENDERER_ROUTE,
+    translucentOutlineOpacity,
+  );
+  expect(result.errors).toEqual([]);
+  const failures = report(
+    `${translucentOutlineGolden} on ${PRIMARY_RENDERER_ROUTE}`,
+    frame,
+    readPng(goldenPath(goldenDirectory, translucentOutlineGolden)),
+    overlayTolerance,
+  );
+  if (!hardware) expect(failures).toEqual([]);
+});
+
 for (const route of alternateRoutes) {
   for (const scene of VIV_SCENES) {
     test(`${scene.name} matches its golden image on the ${route} route`, async ({
@@ -179,8 +237,60 @@ for (const route of alternateRoutes) {
       expect(result.decoded?.workers).toBe(6);
       expect(result.decoded?.dispatched).toBeGreaterThan(0);
       expectGolden(frame, scene.name, scene.format, testInfo.outputDir);
+      if (hardware) {
+        const viv = await renderVivFrame(page, scene);
+        report(`${scene.name} on ${route} against viv`, frame, viv.frame, overlayTolerance);
+      }
     });
   }
+
+  test(`translucent outlines match their golden image on the ${route} route`, async ({
+    page,
+  }, testInfo) => {
+    await skipUnlessRegistered(page, route);
+    if (server === null) throw new Error("The Viv harness server did not start");
+    const { result, frame } = await renderOverlay(
+      page,
+      server,
+      translucentOutlineKinds,
+      route,
+      translucentOutlineOpacity,
+    );
+    expect(result.errors).toEqual([]);
+    expect(result.uncapturedGpuErrors).toBe(0);
+    expect(contentProblems(frame)).toEqual([]);
+    const failures = report(
+      `${translucentOutlineGolden} on ${route}`,
+      frame,
+      readPng(goldenPath(goldenDirectory, translucentOutlineGolden)),
+      overlayTolerance,
+    );
+    if (hardware) {
+      const viv = await renderOverlay(
+        page,
+        server,
+        translucentOutlineKinds,
+        PRIMARY_RENDERER_ROUTE,
+        translucentOutlineOpacity,
+      );
+      report(
+        `${translucentOutlineGolden} on ${route} against viv`,
+        frame,
+        viv.frame,
+        overlayTolerance,
+      );
+      return;
+    }
+    if (failures.length > 0) {
+      expectGolden(
+        frame,
+        translucentOutlineGolden,
+        "svs-jpeg",
+        testInfo.outputDir,
+        overlayTolerance,
+      );
+    }
+  });
 
   for (const kind of overlayStack) {
     const reference = platformGoldenKinds.has(kind)
@@ -197,11 +307,14 @@ for (const route of alternateRoutes) {
       const expected = platformGoldenKinds.has(kind)
         ? (await renderOverlay(page, server, kind, PRIMARY_RENDERER_ROUTE)).frame
         : readPng(goldenPath(goldenDirectory, `viv-overlay-${kind}`));
-      const comparison = compareFrames(frame, expected, overlayTolerance);
-      console.log(
-        `overlay ${kind} on ${route}: differing ${(comparison.differingFraction * 100).toFixed(3)}% maxDelta ${comparison.maxDelta.join(",")} mean ${comparison.meanError.map((error) => error.toFixed(3)).join(",")}`,
-      );
-      expect(comparison.failures).toEqual([]);
+      const failures = report(`overlay ${kind} on ${route}`, frame, expected, overlayTolerance);
+      if (hardware) {
+        const viv = await renderOverlay(page, server, kind, PRIMARY_RENDERER_ROUTE);
+        report(`overlay ${kind} on viv`, viv.frame, expected, overlayTolerance);
+        report(`overlay ${kind} on ${route} against viv`, frame, viv.frame, overlayTolerance);
+        return;
+      }
+      expect(failures).toEqual([]);
     });
   }
 }
@@ -225,4 +338,6 @@ test("switching through every registered route and back keeps the camera and the
   expect(result.decoded?.dispatched).toBeGreaterThan(0);
   expect(result.uncapturedGpuErrors).toBe(registered.includes("deck-webgpu") ? 0 : null);
   expectGolden(frame, scene.name, scene.format, testInfo.outputDir);
+  if (hardware)
+    report(`${scene.name} after the switches against viv`, frame, plain.frame, overlayTolerance);
 });
