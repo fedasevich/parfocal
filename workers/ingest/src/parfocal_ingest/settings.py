@@ -12,6 +12,8 @@ DEFAULT_COPY_PART_BYTES = GIB
 MAX_COPY_PART_BYTES = 4 * GIB
 INGEST_MEMORY_MIB = 2048
 INGEST_MEMORY_LIMIT_MIB = 4096
+PARSE_MEMORY_MIB = 3072
+PARSE_SECONDS = 1800.0
 
 
 def default_work_dir() -> str:
@@ -23,3 +25,8 @@ class IngestSettings(StorageSettings):
     ingest_copy_part_bytes: Annotated[int, Field(ge=MIN_PART_BYTES, le=MAX_COPY_PART_BYTES)] = (
         DEFAULT_COPY_PART_BYTES
     )
+    ingest_parse_memory_mib: Annotated[int, Field(ge=64, le=INGEST_MEMORY_LIMIT_MIB)] = (
+        PARSE_MEMORY_MIB
+    )
+    ingest_parse_seconds: Annotated[float, Field(gt=0)] = PARSE_SECONDS
+    ingest_parse_user: str | None = None
