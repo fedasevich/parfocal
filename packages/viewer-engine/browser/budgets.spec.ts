@@ -8,6 +8,9 @@ import { RTT_MATRIX_MS, startLatencyProxy } from "../../latency-proxy/src/index.
 import { type Served, type ServedRequest, serve } from "../test/pixel-source/serve.ts";
 import { crossOriginIsolated, outDir } from "./global-setup.ts";
 import type { PanSlide } from "./page/pan-harness.ts";
+import { perfRoute, perfRouteLaunchOptions } from "./perf-route.ts";
+
+if (perfRouteLaunchOptions) test.use({ launchOptions: perfRouteLaunchOptions });
 
 const slideFile = "CMU-1.svs";
 const slidePath = `/cache/${slideFile}`;
@@ -69,6 +72,7 @@ async function sample(page: Page, origin: string): Promise<Sample> {
   await page.waitForFunction(() => window.panHarness !== undefined);
   const start = log.length;
   const slide: PanSlide = {
+    route: perfRoute,
     url: `${origin}${slidePath}`,
     formatId: "aperio-svs",
     workers: 6,

@@ -37,6 +37,18 @@ export type LearnerInput = {
   decided: (object: string) => boolean;
 };
 
+export function labelsOnceCorrected(
+  labels: ReadonlyMap<string, string>,
+  cells: readonly LearnerCell[],
+): ReadonlyMap<string, string> {
+  const byObject = new Map(cells.map((cell) => [cell.object, cell]));
+  for (const [object, label] of labels) {
+    const cell = byObject.get(object);
+    if (cell !== undefined && cell.class_name !== label) return labels;
+  }
+  return new Map();
+}
+
 export type PooledFeaturesOf = (
   cells: readonly LearnerCell[],
 ) => Promise<ReadonlyMap<string, Float32Array>>;

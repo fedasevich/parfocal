@@ -179,6 +179,40 @@ test("a route that fails to start leaves the previous route working", async () =
   assert.equal(renderer.routes.length, 3);
 });
 
+test("a route that cannot show the open slide is destroyed and the previous route comes back", async () => {
+  const { engine, renderer, container } = setup();
+  engine.mount(container);
+  await engine.openSlide({ id: "a" });
+  engine.registerOverlay({ id: "results", order: 1 });
+  engine.setCamera({ x: 7_000, y: 6_000, zoom: -2 });
+  const camera = engine.getCamera();
+  const rgbOnly = new FakeRenderer();
+  const refusing: RendererFactory<FakeSlide> = (host) => {
+    const route = rgbOnly.create(host);
+    route.showSlide = () => {
+      throw new Error("This route draws 8-bit RGB slides only");
+    };
+    return route;
+  };
+  assert.throws(() => engine.switchRenderer(refusing), /8-bit RGB slides only/);
+  assert.equal(rgbOnly.routes.length, 1);
+  assert.equal(rgbOnly.alive().length, 0);
+  assert.equal(renderer.routes.length, 2);
+  assert.equal(renderer.alive().length, 1);
+  assert.equal(renderer.last().slide?.id, "a");
+  assert.deepEqual(renderer.last().camera, camera);
+  assert.deepEqual(
+    renderer.last().overlays.map((overlay) => overlay.id),
+    ["results"],
+  );
+  engine.setCamera({ x: 100, y: 200, zoom: -1 });
+  assert.equal(rgbOnly.last().cameraCalls, 0);
+  assert.deepEqual(renderer.last().camera, engine.getCamera());
+  engine.unmount();
+  engine.mount(container);
+  assert.equal(renderer.routes.length, 3);
+});
+
 test("a disposed engine refuses to switch", () => {
   const { engine } = setup();
   engine.dispose();

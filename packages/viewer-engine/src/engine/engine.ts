@@ -393,15 +393,18 @@ export function createViewerEngine<Slide extends EngineSlide>(
     if (!mounted) return;
     const current = mounted;
     current.route.destroy();
+    let started: RendererRoute<Slide> | null = null;
     try {
-      current.route = create(current.container);
+      started = create(current.container);
+      replay(started);
+      current.route = started;
     } catch (error) {
+      started?.destroy();
       createRenderer = previous;
       current.route = previous(current.container);
       replay(current.route);
       throw error;
     }
-    replay(current.route);
   };
 
   const whenIdle = (signal?: AbortSignal): Promise<void> =>
