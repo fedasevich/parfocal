@@ -22,6 +22,7 @@ MANIFEST_COLUMNS = ("file", "case", *PATIENT_COLUMNS)
 MANIFEST = "manifest.csv"
 PUT_ATTEMPTS = 4
 FINISHED = {"ready", "failed", "skipped"}
+UNFINISHED = ("uploading", "processing", "waiting")
 STUCK = {"needs-slide", "slide-refused", "needs-choices"}
 SLIDE_TARGETS = ("slide_id", "slide_upload_id")
 DROP_LIMIT = 5000
@@ -91,9 +92,13 @@ class ImportReport:
     problems: list[ManifestProblem] = field(default_factory=list[ManifestProblem])
 
     @property
+    def unfinished(self) -> int:
+        return sum(item.status in UNFINISHED for item in self.files)
+
+    @property
     def ok(self) -> bool:
         return not self.problems and all(
-            item.outcome is not Outcome.FAILED and item.status not in ("failed", "waiting")
+            item.outcome is not Outcome.FAILED and item.status not in ("failed", *UNFINISHED)
             for item in self.files
         )
 
@@ -534,6 +539,11 @@ def printed(report: ImportReport) -> str:
         f"{sum(item.outcome in (Outcome.UPLOADED, Outcome.RESUMED) for item in report.files)} "
         f"files sent, {sum(item.outcome is Outcome.FAILED for item in report.files)} failed"
     )
+    if report.unfinished:
+        lines.append(
+            f"{report.unfinished} files are not ready yet. Do not run again until the app "
+            "shows them ready, and make any choices there, or they will be sent twice"
+        )
     return "\n".join(lines)
 
 

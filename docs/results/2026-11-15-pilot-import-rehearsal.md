@@ -3,7 +3,7 @@
 - Date: 2026-11-15
 - Backlog: PILOT-004 (pilot data onboarding)
 - Kind: check
-- Commit: the PILOT-004 commit on top of 75111e47 (the parallel run's claim of SEC-013, PILOT-004 and OPS-007)
+- Commit: 6d4a5d0f (PILOT-004, import with cases from names)
 - Environment: Apple M4 with 24 GB, macOS 15.8.1, local Postgres and MinIO from `compose.yaml`, the API under uvicorn on a free port with the production upload limits, the ingest worker inline in a thread. Five other agents shared the machine.
 - Data: four public OpenSlide slides from the fixture cache under pilot-shaped names, and three copies of `workers/ingest/tests/fixtures/results/regions.geojson`. No PHI.
 

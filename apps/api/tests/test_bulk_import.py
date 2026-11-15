@@ -15,6 +15,7 @@ from parfocal_api.bulk_import import (
     import_folder,
     import_named,
     main,
+    printed,
     read_manifest,
     wait_for,
 )
@@ -223,6 +224,9 @@ def test_slides_and_results_land_in_cases_named_by_their_folders_and_files(
 
         report = import_named(api(lab.lead), storage, lab.project, folder)
         assert {item.outcome for item in report.files} == {Outcome.UPLOADED}
+        wait_for(api(lab.lead), report.files, 0, lambda _: None, lambda: 0)
+        assert (report.ok, report.unfinished) == (False, 4)
+        assert "Do not run again" in printed(report)
         run_worker(database, lab.tenant_id, tmp_path / "work")
         wait_for(api(lab.lead), report.files, 0, lambda _: None, lambda: 0, import_as_is=True)
         run_worker(database, lab.tenant_id, tmp_path / "work")

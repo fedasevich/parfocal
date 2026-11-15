@@ -18,6 +18,7 @@ The command takes cases from names, with the same rules as a browser drop (`parf
 - A folder below the top folder names the case of every slide in it, so one folder per case, named with the case number, is the safest layout.
 - Otherwise a slide's file name names its case when its first part, before `_` or a space, looks like a case number: 1 to 8 letters, up to 4 digits, a dash and 2 to 12 digits, such as `S26-04812`.
 - An AI result pairs with its slide when it sits next to it with the same name, such as `A1_HE.svs` and `A1_HE.geojson`, when its name starts with the slide's name, or when the file names its slide inside ([reference/parfocal-results-v1.md](../reference/parfocal-results-v1.md)).
+- Keep `.tif` and `.tiff` heatmap results out of the folder, because a `.tif` counts as a slide by its name. Add them in the app after the import. `.png` masks, `.geojson`, `.json`, `.csv` and `.tsv` results are fine.
 - Remove notes, spreadsheets and anything else that is neither a slide nor a result. Hidden files and a top-level `manifest.csv` are skipped.
 - When the names carry no case numbers, or patient details should come along, write a `manifest.csv` instead and run without `--cases-from-names`. That mode sends slides only, so add results afterwards in the app.
 
@@ -32,9 +33,10 @@ uv run --package parfocal-api python -m parfocal_api.bulk_import FOLDER --projec
 The API is reached through the edge Worker, which applies rate limits and a bot check ([deploy.md](deploy.md)). TODO: no command-line client has gone through that path yet, so try the dry run with a tiny folder first and read any 403 or 429 before the real batch.
 
 1. Read every line of the dry run. Each slide shows its case and each result its slide. A slide with no case number, a result that matches no slide or several, or any other file stops the run before anything is created. Rename or move files until the dry run ends with `0 failed` and the case count you expect.
-2. Run the same command without `--dry-run` and with `--wait 3600`. Large slides take a while, and the command can be stopped and started again: it resumes open uploads and skips slides already in their case and results already imported.
-3. A result whose classes or values need a choice ends `waiting needs-choices`. Make the choices in the app's upload page, or run once more with `--import-as-is` when the defaults are fine for the pilot, which imports the objects that passed the check.
-4. Run the command a last time. It must send nothing and end with exit code 0.
+2. Run the same command without `--dry-run`, with `--wait 3600`, and with `--import-as-is` if the default import choices are fine for the pilot. Without it, a result whose classes or values need a choice ends `waiting needs-choices` and the choices are made in the app.
+3. If the command was stopped while sending, run it again at once. It resumes open uploads and skips slides already in their case and results already imported.
+4. If it ended with "files are not ready yet", do not run it again. A file that finished uploading but is still processing or waiting is not recognised yet and would be sent a second time. Wait until the app shows every slide and result ready, and make any pending choices there.
+5. Only then run the command a last time. It must send nothing and end with exit code 0.
 
 ## Check and close
 
