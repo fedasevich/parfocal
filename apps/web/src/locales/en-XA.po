@@ -56,6 +56,12 @@ msgstr ""
 msgid "{0} cell"
 msgstr ""
 
+#. placeholder {0}: item.corrections
+#. placeholder {1}: item.nuclei_reviewed
+#: src/screens/kpi/corrections-card.tsx
+msgid "{0} corrections in {1} nuclei"
+msgstr ""
+
 #. placeholder {0}: proposals.count
 #: src/annotations/context-bar.tsx
 msgid "{0} found"
@@ -701,6 +707,10 @@ msgstr ""
 msgid "Confirm {0}"
 msgstr ""
 
+#: src/screens/kpi/corrections-card.tsx
+msgid "Corrections per hundred nuclei"
+msgstr ""
+
 #: src/annotations/count-panel.tsx
 msgid "Counts"
 msgstr ""
@@ -930,6 +940,10 @@ msgstr ""
 msgid "How it runs"
 msgstr ""
 
+#: src/screens/kpi/corrections-card.tsx
+msgid "How many AI nuclei reviewers retyped or deleted for every hundred they checked, by month."
+msgstr ""
+
 #: src/screens/viewer/layer-views.tsx
 msgid "How sure the AI is"
 msgstr ""
@@ -1147,6 +1161,10 @@ msgstr ""
 
 #: src/shell/issue-pages.tsx
 msgid "No access to {projectName}"
+msgstr ""
+
+#: src/screens/kpi/corrections-card.tsx
+msgid "No AI nuclei have been reviewed yet."
 msgstr ""
 
 #: src/screens/viewer-tools/compare-view.tsx

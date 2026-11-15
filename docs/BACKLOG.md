@@ -1187,7 +1187,7 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
   Refs doc 03.
   Size: M.
 
-- [ ] INGEST-014 · JPEG 2000 performance decision
+- [x] INGEST-014 · JPEG 2000 performance decision
   Measure decode cost of J2K SVS in the browser (OpenJPEG WASM) against the VIEW-040 budgets. If it fails, the conversion trigger fires for J2K. Otherwise it stays native. HTJ2K is considered for the conversion target.
   Done when an ADR records the numbers and the decision.
   Refs [`poc/src/slide/codecs/openjpeg.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/slide/codecs/openjpeg.ts), doc 03.
@@ -1432,7 +1432,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Refs doc 24.
   Size: M.
 
-- [ ] VIEW-017 · OME-Zarr v0.4 and v0.5 sharded with JPEG and lossless codecs
+- [x] VIEW-017 · OME-Zarr v0.4 and v0.5 sharded with JPEG and lossless codecs
   zarrita store, the `imagecodecs_jpeg` codec registered in workers, NGFF 0.5 `ome` nesting, absent chunks from INGEST-008.
   Done when the converted fixtures from INGEST-015 and public IDR samples pass.
   Refs [`poc/src/slide/omezarr.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/slide/omezarr.ts), [`poc/src/slide/codecs/jpeg-chunk.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/slide/codecs/jpeg-chunk.ts).
@@ -3766,7 +3766,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Done when tests run a round on seeded data, promote it through MLEVAL and roll back.
   Size: L.
 
-- [ ] AILEARN-005 · Recalibration after each round
+- [x] AILEARN-005 · Recalibration after each round
   Done when each promoted round has a fitted temperature and bands.
   Size: M.
 
@@ -3774,7 +3774,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Done when tests confirm the split excludes training examples and is stable across rounds.
   Size: S.
 
-- [ ] AILEARN-007 · Measure corrections per hundred nuclei
+- [x] AILEARN-007 · Measure corrections per hundred nuclei
   The product metric for the loop, reported per tenant over time.
   Done when the metric appears on the lab dashboard with seeded data.
   Size: M.
@@ -3785,7 +3785,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Depends on AILEARN-003.
   Size: M.
 
-- [ ] AILEARN-009 · One SAM worker per page for the learner and smart select
+- [x] AILEARN-009 · One SAM worker per page for the learner and smart select
   AILEARN-008 gives the review viewer its own SAM services beside the slide stage's, so a page that also uses smart select runs two SAM workers and holds the model twice. Lift the stage's shared SAM services one level up so the learner and smart select use one worker.
   Done when a test opens the review viewer, uses smart select and corrects a type, and counts one SAM worker and one model load.
   Depends on AILEARN-008.

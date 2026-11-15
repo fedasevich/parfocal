@@ -9,6 +9,7 @@ import { caseHandlers } from "./case-handlers.ts";
 import { caseReportHandlers, cosignRequestHandlers } from "./case-report-handlers.ts";
 import { connectModelHandlers } from "./connect-model-handlers.ts";
 import { consoleHandlers } from "./console-handlers.ts";
+import { correctionsHandlers } from "./corrections-handlers.ts";
 import { coverageHandlers, tissueHandlers } from "./coverage-handlers.ts";
 import { createdRecordHandlers } from "./create-handlers.ts";
 import { checklistHandlers, draftHandlers } from "./draft-handlers.ts";
@@ -61,6 +62,7 @@ export function fakeApiHandlers(scope: FakeApiScope): RequestHandler[] {
     ...createdRecordHandlers(),
     ...uploadHandlers(),
     ...settingsHandlers(),
+    ...correctionsHandlers(),
     ...consoleHandlers(),
     ...teamActionHandlers(),
     ...tileAccessHandlers(),

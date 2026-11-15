@@ -1536,6 +1536,9 @@ GET_ROUTES = {
         Exposure.TENANT, lambda _: "/api/tenant/retention", admin_rights=True
     ),
     "getAiUsage": Route(Exposure.TENANT, lambda _: "/api/tenant/ai-usage", admin_rights=True),
+    "getAiCorrections": Route(
+        Exposure.TENANT, lambda _: "/api/tenant/ai-corrections", admin_rights=True
+    ),
     "listLegalHolds": Route(
         Exposure.TENANT, lambda _: "/api/tenant/legal-holds", admin_rights=True
     ),

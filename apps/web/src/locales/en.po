@@ -56,6 +56,12 @@ msgstr "{0} and Reviewed"
 msgid "{0} cell"
 msgstr "{0} cell"
 
+#. placeholder {0}: item.corrections
+#. placeholder {1}: item.nuclei_reviewed
+#: src/screens/kpi/corrections-card.tsx
+msgid "{0} corrections in {1} nuclei"
+msgstr "{0} corrections in {1} nuclei"
+
 #. placeholder {0}: proposals.count
 #: src/annotations/context-bar.tsx
 msgid "{0} found"
@@ -701,6 +707,10 @@ msgstr "Confirm"
 msgid "Confirm {0}"
 msgstr "Confirm {0}"
 
+#: src/screens/kpi/corrections-card.tsx
+msgid "Corrections per hundred nuclei"
+msgstr "Corrections per hundred nuclei"
+
 #: src/annotations/count-panel.tsx
 msgid "Counts"
 msgstr "Counts"
@@ -930,6 +940,10 @@ msgstr "Hover preview on"
 msgid "How it runs"
 msgstr "How it runs"
 
+#: src/screens/kpi/corrections-card.tsx
+msgid "How many AI nuclei reviewers retyped or deleted for every hundred they checked, by month."
+msgstr "How many AI nuclei reviewers retyped or deleted for every hundred they checked, by month."
+
 #: src/screens/viewer/layer-views.tsx
 msgid "How sure the AI is"
 msgstr "How sure the AI is"
@@ -1148,6 +1162,10 @@ msgstr "No {setName} result on {slideShort} yet."
 #: src/shell/issue-pages.tsx
 msgid "No access to {projectName}"
 msgstr "No access to {projectName}"
+
+#: src/screens/kpi/corrections-card.tsx
+msgid "No AI nuclei have been reviewed yet."
+msgstr "No AI nuclei have been reviewed yet."
 
 #: src/screens/viewer-tools/compare-view.tsx
 msgid "No clear match between these two. Line them up by hand."
