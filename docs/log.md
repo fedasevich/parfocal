@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-15
 
+- SEC-031 adds scripts/guard_destructive.py as a PreToolUse hook before every Bash, MCP and WebStorm terminal call, refusing destructive cloud tools and commands (26 test cases), removes the two deprecated Cloudflare MCP servers and lists what is refused in knowledge/agent-tooling.md. Deleting or resetting the Neon branch now goes to the owner, narrowing ADR 0293. Token split is decision 109.
 - AILEARN-011 adds server_pooling.py in the ML worker, which pools like the browser and matches it in a parity test, and reviewed_nuclei.py in the API, which turns a tenant's cell decisions into the nuclei collect takes. Stored rows keep an outline fingerprint, so a reshaped nucleus is pooled again (ADR 0323). The Modal job with the real ONNX encoder is still to build.
 - MLEVAL-006 adds a shared per-task promotion gate (within 0.01 of the detector and interactive baselines, no fall for the typer, ECE at most 0.05, tumor map refused until measured) that training rounds and the new registry promotion endpoint both use, with the report in registered_models.evaluation (migration 0115).
 - VIEW-072: dashed rings start mid first edge, so each edge is drawn once on Viv, and the WebGPU route matches the regenerated AI proposals golden at 0.000%. Six dashed goldens regenerated; the Linux eight-layer stack golden was patched with only the 967 pixels the dash change moves, so CI is its real check.

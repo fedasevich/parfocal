@@ -8,7 +8,7 @@ To take every recommendation at once, write "all recommended" here:
 
 ## What you need to do next, in order
 
-1. Decisions 105 (older Ventana archives with several scan areas), 106 (who reads the sealed clinical note), 107 (how CI gets the model files for the parity test) and 108 (whether experts on an annotate task may run a model) below.
+1. Decisions 105 (older Ventana archives with several scan areas), 106 (who reads the sealed clinical note), 107 (how CI gets the model files for the parity test), 108 (whether experts on an annotate task may run a model) and 109 (which Cloudflare token `.env` holds after the destructive action guard) below.
 2. The checks on your Mac listed under "The review column" below, when you have a few minutes.
 3. When the app is ready for production, say so, and the lead books the deploy session of decisions 93, 94 and 95.
 
@@ -165,6 +165,17 @@ JOBS-007 (run a model on a selection in Annotate) lets a person send a selected 
 
 - **A. Keep it to people with the project's "run models" right, as built (recommended).** Runs cost GPU time, and the person who set up the task chooses when to spend it.
 - B. Let experts assigned to an annotate task run models on that task's slides only.
+- Other.
+
+Your choice:
+
+### 109. Which Cloudflare token `.env` holds after the destructive action guard
+
+SEC-031 (hard stops for destructive agent actions) now refuses agents' cloud deletes, resets and rotations, and it names a limited token, `parfocal-agent-dev-staging`, in `.env.example` for you to create. `scripts/tofu.sh` reads `CLOUDFLARE_API_TOKEN` from `.env` for every root, so a dev-only token there would break the `global` and `prod` roots. The guard also sends deleting or resetting the Neon branch to you, which is stricter than ADR 0293 (production only until the first real user).
+
+- **A. `.env` holds only the limited token, and you run `global` and `prod` with your own token in your shell (recommended).** No agent ever holds a token that can delete R2 buckets or DNS.
+- B. `tofu.sh` reads a separate production token variable from `.env`, so agents can still run additive production applies.
+- C. Keep today's broad token in `.env` and rely on the guard alone.
 - Other.
 
 Your choice:
