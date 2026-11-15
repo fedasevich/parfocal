@@ -113,14 +113,16 @@ def test_mismatched_rows_are_refused() -> None:
 
 def test_only_a_calibrated_round_can_be_promoted() -> None:
     fitted = recalibrate(synthetic_round(60, 100, 3), everything_held_out)
-    promoted = promote("typer", "v1.2-round-1", [fitted])
+    promoted = promote("typer", "v1.2-round-1", [fitted], [1])
     assert promoted.calibrations == (fitted,)
     with pytest.raises(NotCalibratedError, match="no fitted temperature"):
-        promote("typer", "v1.2-round-1", [])
+        promote("typer", "v1.2-round-1", [], [1])
+    with pytest.raises(NotCalibratedError, match=r"no temperature for \[8\] views"):
+        promote("typer", "v1.2-round-1", [fitted], [1, 8])
     with pytest.raises(NotCalibratedError, match=r"calibration of typer v1\.2-round-1"):
-        promote("typer", "v1.2-round-2", [fitted])
+        promote("typer", "v1.2-round-2", [fitted], [1])
     with pytest.raises(NotCalibratedError, match="one view count"):
-        promote("typer", "v1.2-round-1", [fitted, fitted])
+        promote("typer", "v1.2-round-1", [fitted, fitted], [1])
 
 
 def test_the_catalogue_row_rounds_as_the_stored_rows_do() -> None:
@@ -162,23 +164,42 @@ def test_the_head_learns_a_separable_problem() -> None:
     labels = generator.integers(0, 3, 600)
     features = generator.normal(0, 0.3, (600, 3)) + np.eye(3)[labels]
     predict = train_head(features, labels, 3)
-    assert (predict(features).argmax(axis=1) == labels).mean() > 0.95
+    assert (predict(features, None).argmax(axis=1) == labels).mean() > 0.95
+
+
+def test_a_head_with_a_start_begins_at_the_start() -> None:
+    generator = np.random.default_rng(6)
+    labels = generator.integers(0, 3, 300)
+    features = generator.normal(0, 1, (300, 2))
+    start = np.log(np.full((300, 3), 1 / 3)) + 2 * np.eye(3)[labels]
+    untrained = train_head(features, labels, 3, start, steps=0)
+    assert untrained(features, start) == pytest.approx(
+        np.exp(start) / np.exp(start).sum(1)[:, None]
+    )
+
+
+EXPECTED = {
+    "starts_from_the_typer": (1.85, 0.0152, 0.0771, 0.0592),
+    "starts_from_zero": (1.79, 0.0187, 0.0892, 0.1),
+}
 
 
 @pytest.mark.skipif(
     not (PANNUKE / "pathosam-features.npz").exists(),
     reason="the POC's cached PanNuke outputs are not on this machine",
 )
-def test_a_trained_round_on_pannuke_needs_its_own_temperature() -> None:
+def test_trained_rounds_on_pannuke_need_their_own_temperature() -> None:
     measured = poc_round(PANNUKE, "pathosam-hovernext", "v1.2-round-1", 1.29)
-    refit = measured["refit"]
-    stale = measured["stale_temperature"]
-    leaked = measured["fitted_on_training_side"]
-    assert isinstance(refit, dict)
-    assert isinstance(stale, dict)
-    assert isinstance(leaked, dict)
-    assert refit["temperature"] == 1.79
-    assert refit["ece"] == 0.0187
-    assert stale["ece"] == 0.0892
-    assert leaked["ece"] == 0.1
-    assert refit["ece"] < 0.05 < stale["ece"]
+    for name, (temperature, refit_ece, stale_ece, leaked_ece) in EXPECTED.items():
+        found = measured[name]
+        assert isinstance(found, dict)
+        refit, stale, leaked = (
+            found["refit"],
+            found["stale_temperature"],
+            found["fitted_on_training_side"],
+        )
+        assert refit["temperature"] == temperature
+        assert refit["ece"] == pytest.approx(refit_ece, abs=5e-4)
+        assert stale["ece"] == pytest.approx(stale_ece, abs=5e-4)
+        assert leaked["ece"] == pytest.approx(leaked_ece, abs=5e-4)
+        assert refit["ece"] < 0.05 < stale["ece"]

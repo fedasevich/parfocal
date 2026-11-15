@@ -103,10 +103,16 @@ def recalibrate(
 
 
 def promote(
-    typer: str, round_version: str, calibrations: Sequence[RoundCalibration]
+    typer: str,
+    round_version: str,
+    calibrations: Sequence[RoundCalibration],
+    served_views: Sequence[int],
 ) -> PromotedRound:
     if not calibrations:
         raise NotCalibratedError(f"{typer} {round_version} has no fitted temperature")
+    missing = sorted(set(served_views) - {row.calibration.test_time_views for row in calibrations})
+    if missing:
+        raise NotCalibratedError(f"{typer} {round_version} has no temperature for {missing} views")
     for row in calibrations:
         fitted = row.calibration
         if (fitted.typer, fitted.version) != (typer, round_version):
@@ -149,52 +155,90 @@ def catalogue_row(row: RoundCalibration) -> dict[str, object]:
     }
 
 
+type Head = Callable[[NDArray[np.floating], NDArray[np.floating] | None], NDArray[np.float64]]
+
+
+def softmax(logits: NDArray[np.floating]) -> NDArray[np.float64]:
+    shifted = np.asarray(logits, np.float64) - np.max(logits, axis=1, keepdims=True)
+    found = np.exp(shifted)
+    return found / found.sum(axis=1, keepdims=True)
+
+
 def train_head(
     features: NDArray[np.floating],
     labels: Labels,
     classes: int,
+    start: NDArray[np.floating] | None = None,
     steps: int = 300,
     rate: float = 0.5,
     decay: float = 1e-4,
-) -> Callable[[NDArray[np.floating]], NDArray[np.float64]]:
+) -> Head:
     values = np.asarray(features, np.float64)
     mean = values.mean(axis=0)
     spread = values.std(axis=0) + 1e-6
     inputs = (values - mean) / spread
     weights = np.zeros((inputs.shape[1], classes))
     bias = np.zeros(classes)
+    offset = np.zeros((len(inputs), classes)) if start is None else np.asarray(start, np.float64)
     truth = np.eye(classes)[np.asarray(labels, np.int64)]
     for _ in range(steps):
-        logits = inputs @ weights + bias
-        logits -= logits.max(axis=1, keepdims=True)
-        probabilities = np.exp(logits)
-        probabilities /= probabilities.sum(axis=1, keepdims=True)
-        error = (probabilities - truth) / len(inputs)
+        error = (softmax(offset + inputs @ weights + bias) - truth) / len(inputs)
         weights -= rate * (inputs.T @ error + decay * weights)
         bias -= rate * error.sum(axis=0)
 
-    def predict(rows: NDArray[np.floating]) -> NDArray[np.float64]:
+    def predict(
+        rows: NDArray[np.floating], at: NDArray[np.floating] | None = None
+    ) -> NDArray[np.float64]:
         logits = ((np.asarray(rows, np.float64) - mean) / spread) @ weights + bias
-        logits -= logits.max(axis=1, keepdims=True)
-        found = np.exp(logits)
-        return found / found.sum(axis=1, keepdims=True)
+        return softmax(logits if at is None else logits + at)
 
     return predict
 
 
-def head_inputs(
-    features: NDArray[np.floating], probabilities: Probabilities
-) -> NDArray[np.float64]:
-    return np.hstack([np.asarray(features, np.float64), np.log(np.clip(probabilities, 1e-7, 1.0))])
+def log_probabilities(probabilities: Probabilities) -> NDArray[np.float64]:
+    return np.log(np.clip(np.asarray(probabilities, np.float64), 1e-7, 1.0))
 
 
 def poc_round(folder: Path, typer: str, round_version: str, stale: float) -> dict[str, object]:
-    pooled = np.load(folder / "pathosam-features.npz")
     fit, fit_labels = poc_split(folder, "train", POC_VIEWS)
+    pooled = np.load(folder / "pathosam-features.npz")
+    test, _ = poc_split(folder, "test", POC_VIEWS)
+    fit_start, test_start = log_probabilities(fit), log_probabilities(test)
+    from_typer = train_head(pooled["train_features"], fit_labels, fit.shape[1], fit_start)
+    from_zero = train_head(
+        np.hstack([pooled["train_features"], fit_start]), fit_labels, fit.shape[1]
+    )
+    return {
+        "starts_from_the_typer": measured_round(
+            folder,
+            typer,
+            round_version,
+            stale,
+            from_typer(pooled["train_features"], fit_start),
+            from_typer(pooled["test_features"], test_start),
+        ),
+        "starts_from_zero": measured_round(
+            folder,
+            typer,
+            round_version,
+            stale,
+            from_zero(np.hstack([pooled["train_features"], fit_start]), None),
+            from_zero(np.hstack([pooled["test_features"], test_start]), None),
+        ),
+    }
+
+
+def measured_round(
+    folder: Path,
+    typer: str,
+    round_version: str,
+    stale: float,
+    trained_side: Probabilities,
+    held_out: Probabilities,
+) -> dict[str, object]:
+    pooled = np.load(folder / "pathosam-features.npz")
+    _, fit_labels = poc_split(folder, "train", POC_VIEWS)
     test, labels = poc_split(folder, "test", POC_VIEWS)
-    head = train_head(head_inputs(pooled["train_features"], fit), fit_labels, fit.shape[1])
-    trained_side = head(head_inputs(pooled["train_features"], fit))
-    held_out = head(head_inputs(pooled["test_features"], test))
     slides = [f"pannuke-fold3-{image}" for image in pooled["test_images"].tolist()]
     sites = np.load(folder / "fold3-nuclei.npz")["tissue"]
     outputs = RoundOutputs(typer, round_version, POC_VIEWS, held_out, labels, slides, sites)
@@ -214,6 +258,9 @@ def poc_round(folder: Path, typer: str, round_version: str, stale: float) -> dic
         }
 
     return {
+        "round_accuracy_on_test_side": round(
+            float((on_test.argmax(axis=1) == test_labels).mean()), ROW_DIGITS
+        ),
         "typer_accuracy_on_test_side": round(
             float((test[measured].argmax(axis=1) == test_labels).mean()), ROW_DIGITS
         ),
