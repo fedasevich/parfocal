@@ -5,7 +5,6 @@ import { join } from "node:path";
 import { after, before, describe, it } from "node:test";
 import { type LatencyProxy, startLatencyProxy } from "@parfocal/latency-proxy";
 import { syntheticDir } from "@parfocal/test-fixtures";
-import { budget, exceeds } from "../../../../scripts/perf-budgets.ts";
 import {
   openTiffSource,
   type PixelLevel,
@@ -29,7 +28,6 @@ const contract: ReadonlyArray<readonly [string, SlideFormatId]> = [
   ["synthetic-mxif-uint16-be.ome.tiff", "ome-tiff"],
 ];
 const rttMs = 100;
-const sidecarOpen = await budget("viewer.sidecar-open-ms");
 const sidecarSamples = 3;
 const browserConnections = 6;
 
@@ -186,7 +184,10 @@ describe(`opening a spread BigTIFF at ${rttMs} ms RTT`, () => {
     await rm(folder, { recursive: true, force: true });
   });
 
-  async function timedOpen(withIndex: boolean): Promise<{ ms: number; levels: number }> {
+  async function timedOpen(
+    withIndex: boolean,
+  ): Promise<{ ms: number; levels: number; requests: number }> {
+    const requestsBefore = origin?.requests.length ?? 0;
     const base = proxy?.url ?? "";
     const started = performance.now();
     const index = withIndex
@@ -202,11 +203,12 @@ describe(`opening a spread BigTIFF at ${rttMs} ms RTT`, () => {
     await source.getTile({ level: coarsest, x: 0, y: 0 });
     const ms = performance.now() - started;
     const levels = source.levels.length;
+    const requests = (origin?.requests.length ?? 0) - requestsBefore;
     source.close();
-    return { ms, levels };
+    return { ms, levels, requests };
   }
 
-  it(`opens with the sidecar in under ${sidecarOpen.limit} ms where the walk takes longer`, async () => {
+  it("opens with the sidecar in fewer requests and under half the time of the walk it replaces", async () => {
     const walked = await timedOpen(false);
     let indexed = await timedOpen(true);
     for (let sample = 1; sample < sidecarSamples; sample++) {
@@ -214,10 +216,10 @@ describe(`opening a spread BigTIFF at ${rttMs} ms RTT`, () => {
       if (next.ms < indexed.ms) indexed = next;
     }
     console.log(
-      `spread BigTIFF, 11 IFDs, ${rttMs} ms RTT: walk ${Math.round(walked.ms)} ms, sidecar ${Math.round(indexed.ms)} ms, fastest of ${sidecarSamples}`,
+      `spread BigTIFF, 11 IFDs, ${rttMs} ms RTT: walk ${Math.round(walked.ms)} ms in ${walked.requests} requests, sidecar ${Math.round(indexed.ms)} ms in ${indexed.requests} requests, fastest of ${sidecarSamples}`,
     );
     assert.equal(indexed.levels, walked.levels);
-    assert.equal(exceeds(sidecarOpen, indexed.ms), null);
-    assert.ok(walked.ms > indexed.ms);
+    assert.ok(indexed.requests * 2 <= walked.requests);
+    assert.ok(indexed.ms * 2 <= walked.ms);
   });
 });
