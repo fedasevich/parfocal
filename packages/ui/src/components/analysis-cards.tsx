@@ -93,7 +93,9 @@ const stepWords: Record<ClusterStepName, (number: number) => string> = {
 };
 
 const joinSteps = (words: string[]) =>
-  words.length > 1 ? t`${words.slice(0, -1).join(", ")} and ${words.at(-1)}` : (words[0] ?? "");
+  words.length > 1
+    ? t`${words.slice(0, -1).join(", ")} and ${words.at(-1) ?? ""}`
+    : (words[0] ?? "");
 
 const capital = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
 

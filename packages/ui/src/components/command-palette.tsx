@@ -80,6 +80,12 @@ function CommandPaletteView({
   onKeyDown,
 }: CommandPaletteViewProps) {
   const { t } = useLingui();
+  const groupTitles: Record<string, string> = {
+    Actions: t`Actions`,
+    "Go to": t`Go to`,
+    Lab: t`Lab`,
+    Settings: t`Settings`,
+  };
 
   const trimmed = query.trim();
   return (
@@ -111,7 +117,7 @@ function CommandPaletteView({
           return (
             <div key={group} role="presentation" className="grid gap-px p-2">
               <span className="px-2.5 pt-1.5 pb-1 text-caption font-semibold text-fg-dim">
-                {group}
+                {groupTitles[group] ?? group}
               </span>
               {inGroup.map((command) => {
                 const on = commands[current]?.id === command.id;

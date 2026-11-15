@@ -91,7 +91,7 @@ test("every icon in the set has an accessible name", () => {
   assert.deepEqual(labels.toSorted(), names.toSorted());
   const block = iconSource.slice(iconSource.indexOf("const iconLabels = {"));
   const spoken = [
-    ...block.slice(0, block.indexOf("}")).matchAll(/^ {2}"?[\w-]+"?: "([^"]*)",$/gm),
+    ...block.slice(0, block.indexOf("}")).matchAll(/^ {2}"?[\w-]+"?: msg`([^`]*)`,$/gm),
   ].map((match) => match[1]);
   assert.equal(spoken.length, names.length);
   assert.ok(spoken.every((label) => label && label.trim().length > 1));

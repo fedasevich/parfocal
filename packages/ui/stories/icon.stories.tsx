@@ -1,3 +1,4 @@
+import { i18n } from "@lingui/core";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Icon, type IconSize, iconLabels, iconNames } from "../src/components/icon.tsx";
 import { KeycapBindings } from "../src/components/keycap.tsx";
@@ -38,7 +39,7 @@ export const EveryIcon: Story = {
           className="grid justify-items-center gap-1.5 text-caption text-fg-dim"
         >
           <Icon name={name} size="md" label className="text-fg" />
-          <span>{iconLabels[name]}</span>
+          <span>{i18n._(iconLabels[name])}</span>
         </li>
       ))}
     </ul>

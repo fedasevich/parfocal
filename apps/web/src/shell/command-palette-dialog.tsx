@@ -26,7 +26,7 @@ function hitRow(hit: SearchHit, query: string, run: () => void): Row {
   const found = query ? matchCommand(label, keywords, query) : null;
   return {
     id: `hit-${hit.kind}-${hit.id}`,
-    group: t`Go to`,
+    group: "Go to",
     icon: hitIcons[hit.kind],
     label,
     matched: found?.indices ?? [],
@@ -130,7 +130,7 @@ function PaletteBody({ initial, close }: { initial: string; close: () => void })
       ? [
           {
             id: "all-results",
-            group: t`Go to`,
+            group: "Go to",
             icon: "search",
             label: t`All results for "${trimmed}"`,
             matched: [],
