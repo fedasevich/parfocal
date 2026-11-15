@@ -1,5 +1,6 @@
 import type { OverlayLayer, OverlayRegistration } from "../engine/types.ts";
 import { withOverlayState } from "./overlay.ts";
+import { sameVectorContent } from "./same-content.ts";
 import type { OverlayDescription } from "./types.ts";
 
 export interface OverlayHost {
@@ -42,6 +43,7 @@ export function createOverlayController(host: OverlayHost): OverlayController {
       entries.set(overlay.id, { registration: host.registerOverlay(overlay), overlay });
       return;
     }
+    if (sameVectorContent(entry.overlay, overlay)) return;
     replace(entry, overlay);
   };
 

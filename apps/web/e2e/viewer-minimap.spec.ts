@@ -30,6 +30,15 @@ test("the map moves to the compact area map when a cell is zoomed to 20x or more
 test("the map fades once the pointer is within 40 px and clears again beyond", async ({ page }) => {
   await openScene(page, "Full viewer, one object · An open region, T5");
   const map = minimap(page);
+  let previous = "";
+  await expect
+    .poll(async () => {
+      const current = JSON.stringify(await map.boundingBox());
+      const settled = current === previous;
+      previous = current;
+      return settled;
+    })
+    .toBe(true);
   const box = await map.boundingBox();
   if (box === null) throw new Error("the minimap has no box");
   await page.mouse.move(box.x - 30, box.y + box.height / 2);
