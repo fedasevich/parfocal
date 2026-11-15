@@ -1,4 +1,4 @@
-# XXXX. The custom WebGPU route ports deck.gl's glyph atlas, blends a ring once with a depth id and rebuilds itself after a lost device
+# 0327. The custom WebGPU route ports deck.gl's glyph atlas, blends a ring once with a depth id and rebuilds itself after a lost device
 
 - Date: 2026-11-15
 - Status: Accepted
