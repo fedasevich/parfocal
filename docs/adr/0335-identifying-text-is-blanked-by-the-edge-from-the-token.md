@@ -45,4 +45,3 @@ Option 1 in each case, and option 2 for labels.
 - After deploying, the shared sample files and any slide already ingested need their ranges file written again, or their originals stay closed. Rewriting a JSON file in the slide bucket is an additive production write.
 - Text in an unrecognised ImageDescription stays. TODO: a generic TIFF whose description holds free text needs a rule once a scanner shows one.
 - Upload rows keep the file name for the uploader's own progress list and for pairing.
-- TODO: the number 0335 was free on this branch on 2026-11-15, and another branch holds 0334. Renumber if it is taken first.
