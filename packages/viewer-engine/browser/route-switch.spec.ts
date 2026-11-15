@@ -2,7 +2,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { type CDPSession, expect, test } from "@playwright/test";
-import { assertSwiftShader } from "../../golden-images/src/playwright.ts";
+import { assertSwiftShader, WEBGPU_SWIFTSHADER_ARGS } from "../../golden-images/src/playwright.ts";
 import type { RendererRouteId } from "../src/index.ts";
 import { collectGarbage, harnessUrl, heapBytes, liveObjects } from "./cdp.ts";
 import type { RouteSwitchReport, RouteSwitchSlide } from "./page/route-switch-harness.ts";
@@ -15,6 +15,12 @@ const switches = Number(process.env.ROUTE_SWITCHES ?? 10);
 const minWarmUpSwitches = 5;
 const heapBudget = 0.1;
 const releaseWaitMs = 5_000;
+
+test.use({
+  launchOptions: {
+    args: [...WEBGPU_SWIFTSHADER_ARGS, "--enable-blink-features=ForceEagerMeasureMemory"],
+  },
+});
 
 interface Sample {
   readonly round: number;
@@ -101,6 +107,7 @@ test("10 renderer route switches keep the camera, one canvas and the heap within
   );
 
   expect(samples.map((sample) => sample.report.errors)).toEqual(samples.map(() => []));
+  expect(samples.map((sample) => sample.report.uncapturedGpuErrors)).toEqual(samples.map(() => 0));
   expect(samples.map((sample) => sample.report.route)).toEqual(
     samples.map((sample) => routeAt(sample.round)),
   );

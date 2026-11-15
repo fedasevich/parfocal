@@ -97,7 +97,7 @@ import { useTissueScan } from "./use-tissue-scan.ts";
 import { useViewerKeys } from "./use-viewer-keys.ts";
 import { ViewedPeek } from "./viewed-peek.tsx";
 import type { ViewerEngine, VivRoute } from "./viewer-engine.ts";
-import { type SelectionArea, zoomTargetArea } from "./viewer-keys.ts";
+import { type SelectionArea, selectionArea, zoomTargetArea } from "./viewer-keys.ts";
 import { railHasTool, type SlideWorkspace, showsCountPanel, workspaceSetups } from "./workspace.ts";
 
 type Phase =
@@ -382,6 +382,16 @@ function OpenedSlide({
     selected: selectedIds,
   });
   const annotations = saved.document;
+  const selectedBox = useMemo(
+    () =>
+      selectionArea(
+        selectedIds.flatMap((id) => {
+          const shape = annotations.shapes.get(id);
+          return shape === undefined ? [] : [shape.bounds];
+        }),
+      ),
+    [annotations.shapes, selectedIds],
+  );
   const proposals = useProposals(saved, slideId);
   const setAnnotations = saved.setDocument;
   const undoBindings = useBindings(["global"], ["undo", "redo"]);
@@ -760,6 +770,8 @@ function OpenedSlide({
               <RunStreamLayer
                 key={slideId}
                 engine={session.engine}
+                stage={hostNode}
+                selection={selectedBox}
                 projectId={projectId}
                 slideId={slideId}
               />

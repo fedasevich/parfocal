@@ -10,6 +10,9 @@ import { type LatencyProxy, startLatencyProxy } from "../../latency-proxy/src/in
 import { type Served, type ServedRequest, serve } from "../test/pixel-source/serve.ts";
 import { crossOriginIsolated, outDir } from "./global-setup.ts";
 import type { PanLeg, PanReport, PanSlide } from "./page/pan-harness.ts";
+import { perfRoute, perfRouteLaunchOptions } from "./perf-route.ts";
+
+if (perfRouteLaunchOptions) test.use({ launchOptions: perfRouteLaunchOptions });
 
 const slideFile = "CMU-1.svs";
 const slidePath = `/cache/${slideFile}`;
@@ -102,6 +105,7 @@ async function panRun(page: Page, setup: Setup): Promise<Run> {
   await page.waitForFunction(() => window.panHarness !== undefined);
   const start = served.log.length;
   const slide: PanSlide = {
+    route: perfRoute,
     url: `${proxy.url}${slidePath}`,
     formatId: "aperio-svs",
     ...setup,

@@ -15,6 +15,7 @@ import {
 } from "@parfocal/viewer-engine";
 import {
   createVivLevels,
+  type DeckWebGpuRoute,
   type PixelSlide,
   pixelRendererRoutes,
   pixelSlide,
@@ -148,20 +149,42 @@ const reset = () => {
 interface HarnessRoutes {
   readonly loaders: RendererRouteLoaders<PixelSlide>;
   readonly viv: () => VivRoute | null;
+  readonly deckWebGpu: () => DeckWebGpuRoute | null;
 }
 
 function harnessRoutes(options: VivRouteOptions = {}): HarnessRoutes {
   const createViv = vivRendererFactory(options);
   let viv: VivRoute | null = null;
+  let deckWebGpu: DeckWebGpuRoute | null = null;
+  const registered = pixelRendererRoutes({
+    viv: options,
+    deckWebGpu: {
+      ...(options.onError ? { onError: options.onError } : {}),
+      ...(options.interpolation ? { interpolation: options.interpolation } : {}),
+    },
+  });
+  const loadDeckWebGpu = registered["deck-webgpu"];
   return {
     loaders: {
-      ...pixelRendererRoutes({ viv: options }),
+      ...registered,
       viv: () => (container) => {
         viv = createViv(container);
         return viv;
       },
+      ...(loadDeckWebGpu === undefined
+        ? {}
+        : {
+            "deck-webgpu": async () => {
+              const create = await loadDeckWebGpu();
+              return (container) => {
+                deckWebGpu = create(container) as DeckWebGpuRoute;
+                return deckWebGpu;
+              };
+            },
+          }),
     },
     viv: () => viv,
+    deckWebGpu: () => deckWebGpu,
   };
 }
 
@@ -227,9 +250,11 @@ const render = async (request: VivSceneRequest): Promise<VivSceneResult> => {
   }
   const viv = shown === "viv" ? routes.viv() : null;
   const { ladder, tileSize } = viv?.channels() ?? createVivLevels(openedSlide.source);
-  const decodeStats = viv?.decodeStats() ?? null;
+  const deckWebGpu = shown === "deck-webgpu" ? routes.deckWebGpu() : null;
+  const decodeStats = viv?.decodeStats() ?? deckWebGpu?.decodeStats() ?? null;
   return {
     route: shown,
+    uncapturedGpuErrors: routes.deckWebGpu()?.uncapturedGpuErrors() ?? null,
     camera: current.getCamera(),
     slide: { width: slide.width, height: slide.height, micronsPerPixel: slide.micronsPerPixel },
     tileSize,
