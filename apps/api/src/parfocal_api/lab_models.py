@@ -18,6 +18,7 @@ from parfocal_api.class_templates import TEMPLATES, TaxonomyTemplate
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.identifiers import ensure_keys, load_keys, open_field, seal_field
 from parfocal_api.model_catalogue import ModelVersion
+from parfocal_api.model_registry import LicenceIn, licence_in_of, licence_of, licence_values
 from parfocal_api.permissions import Permission, member_of, require
 from parfocal_api.principals import Principal, database_scope
 from parfocal_api.problems import BadRequestError, ConflictError, NotFoundError
@@ -142,6 +143,7 @@ class LabModelDraft(ServerSignIn):
     class_map: list[ClassMatch] = Field(max_length=MAX_CLASSES)
     who_can_run: LabModelRunners
     project_ids: list[uuid.UUID] = Field(max_length=200)
+    licence: LicenceIn | None = None
 
     @model_validator(mode="after")
     def sent_once(self) -> LabModelDraft:
@@ -212,6 +214,7 @@ class LabModel(BaseModel):
     class_map: list[ClassMatch]
     who_can_run: LabModelRunners
     project_ids: list[uuid.UUID]
+    licence: LicenceIn | None
     created_at: datetime
 
 
@@ -404,6 +407,7 @@ async def lab_model_of(connection: AsyncConnection, row: Row[Any]) -> LabModel:
         class_map=[ClassMatch.model_validate(match) for match in row.class_map],
         who_can_run=LabModelRunners(row.who_can_run),
         project_ids=await project_ids_of(connection, row.id),
+        licence=licence_in_of(licence) if (licence := licence_of(row)) else None,
         created_at=row.created_at,
     )
 
@@ -475,6 +479,7 @@ async def connect_lab_model(
                     class_map=[match.model_dump() for match in draft.class_map],
                     who_can_run=draft.who_can_run,
                     created_by_user_id=user_of(principal),
+                    **(licence_values(draft.licence.as_licence()) if draft.licence else {}),
                 )
             )
     except IntegrityError as error:

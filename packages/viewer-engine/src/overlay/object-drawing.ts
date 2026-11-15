@@ -56,6 +56,12 @@ export function drawSettingsFromChoices(
   };
 }
 
+const choiceKeys = ["draw", "width", "opacity", "colorBy", "cutoff", "confidence"] as const;
+
+function sameChoices(a: DisplayDrawChoices, b: DisplayDrawChoices): boolean {
+  return choiceKeys.every((key) => a[key] === b[key]);
+}
+
 export function createObjectDrawing(options: ObjectDrawingOptions): ObjectDrawing {
   const controller = createOverlayController(options.host);
   let objects: readonly DrawnObject[] = [];
@@ -91,10 +97,12 @@ export function createObjectDrawing(options: ObjectDrawingOptions): ObjectDrawin
 
   return {
     setObjects: (next) => {
+      if (next === objects && last !== null) return;
       objects = next;
       apply();
     },
     setChoices: (next) => {
+      if (sameChoices(next, choices) && last !== null) return;
       choices = next;
       apply();
     },

@@ -1,0 +1,33 @@
+{
+  "fixture": "JP2K-33003-2.svs",
+  "reader": "openslide",
+  "windows": [
+    {
+      "level": 0,
+      "downsample": 1,
+      "x": 21632,
+      "y": 7808,
+      "width": 256,
+      "height": 256,
+      "file": "level-0-21632-7808.png"
+    },
+    {
+      "level": 1,
+      "downsample": 4,
+      "x": 6784,
+      "y": 1920,
+      "width": 256,
+      "height": 256,
+      "file": "level-1-6784-1920.png"
+    },
+    {
+      "level": 2,
+      "downsample": 16,
+      "x": 896,
+      "y": 2432,
+      "width": 256,
+      "height": 256,
+      "file": "level-2-896-2432.png"
+    }
+  ]
+}

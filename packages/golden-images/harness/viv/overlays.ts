@@ -5,15 +5,19 @@ import {
   isHeatmapOverlay,
   type OverlayController,
   placedLabelBox,
+  type RendererFactory,
+  RendererRouteUnavailableError,
   type ViewerEngine,
   withHeatmapLook,
   zoomForMagnification,
 } from "@parfocal/viewer-engine";
 import {
+  type CustomWebGpuRoute,
+  type DeckWebGpuRoute,
   type PixelSlide,
+  pixelRendererRoutes,
   pixelSlide,
   type VivRoute,
-  vivRendererFactory,
 } from "@parfocal/viewer-engine/viv";
 import {
   idLabelPlacement,
@@ -58,7 +62,7 @@ interface InspectableLayer {
 
 let watching: Destroyable[] = [];
 let engine: ViewerEngine | null = null;
-let route: VivRoute | null = null;
+let route: VivRoute | DeckWebGpuRoute | CustomWebGpuRoute | null = null;
 let layers: OverlayController | null = null;
 let shown: OverlayGeometry | null = null;
 const errors: string[] = [];
@@ -82,6 +86,7 @@ const reset = () => {
 
 const watch = (id: string): ResourceWatch => {
   if (route === null) throw new Error("Nothing is rendered yet");
+  if (!("deck" in route)) throw new Error("This route has no deck.gl layers to watch");
   const manager = (route.deck as unknown as { layerManager: { getLayers(): InspectableLayer[] } })
     .layerManager;
   watching = [];
@@ -105,20 +110,34 @@ const watched = (): ResourceWatch => ({
 const settle = async (): Promise<OverlayRenderResult> => {
   if (route === null || layers === null) throw new Error("Nothing is rendered yet");
   await route.whenIdle();
-  return { errors: [...errors], layerIds: layers.list().map((layer) => layer.id) };
+  return {
+    errors: [...errors],
+    layerIds: layers.list().map((layer) => layer.id),
+    uncapturedGpuErrors: "uncapturedGpuErrors" in route ? route.uncapturedGpuErrors() : null,
+    deviceRecoveries: "deviceRecoveries" in route ? route.deviceRecoveries() : null,
+  };
 };
 
 const render = async (request: OverlayRenderRequest): Promise<OverlayRenderResult> => {
   reset();
-  const factory = vivRendererFactory({
-    onError: (error) => {
+  const routeOptions = {
+    onError: (error: Error) => {
       errors.push(error.message);
     },
-  });
+  };
+  const id = request.route ?? "viv";
+  const load = pixelRendererRoutes({
+    viv: routeOptions,
+    deckWebGpu: routeOptions,
+    customWebGpu: routeOptions,
+  })[id];
+  if (load === undefined) throw new RendererRouteUnavailableError(id);
+  const factory: RendererFactory<PixelSlide> = await load();
   const current = createViewerEngine<PixelSlide>({
     createRenderer: (container) => {
-      route = factory(container);
-      return route;
+      const created = factory(container) as VivRoute | DeckWebGpuRoute | CustomWebGpuRoute;
+      route = created;
+      return created;
     },
     openSlide: async (ref, signal) => {
       const openRequest = { formatId: request.formatId, url: request.url };
@@ -161,6 +180,12 @@ const change = async (operation: OverlayChange): Promise<OverlayRenderResult> =>
   }
   if (operation.kind === "remove") layers.remove(operation.id);
   if (operation.kind === "invalidate") layers.invalidate(operation.id);
+  if (operation.kind === "lose-device") {
+    if (route === null || !("loseDevice" in route)) {
+      throw new Error("This route has no device to lose");
+    }
+    route.loseDevice();
+  }
   return settle();
 };
 

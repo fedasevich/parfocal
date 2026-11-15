@@ -268,7 +268,7 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0302](0302-renderer-routes-switch-inside-the-engine-behind-lazy-loaders.md) | Renderer routes switch inside the engine, and a registry loads each route lazily | Accepted | 2026-11-14 |
 | [0303](0303-a-new-workspace-saves-no-mail-domain.md) | A new workspace saves no mail domain, and only an admin turns joining by domain on in the join settings | Accepted | 2026-11-14 |
 | [0304](0304-a-shared-cursor-is-a-second-capped-frame-in-shares-of-the-slide.md) | A shared cursor is a second capped client frame, sent as shares of the slide, with its own rate cap | Accepted | 2026-11-14 |
-| [XXXX](0305-jpeg-chunks-in-ome-zarr-and-absent-inner-chunks.md) | OME-Zarr JPEG chunks are a zarrita codec named `imagecodecs_jpeg`, and absent inner chunks of a shard come from the slide index | Proposed | 2026-11-14 |
+| [0305](0305-jpeg-chunks-in-ome-zarr-and-absent-inner-chunks.md) | OME-Zarr JPEG chunks are a zarrita codec named `imagecodecs_jpeg`, and absent inner chunks of a shard come from the slide index | Proposed | 2026-11-14 |
 | [0305](0305-jpeg-chunks-in-ome-zarr-and-absent-inner-chunks.md) | OME-Zarr JPEG chunks are a zarrita codec named `imagecodecs_jpeg`, and absent inner chunks of a shard come from the slide index | Accepted | 2026-11-14 |
 | [0306](0306-conversion-triggers-and-the-ome-zarr-target.md) | Conversion runs only on a fired trigger, and writes unsharded OME-Zarr 0.5 with JPEG or zstd chunks | Accepted | 2026-11-14 |
 | [0307](0307-a-bif-is-refused-only-when-its-frame-overlap-is-unknown.md) | A BIF is refused only when its frame overlap is unknown, and a declared zero overlap opens as an exact grid | Accepted | 2026-11-14 |
@@ -278,3 +278,17 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0311](0311-click-decoder-runs-on-a-window-of-the-embedding.md) | The click decoder runs on a 32 token window of the embedding around the prompt | Accepted | 2026-11-14 |
 | [0312](0312-per-slide-type-learner-in-its-own-worker.md) | The per-slide type learner reads the typer's answer as features and runs in its own worker | Accepted | 2026-11-15 |
 | [0313](0313-a-streamed-run-is-a-scene-of-sealed-blocks-per-lineage.md) | A streamed run is a scene of sealed blocks per lineage | Accepted | 2026-11-14 |
+| [0314](0314-deck-webgpu-route-mirrors-the-viv-tile-pipeline.md) | The deck.gl WebGPU route mirrors the Viv tile pipeline and owns its tile textures | Accepted | 2026-11-15 |
+| [0315](0315-a-round-is-recalibrated-on-held-out-slides-before-promotion.md) | A training round is recalibrated on held-out slides before it can be promoted | Accepted | 2026-11-15 |
+| [0316](0316-jpeg-2000-slides-stay-native.md) | JPEG 2000 slides stay native, and the decode budget trigger has not fired | Accepted | 2026-11-15 |
+| [0317](0317-viewer-performance-budgets.md) | Viewer performance budgets per format, CPU-side in CI and frame and GPU time by hand | Accepted | 2026-11-15 |
+| [0318](0318-aperio-coarse-levels-match-the-stored-tiles.md) | Aperio coarse levels match the stored tiles, not OpenSlide's resampled read | Accepted | 2026-11-15 |
+| [0319](0319-training-rounds-start-from-the-typer-and-roll-back-by-pointer.md) | Training rounds start from the typer and roll back by a pointer | Accepted | 2026-11-15 |
+| [0320](0320-pooled-features-of-reviewed-nuclei-are-files-per-slide.md) | Pooled features of reviewed nuclei are files per slide | Accepted | 2026-11-15 |
+| [0321](0321-the-model-registry-is-a-platform-table.md) | The model registry is a platform table that operators write and every workspace reads | Accepted | 2026-11-15 |
+| [0322](0322-the-promotion-gate-compares-with-a-reference-within-a-tolerance.md) | The promotion gate compares a candidate with a reference within a tolerance per task | Accepted | 2026-11-15 |
+| [0323](0323-the-server-pools-reviewed-nuclei-like-the-browser.md) | The server pools reviewed nuclei like the browser and pools a reshaped outline again | Accepted | 2026-11-15 |
+| [0324](0324-web-browser-tests-run-against-a-built-app.md) | Web browser tests run against a built app | Accepted | 2026-11-15 |
+| [0325](0325-isolated-parsing-of-uploaded-files.md) | Uploaded files are parsed in a separate process with a scoped job token, limits and a network block | Accepted | 2026-11-15 |
+| [0326](0326-custom-webgpu-route-draws-from-a-render-worker.md) | The custom WebGPU route draws from a render worker and keeps the Viv tile data path | Accepted | 2026-11-15 |
+| [0327](0327-custom-webgpu-labels-once-per-ring-outlines-and-device-recovery.md) | The custom WebGPU route ports deck.gl's glyph atlas, blends a ring once with a depth id and rebuilds itself after a lost device | Accepted | 2026-11-15 |

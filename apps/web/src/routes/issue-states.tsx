@@ -20,7 +20,7 @@ import type { ScenarioIds } from "../flow-map/targets.ts";
 
 export const Route = createFileRoute("/issue-states")({
   beforeLoad: () => {
-    if (!import.meta.env.DEV) throw notFound();
+    if (import.meta.env.PARFOCAL_PUBLIC_DEV_TOOLS !== "on") throw notFound();
   },
   component: IssueStatesPage,
 });

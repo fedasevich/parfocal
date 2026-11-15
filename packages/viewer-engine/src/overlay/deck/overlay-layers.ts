@@ -22,6 +22,7 @@ import {
   type ViewRect,
   windowMembers,
 } from "../cull-grid.ts";
+import { labelFontSizePx, labelPadding } from "../draw-constants.ts";
 import {
   chooseLod,
   densityRaster,
@@ -57,15 +58,14 @@ import {
   pointData,
   polygonFillData,
   polygonOutlineData,
+  startingMidFirstEdge,
   withCasingColor,
   withoutColors,
 } from "./binary-data.ts";
 
 export const pinSizePx = 28;
 
-export const labelFontSizePx = 12;
-
-export const labelPadding = [6, 3] as const;
+export { labelFontSizePx, labelPadding };
 
 export interface OverlayLayerBuilder {
   readonly build: (
@@ -148,6 +148,16 @@ interface CacheEntry {
 const unpickable = { pickable: false } as const;
 
 const dashes = new PathStyleExtension({ dash: true, dashMode: "path" });
+
+const dashedRings = new WeakMap<BinaryData, BinaryData>();
+
+function dashedRingData(data: BinaryData): BinaryData {
+  const cached = dashedRings.get(data);
+  if (cached) return cached;
+  const shifted = startingMidFirstEdge(data);
+  dashedRings.set(data, shifted);
+  return shifted;
+}
 
 let sharedPinAtlas: { image: ImageData; mapping: Record<PinIconName, object> } | null = null;
 
@@ -460,7 +470,7 @@ function rankedVectorLayers(
     construct(PathLayer, {
       ...(pathType === "loop" ? shapeBase : base),
       id: id(part),
-      data,
+      data: pathType === "loop" && dashArray !== null ? dashedRingData(data) : data,
       opacity,
       _pathType: pathType,
       positionFormat: "XY",

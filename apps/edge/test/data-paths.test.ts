@@ -41,7 +41,7 @@ async function fetchPath(path: string, headers: HeadersInit = {}): Promise<Respo
 async function assertRealNotFound(response: Response, path: string): Promise<void> {
   assert.equal(response.status, 404, path);
   assert.equal(response.headers.get("Content-Type"), "application/problem+json", path);
-  const body = (await response.json()) as { code: string };
+  const body = await response.json<{ code: string }>();
   assert.equal(body.code, "not-found", path);
 }
 

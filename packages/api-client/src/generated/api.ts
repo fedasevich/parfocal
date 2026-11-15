@@ -358,6 +358,22 @@ export interface AiChanges {
   total: Changes;
 }
 
+export interface CorrectionsMonth {
+  month: string;
+  nuclei_reviewed: number;
+  corrections: number;
+  per_hundred: number;
+}
+
+export interface AiCorrections {
+  since: string | null;
+  until: string | null;
+  nuclei_reviewed: number;
+  corrections: number;
+  per_hundred: number;
+  months: CorrectionsMonth[];
+}
+
 export interface AiObjectConfirm {
   geometry?: Geometry | null;
 }
@@ -715,6 +731,7 @@ export const AuditTarget = {
   "report-link": "report-link",
   "clinical-report": "clinical-report",
   "lab-model": "lab-model",
+  "registered-model": "registered-model",
   feedback: "feedback",
   "access-request": "access-request",
 } as const;
@@ -1662,6 +1679,12 @@ export interface CreatedUpload {
   part_count: number;
 }
 
+/**
+ * @minLength 1
+ * @maxLength 400
+ */
+export type LicenceText = string;
+
 export type LicenceClass = (typeof LicenceClass)[keyof typeof LicenceClass];
 
 export const LicenceClass = {
@@ -1670,6 +1693,12 @@ export const LicenceClass = {
   unconfirmed: "unconfirmed",
   own: "own",
 } as const;
+
+export interface DatasetLicenceIn {
+  dataset: LicenceText;
+  licence: LicenceText;
+  licence_class: LicenceClass;
+}
 
 export interface DatasetLicenceOut {
   dataset: string;
@@ -2050,6 +2079,31 @@ export interface EvaluationChanges {
   signed_version: number | null;
   checksum: string | null;
   changes: EvaluationChange[];
+}
+
+export type GateReportOutMeasured = { [key: string]: number };
+
+export type GateReportOutReference = { [key: string]: number };
+
+export type GateReportOutAllowedDrop = { [key: string]: number };
+
+export type GateReportOutCeilings = { [key: string]: number };
+
+export interface GateReportOut {
+  task: string;
+  benchmark: string;
+  source: string;
+  measured: GateReportOutMeasured;
+  reference: GateReportOutReference;
+  allowed_drop: GateReportOutAllowedDrop;
+  ceilings: GateReportOutCeilings;
+  refused: string[];
+  passed: boolean;
+}
+
+export interface EvaluationOut {
+  passed: boolean;
+  reports: GateReportOut[];
 }
 
 export interface EvaluationVersionStarted {
@@ -2727,6 +2781,19 @@ export const LabModelRunners = {
   researchers: "researchers",
 } as const;
 
+export interface LicenceIn {
+  weights: LicenceText;
+  weights_class: LicenceClass;
+  code: LicenceText;
+  /**
+   * @minItems 1
+   * @maxItems 20
+   */
+  data: DatasetLicenceIn[];
+  source: LicenceText;
+  read_on: string;
+}
+
 export interface LabModel {
   id: string;
   name: string;
@@ -2742,6 +2809,7 @@ export interface LabModel {
   class_map: ClassMatch[];
   who_can_run: LabModelRunners;
   project_ids: string[];
+  licence: LicenceIn | null;
   created_at: string;
 }
 
@@ -2795,6 +2863,7 @@ export interface LabModelDraft {
   who_can_run: LabModelRunners;
   /** @maxItems 200 */
   project_ids: string[];
+  licence?: LicenceIn | null;
 }
 
 export type LabModelTestOutcome = (typeof LabModelTestOutcome)[keyof typeof LabModelTestOutcome];
@@ -3155,6 +3224,15 @@ export interface MessageCreate {
 }
 
 /**
+ * @pattern ^[a-z0-9-]{1,40}$
+ */
+export type MetricName = string;
+
+export interface Metrics {
+  [key: string]: number;
+}
+
+/**
  * @minLength 1
  * @maxLength 80
  * @pattern ^[A-Za-z0-9][A-Za-z0-9._/-]*$
@@ -3180,6 +3258,11 @@ export const ModelMakes = {
   cells: "cells",
   heatmap: "heatmap",
 } as const;
+
+export interface ModelRef {
+  name: ModelName;
+  version: ModelVersion;
+}
 
 export interface ModelReference {
   name: ModelName;
@@ -3361,6 +3444,12 @@ export const ModelTask = {
   "interactive-encoder": "interactive-encoder",
   decoder: "decoder",
 } as const;
+
+/**
+ * @minLength 1
+ * @maxLength 200
+ */
+export type ModelText = string;
 
 export type MuteSubject = (typeof MuteSubject)[keyof typeof MuteSubject];
 
@@ -4055,6 +4144,11 @@ export interface ProjectModel {
   serving?: Serving;
 }
 
+export interface PromotionRequest {
+  measured: Partial<Record<ModelTask, Metrics>>;
+  reference?: Partial<Record<ModelTask, Metrics>> | null;
+}
+
 export interface Proportion {
   value: number;
   numerator: number;
@@ -4184,6 +4278,34 @@ export interface RegionMetrics {
   rows?: Rows | null;
 }
 
+export type RegistrationDraftCalibrationTemperatures = { [key: string]: number };
+
+export interface RegistrationDraft {
+  name: ModelName;
+  version: ModelVersion;
+  family: ModelText;
+  title: ModelText;
+  /**
+   * @minItems 1
+   * @maxItems 5
+   */
+  tasks: ModelTask[];
+  /** @maxItems 3 */
+  makes: ModelMakes[];
+  host: ModelHost;
+  licence: LicenceIn;
+  /**
+   * @minItems 1
+   * @maxItems 3
+   */
+  allowed_tenant_kinds: TenantKind[];
+  input_mpp?: number | null;
+  calibration_temperatures?: RegistrationDraftCalibrationTemperatures;
+  evaluation_report?: LicenceText | null;
+  status?: ModelStatus;
+  part_of?: ModelRef | null;
+}
+
 export type RegistryEntryCalibrationTemperatures = { [key: string]: number };
 
 export interface RegistryEntry {
@@ -4200,6 +4322,8 @@ export interface RegistryEntry {
   calibration_temperatures: RegistryEntryCalibrationTemperatures;
   evaluation_report: string | null;
   status: ModelStatus;
+  part_of: ModelRef | null;
+  evaluation?: EvaluationOut | null;
 }
 
 /**
@@ -6109,6 +6233,11 @@ export type PreviewSavedStudyTemplateParams = {
 
 export type DownloadSavedStudyTemplatePreviewParams = {
   locale?: Locale;
+};
+
+export type GetAiCorrectionsParams = {
+  since?: string | null;
+  until?: string | null;
 };
 
 export type GetAiUsageParams = {
@@ -16989,6 +17118,347 @@ export function useGetRegisteredModel<
 
   return withQueryKey(query, queryOptions.queryKey);
 }
+
+export type registerModelResponse201 = {
+  data: RegistryEntry;
+  status: 201;
+};
+
+export type registerModelResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type registerModelResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type registerModelResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type registerModelResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type registerModelResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type registerModelResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type registerModelResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type registerModelResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type registerModelResponseSuccess = registerModelResponse201 & {
+  headers: Headers;
+};
+export type registerModelResponseError = (
+  | registerModelResponse400
+  | registerModelResponse401
+  | registerModelResponse403
+  | registerModelResponse404
+  | registerModelResponse409
+  | registerModelResponse422
+  | registerModelResponse429
+  | registerModelResponse500
+) & {
+  headers: Headers;
+};
+
+export type registerModelResponse = registerModelResponseSuccess | registerModelResponseError;
+
+export const getRegisterModelUrl = () => {
+  return `/api/platform/model-registry`;
+};
+
+/**
+ * @summary Register Model
+ */
+export const registerModel = async (
+  registrationDraft: RegistrationDraft,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<registerModelResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<registerModelResponse>(getRegisterModelUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(registrationDraft),
+  });
+};
+
+export const getRegisterModelMutationKey = () => ["registerModel"] as const;
+
+export const getRegisterModelMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof registerModel>>,
+    TError,
+    RegisterModelMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof registerModel>>,
+  TError,
+  RegisterModelMutationVariables,
+  TContext
+> => {
+  const mutationKey = getRegisterModelMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof registerModel>>,
+    RegisterModelMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return registerModel(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RegisterModelMutationResult = NonNullable<Awaited<ReturnType<typeof registerModel>>>;
+export type RegisterModelMutationBody = RegistrationDraft;
+export type RegisterModelMutationError = Problem;
+export type RegisterModelMutationVariables = { data: RegistrationDraft };
+
+/**
+ * @summary Register Model
+ */
+export const useRegisterModel = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof registerModel>>,
+      TError,
+      RegisterModelMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof registerModel>>,
+  TError,
+  RegisterModelMutationVariables,
+  TContext
+> => {
+  return useMutation(getRegisterModelMutationOptions(options), queryClient);
+};
+
+export type promoteRegisteredModelResponse200 = {
+  data: RegistryEntry;
+  status: 200;
+};
+
+export type promoteRegisteredModelResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type promoteRegisteredModelResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type promoteRegisteredModelResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type promoteRegisteredModelResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type promoteRegisteredModelResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type promoteRegisteredModelResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type promoteRegisteredModelResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type promoteRegisteredModelResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type promoteRegisteredModelResponseSuccess = promoteRegisteredModelResponse200 & {
+  headers: Headers;
+};
+export type promoteRegisteredModelResponseError = (
+  | promoteRegisteredModelResponse400
+  | promoteRegisteredModelResponse401
+  | promoteRegisteredModelResponse403
+  | promoteRegisteredModelResponse404
+  | promoteRegisteredModelResponse409
+  | promoteRegisteredModelResponse422
+  | promoteRegisteredModelResponse429
+  | promoteRegisteredModelResponse500
+) & {
+  headers: Headers;
+};
+
+export type promoteRegisteredModelResponse =
+  | promoteRegisteredModelResponseSuccess
+  | promoteRegisteredModelResponseError;
+
+export const getPromoteRegisteredModelUrl = (name: string, version: string) => {
+  return `/api/platform/model-registry/${name}/${version}/promotion`;
+};
+
+/**
+ * @summary Promote Registered Model
+ */
+export const promoteRegisteredModel = async (
+  name: string,
+  version: string,
+  promotionRequest: PromotionRequest,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<promoteRegisteredModelResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<promoteRegisteredModelResponse>(getPromoteRegisteredModelUrl(name, version), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(promotionRequest),
+  });
+};
+
+export const getPromoteRegisteredModelMutationKey = () => ["promoteRegisteredModel"] as const;
+
+export const getPromoteRegisteredModelMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof promoteRegisteredModel>>,
+    TError,
+    PromoteRegisteredModelMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof promoteRegisteredModel>>,
+  TError,
+  PromoteRegisteredModelMutationVariables,
+  TContext
+> => {
+  const mutationKey = getPromoteRegisteredModelMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof promoteRegisteredModel>>,
+    PromoteRegisteredModelMutationVariables
+  > = (props) => {
+    const { name, version, data } = props ?? {};
+
+    return promoteRegisteredModel(name, version, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type PromoteRegisteredModelMutationResult = NonNullable<
+  Awaited<ReturnType<typeof promoteRegisteredModel>>
+>;
+export type PromoteRegisteredModelMutationBody = PromotionRequest;
+export type PromoteRegisteredModelMutationError = Problem;
+export type PromoteRegisteredModelMutationVariables = {
+  name: string;
+  version: string;
+  data: PromotionRequest;
+};
+
+/**
+ * @summary Promote Registered Model
+ */
+export const usePromoteRegisteredModel = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof promoteRegisteredModel>>,
+      TError,
+      PromoteRegisteredModelMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof promoteRegisteredModel>>,
+  TError,
+  PromoteRegisteredModelMutationVariables,
+  TContext
+> => {
+  return useMutation(getPromoteRegisteredModelMutationOptions(options), queryClient);
+};
 
 export type testLabModelResponse200 = {
   data: LabModelTest;
@@ -50724,6 +51194,204 @@ export function useGetTaskAiChanges<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getGetTaskAiChangesQueryOptions(taskId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type getAiCorrectionsResponse200 = {
+  data: AiCorrections;
+  status: 200;
+};
+
+export type getAiCorrectionsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getAiCorrectionsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getAiCorrectionsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getAiCorrectionsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getAiCorrectionsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getAiCorrectionsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getAiCorrectionsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getAiCorrectionsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getAiCorrectionsResponseSuccess = getAiCorrectionsResponse200 & {
+  headers: Headers;
+};
+export type getAiCorrectionsResponseError = (
+  | getAiCorrectionsResponse400
+  | getAiCorrectionsResponse401
+  | getAiCorrectionsResponse403
+  | getAiCorrectionsResponse404
+  | getAiCorrectionsResponse409
+  | getAiCorrectionsResponse422
+  | getAiCorrectionsResponse429
+  | getAiCorrectionsResponse500
+) & {
+  headers: Headers;
+};
+
+export type getAiCorrectionsResponse =
+  | getAiCorrectionsResponseSuccess
+  | getAiCorrectionsResponseError;
+
+export const getGetAiCorrectionsUrl = (params?: GetAiCorrectionsParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/tenant/ai-corrections?${stringifiedParams}`
+    : `/api/tenant/ai-corrections`;
+};
+
+/**
+ * @summary Get Ai Corrections
+ */
+export const getAiCorrections = async (
+  params?: GetAiCorrectionsParams,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getAiCorrectionsResponse> => {
+  return apiFetch<getAiCorrectionsResponse>(getGetAiCorrectionsUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetAiCorrectionsQueryKey = (params?: GetAiCorrectionsParams) => {
+  return [`/api/tenant/ai-corrections`, ...(params ? [params] : [])] as const;
+};
+
+export const getGetAiCorrectionsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getAiCorrections>>,
+  TError = Problem,
+>(
+  params?: GetAiCorrectionsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAiCorrections>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetAiCorrectionsQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getAiCorrections>>> = ({ signal }) =>
+    getAiCorrections(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getAiCorrections>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetAiCorrectionsQueryResult = NonNullable<Awaited<ReturnType<typeof getAiCorrections>>>;
+export type GetAiCorrectionsQueryError = Problem;
+
+export function useGetAiCorrections<
+  TData = Awaited<ReturnType<typeof getAiCorrections>>,
+  TError = Problem,
+>(
+  params: undefined | GetAiCorrectionsParams,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAiCorrections>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAiCorrections>>,
+          TError,
+          Awaited<ReturnType<typeof getAiCorrections>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetAiCorrections<
+  TData = Awaited<ReturnType<typeof getAiCorrections>>,
+  TError = Problem,
+>(
+  params?: GetAiCorrectionsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAiCorrections>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAiCorrections>>,
+          TError,
+          Awaited<ReturnType<typeof getAiCorrections>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetAiCorrections<
+  TData = Awaited<ReturnType<typeof getAiCorrections>>,
+  TError = Problem,
+>(
+  params?: GetAiCorrectionsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAiCorrections>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Ai Corrections
+ */
+
+export function useGetAiCorrections<
+  TData = Awaited<ReturnType<typeof getAiCorrections>>,
+  TError = Problem,
+>(
+  params?: GetAiCorrectionsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAiCorrections>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetAiCorrectionsQueryOptions(params, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;

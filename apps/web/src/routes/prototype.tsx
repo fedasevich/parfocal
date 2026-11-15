@@ -21,7 +21,7 @@ import { toolPrototypeLinks } from "../screens/viewer-tools/prototype-scenes.ts"
 
 export const Route = createFileRoute("/prototype")({
   beforeLoad: () => {
-    if (!import.meta.env.DEV) throw notFound();
+    if (import.meta.env.PARFOCAL_PUBLIC_DEV_TOOLS !== "on") throw notFound();
   },
   component: PrototypeIndex,
 });

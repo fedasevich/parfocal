@@ -25,6 +25,7 @@ async function settledBox(target: Locator) {
 }
 
 async function drag(page: Page, target: Locator) {
+  await page.bringToFront();
   const box = await settledBox(target);
   const x = box.x + box.width / 2;
   const y = box.y + box.height / 2;
@@ -68,11 +69,14 @@ test("an object selected in the side panel window is selected in the main window
   await page.getByTestId("inspector-popout").click();
   const second = await opened;
   const panel = second.getByRole("complementary", { name: "Side panel" });
+  await second.bringToFront();
   await panel.getByRole("button", { name: /^T5 Tumor region/ }).click();
   await expect(page).toHaveURL(/object=T5/);
+  await page.bringToFront();
   await page.getByRole("button", { name: "Whole slide", exact: true }).click();
   await expect(page).not.toHaveURL(/object=/);
   await expect(second).not.toHaveURL(/object=/);
+  await second.bringToFront();
   await panel.getByRole("tab", { name: /^Comments/ }).click();
   await expect(page).toHaveURL(/tab=comments/);
 });

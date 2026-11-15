@@ -71,7 +71,7 @@ test("nuclei get a casing of half a pixel on each side", () => {
   assert.equal(layer(layers, "outlines").getWidth, 1);
 });
 
-test("an AI proposal is a near-black dashed line on a white casing, whatever its class colour", () => {
+test("an AI proposal is a near-black dashed ring from mid first edge on a white casing", () => {
   const layers = build("ai-proposals");
   const casing = layer(layers, "outline-casings");
   const outline = layer(layers, "outlines");
@@ -83,6 +83,12 @@ test("an AI proposal is a near-black dashed line on a white casing, whatever its
   assert.equal(outline.dashUnits, "pixels");
   assert.equal(outline.capRounded, false);
   assert.deepEqual(attributeNames(outline), ["getPath"]);
+  const pathOf = (props: Props) => [
+    ...(props.data as { attributes: { getPath: { value: Float32Array } } }).attributes.getPath
+      .value,
+  ];
+  assert.deepEqual(pathOf(outline), [5, 0, 10, 0, 10, 10, 0, 10, 0, 0, 5, 0]);
+  assert.deepEqual(pathOf(casing), [0, 0, 10, 0, 10, 10, 0, 10, 0, 0, 10, 0]);
   assert.ok(attributeNames(layer(layers, "fills")).includes("getFillColor"));
   assert.deepEqual(dots.getFillColor, nearBlack);
   assert.deepEqual(dots.getLineColor, white);
@@ -123,6 +129,19 @@ test("a casing that follows alpha takes each outline's alpha in its own colour",
     .getColor.value;
   assert.deepEqual(Array.from(colors.subarray(0, 4)), [11, 11, 11, 51]);
   assert.equal(find(builder.build([overlay])).data, casing.data);
+});
+
+test("the mid edge ring is cached per build and solid outlines keep their wrapped vertices", () => {
+  const builder = createOverlayLayerBuilder();
+  const overlay = createVectorOverlay({ id: "a", kind: "ai-proposals", shapes: { polygons } });
+  const outlineOf = (built: unknown[]) =>
+    propsOf(built.find((entry) => (entry as { id: string }).id === "overlay:a:outlines"));
+  const first = outlineOf(builder.build([overlay]));
+  assert.equal(outlineOf(builder.build([overlay])).data, first.data);
+  const solid = layer(build("human-annotations"), "outlines");
+  const solidPath = (solid.data as { attributes: { getPath: { value: Float32Array } } }).attributes
+    .getPath.value;
+  assert.deepEqual([...solidPath], [0, 0, 10, 0, 10, 10, 0, 10, 0, 0, 10, 0]);
 });
 
 test("an outline follows the outer ring and every hole as separate closed loops", () => {

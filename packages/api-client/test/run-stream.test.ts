@@ -2,8 +2,10 @@ import assert from "node:assert/strict";
 import { after, afterEach, before, test } from "node:test";
 import { setupServer } from "msw/node";
 import {
+  annotateTaskSlides,
   fakeApiHandlers,
   resetFakeRunStreams,
+  resetFakeSharedLayer,
   setFakeViewerScene,
   streamCellsPerTile,
   streamRunPrefix,
@@ -114,4 +116,112 @@ test("cancel freezes the finished tiles and the run ends cancelled", async () =>
   const ended = await areas(run, draining.after);
   assert.equal(ended.status, "cancelled");
   assert.deepEqual(ended.areas, []);
+});
+
+const annotateTask = "00000000-0000-4000-8007-000000000021";
+
+test("a selection run of an annotate task streams only its tiles and joins as AI objects", async () => {
+  setFakeViewerScene("streaming");
+  resetFakeSharedLayer();
+  const byHand = annotateTaskSlides.byHand;
+  const started = await fetch(`/api/projects/${project}/model-runs`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      slide_ids: [byHand],
+      task_id: annotateTask,
+      scope: {
+        kind: "selection",
+        geometry: {
+          type: "Polygon",
+          coordinates: [
+            [
+              [600, 100],
+              [760, 100],
+              [760, 240],
+              [600, 240],
+              [600, 100],
+            ],
+          ],
+        },
+      },
+      parameters: { detector: { name: "hovernet" } },
+    }),
+  });
+  const [run] = (await started.json()) as {
+    id: string;
+    task_id: string;
+    scope: { kind: string };
+    result_set_id: string;
+  }[];
+  if (run === undefined) throw new Error("No run started");
+  assert.equal(run.task_id, annotateTask);
+  assert.equal(run.scope.kind, "selection");
+
+  const streamed = await areas(run.id, 0);
+  assert.equal(streamed.total, 1);
+  assert.deepEqual(
+    streamed.areas.map((area) => [area.unit, area.objects]),
+    [[1, 4]],
+  );
+  const done = (await (await fetch(`/api/projects/${project}/model-runs/${run.id}`)).json()) as {
+    status: string;
+    result_set_id: string;
+  };
+  assert.equal(done.status, "done");
+
+  const base = `/api/review-tasks/${annotateTask}/slides/${byHand}`;
+  const joined = await fetch(`${base}/runs`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ result_set_id: done.result_set_id }),
+  });
+  assert.deepEqual(
+    ((await joined.json()) as { result_set_id: string; run_set_ids: string[] }).run_set_ids,
+    [],
+  );
+  const ai = (await (await fetch(`${base}/shared-layer/ai`)).json()) as {
+    result_set_id: string;
+    objects: { object: string }[];
+  };
+  assert.equal(ai.result_set_id, done.result_set_id);
+  assert.deepEqual(
+    ai.objects.map((item) => item.object),
+    ["C44", "C45", "C50", "C51"],
+  );
+  const fixed = await fetch(`${base}/shared-layer/ai/C44`, {
+    method: "PUT",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ deleted: true }),
+  });
+  assert.equal(fixed.status, 201);
+  assert.equal(((await fixed.json()) as { origin: string }).origin, "ai-edited");
+  resetFakeSharedLayer();
+});
+
+test("a view run echoes its scope and ordering and is listed by status", async () => {
+  setFakeViewerScene("streaming");
+  const scope = { kind: "view", x: 10, y: 20, width: 300, height: 200 };
+  const response = await fetch(`/api/projects/${project}/model-runs`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      slide_ids: [slide],
+      scope,
+      parameters: { detector: { name: "hovernet" }, ordering: "tumor-first" },
+    }),
+  });
+  const [run] = (await response.json()) as {
+    id: string;
+    scope: unknown;
+    parameters: { ordering: string };
+  }[];
+  assert.deepEqual(run?.scope, scope);
+  assert.equal(run?.parameters.ordering, "tumor-first");
+  const listed = (await (
+    await fetch(
+      `/api/projects/${project}/model-runs?slide_id=${slide}&status=done&status=cancelled`,
+    )
+  ).json()) as unknown[];
+  assert.deepEqual(listed, []);
 });

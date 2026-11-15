@@ -46,6 +46,7 @@ export interface VivSceneResult {
   readonly tileSize: number;
   readonly ladder: readonly { readonly downsample: number; readonly backing: number }[];
   readonly errors: readonly string[];
+  readonly uncapturedGpuErrors: number | null;
   readonly decoded: { readonly workers: number; readonly dispatched: number } | null;
   readonly jpeg: readonly (DecodeReport | null)[];
 }

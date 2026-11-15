@@ -25,6 +25,7 @@ export interface RouteSwitchReport {
   readonly camera: Camera;
   readonly canvases: number;
   readonly switchMs: number;
+  readonly uncapturedGpuErrors: number;
   readonly errors: readonly string[];
 }
 
@@ -49,13 +50,22 @@ globalThis.addEventListener("unhandledrejection", (event) => {
   errors.push(String(event.reason));
 });
 
-const loaders = pixelRendererRoutes({
-  viv: {
-    useDevicePixels: 1,
-    onError: (error) => {
-      errors.push(error.message);
-    },
+let uncapturedGpuErrors = 0;
+
+const routeOptions = {
+  useDevicePixels: 1,
+  onError: (error: Error) => {
+    if (error.name === "WebGpuError" && (error as { source?: string }).source === "uncaptured") {
+      uncapturedGpuErrors += 1;
+    }
+    errors.push(error.message);
   },
+};
+
+const loaders = pixelRendererRoutes({
+  viv: routeOptions,
+  deckWebGpu: routeOptions,
+  customWebGpu: routeOptions,
 });
 
 function viewer(): HTMLElement {
@@ -80,6 +90,7 @@ function report(started: number): RouteSwitchReport {
     camera: engine.getCamera(),
     canvases: viewer().querySelectorAll("canvas").length,
     switchMs: performance.now() - started,
+    uncapturedGpuErrors,
     errors: [...errors],
   };
 }

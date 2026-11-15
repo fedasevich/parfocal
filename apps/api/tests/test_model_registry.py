@@ -4,16 +4,22 @@ from typing import Any
 
 import pytest
 
-from parfocal_api.model_catalogue import CATALOGUE, ModelHost, ModelMakes
+from parfocal_api.model_catalogue import (
+    CATALOGUE,
+    LicenceClass,
+    ModelHost,
+    ModelMakes,
+    ModelStatus,
+    ModelTask,
+)
 from parfocal_api.model_registry import (
+    BUILT_INS,
     LICENCE_ENFORCED,
     MODELS,
+    PARTS,
     REGISTRY,
     DatasetLicence,
     Licence,
-    LicenceClass,
-    ModelStatus,
-    ModelTask,
     RegisteredModel,
     RegistrationError,
     catalogue_without_registry,
@@ -47,8 +53,8 @@ SAMPLE = RegisteredModel(
 
 def test_every_catalogue_model_is_registered_with_its_licences() -> None:
     assert catalogue_without_registry() == []
-    assert len(REGISTRY) == len(MODELS) >= len(CATALOGUE)
-    for model in MODELS:
+    assert len(REGISTRY) == len(BUILT_INS) >= len(CATALOGUE)
+    for model in BUILT_INS:
         licence = model.licence
         assert licence.weights.strip()
         assert licence.code.strip()
@@ -120,4 +126,40 @@ def test_the_licence_policy_opens_only_for_permitted_weights_and_data() -> None:
     assert licence_policy_kinds(OPEN) == tuple(TenantKind)
     unconfirmed = DatasetLicence("CAMELYON16", "unclear", LicenceClass.UNCONFIRMED)
     assert licence_policy_kinds(replace(OPEN, data=(unconfirmed,))) == ()
-    assert all(licence_policy_kinds(model.licence) == () for model in MODELS)
+    assert all(licence_policy_kinds(model.licence) == () for model in BUILT_INS)
+
+
+LINE_UP_PARTS = {
+    "pathosam-vit-l-encoder",
+    "pathosam-vit-b-encoder",
+    "pathosam-vit-l-ais-decoder",
+    "pathosam-vit-b-ais-decoder",
+    "pathosam-vit-l-prompt-decoder",
+    "pathosam-vit-b-prompt-decoder",
+    "hovernext-pannuke",
+}
+
+
+def test_every_part_of_the_v1_line_up_is_registered_with_a_version() -> None:
+    assert {model.name for model in PARTS} == LINE_UP_PARTS
+    for model in PARTS:
+        assert model.version
+        assert model.part_of in REGISTRY
+        assert REGISTRY[(model.name, model.version)] is model
+    assert ("camelyon-tumor", "v1.0") in {(model.name, model.version) for model in MODELS}
+
+
+def test_an_encoder_part_may_make_nothing_visible_but_a_decoder_may_not() -> None:
+    encoder = replace(SAMPLE, tasks=(ModelTask.INTERACTIVE_ENCODER,), makes=())
+    assert register([encoder])
+    with pytest.raises(RegistrationError, match="makes nothing"):
+        register([replace(encoder, tasks=(ModelTask.DECODER,))])
+
+
+def test_a_part_names_a_model_registered_before_it() -> None:
+    piece = replace(SAMPLE, name="open-encoder", part_of=("open-detector", "v1"))
+    assert register([SAMPLE, piece])[("open-encoder", "v1")].part_of == ("open-detector", "v1")
+    with pytest.raises(RegistrationError, match="unknown model"):
+        register([piece])
+    with pytest.raises(RegistrationError, match="part of itself"):
+        register([replace(SAMPLE, part_of=("open-detector", "v1"))])

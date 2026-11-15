@@ -14,7 +14,9 @@ import {
   zoomForMagnification,
 } from "@parfocal/viewer-engine";
 import {
+  type CustomWebGpuRoute,
   createVivLevels,
+  type DeckWebGpuRoute,
   type PixelSlide,
   pixelRendererRoutes,
   pixelSlide,
@@ -148,20 +150,59 @@ const reset = () => {
 interface HarnessRoutes {
   readonly loaders: RendererRouteLoaders<PixelSlide>;
   readonly viv: () => VivRoute | null;
+  readonly deckWebGpu: () => DeckWebGpuRoute | null;
+  readonly customWebGpu: () => CustomWebGpuRoute | null;
 }
 
 function harnessRoutes(options: VivRouteOptions = {}): HarnessRoutes {
   const createViv = vivRendererFactory(options);
   let viv: VivRoute | null = null;
+  let deckWebGpu: DeckWebGpuRoute | null = null;
+  let customWebGpu: CustomWebGpuRoute | null = null;
+  const alternateOptions = {
+    ...(options.onError ? { onError: options.onError } : {}),
+    ...(options.interpolation ? { interpolation: options.interpolation } : {}),
+  };
+  const registered = pixelRendererRoutes({
+    viv: options,
+    deckWebGpu: alternateOptions,
+    customWebGpu: alternateOptions,
+  });
+  const loadDeckWebGpu = registered["deck-webgpu"];
+  const loadCustomWebGpu = registered["custom-webgpu"];
   return {
     loaders: {
-      ...pixelRendererRoutes({ viv: options }),
+      ...registered,
       viv: () => (container) => {
         viv = createViv(container);
         return viv;
       },
+      ...(loadDeckWebGpu === undefined
+        ? {}
+        : {
+            "deck-webgpu": async () => {
+              const create = await loadDeckWebGpu();
+              return (container) => {
+                deckWebGpu = create(container) as DeckWebGpuRoute;
+                return deckWebGpu;
+              };
+            },
+          }),
+      ...(loadCustomWebGpu === undefined
+        ? {}
+        : {
+            "custom-webgpu": async () => {
+              const create = await loadCustomWebGpu();
+              return (container) => {
+                customWebGpu = create(container) as CustomWebGpuRoute;
+                return customWebGpu;
+              };
+            },
+          }),
     },
     viv: () => viv,
+    deckWebGpu: () => deckWebGpu,
+    customWebGpu: () => customWebGpu,
   };
 }
 
@@ -227,9 +268,17 @@ const render = async (request: VivSceneRequest): Promise<VivSceneResult> => {
   }
   const viv = shown === "viv" ? routes.viv() : null;
   const { ladder, tileSize } = viv?.channels() ?? createVivLevels(openedSlide.source);
-  const decodeStats = viv?.decodeStats() ?? null;
+  const deckWebGpu = shown === "deck-webgpu" ? routes.deckWebGpu() : null;
+  const customWebGpu = shown === "custom-webgpu" ? routes.customWebGpu() : null;
+  const decodeStats =
+    viv?.decodeStats() ?? deckWebGpu?.decodeStats() ?? customWebGpu?.decodeStats() ?? null;
+  const gpuRoutes = [routes.deckWebGpu(), routes.customWebGpu()].filter((route) => route !== null);
   return {
     route: shown,
+    uncapturedGpuErrors:
+      gpuRoutes.length === 0
+        ? null
+        : gpuRoutes.reduce((total, route) => total + route.uncapturedGpuErrors(), 0),
     camera: current.getCamera(),
     slide: { width: slide.width, height: slide.height, micronsPerPixel: slide.micronsPerPixel },
     tileSize,

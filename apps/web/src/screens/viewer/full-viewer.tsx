@@ -179,8 +179,14 @@ import {
   RunningObjects,
   TellMeWhenReady,
 } from "./objects-panel.tsx";
+import { ReviewLearnerEmbeddings } from "./review-learner-embeddings.tsx";
 import { SavePresetModal } from "./save-preset-modal.tsx";
-import { changedCellIds, type LearnerView, retypedCells } from "./slide-learner.ts";
+import {
+  changedCellIds,
+  type LearnerView,
+  labelsOnceCorrected,
+  retypedCells,
+} from "./slide-learner.ts";
 import { swipeStart } from "./swipe-split.ts";
 import { useAreaNav } from "./use-area-nav.ts";
 import { emptyLearnerView, useSlideLearner } from "./use-slide-learner.ts";
@@ -234,16 +240,18 @@ function ViewerWithTask(props: FullViewerProps & { taskId: string }) {
   const progress = useGetSlideAiProgress(props.slideId);
   if (!session.ready || project === undefined || progress.isPending) return <SlideLoader />;
   return (
-    <ViewerBody
-      key={`${props.search.scene ?? "objects"}-${props.slideId}`}
-      {...props}
-      session={session}
-      clinical={project.privacy_mode === "clinical"}
-      projectCode={project.code}
-      projectName={project.name}
-      viewerParts={project.viewer_parts}
-      template={project.template}
-    />
+    <ReviewLearnerEmbeddings slideId={props.slideId}>
+      <ViewerBody
+        key={`${props.search.scene ?? "objects"}-${props.slideId}`}
+        {...props}
+        session={session}
+        clinical={project.privacy_mode === "clinical"}
+        projectCode={project.code}
+        projectName={project.name}
+        viewerParts={project.viewer_parts}
+        template={project.template}
+      />
+    </ReviewLearnerEmbeddings>
   );
 }
 
@@ -698,7 +706,7 @@ function ViewerBody({
     pooledFeaturesOf: pooledFeaturesOf ?? fixtureFeatures,
     input: {
       cells: typerCells,
-      labels: learnerLabels,
+      labels: labelsOnceCorrected(learnerLabels, typerCells),
       decided: (object) => answer(object) !== undefined,
     },
     onView: setLearnerView,

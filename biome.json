@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.5.15/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.6.7/schema.json",
   "vcs": {
     "enabled": true,
     "clientKind": "git",
@@ -24,6 +24,10 @@
   "linter": {
     "rules": {
       "preset": "recommended",
+      "correctness": {
+        "usePlaywrightValidDescribeCallback": "off",
+        "noComponentHookFactories": "off"
+      },
       "a11y": {
         "noLabelWithoutControl": {
           "level": "error",
@@ -46,7 +50,32 @@
       "tailwindDirectives": true
     }
   },
+  "markdown": {
+    "formatter": { "enabled": false },
+    "linter": { "enabled": false }
+  },
+  "yaml": {
+    "formatter": { "enabled": false },
+    "linter": { "enabled": false }
+  },
   "overrides": [
+    {
+      "includes": ["packages/api-client/src/generated/**"],
+      "linter": { "rules": { "suspicious": { "noConfusingVoidType": "off" } } }
+    },
+    {
+      "includes": ["apps/web/e2e/**", "apps/web/test/**"],
+      "linter": {
+        "rules": {
+          "performance": { "useDomNodeTextContent": "off" },
+          "style": { "noNonNullAssertion": "off" }
+        }
+      }
+    },
+    {
+      "includes": ["scripts/board.html"],
+      "linter": { "rules": { "style": { "noDescendingSpecificity": "off" } } }
+    },
     {
       "includes": ["packages/ui/src/components/**"],
       "linter": {

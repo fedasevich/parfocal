@@ -1,3 +1,4 @@
+import type { RenderWorkerLike } from "../../src/custom-webgpu/index.ts";
 import {
   type BoundViewHistory,
   bindViewerInput,
@@ -7,6 +8,9 @@ import {
   createViewerEngine,
   type MotionVector,
   type PrefetchStats,
+  type RendererFactory,
+  type RendererRouteId,
+  RendererRouteUnavailableError,
   type SlideFormatId,
   type ViewerEngine,
   type ViewerInputBinding,
@@ -14,13 +18,17 @@ import {
   zoomForMagnification,
 } from "../../src/index.ts";
 import {
+  type CustomWebGpuRoute,
   createPixelSlideOpener,
+  type DeckWebGpuRoute,
   type DecodeStats,
   type PixelSlide,
+  pixelRendererRoutes,
   pixelSlide,
   type VivRoute,
-  vivRendererFactory,
 } from "../../src/viv/index.ts";
+
+export type PanRoute = VivRoute | DeckWebGpuRoute | CustomWebGpuRoute;
 
 export interface PanSlide {
   readonly url: string;
@@ -29,12 +37,15 @@ export interface PanSlide {
   readonly reader: "shared-bytes" | "geotiff-direct";
   readonly magnification: number | null;
   readonly prefetch?: boolean;
+  readonly route?: RendererRouteId;
+  readonly micronsPerPixel?: number;
   readonly x: number;
   readonly y: number;
 }
 
 export interface JumpTarget {
   readonly magnification: number;
+  readonly micronsPerPixel?: number;
   readonly x: number;
   readonly y: number;
 }
@@ -107,7 +118,7 @@ declare global {
 
 const errors: string[] = [];
 let engine: ViewerEngine | null = null;
-let route: VivRoute | null = null;
+let route: PanRoute | null = null;
 let history: BoundViewHistory | null = null;
 let wheel: ViewerInputBinding | null = null;
 let frameTimes: number[] | null = null;
@@ -127,7 +138,17 @@ function nextFrame(): Promise<number> {
   return new Promise((resolve) => requestAnimationFrame(resolve));
 }
 
-function mounted(): { engine: ViewerEngine; route: VivRoute } {
+export function shownRoute(): PanRoute | null {
+  return route;
+}
+
+let renderWorkerSpawner: (() => RenderWorkerLike) | null = null;
+
+export function useRenderWorker(spawn: (() => RenderWorkerLike) | null): void {
+  renderWorkerSpawner = spawn;
+}
+
+function mounted(): { engine: ViewerEngine; route: PanRoute } {
   if (engine === null || route === null) throw new Error("No slide is open");
   return { engine, route };
 }
@@ -135,18 +156,32 @@ function mounted(): { engine: ViewerEngine; route: VivRoute } {
 async function open(slide: PanSlide): Promise<Opened> {
   close();
   const started = performance.now();
-  const factory = vivRendererFactory({
+  const routeOptions = {
     decodeWorkers: slide.workers,
     useDevicePixels: 1,
-    ...(slide.prefetch === undefined ? {} : { prefetch: slide.prefetch }),
-    onError: (error) => {
+    onError: (error: Error) => {
       errors.push(error.message);
     },
-  });
+  };
+  const id = slide.route ?? "viv";
+  const load = pixelRendererRoutes({
+    viv: {
+      ...routeOptions,
+      ...(slide.prefetch === undefined ? {} : { prefetch: slide.prefetch }),
+    },
+    deckWebGpu: routeOptions,
+    customWebGpu: {
+      ...routeOptions,
+      ...(renderWorkerSpawner === null ? {} : { spawnRenderWorker: renderWorkerSpawner }),
+    },
+  })[id];
+  if (load === undefined) throw new RendererRouteUnavailableError(id);
+  const factory: RendererFactory<PixelSlide> = await load();
   const current = createViewerEngine<PixelSlide>({
     createRenderer: (container) => {
-      route = factory(container);
-      return route;
+      const created = factory(container) as PanRoute;
+      route = created;
+      return created;
     },
     openSlide:
       slide.reader === "shared-bytes"
@@ -165,11 +200,12 @@ async function open(slide: PanSlide): Promise<Opened> {
   current.mount(viewer());
   const opened = await current.openSlide({ id: slide.url });
   if (slide.magnification !== null) {
-    if (opened.micronsPerPixel === null) throw new Error("The slide has no pixel size");
+    const micronsPerPixel = opened.micronsPerPixel ?? slide.micronsPerPixel ?? null;
+    if (micronsPerPixel === null) throw new Error("The slide has no pixel size");
     current.setCamera({
       x: slide.x,
       y: slide.y,
-      zoom: zoomForMagnification(opened.micronsPerPixel, slide.magnification),
+      zoom: zoomForMagnification(micronsPerPixel, slide.magnification),
     });
   }
   await mounted().route.whenIdle();
@@ -178,7 +214,7 @@ async function open(slide: PanSlide): Promise<Opened> {
 
 async function jump(target: JumpTarget, settleTimeoutMs: number): Promise<JumpReport> {
   const { engine: current, route: shown } = mounted();
-  const micronsPerPixel = current.getSlide()?.micronsPerPixel ?? null;
+  const micronsPerPixel = current.getSlide()?.micronsPerPixel ?? target.micronsPerPixel ?? null;
   if (micronsPerPixel === null) throw new Error("The slide has no pixel size");
   const started = performance.now();
   current.setCamera({
@@ -244,7 +280,7 @@ async function drive(plan: Drive, settleTimeoutMs: number): Promise<DriveReport>
     const dy = plan.vertical ? along : across;
     current.setCamera({ x: camera.x + dx / scale, y: camera.y + dy / scale, zoom: camera.zoom });
     frames++;
-    const vector = shown.prefetchVector();
+    const vector = "prefetchVector" in shown ? shown.prefetchVector() : null;
     if (vector !== null && (maxVector === null || vector.speed > maxVector.speed)) {
       maxVector = vector;
     }
@@ -259,7 +295,7 @@ async function drive(plan: Drive, settleTimeoutMs: number): Promise<DriveReport>
     camera: current.getCamera(),
     decode: shown.decodeStats(),
     errors: [...errors],
-    prefetch: shown.prefetchStats(),
+    prefetch: "prefetchStats" in shown ? shown.prefetchStats() : null,
     vector: maxVector,
   };
 }

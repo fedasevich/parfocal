@@ -108,7 +108,7 @@ async function humanCheck(
   try {
     const answer = await verify(body);
     if (!answer.ok) return false;
-    const outcome = (await answer.json()) as { readonly success?: unknown };
+    const outcome = await answer.json<{ readonly success?: unknown }>();
     return outcome.success === true;
   } catch {
     return false;

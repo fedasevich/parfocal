@@ -1,5 +1,6 @@
 import { Trans, useLingui } from "@lingui/react/macro";
 import { readEventLog } from "../../telemetry/event-log.ts";
+import { CorrectionsCard } from "./corrections-card.tsx";
 import { liveKpiEvents } from "./kpi-live.ts";
 import { areaMedians, computeKpis, formatKpiValue } from "./kpi-model.ts";
 import { seededKpiEvents } from "./kpi-seed.ts";
@@ -84,6 +85,7 @@ export function KpiScreen() {
           ))}
         </ul>
       </section>
+      <CorrectionsCard />
     </main>
   );
 }

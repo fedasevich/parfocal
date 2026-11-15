@@ -204,7 +204,7 @@ async function revoke(env: RoomEnv, call: Revoke | null): Promise<Response> {
     method: "POST",
     body: JSON.stringify({ project: call.project }),
   });
-  const { rooms } = (await index.json()) as { rooms: string[] };
+  const { rooms } = await index.json<{ rooms: string[] }>();
   const body = JSON.stringify({ user: call.user, project: call.project });
   await Promise.all(
     rooms.map((room) =>

@@ -530,7 +530,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Done when actionlint passes on .github/workflows/ci.yml, a docs-only push runs lint, typecheck and test and passes ci-ok with the heavy jobs skipped, a code push runs every job, and the db job time and its cause are written in the log.
   Size: M.
 
-- [ ] FOUND-026 · Web browser tests against a built app
+- [x] FOUND-026 · Web browser tests against a built app
   The apps/web Playwright suite runs on the Vite dev server, where one page load fetches about 340 modules, against 25 from a production build that loads about ten times faster. The fake API and the developer pages start only under `import.meta.env.DEV`, so a build mode for tests needs its own public flag, preview server branches for the dev-only Vite plugins and a guard that a production build has neither. Needs an ADR, because it changes how the app is built for tests.
   Done when the web suite runs against `vite build --mode e2e` and `vite preview` in CI, a guard test fails if a production build contains the fake API or a developer route, and the ADR is written.
   Depends on FOUND-025.
@@ -983,10 +983,16 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Requests with an unsafe method and the session cookie are refused unless their `Origin` header, or `Sec-Fetch-Site: same-origin` when it is absent, matches the app origin. SameSite=Strict does not stop a sibling subdomain of the same site ([threat model](security/threat-model.md) X1).
   Done when API tests refuse a write from another origin and from a same-site subdomain, accept one from the app origin, and leave service tokens and the login callback working.
 
-- [ ] SEC-026 · Isolated parsing of uploaded files
+- [x] SEC-026 · Isolated parsing of uploaded files
   Slide readers and result parsers run in a worker with no network egress except the job's own storage keys, no secrets beyond a job token scoped to one tenant and slide, a memory and time limit and a non-root user ([threat model](security/threat-model.md) U2).
   Done when a test shows a parser job cannot reach the network or read another key, and an oversized or slow parse is stopped and reported as a failed check.
   Depends on AIP-006, INGEST-003.
+  Size: L.
+
+- [ ] SEC-045 · Isolate the remaining parse steps and run them in a Modal sandbox
+  SEC-026 isolates identify, scan and validate in a child process with an audit hook, which native reader code can bypass. The index and derive steps, result-file parsing and patch export still read files inside the worker, and the parser runs as the worker's user. Move those steps into the same child, run the child as its own user, and run parses in a network-blocked Modal sandbox with the file passed in and the app-level secrets moved off.
+  Done when tests show index, derive, result parsing and patch export run in the child with the same limits, a local test shows the parse user cannot read the worker's environment, and the ADR's sandbox TODOs are answered. Deploying the sandbox is an additive production write under ADR 0151 (standing approval within $30 a month).
+  Depends on SEC-026.
   Size: L.
 
 - [ ] SEC-027 · Edge limits per IP
@@ -995,7 +1001,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Depends on SEC-012, STACK-025. Split from SEC-012 by [ADR 0088](adr/0088-rate-limits-in-postgres-and-at-the-edge.md).
   Size: M.
 
-- [ ] SEC-031 · Hard stops for destructive agent actions
+- [x] SEC-031 · Hard stops for destructive agent actions
   The production rules in `AGENTS.md` are prose. The owner's sessions run with permissions bypassed and no deny list, the connected MCP servers give every session and subagent tools that delete a Neon project or branch and an R2 bucket, and `.env` holds a Cloudflare token that writes R2 and DNS ([project review](results/2026-11-09-project-review.md)). Add deny rules or a `PreToolUse` guard in `.claude/settings.json` for destructive MCP tools and for commands that destroy, delete, purge, rotate or reset cloud resources, remove the two deprecated Cloudflare MCP servers (bindings and observability) from `.mcp.json`, and keep a token limited to dev and staging in `.env`, which the owner creates. Additive production writes under ADR 0151 (standing approval within $30 a month) stay allowed.
   Done when a guard test proves the listed tools and commands are refused for agents, the deprecated servers are gone, [knowledge/agent-tooling.md](knowledge/agent-tooling.md) lists what is refused and how the owner runs such an action, and `.env.example` names the limited token.
   Size: M.
@@ -1187,7 +1193,7 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
   Refs doc 03.
   Size: M.
 
-- [ ] INGEST-014 · JPEG 2000 performance decision
+- [x] INGEST-014 · JPEG 2000 performance decision
   Measure decode cost of J2K SVS in the browser (OpenJPEG WASM) against the VIEW-040 budgets. If it fails, the conversion trigger fires for J2K. Otherwise it stays native. HTJ2K is considered for the conversion target.
   Done when an ADR records the numbers and the decision.
   Refs [`poc/src/slide/codecs/openjpeg.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/slide/codecs/openjpeg.ts), doc 03.
@@ -1432,7 +1438,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Refs doc 24.
   Size: M.
 
-- [ ] VIEW-017 · OME-Zarr v0.4 and v0.5 sharded with JPEG and lossless codecs
+- [x] VIEW-017 · OME-Zarr v0.4 and v0.5 sharded with JPEG and lossless codecs
   zarrita store, the `imagecodecs_jpeg` codec registered in workers, NGFF 0.5 `ome` nesting, absent chunks from INGEST-008.
   Done when the converted fixtures from INGEST-015 and public IDR samples pass.
   Refs [`poc/src/slide/omezarr.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/slide/omezarr.ts), [`poc/src/slide/codecs/jpeg-chunk.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/slide/codecs/jpeg-chunk.ts).
@@ -1675,7 +1681,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on VIEW-011. Refs [ADR 0111](adr/0111-jpeg-2000-in-the-decode-workers-and-ome-channel-pages.md).
   The owner chose on 2026-10-31 to add both slides, about 510 MB for the whole group.
   Size: S.
-- [ ] VIEW-055 · JPEG 2000 coarse level differences from OpenSlide
+- [x] VIEW-055 · JPEG 2000 coarse level differences from OpenSlide
   On JP2K-33003-1.svs and JP2K-33003-2.svs one tile at each of levels 1 and 2 differs from OpenSlide by up to 47 while level 0 is within 0.5. Find out whether the cause is the reference, the level table or the decoder.
   Done when a result file names the cause and a test pins it.
   Depends on VIEW-011. Refs [result](results/2026-10-26-jpeg-2000-in-the-decode-workers.md).
@@ -1686,10 +1692,34 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Refs [`poc/src/app/renderer.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/app/renderer.ts).
   Size: L.
 
-- [ ] VIEW-037 · deck.gl 9.4 WebGPU route
+- [x] VIEW-037 · deck.gl 9.4 WebGPU route
   TileLayer over BitmapLayer from the same PixelSources, SolidPolygonLayer for outlines, with known gotchas handled (redraw with a reason, minZoom, adapter limits for buffer size).
   Done when the route plugs into the VIEW-036 renderer interface, the same golden tests that Viv passes pass on this route, perf tests pass, and uncaptured errors are counted and zero. The error helpers are in `src/viv/webgpu-errors.ts` ([ADR 0112](adr/0112-finest-level-sampling-and-webgl-context-recovery.md)).
   Refs [`poc/src/deck94/*`](https://github.com/fedasevich/pathlogy-poc/tree/master/src/deck94), doc 23.
+  Size: L.
+
+- [x] VIEW-070 · Dashed AI proposals on the deck.gl WebGPU route
+  On the VIEW-037 route AI proposals draw solid, 0.625% of pixels off the Viv golden, because deck.gl's `PathStyleExtension` injects GLSL only. Draw the dash in WGSL through a small layer extension, or as screen-space dash geometry rebuilt per zoom step with the extension's phase and caps.
+  Done when the AI proposals golden passes on the route at Viv's 0.1% tolerance and `routes-cmu1.spec.ts` drops its 2% bound.
+  Depends on VIEW-037.
+  Size: M.
+
+- [x] VIEW-071 · Pick the renderer route per slide, checked on a real GPU
+  `mountSlideViewport` always mounts Viv, so the deck.gl WebGPU route of VIEW-037 is reachable only through `PARFOCAL_RENDERER_ROUTE`. Add the route picker behind a developer setting, run the route goldens and the pan and budget specs once on the Mac's real GPU, and check translucent outlines, where the route's wrapped third ring vertex draws one edge twice.
+  Done when the developer setting switches the route on an open slide, a result file records the real-GPU golden and perf numbers, and a translucent outline golden passes on both routes.
+  Depends on VIEW-037.
+  Size: M.
+
+- [x] VIEW-072 · Draw the first edge of a dashed ring once on Viv
+  The shared overlay builder draws the first edge of each dashed AI proposal ring twice at two dash phases on Viv, which is the whole 0.085% left between the WebGPU route and the Viv golden (VIEW-070).
+  Done when each dashed ring edge is drawn once, the AI proposals golden is regenerated and the WebGPU route's difference from it falls below 0.02%.
+  Depends on VIEW-070.
+  Size: S.
+
+- [ ] VIEW-073 · Finish the custom WebGPU route
+  VIEW-038 draws the slide and seven of eight overlay kinds on the custom WebGPU route, but not ID labels, and it has no compute culling, no level-of-detail tiers for many nuclei, no buffer size guard and no device-loss recovery. Translucent outlines also blend twice at round caps there. The developer route picker offers the route with a note that it is incomplete, since only developers see it.
+  Done when the ID labels and translucent outline goldens pass on the route at Viv's tolerance, compute culling and the detail tiers draw 1.6M nuclei within the VIEW-029 budget on the Mac's GPU, and a test loses the device and the route recovers.
+  Depends on VIEW-038.
   Size: L.
 
 - [ ] VIEW-038 · Custom WebGPU engine route
@@ -1698,13 +1728,13 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Refs [`poc/src/webgpu/*`](https://github.com/fedasevich/pathlogy-poc/tree/master/src/webgpu), docs 04, 07.
   Size: L.
 
-- [ ] VIEW-039 · Renderer head-to-head benchmark
+- [x] VIEW-039 · Renderer head-to-head benchmark
   Automated benchmark of the three routes on fixed camera paths with GPU-completion timing (fences, not `gl.finish`) and pixel assertions so empty frames cannot pass.
   Done when a manual benchmark run on the owner's Mac produces a result file with a table comparable with doc 31 ([ADR 0011](adr/0011-hosted-ci-only.md)).
   Refs doc 23.
   Size: M.
 
-- [ ] VIEW-040 · Viewer performance budgets
+- [x] VIEW-040 · Viewer performance budgets
   Budgets per format and RTT: time to first fitted image, time to sharp viewport after a jump, frame p95 while panning, heap ceiling.
   Done when CI enforces the CPU-side budgets on hosted runners, the frame and GPU-time budgets are checked by a manual run recorded as a result file ([ADR 0011](adr/0011-hosted-ci-only.md)), and an ADR records the numbers derived from the POC.
   Depends on TEST-006.
@@ -3414,7 +3444,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Done when tests confirm partial areas arrive before job completion and throughput is recorded per stage.
   Refs [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
 
-- [ ] AIP-012 · Patch service on the server
+- [x] AIP-012 · Patch service on the server
   Read patches at a requested microns per pixel from any supported format, with LRU caching and sparse-region awareness.
   Done when tests read the same 128 µm patch from SVS, NDPI and OME-Zarr fixtures and compare pixels.
   Refs docs 10, 11, 15.
@@ -3458,7 +3488,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Depends on AIP-000.
   Size: S.
 
-- [ ] AIP-020 · Runtime model registration and model parts in the registry
+- [x] AIP-020 · Runtime model registration and model parts in the registry
   AIP-002 (model registry) keeps the registry in code. A migration moves it into a table so an admin can register a model while the app runs, adds licence fields for lab models connected through their own endpoint (JOBS-005), and adds rows with versions for the separate model parts in ADR 0202's line-up, such as the PathoSAM encoder and decoder.
   Done when an API test registers a model at run time and reads it back with its licence fields, a lab model row carries its licence, and every part in ADR 0202's line-up has a registry row with a version.
   Depends on AIP-002.
@@ -3651,7 +3681,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Done when tests produce stable areas on a fixture.
   Size: M.
 
-- [ ] AINUC-010 · Whole-slide nuclei job UI
+- [x] AINUC-010 · Whole-slide nuclei job UI
   Scope view, selection or slide. Defaults fixed for doctors, options for annotators. Find nuclei, cancel, load last run. The minimap shades finished tiles. Cancel stops within one window and keeps finished tiles.
   Done when E2E starts, cancels and reloads a job.
   Depends on AINUC-001, AINUC-002, AINUC-013, JOBS-004.
@@ -3716,7 +3746,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Done when tests round-trip a painted map.
   Size: M.
 
-- [ ] AITUM-006 · Heatmap persistence and export
+- [x] AITUM-006 · Heatmap persistence and export
   Done when tests export a heatmap as an image pyramid and re-import it.
   Refs doc 25.
   Size: M.
@@ -3749,12 +3779,12 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Refs mock 6 "After learning", [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
   Size: M.
 
-- [ ] AILEARN-004 · Server training rounds per tenant
+- [x] AILEARN-004 · Server training rounds per tenant
   Fine-tune the typer head from pretrained weights on the tenant's reviewed examples, versioned rounds with a latest pointer, rollback by pointer.
   Done when tests run a round on seeded data, promote it through MLEVAL and roll back.
   Size: L.
 
-- [ ] AILEARN-005 · Recalibration after each round
+- [x] AILEARN-005 · Recalibration after each round
   Done when each promoted round has a fitted temperature and bands.
   Size: M.
 
@@ -3762,15 +3792,33 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Done when tests confirm the split excludes training examples and is stable across rounds.
   Size: S.
 
-- [ ] AILEARN-007 · Measure corrections per hundred nuclei
+- [x] AILEARN-007 · Measure corrections per hundred nuclei
   The product metric for the loop, reported per tenant over time.
   Done when the metric appears on the lab dashboard with seeded data.
   Size: M.
 
-- [ ] AILEARN-008 · The review viewer gives the learner real embeddings
+- [x] AILEARN-008 · The review viewer gives the learner real embeddings
   AILEARN-003 (learner UI) feeds the learner pooled SAM embeddings through `LearnerEmbeddingsContext`, but only the annotate screens hold SAM services, a patch reader and cell outlines, so on a real slide in the review viewer the learner stays off. The review viewer provides that context from the same SAM services and the slide's cell outlines, lazily and only once the reviewer starts correcting types.
   Done when an E2E on a paged slide with stubbed SAM sees the learner zone appear after 10 retypes, and a test proves no SAM work starts before the first correction.
   Depends on AILEARN-003.
+  Size: M.
+
+- [x] AILEARN-009 · One SAM worker per page for the learner and smart select
+  AILEARN-008 gives the review viewer its own SAM services beside the slide stage's, so a page that also uses smart select runs two SAM workers and holds the model twice. Lift the stage's shared SAM services one level up so the learner and smart select use one worker.
+  Done when a test opens the review viewer, uses smart select and corrects a type, and counts one SAM worker and one model load.
+  Depends on AILEARN-008.
+  Size: S.
+
+- [x] AILEARN-010 · Collect pooled features of reviewed nuclei for training rounds
+  AILEARN-004's training rounds take pooled features and typer outputs from the caller, because nothing on the server stores them for reviewed nuclei yet. Add a job that gathers them per tenant from the reviewed examples and feeds `run_round`.
+  Done when a test seeds reviewed nuclei, runs the job and a round trains from what it stored, with no PHI in the stored files.
+  Depends on AILEARN-004.
+  Size: M.
+
+- [x] AILEARN-011 · Pool reviewed nuclei on the server from review decisions
+  AILEARN-010 collects pooled features through a pooler the caller passes in, and only the browser pools SAM features today. Add a server pooler in the ML worker and API wiring that turns a tenant's review decisions into the nuclei `collect` takes, and re-pool a nucleus whose outline was reshaped.
+  Done when a local test turns seeded review decisions into stored features through the server pooler with fake weights, a reshaped outline is pooled again, and no cloud job runs in tests.
+  Depends on AILEARN-010.
   Size: M.
 
 ---
@@ -3807,7 +3855,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Done when the harness runs on at least three test slides on demand, before a tumor-map model is promoted ([ADR 0011](adr/0011-hosted-ci-only.md)).
   Size: L.
 
-- [ ] MLEVAL-006 · Promotion gate
+- [x] MLEVAL-006 · Promotion gate
   A model version is promoted to a tier only when it meets thresholds per task, with the evaluation report stored in the registry.
   Done when a test promotion fails on a degraded model and passes on the reference one.
   Size: M.
@@ -4483,6 +4531,17 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   `packages/viewer-engine/test/pixel-source/ndpi-real.test.ts` and `reader-check.test.ts` fetch public test slides over HTTP, and on the night of 2026-11-14 three merge checks failed on `read ECONNRESET` for Hamamatsu-1.ndpi and CMU-1.ndpi, each passing on rerun. The shared fetch helper retries a reset or a dropped range read a few times with a short backoff and names the slide and range when it finally gives up.
   Done when a unit test makes the helper's first two reads reset and the third succeed, and the real-slide tests pass with that helper.
   Size: S.
+
+- [ ] TEST-043 · The sidecar open check does not depend on machine load
+  `packages/viewer-engine/test/pixel-source/tile-index.test.ts` asserts that opening with the sidecar takes under 1,000 ms, and on 2026-11-15 it failed on almost every merge check while several agents shared the Mac (1,035 to 11,615 ms), each time passing alone. Compare the sidecar open with the walk it replaces in the same run, or count the reads it saves, instead of a fixed wall time.
+  Done when the check asserts a ratio or a read count, passes ten runs in a row under a parallel verify, and still fails when the sidecar is ignored.
+  Size: S.
+
+- [ ] TEST-044 · Web specs green on the built app
+  FOUND-026 moved the apps/web suite to a built app, and the first CI run on it (8c148200) failed in all three web shards: measure.spec.ts:49 (Measure shows only on a slide), the Guided and Full viewer switch at :213, the follow-view camera within 300 ms at :93, an accessibility check on the slide page, and a sign-out timing spec that sends slide, area and cell times. Session-lock, smart-hover, autosave and run-stream also failed after a reload on the dev server, where a viewer open takes 5 to 6 s on software graphics.
+  Done when two CI runs in a row are green in every web shard with no retry needed, and each fix names its cause in the log.
+  Depends on FOUND-026.
+  Size: M.
 
 - [ ] TEST-040 · API container under the end-to-end suite
   The 6 real-API specs in `apps/e2e` run the API with `uv run uvicorn`, so the deploy image, migrations on start and production-like settings never run under a browser before a deploy. Run `apps/e2e` against the API container from FOUND-015 (container images) and the local Zitadel from TEST-039 (local Zitadel for the end-to-end suite), behind one `pnpm stack:up`, with the web app still on vite dev. Seed with the showcase seed and the small fixtures copied into MinIO. Confirm how an upload starts ingest, since `upload-into-project.spec.ts` now starts it by hand. Nothing in the stack reaches a cloud service. The edge Worker stays out until a tile, realtime or header bug escapes to production because it was missing, and then a new task adds it with a local S3 adapter for its `SLIDES` binding.
@@ -5244,7 +5303,7 @@ The research output of a review task ([ADR 0053](adr/0053-ai-results-review-dire
 
 ---
 
-- [ ] JOBS-007 · Run a model on a selection in Annotate
+- [x] JOBS-007 · Run a model on a selection in Annotate
   In the Annotate workspace the selection or the current view can be sent to a model run (JOBS-001 already takes both scopes). The result streams onto the slide, and in an annotate task its objects are AI objects the experts can fix in the shared layer, and they join the task's check scope (TASK-015).
   Done when component tests cover the selection and view scopes from the Annotate workspace, and E2E runs a model on a drawn selection and fixes one of its objects.
   Depends on JOBS-001, ANN-031, AINUC-013. Refs [ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md), doc 19.

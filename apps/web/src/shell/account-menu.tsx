@@ -132,7 +132,11 @@ export function AccountMenu({ me, person }: { me: Me | undefined; person: Person
         ...(action === "feedback" ? { onSelect: openFeedback } : {}),
         ...(action === "help" ? { onSelect: openHelp } : {}),
       }))}
-      extra={import.meta.env.DEV ? <ViewAs current={me?.initials} /> : null}
+      extra={
+        import.meta.env.PARFOCAL_PUBLIC_DEV_TOOLS === "on" ? (
+          <ViewAs current={me?.initials} />
+        ) : null
+      }
       onLogOut={() => window.location.assign(logOutUrl)}
     />
   );

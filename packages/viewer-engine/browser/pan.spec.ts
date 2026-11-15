@@ -5,11 +5,14 @@ import { fixturesDir } from "@parfocal/test-fixtures";
 import { expect, type Page, test } from "@playwright/test";
 import { fixtureAvailability } from "../../golden-images/render/viv-harness.ts";
 import { cmu1TissueCentre } from "../../golden-images/render/viv-scenes.ts";
-import { assertSwiftShader } from "../../golden-images/src/playwright.ts";
+import { assertGpuMode } from "../../golden-images/src/playwright.ts";
 import { type LatencyProxy, startLatencyProxy } from "../../latency-proxy/src/index.ts";
 import { type Served, type ServedRequest, serve } from "../test/pixel-source/serve.ts";
 import { crossOriginIsolated, outDir } from "./global-setup.ts";
 import type { PanLeg, PanReport, PanSlide } from "./page/pan-harness.ts";
+import { perfRoute, perfRouteLaunch } from "./perf-route.ts";
+
+if (perfRouteLaunch) test.use(perfRouteLaunch);
 
 const slideFile = "CMU-1.svs";
 const slidePath = `/cache/${slideFile}`;
@@ -97,11 +100,12 @@ function slideRequests(from: number, to?: number): ServedRequest[] {
 async function panRun(page: Page, setup: Setup): Promise<Run> {
   if (served === null || proxy === null) throw new Error("The slide server is not running");
   await page.setContent("<!doctype html><html><body></body></html>");
-  await assertSwiftShader(page);
+  await assertGpuMode(page);
   await page.goto(`${proxy.url}/app/pan.html`);
   await page.waitForFunction(() => window.panHarness !== undefined);
   const start = served.log.length;
   const slide: PanSlide = {
+    route: perfRoute,
     url: `${proxy.url}${slidePath}`,
     formatId: "aperio-svs",
     ...setup,

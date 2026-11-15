@@ -1,3 +1,4 @@
+import type { SamClient } from "@parfocal/viewer-engine";
 import { readBuildConfig } from "../config.ts";
 import { loadViewerEngine } from "../viewer/load-engine.ts";
 import { createPresetPatchReader } from "./patch-reader.ts";
@@ -7,7 +8,7 @@ import type { SmartReader, SmartSam } from "./smart-session.ts";
 
 export interface SmartServices {
   readonly reader: SmartReader;
-  readonly sam: SmartSam & RegionSam;
+  readonly sam: SmartSam & RegionSam & Partial<Pick<SamClient, "pool">>;
   readonly plan: (preset: ScalePresetId) => Promise<PresetPatchPlan>;
   readonly close: () => void;
 }
@@ -66,7 +67,8 @@ async function loadRealServices(context: SmartServicesContext): Promise<SmartSer
 
 export const loadSmartServices: SmartServicesLoader = (context) => {
   const config = readBuildConfig();
-  if (import.meta.env.DEV && config.fakeApi !== "off") return loadFakeServices(context);
+  if (import.meta.env.PARFOCAL_PUBLIC_DEV_TOOLS === "on" && config.fakeApi !== "off")
+    return loadFakeServices(context);
   return loadRealServices(context);
 };
 

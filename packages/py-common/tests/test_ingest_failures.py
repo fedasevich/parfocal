@@ -30,6 +30,8 @@ def test_a_file_that_may_pass_when_sent_again_is_transient(code: str) -> None:
     [
         *(refusal for refusal in Refusal if refusal not in RETRY_TO_FIX),
         *ImportFailure,
+        Failure.PARSE_TOO_LARGE,
+        Failure.PARSE_TOO_SLOW,
         "a-code-from-a-newer-worker",
     ],
 )

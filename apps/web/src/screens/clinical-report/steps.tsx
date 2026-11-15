@@ -146,7 +146,7 @@ export function FindingsStep({
   );
 }
 
-function CategoryField({ data, report, errors, setValues, update }: StepProps) {
+function CategoryField({ report, errors, setValues, update }: StepProps) {
   const { t } = useLingui();
 
   const values = report.values;

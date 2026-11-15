@@ -212,3 +212,47 @@ def test_a_finished_tile_of_a_running_run_is_served_as_stored(
     assert (unstored.status_code, unstored.json()["code"]) == (404, "tile-not-finished")
     outsider = api(lab.people["outsider"]).get(f"{lab.runs}/{run['id']}/tiles/1")
     assert outsider.status_code == 404
+
+
+def annotate_task(api: ApiAs, lab: Lab, slide: uuid.UUID) -> str:
+    return ok(
+        api(lab.people["owner"]).post(
+            f"/api/projects/{lab.project}/review-tasks",
+            json={
+                "name": "Annotate a run",
+                "kind": "annotate",
+                "slide_ids": [str(slide)],
+                "result_sets": [],
+                "reviewer_ids": [str(lab.people["owner"].user_id)],
+                "split": "everyone",
+                "scope": None,
+                "blinded": False,
+                "model_name": None,
+                "case_ids": [],
+                "reminder_days": [],
+            },
+        )
+    )["id"]
+
+
+def test_a_finished_run_seals_its_result_set_and_an_annotate_task_takes_it(
+    api: ApiAs, database: str, lab: Lab
+) -> None:
+    slide = lab.slides[1]
+    task = annotate_task(api, lab, slide)
+    run = started(api, lab, [slide], task_id=task)[0]
+    set_id = run["result_set_id"]
+    join = f"/api/review-tasks/{task}/slides/{slide}/runs"
+    client = api(lab.people["owner"])
+    early = client.post(join, json={"result_set_id": set_id})
+    assert early.status_code >= 400, early.text
+    status = f"SELECT status FROM result_sets WHERE id = '{set_id}'"
+    assert owner(database, status) == [("importing",)]
+
+    execute(database, claim(database, lab, tiled_plan(2)))
+
+    assert ok(read(api, lab, run))["status"] == "done"
+    assert owner(database, status) == [("ready",)]
+    joined = ok(client.post(join, json={"result_set_id": set_id}))
+    assert joined["result_set_id"] == set_id
+    assert joined["run_set_ids"] == []

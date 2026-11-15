@@ -2,7 +2,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { type CDPSession, expect, test } from "@playwright/test";
-import { assertSwiftShader } from "../../golden-images/src/playwright.ts";
+import { assertSwiftShader, WEBGPU_SWIFTSHADER_ARGS } from "../../golden-images/src/playwright.ts";
 import type { RendererRouteId } from "../src/index.ts";
 import { collectGarbage, harnessUrl, heapBytes, liveObjects } from "./cdp.ts";
 import type { RouteSwitchReport, RouteSwitchSlide } from "./page/route-switch-harness.ts";
@@ -15,6 +15,12 @@ const switches = Number(process.env.ROUTE_SWITCHES ?? 10);
 const minWarmUpSwitches = 5;
 const heapBudget = 0.1;
 const releaseWaitMs = 5_000;
+
+test.use({
+  launchOptions: {
+    args: [...WEBGPU_SWIFTSHADER_ARGS, "--enable-blink-features=ForceEagerMeasureMemory"],
+  },
+});
 
 interface Sample {
   readonly round: number;
@@ -78,10 +84,18 @@ test("10 renderer route switches keep the camera, one canvas and the heap within
   }
   await cdp.detach();
 
-  const baseline = samples[warmUpSwitches - 1];
-  const last = samples.at(-1);
-  if (!baseline || !last) throw new Error("The run has no samples");
-  const growth = last.heapBytes / baseline.heapBytes - 1;
+  const settled = samples.slice(warmUpSwitches - 1);
+  const growthByRoute = routes.flatMap((route) => {
+    const own = settled.filter((sample) => sample.report.route === route);
+    const first = own[0];
+    const last = own.at(-1);
+    if (!first || !last) return [];
+    return [
+      { route, from: first.round, to: last.round, growth: last.heapBytes / first.heapBytes - 1 },
+    ];
+  });
+  if (growthByRoute.length === 0) throw new Error("The run has no samples");
+  const growth = Math.max(...growthByRoute.map((entry) => entry.growth));
   const megabytes = (bytes: number) => (bytes / 2 ** 20).toFixed(1);
   console.log(
     [
@@ -91,7 +105,11 @@ test("10 renderer route switches keep the camera, one canvas and the heap within
         (sample) =>
           `${sample.round}\t${sample.report.route}\t${megabytes(sample.heapBytes)}\t${sample.decks}\t${sample.report.canvases}\t${sample.report.switchMs.toFixed(0)}`,
       ),
-      `growth ${(growth * 100).toFixed(1)}% after ${warmUpSwitches} warm-up, decks ${decksAfter} and canvases ${canvases} after dispose`,
+      ...growthByRoute.map(
+        (entry) =>
+          `growth ${(entry.growth * 100).toFixed(1)}% on ${entry.route} from round ${entry.from} to round ${entry.to}`,
+      ),
+      `largest growth ${(growth * 100).toFixed(1)}% after ${warmUpSwitches} warm-up, decks ${decksAfter} and canvases ${canvases} after dispose`,
     ].join("\n"),
   );
   mkdirSync(reportDir, { recursive: true });
@@ -101,6 +119,7 @@ test("10 renderer route switches keep the camera, one canvas and the heap within
   );
 
   expect(samples.map((sample) => sample.report.errors)).toEqual(samples.map(() => []));
+  expect(samples.map((sample) => sample.report.uncapturedGpuErrors)).toEqual(samples.map(() => 0));
   expect(samples.map((sample) => sample.report.route)).toEqual(
     samples.map((sample) => routeAt(sample.round)),
   );

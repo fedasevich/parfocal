@@ -16,6 +16,7 @@ from sqlalchemy import (
     Uuid,
     insert,
     select,
+    text,
 )
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine
@@ -172,7 +173,45 @@ async def run_model_run(
     tier: str | None = None,
     machine: str | None = None,
 ) -> None:
-    await run_job(engine, claimed.job, claimed.workflow, worker, labels_of(claimed, tier, machine))
+    async def sealed(job: Claimed) -> None:
+        await seal_run_result(engine, job)
+
+    await run_job(
+        engine,
+        claimed.job,
+        claimed.workflow,
+        worker,
+        labels_of(claimed, tier, machine),
+        on_finished=sealed,
+    )
+
+
+SEAL_RESULT = text(
+    """
+    UPDATE result_sets SET
+      status = 'ready',
+      cell_count = (
+        SELECT coalesce(sum(cell_count), 0) FROM result_chunks
+        WHERE result_chunks.result_set_id = result_sets.id
+      ),
+      region_count = (
+        SELECT count(*) FROM result_objects
+        WHERE result_objects.result_set_id = result_sets.id AND result_objects.kind = 'region'
+      ),
+      zone_count = (
+        SELECT count(*) FROM result_objects
+        WHERE result_objects.result_set_id = result_sets.id AND result_objects.kind = 'zone'
+      )
+    WHERE job_id = :job_id AND status = 'importing' AND deleted_at IS NULL
+    RETURNING id
+    """
+)
+
+
+async def seal_run_result(engine: AsyncEngine, job: Claimed) -> list[uuid.UUID]:
+    async with scoped_transaction(engine, DatabaseScope(tenant_id=job.tenant_id)) as connection:
+        rows = await connection.execute(SEAL_RESULT, {"job_id": job.job_id})
+        return [row.id for row in rows]
 
 
 class RunsInTheModelWorkerError(RuntimeError):

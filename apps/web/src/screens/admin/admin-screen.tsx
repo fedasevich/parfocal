@@ -1,5 +1,5 @@
 import { Trans, useLingui } from "@lingui/react/macro";
-import { type StudyTemplateSummary, useGetMe, useListStudyTemplates } from "@parfocal/api-client";
+import { useGetMe, useListStudyTemplates } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
 import { Breadcrumbs } from "@parfocal/ui/components/flow-page";
 import { Icon } from "@parfocal/ui/components/icon";

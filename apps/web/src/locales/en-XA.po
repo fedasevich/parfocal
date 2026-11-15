@@ -615,6 +615,12 @@ msgstr ""
 msgid "{0} controls"
 msgstr ""
 
+#. placeholder {0}: item.corrections
+#. placeholder {1}: item.nuclei_reviewed
+#: src/screens/kpi/corrections-card.tsx
+msgid "{0} corrections in {1} nuclei"
+msgstr ""
+
 #. placeholder {0}: cutoff.toFixed(2)
 #: ../../packages/ui/src/components/visualize.tsx
 msgid "{0} cutoff"
@@ -3040,6 +3046,10 @@ msgstr ""
 msgid "Adding the result set to the slide"
 msgstr ""
 
+#: src/viewer/run-stream-layer.tsx
+msgid "Adding the run to the task"
+msgstr ""
+
 #: src/screens/admin/connect-model.tsx
 #: src/screens/admin/storage.tsx
 #: src/screens/developer/developer-screen.tsx
@@ -5362,6 +5372,10 @@ msgstr ""
 msgid "Corner"
 msgstr ""
 
+#: src/screens/kpi/corrections-card.tsx
+msgid "Corrections per hundred nuclei"
+msgstr ""
+
 #: src/screens/onboarding/sign-in-forms.tsx
 #: src/screens/onboarding/sign-up-screen.tsx
 msgid "Could not check the code."
@@ -6803,6 +6817,10 @@ msgstr ""
 msgid "Find cells"
 msgstr ""
 
+#: src/viewer/start-run-panel.tsx
+msgid "Find nuclei"
+msgstr ""
+
 #: src/screens/clinical-report/cosign-screen.tsx
 msgid "Findings"
 msgstr ""
@@ -6818,6 +6836,10 @@ msgstr ""
 
 #: ../../packages/ui/src/components/jobs.tsx
 msgid "Finished"
+msgstr ""
+
+#: src/viewer/run-tiles-map.tsx
+msgid "Finished tiles"
 msgstr ""
 
 #: ../../packages/ui/src/components/annotate-task.tsx
@@ -7582,6 +7604,10 @@ msgstr ""
 msgid "How many AI cells each slide checks. The sample is the same for every expert."
 msgstr ""
 
+#: src/screens/kpi/corrections-card.tsx
+msgid "How many AI nuclei reviewers retyped or deleted for every hundred they checked, by month."
+msgstr ""
+
 #: ../../packages/ui/src/components/display-panel.tsx
 #: src/screens/new-task/steps.tsx
 msgid "How objects draw"
@@ -8008,6 +8034,10 @@ msgstr ""
 msgid "ITC if confirmed"
 msgstr ""
 
+#: src/viewer/run-stream-layer.tsx
+msgid "Its objects are AI objects of this task now"
+msgstr ""
+
 #: ../../packages/ui/src/components/issue-index.tsx
 msgid "Its screen is not built yet"
 msgstr ""
@@ -8415,6 +8445,10 @@ msgstr ""
 msgid "Left stick"
 msgstr ""
 
+#: src/viewer/start-run-panel.tsx
+msgid "Left to right"
+msgstr ""
+
 #: src/screens/settings/settings-screen.tsx
 #: src/shell/palette-labels.tsx
 msgid "Lengths"
@@ -8524,6 +8558,10 @@ msgstr ""
 
 #: src/screens/developer/developer-screen.tsx
 msgid "Load a result"
+msgstr ""
+
+#: src/viewer/start-run-panel.tsx
+msgid "Load last run"
 msgstr ""
 
 #. placeholder {0}: Object.keys(settings.custom).length
@@ -9525,6 +9563,10 @@ msgstr ""
 msgid "No access to {projectName}"
 msgstr ""
 
+#: src/screens/kpi/corrections-card.tsx
+msgid "No AI nuclei have been reviewed yet."
+msgstr ""
+
 #: src/screens/upload/files-step.tsx
 msgid "No AI results found next to it. Fine, you can run a model later."
 msgstr ""
@@ -9586,6 +9628,10 @@ msgstr ""
 #: src/screens/my-work/assigned-tab.tsx
 #: src/screens/project/tasks-tab.tsx
 msgid "No due date"
+msgstr ""
+
+#: src/viewer/start-run-panel.tsx
+msgid "No earlier run on this slide"
 msgstr ""
 
 #: src/screens/onboarding/sign-in-forms.tsx
@@ -10801,6 +10847,10 @@ msgstr ""
 msgid "Optional"
 msgstr ""
 
+#: src/viewer/start-run-panel.tsx
+msgid "Options"
+msgstr ""
+
 #: ../../packages/ui/src/components/cells-panel.tsx
 #: src/screens/upload/case-upload-drawer.tsx
 msgid "or"
@@ -10822,6 +10872,7 @@ msgstr ""
 #: ../../packages/ui/src/components/display-panel.tsx
 #: src/screens/developer/developer-screen.tsx
 #: src/screens/new-task/steps.tsx
+#: src/viewer/start-run-panel.tsx
 msgid "Order"
 msgstr ""
 
@@ -13020,6 +13071,7 @@ msgid "Scattered unsure cells"
 msgstr ""
 
 #: src/screens/developer/developer-screen.tsx
+#: src/viewer/start-run-panel.tsx
 msgid "Scope"
 msgstr ""
 
@@ -15373,8 +15425,24 @@ msgstr ""
 msgid "The run {0} joins this slide"
 msgstr ""
 
+#: src/viewer/start-run-panel.tsx
+msgid "The run could not start"
+msgstr ""
+
 #: src/viewer/run-stream-layer.tsx
 msgid "The run could not stream onto this slide"
+msgstr ""
+
+#: src/viewer/run-stream-layer.tsx
+msgid "The run ended as {status}, nothing was added"
+msgstr ""
+
+#: src/viewer/run-stream-layer.tsx
+msgid "The run is streaming onto the slide"
+msgstr ""
+
+#: src/viewer/run-stream-layer.tsx
+msgid "The run joined the task's check scope"
 msgstr ""
 
 #: src/screens/onboarding/setup-screen.tsx
@@ -15387,6 +15455,10 @@ msgstr ""
 
 #: src/feedback/feedback-dialog.tsx
 msgid "The screenshot that will be sent, with slides and patient details blurred"
+msgstr ""
+
+#: src/viewer/start-run-panel.tsx
+msgid "The selected shapes"
 msgstr ""
 
 #: src/screens/clinical-report/cosign-screen.tsx
@@ -15412,6 +15484,10 @@ msgstr ""
 #. placeholder {0}: plural(started.started.length, "file")
 #: src/screens/upload/link-import.tsx
 msgid "The server is fetching {0}. They are checked and published like any upload."
+msgstr ""
+
+#: src/viewer/run-stream-layer.tsx
+msgid "The server refused it ({code})"
 msgstr ""
 
 #: src/screens/upload/server-check.tsx
@@ -16034,6 +16110,7 @@ msgid "Tumor cutoff"
 msgstr ""
 
 #: src/screens/developer/developer-screen.tsx
+#: src/viewer/start-run-panel.tsx
 msgid "Tumor first"
 msgstr ""
 
@@ -16746,6 +16823,10 @@ msgstr ""
 msgid "What he gets back"
 msgstr ""
 
+#: src/viewer/start-run-panel.tsx
+msgid "What I see now"
+msgstr ""
+
 #: src/screens/new-task/modals.tsx
 msgid "What is T2?"
 msgstr ""
@@ -16958,6 +17039,7 @@ msgstr ""
 #: src/screens/review/cells-on-slide.tsx
 #: src/screens/review/guided-review.tsx
 #: src/screens/viewer/full-viewer.tsx
+#: src/viewer/start-run-panel.tsx
 msgid "Whole slide"
 msgstr ""
 
@@ -17469,6 +17551,10 @@ msgstr ""
 
 #: src/screens/review/guided-review.tsx
 msgid "Zoom out (−)"
+msgstr ""
+
+#: src/viewer/start-run-panel.tsx
+msgid "Zoom to a part of the slide first"
 msgstr ""
 
 #: src/screens/onboarding/setup-screen.tsx

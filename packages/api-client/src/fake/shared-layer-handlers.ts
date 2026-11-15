@@ -14,6 +14,7 @@ import type {
   SharedAiObjects,
   SharedLayer,
 } from "../generated/api.ts";
+import { type FakeRunCell, fakeRunCells } from "./run-stream-handlers.ts";
 import { people, resultSets } from "./scenario.ts";
 import { annotateStubTaskId } from "./scenario-review.ts";
 import { fakeView } from "./view.ts";
@@ -36,8 +37,35 @@ export const annotateTaskClasses: ProjectClass[] = [
 
 const resultSet = resultSets.find((set) => set.key === "sam") ?? resultSets[0];
 
-const resultSetOf = (slideId: string) =>
+const builtInSetOf = (slideId: string) =>
   slideId === annotateTaskSlides.withResults ? (resultSet?.id ?? null) : null;
+
+const joinedRunsOf = (taskId: string, slideId: string): string[] =>
+  readStore().runs[keyOf(taskId, slideId)] ?? [];
+
+const resultSetOf = (taskId: string, slideId: string) =>
+  builtInSetOf(slideId) ?? joinedRunsOf(taskId, slideId)[0] ?? null;
+
+const runObjectOf = (cell: FakeRunCell): SharedAiObject => ({
+  object: `C${cell.number}`,
+  kind: "cell",
+  number: cell.number,
+  class_id: annotateTaskClasses[cell.classIndex % annotateTaskClasses.length]?.id ?? null,
+  score: cell.score,
+  probabilities: null,
+  geometry: {
+    type: "Polygon",
+    coordinates: [[...cell.ring, cell.ring[0] ?? [0, 0]].map(([x, y]) => [x, y])],
+  },
+  check: "unchecked",
+});
+
+function aiObjectsOf(taskId: string, slideId: string): SharedAiObject[] {
+  if (builtInSetOf(slideId) !== null) return aiCells;
+  const setId = resultSetOf(taskId, slideId);
+  if (setId === null) return [];
+  return (fakeRunCells(setId) ?? []).map(runObjectOf);
+}
 
 const square = (x: number, y: number, size: number): SharedAiObject["geometry"] => ({
   type: "Polygon",
@@ -67,20 +95,28 @@ const aiCells: SharedAiObject[] = [0.42, 0.61, 0.73, 0.88, 0.55, 0.94].map((scor
   check: "unchecked",
 }));
 
-export const toSharedAiObjects = (taskId: string, slideId: string): SharedAiObjects => ({
-  task_id: taskId,
-  slide_id: slideId,
-  result_set_id: resultSetOf(slideId),
-  result_name: resultSetOf(slideId) === null ? null : (resultSet?.name ?? null),
-  total: resultSetOf(slideId) === null ? 0 : aiCells.length,
-  offset: 0,
-  objects: resultSetOf(slideId) === null ? [] : aiCells,
-});
+const nameOf = (taskId: string, slideId: string) => {
+  if (resultSetOf(taskId, slideId) === null) return null;
+  return builtInSetOf(slideId) === null ? "HoVer-Net run" : (resultSet?.name ?? null);
+};
+
+export const toSharedAiObjects = (taskId: string, slideId: string): SharedAiObjects => {
+  const objects = aiObjectsOf(taskId, slideId);
+  return {
+    task_id: taskId,
+    slide_id: slideId,
+    result_set_id: resultSetOf(taskId, slideId),
+    result_name: nameOf(taskId, slideId),
+    total: objects.length,
+    offset: 0,
+    objects,
+  };
+};
 
 const scopedScoreBelow = 0.9;
 
 export const annotateStoredOrder = (taskId: string, slideId: string): OrderedObject[] | null =>
-  taskId === annotateStubTaskId && resultSetOf(slideId) !== null
+  taskId === annotateStubTaskId && builtInSetOf(slideId) !== null
     ? aiCells
         .filter((cell) => (cell.score ?? 1) < scopedScoreBelow)
         .map(({ object, kind, number }) => ({ object, kind, number }))
@@ -147,8 +183,13 @@ const layerOf = (store: Store, key: string) => store.layers[key] ?? [];
 const live = (objects: readonly LayerObject[]) =>
   objects.filter((item) => item.deleted_at === null);
 
-function progressOf(objects: readonly LayerObject[], slideId: string): CheckProgress | null {
-  if (resultSetOf(slideId) === null) return null;
+function progressOf(
+  objects: readonly LayerObject[],
+  taskId: string,
+  slideId: string,
+): CheckProgress | null {
+  if (resultSetOf(taskId, slideId) === null) return null;
+  const scope = aiObjectsOf(taskId, slideId).length;
   const copies = objects.filter((item) => item.source !== null);
   const confirmed = copies.filter((item) => item.origin === "ai-confirmed").length;
   const deleted = copies.filter((item) => item.deleted_at !== null).length;
@@ -157,9 +198,9 @@ function progressOf(objects: readonly LayerObject[], slideId: string): CheckProg
   ).length;
   const checked = confirmed + deleted + edited;
   return {
-    scope: aiCells.length,
+    scope,
     checked,
-    unchecked: aiCells.length - checked,
+    unchecked: scope - checked,
     confirmed,
     edited,
     deleted,
@@ -171,7 +212,7 @@ export function toAnnotateSlideStatus(taskId: string, slideId: string): Annotate
   const key = keyOf(taskId, slideId);
   const check = store.checks[key] ?? { checked_at: null, nothing_to_mark: false };
   const signOff = store.signOffs[key];
-  const progress = progressOf(layerOf(store, key), slideId);
+  const progress = progressOf(layerOf(store, key), taskId, slideId);
   return {
     task_id: taskId,
     slide_id: slideId,
@@ -276,7 +317,7 @@ function writeLayer(params: Params, change: (objects: LayerObject[]) => LayerObj
 }
 
 export const fakeRunSetIds = (taskId: string, slideId: string): string[] =>
-  readStore().runs[keyOf(taskId, slideId)] ?? [];
+  joinedRunsOf(taskId, slideId).filter((setId) => setId !== resultSetOf(taskId, slideId));
 
 const isSignedOff = (params: Params) =>
   readStore().signOffs[keyOf(params.taskId, params.slideId)] !== undefined;
@@ -332,7 +373,7 @@ const layerHandlers = (): RequestHandler[] => [
     const layer: SharedLayer = {
       task_id: params.taskId,
       slide_id: params.slideId,
-      result_set_id: resultSetOf(params.slideId),
+      result_set_id: resultSetOf(params.taskId, params.slideId),
       objects: layerOf(store, keyOf(params.taskId, params.slideId)).filter(
         (item) => item.deleted_at === null || item.origin === "ai-edited",
       ),
@@ -391,7 +432,9 @@ const layerHandlers = (): RequestHandler[] => [
     async ({ params, request }) => {
       if (isSignedOff(params)) return signedOff();
       const edit = (await request.json()) as AiObjectEdit;
-      const source = aiCells.find((cell) => cell.object === params.objectId);
+      const source = aiObjectsOf(params.taskId, params.slideId).find(
+        (cell) => cell.object === params.objectId,
+      );
       if (source === undefined) return new HttpResponse(null, { status: 404 });
       const store = readStore();
       const made = aiCopy(params, params.objectId, (found) => ({
@@ -417,7 +460,9 @@ const layerHandlers = (): RequestHandler[] => [
     `${base}/shared-layer/ai/:objectId/confirm`,
     ({ params }) => {
       if (isSignedOff(params)) return signedOff();
-      const source = aiCells.find((cell) => cell.object === params.objectId);
+      const source = aiObjectsOf(params.taskId, params.slideId).find(
+        (cell) => cell.object === params.objectId,
+      );
       if (source === undefined) return new HttpResponse(null, { status: 404 });
       const store = readStore();
       const made = aiCopy(params, params.objectId, (found) => ({
@@ -482,12 +527,12 @@ const layerHandlers = (): RequestHandler[] => [
     const { result_set_id } = (await request.json()) as { result_set_id: string };
     const key = keyOf(params.taskId, params.slideId);
     const store = readStore();
-    const known = fakeRunSetIds(params.taskId, params.slideId);
+    const known = joinedRunsOf(params.taskId, params.slideId);
     if (!known.includes(result_set_id))
       writeStore({ ...store, runs: { ...store.runs, [key]: [...known, result_set_id] } });
     return HttpResponse.json({
       slide_id: params.slideId,
-      result_set_id: resultSetOf(params.slideId),
+      result_set_id: resultSetOf(params.taskId, params.slideId),
       run_set_ids: fakeRunSetIds(params.taskId, params.slideId),
       reviewer_ids: [viewerId()],
     });

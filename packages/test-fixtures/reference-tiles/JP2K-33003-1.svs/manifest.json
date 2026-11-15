@@ -19,6 +19,15 @@
       "width": 256,
       "height": 256,
       "file": "level-1-1920-2944.png"
+    },
+    {
+      "level": 2,
+      "downsample": 8,
+      "x": 896,
+      "y": 1408,
+      "width": 256,
+      "height": 256,
+      "file": "level-2-896-1408.png"
     }
   ]
 }

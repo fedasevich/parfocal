@@ -8,7 +8,7 @@ import { chapters } from "../flow-map/walkthrough.ts";
 
 export const Route = createFileRoute("/flow-map/walkthrough/")({
   beforeLoad: () => {
-    if (!import.meta.env.DEV) throw notFound();
+    if (import.meta.env.PARFOCAL_PUBLIC_DEV_TOOLS !== "on") throw notFound();
   },
   component: WalkthroughIndex,
 });
