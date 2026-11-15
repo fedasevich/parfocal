@@ -12,6 +12,7 @@
     "test:weights": "uv run --package parfocal-ml --extra export pytest tests/test_sam_onnx.py tests/test_interactive.py tests/test_ais_region.py -m weights -q",
     "test:accuracy": "PARFOCAL_REQUIRE_WEIGHTS=1 uv run --package parfocal-ml --extra export pytest tests -m 'not db' -q --continue-on-collection-errors",
     "bench:ais-region": "uv run --package parfocal-ml --extra onnx python -m parfocal_ml.ais_region",
+    "dashboard": "cd ../.. && uv run --package parfocal-ml python -m parfocal_ml.dashboard",
     "bench:interactive": "uv run --package parfocal-ml --extra onnx python -m parfocal_ml.interactive"
   },
   "dependencies": {

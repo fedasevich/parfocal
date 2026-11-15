@@ -1,0 +1,124 @@
+[[series]]
+id = "ais-pq-tnbc"
+title = "Automatic segmentation PQ on all 50 TNBC images"
+better = "higher"
+description = "PathoSAM automatic instance segmentation scored by the geometric scorer. The first date rescored the POC's stored predictions, the second ran the parfocal graphs."
+reference = { result = "2026-10-18-geometric-scorer-reproduction.md", row = "pathosam-ais-browser", column = "PQ ours", variant = "POC browser baseline" }
+
+[[series.points]]
+result = "2026-10-18-geometric-scorer-reproduction.md"
+row = "pathosam-ais-batch"
+column = "PQ ours"
+variant = "POC batch"
+
+[[series.points]]
+result = "2026-10-18-geometric-scorer-reproduction.md"
+row = "pathosam-ais-browser"
+column = "PQ ours"
+variant = "POC browser"
+
+[[series.points]]
+result = "2026-11-08-auto-region-pass-on-tnbc.md"
+row = { "Encoder" = "uint8", "AIS decoder" = "fp32" }
+column = "PQ"
+variant = "uint8 encoder, fp32 AIS decoder"
+
+[[series.points]]
+result = "2026-11-08-auto-region-pass-on-tnbc.md"
+row = { "Encoder" = "uint8", "AIS decoder" = "int8 weight-only" }
+column = "PQ"
+variant = "uint8 encoder, int8 AIS decoder"
+
+[[series.points]]
+result = "2026-11-08-auto-region-pass-on-tnbc.md"
+row = { "Encoder" = "4-bit", "AIS decoder" = "int8 weight-only" }
+column = "PQ"
+variant = "4-bit encoder, int8 AIS decoder"
+
+[[series]]
+id = "typer-ece"
+title = "Nucleus typer ECE after temperature scaling"
+better = "lower"
+description = "Expected calibration error of the HoVer-NeXt typer on PanNuke after temperature scaling. The last date is a stand-in training round refitted on held-out slides."
+
+[[series.points]]
+result = "2026-10-18-typing-calibration-reproduction.md"
+row = "1"
+column = "ECE before, after"
+part = 1
+variant = "v1.2, 1 view"
+
+[[series.points]]
+result = "2026-10-18-typing-calibration-reproduction.md"
+row = "8"
+column = "ECE before, after"
+part = 1
+variant = "v1.2, 8 views"
+
+[[series.points]]
+result = "2026-11-04-typer-calibration-registry.md"
+row = "1"
+column = "ECE after"
+variant = "v1.2, 1 view"
+
+[[series.points]]
+result = "2026-11-04-typer-calibration-registry.md"
+row = "8"
+column = "ECE after"
+variant = "v1.2, 8 views"
+
+[[series.points]]
+result = "2026-11-15-recalibration-after-a-round.md"
+row = "Refitted on the held-out fit slides"
+column = "Starts from the typer"
+part = 1
+variant = "round from the typer, refitted"
+
+[[series.points]]
+result = "2026-11-15-recalibration-after-a-round.md"
+row = "Refitted on the held-out fit slides"
+column = "Starts from zero"
+part = 1
+variant = "round from zero, refitted"
+
+[[series]]
+id = "typer-accuracy"
+title = "Nucleus typer accuracy on the PanNuke test split"
+better = "higher"
+description = "Share of nuclei typed right. The last date is a stand-in training round on its measuring slides."
+
+[[series.points]]
+result = "2026-10-18-typing-calibration-reproduction.md"
+row = "1"
+column = "Accuracy"
+variant = "v1.2, 1 view"
+
+[[series.points]]
+result = "2026-10-18-typing-calibration-reproduction.md"
+row = "8"
+column = "Accuracy"
+variant = "v1.2, 8 views"
+
+[[series.points]]
+result = "2026-11-04-typer-calibration-registry.md"
+row = "1"
+column = "Accuracy"
+variant = "v1.2, 1 view"
+
+[[series.points]]
+result = "2026-11-04-typer-calibration-registry.md"
+row = "8"
+column = "Accuracy"
+variant = "v1.2, 8 views"
+
+[[series.points]]
+result = "2026-11-15-recalibration-after-a-round.md"
+row = "Round accuracy"
+column = "Starts from the typer"
+variant = "round from the typer"
+
+[[series.points]]
+result = "2026-11-15-recalibration-after-a-round.md"
+row = "Round accuracy"
+column = "Starts from zero"
+variant = "round from zero"

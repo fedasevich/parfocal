@@ -1,0 +1,5 @@
+{
+  "dataset": "tnbc",
+  "summary": { "pq": 0.8312, "groups": [{ "pq": 0.5 }] },
+  "within_tolerance": true
+}
