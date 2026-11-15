@@ -1,10 +1,14 @@
 import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@parfocal/ui/components/button";
+import { useCallback } from "react";
+import { type ViewRect, viewScopeOf } from "./run-options.ts";
+import { StartRunPanel } from "./start-run-panel.tsx";
 import { type RunStreamControls, runStreamVisible, useRunStream } from "./use-run-stream.ts";
-import type { ViewerEngine } from "./viewer-engine.ts";
+import { type ViewerEngine, viewArea } from "./viewer-engine.ts";
 
 type RunStreamLayerProps = {
   readonly engine: ViewerEngine;
+  readonly stage: HTMLElement | null;
   readonly projectId: string | undefined;
   readonly slideId: string;
 };
@@ -79,12 +83,28 @@ function RunStreamPanel({ controls }: { controls: RunStreamControls }) {
 }
 
 function ProjectRunStreamLayer(props: RunStreamLayerProps & { readonly projectId: string }) {
-  const controls = useRunStream({
-    engine: props.engine,
-    projectId: props.projectId,
-    slideId: props.slideId,
-  });
-  return runStreamVisible(controls) ? <RunStreamPanel controls={controls} /> : null;
+  const { engine, stage, projectId, slideId } = props;
+  const controls = useRunStream({ engine, projectId, slideId });
+  const currentView = useCallback((): ViewRect | null => {
+    const slide = engine.getSlide();
+    if (slide === null || stage === null) return null;
+    const { width, height } = stage.getBoundingClientRect();
+    return viewScopeOf(viewArea(engine.getCamera(), { width, height }), slide);
+  }, [engine, stage]);
+  return (
+    <>
+      {runStreamVisible(controls) ? <RunStreamPanel controls={controls} /> : null}
+      {controls.phase === "streaming" ? null : (
+        <StartRunPanel
+          projectId={projectId}
+          slideId={slideId}
+          currentView={currentView}
+          onStarted={() => void controls.watchNow()}
+          onLoadLast={controls.loadLast}
+        />
+      )}
+    </>
+  );
 }
 
 export function RunStreamLayer(props: RunStreamLayerProps) {

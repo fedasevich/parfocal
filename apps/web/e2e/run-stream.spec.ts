@@ -68,6 +68,31 @@ test("a whole-slide run streams objects before it ends, and cancel keeps them", 
   await expect(page.getByTestId("run-stream-cancel")).toHaveCount(0);
 });
 
+test("a run starts from the app, cancels and reloads", async ({ page }) => {
+  await openStreamingSlide(page);
+  const panel = page.getByTestId("run-stream");
+  await expect(panel).toHaveCount(0);
+
+  await page.getByTestId("start-run-find").click();
+  await expect(panel).toHaveAttribute("data-status", "running", { timeout: 20_000 });
+  await expect.poll(() => numberOf(panel, "data-drawn"), { timeout: 15_000 }).toBeGreaterThan(0);
+  await expect(page.getByTestId("start-run")).toHaveCount(0);
+
+  await page.getByTestId("run-stream-cancel").click();
+  await expect(panel).toHaveAttribute("data-status", "cancelled", { timeout: 15_000 });
+  const drawn = await numberOf(panel, "data-drawn");
+  expect(drawn).toBeGreaterThan(0);
+
+  await page.reload();
+  await expect(page.getByTestId("slide-stage")).toHaveAttribute("data-state", "ready", {
+    timeout: 30_000,
+  });
+  await expect(panel).toHaveCount(0);
+  await page.getByTestId("start-run-load").click();
+  await expect(panel).toHaveAttribute("data-phase", "ended", { timeout: 20_000 });
+  await expect.poll(() => numberOf(panel, "data-drawn")).toBe(drawn);
+});
+
 test("an annotate slide with no run shows no run panel", async ({ page }) => {
   await openStreamingSlide(page);
   await page.waitForTimeout(1000);

@@ -760,6 +760,7 @@ function OpenedSlide({
               <RunStreamLayer
                 key={slideId}
                 engine={session.engine}
+                stage={hostNode}
                 projectId={projectId}
                 slideId={slideId}
               />
