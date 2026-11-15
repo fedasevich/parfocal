@@ -16,6 +16,7 @@
     "gpu-timing": "playwright test -c playwright.gpu.config.ts",
     "bench:sam": "playwright test -c playwright.sam.config.ts sam-variants",
     "bench:type-learner": "node sam-bench/type-learner-same-images.ts",
+    "parity:sam": "playwright test -c playwright.sam.config.ts sam-parity",
     "smoke:smart-select": "playwright test -c playwright.sam.config.ts smart-select-accuracy",
     "traces:record": "vite browser/page --open /trace-recorder.html"
   },
