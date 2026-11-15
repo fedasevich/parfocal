@@ -140,8 +140,9 @@ def socket_origin(url: str) -> str:
 
 def signed_room_token(room: str) -> str:
     from parfocal_api.tile_access import sign_capability
+    from parfocal_api.token_keys import listed_keys
 
-    key = os.environ.get("ROOM_TOKEN_KEY", "")
+    key = next(iter(listed_keys(os.environ.get("ROOM_TOKEN_KEY", ""))), "")
     tenant = setting("TENANT")
     user = setting("USER")
     if not key or not tenant or not user:
