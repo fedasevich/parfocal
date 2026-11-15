@@ -75,6 +75,7 @@ const release = readRelease(params.get("release"));
 if (params.get("uint8") !== "stock") installUint8TextureUpload(XRLayer);
 
 const contexts = { created: 0, lost: 0 };
+const canvasesAwaitingLoss = new Set<HTMLCanvasElement>();
 type GetContext = (this: HTMLCanvasElement, ...args: unknown[]) => RenderingContext | null;
 const getContext = Object.getOwnPropertyDescriptor(HTMLCanvasElement.prototype, "getContext")
   ?.value as GetContext;
@@ -84,8 +85,10 @@ HTMLCanvasElement.prototype.getContext = function (this: HTMLCanvasElement, ...a
   if (context && !known && args[0] === "webgl2") {
     (this as { counted?: boolean }).counted = true;
     contexts.created += 1;
+    canvasesAwaitingLoss.add(this);
     this.addEventListener("webglcontextlost", () => {
       contexts.lost += 1;
+      canvasesAwaitingLoss.delete(this);
     });
   }
   return context;
