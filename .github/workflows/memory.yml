@@ -1,0 +1,87 @@
+name: memory
+
+on:
+  schedule:
+    - cron: "23 2 * * *"
+  workflow_dispatch:
+    inputs:
+      long_visits:
+        description: Slide visits in the long review session
+        type: string
+        default: "100"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: memory-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  TURBO_TELEMETRY_DISABLED: "1"
+
+jobs:
+  viewer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-workspace
+        with:
+          cache-key: memory-viewer
+      - id: fixtures
+        run: echo "key=$(node packages/test-fixtures/src/cli.ts --key small viewer)" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cache/parfocal/fixtures
+          key: fixtures-browser-${{ steps.fixtures.outputs.key }}
+      - run: pnpm fixtures small viewer
+      - run: google-chrome --version
+      - name: Slide switches and a long review session with CMU-1.svs
+        run: pnpm --filter @parfocal/viewer-engine test:memory
+        env:
+          PARFOCAL_REQUIRE_FIXTURES: small,viewer
+          MEMORY_LONG_VISITS: ${{ inputs.long_visits || '100' }}
+      - name: Renderer switches over CMU-1.svs
+        if: always()
+        run: pnpm --filter @parfocal/viewer-engine exec playwright test route-switch
+        env:
+          PARFOCAL_REQUIRE_FIXTURES: small,viewer
+          ROUTE_SWITCHES: "40"
+          ROUTE_SWITCH_SLIDE: CMU-1.svs
+      - if: always()
+        run: node packages/viewer-engine/memory-nightly/summary.ts packages/viewer-engine/test-results/memory-reports >> "$GITHUB_STEP_SUMMARY"
+      - if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: memory-viewer
+          path: packages/viewer-engine/test-results/memory-reports
+          retention-days: 14
+          if-no-files-found: ignore
+
+  web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-workspace
+        with:
+          cache-key: memory-web
+      - id: fixtures
+        run: echo "key=$(node packages/test-fixtures/src/cli.ts --key small)" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cache/parfocal/fixtures
+          key: fixtures-small-${{ steps.fixtures.outputs.key }}
+      - run: pnpm fixtures small
+      - name: Workspace switches
+        run: pnpm --filter @parfocal/web test:memory
+      - if: always()
+        run: node packages/viewer-engine/memory-nightly/summary.ts apps/web/test-results/memory-reports >> "$GITHUB_STEP_SUMMARY"
+      - if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: memory-web
+          path: apps/web/test-results/memory-reports
+          retention-days: 14
+          if-no-files-found: ignore

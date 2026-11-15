@@ -18,6 +18,7 @@
     "bench:hover": "playwright test -c playwright.hover.config.ts",
     "bench:region": "playwright test -c playwright.region.config.ts",
     "smoke": "playwright test -c playwright.smoke.config.ts",
+    "test:memory": "playwright test -c playwright.memory.config.ts",
     "gpu-timing": "pnpm --filter @parfocal/viewer-engine gpu-timing",
     "shot": "node e2e/shot.ts"
   },

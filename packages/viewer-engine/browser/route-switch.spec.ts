@@ -4,12 +4,13 @@ import { fileURLToPath } from "node:url";
 import { type CDPSession, expect, test } from "@playwright/test";
 import { assertSwiftShader, WEBGPU_SWIFTSHADER_ARGS } from "../../golden-images/src/playwright.ts";
 import type { RendererRouteId } from "../src/index.ts";
+import { trendReport } from "../src/memory/heap-trend.ts";
 import { collectGarbage, harnessUrl, heapBytes, liveObjects } from "./cdp.ts";
 import type { RouteSwitchReport, RouteSwitchSlide } from "./page/route-switch-harness.ts";
 
 const reportDir = fileURLToPath(new URL("../test-results/memory-reports", import.meta.url));
 
-const slideFile = "CMU-1-Small-Region.svs";
+const slideFile = process.env.ROUTE_SWITCH_SLIDE ?? "CMU-1-Small-Region.svs";
 const camera = { x: 1100, y: 1500, zoom: -1 };
 const switches = Number(process.env.ROUTE_SWITCHES ?? 10);
 const minWarmUpSwitches = 5;
@@ -117,6 +118,13 @@ test("10 renderer route switches keep the camera, one canvas and the heap within
     join(reportDir, "route-switch.json"),
     `${JSON.stringify({ renderer, routes, warmUpSwitches, samples, growth, decksAfter, canvases }, null, 2)}\n`,
   );
+  const trend = trendReport(
+    `${switches} renderer switches over ${slideFile}, all routes`,
+    samples.map((sample) => ({ visit: sample.round, heapBytes: sample.heapBytes })),
+    warmUpSwitches - 1,
+    { maxGrowth: null, maxSlopeBytesPerVisit: null },
+  );
+  writeFileSync(join(reportDir, "route-switch.trend.json"), `${JSON.stringify(trend, null, 2)}\n`);
 
   expect(samples.map((sample) => sample.report.errors)).toEqual(samples.map(() => []));
   expect(samples.map((sample) => sample.report.uncapturedGpuErrors)).toEqual(samples.map(() => 0));

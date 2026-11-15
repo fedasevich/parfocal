@@ -9,6 +9,8 @@
     "playwright.hover.config.ts",
     "playwright.region.config.ts",
     "playwright.smoke.config.ts",
+    "playwright.memory.config.ts",
+    "memory",
     "smoke",
     "hover-bench/*.ts",
     "region-bench/*.ts"

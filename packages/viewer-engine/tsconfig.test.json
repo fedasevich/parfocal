@@ -3,11 +3,13 @@
   "include": [
     "test",
     "browser",
+    "memory-nightly",
     "sam-bench",
     "gpu-bench/*.ts",
     "j2k-bench/*.ts",
     "frame-bench/*.ts",
     "playwright.config.ts",
+    "playwright.memory.config.ts",
     "playwright.sam.config.ts",
     "playwright.gpu.config.ts",
     "playwright.j2k.config.ts",

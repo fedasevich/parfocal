@@ -7,12 +7,14 @@
     ".": "./src/index.ts",
     "./viv": "./src/viv/index.ts",
     "./draw-constants": "./src/overlay/draw-constants.ts",
-    "./sam-prompt": "./src/sam/smart-prompt.ts"
+    "./sam-prompt": "./src/sam/smart-prompt.ts",
+    "./heap-trend": "./src/memory/heap-trend.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.src.json && tsc --noEmit -p tsconfig.worker.json && tsc --noEmit -p tsconfig.test.json && tsc --noEmit -p tsconfig.browser.json",
     "test": "node --test --experimental-test-coverage --test-coverage-include=\"src/**\" --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=coverage.lcov \"test/**/*.test.ts\"",
     "test:browser": "playwright test",
+    "test:memory": "playwright test -c playwright.memory.config.ts",
     "test:hidden-tab-hardware": "PARFOCAL_GPU=hardware playwright test -c playwright.hardware.config.ts",
     "gpu-timing": "playwright test -c playwright.gpu.config.ts",
     "bench:j2k": "playwright test -c playwright.j2k.config.ts",
