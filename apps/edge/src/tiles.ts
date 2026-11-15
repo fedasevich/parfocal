@@ -33,7 +33,8 @@ const TILES_PREFIX = "/tiles/";
 const FILE_NAME = /^[A-Za-z0-9][A-Za-z0-9._-]{0,99}$/;
 const SINGLE_RANGE = /^bytes=(\d*)-(\d*)$/;
 const CACHE_ORIGIN = "https://tile-range-cache.invalid/";
-const CACHED_FOR_SECONDS = 86_400;
+const SIZED_CACHE_SECONDS = 86_400;
+const UNSIZED_CACHE_SECONDS = 600;
 const BASE_HEADERS = {
   "Cache-Control": "private, max-age=3600",
   "Cross-Origin-Resource-Policy": "same-origin",
@@ -114,14 +115,20 @@ function timing(entries: readonly (readonly [string, number])[]): string {
   return entries.map(([name, ms]) => `${name};dur=${ms}`).join(", ");
 }
 
-function cacheKey(key: string, span: Span | null): Request | null {
-  if (span === null) {
-    return new Request(`${CACHE_ORIGIN}${key}`);
+function cacheKey(key: string, span: Span | null, signedSize: number | null): Request | null {
+  const query = new URLSearchParams();
+  if (signedSize !== null) {
+    query.set("size", String(signedSize));
   }
-  if ("suffix" in span || span.length === undefined) {
-    return null;
+  if (span !== null) {
+    if ("suffix" in span || span.length === undefined) {
+      return null;
+    }
+    query.set("offset", String(span.offset));
+    query.set("length", String(span.length));
   }
-  return new Request(`${CACHE_ORIGIN}${key}?offset=${span.offset}&length=${span.length}`);
+  const search = query.size === 0 ? "" : `?${query.toString()}`;
+  return new Request(`${CACHE_ORIGIN}${key}${search}`);
 }
 
 function answer(stored: Response, span: Span | null, outcome: string, ms: number): Response {
@@ -151,7 +158,7 @@ async function serveCached(
   signedSize: number | null,
   cache: RangeCache,
 ) {
-  const lookup = cacheKey(key, span);
+  const lookup = cacheKey(key, span, signedSize);
   if (lookup === null) {
     return serveFromBucket(env, key, span, signedSize);
   }
@@ -170,8 +177,9 @@ async function serveCached(
     return fresh;
   }
   const [mine, theirs] = (fresh.body as ReadableStream).tee();
+  const maxAge = signedSize === null ? UNSIZED_CACHE_SECONDS : SIZED_CACHE_SECONDS;
   const stored = new Headers({
-    "Cache-Control": `public, max-age=${CACHED_FOR_SECONDS}`,
+    "Cache-Control": `public, max-age=${maxAge}`,
     "Content-Length": fresh.headers.get("Content-Length") ?? "0",
     "Content-Type": fresh.headers.get("Content-Type") ?? "application/octet-stream",
     ETag: fresh.headers.get("ETag") ?? "",

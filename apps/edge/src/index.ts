@@ -5,7 +5,7 @@ import { handleRealtime, isRealtimePath } from "#realtime.ts";
 import type { RoomEnv } from "#room.ts";
 import { withSecurityHeaders } from "#security-headers.ts";
 import { createTileSliCounter, flushTileSli } from "#sli.ts";
-import { handleTiles, isTilesPath, problem, type TileEnv } from "#tiles.ts";
+import { handleTiles, isTilesPath, problem, type RangeCache, type TileEnv } from "#tiles.ts";
 
 export const packageName = "@parfocal/edge";
 
@@ -79,6 +79,11 @@ function route(
   return new Response(null, { status: 404 });
 }
 
+function rangeCache(context?: ExecutionContext): RangeCache | undefined {
+  if (context === undefined || typeof caches === "undefined") return undefined;
+  return { store: caches.default, keep: (work) => context.waitUntil(work) };
+}
+
 async function measuredTiles(
   request: Request,
   env: EdgeEnv,
@@ -87,7 +92,7 @@ async function measuredTiles(
   const started = Date.now();
   let status = 500;
   try {
-    const response = await handleTiles(request, env, seconds);
+    const response = await handleTiles(request, env, seconds, undefined, rangeCache(context));
     status = response.status;
     return response;
   } finally {

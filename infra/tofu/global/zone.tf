@@ -10,6 +10,7 @@ locals {
     min_tls_version  = "1.2"
     tls_1_3          = "on"
     ssl              = "strict"
+    http3            = "on"
   }
 }
 
