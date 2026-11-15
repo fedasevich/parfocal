@@ -2315,6 +2315,10 @@ msgstr ""
 msgid "<0>Going to area 3</0> · {nextMm} mm"
 msgstr ""
 
+#: src/shell/maintenance-banner.tsx
+msgid "<0>Maintenance.</0> Changes are paused and you can still read everything."
+msgstr ""
+
 #. placeholder {0}: batch.storage.needed_gb
 #. placeholder {1}: batch.storage.left_gb
 #. placeholder {2}: batch.storage.allowance_gb
@@ -6582,6 +6586,10 @@ msgstr ""
 
 #: ../../packages/ui/src/components/icon.tsx
 msgid "Expand"
+msgstr ""
+
+#: src/shell/maintenance-banner.tsx
+msgid "Expected back at {until}."
 msgstr ""
 
 #: ../../packages/ui/src/components/annotate-task.tsx

@@ -15,7 +15,7 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `phi` | 47 |
 | `personal` | 91 |
 | `secret` | 11 |
-| `operational` | 769 |
+| `operational` | 775 |
 | `public` | 0 |
 
 ## adjudication_objects
@@ -482,6 +482,17 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `placed_by_user_id` | personal |
 | `released_at` | operational |
 | `released_by_user_id` | personal |
+| `created_at` | operational |
+| `updated_at` | operational |
+
+## maintenance
+
+| Column | Class |
+|---|---|
+| `id` | operational |
+| `message` | operational |
+| `started_at` | operational |
+| `expected_end_at` | operational |
 | `created_at` | operational |
 | `updated_at` | operational |
 

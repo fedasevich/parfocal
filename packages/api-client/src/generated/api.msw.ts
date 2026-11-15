@@ -109,6 +109,7 @@ import type {
   PatientData,
   PendingAccessRequest,
   PersonalData,
+  PlatformStatus,
   PointGeometry,
   PolygonGeometry,
   Preference,
@@ -277,6 +278,7 @@ import {
   Role,
   Rule,
   ServiceScope,
+  ServiceStatus,
   Serving,
   Sex,
   SignOffRule,
@@ -311,6 +313,60 @@ export const getGetHealthResponseMock = (
   overrideResponse: Partial<Extract<Health, object>> = {},
 ): Health => ({
   status: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  ...overrideResponse,
+});
+
+export const getGetPlatformStatusResponseMock = (
+  overrideResponse: Partial<Extract<PlatformStatus, object>> = {},
+): PlatformStatus => ({
+  status: faker.helpers.arrayElement(Object.values(ServiceStatus)),
+  maintenance: faker.helpers.arrayElement([
+    {
+      message: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      started_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+      expected_end_at: faker.helpers.arrayElement([
+        faker.date.past().toISOString().slice(0, 19) + "Z",
+        null,
+      ]),
+    },
+    null,
+  ]),
+  ...overrideResponse,
+});
+
+export const getStartMaintenanceResponseMock = (
+  overrideResponse: Partial<Extract<PlatformStatus, object>> = {},
+): PlatformStatus => ({
+  status: faker.helpers.arrayElement(Object.values(ServiceStatus)),
+  maintenance: faker.helpers.arrayElement([
+    {
+      message: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      started_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+      expected_end_at: faker.helpers.arrayElement([
+        faker.date.past().toISOString().slice(0, 19) + "Z",
+        null,
+      ]),
+    },
+    null,
+  ]),
+  ...overrideResponse,
+});
+
+export const getEndMaintenanceResponseMock = (
+  overrideResponse: Partial<Extract<PlatformStatus, object>> = {},
+): PlatformStatus => ({
+  status: faker.helpers.arrayElement(Object.values(ServiceStatus)),
+  maintenance: faker.helpers.arrayElement([
+    {
+      message: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      started_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+      expected_end_at: faker.helpers.arrayElement([
+        faker.date.past().toISOString().slice(0, 19) + "Z",
+        null,
+      ]),
+    },
+    null,
+  ]),
   ...overrideResponse,
 });
 
@@ -16401,6 +16457,78 @@ export const getGetHealthMockHandler = (
   );
 };
 
+export const getGetPlatformStatusMockHandler = (
+  overrideResponse?:
+    | PlatformStatus
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<PlatformStatus> | PlatformStatus),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/status",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetPlatformStatusResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getStartMaintenanceMockHandler = (
+  overrideResponse?:
+    | PlatformStatus
+    | ((
+        info: Parameters<Parameters<typeof http.put>[1]>[0],
+      ) => Promise<PlatformStatus> | PlatformStatus),
+  options?: RequestHandlerOptions,
+) => {
+  return http.put(
+    "*/api/platform/maintenance",
+    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getStartMaintenanceResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getEndMaintenanceMockHandler = (
+  overrideResponse?:
+    | PlatformStatus
+    | ((
+        info: Parameters<Parameters<typeof http.delete>[1]>[0],
+      ) => Promise<PlatformStatus> | PlatformStatus),
+  options?: RequestHandlerOptions,
+) => {
+  return http.delete(
+    "*/api/platform/maintenance",
+    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getEndMaintenanceResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getGetSessionMockHandler = (
   overrideResponse?:
     | Session
@@ -23947,6 +24075,9 @@ export const getListSlideAreasMockHandler = (
 };
 export const getParfocalAPIMock = () => [
   getGetHealthMockHandler(),
+  getGetPlatformStatusMockHandler(),
+  getStartMaintenanceMockHandler(),
+  getEndMaintenanceMockHandler(),
   getGetSessionMockHandler(),
   getGetPasswordSignInMockHandler(),
   getCreateAccountMockHandler(),

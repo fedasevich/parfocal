@@ -31,7 +31,7 @@ OPEN_DURING_MAINTENANCE = (
 MAINTENANCE_CODE = "maintenance"
 MAINTENANCE_TITLE = "Parfocal is under maintenance, so changes are paused"
 
-type Message = Annotated[
+type MaintenanceMessage = Annotated[
     str, StringConstraints(strip_whitespace=True, min_length=1, max_length=300)
 ]
 
@@ -53,7 +53,7 @@ class PlatformStatus(BaseModel):
 
 
 class MaintenanceStart(BaseModel):
-    message: Message
+    message: MaintenanceMessage
     expected_end_at: datetime | None = None
 
 

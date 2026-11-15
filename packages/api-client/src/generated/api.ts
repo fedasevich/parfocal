@@ -732,6 +732,7 @@ export const AuditTarget = {
   "clinical-report": "clinical-report",
   "lab-model": "lab-model",
   "registered-model": "registered-model",
+  maintenance: "maintenance",
   feedback: "feedback",
   "access-request": "access-request",
 } as const;
@@ -3093,6 +3094,23 @@ export const Locale = {
   "en-XA": "en-XA",
 } as const;
 
+export interface Maintenance {
+  message: string;
+  started_at: string;
+  expected_end_at: string | null;
+}
+
+/**
+ * @minLength 1
+ * @maxLength 300
+ */
+export type MaintenanceMessage = string;
+
+export interface MaintenanceStart {
+  message: MaintenanceMessage;
+  expected_end_at?: string | null;
+}
+
 export interface MappingChange {
   /**
    * @minItems 1
@@ -3926,6 +3944,18 @@ export type Plan = (typeof Plan)[keyof typeof Plan];
 export const Plan = {
   pilot: "pilot",
 } as const;
+
+export type ServiceStatus = (typeof ServiceStatus)[keyof typeof ServiceStatus];
+
+export const ServiceStatus = {
+  ok: "ok",
+  maintenance: "maintenance",
+} as const;
+
+export interface PlatformStatus {
+  status: ServiceStatus;
+  maintenance: Maintenance | null;
+}
 
 export interface Preference {
   kind: NotificationKind;
@@ -6473,6 +6503,475 @@ export function useGetHealth<TData = Awaited<ReturnType<typeof getHealth>>, TErr
 
   return withQueryKey(query, queryOptions.queryKey);
 }
+
+export type getPlatformStatusResponse200 = {
+  data: PlatformStatus;
+  status: 200;
+};
+
+export type getPlatformStatusResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getPlatformStatusResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getPlatformStatusResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getPlatformStatusResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getPlatformStatusResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getPlatformStatusResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getPlatformStatusResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getPlatformStatusResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getPlatformStatusResponseSuccess = getPlatformStatusResponse200 & {
+  headers: Headers;
+};
+export type getPlatformStatusResponseError = (
+  | getPlatformStatusResponse400
+  | getPlatformStatusResponse401
+  | getPlatformStatusResponse403
+  | getPlatformStatusResponse404
+  | getPlatformStatusResponse409
+  | getPlatformStatusResponse422
+  | getPlatformStatusResponse429
+  | getPlatformStatusResponse500
+) & {
+  headers: Headers;
+};
+
+export type getPlatformStatusResponse =
+  | getPlatformStatusResponseSuccess
+  | getPlatformStatusResponseError;
+
+export const getGetPlatformStatusUrl = () => {
+  return `/api/status`;
+};
+
+/**
+ * @summary Get Platform Status
+ */
+export const getPlatformStatus = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getPlatformStatusResponse> => {
+  return apiFetch<getPlatformStatusResponse>(getGetPlatformStatusUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetPlatformStatusQueryKey = () => {
+  return [`/api/status`] as const;
+};
+
+export const getGetPlatformStatusQueryOptions = <
+  TData = Awaited<ReturnType<typeof getPlatformStatus>>,
+  TError = Problem,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getPlatformStatus>>, TError, TData>>;
+  request?: SecondParameter<typeof apiFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetPlatformStatusQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getPlatformStatus>>> = ({ signal }) =>
+    getPlatformStatus({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getPlatformStatus>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetPlatformStatusQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getPlatformStatus>>
+>;
+export type GetPlatformStatusQueryError = Problem;
+
+export function useGetPlatformStatus<
+  TData = Awaited<ReturnType<typeof getPlatformStatus>>,
+  TError = Problem,
+>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getPlatformStatus>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPlatformStatus>>,
+          TError,
+          Awaited<ReturnType<typeof getPlatformStatus>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetPlatformStatus<
+  TData = Awaited<ReturnType<typeof getPlatformStatus>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getPlatformStatus>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPlatformStatus>>,
+          TError,
+          Awaited<ReturnType<typeof getPlatformStatus>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetPlatformStatus<
+  TData = Awaited<ReturnType<typeof getPlatformStatus>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getPlatformStatus>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Platform Status
+ */
+
+export function useGetPlatformStatus<
+  TData = Awaited<ReturnType<typeof getPlatformStatus>>,
+  TError = Problem,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getPlatformStatus>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetPlatformStatusQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type startMaintenanceResponse200 = {
+  data: PlatformStatus;
+  status: 200;
+};
+
+export type startMaintenanceResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type startMaintenanceResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type startMaintenanceResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type startMaintenanceResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type startMaintenanceResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type startMaintenanceResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type startMaintenanceResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type startMaintenanceResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type startMaintenanceResponseSuccess = startMaintenanceResponse200 & {
+  headers: Headers;
+};
+export type startMaintenanceResponseError = (
+  | startMaintenanceResponse400
+  | startMaintenanceResponse401
+  | startMaintenanceResponse403
+  | startMaintenanceResponse404
+  | startMaintenanceResponse409
+  | startMaintenanceResponse422
+  | startMaintenanceResponse429
+  | startMaintenanceResponse500
+) & {
+  headers: Headers;
+};
+
+export type startMaintenanceResponse =
+  | startMaintenanceResponseSuccess
+  | startMaintenanceResponseError;
+
+export const getStartMaintenanceUrl = () => {
+  return `/api/platform/maintenance`;
+};
+
+/**
+ * @summary Start Maintenance
+ */
+export const startMaintenance = async (
+  maintenanceStart: MaintenanceStart,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<startMaintenanceResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<startMaintenanceResponse>(getStartMaintenanceUrl(), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(maintenanceStart),
+  });
+};
+
+export const getStartMaintenanceMutationKey = () => ["startMaintenance"] as const;
+
+export const getStartMaintenanceMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof startMaintenance>>,
+    TError,
+    StartMaintenanceMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof startMaintenance>>,
+  TError,
+  StartMaintenanceMutationVariables,
+  TContext
+> => {
+  const mutationKey = getStartMaintenanceMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof startMaintenance>>,
+    StartMaintenanceMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return startMaintenance(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type StartMaintenanceMutationResult = NonNullable<
+  Awaited<ReturnType<typeof startMaintenance>>
+>;
+export type StartMaintenanceMutationBody = MaintenanceStart;
+export type StartMaintenanceMutationError = Problem;
+export type StartMaintenanceMutationVariables = { data: MaintenanceStart };
+
+/**
+ * @summary Start Maintenance
+ */
+export const useStartMaintenance = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof startMaintenance>>,
+      TError,
+      StartMaintenanceMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof startMaintenance>>,
+  TError,
+  StartMaintenanceMutationVariables,
+  TContext
+> => {
+  return useMutation(getStartMaintenanceMutationOptions(options), queryClient);
+};
+
+export type endMaintenanceResponse200 = {
+  data: PlatformStatus;
+  status: 200;
+};
+
+export type endMaintenanceResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type endMaintenanceResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type endMaintenanceResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type endMaintenanceResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type endMaintenanceResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type endMaintenanceResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type endMaintenanceResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type endMaintenanceResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type endMaintenanceResponseSuccess = endMaintenanceResponse200 & {
+  headers: Headers;
+};
+export type endMaintenanceResponseError = (
+  | endMaintenanceResponse400
+  | endMaintenanceResponse401
+  | endMaintenanceResponse403
+  | endMaintenanceResponse404
+  | endMaintenanceResponse409
+  | endMaintenanceResponse422
+  | endMaintenanceResponse429
+  | endMaintenanceResponse500
+) & {
+  headers: Headers;
+};
+
+export type endMaintenanceResponse = endMaintenanceResponseSuccess | endMaintenanceResponseError;
+
+export const getEndMaintenanceUrl = () => {
+  return `/api/platform/maintenance`;
+};
+
+/**
+ * @summary End Maintenance
+ */
+export const endMaintenance = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<endMaintenanceResponse> => {
+  return apiFetch<endMaintenanceResponse>(getEndMaintenanceUrl(), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getEndMaintenanceMutationKey = () => ["endMaintenance"] as const;
+
+export const getEndMaintenanceMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<Awaited<ReturnType<typeof endMaintenance>>, TError, void, TContext>;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<Awaited<ReturnType<typeof endMaintenance>>, TError, void, TContext> => {
+  const mutationKey = getEndMaintenanceMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof endMaintenance>>, void> = () => {
+    return endMaintenance(requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type EndMaintenanceMutationResult = NonNullable<Awaited<ReturnType<typeof endMaintenance>>>;
+
+export type EndMaintenanceMutationError = Problem;
+
+/**
+ * @summary End Maintenance
+ */
+export const useEndMaintenance = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof endMaintenance>>,
+      TError,
+      void,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<Awaited<ReturnType<typeof endMaintenance>>, TError, void, TContext> => {
+  return useMutation(getEndMaintenanceMutationOptions(options), queryClient);
+};
 
 export type getSessionResponse200 = {
   data: Session;
