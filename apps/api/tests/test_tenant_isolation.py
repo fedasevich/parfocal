@@ -1042,6 +1042,10 @@ def upload_name(seeded: Seeded) -> str:
     return f"Isolation {seeded.tenant_id}.svs"
 
 
+def sent_name(seeded: Seeded) -> str:
+    return f"Sent {seeded.tenant_id}.svs"
+
+
 def upload_content(seeded: Seeded) -> bytes:
     return f"part of {seeded.tenant_id}".encode()
 
@@ -1073,6 +1077,25 @@ async def seed_uploads(connection: AsyncConnection, seeded: Seeded) -> None:
         )
     )
     seeded.markers.update({str(seeded.ids["upload"]), stored.headers["etag"].strip('"')})
+    sent_id = uuid.uuid4()
+    await connection.execute(
+        insert(uploads).values(
+            id=sent_id,
+            tenant_id=seeded.tenant_id,
+            project_id=seeded.ids["project"],
+            created_by_user_id=seeded.ids["user"],
+            file_name=sent_name(seeded),
+            size_bytes=len(content),
+            object_key=f"t/{seeded.tenant_id}/quarantine/{sent_id}/sent.svs",
+            storage_upload_id=f"sent-{sent_id}",
+            part_bytes=TEST_PART_BYTES,
+            part_count=1,
+            kind="result",
+            status="completed",
+            closed_at=func.now(),
+        )
+    )
+    seeded.markers.add(str(sent_id))
 
 
 async def seed_deleted_projects(connection: AsyncConnection, seeded: Seeded) -> None:
@@ -1528,6 +1551,13 @@ GET_ROUTES = {
         Exposure.TENANT,
         lambda a: (
             f"/api/uploads/open?project_id={a.ids['project']}&name={upload_name(a)}"
+            f"&size={len(upload_content(a))}"
+        ),
+    ),
+    "findSentUploads": Route(
+        Exposure.TENANT,
+        lambda a: (
+            f"/api/uploads/sent?project_id={a.ids['project']}&name={sent_name(a)}"
             f"&size={len(upload_content(a))}"
         ),
     ),

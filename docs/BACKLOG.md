@@ -4639,7 +4639,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when tests confirm screenshots are blurred over slide and patient areas.
   Size: M.
 
-- [ ] PILOT-009 · A bulk import rerun never sends a slide twice
+- [x] PILOT-009 · A bulk import rerun never sends a slide twice
   PILOT-004's `--cases-from-names` rerun skips slides already in their case, but a rerun while files are still processing would send them again. The run now fails and warns, and the runbook says to wait.
   Done when a test reruns the import while slides are still processing and no slide or result is sent twice.
   Depends on PILOT-004.

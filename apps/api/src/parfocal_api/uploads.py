@@ -25,7 +25,16 @@ from parfocal_api.result_imports import (
 )
 from parfocal_api.result_sets import require_uploading
 from parfocal_api.settings import ApiSettings
-from parfocal_api.tables import UploadStatus, cases, job_steps, jobs, projects, slides, uploads
+from parfocal_api.tables import (
+    UploadStatus,
+    cases,
+    job_steps,
+    jobs,
+    projects,
+    result_sets,
+    slides,
+    uploads,
+)
 from parfocal_common.ingest import (
     NOTICES,
     Failure,
@@ -53,6 +62,7 @@ from parfocal_common.result_imports import (
 SAFE_CHARACTERS = re.compile(r"[^A-Za-z0-9._-]")
 SAFE_NAME_LENGTH = 120
 COMPANION = "/s3/multipart"
+SENT_LIMIT = 20
 REFUSED_COMPLETIONS = frozenset({"InvalidPart", "InvalidPartOrder", "EntityTooSmall"})
 
 type FileName = Annotated[
@@ -537,6 +547,57 @@ async def find_open_upload(
         size=row.size_bytes,
         created_at=row.created_at,
     )
+
+
+@router.get(
+    "/sent",
+    operation_id="findSentUploads",
+    **require(Permission.UPLOAD_SLIDES),
+)
+async def find_sent_uploads(
+    project_id: uuid.UUID,
+    name: Annotated[str, Query(min_length=1, max_length=255)],
+    size: Annotated[int, Query(ge=1)],
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
+    last_modified: Annotated[int | None, Query(ge=0)] = None,
+) -> list[UploadState]:
+    await visible(connection, principal, project_id)
+    rows = (
+        await connection.execute(
+            select(uploads)
+            .where(
+                uploads.c.project_id == project_id,
+                uploads.c.file_name == name.strip(),
+                uploads.c.size_bytes == size,
+                uploads.c.last_modified_ms.is_not_distinct_from(last_modified),
+                uploads.c.status == UploadStatus.COMPLETED,
+                created_by(principal),
+            )
+            .order_by(uploads.c.created_at.desc())
+            .limit(SENT_LIMIT)
+        )
+    ).all()
+    return [await state_of(connection, row) for row in rows if await still_held(connection, row)]
+
+
+async def still_held(connection: AsyncConnection, row: Any) -> bool:
+    if row.kind == UploadKind.RESULT:
+        if row.result_set_id is None:
+            return True
+        kept = await connection.scalar(
+            select(result_sets.c.id).where(
+                result_sets.c.id == row.result_set_id, result_sets.c.deleted_at.is_(None)
+            )
+        )
+        return kept is not None
+    slide = (
+        await connection.execute(select(slides.c.deleted_at).where(slides.c.upload_id == row.id))
+    ).one_or_none()
+    if slide is not None:
+        return slide.deleted_at is None
+    status = await connection.scalar(select(jobs.c.status).where(jobs.c.id == row.job_id))
+    return status != JobStatus.DONE
 
 
 def failed(reason: str) -> tuple[IngestStatus, str | None, str | None]:
