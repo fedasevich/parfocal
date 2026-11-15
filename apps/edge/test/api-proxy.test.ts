@@ -51,7 +51,7 @@ test("without an API origin the Worker answers a 503 problem instead of the app 
   const response = await worker.fetch(new Request("https://app.parfocal.test/api/health"), env);
   assert.equal(response.status, 503);
   assert.equal(response.headers.get("Content-Type"), "application/problem+json");
-  const body = (await response.json()) as { code: string };
+  const body = await response.json<{ code: string }>();
   assert.equal(body.code, "api-not-configured");
 });
 

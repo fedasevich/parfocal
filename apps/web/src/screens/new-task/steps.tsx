@@ -1325,7 +1325,7 @@ export function HowStep(props: StepProps) {
 }
 
 function ReviewHowStep(props: StepProps) {
-  const { draft, data, update, errors } = props;
+  const { draft, update } = props;
   const claimShown =
     draft.hide && (draft.decision.kind === "certainty5" || draft.decision.kind === "agree");
   return (

@@ -13,7 +13,6 @@ import {
   type ClinicalCase,
   canSignCase,
   clinicalCaseForSlide,
-  clinicalCases,
   clinicalProjectRef,
   clinicalRoles,
   clinicalTemplates,
