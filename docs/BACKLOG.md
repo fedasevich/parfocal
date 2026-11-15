@@ -4168,7 +4168,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Refs [ADR 0021](adr/0021-chosen-home-worklist-status-board-and-account-menu.md).
   Size: M.
 
-- [ ] EXP-004 · Layout experiments
+- [x] EXP-004 · Layout experiments
   Left rail against bottom dock, moving minimap against pinned (kit decisions D6 and D8).
   Done when the experiments are configured and the analysis query exists.
   Size: M.
