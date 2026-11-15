@@ -1,4 +1,4 @@
-# XXXX. Aperio coarse levels match the stored tiles, not OpenSlide's resampled read
+# 0318. Aperio coarse levels match the stored tiles, not OpenSlide's resampled read
 
 - Date: 2026-11-15
 - Status: Accepted

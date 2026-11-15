@@ -282,3 +282,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0315](0315-a-round-is-recalibrated-on-held-out-slides-before-promotion.md) | A training round is recalibrated on held-out slides before it can be promoted | Accepted | 2026-11-15 |
 | [0316](0316-jpeg-2000-slides-stay-native.md) | JPEG 2000 slides stay native, and the decode budget trigger has not fired | Accepted | 2026-11-15 |
 | [0317](0317-viewer-performance-budgets.md) | Viewer performance budgets per format, CPU-side in CI and frame and GPU time by hand | Accepted | 2026-11-15 |
+| [0318](0318-aperio-coarse-levels-match-the-stored-tiles.md) | Aperio coarse levels match the stored tiles, not OpenSlide's resampled read | Accepted | 2026-11-15 |
