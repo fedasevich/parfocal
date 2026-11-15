@@ -4700,7 +4700,7 @@ Importing AI results made elsewhere is first class. A result set is one import o
   Depends on RSET-005. Split from RSET-005 on 2026-11-14.
   Size: M.
 
-- [ ] RSET-014 · Imported heatmaps on the slide, and a choice of scale guess
+- [x] RSET-014 · Imported heatmaps on the slide, and a choice of scale guess
   RSET-013 stores an accepted heatmap as a byte grid beside its result set, but the viewer does not draw it yet, and the uploader can accept only the first level and scale guess. The viewer fetches the stored grid and draws it as a heatmap layer in Layers with the VIZ colour maps, and the import choices take a `heatmap_level` so the uploader can pick any guess, each shown with its share on tissue.
   Done when a component test picks the second guess and the import ends ready at that level, and an E2E imports a heatmap, opens the slide and sees it in Layers over the right tissue.
   Depends on RSET-013, VIZ-001.
