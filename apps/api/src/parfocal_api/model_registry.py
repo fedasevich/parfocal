@@ -1,12 +1,12 @@
 import uuid
 from collections.abc import Iterable, Mapping
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import date
 from typing import Annotated, Any
 
 from fastapi import APIRouter
 from pydantic import BaseModel, Field, StringConstraints
-from sqlalchemy import insert, select
+from sqlalchemy import insert, select, update
 from sqlalchemy.engine import Row
 from sqlalchemy.exc import IntegrityError
 
@@ -25,6 +25,7 @@ from parfocal_api.model_catalogue import (
 )
 from parfocal_api.problems import BadRequestError, ConflictError, NotFoundError
 from parfocal_api.tables import TenantKind, registered_models
+from parfocal_common.promotion_gate import gate_model, passed
 
 LICENCE_ENFORCED = False
 PATHOSAM_MPP = 0.25
@@ -73,6 +74,7 @@ class RegisteredModel:
     evaluation_report: str | None = None
     calibration_temperatures: Mapping[int, float] = field(default_factory=dict[int, float])
     part_of: tuple[str, str] | None = None
+    evaluation: Mapping[str, Any] | None = None
 
 
 class RegistrationError(ValueError):
@@ -412,6 +414,7 @@ def model_of(row: Row[Any]) -> RegisteredModel:
             for views, temperature in row.calibration_temperatures.items()
         },
         part_of=(row.part_of_name, row.part_of_version) if row.part_of_name else None,
+        evaluation=row.evaluation,
     )
 
 
@@ -483,6 +486,32 @@ class ModelRef(BaseModel):
     version: ModelVersion
 
 
+class GateReportOut(BaseModel):
+    task: str
+    benchmark: str
+    source: str
+    measured: dict[str, float]
+    reference: dict[str, float]
+    allowed_drop: dict[str, float]
+    ceilings: dict[str, float]
+    refused: list[str]
+    passed: bool
+
+
+class EvaluationOut(BaseModel):
+    passed: bool
+    reports: list[GateReportOut]
+
+
+type MetricName = Annotated[str, StringConstraints(pattern=r"^[a-z0-9-]{1,40}$")]
+type Metrics = dict[MetricName, float]
+
+
+class PromotionRequest(BaseModel):
+    measured: dict[ModelTask, Metrics] = Field(max_length=len(ModelTask))
+    reference: dict[ModelTask, Metrics] | None = Field(default=None, max_length=len(ModelTask))
+
+
 class RegistryEntry(BaseModel):
     name: str
     family: str
@@ -498,6 +527,7 @@ class RegistryEntry(BaseModel):
     evaluation_report: str | None
     status: ModelStatus
     part_of: ModelRef | None
+    evaluation: EvaluationOut | None = None
 
 
 class RegistrationDraft(BaseModel):
@@ -545,6 +575,11 @@ class RegistrationRefusedError(BadRequestError):
     title = "This model cannot be registered as given"
 
 
+class OnlyCandidatesPromoteError(ConflictError):
+    code = "only-candidates-promote"
+    title = "Only a candidate model is promoted through the gate"
+
+
 class RegisteredModelExistsError(ConflictError):
     code = "registered-model-exists"
     title = "A model with this name and version is already registered"
@@ -588,6 +623,7 @@ def entry_of(model: RegisteredModel) -> RegistryEntry:
         part_of=ModelRef(name=model.part_of[0], version=model.part_of[1])
         if model.part_of
         else None,
+        evaluation=EvaluationOut.model_validate(model.evaluation) if model.evaluation else None,
     )
 
 
@@ -657,3 +693,53 @@ async def register_model(
         details={"name": model.name, "version": model.version},
     )
     return entry_of(model)
+
+
+def metrics_of(
+    given: Mapping[ModelTask, Mapping[str, float]],
+) -> dict[str, Mapping[str, float]]:
+    return {task.value: metrics for task, metrics in given.items()}
+
+
+@platform_router.post("/{name}/{version}/promotion", operation_id="promoteRegisteredModel")
+async def promote_registered_model(
+    name: ModelName,
+    version: ModelVersion,
+    request: PromotionRequest,
+    principal: CurrentPrincipal,
+    connection: PlatformConnection,
+) -> RegistryEntry:
+    row = (
+        await connection.execute(
+            select(registered_models)
+            .where(registered_models.c.name == name, registered_models.c.version == version)
+            .with_for_update()
+        )
+    ).first()
+    if row is None:
+        raise RegisteredModelNotFoundError(f"{name} {version} is not registered")
+    model = model_of(row)
+    if model.status != ModelStatus.CANDIDATE:
+        raise OnlyCandidatesPromoteError(f"{name} {version} is {model.status.value}")
+    reports = gate_model(
+        [task.value for task in model.tasks],
+        metrics_of(request.measured),
+        None if request.reference is None else metrics_of(request.reference),
+    )
+    promoted = passed(reports)
+    evaluation = {"passed": promoted, "reports": [report.as_json() for report in reports]}
+    status = ModelStatus.VALIDATED if promoted else ModelStatus.CANDIDATE
+    await connection.execute(
+        update(registered_models)
+        .where(registered_models.c.id == row.id)
+        .values(evaluation=evaluation, status=status.value)
+    )
+    await record(
+        connection,
+        actor_of(principal),
+        AuditAction.MODEL_EVALUATED,
+        AuditTarget.REGISTERED_MODEL,
+        row.id,
+        details={"name": name, "version": version, "passed": promoted},
+    )
+    return entry_of(replace(model, status=status, evaluation=evaluation))

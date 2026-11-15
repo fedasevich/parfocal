@@ -177,3 +177,90 @@ def test_a_part_of_a_run_time_model_registers_after_it(api: ApiAs, database: str
         "name": parent,
         "version": "v1",
     }
+
+
+REFERENCE_DETECTOR = {"pq": 0.8235, "f1": 0.9489}
+DEGRADED_DETECTOR = {"pq": 0.7629, "f1": 0.9218}
+
+
+def promotion(name: str) -> str:
+    return f"{PLATFORM}/{name}/v1/promotion"
+
+
+def test_promotion_refuses_a_degraded_model_and_passes_the_reference_one(
+    api: ApiAs, database: str
+) -> None:
+    workspace = make_workspace(database, {"researcher": Role.RESEARCHER})
+    degraded, reference = (f"{kind}-{uuid.uuid4().hex[:8]}" for kind in ("degraded", "reference"))
+    for name in (degraded, reference):
+        assert api(OPERATOR).post(PLATFORM, json=draft(name)).status_code == 201
+    refused = ok(
+        api(OPERATOR).post(promotion(degraded), json={"measured": {"detector": DEGRADED_DETECTOR}})
+    )
+    assert refused["status"] == "candidate"
+    assert refused["evaluation"]["passed"] is False
+    [report] = refused["evaluation"]["reports"]
+    assert report["task"] == "detector"
+    assert report["measured"] == DEGRADED_DETECTOR
+    assert report["reference"] == REFERENCE_DETECTOR
+    assert any(reason.startswith("pq 0.7629 is below") for reason in report["refused"])
+    promoted = ok(
+        api(OPERATOR).post(
+            promotion(reference), json={"measured": {"detector": REFERENCE_DETECTOR}}
+        )
+    )
+    assert promoted["status"] == "validated"
+    assert promoted["evaluation"]["passed"] is True
+    caller = api(workspace.people["researcher"])
+    assert ok(caller.get(f"{REGISTRY}/{degraded}/v1")) == refused
+    assert ok(caller.get(f"{REGISTRY}/{reference}/v1")) == promoted
+    actions = owner(
+        database,
+        "SELECT action, details::jsonb->>'passed' FROM audit_events"
+        f" WHERE details::jsonb->>'name' IN ('{degraded}', '{reference}')"
+        " AND action = 'model.evaluated'",
+    )
+    assert sorted(actions) == [("model.evaluated", "false"), ("model.evaluated", "true")]
+
+
+def test_promotion_compares_with_a_given_reference_and_every_task_of_the_model(
+    api: ApiAs, database: str
+) -> None:
+    name = f"typed-{uuid.uuid4().hex[:8]}"
+    assert api(OPERATOR).post(PLATFORM, json=draft(name, tasks=["detector", "typer"])).is_success
+    only_detector = ok(
+        api(OPERATOR).post(promotion(name), json={"measured": {"detector": REFERENCE_DETECTOR}})
+    )
+    assert only_detector["status"] == "candidate"
+    typer = only_detector["evaluation"]["reports"][1]
+    assert typer["refused"] == ["accuracy was not measured", "ece was not measured"]
+    both = {"detector": DEGRADED_DETECTOR, "typer": {"accuracy": 0.83, "ece": 0.02}}
+    against = {"detector": DEGRADED_DETECTOR}
+    promoted = ok(
+        api(OPERATOR).post(promotion(name), json={"measured": both, "reference": against})
+    )
+    assert promoted["status"] == "validated"
+    assert problem(api(OPERATOR).post(promotion(name), json={"measured": both})) == (
+        409,
+        "only-candidates-promote",
+    )
+
+
+def test_only_an_operator_promotes_and_an_unmeasured_task_is_refused(
+    api: ApiAs, database: str
+) -> None:
+    workspace = make_workspace(database, {"researcher": Role.RESEARCHER})
+    name = f"tumor-{uuid.uuid4().hex[:8]}"
+    tumor_map = draft(name, tasks=["tumor-map"], makes=["heatmap"])
+    assert api(OPERATOR).post(PLATFORM, json=tumor_map).status_code == 201
+    body = {"measured": {"tumor-map": {"froc": 0.9}}}
+    assert api(workspace.people["researcher"]).post(promotion(name), json=body).status_code == 403
+    assert problem(api(OPERATOR).post(promotion("no-such-model"), json=body)) == (
+        404,
+        "registered-model-not-found",
+    )
+    tumor = ok(api(OPERATOR).post(promotion(name), json=body))
+    assert tumor["status"] == "candidate"
+    assert tumor["evaluation"]["reports"][0]["refused"] == [
+        "no tumor map threshold is measured yet"
+    ]
