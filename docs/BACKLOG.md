@@ -585,9 +585,15 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Depends on FOUND-024.
   Size: M.
 
-- [ ] FOUND-036 · Split the largest source files
+- [x] FOUND-036 · Split the largest source files
   `apps/api/src/parfocal_api/tables.py` (3,053 lines), `apps/web/src/screens/viewer/full-viewer.tsx` (1,895), `apps/web/src/screens/new-task/steps.tsx` (1,627) and `apps/web/src/screens/review/guided-review.tsx` (1,289) are touched by many tasks, so parallel agents conflict in them and every read of them costs many tokens ([project review](results/2026-11-09-project-review.md)). Split each by domain or by part of the screen with no change in behaviour, and add a guard on file length.
   Done when those four files are split, a guard in `pnpm verify` fails on a new source file over 1,200 lines outside generated code and tests, with today's larger files listed as exceptions, and the suites stay green.
+  Size: M.
+
+- [ ] FOUND-039 · Split the full viewer behind a view-model hook
+  FOUND-036 cut `apps/web/src/screens/viewer/full-viewer.tsx` from 2,131 to 1,870 lines, but `ViewerBody` is still one component of about 1,700 lines whose blocks share 20 to 50 locals each, so moving parts out safely needs a view-model hook that owns the viewer state and hands each panel only what it reads. Keep behaviour identical and take the file out of the exceptions of `scripts/guard_file_length.py`.
+  Done when the file is under 1,200 lines, it is no longer an exception, and the viewer specs stay green.
+  Depends on FOUND-036.
   Size: M.
 
 - [x] FOUND-037 · Docs memory that cannot go stale
