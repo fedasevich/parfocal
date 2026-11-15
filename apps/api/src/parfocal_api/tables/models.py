@@ -25,7 +25,7 @@ from parfocal_api.model_catalogue import LicenceClass, ModelHost, ModelStatus
 from parfocal_api.tables.base import one_of, timestamps
 from parfocal_api.tables.cases import owned_ids
 from parfocal_common.data_classes import OPERATIONAL, PERSONAL, SECRET
-from parfocal_common.db import metadata
+from parfocal_common.db import metadata, tenant_foreign_key, tenant_unique
 from parfocal_common.model_runs import ModelTier
 
 
@@ -176,6 +176,7 @@ lab_models = Table(
     ),
     *timestamps(),
     UniqueConstraint("tenant_id", "name", "version"),
+    tenant_unique(),
     one_of("sign_in", LabModelSignIn),
     one_of("who_can_run", LabModelRunners),
 )
@@ -183,20 +184,8 @@ lab_models = Table(
 lab_model_projects = Table(
     "lab_model_projects",
     metadata,
-    Column(
-        "lab_model_id",
-        Uuid[uuid.UUID](),
-        ForeignKey("lab_models.id", ondelete="CASCADE"),
-        primary_key=True,
-        info=OPERATIONAL,
-    ),
-    Column(
-        "project_id",
-        Uuid[uuid.UUID](),
-        ForeignKey("projects.id", ondelete="CASCADE"),
-        primary_key=True,
-        info=OPERATIONAL,
-    ),
+    Column("lab_model_id", Uuid[uuid.UUID](), primary_key=True, info=OPERATIONAL),
+    Column("project_id", Uuid[uuid.UUID](), primary_key=True, info=OPERATIONAL),
     Column(
         "tenant_id",
         Uuid[uuid.UUID](),
@@ -205,6 +194,8 @@ lab_model_projects = Table(
         index=True,
         info=OPERATIONAL,
     ),
+    tenant_foreign_key("lab_model_id", "lab_models", ondelete="CASCADE"),
+    tenant_foreign_key("project_id", "projects", ondelete="CASCADE"),
 )
 
 rate_counters = Table(

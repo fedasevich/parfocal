@@ -21,7 +21,7 @@ from sqlalchemy.dialects.postgresql import ARRAY
 from parfocal_api.tables.base import one_of
 from parfocal_api.tables.cases import case_timestamps, owned_ids
 from parfocal_common.data_classes import OPERATIONAL, PERSONAL, PHI
-from parfocal_common.db import metadata
+from parfocal_common.db import metadata, tenant_foreign_key, tenant_unique
 
 
 class ResultSource(StrEnum):
@@ -72,9 +72,10 @@ result_sets = Table(
     ),
     *case_timestamps(),
     UniqueConstraint("id", "project_id"),
+    tenant_unique(),
     ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),
     ForeignKeyConstraint(["slide_id", "project_id"], ["slides.id", "slides.project_id"]),
-    ForeignKeyConstraint(["job_id"], ["jobs.id"]),
+    tenant_foreign_key("job_id", "jobs"),
     one_of("source", ResultSource),
     one_of("status", ResultStatus),
     CheckConstraint("cell_count >= 0 AND region_count >= 0 AND zone_count >= 0", name="counts"),
@@ -113,7 +114,7 @@ result_objects = Table(
     Column("score", SmallInteger, nullable=True, info=OPERATIONAL),
     Column("probabilities", ARRAY(SmallInteger), nullable=True, info=OPERATIONAL),
     Column("parent_number", Integer, nullable=True, info=OPERATIONAL),
-    ForeignKeyConstraint(["result_set_id"], ["result_sets.id"]),
+    tenant_foreign_key("result_set_id", "result_sets"),
     Index("ix_result_objects_geometry", "geometry", postgresql_using="gist"),
     one_of("kind", ResultObjectKind),
     CheckConstraint("number > 0", name="number"),
@@ -134,7 +135,7 @@ result_chunks = Table(
     Column("cell_count", Integer, nullable=False, info=OPERATIONAL),
     Column("vertex_count", Integer, nullable=False, info=OPERATIONAL),
     Column("object_key", String(300), nullable=False, info=OPERATIONAL),
-    ForeignKeyConstraint(["result_set_id"], ["result_sets.id"]),
+    tenant_foreign_key("result_set_id", "result_sets"),
     CheckConstraint("chunk >= 0", name="chunk"),
     CheckConstraint("width > 0 AND height > 0", name="size"),
     CheckConstraint("cell_count > 0 AND vertex_count >= 0", name="counts"),

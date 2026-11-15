@@ -28,7 +28,7 @@ from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from parfocal_api.tables.base import one_of, timestamps
 from parfocal_api.tables.cases import owned_ids
 from parfocal_common.data_classes import OPERATIONAL, PERSONAL, PHI
-from parfocal_common.db import metadata
+from parfocal_common.db import metadata, tenant_foreign_key, tenant_unique
 
 
 class TaskSplit(StrEnum):
@@ -152,6 +152,7 @@ review_tasks = Table(
     UniqueConstraint("project_id", "number"),
     UniqueConstraint("id", "project_id"),
     UniqueConstraint("id", "kind"),
+    tenant_unique(),
     ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),
     ForeignKeyConstraint(
         ["project_id", "opinion_form_version"],
@@ -280,11 +281,11 @@ task_nudges = Table(
     Column(
         "task_id",
         Uuid[uuid.UUID](),
-        ForeignKey("review_tasks.id"),
         nullable=False,
         index=True,
         info=OPERATIONAL,
     ),
+    tenant_foreign_key("task_id", "review_tasks"),
     Column("user_id", Uuid[uuid.UUID](), ForeignKey("users.id"), nullable=False, info=PERSONAL),
     Column(
         "sent_by_user_id", Uuid[uuid.UUID](), ForeignKey("users.id"), nullable=True, info=PERSONAL
@@ -305,11 +306,11 @@ task_reassignments = Table(
     Column(
         "task_id",
         Uuid[uuid.UUID](),
-        ForeignKey("review_tasks.id"),
         nullable=False,
         index=True,
         info=OPERATIONAL,
     ),
+    tenant_foreign_key("task_id", "review_tasks"),
     Column(
         "from_user_id", Uuid[uuid.UUID](), ForeignKey("users.id"), nullable=False, info=PERSONAL
     ),
@@ -526,9 +527,8 @@ display_presets = Table(
     metadata,
     *owned_ids(),
     Column("user_id", Uuid[uuid.UUID](), ForeignKey("users.id"), nullable=False, info=PERSONAL),
-    Column(
-        "task_id", Uuid[uuid.UUID](), ForeignKey("review_tasks.id"), nullable=True, info=OPERATIONAL
-    ),
+    Column("task_id", Uuid[uuid.UUID](), nullable=True, info=OPERATIONAL),
+    tenant_foreign_key("task_id", "review_tasks"),
     Column("name", String(40), nullable=False, info=PERSONAL),
     Column("settings", JSONB, nullable=False, info=PERSONAL),
     *timestamps(),
@@ -539,6 +539,7 @@ display_presets = Table(
         func.lower(text("name")),
         unique=True,
     ),
+    tenant_unique(),
 )
 
 display_choices = Table(
@@ -548,18 +549,18 @@ display_choices = Table(
     Column(
         "task_id",
         Uuid[uuid.UUID](),
-        ForeignKey("review_tasks.id"),
         primary_key=True,
         info=OPERATIONAL,
     ),
+    tenant_foreign_key("task_id", "review_tasks"),
     Column("user_id", Uuid[uuid.UUID](), ForeignKey("users.id"), primary_key=True, info=PERSONAL),
     Column(
         "preset_id",
         Uuid[uuid.UUID](),
-        ForeignKey("display_presets.id", ondelete="SET NULL"),
         nullable=True,
         info=PERSONAL,
     ),
+    tenant_foreign_key("preset_id", "display_presets", ondelete="SET NULL (preset_id)"),
     Column("settings", JSONB, nullable=False, info=PERSONAL),
     *timestamps(),
 )
@@ -572,11 +573,11 @@ adjudications = Table(
     Column(
         "task_id",
         Uuid[uuid.UUID](),
-        ForeignKey("review_tasks.id"),
         nullable=False,
         index=True,
         info=OPERATIONAL,
     ),
+    tenant_foreign_key("task_id", "review_tasks"),
     Column(
         "adjudicator_user_id",
         Uuid[uuid.UUID](),
@@ -599,18 +600,13 @@ adjudications = Table(
     Column("declined_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
     Column("declined_note", String(300), nullable=True, info=PHI),
     CheckConstraint("declined_note IS NULL OR declined_at IS NOT NULL", name="declined_with_note"),
+    tenant_unique(),
 )
 
 adjudication_objects = Table(
     "adjudication_objects",
     metadata,
-    Column(
-        "adjudication_id",
-        Uuid[uuid.UUID](),
-        ForeignKey("adjudications.id"),
-        primary_key=True,
-        info=OPERATIONAL,
-    ),
+    Column("adjudication_id", Uuid[uuid.UUID](), primary_key=True, info=OPERATIONAL),
     Column(
         "tenant_id",
         Uuid[uuid.UUID](),
@@ -619,6 +615,7 @@ adjudication_objects = Table(
         index=True,
         info=OPERATIONAL,
     ),
+    tenant_foreign_key("adjudication_id", "adjudications"),
     Column("task_id", Uuid[uuid.UUID](), nullable=False, index=True, info=OPERATIONAL),
     Column("slide_id", Uuid[uuid.UUID](), primary_key=True, info=OPERATIONAL),
     Column("kind", String(10), primary_key=True, info=OPERATIONAL),
@@ -743,6 +740,7 @@ announcements = Table(
     *timestamps(),
     Index("ix_announcements_tenant_id_created_at", "tenant_id", "created_at"),
     one_of("kind", AnnouncementKind),
+    tenant_unique(),
 )
 
 
@@ -761,10 +759,10 @@ site_validations = Table(
     Column(
         "announcement_id",
         Uuid[uuid.UUID](),
-        ForeignKey("announcements.id"),
         nullable=False,
         info=OPERATIONAL,
     ),
+    tenant_foreign_key("announcement_id", "announcements"),
     Column(
         "created_by_user_id",
         Uuid[uuid.UUID](),

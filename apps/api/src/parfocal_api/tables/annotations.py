@@ -22,7 +22,7 @@ from sqlalchemy import (
 from parfocal_api.tables.base import one_of, timestamps
 from parfocal_api.tables.cases import case_timestamps, owned_ids
 from parfocal_common.data_classes import OPERATIONAL, PERSONAL, PHI
-from parfocal_common.db import metadata
+from parfocal_common.db import metadata, tenant_foreign_key, tenant_unique
 
 
 class AnnotationKind(StrEnum):
@@ -54,7 +54,7 @@ slide_counters = Table(
     Column("slide_id", Uuid[uuid.UUID](), primary_key=True, info=OPERATIONAL),
     Column("letter", String(1), primary_key=True, info=OPERATIONAL),
     Column("last", Integer, nullable=False, info=OPERATIONAL),
-    ForeignKeyConstraint(["slide_id"], ["slides.id"]),
+    tenant_foreign_key("slide_id", "slides"),
     CheckConstraint("letter IN ('T', 'C', 'R', 'Z', 'M', 'A', 'N')", name="letter"),
     CheckConstraint("last >= 0", name="last"),
 )
@@ -114,6 +114,7 @@ annotations = Table(
     ForeignKeyConstraint(
         ["task_id", "slide_id"], ["review_task_slides.task_id", "review_task_slides.slide_id"]
     ),
+    tenant_unique(),
     Index("ix_annotations_geometry", "geometry", postgresql_using="gist"),
     one_of("kind", AnnotationKind),
     CheckConstraint("number > 0", name="number"),
@@ -151,7 +152,7 @@ annotation_versions = Table(
         server_default=func.now(),
         info=OPERATIONAL,
     ),
-    ForeignKeyConstraint(["annotation_id"], ["annotations.id"]),
+    tenant_foreign_key("annotation_id", "annotations"),
     one_of("change", AnnotationChange),
 )
 

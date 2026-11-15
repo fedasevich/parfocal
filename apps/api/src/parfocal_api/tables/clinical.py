@@ -21,20 +21,14 @@ from sqlalchemy.dialects.postgresql import JSONB
 from parfocal_api.tables.base import one_of, timestamps
 from parfocal_api.tables.cases import ClinicalTemplate, owned_ids
 from parfocal_common.data_classes import OPERATIONAL, PERSONAL, PHI
-from parfocal_common.db import metadata
+from parfocal_common.db import metadata, tenant_foreign_key, tenant_unique
 
 
-def task_owned_ids() -> list[Column[uuid.UUID]]:
+def task_owned_ids() -> list[Column[uuid.UUID] | ForeignKeyConstraint]:
     return [
         *owned_ids(),
-        Column(
-            "task_id",
-            Uuid[uuid.UUID](),
-            ForeignKey("review_tasks.id", ondelete="CASCADE"),
-            nullable=False,
-            index=True,
-            info=OPERATIONAL,
-        ),
+        Column("task_id", Uuid[uuid.UUID](), nullable=False, index=True, info=OPERATIONAL),
+        tenant_foreign_key("task_id", "review_tasks", ondelete="CASCADE"),
     ]
 
 
@@ -76,9 +70,8 @@ evaluation_changes = Table(
     metadata,
     *task_owned_ids(),
     Column("version", Integer, nullable=False, info=OPERATIONAL),
-    Column(
-        "slide_id", Uuid[uuid.UUID](), ForeignKey("slides.id"), nullable=False, info=OPERATIONAL
-    ),
+    Column("slide_id", Uuid[uuid.UUID](), nullable=False, info=OPERATIONAL),
+    tenant_foreign_key("slide_id", "slides"),
     Column("object_id", String(40), nullable=False, info=OPERATIONAL),
     Column("change", String(200), nullable=False, info=OPERATIONAL),
     Column("reason", String(500), nullable=False, info=PHI),
@@ -141,6 +134,7 @@ clinical_reports = Table(
     *timestamps(),
     ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),
     ForeignKeyConstraint(["case_id", "project_id"], ["cases.id", "cases.project_id"]),
+    tenant_unique(),
     one_of("template", ClinicalTemplate),
     one_of("state", CaseReportState),
     one_of("category", NodeCategory),
@@ -155,17 +149,10 @@ clinical_deposits = Table(
     "clinical_deposits",
     metadata,
     *owned_ids(),
-    Column(
-        "report_id",
-        Uuid[uuid.UUID](),
-        ForeignKey("clinical_reports.id", ondelete="CASCADE"),
-        nullable=False,
-        index=True,
-        info=OPERATIONAL,
-    ),
-    Column(
-        "slide_id", Uuid[uuid.UUID](), ForeignKey("slides.id"), nullable=False, info=OPERATIONAL
-    ),
+    Column("report_id", Uuid[uuid.UUID](), nullable=False, index=True, info=OPERATIONAL),
+    tenant_foreign_key("report_id", "clinical_reports", ondelete="CASCADE"),
+    Column("slide_id", Uuid[uuid.UUID](), nullable=False, info=OPERATIONAL),
+    tenant_foreign_key("slide_id", "slides"),
     Column("object_id", String(40), nullable=True, info=OPERATIONAL),
     Column("size_mm", Float[float](), nullable=True, info=OPERATIONAL),
     Column("note", String(300), nullable=True, info=PHI),
@@ -178,13 +165,12 @@ clinical_report_versions = Table(
     "clinical_report_versions",
     metadata,
     *owned_ids(),
-    Column(
+    Column("report_id", Uuid[uuid.UUID](), nullable=False, index=True, info=OPERATIONAL),
+    tenant_foreign_key(
         "report_id",
-        Uuid[uuid.UUID](),
-        ForeignKey("clinical_reports.id", ondelete="CASCADE"),
-        nullable=False,
-        index=True,
-        info=OPERATIONAL,
+        "clinical_reports",
+        ondelete="CASCADE",
+        name="fk_clinical_report_versions_report_tenant_clinical_reports",
     ),
     Column("number", Integer, nullable=False, info=OPERATIONAL),
     Column("content", JSONB(none_as_null=True), nullable=False, info=PHI),

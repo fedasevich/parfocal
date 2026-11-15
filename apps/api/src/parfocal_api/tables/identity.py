@@ -40,7 +40,7 @@ from parfocal_api.tables.base import (
     timestamps,
 )
 from parfocal_common.data_classes import OPERATIONAL, PERSONAL, SECRET
-from parfocal_common.db import metadata
+from parfocal_common.db import metadata, tenant_foreign_key, tenant_unique
 
 organisations = Table(
     "organisations",
@@ -343,6 +343,7 @@ service_accounts = Table(
     Column("disabled_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
     *timestamps(),
     UniqueConstraint("tenant_id", "name"),
+    tenant_unique(),
     CheckConstraint(SERVICE_SCOPES_CHECK, name="scopes"),
 )
 
@@ -367,11 +368,11 @@ api_tokens = Table(
     Column(
         "service_account_id",
         Uuid[uuid.UUID](),
-        ForeignKey("service_accounts.id"),
         nullable=False,
         index=True,
         info=OPERATIONAL,
     ),
+    tenant_foreign_key("service_account_id", "service_accounts"),
     Column("token_hash", LargeBinary, nullable=False, unique=True, info=SECRET),
     Column("expires_at", DateTime(timezone=True), nullable=False, info=OPERATIONAL),
     Column("revoked_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
@@ -410,11 +411,11 @@ invitations = Table(
     Column(
         "task_id",
         Uuid[uuid.UUID](),
-        ForeignKey("review_tasks.id"),
         nullable=True,
         index=True,
         info=OPERATIONAL,
     ),
+    tenant_foreign_key("task_id", "review_tasks"),
     Column("expires_at", DateTime(timezone=True), nullable=False, info=OPERATIONAL),
     Column("accepted_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),
     Column("revoked_at", DateTime(timezone=True), nullable=True, info=OPERATIONAL),

@@ -1027,7 +1027,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when a database probe as `parfocal_app` fails to move or revive an API token under the auth scope and fails to change the person's own email under a member scope, and the join routes pass their tests without the platform flag in the write transaction.
   Size: M.
 
-- [ ] SEC-035 · Foreign keys to tenant tables carry the tenant
+- [x] SEC-035 · Foreign keys to tenant tables carry the tenant
   About sixty foreign keys to tenant tables leave out `tenant_id`, and foreign key checks ignore row-level security, so a row in one workspace can name a parent in another when a route skips the parent check ([tenant isolation review](results/2026-11-09-tenant-isolation-review.md), suspicion 2). Eight sampled insert paths all check the parent first, the others were not read. Add `UNIQUE (id, tenant_id)` to the parents that lack it and make the single-column keys composite, starting with `resume_states`, `display_choices`, `display_presets`, `lab_model_projects` and `threads`, whose rows a client names directly.
   Done when a database probe as `parfocal_app` fails to insert a child that names a parent of another workspace for every key in the review's list, and the db tests pass.
   Depends on FOUND-035.
