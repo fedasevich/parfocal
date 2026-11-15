@@ -358,6 +358,22 @@ export interface AiChanges {
   total: Changes;
 }
 
+export interface CorrectionsMonth {
+  month: string;
+  nuclei_reviewed: number;
+  corrections: number;
+  per_hundred: number;
+}
+
+export interface AiCorrections {
+  since: string | null;
+  until: string | null;
+  nuclei_reviewed: number;
+  corrections: number;
+  per_hundred: number;
+  months: CorrectionsMonth[];
+}
+
 export interface AiObjectConfirm {
   geometry?: Geometry | null;
 }
@@ -6109,6 +6125,11 @@ export type PreviewSavedStudyTemplateParams = {
 
 export type DownloadSavedStudyTemplatePreviewParams = {
   locale?: Locale;
+};
+
+export type GetAiCorrectionsParams = {
+  since?: string | null;
+  until?: string | null;
 };
 
 export type GetAiUsageParams = {
@@ -50724,6 +50745,204 @@ export function useGetTaskAiChanges<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getGetTaskAiChangesQueryOptions(taskId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type getAiCorrectionsResponse200 = {
+  data: AiCorrections;
+  status: 200;
+};
+
+export type getAiCorrectionsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getAiCorrectionsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getAiCorrectionsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getAiCorrectionsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getAiCorrectionsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getAiCorrectionsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getAiCorrectionsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getAiCorrectionsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getAiCorrectionsResponseSuccess = getAiCorrectionsResponse200 & {
+  headers: Headers;
+};
+export type getAiCorrectionsResponseError = (
+  | getAiCorrectionsResponse400
+  | getAiCorrectionsResponse401
+  | getAiCorrectionsResponse403
+  | getAiCorrectionsResponse404
+  | getAiCorrectionsResponse409
+  | getAiCorrectionsResponse422
+  | getAiCorrectionsResponse429
+  | getAiCorrectionsResponse500
+) & {
+  headers: Headers;
+};
+
+export type getAiCorrectionsResponse =
+  | getAiCorrectionsResponseSuccess
+  | getAiCorrectionsResponseError;
+
+export const getGetAiCorrectionsUrl = (params?: GetAiCorrectionsParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/tenant/ai-corrections?${stringifiedParams}`
+    : `/api/tenant/ai-corrections`;
+};
+
+/**
+ * @summary Get Ai Corrections
+ */
+export const getAiCorrections = async (
+  params?: GetAiCorrectionsParams,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getAiCorrectionsResponse> => {
+  return apiFetch<getAiCorrectionsResponse>(getGetAiCorrectionsUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetAiCorrectionsQueryKey = (params?: GetAiCorrectionsParams) => {
+  return [`/api/tenant/ai-corrections`, ...(params ? [params] : [])] as const;
+};
+
+export const getGetAiCorrectionsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getAiCorrections>>,
+  TError = Problem,
+>(
+  params?: GetAiCorrectionsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAiCorrections>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetAiCorrectionsQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getAiCorrections>>> = ({ signal }) =>
+    getAiCorrections(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getAiCorrections>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetAiCorrectionsQueryResult = NonNullable<Awaited<ReturnType<typeof getAiCorrections>>>;
+export type GetAiCorrectionsQueryError = Problem;
+
+export function useGetAiCorrections<
+  TData = Awaited<ReturnType<typeof getAiCorrections>>,
+  TError = Problem,
+>(
+  params: undefined | GetAiCorrectionsParams,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAiCorrections>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAiCorrections>>,
+          TError,
+          Awaited<ReturnType<typeof getAiCorrections>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetAiCorrections<
+  TData = Awaited<ReturnType<typeof getAiCorrections>>,
+  TError = Problem,
+>(
+  params?: GetAiCorrectionsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAiCorrections>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAiCorrections>>,
+          TError,
+          Awaited<ReturnType<typeof getAiCorrections>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetAiCorrections<
+  TData = Awaited<ReturnType<typeof getAiCorrections>>,
+  TError = Problem,
+>(
+  params?: GetAiCorrectionsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAiCorrections>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Ai Corrections
+ */
+
+export function useGetAiCorrections<
+  TData = Awaited<ReturnType<typeof getAiCorrections>>,
+  TError = Problem,
+>(
+  params?: GetAiCorrectionsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAiCorrections>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetAiCorrectionsQueryOptions(params, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;

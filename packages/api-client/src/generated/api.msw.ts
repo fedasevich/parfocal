@@ -13,6 +13,7 @@ import type {
   AccountCodeSent,
   AdjudicatedObject,
   AiChanges,
+  AiCorrections,
   AiUsage,
   AnnotateSlideStatus,
   Annotation,
@@ -11047,6 +11048,25 @@ export const getGetTaskAiChangesResponseMock = (
   ...overrideResponse,
 });
 
+export const getGetAiCorrectionsResponseMock = (
+  overrideResponse: Partial<Extract<AiCorrections, object>> = {},
+): AiCorrections => ({
+  since: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + "Z", null]),
+  until: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 19) + "Z", null]),
+  nuclei_reviewed: faker.number.int(),
+  corrections: faker.number.int(),
+  per_hundred: faker.number.float({ fractionDigits: 2 }),
+  months: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      month: faker.date.past().toISOString().slice(0, 19) + "Z",
+      nuclei_reviewed: faker.number.int(),
+      corrections: faker.number.int(),
+      per_hundred: faker.number.float({ fractionDigits: 2 }),
+    }),
+  ),
+  ...overrideResponse,
+});
+
 export const getGetAiUsageResponseMock = (
   overrideResponse: Partial<Extract<AiUsage, object>> = {},
 ): AiUsage => ({
@@ -21733,6 +21753,30 @@ export const getGetTaskAiChangesMockHandler = (
   );
 };
 
+export const getGetAiCorrectionsMockHandler = (
+  overrideResponse?:
+    | AiCorrections
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<AiCorrections> | AiCorrections),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/tenant/ai-corrections",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetAiCorrectionsResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getGetAiUsageMockHandler = (
   overrideResponse?:
     | AiUsage
@@ -23842,6 +23886,7 @@ export const getParfocalAPIMock = () => [
   getStartPatchExportMockHandler(),
   getDownloadPatchExportMockHandler(),
   getGetTaskAiChangesMockHandler(),
+  getGetAiCorrectionsMockHandler(),
   getGetAiUsageMockHandler(),
   getStartEvaluationVersionMockHandler(),
   getListEvaluationChangesMockHandler(),
