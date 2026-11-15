@@ -118,11 +118,12 @@ from parfocal_common.clients import Clients, ProductionFactories, select_clients
 from parfocal_common.db import create_engine, require_row_security
 from parfocal_common.envelope import MasterKeyring
 from parfocal_common.object_store import ObjectStore
+from parfocal_common.otlp import otlp_exporter
 from parfocal_common.result_store import ObjectResultStore, ResultStore
 from parfocal_common.settings import load_settings
 from parfocal_common.structured_logging import configure_logging
 
-PRODUCTION_FACTORIES = ProductionFactories()
+PRODUCTION_FACTORIES = ProductionFactories(telemetry=otlp_exporter)
 
 
 class Health(BaseModel):

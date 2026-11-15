@@ -18,6 +18,7 @@ from parfocal_common.alerting import (
 )
 from parfocal_common.clients import TelemetryExporter
 from parfocal_common.object_store import ObjectStore, StorageError
+from parfocal_common.otlp import FlushingExporter
 
 type Clock = Callable[[], datetime]
 
@@ -176,6 +177,8 @@ class SliEmitter:
         return oldest is not None and bucket_of(self.clock()) > oldest
 
     async def flush(self) -> None:
+        if isinstance(self.telemetry, FlushingExporter):
+            await self.telemetry.flush()
         if self.blobs is None or self.pending.oldest() is None:
             self.pending = SliCounts()
             return
