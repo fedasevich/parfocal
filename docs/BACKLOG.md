@@ -1728,7 +1728,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Refs [`poc/src/webgpu/*`](https://github.com/fedasevich/pathlogy-poc/tree/master/src/webgpu), docs 04, 07.
   Size: L.
 
-- [ ] VIEW-039 · Renderer head-to-head benchmark
+- [x] VIEW-039 · Renderer head-to-head benchmark
   Automated benchmark of the three routes on fixed camera paths with GPU-completion timing (fences, not `gl.finish`) and pixel assertions so empty frames cannot pass.
   Done when a manual benchmark run on the owner's Mac produces a result file with a table comparable with doc 31 ([ADR 0011](adr/0011-hosted-ci-only.md)).
   Refs doc 23.
@@ -3444,7 +3444,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Done when tests confirm partial areas arrive before job completion and throughput is recorded per stage.
   Refs [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
 
-- [ ] AIP-012 · Patch service on the server
+- [x] AIP-012 · Patch service on the server
   Read patches at a requested microns per pixel from any supported format, with LRU caching and sparse-region awareness.
   Done when tests read the same 128 µm patch from SVS, NDPI and OME-Zarr fixtures and compare pixels.
   Refs docs 10, 11, 15.

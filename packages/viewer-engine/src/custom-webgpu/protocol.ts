@@ -55,7 +55,17 @@ export interface PinFrames {
   readonly y: number;
 }
 
-export type LayerDraw = SetDraw | RasterDraw | PinDraw;
+export interface LabelDraw {
+  readonly kind: "labels";
+  readonly id: string;
+  readonly glyphsId: string;
+  readonly alpha: number;
+  readonly fill: Rgba;
+  readonly text: Rgba;
+  readonly borderPx: number;
+}
+
+export type LayerDraw = SetDraw | RasterDraw | PinDraw | LabelDraw;
 
 export interface FrameState {
   readonly tiles: ArrayBuffer;
@@ -69,11 +79,12 @@ export interface FrameState {
 export interface SetCounts {
   readonly triangles: number;
   readonly segments: number;
+  readonly repeats?: number;
   readonly points: number;
 }
 
 export type RenderRequest =
-  | { readonly type: "init"; readonly canvas: OffscreenCanvas }
+  | { readonly type: "init"; readonly canvas: OffscreenCanvas; readonly timing?: boolean }
   | { readonly type: "resize"; readonly width: number; readonly height: number }
   | { readonly type: "atlas"; readonly tileSize: number; readonly layers: number }
   | {
@@ -104,8 +115,16 @@ export type RenderRequest =
       readonly rgba: ArrayBuffer;
       readonly frames: PinFrames;
     }
+  | {
+      readonly type: "glyphAtlas";
+      readonly width: number;
+      readonly height: number;
+      readonly rgba: ArrayBuffer;
+    }
   | { readonly type: "drop"; readonly id: string }
   | { readonly type: "frame"; readonly id: number; readonly frame: FrameState }
+  | { readonly type: "lose" }
+  | { readonly type: "restore" }
   | { readonly type: "destroy" };
 
 export type RenderErrorSource = "start" | "uncaptured" | "device-lost";
@@ -113,6 +132,13 @@ export type RenderErrorSource = "start" | "uncaptured" | "device-lost";
 export type RenderResponse =
   | { readonly type: "ready"; readonly maxLayers: number }
   | { readonly type: "drawn"; readonly id: number }
+  | { readonly type: "gpuTime"; readonly ms: number }
+  | {
+      readonly type: "leftOut";
+      readonly id: string;
+      readonly bytes: number;
+      readonly limit: number;
+    }
   | { readonly type: "error"; readonly source: RenderErrorSource; readonly message: string };
 
 export const renderWorkerName = "parfocal-render";
@@ -121,6 +147,10 @@ export const tileInstanceFloats = 8;
 
 export const triangleInstanceBytes = 28;
 
-export const segmentInstanceBytes = 24;
+export const segmentInstanceBytes = 28;
 
 export const pointInstanceBytes = 12;
+
+export const labelBoxInstanceBytes = 28;
+
+export const glyphInstanceBytes = 40;

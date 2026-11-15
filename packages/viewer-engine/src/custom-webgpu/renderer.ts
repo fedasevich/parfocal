@@ -1,11 +1,14 @@
 import type { Rgba } from "../overlay/batch-types.ts";
-import { bufferUsage, shaderStage, textureUsage } from "./gpu-constants.ts";
+import { bufferUsage, mapModeRead, shaderStage, textureUsage } from "./gpu-constants.ts";
 import { mipChain } from "./mipmaps.ts";
 import { createOverlayBuffers } from "./overlay-buffers.ts";
 import {
   type FrameState,
   type FrameView,
+  glyphInstanceBytes,
+  type LabelDraw,
   type LayerDraw,
+  labelBoxInstanceBytes,
   type PinFrames,
   pointInstanceBytes,
   type SetCounts,
@@ -15,6 +18,8 @@ import {
   triangleInstanceBytes,
 } from "./protocol.ts";
 import {
+  glyphShader,
+  labelBoxShader,
   pinShader,
   pointShader,
   rasterShader,
@@ -31,11 +36,17 @@ const smallestTileBuffer = 64 * tileInstanceBytes;
 const thinnestLinePx = 1;
 const capPart = 1;
 const noStroke = [0, 0, 0, 0] as const;
+const ringDepthFormat: GPUTextureFormat = "depth32float";
+const bodyParts = [1, 3] as const;
+const onceVertices = 12;
+const timestampCount = 2;
+const timestampBytes = 16;
+const nanosecondsPerMs = 1e6;
 
 export interface Renderer {
   readonly setAtlas: (tileSize: number, layers: number) => void;
   readonly uploadTile: (layer: number, width: number, height: number, rgba: ArrayBuffer) => void;
-  readonly setOverlay: (id: string, data: ArrayBuffer, counts: SetCounts) => void;
+  readonly setOverlay: (id: string, data: ArrayBuffer, counts: SetCounts) => boolean;
   readonly setRaster: (
     id: string,
     width: number,
@@ -49,6 +60,7 @@ export interface Renderer {
     rgba: ArrayBuffer,
     frames: PinFrames,
   ) => void;
+  readonly setGlyphAtlas: (width: number, height: number, rgba: ArrayBuffer) => void;
   readonly dropOverlay: (id: string) => void;
   readonly draw: (frame: FrameState) => void;
   readonly destroy: () => void;
@@ -134,11 +146,7 @@ function setSlots(set: SetDraw): readonly (StyleSlot | null)[] {
   ];
 }
 
-interface PinAtlas {
-  readonly texture: GPUTexture;
-  readonly group: GPUBindGroup;
-  readonly width: number;
-  readonly height: number;
+interface PinAtlas extends IconTexture {
   readonly frames: PinFrames;
 }
 
@@ -155,8 +163,34 @@ function pinSlot(sizePx: number, alpha: number, atlas: PinAtlas): StyleSlot {
   };
 }
 
-function layerSlots(layer: LayerDraw, pins: PinAtlas | null): readonly (StyleSlot | null)[] {
+interface IconTexture {
+  readonly texture: GPUTexture;
+  readonly group: GPUBindGroup;
+  readonly width: number;
+  readonly height: number;
+}
+
+function labelSlots(layer: LabelDraw, glyphs: IconTexture | null): readonly (StyleSlot | null)[] {
+  return [
+    { ...plainSlot, halfWidth: layer.borderPx, alpha: layer.alpha, color: unit(layer.fill) },
+    glyphs
+      ? {
+          ...plainSlot,
+          alpha: layer.alpha,
+          color: unit(layer.text),
+          strokeColor: [glyphs.width, glyphs.height, 0, 0],
+        }
+      : null,
+  ];
+}
+
+function layerSlots(
+  layer: LayerDraw,
+  pins: PinAtlas | null,
+  glyphs: IconTexture | null,
+): readonly (StyleSlot | null)[] {
   if (layer.kind === "set") return setSlots(layer);
+  if (layer.kind === "labels") return labelSlots(layer, glyphs);
   if (layer.kind === "pins") return [pins ? pinSlot(layer.sizePx, layer.alpha, pins) : null];
   const { x, y, width, height } = layer.area;
   return [{ ...plainSlot, alpha: layer.alpha, color: [x, y, width, height] }];
@@ -187,7 +221,19 @@ export function createRenderer(
   device: GPUDevice,
   context: GPUCanvasContext,
   format: GPUTextureFormat,
+  onGpuTime: ((ms: number) => void) | null = null,
 ): Renderer {
+  const timing =
+    onGpuTime === null
+      ? null
+      : {
+          report: onGpuTime,
+          querySet: device.createQuerySet({ type: "timestamp", count: timestampCount }),
+          resolved: device.createBuffer({
+            size: timestampBytes,
+            usage: bufferUsage.queryResolve | bufferUsage.copySrc,
+          }),
+        };
   const target: GPUColorTargetState = { format, blend: premultipliedBlend };
 
   const tileModule = device.createShaderModule({ code: tileShader });
@@ -254,12 +300,40 @@ export function createRenderer(
     { shaderLocation: 2, offset: 16, format: "float32x2" },
     { shaderLocation: 3, offset: 24, format: "unorm8x4" },
   ]);
-  const segmentPipeline = shapePipeline(segmentShader, "triangle-strip", segmentInstanceBytes, [
+  const segmentAttributes: GPUVertexAttribute[] = [
     { shaderLocation: 0, offset: 0, format: "float32x2" },
     { shaderLocation: 1, offset: 8, format: "float32x2" },
     { shaderLocation: 2, offset: 16, format: "float32" },
     { shaderLocation: 3, offset: 20, format: "unorm8x4" },
-  ]);
+  ];
+  const segmentPipeline = shapePipeline(
+    segmentShader,
+    "triangle-strip",
+    segmentInstanceBytes,
+    segmentAttributes,
+  );
+  const onceModule = device.createShaderModule({ code: segmentShader });
+  const segmentOncePipeline = device.createRenderPipeline({
+    layout: shapeLayout,
+    vertex: {
+      module: onceModule,
+      entryPoint: "vsOnce",
+      buffers: [
+        {
+          arrayStride: segmentInstanceBytes,
+          stepMode: "instance",
+          attributes: [...segmentAttributes, { shaderLocation: 4, offset: 24, format: "uint32" }],
+        },
+      ],
+    },
+    fragment: { module: onceModule, entryPoint: "fsOnce", targets: [target] },
+    primitive: { topology: "triangle-list" },
+    depthStencil: {
+      format: ringDepthFormat,
+      depthWriteEnabled: true,
+      depthCompare: "not-equal",
+    },
+  });
   const pointPipeline = shapePipeline(pointShader, "triangle-strip", pointInstanceBytes, [
     { shaderLocation: 0, offset: 0, format: "float32x2" },
     { shaderLocation: 1, offset: 8, format: "unorm8x4" },
@@ -293,6 +367,34 @@ export function createRenderer(
     fragment: { module: pinModule, entryPoint: "fs", targets: [target] },
     primitive: { topology: "triangle-strip" },
   });
+  const labelBoxPipeline = shapePipeline(labelBoxShader, "triangle-strip", labelBoxInstanceBytes, [
+    { shaderLocation: 0, offset: 0, format: "float32x2" },
+    { shaderLocation: 1, offset: 8, format: "float32x2" },
+    { shaderLocation: 2, offset: 16, format: "float32x2" },
+    { shaderLocation: 3, offset: 24, format: "unorm8x4" },
+  ]);
+  const glyphModule = device.createShaderModule({ code: glyphShader });
+  const glyphPipeline = device.createRenderPipeline({
+    layout: device.createPipelineLayout({ bindGroupLayouts: [styleLayout, rasterLayout] }),
+    vertex: {
+      module: glyphModule,
+      entryPoint: "vs",
+      buffers: [
+        {
+          arrayStride: glyphInstanceBytes,
+          stepMode: "instance",
+          attributes: [
+            { shaderLocation: 0, offset: 0, format: "float32x2" },
+            { shaderLocation: 1, offset: 8, format: "float32x2" },
+            { shaderLocation: 2, offset: 16, format: "float32x2" },
+            { shaderLocation: 3, offset: 24, format: "float32x4" },
+          ],
+        },
+      ],
+    },
+    fragment: { module: glyphModule, entryPoint: "fs", targets: [target] },
+    primitive: { topology: "triangle-strip" },
+  });
   const mipmapSampler = device.createSampler({
     minFilter: "linear",
     magFilter: "linear",
@@ -318,11 +420,14 @@ export function createRenderer(
   const overlays = createOverlayBuffers<GPUBuffer>(
     device,
     bufferUsage.vertex | bufferUsage.copyDst,
+    device.limits.maxBufferSize,
   );
   const rasters = new Map<string, Raster>();
 
   let atlas: Atlas | null = null;
   let pinAtlas: PinAtlas | null = null;
+  let glyphAtlas: IconTexture | null = null;
+  let ringDepth: GPUTexture | null = null;
   let tileBuffer: GPUBuffer | null = null;
   let tileCapacity = 0;
   let styleBuffer: GPUBuffer | null = null;
@@ -384,8 +489,7 @@ export function createRenderer(
     });
   };
 
-  const setPinAtlas: Renderer["setPinAtlas"] = (width, height, rgba, frames) => {
-    pinAtlas?.texture.destroy();
+  const iconTexture = (width: number, height: number, rgba: ArrayBuffer): IconTexture => {
     const levels = mipChain({ width, height, rgba: new Uint8Array(rgba) });
     const texture = device.createTexture({
       size: { width, height },
@@ -401,11 +505,10 @@ export function createRenderer(
         { width: level.width, height: level.height },
       );
     });
-    pinAtlas = {
+    return {
       texture,
       width,
       height,
-      frames,
       group: device.createBindGroup({
         layout: rasterLayout,
         entries: [
@@ -414,6 +517,16 @@ export function createRenderer(
         ],
       }),
     };
+  };
+
+  const setPinAtlas: Renderer["setPinAtlas"] = (width, height, rgba, frames) => {
+    pinAtlas?.texture.destroy();
+    pinAtlas = { ...iconTexture(width, height, rgba), frames };
+  };
+
+  const setGlyphAtlas: Renderer["setGlyphAtlas"] = (width, height, rgba) => {
+    glyphAtlas?.texture.destroy();
+    glyphAtlas = iconTexture(width, height, rgba);
   };
 
   const tileInstancesBuffer = (bytes: number): GPUBuffer => {
@@ -461,7 +574,8 @@ export function createRenderer(
       return overlays.get(layer.id) !== undefined;
     });
     const styles = drawable.length > 0 ? stylesFor(drawable.length) : null;
-    const slots = drawable.map((layer) => layerSlots(layer, pins));
+    const glyphs = glyphAtlas;
+    const slots = drawable.map((layer) => layerSlots(layer, pins, glyphs));
     if (styles) {
       const values = new Float32Array((drawable.length * stylesPerLayer * styleStride) / 4);
       slots.forEach((parts, index) => {
@@ -473,17 +587,57 @@ export function createRenderer(
       device.queue.writeBuffer(styles.buffer, 0, values);
     }
 
+    const timed =
+      timing !== null &&
+      !drawable.some(
+        (layer) =>
+          layer.kind === "set" && layer.alpha < 1 && (overlays.get(layer.id)?.segments ?? 0) > 0,
+      );
     const encoder = device.createCommandEncoder();
-    const pass = encoder.beginRenderPass({
-      colorAttachments: [
-        {
-          view: context.getCurrentTexture().createView(),
-          clearValue: { r: 0, g: 0, b: 0, a: 0 },
-          loadOp: "clear",
-          storeOp: "store",
-        },
-      ],
-    });
+    const frameTexture = context.getCurrentTexture();
+    const frameView = frameTexture.createView();
+    let cleared = false;
+    const beginPass = (depth: GPUTextureView | null): GPURenderPassEncoder => {
+      const loadOp: GPULoadOp = cleared ? "load" : "clear";
+      cleared = true;
+      return encoder.beginRenderPass({
+        colorAttachments: [
+          { view: frameView, clearValue: { r: 0, g: 0, b: 0, a: 0 }, loadOp, storeOp: "store" },
+        ],
+        ...(timed && timing
+          ? {
+              timestampWrites: {
+                querySet: timing.querySet,
+                beginningOfPassWriteIndex: 0,
+                endOfPassWriteIndex: 1,
+              },
+            }
+          : {}),
+        ...(depth
+          ? {
+              depthStencilAttachment: {
+                view: depth,
+                depthClearValue: 0,
+                depthLoadOp: "clear" as const,
+                depthStoreOp: "discard" as const,
+              },
+            }
+          : {}),
+      });
+    };
+    const ringDepthView = (): GPUTextureView => {
+      const { width, height } = frameTexture;
+      if (ringDepth === null || ringDepth.width !== width || ringDepth.height !== height) {
+        ringDepth?.destroy();
+        ringDepth = device.createTexture({
+          size: { width, height },
+          format: ringDepthFormat,
+          usage: textureUsage.renderAttachment,
+        });
+      }
+      return ringDepth.createView();
+    };
+    let pass = beginPass(null);
     if (tiles && instances) {
       pass.setPipeline(tilePipeline);
       pass.setBindGroup(0, frame.nearest ? tiles.nearest : tiles.linear);
@@ -513,6 +667,22 @@ export function createRenderer(
           pass.draw(4, stored.points);
           return;
         }
+        if (layer.kind === "labels") {
+          if (stored.points > 0) {
+            pass.setPipeline(labelBoxPipeline);
+            pass.setBindGroup(0, styles.group, [offsetOf(0)]);
+            pass.setVertexBuffer(0, stored.buffer, stored.pointOffset);
+            pass.draw(4, stored.points);
+          }
+          const text = overlays.get(layer.glyphsId);
+          if (glyphs === null || text === undefined || text.points === 0) return;
+          pass.setPipeline(glyphPipeline);
+          pass.setBindGroup(0, styles.group, [offsetOf(1)]);
+          pass.setBindGroup(1, glyphs.group);
+          pass.setVertexBuffer(0, text.buffer, text.pointOffset);
+          pass.draw(4, text.points);
+          return;
+        }
         const parts = slots[index] ?? [];
         const [fill] = parts;
         const point = parts[5];
@@ -522,7 +692,19 @@ export function createRenderer(
           pass.setVertexBuffer(0, stored.buffer, 0);
           pass.draw(3, stored.triangles);
         }
-        if (stored.segments > 0) {
+        if (stored.segments > 0 && layer.alpha < 1) {
+          for (const part of bodyParts) {
+            if (!parts[part]) continue;
+            pass.end();
+            pass = beginPass(ringDepthView());
+            pass.setPipeline(segmentOncePipeline);
+            pass.setBindGroup(0, styles.group, [offsetOf(part)]);
+            pass.setVertexBuffer(0, stored.buffer, stored.segmentOffset);
+            pass.draw(onceVertices, stored.segments + (stored.repeats ?? 0));
+            pass.end();
+            pass = beginPass(null);
+          }
+        } else if (stored.segments > 0) {
           pass.setPipeline(segmentPipeline);
           pass.setVertexBuffer(0, stored.buffer, stored.segmentOffset);
           for (let part = 1; part <= 4; part++) {
@@ -540,7 +722,28 @@ export function createRenderer(
       });
     }
     pass.end();
+    let stamps: GPUBuffer | null = null;
+    if (timed && timing) {
+      encoder.resolveQuerySet(timing.querySet, 0, timestampCount, timing.resolved, 0);
+      stamps = device.createBuffer({
+        size: timestampBytes,
+        usage: bufferUsage.mapRead | bufferUsage.copyDst,
+      });
+      encoder.copyBufferToBuffer(timing.resolved, 0, stamps, 0, timestampBytes);
+    }
     device.queue.submit([encoder.finish()]);
+    if (stamps && timing) {
+      const buffer = stamps;
+      buffer.mapAsync(mapModeRead).then(
+        () => {
+          const [from = 0n, to = 0n] = new BigUint64Array(buffer.getMappedRange());
+          buffer.unmap();
+          buffer.destroy();
+          timing.report(Number(to - from) / nanosecondsPerMs);
+        },
+        () => {},
+      );
+    }
   };
 
   return {
@@ -557,6 +760,7 @@ export function createRenderer(
     setOverlay: overlays.set,
     setRaster,
     setPinAtlas,
+    setGlyphAtlas,
     dropOverlay: (id) => {
       overlays.drop(id);
       dropRaster(id);
@@ -567,6 +771,12 @@ export function createRenderer(
       atlas = null;
       pinAtlas?.texture.destroy();
       pinAtlas = null;
+      glyphAtlas?.texture.destroy();
+      glyphAtlas = null;
+      ringDepth?.destroy();
+      ringDepth = null;
+      timing?.querySet.destroy();
+      timing?.resolved.destroy();
       tileBuffer?.destroy();
       styleBuffer?.destroy();
       frameUniform.destroy();

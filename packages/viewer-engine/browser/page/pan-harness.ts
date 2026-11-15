@@ -1,3 +1,4 @@
+import type { RenderWorkerLike } from "../../src/custom-webgpu/index.ts";
 import {
   type BoundViewHistory,
   bindViewerInput,
@@ -141,6 +142,12 @@ export function shownRoute(): PanRoute | null {
   return route;
 }
 
+let renderWorkerSpawner: (() => RenderWorkerLike) | null = null;
+
+export function useRenderWorker(spawn: (() => RenderWorkerLike) | null): void {
+  renderWorkerSpawner = spawn;
+}
+
 function mounted(): { engine: ViewerEngine; route: PanRoute } {
   if (engine === null || route === null) throw new Error("No slide is open");
   return { engine, route };
@@ -163,7 +170,10 @@ async function open(slide: PanSlide): Promise<Opened> {
       ...(slide.prefetch === undefined ? {} : { prefetch: slide.prefetch }),
     },
     deckWebGpu: routeOptions,
-    customWebGpu: routeOptions,
+    customWebGpu: {
+      ...routeOptions,
+      ...(renderWorkerSpawner === null ? {} : { spawnRenderWorker: renderWorkerSpawner }),
+    },
   })[id];
   if (load === undefined) throw new RendererRouteUnavailableError(id);
   const factory: RendererFactory<PixelSlide> = await load();
