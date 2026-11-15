@@ -21,7 +21,12 @@ export default async function globalSetup(): Promise<() => Promise<void>> {
       sourcemap: false,
       chunkSizeWarningLimit: 4096,
       rolldownOptions: {
-        input: { "gpu-timing": fileURLToPath(new URL("./page/gpu-timing.html", import.meta.url)) },
+        input: {
+          "gpu-timing": fileURLToPath(new URL("./page/gpu-timing.html", import.meta.url)),
+          "custom-gpu-timing": fileURLToPath(
+            new URL("./page/custom-gpu-timing.html", import.meta.url),
+          ),
+        },
       },
     },
   });

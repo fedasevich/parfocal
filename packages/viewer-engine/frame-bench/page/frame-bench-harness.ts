@@ -1,5 +1,6 @@
 import "../../j2k-bench/page/j2k-bench-harness.ts";
 import { shownRoute } from "../../browser/page/pan-harness.ts";
+import "./route-bench-harness.ts";
 
 export interface GpuFrames {
   readonly source: "timer-query" | "fence";

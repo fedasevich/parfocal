@@ -91,9 +91,7 @@ const routeTasks: Record<RendererRouteId, string> = {
   "custom-webgpu": "VIEW-038 (the custom WebGPU engine route) registers it",
 };
 
-const undrawnKinds: Partial<Record<RendererRouteId, ReadonlySet<OverlayKind>>> = {
-  "custom-webgpu": new Set(["id-labels"]),
-};
+const undrawnKinds: Partial<Record<RendererRouteId, ReadonlySet<OverlayKind>>> = {};
 
 const alternateRoutes = RENDERER_ROUTE_IDS.filter((route) => route !== PRIMARY_RENDERER_ROUTE);
 
@@ -326,6 +324,33 @@ for (const route of alternateRoutes) {
     });
   }
 }
+
+test("a lost device on the custom-webgpu route recovers and redraws the same frame", async ({
+  page,
+}) => {
+  await skipUnlessRegistered(page, "custom-webgpu");
+  if (server === null) throw new Error("The Viv harness server did not start");
+  const kinds: readonly OverlayKind[] = ["heatmap", "nuclei", "id-labels", "comment-pins"];
+  const before = await renderOverlay(page, server, kinds, "custom-webgpu");
+  expect(before.result.errors).toEqual([]);
+  expect(before.result.deviceRecoveries).toBe(0);
+  expect(contentProblems(before.frame)).toEqual([]);
+  const lose = () =>
+    page.evaluate(async (name) => {
+      const harness = (globalThis as unknown as Record<string, OverlayHarness>)[name];
+      if (harness === undefined) throw new Error("The overlay harness did not load");
+      return harness.change({ kind: "lose-device" });
+    }, overlayHarnessGlobal);
+  for (let loss = 1; loss <= 2; loss++) {
+    const after = await lose();
+    expect(after.errors).toEqual([]);
+    expect(after.uncapturedGpuErrors).toBe(0);
+    expect(after.deviceRecoveries).toBe(loss);
+    expect(after.layerIds).toEqual(before.result.layerIds);
+    const frame = await captureScreenshot(page.locator("#viewer canvas"));
+    expect(compareFrames(frame, before.frame, overlayTolerance).failures).toEqual([]);
+  }
+});
 
 test("switching through every registered route and back keeps the camera and the 10x golden", async ({
   page,
