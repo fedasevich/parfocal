@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-15
 
+- TEST-015 merged into the train: nightly browsers workflow runs four viewer checks on Chromium, Firefox and WebKit and publishes a summary table and JSON artifact.
 - FOUND-028 merged into the train: every CI job pinned to ubuntu-24.04 with a guard test against ubuntu-latest.
 - FOUND-028 Pinned every workflow job to ubuntu-24.04 and added scripts/runner-image.test.ts, which fails on any runs-on that is not an explicit ubuntu-NN.NN. A trial run on ubuntu-26.04 on GitHub is still owed before moving to it.
 - TEST-015 (cross-browser matrix) added the nightly browsers workflow (02:47 UTC) running packages/viewer-engine/browser/cross-browser.spec.ts on Chromium, Firefox and WebKit: WebGL2 and WebGPU support report, mouse drag pan, wheel zoom about the cursor, and Viv drawing a multichannel OME-TIFF with contrast limits. All four checks pass locally on all three browsers (Firefox and WebKit on Apple GPUs, Chromium on SwiftShader). Results are published as a job summary table plus the browser-matrix.json artifact. WebGPU has an API but no adapter on Chromium SwiftShader and Firefox, and no API on WebKit, so WebGPU routes stay Chromium hardware only.
