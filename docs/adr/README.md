@@ -295,3 +295,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0328](0328-one-migration-baseline-at-0115.md) | The 96 migrations are squashed into one baseline that keeps revision 0115, proven equal to the old chain by a schema fingerprint | Accepted | 2026-11-15 |
 | [XXXX](0329-view-scoped-tumor-map-in-slide-anchored-tiles.md) | A view-scoped tumor map is a sparse map of slide-anchored tiles scored on demand | Accepted | 2026-11-15 |
 | [0329](0329-view-scoped-tumor-map-in-slide-anchored-tiles.md) | A view-scoped tumor map is a sparse map of slide-anchored tiles scored on demand | Accepted | 2026-11-15 |
+| [XXXX](XXXX-painted-maps-as-whole-versions-of-one-tile-file.md) | A painted map is saved as whole versions of one binary tile file that the export hands out unchanged | Accepted | 2026-11-15 |

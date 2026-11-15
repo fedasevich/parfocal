@@ -12,10 +12,10 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 
 | Class | Columns |
 |---|---|
-| `phi` | 47 |
-| `personal` | 91 |
+| `phi` | 48 |
+| `personal` | 93 |
 | `secret` | 11 |
-| `operational` | 769 |
+| `operational` | 785 |
 | `public` | 0 |
 
 ## adjudication_objects
@@ -614,6 +614,35 @@ Generated from the table models in `apps/api/src/parfocal_api/tables.py` by `pnp
 | `id` | operational |
 | `slug` | operational |
 | `name` | operational |
+| `created_at` | operational |
+| `updated_at` | operational |
+
+## painted_map_versions
+
+| Column | Class |
+|---|---|
+| `tenant_id` | operational |
+| `painted_map_id` | operational |
+| `version` | operational |
+| `content` | operational |
+| `painted_cells` | operational |
+| `saved_by_user_id` | personal |
+| `saved_at` | operational |
+
+## painted_maps
+
+| Column | Class |
+|---|---|
+| `id` | operational |
+| `tenant_id` | operational |
+| `project_id` | operational |
+| `slide_id` | operational |
+| `name` | phi |
+| `version` | operational |
+| `cell` | operational |
+| `tile_cells` | operational |
+| `painted_cells` | operational |
+| `created_by_user_id` | personal |
 | `created_at` | operational |
 | `updated_at` | operational |
 
