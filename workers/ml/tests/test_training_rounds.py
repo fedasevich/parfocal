@@ -1,3 +1,4 @@
+import json
 import uuid
 from pathlib import Path
 
@@ -125,6 +126,33 @@ def test_a_round_needs_training_and_enough_held_out_slides(tmp_path: Path) -> No
     with pytest.raises(ValueError, match="not a typer"):
         run_round(store, TENANT, "../escape", BASE, reviewed(), held_out, [1])
     assert store.numbers(TENANT, TYPER) == []
+
+
+def test_the_promotion_gate_report_is_stored_with_each_round(tmp_path: Path) -> None:
+    store = FolderStore(tmp_path)
+    good = run_round(store, TENANT, TYPER, BASE, reviewed(), held_out, [1, 8])
+    bad = run_round(store, TENANT, TYPER, BASE, reviewed(shuffled=True), held_out, [1])
+    for found in (good, bad):
+        stored = store.load(TENANT, TYPER, found.version).report.evaluation
+        assert stored == found.report.evaluation
+        assert stored is not None
+        assert stored["task"] == "typer"
+        assert stored["reference"] == {"accuracy": found.report.served_accuracy}
+        assert stored["passed"] is found.promoted
+    assert good.report.evaluation is not None
+    assert good.report.evaluation["refused"] == []
+    assert bad.report.evaluation is not None
+    assert bad.report.evaluation["refused"] == list(bad.report.refused)
+
+
+def test_a_round_stored_before_the_gate_report_still_loads(tmp_path: Path) -> None:
+    store = FolderStore(tmp_path)
+    found = run_round(store, TENANT, TYPER, BASE, reviewed(), held_out, [1])
+    path = store.folder(TENANT, TYPER) / found.version / "round.json"
+    stored = json.loads(path.read_text())
+    del stored["report"]["evaluation"]
+    path.write_text(json.dumps(stored))
+    assert store.load(TENANT, TYPER, found.version).report.evaluation is None
 
 
 def gate_free() -> RoundGate:

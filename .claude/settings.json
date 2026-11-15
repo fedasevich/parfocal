@@ -11,6 +11,15 @@
         ]
       },
       {
+        "matcher": "Bash|mcp__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/scripts/guard_destructive.py\""
+          }
+        ]
+      },
+      {
         "matcher": "Read",
         "hooks": [
           {

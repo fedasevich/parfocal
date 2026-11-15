@@ -995,7 +995,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Depends on SEC-012, STACK-025. Split from SEC-012 by [ADR 0088](adr/0088-rate-limits-in-postgres-and-at-the-edge.md).
   Size: M.
 
-- [ ] SEC-031 · Hard stops for destructive agent actions
+- [x] SEC-031 · Hard stops for destructive agent actions
   The production rules in `AGENTS.md` are prose. The owner's sessions run with permissions bypassed and no deny list, the connected MCP servers give every session and subagent tools that delete a Neon project or branch and an R2 bucket, and `.env` holds a Cloudflare token that writes R2 and DNS ([project review](results/2026-11-09-project-review.md)). Add deny rules or a `PreToolUse` guard in `.claude/settings.json` for destructive MCP tools and for commands that destroy, delete, purge, rotate or reset cloud resources, remove the two deprecated Cloudflare MCP servers (bindings and observability) from `.mcp.json`, and keep a token limited to dev and staging in `.env`, which the owner creates. Additive production writes under ADR 0151 (standing approval within $30 a month) stay allowed.
   Done when a guard test proves the listed tools and commands are refused for agents, the deprecated servers are gone, [knowledge/agent-tooling.md](knowledge/agent-tooling.md) lists what is refused and how the owner runs such an action, and `.env.example` names the limited token.
   Size: M.
@@ -1698,7 +1698,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on VIEW-037.
   Size: M.
 
-- [ ] VIEW-071 · Pick the renderer route per slide, checked on a real GPU
+- [x] VIEW-071 · Pick the renderer route per slide, checked on a real GPU
   `mountSlideViewport` always mounts Viv, so the deck.gl WebGPU route of VIEW-037 is reachable only through `PARFOCAL_RENDERER_ROUTE`. Add the route picker behind a developer setting, run the route goldens and the pan and budget specs once on the Mac's real GPU, and check translucent outlines, where the route's wrapped third ring vertex draws one edge twice.
   Done when the developer setting switches the route on an open slide, a result file records the real-GPU golden and perf numbers, and a translucent outline golden passes on both routes.
   Depends on VIEW-037.
@@ -3767,7 +3767,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Refs mock 6 "After learning", [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
   Size: M.
 
-- [ ] AILEARN-004 · Server training rounds per tenant
+- [x] AILEARN-004 · Server training rounds per tenant
   Fine-tune the typer head from pretrained weights on the tenant's reviewed examples, versioned rounds with a latest pointer, rollback by pointer.
   Done when tests run a round on seeded data, promote it through MLEVAL and roll back.
   Size: L.
@@ -3803,7 +3803,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Depends on AILEARN-004.
   Size: M.
 
-- [ ] AILEARN-011 · Pool reviewed nuclei on the server from review decisions
+- [x] AILEARN-011 · Pool reviewed nuclei on the server from review decisions
   AILEARN-010 collects pooled features through a pooler the caller passes in, and only the browser pools SAM features today. Add a server pooler in the ML worker and API wiring that turns a tenant's review decisions into the nuclei `collect` takes, and re-pool a nucleus whose outline was reshaped.
   Done when a local test turns seeded review decisions into stored features through the server pooler with fake weights, a reshaped outline is pooled again, and no cloud job runs in tests.
   Depends on AILEARN-010.
@@ -3843,7 +3843,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Done when the harness runs on at least three test slides on demand, before a tumor-map model is promoted ([ADR 0011](adr/0011-hosted-ci-only.md)).
   Size: L.
 
-- [ ] MLEVAL-006 · Promotion gate
+- [x] MLEVAL-006 · Promotion gate
   A model version is promoted to a tier only when it meets thresholds per task, with the evaluation report stored in the registry.
   Done when a test promotion fails on a degraded model and passes on the reference one.
   Size: M.
