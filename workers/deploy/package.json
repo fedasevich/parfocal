@@ -6,7 +6,8 @@
     "typecheck": "uv run --package parfocal-deploy basedpyright",
     "test": "uv run --package parfocal-deploy pytest tests -q --cov=parfocal_deploy --cov-report=lcov:coverage.lcov",
     "deploy": "uv run --package parfocal-deploy python -m parfocal_deploy.deploy",
-    "bootstrap": "uv run --package parfocal-deploy python -m parfocal_deploy.bootstrap"
+    "bootstrap": "uv run --package parfocal-deploy python -m parfocal_deploy.bootstrap",
+    "costs": "uv run --package parfocal-deploy python -m parfocal_deploy.costs"
   },
   "dependencies": {
     "@parfocal/api": "workspace:*",
