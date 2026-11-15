@@ -2,14 +2,20 @@ import json
 import re
 
 from parfocal_common.alerting import SLOS
-from parfocal_common.dashboards import DASHBOARD_PATH, EMITTED_EVENTS, PANELS, render
+from parfocal_common.dashboards import (
+    DASHBOARD_PATH,
+    EMITTED_EVENTS,
+    PANELS,
+    dashboard,
+    render,
+)
 from parfocal_common.scrubbing import ALLOWED_FIELDS
 
 AREAS = {"api", "tiles", "ingest", "gpu", "workers", "viewer"}
 
 
 def test_the_committed_dashboard_is_the_generated_one() -> None:
-    assert DASHBOARD_PATH.read_text() == render(), (
+    assert json.loads(DASHBOARD_PATH.read_text()) == dashboard(), (
         "infra/grafana/parfocal-overview.json is stale, run: "
         "uv run python -m parfocal_common.dashboards"
     )
