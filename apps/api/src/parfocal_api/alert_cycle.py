@@ -11,6 +11,7 @@ from parfocal_common.alerting import on_call_for
 from parfocal_common.clients import select_clients
 from parfocal_common.db import create_engine
 from parfocal_common.object_store import ObjectStore
+from parfocal_common.otlp import FlushingExporter
 from parfocal_common.settings import load_settings
 from parfocal_common.sli_store import AlertStateStore, ObjectBlobs
 from parfocal_common.structured_logging import configure_logging
@@ -28,8 +29,11 @@ async def cycle(settings: ApiSettings) -> CycleResult:
                 on_call_for(settings, clients),
                 datetime.now(UTC),
                 engine,
+                clients.telemetry,
             )
         finally:
+            if isinstance(clients.telemetry, FlushingExporter):
+                await clients.telemetry.flush()
             await engine.dispose()
 
 

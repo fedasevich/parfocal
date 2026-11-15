@@ -51,6 +51,9 @@ export const allowedFields: ReadonlySet<string> = new Set([
   "p50_ms",
   "p95_ms",
   "long_frames",
+  "slo",
+  "good_permille",
+  "burn_tenths",
 ]);
 
 const minimumSensitiveLength = 3;

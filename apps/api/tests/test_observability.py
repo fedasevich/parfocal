@@ -10,7 +10,6 @@ from parfocal_api.app import ParfocalApi, create_app
 from parfocal_api.auth import authenticate
 from parfocal_api.context import platform_connection
 from parfocal_api.observability import (
-    FRAMES_EVENT,
     JobRow,
     SyntheticError,
     job_recorder,
@@ -18,8 +17,9 @@ from parfocal_api.observability import (
 )
 from parfocal_api.openapi import PLACEHOLDER_SETTINGS
 from parfocal_api.principals import PlatformOperator
-from parfocal_common.alerting import INGEST_TIME, OnCall, SliName
+from parfocal_common.alerting import INGEST_TIME, SLOS, OnCall, SliName
 from parfocal_common.clients import MemoryEmailSender, ProductionFactories
+from parfocal_common.dashboards import FRAMES_EVENT, SLO_STATUS_EVENT
 from parfocal_common.scrubbing import ALLOWED_FIELDS
 from parfocal_common.sli_store import BATCH_PREFIX, AlertStateStore, MemoryBlobs
 
@@ -179,3 +179,18 @@ def test_stuck_and_failed_ingest_jobs_count_against_the_ingest_slo() -> None:
     ]
     tally = job_recorder(rows).tally(INGEST_TIME, now - timedelta(hours=1), now)
     assert (tally.total, tally.bad) == (4, 3)
+
+
+def test_each_cycle_exports_the_status_of_every_slo_for_the_dashboard(rig: Rig) -> None:
+    rig.client.post("/api/platform/drills/synthetic-error")
+    asyncio.run(rig.app.state.sli.flush())
+    store = AlertStateStore(rig.blobs)
+    on_call = OnCall(MemoryEmailSender(), PAGES, PAGES)
+    asyncio.run(run_alert_cycle(store, on_call, START + timedelta(minutes=1), None, rig.captured))
+    status = {
+        event[1]["slo"]: event[1] for event in rig.captured.events if event[0] == SLO_STATUS_EVENT
+    }
+    assert set(status) == {slo.name for slo in SLOS}
+    assert status["availability"]["good_permille"] == "0"
+    assert status["ingest-time"]["good_permille"] == "1000"
+    assert all(set(fields) <= ALLOWED_FIELDS for fields in status.values())

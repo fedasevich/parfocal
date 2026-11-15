@@ -15,14 +15,17 @@ from parfocal_api.request_logging import route_of
 from parfocal_api.security_alerts import CrossWorkspaceWatch, workspaces
 from parfocal_common import ingest, model_runs
 from parfocal_common.alerting import (
+    SLOS,
     Alerting,
     OnCall,
     Sample,
     SliName,
     SliRecorder,
+    SliSource,
     evaluate_slos,
 )
 from parfocal_common.clients import Clients, TelemetryExporter
+from parfocal_common.dashboards import FRAMES_EVENT, SLO_STATUS_EVENT
 from parfocal_common.db import tenant_transaction
 from parfocal_common.jobs import jobs
 from parfocal_common.object_store import ObjectStore
@@ -35,7 +38,7 @@ from parfocal_common.sli_store import (
     SliEmitter,
 )
 
-FRAMES_EVENT = "rum.viewer.frames"
+STATUS_WINDOW = timedelta(hours=1)
 OPEN_STATUSES = ("queued", "running")
 FINISHED_STATUSES = ("done", "failed")
 JOB_SLIS: dict[str, SliName] = {
@@ -124,6 +127,21 @@ async def job_rows(engine: AsyncEngine, now: datetime) -> list[JobRow]:
     return rows
 
 
+def export_slo_status(telemetry: TelemetryExporter, source: SliSource, now: datetime) -> None:
+    for slo in SLOS:
+        tally = source.tally(slo, now - STATUS_WINDOW, now)
+        good = 1000 if tally.total == 0 else round(1000 * (tally.total - tally.bad) / tally.total)
+        telemetry.export(
+            SLO_STATUS_EVENT,
+            {
+                "slo": slo.name,
+                "count": str(tally.total),
+                "good_permille": str(good),
+                "burn_tenths": str(round(10 * tally.burn_rate(slo))),
+            },
+        )
+
+
 @dataclass(frozen=True)
 class CycleResult:
     firing: tuple[str, ...]
@@ -135,12 +153,16 @@ async def run_alert_cycle(
     on_call: OnCall,
     now: datetime,
     engine: AsyncEngine | None = None,
+    telemetry: TelemetryExporter | None = None,
 ) -> CycleResult:
     state = await store.load()
     folded = await store.fold(state, now)
     alerting = Alerting(on_call, dict(state.firing))
     rows = [] if engine is None else await job_rows(engine, now)
-    evaluate_slos(alerting, CombinedSource((state.counts, job_recorder(rows))), now)
+    source = CombinedSource((state.counts, job_recorder(rows)))
+    evaluate_slos(alerting, source, now)
+    if telemetry is not None:
+        export_slo_status(telemetry, source, now)
     state.firing = alerting.firing
     crossings = 0
     if engine is not None:

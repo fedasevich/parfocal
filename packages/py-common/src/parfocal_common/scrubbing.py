@@ -57,6 +57,9 @@ ALLOWED_FIELDS = frozenset(
         "p50_ms",
         "p95_ms",
         "long_frames",
+        "slo",
+        "good_permille",
+        "burn_tenths",
     }
 )
 
