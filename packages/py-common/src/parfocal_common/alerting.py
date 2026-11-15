@@ -3,6 +3,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from enum import StrEnum
+from typing import Protocol
 
 from parfocal_common.clients import Clients, EmailMessage, EmailSender, TelemetryExporter
 from parfocal_common.settings import ServiceSettings
@@ -151,6 +152,9 @@ class SliRecorder:
         ]
         return finished + overdue
 
+    def tally(self, slo: Slo, start: datetime, end: datetime) -> Tally:
+        return recorder_tally(self, slo, start, end)
+
 
 @dataclass
 class Instrument:
@@ -192,24 +196,45 @@ def bad_count(slo: Slo, samples: Sequence[Sample]) -> int:
 
 
 def burn_rate(slo: Slo, samples: Sequence[Sample]) -> float:
-    if not samples:
-        return 0.0
-    return (bad_count(slo, samples) / len(samples)) / slo.error_budget
+    return Tally(len(samples), bad_count(slo, samples)).burn_rate(slo)
 
 
-def burns(slo: Slo, rule: BurnRule, recorder: SliRecorder, now: datetime) -> bool:
-    long = recorder.window(slo, now - rule.long, now)
-    short = recorder.window(slo, now - rule.short, now)
+@dataclass(frozen=True)
+class Tally:
+    total: int = 0
+    bad: int = 0
+
+    def __add__(self, other: Tally) -> Tally:
+        return Tally(self.total + other.total, self.bad + other.bad)
+
+    def burn_rate(self, slo: Slo) -> float:
+        if self.total == 0:
+            return 0.0
+        return (self.bad / self.total) / slo.error_budget
+
+
+class SliSource(Protocol):
+    def tally(self, slo: Slo, start: datetime, end: datetime) -> Tally: ...
+
+
+def recorder_tally(recorder: SliRecorder, slo: Slo, start: datetime, end: datetime) -> Tally:
+    samples = recorder.window(slo, start, end)
+    return Tally(len(samples), bad_count(slo, samples))
+
+
+def burns(slo: Slo, rule: BurnRule, source: SliSource, now: datetime) -> bool:
+    long = source.tally(slo, now - rule.long, now)
+    short = source.tally(slo, now - rule.short, now)
     return (
-        bad_count(slo, long) >= rule.minimum_bad
-        and burn_rate(slo, long) >= rule.factor
-        and burn_rate(slo, short) >= rule.factor
+        long.bad >= rule.minimum_bad
+        and long.burn_rate(slo) >= rule.factor
+        and short.burn_rate(slo) >= rule.factor
     )
 
 
 def slo_alerts(
     slo: Slo,
-    recorder: SliRecorder,
+    recorder: SliSource,
     now: datetime,
     rules: Sequence[BurnRule] = BURN_RULES,
 ) -> list[Alert]:
@@ -311,7 +336,7 @@ class Alerting:
 
 def evaluate_slos(
     alerting: Alerting,
-    recorder: SliRecorder,
+    recorder: SliSource,
     now: datetime | None = None,
     slos: Sequence[Slo] = SLOS,
 ) -> None:

@@ -105,6 +105,7 @@ from parfocal_api import (
     users,
     workspace_access,
 )
+from parfocal_api.observability import SliMiddleware, drill_router, rum_router, sli_emitter
 from parfocal_api.oidc import OidcClient
 from parfocal_api.origin_check import OriginCheck
 from parfocal_api.problems import PROBLEM_RESPONSES, install_problem_handlers
@@ -149,6 +150,7 @@ async def checked_role_then_closed_clients(app: FastAPI) -> AsyncGenerator[None]
         await require_row_security(state.engine)
         yield
     finally:
+        await app.state.sli.flush()
         await state.identity.http.aclose()
         storage: ObjectStore = app.state.storage
         await storage.http.aclose()
@@ -173,6 +175,7 @@ class ParfocalApi(FastAPI):
         self.state.maintenance = maintenance.MaintenanceState(self.state.engine)
         self.state.realtime_http = httpx2.AsyncClient(timeout=5)
         self.state.realtime = realtime_for(settings, self.state.realtime_http)
+        self.state.sli = sli_emitter(settings, clients, self.state.storage)
         self.state.auth = auth.AuthState(
             engine=self.state.engine,
             identity=identity,
@@ -201,6 +204,7 @@ def create_app(
     app.add_middleware(maintenance.MaintenanceGate, state=app.state.maintenance)
     app.add_middleware(OriginCheck, origin=public_origin(resolved))
     app.add_middleware(RequestLogging)
+    app.add_middleware(SliMiddleware, emitter=app.state.sli)
 
     @app.get("/api/health", operation_id="getHealth")
     async def health() -> Health:
@@ -208,6 +212,8 @@ def create_app(
 
     app.include_router(maintenance.router)
     app.include_router(maintenance.platform_router)
+    app.include_router(drill_router)
+    app.include_router(rum_router)
     app.include_router(auth.router)
     app.include_router(password_login.router)
     app.include_router(sessions_api.router)

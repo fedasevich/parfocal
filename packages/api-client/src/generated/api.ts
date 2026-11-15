@@ -2305,6 +2305,36 @@ export interface FormVersion {
 }
 
 /**
+ * @minimum 0
+ * @maximum 60000
+ */
+export type FrameMs = number;
+
+export type FrameSummaryRenderer = (typeof FrameSummaryRenderer)[keyof typeof FrameSummaryRenderer];
+
+export const FrameSummaryRenderer = {
+  viv: "viv",
+  "deck-webgpu": "deck-webgpu",
+  "custom-webgpu": "custom-webgpu",
+} as const;
+
+export interface FrameSummary {
+  renderer: FrameSummaryRenderer;
+  /**
+   * @minimum 1
+   * @maximum 1000000
+   */
+  frames: number;
+  p50_ms: FrameMs;
+  p95_ms: FrameMs;
+  /**
+   * @minimum 0
+   * @maximum 1000000
+   */
+  long_frames: number;
+}
+
+/**
  * @minLength 1
  * @maxLength 80
  * @pattern ^[A-Za-z0-9][A-Za-z0-9-]*$
@@ -7044,6 +7074,313 @@ export const useEndMaintenance = <TError = Problem, TContext = unknown>(
   queryClient?: QueryClient,
 ): UseMutationResult<Awaited<ReturnType<typeof endMaintenance>>, TError, void, TContext> => {
   return useMutation(getEndMaintenanceMutationOptions(options), queryClient);
+};
+
+export type raiseSyntheticErrorResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type raiseSyntheticErrorResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type raiseSyntheticErrorResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type raiseSyntheticErrorResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type raiseSyntheticErrorResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type raiseSyntheticErrorResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type raiseSyntheticErrorResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type raiseSyntheticErrorResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type raiseSyntheticErrorResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type raiseSyntheticErrorResponseSuccess = raiseSyntheticErrorResponse204 & {
+  headers: Headers;
+};
+export type raiseSyntheticErrorResponseError = (
+  | raiseSyntheticErrorResponse400
+  | raiseSyntheticErrorResponse401
+  | raiseSyntheticErrorResponse403
+  | raiseSyntheticErrorResponse404
+  | raiseSyntheticErrorResponse409
+  | raiseSyntheticErrorResponse422
+  | raiseSyntheticErrorResponse429
+  | raiseSyntheticErrorResponse500
+) & {
+  headers: Headers;
+};
+
+export type raiseSyntheticErrorResponse =
+  | raiseSyntheticErrorResponseSuccess
+  | raiseSyntheticErrorResponseError;
+
+export const getRaiseSyntheticErrorUrl = () => {
+  return `/api/platform/drills/synthetic-error`;
+};
+
+/**
+ * @summary Raise Synthetic Error
+ */
+export const raiseSyntheticError = async (
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<raiseSyntheticErrorResponse> => {
+  return apiFetch<raiseSyntheticErrorResponse>(getRaiseSyntheticErrorUrl(), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getRaiseSyntheticErrorMutationKey = () => ["raiseSyntheticError"] as const;
+
+export const getRaiseSyntheticErrorMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof raiseSyntheticError>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<Awaited<ReturnType<typeof raiseSyntheticError>>, TError, void, TContext> => {
+  const mutationKey = getRaiseSyntheticErrorMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof raiseSyntheticError>>,
+    void
+  > = () => {
+    return raiseSyntheticError(requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RaiseSyntheticErrorMutationResult = NonNullable<
+  Awaited<ReturnType<typeof raiseSyntheticError>>
+>;
+
+export type RaiseSyntheticErrorMutationError = Problem;
+
+/**
+ * @summary Raise Synthetic Error
+ */
+export const useRaiseSyntheticError = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof raiseSyntheticError>>,
+      TError,
+      void,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<Awaited<ReturnType<typeof raiseSyntheticError>>, TError, void, TContext> => {
+  return useMutation(getRaiseSyntheticErrorMutationOptions(options), queryClient);
+};
+
+export type reportViewerFramesResponse204 = {
+  data: void;
+  status: 204;
+};
+
+export type reportViewerFramesResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type reportViewerFramesResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type reportViewerFramesResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type reportViewerFramesResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type reportViewerFramesResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type reportViewerFramesResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type reportViewerFramesResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type reportViewerFramesResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type reportViewerFramesResponseSuccess = reportViewerFramesResponse204 & {
+  headers: Headers;
+};
+export type reportViewerFramesResponseError = (
+  | reportViewerFramesResponse400
+  | reportViewerFramesResponse401
+  | reportViewerFramesResponse403
+  | reportViewerFramesResponse404
+  | reportViewerFramesResponse409
+  | reportViewerFramesResponse422
+  | reportViewerFramesResponse429
+  | reportViewerFramesResponse500
+) & {
+  headers: Headers;
+};
+
+export type reportViewerFramesResponse =
+  | reportViewerFramesResponseSuccess
+  | reportViewerFramesResponseError;
+
+export const getReportViewerFramesUrl = () => {
+  return `/api/telemetry/frames`;
+};
+
+/**
+ * @summary Report Viewer Frames
+ */
+export const reportViewerFrames = async (
+  frameSummary: FrameSummary,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<reportViewerFramesResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<reportViewerFramesResponse>(getReportViewerFramesUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(frameSummary),
+  });
+};
+
+export const getReportViewerFramesMutationKey = () => ["reportViewerFrames"] as const;
+
+export const getReportViewerFramesMutationOptions = <
+  TError = Problem,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof reportViewerFrames>>,
+    TError,
+    ReportViewerFramesMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof reportViewerFrames>>,
+  TError,
+  ReportViewerFramesMutationVariables,
+  TContext
+> => {
+  const mutationKey = getReportViewerFramesMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof reportViewerFrames>>,
+    ReportViewerFramesMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return reportViewerFrames(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ReportViewerFramesMutationResult = NonNullable<
+  Awaited<ReturnType<typeof reportViewerFrames>>
+>;
+export type ReportViewerFramesMutationBody = FrameSummary;
+export type ReportViewerFramesMutationError = Problem;
+export type ReportViewerFramesMutationVariables = { data: FrameSummary };
+
+/**
+ * @summary Report Viewer Frames
+ */
+export const useReportViewerFrames = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof reportViewerFrames>>,
+      TError,
+      ReportViewerFramesMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof reportViewerFrames>>,
+  TError,
+  ReportViewerFramesMutationVariables,
+  TContext
+> => {
+  return useMutation(getReportViewerFramesMutationOptions(options), queryClient);
 };
 
 export type getSessionResponse200 = {
