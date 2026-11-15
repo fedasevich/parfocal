@@ -69,10 +69,14 @@ In the app on the real GPU, the developer setting switched an open `tumor_044` f
 
 On a real GPU the route draws the slide pixels Viv draws, so the parity seen on SwiftShader holds. The SwiftShader goldens do not describe a real GPU: Viv itself misses them by up to 43% of pixels, so on a real GPU only the comparison with Viv in the same browser means anything, and the spec reports instead of asserting there. The AI proposals keep the one-edge difference of VIEW-070 (dashed AI proposals on the deck.gl WebGPU route). The pan and budget numbers were taken at a load of 63 to 91 and say only that the route stays within the budgets on this Mac, not what it costs on a quiet machine.
 
-Translucent outlines do not match. The difference sits on one edge per ring, where the two routes close the ring differently, and with the mixed sign it is not a plain extra coat on one route. The route test is marked `test.fail` on SwiftShader, so CI stays green and fails when the frames start to match, which is when the marker has to go. The shared builder and both goldens were left alone, because VIEW-072 (closing dashed rings in the shared overlay builder) is changing how rings close.
+In the first run translucent outlines did not match. The difference sat on one edge per ring, where the two routes closed the ring differently. The section below shows how a route-side change made them match.
 
 In the app on SwiftShader the switch never finished: a second `navigator.gpu.requestAdapter()` call in the page did not resolve within 20 s, while the first did. In the golden harness two calls resolve. The cause was not traced, and the app spec runs only with `PARFOCAL_GPU=hardware`.
 
+## Open paths for closed rings (after merging VIEW-072)
+
+VIEW-072 (closing dashed rings in the shared overlay builder) left solid rings and the translucent golden unchanged, and the route still differed in 0.743% of pixels. The route then stopped adding a third closing vertex and drew the builder's loop layers as open paths over the builder's own buffer. That is the segment list WebGL builds for a loop, with the first edge drawn twice. The expected-failure marker was removed. On SwiftShader all 16 route tests passed: translucent outlines 0.000% (largest delta 1), and nuclei, AI proposals, human annotations and measurements 0.000% each against their Viv goldens. On the real GPU, headed at a load of 25, the translucent outlines on the route differed from the Viv frame of the same browser in 0.002% of pixels (largest delta 35), down from 0.856%. The opaque overlay kinds were not rerun on the real GPU.
+
 ## Follow-ups
 
-TODO: remove the `test.fail` marker of the translucent outline test on deck-webgpu after VIEW-072, and regenerate the translucent golden if that change moves Viv's ring closing. TODO: a Viv control run of the pan and budget specs on the real GPU at a low load. TODO: find why a second adapter request hangs in the app on SwiftShader, so that the app spec can run in CI.
+TODO: a Viv control run of the pan and budget specs on the real GPU at a low load. TODO: find why a second adapter request hangs in the app on SwiftShader, so that the app spec can run in CI.

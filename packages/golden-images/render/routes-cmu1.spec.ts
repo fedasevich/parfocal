@@ -248,10 +248,6 @@ for (const route of alternateRoutes) {
     page,
   }, testInfo) => {
     await skipUnlessRegistered(page, route);
-    test.fail(
-      route === "deck-webgpu" && !hardware,
-      "Viv and this route close a ring differently, so the first edge of each translucent ring differs. TODO: VIEW-072 (closing dashed rings in the shared overlay builder)",
-    );
     if (server === null) throw new Error("The Viv harness server did not start");
     const { result, frame } = await renderOverlay(
       page,
