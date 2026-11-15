@@ -1,7 +1,7 @@
 import { createReadStream, statSync } from "node:fs";
 import { join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
-import { syntheticDir } from "@parfocal/test-fixtures";
+import { convertedDir, skipUnlessConverted, syntheticDir } from "@parfocal/test-fixtures";
 import { expect, test } from "@playwright/test";
 import type { Plugin, ViteDevServer } from "vite";
 import { checkGolden } from "../src/index.ts";
@@ -42,6 +42,28 @@ const scenes: readonly VivGoldenScene[] = [
   },
 ];
 
+const convertedScenes: readonly VivGoldenScene[] = [
+  {
+    name: "viv-cmu-1-small-region-converted-zarr-fit",
+    fixture: "CMU-1-Small-Region.ome.zarr",
+    formatId: "ome-zarr",
+    format: "ome-zarr-jpeg",
+    view: { kind: "fit" },
+  },
+  {
+    name: "viv-cmu-1-small-region-converted-zstd-zarr-fit",
+    fixture: "CMU-1-Small-Region-zstd.ome.zarr",
+    formatId: "ome-zarr",
+    format: "ome-zarr",
+    view: { kind: "fit" },
+  },
+];
+
+const roots = new Map<string, string>([
+  ...scenes.map((scene) => [scene.fixture, syntheticDir] as const),
+  ...convertedScenes.map((scene) => [scene.fixture, convertedDir()] as const),
+]);
+
 function fileSize(path: string): number | null {
   try {
     const info = statSync(path);
@@ -52,18 +74,19 @@ function fileSize(path: string): number | null {
 }
 
 function storeServer(): Plugin {
-  const prefixes = scenes.map((scene) => `/fixtures/${scene.fixture}/`);
   return {
     name: "parfocal-zarr-stores",
     configureServer(server) {
       server.middlewares.use((request, response, next) => {
         const pathname = decodeURIComponent(new URL(request.url ?? "/", "http://x").pathname);
-        if (!prefixes.some((prefix) => pathname.startsWith(prefix))) {
+        const fixture = [...roots.keys()].find((name) => pathname.startsWith(`/fixtures/${name}/`));
+        const root = fixture === undefined ? undefined : roots.get(fixture);
+        if (root === undefined) {
           next();
           return;
         }
-        const path = join(syntheticDir, normalize(pathname.slice("/fixtures/".length)));
-        const size = path.startsWith(syntheticDir) ? fileSize(path) : null;
+        const path = join(root, normalize(pathname.slice("/fixtures/".length)));
+        const size = path.startsWith(root) ? fileSize(path) : null;
         if (size === null) {
           response.writeHead(404);
           response.end();
@@ -109,8 +132,10 @@ test.beforeEach(async ({ page }) => {
   await assertSwiftShader(page);
 });
 
-for (const scene of scenes) {
+for (const scene of [...scenes, ...convertedScenes]) {
   test(`${scene.name} matches its golden image`, async ({ page }, testInfo) => {
+    const skip = scenes.includes(scene) ? false : skipUnlessConverted(scene.fixture);
+    test.skip(skip !== false, skip || "");
     const { result, frame } = await renderVivFrame(page, scene);
     expect(result.errors).toEqual([]);
     expect(result.decoded?.dispatched).toBeGreaterThan(0);
