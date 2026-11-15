@@ -40,6 +40,30 @@ services:
       interval: 1s
       retries: 60
 
+  api:
+    profiles: [api]
+    image: ${PARFOCAL_API_IMAGE:-parfocal-api:local}
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    environment:
+      APP_ENV: dev
+      DATABASE_URL: postgresql://parfocal_app@pooler:5432/parfocal
+      MIGRATION_DATABASE_URL: postgresql://parfocal@postgres:5432/parfocal
+      PUBLIC_ORIGIN: http://localhost:5173
+      SESSION_KEY: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+      MASTER_KEYS: dev:AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE
+      ZITADEL_ISSUER: https://zitadel.invalid
+      ZITADEL_CLIENT_ID: local
+      ZITADEL_CLIENT_SECRET: local-only-client-secret
+      STORAGE_ENDPOINT: http://storage:9000
+    ports: ["8000:8000"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      pooler:
+        condition: service_started
+
 volumes:
   postgres18-data:
   storage-data:

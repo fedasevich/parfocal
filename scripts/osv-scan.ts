@@ -392,6 +392,33 @@ function trivyConfigArgs(target: string, format: string): string[] {
   ];
 }
 
+export function trivyImageArgs(image: string): string[] {
+  return [
+    "image",
+    "--quiet",
+    "--scanners",
+    "vuln",
+    "--severity",
+    "CRITICAL",
+    "--exit-code",
+    String(FINDINGS_EXIT_CODE),
+    "--format=table",
+    image,
+  ];
+}
+
+export function trivySbomArgs(image: string, output: string): string[] {
+  return ["image", "--quiet", "--format=cyclonedx", `--output=${output}`, image];
+}
+
+export function scanImage(image: string, sbom: string | undefined): number {
+  if (sbom) {
+    const written = spawnSync("trivy", trivySbomArgs(image, sbom), { stdio: "inherit" }).status;
+    if (written !== 0) return written ?? 2;
+  }
+  return spawnSync("trivy", trivyImageArgs(image), { stdio: "inherit" }).status ?? 2;
+}
+
 export function scanIac(): number {
   return (
     spawnSync("trivy", trivyConfigArgs(iacPath, "table"), { cwd: repoRoot, stdio: "inherit" })
@@ -455,6 +482,8 @@ if (import.meta.main) {
     process.exit(scanLockfiles());
   } else if (command === "iac") {
     process.exit(scanIac());
+  } else if (command === "image" && process.argv[3]) {
+    process.exit(scanImage(process.argv[3], process.argv[4]));
   } else if (command === "report") {
     const input: ReportInput = {
       today: new Date(),
@@ -471,7 +500,7 @@ if (import.meta.main) {
     process.exit(problems.length === 0 ? 0 : 1);
   } else {
     console.error(
-      "Usage: node scripts/osv-scan.ts [scan|self-test|iac|iac-self-test|report [file]|allowlist]",
+      "Usage: node scripts/osv-scan.ts [scan|self-test|iac|iac-self-test|image IMAGE [sbom]|report [file]|allowlist]",
     );
     process.exit(2);
   }

@@ -6,6 +6,7 @@ import pytest
 
 from parfocal_common.repository import repository_root
 from parfocal_deploy import modal_app
+from parfocal_deploy.image_locks import APP_LOCK, committed, pinned
 from parfocal_deploy.modal_app import (
     APP_NAME,
     FUNCTIONS,
@@ -17,7 +18,6 @@ from parfocal_deploy.modal_app import (
     WEB_FUNCTION,
     WEB_OPTIONS,
     app,
-    requirements,
 )
 from parfocal_ingest.settings import (
     INGEST_MEMORY_LIMIT_MIB,
@@ -63,12 +63,10 @@ def test_the_app_deploys_no_cron() -> None:
     assert MAX_DEPLOYED_CRONS == 5
 
 
-def test_the_image_installs_what_the_packages_declare_and_no_workspace_package() -> None:
-    found = requirements()
-    assert any(requirement.startswith("fastapi") for requirement in found)
-    assert any(requirement.startswith("asyncpg") for requirement in found)
-    assert any(requirement.startswith("openslide-python") for requirement in found)
-    assert not any(requirement.startswith("parfocal-") for requirement in found)
+def test_the_image_installs_the_app_lock_and_no_workspace_package() -> None:
+    found = pinned(committed(APP_LOCK))
+    assert {"fastapi", "asyncpg", "openslide-python", "typst"} <= set(found)
+    assert not any(name.startswith("parfocal-") for name in found)
 
 
 def test_the_web_function_refuses_requests_without_the_proxy_token() -> None:
