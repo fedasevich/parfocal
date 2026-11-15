@@ -23,7 +23,7 @@ Slide pixels:
 
 - The level is `-ceil(zoom)` clamped to the ladder, the rule deck.gl's `TileLayer` uses for a flat view (`tileLevelFor`). Tiles come from the same `createVivLevels` and `createWorkerRegionReader` as the other routes, at most 10 requests at a time, nearest to the centre first.
 - The atlas is one `rgba8unorm` 2D array texture with one layer per tile. A layer has the same texel grid as the single texture Viv gives a tile, and the shader clamps the lookup half a texel inside the valid part, which equals clamp to edge. Its size follows the viewport: twice the largest count of visible tiles plus 16 layers, at least 32, at most the adapter's layer limit capped at 1024. Layers are reused least recently drawn first.
-- Nearest magnification on the finest level ([ADR 0112](0112-finest-level-sampling-and-webgl-context-recovery.md), finest level sampling and WebGL context recovery) is chosen on the CPU from the zoom, because a lookup at an explicit level always uses the magnification filter.
+- Nearest magnification on the finest level ([ADR 0112](0112-finest-level-sampling-and-webgl-context-recovery.md), finest level sampling and WebGL context recovery) is chosen on the CPU, because a lookup at an explicit level always uses the magnification filter. The rule is that a texel covers one device pixel or more (`magnifiesFinestLevel`), which is when a GPU picks the magnification filter. Every golden runs at a pixel ratio of 1, so the ratio part is covered by a unit test only.
 - A tile that is not loaded yet is covered by its nearest loaded ancestor. Coarser tiles are never drawn under loaded ones, since they reach a few pixels past the slide edge.
 - Brightness is one uniform. New tiles fade in over the Viv fade time.
 
@@ -45,9 +45,10 @@ Not built, and each one is reported or stated instead of drawn wrong in silence:
 - The level of detail tiers of the shared overlay builder (density raster and dots for many nuclei). This route draws full outlines at every zoom. TODO: backlog task.
 - Compute culling. Off-screen instances are clipped by the GPU. The POC used a compute pass for nuclei stored as ellipses, which the overlay descriptions do not carry. TODO: measure on a real GPU with a large set before building it.
 - Translucent outlines blend twice where a round cap overlaps a neighbouring segment. The goldens use opaque outlines.
+- A guard for a set larger than the device's `maxBufferSize`. The deck.gl WebGPU route leaves such a layer out and reports it, and this route would raise a GPU error.
 - Recovery after a lost device. The route fails and `whenIdle` rejects, and the user has to switch routes.
 - A run on a real GPU.
 
-`browser/route-switch.spec.ts` now compares the last heap sample with the earliest sample after the warm-up that was taken on the same route. With three routes the old pair was a custom WebGPU sample against a Viv sample, which measured the difference between routes (23.5%) instead of growth. With one or two routes the pair is the same as before.
+`browser/route-switch.spec.ts` now measures heap growth for each route, from its first sample after the warm-up to its last, and asserts the largest. With three routes the old pair was a custom WebGPU sample against a Viv sample, which measured the difference between routes (23.5%) instead of growth.
 
 The harness pages (`harness/viv/main.ts`, `harness/viv/overlays.ts`, `browser/page/route-switch-harness.ts`, `browser/page/pan-harness.ts`) pass options to the third route and read its decode statistics and GPU error count.

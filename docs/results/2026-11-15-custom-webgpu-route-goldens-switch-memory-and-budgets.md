@@ -3,8 +3,8 @@
 - Date: 2026-11-15
 - Backlog: VIEW-038 (custom WebGPU engine route)
 - Kind: baseline
-- Commit: the VIEW-038 commit that adds this file
-- Environment: 24 GB Mac, Darwin 24.6.0, Playwright headless Chrome (`channel: "chrome"`), WebGL on ANGLE Vulkan SwiftShader, WebGPU on the SwiftShader adapter (`--enable-unsafe-webgpu --use-webgpu-adapter=swiftshader --use-vulkan=swiftshader --enable-features=Vulkan`), one Playwright worker, no network shaping except where an RTT is named. Four other agents ran on the same machine, and the 1-minute load was 76 when it was read once during the budget run. It was not held down for any run.
+- Commit: 5153fd9b, and the follow-up commit of the same task for the last switch run
+- Environment: 24 GB Mac, Darwin 24.6.0, Playwright headless Chrome (`channel: "chrome"`), WebGL on ANGLE Vulkan SwiftShader, WebGPU on the SwiftShader adapter (`--enable-unsafe-webgpu --use-webgpu-adapter=swiftshader --use-vulkan=swiftshader --enable-features=Vulkan`), one Playwright worker, no network shaping except where an RTT is named. Four other agents ran on the same machine, and the 1-minute load was 76 when it was read once during the budget run. It was not held down for any run. Nothing was run on the Linux CI runner.
 - Data: `CMU-1.svs`, `CMU-1-Small-Region.svs`, `CMU-1-JP2K-33005.svs` and `CMU-1.tiff` from the fixture cache (public test slides, no PHI)
 
 ## Question
@@ -53,7 +53,15 @@ Route switch memory, 15 switches over `viv`, `deck-webgpu` and `custom-webgpu` w
 | 1 | 8.0 to 8.5 MB | 8.6 to 9.2 MB | 6.8 to 7.3 MB | 0 | 1 | 0 | 798 to 899 ms | 1006 to 1255 ms | 1067 to 1251 ms |
 | 2 | 8.0 to 8.5 MB | 8.5 to 9.1 MB | 6.7 to 7.3 MB | 0 | 1 | 0 | 674 to 805 ms | 982 to 1394 ms | 1057 to 1508 ms |
 
-Run 1 failed the test with 23.5% growth, because the test compared round 5 (custom WebGPU, 6.9 MB) with round 15 (Viv, 8.5 MB). Run 2 used the changed test, which compares round 6 with round 15, both on Viv, and passed with 4.2% growth. Both runs had 0 live decks and 0 canvases after dispose.
+Run 1 failed the test with 23.5% growth, because the test compared round 5 (custom WebGPU, 6.9 MB) with round 15 (Viv, 8.5 MB). Run 2 used a first change of the test, which compared round 6 with round 15, both on Viv, and passed with 4.2% growth. Both runs had 0 live decks and 0 canvases after dispose.
+
+A third run on the follow-up commit used the test as committed, which measures each route from its first sample after the warm-up to its last and asserts the largest growth. It passed, with 0 decks and 0 canvases after dispose:
+
+| Route | Rounds compared | Heap growth |
+| --- | --- | --- |
+| Viv | 6 and 15 | 4.3% |
+| deck.gl WebGPU | 7 and 13 | 3.5% |
+| custom WebGPU | 5 and 14 | 5.9% |
 
 Pan and budget specs with `PARFOCAL_RENDERER_ROUTE=custom-webgpu`, all 15 tests passed their existing budgets:
 
@@ -84,7 +92,7 @@ At 0 ms RTT the longest main thread task during the jump was 1.0 ms on `CMU-1.sv
 
 ## Interpretation
 
-The route draws slide pixels the Viv goldens accept, from a worker, with the same request counts as the deck.gl WebGPU route in its [result](2026-11-15-deck-webgpu-route-goldens-and-switch-memory.md) (8 and 13 on `CMU-1.svs`, and 21, 27 and 0 fetches on the pan), so the tile selection asks for the same tiles. Rasters and pins match to the pixel. Outlines match within the tolerance but not to the pixel, as they do on the deck.gl WebGPU route. The fixture puts vertices on pixel centres, so many line edges pass within about 0.01 pixel of a pixel centre, and which side wins depends on where the rasteriser snaps the corners of each triangle. Giving the body of a segment the same corners as deck.gl's (the two points, with no reach past them) halved the difference, which supports that reading. The joints are still separate squares here and mitred triangles in deck.gl, so the rest will not go away without drawing deck.gl's exact triangles.
+The route draws slide pixels the Viv goldens accept, from a worker, with the same request counts as the deck.gl WebGPU route in its [result](2026-11-15-deck-webgpu-route-goldens-and-switch-memory.md) (8 and 13 on `CMU-1.svs`, and 21, 27 and 0 fetches on the pan), so the tile selection asks for the same tiles. Rasters and pins match to the pixel. Outlines match within the tolerance but not to the pixel, as they do on the deck.gl WebGPU route. The AI proposals are 0.022 percentage points under the 0.1% bound, so that kind has little headroom. The fixture puts vertices on pixel centres, so many line edges pass within about 0.01 pixel of a pixel centre, and which side wins depends on where the rasteriser snaps the corners of each triangle. Giving the body of a segment the same corners as deck.gl's (the two points, with no reach past them) halved the difference, which supports that reading. The joints are still separate squares here and mitred triangles in deck.gl, so the rest will not go away without drawing deck.gl's exact triangles.
 
 ID labels are not drawn, so one of the eight overlay goldens does not pass on this route. The level of detail tiers and compute culling are not built either, and the goldens do not exercise them.
 

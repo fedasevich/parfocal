@@ -21,11 +21,7 @@ import type {
 } from "../overlay/types.ts";
 import { absoluteUrl } from "../pixel-source/url.ts";
 import { observeCanvasSize, observePixelRatio } from "../viv/canvas-observers.ts";
-import {
-  defaultInterpolationRule,
-  type InterpolationRule,
-  usesNearestMagnification,
-} from "../viv/interpolation.ts";
+import { defaultInterpolationRule, type InterpolationRule } from "../viv/interpolation.ts";
 import type { PixelSlide } from "../viv/pixel-slide.ts";
 import { createTileFade } from "../viv/tile-fade.ts";
 import type { TileLoadState } from "../viv/tile-wait.ts";
@@ -40,6 +36,7 @@ import {
 } from "./protocol.ts";
 import {
   atlasLayersFor,
+  magnifiesFinestLevel,
   type PlacedTile,
   parentTile,
   type TileAddress,
@@ -562,7 +559,9 @@ export function createCustomWebGpuRoute(
         frame: {
           tiles: tiles.buffer,
           tileCount: placed.length,
-          nearest: usesNearestMagnification(interpolationRule, -level) && camera.zoom >= 0,
+          nearest:
+            interpolationRule === "finest-nearest" &&
+            magnifiesFinestLevel(level, camera.zoom, pixelRatio()),
           tint: brightness,
           view: { x: camera.x, y: camera.y, scale: 2 ** camera.zoom, ...view },
           layers: drawnLayers(),

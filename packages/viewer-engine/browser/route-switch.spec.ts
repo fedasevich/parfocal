@@ -84,12 +84,18 @@ test("10 renderer route switches keep the camera, one canvas and the heap within
   }
   await cdp.detach();
 
-  const last = samples.at(-1);
-  const sameRouteRounds =
-    Math.floor((samples.length - warmUpSwitches) / routes.length) * routes.length;
-  const baseline = samples[samples.length - 1 - sameRouteRounds];
-  if (!baseline || !last) throw new Error("The run has no samples");
-  const growth = last.heapBytes / baseline.heapBytes - 1;
+  const settled = samples.slice(warmUpSwitches - 1);
+  const growthByRoute = routes.flatMap((route) => {
+    const own = settled.filter((sample) => sample.report.route === route);
+    const first = own[0];
+    const last = own.at(-1);
+    if (!first || !last) return [];
+    return [
+      { route, from: first.round, to: last.round, growth: last.heapBytes / first.heapBytes - 1 },
+    ];
+  });
+  if (growthByRoute.length === 0) throw new Error("The run has no samples");
+  const growth = Math.max(...growthByRoute.map((entry) => entry.growth));
   const megabytes = (bytes: number) => (bytes / 2 ** 20).toFixed(1);
   console.log(
     [
@@ -99,7 +105,11 @@ test("10 renderer route switches keep the camera, one canvas and the heap within
         (sample) =>
           `${sample.round}\t${sample.report.route}\t${megabytes(sample.heapBytes)}\t${sample.decks}\t${sample.report.canvases}\t${sample.report.switchMs.toFixed(0)}`,
       ),
-      `growth ${(growth * 100).toFixed(1)}% from round ${baseline.round} to round ${last.round} on the ${last.report.route} route after ${warmUpSwitches} warm-up, decks ${decksAfter} and canvases ${canvases} after dispose`,
+      ...growthByRoute.map(
+        (entry) =>
+          `growth ${(entry.growth * 100).toFixed(1)}% on ${entry.route} from round ${entry.from} to round ${entry.to}`,
+      ),
+      `largest growth ${(growth * 100).toFixed(1)}% after ${warmUpSwitches} warm-up, decks ${decksAfter} and canvases ${canvases} after dispose`,
     ].join("\n"),
   );
   mkdirSync(reportDir, { recursive: true });

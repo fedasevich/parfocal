@@ -25,6 +25,7 @@ export {
 } from "./overlay-buffers.ts";
 export {
   atlasLayersFor,
+  magnifiesFinestLevel,
   parentTile,
   type TileAddress,
   tileInstances,

@@ -7,6 +7,7 @@ import {
 } from "../../src/custom-webgpu/overlay-buffers.ts";
 import {
   atlasLayersFor,
+  magnifiesFinestLevel,
   minAtlasLayers,
   parentTile,
   tileInstances,
@@ -70,6 +71,14 @@ describe("tile selection", () => {
     assert.equal(tileLevelFor(-1.01, 5), 1);
     assert.equal(tileLevelFor(-2.9, 5), 2);
     assert.equal(tileLevelFor(-40, 5), 4);
+  });
+
+  it("samples the finest level nearest only when a texel covers a device pixel or more", () => {
+    assert.equal(magnifiesFinestLevel(0, 0, 1), true);
+    assert.equal(magnifiesFinestLevel(0, -0.5, 1), false);
+    assert.equal(magnifiesFinestLevel(0, -0.5, 2), true);
+    assert.equal(magnifiesFinestLevel(0, -1, 2), true);
+    assert.equal(magnifiesFinestLevel(1, 3, 2), false);
   });
 
   it("lists only tiles inside the level, nearest to the centre first", () => {

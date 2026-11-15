@@ -27,6 +27,10 @@ export function tileLevelFor(zoom: number, levelCount: number): number {
   return Math.min(levelCount - 1, Math.max(0, level));
 }
 
+export function magnifiesFinestLevel(level: number, zoom: number, pixelRatio: number): boolean {
+  return level === 0 && 2 ** zoom * pixelRatio >= 1;
+}
+
 export function visibleTiles(
   camera: Camera,
   view: ViewSize,
