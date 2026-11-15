@@ -1,4 +1,4 @@
-# 0340. Old tenant objects move to Infrequent Access after 90 days, and budgets per environment live in a cost report
+# 0341. Old tenant objects move to Infrequent Access after 90 days, and budgets per environment live in a cost report
 
 - Date: 2026-11-15
 - Status: Accepted
