@@ -21,6 +21,7 @@ import { Bell } from "./bell.tsx";
 import { ConnectionBanner } from "./connection-banner.tsx";
 import { destinations } from "./destinations.ts";
 import { JobsTrayProvider, ShellJobs } from "./jobs-tray.tsx";
+import { MaintenanceBanner } from "./maintenance-banner.tsx";
 import { useOverlay } from "./overlays.ts";
 import { useGoTo, useRouterLink } from "./router-link.tsx";
 import { foldedShellRouteIds } from "./shell-routes.ts";
@@ -141,6 +142,7 @@ export function GlobalShell({ children }: { children: ReactNode }) {
               accountSlot={<AccountMenu me={me} person={person} />}
             />
             <ConnectionBanner />
+            <MaintenanceBanner />
           </div>
         }
         side={
