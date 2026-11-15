@@ -8,7 +8,7 @@ To take every recommendation at once, write "all recommended" here:
 
 ## What you need to do next, in order
 
-1. Decisions 105 (older Ventana archives with several scan areas), 106 (who reads the sealed clinical note) and 107 (how CI gets the model files for the parity test) below.
+1. Decisions 105 (older Ventana archives with several scan areas), 106 (who reads the sealed clinical note), 107 (how CI gets the model files for the parity test) and 108 (whether experts on an annotate task may run a model) below.
 2. The checks on your Mac listed under "The review column" below, when you have a few minutes.
 3. When the app is ready for production, say so, and the lead books the deploy session of decisions 93, 94 and 95.
 
@@ -155,6 +155,16 @@ MLEVAL-007 (browser parity tests) checks that the browser PathoSAM models match 
 - **A. Publish the files once to R2 as ADR 0276 (model files stored once with a checksum list) describes, and add a WebAssembly-only CI job that downloads them with a read-only token (recommended).** This is a production write of about 450 MB, well under a cent a month of storage, plus a new read-only secret, so it waits for your yes and the deploy session.
 - B. Run the test on a self-hosted GitHub runner on the Mac.
 - C. Keep the Mac run and the switch that makes a skip fail when required, and tick MLEVAL-007 without CI.
+- Other.
+
+Your choice:
+
+### 108. Whether experts on an annotate task may run a model on its slides
+
+JOBS-007 (run a model on a selection in Annotate) lets a person send a selected shape or the current view to a model, and the cells come back as AI objects the experts fix. Starting a run needs the "run models" right on the whole project, which experts assigned to an annotate task usually do not have, so as built only project owners and researchers see the panel.
+
+- **A. Keep it to people with the project's "run models" right, as built (recommended).** Runs cost GPU time, and the person who set up the task chooses when to spend it.
+- B. Let experts assigned to an annotate task run models on that task's slides only.
 - Other.
 
 Your choice:
