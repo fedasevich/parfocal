@@ -36,11 +36,13 @@ export function OutlineLayer({
     () => module.outlineModeOverlays({ id: overlayId, mode, outlines }),
     [module, mode, outlines],
   );
+  const controller = useMemo(() => module.createOverlayController(engine), [engine, module]);
+  useEffect(() => () => controller.clear(), [controller]);
   useEffect(() => {
-    const controller = module.createOverlayController(engine);
+    const keep = new Set(overlays.map((overlay) => overlay.id));
+    for (const stale of controller.list()) if (!keep.has(stale.id)) controller.remove(stale.id);
     for (const overlay of overlays) controller.set(overlay);
-    return () => controller.clear();
-  }, [engine, module, overlays]);
+  }, [controller, overlays]);
   return (
     <div
       hidden

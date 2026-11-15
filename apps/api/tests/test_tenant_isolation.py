@@ -8,6 +8,7 @@ import uuid
 import zipfile
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
+from datetime import UTC, datetime
 from enum import Enum, auto
 from functools import cache
 from typing import Any
@@ -957,6 +958,25 @@ async def seed_cases(connection: AsyncConnection, seeded: Seeded) -> None:
             changed_by_user_id=seeded.ids["user"],
         )
     )
+    corrected_month = datetime(
+        2100 + uuid.uuid4().int % 7800, 1 + uuid.uuid4().int % 12, 1, tzinfo=UTC
+    )
+    await connection.execute(
+        insert(annotations).values(
+            tenant_id=seeded.tenant_id,
+            project_id=case.project_id,
+            slide_id=case.loose_slide_id,
+            task_id=annotate_id,
+            kind="cell",
+            number=2,
+            geometry=func.ST_GeomFromText("POLYGON((0 0,9 0,9 9,0 9,0 0))", 0),
+            origin="ai-edited",
+            source_number=2,
+            created_by_user_id=seeded.ids["user"],
+            created_at=corrected_month,
+        )
+    )
+    seeded.markers.add(corrected_month.strftime("%Y-%m"))
     seeded.ids["shared_object"] = shared_id
     seeded.markers.add(str(shared_id))
     seeded.markers.add(snapshot_class)
