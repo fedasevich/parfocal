@@ -67,3 +67,13 @@ jobs:
           if [ -n "${ALLOW_DESTRUCTIVE}" ]; then arguments+=(--allow-destructive "${ALLOW_DESTRUCTIVE}"); fi
           if [ -n "${ONLY_HEAD_OF}" ]; then arguments+=(--only-head-of "${ONLY_HEAD_OF}"); fi
           pnpm --filter @parfocal/deploy run deploy "${arguments[@]}"
+
+  browser-smoke:
+    needs: deploy
+    if: ${{ !inputs.rollback_to }}
+    permissions:
+      contents: read
+    uses: ./.github/workflows/deploy-smoke.yml
+    with:
+      ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+    secrets: inherit

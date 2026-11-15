@@ -28,6 +28,17 @@ A second run writes only the config secret. If the role exists but the keys secr
 
 CI needs the secrets `CLOUDFLARE_API_TOKEN`, `MODAL_TOKEN_ID`, `MODAL_TOKEN_SECRET` and `NEON_API_KEY` and the variables `CLOUDFLARE_ACCOUNT_ID` and `NEON_PROJECT_ID` in the GitHub environment `production`. The script stops and names whatever is missing, including Modal secrets that bootstrap has not made yet. Then it runs the migrations as the database owner on the direct connection, deploys both Modal apps, builds the web app, deploys the Worker with the Modal web URL as `API_ORIGIN`, and checks that `/api/health` answers 200 and that `/` carries the isolation headers.
 
+### The browser smoke after a deploy
+
+OPS-016 (a real browser checks the deployed app) adds the job `browser-smoke` to `deploy.yml`. It calls `deploy-smoke.yml`, which runs `pnpm --filter @parfocal/web run smoke` (`apps/web/smoke/deployed.spec.ts`) in headless Chrome against `https://app.parfocal.eu`. A rollback skips it, because an older commit may not have the spec.
+
+- Signed out, `/` must show the sign-in, the app's own form or the Zitadel login. Signed in as the smoke account, it opens home, the first workspace, its first case and that case's first slide in the viewer.
+- It fails on a console error or page error from the app, an `/api` answer of 400 or more (401 only while signed out), and a visible issue page such as `issue-server-error`.
+- It is read-only. Every `/api` request that is not GET, HEAD or OPTIONS is aborted and fails the run, except `/api/auth/`, which signing in needs. Signing in itself may still record a session or a sign-in event.
+- Screenshots of every step land in `apps/web/test-results/smoke` and are uploaded as the run artifact `deploy-smoke-<run>-<attempt>`, kept 30 days.
+- It needs the environment variable `PARFOCAL_SMOKE_EMAIL` and the secret `PARFOCAL_SMOKE_PASSWORD` in the GitHub environment `production`. Without them the signed-in test is skipped and the run summary says so. TODO: the smoke account, with view rights on one workspace that holds a case with a slide, is made only after the owner's yes.
+- Run it by hand with `gh workflow run deploy-smoke.yml -f url=<address>`, which also serves a test run against a deliberately broken build. `apps/web/e2e/deploy-smoke-selftest.spec.ts` proves in CI that the same watch fails a broken page and passes a healthy one.
+
 ## Main to production
 
 [ADR 0297](../adr/0297-main-deploys-to-production-behind-a-switch-with-a-migration-check-and-rollback-by-redeploy.md) (main deploys behind a switch, migration check, rollback by redeploy) is the record. `deploy.yml` also starts when the `ci` workflow finishes. The job runs only when the repository variable `DEPLOY_ON_MAIN` is `true` and CI passed for a push to `main`. It deploys the commit CI tested, and stops quietly when `main` has a newer commit, whose own run deploys.

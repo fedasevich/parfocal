@@ -8,6 +8,8 @@
     "playwright.config.ts",
     "playwright.hover.config.ts",
     "playwright.region.config.ts",
+    "playwright.smoke.config.ts",
+    "smoke",
     "hover-bench/*.ts",
     "region-bench/*.ts"
   ],
