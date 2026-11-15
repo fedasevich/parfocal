@@ -4151,7 +4151,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when STACK-033 is confirmed and the event taxonomy is written as an ADR.
   Size: S.
 
-- [ ] EXP-001 · Feature flag service integration
+- [x] EXP-001 · Feature flag service integration
   Flags evaluated server and client side, per tenant, role and user, with a kill switch.
   Done when tests cover targeting rules.
   Size: M.

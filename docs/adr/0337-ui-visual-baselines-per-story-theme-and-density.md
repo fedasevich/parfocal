@@ -1,4 +1,4 @@
-# 0336. UI visual regression compares every story in both themes and densities with committed baselines from the Linux runner
+# 0337. UI visual regression compares every story in both themes and densities with committed baselines from the Linux runner
 
 - Date: 2026-11-15
 - Status: Accepted

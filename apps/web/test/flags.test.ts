@@ -6,6 +6,7 @@ import {
   type FlagDefinitions,
   type IdentifiedAnalytics,
   localFlagService,
+  remoteFlagService,
 } from "../src/flags/flags.ts";
 import { flagArms, flagKeys } from "../src/telemetry/events.ts";
 
@@ -25,8 +26,9 @@ const recorder = () => {
 test("the same user always lands in the same arm", () => {
   const service = localFlagService();
   for (const id of userIds(200)) {
-    assert.equal(service.arm(flag, id), service.arm(flag, id));
-    assert.equal(service.arm(flag, id), assignArm(flag, id, arms));
+    const first = service.evaluate(flag, { userId: id });
+    assert.deepEqual(first, service.evaluate(flag, { userId: id }));
+    assert.equal(first.arm, assignArm(flag, id, arms));
   }
 });
 
@@ -56,19 +58,27 @@ test("a default mode flag returns the default arm for everyone", () => {
     [flag]: { arms, default: "control", mode: "default" },
   };
   const service = localFlagService(definitions);
-  for (const id of userIds(50)) assert.equal(service.arm(flag, id), "control");
+  for (const id of userIds(50)) assert.equal(service.evaluate(flag, { userId: id }).arm, "control");
 });
 
 test("an unknown flag or a non pseudonymous id is refused", () => {
   const service = localFlagService();
-  assert.throws(() => service.arm("nope", "usr_00000001x"));
-  assert.throws(() => service.arm(flag, "jane.doe@example.org"));
+  assert.throws(() => service.evaluate("nope", { userId: "usr_00000001x" }));
+  assert.throws(() => service.evaluate(flag, { userId: "jane.doe@example.org" }));
+  assert.throws(() =>
+    service.evaluate(flag, { userId: "usr_00000001x", workspaceId: "Holloway Lab" }),
+  );
 });
 
 test("the exposure event is sent once with only the flag and the arm", () => {
   const { sent, target } = recorder();
   const userId = "usr_00000042x";
-  const session = experimentsFor(localFlagService(), userId, target, () => false);
+  const session = experimentsFor(
+    localFlagService(),
+    { userId, workspaceId: "wsp_pilotlab1", roles: ["reviewer"] },
+    target,
+    () => false,
+  );
   const first = session.arm(flag);
   session.arm(flag);
   assert.equal(sent.length, 1);
@@ -76,16 +86,17 @@ test("the exposure event is sent once with only the flag and the arm", () => {
   assert.equal(event?.event, "experiment_exposed");
   assert.equal(event?.distinctId, userId);
   assert.deepEqual(event?.properties, { flag, arm: first });
-  assert.equal(JSON.stringify(event?.properties).includes(userId), false);
+  const text = JSON.stringify(event?.properties);
+  assert.equal(text.includes(userId) || text.includes("wsp_pilotlab1"), false);
 });
 
 test("every exposure carries only listed flag and arm values", () => {
   for (const id of userIds(300)) {
     const { sent, target } = recorder();
-    experimentsFor(localFlagService(), id, target, () => false).arm(flag);
+    experimentsFor(localFlagService(), { userId: id }, target, () => false).arm(flag);
     const properties = sent[0]?.properties ?? {};
     assert.deepEqual(Object.keys(properties).sort(), ["arm", "flag"]);
-    assert.ok(flagKeys.includes(properties.flag as string));
+    assert.ok(flagKeys.includes(properties.flag as never));
     assert.ok(flagArms.includes(properties.arm as string));
   }
 });
@@ -95,17 +106,52 @@ test("a flag in default mode records no exposure", () => {
   const definitions: FlagDefinitions = { [flag]: { arms, default: "control", mode: "default" } };
   const session = experimentsFor(
     localFlagService(definitions),
-    "usr_00000042x",
+    { userId: "usr_00000042x" },
     target,
     () => false,
-    definitions,
   );
   assert.equal(session.arm(flag), "control");
   assert.equal(sent.length, 0);
 });
 
+test("targeted, killed and remotely switched off flags record no exposure", () => {
+  const ruled: FlagDefinitions = {
+    [flag]: {
+      arms,
+      default: "control",
+      mode: "split",
+      rules: [{ arm: "status_board", roles: ["reviewer"] }],
+    },
+  };
+  const killed: FlagDefinitions = {
+    [flag]: { arms, default: "control", mode: "split", killed: true },
+  };
+  const context = { userId: "usr_00000042x", roles: ["reviewer"] };
+  for (const service of [
+    localFlagService(ruled),
+    localFlagService(killed),
+    remoteFlagService({ [flag]: false }),
+  ]) {
+    const { sent, target } = recorder();
+    experimentsFor(service, context, target, () => false).arm(flag);
+    assert.equal(sent.length, 0);
+  }
+});
+
+test("a remote arm is an assignment and records one exposure", () => {
+  const { sent, target } = recorder();
+  const session = experimentsFor(
+    remoteFlagService({ [flag]: "status_board" }),
+    { userId: "usr_00000042x" },
+    target,
+    () => false,
+  );
+  assert.equal(session.arm(flag), "status_board");
+  assert.deepEqual(sent[0]?.properties, { flag, arm: "status_board" });
+});
+
 test("an opted out person produces no exposure", () => {
   const { sent, target } = recorder();
-  experimentsFor(localFlagService(), "usr_00000042x", target, () => true).arm(flag);
+  experimentsFor(localFlagService(), { userId: "usr_00000042x" }, target, () => true).arm(flag);
   assert.equal(sent.length, 0);
 });
