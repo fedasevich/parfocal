@@ -1692,6 +1692,18 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Refs [`poc/src/deck94/*`](https://github.com/fedasevich/pathlogy-poc/tree/master/src/deck94), doc 23.
   Size: L.
 
+- [ ] VIEW-070 · Dashed AI proposals on the deck.gl WebGPU route
+  On the VIEW-037 route AI proposals draw solid, 0.625% of pixels off the Viv golden, because deck.gl's `PathStyleExtension` injects GLSL only. Draw the dash in WGSL through a small layer extension, or as screen-space dash geometry rebuilt per zoom step with the extension's phase and caps.
+  Done when the AI proposals golden passes on the route at Viv's 0.1% tolerance and `routes-cmu1.spec.ts` drops its 2% bound.
+  Depends on VIEW-037.
+  Size: M.
+
+- [ ] VIEW-071 · Pick the renderer route per slide, checked on a real GPU
+  `mountSlideViewport` always mounts Viv, so the deck.gl WebGPU route of VIEW-037 is reachable only through `PARFOCAL_RENDERER_ROUTE`. Add the route picker behind a developer setting, run the route goldens and the pan and budget specs once on the Mac's real GPU, and check translucent outlines, where the route's wrapped third ring vertex draws one edge twice.
+  Done when the developer setting switches the route on an open slide, a result file records the real-GPU golden and perf numbers, and a translucent outline golden passes on both routes.
+  Depends on VIEW-037.
+  Size: M.
+
 - [ ] VIEW-038 · Custom WebGPU engine route
   Render worker with OffscreenCanvas, tile atlas, compute culling, instanced polygons with instance-step attributes, 8-bit only.
   Done when the route plugs into the VIEW-036 renderer interface, the same golden tests that Viv passes pass on this route, perf tests pass and annotation set updates take one buffer write (the POC's advantage).
