@@ -239,6 +239,24 @@ describe("overlay buffers", () => {
     assert.equal(buffers.get("nuclei"), undefined);
     assert.equal(device.created[1]?.destroyed, true);
   });
+
+  it("leaves out a set above the device buffer limit and never asks for a larger buffer", () => {
+    const device = fakeDevice();
+    const limit = 3 * smallestInstanceBuffer + 2;
+    const buffers = createOverlayBuffers(device, 0, limit);
+    const counts = { triangles: 0, segments: 0, points: 0 };
+    assert.equal(
+      buffers.set("nuclei", new ArrayBuffer(2 * smallestInstanceBuffer + 4), counts),
+      true,
+    );
+    assert.equal(device.created[0]?.size, 3 * smallestInstanceBuffer);
+    assert.equal(buffers.set("nuclei", new ArrayBuffer(limit + 2), counts), false);
+    assert.equal(buffers.get("nuclei"), undefined);
+    assert.equal(device.created.length, 1);
+    assert.equal(device.created[0]?.destroyed, true);
+    assert.equal(device.writes.length, 1);
+    assert.equal(instanceCapacity(100, limit), smallestInstanceBuffer);
+  });
 });
 
 describe("pixelRendererRoutes", () => {

@@ -91,9 +91,7 @@ const routeTasks: Record<RendererRouteId, string> = {
   "custom-webgpu": "VIEW-038 (the custom WebGPU engine route) registers it",
 };
 
-const undrawnKinds: Partial<Record<RendererRouteId, ReadonlySet<OverlayKind>>> = {
-  "custom-webgpu": new Set(["id-labels"]),
-};
+const undrawnKinds: Partial<Record<RendererRouteId, ReadonlySet<OverlayKind>>> = {};
 
 const alternateRoutes = RENDERER_ROUTE_IDS.filter((route) => route !== PRIMARY_RENDERER_ROUTE);
 

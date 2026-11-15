@@ -7,3 +7,7 @@ export const filledAlpha = 0.55;
 export const scoreRampLow = [67, 56, 202] as const;
 
 export const scoreRampHigh = [250, 204, 21] as const;
+
+export const labelFontSizePx = 12;
+
+export const labelPadding = [6, 3] as const;

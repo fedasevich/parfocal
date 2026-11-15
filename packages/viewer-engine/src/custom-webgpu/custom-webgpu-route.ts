@@ -1,4 +1,5 @@
 import { originCamera } from "../camera/camera.ts";
+import { WebGpuBufferLimitError } from "../deck-webgpu/buffer-limit.ts";
 import { rgbToRgba } from "../deck-webgpu/rgba.ts";
 import { defaultDecodeWorkers } from "../decode/decode-pool.ts";
 import { createRangeCache } from "../decode/range-cache.ts";
@@ -11,9 +12,16 @@ import {
 } from "../decode/worker-reader.ts";
 import { systemClock } from "../engine/environment.ts";
 import type { EngineContainer, OverlayLayer, RendererRoute } from "../engine/types.ts";
-import { isOverlayDescription, isPinOverlay, isRasterOverlay } from "../overlay/overlay.ts";
+import { nearBlack, white } from "../overlay/outline-style.ts";
+import {
+  isLabelOverlay,
+  isOverlayDescription,
+  isPinOverlay,
+  isRasterOverlay,
+} from "../overlay/overlay.ts";
 import { createPinAtlas } from "../overlay/pin-icons.ts";
 import type {
+  LabelOverlay,
   OverlayDescription,
   PinOverlay,
   RasterOverlay,
@@ -27,6 +35,7 @@ import { createTileFade } from "../viv/tile-fade.ts";
 import type { TileLoadState } from "../viv/tile-wait.ts";
 import { createVivLevels, type VivLevels, vivSignalAborted } from "../viv/viv-levels.ts";
 import { WebGpuError } from "../viv/webgpu-errors.ts";
+import { buildLabelInstances, createGlyphAtlas, type GlyphLayout } from "./label-glyphs.ts";
 import {
   type LayerDraw,
   type RenderRequest,
@@ -61,6 +70,12 @@ const opacityGamma = 2.2;
 export const customWebGpuPinSizePx = 28;
 
 const pinInstanceFloats = 3;
+
+const labelBorderPx = 2;
+
+function glyphSetId(id: string): string {
+  return `${id}:glyphs`;
+}
 
 const vectorKinds: ReadonlySet<string> = new Set([
   "human-annotations",
@@ -213,6 +228,7 @@ export function createCustomWebGpuRoute(
   const reportedOverlays = new Set<string>();
   let overlayWrites = 0;
   let pinAtlasSent = false;
+  let glyphLayout: GlyphLayout | null = null;
   let brightness = 1;
   let loading = 0;
   let frameCounter = 0;
@@ -406,10 +422,10 @@ export function createCustomWebGpuRoute(
     return [...below, ...sharp];
   };
 
-  const reportUnsupported = (key: string, what: string) => {
-    if (reportedOverlays.has(key)) return;
-    reportedOverlays.add(key);
-    reportError(new CustomWebGpuUnsupportedOverlayError(what));
+  const reportLeftOut = (id: string, bytes: number, limit: number) => {
+    if (reportedOverlays.has(id)) return;
+    reportedOverlays.add(id);
+    reportError(new WebGpuBufferLimitError(id, bytes, limit));
   };
 
   const sendSet = (overlay: VectorOverlay) => {
@@ -482,6 +498,40 @@ export function createCustomWebGpuRoute(
     );
   };
 
+  const sendLabels = (overlay: LabelOverlay) => {
+    if (glyphLayout === null) {
+      const { rgba, ...layout } = createGlyphAtlas();
+      glyphLayout = layout;
+      post({ type: "glyphAtlas", width: layout.width, height: layout.height, rgba: rgba.buffer }, [
+        rgba.buffer,
+      ]);
+    }
+    const { boxes, boxCount, glyphs, glyphCount } = buildLabelInstances(
+      overlay.labels,
+      glyphLayout,
+    );
+    sentLayers.set(overlay.id, { source: overlay.labels, dashed: false });
+    overlayWrites += 2;
+    post(
+      {
+        type: "set",
+        id: overlay.id,
+        data: boxes,
+        counts: { triangles: 0, segments: 0, points: boxCount },
+      },
+      [boxes],
+    );
+    post(
+      {
+        type: "set",
+        id: glyphSetId(overlay.id),
+        data: glyphs,
+        counts: { triangles: 0, segments: 0, points: glyphCount },
+      },
+      [glyphs],
+    );
+  };
+
   const syncOverlays = (force: string | null) => {
     const kept = new Set<string>();
     for (const layer of overlays) {
@@ -499,14 +549,16 @@ export function createCustomWebGpuRoute(
       } else if (isPinOverlay(layer)) {
         kept.add(layer.id);
         if (force === layer.id || sent?.source !== layer.pins) sendPins(layer);
-      } else if (layer.visible) {
-        reportUnsupported(layer.kind, `the ${layer.kind} layer is left out`);
+      } else if (isLabelOverlay(layer)) {
+        kept.add(layer.id);
+        if (force === layer.id || sent?.source !== layer.labels) sendLabels(layer);
       }
     }
     for (const id of [...sentLayers.keys()]) {
       if (kept.has(id)) continue;
       sentLayers.delete(id);
       post({ type: "drop", id });
+      post({ type: "drop", id: glyphSetId(id) });
     }
   };
 
@@ -534,6 +586,19 @@ export function createCustomWebGpuRoute(
               id: overlay.id,
               alpha: layerAlpha(overlay.opacity),
               sizePx: customWebGpuPinSizePx,
+            },
+          ];
+        }
+        if (isLabelOverlay(overlay)) {
+          return [
+            {
+              kind: "labels",
+              id: overlay.id,
+              glyphsId: glyphSetId(overlay.id),
+              alpha: layerAlpha(overlay.opacity),
+              fill: nearBlack,
+              text: white,
+              borderPx: labelBorderPx,
             },
           ];
         }
@@ -580,6 +645,9 @@ export function createCustomWebGpuRoute(
       changed();
     }
     if (response.type === "drawn") drawnFrame = Math.max(drawnFrame, response.id);
+    if (response.type === "leftOut") {
+      reportLeftOut(response.id, response.bytes, response.limit);
+    }
     if (response.type === "error") {
       if (response.source === "uncaptured") {
         uncaptured += 1;

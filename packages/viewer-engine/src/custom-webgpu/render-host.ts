@@ -40,7 +40,10 @@ export function createRenderHost(scope: RenderScope): RenderHost {
     if (adapter === null) throw new Error("the worker was offered no WebGPU adapter");
     const maxLayers = Math.min(mostAtlasLayers, adapter.limits.maxTextureArrayLayers);
     const device = await adapter.requestDevice({
-      requiredLimits: { maxTextureArrayLayers: maxLayers },
+      requiredLimits: {
+        maxTextureArrayLayers: maxLayers,
+        maxBufferSize: adapter.limits.maxBufferSize,
+      },
     });
     if (destroyed) {
       device.destroy();
@@ -94,7 +97,14 @@ export function createRenderHost(scope: RenderScope): RenderHost {
       current.renderer.uploadTile(request.layer, request.width, request.height, request.rgba);
     }
     if (request.type === "set") {
-      current.renderer.setOverlay(request.id, request.data, request.counts);
+      if (!current.renderer.setOverlay(request.id, request.data, request.counts)) {
+        scope.post({
+          type: "leftOut",
+          id: request.id,
+          bytes: request.data.byteLength,
+          limit: current.device.limits.maxBufferSize,
+        });
+      }
     }
     if (request.type === "raster") {
       current.renderer.setRaster(
@@ -107,6 +117,9 @@ export function createRenderHost(scope: RenderScope): RenderHost {
     }
     if (request.type === "pinAtlas") {
       current.renderer.setPinAtlas(request.width, request.height, request.rgba, request.frames);
+    }
+    if (request.type === "glyphAtlas") {
+      current.renderer.setGlyphAtlas(request.width, request.height, request.rgba);
     }
     if (request.type === "drop") current.renderer.dropOverlay(request.id);
     if (request.type === "frame") {

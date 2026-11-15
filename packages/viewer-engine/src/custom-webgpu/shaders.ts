@@ -304,3 +304,77 @@ fn fs(in: PinOut) -> @location(0) vec4f {
   return premultiplied(vec4f(texel.rgb, alpha));
 }
 `;
+
+export const labelBoxShader = `
+${styleBlock}
+
+struct BoxOut {
+  @builtin(position) position: vec4f,
+  @location(0) uv: vec2f,
+  @location(1) @interpolate(flat) size: vec2f,
+  @location(2) @interpolate(flat) line: vec4f,
+};
+
+@vertex
+fn vs(
+  @builtin(vertex_index) vertex: u32,
+  @location(0) anchor: vec2f,
+  @location(1) offset: vec2f,
+  @location(2) size: vec2f,
+  @location(3) line: vec4f,
+) -> BoxOut {
+  let corner = vec2f(f32(vertex & 1u), f32((vertex >> 1u) & 1u));
+  var out: BoxOut;
+  out.position = toClip(toPixels(anchor) + offset + corner * size);
+  out.uv = corner;
+  out.size = size;
+  out.line = line;
+  return out;
+}
+
+@fragment
+fn fs(in: BoxOut) -> @location(0) vec4f {
+  let place = in.uv * in.size;
+  let toEdge = min(min(place.x, in.size.x - place.x), min(place.y, in.size.y - place.y));
+  let isLine = smoothstep(toEdge - 0.5, toEdge + 0.5, style.halfWidth);
+  let fill = vec4f(style.color.rgb, style.color.a * style.alpha);
+  let line = vec4f(in.line.rgb, in.line.a * style.alpha);
+  return premultiplied(mix(fill, line, isLine));
+}
+`;
+
+export const glyphShader = `
+${styleBlock}
+
+@group(1) @binding(0) var glyphs: texture_2d<f32>;
+@group(1) @binding(1) var glyphSampler: sampler;
+
+struct GlyphOut {
+  @builtin(position) position: vec4f,
+  @location(0) uv: vec2f,
+};
+
+@vertex
+fn vs(
+  @builtin(vertex_index) vertex: u32,
+  @location(0) anchor: vec2f,
+  @location(1) offset: vec2f,
+  @location(2) size: vec2f,
+  @location(3) frame: vec4f,
+) -> GlyphOut {
+  let corner = vec2f(f32(vertex & 1u), f32((vertex >> 1u) & 1u));
+  var out: GlyphOut;
+  out.position = toClip(toPixels(anchor) + offset + corner * size);
+  out.uv = (frame.xy + corner * frame.zw) / style.strokeColor.xy;
+  return out;
+}
+
+@fragment
+fn fs(in: GlyphOut) -> @location(0) vec4f {
+  let alpha = textureSample(glyphs, glyphSampler, in.uv).a * style.color.a;
+  if (alpha < 0.001) {
+    discard;
+  }
+  return premultiplied(vec4f(style.color.rgb, alpha * style.alpha));
+}
+`;
