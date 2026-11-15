@@ -3,16 +3,16 @@ import { type Browser, expect, type Page, test } from "@playwright/test";
 import { checkBudget } from "../../../scripts/perf-budgets.ts";
 import { fixtureAvailability } from "../../golden-images/render/viv-harness.ts";
 import { cmu1MicronsPerPixel, cmu1TissueCentre } from "../../golden-images/render/viv-scenes.ts";
-import { assertSwiftShader } from "../../golden-images/src/playwright.ts";
+import { assertGpuMode } from "../../golden-images/src/playwright.ts";
 import { RTT_MATRIX_MS, startLatencyProxy } from "../../latency-proxy/src/index.ts";
 import type { SlideFormatId } from "../src/index.ts";
 import { type Served, type ServedRequest, serve } from "../test/pixel-source/serve.ts";
 import { crossOriginIsolated, outDir } from "./global-setup.ts";
 import { summarizeMainThread, traceCategories } from "./main-thread-trace.ts";
 import type { PanSlide } from "./page/pan-harness.ts";
-import { perfRoute, perfRouteLaunchOptions } from "./perf-route.ts";
+import { perfRoute, perfRouteLaunch } from "./perf-route.ts";
 
-if (perfRouteLaunchOptions) test.use({ launchOptions: perfRouteLaunchOptions });
+if (perfRouteLaunch) test.use(perfRouteLaunch);
 
 interface BudgetIds {
   readonly fittedRequests: string;
@@ -217,7 +217,7 @@ for (const slide of slides) {
       );
       if (served === null) throw new Error("The slide server is not running");
       await page.setContent("<!doctype html><html><body></body></html>");
-      await assertSwiftShader(page);
+      await assertGpuMode(page);
       const proxy = await startLatencyProxy({ target: served.origin, rttMs });
       const measureCpu = rttMs === cpuRttMs;
       const samples: Sample[] = [];

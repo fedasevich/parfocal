@@ -13,6 +13,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.src.json && tsc --noEmit -p tsconfig.worker.json && tsc --noEmit -p tsconfig.test.json && tsc --noEmit -p tsconfig.browser.json",
     "test": "node --test \"test/**/*.test.ts\"",
     "test:browser": "playwright test",
+    "test:hidden-tab-hardware": "PARFOCAL_GPU=hardware playwright test -c playwright.hardware.config.ts",
     "gpu-timing": "playwright test -c playwright.gpu.config.ts",
     "bench:j2k": "playwright test -c playwright.j2k.config.ts",
     "bench:frames": "playwright test -c playwright.frame.config.ts",

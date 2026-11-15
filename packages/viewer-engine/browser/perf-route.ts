@@ -1,4 +1,8 @@
-import { WEBGPU_SWIFTSHADER_ARGS } from "../../golden-images/src/playwright.ts";
+import {
+  HARDWARE_GPU_ARGS,
+  onHardwareGpu,
+  WEBGPU_SWIFTSHADER_ARGS,
+} from "../../golden-images/src/playwright.ts";
 import { PRIMARY_RENDERER_ROUTE, RENDERER_ROUTE_IDS, type RendererRouteId } from "../src/index.ts";
 
 function routeFromEnvironment(): RendererRouteId {
@@ -15,7 +19,10 @@ function routeFromEnvironment(): RendererRouteId {
 
 export const perfRoute: RendererRouteId = routeFromEnvironment();
 
-export const perfRouteLaunchOptions =
-  perfRoute === PRIMARY_RENDERER_ROUTE
+const eagerMemory = "--enable-blink-features=ForceEagerMeasureMemory";
+
+export const perfRouteLaunch = onHardwareGpu()
+  ? { headless: false, launchOptions: { args: [...HARDWARE_GPU_ARGS, eagerMemory] } }
+  : perfRoute === PRIMARY_RENDERER_ROUTE
     ? null
-    : { args: [...WEBGPU_SWIFTSHADER_ARGS, "--enable-blink-features=ForceEagerMeasureMemory"] };
+    : { launchOptions: { args: [...WEBGPU_SWIFTSHADER_ARGS, eagerMemory] } };

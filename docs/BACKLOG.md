@@ -1698,7 +1698,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on VIEW-037.
   Size: M.
 
-- [ ] VIEW-071 · Pick the renderer route per slide, checked on a real GPU
+- [x] VIEW-071 · Pick the renderer route per slide, checked on a real GPU
   `mountSlideViewport` always mounts Viv, so the deck.gl WebGPU route of VIEW-037 is reachable only through `PARFOCAL_RENDERER_ROUTE`. Add the route picker behind a developer setting, run the route goldens and the pan and budget specs once on the Mac's real GPU, and check translucent outlines, where the route's wrapped third ring vertex draws one edge twice.
   Done when the developer setting switches the route on an open slide, a result file records the real-GPU golden and perf numbers, and a translucent outline golden passes on both routes.
   Depends on VIEW-037.

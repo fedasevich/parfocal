@@ -10,7 +10,7 @@ import {
   splitByBufferLimit,
   WebGpuBufferLimitError,
 } from "../../src/deck-webgpu/buffer-limit.ts";
-import { isLoopPathData, withThirdClosingVertex } from "../../src/deck-webgpu/loop-data.ts";
+import { isLoopPathData, webGpuPathType } from "../../src/deck-webgpu/loop-data.ts";
 import { rgbToRgba } from "../../src/deck-webgpu/rgba.ts";
 import { availableRendererRoutes } from "../../src/index.ts";
 import { pixelRendererRoutes } from "../../src/viv/index.ts";
@@ -88,42 +88,16 @@ describe("loop outlines for the WebGPU path tesselator", () => {
     },
   };
 
-  it("repeats the third vertex after a closed ring and leaves a short path alone", () => {
-    const closed = withThirdClosingVertex(twoRings);
-    assert.deepEqual([...(closed.startIndices ?? [])], [0, 7, 9]);
-    const path = closed.attributes.getPath;
-    assert.ok(path && !(path instanceof Uint32Array));
-    assert.deepEqual([...path.value], [0, 0, 4, 0, 4, 4, 0, 4, 0, 0, 4, 0, 4, 4, 9, 9, 8, 8]);
-    const color = closed.attributes.getColor;
-    assert.ok(color && !(color instanceof Uint32Array));
-    assert.equal(color.value.length, 9 * 4);
-    assert.deepEqual([...color.value.subarray(24, 32)], [1, 1, 1, 1, 2, 2, 2, 2]);
-    assert.equal(color.normalized, true);
-    assert.equal(closed.length, 2);
-  });
-
-  it("repeats the second and third vertex after a ring that starts mid edge", () => {
-    const midEdge = {
-      length: 1,
-      startIndices: new Uint32Array([0, 6]),
-      attributes: {
-        getPath: { value: new Float32Array([2, 0, 4, 0, 4, 4, 0, 4, 0, 0, 2, 0]), size: 2 },
-      },
-    };
-    const closed = withThirdClosingVertex(midEdge);
-    assert.deepEqual([...(closed.startIndices ?? [])], [0, 8]);
-    const path = closed.attributes.getPath;
-    assert.ok(path && !(path instanceof Uint32Array));
-    assert.deepEqual([...path.value], [2, 0, 4, 0, 4, 4, 0, 4, 0, 0, 2, 0, 4, 0, 4, 4]);
-  });
-
-  it("returns the same object when no ring is closed", () => {
-    const open = {
-      length: 1,
-      startIndices: new Uint32Array([0, 2]),
-      attributes: { getPath: { value: new Float32Array([0, 0, 1, 1]), size: 2 } },
-    };
-    assert.equal(withThirdClosingVertex(open), open);
+  it("draws the builder's closed rings as open paths over the same buffer", () => {
+    assert.equal(webGpuPathType("loop", twoRings), "open");
+    assert.equal(webGpuPathType("open", twoRings), null);
+    assert.equal(
+      webGpuPathType("loop", [
+        [0, 0],
+        [1, 1],
+      ]),
+      null,
+    );
   });
 
   it("recognises binary path data only", () => {
