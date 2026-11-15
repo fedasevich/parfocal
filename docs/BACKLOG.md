@@ -1033,7 +1033,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Depends on FOUND-035.
   Size: M.
 
-- [ ] SEC-046 · Composite foreign keys to tenant tables carry the tenant
+- [x] SEC-046 · Composite foreign keys to tenant tables carry the tenant
   SEC-035 made every single-column key between workspace tables include `tenant_id`, but 44 composite keys of the form `(x_id, project_id)` or `(task_id, slide_id)` still leave it out, so a row can still name a parent pair in another workspace when a route skips the parent check. The list is in `docs/knowledge/database.md`.
   Done when the SEC-035 probe as `parfocal_app` also covers every composite key and fails each cross-workspace insert, the guard test rejects a new composite key without `tenant_id`, and the db tests pass.
   Depends on SEC-035.

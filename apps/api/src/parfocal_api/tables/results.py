@@ -74,11 +74,15 @@ result_sets = Table(
     UniqueConstraint("id", "project_id"),
     tenant_unique(),
     ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),
-    ForeignKeyConstraint(["slide_id", "project_id"], ["slides.id", "slides.project_id"]),
+    ForeignKeyConstraint(
+        ["slide_id", "project_id", "tenant_id"],
+        ["slides.id", "slides.project_id", "slides.tenant_id"],
+    ),
     tenant_foreign_key("job_id", "jobs"),
     one_of("source", ResultSource),
     one_of("status", ResultStatus),
     CheckConstraint("cell_count >= 0 AND region_count >= 0 AND zone_count >= 0", name="counts"),
+    tenant_unique("id", "project_id"),
 )
 
 result_set_classes = Table(
@@ -93,10 +97,14 @@ result_set_classes = Table(
     Column("object_count", Integer, nullable=False, server_default="0", info=OPERATIONAL),
     UniqueConstraint("result_set_id", "source_name"),
     ForeignKeyConstraint(
-        ["result_set_id", "project_id"], ["result_sets.id", "result_sets.project_id"]
+        ["result_set_id", "project_id", "tenant_id"],
+        ["result_sets.id", "result_sets.project_id", "result_sets.tenant_id"],
+        name="fk_result_set_classes_result_set_id_project_id_tenant_id",
     ),
     ForeignKeyConstraint(
-        ["class_id", "project_id"], ["project_classes.id", "project_classes.project_id"]
+        ["class_id", "project_id", "tenant_id"],
+        ["project_classes.id", "project_classes.project_id", "project_classes.tenant_id"],
+        name="fk_result_set_classes_class_id_project_id_tenant_id",
     ),
     CheckConstraint("position BETWEEN 0 AND 254", name="position"),
     CheckConstraint("object_count >= 0", name="object_count"),

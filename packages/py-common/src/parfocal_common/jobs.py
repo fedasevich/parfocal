@@ -149,6 +149,7 @@ job_steps = Table(
     tenant_foreign_key("job_id", "jobs", ondelete="CASCADE"),
     CheckConstraint("status IN ('pending', 'running', 'done', 'failed')", name="status"),
     CheckConstraint("units_total IS NULL OR units_total >= 0", name="units_total"),
+    tenant_unique("job_id", "ordinal"),
 )
 
 job_units = Table(
@@ -163,7 +164,9 @@ job_units = Table(
     Column("seq", BigInteger, Identity(always=True), nullable=False, info=OPERATIONAL),
     Column("result", JSONB(none_as_null=True), nullable=True, info=OPERATIONAL),
     ForeignKeyConstraint(
-        ["job_id", "ordinal"], ["job_steps.job_id", "job_steps.ordinal"], ondelete="CASCADE"
+        ["job_id", "ordinal", "tenant_id"],
+        ["job_steps.job_id", "job_steps.ordinal", "job_steps.tenant_id"],
+        ondelete="CASCADE",
     ),
     Index("ix_job_units_job_id_seq", "job_id", "seq"),
 )

@@ -287,7 +287,10 @@ emergency_grants = Table(
     ),
     Column("expires_at", DateTime(timezone=True), nullable=False, info=OPERATIONAL),
     ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),
-    ForeignKeyConstraint(["project_id", "privacy_mode"], ["projects.id", "projects.privacy_mode"]),
+    ForeignKeyConstraint(
+        ["project_id", "privacy_mode", "tenant_id"],
+        ["projects.id", "projects.privacy_mode", "projects.tenant_id"],
+    ),
     ForeignKeyConstraint(
         ["tenant_id", "user_id"], ["memberships.tenant_id", "memberships.user_id"]
     ),
