@@ -1728,7 +1728,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Refs [`poc/src/webgpu/*`](https://github.com/fedasevich/pathlogy-poc/tree/master/src/webgpu), docs 04, 07.
   Size: L.
 
-- [ ] VIEW-039 · Renderer head-to-head benchmark
+- [x] VIEW-039 · Renderer head-to-head benchmark
   Automated benchmark of the three routes on fixed camera paths with GPU-completion timing (fences, not `gl.finish`) and pixel assertions so empty frames cannot pass.
   Done when a manual benchmark run on the owner's Mac produces a result file with a table comparable with doc 31 ([ADR 0011](adr/0011-hosted-ci-only.md)).
   Refs doc 23.
