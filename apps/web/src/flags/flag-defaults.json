@@ -7,11 +7,13 @@
   "viewer_tools_layout": {
     "arms": ["rail", "dock"],
     "default": "rail",
-    "mode": "split"
+    "mode": "split",
+    "killed": true
   },
   "minimap_motion": {
     "arms": ["moving", "pinned"],
     "default": "moving",
-    "mode": "split"
+    "mode": "split",
+    "killed": true
   }
 }

@@ -48,10 +48,26 @@ test("a pinned minimap stays bottom right whatever is under it", () => {
   assert.equal(pinned.y, 800 - 140 - 12);
 });
 
+test("both layout experiments ship switched off until the owner starts them", () => {
+  for (const flag of layoutFlags) assert.equal(bundledFlagDefinitions[flag]?.killed, true);
+  const sent: unknown[] = [];
+  const cache = experimentCache(localFlagService(), { track: () => sent.push(1) });
+  const context = { userId: "usr_00000042x", workspaceId: "wsp_00000007x" };
+  assert.equal(cache.for(context).arm("viewer_tools_layout"), "rail");
+  assert.equal(cache.for(context).arm("minimap_motion"), "moving");
+  assert.equal(sent.length, 0);
+});
+
 test("each user is exposed once per flag with ids only", () => {
   const sent: { name: string; properties: Record<string, unknown> }[] = [];
   const sink: EventSink = { track: (name, properties) => sent.push({ name, properties }) };
-  const cache = experimentCache(localFlagService(), sink);
+  const started = Object.fromEntries(
+    Object.entries(bundledFlagDefinitions).map(([key, definition]) => [
+      key,
+      { ...definition, killed: false },
+    ]),
+  );
+  const cache = experimentCache(localFlagService(started), sink);
   const context = { userId: "usr_00000042x", workspaceId: "wsp_00000007x" };
   for (let round = 0; round < 3; round += 1) {
     for (const flag of layoutFlags) cache.for(context).arm(flag);
