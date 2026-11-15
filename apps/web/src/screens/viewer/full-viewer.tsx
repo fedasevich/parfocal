@@ -1,3 +1,4 @@
+import { plural } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import type { ReviewObject } from "@parfocal/api-client";
 import {
@@ -35,6 +36,7 @@ import {
 } from "@parfocal/ui/components/visualize";
 import { Zone } from "@parfocal/ui/components/zone";
 import { type AreaCall, countOf } from "@parfocal/ui/lib/area-call";
+import { CHANGED_ZONE_ID, CHANGED_ZONE_NAME } from "@parfocal/ui/lib/findings-layout";
 import { inspectorCounts, inspectorTabLabels } from "@parfocal/ui/lib/inspector-tabs";
 import { objectIdPath } from "@parfocal/ui/lib/object-id";
 import {
@@ -156,6 +158,7 @@ import { CalibrationBlock, TrackRecordBlock } from "./ai-record-blocks.tsx";
 import { calibrationLines, trackRecordLines } from "./ai-record-lines.ts";
 import { areaOrder, areaRoleText, areaRows } from "./area-nav.ts";
 import {
+  changedZone,
   findingsSelection,
   findingsZones,
   numberLineOf,
@@ -164,6 +167,7 @@ import {
   viewerFindingsLayout,
 } from "./findings-data.ts";
 import { layerDrawing, setColours } from "./layer-views.tsx";
+import { fixturePooledFeature } from "./learner-fixture-features.ts";
 import { confidenceTintOf, objectStyle } from "./object-draw.ts";
 import { ObjectTablePanel } from "./object-table.tsx";
 import { tableColumns, tableCsv, tableRows } from "./object-table-rows.ts";
@@ -175,8 +179,10 @@ import {
   TellMeWhenReady,
 } from "./objects-panel.tsx";
 import { SavePresetModal } from "./save-preset-modal.tsx";
+import { changedCellIds, type LearnerView, retypedCells } from "./slide-learner.ts";
 import { swipeStart } from "./swipe-split.ts";
 import { useAreaNav } from "./use-area-nav.ts";
+import { emptyLearnerView, useSlideLearner } from "./use-slide-learner.ts";
 import { viewerModelWarnings } from "./viewer-model-warnings.ts";
 import {
   isNavigatorScene,
@@ -187,7 +193,7 @@ import {
   type ViewerTab,
   viewerSetup,
 } from "./viewer-scenes.ts";
-import { nextUnsureCell, zonesOfCells } from "./zone-cells.ts";
+import { type CellZone, nextUnsureCell, zonesOfCells } from "./zone-cells.ts";
 import { useRestKey, ZoneFoot, zoneTile } from "./zone-gallery.tsx";
 
 export type ViewerSearch = CameraSearch & {
@@ -326,10 +332,12 @@ function ViewerBody({
     setup.issue === "noresults" || setup.issue === "withdrawn" ? [] : session.objects;
   const firstReadGate = useFirstReadGate(session);
   const firstReadOpen = firstReadGate === "open";
-  const objects =
+  const [learnerView, setLearnerView] = useState<LearnerView>(emptyLearnerView);
+  const typerObjects =
     paged && !firstReadOpen
       ? [...fixtureObjects.filter((item) => item.kind !== "cell"), ...paged.cells]
       : fixtureObjects;
+  const objects = retypedCells(typerObjects, learnerView.changes);
   const decisions = useDecisionSaves({ ...session, objects }, style);
   const regions = objects.filter((item) => item.kind === "region");
   const cells = objects.filter((item) => item.kind === "cell");
@@ -673,8 +681,45 @@ function ViewerBody({
     cells.map((cell) => [cell.object, answer(cell.object)?.value]),
   );
   const openCells = cells.filter((cell) => !answer(cell.object));
+  const typerCells = typerObjects.filter((item) => item.kind === "cell");
+  const learning = paged === null && !setup.issue && typerCells.length > 0;
+  const learnerLabels = new Map<string, string>();
+  for (const cell of cells) {
+    const picked = chosenType(style, cell, session.classes, answer(cell.object));
+    if (picked === undefined || picked === "notcell") continue;
+    learnerLabels.set(cell.object, picked === "keep" ? cell.class_name : picked);
+  }
+  const learner = useSlideLearner({
+    slideKey: slideId,
+    enabled: learning,
+    pooledFeatureOf: fixturePooledFeature,
+    input: {
+      cells: typerCells,
+      labels: learnerLabels,
+      decided: (object) => answer(object) !== undefined,
+    },
+    onView: setLearnerView,
+  });
+  const changedIds = new Set(changedCellIds(learnerView.changes));
+  const changedCells = cells.filter((cell) => changedIds.has(cell.object));
+  const changedCellZone: CellZone | undefined =
+    changedCells.length === 0
+      ? undefined
+      : { id: CHANGED_ZONE_ID, name: CHANGED_ZONE_NAME, cells: changedCells, total: changedCells };
+  const hadChanged = useRef(false);
+  const changedNow = changedCells.length;
+  useEffect(() => {
+    if (changedNow > 0 && !hadChanged.current) {
+      setToast({
+        id: Date.now(),
+        text: t`The typer learned from your ${learnerView.corrections} corrections and changed ${changedNow} similar cells. They are in a new zone.`,
+      });
+    }
+    hadChanged.current = changedNow > 0;
+  }, [changedNow, learnerView.corrections, t]);
   const zones = zonesOfCells(cells, paged ?? undefined);
-  const openZone = zones.find((zone) => zone.id === openZoneId);
+  const everyZone = changedCellZone ? [...zones, changedCellZone] : zones;
+  const openZone = everyZone.find((zone) => zone.id === openZoneId);
   const openZoneCells = openZone?.cells.filter((cell) => !answer(cell.object)) ?? [];
   const nextInZone = () => {
     if (openZone === undefined) return;
@@ -1052,7 +1097,7 @@ function ViewerBody({
                 unsureIds.has(cell.object),
               ),
             }}
-            selection={findingsSelection(zones, openZoneId, selected)}
+            selection={findingsSelection(everyZone, openZoneId, selected)}
             onSelect={(next) => {
               if (next.kind === "cell") {
                 if (next.zoneId !== null) setOpenZoneId(next.zoneId);
@@ -1065,6 +1110,22 @@ function ViewerBody({
               }
             }}
             zones={findingsZones(zones, decidedObject, classColor, tileOf)}
+            changed={changedZone(changedCells, decidedObject, classColor, tileOf)}
+            onUndoChanged={learner.undoAll}
+            undoLabel={t`Undo all`}
+            learner={
+              learnerView.examples > 0
+                ? {
+                    title: t`Learned on this slide`,
+                    summary: plural(learnerView.examples, {
+                      one: "# example",
+                      other: "# examples",
+                    }),
+                    forgetLabel: t`Forget`,
+                    onForget: learner.forget,
+                  }
+                : undefined
+            }
             scattered={scattered.map(tileOf)}
             cellCall={
               current?.kind === "cell"
