@@ -52,8 +52,10 @@ import {
   useSavedAnnotations,
 } from "../annotations/use-saved-annotations.ts";
 import { provideDebug } from "../debug-handle.ts";
+import { createCameraInput } from "../devices/camera-input.ts";
 import { legendDeviceOf } from "../devices/device-legend.ts";
 import { DeviceLegend } from "../devices/device-legend.tsx";
+import { bindGamepadWhenConnected, deviceIntentEvent } from "../devices/gamepad-source.ts";
 import { engineWheelMode, navigationEvent, readNavigation } from "../devices/navigation.ts";
 import { applyMainCalibration, mainCalibration } from "../devices/stage-calibration.ts";
 import { bindTrackpadListeners } from "../devices/trackpad-listeners.ts";
@@ -656,6 +658,34 @@ function OpenedSlide({
       },
     });
   }, [session, hostNode, chosenDevice, workspace]);
+
+  useEffect(() => {
+    if (session === null || typeof navigator === "undefined" || !("getGamepads" in navigator)) {
+      return;
+    }
+    const input = createCameraInput({
+      device: () => legendDeviceOf(chosenDevice),
+      context: () => (workspace === "annotate" ? "annotate" : "review"),
+      calibration: mainCalibration,
+      camera: session.engine,
+      onIntent: (intent) => {
+        window.dispatchEvent(new CustomEvent(deviceIntentEvent, { detail: intent }));
+      },
+    });
+    return bindGamepadWhenConnected(
+      input,
+      {
+        getPads: () => navigator.getGamepads(),
+        frames: {
+          request: (cb) => requestAnimationFrame(cb),
+          cancel: (id) => cancelAnimationFrame(id),
+        },
+        now: () => performance.now(),
+        focused: () => document.hasFocus() && document.visibilityState === "visible",
+      },
+      window,
+    );
+  }, [session, chosenDevice, workspace]);
 
   useEffect(() => {
     session?.engine.setSlideBrightness(brightness);

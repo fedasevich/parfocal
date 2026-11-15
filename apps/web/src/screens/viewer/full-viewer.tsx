@@ -51,6 +51,8 @@ import {
 import { useNavigate, useRouter } from "@tanstack/react-router";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { provideDebug } from "../../debug-handle.ts";
+import { deviceIntentEvent } from "../../devices/gamepad-source.ts";
+import type { Intent } from "../../devices/intents.ts";
 import { useFormat } from "../../format.ts";
 import { escLayer } from "../../keys/esc-ladder.ts";
 import { useSelectionSync } from "../../popout/popout-channel.ts";
@@ -379,6 +381,20 @@ function ViewerBody({
     },
     closePeek,
   );
+  useEffect(() => {
+    const onIntent = (event: Event) => {
+      const intent = (event as CustomEvent<Intent>).detail;
+      if (intent.kind !== "peek") return;
+      if (intent.held) {
+        setPeekHeld(true);
+        if (!peekOpen) onSearch({ peek: true });
+      } else if (peekOpen) {
+        closePeek();
+      }
+    };
+    window.addEventListener(deviceIntentEvent, onIntent);
+    return () => window.removeEventListener(deviceIntentEvent, onIntent);
+  });
   const [filter, setFilter] = useState<ListFilter>(setup.filter);
   const [cellsOpen, setCellsOpen] = useState(setup.cells);
   const [cellsRect, setCellsRect] = useState<ScreenRect | null>(null);
