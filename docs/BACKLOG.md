@@ -4473,7 +4473,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when the `e2e` job passes with no `ZITADEL_*` secret and no request to `zitadel.cloud`, and a sign-up spec creates and removes a user on the local instance.
   Size: M.
 
-- [ ] TEST-042 · Real-slide tests survive a dropped download
+- [x] TEST-042 · Real-slide tests survive a dropped download
   `packages/viewer-engine/test/pixel-source/ndpi-real.test.ts` and `reader-check.test.ts` fetch public test slides over HTTP, and on the night of 2026-11-14 three merge checks failed on `read ECONNRESET` for Hamamatsu-1.ndpi and CMU-1.ndpi, each passing on rerun. The shared fetch helper retries a reset or a dropped range read a few times with a short backoff and names the slide and range when it finally gives up.
   Done when a unit test makes the helper's first two reads reset and the third succeed, and the real-slide tests pass with that helper.
   Size: S.
