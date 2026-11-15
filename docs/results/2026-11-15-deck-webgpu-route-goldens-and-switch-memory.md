@@ -77,6 +77,16 @@ An earlier switch run grew 72.2% and kept one more `Deck` alive every second rou
 
 All of this is SwiftShader on one Mac. No real GPU was measured, so the switch times say nothing about a user's machine, and the luma.gl canvas upload path is only taken on software adapters.
 
+## Dashes in WGSL (VIEW-070, dashed AI proposals on the deck.gl WebGPU route)
+
+Measured later the same day on the same Mac and flags, with `pnpm exec playwright test --workers=1 routes-cmu1 -g ai-proposals` in `packages/golden-images`, two runs with the same numbers. The route now swaps deck.gl's `PathStyleExtension` for a subclass that injects the dash as WGSL.
+
+| Kind | Pixels differing by more than 4 | Largest channel delta | Mean error R, G, B | Reference | Test bound | Uncaptured GPU errors |
+| --- | --- | --- | --- | --- | --- | --- |
+| ai-proposals, dashed in WGSL | 0.085% | 244 | 0.145, 0.145, 0.145 | Viv golden | 0.1% | 0 |
+
+The route reports no error for this kind any more, and the 2% bound is gone from the test. In the diff image every differing pixel lies on one edge of each of the two rings, and all other edges match. A probe of deck.gl's `PathTesselator` with the builder's ring buffer shows why. On WebGL the ring is drawn as an open path of segments 0 to n, so the first edge is drawn twice, once at dash phase 0 and once at the phase of the whole ring length, and the second pass fills part of the gaps. On WebGPU, with the third closing vertex, each edge is drawn once. The remaining difference is therefore in the Viv golden, and it was left there because Viv must not change in this task.
+
 ## Follow-ups
 
-[ADR 0314](../adr/0314-deck-webgpu-route-mirrors-the-viv-tile-pipeline.md) (the deck.gl WebGPU route mirrors the Viv tile pipeline and owns its tile textures). TODO: dashed outlines on this route need either a WGSL dash in deck.gl's `PathStyleExtension` or dashes built as geometry. TODO: a run on a real GPU, headed. TODO: check translucent outlines on this route, since the third closing vertex draws one edge of each ring more than once.
+[ADR 0314](../adr/0314-deck-webgpu-route-mirrors-the-viv-tile-pipeline.md) (the deck.gl WebGPU route mirrors the Viv tile pipeline and owns its tile textures). Dashed outlines were built in VIEW-070 (section above). TODO: the shared overlay builder draws the first edge of a dashed ring twice on Viv, at two dash phases, which is visible as a denser first edge. TODO: a run on a real GPU, headed. TODO: check translucent outlines on this route, since the third closing vertex draws one edge of each ring more than once.

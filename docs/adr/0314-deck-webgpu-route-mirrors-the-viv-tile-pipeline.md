@@ -38,11 +38,11 @@ Overlays needed four more things, all inside the route so that the shared builde
 
 - The route uploads every overlay `ImageData` (rasters and the pin atlas) into its own texture. On a software adapter luma.gl 9.4.2 uploads an `ImageData` through a 2D canvas, which zeroes the colour under transparent texels and put a dark fringe around the heatmap.
 - The pin atlas keeps a mip chain, as deck.gl gives it on WebGL.
-- deck.gl's `PathStyleExtension` has no WGSL, and a dashed layer invalidates the whole frame. The route removes the extension, draws the outline solid and reports `DeckWebGpuUnsupportedOverlayError` once.
+- deck.gl's `PathStyleExtension` has no WGSL, and a dashed layer invalidates the whole frame. At first the route removed the extension and drew the outline solid. Since VIEW-070 (dashed AI proposals on the deck.gl WebGPU route) it swaps the extension for `WgslDashExtension` (`src/deck-webgpu/wgsl-dash-extension.ts`), a subclass that keeps deck.gl's attributes and dash metrics and injects the same dash maths as WGSL at text anchors in `PathLayer`'s shader, the way deck.gl's own `TripsLayer` does. An extension it cannot translate is still left out and reported as `DeckWebGpuUnsupportedOverlayError` once.
 
 - The shared builder closes a ring with two wrapped vertices. deck.gl's WebGPU `PathLayer` left a mark on every ring with that buffer, so the route copies the data of loop layers and adds a third wrapped vertex (`src/deck-webgpu/loop-data.ts`).
 
-Rasters, pins, ID labels and polygon outlines then match Viv at the Viv tolerance. Solid AI proposals differ from their golden in 0.63% of pixels, and `render/routes-cmu1.spec.ts` bounds that one kind at 2%. The route is therefore fit for comparing renderers, which is what ADR 0098 keeps it for, and not yet for reviewing dashed proposals.
+Rasters, pins, ID labels and polygon outlines then match Viv at the Viv tolerance. Solid AI proposals differed from their golden in 0.63% of pixels and were bounded at 2%. With the WGSL dash of VIEW-070 they differ in 0.085%, and `render/routes-cmu1.spec.ts` holds every overlay kind at the Viv tolerance of 0.1%. The rest is the first edge of each ring, which Viv draws twice at two dash phases and this route draws once.
 
 `switchRenderer` in the engine now treats the first replay as part of starting a route. A route that throws while it is created or while it is handed the open slide is destroyed, and the previous route is created again. Before, only a throwing factory was covered, and this route throws for a slide that is not 8-bit RGB.
 
@@ -52,4 +52,4 @@ Tests that need WebGL and WebGPU in one browser set `WEBGPU_SWIFTSHADER_ARGS` at
 
 The ADR 0098 question about Vite is answered: with one deck.gl and luma.gl install the route loads through a plain dynamic import in both harness servers, with no `optimizeDeps` exclusions.
 
-Not done here: a route picker in `mountSlideViewport`, which ADR 0302 leaves to the first alternate route, and a run on a real GPU. TODO: add both as backlog tasks, together with dashes on WebGPU.
+Not done here: a route picker in `mountSlideViewport`, which ADR 0302 leaves to the first alternate route, and a run on a real GPU. TODO: add both as backlog tasks. Dashes on WebGPU were built in VIEW-070.
