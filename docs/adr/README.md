@@ -285,3 +285,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0318](0318-aperio-coarse-levels-match-the-stored-tiles.md) | Aperio coarse levels match the stored tiles, not OpenSlide's resampled read | Accepted | 2026-11-15 |
 | [0319](0319-training-rounds-start-from-the-typer-and-roll-back-by-pointer.md) | Training rounds start from the typer and roll back by a pointer | Accepted | 2026-11-15 |
 | [0320](0320-pooled-features-of-reviewed-nuclei-are-files-per-slide.md) | Pooled features of reviewed nuclei are files per slide | Accepted | 2026-11-15 |
+| [0321](0321-the-model-registry-is-a-platform-table.md) | The model registry is a platform table that operators write and every workspace reads | Accepted | 2026-11-15 |

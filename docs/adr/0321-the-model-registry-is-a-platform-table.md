@@ -1,4 +1,4 @@
-# XXXX. The model registry is a platform table that operators write and every workspace reads
+# 0321. The model registry is a platform table that operators write and every workspace reads
 
 - Date: 2026-11-15
 - Status: Accepted
