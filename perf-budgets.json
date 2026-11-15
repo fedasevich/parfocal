@@ -666,6 +666,22 @@
       "todo": "Take the request time from a few green hosted runs and tighten the baseline to it."
     },
     {
+      "id": "api.read-p95-during-bulk-inserts-ms",
+      "measures": "p95 of annotation reads, a viewport bbox listing and one annotation by id, from six concurrent readers while two writers post eight bulk batches of 2,500 cells to the same slide",
+      "kind": "ms",
+      "unit": "ms",
+      "baseline": 254,
+      "limit": 750,
+      "headroom": 3,
+      "headroomReason": "The baseline is the median p95 of four local runs at a load average near 4 on ten cores, which spread from 191 to 356 ms because the readers, the writers and the client share one event loop. A hosted runner or a busy Mac is slower on exactly that CPU work, so three times the baseline catches a doubling without flaking.",
+      "rttMs": 0,
+      "environment": "Apple M4 with ten cores shared with other agents, Postgres 17 with PostGIS and PgBouncer from compose.yaml, the API in process through httpx2 ASGITransport, so no network RTT",
+      "check": "apps/api/tests/test_annotation_load.py",
+      "adr": "docs/adr/0003-pilot-platform-architecture.md",
+      "result": "docs/results/2026-11-15-annotation-load-test.md",
+      "todo": "The ADR 0003 target is 250 ms at p95 and this load sits on it. Lower the limit to 250 once the API keeps reads under it, see the result file."
+    },
+    {
       "id": "annotate.hit-test-1m-ms",
       "measures": "95th percentile of one hover hit test over 1,000,000 nuclei with two of eight groups hidden or locked, fastest of three passes",
       "kind": "ms",
