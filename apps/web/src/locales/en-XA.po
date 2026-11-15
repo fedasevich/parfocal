@@ -440,6 +440,12 @@ msgstr ""
 msgid "{0} · Tumor region"
 msgstr ""
 
+#. placeholder {0}: item.name
+#. placeholder {1}: item.version
+#: src/results/painted-map-layer.tsx
+msgid "{0} (v{1})"
+msgstr ""
+
 #. placeholder {0}: data.template.name
 #. placeholder {1}: data.template.version
 #. placeholder {2}: sender?.name
@@ -4726,6 +4732,10 @@ msgstr ""
 msgid "Choose a result file"
 msgstr ""
 
+#: src/results/painted-map-layer.tsx
+msgid "Choose a saved map"
+msgstr ""
+
 #: src/screens/upload/files-step.tsx
 #: src/screens/upload/live-wizard.tsx
 msgid "Choose a slide"
@@ -6056,6 +6066,10 @@ msgstr ""
 msgid "Drag to move, scroll to zoom"
 msgstr ""
 
+#: src/results/painted-map-layer.tsx
+msgid "Drag to paint. Hold Shift or Alt to erase. Press [ or ] to resize."
+msgstr ""
+
 #: ../../packages/ui/src/components/visualize.tsx
 msgid "Drag to swipe between the two sets"
 msgstr ""
@@ -6647,6 +6661,7 @@ msgstr ""
 msgid "Expires in {0} days"
 msgstr ""
 
+#: src/results/painted-map-layer.tsx
 #: src/screens/project/slides-tab.tsx
 #: src/screens/settings/shortcuts-section.tsx
 #: src/screens/sign-off/sign-off-screen.tsx
@@ -9321,6 +9336,7 @@ msgid "My work · To review"
 msgstr ""
 
 #: ../../packages/ui/src/components/new-forms.tsx
+#: src/results/painted-map-layer.tsx
 #: src/screens/admin/connect-model.tsx
 #: src/screens/admin/template-editor.tsx
 #: src/screens/admin/templates.tsx
@@ -9429,6 +9445,10 @@ msgstr ""
 
 #: src/screens/evaluation/share-links.tsx
 msgid "New link"
+msgstr ""
+
+#: src/results/painted-map-layer.tsx
+msgid "New map"
 msgstr ""
 
 #: src/screens/onboarding/sign-in-forms.tsx
@@ -10665,6 +10685,7 @@ msgstr ""
 
 #: ../../packages/ui/src/components/notifications-panel.tsx
 #: ../../packages/ui/src/components/smart-minimap.tsx
+#: src/results/painted-map-layer.tsx
 #: src/screens/admin/overview.tsx
 #: src/screens/admin/sections.tsx
 #: src/screens/developer/developer-screen.tsx
@@ -11062,6 +11083,14 @@ msgstr ""
 
 #: ../../packages/ui/src/components/report-templates.tsx
 msgid "Pages of the report"
+msgstr ""
+
+#: src/results/painted-map-layer.tsx
+msgid "Paint a map"
+msgstr ""
+
+#: src/results/painted-map-layer.tsx
+msgid "Painted map"
 msgstr ""
 
 #: src/screens/shared-report/shared-report-screen.tsx
@@ -13013,6 +13042,7 @@ msgid "Samples"
 msgstr ""
 
 #: ../../packages/ui/src/components/display-panel.tsx
+#: src/results/painted-map-layer.tsx
 #: src/screens/admin/workspace-settings.tsx
 #: src/screens/review/object-card.tsx
 #: src/screens/viewer/save-preset-modal.tsx
@@ -13029,6 +13059,10 @@ msgstr ""
 
 #: ../../packages/ui/src/components/display-panel.tsx
 msgid "Save as"
+msgstr ""
+
+#: src/results/painted-map-layer.tsx
+msgid "Save as new"
 msgstr ""
 
 #: src/screens/evaluation/arrange-editor.tsx
@@ -14591,6 +14625,10 @@ msgstr ""
 msgid "Still reading, {0} so far"
 msgstr ""
 
+#: src/results/painted-map-layer.tsx
+msgid "Stop painting"
+msgstr ""
+
 #: src/help/tour-host.tsx
 msgid "Stop tour"
 msgstr ""
@@ -14938,6 +14976,10 @@ msgstr ""
 #: src/screens/admin/sections.tsx
 #: src/screens/admin/shared-settings.tsx
 msgid "That did not save. Try again."
+msgstr ""
+
+#: src/results/painted-map-layer.tsx
+msgid "That did not work, try again"
 msgstr ""
 
 #: src/screens/admin/people.tsx
@@ -15767,6 +15809,10 @@ msgstr ""
 msgid "This link was revoked or has expired"
 msgstr ""
 
+#: src/results/painted-map-layer.tsx
+msgid "This map changed since you opened it, open it again"
+msgstr ""
+
 #: src/screens/upload/live-wizard.tsx
 msgid "This MRXS slide has no data folder"
 msgstr ""
@@ -16357,6 +16403,10 @@ msgstr ""
 msgid "Unread only"
 msgstr ""
 
+#: src/results/painted-map-layer.tsx
+msgid "Unsaved changes"
+msgstr ""
+
 #: ../../packages/ui/src/components/evaluation-report.tsx
 msgid "unsure"
 msgstr ""
@@ -16592,9 +16642,15 @@ msgstr ""
 msgid "Value"
 msgstr ""
 
+#: src/results/painted-map-layer.tsx
 #: src/screens/admin/connect-model.tsx
 #: src/screens/upload/viewer-flow.tsx
 msgid "Version"
+msgstr ""
+
+#. placeholder {0}: item.version
+#: src/results/painted-map-layer.tsx
+msgid "Version {0}"
 msgstr ""
 
 #: src/screens/clinical-report/steps.tsx

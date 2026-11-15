@@ -254,6 +254,52 @@ def test_the_scheduled_job_purges_expired_records_and_keeps_held_and_used_ones(
     assert run_retention(database, w) == 0
 
 
+def painted_map(database: str, w: Workspace, project: uuid.UUID, on: uuid.UUID) -> uuid.UUID:
+    found = one(
+        database,
+        "INSERT INTO painted_maps (tenant_id, project_id, slide_id, name, cell, tile_cells, "
+        f"painted_cells) VALUES ('{w.tenant_id}', '{project}', '{on}', 'Tumor', 64, 32, 1) "
+        "RETURNING id",
+    )
+    for version in (1, 2):
+        owner(
+            database,
+            "INSERT INTO painted_map_versions (tenant_id, painted_map_id, version, content, "
+            f"painted_cells) VALUES ('{w.tenant_id}', '{found}', {version}, '\\x50464d50', 1)",
+        )
+    return found
+
+
+def test_the_purge_removes_painted_maps_and_their_versions_with_an_expired_slide(
+    api: ApiAs, database: str
+) -> None:
+    w = team(database)
+    project = make_project(database, w.tenant_id, "de-identified")
+    held_project = make_project(database, w.tenant_id, "de-identified")
+    live = slide(database, w, project, None)
+    gone_slide = slide(database, w, project, 40)
+    held_slide = slide(database, w, held_project, 40)
+    live_map = painted_map(database, w, project, live)
+    gone_map = painted_map(database, w, project, gone_slide)
+    held_map = painted_map(database, w, held_project, held_slide)
+    hold = api(w.people["admin"]).post(
+        "/api/tenant/legal-holds", json={"project_id": str(held_project), "reason": "Court order"}
+    )
+    assert hold.status_code == 201, hold.text
+    set_policy(api, w, deleted_after_days=30)
+    assert run_retention(database, w) == 1
+    assert not exists(database, "slides", gone_slide)
+    assert not exists(database, "painted_maps", gone_map)
+    assert owner(
+        database, f"SELECT count(*) FROM painted_map_versions WHERE painted_map_id = '{gone_map}'"
+    ) == [(0,)]
+    for kept in (live_map, held_map):
+        assert exists(database, "painted_maps", kept)
+        assert owner(
+            database, f"SELECT count(*) FROM painted_map_versions WHERE painted_map_id = '{kept}'"
+        ) == [(2,)]
+
+
 def test_old_audit_entries_are_purged_and_the_chain_verifies_from_the_anchor(
     api: ApiAs, database: str
 ) -> None:

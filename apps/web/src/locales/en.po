@@ -442,6 +442,12 @@ msgstr "{0} · they do not block signing, the report lists them"
 msgid "{0} · Tumor region"
 msgstr "{0} · Tumor region"
 
+#. placeholder {0}: item.name
+#. placeholder {1}: item.version
+#: src/results/painted-map-layer.tsx
+msgid "{0} (v{1})"
+msgstr "{0} (v{1})"
+
 #. placeholder {0}: data.template.name
 #. placeholder {1}: data.template.version
 #. placeholder {2}: sender?.name
@@ -4728,6 +4734,10 @@ msgstr "Choose a new password"
 msgid "Choose a result file"
 msgstr "Choose a result file"
 
+#: src/results/painted-map-layer.tsx
+msgid "Choose a saved map"
+msgstr "Choose a saved map"
+
 #: src/screens/upload/files-step.tsx
 #: src/screens/upload/live-wizard.tsx
 msgid "Choose a slide"
@@ -6061,6 +6071,10 @@ msgstr "Drag to move the panel"
 msgid "Drag to move, scroll to zoom"
 msgstr "Drag to move, scroll to zoom"
 
+#: src/results/painted-map-layer.tsx
+msgid "Drag to paint. Hold Shift or Alt to erase. Press [ or ] to resize."
+msgstr "Drag to paint. Hold Shift or Alt to erase. Press [ or ] to resize."
+
 #: ../../packages/ui/src/components/visualize.tsx
 msgid "Drag to swipe between the two sets"
 msgstr "Drag to swipe between the two sets"
@@ -6652,6 +6666,7 @@ msgstr "Expired"
 msgid "Expires in {0} days"
 msgstr "Expires in {0} days"
 
+#: src/results/painted-map-layer.tsx
 #: src/screens/project/slides-tab.tsx
 #: src/screens/settings/shortcuts-section.tsx
 #: src/screens/sign-off/sign-off-screen.tsx
@@ -9326,6 +9341,7 @@ msgid "My work · To review"
 msgstr "My work · To review"
 
 #: ../../packages/ui/src/components/new-forms.tsx
+#: src/results/painted-map-layer.tsx
 #: src/screens/admin/connect-model.tsx
 #: src/screens/admin/template-editor.tsx
 #: src/screens/admin/templates.tsx
@@ -9435,6 +9451,10 @@ msgstr "New here?"
 #: src/screens/evaluation/share-links.tsx
 msgid "New link"
 msgstr "New link"
+
+#: src/results/painted-map-layer.tsx
+msgid "New map"
+msgstr "New map"
 
 #: src/screens/onboarding/sign-in-forms.tsx
 msgid "New password"
@@ -10670,6 +10690,7 @@ msgstr "open"
 
 #: ../../packages/ui/src/components/notifications-panel.tsx
 #: ../../packages/ui/src/components/smart-minimap.tsx
+#: src/results/painted-map-layer.tsx
 #: src/screens/admin/overview.tsx
 #: src/screens/admin/sections.tsx
 #: src/screens/developer/developer-screen.tsx
@@ -11068,6 +11089,14 @@ msgstr "Pages"
 #: ../../packages/ui/src/components/report-templates.tsx
 msgid "Pages of the report"
 msgstr "Pages of the report"
+
+#: src/results/painted-map-layer.tsx
+msgid "Paint a map"
+msgstr "Paint a map"
+
+#: src/results/painted-map-layer.tsx
+msgid "Painted map"
+msgstr "Painted map"
 
 #: src/screens/shared-report/shared-report-screen.tsx
 msgid "Pair"
@@ -13022,6 +13051,7 @@ msgid "Samples"
 msgstr "Samples"
 
 #: ../../packages/ui/src/components/display-panel.tsx
+#: src/results/painted-map-layer.tsx
 #: src/screens/admin/workspace-settings.tsx
 #: src/screens/review/object-card.tsx
 #: src/screens/viewer/save-preset-modal.tsx
@@ -13039,6 +13069,10 @@ msgstr "Save and sign in"
 #: ../../packages/ui/src/components/display-panel.tsx
 msgid "Save as"
 msgstr "Save as"
+
+#: src/results/painted-map-layer.tsx
+msgid "Save as new"
+msgstr "Save as new"
 
 #: src/screens/evaluation/arrange-editor.tsx
 msgid "Save as template"
@@ -14600,6 +14634,10 @@ msgstr "Still reading this slide, {0} regions so far"
 msgid "Still reading, {0} so far"
 msgstr "Still reading, {0} so far"
 
+#: src/results/painted-map-layer.tsx
+msgid "Stop painting"
+msgstr "Stop painting"
+
 #: src/help/tour-host.tsx
 msgid "Stop tour"
 msgstr "Stop tour"
@@ -14948,6 +14986,10 @@ msgstr "That did not go through. Try again, or skip this step and do it later."
 #: src/screens/admin/shared-settings.tsx
 msgid "That did not save. Try again."
 msgstr "That did not save. Try again."
+
+#: src/results/painted-map-layer.tsx
+msgid "That did not work, try again"
+msgstr "That did not work, try again"
 
 #: src/screens/admin/people.tsx
 #: src/screens/admin/template-offers.tsx
@@ -15776,6 +15818,10 @@ msgstr "This link was opened too often just now"
 msgid "This link was revoked or has expired"
 msgstr "This link was revoked or has expired"
 
+#: src/results/painted-map-layer.tsx
+msgid "This map changed since you opened it, open it again"
+msgstr "This map changed since you opened it, open it again"
+
 #: src/screens/upload/live-wizard.tsx
 msgid "This MRXS slide has no data folder"
 msgstr "This MRXS slide has no data folder"
@@ -16366,6 +16412,10 @@ msgstr "Unread"
 msgid "Unread only"
 msgstr "Unread only"
 
+#: src/results/painted-map-layer.tsx
+msgid "Unsaved changes"
+msgstr "Unsaved changes"
+
 #: ../../packages/ui/src/components/evaluation-report.tsx
 msgid "unsure"
 msgstr "unsure"
@@ -16601,10 +16651,16 @@ msgstr "v1 stays readable."
 msgid "Value"
 msgstr "Value"
 
+#: src/results/painted-map-layer.tsx
 #: src/screens/admin/connect-model.tsx
 #: src/screens/upload/viewer-flow.tsx
 msgid "Version"
 msgstr "Version"
+
+#. placeholder {0}: item.version
+#: src/results/painted-map-layer.tsx
+msgid "Version {0}"
+msgstr "Version {0}"
 
 #: src/screens/clinical-report/steps.tsx
 msgid "version 1"

@@ -72,6 +72,7 @@ import { registerStageEngine } from "../presence/stage-engines.ts";
 import { AddResultSet } from "../results/add-result-set.tsx";
 import type { ParsedResults, Placement } from "../results/geojson-placement.ts";
 import { HeatmapLayers, useHeatmapChoices } from "../results/heatmap-layer.tsx";
+import { PaintedMapLayer } from "../results/painted-map-layer.tsx";
 import { PreviewLayer } from "../results/preview-layer.tsx";
 import { ResultSetLayers } from "../results/result-set-layers.tsx";
 import { ViewMapLayer } from "../results/view-map-layer.tsx";
@@ -906,6 +907,9 @@ function OpenedSlide({
             />
             {workspace === "annotate" ? null : (
               <ViewMapLayer engine={session.engine} stage={hostNode} slideId={slideId} />
+            )}
+            {workspace === "annotate" ? null : (
+              <PaintedMapLayer engine={session.engine} stage={hostNode} slideId={slideId} />
             )}
             {workspace === "annotate" ? (
               <RunStreamLayer
