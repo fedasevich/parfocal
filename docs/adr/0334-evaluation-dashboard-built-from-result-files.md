@@ -1,4 +1,4 @@
-# XXXX. The evaluation dashboard is a static page built in Python from the committed result files through a series file
+# 0334. The evaluation dashboard is a static page built in Python from the committed result files through a series file
 
 - Date: 2026-11-15
 - Status: Accepted

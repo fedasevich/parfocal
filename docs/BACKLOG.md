@@ -3875,7 +3875,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Run a model on a site's local validation set and produce a report with sensitivity and specificity, which feeds AIP-005.
   Done when a test produces the report for seeded data and the announcement of a validation reaches the home feed.
 
-- [ ] MLEVAL-009 · Evaluation dashboard
+- [x] MLEVAL-009 · Evaluation dashboard
   Done when results from on-demand evaluation runs are published as a static report with trends ([ADR 0011](adr/0011-hosted-ci-only.md)).
   Size: M.
 
