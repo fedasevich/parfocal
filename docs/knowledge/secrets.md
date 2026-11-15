@@ -4,11 +4,11 @@ Where every runtime secret lives, who writes it and how to rotate it. Source: SE
 
 ## No secret in the repository
 
-`pnpm secrets` runs betterleaks over the whole git history with `.betterleaks.toml`, and the `lint` job in `ci.yml` runs it on every pull request with `fetch-depth: 0`. The config is passed by name, because betterleaks 1.10 on the Mac does not pick `.betterleaks.toml` up on its own and then reports 19 made-up test passwords. Every allowlist entry names the file and the made-up value with a reason. Never allowlist a real value. Rotate it and rewrite nothing, since pushed history stays.
+`pnpm secrets` runs betterleaks over the whole git history with `.betterleaks.toml`, and the `lint` job in `ci.yml` runs it on every pull request with `fetch-depth: 0`. The config is passed by name, because betterleaks 1.10.1 from Homebrew did not pick `.betterleaks.toml` up on its own in a worktree on 2026-11-15 and reported 19 made-up test passwords. CI pins 1.9.0, and the lefthook pre-commit hook passes the config the same way. Every allowlist entry names the file and the made-up value with a reason. Never allowlist a real value. Rotate it and rewrite nothing, since pushed history stays.
 
 ## Inventory
 
-Deployed code reads secrets only from its environment, which Modal fills from the three secrets in `parfocal_deploy.modal_app.SECRETS` and Cloudflare from Worker secrets. `workers/deploy/tests/test_secret_inventory.py` fails when a `SecretStr` setting, a bootstrap value, a Worker secret or a workflow `secrets.` reference is missing from this table, when a row has no rotation step, and when `wrangler.jsonc` or a workflow `env:` holds a literal secret. Production refuses to start on the local storage secret.
+Deployed code reads secrets only from its environment, which Modal fills from the three secrets in `parfocal_deploy.modal_app.SECRETS` and Cloudflare from Worker secrets. `workers/deploy/tests/test_secret_inventory.py` fails when a `SecretStr` setting, a bootstrap value, a Worker secret or a workflow `secrets.` reference is missing from this table, when a row has no rotation step, and when `wrangler.jsonc` or a workflow `env:` holds a literal secret. Production refuses to start on the local storage secret. The production clients for email, errors and analytics take no key yet, so add their rows when they do.
 
 | Secret | Store | Written by | Rotation |
 |---|---|---|---|
@@ -36,7 +36,7 @@ Every rotation of a production secret is asked in chat first, as [ADR 0151](../a
 
 ## Never delete `parfocal-api-keys` to rotate
 
-Bootstrap writes `parfocal-api-keys` only when it is missing, and it then generates every key in it, the master keyring included. Deleting the secret to get a new value therefore makes every encrypted field of every tenant unreadable. Change single values in the Modal dashboard instead. SEC-046 (rotation commands for the keys secret) adds a command that does it.
+Bootstrap writes `parfocal-api-keys` only when it is missing, and it then generates every key in it, the master keyring included. Deleting the secret to get a new value therefore makes every encrypted field of every tenant unreadable. Change single values in the Modal dashboard instead. TODO: editing one value of a Modal secret in the dashboard is untried. SEC-046 (rotation commands for the keys secret) adds a command that does it.
 
 ## Master keyring
 
@@ -55,4 +55,4 @@ The API signs tile and room tokens and the Worker checks them, each with a singl
 
 ## Database role password
 
-`bootstrap --reset-app-role-password` resets the `parfocal_app` password only when `parfocal-api-keys` is missing, so it cannot rotate a working deployment without the trap above. Until SEC-046 lands, set a new password with `ALTER ROLE parfocal_app PASSWORD` as the owner on the direct connection, put the new pooled `DATABASE_URL` into `parfocal-api-keys` in the dashboard and redeploy at once, because the running API loses its connections in between.
+`bootstrap --reset-app-role-password` resets the `parfocal_app` password only when `parfocal-api-keys` is missing, so it cannot rotate a working deployment without the trap above. Until SEC-046 lands, set a new password with `ALTER ROLE parfocal_app PASSWORD` as the owner on the direct connection, put the new pooled `DATABASE_URL` into `parfocal-api-keys` in the dashboard and redeploy at once, because the running API loses its connections in between. TODO: untried.

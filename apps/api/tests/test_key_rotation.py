@@ -6,6 +6,7 @@ import pytest
 from cryptography.exceptions import InvalidTag
 from db_support import APP_URL, OWNER_URL, migrated_database, query, with_database
 from test_identifiers import JANA, PETR, admit, make_tenant, master_key, read
+from test_startup import REQUIRED
 
 from parfocal_api.auth import SessionCipher
 from parfocal_api.key_rotation import (
@@ -13,6 +14,7 @@ from parfocal_api.key_rotation import (
     RetireRefusedError,
     check_retire,
     describe,
+    main,
     run,
 )
 from parfocal_common.envelope import MasterKeyring, UnknownMasterKeyError
@@ -63,6 +65,26 @@ def test_the_master_key_rotation_drill_keeps_every_tenant_readable(drill: str) -
     assert ciphertexts(drill) == stored
     with pytest.raises(UnknownMasterKeyError):
         read(drill, first, jana, keyring=before)
+
+
+@pytest.mark.db
+def test_the_rotation_command_refuses_to_retire_then_rewraps(
+    drill: str, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    old, new = master_key(), master_key()
+    tenant = make_tenant(drill)
+    admit(drill, tenant, JANA, keyring=MasterKeyring.from_setting(f"m1:{old}"))
+    for name, value in REQUIRED.items():
+        monkeypatch.setenv(name, value)
+    monkeypatch.setenv("DATABASE_URL", with_database(APP_URL, drill))
+    monkeypatch.setenv("MASTER_KEYS", f"m2:{new},m1:{old}")
+    with pytest.raises(SystemExit, match="Keep m1: 2 tenant keys are still wrapped by m1"):
+        main(["check-retire", "m1"])
+    main(["rewrap"])
+    main(["check-retire", "m1"])
+    printed = capsys.readouterr().out.splitlines()
+    assert printed[-1] == "m1 wraps nothing and can be removed from MASTER_KEYS"
+    assert "wrapped by m2: 2" in printed
 
 
 @pytest.mark.db
