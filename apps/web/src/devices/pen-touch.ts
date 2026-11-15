@@ -33,6 +33,21 @@ export function stageAction(input: StageInput): StageAction {
 export const fingerPans = (input: Pick<StageInput, "pointerType">): boolean =>
   input.pointerType === "touch";
 
+export type PointerStepType =
+  | "pointerdown"
+  | "pointermove"
+  | "pointerup"
+  | "pointercancel"
+  | "lostpointercapture";
+
+export type FingerSelectStep = "ignore" | "tap-only" | "full";
+
+export function fingerSelectStep(pointerType: string, type: PointerStepType): FingerSelectStep {
+  if (pointerType !== "touch") return "full";
+  if (type === "pointerdown" || type === "pointerup" || type === "pointercancel") return "tap-only";
+  return "ignore";
+}
+
 export const penDoubleTapMs = 350;
 export const penDoubleTapSlopPx = 24;
 

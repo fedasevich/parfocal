@@ -4,6 +4,7 @@ import {
   createPenDoubleTap,
   createToolHistory,
   fingerPans,
+  fingerSelectStep,
   isPenErase,
   stageAction,
 } from "../src/devices/pen-touch.ts";
@@ -16,6 +17,14 @@ test("a finger pans and never draws", () => {
   assert.equal(stageAction(input("touch", 2, 2)), "pan");
   assert.equal(fingerPans({ pointerType: "touch" }), true);
   assert.equal(fingerPans({ pointerType: "pen" }), false);
+});
+
+test("a finger can tap to select but never drags a shape", () => {
+  assert.equal(fingerSelectStep("touch", "pointerdown"), "tap-only");
+  assert.equal(fingerSelectStep("touch", "pointerup"), "tap-only");
+  assert.equal(fingerSelectStep("touch", "pointermove"), "ignore");
+  assert.equal(fingerSelectStep("pen", "pointermove"), "full");
+  assert.equal(fingerSelectStep("mouse", "pointerdown"), "full");
 });
 
 test("a pen draws with the active tool", () => {
