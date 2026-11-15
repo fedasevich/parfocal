@@ -530,7 +530,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Done when actionlint passes on .github/workflows/ci.yml, a docs-only push runs lint, typecheck and test and passes ci-ok with the heavy jobs skipped, a code push runs every job, and the db job time and its cause are written in the log.
   Size: M.
 
-- [ ] FOUND-026 · Web browser tests against a built app
+- [x] FOUND-026 · Web browser tests against a built app
   The apps/web Playwright suite runs on the Vite dev server, where one page load fetches about 340 modules, against 25 from a production build that loads about ten times faster. The fake API and the developer pages start only under `import.meta.env.DEV`, so a build mode for tests needs its own public flag, preview server branches for the dev-only Vite plugins and a guard that a production build has neither. Needs an ADR, because it changes how the app is built for tests.
   Done when the web suite runs against `vite build --mode e2e` and `vite preview` in CI, a guard test fails if a production build contains the fake API or a developer route, and the ADR is written.
   Depends on FOUND-025.

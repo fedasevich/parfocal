@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-15
 
+- FOUND-026 runs the web browser suite on a built app (vite build --mode e2e and vite preview) behind a PARFOCAL_PUBLIC_DEV_TOOLS flag that staging and prod builds refuse, with a bundle guard that fails if a production build holds the fake API or a developer route. A 20-file slice drops from 1578 s to 597 s and the first page load from 11052 ms to 744 ms on the Mac.
 - CI fix: the model registry writes are in the isolation suite, the jump longest-task budgets take a 52 ms hosted baseline with a 78 ms limit (ADR 0317 rule), the four-viewer memory spec keeps canvases alive until context loss, and the web shard timeouts are runner variance across seven runs, not a commit (left to FOUND-026).
 - VIEW-052 adds an opt-in real-Chrome hidden tab spec over CDP with a real tab switch and a real context loss while hidden (PARFOCAL_GPU=hardware). It could not run tonight because the Mac screen was locked, which makes Chrome report hidden from the start.
 - VIEW-071 adds the developer route picker (Viv first, falls back to Viv when the route fails), measures the deck.gl WebGPU route on the M4 (frames match Viv within 0.009%, pan and budget specs pass), and makes every outline kind match Viv at 0.000% on SwiftShader by drawing closed rings as open paths. Translucent outlines differ by 0.002% headed on the M4.
