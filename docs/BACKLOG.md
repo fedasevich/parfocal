@@ -314,7 +314,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
 
 - [x] STACK-024 · Realtime transport
   Candidates: FastAPI WebSockets with Valkey pub/sub, Centrifugo, Server-Sent Events plus POST, a managed service (Ably, Pusher, Liveblocks). Default per [ADR 0003](adr/0003-pilot-platform-architecture.md): Cloudflare Durable Objects with WebSocket Hibernation, one room per case and one per user. Durable Objects carry ephemeral events only and Postgres stays the system of record. FastAPI posts events to a room over an authenticated internal route, and clients refetch on reconnect.
-  Done when the spike shows presence and a thread update reaching two browsers under 300 ms on staging.
+  Done when the spike shows presence and a thread update reaching two browsers under 300 ms on production.
 
 - [x] STACK-025 · Object storage, CDN and signed access
   Candidates: S3, Google Cloud Storage, Azure Blob, Cloudflare R2, with CloudFront, Cloud CDN or Cloudflare in front. Default per [ADR 0003](adr/0003-pilot-platform-architecture.md): Cloudflare R2 with one bucket per environment, keys under `t/{tenant}/s/{slide}/`, and a Worker gateway under the app origin that verifies capability tokens and serves byte ranges through the R2 binding. Presigned URLs are for uploads only, because presigned GETs work only on the S3 API domain and bypass the CDN. Requirements are HTTP/2 or HTTP/3 at the edge, Range requests, signed URLs or signed cookies scoped to a tenant and slide, COOP and COEP header injection, and no SPA fallback on data paths.
@@ -580,7 +580,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Size: S.
 
 - [x] FOUND-035 · Squash the migrations into one baseline
-  There are 91 migration files, numbered up to `0110`, and no shared database yet, so replacing them with one baseline is free now and never again ([project review](results/2026-11-09-project-review.md)). Production may be reset while it holds only the owner's test data ([ADR 0293](adr/0293-production-only-until-the-first-real-user.md), production only until the first real user), so this must land before OPS-014 (bring back staging before the first real user) ends that, not before SKEL-001 (production environment exists). The baseline also freezes the built-in study templates that `0044` imports from `parfocal_api.study_templates`. Needs an ADR, because [knowledge/database.md](knowledge/database.md) says every change since `0020` is a new migration.
+  There are 91 migration files, numbered up to `0110`, and no shared database yet, so replacing them with one baseline is free now and never again ([project review](results/2026-11-09-project-review.md)). Production may be reset while it holds only the owner's test data ([ADR 0293](adr/0293-production-only-until-the-first-real-user.md), production only until the first real user), so this must land before OPS-014 (prepare production for the first real user) ends that, not before SKEL-001 (production environment exists). The baseline also freezes the built-in study templates that `0044` imports from `parfocal_api.study_templates`. Needs an ADR, because [knowledge/database.md](knowledge/database.md) says every change since `0020` is a new migration.
   Done when a test proves the baseline and the old chain give the same schema, the seed data imports no application code, the ADR is written and the db tests pass.
   Depends on FOUND-024.
   Size: M.
@@ -914,7 +914,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Refs [ADR 0088](adr/0088-rate-limits-in-postgres-and-at-the-edge.md). Per-IP limits and bot protection on login moved to SEC-027.
 
 - [ ] SEC-013 · Secrets management in all environments
-  Done when no secret exists in the repo (scanner in CI), runtime secrets come from the secret store, and rotation is documented and tested on staging.
+  Done when no secret exists in the repo (scanner in CI), runtime secrets come from the secret store, and rotation is documented and tested in a drill environment.
   Depends on STACK-037.
   Size: L.
 
@@ -3408,7 +3408,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
 
 - [x] AIP-006 · GPU worker pool
   Modal GPU functions per model family with GPU type, memory caps, concurrency and container limits, scaling to zero when idle ([ADR 0003](adr/0003-pilot-platform-architecture.md)).
-  Done when tests confirm the limits and that containers scale with queue depth in staging.
+  Done when tests confirm the limits and that containers scale with queue depth in a drill environment.
   Refs docs 17, 19.
   Size: L.
 
@@ -4223,7 +4223,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
 
 - [x] OPS-001 · Base infrastructure as code
   OpenTofu for the zone settings, the R2 buckets and the Zitadel project and login apps, one root per environment ([ADR 0287](adr/0287-one-opentofu-root-per-environment-over-a-shared-module.md), one OpenTofu root per environment). Workers, Durable Objects, the app hostnames with their certificates, Neon and Modal resources are defined in their own config ([ADR 0289](adr/0289-opentofu-owns-buckets-zone-settings-and-zitadel-only.md), what OpenTofu owns).
-  Done when `tofu plan` is clean for staging and production and a policy check passes ([ADR 0288](adr/0288-conftest-checks-the-opentofu-code-and-every-plan.md), conftest checks the code and every plan).
+  Done when `tofu plan` is clean for production and a policy check passes ([ADR 0288](adr/0288-conftest-checks-the-opentofu-code-and-every-plan.md), conftest checks the code and every plan).
   Refs [ADR 0050](adr/0050-deploy-pipeline-and-previews.md) for how this task is shaped.
   Size: L.
 
@@ -4231,13 +4231,13 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Wrangler config for the edge Worker and Pages, Modal app definitions for the API, ingest and ML functions, and the deploy scripts CI runs ([ADR 0003](adr/0003-pilot-platform-architecture.md)).
   It also owns the app hostnames as Workers Custom Domains and an idempotent script that makes sure the Neon branches exist in the projects the owner made in the Vercel dashboard, and it reads the bucket, origin and login app of an environment from `infra/tofu/tofu.sh <root> output -json` ([ADR 0289](adr/0289-opentofu-owns-buckets-zone-settings-and-zitadel-only.md), what OpenTofu owns).
   The ingest function takes its memory from `INGEST_MEMORY_MIB` in `parfocal_ingest.settings`, 2 GiB since RSET-012 (large result files in bounded memory) and [ADR 0128](adr/0128-result-files-stream-through-a-byte-scanner-into-cell-columns.md) (result files stream through a byte scanner into cell columns), and the bounded cell import benchmark is repeated on Modal once it runs there.
-  Done when CI recreates staging from git alone.
+  Done when CI recreates a drill environment from git alone.
   Refs [ADR 0050](adr/0050-deploy-pipeline-and-previews.md) for how this task is shaped.
   Size: L.
 
 - [ ] OPS-003 · Environments
   Local, a preview per pull request (Workers preview version, Modal environment, Neon branch, bucket prefix) with seeded data, and production from `main`, scaling to zero wherever the platform allows ([ADR 0003](adr/0003-pilot-platform-architecture.md)).
-  Staging from `main` with production from tags returns with OPS-014 (bring back staging before the first real user) ([ADR 0293](adr/0293-production-only-until-the-first-real-user.md), production only until the first real user).
+  There is no staging environment ([ADR 0331](adr/0331-no-staging-environment.md), no staging environment).
   Done when a pull request gets a working preview URL and closing it deletes its branch, environment and prefix.
   Refs [ADR 0050](adr/0050-deploy-pipeline-and-previews.md) for how this task is shaped.
   Size: L.
@@ -4248,7 +4248,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Size: L.
 
 - [ ] OPS-005 · Continuous deployment
-  Main to production automatically, database migration safety checks, rollback. Tagged releases to production with approval return with OPS-014 (bring back staging before the first real user) ([ADR 0293](adr/0293-production-only-until-the-first-real-user.md), production only until the first real user).
+  Main to production automatically, database migration safety checks, rollback. Tagged releases with approval come back with OPS-014 (prepare production for the first real user) ([ADR 0331](adr/0331-no-staging-environment.md), no staging environment).
   Done when a rollback drill on production succeeds.
   Refs [ADR 0050](adr/0050-deploy-pipeline-and-previews.md) for how this task is shaped.
   Size: L.
@@ -4259,29 +4259,29 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Size: L.
 
 - [ ] OPS-007 · Alerting and on-call
-  SLOs for availability, tile latency, ingest time, pre-read time. Alerts routed to on-call. A security alert fires on any audit event whose actor and target workspaces differ, as the first tabletop exercise asked ([tabletop-exercise.md](compliance/tabletop-exercise.md)). Fault-injection tests on staging switch export on through the override ([ADR 0005](adr/0005-external-sends-only-in-production.md)).
+  SLOs for availability, tile latency, ingest time, pre-read time. Alerts routed to on-call. A security alert fires on any audit event whose actor and target workspaces differ, as the first tabletop exercise asked ([tabletop-exercise.md](compliance/tabletop-exercise.md)). Fault-injection tests in a drill environment switch export on through the override ([ADR 0005](adr/0005-external-sends-only-in-production.md)).
   Done when each SLO has an alert tested by fault injection.
   Size: M.
 
 - [ ] OPS-008 · Backups and disaster recovery
   Recovery point and time objectives, cross-region backup copies within the residency rules, a documented and rehearsed restore.
-  Done when a DR drill restores staging from backups within the objective.
+  Done when a DR drill restores a drill environment from production's backups within the objective.
   Depends on SEC-014.
   Size: L.
 
 - [ ] OPS-009 · Storage lifecycle and cost controls
   Tiering for old slides, GPU scale to zero, budgets and alerts per environment.
-  Done when cost dashboards exist and lifecycle rules are tested on staging.
+  Done when cost dashboards exist and lifecycle rules are tested in a drill environment.
   Account-level caps and alerts were set on 2026-10-31 under [ADR 0115](adr/0115-production-access-and-spend-caps.md), with the table in [knowledge/platform.md](knowledge/platform.md). Budgets per environment, cost dashboards and lifecycle rules are still open.
   Size: M.
 
 - [ ] OPS-010 · Tenant provisioning automation
   Create a tenant with region, IdP organisation, buckets, keys and defaults in one command.
-  Done when a test provisions and deprovisions a tenant on staging.
+  Done when a test provisions and deprovisions a tenant in a drill environment.
   Size: L.
 
 - [ ] OPS-011 · Status page and maintenance mode
-  Done when maintenance mode shows a banner and blocks writes, tested on staging.
+  Done when maintenance mode shows a banner and blocks writes, tested in local dev.
   Size: M.
 
 - [ ] OPS-012 · Load and soak testing
@@ -4297,10 +4297,10 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   On hold since 2026-11-04. The owner parked compliance, legal, email and pilot paperwork as not worth the time yet. Resume when the owner asks or before the first tenant with real patient data.
   Size: S.
 
-- [ ] OPS-014 · Bring back staging before the first real user
-  Production is the only cloud environment while the owner is the only user ([ADR 0293](adr/0293-production-only-until-the-first-real-user.md), production only until the first real user). The trigger is firm: this task is done before the first real user's data enters production, where the first real user is the first pilot user other than the owner. No account is made for such a user until it is ticked.
-  Apply the unused `staging` root of `infra/tofu` again, make the GitHub environment `staging` with its own deploy credentials, a Neon branch, the hostname `staging.parfocal.eu` and the Modal environment, and deploy `main` to staging with tagged releases to production with approval ([ADR 0050](adr/0050-deploy-pipeline-and-previews.md), deploy pipeline and previews). Move production's slides from the shared bucket `parfocal-dev` to a bucket of its own. Take the E2E account with its shared password out of production's user directory or wall it off, and decide again whether staging gets its own Zitadel organisation. End the standing yes to reset production in `AGENTS.md`. Move the tasks whose drills destroy things back to staging: OPS-007 (alerting and on-call), OPS-008 (backups and disaster recovery), OPS-009 (storage lifecycle and cost controls), OPS-010 (tenant provisioning automation), OPS-011 (status page and maintenance mode) and SEC-013 (secrets management in all environments) already say staging.
-  Done when the real end-to-end specs pass on staging after a push to `main`, production deploys only from a tag with approval, production holds no test account and no fixture or test data, and `AGENTS.md` no longer carries the reseed yes.
+- [ ] OPS-014 · Prepare production for the first real user
+  There is no staging environment, now or later ([ADR 0331](adr/0331-no-staging-environment.md), no staging environment). The environments are local development and production. What staging was to guard is done in production itself before the first real user's data enters it, where the first real user is the first pilot user other than the owner. No account is made for such a user until this is ticked.
+  Move production's slides from the shared bucket `parfocal-dev` to `parfocal-prod`. Take the E2E account with its shared password out of production's user directory. Empty production of fixture and test data. Deploy production only from a tag with approval ([ADR 0050](adr/0050-deploy-pipeline-and-previews.md), deploy pipeline and previews). End the standing yes to reset production in `AGENTS.md`. Remove the unused `staging` OpenTofu root, asking the owner before anything in the cloud is deleted.
+  Done when production deploys only from a tag with approval, production holds no test account and no fixture or test data, its slides live in `parfocal-prod`, the `staging` root is gone and `AGENTS.md` no longer carries the reseed yes.
   Size: L.
 
 - [x] OPS-015 · Make draft calls safe in production
@@ -4372,7 +4372,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
 
 - [ ] TEST-010 · Load test tooling
   k6 or Locust scenarios for API, tiles and realtime.
-  Done when scenarios run against staging on demand.
+  Done when scenarios run against production on demand.
   Size: M.
 
 - [x] TEST-011 · Contract tests for the API client
@@ -4578,13 +4578,13 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
 
 - [ ] PILOT-003 · Operations runbooks (on hold)
   Deploy, rollback, restore, incident, GPU capacity, stuck jobs, ingest failures.
-  Done when each runbook is exercised once on staging.
+  Done when each runbook is exercised once in local dev or a drill environment.
   On hold since 2026-11-04. The owner parked compliance, legal, email and pilot paperwork as not worth the time yet. Resume when the owner asks or before the first tenant with real patient data.
   Size: L.
 
 - [ ] PILOT-004 · Pilot data onboarding
   Import the pilot's slides and their AI results into projects with the bulk import tool, with cases from file names.
-  Done when a dry run on staging imports the pilot sample.
+  Done when a dry run in a drill environment imports the pilot sample.
   Size: M.
 
 - [ ] PILOT-005 · Moderated usability study, second round

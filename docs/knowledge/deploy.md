@@ -1,6 +1,6 @@
 # Deploying
 
-OPS-002 (deploy definitions) put everything a deploy needs in git. Production is the only cloud environment (ADR 0293, production only until the first real user). Every definition still takes an environment name, so OPS-014 (bring back staging) only has to switch the second one on.
+OPS-002 (deploy definitions) put everything a deploy needs in git. Production is the only cloud environment (ADR 0293, production only until the first real user). Every definition still takes an environment name, but there is no staging environment, now or later ([ADR 0331](../adr/0331-no-staging-environment.md), no staging environment).
 
 ## The pieces
 
@@ -82,7 +82,7 @@ Nothing was deployed by OPS-002. The lead runs the first deploy with the owner, 
 
 ## The shared bucket
 
-The deployed app reads and writes the existing bucket `parfocal-dev`, the only slide store until staging returns. `slide_bucket` in `environments.py` is the single setting to change. Local runs use MinIO and the bucket `parfocal-local` by default, so they stay off the deployed objects. Two things do reach `parfocal-dev` from a Mac: checks that use the `R2_*` settings, and `wrangler dev --remote` with the top-level binding. Give such checks their own key prefix and delete what they wrote.
+The deployed app reads and writes the existing bucket `parfocal-dev`, the only slide store until OPS-014 (prepare production for the first real user) moves production to `parfocal-prod`. `slide_bucket` in `environments.py` is the single setting to change. Local runs use MinIO and the bucket `parfocal-local` by default, so they stay off the deployed objects. Two things do reach `parfocal-dev` from a Mac: checks that use the `R2_*` settings, and `wrangler dev --remote` with the top-level binding. Give such checks their own key prefix and delete what they wrote.
 
 ## Postgres version
 
