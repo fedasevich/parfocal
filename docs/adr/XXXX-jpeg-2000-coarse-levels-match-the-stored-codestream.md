@@ -1,4 +1,4 @@
-# 0317. JPEG 2000 coarse levels match the stored codestream, not OpenSlide's resampled read
+# XXXX. JPEG 2000 coarse levels match the stored codestream, not OpenSlide's resampled read
 
 - Date: 2026-11-15
 - Status: Accepted
@@ -19,11 +19,11 @@ The browser reader and the INGEST-009 (seams and correctness check) reference ha
 
 ## Decision
 
-Option 1. The [result](../results/2026-11-15-jpeg-2000-coarse-level-differences.md) shows the difference follows where OpenSlide is asked to read and not the decoder. The same codestream decode is 0 from OpenSlide at (0, 0) and 43 to 46 from it at the whole-downsample locations VIEW-011 used. The browser reader is within 3 grey levels of the codestream at every level of both slides, and its level table equals the TIFF pages.
+Option 1. The [result](../results/2026-11-15-jpeg-2000-coarse-level-differences.md) shows the difference follows where OpenSlide is asked to read and not the decoder. The same codestream decode is 0 from OpenSlide at (0, 0) and 43 to 46 from it at the whole-downsample locations VIEW-011 used, except 7 on level 1 of `JP2K-33003-2.svs`. The browser reader is within 3 grey levels of the codestream at every level of both slides, and its level table equals the TIFF pages.
 
 - The codestream is what the scanner wrote. A resampled read is a property of one reader's location arithmetic, and it is not even stable inside OpenSlide, since it changes with the location and with the 4096 px pieces a read is split into.
 - The converted store of ADR 0310 already takes these levels from the codestream. With option 1 the native browser view, the converted store and the reference are the same pixels.
-- Option 2 would blur every coarse tile by a sub-pixel shift for no gain in placement. Placing a level at its whole downsample instead of the exact one moves its far edge by at most 0.6 of that level's pixel on these slides (2041 × 0.0044 / 16 on level 2 of `JP2K-33003-2.svs`), and nothing at the origin.
+- Option 2 would blur every coarse tile by a sub-pixel shift for no gain in placement. Placing a level at its whole downsample instead of the exact one moves its far edge by under one pixel of that level on these slides, at most 15 level 0 pixels on level 2 of `JP2K-33003-2.svs` (32671 against 2041 × 16), and nothing at the origin.
 - Option 3 cannot tell the two references apart. The browser was a mean of 0.98 from the old OpenSlide window, under the 1.0 limit, and 14 at its largest.
 
 Built with it:
@@ -35,6 +35,6 @@ Built with it:
 ## Consequences
 
 - The browser keeps reading coarse JPEG 2000 levels as stored, with no change to the decoder or the level table.
-- A residual of 1 to 3 grey levels remains at every level, including level 0, because the OpenJPEG WASM build converts YCbCr with its own arithmetic and not OpenSlide's fixed point table. It is under the agreement limit and is not changed here.
+- A residual of 1 to 3 grey levels remains at every level, including level 0. It is assumed, not traced, to come from the OpenJPEG WASM build converting YCbCr with its own arithmetic instead of OpenSlide's fixed point table. It is under the agreement limit and is not changed here.
 - Aperio JPEG slides such as `CMU-1.svs` have the same fractional downsamples (4.0001 and 16.0005), so their coarse reference windows are still OpenSlide's resampled reads. They pass the mean check. TODO a follow-up task could cut them from the stored JPEG tiles the same way and bound their largest difference.
 - Window placement is unchanged. Coarse level pixel x still covers level 0 from x times the whole downsample, as before, which matches how the viewer places levels.

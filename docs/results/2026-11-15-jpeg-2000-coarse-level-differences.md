@@ -47,7 +47,7 @@ All three columns are compared with the codestream decode of step 1.
 
 ## Conclusion
 
-The cause is the reference. OpenSlide maps a level 0 location to a coarse level by dividing by the exact downsample, so at 4.0004 or 8.0018 no location away from (0, 0) lands on a whole pixel, and OpenSlide resamples the tile. The spike follows where OpenSlide was asked to read, not the decoder: the same codestream decode is 0 from OpenSlide at (0, 0) and 43 to 46 from it at the whole-downsample location VIEW-011 used. The level table is right, and the decoder is as close at levels 1 and 2 as at level 0. The remaining 1 to 3 grey levels at every level are the colour conversion inside the OpenJPEG WASM build, which is not OpenSlide's fixed point table. [ADR 0317](../adr/0317-jpeg-2000-coarse-levels-match-the-stored-codestream.md) records that the browser's coarse levels match the stored codestream and that the reference now does too.
+The cause is the reference. OpenSlide maps a level 0 location to a coarse level by dividing by the exact downsample, so at 4.0004 or 8.0018 no location away from (0, 0) lands on a whole pixel, and OpenSlide resamples the tile. The spike follows where OpenSlide was asked to read, not the decoder: the same codestream decode is 0 from OpenSlide at (0, 0) and 43 to 46 from it at the whole-downsample location VIEW-011 used, except 7 on level 1 of `JP2K-33003-2.svs`. The level table is right, and the decoder is as close at levels 1 and 2 as at level 0. The remaining 1 to 3 grey levels at every level are assumed, not traced, to come from the colour conversion inside the OpenJPEG WASM build, which is not OpenSlide's fixed point table. [ADR XXXX](../adr/XXXX-jpeg-2000-coarse-levels-match-the-stored-codestream.md) (JPEG 2000 coarse levels match the stored codestream) records that the browser's coarse levels match the stored codestream and that the reference now does too.
 
 ## Pinned by
 
@@ -56,4 +56,4 @@ The cause is the reference. OpenSlide maps a level 0 location to a coarse level 
 
 ## Limits
 
-Two slides, both compression 33003, one tile per level, one run. The colour residual of up to 3 was not traced inside the WASM build. Aperio JPEG slides have the same fractional downsamples, so their coarse INGEST-009 reference windows are still OpenSlide's resampled reads. Their mean check passes, but they were not measured here.
+Two slides, both compression 33003, one tile per level, one run. The colour residual of up to 3 was not traced inside the WASM build, so its cause is an assumption. Aperio JPEG slides have the same fractional downsamples, so their coarse INGEST-009 reference windows are still OpenSlide's resampled reads. Their mean check passes, but they were not measured here.
