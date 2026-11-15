@@ -4532,7 +4532,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when a unit test makes the helper's first two reads reset and the third succeed, and the real-slide tests pass with that helper.
   Size: S.
 
-- [ ] TEST-043 · The sidecar open check does not depend on machine load
+- [x] TEST-043 · The sidecar open check does not depend on machine load
   `packages/viewer-engine/test/pixel-source/tile-index.test.ts` asserts that opening with the sidecar takes under 1,000 ms, and on 2026-11-15 it failed on almost every merge check while several agents shared the Mac (1,035 to 11,615 ms), each time passing alone. Compare the sidecar open with the walk it replaces in the same run, or count the reads it saves, instead of a fixed wall time.
   Done when the check asserts a ratio or a read count, passes ten runs in a row under a parallel verify, and still fails when the sidecar is ignored.
   Size: S.
