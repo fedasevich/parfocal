@@ -1,4 +1,5 @@
 import type { Path64, Paths64 } from "clipper2-ts";
+import { isPenErase } from "../devices/pen-touch.ts";
 import {
   type AnnotationDocument,
   addShape,
@@ -56,8 +57,16 @@ export function stepBrushSize(size: number, direction: 1 | -1): number {
 export function brushModeOf(keys: {
   readonly shiftKey: boolean;
   readonly altKey: boolean;
+  readonly pointerType?: string;
+  readonly button?: number;
+  readonly buttons?: number;
 }): BrushMode {
-  return keys.shiftKey || keys.altKey ? "erase" : "paint";
+  const penErase = isPenErase({
+    pointerType: keys.pointerType ?? "",
+    button: keys.button ?? 0,
+    buttons: keys.buttons ?? 0,
+  });
+  return keys.shiftKey || keys.altKey || penErase ? "erase" : "paint";
 }
 
 function toPath(points: readonly Point[]): Path64 {

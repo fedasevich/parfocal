@@ -1,5 +1,6 @@
 import type { PointerInput } from "@parfocal/viewer-engine";
 import { useEffect, useMemo, useRef, useSyncExternalStore } from "react";
+import { fingerPans } from "../devices/pen-touch.ts";
 import { useEscRegistry } from "../keys/esc-owner.tsx";
 import { isTyping } from "../keys/registry.ts";
 import type { ViewerEngine } from "../viewer/viewer-engine.ts";
@@ -187,6 +188,7 @@ export function SelectLayer({
       gesturing: () => tool.state().gesture !== "idle",
     });
     const pointer = (event: PointerEvent) => {
+      if (fingerPans(event) && tool.state().gesture === "idle") return;
       if (event.type === "pointerdown" && pan.held()) return;
       if (event.type === "pointermove") {
         if (pan.steer(event)) {
