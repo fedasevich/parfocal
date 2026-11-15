@@ -60,12 +60,15 @@ const fixtureTiles: Connect.NextHandleFunction = (request, response, next) => {
   createReadStream(fixture, { start, end }).pipe(response);
 };
 
-export function fixtureTilesInDevOnly(): Plugin {
+export function fixtureTilesWithDevTools(devTools: boolean): Plugin {
   return {
     name: "parfocal-fixture-tiles",
     apply: "serve",
     configureServer(server) {
       server.middlewares.use(fixtureTiles);
+    },
+    configurePreviewServer(server) {
+      if (devTools) server.middlewares.use(fixtureTiles);
     },
   };
 }

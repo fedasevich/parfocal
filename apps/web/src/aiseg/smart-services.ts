@@ -67,7 +67,8 @@ async function loadRealServices(context: SmartServicesContext): Promise<SmartSer
 
 export const loadSmartServices: SmartServicesLoader = (context) => {
   const config = readBuildConfig();
-  if (import.meta.env.DEV && config.fakeApi !== "off") return loadFakeServices(context);
+  if (import.meta.env.PARFOCAL_PUBLIC_DEV_TOOLS === "on" && config.fakeApi !== "off")
+    return loadFakeServices(context);
   return loadRealServices(context);
 };
 

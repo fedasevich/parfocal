@@ -18,7 +18,8 @@ async function roomTicket(room: string): Promise<RoomTicket | null> {
 }
 
 export function connectWorklistLive(queryClient: QueryClient, me: string): () => void {
-  const fake = import.meta.env.DEV && readBuildConfig().fakeApi !== "off";
+  const fake =
+    import.meta.env.PARFOCAL_PUBLIC_DEV_TOOLS === "on" && readBuildConfig().fakeApi !== "off";
   const room = userRoom(me);
   const refresh = () =>
     void queryClient.invalidateQueries({ predicate: (query) => isWorklistQuery(query.queryKey) });

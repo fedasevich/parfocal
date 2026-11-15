@@ -35,14 +35,16 @@ const queryClient = createQueryClient(showErrorToast, signedOutRedirect(window))
 installNameMask(queryClient);
 watchSensitiveData(queryClient, clients.sensitive);
 
-const prototypeFrame = import.meta.env.DEV
+const devTools = import.meta.env.PARFOCAL_PUBLIC_DEV_TOOLS === "on";
+
+const prototypeFrame = devTools
   ? (await import("./flow-map/prototype-bar.tsx")).PrototypeFrame
   : undefined;
 
 const router = createAppRouter(prototypeFrame);
 viewTransitions.listen();
 
-if (import.meta.env.DEV && config.fakeApi !== "off") {
+if (devTools && config.fakeApi !== "off") {
   const { startFakeApi } = await import("./fake-api/start.tsx");
   await startFakeApi(config.fakeApi, queryClient, router);
 }
