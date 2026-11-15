@@ -3737,7 +3737,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Refs doc 25.
   Size: S.
 
-- [ ] AILEARN-002 · Browser per-slide learner
+- [x] AILEARN-002 · Browser per-slide learner
   Softmax regression on pooled embedding features plus the typer's log-probabilities, retrained in a worker in milliseconds per correction, saved with the slide's annotation document.
   Done when a test on the doc 22 protocol improves same-image typing accuracy by at least 10 points after 200 corrections.
   Refs doc 22, [`poc/src/segment/type-learner.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/segment/type-learner.ts).
