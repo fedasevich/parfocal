@@ -220,6 +220,16 @@ OPS-006 (observability stack) built `python -m parfocal_api.alert_cycle`, which 
 
 Your choice:
 
+### 114. Where the monthly restore check puts the production dump
+
+SEC-014 (backups and restore testing) added `.github/workflows/restore-check.yml`, which on the 3rd of each month dumps Neon `main` and restores it into a Postgres container on a GitHub-hosted runner, then compares every table. It has never run. Once real users exist, that dump holds their data on a GitHub runner for a few minutes, which is a data location question for the records of processing. It also tests a fresh logical dump, not Neon point-in-time recovery.
+
+- **A. Keep the GitHub runner while production holds only your test data, and before the first real user move the check to a Neon recovery branch made at a past timestamp, compared and deleted in the same run. This exercises point-in-time recovery too, and costs a few minutes of Neon compute a month (recommended).**
+- B. Keep the GitHub runner for good and list GitHub as a subprocessor for backups.
+- C. Run the check on Modal in the EU instead of GitHub.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 The temporary review checklist of 2026-11-14 is handled and deleted. What still waits is below.

@@ -7,7 +7,7 @@ import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from urllib.parse import urlsplit, urlunsplit
+from urllib.parse import parse_qsl, unquote, urlencode, urlsplit, urlunsplit
 
 import asyncpg
 
@@ -118,18 +118,41 @@ def tool(name: str) -> list[str]:
     return [*shlex.split(os.environ.get(TOOLS_PREFIX, "")), name]
 
 
-def dump(source_url: str, archive: Path, snapshot: str | None) -> None:
+def without_password(url: str) -> tuple[str, dict[str, str]]:
+    parts = urlsplit(url)
+    if parts.password is None:
+        return url, dict(os.environ)
+    host = parts.hostname or ""
+    port = f":{parts.port}" if parts.port else ""
+    user = f"{parts.username}@" if parts.username else ""
+    bare = urlunsplit(parts._replace(netloc=f"{user}{host}{port}"))
+    return bare, {**os.environ, "PGPASSWORD": unquote(parts.password)}
+
+
+def driver_url(url: str) -> str:
+    parts = urlsplit(url)
+    query = [(name, value) for name, value in parse_qsl(parts.query) if name != "channel_binding"]
+    return urlunsplit(parts._replace(query=urlencode(query)))
+
+
+def dump_command(source_url: str, snapshot: str | None) -> list[str]:
     command = [*tool("pg_dump"), "--format=custom", "--no-owner", "--no-privileges"]
     if snapshot is not None:
         command.append(f"--snapshot={snapshot}")
+    return [*command, f"--dbname={source_url}"]
+
+
+def dump(source_url: str, archive: Path, snapshot: str | None) -> None:
+    bare, env = without_password(source_url)
     with archive.open("wb") as output:
-        subprocess.run([*command, f"--dbname={source_url}"], stdout=output, check=True)
+        subprocess.run(dump_command(bare, snapshot), stdout=output, check=True, env=env)
 
 
 def restore(archive: Path, target_url: str) -> None:
+    bare, env = without_password(target_url)
     command = [*tool("pg_restore"), "--exit-on-error", "--no-owner", "--no-privileges"]
     with archive.open("rb") as archive_input:
-        subprocess.run([*command, f"--dbname={target_url}"], stdin=archive_input, check=True)
+        subprocess.run([*command, f"--dbname={bare}"], stdin=archive_input, check=True, env=env)
 
 
 def with_database(url: str, database: str) -> str:
@@ -141,7 +164,7 @@ def scratch_name() -> str:
 
 
 async def dump_and_print(source_url: str, archive: Path) -> Fingerprint:
-    connection = await asyncpg.connect(source_url)
+    connection = await asyncpg.connect(driver_url(source_url))
     try:
         async with connection.transaction(isolation="repeatable_read", readonly=True):
             snapshot = await connection.fetchval("select pg_export_snapshot()")
@@ -152,7 +175,7 @@ async def dump_and_print(source_url: str, archive: Path) -> Fingerprint:
 
 
 async def create_database(admin_url: str, name: str) -> None:
-    connection = await asyncpg.connect(admin_url)
+    connection = await asyncpg.connect(driver_url(admin_url))
     try:
         await connection.execute(f'create database "{name}"')
     finally:
@@ -160,7 +183,7 @@ async def create_database(admin_url: str, name: str) -> None:
 
 
 async def drop_database(admin_url: str, name: str) -> None:
-    connection = await asyncpg.connect(admin_url)
+    connection = await asyncpg.connect(driver_url(admin_url))
     try:
         await connection.execute(f'drop database if exists "{name}" with (force)')
     finally:
@@ -174,7 +197,7 @@ async def check(source_url: str, scratch_admin_url: str, archive: Path) -> Outco
     try:
         target = with_database(scratch_admin_url, name)
         await asyncio.to_thread(restore, archive, target)
-        connection = await asyncpg.connect(target)
+        connection = await asyncpg.connect(driver_url(target))
         try:
             restored = await fingerprint(connection)
         finally:

@@ -129,3 +129,22 @@ def test_the_scratch_database_replaces_only_the_path() -> None:
     assert with_database(url, "restore_check_1") == (
         "postgresql://owner@ep-a.neon.tech:5432/restore_check_1?sslmode=require"
     )
+
+
+def test_the_password_goes_to_the_environment_and_never_to_the_command() -> None:
+    hidden = "pw-" + "x" * 8
+    url = f"postgresql://owner:{hidden}@ep-a.neon.tech/parfocal?sslmode=require"
+
+    bare, env = restore_check.without_password(url)
+
+    assert bare == "postgresql://owner@ep-a.neon.tech/parfocal?sslmode=require"
+    assert env["PGPASSWORD"] == hidden
+    assert hidden not in " ".join(restore_check.dump_command(bare, "snap"))
+
+
+def test_the_driver_url_drops_channel_binding() -> None:
+    url = "postgresql://owner@ep-a.neon.tech/parfocal?sslmode=require&channel_binding=require"
+
+    assert restore_check.driver_url(url) == (
+        "postgresql://owner@ep-a.neon.tech/parfocal?sslmode=require"
+    )
