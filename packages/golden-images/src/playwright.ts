@@ -4,6 +4,14 @@ import { decodePng } from "#png.ts";
 
 export const SWIFTSHADER_ARGS = ["--use-angle=swiftshader", "--enable-unsafe-swiftshader"];
 
+export const WEBGPU_SWIFTSHADER_ARGS = [
+  ...SWIFTSHADER_ARGS,
+  "--enable-unsafe-webgpu",
+  "--use-webgpu-adapter=swiftshader",
+  "--use-vulkan=swiftshader",
+  "--enable-features=Vulkan",
+];
+
 export async function webglRendererName(page: Page): Promise<string> {
   return page.evaluate(() => {
     const gl = document.createElement("canvas").getContext("webgl2");

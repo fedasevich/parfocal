@@ -9,16 +9,8 @@ import {
   readPng,
   swapRedAndBlue,
 } from "../src/index.ts";
-import { captureScreenshot, SWIFTSHADER_ARGS } from "../src/playwright.ts";
+import { captureScreenshot, WEBGPU_SWIFTSHADER_ARGS } from "../src/playwright.ts";
 import { tile } from "./scenes.ts";
-
-const WEBGPU_SWIFTSHADER_ARGS = [
-  ...SWIFTSHADER_ARGS,
-  "--enable-unsafe-webgpu",
-  "--use-webgpu-adapter=swiftshader",
-  "--use-vulkan=swiftshader",
-  "--enable-features=Vulkan",
-];
 
 const goldenDirectory = fileURLToPath(new URL("../goldens", import.meta.url));
 const secureOrigin = "https://webgpu-probe.test/";
