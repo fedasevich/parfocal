@@ -50,7 +50,7 @@ Route switch memory, 15 switches with a five-switch warm-up, two runs:
 | 1 | 8.7 MB | 9.1 MB | 3.9% | 1 | 1 | 0 | 779 to 1141 ms |
 | 2 | 8.7 MB | 9.0 MB | 3.5% | 1 | 1 | 0 | 767 to 1072 ms |
 
-After dispose both runs had 0 live decks and 0 canvases. The heap was 8.5 to 9.1 MB after a switch to `deck-webgpu` and 7.9 to 8.4 MB after a switch to Viv.
+Run 2 is the committed code. Run 1 was taken just before the texture upload moved from the deprecated `data` prop of `createTexture` to `writeData`, with nothing else different. After dispose both runs had 0 live decks and 0 canvases. The heap was 8.5 to 9.1 MB after a switch to `deck-webgpu` and 7.9 to 8.4 MB after a switch to Viv.
 
 ## Interpretation
 

@@ -32,7 +32,7 @@ The route draws 8-bit RGB slides only, as [ADR 0098](0098-viv-and-deck-gl-versio
 
 ## Consequences
 
-Measured on this Mac under SwiftShader ([result](../results/2026-11-15-deck-webgpu-route-goldens-and-switch-memory.md)): the three CMU-1.svs goldens match on the route with zero uncaptured GPU errors, a switch from Viv to the route and back still matches the 10x golden, and 15 switches between the two routes grow the heap 3.5% to 3.9% with one deck and one canvas each round.
+Measured on this Mac under SwiftShader ([result](../results/2026-11-15-deck-webgpu-route-goldens-and-switch-memory.md)): the three CMU-1.svs goldens match on the route with zero uncaptured GPU errors, a switch from Viv to the route and back still matches the 10x golden, and 15 switches between the two routes grow the heap 3.5% with one deck and one canvas each round.
 
 Overlays needed three more things, all inside the route so that the shared builder and Viv do not change:
 
