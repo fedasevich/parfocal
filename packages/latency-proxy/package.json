@@ -8,7 +8,7 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.src.json && tsc --noEmit -p tsconfig.test.json",
-    "test": "node --test \"test/**/*.test.ts\"",
+    "test": "node --test --experimental-test-coverage --test-coverage-include=\"src/**\" --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=coverage.lcov \"test/**/*.test.ts\"",
     "test:browser": "playwright test",
     "measure": "node scripts/measure.ts",
     "start": "node src/cli.ts"
@@ -19,5 +19,8 @@
   "devDependencies": {
     "@parfocal/typescript-config": "workspace:*",
     "@playwright/test": "1.65.1"
+  },
+  "coverage": {
+    "lines": 40
   }
 }

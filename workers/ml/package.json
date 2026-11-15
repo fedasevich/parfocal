@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "typecheck": "uv run --package parfocal-ml basedpyright",
-    "test": "uv run --package parfocal-ml pytest tests -q",
+    "test": "uv run --package parfocal-ml pytest tests -q --cov=parfocal_ml --cov-report=lcov:coverage.lcov",
     "export:sam": "uv run --package parfocal-ml --extra export python -m parfocal_ml.sam_onnx.export",
     "smoke:fixture": "uv run --package parfocal-ml python -m parfocal_ml.sam_onnx.smoke_fixture",
     "parity:fixture": "uv run --package parfocal-ml --extra export python -m parfocal_ml.sam_onnx.parity_fixture",
@@ -15,5 +15,8 @@
   },
   "dependencies": {
     "@parfocal/py-common": "workspace:*"
+  },
+  "coverage": {
+    "lines": 30
   }
 }

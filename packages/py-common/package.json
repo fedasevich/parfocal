@@ -4,6 +4,9 @@
   "private": true,
   "scripts": {
     "typecheck": "uv run --package parfocal-common basedpyright",
-    "test": "uv run --package parfocal-common pytest tests -q"
+    "test": "uv run --package parfocal-common pytest tests -q --cov=parfocal_common --cov-report=lcov:coverage.lcov"
+  },
+  "coverage": {
+    "lines": 30
   }
 }

@@ -20,7 +20,7 @@
     },
     "test": {
       "dependsOn": ["topo"],
-      "outputs": [],
+      "outputs": ["coverage.lcov"],
       "env": ["PARFOCAL_REQUIRE_FIXTURES"],
       "passThroughEnv": ["PARFOCAL_FIXTURES_DIR", "XDG_CACHE_HOME"]
     },

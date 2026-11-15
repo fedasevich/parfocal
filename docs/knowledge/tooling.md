@@ -14,6 +14,10 @@ Turborepo hashes every file in a package that git does not ignore. `__pycache__/
 
 TypeScript packages test with `node --test "test/**/*.test.ts"`, kept by [ADR 0146](../adr/0146-frontend-testing-stack.md) (frontend testing stack). Component tests are Storybook stories driven by Playwright, not a simulated DOM. Node 26 strips types itself, so `tsconfig.base.json` sets `erasableSyntaxOnly` and `allowImportingTsExtensions`, and imports name the `.ts` file. Enums, namespaces and parameter properties are not allowed under this setting.
 
+## Unit test coverage gate
+
+Every package `test` script writes `coverage.lcov` in its folder (TEST-001, unit test setup). TypeScript uses Node's built-in `--experimental-test-coverage` limited to `src/**`, which counts only the files a test loads. Python uses `pytest-cov` with `--cov=<module>`, which also counts modules no test imports. Each `package.json` holds its minimum as `"coverage": { "lines": N }`, and `node scripts/coverage-gate.ts` in the `test` job of the `ci` workflow fails when a package is under it and writes the table to the job summary. Set a minimum a few points under the measured number. Locally, tests that need missing fixtures skip, so local numbers can be lower than CI's. Running one test file with `node --test test/x.test.ts` collects no coverage.
+
 ## Biome config migrations
 
 Biome 2.5 deprecated `"recommended": true` under `linter.rules` in favour of `"preset": "recommended"`. Run `pnpm biome migrate --write` after upgrading Biome and check that `pnpm check` prints no info diagnostics.

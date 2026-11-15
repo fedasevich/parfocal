@@ -134,6 +134,18 @@ jobs:
       - run: pnpm turbo run test --cache-dir=.turbo/cache
         env:
           PARFOCAL_REQUIRE_FIXTURES: small
+      - name: Check unit test line coverage against each package minimum
+        run: node scripts/coverage-gate.ts "$GITHUB_STEP_SUMMARY"
+      - if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: unit-coverage
+          path: |
+            apps/*/coverage.lcov
+            packages/*/coverage.lcov
+            workers/*/coverage.lcov
+          retention-days: 14
+          if-no-files-found: ignore
       - name: Check the colour tokens against the accessibility and class colour limits
         run: pnpm --filter @parfocal/tokens colour-check
       - name: Check the generated API client is current
