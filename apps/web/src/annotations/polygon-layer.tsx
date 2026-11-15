@@ -1,4 +1,5 @@
 import { type RefObject, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { fingerPans } from "../devices/pen-touch.ts";
 import { useEscRegistry } from "../keys/esc-owner.tsx";
 import { isTyping } from "../keys/registry.ts";
 import type { ViewerEngine } from "../viewer/viewer-engine.ts";
@@ -120,7 +121,7 @@ export function PolygonLayer({
     };
 
     const down = (event: PointerEvent) => {
-      if (event.button !== 0 || pan.held()) return;
+      if (fingerPans(event) || event.button !== 0 || pan.held()) return;
       event.stopImmediatePropagation();
       event.preventDefault();
       interruptMotion(latest.current.engine);

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { fingerPans } from "../devices/pen-touch.ts";
 import { useEscRegistry } from "../keys/esc-owner.tsx";
 import type { ViewerEngine } from "../viewer/viewer-engine.ts";
 import { screenScale, screenToSlide, slideToScreen } from "../viewer/viewer-engine.ts";
@@ -45,7 +46,7 @@ export function DragLayer({ engine, stage, kind, active, onClose }: DragLayerPro
       gesturing: () => current !== null,
     });
     const down = (event: PointerEvent) => {
-      if (event.button !== 0 || current !== null || pan.held()) return;
+      if (fingerPans(event) || event.button !== 0 || current !== null || pan.held()) return;
       event.stopImmediatePropagation();
       event.preventDefault();
       interruptMotion(latest.current.engine);

@@ -3,8 +3,7 @@ from functools import partial
 from typing import Any
 
 import pytest
-from alembic import command
-from db_support import OWNER_URL, ApiAs, alembic_config, fresh_database, query, with_database
+from db_support import ApiAs
 from test_review_tasks import Study, study
 from test_review_tasks import draft as task_draft
 from workspace_support import make_workspace, owner, person
@@ -396,29 +395,6 @@ def test_a_task_refuses_unknown_foreign_and_retired_templates(api: ApiAs, databa
     retired = researcher().post(s.tasks, json=task_draft(s, study_template_id=mine))
     assert (retired.status_code, retired.json()["code"]) == (409, "study-template-retired")
     assert researcher().get(s.tasks).json() == []
-
-
-def test_the_migration_seeds_the_built_ins_into_existing_workspaces() -> None:
-    with fresh_database() as name:
-        url = with_database(OWNER_URL, name)
-        config = alembic_config(url)
-        command.upgrade(config, "0044-1")
-        query(url, "INSERT INTO organisations (slug, name) VALUES ('lab', 'Lab')")
-        query(
-            url,
-            "INSERT INTO tenants (organisation_id, slug, name, kind, region, plan) "
-            "SELECT id, 'lab', 'Lab', 'research', 'eu', 'pilot' FROM organisations",
-        )
-        command.upgrade(config, "0044")
-        rows = query(
-            url,
-            "SELECT t.built_in, v.name, v.version FROM study_templates t "
-            "JOIN study_template_versions v ON v.template_id = t.id ORDER BY t.built_in",
-        )
-        assert {row[0]: row[1] for row in rows} == BUILT_IN_NAMES
-        assert {row[2] for row in rows} == {1}
-        command.downgrade(config, "0044-1")
-        assert query(url, "SELECT to_regclass('study_templates')") == [(None,)]
 
 
 def test_a_template_presets_the_decision_style_and_a_task_may_override_it(

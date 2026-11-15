@@ -579,7 +579,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Done when a test shows `check_adrs.py` failing on a duplicate number, every record has its own number and the check passes.
   Size: S.
 
-- [ ] FOUND-035 · Squash the migrations into one baseline
+- [x] FOUND-035 · Squash the migrations into one baseline
   There are 91 migration files, numbered up to `0110`, and no shared database yet, so replacing them with one baseline is free now and never again ([project review](results/2026-11-09-project-review.md)). Production may be reset while it holds only the owner's test data ([ADR 0293](adr/0293-production-only-until-the-first-real-user.md), production only until the first real user), so this must land before OPS-014 (bring back staging before the first real user) ends that, not before SKEL-001 (production environment exists). The baseline also freezes the built-in study templates that `0044` imports from `parfocal_api.study_templates`. Needs an ADR, because [knowledge/database.md](knowledge/database.md) says every change since `0020` is a new migration.
   Done when a test proves the baseline and the old chain give the same schema, the seed data imports no application code, the ADR is written and the db tests pass.
   Depends on FOUND-024.
@@ -2411,7 +2411,7 @@ The case view becomes the slide view ([ADR 0053](adr/0053-ai-results-review-dire
   Done when component tests cover each field and missing data.
   Size: S.
 
-- [ ] CASE-012 · Idea: Case state transitions
+- [ ] CASE-012 · Idea: Case state transitions (dropped)
   Idea since [ADR 0053](adr/0053-ai-results-review-direction.md). Not planned. Review tasks carry the slide pipeline (TASK-002), and ADAPT-007 reverts the case state machine.
   Scanned, AI reading, to review, waiting on others, draft report, signed, amended.
   Done when unit tests cover the state machine and every transition is audited.
@@ -4036,12 +4036,12 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Depends on DEV-002.
   Size: S.
 
-- [ ] DEV-003 · Gamepad support
+- [x] DEV-003 · Gamepad support
   Left stick pans with speed by deflection, triggers zoom, shoulder buttons step presets, A keep, B next, X not a cell, D-pad set type, Start next area, hold Select for peek. Dead zones and per-device speed.
   Done when unit tests with a simulated gamepad cover each mapping.
   Size: M.
 
-- [ ] DEV-004 · SpaceMouse over WebHID
+- [x] DEV-004 · SpaceMouse over WebHID
   Tilt pans, push and pull zoom, side buttons step presets or next cell and keep, full pull for peek, rotation off by default, permission prompt flow.
   Done when tests with recorded HID reports cover each mapping.
   Size: M.

@@ -65,7 +65,7 @@ export type RawInput =
   | PinchRaw
   | WheelEventRaw
   | AxesRaw
-  | { kind: "button"; name: string }
+  | { kind: "button"; name: string; down?: boolean }
   | { kind: "gesture"; name: string };
 
 export type MapOptions = {
@@ -259,8 +259,16 @@ export function mapInput(
     return axesIntents(raw, calibration, device === "spacemouse" && context === "read");
   }
   if (raw.kind === "button") {
+    if (device === "spacemouse" && raw.name === "pull") {
+      return context === "read" && raw.down === false ? [{ kind: "peek", held: false }] : none;
+    }
     if (device === "spacemouse") return lookup(spaceMouseButtons, raw.name, context);
-    if (device === "gamepad") return lookup(gamepadButtons, raw.name, context);
+    if (device === "gamepad") {
+      if (raw.name === "select") {
+        return [{ kind: "peek", held: raw.down ?? true }];
+      }
+      return raw.down === false ? none : lookup(gamepadButtons, raw.name, context);
+    }
     return none;
   }
   if (raw.kind === "gesture") {

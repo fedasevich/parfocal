@@ -75,6 +75,14 @@ describe("brush size and modifiers", () => {
     assert.equal(brushModeOf({ shiftKey: false, altKey: false }), "paint");
     assert.equal(brushModeOf({ shiftKey: true, altKey: false }), "erase");
     assert.equal(brushModeOf({ shiftKey: false, altKey: true }), "erase");
+    assert.equal(
+      brushModeOf({ shiftKey: false, altKey: false, pointerType: "pen", button: 2, buttons: 2 }),
+      "erase",
+    );
+    assert.equal(
+      brushModeOf({ shiftKey: false, altKey: false, pointerType: "pen", button: 0, buttons: 1 }),
+      "paint",
+    );
   });
 });
 

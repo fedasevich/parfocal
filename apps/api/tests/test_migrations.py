@@ -1,3 +1,4 @@
+import ast
 import asyncio
 import json
 import os
@@ -8,12 +9,12 @@ import pytest
 from alembic import command
 from alembic.autogenerate import compare_metadata
 from alembic.migration import MigrationContext
-from db_support import OWNER_URL, alembic_config, fresh_database, query, with_database
+from db_support import ALEMBIC_INI, OWNER_URL, alembic_config, fresh_database, query, with_database
+from schema_fingerprint import schema_of
 from sqlalchemy import Connection
 from sqlalchemy.ext.asyncio import create_async_engine
 
 from parfocal_api import tables
-from parfocal_api.legacy_names import OLD_REVIEW_TABLE
 from parfocal_common.db import async_database_url, metadata
 from parfocal_common.schema_sql import (
     POLICIES,
@@ -62,134 +63,45 @@ def test_migrations_upgrade_downgrade_and_upgrade_again(empty_database: str) -> 
     assert installed(empty_database) == everything
 
 
-def seed_admins(url: str) -> None:
-    query(url, "INSERT INTO organisations (slug, name) VALUES ('lab', 'Lab')")
-    query(
-        url,
-        "INSERT INTO tenants (organisation_id, slug, name, kind, region, plan) "
-        "SELECT id, 'lab', 'Lab', 'research', 'eu', 'pilot' FROM organisations",
-    )
-    for subject in ("admin", "reviewer"):
-        query(
-            url,
-            "INSERT INTO users (subject, display_name, initials, avatar_colour) "
-            f"VALUES ('{subject}', '{subject}', 'AD', 1)",
-        )
-        query(
-            url,
-            "INSERT INTO memberships (tenant_id, user_id, role) "
-            f"SELECT tenants.id, users.id, '{subject}' FROM tenants, users "
-            f"WHERE users.subject = '{subject}'",
-        )
-        query(
-            url,
-            "INSERT INTO invitations (tenant_id, email, role, token_hash, expires_at) "
-            f"SELECT id, '{subject}@example.test', '{subject}', '{subject}'::bytea, now() "
-            "FROM tenants",
-        )
+BASELINE = "0115"
+MIGRATIONS = ALEMBIC_INI.parent / "migrations"
+OLD_CHAIN_SCHEMA = Path(__file__).parent / "fixtures" / "schema_of_the_old_chain.json"
 
 
-def seats(url: str, table: str) -> list[tuple[object, ...]]:
-    return query(url, f"SELECT role, admin_rights FROM {table} ORDER BY role")
+def test_the_baseline_gives_the_schema_of_the_old_chain(empty_database: str) -> None:
+    command.upgrade(alembic_config(empty_database), BASELINE)
+    assert schema_of(empty_database) == json.loads(OLD_CHAIN_SCHEMA.read_text())
 
 
-def test_admin_memberships_and_invitations_become_researchers_with_admin_rights(
-    empty_database: str,
-) -> None:
-    config = alembic_config(empty_database)
-    command.upgrade(config, "0038")
-    seed_admins(empty_database)
-
-    command.upgrade(config, "0039")
-    for table in ("memberships", "invitations"):
-        assert seats(empty_database, table) == [("researcher", True), ("reviewer", False)]
-
-    command.downgrade(config, "0038")
-    for table in ("memberships", "invitations"):
-        roles = query(empty_database, f"SELECT role FROM {table} ORDER BY role")
-        assert roles == [("admin",), ("reviewer",)]
-
-
-CONTEXT_SEED = (
-    "INSERT INTO organisations (slug, name) VALUES ('lab', 'Lab')",
-    "INSERT INTO tenants (organisation_id, slug, name, kind, region, plan) "
-    "SELECT id, 'lab', 'Lab', 'research', 'eu', 'pilot' FROM organisations",
-    "INSERT INTO users (subject, display_name, initials, avatar_colour) "
-    "VALUES ('ana', 'ana', 'AN', 1)",
-    "INSERT INTO memberships (tenant_id, user_id, role) "
-    "SELECT tenants.id, users.id, 'researcher' FROM tenants, users",
-    "INSERT INTO projects (tenant_id, number, name, privacy_mode) "
-    "SELECT id, 1, 'Nodes', 'de-identified' FROM tenants",
-    "INSERT INTO cases (tenant_id, project_id, label, source) "
-    "SELECT tenant_id, id, 'S26-1', 'manual' FROM projects",
-    "INSERT INTO slides (tenant_id, project_id, case_id, label) "
-    "SELECT tenant_id, project_id, id, 'A1' FROM cases",
-    "INSERT INTO jobs (tenant_id, project_id, kind) "
-    "SELECT tenant_id, id, 'model-run' FROM projects",
+@pytest.mark.parametrize(
+    "changed",
+    [
+        "ALTER TABLE cases DROP CONSTRAINT ck_cases_source",
+        "ALTER TABLE cases ALTER COLUMN label DROP NOT NULL",
+        "REVOKE DELETE ON cases FROM parfocal_app",
+        "UPDATE registered_models SET status = 'retired'",
+    ],
 )
+def test_a_changed_schema_differs_from_the_old_chain(empty_database: str, changed: str) -> None:
+    command.upgrade(alembic_config(empty_database), BASELINE)
+    query(empty_database, changed)
+    assert schema_of(empty_database) != json.loads(OLD_CHAIN_SCHEMA.read_text())
 
 
-def seed_notification(url: str, kind: str, target_type: str, target: str, payload: str) -> None:
-    query(
-        url,
-        "INSERT INTO notifications (tenant_id, user_id, kind, target_type, target_id, payload, "
-        f"in_app, realtime, email_status) SELECT tenant_id, user_id, '{kind}', '{target_type}', "
-        f"({target}), '{payload}'::jsonb, true, true, 'none' FROM memberships",
-    )
+def imported_modules(path: Path) -> set[str]:
+    modules: set[str] = set()
+    for node in ast.walk(ast.parse(path.read_text())):
+        if isinstance(node, ast.Import):
+            modules.update(alias.name for alias in node.names)
+        if isinstance(node, ast.ImportFrom) and node.module:
+            modules.add(node.module)
+    return modules
 
 
-def test_existing_notifications_get_their_project_task_and_case(empty_database: str) -> None:
-    config = alembic_config(empty_database)
-    command.upgrade(config, "0041-1")
-    for statement in CONTEXT_SEED:
-        query(empty_database, statement)
-    task = "11111111-2222-3333-4444-555555555555"
-    seed_notification(
-        empty_database,
-        "result-set-added",
-        "slide",
-        "SELECT id FROM slides",
-        f'{{"task_id": "{task}", "object_id": "T1"}}',
-    )
-    seed_notification(empty_database, "model-run-paused", "job", "SELECT id FROM jobs", "{}")
-    seed_notification(
-        empty_database, "emergency-access", "project", "SELECT id FROM projects", "{}"
-    )
-    seed_notification(empty_database, "mention", "thread", "SELECT gen_random_uuid()", "{}")
-
-    command.upgrade(config, "0041")
-    rows = query(
-        empty_database,
-        "SELECT n.kind, n.project_id = p.id, n.task_id::text, n.case_id = c.id "
-        "FROM notifications n, projects p, cases c ORDER BY n.kind",
-    )
-    assert rows == [
-        ("emergency-access", True, None, None),
-        ("mention", None, None, None),
-        ("model-run-paused", True, None, None),
-        ("result-set-added", True, task, True),
-    ]
-    command.downgrade(config, "0041-1")
-
-
-def test_existing_notifications_are_not_muted(empty_database: str) -> None:
-    config = alembic_config(empty_database)
-    command.upgrade(config, "0043-1")
-    for statement in CONTEXT_SEED:
-        query(empty_database, statement)
-    seed_notification(empty_database, "model-run-paused", "job", "SELECT id FROM jobs", "{}")
-
-    command.upgrade(config, "0043")
-    assert query(empty_database, "SELECT kind, muted FROM notifications") == [
-        ("model-run-paused", False)
-    ]
-    command.downgrade(config, "0043-1")
-    columns = query(
-        empty_database,
-        "SELECT column_name FROM information_schema.columns "
-        "WHERE table_name = 'notifications' AND column_name = 'muted'",
-    )
-    assert columns == []
+def test_the_baseline_imports_no_application_code() -> None:
+    baseline = next((MIGRATIONS / "versions").glob(f"{BASELINE}_*.py"))
+    assert not {module for module in imported_modules(baseline) if module.startswith("parfocal")}
+    assert "parfocal_api" not in (MIGRATIONS / "baseline.sql").read_text()
 
 
 def test_every_tenant_table_is_isolated_at_head(empty_database: str) -> None:
@@ -267,139 +179,3 @@ async def test_models_match_the_migrations(empty_database: str) -> None:
             assert await connection.run_sync(differences) == []
     finally:
         await engine.dispose()
-
-
-def seed_decision(url: str, kind: str, number: int, value: str, reason: str) -> None:
-    query(
-        url,
-        f"INSERT INTO {OLD_REVIEW_TABLE} (tenant_id, project_id, task_id, slide_id, user_id, kind, "
-        f"number, value, reason) SELECT p.tenant_id, p.id, gen_random_uuid(), s.id, u.id, "
-        f"'{kind}', {number}, '{value}', {reason} FROM projects p, slides s, users u",
-    )
-
-
-def test_each_old_decision_reason_becomes_a_set_of_one(empty_database: str) -> None:
-    config = alembic_config(empty_database)
-    command.upgrade(config, "0049")
-    for statement in CONTEXT_SEED:
-        query(empty_database, statement)
-    query(empty_database, f"ALTER TABLE {OLD_REVIEW_TABLE} DISABLE TRIGGER ALL")
-    seed_decision(empty_database, "region", 1, "disagree", "'boundary_off'")
-    seed_decision(empty_database, "region", 2, "agree", "NULL")
-    seed_decision(empty_database, "cell", 1, "unsure", "NULL")
-    query(empty_database, f"ALTER TABLE {OLD_REVIEW_TABLE} ENABLE TRIGGER ALL")
-
-    command.upgrade(config, "0050")
-    listed = f"SELECT kind, number, value, reasons FROM {OLD_REVIEW_TABLE} ORDER BY kind, number"
-    assert query(empty_database, listed) == [
-        ("cell", 1, "unsure", []),
-        ("region", 1, "disagree", ["boundary_off"]),
-        ("region", 2, "agree", []),
-    ]
-    query(
-        empty_database,
-        f"UPDATE {OLD_REVIEW_TABLE} SET reasons = '{{two_regions,boundary_off}}' WHERE number = 1 "
-        "AND kind = 'region'",
-    )
-    command.downgrade(config, "0049")
-    assert query(
-        empty_database, f"SELECT reason FROM {OLD_REVIEW_TABLE} ORDER BY kind, number"
-    ) == [
-        (None,),
-        ("two_regions",),
-        (None,),
-    ]
-
-
-OLD_NAMES = """
-SELECT conname FROM pg_constraint WHERE conname LIKE :pattern
-UNION ALL SELECT indexname FROM pg_indexes WHERE indexname LIKE :pattern
-UNION ALL SELECT tgname FROM pg_trigger WHERE tgname LIKE :pattern
-UNION ALL SELECT tablename FROM pg_tables WHERE tablename LIKE :pattern
-"""
-
-
-def names_like(url: str, pattern: str) -> list[str]:
-    sql = OLD_NAMES.replace(":pattern", f"'{pattern}'")
-    return sorted(str(row[0]) for row in query(url, sql))
-
-
-def test_review_decisions_rename_keeps_rows_and_renames_every_name(empty_database: str) -> None:
-    config = alembic_config(empty_database)
-    command.upgrade(config, "0110")
-    for statement in CONTEXT_SEED:
-        query(empty_database, statement)
-    query(empty_database, f"ALTER TABLE {OLD_REVIEW_TABLE} DISABLE TRIGGER ALL")
-    query(
-        empty_database,
-        f"INSERT INTO {OLD_REVIEW_TABLE} (tenant_id, project_id, task_id, slide_id, user_id, kind, "
-        "number, value, style, answer) SELECT p.tenant_id, p.id, gen_random_uuid(), s.id, u.id, "
-        "'region', 1, 'agree', 'agree', 'agree' FROM projects p, slides s, users u",
-    )
-    query(empty_database, f"ALTER TABLE {OLD_REVIEW_TABLE} ENABLE TRIGGER ALL")
-    before = names_like(empty_database, f"%{OLD_REVIEW_TABLE}%")
-
-    command.upgrade(config, "0111")
-    assert names_like(empty_database, f"%{OLD_REVIEW_TABLE}%") == []
-    after = names_like(empty_database, "%review_decisions%")
-    assert len(after) == len(before)
-    assert query(empty_database, "SELECT kind, number, value FROM review_decisions") == [
-        ("region", 1, "agree")
-    ]
-
-    command.downgrade(config, "0110")
-    assert names_like(empty_database, f"%{OLD_REVIEW_TABLE}%") == before
-    assert names_like(empty_database, "%review_decisions%") == []
-
-
-def test_old_queue_choices_read_as_agree_and_disagree(empty_database: str) -> None:
-    config = alembic_config(empty_database)
-    command.upgrade(config, "0079")
-    for statement in CONTEXT_SEED:
-        query(empty_database, statement)
-    query(empty_database, "ALTER TABLE disagreement_decisions DISABLE TRIGGER ALL")
-    for number, choice in ((1, "keep-ai"), (2, "go-with-reviewers")):
-        query(
-            empty_database,
-            "INSERT INTO disagreement_decisions (tenant_id, project_id, task_id, slide_id, kind, "
-            "number, decision) SELECT p.tenant_id, p.id, gen_random_uuid(), s.id, 'region', "
-            f"{number}, '{choice}' FROM projects p, slides s",
-        )
-    query(empty_database, "ALTER TABLE disagreement_decisions ENABLE TRIGGER ALL")
-
-    command.upgrade(config, "0080")
-    listed = "SELECT number, decision, value, left_open FROM disagreement_decisions ORDER BY number"
-    assert query(empty_database, listed) == [
-        (1, "keep-ai", "agree", False),
-        (2, "go-with-reviewers", "disagree", False),
-    ]
-    command.downgrade(config, "0079")
-    decisions = "SELECT decision FROM disagreement_decisions ORDER BY number"
-    assert query(empty_database, decisions) == [("keep-ai",), ("go-with-reviewers",)]
-
-
-def test_old_tiffslide_slides_read_back_as_tifffile(empty_database: str) -> None:
-    config = alembic_config(empty_database)
-    command.upgrade(config, "0082")
-    for statement in CONTEXT_SEED:
-        query(empty_database, statement)
-    query(
-        empty_database,
-        "INSERT INTO slides (tenant_id, project_id, case_id, label, reader) "
-        "SELECT c.tenant_id, c.project_id, c.id, r.label, r.reader FROM cases c, "
-        "(VALUES ('A2', 'tiffslide'), ('A3', 'openslide')) AS r(label, reader)",
-    )
-
-    command.upgrade(config, "0083")
-    readers = "SELECT label, reader FROM slides ORDER BY label"
-    assert query(empty_database, readers) == [
-        ("A1", None),
-        ("A2", "tifffile"),
-        ("A3", "openslide"),
-    ]
-    command.downgrade(config, "0082")
-    assert query(empty_database, readers) == [
-        ("A1", None),
-        ("A2", "tiffslide"),
-        ("A3", "openslide"),
-    ]

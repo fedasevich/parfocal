@@ -7429,6 +7429,10 @@ msgstr ""
 msgid "Help"
 msgstr ""
 
+#: src/shell/account-menu.tsx
+msgid "Help and tour"
+msgstr ""
+
 #: src/screens/onboarding/setup-screen.tsx
 msgid "Hematopathology"
 msgstr ""
@@ -8206,6 +8210,7 @@ msgstr ""
 msgid "Keyboard"
 msgstr ""
 
+#: src/shell/account-menu.tsx
 #: src/shell/palette-labels.tsx
 msgid "Keyboard shortcuts"
 msgstr ""
@@ -8672,6 +8677,10 @@ msgstr ""
 msgid "Lock for every reviewer"
 msgstr ""
 
+#: src/shell/account-menu.tsx
+msgid "Lock the screen"
+msgstr ""
+
 #: src/screens/admin/workspace-settings.tsx
 msgid "Lock times"
 msgstr ""
@@ -8723,6 +8732,10 @@ msgstr ""
 
 #: src/screens/admin/workspace-settings.tsx
 msgid "Locked keeps the lab's choice for everyone."
+msgstr ""
+
+#: src/shell/account-menu.tsx
+msgid "Locks after a quiet spell for now"
 msgstr ""
 
 #: ../../packages/ui/src/components/account-menu.tsx
@@ -11693,6 +11706,10 @@ msgstr ""
 msgid "Problems also show in notifications"
 msgstr ""
 
+#: src/shell/account-menu.tsx
+msgid "Profile and signature"
+msgstr ""
+
 #: ../../packages/ui/src/components/review-top-bar.tsx
 msgid "Progress on this slide and in the whole task"
 msgstr ""
@@ -13276,6 +13293,7 @@ msgid "Send {count} object{0}"
 msgstr ""
 
 #: src/feedback/feedback-dialog.tsx
+#: src/shell/account-menu.tsx
 #: src/shell/palette-labels.tsx
 msgid "Send feedback"
 msgstr ""
@@ -13461,6 +13479,7 @@ msgstr ""
 #: src/routes/issue-states.tsx
 #: src/screens/project/project-page.tsx
 #: src/screens/settings/settings-screen.tsx
+#: src/shell/account-menu.tsx
 msgid "Settings"
 msgstr ""
 

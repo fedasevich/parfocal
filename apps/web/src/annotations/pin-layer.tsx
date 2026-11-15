@@ -4,6 +4,7 @@ import { CommentComposer } from "@parfocal/ui/components/comment-thread";
 import { SmallModal } from "@parfocal/ui/components/small-modal";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { fingerPans } from "../devices/pen-touch.ts";
 import { useEscRegistry } from "../keys/esc-owner.tsx";
 import { markTried } from "../screens/home/getting-started.ts";
 import { usePeople } from "../screens/people.ts";
@@ -351,7 +352,7 @@ export function PinLayer({
             className={`${selecting ? "pointer-events-none" : "pointer-events-auto"} absolute grid size-7 -translate-y-full cursor-grab place-items-center rounded-full rounded-bl-none border-0 bg-accent-fill p-0 font-semibold text-caption text-on-accent shadow-md active:cursor-grabbing`}
             style={{ left: at.x, top: at.y }}
             onPointerDown={(event) => {
-              if (event.button !== 0) return;
+              if (fingerPans(event) || event.button !== 0) return;
               event.currentTarget.setPointerCapture(event.pointerId);
               const grabbed = screenToSlide(
                 latest.current.engine.getCamera(),
