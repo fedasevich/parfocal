@@ -42,7 +42,7 @@ Overlays needed four more things, all inside the route so that the shared builde
 
 - The shared builder closes a ring with two wrapped vertices. deck.gl's WebGPU `PathLayer` left a mark on every ring with that buffer, so the route copies the data of loop layers and adds a third wrapped vertex (`src/deck-webgpu/loop-data.ts`).
 
-Rasters, pins, ID labels and polygon outlines then match Viv at the Viv tolerance. Solid AI proposals differed from their golden in 0.63% of pixels and were bounded at 2%. With the WGSL dash of VIEW-070 they differ in 0.085%, and `render/routes-cmu1.spec.ts` holds every overlay kind at the Viv tolerance of 0.1%. The rest is the first edge of each ring, which Viv draws twice at two dash phases and this route draws once.
+Rasters, pins, ID labels and polygon outlines then match Viv at the Viv tolerance. Solid AI proposals differed from their golden in 0.63% of pixels and were bounded at 2%. With the WGSL dash of VIEW-070 they differ in 0.085%, and `render/routes-cmu1.spec.ts` holds every overlay kind at the Viv tolerance of 0.1%. The rest is the first edge of each ring, which Viv draws twice at two dash phases and this route draws once. Only the variant the overlay builder uses (path mode, pixel units, butt caps, no antialiasing) was compiled and measured on a device.
 
 `switchRenderer` in the engine now treats the first replay as part of starting a route. A route that throws while it is created or while it is handed the open slide is destroyed, and the previous route is created again. Before, only a throwing factory was covered, and this route throws for a slide that is not 8-bit RGB.
 
