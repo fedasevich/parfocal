@@ -260,6 +260,7 @@ ON_ANNOTATE_TASK = {"task_id": seeded("annotate_task")}
 SHARED_OBJECT = {**ON_ANNOTATE_TASK, "annotation_id": seeded("shared_object")}
 OBJECT = {"object_id": fixed("T1")}
 AI_OBJECT = {**ON_ANNOTATE_TASK, **OBJECT}
+REGISTERED_MODEL = {"name": fixed("second-model"), "version": fixed("1.0")}
 ANCHOR = {"kind": "point", "geometry": POINT}
 THREAD = {"title": "A question", "body": "What is this?", "anchor": ANCHOR}
 
@@ -523,6 +524,19 @@ WRITE_ROUTES: dict[str, Write] = {
     ),
     "addMember": Write(
         body=lambda a: {"role": "reviewer", "user_id": str(a.ids["user"])},
+        refused=403,
+        owner=None,
+    ),
+    "registerModel": Write(
+        body=constant({"name": "second-model", "version": "1.0"}),
+        admin_rights=True,
+        refused=403,
+        owner=None,
+    ),
+    "promoteRegisteredModel": Write(
+        path=REGISTERED_MODEL,
+        body=constant({"measured": {}}),
+        admin_rights=True,
         refused=403,
         owner=None,
     ),
