@@ -8,6 +8,7 @@ import {
   createVectorOverlay,
   createViewerEngine,
   isOverlayDescription,
+  type OverlayHost,
   overlayOrder,
   overlayStack,
   pointBatchFromPoints,
@@ -222,7 +223,7 @@ test("setting a layer again replaces it and removing it takes it out of the rout
   const layers = createOverlayController(engine);
   engine.mount(container);
   layers.set(annotations("human"));
-  const replacement = annotations("human");
+  const replacement = withOverlayState(annotations("human"), { opacity: 0.5 });
   layers.set(replacement);
   assert.equal(renderer.last().overlays.length, 1);
   assert.equal(renderer.last().overlays[0], replacement);
@@ -230,6 +231,97 @@ test("setting a layer again replaces it and removing it takes it out of the rout
   layers.remove("human");
   assert.equal(renderer.last().overlays.length, 0);
   assert.equal(layers.get("human"), undefined);
+});
+
+function countingHost() {
+  const counts = { registered: 0, updated: 0, removed: 0 };
+  const host: OverlayHost = {
+    registerOverlay: () => {
+      counts.registered += 1;
+      return {
+        update: () => {
+          counts.updated += 1;
+        },
+        invalidate: () => undefined,
+        unregister: () => {
+          counts.removed += 1;
+        },
+      };
+    },
+  };
+  return { host, counts };
+}
+
+function ring(offset: number) {
+  return polygonBatchFromRings([
+    { ring: [offset, 0, offset + 10, 0, offset + 10, 10, offset, 10], color: red },
+  ]);
+}
+
+test("setting a fresh layer with equal geometry and style keeps the registered one", () => {
+  const { host, counts } = countingHost();
+  const layers = createOverlayController(host);
+  const first = createVectorOverlay({
+    id: "o",
+    kind: "ai-proposals",
+    shapes: { polygons: ring(0) },
+  });
+  layers.set(first);
+  layers.set(createVectorOverlay({ id: "o", kind: "ai-proposals", shapes: { polygons: ring(0) } }));
+  assert.equal(counts.updated, 0);
+  assert.equal(layers.get("o"), first);
+});
+
+test("setting a layer whose geometry or style changed updates it once", () => {
+  const { host, counts } = countingHost();
+  const layers = createOverlayController(host);
+  const shapes = { polygons: ring(0) };
+  layers.set(createVectorOverlay({ id: "o", kind: "ai-proposals", shapes }));
+  const moved = createVectorOverlay({
+    id: "o",
+    kind: "ai-proposals",
+    shapes: { polygons: ring(1) },
+  });
+  layers.set(moved);
+  assert.equal(counts.updated, 1);
+  assert.equal(layers.get("o"), moved);
+  layers.set(
+    createVectorOverlay({
+      id: "o",
+      kind: "ai-proposals",
+      shapes: { polygons: ring(1) },
+      style: { lineWidthPx: 4 },
+    }),
+  );
+  assert.equal(counts.updated, 2);
+});
+
+test("a fresh layer holding the same typed arrays as before counts as changed", () => {
+  const { host, counts } = countingHost();
+  const layers = createOverlayController(host);
+  const polygons = ring(0);
+  layers.set(createVectorOverlay({ id: "o", kind: "ai-proposals", shapes: { polygons } }));
+  layers.set(
+    createVectorOverlay({ id: "o", kind: "ai-proposals", shapes: { polygons: { ...polygons } } }),
+  );
+  assert.equal(counts.updated, 1);
+});
+
+test("a raster layer set again is always passed on", () => {
+  const { host, counts } = countingHost();
+  const layers = createOverlayController(host);
+  layers.set(heatmap("h"));
+  layers.set(heatmap("h"));
+  assert.equal(counts.updated, 1);
+});
+
+test("a layer set again after clearing registers again", () => {
+  const { host, counts } = countingHost();
+  const layers = createOverlayController(host);
+  layers.set(annotations("a"));
+  layers.clear();
+  layers.set(annotations("a"));
+  assert.deepEqual(counts, { registered: 2, updated: 0, removed: 1 });
 });
 
 test("invalidating asks the route to rebuild just that layer", () => {

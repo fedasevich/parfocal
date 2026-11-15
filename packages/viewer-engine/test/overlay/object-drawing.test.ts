@@ -87,3 +87,33 @@ test("hidden classes leave the live drawing but stay in scope", () => {
   assert.deepEqual(drawing.result()?.hiddenByClass, ["B"]);
   assert.deepEqual(drawing.result()?.scope, ["A", "B"]);
 });
+
+test("a re-render with the same objects and equal choices leaves the drawn layers alone", () => {
+  const { host, layers } = fakeHost();
+  let updates = 0;
+  const counted = {
+    registerOverlay: (layer: OverlayLayer): OverlayRegistration => {
+      const registration = host.registerOverlay(layer);
+      return {
+        ...registration,
+        update: (next) => {
+          updates += 1;
+          registration.update(next);
+        },
+      };
+    },
+  };
+  const drawing = createObjectDrawing({ id: "t", host: counted });
+  drawing.setObjects(objects);
+  drawing.setChoices({ draw: "outline", width: "2" });
+  const drawn = new Map(layers);
+  const before = updates;
+  drawing.setObjects(objects);
+  drawing.setChoices({ draw: "outline", width: "2" });
+  drawing.setObjects([...objects]);
+  assert.equal(updates, before);
+  assert.deepEqual([...layers.entries()], [...drawn.entries()]);
+  for (const [id, layer] of drawn) assert.equal(layers.get(id), layer);
+  drawing.setChoices({ draw: "outline", width: "3" });
+  assert.ok(updates > before);
+});
