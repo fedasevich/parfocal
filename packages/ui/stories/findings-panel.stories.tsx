@@ -131,6 +131,7 @@ function CellDemo({
 }: CellDemoProps) {
   const [selection, setSelection] = useState(start);
   const [kept, setKept] = useState(learned);
+  const [taught, setTaught] = useState(true);
   return (
     <FindingsPanel
       layout="cell-findings"
@@ -143,6 +144,19 @@ function CellDemo({
       outline={outlined ? { id: "R1", name: "Invasive front", classes: outlineClasses } : undefined}
       changed={kept ? changed : undefined}
       onUndoChanged={() => setKept(false)}
+      learner={
+        learned && taught
+          ? {
+              title: "Learned on this slide",
+              summary: "14 examples",
+              forgetLabel: "Forget",
+              onForget: () => {
+                setTaught(false);
+                setKept(false);
+              },
+            }
+          : undefined
+      }
       cellCall={cellCall}
       extras={extras}
       hovered={

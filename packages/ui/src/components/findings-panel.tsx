@@ -76,6 +76,13 @@ type FindingsExtra = {
 
 type FindingsHover = { id: string; numbers: string };
 
+type FindingsLearner = {
+  title: React.ReactNode;
+  summary: React.ReactNode;
+  forgetLabel: React.ReactNode;
+  onForget: () => void;
+};
+
 type CellFindingsProps = {
   image: string;
   slide: FindingsNumbers & { label: string };
@@ -86,6 +93,8 @@ type CellFindingsProps = {
   outline?: FindingsOutline | undefined;
   changed?: FindingsPanelZone | undefined;
   onUndoChanged?: (() => void) | undefined;
+  undoLabel?: React.ReactNode;
+  learner?: FindingsLearner | undefined;
   cellCall?: FindingsCellCall | undefined;
   galleryFoot?: React.ReactNode;
   extras?: readonly FindingsExtra[];
@@ -189,6 +198,8 @@ function CellFindings({
   outline,
   changed,
   onUndoChanged,
+  undoLabel = "Undo all",
+  learner,
   cellCall,
   galleryFoot,
   extras = [],
@@ -291,7 +302,7 @@ function CellFindings({
           end={
             onUndoChanged ? (
               <Button variant="ghost" size="sm" onClick={onUndoChanged}>
-                Undo
+                {undoLabel}
               </Button>
             ) : null
           }
@@ -366,6 +377,20 @@ function CellFindings({
   return (
     <>
       {sections.map((section) => render[section]())}
+      {learner && selection.kind === "none" ? (
+        <div
+          data-slot="findings-learner"
+          className="flex items-center gap-2 rounded-ctl border border-line bg-chrome px-3 py-2 text-body-sm text-fg"
+        >
+          <span className="grid min-w-0 flex-1 gap-0.5">
+            <b className="truncate font-semibold">{learner.title}</b>
+            <span className="truncate text-caption text-fg-dim">{learner.summary}</span>
+          </span>
+          <Button variant="ghost" size="sm" onClick={learner.onForget}>
+            {learner.forgetLabel}
+          </Button>
+        </div>
+      ) : null}
       {hovered ? (
         <p
           data-slot="findings-hover"
@@ -532,6 +557,7 @@ export {
   type FindingsCellCall,
   type FindingsExtra,
   type FindingsHover,
+  type FindingsLearner,
   type FindingsOutline,
   FindingsPanel,
   type FindingsPanelProps,

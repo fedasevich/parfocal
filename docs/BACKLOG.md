@@ -3743,7 +3743,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Refs doc 22, [`poc/src/segment/type-learner.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/segment/type-learner.ts).
   Size: M.
 
-- [ ] AILEARN-003 · Learner UI
+- [x] AILEARN-003 · Learner UI
   After a few corrections on a slide (10 by default) the learner re-checks the slide. The cells it changed form a zone in findings, "Changed after your corrections", reviewed with the same type bar and keys, with Undo all that restores the typer's first calls and keeps the doctor's own corrections. Learning applies to that slide only. A collapsed row shows how many examples the learner has, with forget.
   Done when component tests cover the zone, undo and forget, and an E2E sees the zone appear after the set number of corrections.
   Refs mock 6 "After learning", [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
@@ -4472,6 +4472,11 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   The CI `e2e` job signs in at the production Zitadel instance with a test user, which touches production on every run and gets worse once sign-up specs create users. `infra/tofu/idp-scratch` already boots Zitadel in Docker and applies the production `zitadel-identity` module with no credential. Turn it into a compose profile that stays up, point `apps/e2e` and the CI job at it, and seed the test user there. Start with a short spike, because sign-in through the app's own screens on the Zitadel session API ([ADR 0294](adr/0294-native-sign-up-and-sign-in-through-zitadel-session-api.md), native sign-up and sign-in) is untried on the container.
   Done when the `e2e` job passes with no `ZITADEL_*` secret and no request to `zitadel.cloud`, and a sign-up spec creates and removes a user on the local instance.
   Size: M.
+
+- [x] TEST-042 · Real-slide tests survive a dropped download
+  `packages/viewer-engine/test/pixel-source/ndpi-real.test.ts` and `reader-check.test.ts` fetch public test slides over HTTP, and on the night of 2026-11-14 three merge checks failed on `read ECONNRESET` for Hamamatsu-1.ndpi and CMU-1.ndpi, each passing on rerun. The shared fetch helper retries a reset or a dropped range read a few times with a short backoff and names the slide and range when it finally gives up.
+  Done when a unit test makes the helper's first two reads reset and the third succeed, and the real-slide tests pass with that helper.
+  Size: S.
 
 - [ ] TEST-040 · API container under the end-to-end suite
   The 6 real-API specs in `apps/e2e` run the API with `uv run uvicorn`, so the deploy image, migrations on start and production-like settings never run under a browser before a deploy. Run `apps/e2e` against the API container from FOUND-015 (container images) and the local Zitadel from TEST-039 (local Zitadel for the end-to-end suite), behind one `pnpm stack:up`, with the web app still on vite dev. Seed with the showcase seed and the small fixtures copied into MinIO. Confirm how an upload starts ingest, since `upload-into-project.spec.ts` now starts it by hand. Nothing in the stack reaches a cloud service. The edge Worker stays out until a tile, realtime or header bug escapes to production because it was missing, and then a new task adds it with a local S3 adapter for its `SLIDES` binding.
