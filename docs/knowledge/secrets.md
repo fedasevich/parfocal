@@ -36,16 +36,28 @@ Every rotation of a production secret is asked in chat first, as [ADR 0151](../a
 
 ## Never delete `parfocal-api-keys` to rotate
 
-Bootstrap writes `parfocal-api-keys` only when it is missing, and it then generates every key in it, the master keyring included. Deleting the secret to get a new value therefore makes every encrypted field of every tenant unreadable. Change single values in the Modal dashboard instead. TODO: editing one value of a Modal secret in the dashboard is untried. SEC-048 (rotation commands for the keys secret) adds a command that does it.
+Bootstrap writes `parfocal-api-keys` only when it is missing, and it then generates every key in it, the master keyring included. Deleting the secret to get a new value therefore makes every encrypted field of every tenant unreadable. Change single values with `pnpm --filter @parfocal/deploy rotate`, whose commands take only names and key ids, generate the new value themselves and merge it into the secret with `modal.Secret.update`, which keeps every other value. They refuse when the secret is missing, so they never create half of it. `workers/deploy/tests/test_rotate.py` checks against fakes that each command keeps the other values and that no secret reaches a command line. TODO: no command has run against real Modal yet, and every production rotation is still asked first.
+
+| Command | Changes |
+|---|---|
+| `add-master-key` | Prepends the next `kN` to `MASTER_KEYS` |
+| `rewrap` | Rewraps tenant keys under the current master key, nothing in the secret |
+| `retire-master-key k1` | Removes `k1` from `MASTER_KEYS` only after `check-retire` passes |
+| `replace-key SESSION_KEY` | Prepends a new key to `SESSION_KEY` in the secret and keeps the previous one |
+| `replace-key TILE_TOKEN_KEY` or `ROOM_TOKEN_KEY` | The same list in the Worker through `wrangler secret bulk` on stdin, then in the secret |
+| `drop-old-keys NAME` | Keeps only the first key, in the secret and then in the Worker for a token key |
+| `reset-app-password` | The `parfocal_app` password on the direct owner connection, then `DATABASE_URL` |
+
+Every command that changes the secret needs a redeploy afterwards. `add-master-key`, `rewrap` and `retire-master-key` read the stored keyring and the tenant key counts in a short-lived Modal app, `parfocal-key-rotation`, which mounts the three API secrets and returns only `MASTER_KEYS` and the counts. `replace-key` and `drop-old-keys` read the one key list they change through the same app.
 
 ## Master keyring
 
 `MASTER_KEYS` is `id:key` pairs, newest first, and only the small wrapped tenant keys depend on it. The drill in `apps/api/tests/test_key_rotation.py` runs these steps on local Postgres.
 
-1. Prepend a new pair, for example `k2:<32 random bytes in url-safe base64>,k1:<old>`, and redeploy. New tenant keys are wrapped with `k2`, and `k1` still unwraps the old ones.
-2. Run `python -m parfocal_api.key_rotation rewrap` with the API's environment, which rewraps every tenant key still under an older master key. Encrypted fields are not touched. TODO: run it through `modal shell` on the deployed `web` function, which has the three secrets, untried.
-3. Run `python -m parfocal_api.key_rotation check-retire k1`. It refuses while a tenant key is still wrapped by `k1`, when `k1` is the current key and when a key hangs on a master id that is not listed.
-4. Remove `k1` and redeploy.
+1. Run `rotate add-master-key`, which makes `MASTER_KEYS` `k2:<new>,k1:<old>`, and redeploy. New tenant keys are wrapped with `k2`, and `k1` still unwraps the old ones.
+2. Run `rotate rewrap`, which runs `python -m parfocal_api.key_rotation rewrap` in the API's environment and rewraps every tenant key still under an older master key. Encrypted fields are not touched.
+3. Run `rotate retire-master-key k1`. It runs the `check-retire` rules first and refuses while a tenant key is still wrapped by `k1`, when `k1` is the current key and when a key hangs on a master id that is not listed. Only then does it remove `k1`. Run it only after the redeploy in step 1 has finished, because a container still on the old keyring can wrap a new tenant key with `k1` after the check passes.
+4. Redeploy.
 
 Removing `k1` before step 3 passes locks every tenant out of its encrypted fields until `k1` is put back. Audit exports signed before the rotation carry the key id `k1`, and `GET` on the audit signing keys stops listing its public key once `k1` is gone. TODO: keep the old public key with the audit evidence before step 4.
 
@@ -53,12 +65,12 @@ Removing `k1` before step 3 passes locks every tenant out of its encrypted field
 
 `SESSION_KEY`, `TILE_TOKEN_KEY` and `ROOM_TOKEN_KEY` each take one key or a comma-separated list, newest first, as SEC-049 (an overlap window for session and token keys) built. The first key seals sessions and signs tile tokens, room tokens and the API's publish calls to the Worker. Any listed key opens or verifies. One bad entry turns the whole value off: the API refuses to start on a bad `SESSION_KEY` and answers 503 for tile and room access, and the Worker answers 503 `signing-key-not-configured`. A single key works as before. `apps/api/tests/test_token_keys.py`, `test_tile_access.py`, `test_realtime.py` and `apps/edge/test/tiles.test.ts` and `rooms.test.ts` show an old-key session or token opening while it is listed and failing once it is removed.
 
-1. For a token key, write `new,old` to the Worker first, then to `parfocal-api-keys`, and redeploy the API. In this order the Worker already knows the new key when the API starts signing with it. `SESSION_KEY` lives only in the API.
-2. Wait out the longest lifetime signed with `old`: 10 minutes for tile tokens, 5 minutes for room tokens. For `SESSION_KEY`, a session is sealed again with the first key whenever its access token refreshes, but an idle one keeps `old` until it ends, so wait the session lifetime, 12 hours by default.
-3. Write `new` alone to `parfocal-api-keys`, redeploy the API, then write it to the Worker.
+1. Run `rotate replace-key NAME`. It reads the stored list in the `parfocal-key-rotation` app, which returns only that value, makes `new,<current first key>` and writes it to the Worker first for a token key, then to `parfocal-api-keys`. Keys older than the current first one are dropped, so the list never grows past two. Redeploy the API. In this order the Worker already knows the new key when the API starts signing with it. `SESSION_KEY` lives only in the API.
+2. Wait out the longest lifetime signed with the old key: 10 minutes for tile tokens, 5 minutes for room tokens. For `SESSION_KEY`, a session is sealed again with the first key whenever its access token refreshes, but an idle one keeps the old key until it ends, so wait the session lifetime, 12 hours by default.
+3. Run `rotate drop-old-keys NAME`, which keeps only the first key in `parfocal-api-keys` and then in the Worker, and redeploy the API. It refuses when only one key is listed, and both commands refuse a stored list with a bad entry.
 
-Removing `old` early drops only what it signed: viewers ask for a fresh tile or room token, and idle sessions sign in again. TODO: untried against the deployed Worker and API.
+The Worker's value cannot be read back, so both commands write the list they made from the API's copy. Removing the old key early drops only what it signed: viewers ask for a fresh tile or room token, and idle sessions sign in again. `workers/deploy/tests/test_rotate.py` checks the lists and the write order against fakes. TODO: untried against the deployed Worker and API.
 
 ## Database role password
 
-`bootstrap --reset-app-role-password` resets the `parfocal_app` password only when `parfocal-api-keys` is missing, so it cannot rotate a working deployment without the trap above. Until SEC-048 lands, set a new password with `ALTER ROLE parfocal_app PASSWORD` as the owner on the direct connection, put the new pooled `DATABASE_URL` into `parfocal-api-keys` in the dashboard and redeploy at once, because the running API loses its connections in between. TODO: untried.
+`bootstrap --reset-app-role-password` resets the `parfocal_app` password only when `parfocal-api-keys` is missing, so it cannot rotate a working deployment without the trap above. Run `rotate reset-app-password` with `NEON_API_KEY` and `NEON_PROJECT_ID` in the shell instead. It sets a new password as the owner on the direct connection and merges the new pooled `DATABASE_URL`. Redeploy at once, because the running API loses its connections in between. If it fails between the two steps, run it again, since each run makes a fresh password and writes both.

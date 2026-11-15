@@ -596,6 +596,12 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Depends on FOUND-036.
   Size: M.
 
+- [ ] FOUND-040 · The edge Worker and the dev bucket under make dev
+  FOUND-009 made `make dev` start the stack and sign in through the local Zitadel, but the Vite dev server does not yet run the edge Worker and its Durable Objects through the Cloudflare Vite plugin, and there is no remote binding to the `parfocal-dev` R2 bucket, so no slide opens in the viewer under `make dev`.
+  Done when `make dev` opens a slide in the viewer through the edge Worker, the README says how, and the dev check signs in and draws a tile.
+  Depends on FOUND-009.
+  Size: M.
+
 - [x] FOUND-037 · Docs memory that cannot go stale
   `docs/README.md` was last consolidated on 2026-10-18 and says 796 tasks with about 170 ticked, against 940 with 664 ticked on 2026-11-09. The roadmap says M2 (viewer parity) is not started while VIEW is 39 of 56 and has no row for MA (the annotation path), risk R11 still says the cloud is paused, and "In progress" names decision 15a, which is gone ([project review](results/2026-11-09-project-review.md)). Run the consolidation once, replace hand-written counts with a `board.py` command that prints tasks and ticks per epic and milestone, and make the lead consolidate at the end of each parallel run.
   Done when README, roadmap and risks match the board on the day of the change, README holds no hand-written count, `board.py` prints the counts, and `knowledge/agent-workflow.md` names the lead's consolidation step.
@@ -1007,7 +1013,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Depends on SEC-013.
   Size: M.
 
-- [ ] SEC-049 · An overlap window for session and token keys
+- [x] SEC-049 · An overlap window for session and token keys
   `SESSION_KEY`, `TILE_TOKEN_KEY` and `ROOM_TOKEN_KEY` each hold one key, so rotating the first signs everyone out and rotating the others breaks open viewers for up to 10 minutes. Accept a list, newest first, sign with the first and verify with any, in the API and in the Worker.
   Done when API and Worker tests show a token or session sealed with the previous key still opens while it is listed and stops once it is removed.
   Depends on SEC-013.
@@ -4632,6 +4638,12 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   In-app feedback with screenshot (PHI-blurred) routed to the team.
   Done when tests confirm screenshots are blurred over slide and patient areas.
   Size: M.
+
+- [ ] PILOT-009 · A bulk import rerun never sends a slide twice
+  PILOT-004's `--cases-from-names` rerun skips slides already in their case, but a rerun while files are still processing would send them again. The run now fails and warns, and the runbook says to wait.
+  Done when a test reruns the import while slides are still processing and no slide or result is sent twice.
+  Depends on PILOT-004.
+  Size: S.
 
 - [ ] PILOT-008 · Owner walkthrough of the whole app
   A guided walkthrough for the owner on production that visits every screen and flow built so far, so the owner can try each one and list fixes and dislikes. The point is to see the UX of everything possible, not only the main paths, so the script covers every variant a user can meet: each role, state, option and setting, the loading, empty and error states, long and short data, keyboard paths, and the edge cases such as a huge slide, a failed job or a refused action. It is a written script in `docs/knowledge/` with one step per screen or flow, in the order a user meets them: sign up and setup, the sample project, Home and My work, upload with AI results, the slide view with decisions and the opinion form, guided review, navigation aids and measurement, Annotate with its tools, model runs on a selection and the whole slide, threads and live updates, compare, notifications, the disagreement queue and sign-off, the evaluation report and exports, settings, the palette and the admin page. Each step names the URL, the seeded account and data to use, what to do and what should happen, and leaves room for the owner's notes. It runs over the TEST-020 showcase seed (every feature over the real fixture slides), which resets staging between runs. Agents run the script first and fix what is plainly broken before handing it over. The owner's notes become backlog tasks, one per fix, grouped by screen.

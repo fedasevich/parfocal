@@ -12,14 +12,13 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
 from parfocal_api.case_creation import (
     CaseLabelTakenError,
-    creator_of,
     not_the_loose_case,
     privacy_of,
     require_owner,
 )
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.permissions import Permission, require
-from parfocal_api.principals import Principal
+from parfocal_api.principals import MemberPrincipal, Principal
 from parfocal_api.problems import BadRequestError
 from parfocal_api.projects import visible
 from parfocal_api.result_pairing import (
@@ -333,7 +332,7 @@ async def sorting_of(connection: AsyncConnection, draft: Draft, request: Sorting
 async def create_cases(
     connection: AsyncConnection, principal: Principal, draft: Draft, labels: list[str]
 ) -> dict[str, uuid.UUID]:
-    creator = creator_of(principal)
+    author = principal.user_id if isinstance(principal, MemberPrincipal) else None
     await require_owner(connection, principal, draft.project_id)
     mode = await privacy_of(connection, draft.project_id)
     created = {label: uuid.uuid4() for label in labels}
@@ -348,7 +347,7 @@ async def create_cases(
                         "project_id": draft.project_id,
                         "label": label,
                         "source": CaseSource.UPLOAD,
-                        "created_by_user_id": creator.user_id,
+                        "created_by_user_id": author,
                     }
                     for label, case_id in created.items()
                 ],

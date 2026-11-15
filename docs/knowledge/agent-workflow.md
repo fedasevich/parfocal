@@ -78,6 +78,7 @@ How many agents and which model:
 - In such a run prefer tasks that close an epic or a milestone: run `board.py counts` and pick the last open tasks of the nearest complete epics.
 - At most one task that adds a migration runs at a time. Never run two tasks that touch the same screen or fake API store, such as the bell and mentions, at once. Hold the second until the first merges.
 - Pick tasks by [Picking the next task](#picking-the-next-task), quick wins and high "unblocks" counts first.
+- Do a follow-up in the same agent or the very next one (owner, 2026-11-15). When a hand-back leaves a small gap, send it back to that agent with SendMessage while it still holds the context. When the gap becomes a new backlog task, give it to the next agent the lead starts, ahead of the usual order.
 
 Stopping:
 

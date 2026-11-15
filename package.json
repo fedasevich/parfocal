@@ -8,6 +8,7 @@
   },
   "scripts": {
     "prepare": "lefthook install",
+    "dev": "bash scripts/dev.sh",
     "test": "turbo run test",
     "test:browser": "turbo run test:browser --concurrency=1",
     "golden:update": "pnpm --filter @parfocal/golden-images golden:update",
