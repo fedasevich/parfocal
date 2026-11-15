@@ -379,6 +379,10 @@ msgstr ""
 msgid "Adding the result set to the slide"
 msgstr ""
 
+#: src/viewer/annotate-run-panel.tsx
+msgid "Adding the run to the task"
+msgstr ""
+
 #: src/screens/review/first-read.tsx
 msgid "After this the AI result appears and you can give your decisions."
 msgstr ""
@@ -736,6 +740,10 @@ msgstr ""
 msgid "Drag to move, scroll to zoom"
 msgstr ""
 
+#: src/viewer/annotate-run-panel.tsx
+msgid "Draw or select a shape to run on it, or run on this view"
+msgstr ""
+
 #. placeholder {0}: object.object
 #: src/screens/review/object-card.tsx
 msgid "Draw the new outline of {0}"
@@ -915,6 +923,10 @@ msgstr ""
 
 #: src/screens/viewer-tools/annotate-view.tsx
 msgid "into \"{targetName}\""
+msgstr ""
+
+#: src/viewer/annotate-run-panel.tsx
+msgid "Its objects are AI objects of this task now"
 msgstr ""
 
 #: src/screens/home/activity-card.tsx
@@ -1460,6 +1472,18 @@ msgstr ""
 msgid "ruler, across {0}"
 msgstr ""
 
+#: src/viewer/annotate-run-panel.tsx
+msgid "Run a model"
+msgstr ""
+
+#: src/viewer/annotate-run-panel.tsx
+msgid "Run on the selection"
+msgstr ""
+
+#: src/viewer/annotate-run-panel.tsx
+msgid "Run on this view"
+msgstr ""
+
 #: src/viewer/annotate-task-panel.tsx
 msgid "Runs to add"
 msgstr ""
@@ -1636,6 +1660,10 @@ msgstr ""
 msgid "Starting point"
 msgstr ""
 
+#: src/viewer/annotate-run-panel.tsx
+msgid "Starting the run"
+msgstr ""
+
 #: src/screens/review/slide-submitted.tsx
 msgid "Stays open until you pick. Your review can be changed until sign-off."
 msgstr ""
@@ -1760,6 +1788,18 @@ msgstr ""
 
 #: src/viewer/run-stream-layer.tsx
 msgid "The run could not stream onto this slide"
+msgstr ""
+
+#: src/viewer/annotate-run-panel.tsx
+msgid "The run ended as {status}, nothing was added"
+msgstr ""
+
+#: src/viewer/annotate-run-panel.tsx
+msgid "The run is streaming onto the slide"
+msgstr ""
+
+#: src/viewer/annotate-run-panel.tsx
+msgid "The server refused it ({code})"
 msgstr ""
 
 #: src/screens/review/slide-still.tsx
