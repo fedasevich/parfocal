@@ -3,7 +3,6 @@ import { Trans, useLingui } from "@lingui/react/macro";
 import type { ReviewObject } from "@parfocal/api-client";
 import {
   type AnalysisTemplate,
-  type SlideAiProgress,
   useGetMyHome,
   useGetMyTrackRecord,
   useGetProject,
@@ -15,7 +14,6 @@ import {
   useSubmitSlideReview,
   type ViewerPart,
 } from "@parfocal/api-client";
-import { Banner } from "@parfocal/ui/components/banner";
 import type { Blocker } from "@parfocal/ui/components/before-you-list";
 import { Button } from "@parfocal/ui/components/button";
 import { CellCluster, CellsLauncher } from "@parfocal/ui/components/cells-panel";
@@ -26,14 +24,8 @@ import { Loader } from "@parfocal/ui/components/loader";
 import { MagnificationBar } from "@parfocal/ui/components/magnification-bar";
 import { ModelWarningsBlock } from "@parfocal/ui/components/model-warnings";
 import { type OpinionQuestion, SlideDoneCard } from "@parfocal/ui/components/slide-done-card";
-import { ObjectIdTag } from "@parfocal/ui/components/tag";
 import { UndoToast } from "@parfocal/ui/components/undo-toast";
-import {
-  ClassVisibility,
-  ResultSetRows,
-  TileHint,
-  ViewPicker,
-} from "@parfocal/ui/components/visualize";
+import { ClassVisibility, ViewPicker } from "@parfocal/ui/components/visualize";
 import { Zone } from "@parfocal/ui/components/zone";
 import { type AreaCall, countOf } from "@parfocal/ui/lib/area-call";
 import { CHANGED_ZONE_ID, CHANGED_ZONE_NAME } from "@parfocal/ui/lib/findings-layout";
@@ -57,13 +49,10 @@ import { useFormat } from "../../format.ts";
 import { escLayer } from "../../keys/esc-ladder.ts";
 import { useSelectionSync } from "../../popout/popout-channel.ts";
 import { useConnection } from "../../shell/connection.ts";
-import { ConnectionBanner } from "../../shell/connection-banner.tsx";
-import { destinations } from "../../shell/destinations.ts";
 import { useLabDecisionCutoff, useResolvedSettings } from "../../shell/resolved-settings.ts";
 import { useCellTiming, useChromeSampling, useTaskRun } from "../../telemetry/use-task-timing.ts";
 import { engineBehindStill, noResultsOn, useStillBackdrop } from "../../viewer/still-backdrop.tsx";
 import { useStillObjects } from "../../viewer/use-still-objects.ts";
-import { formatDayMonth } from "../format.ts";
 import { useRememberResume } from "../home/remember-resume.ts";
 import { usePeople } from "../people.ts";
 import { okData } from "../placeholder.tsx";
@@ -92,7 +81,6 @@ import {
 } from "../review/display-tab.tsx";
 import { useFirstReadGate } from "../review/first-read-gate.ts";
 import { FirstReadNotice } from "../review/first-read-notice.tsx";
-import { CanvasNotice } from "../review/guided-review.tsx";
 import { finishingAnswers } from "../review/guided-scenes.ts";
 import { useNoteKey } from "../review/note-key.ts";
 import { hasNote, reasonBody, withNote } from "../review/note-model.ts";
@@ -192,7 +180,10 @@ import {
 import { swipeStart } from "./swipe-split.ts";
 import { useAreaNav } from "./use-area-nav.ts";
 import { emptyLearnerView, useSlideLearner } from "./use-slide-learner.ts";
+import { RunningHeat, readReach, TableObjectFacts } from "./viewer-canvas-parts.tsx";
 import { viewerModelWarnings } from "./viewer-model-warnings.ts";
+import { ViewerBanner, ViewerCanvasNotice, ViewerTileHint } from "./viewer-notices.tsx";
+import { ViewerResultSets } from "./viewer-result-sets.tsx";
 import {
   isNavigatorScene,
   type LayerView,
@@ -315,7 +306,7 @@ function ViewerBody({
   const [peekHeld, setPeekHeld] = useState(false);
   const [swipeAt, setSwipeAt] = useState(swipeStart);
   const navigate = useNavigate();
-  const router = useRouter();
+  const _router = useRouter();
   const person = usePeople();
   const submitReview = useSubmitSlideReview();
   const threadsWarning = useOpenThreadsWarning(session.taskId, session.slideId);
@@ -1267,67 +1258,17 @@ function ViewerBody({
   );
 
   const resultSetRows = (
-    <ResultSetRows
+    <ViewerResultSets
+      projectId={projectId}
+      slideId={slideId}
+      slideSets={slideSets}
+      taskSetId={taskSetId}
+      taskCode={session.display?.task_code}
+      setsLock={setsLock}
+      isShown={setIsShown}
+      reviewedOn={reviewedOn}
       onToggle={choice.showSet}
-      locked={
-        setsLock
-          ? {
-              reason: t`Locked by ${session.display?.task_code ?? "the task"}: ${setsLock.reason.charAt(0).toLowerCase()}${setsLock.reason.slice(1)}`,
-            }
-          : undefined
-      }
-      sets={[
-        ...slideSets.map((set) => {
-          const task = set.id === taskSetId;
-          return {
-            key: set.id,
-            name: `${set.name} ${set.model_version ?? ""}`.trim(),
-            sub: `${set.source === "run" ? t`Run here` : t`Imported`} ${formatDayMonth(new Date(set.produced_at ?? set.created_at))}${task ? t` · the result this task checks` : ""}`,
-            color: task ? setColours.a : setColours.b,
-            fixed: task,
-            on: task ? false : setsLock ? false : setIsShown(set.id),
-            menu: [
-              {
-                icon: "slides" as const,
-                label: t`Compare with another set`,
-                onSelect: (): void => goView("models"),
-              },
-              {
-                icon: "smart" as const,
-                label: set.source === "run" ? t`Run again` : t`Run a model on this slide`,
-                onSelect: (): void =>
-                  void router.navigate({
-                    href: `${destinations.runModel(projectId)}?slides=${encodeURIComponent(JSON.stringify([slideId]))}`,
-                  }),
-              },
-              {
-                icon: "upload" as const,
-                label: t`Add another result set`,
-                onSelect: (): void =>
-                  void navigate({
-                    to: "/projects/$projectId/upload",
-                    params: { projectId },
-                    search: { scene: "viewer" },
-                  }),
-              },
-            ],
-          };
-        }),
-        {
-          key: "reviewed",
-          name: "Your review",
-          sub: t`The reviewed layer, as you edit it`,
-          color: setColours.reviewed,
-          on: reviewedOn,
-          menu: [
-            {
-              icon: "slides" as const,
-              label: t`Compare with the AI`,
-              onSelect: (): void => goView("diff"),
-            },
-          ],
-        },
-      ]}
+      goView={goView}
     />
   );
 
@@ -1483,126 +1424,29 @@ function ViewerBody({
   const withdrawnBy = creatorName ?? t`The researcher`;
   const withdrawnTask = session.task?.code ?? t`the task`;
   const banner =
-    setup.connLost || !online ? (
-      <ConnectionBanner pinned={setup.connLost} />
-    ) : readOnly ? (
-      <Banner
-        tone="info"
-        icon="lock"
-        actions={
-          <Button size="sm">
-            {researcherName === undefined ? (
-              <Trans>Ask the researcher to amend</Trans>
-            ) : (
-              <Trans>Ask {researcherName} to amend</Trans>
-            )}
-          </Button>
-        }
-      >
-        <Trans>
-          <b>Signed off 15 Oct.</b> Changes need an amendment.
-        </Trans>
-      </Banner>
-    ) : setup.sourceOff ? (
-      <Banner
-        tone="warn"
-        icon="link"
-        actions={
-          <Button
-            size="sm"
-            onClick={() =>
-              void router.navigate({ href: `${destinations.admin()}?section=storage` })
-            }
-          >
-            <Trans>Source status</Trans>
-          </Button>
-        }
-      >
-        <Trans>
-          <b>Scanner archive is not answering since 10:40.</b> {slideLabel} is read in place from
-          there, so it opens from the 7-day tile cache. Places never viewed show a quiet checker
-          until the source is back.
-        </Trans>
-      </Banner>
+    setup.connLost || !online || readOnly || setup.sourceOff ? (
+      <ViewerBanner
+        setup={setup}
+        online={online}
+        readOnly={readOnly}
+        researcherName={researcherName}
+        slideLabel={slideLabel}
+      />
     ) : null;
 
-  const canvasNotice =
-    setup.issue === "slidefail" ? (
-      <CanvasNotice
-        icon="warn"
-        title={t`${slideLabel} could not be read at 20x and 40x.`}
-        actions={
-          <>
-            <Button variant="primary">
-              <Trans>Retry</Trans>
-            </Button>
-            <Button>
-              <Trans>Ask the researcher</Trans>
-            </Button>
-          </>
-        }
-      >
-        <Trans>
-          Tiles are missing on the server. Lower magnifications still show, and your other slides
-          work.
-        </Trans>
-      </CanvasNotice>
-    ) : setup.issue === "withdrawn" ? (
-      <CanvasNotice
-        icon="info"
-        title={t`${taskCodeOrThe} was withdrawn.`}
-        actions={
-          <Button variant="primary" onClick={() => void navigate({ to: "/my-work" })}>
-            <Trans>Back to My work</Trans>
-          </Button>
-        }
-      >
-        <Trans>
-          {withdrawnBy} withdrew {withdrawnTask} on 16 Oct. Your 7 decided slides are kept and show
-          in the report.
-        </Trans>
-      </CanvasNotice>
-    ) : setup.issue === "noresults" ? (
-      <CanvasNotice
-        icon="smart"
-        title={t`No ${setName} result on ${slideLabel} yet.`}
-        actions={
-          <Button>
-            <Trans>Ask the researcher</Trans>
-          </Button>
-        }
-      >
-        <Trans>Look at the slide without AI, or ask the researcher to run the model.</Trans>
-      </CanvasNotice>
-    ) : null;
+  const canvasNotice = setup.issue ? (
+    <ViewerCanvasNotice
+      setup={setup}
+      slideLabel={slideLabel}
+      setName={setName}
+      taskCodeOrThe={taskCodeOrThe}
+      withdrawnBy={withdrawnBy}
+      withdrawnTask={withdrawnTask}
+    />
+  ) : null;
 
   const whole = stillView.kind === "whole";
-  const tileHint =
-    setup.tileHint === "loading" ? (
-      <TileHint percent={40}>{t`Loading sharper tiles · 12 left`}</TileHint>
-    ) : setup.tileHint === "unloaded" ? (
-      <TileHint percent={6}>{t`Loading the slide`}</TileHint>
-    ) : setup.tileHint === "slow" ? (
-      <TileHint
-        className="w-112"
-        percent={70}
-        action={
-          <Button
-            size="sm"
-            onClick={() =>
-              void router.navigate({ href: `${destinations.admin()}?section=storage` })
-            }
-          >
-            <Trans>Source status</Trans>
-          </Button>
-        }
-      >
-        <Trans>
-          <b>Slow source.</b> The scanner archive answers in 2.4 s. Keep reading, the view sharpens
-          as tiles arrive. Lower magnifications come first.
-        </Trans>
-      </TileHint>
-    ) : null;
+  const tileHint = setup.tileHint ? <ViewerTileHint setup={setup} /> : null;
 
   const topBar = (
     <ReviewTop
@@ -2021,111 +1865,6 @@ function ViewerBody({
           return result.status;
         }}
       />
-    </>
-  );
-}
-
-function readReach(progress: SlideAiProgress | undefined) {
-  const regionsStep = progress?.steps.find((step) => step.key === "regions");
-  return Math.min(1, Math.max(0, (regionsStep?.percent ?? 0) / 100));
-}
-
-function RunningHeat({ reached }: { reached: number }) {
-  return (
-    <>
-      <defs>
-        <clipPath id="running-clip">
-          <rect x={0} y={0} width={1400} height={1924 * reached} />
-        </clipPath>
-      </defs>
-      <image
-        href="/mock-assets/tumor-heat.png"
-        width={1400}
-        height={1924}
-        opacity={0.5}
-        clipPath="url(#running-clip)"
-      />
-      <line
-        data-testid="ai-reached"
-        data-reached={reached}
-        x1={0}
-        x2={1400}
-        y1={1924 * reached}
-        y2={1924 * reached}
-        stroke="var(--accent)"
-        strokeWidth={2}
-        strokeDasharray="8 6"
-        vectorEffect="non-scaling-stroke"
-      />
-    </>
-  );
-}
-
-function TableObjectFacts({
-  score,
-  size,
-  sets,
-  answer,
-  fullId,
-  object,
-  comments,
-  onComments,
-}: {
-  object: string;
-  score: number | null;
-  size: number | null;
-  sets: string[];
-  answer: Answer | undefined;
-  fullId: string;
-  comments: number;
-  onComments: () => void;
-}) {
-  const { t } = useLingui();
-
-  const format = useFormat();
-  const rows: [string, ReactNode][] = [
-    ...(score === null
-      ? []
-      : [
-          [
-            t`Score`,
-            <span key="s" className="font-mono">
-              {format.number(score, { decimals: 2 })}
-            </span>,
-          ] as [string, ReactNode],
-        ]),
-    [t`Size`, size === null ? "" : `${format.size(size)} across`],
-    [t`In sets`, sets.join(", ")],
-    [
-      t`Your decision`,
-      answer
-        ? `${answer.value === "unsure" ? t`Not sure` : `${answer.value.charAt(0).toUpperCase()}${answer.value.slice(1)}`}${answer.reasons[0] ? `, ${answer.reasons[0].toLowerCase()}` : ""}`
-        : t`Open`,
-    ],
-    [t`Preset`, answer ? t`Task default` : t`None yet`],
-    [
-      "Full ID",
-      <ObjectIdTag key="f" copyText={fullId}>
-        {fullId}
-      </ObjectIdTag>,
-    ],
-  ];
-  return (
-    <>
-      <dl className="m-0 grid grid-cols-[96px_1fr] gap-x-3 gap-y-1.5 text-body-sm">
-        {rows.map(([label, value]) => (
-          <div key={label} className="contents">
-            <dt className="text-fg-dim">{label}</dt>
-            <dd className="m-0">{value}</dd>
-          </div>
-        ))}
-      </dl>
-      <Button className="w-full" onClick={onComments}>
-        <Icon name="comment" />
-        <Trans>
-          {comments} comments on {object}
-        </Trans>
-      </Button>
     </>
   );
 }

@@ -10,7 +10,6 @@ import {
   useSubmitSlideReview,
 } from "@parfocal/api-client";
 import { Banner, InlineState } from "@parfocal/ui/components/banner";
-import type { Blocker } from "@parfocal/ui/components/before-you-list";
 import { Button } from "@parfocal/ui/components/button";
 import { CellCluster, CellsLauncher } from "@parfocal/ui/components/cells-panel";
 import { DecisionButtons } from "@parfocal/ui/components/decision-buttons";
@@ -18,7 +17,7 @@ import { Icon } from "@parfocal/ui/components/icon";
 import { Keycap } from "@parfocal/ui/components/keycap";
 import { Loader } from "@parfocal/ui/components/loader";
 import { SidePanel } from "@parfocal/ui/components/side-panel";
-import { type OpinionQuestion, SlideDoneCard } from "@parfocal/ui/components/slide-done-card";
+import { SlideDoneCard } from "@parfocal/ui/components/slide-done-card";
 import {
   type AreaCall,
   type AreaCount,
@@ -31,7 +30,6 @@ import {
   roleText,
   unsureAreaIds,
 } from "@parfocal/ui/lib/area-call";
-import { cn } from "@parfocal/ui/lib/utils";
 import { useNavigate } from "@tanstack/react-router";
 import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { polygonToGeoJson } from "../../annotations/geojson.ts";
@@ -66,8 +64,15 @@ import {
 import { disagreeOptions, reasonDraft } from "./disagree-reasons.ts";
 import { type DisplayLock, DisplayTab, displaySettings, withOverrides } from "./display-tab.tsx";
 import { FirstReadStep } from "./first-read.tsx";
+import {
+  openBlockers,
+  opinionQuestions,
+  questionBlockers,
+  unsureBlockers,
+} from "./guided-blockers.ts";
 import { useGuidedCoach } from "./guided-coach.ts";
 import { orderObjects, zoomedCamera } from "./guided-drive.ts";
+import { CameraBar, CanvasNotice, CoachTip, IssueCard } from "./guided-parts.tsx";
 import { nextOpenIndex } from "./guided-progress.ts";
 import {
   finishingAnswers,
@@ -93,7 +98,7 @@ import { RedrawLayer } from "./redraw-layer.tsx";
 import { type ReviewSession, useReviewSession } from "./review-data.ts";
 import { type Answer, type Answers, answerOf, baseAnswers, countAnswers } from "./review-state.ts";
 import { ReviewTop } from "./review-top.tsx";
-import { type Camera, homeCamera, readout, SlideStill, type StillView } from "./slide-still.tsx";
+import { type Camera, homeCamera, SlideStill, type StillView } from "./slide-still.tsx";
 import { ThreadsTab, useOpenThreadsWarning } from "./threads-tab.tsx";
 import { useDecisionSaves } from "./use-decision-saves.ts";
 import { useDisplayChoice, useShiftPresetKeys } from "./use-display-choice.ts";
@@ -648,63 +653,10 @@ function GuidedBody({
         })
       : undefined;
   const openRegions = regions.filter((region) => !answer(region.object));
-  const blockers: Blocker[] = [
-    ...openRegions.map((region) => ({
-      id: region.object,
-      text: `${region.object} is still open`,
-      goTo: `Go to ${region.object}`,
-      onGoTo: () => jump(region.object),
-    })),
-    ...(openCells.length
-      ? [
-          {
-            id: "cells",
-            text: `${openCells.length} cell${openCells.length === 1 ? "" : "s"} in the sample ${openCells.length === 1 ? "is" : "are"} still open`,
-            goTo: "Go to the cells",
-            onGoTo: () => jump("cells"),
-          },
-        ]
-      : []),
-  ];
-  const questions: OpinionQuestion[] = (session.opinion?.questions ?? [])
-    .filter((question) => !session.task?.ai_hidden_first_read || question.asked !== "first-read")
-    .map((question) => {
-      const answerText = opinion[question.key];
-      const missing = question.required === true && !answerText && setup.dropAnswers.length > 0;
-      return {
-        id: question.key,
-        question: question.label,
-        required: question.required ?? false,
-        kind: question.kind,
-        ...(question.kind === "choice" ? { options: question.options } : {}),
-        ...(question.kind === "scale" && question.min_label && question.max_label
-          ? {
-              help: `${question.min ?? 1} ${question.min_label} · ${question.max ?? 5} ${question.max_label}`,
-            }
-          : {}),
-        ...(answerText ? { answer: answerText } : {}),
-        ...(missing ? { missing: true } : {}),
-      };
-    });
-  const missingQuestions = questions
-    .map((question, position) => ({ question, position }))
-    .filter(({ question }) => question.required && !opinion[question.id]);
-  const unsureAreas: Blocker[] = session.nodeStaging
-    ? unsureAreaIds(regionAreas).map((id) => ({
-        id,
-        text: `${id} is not sure. The researcher sees it.`,
-        goTo: `Go to ${id}`,
-        onGoTo: () => jump(id),
-      }))
-    : [];
-  const doneBlockers: Blocker[] = counts.open
-    ? blockers
-    : missingQuestions.map(({ question, position }) => ({
-        id: question.id,
-        text: `Question ${position + 1} is not answered`,
-        goTo: "Answer it",
-        target: `[data-question="${question.id}"]`,
-      }));
+  const blockers = openBlockers(openRegions, openCells.length, jump);
+  const questions = opinionQuestions(session, opinion, setup.dropAnswers);
+  const unsureAreas = session.nodeStaging ? unsureBlockers(unsureAreaIds(regionAreas), jump) : [];
+  const doneBlockers = counts.open ? blockers : questionBlockers(questions, opinion);
   const nextLabel = !session.neighbours
     ? "Submit"
     : session.neighbours.next === null
@@ -1146,71 +1098,24 @@ function GuidedBody({
                   )
                 ) : null}
                 {noResults ? null : (
-                  <div className="absolute bottom-4 left-4 flex items-center gap-2">
-                    {showDone ? null : (
-                      <Button
-                        size="lg"
-                        variant={moved && !confirmRest ? "primary" : "secondary"}
-                        title={t`Center ${currentId} again`}
-                        onClick={() => {
-                          setCamera(null);
-                          setWhole(false);
-                        }}
-                      >
-                        <Icon name="target" />
-                        <Trans>Back to {currentId}</Trans>
-                      </Button>
-                    )}
-                    <fieldset
-                      aria-label={t`Zoom`}
-                      className="m-0 inline-flex h-10 min-w-0 items-center rounded-ctl border border-line-strong bg-btn-bg p-0"
-                    >
-                      <Button
-                        variant="ghost"
-                        size="icon-lg"
-                        aria-label={t`Zoom out`}
-                        title={t`Zoom out (−)`}
-                        onClick={() => setCamera({ ...shown, scale: shown.scale / 1.4 })}
-                      >
-                        <Icon name="minus" />
-                      </Button>
-                      <span
-                        className="min-w-14 text-center font-mono text-body-sm font-semibold"
-                        title={t`Magnification on screen`}
-                      >
-                        {readout(view, shown)}
-                      </span>
-                      <Button
-                        variant="ghost"
-                        size="icon-lg"
-                        aria-label={t`Zoom in`}
-                        title={t`Zoom in (+)`}
-                        onClick={() => setCamera({ ...shown, scale: shown.scale * 1.4 })}
-                      >
-                        <Icon name="plus" />
-                      </Button>
-                    </fieldset>
-                    <Button
-                      size="lg"
-                      className={
-                        view.kind === "whole"
-                          ? "border-accent bg-[color-mix(in_srgb,var(--accent)_18%,var(--chrome))]"
-                          : undefined
-                      }
-                      aria-pressed={view.kind === "whole"}
-                      title={
-                        view.kind === "whole" ? t`Back to ${currentId}` : t`See the whole slide`
-                      }
-                      onClick={() => {
-                        setCamera(null);
-                        setWhole(view.kind !== "whole");
-                        if (view.kind === "whole") setShowDone(false);
-                      }}
-                    >
-                      <Icon name="expand" />
-                      <Trans>Whole slide</Trans>
-                    </Button>
-                  </div>
+                  <CameraBar
+                    view={view}
+                    shown={shown}
+                    moved={moved}
+                    showDone={showDone}
+                    confirmRest={confirmRest}
+                    currentId={currentId}
+                    onCamera={setCamera}
+                    onBack={() => {
+                      setCamera(null);
+                      setWhole(false);
+                    }}
+                    onWhole={() => {
+                      setCamera(null);
+                      setWhole(view.kind !== "whole");
+                      if (view.kind === "whole") setShowDone(false);
+                    }}
+                  />
                 )}
               </>
             )}
@@ -1288,75 +1193,5 @@ function GuidedBody({
         }}
       />
     </main>
-  );
-}
-
-function CoachTip({
-  n,
-  children,
-  className,
-}: {
-  n: number;
-  children: ReactNode;
-  className?: string;
-}) {
-  return (
-    <div
-      className={cn(
-        "flex items-start gap-3 rounded-zone bg-[#0369a1] px-3.5 py-3 text-body-sm leading-[1.45] text-white shadow-pop",
-        className,
-      )}
-    >
-      <b className="grid size-5.5 shrink-0 place-items-center rounded-full bg-white text-caption text-[#0369a1]">
-        {n}
-      </b>
-      <span>{children}</span>
-    </div>
-  );
-}
-
-export function IssueCard({
-  icon,
-  title,
-  body,
-  action,
-}: {
-  icon: "info" | "smart";
-  title: string;
-  body: string;
-  action: ReactNode;
-}) {
-  return (
-    <div className="grid justify-items-start gap-3">
-      <Icon name={icon} size="lg" className="text-fg-dim" />
-      <h2 className="m-0 text-title-sm font-semibold">{title}</h2>
-      <p className="m-0 text-body leading-[1.5] text-fg-dim">{body}</p>
-      {action}
-    </div>
-  );
-}
-
-export function CanvasNotice({
-  icon,
-  title,
-  actions,
-  children,
-}: {
-  icon: "warn" | "smart" | "info";
-  title: string;
-  actions: ReactNode;
-  children: ReactNode;
-}) {
-  return (
-    <div className="absolute top-4 left-1/2 w-[min(760px,calc(100%-2rem))] -translate-x-1/2">
-      <InlineState
-        icon={icon}
-        title={title}
-        action={<span className="flex gap-2">{actions}</span>}
-        className="border-solid shadow-pop"
-      >
-        {children}
-      </InlineState>
-    </div>
   );
 }

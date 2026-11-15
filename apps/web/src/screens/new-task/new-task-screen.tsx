@@ -20,6 +20,8 @@ import { SidebarToggle } from "../../shell/sidebar-toggle.tsx";
 import { QueryState } from "../placeholder.tsx";
 import { decisionSettings } from "../review/decision-style.ts";
 import { checkChangeOf, checkPresetOf } from "./annotate-draft.ts";
+import { CheckStep } from "./check-step.tsx";
+import { HowStep } from "./how-step.tsx";
 import { AddSlidesModal, PreviewQuestionModal } from "./modals.tsx";
 import {
   applyTemplate,
@@ -50,16 +52,9 @@ import {
   whoReviews,
 } from "./model.ts";
 import { fieldId } from "./parts.tsx";
-import {
-  CheckStep,
-  HowStep,
-  KindStep,
-  ReviewersStep,
-  SendStep,
-  SentPanel,
-  SlidesStep,
-  styleOf,
-} from "./steps.tsx";
+import { ReviewersStep } from "./reviewers-step.tsx";
+import { SendStep, SentPanel } from "./send-step.tsx";
+import { KindStep, SlidesStep, styleOf } from "./steps.tsx";
 import { useTaskData } from "./use-task-data.ts";
 
 export type TaskModal = "addslides" | "dpreview";
