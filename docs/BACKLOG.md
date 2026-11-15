@@ -989,6 +989,12 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Depends on AIP-006, INGEST-003.
   Size: L.
 
+- [ ] SEC-045 · Isolate the remaining parse steps and run them in a Modal sandbox
+  SEC-026 isolates identify, scan and validate in a child process with an audit hook, which native reader code can bypass. The index and derive steps, result-file parsing and patch export still read files inside the worker, and the parser runs as the worker's user. Move those steps into the same child, run the child as its own user, and run parses in a network-blocked Modal sandbox with the file passed in and the app-level secrets moved off.
+  Done when tests show index, derive, result parsing and patch export run in the child with the same limits, a local test shows the parse user cannot read the worker's environment, and the ADR's sandbox TODOs are answered. Deploying the sandbox is an additive production write under ADR 0151 (standing approval within $30 a month).
+  Depends on SEC-026.
+  Size: L.
+
 - [ ] SEC-027 · Edge limits per IP
   The edge Worker limits login, upload and tile requests per client address with Cloudflare's rate limiting binding, and adds bot protection to login ([threat model](security/threat-model.md) X3 and T4).
   Done when a test against a preview shows a login flood from one address answered with 429 while another address signs in.
