@@ -22,6 +22,7 @@ export interface SamClient {
   encode(id: string, pixels: Float32Array<ArrayBuffer>): Promise<SamEncoded>;
   prompt(id: string, prompt: SamPrompt): Promise<SamPromptOutcome>;
   segmentAll(id: string): Promise<SamOutputs>;
+  pool(id: string, outlines: readonly Float32Array[]): Promise<Float32Array[]>;
   drop(id: string): void;
   close(): void;
 }
@@ -141,6 +142,14 @@ export function createSamClient(options: SamClientOptions): SamClient {
     async segmentAll(id) {
       const reply = await request((requestId) => ({ type: "segmentAll", requestId, id }));
       return reply.type === "segmented" ? reply.outputs : unexpected(reply);
+    },
+    async pool(id, outlines) {
+      const copies = outlines.map((outline) => Float32Array.from(outline));
+      const reply = await request(
+        (requestId) => ({ type: "pool", requestId, id, outlines: copies }),
+        copies.map((copy) => copy.buffer),
+      );
+      return reply.type === "pooled" ? [...reply.features] : unexpected(reply);
     },
     drop(id) {
       if (!closed) {

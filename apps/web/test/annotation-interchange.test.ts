@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, test } from "node:test";
+import { createTypeLearner, saveLearner } from "@parfocal/viewer-engine";
 import {
   type AnnotationDocument,
   addGroup,
@@ -10,6 +11,7 @@ import {
   linkThread,
   listShapes,
   placePin,
+  withLearner,
 } from "../src/annotations/document.ts";
 import { createHistory, undo } from "../src/annotations/history.ts";
 import {
@@ -266,5 +268,25 @@ describe("annotation import and export", () => {
     assert.throws(() => readFile('{"hello":"world"}'), UnreadableFileError);
     const empty = readFile('{"type":"FeatureCollection","features":[]}');
     assert.throws(() => mergeFile(createDocument(), empty, "empty.geojson"), UnreadableFileError);
+  });
+});
+
+describe("the slide's learner in the annotation file", () => {
+  test("travels with the own format and the GeoJSON export and comes back", () => {
+    const learner = createTypeLearner(2, 2, { minExamples: 1 });
+    learner.teach("shape-1", Float32Array.of(0.5, -1), 1);
+    const saved = saveLearner(learner, ["tumor", "stroma"]);
+    const doc = withLearner(createDocument(), saved);
+    const own = readFile(JSON.stringify(toOwnJson(doc)));
+    assert.deepEqual(own.learner, saved);
+    const geo = readFile(JSON.stringify(toGeoJson(doc)));
+    assert.deepEqual(geo.learner, saved);
+  });
+
+  test("is left out when the slide has none or the saved one is unreadable", () => {
+    const json = toOwnJson(createDocument());
+    assert.equal("learner" in json, false);
+    const broken = readFile(JSON.stringify({ ...json, learner: { version: 99 } }));
+    assert.equal(broken.learner, undefined);
   });
 });
