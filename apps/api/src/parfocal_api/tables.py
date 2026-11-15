@@ -2479,6 +2479,7 @@ registered_models = Table(
     Column("status", String(20), nullable=False, info=OPERATIONAL),
     Column("evaluation_report", String(400), nullable=True, info=OPERATIONAL),
     Column("calibration_temperatures", JSONB, nullable=False, info=OPERATIONAL),
+    Column("evaluation", JSONB, nullable=True, info=OPERATIONAL),
     Column("part_of_name", String(80), nullable=True, info=OPERATIONAL),
     Column("part_of_version", String(40), nullable=True, info=OPERATIONAL),
     *timestamps(),

@@ -4099,6 +4099,36 @@ export const getListRegisteredModelsResponseMock = (): RegistryEntry[] =>
       },
       null,
     ]),
+    evaluation: faker.helpers.arrayElement([
+      {
+        passed: faker.datatype.boolean(),
+        reports: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+          () => ({
+            task: faker.string.alpha({ length: { min: 10, max: 20 } }),
+            benchmark: faker.string.alpha({ length: { min: 10, max: 20 } }),
+            source: faker.string.alpha({ length: { min: 10, max: 20 } }),
+            measured: {
+              [faker.string.alphanumeric(5)]: faker.number.float({ fractionDigits: 2 }),
+            },
+            reference: {
+              [faker.string.alphanumeric(5)]: faker.number.float({ fractionDigits: 2 }),
+            },
+            allowed_drop: {
+              [faker.string.alphanumeric(5)]: faker.number.float({ fractionDigits: 2 }),
+            },
+            ceilings: {
+              [faker.string.alphanumeric(5)]: faker.number.float({ fractionDigits: 2 }),
+            },
+            refused: Array.from(
+              { length: faker.number.int({ min: 1, max: 10 }) },
+              (_, i) => i + 1,
+            ).map(() => faker.string.alpha({ length: { min: 10, max: 20 } })),
+            passed: faker.datatype.boolean(),
+          }),
+        ),
+      },
+      null,
+    ]),
   }));
 
 export const getGetRegisteredModelResponseMock = (
@@ -4141,6 +4171,36 @@ export const getGetRegisteredModelResponseMock = (
     {
       name: faker.helpers.fromRegExp("^[A-Za-z0-9][A-Za-z0-9._/-]*$"),
       version: faker.helpers.fromRegExp("^[A-Za-z0-9][A-Za-z0-9._+-]*$"),
+    },
+    null,
+  ]),
+  evaluation: faker.helpers.arrayElement([
+    {
+      passed: faker.datatype.boolean(),
+      reports: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () => ({
+          task: faker.string.alpha({ length: { min: 10, max: 20 } }),
+          benchmark: faker.string.alpha({ length: { min: 10, max: 20 } }),
+          source: faker.string.alpha({ length: { min: 10, max: 20 } }),
+          measured: {
+            [faker.string.alphanumeric(5)]: faker.number.float({ fractionDigits: 2 }),
+          },
+          reference: {
+            [faker.string.alphanumeric(5)]: faker.number.float({ fractionDigits: 2 }),
+          },
+          allowed_drop: {
+            [faker.string.alphanumeric(5)]: faker.number.float({ fractionDigits: 2 }),
+          },
+          ceilings: {
+            [faker.string.alphanumeric(5)]: faker.number.float({ fractionDigits: 2 }),
+          },
+          refused: Array.from(
+            { length: faker.number.int({ min: 1, max: 10 }) },
+            (_, i) => i + 1,
+          ).map(() => faker.string.alpha({ length: { min: 10, max: 20 } })),
+          passed: faker.datatype.boolean(),
+        }),
+      ),
     },
     null,
   ]),
@@ -4187,6 +4247,112 @@ export const getRegisterModelResponseMock = (
     {
       name: faker.helpers.fromRegExp("^[A-Za-z0-9][A-Za-z0-9._/-]*$"),
       version: faker.helpers.fromRegExp("^[A-Za-z0-9][A-Za-z0-9._+-]*$"),
+    },
+    null,
+  ]),
+  evaluation: faker.helpers.arrayElement([
+    {
+      passed: faker.datatype.boolean(),
+      reports: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () => ({
+          task: faker.string.alpha({ length: { min: 10, max: 20 } }),
+          benchmark: faker.string.alpha({ length: { min: 10, max: 20 } }),
+          source: faker.string.alpha({ length: { min: 10, max: 20 } }),
+          measured: {
+            [faker.string.alphanumeric(5)]: faker.number.float({ fractionDigits: 2 }),
+          },
+          reference: {
+            [faker.string.alphanumeric(5)]: faker.number.float({ fractionDigits: 2 }),
+          },
+          allowed_drop: {
+            [faker.string.alphanumeric(5)]: faker.number.float({ fractionDigits: 2 }),
+          },
+          ceilings: {
+            [faker.string.alphanumeric(5)]: faker.number.float({ fractionDigits: 2 }),
+          },
+          refused: Array.from(
+            { length: faker.number.int({ min: 1, max: 10 }) },
+            (_, i) => i + 1,
+          ).map(() => faker.string.alpha({ length: { min: 10, max: 20 } })),
+          passed: faker.datatype.boolean(),
+        }),
+      ),
+    },
+    null,
+  ]),
+  ...overrideResponse,
+});
+
+export const getPromoteRegisteredModelResponseMock = (
+  overrideResponse: Partial<Extract<RegistryEntry, object>> = {},
+): RegistryEntry => ({
+  name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  family: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  version: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  title: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  tasks: faker.helpers.arrayElements(Object.values(ModelTask)),
+  makes: faker.helpers.arrayElements(Object.values(ModelMakes)),
+  host: faker.helpers.arrayElement(Object.values(ModelHost)),
+  licence: {
+    weights: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    weights_class: faker.helpers.arrayElement(Object.values(LicenceClass)),
+    code: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    data: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () => ({
+        dataset: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        licence: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        licence_class: faker.helpers.arrayElement(Object.values(LicenceClass)),
+      }),
+    ),
+    source: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    read_on: faker.date.past().toISOString().slice(0, 10),
+    policy_kinds: faker.helpers.arrayElements(Object.values(TenantKind)),
+    enforced: faker.datatype.boolean(),
+  },
+  allowed_tenant_kinds: faker.helpers.arrayElements(Object.values(TenantKind)),
+  input_mpp: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+  calibration_temperatures: {
+    [faker.string.alphanumeric(5)]: faker.number.float({ fractionDigits: 2 }),
+  },
+  evaluation_report: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  status: faker.helpers.arrayElement(Object.values(ModelStatus)),
+  part_of: faker.helpers.arrayElement([
+    {
+      name: faker.helpers.fromRegExp("^[A-Za-z0-9][A-Za-z0-9._/-]*$"),
+      version: faker.helpers.fromRegExp("^[A-Za-z0-9][A-Za-z0-9._+-]*$"),
+    },
+    null,
+  ]),
+  evaluation: faker.helpers.arrayElement([
+    {
+      passed: faker.datatype.boolean(),
+      reports: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () => ({
+          task: faker.string.alpha({ length: { min: 10, max: 20 } }),
+          benchmark: faker.string.alpha({ length: { min: 10, max: 20 } }),
+          source: faker.string.alpha({ length: { min: 10, max: 20 } }),
+          measured: {
+            [faker.string.alphanumeric(5)]: faker.number.float({ fractionDigits: 2 }),
+          },
+          reference: {
+            [faker.string.alphanumeric(5)]: faker.number.float({ fractionDigits: 2 }),
+          },
+          allowed_drop: {
+            [faker.string.alphanumeric(5)]: faker.number.float({ fractionDigits: 2 }),
+          },
+          ceilings: {
+            [faker.string.alphanumeric(5)]: faker.number.float({ fractionDigits: 2 }),
+          },
+          refused: Array.from(
+            { length: faker.number.int({ min: 1, max: 10 }) },
+            (_, i) => i + 1,
+          ).map(() => faker.string.alpha({ length: { min: 10, max: 20 } })),
+          passed: faker.datatype.boolean(),
+        }),
+      ),
     },
     null,
   ]),
@@ -17658,6 +17824,30 @@ export const getRegisterModelMockHandler = (
   );
 };
 
+export const getPromoteRegisteredModelMockHandler = (
+  overrideResponse?:
+    | RegistryEntry
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<RegistryEntry> | RegistryEntry),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/platform/model-registry/:name/:version/promotion",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getPromoteRegisteredModelResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getTestLabModelMockHandler = (
   overrideResponse?:
     | LabModelTest
@@ -23820,6 +24010,7 @@ export const getParfocalAPIMock = () => [
   getListRegisteredModelsMockHandler(),
   getGetRegisteredModelMockHandler(),
   getRegisterModelMockHandler(),
+  getPromoteRegisteredModelMockHandler(),
   getTestLabModelMockHandler(),
   getConnectLabModelMockHandler(),
   getGetLabModelMockHandler(),
