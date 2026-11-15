@@ -100,4 +100,4 @@ All of this is SwiftShader on one loaded Mac. The switch times and the fitted an
 
 ## Follow-ups
 
-[ADR XXXX](../adr/XXXX-custom-webgpu-route-draws-from-a-render-worker.md) (the custom WebGPU route draws from a render worker and keeps the Viv tile data path). TODO: ID labels on this route. TODO: the level of detail tiers on this route. TODO: a run on a real GPU, headed, with a large nuclei set, to decide on compute culling.
+[ADR 0326](../adr/0326-custom-webgpu-route-draws-from-a-render-worker.md) (the custom WebGPU route draws from a render worker and keeps the Viv tile data path). TODO: ID labels on this route. TODO: the level of detail tiers on this route. TODO: a run on a real GPU, headed, with a large nuclei set, to decide on compute culling.

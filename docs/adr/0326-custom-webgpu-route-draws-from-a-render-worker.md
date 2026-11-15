@@ -1,4 +1,4 @@
-# XXXX. The custom WebGPU route draws from a render worker and keeps the Viv tile data path
+# 0326. The custom WebGPU route draws from a render worker and keeps the Viv tile data path
 
 - Date: 2026-11-15
 - Status: Accepted
