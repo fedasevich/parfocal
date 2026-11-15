@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import { before, describe, it } from "node:test";
-import { nucleiWarmupLayers } from "../../src/overlay/deck/shader-warmup.ts";
+import {
+  deviceInfoOf,
+  nucleiWarmupLayers,
+  warmupPaysOff,
+} from "../../src/overlay/deck/shader-warmup.ts";
 
 before(() => {
   if (typeof globalThis.ImageData === "undefined") {
@@ -21,5 +25,27 @@ describe("nucleiWarmupLayers", () => {
     }
     const kinds = new Set(layers.map((layer) => layer.constructor.name));
     assert.ok(kinds.size >= 3, [...kinds].join(", "));
+  });
+});
+
+describe("warmupPaysOff", () => {
+  it("warms on a hardware GPU and when the device is not known yet", () => {
+    assert.equal(
+      warmupPaysOff({ gpuType: "integrated", renderer: "ANGLE (Apple, M4, Metal)" }),
+      true,
+    );
+    assert.equal(warmupPaysOff({ gpuType: "unknown", renderer: "ANGLE (NVIDIA GeForce)" }), true);
+    assert.equal(warmupPaysOff(null), true);
+  });
+
+  it("skips a software renderer, where linking the programs stalls frames for seconds", () => {
+    assert.equal(warmupPaysOff({ gpuType: "cpu", renderer: "ANGLE (Google, SwiftShader)" }), false);
+    assert.equal(warmupPaysOff({ gpuType: "unknown", renderer: "llvmpipe (LLVM 15.0.7)" }), false);
+  });
+
+  it("reads the device info from a deck", () => {
+    const info = { gpuType: "cpu", renderer: "SwiftShader" };
+    assert.deepEqual(deviceInfoOf({ device: { info } }), info);
+    assert.equal(deviceInfoOf({ device: null }), null);
   });
 });

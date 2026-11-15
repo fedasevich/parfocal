@@ -18,6 +18,7 @@ type RunStreamLayerProps = {
   readonly task: AnnotateTask | null;
   readonly projectId: string | undefined;
   readonly slideId: string;
+  readonly startShown: boolean;
 };
 
 const secondsPerMinute = 60;
@@ -97,7 +98,7 @@ function RunStreamPanel({
 }
 
 function ProjectRunStreamLayer(props: RunStreamLayerProps & { readonly projectId: string }) {
-  const { engine, stage, projectId, slideId, selection, task } = props;
+  const { engine, stage, projectId, slideId, selection, task, startShown } = props;
   const me = okData(useGetMe().data);
   const project = okData(useGetProject(projectId).data);
   const canTune = canTuneRun({
@@ -122,7 +123,7 @@ function ProjectRunStreamLayer(props: RunStreamLayerProps & { readonly projectId
         <RunStreamPanel controls={controls} slide={engine.getSlide()} />
       ) : null}
       {task === null ? null : <TaskRunStatus join={join} streamed={controls.drawn} />}
-      {controls.phase === "streaming" || !runner ? null : (
+      {controls.phase === "streaming" || !runner || !startShown ? null : (
         <StartRunPanel
           projectId={projectId}
           slideId={slideId}

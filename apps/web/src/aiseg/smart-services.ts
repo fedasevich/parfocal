@@ -1,3 +1,4 @@
+import type { SamClient } from "@parfocal/viewer-engine";
 import { readBuildConfig } from "../config.ts";
 import { loadViewerEngine } from "../viewer/load-engine.ts";
 import { createPresetPatchReader } from "./patch-reader.ts";
@@ -7,7 +8,7 @@ import type { SmartReader, SmartSam } from "./smart-session.ts";
 
 export interface SmartServices {
   readonly reader: SmartReader;
-  readonly sam: SmartSam & RegionSam;
+  readonly sam: SmartSam & RegionSam & Partial<Pick<SamClient, "pool">>;
   readonly plan: (preset: ScalePresetId) => Promise<PresetPatchPlan>;
   readonly close: () => void;
 }

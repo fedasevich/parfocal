@@ -23,7 +23,8 @@ export const fakeMapSize = 256;
 export const fakeNucleusRadius = 7;
 export const fakeNucleusSpacing = 22;
 
-export interface FakeSam extends Pick<SamClient, "encode" | "prompt" | "segmentAll" | "drop"> {
+export interface FakeSam
+  extends Pick<SamClient, "encode" | "prompt" | "segmentAll" | "drop" | "pool"> {
   readonly prompts: FakePromptRecord[];
   readonly encodes: string[];
   readonly dropped: string[];
@@ -82,6 +83,22 @@ export function fakeNucleusGrid(size: number = fakeMapSize): { x: number; y: num
   return discs;
 }
 
+export const fakePooledDims = 8;
+
+export function fakePooledFeature(outline: Float32Array): Float32Array {
+  const count = Math.max(1, outline.length >> 1);
+  let spread = 0;
+  for (let at = 0; at + 3 < outline.length; at += 2) {
+    const dx = (outline[at + 2] ?? 0) - (outline[at] ?? 0);
+    const dy = (outline[at + 3] ?? 0) - (outline[at + 1] ?? 0);
+    spread += Math.hypot(dx, dy) / count;
+  }
+  const feature = new Float32Array(fakePooledDims);
+  feature[0] = 3;
+  feature[1] = spread / 100;
+  return feature;
+}
+
 export function createFakeSam(): FakeSam {
   const prompts: FakePromptRecord[] = [];
   const encodes: string[] = [];
@@ -96,6 +113,9 @@ export function createFakeSam(): FakeSam {
     },
     drop(id) {
       dropped.push(id);
+    },
+    pool(_id, outlines) {
+      return Promise.resolve(outlines.map((outline) => fakePooledFeature(outline)));
     },
     encode(id) {
       encodes.push(id);

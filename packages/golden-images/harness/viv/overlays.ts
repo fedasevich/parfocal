@@ -5,15 +5,18 @@ import {
   isHeatmapOverlay,
   type OverlayController,
   placedLabelBox,
+  type RendererFactory,
+  RendererRouteUnavailableError,
   type ViewerEngine,
   withHeatmapLook,
   zoomForMagnification,
 } from "@parfocal/viewer-engine";
 import {
+  type DeckWebGpuRoute,
   type PixelSlide,
+  pixelRendererRoutes,
   pixelSlide,
   type VivRoute,
-  vivRendererFactory,
 } from "@parfocal/viewer-engine/viv";
 import {
   idLabelPlacement,
@@ -58,7 +61,7 @@ interface InspectableLayer {
 
 let watching: Destroyable[] = [];
 let engine: ViewerEngine | null = null;
-let route: VivRoute | null = null;
+let route: VivRoute | DeckWebGpuRoute | null = null;
 let layers: OverlayController | null = null;
 let shown: OverlayGeometry | null = null;
 const errors: string[] = [];
@@ -105,20 +108,29 @@ const watched = (): ResourceWatch => ({
 const settle = async (): Promise<OverlayRenderResult> => {
   if (route === null || layers === null) throw new Error("Nothing is rendered yet");
   await route.whenIdle();
-  return { errors: [...errors], layerIds: layers.list().map((layer) => layer.id) };
+  return {
+    errors: [...errors],
+    layerIds: layers.list().map((layer) => layer.id),
+    uncapturedGpuErrors: "uncapturedGpuErrors" in route ? route.uncapturedGpuErrors() : null,
+  };
 };
 
 const render = async (request: OverlayRenderRequest): Promise<OverlayRenderResult> => {
   reset();
-  const factory = vivRendererFactory({
-    onError: (error) => {
+  const routeOptions = {
+    onError: (error: Error) => {
       errors.push(error.message);
     },
-  });
+  };
+  const id = request.route ?? "viv";
+  const load = pixelRendererRoutes({ viv: routeOptions, deckWebGpu: routeOptions })[id];
+  if (load === undefined) throw new RendererRouteUnavailableError(id);
+  const factory: RendererFactory<PixelSlide> = await load();
   const current = createViewerEngine<PixelSlide>({
     createRenderer: (container) => {
-      route = factory(container);
-      return route;
+      const created = factory(container) as VivRoute | DeckWebGpuRoute;
+      route = created;
+      return created;
     },
     openSlide: async (ref, signal) => {
       const openRequest = { formatId: request.formatId, url: request.url };

@@ -1692,6 +1692,18 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Refs [`poc/src/deck94/*`](https://github.com/fedasevich/pathlogy-poc/tree/master/src/deck94), doc 23.
   Size: L.
 
+- [ ] VIEW-070 · Dashed AI proposals on the deck.gl WebGPU route
+  On the VIEW-037 route AI proposals draw solid, 0.625% of pixels off the Viv golden, because deck.gl's `PathStyleExtension` injects GLSL only. Draw the dash in WGSL through a small layer extension, or as screen-space dash geometry rebuilt per zoom step with the extension's phase and caps.
+  Done when the AI proposals golden passes on the route at Viv's 0.1% tolerance and `routes-cmu1.spec.ts` drops its 2% bound.
+  Depends on VIEW-037.
+  Size: M.
+
+- [ ] VIEW-071 · Pick the renderer route per slide, checked on a real GPU
+  `mountSlideViewport` always mounts Viv, so the deck.gl WebGPU route of VIEW-037 is reachable only through `PARFOCAL_RENDERER_ROUTE`. Add the route picker behind a developer setting, run the route goldens and the pan and budget specs once on the Mac's real GPU, and check translucent outlines, where the route's wrapped third ring vertex draws one edge twice.
+  Done when the developer setting switches the route on an open slide, a result file records the real-GPU golden and perf numbers, and a translucent outline golden passes on both routes.
+  Depends on VIEW-037.
+  Size: M.
+
 - [ ] VIEW-038 · Custom WebGPU engine route
   Render worker with OffscreenCanvas, tile atlas, compute culling, instanced polygons with instance-step attributes, 8-bit only.
   Done when the route plugs into the VIEW-036 renderer interface, the same golden tests that Viv passes pass on this route, perf tests pass and annotation set updates take one buffer write (the POC's advantage).
@@ -3767,11 +3779,17 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Done when the metric appears on the lab dashboard with seeded data.
   Size: M.
 
-- [ ] AILEARN-008 · The review viewer gives the learner real embeddings
+- [x] AILEARN-008 · The review viewer gives the learner real embeddings
   AILEARN-003 (learner UI) feeds the learner pooled SAM embeddings through `LearnerEmbeddingsContext`, but only the annotate screens hold SAM services, a patch reader and cell outlines, so on a real slide in the review viewer the learner stays off. The review viewer provides that context from the same SAM services and the slide's cell outlines, lazily and only once the reviewer starts correcting types.
   Done when an E2E on a paged slide with stubbed SAM sees the learner zone appear after 10 retypes, and a test proves no SAM work starts before the first correction.
   Depends on AILEARN-003.
   Size: M.
+
+- [ ] AILEARN-009 · One SAM worker per page for the learner and smart select
+  AILEARN-008 gives the review viewer its own SAM services beside the slide stage's, so a page that also uses smart select runs two SAM workers and holds the model twice. Lift the stage's shared SAM services one level up so the learner and smart select use one worker.
+  Done when a test opens the review viewer, uses smart select and corrects a type, and counts one SAM worker and one model load.
+  Depends on AILEARN-008.
+  Size: S.
 
 ---
 

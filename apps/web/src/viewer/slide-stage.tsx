@@ -775,6 +775,7 @@ function OpenedSlide({
                 task={annotateTask}
                 projectId={projectId}
                 slideId={slideId}
+                startShown={tool !== "smart"}
               />
             ) : null}
             {resultPreview === null ? null : (
