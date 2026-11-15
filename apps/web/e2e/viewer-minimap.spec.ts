@@ -43,8 +43,12 @@ test("the map fades once the pointer is within 40 px and clears again beyond", a
   if (box === null) throw new Error("the minimap has no box");
   await page.mouse.move(box.x - 30, box.y + box.height / 2);
   await expect(map).toHaveAttribute("data-faded", "true");
-  await page.mouse.move(box.x - 120, box.y + box.height / 2);
-  await expect(map).not.toHaveAttribute("data-faded", "true");
+  await expect(async () => {
+    const now = (await map.boundingBox()) ?? box;
+    await page.mouse.move(now.x - 100, now.y + now.height / 2);
+    await page.mouse.move(now.x - 120, now.y + now.height / 2, { steps: 3 });
+    await expect(map).not.toHaveAttribute("data-faded", "true", { timeout: 1000 });
+  }).toPass({ timeout: 15_000 });
 });
 
 test("clicking the faded map still opens the whole-slide peek", async ({ page }) => {

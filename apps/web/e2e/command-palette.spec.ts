@@ -57,6 +57,7 @@ test("Measure shows only on a slide and arms the ruler", async ({ page }) => {
     .first()
     .click();
   await expect(page).toHaveURL(/\/slides\//);
+  await expect(palette).toBeHidden();
   palette = await openPalette(page);
   await palette.getByRole("combobox").fill("measure");
   const measure = palette.getByRole("option", { name: /Measure/ });
