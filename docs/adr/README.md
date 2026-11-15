@@ -304,3 +304,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0337](0337-ui-visual-baselines-per-story-theme-and-density.md) | UI visual regression compares every story in both themes and densities with committed baselines from the Linux runner | Accepted | 2026-11-15 |
 | [0338](0338-layout-experiments-split-only-unchosen-production-users.md) | Layout experiments split only production users who have not chosen, and pinned means bottom right | Accepted | 2026-11-15 |
 | [0339](0339-container-images-install-from-uv-lock.md) | Container images install from uv.lock, through exported lock files for Modal | Accepted | 2026-11-15 |
+| [XXXX](XXXX-make-dev-signs-in-through-the-local-zitadel.md) | make dev signs in through the local Zitadel by default, and Zitadel Cloud stays one setting away | Accepted | 2026-11-15 |

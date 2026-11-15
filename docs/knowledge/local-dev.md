@@ -1,6 +1,12 @@
 # Local development
 
-How every service in [ADR 0003](../adr/0003-pilot-platform-architecture.md) is reached from a laptop, as decided in [ADR 0004](../adr/0004-cloud-dev-resources.md) and [ADR 0005](../adr/0005-external-sends-only-in-production.md). Only `APP_ENV=prod` talks to Resend, Sentry, Grafana Cloud and PostHog. Each has an override setting for the rare case of testing it elsewhere. FOUND-009 builds this. Postgres and MinIO are the only local services. Everything else runs inside the dev servers or is a free cloud resource.
+How every service in [ADR 0003](../adr/0003-pilot-platform-architecture.md) is reached from a laptop, as decided in [ADR 0004](../adr/0004-cloud-dev-resources.md) and [ADR 0005](../adr/0005-external-sends-only-in-production.md). Only `APP_ENV=prod` talks to Resend, Sentry, Grafana Cloud and PostHog. Each has an override setting for the rare case of testing it elsewhere. Postgres, MinIO and, for `make dev`, a local Zitadel are the local services. Everything else runs inside the dev servers or is a free cloud resource.
+
+## make dev
+
+`make dev` runs `scripts/dev.sh`. It installs the packages, writes missing keys into `.env` (`scripts/dev_env.py`), starts the compose stack and the local Zitadel (`infra/local/zitadel-up.sh`), migrates, creates the MinIO bucket, seeds the ČVUT showcase with the test user as owner and runs the API and Vite. The test user is `e2e-pathologist@parfocal.test`, with the password in `.zitadel/test-password`. Every step is safe to repeat. The seed runs as the owner role from `MIGRATION_DATABASE_URL`, because the app role cannot insert workspace settings past row-level security.
+
+The script sources `.env` and then `.zitadel/e2e.env`, so the local Zitadel wins over any Zitadel Cloud values, and it sets the database, storage and origin settings from the ports itself. `PARFOCAL_DEV_IDENTITY=cloud` skips the local Zitadel ([ADR XXXX](../adr/XXXX-make-dev-signs-in-through-the-local-zitadel.md), make dev signs in through the local Zitadel). `PARFOCAL_DEV_PROJECT` names the compose project (default `parfocal`, Zitadel gets `-zitadel` added), and `PARFOCAL_PG_PORT`, `PARFOCAL_POOLER_PORT`, `PARFOCAL_STORAGE_PORT`, `PARFOCAL_ZITADEL_PORT`, `PARFOCAL_MAILPIT_PORT`, `PARFOCAL_WEB_PORT` and `PARFOCAL_API_PORT` move the ports, which lets an agent run a second stack beside the shared one. Ctrl-C stops the API and Vite and leaves the containers running. macOS ships bash 3.2, so the script avoids `wait -n` and other bash 4 features.
 
 | Service | Production | Development | Automated tests |
 |---|---|---|---|
@@ -11,7 +17,7 @@ How every service in [ADR 0003](../adr/0003-pilot-platform-architecture.md) is r
 | Python API | FastAPI on Modal | `uv run uvicorn` | pytest with the FastAPI test client |
 | Jobs | Modal `spawn` and cron | In-process runner behind the same interface | In-process runner with a fake clock |
 | GPU inference | Modal GPU functions | CPU or Apple MPS for small models, or `modal serve` against the dev Modal environment | CPU with tiny fixtures |
-| Identity | Zitadel Cloud | The same Zitadel Cloud instance, dev application with `localhost` redirects | Identity faked at the FastAPI dependency. Playwright uses a dedicated test user |
+| Identity | Zitadel Cloud | The local Zitadel in Docker under `make dev`, or the Zitadel Cloud dev application with `PARFOCAL_DEV_IDENTITY=cloud` | Identity faked at the FastAPI dependency. Playwright uses a dedicated test user |
 | Email | Resend | Console sender that prints recipient, template and link | In-memory fake sender |
 | Errors | Sentry | Console only, no DSN | None |
 | Traces, logs, metrics | Grafana Cloud | Console exporters | Console and file exporters, which the SEC-010 scan reads |
@@ -27,4 +33,4 @@ The web app only sees variables that start with `PARFOCAL_PUBLIC_`. `PARFOCAL_PU
 
 ## Unverified
 
-- A Worker under `vite dev` using a remote R2 binding while its Durable Objects stay local. Confirm in FOUND-009.
+- A Worker under `vite dev` using a remote R2 binding while its Durable Objects stay local. FOUND-009 did not wire the Cloudflare Vite plugin into `apps/web`, so this is still unchecked, and `make dev` was not checked with a slide open in the viewer.

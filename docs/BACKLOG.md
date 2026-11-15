@@ -443,7 +443,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Done when a contract test proves the served schema equals the committed one.
   Depends on STACK-008, STACK-019.
 
-- [ ] FOUND-009 · Local development environment
+- [x] FOUND-009 · Local development environment
   Docker Compose with Postgres plus PostGIS and a PgBouncer in transaction mode like Neon's (the compose file exists since FOUND-013). The Vite dev server runs the edge Worker and Durable Objects through the Cloudflare Vite plugin with a remote binding to the `parfocal-dev` R2 bucket, FastAPI runs under uvicorn and jobs run in-process behind the same runner interface as Modal. Zitadel Cloud and the dev bucket are real cloud resources configured through `.env` ([ADR 0004](adr/0004-cloud-dev-resources.md)). One command starts everything. Seeded dev tenant. See [knowledge/local-dev.md](knowledge/local-dev.md).
   Done when a new machine runs `make dev` (or equivalent) and reaches the logged-in home screen in under 10 minutes, documented in the README.
   Size: L.

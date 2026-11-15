@@ -29,7 +29,9 @@ The project memory lives in [docs/](docs/README.md). The plan is [docs/BACKLOG.m
 
 ## Getting started
 
-Needs Node 26, pnpm 12, uv, betterleaks (`brew install betterleaks`) and Docker. Python 3.14 is fetched by uv. `pnpm install` also installs the lefthook git hooks, which check staged files with Biome, Oxlint, Ruff and betterleaks.
+Needs Node 26, pnpm 12, uv, OpenTofu (`brew install opentofu`), betterleaks (`brew install betterleaks`) and Docker. Python 3.14 is fetched by uv. `pnpm install` also installs the lefthook git hooks, which check staged files with Biome, Oxlint, Ruff and betterleaks.
+
+`make dev` (or `pnpm dev`) takes a fresh checkout to a running app. It installs the packages, writes a `.env` with new keys, starts Postgres, PgBouncer, MinIO and a local Zitadel in Docker, migrates, seeds the ČVUT showcase workspaces and runs the API and the web app. Open `http://localhost:5173` and sign in as `e2e-pathologist@parfocal.test` with the password in `.zitadel/test-password`. A clean run took 62 s with warm caches ([result](docs/results/2026-11-15-make-dev-cold-start.md)). Running it again reuses everything. `PARFOCAL_DEV_IDENTITY=cloud make dev` uses the Zitadel Cloud settings in `.env` instead, and the `PARFOCAL_*_PORT` and `PARFOCAL_DEV_PROJECT` variables move a second stack off the default ports ([knowledge/local-dev.md](docs/knowledge/local-dev.md)). `pnpm --filter @parfocal/e2e dev:check` signs in and checks the home screen.
 
 ```
 pnpm install
