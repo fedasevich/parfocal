@@ -1,6 +1,6 @@
 # Decisions waiting for the owner
 
-Last updated: 2026-11-14
+Last updated: 2026-11-15
 
 Each decision lists its options, with the recommended one marked. Write your letter after "Your choice:", or leave it empty to take the recommended option. A short note is welcome where you pick "Other".
 
@@ -8,7 +8,7 @@ To take every recommendation at once, write "all recommended" here:
 
 ## What you need to do next, in order
 
-1. Decisions 105 (older Ventana archives with several scan areas), 106 (who reads the sealed clinical note), 107 (how CI gets the model files for the parity test), 108 (whether experts on an annotate task may run a model) and 109 (which Cloudflare token `.env` holds after the destructive action guard) below.
+1. Decisions 105 (older Ventana archives with several scan areas), 106 (who reads the sealed clinical note), 107 (how CI gets the model files for the parity test), 108 (whether experts on an annotate task may run a model), 109 (which Cloudflare token `.env` holds after the destructive action guard) and 110 (a smoke account for the browser check after each deploy) below.
 2. The checks on your Mac listed under "The review column" below, when you have a few minutes.
 3. When the app is ready for production, say so, and the lead books the deploy session of decisions 93, 94 and 95.
 
@@ -180,6 +180,16 @@ SEC-031 (hard stops for destructive agent actions) now refuses agents' cloud del
 
 Your choice:
 
+### 110. A smoke account for the browser check after each deploy
+
+OPS-016 (a real browser checks the deployed app after every deploy) added a read-only headless browser run after each production deploy. Signed out it checks the sign-in page. Signed in it opens home, a workspace, a case and a slide, and any `/api` write fails the run. The signed-in part needs a production account, which is skipped until it exists.
+
+- **A. Make a smoke account that can only view one workspace with one case and one fixture slide, and put `PARFOCAL_SMOKE_EMAIL` as a variable and `PARFOCAL_SMOKE_PASSWORD` as a secret in the GitHub environment `production` (recommended).** The check then covers the real viewer path, and OPS-014 (prepare production for the first real user) decides later whether the account stays.
+- B. Run the signed-out check only.
+- Other.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 The temporary review checklist of 2026-11-14 is handled and deleted. What still waits is below.
@@ -195,7 +205,7 @@ Waiting on something else, nothing for you now:
 
 - IAM-027 (sign-up and sign-in from the app's own screens) waits for the deploy session in decision 95 (the Zitadel login service user), paused until the app is ready for production.
 - OPS-005 (continuous deployment) is paused by your answer to decision 96, and TEST-020 (showcase seed) and SEC-042 (the edge guards the real API path) wait for the next production deploy.
-- IAM-001 (identity provider as code) and TEST-010 (load test tooling) wait for staging, which is cut for now.
+- IAM-001 (identity provider as code) and TEST-010 (load test tooling) waited for staging, which is dropped for good (ADR 0331, no staging environment), so the next session rescopes them to local dev or a drill environment.
 - FOUND-030 (bundle analyzer report), TEST-017 (flaky test management), TEST-036 (display panel Undo tests) and TEST-039 (local Zitadel for the end-to-end suite) wait for a green CI run on `main`, which agents are fixing.
 - IAM-021 (lock screen) and SHELL-012 (account menu) wait for the expired sign-in to return to the object and for the manual lock item.
 - VIEW-017 (OME-Zarr reader) waits for converted real fixtures from INGEST-015 (conversion fallback worker), which an agent now finishes with lossless chunks after decision 104.
