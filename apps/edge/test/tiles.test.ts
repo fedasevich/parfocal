@@ -607,7 +607,7 @@ describe("the byte range cache", () => {
     assert.equal(cache.puts.length, 0);
   });
 
-  test("a cached range is refused for a token signed for another size", async () => {
+  test("a token signed for another size misses the cache and is refused by the bucket", async () => {
     const bucket = lab();
     const cache = new FakeCache();
     const first = await cachedRequest(bucket, cache, ORIGINAL, await tokenFor(), "bytes=0-99");
@@ -615,7 +615,22 @@ describe("the byte range cache", () => {
     const other = await tokenFor({ size: 4000, restricted: [] });
     const response = await cachedRequest(bucket, cache, ORIGINAL, other, "bytes=0-99");
     assert.equal(response.status, 409);
-    assert.equal(bucket.reads.length, 1);
+    assert.equal(bucket.reads.length, 2);
+    assert.equal(cache.puts.length, 1);
+  });
+
+  test("the original is keyed by its signed size and kept a day, other files ten minutes", async () => {
+    const bucket = lab();
+    const cache = new FakeCache();
+    const token = await tokenFor();
+    await (await cachedRequest(bucket, cache, ORIGINAL, token, "bytes=0-99")).arrayBuffer();
+    await (await cachedRequest(bucket, cache, `/tiles/${SLIDE}/levels.json`, token)).arrayBuffer();
+    const [original = "", levels = ""] = cache.puts;
+    assert.match(original, new RegExp(`\\?size=${SIZE}&offset=0&length=100$`));
+    assert.match(levels, /levels\.json$/);
+    const kept = (url: string) => cache.entries.get(url)?.headers.get("Cache-Control");
+    assert.equal(kept(original), "public, max-age=86400");
+    assert.equal(kept(levels), "public, max-age=600");
   });
 
   test("a cached range is blanked for a token that blanks it and clear for one that does not", async () => {
