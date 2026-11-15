@@ -1342,6 +1342,12 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
   Done when tests show expired or cross-tenant signatures are refused and a two-hour viewing session never fails a tile.
   The original file holds the label and macro pages on SVS, NDPI, SCN, BIF and similar formats, so a token must not let a reader who may not see labels fetch those bytes ([ADR 0124](adr/0124-labels-and-macros-only-for-whole-project-readers-in-clinical-projects.md), labels and macros only for whole-project readers in clinical projects, ). Ingest records the byte ranges of the label and macro pages and the edge refuses any range that overlaps them, so the stored original keeps the bytes and SHA-256 of the upload, as the owner chose on 2026-11-02.
 
+- [ ] TILES-009 · A rewritten original never comes from a stale cache
+  TILES-002 caches tile ranges at the edge keyed on the original's signed size, so an original rewritten at the same size is served stale for up to a day. Add an optional ETag field to the tile token, have `head_object` return it, and make the Worker add it to the cache key and refuse to cache on a mismatch.
+  Done when a test shows a same-size rewrite misses the cache, and a check against real R2 confirms the S3 ETag of a multipart upload equals the Worker's `etag`.
+  Depends on TILES-002.
+  Size: S.
+
 - [ ] TILES-002 · CDN in front of slide storage
   HTTP/2 or HTTP/3, Range requests through the Worker gateway, and a Cache API layer keyed per object and byte range without the token if STACK-025 shows it is needed.
   Done when the latency test shows warm tile fetch p95 under 60 ms in the same region.
@@ -4316,6 +4322,12 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when cost dashboards exist and lifecycle rules are tested in a drill environment.
   Account-level caps and alerts were set on 2026-10-31 under [ADR 0115](adr/0115-production-access-and-spend-caps.md), with the table in [knowledge/platform.md](knowledge/platform.md). Budgets per environment, cost dashboards and lifecycle rules are still open.
   Size: M.
+
+- [ ] OPS-019 · A Zitadel adapter and a command for tenant provisioning
+  OPS-010 provisions and deprovisions a tenant against local Postgres, MinIO and a fake identity provider in `apps/api/src/parfocal_api/tenant_provisioning.py`. A real Zitadel adapter and a command-line entry point are still missing.
+  Done when the command provisions and deprovisions a tenant against the local Zitadel from FOUND-009 (make dev) in a test, and its runbook names the drill environment run.
+  Depends on OPS-010.
+  Size: S.
 
 - [ ] OPS-010 · Tenant provisioning automation
   Create a tenant with region, IdP organisation, buckets, keys and defaults in one command.
