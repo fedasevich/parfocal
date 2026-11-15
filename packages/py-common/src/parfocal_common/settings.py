@@ -65,6 +65,8 @@ class ServiceSettings(BaseSettings):
     flag_backend: FlagBackend | None = None
     flag_file: str = "flags.json"
     email_outbox: str = ".outbox/email.jsonl"
+    alert_page_email: str = "security@parfocal.eu"
+    alert_ticket_email: str = "security@parfocal.eu"
 
     def backends(self) -> Backends:
         defaults = default_backends(self.app_env)

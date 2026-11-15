@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-15
 
+- OPS-007 Built SLOs, burn-rate alert rules and on-call email routing in parfocal_common.alerting and the cross-workspace audit watch in parfocal_api.security_alerts (ADR 0339, SLOs and alerts as code, routed by email). Every SLO has a fault-injection test against a fake upstream and the watch has one against Postgres. Runbook gained the cross-workspace query. Decision 111 asks for the ingest and pre-read targets. Left: OPS-006 (observability stack) must emit the SLI events and schedule evaluate_slos and CrossWorkspaceWatch.check, and a drill environment run. No cloud service touched.
 - EXP-008 partly merged into the train: /study page with timed tasks, frozen rounds, a task set editable as JSON in the browser and a JSON results download. The ten tasks are agent-written stand-ins for the kit plan.
 - TEST-015 merged into the train: nightly browsers workflow runs four viewer checks on Chromium, Firefox and WebKit and publishes a summary table and JSON artifact.
 - FOUND-028 merged into the train: every CI job pinned to ubuntu-24.04 with a guard test against ubuntu-latest.
