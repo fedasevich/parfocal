@@ -1,0 +1,48 @@
+[[series]]
+id = "pq"
+title = "PQ on the fixture"
+better = "higher"
+reference = { result = "2026-01-02-first-run.md", row = "beta", column = "PQ", variant = "baseline" }
+
+[[series.points]]
+result = "2026-02-03-second-run.md"
+row = "alpha"
+column = "PQ"
+variant = "alpha"
+
+[[series.points]]
+result = "2026-01-02-first-run.md"
+row = "alpha"
+column = "PQ"
+variant = "alpha"
+
+[[series.points]]
+result = "2026-01-02-first-run.md"
+row = "beta"
+column = "PQ"
+variant = "beta"
+
+[[series.points]]
+json = "summary.json"
+key = "summary.pq"
+date = "2026-03-01"
+variant = "alpha"
+note = "(stored output)"
+
+[[series]]
+id = "ece"
+title = "ECE after"
+better = "lower"
+
+[[series.points]]
+result = "2026-01-02-first-run.md"
+row = "beta"
+column = "ECE before, after"
+part = 1
+variant = "beta"
+
+[[series.points]]
+result = "2026-01-02-first-run.md"
+row = { "Encoder" = "uint8", "Decoder" = "fp32" }
+column = "Count"
+variant = "count"

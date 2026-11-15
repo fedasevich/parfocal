@@ -1,0 +1,55 @@
+name: deploy-smoke
+
+run-name: ${{ format('browser smoke {0}', inputs.url || 'https://app.parfocal.eu') }}
+
+on:
+  workflow_call:
+    inputs:
+      ref:
+        description: Commit whose smoke spec runs
+        type: string
+        required: true
+      url:
+        description: Address of the deployed app
+        type: string
+        default: https://app.parfocal.eu
+  workflow_dispatch:
+    inputs:
+      url:
+        description: Address of the deployed app, or of a deliberately broken build for a test run
+        type: string
+        default: https://app.parfocal.eu
+
+permissions:
+  contents: read
+
+env:
+  TURBO_TELEMETRY_DISABLED: "1"
+
+jobs:
+  browser-smoke:
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 20
+    env:
+      PARFOCAL_SMOKE_URL: ${{ inputs.url || 'https://app.parfocal.eu' }}
+      PARFOCAL_SMOKE_EMAIL: ${{ vars.PARFOCAL_SMOKE_EMAIL }}
+      PARFOCAL_SMOKE_PASSWORD: ${{ secrets.PARFOCAL_SMOKE_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+      - uses: ./.github/actions/setup-workspace
+        with:
+          cache-key: deploy-smoke
+      - run: google-chrome --version
+      - if: ${{ env.PARFOCAL_SMOKE_EMAIL == '' || env.PARFOCAL_SMOKE_PASSWORD == '' }}
+        run: echo "The signed-in smoke was skipped because the smoke account is not set up yet" >> "$GITHUB_STEP_SUMMARY"
+      - run: pnpm --filter @parfocal/web run smoke
+      - if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: deploy-smoke-${{ github.run_id }}-${{ github.run_attempt }}
+          path: apps/web/test-results/smoke
+          retention-days: 30
+          if-no-files-found: warn
