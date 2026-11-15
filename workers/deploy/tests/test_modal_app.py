@@ -1,3 +1,4 @@
+import inspect
 from pathlib import Path
 
 import modal
@@ -11,13 +12,19 @@ from parfocal_deploy.modal_app import (
     INGEST_FUNCTION,
     INGEST_OPTIONS,
     MAX_DEPLOYED_CRONS,
+    PARSE_SANDBOX_OPTIONS,
     WEB_ENDPOINT,
     WEB_FUNCTION,
     WEB_OPTIONS,
     app,
     requirements,
 )
-from parfocal_ingest.settings import INGEST_MEMORY_LIMIT_MIB, INGEST_MEMORY_MIB
+from parfocal_ingest.settings import (
+    INGEST_MEMORY_LIMIT_MIB,
+    INGEST_MEMORY_MIB,
+    PARSE_MEMORY_MIB,
+    PARSE_SECONDS,
+)
 from parfocal_ml.gpu_pool import POOLS
 
 
@@ -38,6 +45,16 @@ def test_nothing_is_kept_warm_and_every_function_is_bounded() -> None:
         assert "buffer_containers" not in options
         assert options["max_containers"] <= 4
     assert all(pool.min_containers == 0 for pool in POOLS)
+
+
+def test_the_parse_sandbox_blocks_the_network_and_carries_no_secret() -> None:
+    accepted = inspect.signature(modal.Sandbox.create).parameters
+    assert set(PARSE_SANDBOX_OPTIONS) <= set(accepted)
+    assert PARSE_SANDBOX_OPTIONS["block_network"] is True
+    assert "secrets" not in PARSE_SANDBOX_OPTIONS
+    assert PARSE_SANDBOX_OPTIONS["memory"] == (PARSE_MEMORY_MIB, PARSE_MEMORY_MIB)
+    assert PARSE_SANDBOX_OPTIONS["timeout"] == PARSE_SECONDS
+    assert "block_network" in inspect.signature(modal.App.function).parameters
 
 
 def test_the_app_deploys_no_cron() -> None:

@@ -20,6 +20,7 @@ from parfocal_ingest.bif_frames import (
     placed_extent,
 )
 from parfocal_ingest.identify import Format, Identified
+from parfocal_ingest.parse_jobs import identify_file
 from parfocal_ingest.pyramid import Pyramid, frames_refusal, main_series, read_pyramid
 from parfocal_ingest.tile_index import (
     argos_focused_plane,
@@ -27,7 +28,6 @@ from parfocal_ingest.tile_index import (
     offset_gaps,
     tile_index,
 )
-from parfocal_ingest.workflow import identify_file
 
 GOLDEN = Path(__file__).resolve().parent / "golden" / "tile-index"
 CONTRACT_FIXTURES = (

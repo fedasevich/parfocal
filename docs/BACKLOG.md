@@ -530,7 +530,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Done when actionlint passes on .github/workflows/ci.yml, a docs-only push runs lint, typecheck and test and passes ci-ok with the heavy jobs skipped, a code push runs every job, and the db job time and its cause are written in the log.
   Size: M.
 
-- [ ] FOUND-026 · Web browser tests against a built app
+- [x] FOUND-026 · Web browser tests against a built app
   The apps/web Playwright suite runs on the Vite dev server, where one page load fetches about 340 modules, against 25 from a production build that loads about ten times faster. The fake API and the developer pages start only under `import.meta.env.DEV`, so a build mode for tests needs its own public flag, preview server branches for the dev-only Vite plugins and a guard that a production build has neither. Needs an ADR, because it changes how the app is built for tests.
   Done when the web suite runs against `vite build --mode e2e` and `vite preview` in CI, a guard test fails if a production build contains the fake API or a developer route, and the ADR is written.
   Depends on FOUND-025.
@@ -983,10 +983,16 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Requests with an unsafe method and the session cookie are refused unless their `Origin` header, or `Sec-Fetch-Site: same-origin` when it is absent, matches the app origin. SameSite=Strict does not stop a sibling subdomain of the same site ([threat model](security/threat-model.md) X1).
   Done when API tests refuse a write from another origin and from a same-site subdomain, accept one from the app origin, and leave service tokens and the login callback working.
 
-- [ ] SEC-026 · Isolated parsing of uploaded files
+- [x] SEC-026 · Isolated parsing of uploaded files
   Slide readers and result parsers run in a worker with no network egress except the job's own storage keys, no secrets beyond a job token scoped to one tenant and slide, a memory and time limit and a non-root user ([threat model](security/threat-model.md) U2).
   Done when a test shows a parser job cannot reach the network or read another key, and an oversized or slow parse is stopped and reported as a failed check.
   Depends on AIP-006, INGEST-003.
+  Size: L.
+
+- [ ] SEC-045 · Isolate the remaining parse steps and run them in a Modal sandbox
+  SEC-026 isolates identify, scan and validate in a child process with an audit hook, which native reader code can bypass. The index and derive steps, result-file parsing and patch export still read files inside the worker, and the parser runs as the worker's user. Move those steps into the same child, run the child as its own user, and run parses in a network-blocked Modal sandbox with the file passed in and the app-level secrets moved off.
+  Done when tests show index, derive, result parsing and patch export run in the child with the same limits, a local test shows the parse user cannot read the worker's environment, and the ADR's sandbox TODOs are answered. Deploying the sandbox is an additive production write under ADR 0151 (standing approval within $30 a month).
+  Depends on SEC-026.
   Size: L.
 
 - [ ] SEC-027 · Edge limits per IP
@@ -1709,6 +1715,12 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Done when each dashed ring edge is drawn once, the AI proposals golden is regenerated and the WebGPU route's difference from it falls below 0.02%.
   Depends on VIEW-070.
   Size: S.
+
+- [ ] VIEW-073 · Finish the custom WebGPU route
+  VIEW-038 draws the slide and seven of eight overlay kinds on the custom WebGPU route, but not ID labels, and it has no compute culling, no level-of-detail tiers for many nuclei, no buffer size guard and no device-loss recovery. Translucent outlines also blend twice at round caps there. The developer route picker offers the route with a note that it is incomplete, since only developers see it.
+  Done when the ID labels and translucent outline goldens pass on the route at Viv's tolerance, compute culling and the detail tiers draw 1.6M nuclei within the VIEW-029 budget on the Mac's GPU, and a test loses the device and the route recovers.
+  Depends on VIEW-038.
+  Size: L.
 
 - [ ] VIEW-038 · Custom WebGPU engine route
   Render worker with OffscreenCanvas, tile atlas, compute culling, instanced polygons with instance-step attributes, 8-bit only.

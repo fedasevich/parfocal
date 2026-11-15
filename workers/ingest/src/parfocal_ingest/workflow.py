@@ -5,17 +5,13 @@ import json
 import shutil
 import uuid
 from collections.abc import Awaitable, Callable, Mapping
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from functools import cache
 from pathlib import Path, PurePosixPath
 from typing import Any
 
 import httpx2
-import openslide
-import tifffile
-from PIL import UnidentifiedImageError
 from sqlalchemy import select
-from wsidicom.errors import WsiDicomError
 
 from parfocal_api.slide_ingest import SlideFacts, publish_slide, record_refusal, upload_of
 from parfocal_api.tables import UploadStatus, job_steps
@@ -35,10 +31,11 @@ from parfocal_common.jobs import Step, StepFailedError, StepRun, Workflow
 from parfocal_common.object_store import ObjectStore, StorageLocation
 from parfocal_common.settings import load_settings
 from parfocal_ingest.associated import associated_images
-from parfocal_ingest.identify import Format, Identified, Refusal, identify
-from parfocal_ingest.integrity import check_integrity
+from parfocal_ingest.identify import Format, Identified, Refusal
+from parfocal_ingest.isolation import JobScope, JobTokens, ParseLimits, parse_isolated
 from parfocal_ingest.overview_levels import OVERVIEW_LEVELS_NAME, overview_levels
-from parfocal_ingest.pyramid import Pyramid, read_pyramid, unpack
+from parfocal_ingest.parse_jobs import READER_ERRORS, unpacked_in
+from parfocal_ingest.pyramid import Pyramid, read_pyramid
 from parfocal_ingest.restricted_ranges import ranges_document, restricted_ranges
 from parfocal_ingest.settings import DEFAULT_COPY_PART_BYTES, IngestSettings
 from parfocal_ingest.thumbnail import previews
@@ -48,12 +45,7 @@ from parfocal_ingest.tissue import tissue_mask
 __all__ = ["INGEST", "STEP_NAMES", "Resources", "ingest_workflow"]
 
 HASH_CHUNK_BYTES = 1024 * 1024
-READER_ERRORS = (
-    openslide.OpenSlideError,
-    tifffile.TiffFileError,
-    UnidentifiedImageError,
-    WsiDicomError,
-)
+PARSERS = "parfocal_ingest.parse_jobs"
 UNIT_PREVIEWS = 0
 UNIT_TISSUE = 1
 UNIT_RESTRICTED = 2
@@ -69,6 +61,8 @@ class Resources:
     link_trusted_origins: tuple[str, ...] = ()
     link_read_seconds: float = 30.0
     link_fetch_seconds: float = 3600.0
+    parse_limits: ParseLimits = field(default_factory=ParseLimits)
+    parse_tokens: JobTokens = field(default_factory=JobTokens)
 
 
 @cache
@@ -81,6 +75,11 @@ def resources_from_environment() -> Resources:
         link_trusted_origins=tuple(settings.link_trusted_origins),
         link_read_seconds=settings.link_read_seconds,
         link_fetch_seconds=settings.link_fetch_seconds,
+        parse_limits=ParseLimits(
+            memory_mib=settings.ingest_parse_memory_mib,
+            seconds=settings.ingest_parse_seconds,
+            user=settings.ingest_parse_user,
+        ),
     )
 
 
@@ -163,27 +162,11 @@ def identified_of(results: Mapping[str, Mapping[str, Any]]) -> Identified:
     return Identified(Format(found["format"]), found.get("variant"))
 
 
-def unpacked(context: Context, identified: Identified) -> Path:
-    if identified.variant != "zip" or identified.format is None:
-        return context.local
-    target = context.folder / "unpacked"
-    marker = context.folder / "unpacked.json"
-    if marker.exists():
-        return target / json.loads(marker.read_text())["path"]
-    shutil.rmtree(target, ignore_errors=True)
-    target.mkdir(parents=True)
-    found = unpack(context.local, target, identified.format)
-    if isinstance(found, Refusal):
-        raise StepFailedError(found)
-    marker.write_text(json.dumps({"path": str(found.relative_to(target))}))
-    return found
-
-
 async def opened(context: Context) -> tuple[Path, Identified, Pyramid]:
     results = await earlier_results(context.step)
     await fetch(context)
     identified = identified_of(results)
-    path = await asyncio.to_thread(unpacked, context, identified)
+    path = await asyncio.to_thread(unpacked_in, context.folder, context.local, identified)
     found = await asyncio.to_thread(read_pyramid, path, identified)
     if isinstance(found, Refusal):
         raise StepFailedError(found)
@@ -200,41 +183,51 @@ async def quarantine(context: Context) -> Mapping[str, Any]:
     return {"bytes": stored, "sha256": sha256, "slide_id": str(uuid.uuid4())}
 
 
-def identify_file(path: Path, name: str) -> Identified:
-    with path.open("rb") as handle:
-        return identify(handle, name)
+def object_path(context: Context, key: str) -> Path:
+    return context.folder / "objects" / hashlib.sha256(key.encode()).hexdigest()
+
+
+async def fetch_for_parser(context: Context, key: str) -> Path:
+    if key == context.upload.object_key:
+        await fetch(context)
+        return context.local
+    target = object_path(context, key)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    await context.store.download(key, target)
+    return target
+
+
+async def parsed(
+    context: Context, parser: str, arguments: Mapping[str, Any], slide_id: uuid.UUID | None = None
+) -> Mapping[str, Any]:
+    upload = context.upload
+
+    async def fetcher(key: str) -> Path:
+        return await fetch_for_parser(context, key)
+
+    return await parse_isolated(
+        f"{PARSERS}:{parser}",
+        {"key": upload.object_key, **arguments},
+        JobScope(upload.tenant_id, slide_id, (upload.object_key,)),
+        fetcher,
+        context.folder,
+        context.resources.parse_limits,
+        context.resources.parse_tokens,
+    )
 
 
 async def identify_step(context: Context) -> Mapping[str, Any]:
-    await fetch(context)
-    found = await asyncio.to_thread(identify_file, context.local, context.upload.stored_name)
-    if found.format is None:
-        raise StepFailedError(found.refusal or Refusal.UNKNOWN)
-    return {"format": found.format.value, "variant": found.variant}
+    return await parsed(context, "identify_upload", {"name": context.upload.stored_name})
 
 
 async def scan(context: Context) -> Mapping[str, Any]:
     results = await earlier_results(context.step)
-    await fetch(context)
-    refusal = await asyncio.to_thread(check_integrity, context.local, identified_of(results))
-    if refusal is not None:
-        raise StepFailedError(refusal)
-    return {"clean": True}
+    return await parsed(context, "scan_upload", results["identify"])
 
 
 async def validate(context: Context) -> Mapping[str, Any]:
-    _, _, found = await opened(context)
-    base = found.levels[0]
-    return {
-        "reader": found.reader.value,
-        "width": base.width,
-        "height": base.height,
-        "levels": len(found.levels),
-        "mpp_x": found.scale.mpp_x,
-        "mpp_y": found.scale.mpp_y,
-        "objective_power": found.scale.objective_power,
-        "notices": [notice.value for notice in found.notices],
-    }
+    results = await earlier_results(context.step)
+    return await parsed(context, "validate_upload", results["identify"], slide_id_of(results))
 
 
 def level_table(found: Pyramid) -> bytes:

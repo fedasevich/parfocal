@@ -18,6 +18,7 @@ pnpm-debug.log*
 *.tsbuildinfo
 
 dist/
+dist-e2e/
 build/
 out/
 .turbo/

@@ -26,7 +26,7 @@ import { WalkBar } from "../flow-map/walk-bar.tsx";
 
 export const Route = createFileRoute("/flow-map/")({
   beforeLoad: () => {
-    if (!import.meta.env.DEV) throw notFound();
+    if (import.meta.env.PARFOCAL_PUBLIC_DEV_TOOLS !== "on") throw notFound();
   },
   component: FlowMapPage,
 });

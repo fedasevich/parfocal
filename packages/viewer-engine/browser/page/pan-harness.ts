@@ -17,6 +17,7 @@ import {
   zoomForMagnification,
 } from "../../src/index.ts";
 import {
+  type CustomWebGpuRoute,
   createPixelSlideOpener,
   type DeckWebGpuRoute,
   type DecodeStats,
@@ -25,6 +26,8 @@ import {
   pixelSlide,
   type VivRoute,
 } from "../../src/viv/index.ts";
+
+export type PanRoute = VivRoute | DeckWebGpuRoute | CustomWebGpuRoute;
 
 export interface PanSlide {
   readonly url: string;
@@ -114,7 +117,7 @@ declare global {
 
 const errors: string[] = [];
 let engine: ViewerEngine | null = null;
-let route: VivRoute | DeckWebGpuRoute | null = null;
+let route: PanRoute | null = null;
 let history: BoundViewHistory | null = null;
 let wheel: ViewerInputBinding | null = null;
 let frameTimes: number[] | null = null;
@@ -134,11 +137,11 @@ function nextFrame(): Promise<number> {
   return new Promise((resolve) => requestAnimationFrame(resolve));
 }
 
-export function shownRoute(): VivRoute | DeckWebGpuRoute | null {
+export function shownRoute(): PanRoute | null {
   return route;
 }
 
-function mounted(): { engine: ViewerEngine; route: VivRoute | DeckWebGpuRoute } {
+function mounted(): { engine: ViewerEngine; route: PanRoute } {
   if (engine === null || route === null) throw new Error("No slide is open");
   return { engine, route };
 }
@@ -160,12 +163,13 @@ async function open(slide: PanSlide): Promise<Opened> {
       ...(slide.prefetch === undefined ? {} : { prefetch: slide.prefetch }),
     },
     deckWebGpu: routeOptions,
+    customWebGpu: routeOptions,
   })[id];
   if (load === undefined) throw new RendererRouteUnavailableError(id);
   const factory: RendererFactory<PixelSlide> = await load();
   const current = createViewerEngine<PixelSlide>({
     createRenderer: (container) => {
-      const created = factory(container) as VivRoute | DeckWebGpuRoute;
+      const created = factory(container) as PanRoute;
       route = created;
       return created;
     },
