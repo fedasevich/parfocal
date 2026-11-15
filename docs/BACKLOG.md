@@ -2411,7 +2411,7 @@ The case view becomes the slide view ([ADR 0053](adr/0053-ai-results-review-dire
   Done when component tests cover each field and missing data.
   Size: S.
 
-- [ ] CASE-012 · Idea: Case state transitions
+- [ ] CASE-012 · Idea: Case state transitions (dropped)
   Idea since [ADR 0053](adr/0053-ai-results-review-direction.md). Not planned. Review tasks carry the slide pipeline (TASK-002), and ADAPT-007 reverts the case state machine.
   Scanned, AI reading, to review, waiting on others, draft report, signed, amended.
   Done when unit tests cover the state machine and every transition is audited.
