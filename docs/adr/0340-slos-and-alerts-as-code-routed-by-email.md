@@ -1,4 +1,4 @@
-# 0339. SLOs and alert rules live in code, burn by two windows and reach on-call by email
+# 0340. SLOs and alert rules live in code, burn by two windows and reach on-call by email
 
 - Date: 2026-11-15
 - Status: Accepted

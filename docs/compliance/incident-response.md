@@ -156,7 +156,7 @@ SEC-018 asks that contacts be configured for alerting. That needs the owner's ac
 | SLO burn alerts in `parfocal_common.alerting` (OPS-007, alerting and on-call) | Availability, tile latency, ingest time or pre-read time burning its error budget | Email to `ALERT_PAGE_EMAIL` for pages and `ALERT_TICKET_EMAIL` for tickets, both `security@parfocal.eu` | Built and tested against fakes. Nothing runs them in production until OPS-006 emits the SLI events and schedules the check |
 | Cross-workspace audit watch in `parfocal_api.security_alerts` (OPS-007, alerting and on-call) | An audit event by anyone but a platform operator whose target is not in the actor's workspace | Page email to `ALERT_PAGE_EMAIL` | Same as above, it needs a scheduled run |
 
-The policy is [ADR 0339](../adr/0339-slos-and-alerts-as-code-routed-by-email.md) (SLOs and alerts as code, routed by email). Apart from the cross-workspace watch, no channel alerts on a security event in production, such as a burst of failed sign-ins, an emergency access grant or an audit chain break.
+The policy is [ADR 0340](../adr/0340-slos-and-alerts-as-code-routed-by-email.md) (SLOs and alerts as code, routed by email). Apart from the cross-workspace watch, no channel alerts on a security event in production, such as a burst of failed sign-ins, an emergency access grant or an audit chain break.
 
 ### Finding audit events that crossed workspaces
 

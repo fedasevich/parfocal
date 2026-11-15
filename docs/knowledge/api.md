@@ -56,7 +56,7 @@ CI runs `pytest -m 'not db'` in the `test` job without Postgres and `-m db` in t
 
 ## SLOs and alerts
 
-`parfocal_common.alerting` holds the four SLOs, the burn-rate rules and `OnCall`, which mails alerts through the `EmailSender` that `select_clients` picks. Code measures with `Instrument.observe` or `Instrument.measure` under one of the `SliName` values. A new audit target goes into `security_alerts.TARGET_TABLES` or `UNCHECKED_TARGETS` with a reason, or `test_security_alerts.py` fails ([ADR 0339](../adr/0339-slos-and-alerts-as-code-routed-by-email.md), SLOs and alerts as code, routed by email).
+`parfocal_common.alerting` holds the four SLOs, the burn-rate rules and `OnCall`, which mails alerts through the `EmailSender` that `select_clients` picks. Code measures with `Instrument.observe` or `Instrument.measure` under one of the `SliName` values. A new audit target goes into `security_alerts.TARGET_TABLES` or `UNCHECKED_TARGETS` with a reason, or `test_security_alerts.py` fails ([ADR 0340](../adr/0340-slos-and-alerts-as-code-routed-by-email.md), SLOs and alerts as code, routed by email).
 
 ## Logging
 
