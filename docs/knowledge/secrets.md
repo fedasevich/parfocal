@@ -36,7 +36,7 @@ Every rotation of a production secret is asked in chat first, as [ADR 0151](../a
 
 ## Never delete `parfocal-api-keys` to rotate
 
-Bootstrap writes `parfocal-api-keys` only when it is missing, and it then generates every key in it, the master keyring included. Deleting the secret to get a new value therefore makes every encrypted field of every tenant unreadable. Change single values in the Modal dashboard instead. TODO: editing one value of a Modal secret in the dashboard is untried. SEC-046 (rotation commands for the keys secret) adds a command that does it.
+Bootstrap writes `parfocal-api-keys` only when it is missing, and it then generates every key in it, the master keyring included. Deleting the secret to get a new value therefore makes every encrypted field of every tenant unreadable. Change single values in the Modal dashboard instead. TODO: editing one value of a Modal secret in the dashboard is untried. SEC-048 (rotation commands for the keys secret) adds a command that does it.
 
 ## Master keyring
 
@@ -51,8 +51,8 @@ Removing `k1` before step 3 passes locks every tenant out of its encrypted field
 
 ## Shared token keys
 
-The API signs tile and room tokens and the Worker checks them, each with a single key. Rotating means writing the new key to the Worker and to `parfocal-api-keys`, then redeploying the API. Tokens signed in between fail until the viewer asks for a fresh one, at most 10 minutes for tiles and 5 minutes for rooms. SEC-047 (an overlap window for session and token keys) lets both sides accept the old key for a while.
+The API signs tile and room tokens and the Worker checks them, each with a single key. Rotating means writing the new key to the Worker and to `parfocal-api-keys`, then redeploying the API. Tokens signed in between fail until the viewer asks for a fresh one, at most 10 minutes for tiles and 5 minutes for rooms. SEC-049 (an overlap window for session and token keys) lets both sides accept the old key for a while.
 
 ## Database role password
 
-`bootstrap --reset-app-role-password` resets the `parfocal_app` password only when `parfocal-api-keys` is missing, so it cannot rotate a working deployment without the trap above. Until SEC-046 lands, set a new password with `ALTER ROLE parfocal_app PASSWORD` as the owner on the direct connection, put the new pooled `DATABASE_URL` into `parfocal-api-keys` in the dashboard and redeploy at once, because the running API loses its connections in between. TODO: untried.
+`bootstrap --reset-app-role-password` resets the `parfocal_app` password only when `parfocal-api-keys` is missing, so it cannot rotate a working deployment without the trap above. Until SEC-048 lands, set a new password with `ALTER ROLE parfocal_app PASSWORD` as the owner on the direct connection, put the new pooled `DATABASE_URL` into `parfocal-api-keys` in the dashboard and redeploy at once, because the running API loses its connections in between. TODO: untried.
