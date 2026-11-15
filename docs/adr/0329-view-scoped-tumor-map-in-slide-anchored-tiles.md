@@ -1,4 +1,4 @@
-# XXXX. A view-scoped tumor map is a sparse map of slide-anchored tiles scored on demand
+# 0329. A view-scoped tumor map is a sparse map of slide-anchored tiles scored on demand
 
 - Date: 2026-11-15
 - Status: Accepted
