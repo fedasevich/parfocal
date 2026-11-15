@@ -125,18 +125,12 @@ struct SegmentOut {
   @location(1) place: vec2f,
   @location(2) @interpolate(flat) size: f32,
   @location(3) @interpolate(flat) travelled: f32,
+  @location(4) @interpolate(flat) ring: f32,
 };
 
-@vertex
-fn vs(
-  @builtin(vertex_index) vertex: u32,
-  @location(0) a: vec2f,
-  @location(1) b: vec2f,
-  @location(2) reach: f32,
-  @location(3) color: vec4f,
-) -> SegmentOut {
-  let along = f32(vertex & 1u);
-  let side = f32((vertex >> 1u) & 1u) * 2.0 - 1.0;
+fn placed(corner: u32, isCap: bool, a: vec2f, b: vec2f, reach: f32, color: vec4f) -> SegmentOut {
+  let along = f32(corner & 1u);
+  let side = f32((corner >> 1u) & 1u) * 2.0 - 1.0;
   let start = toPixels(a);
   let end = toPixels(b);
   let delta = end - start;
@@ -149,7 +143,8 @@ fn vs(
   var out: SegmentOut;
   out.color = premultiplied(styled(color));
   out.travelled = reach * style.pixelsPerUnit;
-  if (style.innerRadius > 0.5) {
+  out.ring = 0.0;
+  if (isCap) {
     let dashed = style.dash.x + style.dash.y > 0.0 && style.dash.y > 0.0;
     let place = vec2f(along * 2.0 - 1.0, side) * style.halfWidth;
     out.position = toClip(start + place);
@@ -167,12 +162,37 @@ fn vs(
   return out;
 }
 
+@vertex
+fn vs(
+  @builtin(vertex_index) vertex: u32,
+  @location(0) a: vec2f,
+  @location(1) b: vec2f,
+  @location(2) reach: f32,
+  @location(3) color: vec4f,
+) -> SegmentOut {
+  return placed(vertex, style.innerRadius > 0.5, a, b, reach, color);
+}
+
+@vertex
+fn vsOnce(
+  @builtin(vertex_index) vertex: u32,
+  @location(0) a: vec2f,
+  @location(1) b: vec2f,
+  @location(2) reach: f32,
+  @location(3) color: vec4f,
+  @location(4) ring: u32,
+) -> SegmentOut {
+  var corners = array<u32, 6>(0u, 1u, 2u, 2u, 1u, 3u);
+  var out = placed(corners[vertex % 6u], vertex >= 6u, a, b, reach, color);
+  out.ring = f32(ring % 8388607u + 1u) / 8388608.0;
+  return out;
+}
+
 fn dashIntegral(position: f32, solid: f32, period: f32) -> f32 {
   return floor(position / period) * solid + min(position - period * floor(position / period), solid);
 }
 
-@fragment
-fn fs(in: SegmentOut) -> @location(0) vec4f {
+fn covered(in: SegmentOut) -> f32 {
   let nearest = clamp(in.place.x, 0.0, in.size);
   let position = in.travelled + nearest;
   let spread = max(fwidth(position), 0.0001);
@@ -193,7 +213,29 @@ fn fs(in: SegmentOut) -> @location(0) vec4f {
       discard;
     }
   }
-  return in.color * coverage;
+  return coverage;
+}
+
+@fragment
+fn fs(in: SegmentOut) -> @location(0) vec4f {
+  return in.color * covered(in);
+}
+
+struct OnceOut {
+  @location(0) color: vec4f,
+  @builtin(frag_depth) depth: f32,
+};
+
+@fragment
+fn fsOnce(in: SegmentOut) -> OnceOut {
+  var out: OnceOut;
+  let coverage = covered(in);
+  out.color = in.color * coverage;
+  out.depth = in.ring;
+  if (coverage < 1.0) {
+    out.depth = in.ring + 1.0 / 16777216.0;
+  }
+  return out;
 }
 `;
 
@@ -302,5 +344,79 @@ fn fs(in: PinOut) -> @location(0) vec4f {
     discard;
   }
   return premultiplied(vec4f(texel.rgb, alpha));
+}
+`;
+
+export const labelBoxShader = `
+${styleBlock}
+
+struct BoxOut {
+  @builtin(position) position: vec4f,
+  @location(0) uv: vec2f,
+  @location(1) @interpolate(flat) size: vec2f,
+  @location(2) @interpolate(flat) line: vec4f,
+};
+
+@vertex
+fn vs(
+  @builtin(vertex_index) vertex: u32,
+  @location(0) anchor: vec2f,
+  @location(1) offset: vec2f,
+  @location(2) size: vec2f,
+  @location(3) line: vec4f,
+) -> BoxOut {
+  let corner = vec2f(f32(vertex & 1u), f32((vertex >> 1u) & 1u));
+  var out: BoxOut;
+  out.position = toClip(toPixels(anchor) + offset + corner * size);
+  out.uv = corner;
+  out.size = size;
+  out.line = line;
+  return out;
+}
+
+@fragment
+fn fs(in: BoxOut) -> @location(0) vec4f {
+  let place = in.uv * in.size;
+  let toEdge = min(min(place.x, in.size.x - place.x), min(place.y, in.size.y - place.y));
+  let isLine = smoothstep(toEdge - 0.5, toEdge + 0.5, style.halfWidth);
+  let fill = vec4f(style.color.rgb, style.color.a * style.alpha);
+  let line = vec4f(in.line.rgb, in.line.a * style.alpha);
+  return premultiplied(mix(fill, line, isLine));
+}
+`;
+
+export const glyphShader = `
+${styleBlock}
+
+@group(1) @binding(0) var glyphs: texture_2d<f32>;
+@group(1) @binding(1) var glyphSampler: sampler;
+
+struct GlyphOut {
+  @builtin(position) position: vec4f,
+  @location(0) uv: vec2f,
+};
+
+@vertex
+fn vs(
+  @builtin(vertex_index) vertex: u32,
+  @location(0) anchor: vec2f,
+  @location(1) offset: vec2f,
+  @location(2) size: vec2f,
+  @location(3) frame: vec4f,
+) -> GlyphOut {
+  let corner = vec2f(f32(vertex & 1u), f32((vertex >> 1u) & 1u));
+  var out: GlyphOut;
+  out.position = toClip(toPixels(anchor) + offset + corner * size);
+  out.uv = (frame.xy + corner * frame.zw) / style.strokeColor.xy;
+  return out;
+}
+
+@fragment
+fn fs(in: GlyphOut) -> @location(0) vec4f {
+  let alpha = textureSample(glyphs, glyphSampler, in.uv).a * style.color.a;
+  if (alpha < 0.001) {
+    discard;
+  }
+  return premultiplied(vec4f(style.color.rgb, alpha * style.alpha));
 }
 `;

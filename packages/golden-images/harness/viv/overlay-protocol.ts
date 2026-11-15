@@ -24,12 +24,14 @@ export type OverlayChange =
   | { readonly kind: "opacity"; readonly id: string; readonly opacity: number }
   | { readonly kind: "heatmap"; readonly id: string; readonly look: Partial<HeatmapLook> }
   | { readonly kind: "remove"; readonly id: string }
-  | { readonly kind: "invalidate"; readonly id: string };
+  | { readonly kind: "invalidate"; readonly id: string }
+  | { readonly kind: "lose-device" };
 
 export interface OverlayRenderResult {
   readonly errors: readonly string[];
   readonly layerIds: readonly string[];
   readonly uncapturedGpuErrors: number | null;
+  readonly deviceRecoveries: number | null;
 }
 
 export interface ResourceWatch {

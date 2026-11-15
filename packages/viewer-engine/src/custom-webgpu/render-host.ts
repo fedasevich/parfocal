@@ -5,6 +5,8 @@ export const mostAtlasLayers = 1024;
 
 const intentionalLossReason = "destroyed";
 
+const timestampFeature: GPUFeatureName = "timestamp-query";
+
 export interface RenderScope {
   readonly post: (response: RenderResponse) => void;
   readonly requestFrame: (callback: () => void) => void;
@@ -28,6 +30,10 @@ function messageOf(error: unknown): string {
 export function createRenderHost(scope: RenderScope): RenderHost {
   let started: Started | null = null;
   let starting = false;
+  let lost = false;
+  let timing = false;
+  let surface: OffscreenCanvas | null = null;
+  const losing = new WeakSet<GPUDevice>();
   let destroyed = false;
   let waiting: RenderRequest[] = [];
   let pending: { readonly id: number; readonly frame: FrameState } | null = null;
@@ -39,8 +45,13 @@ export function createRenderHost(scope: RenderScope): RenderHost {
     const adapter = await gpu.requestAdapter();
     if (adapter === null) throw new Error("the worker was offered no WebGPU adapter");
     const maxLayers = Math.min(mostAtlasLayers, adapter.limits.maxTextureArrayLayers);
+    const timed = timing && adapter.features.has(timestampFeature);
     const device = await adapter.requestDevice({
-      requiredLimits: { maxTextureArrayLayers: maxLayers },
+      requiredFeatures: timed ? [timestampFeature] : [],
+      requiredLimits: {
+        maxTextureArrayLayers: maxLayers,
+        maxBufferSize: adapter.limits.maxBufferSize,
+      },
     });
     if (destroyed) {
       device.destroy();
@@ -60,12 +71,26 @@ export function createRenderHost(scope: RenderScope): RenderHost {
     });
     device.lost.then(
       (info) => {
-        if (destroyed || info.reason === intentionalLossReason) return;
+        if (destroyed || started?.device !== device) return;
+        if (info.reason === intentionalLossReason && !losing.has(device)) return;
+        started = null;
+        pending = null;
+        waiting = [];
+        lost = true;
         scope.post({ type: "error", source: "device-lost", message: info.message });
       },
       () => {},
     );
-    started = { device, canvas, renderer: createRenderer(device, context, format) };
+    started = {
+      device,
+      canvas,
+      renderer: createRenderer(
+        device,
+        context,
+        format,
+        timed ? (ms) => scope.post({ type: "gpuTime", ms }) : null,
+      ),
+    };
     scope.post({ type: "ready", maxLayers });
   };
 
@@ -94,7 +119,14 @@ export function createRenderHost(scope: RenderScope): RenderHost {
       current.renderer.uploadTile(request.layer, request.width, request.height, request.rgba);
     }
     if (request.type === "set") {
-      current.renderer.setOverlay(request.id, request.data, request.counts);
+      if (!current.renderer.setOverlay(request.id, request.data, request.counts)) {
+        scope.post({
+          type: "leftOut",
+          id: request.id,
+          bytes: request.data.byteLength,
+          limit: current.device.limits.maxBufferSize,
+        });
+      }
     }
     if (request.type === "raster") {
       current.renderer.setRaster(
@@ -107,6 +139,9 @@ export function createRenderHost(scope: RenderScope): RenderHost {
     }
     if (request.type === "pinAtlas") {
       current.renderer.setPinAtlas(request.width, request.height, request.rgba, request.frames);
+    }
+    if (request.type === "glyphAtlas") {
+      current.renderer.setGlyphAtlas(request.width, request.height, request.rgba);
     }
     if (request.type === "drop") current.renderer.dropOverlay(request.id);
     if (request.type === "frame") {
@@ -127,6 +162,20 @@ export function createRenderHost(scope: RenderScope): RenderHost {
     started = null;
   };
 
+  const begin = (canvas: OffscreenCanvas) => {
+    start(canvas).then(
+      () => {
+        const current = started;
+        const queued = waiting;
+        waiting = [];
+        if (current !== null) for (const next of queued) apply(current, next);
+      },
+      (error: unknown) => {
+        if (!destroyed) scope.post({ type: "error", source: "start", message: messageOf(error) });
+      },
+    );
+  };
+
   const handle = (request: RenderRequest) => {
     if (destroyed) return;
     if (request.type === "destroy") {
@@ -136,19 +185,24 @@ export function createRenderHost(scope: RenderScope): RenderHost {
     if (request.type === "init") {
       if (starting) return;
       starting = true;
-      start(request.canvas).then(
-        () => {
-          const current = started;
-          const queued = waiting;
-          waiting = [];
-          if (current !== null) for (const next of queued) apply(current, next);
-        },
-        (error: unknown) => {
-          if (!destroyed) scope.post({ type: "error", source: "start", message: messageOf(error) });
-        },
-      );
+      surface = request.canvas;
+      timing = request.timing === true;
+      begin(request.canvas);
       return;
     }
+    if (request.type === "lose") {
+      if (started === null) return;
+      losing.add(started.device);
+      started.device.destroy();
+      return;
+    }
+    if (request.type === "restore") {
+      if (!lost || surface === null) return;
+      lost = false;
+      begin(surface);
+      return;
+    }
+    if (lost) return;
     if (started === null) {
       waiting.push(request);
       return;

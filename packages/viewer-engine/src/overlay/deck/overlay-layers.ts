@@ -22,6 +22,7 @@ import {
   type ViewRect,
   windowMembers,
 } from "../cull-grid.ts";
+import { labelFontSizePx, labelPadding } from "../draw-constants.ts";
 import {
   chooseLod,
   densityRaster,
@@ -64,9 +65,7 @@ import {
 
 export const pinSizePx = 28;
 
-export const labelFontSizePx = 12;
-
-export const labelPadding = [6, 3] as const;
+export { labelFontSizePx, labelPadding };
 
 export interface OverlayLayerBuilder {
   readonly build: (
