@@ -12,9 +12,9 @@ from parfocal_common.ingest import RESTRICTED_RANGES_NAME, sample_folder, sample
 from parfocal_common.object_store import ObjectStore, StoredPart
 from parfocal_common.settings import load_settings
 from parfocal_ingest.identify import Identified, identify
+from parfocal_ingest.identifying_text import ranges_file
 from parfocal_ingest.overview_levels import OVERVIEW_LEVELS_NAME, overview_levels
 from parfocal_ingest.pyramid import Pyramid, read_pyramid
-from parfocal_ingest.restricted_ranges import ranges_document, restricted_ranges
 from parfocal_ingest.settings import IngestSettings
 from parfocal_ingest.thumbnail import previews
 from parfocal_ingest.tile_index import index_document, tile_index
@@ -92,10 +92,8 @@ async def send_sample(store: ObjectStore, label: str, path: Path) -> SampleFile:
     images = await asyncio.to_thread(previews, path, identified.format, found)
     await store.put_object(f"{folder}thumbnail.jpg", images.thumbnail, "image/jpeg")
     await store.put_object(f"{folder}overview.jpg", images.overview, "image/jpeg")
-    ranges = await asyncio.to_thread(restricted_ranges, path)
-    await store.put_object(
-        f"{folder}{RESTRICTED_RANGES_NAME}", ranges_document(ranges), "application/json"
-    )
+    ranges = await asyncio.to_thread(ranges_file, path)
+    await store.put_object(f"{folder}{RESTRICTED_RANGES_NAME}", ranges, "application/json")
     key = sample_original_key(label, path.name)
     size, sha256 = await send_original(store, path, key)
     base = found.levels[0]

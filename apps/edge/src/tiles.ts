@@ -1,4 +1,11 @@
-import { type Capability, overlapsRestricted, signingKey, verifyCapability } from "#capability.ts";
+import {
+  type ByteRange,
+  blankedBytes,
+  type Capability,
+  overlapsRestricted,
+  signingKey,
+  verifyCapability,
+} from "#capability.ts";
 
 export type TileEnv = {
   readonly SLIDES: R2Bucket;
@@ -303,7 +310,26 @@ export async function handleTiles(
     return problem(403, "range-restricted", "These bytes hold a label or macro image");
   }
   const checked = span === null || end === start ? span : { offset: start, length: end - start };
-  return serve(request, env, key, checked, capability.size, cache);
+  const served = await serve(request, env, key, checked, capability.size, cache);
+  return withBlanks(served, capability.blank ?? [], start, end);
+}
+
+function withBlanks(
+  response: Response,
+  blank: readonly ByteRange[],
+  start: number,
+  end: number,
+): Response {
+  const ok = response.status === 200 || response.status === 206;
+  if (!ok || response.body === null || !overlapsRestricted(blank, start, end)) {
+    return response;
+  }
+  const headers = new Headers(response.headers);
+  headers.set("ETag", (headers.get("ETag") ?? '""').replace(/"$/, '-blank"'));
+  return new Response(response.body.pipeThrough(blankedBytes(blank, start)), {
+    status: response.status,
+    headers,
+  });
 }
 
 export function isTilesPath(pathname: string): boolean {

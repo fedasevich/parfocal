@@ -32,7 +32,7 @@ def test_the_loader_stores_each_sample_once_with_its_size_and_checksum(
         assert await store.get_object(sent["tumor_001"].original_key) == data
         assert await store.head_object("samples/camelyon16/tumor_001/thumbnail.jpg")
         ranges = await store.get_object("samples/camelyon16/tumor_001/restricted-ranges.json")
-        assert json.loads(ranges) == {"ranges": []}
+        assert json.loads(ranges) == {"ranges": [], "identifying": [], "barcode": []}
         return sent, found, levels
 
     sent, found, levels = with_store(go)

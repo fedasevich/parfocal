@@ -14,7 +14,16 @@ from parfocal_api.problems import ConflictError
 from parfocal_api.projects import visible
 from parfocal_api.result_imports import lock_slide_upload, queue_if_ready
 from parfocal_api.result_sets import require_uploading
-from parfocal_api.tables import UploadStatus, cases, jobs, projects, slides, uploads
+from parfocal_api.slide_ingest import label_of
+from parfocal_api.tables import (
+    PrivacyMode,
+    UploadStatus,
+    cases,
+    jobs,
+    projects,
+    slides,
+    uploads,
+)
 from parfocal_api.uploads import (
     CaseNotFoundError,
     UploadId,
@@ -139,14 +148,20 @@ async def existing_slides(
         slides.c.case_id == case_id if case_id is not None else slides.c.project_id == project_id
     )
     rows = await connection.execute(
-        select(slides.c.id, slides.c.label).where(
-            place, slides.c.project_id == project_id, slides.c.deleted_at.is_(None)
-        )
+        select(slides.c.id, slides.c.label, uploads.c.file_name, projects.c.privacy_mode)
+        .join(projects, projects.c.id == slides.c.project_id)
+        .outerjoin(uploads, uploads.c.id == slides.c.upload_id)
+        .where(place, slides.c.project_id == project_id, slides.c.deleted_at.is_(None))
     )
     return [
-        SlideCandidate(key=f"{EXISTING}{row.id}", name=row.label, slide_id=str(row.id))
+        SlideCandidate(key=f"{EXISTING}{row.id}", name=pairing_name(row), slide_id=str(row.id))
         for row in rows
     ]
+
+
+def pairing_name(row: Any) -> str:
+    clinical = PrivacyMode(row.privacy_mode) is PrivacyMode.CLINICAL
+    return row.label if clinical or row.file_name is None else label_of(row.file_name)
 
 
 @router.post(

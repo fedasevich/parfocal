@@ -6,6 +6,7 @@ export type Capability = {
   readonly original: string;
   readonly size: number;
   readonly restricted: readonly ByteRange[];
+  readonly blank?: readonly ByteRange[];
   readonly expires: number;
   readonly folder?: string;
 };
@@ -15,6 +16,7 @@ export type CapabilityCheck =
   | { readonly ok: false; readonly reason: "malformed" | "bad-signature" | "expired" };
 
 const TOKEN_VERSION = 1;
+const SPACE = 0x20;
 const SHARED_FOLDER = /^samples\/camelyon16\/[A-Za-z0-9][A-Za-z0-9_-]{0,63}\/$/;
 const encoder = new TextEncoder();
 
@@ -80,7 +82,7 @@ function capabilityOf(claims: unknown): Capability | null {
   if (typeof claims !== "object" || claims === null) {
     return null;
   }
-  const { v, t, s, o, n, d, e, p } = claims as Record<string, unknown>;
+  const { v, t, s, o, n, d, b, e, p } = claims as Record<string, unknown>;
   if (
     v !== TOKEN_VERSION ||
     typeof t !== "string" ||
@@ -91,6 +93,7 @@ function capabilityOf(claims: unknown): Capability | null {
     !Number.isSafeInteger(e) ||
     !Array.isArray(d) ||
     !d.every(isRange) ||
+    (b !== undefined && (!Array.isArray(b) || !b.every(isRange))) ||
     (p !== undefined && (typeof p !== "string" || !SHARED_FOLDER.test(p)))
   ) {
     return null;
@@ -101,6 +104,7 @@ function capabilityOf(claims: unknown): Capability | null {
     original: o,
     size: n as number,
     restricted: d,
+    ...(b === undefined ? {} : { blank: b }),
     expires: e as number,
     ...(p === undefined ? {} : { folder: p }),
   };
@@ -143,6 +147,9 @@ export async function verifyCapability(
 
 export async function signCapability(capability: Capability, key: CryptoKey): Promise<string> {
   const claims = {
+    ...(capability.blank === undefined || capability.blank.length === 0
+      ? {}
+      : { b: capability.blank }),
     d: capability.restricted,
     e: capability.expires,
     n: capability.size,
@@ -163,4 +170,28 @@ export function overlapsRestricted(
   endExclusive: number,
 ): boolean {
   return restricted.some(([from, to]) => start < to && from < endExclusive);
+}
+
+export function blankedBytes(
+  blank: readonly ByteRange[],
+  start: number,
+): TransformStream<Uint8Array, Uint8Array> {
+  let position = start;
+  return new TransformStream({
+    transform(chunk, controller) {
+      const from = position;
+      const to = from + chunk.length;
+      position = to;
+      const touched = blank.filter(([first, last]) => first < to && from < last);
+      if (touched.length === 0) {
+        controller.enqueue(chunk);
+        return;
+      }
+      const copy = new Uint8Array(chunk);
+      for (const [first, last] of touched) {
+        copy.fill(SPACE, Math.max(first, from) - from, Math.min(last, to) - from);
+      }
+      controller.enqueue(copy);
+    },
+  });
 }

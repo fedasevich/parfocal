@@ -12,6 +12,7 @@ from parfocal_common.object_store import ObjectStore
 PSEUDONYM_PREFIX = "Case "
 PSEUDONYM_LENGTH = 10
 PSEUDONYM_FIELD = "case-pseudonym"
+NEUTRAL_LABEL = "Slide"
 
 
 def keeps_restricted_images(mode: PrivacyMode) -> bool:
@@ -46,3 +47,37 @@ async def strip_restricted_images(
     for slide_id in labelled.all():
         deleted += await delete_restricted_images(store, tenant_id, slide_id)
     return deleted
+
+
+def numbered(index: int) -> str:
+    return NEUTRAL_LABEL if index == 0 else f"{NEUTRAL_LABEL} ({index + 1})"
+
+
+async def neutral_labels(connection: AsyncConnection, project_id: uuid.UUID) -> int:
+    rows = (
+        await connection.execute(
+            select(slides.c.id, slides.c.case_id, slides.c.label, slides.c.deleted_at)
+            .where(slides.c.project_id == project_id)
+            .order_by(slides.c.case_id, slides.c.published_at, slides.c.id)
+            .with_for_update()
+        )
+    ).all()
+    wanted: dict[uuid.UUID, str] = {}
+    places: dict[uuid.UUID | None, int] = {}
+    for row in rows:
+        if row.deleted_at is not None:
+            wanted[row.id] = NEUTRAL_LABEL
+            continue
+        index = places.get(row.case_id, 0)
+        places[row.case_id] = index + 1
+        wanted[row.id] = numbered(index)
+    changed = [row for row in rows if wanted[row.id] != row.label]
+    for row in changed:
+        await connection.execute(
+            update(slides).where(slides.c.id == row.id).values(label=str(row.id))
+        )
+    for row in changed:
+        await connection.execute(
+            update(slides).where(slides.c.id == row.id).values(label=wanted[row.id])
+        )
+    return len(changed)

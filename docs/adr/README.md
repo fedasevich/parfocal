@@ -298,3 +298,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0331](0331-no-staging-environment.md) | There is no staging environment, now or later | Accepted | 2026-11-15 |
 | [0332](0332-painted-maps-as-whole-versions-of-one-tile-file.md) | A painted map is saved as whole versions of one binary tile file | Accepted | 2026-11-15 |
 | [0333](0333-de-identified-projects-keep-no-labels-and-copies-get-pseudonyms.md) | A de-identified project stores no label or macro, and a slide copied into one gets a pseudonymous case | Accepted | 2026-11-15 |
+| [0335](0335-identifying-text-is-blanked-by-the-edge-from-the-token.md) | Identifying text and barcodes in an original are blanked by the edge from ranges in the token | Accepted | 2026-11-15 |

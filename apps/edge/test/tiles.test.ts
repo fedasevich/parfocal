@@ -19,7 +19,15 @@ import {
 type Vector = {
   secret: string;
   token: string;
-  claims: { t: string; s: string; o: string; n: number; d: [number, number][]; e: number };
+  claims: {
+    t: string;
+    s: string;
+    o: string;
+    n: number;
+    d: [number, number][];
+    b: [number, number][];
+    e: number;
+  };
 };
 
 const vector = JSON.parse(
@@ -147,6 +155,7 @@ describe("capability tokens", () => {
         original: claims.o,
         size: claims.n,
         restricted: claims.d,
+        blank: claims.b,
         expires: claims.e,
       },
       await signingKey(SECRET),
@@ -338,6 +347,41 @@ describe("the tile gateway", () => {
     assert.equal((await request(bucket, ORIGINAL, token, "bytes=0-3999")).status, 206);
     assert.equal((await request(bucket, ORIGINAL, token, "bytes=5000-5999")).status, 206);
     assert.equal((await request(bucket, ORIGINAL, token, "bytes=-5000")).status, 206);
+  });
+
+  test("blanks identifying text with spaces of the same length and keeps every other byte", async () => {
+    const bucket = lab();
+    const stored = bucket.objects.get(`t/${TENANT}/s/${SLIDE}/original.svs`) ?? new Uint8Array();
+    const token = await tokenFor({
+      restricted: [],
+      blank: [
+        [100, 120],
+        [9990, 10_000],
+      ],
+    });
+    const whole = await request(bucket, ORIGINAL, token);
+    assert.equal(whole.status, 200);
+    assert.notEqual(whole.headers.get("ETag"), `"${`t/${TENANT}/s/${SLIDE}/original.svs`.length}"`);
+    const bytes = new Uint8Array(await whole.arrayBuffer());
+    assert.equal(bytes.length, SIZE);
+    assert.ok(bytes.slice(100, 120).every((byte) => byte === 0x20));
+    assert.ok(bytes.slice(9990).every((byte) => byte === 0x20));
+    assert.deepEqual(bytes.slice(0, 100), stored.slice(0, 100));
+    assert.deepEqual(bytes.slice(120, 9990), stored.slice(120, 9990));
+    const part = await request(bucket, ORIGINAL, token, "bytes=110-129");
+    assert.equal(part.status, 206);
+    assert.equal(part.headers.get("Content-Range"), `bytes 110-129/${SIZE}`);
+    const piece = new Uint8Array(await part.arrayBuffer());
+    assert.ok(piece.slice(0, 10).every((byte) => byte === 0x20));
+    assert.deepEqual(piece.slice(10), stored.slice(120, 130));
+    const clear = await request(bucket, ORIGINAL, token, "bytes=200-299");
+    assert.deepEqual(new Uint8Array(await clear.arrayBuffer()), stored.slice(200, 300));
+  });
+
+  test("a token with a blank list that is not ranges is malformed", async () => {
+    const key = await signingKey(SECRET);
+    const signed = await signCapability(capability({ blank: [[5, 1]] }), key);
+    assert.deepEqual(await verifyCapability(signed, key, NOW), { ok: false, reason: "malformed" });
   });
 
   test("a token whose size is smaller than the stored object never reads a closed range", async () => {
@@ -571,6 +615,21 @@ describe("the byte range cache", () => {
     const response = await cachedRequest(bucket, cache, ORIGINAL, other, "bytes=0-99");
     assert.equal(response.status, 409);
     assert.equal(bucket.reads.length, 1);
+  });
+
+  test("a cached range is blanked for a token that blanks it and clear for one that does not", async () => {
+    const bucket = lab();
+    const cache = new FakeCache();
+    const open = await tokenFor({ restricted: [] });
+    const blanking = await tokenFor({ restricted: [], blank: [[10, 20]] });
+    const first = await cachedRequest(bucket, cache, ORIGINAL, open, "bytes=0-99");
+    const stored = new Uint8Array(await first.arrayBuffer());
+    const second = await cachedRequest(bucket, cache, ORIGINAL, blanking, "bytes=0-99");
+    const hidden = new Uint8Array(await second.arrayBuffer());
+    assert.ok(hidden.slice(10, 20).every((byte) => byte === 0x20));
+    assert.deepEqual(hidden.slice(20), stored.slice(20));
+    const third = await cachedRequest(bucket, cache, ORIGINAL, open, "bytes=0-99");
+    assert.deepEqual(new Uint8Array(await third.arrayBuffer()), stored);
   });
 
   test("a restricted range is refused before the cache is touched", async () => {

@@ -34,11 +34,11 @@ from parfocal_common.object_store import ObjectStore, StorageLocation
 from parfocal_common.settings import load_settings
 from parfocal_ingest.associated import associated_images
 from parfocal_ingest.identify import Format, Identified, Refusal
+from parfocal_ingest.identifying_text import ranges_file
 from parfocal_ingest.isolation import JobScope, JobTokens, ParseLimits, parse_isolated
 from parfocal_ingest.overview_levels import OVERVIEW_LEVELS_NAME, overview_levels
 from parfocal_ingest.parse_jobs import READER_ERRORS, unpacked_in
 from parfocal_ingest.pyramid import Pyramid, read_pyramid
-from parfocal_ingest.restricted_ranges import ranges_document, restricted_ranges
 from parfocal_ingest.settings import DEFAULT_COPY_PART_BYTES, IngestSettings
 from parfocal_ingest.thumbnail import previews
 from parfocal_ingest.tile_index import index_document, tile_index
@@ -306,9 +306,9 @@ async def derive(context: Context) -> Mapping[str, Any]:
                 await context.store.put_object(key, image.data, image.media_type)
         async with step.transaction() as connection:
             await step.mark_unit(connection, UNIT_RESTRICTED)
-    ranges = await asyncio.to_thread(restricted_ranges, context.local)
+    ranges = await asyncio.to_thread(ranges_file, context.local)
     await context.store.put_object(
-        restricted_ranges_key(tenant_id, slide_id), ranges_document(ranges), "application/json"
+        restricted_ranges_key(tenant_id, slide_id), ranges, "application/json"
     )
     present = [
         image.value
