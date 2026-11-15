@@ -1,4 +1,4 @@
-# XXXX. make dev signs in through the local Zitadel by default
+# 0342. make dev signs in through the local Zitadel by default
 
 - Date: 2026-11-15
 - Status: Accepted
