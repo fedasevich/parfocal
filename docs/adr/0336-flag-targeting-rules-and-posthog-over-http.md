@@ -1,4 +1,4 @@
-# XXXX. Flags target by workspace, role and user in one shared file, and PostHog answers over plain HTTP
+# 0336. Flags target by workspace, role and user in one shared file, and PostHog answers over plain HTTP
 
 - Date: 2026-11-15
 - Status: Accepted
