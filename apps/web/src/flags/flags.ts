@@ -1,35 +1,41 @@
 import type { Analytics } from "../clients.ts";
 import { type EventSink, eventSink } from "../telemetry/events.ts";
-import { assignArm, isPseudonymousId } from "./assign.ts";
+import type { ArmOf, FlagKey } from "./catalogue.ts";
 import flagDefaults from "./flag-defaults.json" with { type: "json" };
+import {
+  evaluateFlag,
+  type FlagContext,
+  type FlagDefinitions,
+  type FlagEvaluation,
+  type RemoteArms,
+} from "./targeting.ts";
 
-export type FlagDefinition = {
-  arms: readonly string[];
-  default: string;
-  mode: "default" | "split";
-};
-
-export type FlagDefinitions = Record<string, FlagDefinition>;
+export type {
+  FlagContext,
+  FlagDefinition,
+  FlagDefinitions,
+  FlagEvaluation,
+  FlagRule,
+  RemoteArms,
+} from "./targeting.ts";
 
 export type FlagService = {
-  arm(flagKey: string, userId: string): string;
+  evaluate(flagKey: string, context: FlagContext): FlagEvaluation;
 };
 
-export const bundledFlagDefinitions: FlagDefinitions = flagDefaults as FlagDefinitions;
+export const bundledFlagDefinitions = flagDefaults as FlagDefinitions;
 
 export function localFlagService(
   definitions: FlagDefinitions = bundledFlagDefinitions,
 ): FlagService {
-  return {
-    arm(flagKey, userId) {
-      const definition = definitions[flagKey];
-      if (definition === undefined) throw new Error(`unknown flag ${flagKey}`);
-      if (!isPseudonymousId(userId)) throw new Error("flags need a pseudonymous user id");
-      return definition.mode === "split"
-        ? assignArm(flagKey, userId, definition.arms)
-        : definition.default;
-    },
-  };
+  return { evaluate: (flagKey, context) => evaluateFlag(definitions, flagKey, context) };
+}
+
+export function remoteFlagService(
+  remote: RemoteArms,
+  definitions: FlagDefinitions = bundledFlagDefinitions,
+): FlagService {
+  return { evaluate: (flagKey, context) => evaluateFlag(definitions, flagKey, context, remote) };
 }
 
 export type IdentifiedAnalytics = {
@@ -41,39 +47,38 @@ export function identifiedAnalytics(userId: string, target: IdentifiedAnalytics)
 }
 
 export type Experiments = {
-  arm(flagKey: string): string;
+  arm<Key extends FlagKey>(flagKey: Key): ArmOf<Key>;
 };
+
+const assigned = new Set(["split", "remote"]);
 
 export function experiments(
   service: FlagService,
-  userId: string,
+  context: FlagContext,
   sink: EventSink,
-  definitions: FlagDefinitions = bundledFlagDefinitions,
 ): Experiments {
   const exposed = new Set<string>();
   return {
-    arm(flagKey) {
-      const arm = service.arm(flagKey, userId);
-      if (definitions[flagKey]?.mode === "split" && !exposed.has(flagKey)) {
+    arm<Key extends FlagKey>(flagKey: Key) {
+      const { arm, reason } = service.evaluate(flagKey, context);
+      if (assigned.has(reason) && !exposed.has(flagKey)) {
         exposed.add(flagKey);
         sink.track("experiment_exposed", { flag: flagKey, arm });
       }
-      return arm;
+      return arm as ArmOf<Key>;
     },
   };
 }
 
 export function experimentsFor(
   service: FlagService,
-  userId: string,
+  context: FlagContext,
   target: IdentifiedAnalytics,
   optedOut: () => boolean,
-  definitions: FlagDefinitions = bundledFlagDefinitions,
 ): Experiments {
   return experiments(
     service,
-    userId,
-    eventSink(identifiedAnalytics(userId, target), optedOut),
-    definitions,
+    context,
+    eventSink(identifiedAnalytics(context.userId, target), optedOut),
   );
 }

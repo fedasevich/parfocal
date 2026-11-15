@@ -1,0 +1,763 @@
+{
+  "definitions": {
+    "home_layout": {
+      "arms": ["control", "status_board"],
+      "default": "control",
+      "mode": "split",
+      "rules": [
+        {
+          "arm": "status_board",
+          "users": ["usr_pilot0001"]
+        },
+        {
+          "arm": "control",
+          "workspaces": ["wsp_holdout01"]
+        },
+        {
+          "arm": "status_board",
+          "workspaces": ["wsp_pilotlab1"],
+          "roles": ["reviewer"]
+        }
+      ]
+    },
+    "killed_layout": {
+      "arms": ["control", "status_board"],
+      "default": "control",
+      "mode": "split",
+      "killed": true,
+      "rules": [
+        {
+          "arm": "status_board",
+          "users": ["usr_pilot0001"]
+        }
+      ]
+    },
+    "plain_layout": {
+      "arms": ["control", "status_board"],
+      "default": "status_board",
+      "mode": "default"
+    }
+  },
+  "cases": [
+    {
+      "flag": "home_layout",
+      "context": { "userId": "usr_pilot0001" },
+      "remote": {},
+      "expected": { "arm": "status_board", "reason": "rule" }
+    },
+    {
+      "flag": "home_layout",
+      "context": { "userId": "usr_pilot0001" },
+      "remote": { "home_layout": "status_board" },
+      "expected": { "arm": "status_board", "reason": "remote" }
+    },
+    {
+      "flag": "home_layout",
+      "context": { "userId": "usr_pilot0001" },
+      "remote": { "home_layout": false },
+      "expected": { "arm": "control", "reason": "remote_off" }
+    },
+    {
+      "flag": "home_layout",
+      "context": { "userId": "usr_pilot0001" },
+      "remote": { "home_layout": "nope" },
+      "expected": { "arm": "status_board", "reason": "rule" }
+    },
+    {
+      "flag": "home_layout",
+      "context": { "userId": "usr_pilot0001", "workspaceId": "wsp_holdout01" },
+      "remote": {},
+      "expected": { "arm": "status_board", "reason": "rule" }
+    },
+    {
+      "flag": "home_layout",
+      "context": { "userId": "usr_pilot0001", "workspaceId": "wsp_holdout01" },
+      "remote": { "home_layout": "status_board" },
+      "expected": { "arm": "status_board", "reason": "remote" }
+    },
+    {
+      "flag": "home_layout",
+      "context": { "userId": "usr_pilot0001", "workspaceId": "wsp_holdout01" },
+      "remote": { "home_layout": false },
+      "expected": { "arm": "control", "reason": "remote_off" }
+    },
+    {
+      "flag": "home_layout",
+      "context": { "userId": "usr_pilot0001", "workspaceId": "wsp_holdout01" },
+      "remote": { "home_layout": "nope" },
+      "expected": { "arm": "status_board", "reason": "rule" }
+    },
+    {
+      "flag": "home_layout",
+      "context": {
+        "userId": "usr_00000042x",
+        "workspaceId": "wsp_holdout01",
+        "roles": ["reviewer"]
+      },
+      "remote": {},
+      "expected": { "arm": "control", "reason": "rule" }
+    },
+    {
+      "flag": "home_layout",
+      "context": {
+        "userId": "usr_00000042x",
+        "workspaceId": "wsp_holdout01",
+        "roles": ["reviewer"]
+      },
+      "remote": { "home_layout": "status_board" },
+      "expected": { "arm": "status_board", "reason": "remote" }
+    },
+    {
+      "flag": "home_layout",
+      "context": {
+        "userId": "usr_00000042x",
+        "workspaceId": "wsp_holdout01",
+        "roles": ["reviewer"]
+      },
+      "remote": { "home_layout": false },
+      "expected": { "arm": "control", "reason": "remote_off" }
+    },
+    {
+      "flag": "home_layout",
+      "context": {
+        "userId": "usr_00000042x",
+        "workspaceId": "wsp_holdout01",
+        "roles": ["reviewer"]
+      },
+      "remote": { "home_layout": "nope" },
+      "expected": { "arm": "control", "reason": "rule" }
+    },
+    {
+      "flag": "home_layout",
+      "context": {
+        "userId": "usr_00000042x",
+        "workspaceId": "wsp_pilotlab1",
+        "roles": ["reviewer"]
+      },
+      "remote": {},
+      "expected": { "arm": "status_board", "reason": "rule" }
+    },
+    {
+      "flag": "home_layout",
+      "context": {
+        "userId": "usr_00000042x",
+        "workspaceId": "wsp_pilotlab1",
+        "roles": ["reviewer"]
+      },
+      "remote": { "home_layout": "status_board" },
+      "expected": { "arm": "status_board", "reason": "remote" }
+    },
+    {
+      "flag": "home_layout",
+      "context": {
+        "userId": "usr_00000042x",
+        "workspaceId": "wsp_pilotlab1",
+        "roles": ["reviewer"]
+      },
+      "remote": { "home_layout": false },
+      "expected": { "arm": "control", "reason": "remote_off" }
+    },
+    {
+      "flag": "home_layout",
+      "context": {
+        "userId": "usr_00000042x",
+        "workspaceId": "wsp_pilotlab1",
+        "roles": ["reviewer"]
+      },
+      "remote": { "home_layout": "nope" },
+      "expected": { "arm": "status_board", "reason": "rule" }
+    },
+    {
+      "flag": "home_layout",
+      "context": {
+        "userId": "usr_00000042x",
+        "workspaceId": "wsp_pilotlab1",
+        "roles": ["researcher"]
+      },
+      "remote": {},
+      "expected": { "arm": "status_board", "reason": "split" }
+    },
+    {
+      "flag": "home_layout",
+      "context": {
+        "userId": "usr_00000042x",
+        "workspaceId": "wsp_pilotlab1",
+        "roles": ["researcher"]
+      },
+      "remote": { "home_layout": "status_board" },
+      "expected": { "arm": "status_board", "reason": "remote" }
+    },
+    {
+      "flag": "home_layout",
+      "context": {
+        "userId": "usr_00000042x",
+        "workspaceId": "wsp_pilotlab1",
+        "roles": ["researcher"]
+      },
+      "remote": { "home_layout": false },
+      "expected": { "arm": "control", "reason": "remote_off" }
+    },
+    {
+      "flag": "home_layout",
+      "context": {
+        "userId": "usr_00000042x",
+        "workspaceId": "wsp_pilotlab1",
+        "roles": ["researcher"]
+      },
+      "remote": { "home_layout": "nope" },
+      "expected": { "arm": "status_board", "reason": "split" }
+    },
+    {
+      "flag": "home_layout",
+      "context": { "userId": "usr_00000042x", "roles": ["reviewer"] },
+      "remote": {},
+      "expected": { "arm": "status_board", "reason": "split" }
+    },
+    {
+      "flag": "home_layout",
+      "context": { "userId": "usr_00000042x", "roles": ["reviewer"] },
+      "remote": { "home_layout": "status_board" },
+      "expected": { "arm": "status_board", "reason": "remote" }
+    },
+    {
+      "flag": "home_layout",
+      "context": { "userId": "usr_00000042x", "roles": ["reviewer"] },
+      "remote": { "home_layout": false },
+      "expected": { "arm": "control", "reason": "remote_off" }
+    },
+    {
+      "flag": "home_layout",
+      "context": { "userId": "usr_00000042x", "roles": ["reviewer"] },
+      "remote": { "home_layout": "nope" },
+      "expected": { "arm": "status_board", "reason": "split" }
+    },
+    {
+      "flag": "home_layout",
+      "context": { "userId": "usr_00000000x", "workspaceId": "wsp_otherlab1" },
+      "remote": {},
+      "expected": { "arm": "status_board", "reason": "split" }
+    },
+    {
+      "flag": "home_layout",
+      "context": { "userId": "usr_00000000x", "workspaceId": "wsp_otherlab1" },
+      "remote": { "home_layout": "status_board" },
+      "expected": { "arm": "status_board", "reason": "remote" }
+    },
+    {
+      "flag": "home_layout",
+      "context": { "userId": "usr_00000000x", "workspaceId": "wsp_otherlab1" },
+      "remote": { "home_layout": false },
+      "expected": { "arm": "control", "reason": "remote_off" }
+    },
+    {
+      "flag": "home_layout",
+      "context": { "userId": "usr_00000000x", "workspaceId": "wsp_otherlab1" },
+      "remote": { "home_layout": "nope" },
+      "expected": { "arm": "status_board", "reason": "split" }
+    },
+    {
+      "flag": "home_layout",
+      "context": { "userId": "usr_00000001x", "workspaceId": "wsp_otherlab1" },
+      "remote": {},
+      "expected": { "arm": "control", "reason": "split" }
+    },
+    {
+      "flag": "home_layout",
+      "context": { "userId": "usr_00000001x", "workspaceId": "wsp_otherlab1" },
+      "remote": { "home_layout": "status_board" },
+      "expected": { "arm": "status_board", "reason": "remote" }
+    },
+    {
+      "flag": "home_layout",
+      "context": { "userId": "usr_00000001x", "workspaceId": "wsp_otherlab1" },
+      "remote": { "home_layout": false },
+      "expected": { "arm": "control", "reason": "remote_off" }
+    },
+    {
+      "flag": "home_layout",
+      "context": { "userId": "usr_00000001x", "workspaceId": "wsp_otherlab1" },
+      "remote": { "home_layout": "nope" },
+      "expected": { "arm": "control", "reason": "split" }
+    },
+    {
+      "flag": "home_layout",
+      "context": { "userId": "usr_00000002x", "workspaceId": "wsp_otherlab1" },
+      "remote": {},
+      "expected": { "arm": "control", "reason": "split" }
+    },
+    {
+      "flag": "home_layout",
+      "context": { "userId": "usr_00000002x", "workspaceId": "wsp_otherlab1" },
+      "remote": { "home_layout": "status_board" },
+      "expected": { "arm": "status_board", "reason": "remote" }
+    },
+    {
+      "flag": "home_layout",
+      "context": { "userId": "usr_00000002x", "workspaceId": "wsp_otherlab1" },
+      "remote": { "home_layout": false },
+      "expected": { "arm": "control", "reason": "remote_off" }
+    },
+    {
+      "flag": "home_layout",
+      "context": { "userId": "usr_00000002x", "workspaceId": "wsp_otherlab1" },
+      "remote": { "home_layout": "nope" },
+      "expected": { "arm": "control", "reason": "split" }
+    },
+    {
+      "flag": "home_layout",
+      "context": { "userId": "usr_00000003x", "workspaceId": "wsp_otherlab1" },
+      "remote": {},
+      "expected": { "arm": "status_board", "reason": "split" }
+    },
+    {
+      "flag": "home_layout",
+      "context": { "userId": "usr_00000003x", "workspaceId": "wsp_otherlab1" },
+      "remote": { "home_layout": "status_board" },
+      "expected": { "arm": "status_board", "reason": "remote" }
+    },
+    {
+      "flag": "home_layout",
+      "context": { "userId": "usr_00000003x", "workspaceId": "wsp_otherlab1" },
+      "remote": { "home_layout": false },
+      "expected": { "arm": "control", "reason": "remote_off" }
+    },
+    {
+      "flag": "home_layout",
+      "context": { "userId": "usr_00000003x", "workspaceId": "wsp_otherlab1" },
+      "remote": { "home_layout": "nope" },
+      "expected": { "arm": "status_board", "reason": "split" }
+    },
+    {
+      "flag": "home_layout",
+      "context": { "userId": "usr_00000004x", "workspaceId": "wsp_otherlab1" },
+      "remote": {},
+      "expected": { "arm": "status_board", "reason": "split" }
+    },
+    {
+      "flag": "home_layout",
+      "context": { "userId": "usr_00000004x", "workspaceId": "wsp_otherlab1" },
+      "remote": { "home_layout": "status_board" },
+      "expected": { "arm": "status_board", "reason": "remote" }
+    },
+    {
+      "flag": "home_layout",
+      "context": { "userId": "usr_00000004x", "workspaceId": "wsp_otherlab1" },
+      "remote": { "home_layout": false },
+      "expected": { "arm": "control", "reason": "remote_off" }
+    },
+    {
+      "flag": "home_layout",
+      "context": { "userId": "usr_00000004x", "workspaceId": "wsp_otherlab1" },
+      "remote": { "home_layout": "nope" },
+      "expected": { "arm": "status_board", "reason": "split" }
+    },
+    {
+      "flag": "home_layout",
+      "context": { "userId": "usr_00000005x", "workspaceId": "wsp_otherlab1" },
+      "remote": {},
+      "expected": { "arm": "control", "reason": "split" }
+    },
+    {
+      "flag": "home_layout",
+      "context": { "userId": "usr_00000005x", "workspaceId": "wsp_otherlab1" },
+      "remote": { "home_layout": "status_board" },
+      "expected": { "arm": "status_board", "reason": "remote" }
+    },
+    {
+      "flag": "home_layout",
+      "context": { "userId": "usr_00000005x", "workspaceId": "wsp_otherlab1" },
+      "remote": { "home_layout": false },
+      "expected": { "arm": "control", "reason": "remote_off" }
+    },
+    {
+      "flag": "home_layout",
+      "context": { "userId": "usr_00000005x", "workspaceId": "wsp_otherlab1" },
+      "remote": { "home_layout": "nope" },
+      "expected": { "arm": "control", "reason": "split" }
+    },
+    {
+      "flag": "home_layout",
+      "context": { "userId": "usr_00000006x", "workspaceId": "wsp_otherlab1" },
+      "remote": {},
+      "expected": { "arm": "control", "reason": "split" }
+    },
+    {
+      "flag": "home_layout",
+      "context": { "userId": "usr_00000006x", "workspaceId": "wsp_otherlab1" },
+      "remote": { "home_layout": "status_board" },
+      "expected": { "arm": "status_board", "reason": "remote" }
+    },
+    {
+      "flag": "home_layout",
+      "context": { "userId": "usr_00000006x", "workspaceId": "wsp_otherlab1" },
+      "remote": { "home_layout": false },
+      "expected": { "arm": "control", "reason": "remote_off" }
+    },
+    {
+      "flag": "home_layout",
+      "context": { "userId": "usr_00000006x", "workspaceId": "wsp_otherlab1" },
+      "remote": { "home_layout": "nope" },
+      "expected": { "arm": "control", "reason": "split" }
+    },
+    {
+      "flag": "home_layout",
+      "context": { "userId": "usr_00000007x", "workspaceId": "wsp_otherlab1" },
+      "remote": {},
+      "expected": { "arm": "control", "reason": "split" }
+    },
+    {
+      "flag": "home_layout",
+      "context": { "userId": "usr_00000007x", "workspaceId": "wsp_otherlab1" },
+      "remote": { "home_layout": "status_board" },
+      "expected": { "arm": "status_board", "reason": "remote" }
+    },
+    {
+      "flag": "home_layout",
+      "context": { "userId": "usr_00000007x", "workspaceId": "wsp_otherlab1" },
+      "remote": { "home_layout": false },
+      "expected": { "arm": "control", "reason": "remote_off" }
+    },
+    {
+      "flag": "home_layout",
+      "context": { "userId": "usr_00000007x", "workspaceId": "wsp_otherlab1" },
+      "remote": { "home_layout": "nope" },
+      "expected": { "arm": "control", "reason": "split" }
+    },
+    {
+      "flag": "home_layout",
+      "context": { "userId": "usr_00000008x", "workspaceId": "wsp_otherlab1" },
+      "remote": {},
+      "expected": { "arm": "control", "reason": "split" }
+    },
+    {
+      "flag": "home_layout",
+      "context": { "userId": "usr_00000008x", "workspaceId": "wsp_otherlab1" },
+      "remote": { "home_layout": "status_board" },
+      "expected": { "arm": "status_board", "reason": "remote" }
+    },
+    {
+      "flag": "home_layout",
+      "context": { "userId": "usr_00000008x", "workspaceId": "wsp_otherlab1" },
+      "remote": { "home_layout": false },
+      "expected": { "arm": "control", "reason": "remote_off" }
+    },
+    {
+      "flag": "home_layout",
+      "context": { "userId": "usr_00000008x", "workspaceId": "wsp_otherlab1" },
+      "remote": { "home_layout": "nope" },
+      "expected": { "arm": "control", "reason": "split" }
+    },
+    {
+      "flag": "home_layout",
+      "context": { "userId": "usr_00000009x", "workspaceId": "wsp_otherlab1" },
+      "remote": {},
+      "expected": { "arm": "control", "reason": "split" }
+    },
+    {
+      "flag": "home_layout",
+      "context": { "userId": "usr_00000009x", "workspaceId": "wsp_otherlab1" },
+      "remote": { "home_layout": "status_board" },
+      "expected": { "arm": "status_board", "reason": "remote" }
+    },
+    {
+      "flag": "home_layout",
+      "context": { "userId": "usr_00000009x", "workspaceId": "wsp_otherlab1" },
+      "remote": { "home_layout": false },
+      "expected": { "arm": "control", "reason": "remote_off" }
+    },
+    {
+      "flag": "home_layout",
+      "context": { "userId": "usr_00000009x", "workspaceId": "wsp_otherlab1" },
+      "remote": { "home_layout": "nope" },
+      "expected": { "arm": "control", "reason": "split" }
+    },
+    {
+      "flag": "home_layout",
+      "context": { "userId": "usr_0000000ax", "workspaceId": "wsp_otherlab1" },
+      "remote": {},
+      "expected": { "arm": "status_board", "reason": "split" }
+    },
+    {
+      "flag": "home_layout",
+      "context": { "userId": "usr_0000000ax", "workspaceId": "wsp_otherlab1" },
+      "remote": { "home_layout": "status_board" },
+      "expected": { "arm": "status_board", "reason": "remote" }
+    },
+    {
+      "flag": "home_layout",
+      "context": { "userId": "usr_0000000ax", "workspaceId": "wsp_otherlab1" },
+      "remote": { "home_layout": false },
+      "expected": { "arm": "control", "reason": "remote_off" }
+    },
+    {
+      "flag": "home_layout",
+      "context": { "userId": "usr_0000000ax", "workspaceId": "wsp_otherlab1" },
+      "remote": { "home_layout": "nope" },
+      "expected": { "arm": "status_board", "reason": "split" }
+    },
+    {
+      "flag": "home_layout",
+      "context": { "userId": "usr_0000000bx", "workspaceId": "wsp_otherlab1" },
+      "remote": {},
+      "expected": { "arm": "status_board", "reason": "split" }
+    },
+    {
+      "flag": "home_layout",
+      "context": { "userId": "usr_0000000bx", "workspaceId": "wsp_otherlab1" },
+      "remote": { "home_layout": "status_board" },
+      "expected": { "arm": "status_board", "reason": "remote" }
+    },
+    {
+      "flag": "home_layout",
+      "context": { "userId": "usr_0000000bx", "workspaceId": "wsp_otherlab1" },
+      "remote": { "home_layout": false },
+      "expected": { "arm": "control", "reason": "remote_off" }
+    },
+    {
+      "flag": "home_layout",
+      "context": { "userId": "usr_0000000bx", "workspaceId": "wsp_otherlab1" },
+      "remote": { "home_layout": "nope" },
+      "expected": { "arm": "status_board", "reason": "split" }
+    },
+    {
+      "flag": "killed_layout",
+      "context": { "userId": "usr_pilot0001" },
+      "remote": {},
+      "expected": { "arm": "control", "reason": "killed" }
+    },
+    {
+      "flag": "killed_layout",
+      "context": { "userId": "usr_pilot0001", "workspaceId": "wsp_holdout01" },
+      "remote": {},
+      "expected": { "arm": "control", "reason": "killed" }
+    },
+    {
+      "flag": "killed_layout",
+      "context": {
+        "userId": "usr_00000042x",
+        "workspaceId": "wsp_holdout01",
+        "roles": ["reviewer"]
+      },
+      "remote": {},
+      "expected": { "arm": "control", "reason": "killed" }
+    },
+    {
+      "flag": "killed_layout",
+      "context": {
+        "userId": "usr_00000042x",
+        "workspaceId": "wsp_pilotlab1",
+        "roles": ["reviewer"]
+      },
+      "remote": {},
+      "expected": { "arm": "control", "reason": "killed" }
+    },
+    {
+      "flag": "killed_layout",
+      "context": {
+        "userId": "usr_00000042x",
+        "workspaceId": "wsp_pilotlab1",
+        "roles": ["researcher"]
+      },
+      "remote": {},
+      "expected": { "arm": "control", "reason": "killed" }
+    },
+    {
+      "flag": "killed_layout",
+      "context": { "userId": "usr_00000042x", "roles": ["reviewer"] },
+      "remote": {},
+      "expected": { "arm": "control", "reason": "killed" }
+    },
+    {
+      "flag": "killed_layout",
+      "context": { "userId": "usr_00000000x", "workspaceId": "wsp_otherlab1" },
+      "remote": {},
+      "expected": { "arm": "control", "reason": "killed" }
+    },
+    {
+      "flag": "killed_layout",
+      "context": { "userId": "usr_00000001x", "workspaceId": "wsp_otherlab1" },
+      "remote": {},
+      "expected": { "arm": "control", "reason": "killed" }
+    },
+    {
+      "flag": "killed_layout",
+      "context": { "userId": "usr_00000002x", "workspaceId": "wsp_otherlab1" },
+      "remote": {},
+      "expected": { "arm": "control", "reason": "killed" }
+    },
+    {
+      "flag": "killed_layout",
+      "context": { "userId": "usr_00000003x", "workspaceId": "wsp_otherlab1" },
+      "remote": {},
+      "expected": { "arm": "control", "reason": "killed" }
+    },
+    {
+      "flag": "killed_layout",
+      "context": { "userId": "usr_00000004x", "workspaceId": "wsp_otherlab1" },
+      "remote": {},
+      "expected": { "arm": "control", "reason": "killed" }
+    },
+    {
+      "flag": "killed_layout",
+      "context": { "userId": "usr_00000005x", "workspaceId": "wsp_otherlab1" },
+      "remote": {},
+      "expected": { "arm": "control", "reason": "killed" }
+    },
+    {
+      "flag": "killed_layout",
+      "context": { "userId": "usr_00000006x", "workspaceId": "wsp_otherlab1" },
+      "remote": {},
+      "expected": { "arm": "control", "reason": "killed" }
+    },
+    {
+      "flag": "killed_layout",
+      "context": { "userId": "usr_00000007x", "workspaceId": "wsp_otherlab1" },
+      "remote": {},
+      "expected": { "arm": "control", "reason": "killed" }
+    },
+    {
+      "flag": "killed_layout",
+      "context": { "userId": "usr_00000008x", "workspaceId": "wsp_otherlab1" },
+      "remote": {},
+      "expected": { "arm": "control", "reason": "killed" }
+    },
+    {
+      "flag": "killed_layout",
+      "context": { "userId": "usr_00000009x", "workspaceId": "wsp_otherlab1" },
+      "remote": {},
+      "expected": { "arm": "control", "reason": "killed" }
+    },
+    {
+      "flag": "killed_layout",
+      "context": { "userId": "usr_0000000ax", "workspaceId": "wsp_otherlab1" },
+      "remote": {},
+      "expected": { "arm": "control", "reason": "killed" }
+    },
+    {
+      "flag": "killed_layout",
+      "context": { "userId": "usr_0000000bx", "workspaceId": "wsp_otherlab1" },
+      "remote": {},
+      "expected": { "arm": "control", "reason": "killed" }
+    },
+    {
+      "flag": "plain_layout",
+      "context": { "userId": "usr_pilot0001" },
+      "remote": {},
+      "expected": { "arm": "status_board", "reason": "default" }
+    },
+    {
+      "flag": "plain_layout",
+      "context": { "userId": "usr_pilot0001", "workspaceId": "wsp_holdout01" },
+      "remote": {},
+      "expected": { "arm": "status_board", "reason": "default" }
+    },
+    {
+      "flag": "plain_layout",
+      "context": {
+        "userId": "usr_00000042x",
+        "workspaceId": "wsp_holdout01",
+        "roles": ["reviewer"]
+      },
+      "remote": {},
+      "expected": { "arm": "status_board", "reason": "default" }
+    },
+    {
+      "flag": "plain_layout",
+      "context": {
+        "userId": "usr_00000042x",
+        "workspaceId": "wsp_pilotlab1",
+        "roles": ["reviewer"]
+      },
+      "remote": {},
+      "expected": { "arm": "status_board", "reason": "default" }
+    },
+    {
+      "flag": "plain_layout",
+      "context": {
+        "userId": "usr_00000042x",
+        "workspaceId": "wsp_pilotlab1",
+        "roles": ["researcher"]
+      },
+      "remote": {},
+      "expected": { "arm": "status_board", "reason": "default" }
+    },
+    {
+      "flag": "plain_layout",
+      "context": { "userId": "usr_00000042x", "roles": ["reviewer"] },
+      "remote": {},
+      "expected": { "arm": "status_board", "reason": "default" }
+    },
+    {
+      "flag": "plain_layout",
+      "context": { "userId": "usr_00000000x", "workspaceId": "wsp_otherlab1" },
+      "remote": {},
+      "expected": { "arm": "status_board", "reason": "default" }
+    },
+    {
+      "flag": "plain_layout",
+      "context": { "userId": "usr_00000001x", "workspaceId": "wsp_otherlab1" },
+      "remote": {},
+      "expected": { "arm": "status_board", "reason": "default" }
+    },
+    {
+      "flag": "plain_layout",
+      "context": { "userId": "usr_00000002x", "workspaceId": "wsp_otherlab1" },
+      "remote": {},
+      "expected": { "arm": "status_board", "reason": "default" }
+    },
+    {
+      "flag": "plain_layout",
+      "context": { "userId": "usr_00000003x", "workspaceId": "wsp_otherlab1" },
+      "remote": {},
+      "expected": { "arm": "status_board", "reason": "default" }
+    },
+    {
+      "flag": "plain_layout",
+      "context": { "userId": "usr_00000004x", "workspaceId": "wsp_otherlab1" },
+      "remote": {},
+      "expected": { "arm": "status_board", "reason": "default" }
+    },
+    {
+      "flag": "plain_layout",
+      "context": { "userId": "usr_00000005x", "workspaceId": "wsp_otherlab1" },
+      "remote": {},
+      "expected": { "arm": "status_board", "reason": "default" }
+    },
+    {
+      "flag": "plain_layout",
+      "context": { "userId": "usr_00000006x", "workspaceId": "wsp_otherlab1" },
+      "remote": {},
+      "expected": { "arm": "status_board", "reason": "default" }
+    },
+    {
+      "flag": "plain_layout",
+      "context": { "userId": "usr_00000007x", "workspaceId": "wsp_otherlab1" },
+      "remote": {},
+      "expected": { "arm": "status_board", "reason": "default" }
+    },
+    {
+      "flag": "plain_layout",
+      "context": { "userId": "usr_00000008x", "workspaceId": "wsp_otherlab1" },
+      "remote": {},
+      "expected": { "arm": "status_board", "reason": "default" }
+    },
+    {
+      "flag": "plain_layout",
+      "context": { "userId": "usr_00000009x", "workspaceId": "wsp_otherlab1" },
+      "remote": {},
+      "expected": { "arm": "status_board", "reason": "default" }
+    },
+    {
+      "flag": "plain_layout",
+      "context": { "userId": "usr_0000000ax", "workspaceId": "wsp_otherlab1" },
+      "remote": {},
+      "expected": { "arm": "status_board", "reason": "default" }
+    },
+    {
+      "flag": "plain_layout",
+      "context": { "userId": "usr_0000000bx", "workspaceId": "wsp_otherlab1" },
+      "remote": {},
+      "expected": { "arm": "status_board", "reason": "default" }
+    }
+  ]
+}

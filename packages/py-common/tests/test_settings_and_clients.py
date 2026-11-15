@@ -10,13 +10,13 @@ from parfocal_common.clients import (
     ConsoleTelemetryExporter,
     EmailMessage,
     Factory,
-    FileFlagClient,
     MemoryEmailSender,
     MissingProductionClientError,
     NoAnalytics,
     ProductionFactories,
     select_clients,
 )
+from parfocal_common.flags import FlagContext, FlagEvaluation, RuleFlagClient
 from parfocal_common.settings import AppEnv, ServiceSettings, load_settings
 
 NON_PRODUCTION = [env for env in AppEnv if env is not AppEnv.PROD]
@@ -35,7 +35,7 @@ def recording_factories(calls: list[str]) -> ProductionFactories:
         errors=record("errors", ConsoleErrorReporter()),
         telemetry=record("telemetry", ConsoleTelemetryExporter()),
         analytics=record("analytics", NoAnalytics()),
-        flags=record("flags", FileFlagClient({})),
+        flags=record("flags", RuleFlagClient()),
     )
 
 
@@ -65,7 +65,7 @@ def test_no_production_client_outside_prod(app_env: AppEnv) -> None:
     clients = select_clients(settings(app_env=app_env), recording_factories(calls))
     assert calls == []
     assert isinstance(clients.analytics, NoAnalytics)
-    assert isinstance(clients.flags, FileFlagClient)
+    assert isinstance(clients.flags, RuleFlagClient)
 
 
 def test_prod_creates_every_production_client() -> None:
@@ -95,12 +95,14 @@ def test_prod_without_a_configured_client_fails_at_startup() -> None:
 
 def test_local_flags_come_from_the_flag_file(tmp_path: Path) -> None:
     flag_file = tmp_path / "flags.json"
-    flag_file.write_text('{"home-variant": "B"}')
+    flag_file.write_text('{"home": {"arms": ["a", "b"], "default": "b", "mode": "default"}}')
     clients = select_clients(
         settings(app_env="dev", flag_file=str(flag_file)), ProductionFactories()
     )
-    assert clients.flags.variant("home-variant", "user-1") == "B"
-    assert clients.flags.variant("unknown", "user-1") is None
+    context = FlagContext(user_id="usr_00000001x")
+    assert clients.flags.evaluate("home", context) == FlagEvaluation("b", "default")
+    with pytest.raises(KeyError):
+        clients.flags.evaluate("unknown", context)
 
 
 def test_a_local_outbox_file_collects_emails(tmp_path: Path) -> None:

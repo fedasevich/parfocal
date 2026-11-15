@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Protocol
 
+from parfocal_common.flags import FlagContext, FlagEvaluation, RuleFlagClient
 from parfocal_common.settings import ServiceSettings
 
 logger = logging.getLogger("parfocal")
@@ -48,7 +49,7 @@ class Analytics(Protocol):
 
 
 class FlagClient(Protocol):
-    def variant(self, flag: str, distinct_id: str) -> str | None: ...
+    def evaluate(self, flag: str, context: FlagContext) -> FlagEvaluation: ...
 
 
 class ConsoleEmailSender:
@@ -77,21 +78,6 @@ class ConsoleTelemetryExporter:
 class NoAnalytics:
     def capture(self, distinct_id: str, event: str, properties: Mapping[str, str]) -> None:
         return None
-
-
-@dataclass(frozen=True)
-class FileFlagClient:
-    defaults: Mapping[str, str]
-
-    @classmethod
-    def from_file(cls, path: Path) -> FileFlagClient:
-        if not path.exists():
-            return cls({})
-        loaded: dict[str, str] = json.loads(path.read_text())
-        return cls(loaded)
-
-    def variant(self, flag: str, distinct_id: str) -> str | None:
-        return self.defaults.get(flag)
 
 
 type Factory[T] = Callable[[ServiceSettings], T]
@@ -158,7 +144,7 @@ def select_clients(settings: ServiceSettings, production: ProductionFactories) -
     flags: FlagClient = (
         _production("flags", "posthog", production.flags, settings)
         if backends.flags == "posthog"
-        else FileFlagClient.from_file(Path(settings.flag_file))
+        else RuleFlagClient.from_file(Path(settings.flag_file))
     )
     return Clients(
         email=email, errors=errors, telemetry=telemetry, analytics=analytics, flags=flags
