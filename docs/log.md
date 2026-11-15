@@ -4,6 +4,8 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-15
 
+- AILEARN-011 adds server_pooling.py in the ML worker, which pools like the browser and matches it in a parity test, and reviewed_nuclei.py in the API, which turns a tenant's cell decisions into the nuclei collect takes. Stored rows keep an outline fingerprint, so a reshaped nucleus is pooled again (ADR 0323). The Modal job with the real ONNX encoder is still to build.
+- MLEVAL-006 adds a shared per-task promotion gate (within 0.01 of the detector and interactive baselines, no fall for the typer, ECE at most 0.05, tumor map refused until measured) that training rounds and the new registry promotion endpoint both use, with the report in registered_models.evaluation (migration 0115).
 - VIEW-072: dashed rings start mid first edge, so each edge is drawn once on Viv, and the WebGPU route matches the regenerated AI proposals golden at 0.000%. Six dashed goldens regenerated; the Linux eight-layer stack golden was patched with only the 967 pixels the dash change moves, so CI is its real check.
 - AIP-020 additive migration 0114 creates the platform table registered_models seeded from the code registry (3 models and 7 parts of ADR 0202's line-up, versions TODO beyond v1.2), adds nullable licence columns to lab_models, and POST /api/platform/model-registry lets a platform operator register a model at run time. Only platform operators register, because the table is shared by every workspace.
 - AILEARN-010 stores pooled features and typer outputs of reviewed nuclei as per-slide files and builds the rows a training round takes, with no migration. A server-side SAM pooler job and the API wiring from review decisions are still to build.

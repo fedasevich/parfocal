@@ -4,7 +4,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Any
 
-from sqlalchemy import and_, func, select
+from sqlalchemy import ColumnElement, and_, func, select
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.tables import DecisionReason, DecisionValue, review_decisions, review_edits
@@ -138,6 +138,21 @@ def decision_columns() -> list[Any]:
 async def reviewed_decisions(
     connection: AsyncConnection, project_id: uuid.UUID, task_id: uuid.UUID | None = None
 ) -> list[ReviewedDecision]:
+    where = [review_decisions.c.project_id == project_id]
+    if task_id is not None:
+        where.append(review_decisions.c.task_id == task_id)
+    return await decisions_where(connection, where)
+
+
+async def tenant_decisions(
+    connection: AsyncConnection, tenant_id: uuid.UUID
+) -> list[ReviewedDecision]:
+    return await decisions_where(connection, [review_decisions.c.tenant_id == tenant_id])
+
+
+async def decisions_where(
+    connection: AsyncConnection, where: Sequence[ColumnElement[bool]]
+) -> list[ReviewedDecision]:
     edit = and_(
         review_edits.c.task_id == review_decisions.c.task_id,
         review_edits.c.slide_id == review_decisions.c.slide_id,
@@ -149,7 +164,7 @@ async def reviewed_decisions(
     query = (
         select(*decision_columns())
         .select_from(review_decisions.outerjoin(review_edits, edit))
-        .where(review_decisions.c.project_id == project_id)
+        .where(*where)
         .order_by(
             review_decisions.c.task_id,
             review_decisions.c.slide_id,
@@ -157,8 +172,6 @@ async def reviewed_decisions(
             review_decisions.c.number,
         )
     )
-    if task_id is not None:
-        query = query.where(review_decisions.c.task_id == task_id)
     rows = (await connection.execute(query)).all()
     return [
         ReviewedDecision(
