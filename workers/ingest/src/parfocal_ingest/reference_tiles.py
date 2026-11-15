@@ -10,7 +10,7 @@ from PIL import Image
 
 from parfocal_ingest.identify import Format, identify
 from parfocal_ingest.pyramid import Level, Pyramid, Reader, main_series, read_pyramid
-from parfocal_ingest.source_levels import aperio_jpeg2000_page, aperio_jpeg2000_window
+from parfocal_ingest.source_levels import aperio_page, aperio_window
 from parfocal_ingest.thumbnail import background_of, flattened
 
 SAMPLED_LEVELS = 2
@@ -75,8 +75,8 @@ def sampled_levels(path: Path, found: Format, pyramid: Pyramid) -> int:
     if found is not Format.APERIO_SVS:
         return SAMPLED_LEVELS
     with tifffile.TiffFile(path) as tiff:
-        stored_jpeg2000 = aperio_jpeg2000_page(tiff, 0) is not None
-    return len(pyramid.levels) if stored_jpeg2000 else SAMPLED_LEVELS
+        stored_tiles = aperio_page(tiff, 0) is not None
+    return len(pyramid.levels) if stored_tiles else SAMPLED_LEVELS
 
 
 def sample_windows(path: Path, found: Format, pyramid: Pyramid) -> list[tuple[Window, Image.Image]]:
@@ -105,7 +105,7 @@ def openslide_window(path: Path, found: Format, window: Window) -> Image.Image:
         )
         exact = slide.level_downsamples[index]
         if found is Format.APERIO_SVS and exact != window.downsample:
-            stored = aperio_jpeg2000_window(
+            stored = aperio_window(
                 path, window.level, window.x, window.y, window.width, window.height
             )
             if stored is not None:

@@ -28,6 +28,7 @@ import { retryingFetch } from "./retrying-fetch.ts";
 import { serve } from "./serve.ts";
 
 const JPEG2000_LARGEST_DIFFERENCE = 3;
+const APERIO_JPEG_LARGEST_DIFFERENCE = 1;
 
 const served = await serve({ "/synthetic": syntheticDir, "/cache": fixturesDir() });
 after(() => served.close());
@@ -283,7 +284,7 @@ describe("reader check: a misread pyramid ladder is caught", () => {
   });
 
   for (const [name, expected] of [
-    ["CMU-1.svs", [null, "unreadable"]],
+    ["CMU-1.svs", [null, "unreadable", "missing-level"]],
     ["JP2K-33003-1.svs", [null, "unreadable", "missing-level"]],
   ] as const) {
     it(`a coarser level labelled 4x is caught (${name})`, skipUnless(slide(name)), async () => {
@@ -295,10 +296,14 @@ describe("reader check: a misread pyramid ladder is caught", () => {
   }
 });
 
-describe("reader check: JPEG 2000 coarse levels are the stored codestream", () => {
-  for (const name of ["JP2K-33003-1.svs", "JP2K-33003-2.svs"]) {
+describe("reader check: Aperio coarse levels are the stored tiles", () => {
+  for (const [name, bound] of [
+    ["JP2K-33003-1.svs", JPEG2000_LARGEST_DIFFERENCE],
+    ["JP2K-33003-2.svs", JPEG2000_LARGEST_DIFFERENCE],
+    ["CMU-1.svs", APERIO_JPEG_LARGEST_DIFFERENCE],
+  ] as const) {
     it(
-      `every level agrees with the decoded codestream within ${JPEG2000_LARGEST_DIFFERENCE} grey levels (${name})`,
+      `every level agrees with the decoded stored tiles within ${bound} grey levels (${name})`,
       skipUnless(slide(name)),
       async () => {
         const source = await open(slide(name));
@@ -311,8 +316,7 @@ describe("reader check: JPEG 2000 coarse levels are the stored codestream", () =
           const { level } = check.window;
           assert.ok(check.meanError !== null && check.meanError <= 0.5, `level ${level} mean`);
           assert.ok(
-            check.largestDifference !== null &&
-              check.largestDifference <= JPEG2000_LARGEST_DIFFERENCE,
+            check.largestDifference !== null && check.largestDifference <= bound,
             `level ${level} largest ${check.largestDifference}`,
           );
         }

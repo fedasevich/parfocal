@@ -12,7 +12,7 @@ from PIL import Image
 from parfocal_ingest.identify import Format, identify
 from parfocal_ingest.pyramid import Pyramid, main_series, read_pyramid
 from parfocal_ingest.reference_tiles import Window, read_window, write_reference
-from parfocal_ingest.source_levels import aperio_jpeg2000_window
+from parfocal_ingest.source_levels import aperio_window
 
 REFERENCE = ROOT / "packages" / "test-fixtures" / "reference-tiles"
 FIXTURES = [
@@ -80,7 +80,7 @@ def test_a_coarser_window_matches_the_finest_level_averaged() -> None:
 
 
 def codestream(path: Path, level: int, x: int, y: int, size: int) -> np.ndarray:
-    stored = aperio_jpeg2000_window(path, level, x, y, size, size)
+    stored = aperio_window(path, level, x, y, size, size)
     assert stored is not None
     return stored.astype(np.int16)
 
@@ -91,14 +91,23 @@ def openslide_read(path: Path, level: int, location: tuple[int, int], size: int)
     return np.asarray(region.convert("RGB"), dtype=np.int16)
 
 
-@pytest.mark.parametrize("name", JPEG2000_FIXTURES)
-def test_openslide_decodes_a_jpeg2000_level_like_the_codestream_at_its_origin(name: str) -> None:
+@pytest.mark.parametrize("name", [*JPEG2000_FIXTURES, "CMU-1.svs"])
+def test_openslide_decodes_an_aperio_level_like_its_stored_tiles_at_its_origin(name: str) -> None:
     path = fixture_path(name)
     with openslide.OpenSlide(path) as slide:
         levels = slide.level_count
     for level in range(levels):
         read = openslide_read(path, level, (0, 0), ORIGIN_SIDE)
         assert np.array_equal(read, codestream(path, level, 0, 0, ORIGIN_SIDE)), level
+
+
+def test_a_coarse_aperio_jpeg_window_is_cut_from_the_stored_tiles() -> None:
+    path, pyramid = opened("CMU-1.svs")
+    for level in pyramid.levels[1:]:
+        window = Window(level.index, level.downsample, 3 * TILE - 40, 2 * TILE - 24, TILE, TILE)
+        read = pixels(read_window(path, Format.APERIO_SVS, pyramid, window))
+        stored = codestream(path, level.index, window.x, window.y, TILE)
+        assert np.array_equal(read, stored), level.index
 
 
 @pytest.mark.parametrize("name", JPEG2000_FIXTURES)

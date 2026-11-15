@@ -43,17 +43,40 @@ All three columns are compared with the codestream decode of step 1.
 | JP2K-33003-2.svs | mean 0.463, largest 2 | mean 0.464, largest 2 | mean 0.422, largest 2 |
 
 - With the old OpenSlide window of level 1 of `JP2K-33003-1.svs` swapped back in, the browser was a mean of 0.980 and a largest of 14 from it. That mean passed the old check of 1.0, so a mean alone could not tell the two references apart. The old and new windows differ by a mean of 0.761 and a largest of 13.
-- `CMU-1.svs` (Aperio JPEG, not JPEG 2000) has downsamples 4.000122 and 16.000486, and `CMU-1-JP2K-33005.svs` has 4.000061 and 16.003163.
+- `CMU-1.svs` (Aperio JPEG, not JPEG 2000) has downsamples 4.000122 and 16.000486, `CMU-2.svs` has 4.000131, 16.003678 and 32.019056, and `CMU-1-JP2K-33005.svs` has 4.000061 and 16.003163.
+
+## Aperio JPEG
+
+A second pass applied the same check to Aperio JPEG, whose tiles are JPEG with shared JPEG tables and photometric RGB. Each stored tile was joined with the page's tables and decoded by Pillow as RGB with no colour transform, then compared with OpenSlide on tile 0,0 at each level's origin and on tile 3,3 at the whole-downsample location.
+
+| Slide | Level | At the origin | Tile 3,3 at whole downsample |
+|---|---|---|---|
+| CMU-1.svs | 0 | 0 (mean 0.000) | 0 (mean 0.000) |
+| CMU-1.svs | 1 | 0 (mean 0.000) | 2 (mean 0.002) |
+| CMU-1.svs | 2 | 0 (mean 0.000) | 7 (mean 0.240) |
+| CMU-2.svs | 0 | 0 (mean 0.000) | 0 (mean 0.000) |
+| CMU-2.svs | 1 | 0 (mean 0.000) | 4 (mean 0.004) |
+| CMU-2.svs | 2 | 0 (mean 0.000) | 61 (mean 5.413) |
+| CMU-2.svs | 3 | 0 (mean 0.000) | 246 (mean 1.008) |
+
+Decoding Pillow's default way, as YCbCr, put every tile about 48 grey levels off on average, so the RGB decode is required. With the coarse windows of `CMU-1.svs` now cut from the stored tiles and a window on every level, the browser reader with its script decoder (`nativeJpeg: "off"`) against them:
+
+| Slide | Level 0 | Level 1 | Level 2 |
+|---|---|---|---|
+| CMU-1.svs | mean 0.067, largest 1 | mean 0.016, largest 1 | mean 0.033, largest 1 |
+| CMU-1-Small-Region.svs (one level) | mean 0.041, largest 1 | | |
+
+With the old OpenSlide window of level 1 swapped back in, the browser was a mean of 0.334 and a largest of 19 from it, and the old and new windows differ by a mean of 0.330 and a largest of 19. The check on the Aperio JPEG slide is now a largest difference of 1 on every level, on top of the mean.
 
 ## Conclusion
 
-The cause is the reference. OpenSlide maps a level 0 location to a coarse level by dividing by the exact downsample, so at 4.0004 or 8.0018 no location away from (0, 0) lands on a whole pixel, and OpenSlide resamples the tile. The spike follows where OpenSlide was asked to read, not the decoder: the same codestream decode is 0 from OpenSlide at (0, 0) and 43 to 46 from it at the whole-downsample location VIEW-011 used, except 7 on level 1 of `JP2K-33003-2.svs`. The level table is right, and the decoder is as close at levels 1 and 2 as at level 0. The remaining 1 to 3 grey levels at every level are assumed, not traced, to come from the colour conversion inside the OpenJPEG WASM build, which is not OpenSlide's fixed point table. [ADR XXXX](../adr/XXXX-jpeg-2000-coarse-levels-match-the-stored-codestream.md) (JPEG 2000 coarse levels match the stored codestream) records that the browser's coarse levels match the stored codestream and that the reference now does too.
+The cause is the reference. OpenSlide maps a level 0 location to a coarse level by dividing by the exact downsample, so at 4.0004 or 8.0018 no location away from (0, 0) lands on a whole pixel, and OpenSlide resamples the tile. The spike follows where OpenSlide was asked to read, not the decoder: the same codestream decode is 0 from OpenSlide at (0, 0) and 43 to 46 from it at the whole-downsample location VIEW-011 used, except 7 on level 1 of `JP2K-33003-2.svs`. The level table is right, and the decoder is as close at levels 1 and 2 as at level 0. The remaining 1 to 3 grey levels at every level are assumed, not traced, to come from the colour conversion inside the OpenJPEG WASM build, which is not OpenSlide's fixed point table. Aperio JPEG has the same cause, smaller on the finer coarse levels and larger on the coarsest. [ADR XXXX](../adr/XXXX-aperio-coarse-levels-match-the-stored-tiles.md) (Aperio coarse levels match the stored tiles) records that the browser's coarse levels match the stored tiles and that the reference now does too.
 
 ## Pinned by
 
-- `workers/ingest/tests/test_reference_tiles.py`: OpenSlide at each level's origin equals the codestream decode exactly, OpenSlide away from the origin is at least 5 grey levels off on the four tiles above while the reference window there equals the codestream exactly, and the committed windows (now three levels for each JPEG 2000 slide, with `JP2K-33003-2.svs` added) still match the server reader.
-- `packages/viewer-engine/test/pixel-source/reader-check.test.ts`: on both slides every level agrees with the reference within a mean of 0.5 and a largest difference of 3, which the old level 1 window fails at 14.
+- `workers/ingest/tests/test_reference_tiles.py`: OpenSlide at each level's origin equals the stored tile decode exactly on both JPEG 2000 slides and `CMU-1.svs`, OpenSlide away from the origin is at least 5 grey levels off on the four JPEG 2000 tiles above while the reference window there equals the codestream exactly, a coarse `CMU-1.svs` window equals its stored tiles exactly, and the committed windows (now one per level for each Aperio slide, with `JP2K-33003-2.svs` added) still match the server reader.
+- `packages/viewer-engine/test/pixel-source/reader-check.test.ts`: every level agrees with the reference within a mean of 0.5 and a largest difference of 3 on both JPEG 2000 slides, which the old level 1 window fails at 14, and of 1 on `CMU-1.svs`, which its old level 1 window fails at 19.
 
 ## Limits
 
-Two slides, both compression 33003, one tile per level, one run. The colour residual of up to 3 was not traced inside the WASM build, so its cause is an assumption. Aperio JPEG slides have the same fractional downsamples, so their coarse INGEST-009 reference windows are still OpenSlide's resampled reads. Their mean check passes, but they were not measured here.
+Two JPEG 2000 slides, both compression 33003, and two Aperio JPEG slides, one tile per level, one run. Only `CMU-1.svs` of the JPEG slides is a reference fixture. The colour residual of up to 3 was not traced inside the WASM build, so its cause is an assumption. The JPEG bound of 1 is for the script decoder, not the browser's native JPEG decode.
