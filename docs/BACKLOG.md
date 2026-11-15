@@ -3651,7 +3651,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Done when tests produce stable areas on a fixture.
   Size: M.
 
-- [ ] AINUC-010 · Whole-slide nuclei job UI
+- [x] AINUC-010 · Whole-slide nuclei job UI
   Scope view, selection or slide. Defaults fixed for doctors, options for annotators. Find nuclei, cancel, load last run. The minimap shades finished tiles. Cancel stops within one window and keeps finished tiles.
   Done when E2E starts, cancels and reloads a job.
   Depends on AINUC-001, AINUC-002, AINUC-013, JOBS-004.
