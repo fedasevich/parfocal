@@ -200,6 +200,16 @@ OPS-007 (alerting and on-call) set four SLOs in [ADR 0340](adr/0340-slos-and-ale
 
 Your choice:
 
+### 112. A slide for the viewer under make dev
+
+FOUND-040 (the edge Worker and the dev bucket under make dev) runs the edge Worker inside Vite with a read-only binding to `parfocal-dev`, but no slide opens yet. The Worker serves shared slides only from `samples/camelyon16/`, and that folder in `parfocal-dev` is empty. The format gallery slides sit under `fixtures/`, which the Worker refuses.
+
+- **A. Upload the four CAMELYON16 samples into `parfocal-dev` through the ingest sample job once, an additive production write under ADR 0151 (standing approval within $30 a month) that adds a few GB to R2 storage, and seed them under make dev (recommended).**
+- B. Let the Worker also serve `fixtures/<file>` as a shared folder, which widens a security rule but needs no upload.
+- C. Leave make dev without a viewer slide for now.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 The temporary review checklist of 2026-11-14 is handled and deleted. What still waits is below.
