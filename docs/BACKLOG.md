@@ -4036,7 +4036,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Depends on DEV-002.
   Size: S.
 
-- [ ] DEV-003 · Gamepad support
+- [x] DEV-003 · Gamepad support
   Left stick pans with speed by deflection, triggers zoom, shoulder buttons step presets, A keep, B next, X not a cell, D-pad set type, Start next area, hold Select for peek. Dead zones and per-device speed.
   Done when unit tests with a simulated gamepad cover each mapping.
   Size: M.
