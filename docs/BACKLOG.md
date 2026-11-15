@@ -1692,7 +1692,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Refs [`poc/src/deck94/*`](https://github.com/fedasevich/pathlogy-poc/tree/master/src/deck94), doc 23.
   Size: L.
 
-- [ ] VIEW-070 · Dashed AI proposals on the deck.gl WebGPU route
+- [x] VIEW-070 · Dashed AI proposals on the deck.gl WebGPU route
   On the VIEW-037 route AI proposals draw solid, 0.625% of pixels off the Viv golden, because deck.gl's `PathStyleExtension` injects GLSL only. Draw the dash in WGSL through a small layer extension, or as screen-space dash geometry rebuilt per zoom step with the extension's phase and caps.
   Done when the AI proposals golden passes on the route at Viv's 0.1% tolerance and `routes-cmu1.spec.ts` drops its 2% bound.
   Depends on VIEW-037.
