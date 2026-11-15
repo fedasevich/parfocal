@@ -33,7 +33,14 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine
 
 from parfocal_common.data_classes import OPERATIONAL
-from parfocal_common.db import DatabaseScope, metadata, require_row_security, scoped_transaction
+from parfocal_common.db import (
+    DatabaseScope,
+    metadata,
+    require_row_security,
+    scoped_transaction,
+    tenant_foreign_key,
+    tenant_unique,
+)
 from parfocal_common.stage_throughput import RunLabels, StageSample, record_throughput
 
 logger = logging.getLogger("parfocal.jobs")
@@ -116,6 +123,7 @@ jobs = Table(
     timestamp("created_at", nullable=False),
     timestamp("finished_at"),
     ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),
+    tenant_unique(),
     CheckConstraint(JOB_STATUS_CHECK, name="status"),
     CheckConstraint("(status = 'paused') = (pause_reason IS NOT NULL)", name="pause_reason"),
     Index(
@@ -138,7 +146,7 @@ job_steps = Table(
     Column("result", JSONB, nullable=True, info=OPERATIONAL),
     timestamp("started_at"),
     timestamp("finished_at"),
-    ForeignKeyConstraint(["job_id"], ["jobs.id"], ondelete="CASCADE"),
+    tenant_foreign_key("job_id", "jobs", ondelete="CASCADE"),
     CheckConstraint("status IN ('pending', 'running', 'done', 'failed')", name="status"),
     CheckConstraint("units_total IS NULL OR units_total >= 0", name="units_total"),
 )

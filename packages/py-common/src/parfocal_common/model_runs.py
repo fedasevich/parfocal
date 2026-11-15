@@ -22,7 +22,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine
 
 from parfocal_common.data_classes import OPERATIONAL, PERSONAL
-from parfocal_common.db import DatabaseScope, metadata, scoped_transaction
+from parfocal_common.db import DatabaseScope, metadata, scoped_transaction, tenant_foreign_key
 from parfocal_common.jobs import (
     Claimed,
     Step,
@@ -106,7 +106,7 @@ model_runs = Table(
         info=PERSONAL,
     ),
     timestamp("created_at", nullable=False),
-    ForeignKeyConstraint(["job_id"], ["jobs.id"]),
+    tenant_foreign_key("job_id", "jobs"),
     ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),
     ForeignKeyConstraint(["slide_id", "project_id"], ["slides.id", "slides.project_id"]),
     ForeignKeyConstraint(["task_id", "project_id"], ["review_tasks.id", "review_tasks.project_id"]),

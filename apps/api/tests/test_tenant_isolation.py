@@ -21,6 +21,7 @@ from db_support import APP_URL, OWNER_URL, ApiAs, query, with_database
 from link_support import Site
 from pypdf import PdfReader
 from sqlalchemy import func, insert, select, text, update
+from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.asyncio import AsyncConnection, create_async_engine
 from storage_support import TEST_PART_BYTES, TEST_STORAGE, put_restricted_images, stand_in_images
 
@@ -2182,3 +2183,166 @@ def test_another_workspace_cannot_answer_an_ask(api: ApiAs, seeded: tuple[Seeded
         assert attempt.status_code == 404, attempt.text
     pending = api(a.member(admin_rights=True)).get("/api/tenant/access-requests").json()
     assert str(a.ids["access_request"]) in [item["id"] for item in pending]
+
+
+KEY_COLUMNS = (
+    "(SELECT string_agg(a.attname::text, ',' ORDER BY k.ord) FROM unnest({keys}) "
+    "WITH ORDINALITY k(n, ord) JOIN pg_attribute a ON a.attrelid = {table} AND a.attnum = k.n)"
+)
+KEYS_BETWEEN_TENANT_TABLES = (
+    "SELECT c.conname, c.conrelid::regclass::text, c.confrelid::regclass::text, "
+    + KEY_COLUMNS.format(keys="c.conkey", table="c.conrelid")
+    + ", "
+    + KEY_COLUMNS.format(keys="c.confkey", table="c.confrelid")
+    + " FROM pg_constraint c WHERE c.contype = 'f' "
+    "AND c.connamespace = 'public'::regnamespace AND c.confrelid <> 'tenants'::regclass "
+    "AND EXISTS (SELECT 1 FROM pg_attribute a WHERE a.attrelid = c.conrelid "
+    "AND a.attname = 'tenant_id') "
+    "AND EXISTS (SELECT 1 FROM pg_attribute a WHERE a.attrelid = c.confrelid "
+    "AND a.attname = 'tenant_id') ORDER BY 1"
+)
+INSERTABLE_COLUMNS = (
+    "SELECT column_name FROM information_schema.columns WHERE table_schema = 'public' "
+    "AND table_name = :table AND is_generated = 'NEVER' "
+    "AND coalesce(identity_generation, '') <> 'ALWAYS' ORDER BY ordinal_position"
+)
+
+
+@dataclass(frozen=True)
+class TenantKey:
+    name: str
+    child: str
+    parent: str
+    column: str
+
+
+def keys_between_tenant_tables(owner: str) -> list[tuple[str, str, str, list[str], list[str]]]:
+    return [
+        (str(name), str(child), str(parent), names_of(columns), names_of(referred))
+        for name, child, parent, columns, referred in query(owner, KEYS_BETWEEN_TENANT_TABLES)
+    ]
+
+
+def names_of(joined: object) -> list[str]:
+    return str(joined).split(",")
+
+
+def tenant_keys(owner: str) -> list[TenantKey]:
+    return [
+        TenantKey(name, child, parent, columns[0])
+        for name, child, parent, columns, referred in keys_between_tenant_tables(owner)
+        if len(columns) == 2
+        and columns[0] != "project_id"
+        and columns[1] == "tenant_id"
+        and referred == ["id", "tenant_id"]
+    ]
+
+
+CHANGED_IN_A_COPY = {
+    "annotation_versions": {"version": "version + 1000"},
+    "api_tokens": {"token_hash": "sha256(token_hash)"},
+    "clinical_report_versions": {"number": "number + 1000", "reason": "'probe'"},
+    "evaluation_versions": {"number": "number + 1000"},
+    "job_steps": {"ordinal": "ordinal + 1000"},
+    "painted_map_versions": {"version": "version + 1000"},
+    "specimens": {"letter": "'ZZ'"},
+    "study_template_versions": {"version": "version + 1000"},
+    "uploads": {"object_key": "object_key || '.probe'"},
+}
+CHECKED_WITH_THE_KEY = {
+    ("uploads", "created_by_service_id"): {"created_by_user_id": "NULL"},
+    ("uploads", "job_id"): {"status": "'completed'", "closed_at": "coalesce(closed_at, now())"},
+}
+REFUSED_BEFORE_THE_KEY = {
+    "result_chunks": "is not importing",
+    "result_objects": "is not importing",
+}
+
+
+def copy_pointing_at(key: TenantKey, columns: list[str]) -> str:
+    changes = CHANGED_IN_A_COPY.get(key.child, {}) | CHECKED_WITH_THE_KEY.get(
+        (key.child, key.column), {}
+    )
+    values = [
+        ":parent"
+        if column == key.column
+        else "gen_random_uuid()"
+        if column == "id"
+        else changes.get(column, column)
+        for column in columns
+    ]
+    return (
+        f"INSERT INTO {key.child} ({', '.join(columns)}) "
+        f"SELECT {', '.join(values)} FROM {key.child} ORDER BY {key.column} IS NULL LIMIT 1"
+    )
+
+
+def move_pointing_at(key: TenantKey) -> str:
+    return (
+        f"UPDATE {key.child} SET {key.column} = :parent WHERE ctid = "
+        f"(SELECT ctid FROM {key.child} ORDER BY {key.column} IS NULL LIMIT 1)"
+    )
+
+
+def refused_by_its_key(key: TenantKey, refusal: str) -> bool:
+    before = REFUSED_BEFORE_THE_KEY.get(key.child)
+    return f'violates foreign key constraint "{key.name}"' in refusal or (
+        before is not None and before in refusal
+    )
+
+
+async def write_pointing_across(
+    app: str, key: TenantKey, scope: DatabaseScope, parent: object, statement: str
+) -> str:
+    engine = create_async_engine(async_database_url(app))
+    try:
+        async with engine.connect() as connection:
+            await connection.execute(SET_SCOPE, scope.parameters())
+            columns = [
+                str(row[0])
+                for row in await connection.execute(text(INSERTABLE_COLUMNS), {"table": key.child})
+            ]
+            sql = copy_pointing_at(key, columns) if statement == "insert" else move_pointing_at(key)
+            written = await connection.execute(text(sql), {"parent": parent})
+            return f"{statement} of {written.rowcount} rows accepted"
+    except DBAPIError as error:
+        return str(error.orig)
+    finally:
+        await engine.dispose()
+
+
+def refusal_of(app: str, key: TenantKey, scope: DatabaseScope, parent: object) -> str:
+    refusal = asyncio.run(write_pointing_across(app, key, scope, parent, "insert"))
+    if refused_by_its_key(key, refusal) or "accepted" in refusal:
+        return refusal
+    return asyncio.run(write_pointing_across(app, key, scope, parent, "update"))
+
+
+def test_every_key_between_workspace_tables_carries_the_workspace(database: str) -> None:
+    owner = with_database(OWNER_URL, database)
+    single = [
+        (name, columns)
+        for name, _, _, columns, _ in keys_between_tenant_tables(owner)
+        if "tenant_id" not in columns and len(columns) == 1
+    ]
+    assert single == []
+
+
+def test_a_row_cannot_point_at_a_parent_in_another_workspace(
+    database: str, seeded: tuple[Seeded, Seeded]
+) -> None:
+    a, b = seeded
+    owner = with_database(OWNER_URL, database)
+    app = with_database(APP_URL, database)
+    scope = DatabaseScope(tenant_id=b.tenant_id, user_id=b.ids["user"])
+    keys = tenant_keys(owner)
+    assert len(keys) >= 35
+    accepted: list[str] = []
+    for key in keys:
+        parent = query(
+            owner, f"SELECT id FROM {key.parent} WHERE tenant_id = '{a.tenant_id}' LIMIT 1"
+        )[0][0]
+        refusal = refusal_of(app, key, scope, parent)
+        if not refused_by_its_key(key, refusal):
+            accepted.append(f"{key.name}: {refusal}")
+    assert not accepted, "\n".join(accepted)

@@ -22,7 +22,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 from parfocal_api.tables.base import one_of, timestamps
 from parfocal_api.tables.cases import owned_ids
 from parfocal_common.data_classes import OPERATIONAL, PERSONAL, PHI
-from parfocal_common.db import metadata
+from parfocal_common.db import metadata, tenant_foreign_key
 from parfocal_common.pairing import Certainty, Rule
 from parfocal_common.result_imports import ResultFormat, UploadKind
 
@@ -97,10 +97,10 @@ uploads = Table(
     Column(
         "created_by_service_id",
         Uuid[uuid.UUID](),
-        ForeignKey("service_accounts.id"),
         nullable=True,
         info=OPERATIONAL,
     ),
+    tenant_foreign_key("created_by_service_id", "service_accounts"),
     Column("file_name", String(255), nullable=False, info=PHI),
     Column("size_bytes", BigInteger, nullable=False, info=OPERATIONAL),
     Column("last_modified_ms", BigInteger, nullable=True, info=OPERATIONAL),
@@ -110,7 +110,8 @@ uploads = Table(
     Column("part_count", Integer, nullable=False, info=OPERATIONAL),
     Column("status", String(10), nullable=False, server_default="open", info=OPERATIONAL),
     Column("etag", String(80), nullable=True, info=OPERATIONAL),
-    Column("job_id", Uuid[uuid.UUID](), ForeignKey("jobs.id"), nullable=True, info=OPERATIONAL),
+    Column("job_id", Uuid[uuid.UUID](), nullable=True, info=OPERATIONAL),
+    tenant_foreign_key("job_id", "jobs"),
     Column(
         "last_activity_at",
         DateTime(timezone=True),

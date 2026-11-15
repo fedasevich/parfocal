@@ -28,7 +28,7 @@ from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 
 from parfocal_api.tables.base import ProjectRole, SignOutRight, one_of, timestamps
 from parfocal_common.data_classes import OPERATIONAL, PERSONAL, PHI, SECRET
-from parfocal_common.db import metadata
+from parfocal_common.db import metadata, tenant_foreign_key, tenant_unique
 
 
 class Sex(StrEnum):
@@ -233,13 +233,8 @@ projects = Table(
         server_default=text("false"),
         info=OPERATIONAL,
     ),
-    Column(
-        "study_template_id",
-        Uuid[uuid.UUID](),
-        ForeignKey("study_templates.id"),
-        nullable=True,
-        info=OPERATIONAL,
-    ),
+    Column("study_template_id", Uuid[uuid.UUID](), nullable=True, info=OPERATIONAL),
+    tenant_foreign_key("study_template_id", "study_templates"),
     Column("match_iou", Float[float](), nullable=False, server_default="0.5", info=OPERATIONAL),
     Column(
         "match_distance_um", Float[float](), nullable=False, server_default="4", info=OPERATIONAL
@@ -391,6 +386,7 @@ slides = Table(
     *case_timestamps(),
     UniqueConstraint("project_id", "barcode"),
     UniqueConstraint("id", "project_id"),
+    tenant_unique(),
     Index(
         "ix_slides_case_id_label",
         "case_id",
