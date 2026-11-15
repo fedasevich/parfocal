@@ -22,5 +22,5 @@ Option 3. `parfocal_ml.reviewed_features.collect` calls a caller-supplied pooler
 ## Consequences
 
 - No migration, and the layout maps onto R2 keys without change like the rounds do.
-- A changed or reopened decision relabels a nucleus without pooling it again. A reshaped outline keeps its first pooled feature, which is not yet refreshed.
+- A changed or reopened decision relabels a nucleus without pooling it again. A reshaped outline is pooled again since ADR 0322 (the server pools reviewed nuclei like the browser).
 - Python has no SAM pooling yet, only the browser does (AILEARN-003 and AILEARN-008). The tests use a seeded fake pooler, and a job that runs the real pooler on Modal is follow-up work.
