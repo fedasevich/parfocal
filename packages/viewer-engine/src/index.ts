@@ -675,6 +675,20 @@ export {
   withOverlayState,
 } from "./overlay/overlay.ts";
 export {
+  decodePaintedMap,
+  encodePaintedMap,
+  PaintedMapFormatError,
+  type PaintedMapMode,
+  type PaintedMapStroke,
+  paintedCellCount,
+  paintedMapFormat,
+  paintedMapFullValue,
+  paintedMapHeaderBytes,
+  paintedMapMagic,
+  paintedMapTileHeaderBytes,
+  paintViewMap,
+} from "./overlay/painted-map.ts";
+export {
   createPinAtlas,
   type PinAtlas,
   type PinIconBox,

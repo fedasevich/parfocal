@@ -1581,6 +1581,12 @@ export interface ConfusionMatrix {
   values?: ConfusionMatrixValues;
 }
 
+/**
+ * @minLength 1
+ * @maxLength 22369624
+ */
+export type Content = string;
+
 export interface CosignRequest {
   id: string;
   case_id: string;
@@ -3112,6 +3118,12 @@ export interface MaintenanceStart {
   expected_end_at?: string | null;
 }
 
+/**
+ * @minLength 1
+ * @maxLength 80
+ */
+export type MapName = string;
+
 export interface MappingChange {
   /**
    * @minItems 1
@@ -3776,6 +3788,47 @@ export const Outcome = {
   tie: "tie",
   unmatched: "unmatched",
 } as const;
+
+export interface PaintedMap {
+  id: string;
+  slide_id: string;
+  name: string;
+  version: number;
+  cell: number;
+  tile_cells: number;
+  painted_cells: number;
+  created_by_user_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PaintedMapContent {
+  version: number;
+  painted_cells: number;
+  saved_by_user_id: string | null;
+  saved_at: string;
+  painted_map_id: string;
+  content: string;
+}
+
+export interface PaintedMapDraft {
+  name: MapName;
+  content: Content;
+}
+
+export interface PaintedMapSave {
+  /** @minimum 1 */
+  version: number;
+  content: Content;
+  name?: MapName | null;
+}
+
+export interface PaintedMapVersion {
+  version: number;
+  painted_cells: number;
+  saved_by_user_id: string | null;
+  saved_at: string;
+}
 
 export interface Pair {
   slide_id: string;
@@ -22654,6 +22707,1193 @@ export function useListAnnotationHistory<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getListAnnotationHistoryQueryOptions(slideId, annotationId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type listPaintedMapsResponse200 = {
+  data: PaintedMap[];
+  status: 200;
+};
+
+export type listPaintedMapsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listPaintedMapsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listPaintedMapsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listPaintedMapsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listPaintedMapsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listPaintedMapsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listPaintedMapsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type listPaintedMapsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listPaintedMapsResponseSuccess = listPaintedMapsResponse200 & {
+  headers: Headers;
+};
+export type listPaintedMapsResponseError = (
+  | listPaintedMapsResponse400
+  | listPaintedMapsResponse401
+  | listPaintedMapsResponse403
+  | listPaintedMapsResponse404
+  | listPaintedMapsResponse409
+  | listPaintedMapsResponse422
+  | listPaintedMapsResponse429
+  | listPaintedMapsResponse500
+) & {
+  headers: Headers;
+};
+
+export type listPaintedMapsResponse = listPaintedMapsResponseSuccess | listPaintedMapsResponseError;
+
+export const getListPaintedMapsUrl = (slideId: string) => {
+  return `/api/slides/${slideId}/painted-maps`;
+};
+
+/**
+ * @summary List Painted Maps
+ */
+export const listPaintedMaps = async (
+  slideId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listPaintedMapsResponse> => {
+  return apiFetch<listPaintedMapsResponse>(getListPaintedMapsUrl(slideId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListPaintedMapsQueryKey = (slideId: string) => {
+  return [`/api/slides/${slideId}/painted-maps`] as const;
+};
+
+export const getListPaintedMapsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listPaintedMaps>>,
+  TError = Problem,
+>(
+  slideId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listPaintedMaps>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListPaintedMapsQueryKey(slideId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listPaintedMaps>>> = ({ signal }) =>
+    listPaintedMaps(slideId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: slideId !== null && slideId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof listPaintedMaps>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type ListPaintedMapsQueryResult = NonNullable<Awaited<ReturnType<typeof listPaintedMaps>>>;
+export type ListPaintedMapsQueryError = Problem;
+
+export function useListPaintedMaps<
+  TData = Awaited<ReturnType<typeof listPaintedMaps>>,
+  TError = Problem,
+>(
+  slideId: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listPaintedMaps>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listPaintedMaps>>,
+          TError,
+          Awaited<ReturnType<typeof listPaintedMaps>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListPaintedMaps<
+  TData = Awaited<ReturnType<typeof listPaintedMaps>>,
+  TError = Problem,
+>(
+  slideId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listPaintedMaps>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listPaintedMaps>>,
+          TError,
+          Awaited<ReturnType<typeof listPaintedMaps>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListPaintedMaps<
+  TData = Awaited<ReturnType<typeof listPaintedMaps>>,
+  TError = Problem,
+>(
+  slideId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listPaintedMaps>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Painted Maps
+ */
+
+export function useListPaintedMaps<
+  TData = Awaited<ReturnType<typeof listPaintedMaps>>,
+  TError = Problem,
+>(
+  slideId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listPaintedMaps>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListPaintedMapsQueryOptions(slideId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type createPaintedMapResponse201 = {
+  data: PaintedMap;
+  status: 201;
+};
+
+export type createPaintedMapResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type createPaintedMapResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type createPaintedMapResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type createPaintedMapResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type createPaintedMapResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type createPaintedMapResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type createPaintedMapResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type createPaintedMapResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type createPaintedMapResponseSuccess = createPaintedMapResponse201 & {
+  headers: Headers;
+};
+export type createPaintedMapResponseError = (
+  | createPaintedMapResponse400
+  | createPaintedMapResponse401
+  | createPaintedMapResponse403
+  | createPaintedMapResponse404
+  | createPaintedMapResponse409
+  | createPaintedMapResponse422
+  | createPaintedMapResponse429
+  | createPaintedMapResponse500
+) & {
+  headers: Headers;
+};
+
+export type createPaintedMapResponse =
+  | createPaintedMapResponseSuccess
+  | createPaintedMapResponseError;
+
+export const getCreatePaintedMapUrl = (slideId: string) => {
+  return `/api/slides/${slideId}/painted-maps`;
+};
+
+/**
+ * @summary Create Painted Map
+ */
+export const createPaintedMap = async (
+  slideId: string,
+  paintedMapDraft: PaintedMapDraft,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<createPaintedMapResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<createPaintedMapResponse>(getCreatePaintedMapUrl(slideId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(paintedMapDraft),
+  });
+};
+
+export const getCreatePaintedMapMutationKey = () => ["createPaintedMap"] as const;
+
+export const getCreatePaintedMapMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createPaintedMap>>,
+    TError,
+    CreatePaintedMapMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createPaintedMap>>,
+  TError,
+  CreatePaintedMapMutationVariables,
+  TContext
+> => {
+  const mutationKey = getCreatePaintedMapMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createPaintedMap>>,
+    CreatePaintedMapMutationVariables
+  > = (props) => {
+    const { slideId, data } = props ?? {};
+
+    return createPaintedMap(slideId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreatePaintedMapMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createPaintedMap>>
+>;
+export type CreatePaintedMapMutationBody = PaintedMapDraft;
+export type CreatePaintedMapMutationError = Problem;
+export type CreatePaintedMapMutationVariables = { slideId: string; data: PaintedMapDraft };
+
+/**
+ * @summary Create Painted Map
+ */
+export const useCreatePaintedMap = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof createPaintedMap>>,
+      TError,
+      CreatePaintedMapMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof createPaintedMap>>,
+  TError,
+  CreatePaintedMapMutationVariables,
+  TContext
+> => {
+  return useMutation(getCreatePaintedMapMutationOptions(options), queryClient);
+};
+
+export type savePaintedMapResponse200 = {
+  data: PaintedMap;
+  status: 200;
+};
+
+export type savePaintedMapResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type savePaintedMapResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type savePaintedMapResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type savePaintedMapResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type savePaintedMapResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type savePaintedMapResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type savePaintedMapResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type savePaintedMapResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type savePaintedMapResponseSuccess = savePaintedMapResponse200 & {
+  headers: Headers;
+};
+export type savePaintedMapResponseError = (
+  | savePaintedMapResponse400
+  | savePaintedMapResponse401
+  | savePaintedMapResponse403
+  | savePaintedMapResponse404
+  | savePaintedMapResponse409
+  | savePaintedMapResponse422
+  | savePaintedMapResponse429
+  | savePaintedMapResponse500
+) & {
+  headers: Headers;
+};
+
+export type savePaintedMapResponse = savePaintedMapResponseSuccess | savePaintedMapResponseError;
+
+export const getSavePaintedMapUrl = (slideId: string, paintedMapId: string) => {
+  return `/api/slides/${slideId}/painted-maps/${paintedMapId}`;
+};
+
+/**
+ * @summary Save Painted Map
+ */
+export const savePaintedMap = async (
+  slideId: string,
+  paintedMapId: string,
+  paintedMapSave: PaintedMapSave,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<savePaintedMapResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return apiFetch<savePaintedMapResponse>(getSavePaintedMapUrl(slideId, paintedMapId), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(paintedMapSave),
+  });
+};
+
+export const getSavePaintedMapMutationKey = () => ["savePaintedMap"] as const;
+
+export const getSavePaintedMapMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof savePaintedMap>>,
+    TError,
+    SavePaintedMapMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof savePaintedMap>>,
+  TError,
+  SavePaintedMapMutationVariables,
+  TContext
+> => {
+  const mutationKey = getSavePaintedMapMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof savePaintedMap>>,
+    SavePaintedMapMutationVariables
+  > = (props) => {
+    const { slideId, paintedMapId, data } = props ?? {};
+
+    return savePaintedMap(slideId, paintedMapId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SavePaintedMapMutationResult = NonNullable<Awaited<ReturnType<typeof savePaintedMap>>>;
+export type SavePaintedMapMutationBody = PaintedMapSave;
+export type SavePaintedMapMutationError = Problem;
+export type SavePaintedMapMutationVariables = {
+  slideId: string;
+  paintedMapId: string;
+  data: PaintedMapSave;
+};
+
+/**
+ * @summary Save Painted Map
+ */
+export const useSavePaintedMap = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof savePaintedMap>>,
+      TError,
+      SavePaintedMapMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof savePaintedMap>>,
+  TError,
+  SavePaintedMapMutationVariables,
+  TContext
+> => {
+  return useMutation(getSavePaintedMapMutationOptions(options), queryClient);
+};
+
+export type listPaintedMapVersionsResponse200 = {
+  data: PaintedMapVersion[];
+  status: 200;
+};
+
+export type listPaintedMapVersionsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type listPaintedMapVersionsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type listPaintedMapVersionsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type listPaintedMapVersionsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type listPaintedMapVersionsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type listPaintedMapVersionsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type listPaintedMapVersionsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type listPaintedMapVersionsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type listPaintedMapVersionsResponseSuccess = listPaintedMapVersionsResponse200 & {
+  headers: Headers;
+};
+export type listPaintedMapVersionsResponseError = (
+  | listPaintedMapVersionsResponse400
+  | listPaintedMapVersionsResponse401
+  | listPaintedMapVersionsResponse403
+  | listPaintedMapVersionsResponse404
+  | listPaintedMapVersionsResponse409
+  | listPaintedMapVersionsResponse422
+  | listPaintedMapVersionsResponse429
+  | listPaintedMapVersionsResponse500
+) & {
+  headers: Headers;
+};
+
+export type listPaintedMapVersionsResponse =
+  | listPaintedMapVersionsResponseSuccess
+  | listPaintedMapVersionsResponseError;
+
+export const getListPaintedMapVersionsUrl = (slideId: string, paintedMapId: string) => {
+  return `/api/slides/${slideId}/painted-maps/${paintedMapId}/versions`;
+};
+
+/**
+ * @summary List Painted Map Versions
+ */
+export const listPaintedMapVersions = async (
+  slideId: string,
+  paintedMapId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<listPaintedMapVersionsResponse> => {
+  return apiFetch<listPaintedMapVersionsResponse>(
+    getListPaintedMapVersionsUrl(slideId, paintedMapId),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getListPaintedMapVersionsQueryKey = (slideId: string, paintedMapId: string) => {
+  return [`/api/slides/${slideId}/painted-maps/${paintedMapId}/versions`] as const;
+};
+
+export const getListPaintedMapVersionsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listPaintedMapVersions>>,
+  TError = Problem,
+>(
+  slideId: string,
+  paintedMapId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listPaintedMapVersions>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getListPaintedMapVersionsQueryKey(slideId, paintedMapId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listPaintedMapVersions>>> = ({ signal }) =>
+    listPaintedMapVersions(slideId, paintedMapId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled:
+      slideId !== null &&
+      slideId !== undefined &&
+      paintedMapId !== null &&
+      paintedMapId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof listPaintedMapVersions>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type ListPaintedMapVersionsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listPaintedMapVersions>>
+>;
+export type ListPaintedMapVersionsQueryError = Problem;
+
+export function useListPaintedMapVersions<
+  TData = Awaited<ReturnType<typeof listPaintedMapVersions>>,
+  TError = Problem,
+>(
+  slideId: string,
+  paintedMapId: string,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listPaintedMapVersions>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listPaintedMapVersions>>,
+          TError,
+          Awaited<ReturnType<typeof listPaintedMapVersions>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListPaintedMapVersions<
+  TData = Awaited<ReturnType<typeof listPaintedMapVersions>>,
+  TError = Problem,
+>(
+  slideId: string,
+  paintedMapId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listPaintedMapVersions>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listPaintedMapVersions>>,
+          TError,
+          Awaited<ReturnType<typeof listPaintedMapVersions>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useListPaintedMapVersions<
+  TData = Awaited<ReturnType<typeof listPaintedMapVersions>>,
+  TError = Problem,
+>(
+  slideId: string,
+  paintedMapId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listPaintedMapVersions>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List Painted Map Versions
+ */
+
+export function useListPaintedMapVersions<
+  TData = Awaited<ReturnType<typeof listPaintedMapVersions>>,
+  TError = Problem,
+>(
+  slideId: string,
+  paintedMapId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listPaintedMapVersions>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListPaintedMapVersionsQueryOptions(slideId, paintedMapId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type getPaintedMapVersionResponse200 = {
+  data: PaintedMapContent;
+  status: 200;
+};
+
+export type getPaintedMapVersionResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getPaintedMapVersionResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getPaintedMapVersionResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getPaintedMapVersionResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getPaintedMapVersionResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getPaintedMapVersionResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getPaintedMapVersionResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getPaintedMapVersionResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getPaintedMapVersionResponseSuccess = getPaintedMapVersionResponse200 & {
+  headers: Headers;
+};
+export type getPaintedMapVersionResponseError = (
+  | getPaintedMapVersionResponse400
+  | getPaintedMapVersionResponse401
+  | getPaintedMapVersionResponse403
+  | getPaintedMapVersionResponse404
+  | getPaintedMapVersionResponse409
+  | getPaintedMapVersionResponse422
+  | getPaintedMapVersionResponse429
+  | getPaintedMapVersionResponse500
+) & {
+  headers: Headers;
+};
+
+export type getPaintedMapVersionResponse =
+  | getPaintedMapVersionResponseSuccess
+  | getPaintedMapVersionResponseError;
+
+export const getGetPaintedMapVersionUrl = (
+  slideId: string,
+  paintedMapId: string,
+  version: number,
+) => {
+  return `/api/slides/${slideId}/painted-maps/${paintedMapId}/versions/${version}`;
+};
+
+/**
+ * @summary Get Painted Map Version
+ */
+export const getPaintedMapVersion = async (
+  slideId: string,
+  paintedMapId: string,
+  version: number,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getPaintedMapVersionResponse> => {
+  return apiFetch<getPaintedMapVersionResponse>(
+    getGetPaintedMapVersionUrl(slideId, paintedMapId, version),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getGetPaintedMapVersionQueryKey = (
+  slideId: string,
+  paintedMapId: string,
+  version: number,
+) => {
+  return [`/api/slides/${slideId}/painted-maps/${paintedMapId}/versions/${version}`] as const;
+};
+
+export const getGetPaintedMapVersionQueryOptions = <
+  TData = Awaited<ReturnType<typeof getPaintedMapVersion>>,
+  TError = Problem,
+>(
+  slideId: string,
+  paintedMapId: string,
+  version: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getPaintedMapVersion>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetPaintedMapVersionQueryKey(slideId, paintedMapId, version);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getPaintedMapVersion>>> = ({ signal }) =>
+    getPaintedMapVersion(slideId, paintedMapId, version, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled:
+      slideId !== null &&
+      slideId !== undefined &&
+      paintedMapId !== null &&
+      paintedMapId !== undefined &&
+      version !== null &&
+      version !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getPaintedMapVersion>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetPaintedMapVersionQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getPaintedMapVersion>>
+>;
+export type GetPaintedMapVersionQueryError = Problem;
+
+export function useGetPaintedMapVersion<
+  TData = Awaited<ReturnType<typeof getPaintedMapVersion>>,
+  TError = Problem,
+>(
+  slideId: string,
+  paintedMapId: string,
+  version: number,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getPaintedMapVersion>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPaintedMapVersion>>,
+          TError,
+          Awaited<ReturnType<typeof getPaintedMapVersion>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetPaintedMapVersion<
+  TData = Awaited<ReturnType<typeof getPaintedMapVersion>>,
+  TError = Problem,
+>(
+  slideId: string,
+  paintedMapId: string,
+  version: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getPaintedMapVersion>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPaintedMapVersion>>,
+          TError,
+          Awaited<ReturnType<typeof getPaintedMapVersion>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetPaintedMapVersion<
+  TData = Awaited<ReturnType<typeof getPaintedMapVersion>>,
+  TError = Problem,
+>(
+  slideId: string,
+  paintedMapId: string,
+  version: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getPaintedMapVersion>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Painted Map Version
+ */
+
+export function useGetPaintedMapVersion<
+  TData = Awaited<ReturnType<typeof getPaintedMapVersion>>,
+  TError = Problem,
+>(
+  slideId: string,
+  paintedMapId: string,
+  version: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getPaintedMapVersion>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetPaintedMapVersionQueryOptions(slideId, paintedMapId, version, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type exportPaintedMapResponse200 = {
+  data: Blob;
+  status: 200;
+};
+
+export type exportPaintedMapResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type exportPaintedMapResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type exportPaintedMapResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type exportPaintedMapResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type exportPaintedMapResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type exportPaintedMapResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type exportPaintedMapResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type exportPaintedMapResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type exportPaintedMapResponseSuccess = exportPaintedMapResponse200 & {
+  headers: Headers;
+};
+export type exportPaintedMapResponseError = (
+  | exportPaintedMapResponse400
+  | exportPaintedMapResponse401
+  | exportPaintedMapResponse403
+  | exportPaintedMapResponse404
+  | exportPaintedMapResponse409
+  | exportPaintedMapResponse422
+  | exportPaintedMapResponse429
+  | exportPaintedMapResponse500
+) & {
+  headers: Headers;
+};
+
+export type exportPaintedMapResponse =
+  | exportPaintedMapResponseSuccess
+  | exportPaintedMapResponseError;
+
+export const getExportPaintedMapUrl = (slideId: string, paintedMapId: string, version: number) => {
+  return `/api/slides/${slideId}/painted-maps/${paintedMapId}/versions/${version}/file`;
+};
+
+/**
+ * @summary Export Painted Map
+ */
+export const exportPaintedMap = async (
+  slideId: string,
+  paintedMapId: string,
+  version: number,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<exportPaintedMapResponse> => {
+  return apiFetch<exportPaintedMapResponse>(
+    getExportPaintedMapUrl(slideId, paintedMapId, version),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getExportPaintedMapQueryKey = (
+  slideId: string,
+  paintedMapId: string,
+  version: number,
+) => {
+  return [`/api/slides/${slideId}/painted-maps/${paintedMapId}/versions/${version}/file`] as const;
+};
+
+export const getExportPaintedMapQueryOptions = <
+  TData = Awaited<ReturnType<typeof exportPaintedMap>>,
+  TError = Problem,
+>(
+  slideId: string,
+  paintedMapId: string,
+  version: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof exportPaintedMap>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getExportPaintedMapQueryKey(slideId, paintedMapId, version);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof exportPaintedMap>>> = ({ signal }) =>
+    exportPaintedMap(slideId, paintedMapId, version, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled:
+      slideId !== null &&
+      slideId !== undefined &&
+      paintedMapId !== null &&
+      paintedMapId !== undefined &&
+      version !== null &&
+      version !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof exportPaintedMap>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type ExportPaintedMapQueryResult = NonNullable<Awaited<ReturnType<typeof exportPaintedMap>>>;
+export type ExportPaintedMapQueryError = Problem;
+
+export function useExportPaintedMap<
+  TData = Awaited<ReturnType<typeof exportPaintedMap>>,
+  TError = Problem,
+>(
+  slideId: string,
+  paintedMapId: string,
+  version: number,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof exportPaintedMap>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof exportPaintedMap>>,
+          TError,
+          Awaited<ReturnType<typeof exportPaintedMap>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useExportPaintedMap<
+  TData = Awaited<ReturnType<typeof exportPaintedMap>>,
+  TError = Problem,
+>(
+  slideId: string,
+  paintedMapId: string,
+  version: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof exportPaintedMap>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof exportPaintedMap>>,
+          TError,
+          Awaited<ReturnType<typeof exportPaintedMap>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useExportPaintedMap<
+  TData = Awaited<ReturnType<typeof exportPaintedMap>>,
+  TError = Problem,
+>(
+  slideId: string,
+  paintedMapId: string,
+  version: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof exportPaintedMap>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Export Painted Map
+ */
+
+export function useExportPaintedMap<
+  TData = Awaited<ReturnType<typeof exportPaintedMap>>,
+  TError = Problem,
+>(
+  slideId: string,
+  paintedMapId: string,
+  version: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof exportPaintedMap>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getExportPaintedMapQueryOptions(slideId, paintedMapId, version, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;

@@ -1401,6 +1401,62 @@ annotation_versions = Table(
     one_of("change", AnnotationChange),
 )
 
+painted_maps = Table(
+    "painted_maps",
+    metadata,
+    *owned_ids(),
+    Column("project_id", Uuid[uuid.UUID](), nullable=False, info=OPERATIONAL),
+    Column("slide_id", Uuid[uuid.UUID](), nullable=False, index=True, info=OPERATIONAL),
+    Column("name", String(80), nullable=False, info=PHI),
+    Column("version", Integer, nullable=False, server_default="1", info=OPERATIONAL),
+    Column("cell", Integer, nullable=False, info=OPERATIONAL),
+    Column("tile_cells", Integer, nullable=False, info=OPERATIONAL),
+    Column("painted_cells", Integer, nullable=False, info=OPERATIONAL),
+    Column(
+        "created_by_user_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("users.id"),
+        nullable=True,
+        info=PERSONAL,
+    ),
+    *timestamps(),
+    UniqueConstraint("id", "tenant_id"),
+    ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),
+    ForeignKeyConstraint(["slide_id", "project_id"], ["slides.id", "slides.project_id"]),
+    CheckConstraint("version > 0", name="version"),
+    CheckConstraint("cell > 0", name="cell"),
+    CheckConstraint("tile_cells > 0", name="tile_cells"),
+    CheckConstraint("painted_cells >= 0", name="painted_cells"),
+)
+
+painted_map_versions = Table(
+    "painted_map_versions",
+    metadata,
+    Column("tenant_id", Uuid[uuid.UUID](), nullable=False, index=True, info=OPERATIONAL),
+    Column("painted_map_id", Uuid[uuid.UUID](), primary_key=True, info=OPERATIONAL),
+    Column("version", Integer, primary_key=True, info=OPERATIONAL),
+    Column("content", LargeBinary, nullable=False, info=OPERATIONAL),
+    Column("painted_cells", Integer, nullable=False, info=OPERATIONAL),
+    Column(
+        "saved_by_user_id",
+        Uuid[uuid.UUID](),
+        ForeignKey("users.id"),
+        nullable=True,
+        info=PERSONAL,
+    ),
+    Column(
+        "saved_at",
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        info=OPERATIONAL,
+    ),
+    ForeignKeyConstraint(
+        ["painted_map_id", "tenant_id"], ["painted_maps.id", "painted_maps.tenant_id"]
+    ),
+    CheckConstraint("version > 0", name="version"),
+)
+
 
 class ResultSource(StrEnum):
     IMPORT = "import"

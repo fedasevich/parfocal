@@ -35,6 +35,7 @@ PATH_IDS: dict[str, str] = {
     "slide_id": "slide",
     "case_id": "case",
     "annotation_id": "annotation",
+    "painted_map_id": "painted_map",
     "project_id": "project",
     "task_id": "task",
     "thread_id": "thread",
@@ -95,6 +96,7 @@ SHARED_FOLDER = "/shared/"
 SHARED_FILE = "scan.svs"
 POINT = {"type": "Point", "coordinates": [4, 4]}
 LINE = {"type": "LineString", "coordinates": [[0, 0], [5, 5]]}
+EMPTY_PAINTED_MAP = "UEZQTQEAEAAAAQAAABAAAAAIAAAAAAAA"
 BLOCKS = [{"title": "Headline", "kind": "headline-numbers", "metrics": ["sensitivity"]}]
 DISPLAY = {"draw_as": "fill"}
 
@@ -275,6 +277,8 @@ WRITE_ROUTES: dict[str, Write] = {
     "changeAnnotation": Write(body=constant({"version": 1, "geometry": SQUARE})),
     "deleteAnnotation": Write(query=lambda _: {"version": "1"}),
     "restoreAnnotation": Write(body=constant({"version": 1}), owner=CONFLICT),
+    "createPaintedMap": Write(body=constant({"name": "Painted", "content": EMPTY_PAINTED_MAP})),
+    "savePaintedMap": Write(body=constant({"version": 1, "content": EMPTY_PAINTED_MAP})),
     "recordSlideCoverage": Write(
         body=constant({"grid": {"cell": 64, "columns": 64, "rows": 32}, "cells": [0, 1]})
     ),
@@ -602,6 +606,10 @@ UNAIMED_WRITES: dict[str, str] = {
         "answers the anonymous caller about their own account and names no other row",
     ),
     "recordActivity": "stamps the caller's own session",
+    **dict.fromkeys(
+        ("startMaintenance", "endMaintenance"),
+        "switches the one platform-wide maintenance row, for platform operators only",
+    ),
     "endOtherSessions": "ends the caller's own other sessions",
     "sendFeedback": "files feedback under the caller's workspace",
     "acceptInvitation": "takes a secret token, which is the invitation itself",

@@ -5,6 +5,8 @@
 - Deciders: Yurii Fedas
 - Backlog: OPS-014 (bring back staging before the first real user), added here. Changes SKEL-001 (production environment exists), SKEL-002 (log in through the IdP), SKEL-009 (CI deploys main to production), SKEL-011 (skeleton numbers from production and hosted runners), OPS-003 (environments), OPS-005 (continuous deployment), OPS-006 (observability stack), FOUND-035 (squash the migrations into one baseline) and SEC-011 (security headers and CSP). OPS-002 (deploy definitions) targets production too and is edited by its own agent.
 
+[ADR 0331](0331-no-staging-environment.md) (no staging environment) ends the staging trigger below. OPS-014 is now "prepare production for the first real user".
+
 ## Context
 
 Decision 81a (staging before more features) of 2026-11-13 put a staging environment ahead of every other task. The same day the owner looked at what it costs to stand up two cloud environments, each with its own deploy credentials, Neon branch, bucket, login app and hostname, while the owner is the only user and no real data exists anywhere. Staging protects real users' data from untested changes. With no real users, it protects nothing and doubles the setup work.

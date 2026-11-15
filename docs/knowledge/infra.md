@@ -8,7 +8,7 @@ How `infra/tofu` works and the traps found while setting it up. It is the result
 |---|---|---|
 | `global` | `global.tfstate` | Zone settings on `parfocal.eu` (HTTPS only, TLS 1.2 minimum, TLS 1.3, strict SSL) and the Zitadel project `Parfocal` |
 | `dev` | `dev.tfstate` | `modules/environment` for `http://localhost:5173`, with Zitadel `dev_mode` on |
-| `staging` | `staging.tfstate` | `modules/environment` for `https://staging.parfocal.eu`. Unused and not applied until OPS-014 (bring back staging before the first real user), kept so staging can return cheaply ([ADR 0293](../adr/0293-production-only-until-the-first-real-user.md), production only until the first real user) |
+| `staging` | `staging.tfstate` | `modules/environment` for `https://staging.parfocal.eu`. Unused and never applied again. Staging is dropped for good ([ADR 0331](../adr/0331-no-staging-environment.md), no staging environment) and OPS-014 (prepare production for the first real user) removes this root ([ADR 0293](../adr/0293-production-only-until-the-first-real-user.md), production only until the first real user) |
 | `prod` | `prod.tfstate` | `modules/environment` for `https://app.parfocal.eu` |
 | `modules/environment` | none | Bucket `parfocal-<name>` with `prevent_destroy`, its upload CORS rule (the app origin, `PUT`, `Content-Type`, `ETag` exposed, 3600 s), a rule that aborts incomplete multipart uploads under `t/` after 1 day, and the confidential OIDC app `parfocal-api-<name>` |
 | `policy` | none | Rego rules and their tests |
@@ -45,7 +45,7 @@ It needs three things on the machine:
 | `dev`, `staging`, `prod` | `app_origin`, `slide_bucket`, `zitadel_issuer`, `zitadel_client_id` (sensitive), `zitadel_client_secret` (sensitive) |
 | `global` | `zone_id`, `zitadel_issuer`, `zitadel_project_id` |
 
-Until staging returns the deployed app keeps its slides in `parfocal-dev`, not in the `slide_bucket` of `prod` (ADR 0293). Read them with `tofu.sh <root> output -json` and pipe the values straight into `.env`, a Modal secret or a Wrangler secret without printing.
+Until OPS-014 the deployed app keeps its slides in `parfocal-dev`, not in the `slide_bucket` of `prod` (ADR 0293). Read them with `tofu.sh <root> output -json` and pipe the values straight into `.env`, a Modal secret or a Wrangler secret without printing.
 
 ## Policy check
 

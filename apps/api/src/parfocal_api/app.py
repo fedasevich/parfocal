@@ -55,6 +55,7 @@ from parfocal_api import (
     opinion_forms,
     opinions,
     own_workspaces,
+    painted_maps,
     password_login,
     patch_exports,
     personal_data,
@@ -234,6 +235,7 @@ def create_app(
     app.include_router(slide_moves.router)
     app.include_router(slide_copies.router)
     app.include_router(annotations.router)
+    app.include_router(painted_maps.router)
     app.include_router(result_sets.slide_router)
     app.include_router(result_sets.project_router)
     app.include_router(result_sets.router)

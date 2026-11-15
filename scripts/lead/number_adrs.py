@@ -30,7 +30,12 @@ def number_one(path: Path, number: str) -> None:
     readme = ADR / "README.md"
     heading = title.group(1).rstrip(".")
     row = f"| [{number}]({renamed.name}) | {heading} | Accepted | {date.group(1)} |"
-    readme.write_text(readme.read_text().rstrip("\n") + f"\n{row}\n")
+    index = readme.read_text()
+    listed = re.compile(r"^\| \[XXXX\]\(" + re.escape(renamed.name) + r"\) \|.*$", re.MULTILINE)
+    if listed.search(index) is not None:
+        readme.write_text(listed.sub(row, index, count=1))
+    elif f"]({renamed.name})" not in index:
+        readme.write_text(index.rstrip("\n") + f"\n{row}\n")
     print(f"ADR {number}: {title.group(1)}")
 
 

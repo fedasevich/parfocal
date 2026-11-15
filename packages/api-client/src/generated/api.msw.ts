@@ -103,6 +103,9 @@ import type {
   OpinionAnswers,
   OpinionForm,
   Organisation,
+  PaintedMap,
+  PaintedMapContent,
+  PaintedMapVersion,
   Pairings,
   PasswordSignInAvailability,
   PatchExportStarted,
@@ -5293,6 +5296,75 @@ export const getListAnnotationHistoryResponseMock = (): AnnotationVersion[] =>
       null,
     ]),
   }));
+
+export const getListPaintedMapsResponseMock = (): PaintedMap[] =>
+  Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    id: faker.string.uuid(),
+    slide_id: faker.string.uuid(),
+    name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    version: faker.number.int(),
+    cell: faker.number.int(),
+    tile_cells: faker.number.int(),
+    painted_cells: faker.number.int(),
+    created_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+    updated_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  }));
+
+export const getCreatePaintedMapResponseMock = (
+  overrideResponse: Partial<Extract<PaintedMap, object>> = {},
+): PaintedMap => ({
+  id: faker.string.uuid(),
+  slide_id: faker.string.uuid(),
+  name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  version: faker.number.int(),
+  cell: faker.number.int(),
+  tile_cells: faker.number.int(),
+  painted_cells: faker.number.int(),
+  created_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  updated_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  ...overrideResponse,
+});
+
+export const getSavePaintedMapResponseMock = (
+  overrideResponse: Partial<Extract<PaintedMap, object>> = {},
+): PaintedMap => ({
+  id: faker.string.uuid(),
+  slide_id: faker.string.uuid(),
+  name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  version: faker.number.int(),
+  cell: faker.number.int(),
+  tile_cells: faker.number.int(),
+  painted_cells: faker.number.int(),
+  created_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  created_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  updated_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  ...overrideResponse,
+});
+
+export const getListPaintedMapVersionsResponseMock = (): PaintedMapVersion[] =>
+  Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    version: faker.number.int(),
+    painted_cells: faker.number.int(),
+    saved_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    saved_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  }));
+
+export const getGetPaintedMapVersionResponseMock = (
+  overrideResponse: Partial<Extract<PaintedMapContent, object>> = {},
+): PaintedMapContent => ({
+  version: faker.number.int(),
+  painted_cells: faker.number.int(),
+  saved_by_user_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  saved_at: faker.date.past().toISOString().slice(0, 19) + "Z",
+  painted_map_id: faker.string.uuid(),
+  content: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  ...overrideResponse,
+});
+
+export const getExportPaintedMapResponseMock = (): Blob =>
+  new Blob([new Uint8Array(faker.number.int({ min: 1, max: 64 }))]);
 
 export const getCreateResultSetResponseMock = (
   overrideResponse: Partial<Extract<ResultSetDetail, object>> = {},
@@ -18585,6 +18657,146 @@ export const getListAnnotationHistoryMockHandler = (
   );
 };
 
+export const getListPaintedMapsMockHandler = (
+  overrideResponse?:
+    | PaintedMap[]
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<PaintedMap[]> | PaintedMap[]),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/slides/:slideId/painted-maps",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getListPaintedMapsResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getCreatePaintedMapMockHandler = (
+  overrideResponse?:
+    | PaintedMap
+    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<PaintedMap> | PaintedMap),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/slides/:slideId/painted-maps",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getCreatePaintedMapResponseMock(),
+        { status: 201 },
+      );
+    },
+    options,
+  );
+};
+
+export const getSavePaintedMapMockHandler = (
+  overrideResponse?:
+    | PaintedMap
+    | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<PaintedMap> | PaintedMap),
+  options?: RequestHandlerOptions,
+) => {
+  return http.put(
+    "*/api/slides/:slideId/painted-maps/:paintedMapId",
+    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getSavePaintedMapResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getListPaintedMapVersionsMockHandler = (
+  overrideResponse?:
+    | PaintedMapVersion[]
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<PaintedMapVersion[]> | PaintedMapVersion[]),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/slides/:slideId/painted-maps/:paintedMapId/versions",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getListPaintedMapVersionsResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getGetPaintedMapVersionMockHandler = (
+  overrideResponse?:
+    | PaintedMapContent
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<PaintedMapContent> | PaintedMapContent),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/slides/:slideId/painted-maps/:paintedMapId/versions/:version",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetPaintedMapVersionResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getExportPaintedMapMockHandler = (
+  overrideResponse?:
+    | Blob
+    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<Blob> | Blob),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/slides/:slideId/painted-maps/:paintedMapId/versions/:version/file",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      const binaryBody =
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getExportPaintedMapResponseMock();
+      return new HttpResponse(binaryBody, {
+        status: 200,
+        headers: { "Content-Type": "application/octet-stream" },
+      });
+    },
+    options,
+  );
+};
+
 export const getCreateResultSetMockHandler = (
   overrideResponse?:
     | ResultSetDetail
@@ -24210,6 +24422,12 @@ export const getParfocalAPIMock = () => [
   getDeleteAnnotationMockHandler(),
   getRestoreAnnotationMockHandler(),
   getListAnnotationHistoryMockHandler(),
+  getListPaintedMapsMockHandler(),
+  getCreatePaintedMapMockHandler(),
+  getSavePaintedMapMockHandler(),
+  getListPaintedMapVersionsMockHandler(),
+  getGetPaintedMapVersionMockHandler(),
+  getExportPaintedMapMockHandler(),
   getCreateResultSetMockHandler(),
   getListSlideResultSetsMockHandler(),
   getListProjectResultSetsMockHandler(),

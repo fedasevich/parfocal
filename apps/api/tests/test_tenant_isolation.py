@@ -67,6 +67,8 @@ from parfocal_api.tables import (
     notifications,
     opinions,
     organisations,
+    painted_map_versions,
+    painted_maps,
     personal_settings,
     platform_operators,
     project_classes,
@@ -1250,6 +1252,45 @@ async def seed_slide_coverage(connection: AsyncConnection, seeded: Seeded) -> No
     seeded.markers.add(str(seeded.ids["slide"]))
 
 
+async def seed_painted_maps(connection: AsyncConnection, seeded: Seeded) -> None:
+    name = f"Painted {uuid.uuid4().hex[:8]}"
+    project_id = await connection.scalar(
+        select(slides.c.project_id).where(slides.c.id == seeded.ids["slide"])
+    )
+    painted_map_id = await connection.scalar(
+        insert(painted_maps)
+        .values(
+            tenant_id=seeded.tenant_id,
+            project_id=project_id,
+            slide_id=seeded.ids["slide"],
+            name=name,
+            cell=256,
+            tile_cells=16,
+            painted_cells=0,
+            created_by_user_id=seeded.ids["user"],
+        )
+        .returning(painted_maps.c.id)
+    )
+    assert isinstance(painted_map_id, uuid.UUID)
+    seeded.ids["painted_map"] = painted_map_id
+    seeded.markers.update({name, str(painted_map_id)})
+
+
+async def seed_painted_map_versions(connection: AsyncConnection, seeded: Seeded) -> None:
+    marker = f"painted-{uuid.uuid4().hex}"
+    await connection.execute(
+        insert(painted_map_versions).values(
+            tenant_id=seeded.tenant_id,
+            painted_map_id=seeded.ids["painted_map"],
+            version=1,
+            content=marker.encode(),
+            painted_cells=0,
+            saved_by_user_id=seeded.ids["user"],
+        )
+    )
+    seeded.markers.add(marker)
+
+
 async def seed_display_presets(connection: AsyncConnection, seeded: Seeded) -> None:
     name = f"Preset {uuid.uuid4().hex[:8]}"
     preset_id = await connection.scalar(
@@ -1461,6 +1502,8 @@ SEEDERS: dict[str, Seeder] = {
     "workspace_access_requests": seed_workspace_access_requests,
     "template_offers": seed_template_offers,
     "slide_coverage": seed_slide_coverage,
+    "painted_maps": seed_painted_maps,
+    "painted_map_versions": seed_painted_map_versions,
     "display_presets": seed_display_presets,
     "display_choices": seed_display_choices,
     "adjudications": seed_adjudications,
@@ -1848,6 +1891,23 @@ GET_ROUTES = {
     "listAnnotationHistory": Route(
         Exposure.TENANT,
         lambda a: f"/api/slides/{a.ids['slide']}/annotations/{a.ids['annotation']}/history",
+    ),
+    "listPaintedMaps": Route(
+        Exposure.TENANT, lambda a: f"/api/slides/{a.ids['slide']}/painted-maps"
+    ),
+    "listPaintedMapVersions": Route(
+        Exposure.TENANT,
+        lambda a: f"/api/slides/{a.ids['slide']}/painted-maps/{a.ids['painted_map']}/versions",
+    ),
+    "getPaintedMapVersion": Route(
+        Exposure.TENANT,
+        lambda a: f"/api/slides/{a.ids['slide']}/painted-maps/{a.ids['painted_map']}/versions/1",
+    ),
+    "exportPaintedMap": Route(
+        Exposure.TENANT,
+        lambda a: (
+            f"/api/slides/{a.ids['slide']}/painted-maps/{a.ids['painted_map']}/versions/1/file"
+        ),
     ),
     "getMyAvailability": Route(Exposure.TENANT, lambda _: "/api/me/availability"),
     "listAvailability": Route(Exposure.TENANT, lambda _: "/api/tenant/availability"),
