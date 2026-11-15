@@ -11,7 +11,7 @@ from parfocal_common.dashboards import (
 )
 from parfocal_common.scrubbing import ALLOWED_FIELDS
 
-AREAS = {"api", "tiles", "ingest", "gpu", "workers", "viewer"}
+AREAS = {"api", "tiles", "ingest", "gpu", "realtime", "workers", "viewer"}
 
 
 def test_the_committed_dashboard_is_the_generated_one() -> None:

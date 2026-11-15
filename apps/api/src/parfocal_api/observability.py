@@ -6,14 +6,13 @@ from typing import Annotated, Literal
 
 from fastapi import APIRouter, Request
 from pydantic import BaseModel, ConfigDict, Field
-from sqlalchemy import and_, or_, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncEngine
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from parfocal_api.context import CurrentPrincipal, PlatformConnection
 from parfocal_api.request_logging import route_of
 from parfocal_api.security_alerts import CrossWorkspaceWatch, workspaces
-from parfocal_common import ingest, model_runs
 from parfocal_common.alerting import (
     SLOS,
     Alerting,
@@ -26,12 +25,12 @@ from parfocal_common.alerting import (
 )
 from parfocal_common.clients import Clients, TelemetryExporter
 from parfocal_common.db import tenant_transaction
+from parfocal_common.job_sli import JOB_SLIS, counts_toward_an_slo, jobs_with_runs
 from parfocal_common.jobs import jobs
 from parfocal_common.object_store import ObjectStore
 from parfocal_common.settings import AppEnv, ServiceSettings
 from parfocal_common.sli_store import (
     FRAMES_EVENT,
-    RETAINED,
     SLO_STATUS_EVENT,
     AlertStateStore,
     CombinedSource,
@@ -42,10 +41,6 @@ from parfocal_common.sli_store import (
 STATUS_WINDOW = timedelta(hours=1)
 OPEN_STATUSES = ("queued", "running")
 FINISHED_STATUSES = ("done", "failed")
-JOB_SLIS: dict[str, SliName] = {
-    ingest.KIND: SliName.INGEST_TIME,
-    model_runs.KIND: SliName.PRE_READ_TIME,
-}
 
 
 def sli_emitter(settings: ServiceSettings, clients: Clients, storage: ObjectStore) -> SliEmitter:
@@ -107,19 +102,19 @@ def job_recorder(rows: Sequence[JobRow]) -> SliRecorder:
     return recorder
 
 
-async def job_rows(engine: AsyncEngine, now: datetime) -> list[JobRow]:
-    since = now - RETAINED
+async def job_rows(engine: AsyncEngine) -> list[JobRow]:
     rows: list[JobRow] = []
     for tenant_id in await workspaces(engine):
         async with tenant_transaction(engine, tenant_id) as connection:
             result = await connection.execute(
-                select(jobs.c.kind, jobs.c.status, jobs.c.created_at, jobs.c.finished_at).where(
+                select(jobs.c.kind, jobs.c.status, jobs.c.created_at, jobs.c.finished_at)
+                .select_from(jobs_with_runs())
+                .where(
                     jobs.c.tenant_id == tenant_id,
                     jobs.c.kind.in_(JOB_SLIS),
-                    or_(
-                        and_(jobs.c.finished_at.is_(None), jobs.c.status.in_(OPEN_STATUSES)),
-                        jobs.c.finished_at > since,
-                    ),
+                    jobs.c.finished_at.is_(None),
+                    jobs.c.status.in_(OPEN_STATUSES),
+                    counts_toward_an_slo(),
                 )
             )
             rows.extend(
@@ -159,7 +154,7 @@ async def run_alert_cycle(
     state = await store.load()
     folded = await store.fold(state, now)
     alerting = Alerting(on_call, dict(state.firing))
-    rows = [] if engine is None else await job_rows(engine, now)
+    rows = [] if engine is None else await job_rows(engine)
     source = CombinedSource((state.counts, job_recorder(rows)))
     evaluate_slos(alerting, source, now)
     if telemetry is not None:
