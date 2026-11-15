@@ -1,6 +1,10 @@
-import type { SlideArea, SlideFormatId, SlideIndex } from "@parfocal/viewer-engine";
+import type { OverlayKind, SlideArea, SlideFormatId, SlideIndex } from "@parfocal/viewer-engine";
 import type { VivView } from "../harness/viv/protocol.ts";
 import type { SlideFormat } from "../src/tolerances.ts";
+
+export const translucentOutlineKinds: readonly OverlayKind[] = ["nuclei", "human-annotations"];
+export const translucentOutlineOpacity = 0.5;
+export const translucentOutlineGolden = "viv-overlay-translucent-outlines";
 
 export interface VivGoldenScene {
   readonly name: string;

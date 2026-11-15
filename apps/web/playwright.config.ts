@@ -1,6 +1,9 @@
 import { defineConfig } from "@playwright/test";
 
 const port = Number(process.env["PARFOCAL_E2E_PORT"] ?? 5183);
+const vite = "node --no-turbo-fast-api-calls ./node_modules/vite/bin/vite.js";
+const devServer = `${vite} --port ${port} --strictPort`;
+const builtApp = `${vite} build --mode e2e && ${vite} preview --mode e2e --port ${port} --strictPort`;
 
 export default defineConfig({
   testDir: "e2e",
@@ -22,13 +25,15 @@ export default defineConfig({
     trace: process.env.CI ? "off" : "retain-on-failure",
   },
   webServer: {
-    command: `node --no-turbo-fast-api-calls ./node_modules/vite/bin/vite.js --port ${port} --strictPort`,
+    command: process.env["PARFOCAL_E2E_SERVER"] === "dev" ? devServer : builtApp,
     env: {
       PARFOCAL_PUBLIC_APP_ENV: "dev",
       PARFOCAL_PUBLIC_FAKE_API: "all",
+      PARFOCAL_PUBLIC_DEV_TOOLS: "on",
       PARFOCAL_PUBLIC_API_BASE_URL: "http://127.0.0.1:9161/e2e",
     },
     url: `http://localhost:${port}/`,
     reuseExistingServer: !process.env.CI,
+    timeout: 300_000,
   },
 });

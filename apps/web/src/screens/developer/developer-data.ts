@@ -57,7 +57,7 @@ export const rendererHints: Record<Renderer, string> = {
   viv: "The default. Opens every format, and Zarr that is not 8-bit always opens here.",
   webgpu:
     "Our own WebGPU route, with GPU culling and motion prediction. Zarr that is not 8-bit still falls back to Viv.",
-  deck: "deck.gl 9.4 layers, on WebGL2 or WebGPU.",
+  deck: "deck.gl 9.4 layers on WebGPU, for 8-bit RGB slides. Other slides and browsers without WebGPU stay on Viv.",
 };
 
 export const colourMaps: Record<string, string> = {

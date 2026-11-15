@@ -12,7 +12,7 @@ const worklistSearch = z.object({
 export const Route = createFileRoute("/spikes/worklist")({
   validateSearch: worklistSearch,
   beforeLoad: () => {
-    if (!import.meta.env.DEV) throw notFound();
+    if (import.meta.env.PARFOCAL_PUBLIC_DEV_TOOLS !== "on") throw notFound();
   },
   component: WorklistSpikePage,
 });

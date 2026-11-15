@@ -9,7 +9,7 @@ import { chapters, stepRole, stepWho } from "../flow-map/walkthrough.ts";
 
 export const Route = createFileRoute("/flow-map/walkthrough/$chapter")({
   beforeLoad: async ({ params }) => {
-    if (!import.meta.env.DEV) throw notFound();
+    if (import.meta.env.PARFOCAL_PUBLIC_DEV_TOOLS !== "on") throw notFound();
     const { chapters } = await import("../flow-map/walkthrough.ts");
     const index = Number(params.chapter) - 1;
     if (!Number.isInteger(index) || chapters[index] === undefined) throw notFound();

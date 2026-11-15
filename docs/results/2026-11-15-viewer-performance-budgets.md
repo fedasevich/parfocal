@@ -77,5 +77,13 @@ Limits. One machine, one frame run of three rounds, three encodings of one tissu
 
 ## Follow-ups
 
-- TODO: take the hosted numbers of the new budgets from the first CI run and tighten their limits.
+- TODO: take the hosted numbers of the other new budgets (fitted and sharp at 0 ms RTT, memory and tile p95) from a few more green CI runs and tighten their limits.
+
+## Hosted numbers for the longest jump task, 2026-11-15
+
+The first two `main` CI runs with these budgets, 43678740599 on 4d2deb88 and 43682744734 on 2d6ba073, failed the 50 ms line on the hosted runner. Their `browser (viewer-engine)` logs give four samples, each the fastest of three: `CMU-1.svs` 37.5 and 66.2 ms, `CMU-1-JP2K-33005.svs` 44.8 ms and `CMU-1.tiff` 59.9 ms. The second run stopped after the first failure, so the other two slides have one sample each.
+
+Against the M4 baselines of 9.0, 12.3 and 12.4 ms on the same work, SwiftShader on a shared runner is 3.6 to 7.4 times slower here, past the at most three times that ADR 0154 assumes. The three slides hold the same tissue, the decoding runs in workers and the main-thread work of the jump is the same deck update on each, so the four samples are pooled. Their median is 52 ms. The three budgets `viewer.jump-longest-task-ms`, `viewer.jp2k.jump-longest-task-ms` and `viewer.tiff.jump-longest-task-ms` now have a baseline of 52 ms and a limit of 78 ms, 1.5 times the hosted median, the same rule ADR 0317 uses for `viewer.jump-sharp-ms`. The highest sample, 66.2 ms, is 15 percent under the limit. The 50 ms line of VIEW-031 stays the reference on real hardware, where the M4 sits at a quarter of it.
+
+- TODO: once seven green hosted runs exist, recompute the median per slide and tighten the three limits if the slides differ.
 - TODO: repeat the frame run before the M2 gate and when a change targets rendering speed, as ADR 0011 says.

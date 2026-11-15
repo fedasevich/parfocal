@@ -34,7 +34,8 @@
         "GOLDEN_UPDATE",
         "GOLDEN_MEASURE",
         "PAN_RTT_MS",
-        "PAN_BANDWIDTH"
+        "PAN_BANDWIDTH",
+        "PARFOCAL_E2E_SERVER"
       ]
     }
   }

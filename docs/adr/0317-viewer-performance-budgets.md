@@ -30,7 +30,7 @@ Option 2. Every number is in `perf-budgets.json` with its baseline, limit, reaso
 | Requests and bytes to the fitted image and to sharp after a jump to 10x | CI, every RTT of the matrix | 1.2 times the baseline (ADR 0154) |
 | Time to the fitted image at 200 ms RTT | CI | 6,300 ms on every slide, the limit INGEST-014 (JPEG 2000 performance decision) used, inside the POC's 3.25 to 4.8 s open plus the runner's slower CPU part |
 | Time to sharp after a jump at 200 ms RTT | CI | `CMU-1.svs` 4,390 ms, 1.5 times the median of seven hosted runs (tightened from 5,390 ms). The other two slides twice their baseline |
-| Longest main-thread task from the jump until idle, 0 ms RTT | CI | 50 ms, the VIEW-031 (wheel zoom has no frame over 50 ms) line on a 17 ms one-frame baseline. POC doc 24 is 0 to 3 ms of blocking |
+| Longest main-thread task from the jump until idle, 0 ms RTT | CI | 78 ms, 1.5 times the median of four hosted samples (52 ms), raised on 2026-11-15 from the 50 ms VIEW-031 (wheel zoom has no frame over 50 ms) line, which the M4 still holds at 9 to 14 ms. POC doc 24 is 0 to 3 ms of blocking |
 | Page and worker memory after the fitted view and the jump, `measureUserAgentSpecificMemory`, 0 ms RTT | CI | 1.2 times the baseline of 62 to 73 MB, well under the POC's 260 MB or more per CMU-1 slide after a tour |
 | p95 of one warm tile through one decode worker | CI | Three times the Apple M4 baseline of 5.1 to 14.8 ms |
 | Frame p95 while panning at 1,000 screen px a second at 10x | The Mac, by hand | Set from the result file. POC doc 31 is no frame over 18 ms at 60 Hz |

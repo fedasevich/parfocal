@@ -94,7 +94,8 @@ for (const part of parts) {
       await page.goto("/flow-map");
       await page.locator(`a[data-box="${id}"]`).click();
       await expect(page.getByTestId("prototype-bar")).toBeVisible();
-      await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "How a review works" })).toHaveCount(0);
+      await expect(page.getByRole("heading").first()).toBeVisible();
       await expect(page.getByRole("heading", { name: "Page not found" })).toHaveCount(0);
     }
   });

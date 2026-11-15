@@ -44,9 +44,10 @@ from parfocal_api.training_exports import (
 from parfocal_common.jobs import JobStoppedError, Step, StepFailedError, StepRun, Workflow
 from parfocal_common.result_store import ObjectResultStore
 from parfocal_ingest.identify import Format, Refusal, identify
+from parfocal_ingest.parse_jobs import READER_ERRORS
 from parfocal_ingest.pyramid import Level, Pyramid, Reader, main_series, read_pyramid, unpack
 from parfocal_ingest.thumbnail import WHITE, background_of, flattened
-from parfocal_ingest.workflow import READER_ERRORS, Resources, resources_from_environment
+from parfocal_ingest.workflow import Resources, resources_from_environment
 
 FORMAT = "parfocal-patch-dataset"
 FORMAT_VERSION = 1

@@ -15,9 +15,9 @@ from parfocal_ingest.overview_levels import (
     overview_levels,
     viewer_tile,
 )
+from parfocal_ingest.parse_jobs import identify_file
 from parfocal_ingest.pyramid import Pyramid, read_pyramid
 from parfocal_ingest.thumbnail import level_image
-from parfocal_ingest.workflow import identify_file
 
 GAPPED = {
     "CMU-1.svs": (256, (32, 64, 128, 256)),

@@ -19,7 +19,13 @@ import { overlayHarnessGlobal } from "../harness/viv/overlay-protocol.ts";
 import { checkGolden, compareFrames, EXACT, type Frame, type Tolerance } from "../src/index.ts";
 import { assertSwiftShader, captureScreenshot } from "../src/playwright.ts";
 import { fixtureAvailability, fixtureUrl, harnessUrl, startVivHarness } from "./viv-harness.ts";
-import { cmu1MicronsPerPixel, cmu1TissueCentre } from "./viv-scenes.ts";
+import {
+  cmu1MicronsPerPixel,
+  cmu1TissueCentre,
+  translucentOutlineGolden,
+  translucentOutlineKinds,
+  translucentOutlineOpacity,
+} from "./viv-scenes.ts";
 
 const overlayTolerance: Tolerance = {
   maxChannelDelta: 4,
@@ -167,6 +173,28 @@ test("all eight layers stacked match their golden image", async ({ page }, testI
   expect(result.errors).toEqual([]);
   const outcome = checkGolden(frame, {
     name: "viv-overlay-stack",
+    format: "svs-jpeg",
+    tolerance: overlayTolerance,
+    goldenDirectory,
+    outputDirectory: testInfo.outputDir,
+  });
+  if (outcome.status === "mismatched") throw new Error(outcome.message);
+});
+
+test("translucent outlines match their golden image and are lighter than opaque ones", async ({
+  page,
+}, testInfo) => {
+  const base = await baseFrame(page);
+  const { result, frame: opaque } = await render(page, translucentOutlineKinds);
+  expect(result.errors).toEqual([]);
+  let frame = opaque;
+  for (const id of translucentOutlineKinds) {
+    frame = await change(page, { kind: "opacity", id, opacity: translucentOutlineOpacity });
+  }
+  expect(changedFraction(frame, base)).toBeGreaterThan(minimumChangedFraction);
+  expect(changedFraction(frame, opaque)).toBeGreaterThan(minimumChangedFraction);
+  const outcome = checkGolden(frame, {
+    name: translucentOutlineGolden,
     format: "svs-jpeg",
     tolerance: overlayTolerance,
     goldenDirectory,
