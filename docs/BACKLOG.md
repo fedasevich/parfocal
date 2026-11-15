@@ -3843,7 +3843,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Done when the harness runs on at least three test slides on demand, before a tumor-map model is promoted ([ADR 0011](adr/0011-hosted-ci-only.md)).
   Size: L.
 
-- [ ] MLEVAL-006 · Promotion gate
+- [x] MLEVAL-006 · Promotion gate
   A model version is promoted to a tier only when it meets thresholds per task, with the evaluation report stored in the registry.
   Done when a test promotion fails on a degraded model and passes on the reference one.
   Size: M.
