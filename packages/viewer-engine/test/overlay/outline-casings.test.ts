@@ -71,7 +71,7 @@ test("nuclei get a casing of half a pixel on each side", () => {
   assert.equal(layer(layers, "outlines").getWidth, 1);
 });
 
-test("an AI proposal is a near-black dashed line on a white casing, whatever its class colour", () => {
+test("an AI proposal is a near-black dashed ring from mid first edge on a white casing", () => {
   const layers = build("ai-proposals");
   const casing = layer(layers, "outline-casings");
   const outline = layer(layers, "outlines");
@@ -131,7 +131,7 @@ test("a casing that follows alpha takes each outline's alpha in its own colour",
   assert.equal(find(builder.build([overlay])).data, casing.data);
 });
 
-test("a dashed ring starts mid first edge so each edge is drawn once at one dash phase", () => {
+test("the mid edge ring is cached per build and solid outlines keep their wrapped vertices", () => {
   const builder = createOverlayLayerBuilder();
   const overlay = createVectorOverlay({ id: "a", kind: "ai-proposals", shapes: { polygons } });
   const outlineOf = (built: unknown[]) =>
