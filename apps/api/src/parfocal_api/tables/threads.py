@@ -70,7 +70,12 @@ threads = Table(
     ),
     ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),
     ForeignKeyConstraint(
-        ["task_id", "slide_id"], ["review_task_slides.task_id", "review_task_slides.slide_id"]
+        ["task_id", "slide_id", "tenant_id"],
+        [
+            "review_task_slides.task_id",
+            "review_task_slides.slide_id",
+            "review_task_slides.tenant_id",
+        ],
     ),
     tenant_foreign_key("result_set_id", "result_sets"),
     tenant_unique(),

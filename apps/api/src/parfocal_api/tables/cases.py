@@ -127,10 +127,14 @@ patients = Table(
     UniqueConstraint("id", "tenant_id"),
     UniqueConstraint("id", "project_id"),
     ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),
-    ForeignKeyConstraint(["project_id", "privacy_mode"], ["projects.id", "projects.privacy_mode"]),
+    ForeignKeyConstraint(
+        ["project_id", "privacy_mode", "tenant_id"],
+        ["projects.id", "projects.privacy_mode", "projects.tenant_id"],
+    ),
     CheckConstraint("privacy_mode = 'clinical'", name="clinical_only"),
     one_of("sex", Sex),
     CheckConstraint("age_years BETWEEN 0 AND 150", name="age_years"),
+    tenant_unique("id", "project_id"),
 )
 
 
@@ -255,6 +259,7 @@ projects = Table(
     one_of("privacy_mode", PrivacyMode),
     one_of("template", AnalysisTemplate),
     one_of("clinical_template", ClinicalTemplate),
+    tenant_unique("id", "privacy_mode"),
 )
 
 project_members = Table(
@@ -297,8 +302,12 @@ cases = Table(
     UniqueConstraint("id", "tenant_id"),
     UniqueConstraint("id", "project_id"),
     ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),
-    ForeignKeyConstraint(["patient_id", "project_id"], ["patients.id", "patients.project_id"]),
+    ForeignKeyConstraint(
+        ["patient_id", "project_id", "tenant_id"],
+        ["patients.id", "patients.project_id", "patients.tenant_id"],
+    ),
     one_of("source", CaseSource),
+    tenant_unique("id", "project_id"),
 )
 
 specimens = Table(
@@ -346,6 +355,7 @@ blocks = Table(
     ),
     CheckConstraint("number BETWEEN 1 AND 999", name="number"),
     CheckConstraint("levels BETWEEN 1 AND 50", name="levels"),
+    tenant_unique("id", "case_id"),
 )
 
 slides = Table(
@@ -402,11 +412,19 @@ slides = Table(
         postgresql_where=text("case_id IS NULL AND deleted_at IS NULL"),
     ),
     ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),
-    ForeignKeyConstraint(["case_id", "project_id"], ["cases.id", "cases.project_id"]),
-    ForeignKeyConstraint(["block_id", "case_id"], ["blocks.id", "blocks.case_id"]),
-    ForeignKeyConstraint(["upload_id", "project_id"], ["uploads.id", "uploads.project_id"]),
+    ForeignKeyConstraint(
+        ["case_id", "project_id", "tenant_id"], ["cases.id", "cases.project_id", "cases.tenant_id"]
+    ),
+    ForeignKeyConstraint(
+        ["block_id", "case_id", "tenant_id"], ["blocks.id", "blocks.case_id", "blocks.tenant_id"]
+    ),
+    ForeignKeyConstraint(
+        ["upload_id", "project_id", "tenant_id"],
+        ["uploads.id", "uploads.project_id", "uploads.tenant_id"],
+    ),
     CheckConstraint("block_id IS NULL OR case_id IS NOT NULL", name="block_in_case"),
     CheckConstraint("upload_id IS NULL OR original_key IS NOT NULL", name="uploaded_file"),
+    tenant_unique("id", "project_id"),
 )
 
 project_classes = Table(
@@ -426,6 +444,7 @@ project_classes = Table(
     Index(
         "ix_project_classes_project_id_name", "project_id", func.lower(text("name")), unique=True
     ),
+    tenant_unique("id", "project_id"),
 )
 
 class_mappings = Table(
@@ -438,8 +457,8 @@ class_mappings = Table(
     *timestamps(),
     ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),
     ForeignKeyConstraint(
-        ["class_id", "project_id"],
-        ["project_classes.id", "project_classes.project_id"],
+        ["class_id", "project_id", "tenant_id"],
+        ["project_classes.id", "project_classes.project_id", "project_classes.tenant_id"],
         ondelete="CASCADE",
     ),
 )
@@ -469,4 +488,5 @@ opinion_forms = Table(
     UniqueConstraint("id", "project_id"),
     ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),
     CheckConstraint("version >= 1", name="version"),
+    tenant_unique("project_id", "version"),
 )

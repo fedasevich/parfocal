@@ -155,8 +155,9 @@ review_tasks = Table(
     tenant_unique(),
     ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),
     ForeignKeyConstraint(
-        ["project_id", "opinion_form_version"],
-        ["opinion_forms.project_id", "opinion_forms.version"],
+        ["project_id", "opinion_form_version", "tenant_id"],
+        ["opinion_forms.project_id", "opinion_forms.version", "opinion_forms.tenant_id"],
+        name="fk_review_tasks_project_id_opinion_form_version_tenant_id",
     ),
     ForeignKeyConstraint(
         ["study_template_id", "study_template_version", "tenant_id"],
@@ -196,6 +197,8 @@ review_tasks = Table(
     ),
     CheckConstraint("scope_score IS NULL OR scope_score BETWEEN 0 AND 255", name="scope_score"),
     CheckConstraint("cardinality(reminder_days) <= 3", name="reminders"),
+    tenant_unique("id", "project_id"),
+    tenant_unique("id", "kind"),
 )
 
 review_task_slides = Table(
@@ -226,15 +229,27 @@ review_task_slides = Table(
         info=PERSONAL,
     ),
     UniqueConstraint("task_id", "position"),
-    ForeignKeyConstraint(["task_id", "project_id"], ["review_tasks.id", "review_tasks.project_id"]),
-    ForeignKeyConstraint(["task_id", "kind"], ["review_tasks.id", "review_tasks.kind"]),
+    ForeignKeyConstraint(
+        ["task_id", "project_id", "tenant_id"],
+        ["review_tasks.id", "review_tasks.project_id", "review_tasks.tenant_id"],
+    ),
+    ForeignKeyConstraint(
+        ["task_id", "kind", "tenant_id"],
+        ["review_tasks.id", "review_tasks.kind", "review_tasks.tenant_id"],
+    ),
     CheckConstraint("kind = 'annotate' OR result_set_id IS NOT NULL", name="result_set"),
     CheckConstraint("kind = 'annotate' OR cardinality(run_set_ids) = 0", name="run_sets"),
     CheckConstraint("kind = 'annotate' OR signed_off_at IS NULL", name="slide_sign_off"),
-    ForeignKeyConstraint(["slide_id", "project_id"], ["slides.id", "slides.project_id"]),
     ForeignKeyConstraint(
-        ["result_set_id", "project_id"], ["result_sets.id", "result_sets.project_id"]
+        ["slide_id", "project_id", "tenant_id"],
+        ["slides.id", "slides.project_id", "slides.tenant_id"],
     ),
+    ForeignKeyConstraint(
+        ["result_set_id", "project_id", "tenant_id"],
+        ["result_sets.id", "result_sets.project_id", "result_sets.tenant_id"],
+        name="fk_review_task_slides_result_set_id_project_id_tenant_id",
+    ),
+    tenant_unique("task_id", "slide_id"),
 )
 
 review_assignments = Table(
@@ -259,13 +274,20 @@ review_assignments = Table(
         "nothing_to_mark", Boolean, nullable=False, server_default=text("false"), info=OPERATIONAL
     ),
     ForeignKeyConstraint(
-        ["task_id", "slide_id"], ["review_task_slides.task_id", "review_task_slides.slide_id"]
+        ["task_id", "slide_id", "tenant_id"],
+        [
+            "review_task_slides.task_id",
+            "review_task_slides.slide_id",
+            "review_task_slides.tenant_id",
+        ],
+        name="fk_review_assignments_task_id_slide_id_tenant_id",
     ),
     ForeignKeyConstraint(
         ["tenant_id", "user_id"], ["memberships.tenant_id", "memberships.user_id"]
     ),
     CheckConstraint("(first_read_at IS NULL) = (first_read IS NULL)", name="first_read_pair"),
     CheckConstraint("NOT nothing_to_mark OR submitted_at IS NOT NULL", name="nothing_to_mark"),
+    tenant_unique("task_id", "slide_id", "user_id"),
 )
 
 
@@ -348,7 +370,12 @@ review_order = Table(
         info=OPERATIONAL,
     ),
     ForeignKeyConstraint(
-        ["task_id", "slide_id"], ["review_task_slides.task_id", "review_task_slides.slide_id"]
+        ["task_id", "slide_id", "tenant_id"],
+        [
+            "review_task_slides.task_id",
+            "review_task_slides.slide_id",
+            "review_task_slides.tenant_id",
+        ],
     ),
     ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),
     CheckConstraint("count >= 0", name="count"),
@@ -375,11 +402,18 @@ review_edits = Table(
     Column("merged_into_split", String(26), nullable=True, info=OPERATIONAL),
     *timestamps(),
     ForeignKeyConstraint(
-        ["task_id", "slide_id", "user_id"],
-        ["review_assignments.task_id", "review_assignments.slide_id", "review_assignments.user_id"],
+        ["task_id", "slide_id", "user_id", "tenant_id"],
+        [
+            "review_assignments.task_id",
+            "review_assignments.slide_id",
+            "review_assignments.user_id",
+            "review_assignments.tenant_id",
+        ],
+        name="fk_review_edits_task_id_slide_id_user_id_tenant_id",
     ),
     ForeignKeyConstraint(
-        ["class_id", "project_id"], ["project_classes.id", "project_classes.project_id"]
+        ["class_id", "project_id", "tenant_id"],
+        ["project_classes.id", "project_classes.project_id", "project_classes.tenant_id"],
     ),
     ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),
     CheckConstraint("kind IN ('region', 'cell')", name="kind"),
@@ -448,22 +482,30 @@ review_decisions = Table(
     Column("ai_score", SmallInteger, nullable=True, info=AI_CALL),
     *timestamps(),
     ForeignKeyConstraint(
-        ["task_id", "slide_id", "user_id"],
-        ["review_assignments.task_id", "review_assignments.slide_id", "review_assignments.user_id"],
+        ["task_id", "slide_id", "user_id", "tenant_id"],
+        [
+            "review_assignments.task_id",
+            "review_assignments.slide_id",
+            "review_assignments.user_id",
+            "review_assignments.tenant_id",
+        ],
+        name="fk_review_decisions_task_id_slide_id_user_id_tenant_id",
     ),
     ForeignKeyConstraint(
-        ["reason_class_id", "project_id"], ["project_classes.id", "project_classes.project_id"]
+        ["reason_class_id", "project_id", "tenant_id"],
+        ["project_classes.id", "project_classes.project_id", "project_classes.tenant_id"],
+        name="fk_review_decisions_reason_class_id_project_id_tenant_id",
     ),
     ForeignKeyConstraint(
-        ["ai_class_id", "project_id"],
-        ["project_classes.id", "project_classes.project_id"],
-        name="fk_review_decisions_ai_class_id_project_id_project_classes",
+        ["ai_class_id", "project_id", "tenant_id"],
+        ["project_classes.id", "project_classes.project_id", "project_classes.tenant_id"],
+        name="fk_review_decisions_ai_class_id_project_id_tenant_id",
     ),
     CheckConstraint("ai_score BETWEEN 0 AND 255", name="ai_score"),
     ForeignKeyConstraint(
-        ["answer_class_id", "project_id"],
-        ["project_classes.id", "project_classes.project_id"],
-        name="fk_review_decisions_answer_class_id_project_id_project_classes",
+        ["answer_class_id", "project_id", "tenant_id"],
+        ["project_classes.id", "project_classes.project_id", "project_classes.tenant_id"],
+        name="fk_review_decisions_answer_class_id_project_id_tenant_id",
     ),
     ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),
     CheckConstraint("kind IN ('region', 'cell')", name="kind"),
@@ -510,11 +552,19 @@ review_skips = Table(
     Column("ai_score", SmallInteger, nullable=True, info=AI_CALL),
     *timestamps(),
     ForeignKeyConstraint(
-        ["task_id", "slide_id", "user_id"],
-        ["review_assignments.task_id", "review_assignments.slide_id", "review_assignments.user_id"],
+        ["task_id", "slide_id", "user_id", "tenant_id"],
+        [
+            "review_assignments.task_id",
+            "review_assignments.slide_id",
+            "review_assignments.user_id",
+            "review_assignments.tenant_id",
+        ],
+        name="fk_review_skips_task_id_slide_id_user_id_tenant_id",
     ),
     ForeignKeyConstraint(
-        ["ai_class_id", "project_id"], ["project_classes.id", "project_classes.project_id"]
+        ["ai_class_id", "project_id", "tenant_id"],
+        ["project_classes.id", "project_classes.project_id", "project_classes.tenant_id"],
+        name="fk_review_skips_ai_class_id_project_id_tenant_id",
     ),
     ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),
     CheckConstraint("kind IN ('region', 'cell')", name="kind"),
@@ -621,7 +671,13 @@ adjudication_objects = Table(
     Column("kind", String(10), primary_key=True, info=OPERATIONAL),
     Column("number", Integer, primary_key=True, info=OPERATIONAL),
     ForeignKeyConstraint(
-        ["task_id", "slide_id"], ["review_task_slides.task_id", "review_task_slides.slide_id"]
+        ["task_id", "slide_id", "tenant_id"],
+        [
+            "review_task_slides.task_id",
+            "review_task_slides.slide_id",
+            "review_task_slides.tenant_id",
+        ],
+        name="fk_adjudication_objects_task_id_slide_id_tenant_id",
     ),
     CheckConstraint("kind IN ('region', 'cell')", name="kind"),
     CheckConstraint("number > 0", name="number"),
@@ -659,16 +715,22 @@ disagreement_decisions = Table(
     ),
     *timestamps(),
     ForeignKeyConstraint(
-        ["task_id", "slide_id"], ["review_task_slides.task_id", "review_task_slides.slide_id"]
+        ["task_id", "slide_id", "tenant_id"],
+        [
+            "review_task_slides.task_id",
+            "review_task_slides.slide_id",
+            "review_task_slides.tenant_id",
+        ],
+        name="fk_disagreement_decisions_task_id_slide_id_tenant_id",
     ),
     ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),
     CheckConstraint("kind IN ('region', 'cell')", name="kind"),
     CheckConstraint("number > 0", name="number"),
     one_of("decision", Decision),
     ForeignKeyConstraint(
-        ["answer_class_id", "project_id"],
-        ["project_classes.id", "project_classes.project_id"],
-        name="fk_disagreement_decisions_answer_class_id_project_classes",
+        ["answer_class_id", "project_id", "tenant_id"],
+        ["project_classes.id", "project_classes.project_id", "project_classes.tenant_id"],
+        name="fk_disagreement_decisions_answer_class_id_project_id_tenant_id",
     ),
     CheckConstraint(
         "style IS NULL OR style IN ('certainty', 'agree', 'yes-no', 'blind')", name="style"
@@ -707,11 +769,18 @@ opinions = Table(
     Column("answers", JSONB, nullable=False, server_default=text("'{}'::jsonb"), info=PHI),
     *timestamps(),
     ForeignKeyConstraint(
-        ["task_id", "slide_id", "user_id"],
-        ["review_assignments.task_id", "review_assignments.slide_id", "review_assignments.user_id"],
+        ["task_id", "slide_id", "user_id", "tenant_id"],
+        [
+            "review_assignments.task_id",
+            "review_assignments.slide_id",
+            "review_assignments.user_id",
+            "review_assignments.tenant_id",
+        ],
+        name="fk_opinions_task_id_slide_id_user_id_tenant_id",
     ),
     ForeignKeyConstraint(
-        ["project_id", "form_version"], ["opinion_forms.project_id", "opinion_forms.version"]
+        ["project_id", "form_version", "tenant_id"],
+        ["opinion_forms.project_id", "opinion_forms.version", "opinion_forms.tenant_id"],
     ),
     ForeignKeyConstraint(["project_id", "tenant_id"], ["projects.id", "projects.tenant_id"]),
 )

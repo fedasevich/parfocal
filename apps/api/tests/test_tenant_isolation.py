@@ -2320,12 +2320,12 @@ def refusal_of(app: str, key: TenantKey, scope: DatabaseScope, parent: object) -
 
 def test_every_key_between_workspace_tables_carries_the_workspace(database: str) -> None:
     owner = with_database(OWNER_URL, database)
-    single = [
-        (name, columns)
-        for name, _, _, columns, _ in keys_between_tenant_tables(owner)
-        if "tenant_id" not in columns and len(columns) == 1
+    without_the_workspace = [
+        (name, columns, referred)
+        for name, _, _, columns, referred in keys_between_tenant_tables(owner)
+        if "tenant_id" not in columns or referred[columns.index("tenant_id")] != "tenant_id"
     ]
-    assert single == []
+    assert without_the_workspace == []
 
 
 def test_a_row_cannot_point_at_a_parent_in_another_workspace(
@@ -2344,5 +2344,166 @@ def test_a_row_cannot_point_at_a_parent_in_another_workspace(
         )[0][0]
         refusal = refusal_of(app, key, scope, parent)
         if not refused_by_its_key(key, refusal):
+            accepted.append(f"{key.name}: {refusal}")
+    assert not accepted, "\n".join(accepted)
+
+
+@dataclass(frozen=True)
+class CompositeKey:
+    name: str
+    child: str
+    parent: str
+    columns: tuple[str, ...]
+    referred: tuple[str, ...]
+
+
+def composite_keys(owner: str) -> list[CompositeKey]:
+    return [
+        CompositeKey(
+            name,
+            child,
+            parent,
+            tuple(column for column in columns if column != "tenant_id"),
+            tuple(column for column in referred if column != "tenant_id"),
+        )
+        for name, child, parent, columns, referred in keys_between_tenant_tables(owner)
+        if len([column for column in columns if column != "tenant_id"]) >= 2
+    ]
+
+
+CONSTRAINTS_BESIDE = (
+    "SELECT c.conname FROM pg_constraint c, pg_constraint k "
+    "WHERE k.conname = :name AND k.conrelid = CAST(:table AS regclass) "
+    "AND c.conrelid = k.conrelid AND c.oid <> k.oid AND c.contype IN ('c', 'f', 'p', 'u', 'x') "
+    "AND (c.contype IN ('c', 'f') OR c.conindid <> k.conindid)"
+)
+UNIQUE_INDEXES_BESIDE = (
+    "SELECT i.indexrelid::regclass::text FROM pg_index i, pg_constraint k "
+    "WHERE k.conname = :name AND k.conrelid = CAST(:table AS regclass) "
+    "AND i.indrelid = k.conrelid AND i.indisunique AND i.indexrelid <> k.conindid "
+    "AND NOT EXISTS (SELECT 1 FROM pg_constraint c WHERE c.conindid = i.indexrelid "
+    "AND c.conrelid = i.indrelid)"
+)
+COLUMN_TYPES = (
+    "SELECT attname, format_type(atttypid, atttypmod) FROM pg_attribute "
+    "WHERE attrelid = CAST(:table AS regclass) AND attnum > 0 AND NOT attisdropped"
+)
+
+
+def all_set(columns: tuple[str, ...]) -> str:
+    return " AND ".join(f"{column} IS NOT NULL" for column in columns)
+
+
+def foreign_tuple(owner: str, key: CompositeKey, tenant_id: object) -> tuple[object, ...]:
+    own = query(
+        owner,
+        f"SELECT {', '.join(key.columns)} FROM {key.child} "
+        f"WHERE tenant_id = '{tenant_id}' AND {all_set(key.columns)} LIMIT 1",
+    )
+    if own:
+        return own[0]
+    return query(
+        owner,
+        f"SELECT {', '.join(key.referred)} FROM {key.parent} "
+        f"WHERE tenant_id = '{tenant_id}' AND {all_set(key.referred)} LIMIT 1",
+    )[0]
+
+
+def composite_copy(key: CompositeKey, columns: list[str], types: dict[str, str]) -> str:
+    values = [
+        f"CAST(:k{key.columns.index(column)} AS {types[column]})"
+        if column in key.columns
+        else "gen_random_uuid()"
+        if column == "id"
+        else column
+        for column in columns
+    ]
+    return (
+        f"INSERT INTO {key.child} ({', '.join(columns)}) "
+        f"SELECT {', '.join(values)} FROM {key.child} LIMIT 1"
+    )
+
+
+async def leave_only_the_key(connection: AsyncConnection, key: CompositeKey) -> None:
+    where = {"table": key.child, "name": key.name}
+    for (constraint,) in (await connection.execute(text(CONSTRAINTS_BESIDE), where)).all():
+        await connection.execute(
+            text(f'ALTER TABLE {key.child} DROP CONSTRAINT IF EXISTS "{constraint}" CASCADE')
+        )
+    for (index,) in (await connection.execute(text(UNIQUE_INDEXES_BESIDE), where)).all():
+        await connection.execute(text(f"DROP INDEX {index}"))
+    await connection.execute(text(f"ALTER TABLE {key.child} DISABLE TRIGGER USER"))
+    await connection.execute(text(f"GRANT INSERT ON {key.child} TO parfocal_app"))
+
+
+async def insert_across(
+    owner: str, key: CompositeKey, scope: DatabaseScope, values: tuple[object, ...]
+) -> str:
+    engine = create_async_engine(async_database_url(owner))
+    try:
+        async with engine.connect() as connection:
+            transaction = await connection.begin()
+            try:
+                await leave_only_the_key(connection, key)
+                types = {
+                    str(column): str(kind)
+                    for column, kind in await connection.execute(
+                        text(COLUMN_TYPES), {"table": key.child}
+                    )
+                }
+                columns = [
+                    str(row[0])
+                    for row in await connection.execute(
+                        text(INSERTABLE_COLUMNS), {"table": key.child}
+                    )
+                ]
+                await connection.execute(text("SET LOCAL ROLE parfocal_app"))
+                await connection.execute(SET_SCOPE, scope.parameters())
+                written = await connection.execute(
+                    text(composite_copy(key, columns, types)),
+                    {f"k{index}": value for index, value in enumerate(values)},
+                )
+                return f"insert of {written.rowcount} rows accepted"
+            finally:
+                await transaction.rollback()
+    except DBAPIError as error:
+        return str(error.orig)
+    finally:
+        await engine.dispose()
+
+
+async def seen_as_the_app(owner: str, scope: DatabaseScope, tenant_id: object) -> tuple[str, int]:
+    engine = create_async_engine(async_database_url(owner))
+    try:
+        async with engine.connect() as connection, connection.begin():
+            await connection.execute(text("SET LOCAL ROLE parfocal_app"))
+            await connection.execute(SET_SCOPE, scope.parameters())
+            role = (await connection.execute(text("SELECT current_user"))).scalar_one()
+            hidden = (
+                await connection.execute(
+                    text("SELECT count(*) FROM slides WHERE tenant_id = :tenant"),
+                    {"tenant": tenant_id},
+                )
+            ).scalar_one()
+            return str(role), int(hidden)
+    finally:
+        await engine.dispose()
+
+
+def test_a_row_cannot_name_a_parent_pair_in_another_workspace(
+    database: str, seeded: tuple[Seeded, Seeded]
+) -> None:
+    a, b = seeded
+    owner = with_database(OWNER_URL, database)
+    scope = DatabaseScope(tenant_id=b.tenant_id, user_id=b.ids["user"])
+    assert asyncio.run(seen_as_the_app(owner, scope, a.tenant_id)) == ("parfocal_app", 0)
+    keys = composite_keys(owner)
+    assert len(keys) == 46
+    accepted: list[str] = []
+    for key in keys:
+        refusal = asyncio.run(
+            insert_across(owner, key, scope, foreign_tuple(owner, key, a.tenant_id))
+        )
+        if f'violates foreign key constraint "{key.name}"' not in refusal:
             accepted.append(f"{key.name}: {refusal}")
     assert not accepted, "\n".join(accepted)
