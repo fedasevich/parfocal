@@ -45,6 +45,16 @@ variable "tier_after_days" {
   }
 }
 
+variable "locked_days" {
+  type    = number
+  default = 7
+
+  validation {
+    condition     = var.locked_days >= 1 && floor(var.locked_days) == var.locked_days
+    error_message = "Tenant objects stay locked against delete and overwrite for at least one whole day, so a mistaken delete can be undone."
+  }
+}
+
 variable "cloudflare_account_id" {
   type = string
 }

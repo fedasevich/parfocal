@@ -230,6 +230,16 @@ SEC-014 (backups and restore testing) added `.github/workflows/restore-check.yml
 
 Your choice:
 
+### 115. How long the slide bucket lock keeps tenant objects
+
+R2 has no object versioning that this repository relies on, so SEC-014 (backups and restore testing) added a `cloudflare_r2_bucket_lock` rule to the environment module instead. It stops anyone from deleting or overwriting an object under `t/` for `locked_days` after it was written, 7 by default. It is validated and covered by the conftest policy but not applied. Once applied, the production reset in `reset-production.yml` and an erasure request (ADR 0090, access export and erasure) cannot remove tenant objects younger than the lock.
+
+- **A. Keep 7 days, apply it before the first real user, and have reset and erasure skip locked objects and retry after the lock ends. One week covers a mistaken delete noticed in a weekly review (recommended).**
+- B. 1 day. Reset and erasure wait at most a day, but a mistake must be caught within 24 hours.
+- C. 30 days. The longest protection, and erasure answers stay inside the one month GDPR deadline only just.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 The temporary review checklist of 2026-11-14 is handled and deleted. What still waits is below.

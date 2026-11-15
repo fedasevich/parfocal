@@ -159,6 +159,21 @@ deny contains msg if {
 	msg := "the environment module must keep a lifecycle rule that moves old tenant objects to Infrequent Access"
 }
 
+deny contains msg if {
+	not locks_tenant_objects
+	msg := "the environment module must keep an enabled R2 bucket lock on the prefix t/, the recovery rule for deleted or overwritten slides"
+}
+
+locks_tenant_objects if {
+	some file in input
+	startswith(file.path, "modules/environment/")
+	some _, blocks in file.contents.resource.cloudflare_r2_bucket_lock
+	some block in blocks
+	some rule in block.rules
+	rule.enabled == true
+	rule.prefix == allowed.lifecycle_prefix
+}
+
 tiers_old_objects if {
 	some [path, rule] in lifecycle_rules
 	startswith(path, "modules/environment/")

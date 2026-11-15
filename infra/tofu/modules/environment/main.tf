@@ -57,6 +57,21 @@ resource "cloudflare_r2_bucket_lifecycle" "uploads" {
   }]
 }
 
+resource "cloudflare_r2_bucket_lock" "recovery" {
+  account_id  = var.cloudflare_account_id
+  bucket_name = cloudflare_r2_bucket.slides.name
+
+  rules = [{
+    id      = "keep-tenant-objects"
+    enabled = true
+    prefix  = "t/"
+    condition = {
+      type            = "Age"
+      max_age_seconds = var.locked_days * 86400
+    }
+  }]
+}
+
 resource "zitadel_application_oidc" "api" {
   org_id                       = var.zitadel_org_id
   project_id                   = var.zitadel_project_id

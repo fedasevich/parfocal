@@ -39,7 +39,20 @@ lifecycle(rule) := json.patch(bucket_only, [{
 	"value": {"uploads": [{"rules": [rule]}]},
 }])
 
-bucket := lifecycle(tier_rule)
+lock_rule := {
+	"id": "keep-tenant-objects",
+	"enabled": true,
+	"prefix": "t/",
+	"condition": {"type": "Age", "max_age_seconds": "${var.locked_days * 86400}"},
+}
+
+locked(contents, rule) := json.patch(contents, [{
+	"op": "add",
+	"path": "/resource/cloudflare_r2_bucket_lock",
+	"value": {"recovery": [{"rules": [rule]}]},
+}])
+
+bucket := locked(lifecycle(tier_rule), lock_rule)
 
 good := [
 	{"path": "global/versions.tf", "contents": backend("global")},
@@ -142,6 +155,20 @@ test_fixtures_lifecycle_prefix_fails if {
 test_unknown_storage_class_fails if {
 	rule := json.patch(tier_rule, [{"op": "replace", "path": "/storage_class_transitions/0/storage_class", "value": "Glacier"}])
 	denied(in_module(lifecycle(rule)), "unknown storage class")
+}
+
+test_missing_bucket_lock_fails if {
+	denied(in_module(lifecycle(tier_rule)), "must keep an enabled R2 bucket lock")
+}
+
+test_disabled_bucket_lock_fails if {
+	rule := object.union(lock_rule, {"enabled": false})
+	denied(in_module(locked(lifecycle(tier_rule), rule)), "must keep an enabled R2 bucket lock")
+}
+
+test_bucket_lock_on_another_prefix_fails if {
+	rule := object.union(lock_rule, {"prefix": "fixtures/"})
+	denied(in_module(locked(lifecycle(tier_rule), rule)), "must keep an enabled R2 bucket lock")
 }
 
 test_tier_age_below_minimum_fails if {

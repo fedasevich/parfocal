@@ -8,6 +8,7 @@ free_resource_types := {
 	"cloudflare_r2_bucket",
 	"cloudflare_r2_bucket_cors",
 	"cloudflare_r2_bucket_lifecycle",
+	"cloudflare_r2_bucket_lock",
 }
 
 resource_type(type) if type in free_resource_types
