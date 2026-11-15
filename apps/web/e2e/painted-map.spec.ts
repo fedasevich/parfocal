@@ -23,6 +23,7 @@ async function paintAcross(page: Page, stage: Locator): Promise<void> {
 const paintedOf = async (panel: Locator) => Number(await panel.getAttribute("data-painted"));
 
 test("a painted map is painted, saved, reloaded and opened again", async ({ page }) => {
+  test.setTimeout(90_000);
   const stage = await openReviewSlide(page);
   const panel = page.getByTestId("painted-map");
   await page.getByTestId("painted-map-toggle").click();

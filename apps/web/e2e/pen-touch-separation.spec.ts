@@ -25,7 +25,8 @@ async function stroke(page: Page, pointerType: Pointer, stopMidway: boolean) {
   const drawing = page.getByTestId("freehand-layer");
   const peak = { value: 0 };
   await stage.evaluate(
-    (node, args) => {
+    (stageNode, args) => {
+      const node = document.elementFromPoint(args.x, args.y) ?? stageNode;
       const fire = (type: string, dx: number, dy: number) =>
         node.dispatchEvent(
           new PointerEvent(type, {

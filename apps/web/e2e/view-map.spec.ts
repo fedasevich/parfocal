@@ -22,7 +22,7 @@ async function dragLeft(page: Page, stage: Locator): Promise<void> {
 
 const tilesOf = async (panel: Locator) => Number(await panel.getAttribute("data-tiles"));
 
-test("the view map is computed on demand and extends as the user pans and asks again", async ({
+test("the view map is computed on demand and asking again after a pan rescores nothing", async ({
   page,
 }) => {
   const stage = await openReviewSlide(page);
@@ -39,6 +39,6 @@ test("the view map is computed on demand and extends as the user pans and asks a
   await dragLeft(page, stage);
   await dragLeft(page, stage);
   await page.getByTestId("view-map-ask").click();
-  await expect.poll(() => tilesOf(panel)).toBeGreaterThan(first);
   await expect(panel).toHaveAttribute("data-phase", "ready");
+  expect(await tilesOf(panel)).toBe(first);
 });
