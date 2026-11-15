@@ -1,4 +1,4 @@
-# XXXX. Viewer performance budgets per format, CPU-side in CI and frame and GPU time by hand
+# 0317. Viewer performance budgets per format, CPU-side in CI and frame and GPU time by hand
 
 - Date: 2026-11-15
 - Status: Accepted
