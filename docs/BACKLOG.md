@@ -590,7 +590,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Done when those four files are split, a guard in `pnpm verify` fails on a new source file over 1,200 lines outside generated code and tests, with today's larger files listed as exceptions, and the suites stay green.
   Size: M.
 
-- [ ] FOUND-039 · Split the full viewer behind a view-model hook
+- [x] FOUND-039 · Split the full viewer behind a view-model hook
   FOUND-036 cut `apps/web/src/screens/viewer/full-viewer.tsx` from 2,131 to 1,870 lines, but `ViewerBody` is still one component of about 1,700 lines whose blocks share 20 to 50 locals each, so moving parts out safely needs a view-model hook that owns the viewer state and hands each panel only what it reads. Keep behaviour identical and take the file out of the exceptions of `scripts/guard_file_length.py`.
   Done when the file is under 1,200 lines, it is no longer an exception, and the viewer specs stay green.
   Depends on FOUND-036.
