@@ -58,6 +58,7 @@ import { DeviceLegend } from "../devices/device-legend.tsx";
 import { bindGamepadWhenConnected, deviceIntentEvent } from "../devices/gamepad-source.ts";
 import { dispatchIntentKey, steppedPreset } from "../devices/intent-keys.ts";
 import { engineWheelMode, navigationEvent, readNavigation } from "../devices/navigation.ts";
+import { createPenDoubleTap, createToolHistory } from "../devices/pen-touch.ts";
 import { bindSpaceMouse, type HidLike, hasWebHid } from "../devices/spacemouse-source.ts";
 import { applyMainCalibration, mainCalibration } from "../devices/stage-calibration.ts";
 import { bindTrackpadListeners } from "../devices/trackpad-listeners.ts";
@@ -644,6 +645,24 @@ function OpenedSlide({
     mark();
     return session.engine.subscribeCamera(mark);
   }, [session, hostNode]);
+
+  const toolHistory = useRef(createToolHistory<ViewerTool>(restingTool));
+  useEffect(() => {
+    toolHistory.current.select(tool);
+  }, [tool]);
+
+  useEffect(() => {
+    const surface = hostNode?.parentElement;
+    if (!surface) return;
+    const doubleTap = createPenDoubleTap();
+    const onDown = (event: PointerEvent) => {
+      if (event.pointerType !== "pen" || event.button !== 0 || event.buttons > 1) return;
+      const twice = doubleTap.tap({ at: event.timeStamp, x: event.clientX, y: event.clientY });
+      if (twice) setTool(toolHistory.current.swap());
+    };
+    surface.addEventListener("pointerdown", onDown, true);
+    return () => surface.removeEventListener("pointerdown", onDown, true);
+  }, [hostNode]);
 
   useEffect(() => {
     const surface = hostNode?.parentElement;

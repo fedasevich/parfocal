@@ -146,8 +146,9 @@ export type HidLike = {
   readonly removeEventListener: (type: "connect" | "disconnect", listener: () => void) => void;
 };
 
-export function hasWebHid(scope: { readonly hid?: unknown } | undefined): boolean {
-  return scope?.hid !== undefined && scope.hid !== null;
+export function hasWebHid(scope: object | undefined): boolean {
+  if (scope === undefined || !("hid" in scope)) return false;
+  return scope.hid !== undefined && scope.hid !== null;
 }
 
 export function isSpaceMouse(device: HidDeviceLike): boolean {
