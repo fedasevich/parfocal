@@ -1,5 +1,8 @@
 import type { Analytics } from "../clients.ts";
+import { flagArms, flagKeys } from "../flags/catalogue.ts";
 import { analyticsOptedOut } from "./consent.ts";
+
+export { flagArms, flagKeys };
 
 const idPattern = /^[A-Za-z0-9][A-Za-z0-9_-]{7,63}$/u;
 
@@ -22,8 +25,6 @@ export const tools = [
   "overlay",
 ];
 export const surveys = ["sus", "seq"];
-export const flagKeys = ["lab_lead_default_home"];
-export const flagArms = ["control", "status_board"];
 export const taskKinds = ["review", "annotate", "upload", "report"];
 
 export const eventSchema = {
