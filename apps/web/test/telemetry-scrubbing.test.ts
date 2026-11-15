@@ -21,7 +21,7 @@ const pythonRules = new URL(
 test("the web allow-list is the same as the Python one", () => {
   const source = readFileSync(pythonRules, "utf8");
   const block = /ALLOWED_FIELDS = frozenset\(\s*\{([^}]*)\}/u.exec(source)?.[1] ?? "";
-  const python = [...block.matchAll(/"([a-z_]+)"/gu)].map((match) => match[1]);
+  const python = [...block.matchAll(/"([a-z0-9_]+)"/gu)].map((match) => match[1]);
   assert.ok(python.length > 10);
   assert.deepEqual([...allowedFields].sort(), python.sort());
 });
