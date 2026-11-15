@@ -114,3 +114,4 @@ One file per measured run, named `YYYY-MM-DD-short-topic.md`. Copy [_template.md
 | 2026-11-15 | [The per-slide type learner raises same-image balanced typing accuracy from 50.6% to 64.7% after 200 corrections](2026-11-15-per-slide-type-learner-same-images.md) | AILEARN-002 | benchmark |
 | 2026-11-15 | [PathoSAM browser graphs match PyTorch on 48 TNBC clicks in Chrome, WebGPU q4 at a mean IoU of 0.9625 and WebAssembly uint8 at 0.9822, with AIS foreground IoU at least 0.973](2026-11-15-browser-parity-with-pytorch.md) | MLEVAL-007 | check |
 | 2026-11-15 | [The window decoder cuts a click decode to 14 to 17 ms in Chrome and agrees with the full decoder at a mean IoU of 0.99](2026-11-15-embedding-window-decoder.md) | AISEG-009 | benchmark |
+| 2026-11-15 | [A trained typer round on PanNuke needs its own temperature, 1.79, which brings its ECE from 0.089 with the old 1.29 to 0.019](2026-11-15-recalibration-after-a-round.md) | AILEARN-005 | check |
