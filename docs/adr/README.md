@@ -300,3 +300,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0333](0333-de-identified-projects-keep-no-labels-and-copies-get-pseudonyms.md) | A de-identified project stores no label or macro, and a slide copied into one gets a pseudonymous case | Accepted | 2026-11-15 |
 | [0334](0334-evaluation-dashboard-built-from-result-files.md) | The evaluation dashboard is a static page built in Python from the committed result files through a series file | Accepted | 2026-11-15 |
 | [0335](0335-identifying-text-is-blanked-by-the-edge-from-the-token.md) | Identifying text and barcodes in an original are blanked by the edge from ranges in the token | Accepted | 2026-11-15 |
+| [0336](0336-ui-visual-baselines-per-story-theme-and-density.md) | UI visual regression compares every story in both themes and densities with committed baselines from the Linux runner | Accepted | 2026-11-15 |
