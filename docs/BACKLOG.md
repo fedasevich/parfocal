@@ -4294,6 +4294,12 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when dashboards exist and a synthetic error appears in alerting.
   Size: L.
 
+- [ ] OPS-018 · SLI events from the workers, a realtime SLI and traces
+  OPS-006 (observability stack) counts API requests and edge tile fetches in the slide bucket and reads ingest and pre-read times from job rows, but the ingest and GPU workers send no SLI events of their own, realtime has no SLI, requests go out as log records rather than spans and metrics, and hand-started model runs count as pre-reads.
+  Done when the ingest and GPU workers and realtime write SLI counts the alert cycle reads, only pre-reads count toward the pre-read SLO, and a test on fakes covers each.
+  Depends on OPS-006.
+  Size: M.
+
 - [ ] OPS-007 · Alerting and on-call
   SLOs for availability, tile latency, ingest time, pre-read time. Alerts routed to on-call. A security alert fires on any audit event whose actor and target workspaces differ, as the first tabletop exercise asked ([tabletop-exercise.md](compliance/tabletop-exercise.md)). Fault-injection tests in a drill environment switch export on through the override ([ADR 0005](adr/0005-external-sends-only-in-production.md)).
   Done when each SLO has an alert tested by fault injection.
