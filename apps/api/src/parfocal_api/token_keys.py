@@ -4,6 +4,7 @@ import binascii
 from pydantic import SecretStr
 
 MIN_KEY_BYTES = 32
+KEY_SEPARATOR = ","
 
 
 def decoded_key(secret: str) -> bytes:
@@ -19,8 +20,14 @@ def key_bytes(secret: str) -> bytes | None:
     return key if len(key) >= MIN_KEY_BYTES else None
 
 
-def usable_secret(key: SecretStr | None) -> str | None:
+def listed_keys(value: str) -> list[str]:
+    return [part.strip() for part in value.split(KEY_SEPARATOR) if part.strip()]
+
+
+def usable_keys(key: SecretStr | None) -> list[str] | None:
     if key is None:
         return None
-    secret = key.get_secret_value()
-    return None if key_bytes(secret) is None else secret
+    keys = listed_keys(key.get_secret_value())
+    if not keys or any(key_bytes(secret) is None for secret in keys):
+        return None
+    return keys

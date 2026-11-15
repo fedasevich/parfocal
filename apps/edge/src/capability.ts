@@ -69,6 +69,41 @@ export async function signingKey(secret: string): Promise<CryptoKey> {
   ]);
 }
 
+export type VerifyingKeys = CryptoKey | readonly CryptoKey[];
+
+const KEY_SEPARATOR = ",";
+const keyLists = new Map<string, Promise<readonly CryptoKey[]>>();
+
+async function importedKeys(secrets: string): Promise<readonly CryptoKey[]> {
+  const listed = secrets
+    .split(KEY_SEPARATOR)
+    .map((part) => part.trim())
+    .filter((part) => part !== "");
+  if (listed.length === 0) throw new WeakSigningKeyError();
+  return Promise.all(listed.map((secret) => signingKey(secret)));
+}
+
+export function verifyingKeys(secrets: string): Promise<readonly CryptoKey[]> {
+  let keys = keyLists.get(secrets);
+  if (keys === undefined) {
+    keys = importedKeys(secrets);
+    keyLists.set(secrets, keys);
+  }
+  return keys;
+}
+
+export async function signedByAny(
+  keys: VerifyingKeys,
+  signature: BufferSource,
+  data: BufferSource,
+): Promise<boolean> {
+  const listed: readonly CryptoKey[] = Array.isArray(keys) ? keys : [keys as CryptoKey];
+  for (const key of listed) {
+    if (await crypto.subtle.verify("HMAC", key, signature, data)) return true;
+  }
+  return false;
+}
+
 function isRange(value: unknown): value is ByteRange {
   return (
     Array.isArray(value) &&
@@ -112,7 +147,7 @@ function capabilityOf(claims: unknown): Capability | null {
 
 export async function verifyCapability(
   token: string,
-  key: CryptoKey,
+  keys: VerifyingKeys,
   nowSeconds: number,
 ): Promise<CapabilityCheck> {
   const parts = token.split(".");
@@ -125,8 +160,7 @@ export async function verifyCapability(
   if (signatureBytes === null || payloadBytes === null) {
     return { ok: false, reason: "malformed" };
   }
-  const valid = await crypto.subtle.verify("HMAC", key, signatureBytes, encoder.encode(payload));
-  if (!valid) {
+  if (!(await signedByAny(keys, signatureBytes, encoder.encode(payload)))) {
     return { ok: false, reason: "bad-signature" };
   }
   let claims: unknown;

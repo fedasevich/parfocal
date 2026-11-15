@@ -1,4 +1,10 @@
-import { fromBase64Url, signingKey, toBase64Url } from "#capability.ts";
+import {
+  fromBase64Url,
+  signedByAny,
+  signingKey,
+  toBase64Url,
+  type VerifyingKeys,
+} from "#capability.ts";
 
 export type RoomGrant = {
   readonly tenant: string;
@@ -59,7 +65,7 @@ function grantOf(claims: unknown): RoomGrant | null {
 
 export async function verifyRoomToken(
   token: string,
-  key: CryptoKey,
+  keys: VerifyingKeys,
   nowSeconds: number,
 ): Promise<RoomTokenCheck> {
   const parts = token.split(".");
@@ -72,7 +78,7 @@ export async function verifyRoomToken(
   if (signatureBytes === null || payloadBytes === null) {
     return { ok: false, reason: "malformed" };
   }
-  if (!(await crypto.subtle.verify("HMAC", key, signatureBytes, encoder.encode(payload)))) {
+  if (!(await signedByAny(keys, signatureBytes, encoder.encode(payload)))) {
     return { ok: false, reason: "signature" };
   }
   let claims: unknown;
@@ -124,7 +130,7 @@ export function isPublishSignature(header: string | null): header is string {
 }
 
 export async function verifyPublish(
-  key: CryptoKey,
+  keys: VerifyingKeys,
   header: string | null,
   body: string,
   nowSeconds: number,
@@ -141,5 +147,5 @@ export async function verifyPublish(
   if (given === null) {
     return false;
   }
-  return crypto.subtle.verify("HMAC", key, given, encoder.encode(`publish.${stamp}.${body}`));
+  return signedByAny(keys, given, encoder.encode(`publish.${stamp}.${body}`));
 }

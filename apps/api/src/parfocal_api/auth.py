@@ -48,7 +48,7 @@ from parfocal_api.tables import (
     sessions,
     users,
 )
-from parfocal_api.token_keys import decoded_key
+from parfocal_api.token_keys import decoded_key, listed_keys
 from parfocal_api.zitadel_login import ZitadelLogin
 from parfocal_common.db import DatabaseScope, scoped_transaction
 
@@ -73,23 +73,36 @@ class SessionKeyError(ValueError):
         super().__init__("SESSION_KEY must be 32 bytes encoded as URL-safe base64")
 
 
+def session_aead(key: str) -> AESGCM:
+    try:
+        raw = decoded_key(key)
+    except ValueError as error:
+        raise SessionKeyError from error
+    if len(raw) != 32:
+        raise SessionKeyError
+    return AESGCM(raw)
+
+
 class SessionCipher:
-    def __init__(self, key: str) -> None:
-        try:
-            raw = decoded_key(key)
-        except ValueError as error:
-            raise SessionKeyError from error
-        if len(raw) != 32:
+    def __init__(self, keys: str) -> None:
+        listed = listed_keys(keys)
+        if not listed:
             raise SessionKeyError
-        self._aead = AESGCM(raw)
+        self._aeads = [session_aead(key) for key in listed]
 
     def seal(self, value: dict[str, Any]) -> bytes:
         nonce = secrets.token_bytes(12)
-        return nonce + self._aead.encrypt(nonce, json.dumps(value).encode(), None)
+        return nonce + self._aeads[0].encrypt(nonce, json.dumps(value).encode(), None)
 
     def open(self, sealed: bytes) -> dict[str, Any]:
-        opened: dict[str, Any] = json.loads(self._aead.decrypt(sealed[:12], sealed[12:], None))
-        return opened
+        for aead in self._aeads:
+            try:
+                plain = aead.decrypt(sealed[:12], sealed[12:], None)
+            except InvalidTag:
+                continue
+            opened: dict[str, Any] = json.loads(plain)
+            return opened
+        raise InvalidTag
 
 
 @dataclass(frozen=True)

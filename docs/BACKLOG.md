@@ -1013,7 +1013,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Depends on SEC-013.
   Size: M.
 
-- [ ] SEC-049 · An overlap window for session and token keys
+- [x] SEC-049 · An overlap window for session and token keys
   `SESSION_KEY`, `TILE_TOKEN_KEY` and `ROOM_TOKEN_KEY` each hold one key, so rotating the first signs everyone out and rotating the others breaks open viewers for up to 10 minutes. Accept a list, newest first, sign with the first and verify with any, in the API and in the Worker.
   Done when API and Worker tests show a token or session sealed with the previous key still opens while it is listed and stops once it is removed.
   Depends on SEC-013.

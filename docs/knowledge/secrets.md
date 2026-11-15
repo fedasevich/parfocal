@@ -13,9 +13,9 @@ Deployed code reads secrets only from its environment, which Modal fills from th
 | Secret | Store | Written by | Rotation |
 |---|---|---|---|
 | `MASTER_KEYS` | Modal `parfocal-api-keys` | bootstrap, once | [Master keyring](#master-keyring), no downtime |
-| `SESSION_KEY` | Modal `parfocal-api-keys` | bootstrap, once | Replace and redeploy. Sealed session tokens fail to open, so everyone is signed out once |
-| `TILE_TOKEN_KEY` | Modal `parfocal-api-keys` and the Worker | bootstrap, once | [Shared token keys](#shared-token-keys) |
-| `ROOM_TOKEN_KEY` | Modal `parfocal-api-keys` and the Worker | bootstrap, once | [Shared token keys](#shared-token-keys) |
+| `SESSION_KEY` | Modal `parfocal-api-keys` | bootstrap, once | [Session and token key overlap](#session-and-token-key-overlap), no sign-out |
+| `TILE_TOKEN_KEY` | Modal `parfocal-api-keys` and the Worker | bootstrap, once | [Session and token key overlap](#session-and-token-key-overlap), no broken viewer |
+| `ROOM_TOKEN_KEY` | Modal `parfocal-api-keys` and the Worker | bootstrap, once | [Session and token key overlap](#session-and-token-key-overlap), no dropped room |
 | `DATABASE_URL` | Modal `parfocal-api-keys` | bootstrap, once | [Database role password](#database-role-password) |
 | `ZITADEL_CLIENT_SECRET` | Modal `parfocal-api-config` | bootstrap from the OpenTofu output | Regenerate the client secret through the identity module, rerun bootstrap, which always rewrites the config secret, then redeploy |
 | `STORAGE_SECRET_ACCESS_KEY` | Modal `parfocal-api-config` | bootstrap from `R2_SECRET_ACCESS_KEY` | Make a new R2 token, rerun bootstrap with it in the shell, redeploy, update the GitHub copies, then delete the old token |
@@ -43,11 +43,12 @@ Bootstrap writes `parfocal-api-keys` only when it is missing, and it then genera
 | `add-master-key` | Prepends the next `kN` to `MASTER_KEYS` |
 | `rewrap` | Rewraps tenant keys under the current master key, nothing in the secret |
 | `retire-master-key k1` | Removes `k1` from `MASTER_KEYS` only after `check-retire` passes |
-| `replace-key SESSION_KEY` | `SESSION_KEY` in the secret |
-| `replace-key TILE_TOKEN_KEY` or `ROOM_TOKEN_KEY` | That key in the Worker through `wrangler secret bulk` on stdin, then in the secret |
+| `replace-key SESSION_KEY` | Prepends a new key to `SESSION_KEY` in the secret and keeps every listed key |
+| `replace-key TILE_TOKEN_KEY` or `ROOM_TOKEN_KEY` | The same list in the Worker through `wrangler secret bulk` on stdin, then in the secret |
+| `drop-old-keys NAME` | Keeps only the first key, in the Worker first for a token key, then in the secret |
 | `reset-app-password` | The `parfocal_app` password on the direct owner connection, then `DATABASE_URL` |
 
-Every command that changes the secret needs a redeploy afterwards. `add-master-key`, `rewrap` and `retire-master-key` read the stored keyring and the tenant key counts in a short-lived Modal app, `parfocal-key-rotation`, which mounts the three API secrets and returns only `MASTER_KEYS` and the counts.
+Every command that changes the secret needs a redeploy afterwards. `add-master-key`, `rewrap` and `retire-master-key` read the stored keyring and the tenant key counts in a short-lived Modal app, `parfocal-key-rotation`, which mounts the three API secrets and returns only `MASTER_KEYS` and the counts. `replace-key` and `drop-old-keys` read the one key list they change through the same app.
 
 ## Master keyring
 
@@ -60,9 +61,15 @@ Every command that changes the secret needs a redeploy afterwards. `add-master-k
 
 Removing `k1` before step 3 passes locks every tenant out of its encrypted fields until `k1` is put back. Audit exports signed before the rotation carry the key id `k1`, and `GET` on the audit signing keys stops listing its public key once `k1` is gone. TODO: keep the old public key with the audit evidence before step 4.
 
-## Shared token keys
+## Session and token key overlap
 
-The API signs tile and room tokens and the Worker checks them, each with a single key. Rotating means `rotate replace-key TILE_TOKEN_KEY` or `ROOM_TOKEN_KEY`, which writes the new key to the Worker and to `parfocal-api-keys`, then redeploying the API. Tokens signed in between fail until the viewer asks for a fresh one, at most 10 minutes for tiles and 5 minutes for rooms. SEC-049 (an overlap window for session and token keys) lets both sides accept the old key for a while.
+`SESSION_KEY`, `TILE_TOKEN_KEY` and `ROOM_TOKEN_KEY` each take one key or a comma-separated list, newest first, as SEC-049 (an overlap window for session and token keys) built. The first key seals sessions and signs tile tokens, room tokens and the API's publish calls to the Worker. Any listed key opens or verifies. One bad entry turns the whole value off: the API refuses to start on a bad `SESSION_KEY` and answers 503 for tile and room access, and the Worker answers 503 `signing-key-not-configured`. A single key works as before. `apps/api/tests/test_token_keys.py`, `test_tile_access.py`, `test_realtime.py` and `apps/edge/test/tiles.test.ts` and `rooms.test.ts` show an old-key session or token opening while it is listed and failing once it is removed.
+
+1. Run `rotate replace-key NAME`. It reads the stored list in the `parfocal-key-rotation` app, which returns only that value, prepends a new key to every listed one and writes the list to the Worker first for a token key, then to `parfocal-api-keys`. Nothing is dropped, so running it twice before a redeploy still leaves the key the running API signs with. Redeploy the API. In this order the Worker already knows the new key when the API starts signing with it. `SESSION_KEY` lives only in the API.
+2. Wait out the longest lifetime signed with the old key: 10 minutes for tile tokens, 5 minutes for room tokens. For `SESSION_KEY`, a session is sealed again with the first key whenever its access token refreshes, but an idle one keeps the old key until it ends, so wait the session lifetime, 12 hours by default.
+3. Run `rotate drop-old-keys NAME`, which keeps only the first key in the Worker and then in `parfocal-api-keys`, so a failed Worker write leaves the secret as it was and the command can run again. Redeploy the API. It refuses when only one key is listed, and both commands refuse a stored list with a bad entry.
+
+The Worker's value cannot be read back, so both commands write the list they made from the API's copy. Removing the old key early drops only what it signed: viewers ask for a fresh tile or room token, and idle sessions sign in again. `workers/deploy/tests/test_rotate.py` checks the lists and the write order against fakes. TODO: untried against the deployed Worker and API.
 
 ## Database role password
 

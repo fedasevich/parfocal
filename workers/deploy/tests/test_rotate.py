@@ -1,5 +1,6 @@
 import argparse
 import json
+import subprocess
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Any
@@ -17,6 +18,7 @@ from parfocal_deploy.rotate import (
     RotationRefusedError,
     add_master_key,
     dispatch,
+    drop_old_keys,
     next_master_id,
     replace_key,
     reset_app_password,
@@ -49,6 +51,7 @@ class FakeStore:
     wrapped_by: dict[str, int] = field(default_factory=lambda: {"k1": 3})
     actions: list[str] = field(default_factory=list)
     merges: list[dict[str, str]] = field(default_factory=list)
+    journal: list[str] = field(default_factory=list)
 
     def exists(self) -> bool:
         return self.values is not None
@@ -64,7 +67,12 @@ class FakeStore:
     def merge(self, values: Mapping[str, str]) -> None:
         assert self.values is not None
         self.merges.append(dict(values))
+        self.journal.append("secret")
         self.values |= values
+
+    def key_list(self, name: str) -> str:
+        assert self.values is not None
+        return self.values[name]
 
 
 @dataclass
@@ -73,9 +81,15 @@ class Recorder:
     stdin: list[str] = field(default_factory=list)
     statements: list[str] = field(default_factory=list)
     neon_paths: list[str] = field(default_factory=list)
+    journal: list[str] = field(default_factory=list)
+    failures: int = 0
 
     def run(self, argv: Sequence[str], stdin: str | None, extra: Mapping[str, str] | None) -> None:
+        if self.failures:
+            self.failures -= 1
+            raise subprocess.CalledProcessError(1, list(argv))
         self.argv.append(list(argv))
+        self.journal.append("worker")
         if stdin is not None:
             self.stdin.append(stdin)
         assert not extra
@@ -118,6 +132,7 @@ def secret_values(*stores: Mapping[str, str]) -> set[str]:
     for values in stores:
         for value in values.values():
             found.add(value)
+            found.update(value.split(","))
             found.update(part.partition(":")[2] for part in value.split(","))
     return {value for value in found if len(value) >= 8}
 
@@ -240,7 +255,103 @@ def test_a_shared_token_key_changes_in_the_worker_and_the_secret_together(name: 
         ]
     ]
     assert [json.loads(stdin) for stdin in recorder.stdin] == [{name: after[name]}]
+    assert after[name].split(",")[1] == before[name]
     assert_no_secret_in_argv(recorder, before, after)
+
+
+def test_replacing_a_token_key_writes_the_worker_before_the_secret() -> None:
+    store = FakeStore()
+
+    replace_key(store, Recorder(journal=store.journal).tools(), TARGET, "TILE_TOKEN_KEY")
+
+    assert store.journal == ["worker", "secret"]
+
+
+@pytest.mark.parametrize("name", ["SESSION_KEY", "TILE_TOKEN_KEY", "ROOM_TOKEN_KEY"])
+def test_replacing_a_key_puts_the_new_one_first_and_keeps_every_listed_key(name: str) -> None:
+    store = FakeStore()
+    assert store.values is not None
+    previous, older, newer = new_key(), new_key(), new_key()
+    store.values[name] = f"{previous},{older}"
+
+    replace_key(store, Recorder().tools(), TARGET, name, make=lambda: newer)
+
+    assert store.values[name] == f"{newer},{previous},{older}"
+
+
+@pytest.mark.parametrize("name", ["TILE_TOKEN_KEY", "ROOM_TOKEN_KEY"])
+def test_dropping_old_token_keys_changes_the_worker_before_the_secret(name: str) -> None:
+    store = FakeStore()
+    assert store.values is not None
+    newer, previous = new_key(), new_key()
+    store.values[name] = f"{newer},{previous}"
+    before = dict(store.values)
+    recorder = Recorder(journal=store.journal)
+
+    drop_old_keys(store, recorder.tools(), TARGET, name)
+
+    assert store.values[name] == newer
+    assert store.journal == ["worker", "secret"]
+    assert [json.loads(stdin) for stdin in recorder.stdin] == [{name: newer}]
+    assert {key: value for key, value in store.values.items() if key != name} == {
+        key: value for key, value in before.items() if key != name
+    }
+    assert_no_secret_in_argv(recorder, before, store.values)
+
+
+def test_a_drop_that_fails_at_the_worker_changes_nothing_and_can_be_run_again() -> None:
+    store = FakeStore()
+    assert store.values is not None
+    newer = new_key()
+    store.values["TILE_TOKEN_KEY"] = f"{newer},{new_key()}"
+    recorder = Recorder(failures=1)
+
+    with pytest.raises(subprocess.CalledProcessError):
+        drop_old_keys(store, recorder.tools(), TARGET, "TILE_TOKEN_KEY")
+    assert store.merges == []
+
+    drop_old_keys(store, recorder.tools(), TARGET, "TILE_TOKEN_KEY")
+    assert store.values["TILE_TOKEN_KEY"] == newer
+    assert [json.loads(stdin) for stdin in recorder.stdin] == [{"TILE_TOKEN_KEY": newer}]
+
+
+def test_dropping_old_session_keys_never_touches_the_worker() -> None:
+    store = FakeStore()
+    assert store.values is not None
+    newer = new_key()
+    store.values["SESSION_KEY"] = f"{newer},{new_key()}"
+    recorder = Recorder()
+
+    drop_old_keys(store, recorder.tools(), TARGET, "SESSION_KEY")
+
+    assert store.values["SESSION_KEY"] == newer
+    assert recorder.argv == []
+
+
+def test_a_single_key_has_no_old_key_to_drop() -> None:
+    store = FakeStore()
+    recorder = Recorder()
+
+    with pytest.raises(RotationRefusedError, match="one key only"):
+        drop_old_keys(store, recorder.tools(), TARGET, "TILE_TOKEN_KEY")
+
+    assert store.merges == []
+    assert recorder.argv == []
+
+
+@pytest.mark.parametrize("stored", ["", ",", "change-me", f"{new_key()},change-me"])
+def test_a_stored_key_list_with_a_bad_entry_is_never_extended_or_shortened(stored: str) -> None:
+    store = FakeStore()
+    assert store.values is not None
+    store.values["ROOM_TOKEN_KEY"] = stored
+    recorder = Recorder()
+
+    for attempt in (replace_key, drop_old_keys):
+        with pytest.raises(RotationRefusedError, match="not a list of keys"):
+            attempt(store, recorder.tools(), TARGET, "ROOM_TOKEN_KEY")
+
+    assert store.merges == []
+    assert recorder.argv == []
 
 
 def test_only_the_known_keys_can_be_replaced() -> None:
@@ -284,6 +395,7 @@ def test_a_missing_keys_secret_is_never_created_in_part() -> None:
         lambda: rewrap(store),
         lambda: retire_master_key(store, "k1"),
         lambda: replace_key(store, recorder.tools(), TARGET, "TILE_TOKEN_KEY"),
+        lambda: drop_old_keys(store, recorder.tools(), TARGET, "TILE_TOKEN_KEY"),
         lambda: reset_app_password(store, recorder.tools(), TARGET, local),
     ):
         with pytest.raises(MissingKeysSecretError):
@@ -306,6 +418,7 @@ def test_the_commands_take_names_and_never_key_material() -> None:
             ("rewrap", {}),
             ("retire-master-key", {"key_id": "k1"}),
             ("replace-key", {"name": "ROOM_TOKEN_KEY"}),
+            ("drop-old-keys", {"name": "ROOM_TOKEN_KEY"}),
         )
     ]
 
@@ -314,6 +427,9 @@ def test_the_commands_take_names_and_never_key_material() -> None:
     assert store.values is not None
     assert store.values["MASTER_KEYS"].startswith("k2:")
     assert store.values["UNRELATED"] == before["UNRELATED"]
+    assert messages[3].endswith("then drop-old-keys once the old tokens have expired")
+    assert "," not in store.values["ROOM_TOKEN_KEY"]
+    assert store.values["ROOM_TOKEN_KEY"] != before["ROOM_TOKEN_KEY"]
     assert_no_secret_in_argv(recorder, before, store.values)
 
 

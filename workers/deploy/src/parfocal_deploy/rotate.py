@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from typing import Protocol
 
 from parfocal_api.key_rotation import KeyringStatus, RetireRefusedError, check_retire
+from parfocal_api.token_keys import KEY_SEPARATOR, key_bytes, listed_keys
 from parfocal_common.envelope import MasterKeyring
 from parfocal_deploy import neon
 from parfocal_deploy.bootstrap import new_key
@@ -44,6 +45,8 @@ class KeysStore(Protocol):
     def keyring(self, action: str) -> MasterState: ...
 
     def merge(self, values: Mapping[str, str]) -> None: ...
+
+    def key_list(self, name: str) -> str: ...
 
 
 class RotationRefusedError(Exception):
@@ -103,6 +106,15 @@ def retire_master_key(store: KeysStore, key_id: str) -> None:
     store.merge({MASTER_KEYS: joined([pair for pair in current if pair[0] != key_id])})
 
 
+def stored_keys(store: KeysStore, name: str) -> list[str]:
+    if name not in REPLACEABLE:
+        raise RotationRefusedError(f"{name} is not one of {', '.join(REPLACEABLE)}")
+    keys = listed_keys(checked_store(store).key_list(name))
+    if not keys or any(key_bytes(key) is None for key in keys):
+        raise RotationRefusedError(f"the stored {name} is not a list of keys of 32 bytes")
+    return keys
+
+
 def replace_key(
     store: KeysStore,
     tools: Tools,
@@ -110,10 +122,18 @@ def replace_key(
     name: str,
     make: Callable[[], str] = new_key,
 ) -> None:
-    if name not in REPLACEABLE:
-        raise RotationRefusedError(f"{name} is not one of {', '.join(REPLACEABLE)}")
-    checked_store(store)
-    value = make()
+    current = stored_keys(store, name)
+    write_both(store, tools, target, name, KEY_SEPARATOR.join([make(), *current]))
+
+
+def drop_old_keys(store: KeysStore, tools: Tools, target: Environment, name: str) -> None:
+    current = stored_keys(store, name)
+    if len(current) == 1:
+        raise RotationRefusedError(f"{name} holds one key only, so there is no old key to drop")
+    write_both(store, tools, target, name, current[0])
+
+
+def write_both(store: KeysStore, tools: Tools, target: Environment, name: str, value: str) -> None:
     if name in SHARED_TOKEN_KEYS:
         write_worker_secrets(tools, target.wrangler_env, {name: value})
     store.merge({name: value})
@@ -153,6 +173,12 @@ class ModalKeysStore:
             stored, wrapped_by = keyring.remote(action)
         return MasterState(stored, wrapped_by)
 
+    def key_list(self, name: str) -> str:
+        from parfocal_deploy.rotate_app import app, key_list
+
+        with app.run(environment_name=self.modal_environment):
+            return key_list.remote(name)
+
     def merge(self, values: Mapping[str, str]) -> None:
         import modal
 
@@ -176,6 +202,8 @@ def main(argv: list[str] | None = None) -> None:
     retire.add_argument("key_id")
     replace = commands.add_parser("replace-key")
     replace.add_argument("name", choices=REPLACEABLE)
+    drop = commands.add_parser("drop-old-keys")
+    drop.add_argument("name", choices=REPLACEABLE)
     commands.add_parser("reset-app-password")
     arguments = parser.parse_args(argv)
     target = environment(arguments.env)
@@ -204,7 +232,13 @@ def dispatch(
             return f"{arguments.key_id} removed from {MASTER_KEYS}. Next, {NEXT_STEP}"
         case "replace-key":
             replace_key(store, tools, target, arguments.name)
-            return f"{arguments.name} replaced. Next, {NEXT_STEP}"
+            return (
+                f"{arguments.name} has a new first key and keeps the previous one. "
+                f"Next, {NEXT_STEP}, then drop-old-keys once the old tokens have expired"
+            )
+        case "drop-old-keys":
+            drop_old_keys(store, tools, target, arguments.name)
+            return f"{arguments.name} keeps only its first key. Next, {NEXT_STEP}"
         case _:
             reset_app_password(store, tools, target, os.environ)
             return f"the {neon.APP_ROLE} password changed. Next, {NEXT_STEP}"

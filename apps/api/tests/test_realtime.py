@@ -10,15 +10,17 @@ from typing import Any
 import httpx2
 import pytest
 from db_support import ApiAs, api_as
-from pydantic import SecretStr, ValidationError
+from pydantic import AnyHttpUrl, SecretStr, ValidationError
 from workspace_support import join_project, make_project, make_slide, make_workspace, owner
 
 from parfocal_api.principals import PlatformOperator
 from parfocal_api.realtime import (
     PUBLISH_HEADER,
     EdgeRealtime,
+    RealtimeSettings,
     RecordedRealtime,
     RoomEvent,
+    realtime_for,
     sign_publish,
 )
 from parfocal_api.room_access import ROOM_PROTOCOL, ROOM_TOKEN_SECONDS
@@ -209,6 +211,8 @@ def test_an_unknown_room_is_not_found(lab: Lab) -> None:
         SecretStr("change-me"),
         SecretStr("<32 random bytes in base64>"),
         SecretStr(base64.b64encode(bytes(31)).decode()),
+        SecretStr(f"{SECRET},change-me"),
+        SecretStr(","),
     ],
 )
 def test_without_a_room_key_of_32_bytes_live_updates_are_unavailable(
@@ -221,6 +225,35 @@ def test_without_a_room_key_of_32_bytes_live_updates_are_unavailable(
     finally:
         lab.api.app.settings = settings
     assert (response.status_code, response.json()["code"]) == (503, "realtime-not-configured")
+
+
+NEWER_ROOM_KEY = base64.b64encode(b"n" * 32).decode()
+
+
+@pytest.mark.db
+def test_with_two_room_keys_the_token_is_signed_with_the_first(lab: Lab) -> None:
+    settings = lab.api.app.settings
+    lab.api.app.settings = settings.model_copy(
+        update={"room_token_key": SecretStr(f"{NEWER_ROOM_KEY},{SECRET}")}
+    )
+    try:
+        response = lab.access("owner", f"slide:{lab.slide}")
+    finally:
+        lab.api.app.settings = settings
+    assert response.status_code == 200, response.text
+    assert verified_claims(NEWER_ROOM_KEY, response.json()["token"]) is not None
+    assert verified_claims(SECRET, response.json()["token"]) is None
+
+
+async def test_with_two_room_keys_publish_calls_are_signed_with_the_first() -> None:
+    settings = RealtimeSettings(
+        room_token_key=SecretStr(f"{NEWER_ROOM_KEY},{SECRET}"),
+        realtime_internal_url=AnyHttpUrl("https://edge.parfocal.test"),
+    )
+    async with httpx2.AsyncClient() as http:
+        realtime = realtime_for(settings, http)
+    assert isinstance(realtime, EdgeRealtime)
+    assert realtime.secret == NEWER_ROOM_KEY
 
 
 @pytest.mark.db
