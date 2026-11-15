@@ -6,6 +6,7 @@ from db_support import ApiAs
 from upload_support import Lab
 from workspace_support import join_project, make_case, make_slide, owner, person
 
+from parfocal_api.principals import ServicePrincipal
 from parfocal_api.tables import Role
 
 pytestmark = pytest.mark.db
@@ -229,3 +230,25 @@ def test_only_project_owners_create_cases_by_sorting(api: ApiAs, database: str, 
     refused = api(viewer).post("/api/uploads/sorting/apply", json=body)
     assert (refused.status_code, refused.json()["code"]) == (403, "uploading-not-allowed")
     assert case_rows(database, lab) == []
+
+
+def test_a_service_account_creates_cases_by_sorting_with_no_author(
+    api: ApiAs, database: str, lab: Lab
+) -> None:
+    scopes = frozenset({"create-cases", "upload-slides"})
+    account = owner(
+        database,
+        "INSERT INTO service_accounts (tenant_id, name, scopes) "
+        f"VALUES ('{lab.tenant_id}', 'Pilot import', '{{create-cases,upload-slides}}') "
+        "RETURNING id",
+    )[0][0]
+    service = ServicePrincipal(uuid.UUID(str(account)), lab.tenant_id, scopes)
+    body = {"project_id": str(lab.project), "files": DROP}
+    applied = api(service).post("/api/uploads/sorting/apply", json=body)
+    assert applied.status_code == 200, applied.text
+    assert applied.json()["new_cases"] == ["S26-04812", "S26-04813"]
+    assert owner(
+        database,
+        "SELECT count(*) FROM cases "
+        f"WHERE project_id = '{lab.project}' AND created_by_user_id IS NULL",
+    ) == [(2,)]
