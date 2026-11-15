@@ -10864,6 +10864,139 @@
         "x-permission-write": true
       }
     },
+    "/api/projects/{project_id}/slide-copies": {
+      "post": {
+        "tags": [
+          "slides"
+        ],
+        "summary": "Copy Slides",
+        "operationId": "copySlides",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SlideCopyRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SlideCopies"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Sign in to continue"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "You do not have access to this"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "This changed since you loaded it"
+          },
+          "429": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Too many requests, try again shortly"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request is not valid"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {},
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Something went wrong"
+          }
+        },
+        "x-permission": "create-cases",
+        "x-permission-write": true
+      }
+    },
     "/api/slides/{slide_id}/annotations": {
       "get": {
         "tags": [
@@ -46994,7 +47127,8 @@
         "enum": [
           "manual",
           "upload",
-          "import"
+          "import",
+          "copy"
         ],
         "title": "CaseSource"
       },
@@ -61370,6 +61504,87 @@
           "disagreements",
           "time"
         ]
+      },
+      "SlideCopies": {
+        "properties": {
+          "copies": {
+            "items": {
+              "$ref": "#/components/schemas/SlideCopy"
+            },
+            "type": "array",
+            "title": "Copies"
+          }
+        },
+        "type": "object",
+        "required": [
+          "copies"
+        ],
+        "title": "SlideCopies"
+      },
+      "SlideCopy": {
+        "properties": {
+          "source_slide_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Source Slide Id"
+          },
+          "slide_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Slide Id"
+          },
+          "case_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Case Id"
+          },
+          "case_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Case Label"
+          }
+        },
+        "type": "object",
+        "required": [
+          "source_slide_id",
+          "slide_id",
+          "case_id",
+          "case_label"
+        ],
+        "title": "SlideCopy"
+      },
+      "SlideCopyRequest": {
+        "properties": {
+          "slide_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "minItems": 1,
+            "title": "Slide Ids"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "slide_ids"
+        ],
+        "title": "SlideCopyRequest"
       },
       "SlideCoverage": {
         "properties": {

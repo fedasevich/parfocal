@@ -157,6 +157,7 @@ import type {
   SiteValidation,
   Skip,
   SlideArea,
+  SlideCopies,
   SlideCoverage,
   SlideDetail,
   SlideFigure,
@@ -5137,6 +5138,23 @@ export const getMoveSlideResponseMock = (
     faker.string.uuid(),
   ),
   block_cleared: faker.datatype.boolean(),
+  ...overrideResponse,
+});
+
+export const getCopySlidesResponseMock = (
+  overrideResponse: Partial<Extract<SlideCopies, object>> = {},
+): SlideCopies => ({
+  copies: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      source_slide_id: faker.string.uuid(),
+      slide_id: faker.string.uuid(),
+      case_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      case_label: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+    }),
+  ),
   ...overrideResponse,
 });
 
@@ -18364,6 +18382,30 @@ export const getMoveSlideMockHandler = (
   );
 };
 
+export const getCopySlidesMockHandler = (
+  overrideResponse?:
+    | SlideCopies
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<SlideCopies> | SlideCopies),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/projects/:projectId/slide-copies",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getCopySlidesResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getListAnnotationsMockHandler = (
   overrideResponse?:
     | Annotation[]
@@ -24159,6 +24201,7 @@ export const getParfocalAPIMock = () => [
   getReorderCaseSlidesMockHandler(),
   getSetCaseClinicalNoteMockHandler(),
   getMoveSlideMockHandler(),
+  getCopySlidesMockHandler(),
   getListAnnotationsMockHandler(),
   getCreateAnnotationMockHandler(),
   getCreateAnnotationsMockHandler(),

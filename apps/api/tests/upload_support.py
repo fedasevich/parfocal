@@ -8,7 +8,7 @@ from db_support import APP_URL, ApiAs, with_database
 from storage_support import TEST_STORAGE, put, with_store
 from workspace_support import join_project, make_project, make_workspace, owner
 
-from parfocal_api.principals import MemberPrincipal
+from parfocal_api.principals import MemberPrincipal, Principal
 from parfocal_api.tables import Role
 from parfocal_common.db import create_engine
 from parfocal_common.jobs import work
@@ -37,7 +37,7 @@ def make_lab(database: str) -> Lab:
 
 
 def start_upload(
-    api: ApiAs, who: MemberPrincipal, project: uuid.UUID, name: str, size: int, **meta: Any
+    api: ApiAs, who: Principal, project: uuid.UUID, name: str, size: int, **meta: Any
 ) -> dict[str, Any]:
     response = api(who).post(
         "/api/uploads/s3/multipart",
@@ -51,7 +51,7 @@ def start_upload(
     return response.json()
 
 
-def send_file(api: ApiAs, who: MemberPrincipal, upload: dict[str, Any], data: bytes) -> None:
+def send_file(api: ApiAs, who: Principal, upload: dict[str, Any], data: bytes) -> None:
     query = {"key": upload["key"]}
     base = f"/api/uploads/s3/multipart/{upload['uploadId']}"
     size = upload["part_size"]

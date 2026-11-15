@@ -84,6 +84,7 @@ from parfocal_api import (
     sign_out,
     site_validations,
     slide_areas,
+    slide_copies,
     slide_coverage,
     slide_details,
     slide_moves,
@@ -231,6 +232,7 @@ def create_app(
     app.include_router(slide_details.router)
     app.include_router(clinical_notes.router)
     app.include_router(slide_moves.router)
+    app.include_router(slide_copies.router)
     app.include_router(annotations.router)
     app.include_router(result_sets.slide_router)
     app.include_router(result_sets.project_router)
