@@ -3746,7 +3746,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Done when tests round-trip a painted map.
   Size: M.
 
-- [ ] AITUM-006 · Heatmap persistence and export
+- [x] AITUM-006 · Heatmap persistence and export
   Done when tests export a heatmap as an image pyramid and re-import it.
   Refs doc 25.
   Size: M.

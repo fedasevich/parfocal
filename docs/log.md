@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-15
 
+- AITUM-006 adds export_heatmap_pyramid, which writes a stored heatmap grid as a tiled deflate pyramidal TIFF with sub-IFD levels that the existing heatmap reader re-imports value for value, with round-trip tests. No API route or download button yet.
 - AIP-012 adds a CPU patch service over Aperio SVS stored tiles, OpenSlide and OME-Zarr with LRU caching and sparse skipping. The same 128 um patch matches between SVS and its lossless OME-Zarr; NDPI is a different scan, so it is checked against its reference tile and its own coarse level instead. Sharded and v2 Zarr, DICOM and the Leica SCN origin offset are left.
 - VIEW-039 bench:routes runs CMU-1 through Viv, deck.gl WebGPU and custom-webgpu on one fixed camera path headed on the M4 with screenshot checks. All three pan at p50 16.7 ms and p95 18.6 ms with no frame over 33 ms in 540. GPU times per frame (0.40, 1.7 to 2.2, about 16.6 ms) measure different spans, so timestamp queries in the WebGPU routes are a TODO, and an overlay case with nuclei is left.
 - VIEW-073 draws ID labels (0.000%), blends translucent outlines once per ring (0.063% against 0.1%), guards the buffer size and recovers from a lost device on the custom WebGPU route. Mac GPU timing without culling: 114.82 ms a frame for 1.6M nuclei against 6 ms, so compute culling and detail tiers are still needed.
