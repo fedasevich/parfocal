@@ -3785,6 +3785,12 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Depends on AILEARN-003.
   Size: M.
 
+- [ ] AILEARN-009 · One SAM worker per page for the learner and smart select
+  AILEARN-008 gives the review viewer its own SAM services beside the slide stage's, so a page that also uses smart select runs two SAM workers and holds the model twice. Lift the stage's shared SAM services one level up so the learner and smart select use one worker.
+  Done when a test opens the review viewer, uses smart select and corrects a type, and counts one SAM worker and one model load.
+  Depends on AILEARN-008.
+  Size: S.
+
 ---
 
 ## 26 MLEVAL · Evaluation harness and promotion gate
