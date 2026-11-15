@@ -7,6 +7,7 @@ import { Loader } from "@parfocal/ui/components/loader";
 import { SegmentedControl } from "@parfocal/ui/components/segmented-control";
 import { ToolRailButton } from "@parfocal/ui/components/tool-rail-button";
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useSharedSmartServices } from "../aiseg/shared-smart-services.ts";
 import {
   loadSmartServices,
   type SmartServicesContext,
@@ -307,7 +308,9 @@ function OpenedSlide({
   doubleClick.current = useResolvedSettings()?.double_click ?? "zoom";
   const [hostNode, setHostNode] = useState<HTMLDivElement | null>(null);
   const pinRegistry = useMemo(createPinRegistry, []);
-  const sharedServices = useMemo(() => shareServices(loadSmartServices), []);
+  const pageServices = useSharedSmartServices();
+  const ownServices = useMemo(() => shareServices(loadSmartServices), []);
+  const sharedServices = pageServices ?? ownServices;
   const hostRef = useCallback((node: HTMLDivElement | null) => {
     host.current = node;
     setHostNode(node);
