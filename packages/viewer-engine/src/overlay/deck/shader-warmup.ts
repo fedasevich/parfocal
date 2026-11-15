@@ -28,6 +28,24 @@ function warmupBatch() {
   return polygonBatchFromRings(rings);
 }
 
+export interface GpuDeviceInfo {
+  readonly gpuType?: string;
+  readonly renderer?: string;
+}
+
+const softwareRenderers = /swiftshader|llvmpipe|softpipe|software/i;
+
+export function deviceInfoOf(deck: unknown): GpuDeviceInfo | null {
+  const device = (deck as { device?: { info?: GpuDeviceInfo } | null }).device;
+  return device?.info ?? null;
+}
+
+export function warmupPaysOff(info: GpuDeviceInfo | null): boolean {
+  if (info === null) return true;
+  if (info.gpuType === "cpu") return false;
+  return !softwareRenderers.test(info.renderer ?? "");
+}
+
 export function nucleiWarmupLayers(): Layer[] {
   const polygons = warmupBatch();
   const span = warmupSide * 2 * warmupColumns;

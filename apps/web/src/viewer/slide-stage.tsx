@@ -774,6 +774,7 @@ function OpenedSlide({
                 selection={selectedBox}
                 projectId={projectId}
                 slideId={slideId}
+                startShown={tool !== "smart"}
               />
             ) : null}
             {resultPreview === null ? null : (

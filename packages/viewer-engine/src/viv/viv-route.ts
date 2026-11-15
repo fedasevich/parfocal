@@ -24,7 +24,7 @@ import {
 import type { EngineContainer, OverlayLayer, RendererRoute } from "../engine/types.ts";
 import { cameraViewRect, type ViewRect } from "../overlay/cull-grid.ts";
 import { createOverlayLayerBuilder } from "../overlay/deck/overlay-layers.ts";
-import { nucleiWarmupLayers } from "../overlay/deck/shader-warmup.ts";
+import { deviceInfoOf, nucleiWarmupLayers, warmupPaysOff } from "../overlay/deck/shader-warmup.ts";
 import type { DecodeReport } from "../pixel-source/types.ts";
 import { absoluteUrl } from "../pixel-source/url.ts";
 import { observeCanvasSize, observePixelRatio } from "./canvas-observers.ts";
@@ -331,6 +331,10 @@ export function createVivRoute(
       return;
     }
     if (warmup !== "cold" || shown === null) return;
+    if (!warmupPaysOff(deviceInfoOf(deck))) {
+      warmup = "done";
+      return;
+    }
     warmup = "warming";
     whenIdle().then(
       () => {

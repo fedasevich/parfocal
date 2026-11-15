@@ -15,6 +15,7 @@ type RunStreamLayerProps = {
   readonly selection: ViewRect | null;
   readonly projectId: string | undefined;
   readonly slideId: string;
+  readonly startShown: boolean;
 };
 
 const secondsPerMinute = 60;
@@ -94,7 +95,7 @@ function RunStreamPanel({
 }
 
 function ProjectRunStreamLayer(props: RunStreamLayerProps & { readonly projectId: string }) {
-  const { engine, stage, projectId, slideId, selection } = props;
+  const { engine, stage, projectId, slideId, selection, startShown } = props;
   const me = okData(useGetMe().data);
   const project = okData(useGetProject(projectId).data);
   const canTune = canTuneRun({
@@ -113,7 +114,7 @@ function ProjectRunStreamLayer(props: RunStreamLayerProps & { readonly projectId
       {runStreamVisible(controls) ? (
         <RunStreamPanel controls={controls} slide={engine.getSlide()} />
       ) : null}
-      {controls.phase === "streaming" ? null : (
+      {controls.phase === "streaming" || !startShown ? null : (
         <StartRunPanel
           projectId={projectId}
           slideId={slideId}
