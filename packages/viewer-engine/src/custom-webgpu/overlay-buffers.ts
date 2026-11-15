@@ -70,7 +70,8 @@ export function createOverlayBuffers<Buffer extends InstanceBufferLike>(
         buffer,
         capacity,
         segmentOffset,
-        pointOffset: segmentOffset + counts.segments * segmentInstanceBytes,
+        pointOffset:
+          segmentOffset + (counts.segments + (counts.repeats ?? 0)) * segmentInstanceBytes,
       });
       return true;
     },

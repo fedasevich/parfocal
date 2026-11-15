@@ -79,6 +79,7 @@ export interface FrameState {
 export interface SetCounts {
   readonly triangles: number;
   readonly segments: number;
+  readonly repeats?: number;
   readonly points: number;
 }
 
@@ -143,7 +144,7 @@ export const tileInstanceFloats = 8;
 
 export const triangleInstanceBytes = 28;
 
-export const segmentInstanceBytes = 24;
+export const segmentInstanceBytes = 28;
 
 export const pointInstanceBytes = 12;
 

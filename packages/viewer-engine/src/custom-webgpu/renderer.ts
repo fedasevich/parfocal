@@ -36,6 +36,9 @@ const smallestTileBuffer = 64 * tileInstanceBytes;
 const thinnestLinePx = 1;
 const capPart = 1;
 const noStroke = [0, 0, 0, 0] as const;
+const ringDepthFormat: GPUTextureFormat = "depth32float";
+const bodyParts = [1, 3] as const;
+const onceVertices = 12;
 
 export interface Renderer {
   readonly setAtlas: (tileSize: number, layers: number) => void;
@@ -282,12 +285,40 @@ export function createRenderer(
     { shaderLocation: 2, offset: 16, format: "float32x2" },
     { shaderLocation: 3, offset: 24, format: "unorm8x4" },
   ]);
-  const segmentPipeline = shapePipeline(segmentShader, "triangle-strip", segmentInstanceBytes, [
+  const segmentAttributes: GPUVertexAttribute[] = [
     { shaderLocation: 0, offset: 0, format: "float32x2" },
     { shaderLocation: 1, offset: 8, format: "float32x2" },
     { shaderLocation: 2, offset: 16, format: "float32" },
     { shaderLocation: 3, offset: 20, format: "unorm8x4" },
-  ]);
+  ];
+  const segmentPipeline = shapePipeline(
+    segmentShader,
+    "triangle-strip",
+    segmentInstanceBytes,
+    segmentAttributes,
+  );
+  const onceModule = device.createShaderModule({ code: segmentShader });
+  const segmentOncePipeline = device.createRenderPipeline({
+    layout: shapeLayout,
+    vertex: {
+      module: onceModule,
+      entryPoint: "vsOnce",
+      buffers: [
+        {
+          arrayStride: segmentInstanceBytes,
+          stepMode: "instance",
+          attributes: [...segmentAttributes, { shaderLocation: 4, offset: 24, format: "uint32" }],
+        },
+      ],
+    },
+    fragment: { module: onceModule, entryPoint: "fsOnce", targets: [target] },
+    primitive: { topology: "triangle-list" },
+    depthStencil: {
+      format: ringDepthFormat,
+      depthWriteEnabled: true,
+      depthCompare: "not-equal",
+    },
+  });
   const pointPipeline = shapePipeline(pointShader, "triangle-strip", pointInstanceBytes, [
     { shaderLocation: 0, offset: 0, format: "float32x2" },
     { shaderLocation: 1, offset: 8, format: "unorm8x4" },
@@ -381,6 +412,7 @@ export function createRenderer(
   let atlas: Atlas | null = null;
   let pinAtlas: PinAtlas | null = null;
   let glyphAtlas: IconTexture | null = null;
+  let ringDepth: GPUTexture | null = null;
   let tileBuffer: GPUBuffer | null = null;
   let tileCapacity = 0;
   let styleBuffer: GPUBuffer | null = null;
@@ -541,16 +573,41 @@ export function createRenderer(
     }
 
     const encoder = device.createCommandEncoder();
-    const pass = encoder.beginRenderPass({
-      colorAttachments: [
-        {
-          view: context.getCurrentTexture().createView(),
-          clearValue: { r: 0, g: 0, b: 0, a: 0 },
-          loadOp: "clear",
-          storeOp: "store",
-        },
-      ],
-    });
+    const frameTexture = context.getCurrentTexture();
+    const frameView = frameTexture.createView();
+    let cleared = false;
+    const beginPass = (depth: GPUTextureView | null): GPURenderPassEncoder => {
+      const loadOp: GPULoadOp = cleared ? "load" : "clear";
+      cleared = true;
+      return encoder.beginRenderPass({
+        colorAttachments: [
+          { view: frameView, clearValue: { r: 0, g: 0, b: 0, a: 0 }, loadOp, storeOp: "store" },
+        ],
+        ...(depth
+          ? {
+              depthStencilAttachment: {
+                view: depth,
+                depthClearValue: 0,
+                depthLoadOp: "clear" as const,
+                depthStoreOp: "discard" as const,
+              },
+            }
+          : {}),
+      });
+    };
+    const ringDepthView = (): GPUTextureView => {
+      const { width, height } = frameTexture;
+      if (ringDepth === null || ringDepth.width !== width || ringDepth.height !== height) {
+        ringDepth?.destroy();
+        ringDepth = device.createTexture({
+          size: { width, height },
+          format: ringDepthFormat,
+          usage: textureUsage.renderAttachment,
+        });
+      }
+      return ringDepth.createView();
+    };
+    let pass = beginPass(null);
     if (tiles && instances) {
       pass.setPipeline(tilePipeline);
       pass.setBindGroup(0, frame.nearest ? tiles.nearest : tiles.linear);
@@ -605,7 +662,19 @@ export function createRenderer(
           pass.setVertexBuffer(0, stored.buffer, 0);
           pass.draw(3, stored.triangles);
         }
-        if (stored.segments > 0) {
+        if (stored.segments > 0 && layer.alpha < 1) {
+          for (const part of bodyParts) {
+            if (!parts[part]) continue;
+            pass.end();
+            pass = beginPass(ringDepthView());
+            pass.setPipeline(segmentOncePipeline);
+            pass.setBindGroup(0, styles.group, [offsetOf(part)]);
+            pass.setVertexBuffer(0, stored.buffer, stored.segmentOffset);
+            pass.draw(onceVertices, stored.segments + (stored.repeats ?? 0));
+            pass.end();
+            pass = beginPass(null);
+          }
+        } else if (stored.segments > 0) {
           pass.setPipeline(segmentPipeline);
           pass.setVertexBuffer(0, stored.buffer, stored.segmentOffset);
           for (let part = 1; part <= 4; part++) {
@@ -653,6 +722,8 @@ export function createRenderer(
       pinAtlas = null;
       glyphAtlas?.texture.destroy();
       glyphAtlas = null;
+      ringDepth?.destroy();
+      ringDepth = null;
       tileBuffer?.destroy();
       styleBuffer?.destroy();
       frameUniform.destroy();

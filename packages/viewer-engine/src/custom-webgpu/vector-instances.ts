@@ -19,6 +19,8 @@ export interface VectorInstanceOptions {
 
 const smallestRing = 3;
 
+const repeatSegments = 2;
+
 function ringEnds(starts: Uint32Array, holeStarts: Uint32Array): number[] {
   const ends = new Set<number>();
   for (let index = 1; index < starts.length; index++) ends.add(starts[index] ?? 0);
@@ -29,6 +31,17 @@ function ringEnds(starts: Uint32Array, holeStarts: Uint32Array): number[] {
 function ringSegments(vertices: number, fromMiddle: boolean): number {
   if (vertices < 2) return 0;
   return fromMiddle && vertices >= smallestRing ? vertices + 1 : vertices;
+}
+
+function repeatCount(shapes: ShapeData, fromMiddle: boolean): number {
+  if (fromMiddle || !shapes.polygons) return 0;
+  let count = 0;
+  let from = 0;
+  for (const to of ringEnds(shapes.polygons.starts, shapes.polygons.holeStarts)) {
+    if (to - from >= smallestRing) count += repeatSegments;
+    from = to;
+  }
+  return count;
 }
 
 function segmentCount(shapes: ShapeData, fromMiddle: boolean): number {
@@ -66,12 +79,14 @@ export function buildVectorInstances(
   const triangles = shapes.polygons ? Math.floor(shapes.polygons.indices.length / 3) : 0;
   const segments = segmentCount(shapes, fromMiddle);
   const points = shapes.points?.count ?? 0;
+  const repeats = repeatCount(shapes, fromMiddle);
   const data = new ArrayBuffer(
     triangles * triangleInstanceBytes +
-      segments * segmentInstanceBytes +
+      (segments + repeats) * segmentInstanceBytes +
       points * pointInstanceBytes,
   );
   const floats = new Float32Array(data);
+  const words = new Uint32Array(data);
   const bytes = new Uint8Array(data);
   let cursor = 0;
 
@@ -85,6 +100,7 @@ export function buildVectorInstances(
   };
 
   let travelled = 0;
+  let ring = 0;
   const putSegment = (
     ax: number,
     ay: number,
@@ -99,6 +115,8 @@ export function buildVectorInstances(
     putFloat(by);
     putFloat(travelled);
     putColor(colors, item);
+    words[cursor / 4] = ring;
+    cursor += 4;
     travelled += Math.hypot(bx - ax, by - ay);
   };
 
@@ -131,6 +149,7 @@ export function buildVectorInstances(
           putSegment(x(vertex), y(vertex), x(next), y(next), colors, owner);
         }
         if (split) putSegment(x(from), y(from), middleX, middleY, colors, owner);
+        ring += 1;
       }
       from = to;
     }
@@ -149,6 +168,36 @@ export function buildVectorInstances(
         putSegment(x(vertex), y(vertex), x(vertex + 1), y(vertex + 1), colors, path);
       }
       putSegment(x(to - 1), y(to - 1), x(to - 1), y(to - 1), colors, path);
+      ring += 1;
+    }
+  }
+
+  if (repeats > 0 && shapes.polygons) {
+    const { positions, starts, holeStarts, colors } = shapes.polygons;
+    const owners = ownerOfVertex(starts);
+    let from = 0;
+    for (const to of ringEnds(starts, holeStarts)) {
+      if (to - from >= smallestRing) {
+        travelled = 0;
+        putSegment(
+          positions[from * 2] ?? 0,
+          positions[from * 2 + 1] ?? 0,
+          positions[from * 2 + 2] ?? 0,
+          positions[from * 2 + 3] ?? 0,
+          colors,
+          owners[from] ?? 0,
+        );
+        putSegment(
+          positions[from * 2 + 2] ?? 0,
+          positions[from * 2 + 3] ?? 0,
+          positions[from * 2 + 2] ?? 0,
+          positions[from * 2 + 3] ?? 0,
+          colors,
+          owners[from] ?? 0,
+        );
+        ring += 1;
+      }
+      from = to;
     }
   }
 
@@ -161,5 +210,5 @@ export function buildVectorInstances(
     }
   }
 
-  return { data, counts: { triangles, segments, points } };
+  return { data, counts: { triangles, segments, repeats, points } };
 }

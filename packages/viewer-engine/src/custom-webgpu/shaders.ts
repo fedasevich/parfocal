@@ -125,18 +125,12 @@ struct SegmentOut {
   @location(1) place: vec2f,
   @location(2) @interpolate(flat) size: f32,
   @location(3) @interpolate(flat) travelled: f32,
+  @location(4) @interpolate(flat) ring: f32,
 };
 
-@vertex
-fn vs(
-  @builtin(vertex_index) vertex: u32,
-  @location(0) a: vec2f,
-  @location(1) b: vec2f,
-  @location(2) reach: f32,
-  @location(3) color: vec4f,
-) -> SegmentOut {
-  let along = f32(vertex & 1u);
-  let side = f32((vertex >> 1u) & 1u) * 2.0 - 1.0;
+fn placed(corner: u32, isCap: bool, a: vec2f, b: vec2f, reach: f32, color: vec4f) -> SegmentOut {
+  let along = f32(corner & 1u);
+  let side = f32((corner >> 1u) & 1u) * 2.0 - 1.0;
   let start = toPixels(a);
   let end = toPixels(b);
   let delta = end - start;
@@ -149,7 +143,8 @@ fn vs(
   var out: SegmentOut;
   out.color = premultiplied(styled(color));
   out.travelled = reach * style.pixelsPerUnit;
-  if (style.innerRadius > 0.5) {
+  out.ring = 0.0;
+  if (isCap) {
     let dashed = style.dash.x + style.dash.y > 0.0 && style.dash.y > 0.0;
     let place = vec2f(along * 2.0 - 1.0, side) * style.halfWidth;
     out.position = toClip(start + place);
@@ -167,12 +162,37 @@ fn vs(
   return out;
 }
 
+@vertex
+fn vs(
+  @builtin(vertex_index) vertex: u32,
+  @location(0) a: vec2f,
+  @location(1) b: vec2f,
+  @location(2) reach: f32,
+  @location(3) color: vec4f,
+) -> SegmentOut {
+  return placed(vertex, style.innerRadius > 0.5, a, b, reach, color);
+}
+
+@vertex
+fn vsOnce(
+  @builtin(vertex_index) vertex: u32,
+  @location(0) a: vec2f,
+  @location(1) b: vec2f,
+  @location(2) reach: f32,
+  @location(3) color: vec4f,
+  @location(4) ring: u32,
+) -> SegmentOut {
+  var corners = array<u32, 6>(0u, 1u, 2u, 2u, 1u, 3u);
+  var out = placed(corners[vertex % 6u], vertex >= 6u, a, b, reach, color);
+  out.ring = f32(ring % 8388607u + 1u) / 8388608.0;
+  return out;
+}
+
 fn dashIntegral(position: f32, solid: f32, period: f32) -> f32 {
   return floor(position / period) * solid + min(position - period * floor(position / period), solid);
 }
 
-@fragment
-fn fs(in: SegmentOut) -> @location(0) vec4f {
+fn covered(in: SegmentOut) -> f32 {
   let nearest = clamp(in.place.x, 0.0, in.size);
   let position = in.travelled + nearest;
   let spread = max(fwidth(position), 0.0001);
@@ -193,7 +213,29 @@ fn fs(in: SegmentOut) -> @location(0) vec4f {
       discard;
     }
   }
-  return in.color * coverage;
+  return coverage;
+}
+
+@fragment
+fn fs(in: SegmentOut) -> @location(0) vec4f {
+  return in.color * covered(in);
+}
+
+struct OnceOut {
+  @location(0) color: vec4f,
+  @builtin(frag_depth) depth: f32,
+};
+
+@fragment
+fn fsOnce(in: SegmentOut) -> OnceOut {
+  var out: OnceOut;
+  let coverage = covered(in);
+  out.color = in.color * coverage;
+  out.depth = in.ring;
+  if (coverage < 1.0) {
+    out.depth = in.ring + 1.0 / 16777216.0;
+  }
+  return out;
 }
 `;
 

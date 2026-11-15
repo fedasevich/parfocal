@@ -146,10 +146,11 @@ describe("vector instances", () => {
     assert.deepEqual(counts, {
       triangles: polygons.indices.length / 3,
       segments: 4 + 3 + 3,
+      repeats: 6,
       points: 1,
     });
     const segmentOffset = counts.triangles * triangleInstanceBytes;
-    const pointOffset = segmentOffset + 10 * segmentInstanceBytes;
+    const pointOffset = segmentOffset + 16 * segmentInstanceBytes;
     assert.equal(data.byteLength, pointOffset + pointInstanceBytes);
     const lastOfOuter = new Float32Array(data, segmentOffset + 3 * segmentInstanceBytes, 5);
     assert.deepEqual([...lastOfOuter], [0, 10, 0, 0, 30]);
@@ -157,6 +158,16 @@ describe("vector instances", () => {
     assert.deepEqual([...holeColor], [255, 0, 0, 128]);
     const secondColor = new Uint8Array(data, segmentOffset + 7 * segmentInstanceBytes + 20, 4);
     assert.deepEqual([...secondColor], [0, 255, 0, 255]);
+    const ringOf = (segment: number) =>
+      new Uint32Array(data, segmentOffset + segment * segmentInstanceBytes + 24, 1)[0];
+    assert.deepEqual([0, 3, 4, 6, 7, 9].map(ringOf), [0, 0, 1, 1, 2, 2]);
+    const repeated = (segment: number) => [
+      ...new Float32Array(data, segmentOffset + segment * segmentInstanceBytes, 4),
+      ringOf(segment),
+    ];
+    assert.deepEqual(repeated(10), [0, 0, 10, 0, 3]);
+    assert.deepEqual(repeated(11), [10, 0, 10, 0, 3]);
+    assert.deepEqual(repeated(14), [20, 0, 30, 0, 5]);
     assert.deepEqual([...new Float32Array(data, pointOffset, 2)], [7, 8]);
     assert.deepEqual([...new Uint8Array(data, pointOffset + 8, 4)], [9, 8, 7, 6]);
   });
@@ -167,6 +178,7 @@ describe("vector instances", () => {
       { ringsFromMidFirstEdge: true },
     );
     assert.equal(counts.segments, 4);
+    assert.equal(counts.repeats, 0);
     const offset = counts.triangles * triangleInstanceBytes;
     const segment = (index: number) => [
       ...new Float32Array(data, offset + index * segmentInstanceBytes, 5),
@@ -185,7 +197,7 @@ describe("vector instances", () => {
         colors: new Uint8Array([1, 2, 3, 4]),
       },
     });
-    assert.deepEqual(counts, { triangles: 0, segments: 3, points: 0 });
+    assert.deepEqual(counts, { triangles: 0, segments: 3, repeats: 0, points: 0 });
     assert.deepEqual([...new Float32Array(data, 2 * segmentInstanceBytes, 5)], [5, 5, 5, 5, 10]);
   });
 });
@@ -217,7 +229,7 @@ describe("overlay buffers", () => {
     assert.equal(stored?.segmentOffset, second.counts.triangles * triangleInstanceBytes);
     assert.equal(
       stored?.pointOffset,
-      second.counts.triangles * triangleInstanceBytes + 7 * segmentInstanceBytes,
+      second.counts.triangles * triangleInstanceBytes + (7 + 4) * segmentInstanceBytes,
     );
   });
 

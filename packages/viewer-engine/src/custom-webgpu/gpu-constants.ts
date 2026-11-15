@@ -7,6 +7,7 @@ export const bufferUsage = {
 export const textureUsage = {
   copyDst: 0x02,
   textureBinding: 0x04,
+  renderAttachment: 0x10,
 } as const;
 
 export const shaderStage = {
