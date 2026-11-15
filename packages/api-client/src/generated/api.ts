@@ -6104,6 +6104,20 @@ export type FindOpenUploadParams = {
   last_modified?: number | null;
 };
 
+export type FindSentUploadsParams = {
+  project_id: string;
+  /**
+   * @minLength 1
+   * @maxLength 255
+   */
+  name: string;
+  /**
+   * @minimum 1
+   */
+  size: number;
+  last_modified?: number | null;
+};
+
 export type SignUploadPartParams = {
   /**
    * @minLength 1
@@ -26239,6 +26253,202 @@ export function useFindOpenUpload<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getFindOpenUploadQueryOptions(params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type findSentUploadsResponse200 = {
+  data: UploadState[];
+  status: 200;
+};
+
+export type findSentUploadsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type findSentUploadsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type findSentUploadsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type findSentUploadsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type findSentUploadsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type findSentUploadsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type findSentUploadsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type findSentUploadsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type findSentUploadsResponseSuccess = findSentUploadsResponse200 & {
+  headers: Headers;
+};
+export type findSentUploadsResponseError = (
+  | findSentUploadsResponse400
+  | findSentUploadsResponse401
+  | findSentUploadsResponse403
+  | findSentUploadsResponse404
+  | findSentUploadsResponse409
+  | findSentUploadsResponse422
+  | findSentUploadsResponse429
+  | findSentUploadsResponse500
+) & {
+  headers: Headers;
+};
+
+export type findSentUploadsResponse = findSentUploadsResponseSuccess | findSentUploadsResponseError;
+
+export const getFindSentUploadsUrl = (params: FindSentUploadsParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/uploads/sent?${stringifiedParams}`
+    : `/api/uploads/sent`;
+};
+
+/**
+ * @summary Find Sent Uploads
+ */
+export const findSentUploads = async (
+  params: FindSentUploadsParams,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<findSentUploadsResponse> => {
+  return apiFetch<findSentUploadsResponse>(getFindSentUploadsUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getFindSentUploadsQueryKey = (params?: FindSentUploadsParams) => {
+  return [`/api/uploads/sent`, ...(params ? [params] : [])] as const;
+};
+
+export const getFindSentUploadsQueryOptions = <
+  TData = Awaited<ReturnType<typeof findSentUploads>>,
+  TError = Problem,
+>(
+  params: FindSentUploadsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof findSentUploads>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getFindSentUploadsQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof findSentUploads>>> = ({ signal }) =>
+    findSentUploads(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof findSentUploads>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type FindSentUploadsQueryResult = NonNullable<Awaited<ReturnType<typeof findSentUploads>>>;
+export type FindSentUploadsQueryError = Problem;
+
+export function useFindSentUploads<
+  TData = Awaited<ReturnType<typeof findSentUploads>>,
+  TError = Problem,
+>(
+  params: FindSentUploadsParams,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof findSentUploads>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof findSentUploads>>,
+          TError,
+          Awaited<ReturnType<typeof findSentUploads>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useFindSentUploads<
+  TData = Awaited<ReturnType<typeof findSentUploads>>,
+  TError = Problem,
+>(
+  params: FindSentUploadsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof findSentUploads>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof findSentUploads>>,
+          TError,
+          Awaited<ReturnType<typeof findSentUploads>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useFindSentUploads<
+  TData = Awaited<ReturnType<typeof findSentUploads>>,
+  TError = Problem,
+>(
+  params: FindSentUploadsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof findSentUploads>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Find Sent Uploads
+ */
+
+export function useFindSentUploads<
+  TData = Awaited<ReturnType<typeof findSentUploads>>,
+  TError = Problem,
+>(
+  params: FindSentUploadsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof findSentUploads>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getFindSentUploadsQueryOptions(params, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;

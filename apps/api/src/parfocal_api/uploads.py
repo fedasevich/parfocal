@@ -53,6 +53,7 @@ from parfocal_common.result_imports import (
 SAFE_CHARACTERS = re.compile(r"[^A-Za-z0-9._-]")
 SAFE_NAME_LENGTH = 120
 COMPANION = "/s3/multipart"
+SENT_LIMIT = 20
 REFUSED_COMPLETIONS = frozenset({"InvalidPart", "InvalidPartOrder", "EntityTooSmall"})
 
 type FileName = Annotated[
@@ -537,6 +538,38 @@ async def find_open_upload(
         size=row.size_bytes,
         created_at=row.created_at,
     )
+
+
+@router.get(
+    "/sent",
+    operation_id="findSentUploads",
+    **require(Permission.UPLOAD_SLIDES),
+)
+async def find_sent_uploads(
+    project_id: uuid.UUID,
+    name: Annotated[str, Query(min_length=1, max_length=255)],
+    size: Annotated[int, Query(ge=1)],
+    principal: CurrentPrincipal,
+    connection: TenantConnection,
+    last_modified: Annotated[int | None, Query(ge=0)] = None,
+) -> list[UploadState]:
+    await visible(connection, principal, project_id)
+    rows = (
+        await connection.execute(
+            select(uploads)
+            .where(
+                uploads.c.project_id == project_id,
+                uploads.c.file_name == name.strip(),
+                uploads.c.size_bytes == size,
+                uploads.c.last_modified_ms.is_not_distinct_from(last_modified),
+                uploads.c.status == UploadStatus.COMPLETED,
+                created_by(principal),
+            )
+            .order_by(uploads.c.created_at.desc())
+            .limit(SENT_LIMIT)
+        )
+    ).all()
+    return [await state_of(connection, row) for row in rows]
 
 
 def failed(reason: str) -> tuple[IngestStatus, str | None, str | None]:

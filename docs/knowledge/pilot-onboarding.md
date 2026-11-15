@@ -34,9 +34,9 @@ The API is reached through the edge Worker, which applies rate limits and a bot 
 
 1. Read every line of the dry run. Each slide shows its case and each result its slide. A slide with no case number, a result that matches no slide or several, or any other file stops the run before anything is created. Rename or move files until the dry run ends with `0 failed` and the case count you expect.
 2. Run the same command without `--dry-run`, with `--wait 3600`, and with `--import-as-is` if the default import choices are fine for the pilot. Without it, a result whose classes or values need a choice ends `waiting needs-choices` and the choices are made in the app.
-3. If the command was stopped while sending, run it again at once. It resumes open uploads and skips slides already in their case and results already imported.
-4. If it ended with "files are not ready yet", do not run it again. A file that finished uploading but is still processing or waiting is not recognised yet and would be sent a second time. Wait until the app shows every slide and result ready, and make any pending choices there.
-5. Only then run the command a last time. It must send nothing and end with exit code 0.
+3. If the command was stopped while sending, run it again at once. It resumes open uploads, reports files that were sent and are still processing, waiting or ready as `already-sent`, and skips slides already in their case and results already imported. Nothing is sent twice. Rerun with the same service account token, because the command only recognises uploads its own account sent.
+4. If it ended with "files are not ready yet", run the same command again with `--wait 3600`, and with `--import-as-is` if you used it before. It sends nothing new and follows the earlier uploads until they are ready. A result that stops for choices without `--import-as-is` is finished in the app.
+5. Run the command a last time. It must send nothing and end with exit code 0. A file shown `failed` is sent again by a rerun, so read its message and fix the file first.
 
 ## Check and close
 

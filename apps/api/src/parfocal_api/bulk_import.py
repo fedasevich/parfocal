@@ -24,6 +24,7 @@ PUT_ATTEMPTS = 4
 FINISHED = {"ready", "failed", "skipped"}
 UNFINISHED = ("uploading", "processing", "waiting")
 STUCK = {"needs-slide", "slide-refused", "needs-choices"}
+ON_ITS_WAY = {"processing", "waiting", "ready"}
 SLIDE_TARGETS = ("slide_id", "slide_upload_id")
 DROP_LIMIT = 5000
 
@@ -32,6 +33,7 @@ class Outcome(StrEnum):
     PLANNED = "planned"
     UPLOADED = "uploaded"
     RESUMED = "resumed"
+    ALREADY_SENT = "already-sent"
     ALREADY_IN_CASE = "already-in-case"
     ALREADY_IMPORTED = "already-imported"
     FAILED = "failed"
@@ -228,6 +230,38 @@ def open_upload(
     return answer(response)
 
 
+def already_sent(
+    api: httpx2.Client,
+    project_id: uuid.UUID,
+    path: Path,
+    size: int,
+    modified: int,
+    case_id: str | None,
+    target: dict[str, str],
+) -> str | None:
+    found = answer(
+        api.get(
+            "/api/uploads/sent",
+            params={
+                "project_id": str(project_id),
+                "name": path.name,
+                "size": size,
+                "last_modified": modified,
+            },
+        )
+    )
+    kind = "result" if target else "slide"
+    for state in found:
+        if (
+            state["status"] in ON_ITS_WAY
+            and state["kind"] == kind
+            and state["case_id"] == case_id
+            and all(state.get(name) == value for name, value in target.items())
+        ):
+            return str(state["upload_id"])
+    return None
+
+
 def resumable(
     api: httpx2.Client, upload: dict[str, Any] | None, case_id: str | None, target: dict[str, str]
 ) -> bool:
@@ -252,8 +286,11 @@ def send(
 ) -> tuple[Outcome, str]:
     size = path.stat().st_size
     modified = int(path.stat().st_mtime * 1000)
-    upload = open_upload(api, project_id, path, size, modified)
     target = {name: value for name, value in (result or {}).items() if name in SLIDE_TARGETS}
+    known = already_sent(api, project_id, path, size, modified, case_id, target)
+    if known is not None:
+        return Outcome.ALREADY_SENT, known
+    upload = open_upload(api, project_id, path, size, modified)
     stored: dict[int, str] = {}
     outcome = Outcome.UPLOADED
     if upload is not None and resumable(api, upload, case_id, target):
@@ -541,8 +578,8 @@ def printed(report: ImportReport) -> str:
     )
     if report.unfinished:
         lines.append(
-            f"{report.unfinished} files are not ready yet. Do not run again until the app "
-            "shows them ready, and make any choices there, or they will be sent twice"
+            f"{report.unfinished} files are not ready yet. Run again with --wait to follow "
+            "them, which sends nothing twice, or make any choices in the app"
         )
     return "\n".join(lines)
 

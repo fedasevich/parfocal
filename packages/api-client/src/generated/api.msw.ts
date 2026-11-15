@@ -5579,6 +5579,51 @@ export const getFindOpenUploadResponseMock = (
   ...overrideResponse,
 });
 
+export const getFindSentUploadsResponseMock = (): UploadState[] =>
+  Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    upload_id: faker.string.uuid(),
+    project_id: faker.string.uuid(),
+    case_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    kind: faker.helpers.arrayElement(Object.values(UploadKind)),
+    status: faker.helpers.arrayElement(Object.values(IngestStatus)),
+    upload_status: faker.helpers.arrayElement(Object.values(UploadStatus)),
+    job_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    step: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
+    slide_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    reason: faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    failure_class: faker.helpers.arrayElement([
+      faker.helpers.arrayElement(Object.values(FailureClass)),
+      null,
+    ]),
+    message: faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    notices: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () => ({
+        code: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        message: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      }),
+    ),
+    result_format: faker.helpers.arrayElement([
+      faker.helpers.arrayElement(Object.values(ResultFormat)),
+      null,
+    ]),
+    slide_upload_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+    pairing_rule: faker.helpers.arrayElement([
+      faker.helpers.arrayElement(Object.values(Rule)),
+      null,
+    ]),
+    pairing_certainty: faker.helpers.arrayElement([
+      faker.helpers.arrayElement(Object.values(Certainty)),
+      null,
+    ]),
+    result_set_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+  }));
+
 export const getGetUploadStatusResponseMock = (
   overrideResponse: Partial<Extract<UploadState, object>> = {},
 ): UploadState => ({
@@ -19101,6 +19146,30 @@ export const getFindOpenUploadMockHandler = (
   );
 };
 
+export const getFindSentUploadsMockHandler = (
+  overrideResponse?:
+    | UploadState[]
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<UploadState[]> | UploadState[]),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/uploads/sent",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getFindSentUploadsResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getGetUploadStatusMockHandler = (
   overrideResponse?:
     | UploadState
@@ -24441,6 +24510,7 @@ export const getParfocalAPIMock = () => [
   getValidateResultsFileMockHandler(),
   getCreateUploadMockHandler(),
   getFindOpenUploadMockHandler(),
+  getFindSentUploadsMockHandler(),
   getGetUploadStatusMockHandler(),
   getSignUploadPartMockHandler(),
   getListUploadPartsMockHandler(),

@@ -62,6 +62,10 @@ def slide_folder(root: Path) -> tuple[Path, str]:
     return folder, "\n".join(lines) + "\n"
 
 
+def uploads_in(database: str, project: uuid.UUID) -> object:
+    return owner(database, f"SELECT count(*) FROM uploads WHERE project_id = '{project}'")[0][0]
+
+
 def test_the_manifest_names_every_row_it_cannot_use(tmp_path: Path) -> None:
     (tmp_path / "a.tiff").write_bytes(b"x")
     (tmp_path.parent / "outside.tiff").write_bytes(b"x")
@@ -136,6 +140,9 @@ def test_twenty_fixture_slides_land_in_five_cases(
         assert (report.cases_created, report.cases_existing) == (4, 1)
         outcomes = [item.outcome for item in report.files]
         assert outcomes == [Outcome.RESUMED] + [Outcome.UPLOADED] * 19
+        pending = import_folder(api(lab.lead), storage, lab.project, folder, manifest)
+        assert {item.outcome for item in pending.files} == {Outcome.ALREADY_SENT}
+        assert uploads_in(database, lab.project) == 20
 
         run_worker(database, lab.tenant_id, tmp_path / "work")
         wait_for(api(lab.lead), report.files, 0, lambda _: None, lambda: 0)
@@ -226,9 +233,23 @@ def test_slides_and_results_land_in_cases_named_by_their_folders_and_files(
         assert {item.outcome for item in report.files} == {Outcome.UPLOADED}
         wait_for(api(lab.lead), report.files, 0, lambda _: None, lambda: 0)
         assert (report.ok, report.unfinished) == (False, 4)
-        assert "Do not run again" in printed(report)
+        assert "sends nothing twice" in printed(report)
+
+        processing = import_named(api(lab.lead), storage, lab.project, folder)
+        assert [item.outcome for item in processing.files] == [Outcome.ALREADY_SENT] * 4
+        assert {item.upload_id for item in processing.files} == {
+            item.upload_id for item in report.files
+        }
+        assert uploads_in(database, lab.project) == 4
+
         run_worker(database, lab.tenant_id, tmp_path / "work")
         wait_for(api(lab.lead), report.files, 0, lambda _: None, lambda: 0, import_as_is=True)
+        importing = import_named(api(lab.lead), storage, lab.project, folder)
+        assert sorted(item.outcome for item in importing.files) == sorted(
+            [Outcome.ALREADY_IN_CASE] * 2 + [Outcome.ALREADY_SENT] * 2
+        )
+        assert uploads_in(database, lab.project) == 4
+
         run_worker(database, lab.tenant_id, tmp_path / "work")
         wait_for(api(lab.lead), report.files, 0, lambda _: None, lambda: 0, import_as_is=True)
         assert report.ok, report
@@ -249,6 +270,4 @@ def test_slides_and_results_land_in_cases_named_by_their_folders_and_files(
     assert sorted(item.outcome for item in again.files) == sorted(
         [Outcome.ALREADY_IN_CASE] * 2 + [Outcome.ALREADY_IMPORTED] * 2
     )
-    assert owner(database, f"SELECT count(*) FROM uploads WHERE project_id = '{lab.project}'") == [
-        (4,)
-    ]
+    assert uploads_in(database, lab.project) == 4
