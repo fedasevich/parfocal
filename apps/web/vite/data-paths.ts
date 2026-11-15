@@ -26,10 +26,14 @@ function isFileIn(root: string, pathname: string): boolean {
   return file.startsWith(root + sep) && existsSync(file) && statSync(file).isFile();
 }
 
-function missingDataIsNotFound(publicDir: () => string | false): Connect.NextHandleFunction {
+function missingDataIsNotFound(
+  publicDir: () => string | false,
+  workerPrefixes: readonly string[],
+): Connect.NextHandleFunction {
   return (request, response, next) => {
     const pathname = new URL(request.url ?? "/", "http://dev").pathname;
     if (!dataPathPrefixes.some((prefix) => pathname.startsWith(prefix))) return next();
+    if (workerPrefixes.some((prefix) => pathname.startsWith(prefix))) return next();
     const root = publicDir();
     if (root !== false && isFileIn(root, pathname)) return next();
     response.statusCode = 404;
@@ -39,7 +43,7 @@ function missingDataIsNotFound(publicDir: () => string | false): Connect.NextHan
   };
 }
 
-export function noAppPageForMissingData(): Plugin {
+export function noAppPageForMissingData(workerPrefixes: readonly string[] = []): Plugin {
   let publicDir: string | false = false;
   return {
     name: "parfocal-no-app-page-for-missing-data",
@@ -47,10 +51,10 @@ export function noAppPageForMissingData(): Plugin {
       publicDir = config.publicDir === "" ? false : normalize(config.publicDir);
     },
     configureServer(server) {
-      server.middlewares.use(missingDataIsNotFound(() => publicDir));
+      server.middlewares.use(missingDataIsNotFound(() => publicDir, workerPrefixes));
     },
     configurePreviewServer(server) {
-      server.middlewares.use(missingDataIsNotFound(() => publicDir));
+      server.middlewares.use(missingDataIsNotFound(() => publicDir, []));
     },
   };
 }
