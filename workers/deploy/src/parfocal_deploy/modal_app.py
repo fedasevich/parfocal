@@ -5,6 +5,7 @@ from typing import Any
 import modal
 
 from parfocal_common.repository import repository_root
+from parfocal_deploy.image_locks import APP_LOCK
 from parfocal_ingest.settings import (
     INGEST_MEMORY_LIMIT_MIB,
     INGEST_MEMORY_MIB,
@@ -76,9 +77,7 @@ def app_image() -> modal.Image:
     base = modal.Image.debian_slim(python_version=PYTHON_VERSION)
     if not modal.is_local():
         return base
-    return base.uv_pip_install(*requirements()).add_local_python_source(
-        *SOURCES, ignore=["**/__pycache__/**"]
-    )
+    return APP_LOCK.install(base).add_local_python_source(*SOURCES, ignore=["**/__pycache__/**"])
 
 
 def serve() -> Any:

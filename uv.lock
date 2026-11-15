@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 5
 requires-python = "==3.14.*"
 
 [manifest]
@@ -1634,6 +1634,11 @@ pdf = [
     { name = "typst" },
 ]
 
+[package.dev-dependencies]
+serve = [
+    { name = "uvicorn" },
+]
+
 [package.metadata]
 requires-dist = [
     { name = "alembic", specifier = ">=1.20,<1.21" },
@@ -1645,6 +1650,9 @@ requires-dist = [
     { name = "typst", marker = "extra == 'pdf'", specifier = ">=0.15,<0.16" },
 ]
 provides-extras = ["pdf"]
+
+[package.metadata.requires-dev]
+serve = [{ name = "uvicorn", specifier = ">=0.54,<0.55" }]
 
 [[package]]
 name = "parfocal-common"

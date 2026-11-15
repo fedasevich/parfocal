@@ -18,7 +18,29 @@ import {
   selfTestProblem,
   severityFromScore,
   trivyAvailable,
+  trivyImageArgs,
+  trivySbomArgs,
 } from "./osv-scan.ts";
+
+describe("container image scan", () => {
+  it("fails on a critical vulnerability and keeps unfixed ones in scope", () => {
+    const args = trivyImageArgs("parfocal-api:ci");
+    assert.equal(args.at(-1), "parfocal-api:ci");
+    assert.equal(args[args.indexOf("--severity") + 1], "CRITICAL");
+    assert.equal(args[args.indexOf("--exit-code") + 1], "1");
+    assert.ok(!args.includes("--ignore-unfixed"));
+  });
+
+  it("writes a CycloneDX SBOM of the image", () => {
+    assert.deepEqual(trivySbomArgs("parfocal-api:ci", "sbom.json"), [
+      "image",
+      "--quiet",
+      "--format=cyclonedx",
+      "--output=sbom.json",
+      "parfocal-api:ci",
+    ]);
+  });
+});
 
 const today = new Date("2026-11-09T00:00:00Z");
 

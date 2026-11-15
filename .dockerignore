@@ -1,0 +1,15 @@
+*
+!uv.lock
+!pyproject.toml
+!apps/api/pyproject.toml
+!apps/api/alembic.ini
+!apps/api/docker-entrypoint.sh
+!apps/api/migrations
+!apps/api/src
+!packages/py-common/pyproject.toml
+!packages/py-common/src
+!workers/ingest/pyproject.toml
+!workers/ml/pyproject.toml
+!workers/deploy/pyproject.toml
+**/__pycache__
+**/*.pyc

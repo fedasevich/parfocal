@@ -5,6 +5,7 @@ from collections.abc import Callable
 
 import modal
 
+from parfocal_common.repository import repository_root
 from parfocal_ml.gpu_pool import (
     POOLS,
     PoolLimits,
@@ -15,6 +16,13 @@ from parfocal_ml.gpu_pool import (
 
 APP_NAME = "parfocal-gpu-pool"
 PYTHON_VERSION = "3.14"
+CUDA_BASE = (
+    "nvidia/cuda:12.9.1-runtime-ubuntu24.04"
+    "@sha256:1287141d283b8f06f45681b56a48a85791398c615888b1f96bfb9fc981392d98"
+)
+LOCK_PATH = "workers/deploy/locks/ml.txt"
+UV_VERSION = "0.13.8"
+LOCKED_INSTALL_OPTIONS = "--require-hashes --no-deps"
 MAX_PROBE_SECONDS = 30.0
 
 
@@ -28,9 +36,14 @@ def probe(seconds: float) -> dict[str, object]:
 
 
 def pool_image() -> modal.Image:
-    return modal.Image.debian_slim(python_version=PYTHON_VERSION).add_local_python_source(
-        "parfocal_ml"
-    )
+    base = modal.Image.from_registry(CUDA_BASE, add_python=PYTHON_VERSION)
+    if not modal.is_local():
+        return base
+    return base.uv_pip_install(
+        requirements=[str(repository_root(__file__) / LOCK_PATH)],
+        uv_version=UV_VERSION,
+        extra_options=LOCKED_INSTALL_OPTIONS,
+    ).add_local_python_source("parfocal_common", "parfocal_ml", ignore=["**/__pycache__/**"])
 
 
 def pool_entry(pool: PoolLimits) -> Callable[[dict[str, object]], dict[str, object]]:
