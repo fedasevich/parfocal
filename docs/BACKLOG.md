@@ -3779,7 +3779,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Done when the metric appears on the lab dashboard with seeded data.
   Size: M.
 
-- [ ] AILEARN-008 · The review viewer gives the learner real embeddings
+- [x] AILEARN-008 · The review viewer gives the learner real embeddings
   AILEARN-003 (learner UI) feeds the learner pooled SAM embeddings through `LearnerEmbeddingsContext`, but only the annotate screens hold SAM services, a patch reader and cell outlines, so on a real slide in the review viewer the learner stays off. The review viewer provides that context from the same SAM services and the slide's cell outlines, lazily and only once the reviewer starts correcting types.
   Done when an E2E on a paged slide with stubbed SAM sees the learner zone appear after 10 retypes, and a test proves no SAM work starts before the first correction.
   Depends on AILEARN-003.
