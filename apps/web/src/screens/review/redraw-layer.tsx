@@ -1,3 +1,4 @@
+import { useLingui } from "@lingui/react/macro";
 import type { Point, PolygonDraft } from "../../annotations/polygon-draft.ts";
 import { pinOnScreen } from "./comment-pin.ts";
 import type { Camera } from "./slide-still.tsx";
@@ -18,6 +19,7 @@ const pointsOf = (camera: Camera, size: Size, shape: PolygonDraft) =>
 const path = (points: Point[]) => points.map((point) => `${point.x},${point.y}`).join(" ");
 
 export function RedrawLayer({ camera, size, draft, saved, onClose }: RedrawLayerProps) {
+  const { t } = useLingui();
   const drafting = draft === null ? [] : pointsOf(camera, size, draft);
   const kept = saved === null ? [] : pointsOf(camera, size, saved);
   const first = drafting[0];
@@ -54,7 +56,7 @@ export function RedrawLayer({ camera, size, draft, saved, onClose }: RedrawLayer
       {first !== undefined && drafting.length >= 3 ? (
         <button
           type="button"
-          aria-label="Close the outline"
+          aria-label={t`Close the outline`}
           data-testid="redraw-close"
           className="absolute size-5 -translate-x-1/2 -translate-y-1/2 cursor-pointer rounded-full border-2 border-accent bg-white/30"
           style={{ left: first.x, top: first.y }}

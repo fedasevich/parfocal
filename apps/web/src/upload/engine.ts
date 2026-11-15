@@ -25,11 +25,13 @@ export type UploadMeta = {
   case_id?: string;
   size: number;
   last_modified: number;
+  kind?: "result";
+  slide_id?: string;
 };
 
 export type CreatedListener = (uploadId: string) => void;
 
-export type UploadTarget = { projectId: string; caseId: string | null };
+export type UploadTarget = { projectId: string; caseId: string | null; slideId?: string };
 
 export type UploadEngine = {
   subscribe: (listener: () => void) => () => void;
@@ -54,6 +56,9 @@ function metaOf(identity: FileIdentity): UploadMeta {
   return {
     project_id: identity.projectId,
     ...(identity.caseId === null ? {} : { case_id: identity.caseId }),
+    ...(identity.slideId === undefined
+      ? {}
+      : { kind: "result" as const, slide_id: identity.slideId }),
     size: identity.size,
     last_modified: identity.lastModified,
   };

@@ -66,6 +66,7 @@ import {
 import { annotateStubTaskId, rt13 } from "./scenario-review.ts";
 import { opinionForms, studyTemplates } from "./scenario-task.ts";
 import { annotateTaskClasses, annotateTaskSlides } from "./shared-layer-handlers.ts";
+import { addedResultSets } from "./upload-handlers.ts";
 import { toSlideRow } from "./work-handlers.ts";
 
 const projectOf = (idOrCode: string): ScenarioProject =>
@@ -457,9 +458,10 @@ export function projectHandlers(): RequestHandler[] {
     getListSlideResultSetsMockHandler(({ params, request }) => {
       const slideId = String(params.slideId);
       const sets = toSlideResultSets(slideId, runsToAddInAnnotateTask(request, slideId));
-      return hidesRt17Sets(request, String(params.slideId))
+      const shown = hidesRt17Sets(request, String(params.slideId))
         ? sets.filter((set) => set.id !== rt17SetId())
         : sets;
+      return [...shown, ...addedResultSets(slideId)];
     }),
     getListSlideAreasMockHandler(({ params }) => toSlideAreas(String(params.slideId))),
     getListProjectClassesMockHandler(({ params }) => toProjectClasses(String(params.projectId))),

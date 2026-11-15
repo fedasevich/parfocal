@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { listProjectClasses, type ProjectClass } from "@parfocal/api-client";
 import { AreaList } from "@parfocal/ui/components/analysis-cards";
 import { InlineState } from "@parfocal/ui/components/banner";
@@ -61,6 +62,11 @@ import { MeasurementList } from "../measure/measurement-list.tsx";
 import { RulerLayer } from "../measure/ruler-layer.tsx";
 import { SharedCursorLayer } from "../presence/live-cursor.tsx";
 import { registerStageEngine } from "../presence/stage-engines.ts";
+import { AddResultSet } from "../results/add-result-set.tsx";
+import type { ParsedResults, Placement } from "../results/geojson-placement.ts";
+import { HeatmapLayers, useHeatmapChoices } from "../results/heatmap-layer.tsx";
+import { PreviewLayer } from "../results/preview-layer.tsx";
+import { ResultSetLayers } from "../results/result-set-layers.tsx";
 import { areaRoleText, areaRows } from "../screens/viewer/area-nav.ts";
 import { annotateRail } from "../screens/viewer-tools/rails.ts";
 import { useDeveloperMode } from "../shell/developer-mode.ts";
@@ -77,6 +83,7 @@ import { ObjectDrawLayer } from "./object-draw-layer.tsx";
 import { describeOpenFailure, type OpenFailure } from "./open-failure.ts";
 import { OutlineLayer } from "./outline-layer.tsx";
 import { type OutlineModeChoice, outlineModeChoices, outlineModeLabels } from "./outline-mode.ts";
+import { RunStreamLayer } from "./run-stream-layer.tsx";
 import type { SlideAreaEntry } from "./slide-areas.ts";
 import { useSlideBrightness } from "./slide-brightness.ts";
 import { useSlideCoverage } from "./slide-coverage.ts";
@@ -90,7 +97,7 @@ import { useTissueScan } from "./use-tissue-scan.ts";
 import { useViewerKeys } from "./use-viewer-keys.ts";
 import { ViewedPeek } from "./viewed-peek.tsx";
 import type { ViewerEngine, VivRoute } from "./viewer-engine.ts";
-import { type SelectionArea, zoomTargetArea } from "./viewer-keys.ts";
+import { type SelectionArea, selectionArea, zoomTargetArea } from "./viewer-keys.ts";
 import { railHasTool, type SlideWorkspace, showsCountPanel, workspaceSetups } from "./workspace.ts";
 
 type Phase =
@@ -141,6 +148,7 @@ function AreaKeys({
   host: HTMLElement | null;
   focused: { current: SelectionArea | null };
 }) {
+  const { t } = useLingui();
   const nav = useEngineAreaNav(session.engine, session.module, areas, host);
   useEffect(() => {
     focused.current = areas.find((entry) => entry.object === nav.current)?.bounds ?? null;
@@ -172,13 +180,15 @@ function AreaKeys({
         />
       ) : null}
       <section
-        aria-label="Areas"
+        aria-label={t`Areas`}
         data-testid="area-nav"
         data-current={nav.current ?? ""}
         data-visited={[...nav.visited].sort().join(" ")}
         className="absolute top-4 right-4 grid w-[min(320px,calc(100%-6rem))] gap-2 rounded-ctl border border-line bg-chrome p-3"
       >
-        <h2 className="m-0 font-semibold text-body-sm">Areas, largest first</h2>
+        <h2 className="m-0 font-semibold text-body-sm">
+          <Trans>Areas, largest first</Trans>
+        </h2>
         <AreaList
           areas={areas}
           current={nav.current}
@@ -291,6 +301,7 @@ function OpenedSlide({
   workspace: SlideWorkspace;
   onRetry: () => void;
 }) {
+  const { t } = useLingui();
   const host = useRef<HTMLDivElement | null>(null);
   const doubleClick = useRef<"zoom" | "toggle">("zoom");
   doubleClick.current = useResolvedSettings()?.double_click ?? "zoom";
@@ -304,6 +315,13 @@ function OpenedSlide({
   const setup = workspaceSetups[workspace];
   const restingTool: ViewerTool = setup.restingTool;
   const [tool, setTool] = useState<ViewerTool>(restingTool);
+  const [addingResults, setAddingResults] = useState(false);
+  const heatmapChoices = useHeatmapChoices();
+  const [resultPreview, setResultPreview] = useState<{
+    results: ParsedResults;
+    placement: Placement;
+  } | null>(null);
+  const closeAddResults = useCallback(() => setAddingResults(false), []);
   useEffect(() => setTool(restingTool), [restingTool]);
   const toolBindings = useBindings(["annotate"], railActions);
   const onToolKey = useCallback(
@@ -364,6 +382,16 @@ function OpenedSlide({
     selected: selectedIds,
   });
   const annotations = saved.document;
+  const selectedBox = useMemo(
+    () =>
+      selectionArea(
+        selectedIds.flatMap((id) => {
+          const shape = annotations.shapes.get(id);
+          return shape === undefined ? [] : [shape.bounds];
+        }),
+      ),
+    [annotations.shapes, selectedIds],
+  );
   const proposals = useProposals(saved, slideId);
   const setAnnotations = saved.setDocument;
   const undoBindings = useBindings(["global"], ["undo", "redo"]);
@@ -732,6 +760,38 @@ function OpenedSlide({
               onDocumentChange={setAnnotations}
             />
             <ProposalLayer engine={session.engine} stage={hostNode} proposals={proposals.pending} />
+            <HeatmapLayers
+              engine={session.engine}
+              stage={hostNode}
+              slideId={slideId}
+              choices={heatmapChoices}
+            />
+            {workspace === "annotate" ? (
+              <RunStreamLayer
+                key={slideId}
+                engine={session.engine}
+                stage={hostNode}
+                selection={selectedBox}
+                projectId={projectId}
+                slideId={slideId}
+              />
+            ) : null}
+            {resultPreview === null ? null : (
+              <PreviewLayer
+                engine={session.engine}
+                stage={hostNode}
+                results={resultPreview.results}
+                placement={resultPreview.placement}
+              />
+            )}
+            {addingResults && projectId !== undefined ? (
+              <AddResultSet
+                projectId={projectId}
+                slideId={slideId}
+                onClose={closeAddResults}
+                onPreview={setResultPreview}
+              />
+            ) : null}
             {annotateTask ? (
               <AnnotateTaskPanel
                 engine={session.engine}
@@ -809,6 +869,16 @@ function OpenedSlide({
                   areas={areas}
                   target={saved.target}
                   onTarget={saved.setTarget}
+                  resultSets={
+                    projectId === undefined ? undefined : (
+                      <ResultSetLayers
+                        slideId={slideId}
+                        adding={addingResults}
+                        onAdd={() => setAddingResults(true)}
+                        heatmaps={heatmapChoices}
+                      />
+                    )
+                  }
                 />
               ) : null}
               {showsCountPanel(setup, {
@@ -840,7 +910,7 @@ function OpenedSlide({
                     saved.apply(clearAll(annotations).document, "Clear all");
                   }}
                 >
-                  Clear all
+                  <Trans>Clear all</Trans>
                 </Button>
               ) : null}
             </div>
@@ -873,7 +943,7 @@ function OpenedSlide({
             )}
             <div className="absolute top-16 left-1/2 -translate-x-1/2 rounded-ctl border border-line bg-chrome p-1">
               <SegmentedControl
-                aria-label="Outline display"
+                aria-label={t`Outline display`}
                 value={outlineMode}
                 onValueChange={(next) => setOutlineMode(next as OutlineModeChoice)}
                 options={outlineModeChoices.map((choice) => ({
@@ -912,7 +982,7 @@ function OpenedSlide({
         ) : null}
         {phase.state === "loading" ? (
           <div className="absolute top-4 left-4">
-            <Loader label="Loading the slide" size="inline" />
+            <Loader label={t`Loading the slide`} size="inline" />
           </div>
         ) : null}
         {chosenDevice === undefined ? null : (
@@ -935,7 +1005,7 @@ function OpenedSlide({
               className="border-solid shadow-pop"
               action={
                 <Button size="lg" onClick={onRetry}>
-                  Try again
+                  <Trans>Try again</Trans>
                 </Button>
               }
             >

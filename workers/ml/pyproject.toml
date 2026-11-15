@@ -33,5 +33,5 @@ parfocal-common = { workspace = true }
 [tool.basedpyright]
 typeCheckingMode = "standard"
 pythonVersion = "3.14"
-exclude = ["spike", "src/parfocal_ml/sam_onnx", "tests/test_sam_onnx.py"]
+exclude = ["spike", "src/parfocal_ml/sam_onnx", "tests/test_sam_onnx.py", "tests/test_sam_window.py"]
 extraPaths = ["tests", "../ingest/tests"]

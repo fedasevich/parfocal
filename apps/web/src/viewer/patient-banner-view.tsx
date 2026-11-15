@@ -1,3 +1,4 @@
+import { useLingui } from "@lingui/react/macro";
 import { useGetMySettingLayers } from "@parfocal/api-client";
 import { now } from "../clock.ts";
 import { okData } from "../screens/placeholder.tsx";
@@ -5,9 +6,10 @@ import type { CaseLoad } from "./case-load.ts";
 import { type PatientBanner, patientBanner } from "./patient-banner.ts";
 
 export function PatientBannerStrip({ banner }: { banner: PatientBanner }) {
+  const { t } = useLingui();
   return (
     <section
-      aria-label="Patient"
+      aria-label={t`Patient`}
       className="flex min-w-0 flex-wrap items-baseline gap-x-4 gap-y-1 border-line border-b bg-chrome-2 px-4 py-1.5 text-body-sm"
       data-testid="patient-banner"
       data-phi=""

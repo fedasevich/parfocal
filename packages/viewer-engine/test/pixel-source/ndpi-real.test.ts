@@ -9,6 +9,7 @@ import {
   type SlideIndex,
 } from "../../src/index.ts";
 import { ndpiIndexOf } from "./ndpi-index.ts";
+import { retryingFetch } from "./retrying-fetch.ts";
 import { serve } from "./serve.ts";
 
 const fourGigabytes = 2 ** 32;
@@ -39,7 +40,7 @@ function open(name: string, watch: Watched, index?: SlideIndex): Promise<PixelSo
   return openNdpiSource({
     formatId: "hamamatsu-ndpi",
     url: served.url(`/cache/${name}`),
-    fetch: watch.fetch,
+    fetch: retryingFetch(name, { fetch: watch.fetch }),
     nativeJpeg: "off",
     ...(index === undefined ? {} : { index }),
   });
@@ -135,7 +136,7 @@ for (const slide of slides) {
       const walkRequests = walkWatch.requests;
       const index = await ndpiIndexOf(
         served.url(`/cache/${slide.name}`),
-        fetch,
+        retryingFetch(slide.name),
         slide.micronsPerPixel,
       );
       const indexWatch = watched();

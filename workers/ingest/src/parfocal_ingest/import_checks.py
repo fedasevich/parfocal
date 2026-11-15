@@ -2,7 +2,7 @@ import math
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field, replace
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
 import shapely
@@ -10,11 +10,13 @@ import tifffile
 from numpy.typing import NDArray
 from PIL import Image
 
-from parfocal_common.result_imports import CheckProblem, ResultFormat, ScoreDefault
+from parfocal_common.jobs import StepFailedError
+from parfocal_common.result_imports import CheckProblem, ImportFailure, ResultFormat, ScoreDefault
 from parfocal_ingest.cell_import import class_key
-from parfocal_ingest.results import ObjectKind, ReadResult, ResultObject
+from parfocal_ingest.results import ObjectKind, ReadResult, ResultObject, load_raster
 
 PLACES = 200
+HEATMAP_DIMENSIONS = 2
 RATIO_TOLERANCE = 0.02
 LEVEL_TOLERANCE = 0.05
 CLASSED_KINDS = frozenset({ObjectKind.REGION, ObjectKind.CELL})
@@ -209,9 +211,31 @@ class Guess:
     level: int | None
     downsample: float
     mpp: float | None
+    tissue_share: float | None = None
 
     def as_dict(self) -> dict[str, Any]:
-        return {"level": self.level, "downsample": self.downsample, "mpp": self.mpp}
+        return {
+            "level": self.level,
+            "downsample": self.downsample,
+            "mpp": self.mpp,
+            "tissue_share": self.tissue_share,
+        }
+
+
+@dataclass(frozen=True)
+class TissueCells:
+    cell: int
+    cells: NDArray[np.bool_]
+
+
+RASTER_ERRORS = (
+    OSError,
+    ValueError,
+    SyntaxError,
+    IndexError,
+    tifffile.TiffFileError,
+    Image.DecompressionBombError,
+)
 
 
 def heatmap_guess(shape: Sequence[int], frame: SlideFrame) -> Guess | None:
@@ -232,22 +256,97 @@ def heatmap_guess(shape: Sequence[int], frame: SlideFrame) -> Guess | None:
     return Guess(level, scale, frame.mpp * scale if frame.mpp else None)
 
 
-def raster_shape(path: Path) -> tuple[int, ...]:
+def heatmap_values(path: Path, file_name: str) -> NDArray[Any]:
     try:
-        with tifffile.TiffFile(path) as tiff:
-            return tuple(tiff.series[0].shape)
-    except tifffile.TiffFileError:
-        with Image.open(path) as image:
-            return (image.height, image.width)
+        values = np.squeeze(load_raster(path.read_bytes(), file_name))
+    except RASTER_ERRORS:
+        raise StepFailedError(ImportFailure.HEATMAP_UNREADABLE) from None
+    if values.ndim != HEATMAP_DIMENSIONS or not values.size or values.dtype.kind not in "biuf":
+        raise StepFailedError(ImportFailure.HEATMAP_UNREADABLE)
+    return values
 
 
-def heatmap_problems(shape: Sequence[int], frame: SlideFrame) -> list[dict[str, Any]]:
-    guess = heatmap_guess(shape, frame)
+def tissue_share(
+    values: NDArray[Any], downsample: float, tissue: TissueCells | None
+) -> float | None:
+    if tissue is None:
+        return None
+    weights = np.clip(np.nan_to_num(values.astype(np.float32), nan=0.0), 0, None)
+    total = float(weights.sum(dtype=np.float64))
+    if total <= 0:
+        return None
+    height, width = weights.shape
+    rows = ((np.arange(height) + 0.5) * downsample // tissue.cell).astype(np.int64)
+    cols = ((np.arange(width) + 0.5) * downsample // tissue.cell).astype(np.int64)
+    row_in = rows < tissue.cells.shape[0]
+    col_in = cols < tissue.cells.shape[1]
+    on = tissue.cells[np.ix_(rows[row_in], cols[col_in])]
+    landed = float(weights[np.ix_(row_in, col_in)][on].sum(dtype=np.float64))
+    return round(landed / total, 4)
+
+
+def heatmap_guesses(
+    values: NDArray[Any], frame: SlideFrame, tissue: TissueCells | None
+) -> list[Guess]:
+    fitted = heatmap_guess(values.shape, frame)
+    guesses = [fitted] if fitted is not None else []
+    for level in range(frame.level_count or 0):
+        if fitted is None or level != fitted.level:
+            scale = float(2**level)
+            guesses.append(Guess(level, scale, frame.mpp * scale if frame.mpp else None))
+    shared = [
+        replace(guess, tissue_share=tissue_share(values, guess.downsample, tissue))
+        for guess in guesses
+    ]
+    if fitted is None:
+        shared.sort(key=lambda guess: -1.0 if guess.tissue_share is None else -guess.tissue_share)
+    return shared
+
+
+def heatmap_problems(
+    values: NDArray[Any], frame: SlideFrame, tissue: TissueCells | None = None
+) -> list[dict[str, Any]]:
+    guesses = heatmap_guesses(values, frame, tissue)
     return [
         {
             "code": CheckProblem.HEATMAP_SCALE.value,
             "count": 1,
             "places": [],
-            "guess": guess.as_dict() if guess is not None else None,
+            "guess": guesses[0].as_dict() if guesses else None,
+            "guesses": [guess.as_dict() for guess in guesses],
         }
     ]
+
+
+def accepted_guess(stored: Any, level: int | None = None) -> Guess:
+    found = cast("dict[str, Any]", stored or {}).get("problems") or []
+    for item in cast("list[dict[str, Any]]", found):
+        if item.get("code") != CheckProblem.HEATMAP_SCALE.value:
+            continue
+        offered = cast("list[dict[str, Any]]", item.get("guesses") or [])
+        picked = (
+            item.get("guess")
+            if level is None
+            else next((guess for guess in offered if guess.get("level") == level), None)
+        )
+        if picked:
+            return Guess(
+                picked.get("level"),
+                float(picked["downsample"]),
+                picked.get("mpp"),
+                picked.get("tissue_share"),
+            )
+    raise StepFailedError(ImportFailure.HEATMAP_UNPLACED)
+
+
+def stored_values(values: NDArray[Any]) -> NDArray[np.uint8]:
+    if values.dtype == np.uint8:
+        return values
+    if values.dtype.kind == "b":
+        return values.astype(np.uint8) * 255
+    if values.dtype.kind in "iu":
+        top = float(np.iinfo(values.dtype).max)
+        scaled = np.clip(values.astype(np.float64), 0, None) / top
+    else:
+        scaled = np.clip(np.nan_to_num(values.astype(np.float64), nan=0.0), 0, 1)
+    return np.rint(scaled * 255).astype(np.uint8)

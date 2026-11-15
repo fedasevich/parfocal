@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Keycap } from "@parfocal/ui/components/keycap";
 import { MagnificationBar } from "@parfocal/ui/components/magnification-bar";
 import { MapViewport, SmartMinimap } from "@parfocal/ui/components/smart-minimap";
@@ -29,6 +30,7 @@ export function CellFocus({
   onObject: (object: string) => void;
   onLeave: () => void;
 }) {
+  const { t } = useLingui();
   const { session, answer, setAnswer, paged } = tools;
   const decisions = useDecisionSaves(session, session.style);
   const [camera, setCamera] = useState<Camera | null>(null);
@@ -142,7 +144,7 @@ export function CellFocus({
                 <button
                   type="button"
                   onClick={onLeave}
-                  aria-label="Esc, leave focus mode"
+                  aria-label={t`Esc, leave focus mode`}
                   className="cursor-pointer border-0 bg-transparent p-0"
                 >
                   <Keycap keys="Esc" size="sm" />
@@ -177,7 +179,9 @@ export function CellFocus({
                 />
               </div>
               <span className="sr-only" aria-live="polite">
-                {decidedCount} of {spots.length} cells decided
+                <Trans>
+                  {decidedCount} of {spots.length} cells decided
+                </Trans>
               </span>
             </>
           );

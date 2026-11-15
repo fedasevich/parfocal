@@ -57,6 +57,7 @@ import type {
   GetResultsTemplate200,
   HeadlineNumbers,
   Health,
+  HeatmapFacts,
   Home,
   ImportCheck,
   ImportReport,
@@ -117,6 +118,7 @@ import type {
   QueuedObject,
   Reassignment,
   RegionMetrics,
+  RegistryEntry,
   ReportLink,
   ReportPreview,
   Resolved,
@@ -241,10 +243,13 @@ import {
   LabModelSignIn,
   Laterality,
   Layer,
+  LicenceClass,
   LinkRefusal,
   Metric,
   ModelHost,
   ModelMakes,
+  ModelStatus,
+  ModelTask,
   ModelTier,
   MuteSubject,
   MyJobKind,
@@ -4051,6 +4056,82 @@ export const getShowModelResponseMock = (
   ...overrideResponse,
 });
 
+export const getListRegisteredModelsResponseMock = (): RegistryEntry[] =>
+  Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
+    name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    family: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    version: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    title: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    tasks: faker.helpers.arrayElements(Object.values(ModelTask)),
+    makes: faker.helpers.arrayElements(Object.values(ModelMakes)),
+    host: faker.helpers.arrayElement(Object.values(ModelHost)),
+    licence: {
+      weights: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      weights_class: faker.helpers.arrayElement(Object.values(LicenceClass)),
+      code: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      data: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () => ({
+          dataset: faker.string.alpha({ length: { min: 10, max: 20 } }),
+          licence: faker.string.alpha({ length: { min: 10, max: 20 } }),
+          licence_class: faker.helpers.arrayElement(Object.values(LicenceClass)),
+        }),
+      ),
+      source: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      read_on: faker.date.past().toISOString().slice(0, 10),
+      policy_kinds: faker.helpers.arrayElements(Object.values(TenantKind)),
+      enforced: faker.datatype.boolean(),
+    },
+    allowed_tenant_kinds: faker.helpers.arrayElements(Object.values(TenantKind)),
+    input_mpp: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+    calibration_temperatures: {
+      [faker.string.alphanumeric(5)]: faker.number.float({ fractionDigits: 2 }),
+    },
+    evaluation_report: faker.helpers.arrayElement([
+      faker.string.alpha({ length: { min: 10, max: 20 } }),
+      null,
+    ]),
+    status: faker.helpers.arrayElement(Object.values(ModelStatus)),
+  }));
+
+export const getGetRegisteredModelResponseMock = (
+  overrideResponse: Partial<Extract<RegistryEntry, object>> = {},
+): RegistryEntry => ({
+  name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  family: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  version: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  title: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  tasks: faker.helpers.arrayElements(Object.values(ModelTask)),
+  makes: faker.helpers.arrayElements(Object.values(ModelMakes)),
+  host: faker.helpers.arrayElement(Object.values(ModelHost)),
+  licence: {
+    weights: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    weights_class: faker.helpers.arrayElement(Object.values(LicenceClass)),
+    code: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    data: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+      () => ({
+        dataset: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        licence: faker.string.alpha({ length: { min: 10, max: 20 } }),
+        licence_class: faker.helpers.arrayElement(Object.values(LicenceClass)),
+      }),
+    ),
+    source: faker.string.alpha({ length: { min: 10, max: 20 } }),
+    read_on: faker.date.past().toISOString().slice(0, 10),
+    policy_kinds: faker.helpers.arrayElements(Object.values(TenantKind)),
+    enforced: faker.datatype.boolean(),
+  },
+  allowed_tenant_kinds: faker.helpers.arrayElements(Object.values(TenantKind)),
+  input_mpp: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+  calibration_temperatures: {
+    [faker.string.alphanumeric(5)]: faker.number.float({ fractionDigits: 2 }),
+  },
+  evaluation_report: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  status: faker.helpers.arrayElement(Object.values(ModelStatus)),
+  ...overrideResponse,
+});
+
 export const getTestLabModelResponseMock = (
   overrideResponse: Partial<Extract<LabModelTest, object>> = {},
 ): LabModelTest => ({
@@ -4263,8 +4344,12 @@ export const getListModelRunAreasResponseMock = (
   })),
   after: faker.number.int(),
   more: faker.datatype.boolean(),
+  total: faker.helpers.arrayElement([faker.number.int(), null]),
   ...overrideResponse,
 });
+
+export const getGetModelRunTileResponseMock = (): Blob =>
+  new Blob([new Uint8Array(faker.number.int({ min: 1, max: 64 }))]);
 
 export const getListNotificationPreferencesResponseMock = (): Preference[] =>
   Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
@@ -4394,6 +4479,10 @@ export const getGetCaseResponseMock = (
     },
     null,
   ]),
+  clinical_note: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
   specimens: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
     () => ({
       id: faker.string.uuid(),
@@ -4477,6 +4566,10 @@ export const getCreateCaseResponseMock = (
       sex: faker.helpers.arrayElement(Object.values(Sex)),
       age_years: faker.helpers.arrayElement([faker.number.int(), null]),
     },
+    null,
+  ]),
+  clinical_note: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
     null,
   ]),
   specimens: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
@@ -4567,6 +4660,91 @@ export const getReorderCaseSlidesResponseMock = (
       sex: faker.helpers.arrayElement(Object.values(Sex)),
       age_years: faker.helpers.arrayElement([faker.number.int(), null]),
     },
+    null,
+  ]),
+  clinical_note: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
+    null,
+  ]),
+  specimens: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      id: faker.string.uuid(),
+      letter: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      type: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      site: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      laterality: faker.helpers.arrayElement(Object.values(Laterality)),
+      procedure: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      collected_at: faker.helpers.arrayElement([
+        faker.date.past().toISOString().slice(0, 19) + "Z",
+        null,
+      ]),
+      received_at: faker.helpers.arrayElement([
+        faker.date.past().toISOString().slice(0, 19) + "Z",
+        null,
+      ]),
+      blocks: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () => ({
+          id: faker.string.uuid(),
+          number: faker.number.int(),
+          description: faker.helpers.arrayElement([
+            faker.string.alpha({ length: { min: 10, max: 20 } }),
+            null,
+          ]),
+          stains: Array.from(
+            { length: faker.number.int({ min: 1, max: 10 }) },
+            (_, i) => i + 1,
+          ).map(() => faker.string.alpha({ length: { min: 10, max: 20 } })),
+          levels: faker.number.int(),
+        }),
+      ),
+    }),
+  ),
+  slides: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+    () => ({
+      id: faker.string.uuid(),
+      label: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      block_id: faker.helpers.arrayElement([faker.string.uuid(), null]),
+      barcode: faker.helpers.arrayElement([
+        faker.string.alpha({ length: { min: 10, max: 20 } }),
+        null,
+      ]),
+      stain: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      level: faker.helpers.arrayElement([faker.number.int(), null]),
+      restricted_images: faker.helpers.arrayElements(Object.values(RestrictedImage)),
+    }),
+  ),
+  ...overrideResponse,
+});
+
+export const getSetCaseClinicalNoteResponseMock = (
+  overrideResponse: Partial<Extract<CaseDetail, object>> = {},
+): CaseDetail => ({
+  id: faker.string.uuid(),
+  project_id: faker.string.uuid(),
+  label: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  source: faker.helpers.arrayElement(Object.values(CaseSource)),
+  patient: faker.helpers.arrayElement([
+    {
+      id: faker.string.uuid(),
+      name: faker.string.alpha({ length: { min: 10, max: 20 } }),
+      mrn: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
+      birth_date: faker.helpers.arrayElement([faker.date.past().toISOString().slice(0, 10), null]),
+      sex: faker.helpers.arrayElement(Object.values(Sex)),
+      age_years: faker.helpers.arrayElement([faker.number.int(), null]),
+    },
+    null,
+  ]),
+  clinical_note: faker.helpers.arrayElement([
+    faker.string.alpha({ length: { min: 10, max: 20 } }),
     null,
   ]),
   specimens: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
@@ -4936,6 +5114,21 @@ export const getDeleteResultSetResponseMock = (
 export const getGetCellSummaryResponseMock = (): Blob =>
   new Blob([new Uint8Array(faker.number.int({ min: 1, max: 64 }))]);
 
+export const getGetHeatmapResponseMock = (
+  overrideResponse: Partial<Extract<HeatmapFacts, object>> = {},
+): HeatmapFacts => ({
+  width: faker.number.int(),
+  height: faker.number.int(),
+  level: faker.helpers.arrayElement([faker.number.int(), null]),
+  downsample: faker.number.float({ fractionDigits: 2 }),
+  mpp: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+  tissue_share: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+  ...overrideResponse,
+});
+
+export const getGetHeatmapGridResponseMock = (): Blob =>
+  new Blob([new Uint8Array(faker.number.int({ min: 1, max: 64 }))]);
+
 export const getGetResultsSchemaResponseMock = (): GetResultsSchema200 => ({});
 
 export const getGetResultsTemplateResponseMock = (): GetResultsTemplate200 => ({});
@@ -5153,9 +5346,24 @@ export const getGetImportProblemsResponseMock = (
           level: faker.helpers.arrayElement([faker.number.int(), null]),
           downsample: faker.number.float({ fractionDigits: 2 }),
           mpp: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+          tissue_share: faker.helpers.arrayElement([
+            faker.number.float({ fractionDigits: 2 }),
+            null,
+          ]),
         },
         null,
       ]),
+      guesses: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
+        () => ({
+          level: faker.helpers.arrayElement([faker.number.int(), null]),
+          downsample: faker.number.float({ fractionDigits: 2 }),
+          mpp: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
+          tissue_share: faker.helpers.arrayElement([
+            faker.number.float({ fractionDigits: 2 }),
+            null,
+          ]),
+        }),
+      ),
     }),
   ),
   ...overrideResponse,
@@ -17264,6 +17472,54 @@ export const getShowModelMockHandler = (
   );
 };
 
+export const getListRegisteredModelsMockHandler = (
+  overrideResponse?:
+    | RegistryEntry[]
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<RegistryEntry[]> | RegistryEntry[]),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/model-registry",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getListRegisteredModelsResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getGetRegisteredModelMockHandler = (
+  overrideResponse?:
+    | RegistryEntry
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<RegistryEntry> | RegistryEntry),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/model-registry/:name/:version",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetRegisteredModelResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getTestLabModelMockHandler = (
   overrideResponse?:
     | LabModelTest
@@ -17373,6 +17629,30 @@ export const getListModelRunAreasMockHandler = (
           : getListModelRunAreasResponseMock(),
         { status: 200 },
       );
+    },
+    options,
+  );
+};
+
+export const getGetModelRunTileMockHandler = (
+  overrideResponse?:
+    | Blob
+    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<Blob> | Blob),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/projects/:projectId/model-runs/:runId/tiles/:unit",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      const binaryBody =
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetModelRunTileResponseMock();
+      return new HttpResponse(binaryBody, {
+        status: 200,
+        headers: { "Content-Type": "application/octet-stream" },
+      });
     },
     options,
   );
@@ -17577,6 +17857,28 @@ export const getReorderCaseSlidesMockHandler = (
             ? await overrideResponse(info)
             : overrideResponse
           : getReorderCaseSlidesResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getSetCaseClinicalNoteMockHandler = (
+  overrideResponse?:
+    | CaseDetail
+    | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<CaseDetail> | CaseDetail),
+  options?: RequestHandlerOptions,
+) => {
+  return http.put(
+    "*/api/cases/:caseId/clinical-note",
+    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getSetCaseClinicalNoteResponseMock(),
         { status: 200 },
       );
     },
@@ -17916,6 +18218,54 @@ export const getGetCellSummaryMockHandler = (
             ? await overrideResponse(info)
             : overrideResponse
           : getGetCellSummaryResponseMock();
+      return new HttpResponse(binaryBody, {
+        status: 200,
+        headers: { "Content-Type": "application/octet-stream" },
+      });
+    },
+    options,
+  );
+};
+
+export const getGetHeatmapMockHandler = (
+  overrideResponse?:
+    | HeatmapFacts
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<HeatmapFacts> | HeatmapFacts),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/result-sets/:resultSetId/heatmap",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetHeatmapResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getGetHeatmapGridMockHandler = (
+  overrideResponse?:
+    | Blob
+    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<Blob> | Blob),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/result-sets/:resultSetId/heatmap/grid",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      const binaryBody =
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetHeatmapGridResponseMock();
       return new HttpResponse(binaryBody, {
         status: 200,
         headers: { "Content-Type": "application/octet-stream" },
@@ -23305,11 +23655,14 @@ export const getParfocalAPIMock = () => [
   getListModelVisibilityMockHandler(),
   getHideModelMockHandler(),
   getShowModelMockHandler(),
+  getListRegisteredModelsMockHandler(),
+  getGetRegisteredModelMockHandler(),
   getTestLabModelMockHandler(),
   getConnectLabModelMockHandler(),
   getGetLabModelMockHandler(),
   getTestConnectedLabModelMockHandler(),
   getListModelRunAreasMockHandler(),
+  getGetModelRunTileMockHandler(),
   getListNotificationPreferencesMockHandler(),
   getSetNotificationPreferencesMockHandler(),
   getGetOpinionFormTemplateMockHandler(),
@@ -23319,6 +23672,7 @@ export const getParfocalAPIMock = () => [
   getCreateCaseMockHandler(),
   getChangeSlideDetailsMockHandler(),
   getReorderCaseSlidesMockHandler(),
+  getSetCaseClinicalNoteMockHandler(),
   getMoveSlideMockHandler(),
   getListAnnotationsMockHandler(),
   getCreateAnnotationMockHandler(),
@@ -23334,6 +23688,8 @@ export const getParfocalAPIMock = () => [
   getGetResultSetMockHandler(),
   getDeleteResultSetMockHandler(),
   getGetCellSummaryMockHandler(),
+  getGetHeatmapMockHandler(),
+  getGetHeatmapGridMockHandler(),
   getGetResultsSchemaMockHandler(),
   getGetResultsTemplateMockHandler(),
   getValidateResultsFileMockHandler(),

@@ -1,5 +1,7 @@
 import asyncio
+import gzip
 import io
+import json
 import threading
 import uuid
 import zipfile
@@ -50,6 +52,7 @@ from parfocal_api.tables import (
     clinical_reports,
     display_presets,
     invitations,
+    job_units,
     jobs,
     lab_models,
     legal_holds,
@@ -81,12 +84,21 @@ from parfocal_api.tables import (
     workspace_access_requests,
     workspace_settings,
 )
-from parfocal_common.chunk_store import Cell, build_cells
+from parfocal_common.chunk_store import Cell, build_cells, packed
 from parfocal_common.db import async_database_url, metadata
 from parfocal_common.ingest import RestrictedImage, slide_prefix
 from parfocal_common.jobs import enqueue
-from parfocal_common.model_runs import RunScopeKind, RunSettings, enqueue_model_run
+from parfocal_common.model_runs import (
+    MODEL_STAGE,
+    STAGES,
+    RunScopeKind,
+    RunSettings,
+    enqueue_model_run,
+    run_prefix,
+    tile_key,
+)
 from parfocal_common.object_store import ObjectStore, StorageLocation
+from parfocal_common.result_imports import result_set_prefix
 from parfocal_common.result_store import ObjectResultStore
 from parfocal_ingest.tissue import TissueMask
 from parfocal_ingest.workflow import INGEST
@@ -147,6 +159,8 @@ OPEN_OPERATIONS = {
     "listSiteValidations": "member",
     "listModelTiers": "member",
     "listModelVisibility": "member",
+    "listRegisteredModels": "member",
+    "getRegisteredModel": "member",
     "getMyHome": "member",
     "getMyChecklist": "member",
     "listMyJobs": "member",
@@ -626,6 +640,9 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "listModelRunAreas": lambda w: Call(
         "GET", f"/api/projects/{w.project}/model-runs/{w.queued_run}/areas"
     ),
+    "getModelRunTile": lambda w: Call(
+        "GET", f"/api/projects/{w.project}/model-runs/{w.queued_run}/tiles/0"
+    ),
     "cancelModelRun": lambda w: Call(
         "POST", f"/api/projects/{w.project}/model-runs/{w.queued_run}/cancel"
     ),
@@ -790,6 +807,8 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "listProjectResultSets": lambda w: Call("GET", f"/api/projects/{w.project}/result-sets"),
     "getResultSet": lambda w: Call("GET", f"/api/result-sets/{w.result_set}"),
     "getCellSummary": lambda w: Call("GET", f"/api/result-sets/{w.result_set}/cell-summary"),
+    "getHeatmap": lambda w: Call("GET", f"/api/result-sets/{w.result_set}/heatmap"),
+    "getHeatmapGrid": lambda w: Call("GET", f"/api/result-sets/{w.result_set}/heatmap/grid"),
     "exportSlideObjects": lambda w: Call(
         "GET", f"/api/slides/{w.slide}/export?format=flatgeobuf&result_set_id={w.result_set}"
     ),
@@ -1165,6 +1184,9 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "reorderCaseSlides": lambda w: Call(
         "PUT", f"/api/cases/{w.case}/slide-order", {"slide_ids": []}
     ),
+    "setCaseClinicalNote": lambda w: Call(
+        "PUT", f"/api/cases/{w.case}/clinical-note", {"note": "Fake note for a test"}
+    ),
     "listAvailability": lambda _: Call("GET", "/api/tenant/availability"),
     "updateSessionPolicy": lambda _: Call(
         "PUT", "/api/tenant/session-policy", {"idle_lock_minutes": 15, "session_hours": 12}
@@ -1265,6 +1287,8 @@ MEMBER_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "listSiteValidations": lambda _: Call("GET", "/api/site-validations"),
     "listModelTiers": lambda _: Call("GET", "/api/tenant/model-tiers"),
     "listModelVisibility": lambda _: Call("GET", "/api/tenant/hidden-models"),
+    "listRegisteredModels": lambda _: Call("GET", "/api/model-registry"),
+    "getRegisteredModel": lambda _: Call("GET", "/api/model-registry/hovernet/v0.9"),
     "getMyHome": lambda _: Call("GET", "/api/me/home"),
     "listMyJobs": lambda _: Call("GET", "/api/me/jobs"),
     "getMyChecklist": lambda _: Call("GET", "/api/me/checklist"),
@@ -2148,6 +2172,24 @@ async def seed(database: str, lead: Seat = RESEARCHER, presets_for: Seat = RESEA
                 await ObjectResultStore(store).put(
                     matrix_cells.summary.key, matrix_cells.summary.data
                 )
+                heat_prefix = result_set_prefix(tenant_id, case.loose_slide_id, result_set)
+                await ObjectResultStore(store).put(
+                    f"{heat_prefix}heatmap.bin", gzip.compress(bytes(4))
+                )
+                await store.put_object(
+                    f"{heat_prefix}heatmap.json",
+                    json.dumps(
+                        {
+                            "width": 2,
+                            "height": 2,
+                            "level": 0,
+                            "downsample": 1.0,
+                            "mpp": None,
+                            "tissue_share": None,
+                        }
+                    ).encode(),
+                    "application/json",
+                )
                 await put_restricted_images(
                     store,
                     tenant_id,
@@ -2306,6 +2348,20 @@ async def seed_runs(
         )
         for _ in range(3)
     ]
+    await connection.execute(
+        insert(job_units).values(
+            tenant_id=tenant_id,
+            job_id=runs[0],
+            ordinal=STAGES.index(MODEL_STAGE),
+            unit=0,
+            worker="matrix",
+            result={"x": 0, "y": 0, "width": 512, "height": 512, "objects": 1},
+        )
+    )
+    async with httpx2.AsyncClient(timeout=30) as http:
+        await ObjectResultStore(ObjectStore(TEST_STORAGE, http)).put(
+            tile_key(run_prefix(tenant_id, slide_id, runs[0]), 0), packed(b"matrix tile")
+        )
     await connection.execute(
         update(jobs).where(jobs.c.id == runs[1]).values(status="paused", pause_reason="matrix")
     )

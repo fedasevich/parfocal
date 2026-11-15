@@ -48,6 +48,7 @@ type Gate = {
   release: () => void;
   created: Created[];
   pairs: { uploadId: string; slideUploadId: string }[];
+  bodies: Map<string, Buffer>;
 };
 
 const caseS2604812 = "00000000-0000-4000-8004-000000000001";
@@ -58,6 +59,7 @@ async function fakeStorage(page: Page, hold: boolean): Promise<Gate> {
   let counter = 0;
   const created: Created[] = [];
   const pairs: { uploadId: string; slideUploadId: string }[] = [];
+  const bodies = new Map<string, Buffer>();
   page.on("request", (request) => {
     const match = /\/api\/uploads\/([^/]+)\/slide$/.exec(new URL(request.url()).pathname);
     if (request.method() !== "PUT" || match === null) return;
@@ -121,6 +123,8 @@ async function fakeStorage(page: Page, hold: boolean): Promise<Gate> {
     }
     if (request.method() === "PUT" && path.startsWith("/part/")) {
       await gate;
+      const body = request.postDataBuffer();
+      if (body !== null) bodies.set(path.split("/")[2] ?? "", body);
       await route.fulfill({ status: 200, headers: { ...headers, etag: '"abc"' }, body: "" });
       return;
     }
@@ -134,7 +138,7 @@ async function fakeStorage(page: Page, hold: boolean): Promise<Gate> {
     }
     await route.fulfill({ status: 200, headers, json: {} });
   });
-  return { release, created, pairs };
+  return { release, created, pairs, bodies };
 }
 
 async function dropTree(page: Page, selector: string, tree: Tree) {
@@ -346,4 +350,300 @@ test("a slide opens from the upload while its results are still being placed", a
   await expect(row).toHaveAttribute("data-ingest", "processing");
   await open.click();
   await expect(page).toHaveURL(/\/slides\//);
+});
+
+test("a mixed set uploads the fixed MRXS slide while the slide left out and the empty one wait", async ({
+  page,
+}) => {
+  const root = await mkdtemp(join(tmpdir(), "parfocal-mrxs-e2e-"));
+  const mixed: Tree = {
+    name: "mixed",
+    children: [
+      { name: "fine.svs", text: "slide-fine" },
+      { name: "scan.mrxs", text: "mirax" },
+      { name: "other.mrxs", text: "mirax-two" },
+      { name: "empty.svs", text: "" },
+    ],
+  };
+  const dataFolder: Tree = {
+    name: "scan",
+    children: [
+      { name: "Slidedat.ini", text: "ini" },
+      { name: "Data0000.dat", text: "dat" },
+    ],
+  };
+  await writeTree(root, mixed);
+  await writeTree(root, dataFolder);
+  const gate = await fakeStorage(page, false);
+  await page.goto(`/projects/${p07}/upload`);
+  await page.getByTestId("folder-input").setInputFiles(join(root, "mixed"));
+  await page.getByTestId("upload-next").click();
+  await expect(page.getByTestId("upload-problem")).toHaveCount(3);
+  await expect(page.getByTestId("check-summary")).toContainText("3 files");
+  await page
+    .getByTestId("upload-problem")
+    .filter({ hasText: "mixed/scan.mrxs" })
+    .getByRole("button", { name: "Add the folder" })
+    .click();
+  await page.getByTestId("data-folder-input").setInputFiles(join(root, "scan"));
+  await expect(page.getByTestId("upload-problem")).toHaveCount(2);
+  await page
+    .getByTestId("upload-problem")
+    .filter({ hasText: "mixed/other.mrxs" })
+    .getByRole("button", { name: "Leave it out" })
+    .click();
+  await expect(page.getByTestId("upload-problem")).toHaveCount(1);
+  await expect(page.getByTestId("upload-problem")).toContainText("This slide cannot be read");
+  await expect(page.getByTestId("start-upload")).toContainText("Upload 2 slides and 0 results");
+  await page.getByTestId("start-upload").click();
+  await expect(page.getByTestId("upload-page")).toHaveAttribute("data-scene", "progress");
+  await expect(page.getByTestId("upload-file-row")).toHaveCount(2);
+  await expect
+    .poll(() => gate.created.map((item) => item.filename).toSorted())
+    .toEqual(["fine.svs", "scan.zip"]);
+  const zipId = gate.created.find((item) => item.filename === "scan.zip")?.uploadId ?? "";
+  await expect.poll(() => gate.bodies.has(zipId)).toBe(true);
+  const zipText = gate.bodies.get(zipId)?.toString("latin1") ?? "";
+  for (const needle of [
+    "scan.mrxs",
+    "mirax",
+    "scan/Slidedat.ini",
+    "scan/Data0000.dat",
+    "ini",
+    "dat",
+  ]) {
+    expect(zipText).toContain(needle);
+  }
+  await rm(root, { recursive: true, force: true });
+});
+
+type Fake = {
+  statuses: Record<string, Record<string, unknown>>;
+  problems?: unknown;
+  chosen: unknown[];
+  left: string[];
+};
+
+async function seedFake(page: Page, extra: Partial<Fake> = {}) {
+  await page.addInitScript((seed) => {
+    (window as unknown as { __parfocalFake: unknown }).__parfocalFake = {
+      statuses: {},
+      chosen: [],
+      left: [],
+      ...seed,
+    };
+  }, extra);
+}
+
+const fakeOf = (page: Page) =>
+  page.evaluate(() => (window as unknown as { __parfocalFake: Fake }).__parfocalFake);
+
+async function duplicateFolder() {
+  const root = await mkdtemp(join(tmpdir(), "parfocal-dup-e2e-"));
+  await writeTree(root, {
+    name: "dupes",
+    children: [
+      { name: "fine.svs", text: "slide-fine" },
+      { name: "dup-copy.svs", text: "slide-copy" },
+    ],
+  });
+  return root;
+}
+
+test("a duplicate slide waits for skip or keep both, and keeping both uploads it", async ({
+  page,
+}) => {
+  const root = await duplicateFolder();
+  const gate = await fakeStorage(page, false);
+  await page.goto(`/projects/${p07}/upload`);
+  await page.getByTestId("folder-input").setInputFiles(join(root, "dupes"));
+  await page.getByTestId("upload-next").click();
+  const zone = page.getByTestId("upload-problem");
+  await expect(zone).toHaveCount(1);
+  await expect(zone).toContainText("This slide is already in the project");
+  await expect(page.getByTestId("check-summary")).toContainText("1 file");
+  await zone.getByRole("button", { name: "Skip it" }).click();
+  await expect(page.getByTestId("upload-fixed")).toContainText("Skipped, already here");
+  await expect(page.getByTestId("check-summary")).toContainText("Nothing needs you");
+  await page.getByRole("button", { name: "Undo" }).click();
+  await expect(zone).toHaveCount(1);
+  await zone.getByRole("button", { name: "Keep both" }).click();
+  await expect(page.getByTestId("upload-fixed")).toContainText(
+    "Kept next to the copy already here",
+  );
+  await expect(page.getByTestId("check-summary")).toContainText("Nothing needs you");
+  await page.getByTestId("start-upload").click();
+  await expect(page.getByTestId("upload-page")).toHaveAttribute("data-scene", "progress");
+  await expect
+    .poll(() => gate.created.map((item) => item.filename).toSorted())
+    .toEqual(["dup-copy.svs", "fine.svs"]);
+  await rm(root, { recursive: true, force: true });
+});
+
+test("a skipped duplicate stays out of the upload", async ({ page }) => {
+  const root = await duplicateFolder();
+  const gate = await fakeStorage(page, false);
+  await page.goto(`/projects/${p07}/upload`);
+  await page.getByTestId("folder-input").setInputFiles(join(root, "dupes"));
+  await page.getByTestId("upload-next").click();
+  await page.getByTestId("upload-problem").getByRole("button", { name: "Skip it" }).click();
+  await expect(page.getByTestId("start-upload")).toContainText("Upload 2 slides");
+  await page.getByTestId("start-upload").click();
+  await expect(page.getByTestId("upload-page")).toHaveAttribute("data-scene", "progress");
+  await expect.poll(() => gate.created.map((item) => item.filename)).toEqual(["fine.svs"]);
+  await rm(root, { recursive: true, force: true });
+});
+
+const tumorId = "00000000-0000-4000-8003-000000000007-class-1";
+const stromaId = "00000000-0000-4000-8003-000000000007-class-2";
+
+const problem = (code: string, message: string, extra: Record<string, unknown> = {}) => ({
+  code,
+  message,
+  count: 0,
+  places: [],
+  names: [],
+  guess: null,
+  guesses: [],
+  ...extra,
+});
+
+const problems = {
+  upload_id: "up-2",
+  readable: 90,
+  problems: [
+    problem("objects-unreadable", "These objects could not be read.", {
+      count: 3,
+      places: ["line 4", "line 9"],
+    }),
+    problem("objects-without-class", "These objects have no class.", { count: 5 }),
+    problem("unknown-classes", "These classes are not in the project yet. Map them once.", {
+      count: 40,
+      names: ["Epithelium"],
+    }),
+    problem("scores-missing", "These objects have no score. Count them as no score or as 1.0.", {
+      count: 12,
+    }),
+    problem("partly-outside", "These objects lie outside the slide.", { count: 2 }),
+    problem("heatmap-scale", "Parfocal guessed the slide level and scale of this heatmap.", {
+      guess: { level: 2, downsample: 4, mpp: null, tissue_share: 0.31 },
+      guesses: [
+        { level: 2, downsample: 4, mpp: null, tissue_share: 0.31 },
+        { level: 0, downsample: 1, mpp: null, tissue_share: 0.92 },
+      ],
+    }),
+  ],
+};
+
+async function uploadResults(page: Page, root: string) {
+  await writeTree(root, {
+    name: "res",
+    children: [
+      { name: "slide.svs", text: "slide-res" },
+      { name: "slide.csv", text: "x,y" },
+      { name: "slide_prob.png", text: "png" },
+    ],
+  });
+  await seedFake(page, { problems });
+  const gate = await fakeStorage(page, false);
+  await page.goto(`/projects/${p07}/upload`);
+  await page.getByTestId("folder-input").setInputFiles(join(root, "res"));
+  await page.getByTestId("upload-next").click();
+  await page.getByTestId("start-upload").click();
+  await expect(page.getByTestId("upload-page")).toHaveAttribute("data-scene", "progress");
+  await expect.poll(() => gate.created.length).toBe(3);
+  const idOf = (name: string) => gate.created.find((item) => item.filename === name)?.uploadId;
+  const csv = idOf("slide.csv") ?? "";
+  const heatmap = idOf("slide_prob.png") ?? "";
+  await page.evaluate(
+    ({ csvId, heatmapId }) => {
+      const fake = (window as unknown as { __parfocalFake: Fake }).__parfocalFake;
+      fake.statuses[csvId] = {
+        kind: "result",
+        status: "waiting",
+        reason: "needs-choices",
+        message: "Choose how to import",
+      };
+      fake.statuses[heatmapId] = {
+        kind: "result",
+        status: "failed",
+        reason: "result-heatmap-not-stored",
+        failure_class: "permanent",
+        message: "Parfocal checked this heatmap against its slide but cannot keep heatmaps yet.",
+      };
+    },
+    { csvId: csv, heatmapId: heatmap },
+  );
+  return csv;
+}
+
+test("a result file with problems waits, each problem is fixed in its zone, and the import follows", async ({
+  page,
+}) => {
+  const root = await mkdtemp(join(tmpdir(), "parfocal-res-e2e-"));
+  const csv = await uploadResults(page, root);
+  const summary = page.getByTestId("result-problems-summary");
+  await expect(summary).toContainText("2 result files need you", { timeout: 20_000 });
+  await expect(page.getByText("Parfocal cannot keep heatmaps yet")).toBeVisible();
+  const zones = page.getByTestId("upload-problem");
+  const zoneOf = (text: string) => zones.filter({ hasText: text });
+  await expect(zoneOf("could not be read")).toHaveCount(1);
+  const importButton = page.getByTestId("import-result");
+  await expect(importButton).toBeDisabled();
+  await zoneOf("could not be read").getByRole("button", { name: "Skip them" }).click();
+  await page.getByRole("combobox", { name: "Class for objects with none" }).click();
+  await page.getByRole("option", { name: "Tumor" }).click();
+  await page.getByRole("combobox", { name: "Class for Epithelium" }).click();
+  await page.getByRole("option", { name: "Stroma" }).click();
+  await page.getByRole("radio", { name: "Count as 1.0" }).click();
+  await zoneOf("have no score").getByRole("button", { name: "Use this choice" }).click();
+  await zoneOf("lie outside the slide").getByRole("button", { name: "Leave them out" }).click();
+  await expect(importButton).toBeDisabled();
+  const guesses = zoneOf("guessed the slide level");
+  await expect(guesses.getByRole("radio", { name: /Level 2.*31% on tissue/ })).toBeChecked();
+  await guesses.getByRole("radio", { name: /Level 0.*92% on tissue/ }).click();
+  await guesses.getByRole("button", { name: "Use this guess" }).click();
+  await expect(importButton).toBeEnabled();
+  await importButton.click();
+  await expect(summary).toContainText("1 result file needs you", { timeout: 20_000 });
+  const fake = await fakeOf(page);
+  expect(fake.chosen).toEqual([
+    {
+      score_default: "one",
+      unclassified_class_id: tumorId,
+      heatmap_level: 0,
+      class_mappings: [{ source_name: "Epithelium", class_id: stromaId }],
+    },
+  ]);
+  expect(csv).not.toBe("");
+  await rm(root, { recursive: true, force: true });
+});
+
+test("a result file can be left out instead of fixed", async ({ page }) => {
+  const root = await mkdtemp(join(tmpdir(), "parfocal-res-leave-e2e-"));
+  const csv = await uploadResults(page, root);
+  await page.getByRole("button", { name: "Leave it out" }).click();
+  await expect.poll(async () => (await fakeOf(page)).left).toEqual([csv]);
+  await rm(root, { recursive: true, force: true });
+});
+
+test("a heatmap with no slide waits in Check until its slide is picked", async ({ page }) => {
+  const root = await mkdtemp(join(tmpdir(), "parfocal-heat-e2e-"));
+  await writeTree(root, {
+    name: "heat",
+    children: [
+      { name: "slide.svs", text: "slide-heat" },
+      { name: "mystery_heatmap.png", text: "png" },
+    ],
+  });
+  await page.goto(`/projects/${p07}/upload`);
+  await page.getByTestId("folder-input").setInputFiles(join(root, "heat"));
+  await page.getByTestId("upload-next").click();
+  const zone = page.getByTestId("upload-problem");
+  await expect(zone).toContainText("This result file has no slide yet");
+  await zone.getByRole("combobox", { name: "Choose a slide" }).click();
+  await page.getByRole("option", { name: "heat/slide.svs" }).click();
+  await expect(zone).toHaveCount(0);
+  await expect(page.getByTestId("check-summary")).toContainText("Nothing needs you");
+  await rm(root, { recursive: true, force: true });
 });

@@ -115,7 +115,7 @@ test("a drawn outline shows only its own number line", async ({ page }) => {
   await expect(slot(page, "findings-number-line")).toContainText("R1 · Invasive front");
 });
 
-test("after learning the changed zone is listed, opens to its cells and can be undone", async ({
+test("after learning the changed zone is listed, opens to its cells and can be undone all", async ({
   page,
 }) => {
   await open(page, "after-learning");
@@ -124,9 +124,18 @@ test("after learning the changed zone is listed, opens to its cells and can be u
   await zone.locator('[data-slot="findings-zone-row"]').click();
   await expect(slot(page, "findings-gallery").locator('[data-slot="gallery-tile"]')).toHaveCount(6);
   await page.getByRole("button", { name: /Back to the list/ }).click();
-  await zone.getByRole("button", { name: "Undo" }).click();
+  await expect(slot(page, "findings-learner")).toContainText("14 examples");
+  await zone.getByRole("button", { name: "Undo all" }).click();
   await expect(zone).toHaveCount(0);
   await expect(zoneRows(page)).toHaveCount(2);
+  await expect(slot(page, "findings-learner")).toHaveCount(1);
+});
+
+test("forget clears the learner row and the changed zone together", async ({ page }) => {
+  await open(page, "after-learning");
+  await slot(page, "findings-learner").getByRole("button", { name: "Forget" }).click();
+  await expect(slot(page, "findings-learner")).toHaveCount(0);
+  await expect(slot(page, "findings-changed")).toHaveCount(0);
 });
 
 test("the model warning bar leads both layouts and is absent without a warning", async ({

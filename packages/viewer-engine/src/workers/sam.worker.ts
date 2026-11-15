@@ -25,6 +25,7 @@ startSamWorker(self, {
       cache,
       modelsUrl,
       onStage,
+      windowDecoder: true,
       hasGpuAdapter: async () => {
         const gpu = (self.navigator as GpuNavigator).gpu;
         return gpu === undefined ? false : (await gpu.requestAdapter()) !== null;

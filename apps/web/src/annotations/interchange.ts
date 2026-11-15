@@ -1,3 +1,4 @@
+import { readSavedLearner, type SavedLearner } from "@parfocal/viewer-engine";
 import {
   type AnnotationDocument,
   addGroup,
@@ -64,6 +65,15 @@ export interface ReadFile {
   readonly shapes: readonly FileShape[];
   readonly pins: readonly FilePin[];
   readonly skipped: readonly Skipped[];
+  readonly learner?: SavedLearner;
+}
+
+const learnerOf = (doc: AnnotationDocument): Json =>
+  doc.learner === undefined ? {} : { learner: doc.learner };
+
+function fileLearner(value: unknown): { learner?: SavedLearner } {
+  const learner = readSavedLearner(value);
+  return learner === null ? {} : { learner };
 }
 
 export interface ClassNames {
@@ -189,6 +199,7 @@ export function toOwnJson(doc: AnnotationDocument, names: ClassNames = sameClass
     version: ownVersion,
     groups: groupsOf(doc),
     pins: pinsOf(doc),
+    ...learnerOf(doc),
     objects: listShapes(doc).map((shape) => {
       const kind = layerKinds[shape.kind];
       return {
@@ -203,7 +214,13 @@ export function toOwnJson(doc: AnnotationDocument, names: ClassNames = sameClass
 export function toGeoJson(doc: AnnotationDocument, names: ClassNames = sameClassNames): Json {
   return {
     type: "FeatureCollection",
-    parfocal: { format: ownFormat, version: ownVersion, groups: groupsOf(doc), pins: pinsOf(doc) },
+    parfocal: {
+      format: ownFormat,
+      version: ownVersion,
+      groups: groupsOf(doc),
+      pins: pinsOf(doc),
+      ...learnerOf(doc),
+    },
     features: listShapes(doc).map((shape) => ({
       type: "Feature",
       id: String(shape.id),
@@ -452,6 +469,7 @@ export function readFile(text: string): ReadFile {
       shapes: objects.flatMap((item, index) => objectShapes(item, index, skipped)),
       pins: filePins(parsed["pins"]),
       skipped,
+      ...fileLearner(parsed["learner"]),
     };
   }
   const features = parsed["features"];
@@ -462,6 +480,7 @@ export function readFile(text: string): ReadFile {
       shapes: features.flatMap((item, index) => featureShapes(item, index, skipped)),
       pins: filePins(own["pins"]),
       skipped,
+      ...fileLearner(own["learner"]),
     };
   }
   if (parsed["type"] === "Feature") {

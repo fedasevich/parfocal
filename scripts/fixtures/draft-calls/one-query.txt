@@ -1,0 +1,2 @@
+const draft = defineDraftQuery("getAdminOverview", url, schema);
+const another = defineDraftQuery("getStorageUsage", url, schema);

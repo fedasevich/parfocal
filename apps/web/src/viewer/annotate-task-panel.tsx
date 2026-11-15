@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   ApiError,
   getGetReviewTaskQueryKey,
@@ -99,6 +100,7 @@ export function AnnotateTaskPanel({
   colourOf,
   onOpenSlide,
 }: AnnotateTaskPanelProps) {
+  const { t } = useLingui();
   const { taskId, slideId } = task;
   const queryClient = useQueryClient();
   const me = okData(useGetMe().data)?.user_id ?? null;
@@ -265,7 +267,7 @@ export function AnnotateTaskPanel({
         />
       ) : null}
       <section
-        aria-label="Annotate task"
+        aria-label={t`Annotate task`}
         data-testid="annotate-task-panel"
         data-step={step}
         data-ai={view.shown ? "shown" : view.available ? "hidden" : "none"}
@@ -278,18 +280,18 @@ export function AnnotateTaskPanel({
           <AiResultToggle
             checked={view.shown}
             onCheckedChange={(on) => setAiHidden(!on)}
-            resultName={aiList?.result_name ?? "AI result"}
+            resultName={aiList?.result_name ?? t`AI result`}
             count={ai.length}
           />
         ) : (
           <p className="m-0 text-body-sm text-fg-dim" data-testid="no-result-set">
-            {view.label}. Draw the objects by hand.
+            <Trans>{view.label}. Draw the objects by hand.</Trans>
           </p>
         )}
         {view.available && ai.length > 0 ? (
           <CheckProgress counts={counts} scope="AI objects" />
         ) : null}
-        <ul aria-label="Counts per class" className="m-0 grid list-none gap-1 p-0 text-body-sm">
+        <ul aria-label={t`Counts per class`} className="m-0 grid list-none gap-1 p-0 text-body-sm">
           {classCounts.map((item) => (
             <li key={item.id} className="flex items-center gap-2" data-testid="class-count">
               <i
@@ -302,7 +304,10 @@ export function AnnotateTaskPanel({
             </li>
           ))}
         </ul>
-        <ul aria-label="Objects" className="m-0 grid max-h-64 list-none gap-0.5 overflow-auto p-0">
+        <ul
+          aria-label={t`Objects`}
+          className="m-0 grid max-h-64 list-none gap-0.5 overflow-auto p-0"
+        >
           {shownAi.map((object) => (
             <li key={object.object}>
               <button
@@ -344,7 +349,7 @@ export function AnnotateTaskPanel({
           guided ? (
             orderQuery.isPending ? (
               <div data-testid="guided-loading">
-                <Loader label="Loading the check order" />
+                <Loader label={t`Loading the check order`} />
               </div>
             ) : (
               <GuidedCheck
@@ -362,7 +367,7 @@ export function AnnotateTaskPanel({
             )
           ) : (
             <Button size="sm" onClick={toggleGuide}>
-              Guided check <Keycap action={guideAction} keys="⇧G" size="sm" />
+              <Trans>Guided check</Trans> <Keycap action={guideAction} keys="⇧G" size="sm" />
             </Button>
           )
         ) : null}
@@ -374,15 +379,16 @@ export function AnnotateTaskPanel({
               disabled={selectedAi.check !== "unchecked"}
               onClick={confirmSelected}
             >
-              Confirm {selectedAi.object} <Keycap action={confirmAction} keys="D" size="sm" />
+              <Trans>Confirm {selectedAi.object}</Trans>{" "}
+              <Keycap action={confirmAction} keys="D" size="sm" />
             </Button>
             <Button size="sm" disabled={selectedAi.check === "deleted"} onClick={deleteSelected}>
-              Delete {selectedAi.object}
+              <Trans>Delete {selectedAi.object}</Trans>
             </Button>
           </div>
         ) : null}
         {newRuns.length > 0 && (!locked || task.owner) ? (
-          <ul aria-label="Runs to add" className="m-0 grid list-none gap-1 p-0">
+          <ul aria-label={t`Runs to add`} className="m-0 grid list-none gap-1 p-0">
             {newRuns.map((set) => (
               <li key={set.id}>
                 <Button
@@ -390,7 +396,7 @@ export function AnnotateTaskPanel({
                   data-testid="add-run"
                   onClick={() => (locked ? setAddingRun(set.id) : addRunNow(set.id))}
                 >
-                  Add the run {set.name}
+                  <Trans>Add the run {set.name}</Trans>
                 </Button>
               </li>
             ))}
@@ -398,16 +404,16 @@ export function AnnotateTaskPanel({
         ) : null}
         {addingSet ? (
           <ReasonModal
-            title="Add a run to a signed-off slide"
-            subtitle="This slide is signed off"
-            whatLabel="What changes"
-            what={`The run ${addingSet.name} joins this slide`}
-            label="Reason"
-            placeholder="For example, a newer model run finished"
-            help="The reason goes into the history of the layer."
-            hint="The change is listed with the evaluation."
-            primary="Add the run"
-            tooShort="Give a reason of at least 10 characters."
+            title={t`Add a run to a signed-off slide`}
+            subtitle={t`This slide is signed off`}
+            whatLabel={t`What changes`}
+            what={t`The run ${addingSet.name} joins this slide`}
+            label={t`Reason`}
+            placeholder={t`For example, a newer model run finished`}
+            help={t`The reason goes into the history of the layer.`}
+            hint={t`The change is listed with the evaluation.`}
+            primary={t`Add the run`}
+            tooShort={t`Give a reason of at least 10 characters.`}
             onClose={() => setAddingRun(null)}
             onSubmit={(reason) => {
               setAddingRun(null);
@@ -417,7 +423,7 @@ export function AnnotateTaskPanel({
         ) : null}
         {aiQuery.isError ? (
           <p role="alert" className="m-0 text-body-sm text-danger">
-            The AI result did not load. Reload the slide to try again.
+            <Trans>The AI result did not load. Reload the slide to try again.</Trans>
           </p>
         ) : null}
         {refusal ? (
@@ -435,7 +441,7 @@ export function AnnotateTaskPanel({
               )
             }
           >
-            {nothingToMark ? "Nothing to mark" : "Mark slide checked"}
+            {nothingToMark ? t`Nothing to mark` : t`Mark slide checked`}
           </Button>
         ) : null}
         {step !== "open" ? (

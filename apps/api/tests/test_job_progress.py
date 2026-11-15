@@ -7,9 +7,11 @@ from typing import Any
 
 import pytest
 from db_support import ApiAs
+from storage_support import with_store
 from test_model_runs import Lab, claim, make_lab, ok, one_run, read, run_async, stage, started
 from workspace_support import owner
 
+from parfocal_common.chunk_store import packed
 from parfocal_common.jobs import StepPausedError, StepRun
 from parfocal_common.model_runs import (
     STAGES,
@@ -17,8 +19,11 @@ from parfocal_common.model_runs import (
     ClaimedRun,
     mark_area,
     run_model_run,
+    run_prefix,
+    tile_key,
     workflow,
 )
+from parfocal_common.result_store import ObjectResultStore
 
 pytestmark = pytest.mark.db
 
@@ -181,3 +186,29 @@ def test_people_outside_the_project_see_no_areas(api: ApiAs, database: str, lab:
     assert response.status_code == 404
     missing = api(lab.people["owner"]).get(f"{lab.runs}/{uuid.uuid4()}/areas")
     assert missing.status_code == 404
+
+
+def test_a_finished_tile_of_a_running_run_is_served_as_stored(
+    api: ApiAs, database: str, lab: Lab
+) -> None:
+    run = one_run(api, lab)
+    execute(database, claim(database, lab, tiled_plan(3)))
+    [[tenant_id, slide_id]] = owner(
+        database, f"SELECT tenant_id, slide_id FROM model_runs WHERE job_id = '{run['id']}'"
+    )
+    prefix = run_prefix(uuid.UUID(str(tenant_id)), uuid.UUID(str(slide_id)), uuid.UUID(run["id"]))
+    key = tile_key(prefix, 1)
+    with_store(lambda store: ObjectResultStore(store).put(key, packed(b"cells of tile 1")))
+    client = api(lab.people["owner"])
+    listed = areas(api, lab, run)
+    assert listed["total"] == 3
+    served = client.get(f"{lab.runs}/{run['id']}/tiles/1")
+    assert served.status_code == 200, served.text
+    assert served.headers["content-encoding"] == "gzip"
+    assert served.content == b"cells of tile 1"
+    unfinished = client.get(f"{lab.runs}/{run['id']}/tiles/7")
+    assert (unfinished.status_code, unfinished.json()["code"]) == (404, "tile-not-finished")
+    unstored = client.get(f"{lab.runs}/{run['id']}/tiles/2")
+    assert (unstored.status_code, unstored.json()["code"]) == (404, "tile-not-finished")
+    outsider = api(lab.people["outsider"]).get(f"{lab.runs}/{run['id']}/tiles/1")
+    assert outsider.status_code == 404

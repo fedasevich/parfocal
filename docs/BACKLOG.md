@@ -1082,7 +1082,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Depends on I18N-000.
   Size: M.
 
-- [ ] I18N-004 · Convert the viewer, review and annotate screens to the i18n layer
+- [x] I18N-004 · Convert the viewer, review and annotate screens to the i18n layer
   Move every raw string in the viewer, review, annotate and compare screens of `apps/web` into Lingui messages and drop those files from the I18N-001 baseline list.
   Done when those files are off the baseline, the pseudo-locale test covers one screen of each area and the English catalogue is extracted.
   Depends on I18N-001.
@@ -1193,7 +1193,7 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
   Refs [`poc/src/slide/codecs/openjpeg.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/slide/codecs/openjpeg.ts), doc 03.
   Size: M.
 
-- [ ] INGEST-015 · Conversion fallback worker
+- [x] INGEST-015 · Conversion fallback worker
   Convert to OME-Zarr v0.5 with all RGB channels in one chunk and JPEG chunks at q90 for brightfield, or lossless zstd for 16-bit and fluorescence. Write NGFF metadata. Only invoked by a trigger.
   Done when converting each trigger fixture produces a store that passes INGEST-006 and INGEST-009 and opens in Viv.
   Refs doc 32, [`poc/scripts/tiff-to-zarr.mjs`](https://github.com/fedasevich/pathlogy-poc/blob/master/scripts/tiff-to-zarr.mjs), [`poc/server/tools/ome_tiff_to_zarr16.py`](https://github.com/fedasevich/pathlogy-poc/blob/master/server/tools/ome_tiff_to_zarr16.py).
@@ -1232,7 +1232,7 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
   Depends on INGEST-002, INGEST-011, RSET-004, CASES-024. Refs mock: upload, doc 38, doc 39, doc 42, [ADR 0053](adr/0053-ai-results-review-direction.md).
   Size: L.
 
-- [ ] INGEST-022 · Per-file problems in the Check step
+- [x] INGEST-022 · Per-file problems in the Check step
   One zone per problem, each with its fix: a slide that cannot be read, an MRXS without its data folder (add the folder), a duplicate already in the project (skip or keep both), and a result file with parse errors, a scale mismatch or new classes (RSET-005). Files with a problem wait and the rest upload. The step counts the open problems down to "Nothing needs you".
   Done when component tests resolve each problem class, and an E2E uploads a mixed set and ends with the fixed files uploaded and the others waiting.
   Depends on INGEST-021, INGEST-018, RSET-005. Refs mock: upload/check, doc 40 R3.
@@ -1417,9 +1417,9 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Refs [`poc/src/slide/ventana.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/slide/ventana.ts), doc 06.
   Size: M.
 
-- [ ] VIEW-069 · Ventana BIF with several scan areas
-  Since [ADR 0307](adr/0307-a-bif-is-refused-only-when-its-frame-overlap-is-unknown.md) (a BIF is refused only when its frame overlap is unknown), a BIF with several scan areas is refused because the reader cannot place them, while OpenSlide opens such files. Place each area by its own joints and origin as OpenSlide's Ventana driver does, in ingest and the browser reader through the one `frame_placement` rule.
-  Done when a synthetic BIF with two scan areas opens with both areas where OpenSlide puts them and matches an OpenSlide reference window, and the refusal stays for areas whose overlap is unknown.
+- [x] VIEW-069 · Ventana BIF with several scan areas, research first
+  Since [ADR 0307](adr/0307-a-bif-is-refused-only-when-its-frame-overlap-is-unknown.md) (a BIF is refused only when its frame overlap is unknown), a BIF with several scan areas is refused because the reader cannot place them, while OpenSlide opens such files. First research how common such files are from Roche DP 200, DP 600 and iScan output, OpenSlide's Ventana test data and public datasets, and what OpenSlide does with them. Then decide: place each area by its own joints and origin in ingest and the browser reader through the one `frame_placement` rule, or keep the refusal with a clear message. The owner asked for research before any build (2026-11-14).
+  Done when a result file records the sources, how often the files occur and a recommendation, and either the placement is built (a synthetic two-area BIF matches an OpenSlide reference window, with the refusal kept for areas of unknown overlap) or the refusal stays and its message says why.
   Depends on VIEW-014.
   Size: M.
 
@@ -1692,6 +1692,18 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Refs [`poc/src/deck94/*`](https://github.com/fedasevich/pathlogy-poc/tree/master/src/deck94), doc 23.
   Size: L.
 
+- [ ] VIEW-070 · Dashed AI proposals on the deck.gl WebGPU route
+  On the VIEW-037 route AI proposals draw solid, 0.625% of pixels off the Viv golden, because deck.gl's `PathStyleExtension` injects GLSL only. Draw the dash in WGSL through a small layer extension, or as screen-space dash geometry rebuilt per zoom step with the extension's phase and caps.
+  Done when the AI proposals golden passes on the route at Viv's 0.1% tolerance and `routes-cmu1.spec.ts` drops its 2% bound.
+  Depends on VIEW-037.
+  Size: M.
+
+- [ ] VIEW-071 · Pick the renderer route per slide, checked on a real GPU
+  `mountSlideViewport` always mounts Viv, so the deck.gl WebGPU route of VIEW-037 is reachable only through `PARFOCAL_RENDERER_ROUTE`. Add the route picker behind a developer setting, run the route goldens and the pan and budget specs once on the Mac's real GPU, and check translucent outlines, where the route's wrapped third ring vertex draws one edge twice.
+  Done when the developer setting switches the route on an open slide, a result file records the real-GPU golden and perf numbers, and a translucent outline golden passes on both routes.
+  Depends on VIEW-037.
+  Size: M.
+
 - [ ] VIEW-038 · Custom WebGPU engine route
   Render worker with OffscreenCanvas, tile atlas, compute culling, instanced polygons with instance-step attributes, 8-bit only.
   Done when the route plugs into the VIEW-036 renderer interface, the same golden tests that Viv passes pass on this route, perf tests pass and annotation set updates take one buffer write (the POC's advantage).
@@ -1766,7 +1778,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on PROTO-011. Refs kit Design system page, mock token block, [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
   Size: M.
 
-- [ ] DS-002 · Colour measurement scripts in CI
+- [x] DS-002 · Colour measurement scripts in CI
   WCAG 2 contrast and APCA Lc 60 or more for every text pair, CIEDE2000 between classes after protan, deutan and tritan simulation (Machado), outline contrast over sampled real H&E pixels. Start from the POC's `scripts/color-check.mjs`, which already implements all four.
   Done when CI fails if a token change breaks any threshold, with the doc 35 numbers as the baseline (closest class pair 15.1 under deuteranopia, proposals at least 40 from every class, unsure marks at least 13 from every class on the slide and 15 in the panel).
   Depends on PROTO-011. Refs doc 35, kit decision D12, [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md). Use the limits that the API applies to class colours ([ADR 0067](adr/0067-class-taxonomy-and-colour-check.md)) so tokens and taxonomies never disagree.
@@ -2070,7 +2082,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on SHELL-010.
   Size: M.
 
-- [ ] SHELL-011 · Second-monitor pop-out windows
+- [x] SHELL-011 · Second-monitor pop-out windows
   The minimap and the inspector can pop out into a second window that stays in sync (BroadcastChannel), using the Window Management API where available.
   Done when an E2E test with two pages confirms camera sync both ways.
   Refs doc 35, mock 7 pop-out icon.
@@ -2138,7 +2150,7 @@ The launchpad is everyone's home ([ADR 0021](adr/0021-chosen-home-worklist-statu
   Done when unit tests cover the heuristic and E2E applies a suggestion with an audit entry.
   Size: M.
 
-- [ ] HOME-007 · Activity on the launchpad and in notifications
+- [x] HOME-007 · Activity on the launchpad and in notifications
   Replies, mentions, new tasks, finished model runs and imports, and sign-offs, shown on the launchpad and in the notification centre, filterable by everything, mentions and jobs. Each item links to the slide, object, thread, task or job.
   Done when component tests render seeded events with each filter and the activity updates in realtime.
   Depends on COLLAB-001, NOTIF-002. Refs mock 1 scene C, [ADR 0021](adr/0021-chosen-home-worklist-status-board-and-account-menu.md).
@@ -3317,7 +3329,7 @@ Cases are optional groups of slides inside a project (PROJ-001). Patient fields 
   Depends on CASES-003 and the final UI shell.
   Size: M.
 
-- [ ] CASES-026 · Encrypted clinical note per case
+- [x] CASES-026 · Encrypted clinical note per case
   The slide picker's case details (CASE-011) have a clinical note row in clinical projects, but [ADR 0054](adr/0054-hospital-code-inventory-and-revert-order.md) removed `cases.clinical_note`, so it always reads "No clinical note". The owner chose on 2026-11-04 to store it again. A migration adds the note sealed with the tenant key as patient identifiers are (SEC-004), with the column classed phi in the data map. Project owners write it in clinical projects only, de-identified projects refuse it, and it is never written to logs, audit details, notifications or telemetry. A short ADR records why the note comes back, and a security review of the sealing is written into it.
   Done when API tests cover writing, reading, clearing, tenant isolation, the refusal in de-identified projects and an audit entry without the text, a log capture test proves the text never reaches a log, and the case details show the note.
   Depends on SEC-004, CASE-011.
@@ -3352,7 +3364,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Done when tests reject an artifact whose checksum does not match.
   Size: M.
 
-- [ ] AIP-002 · Model registry
+- [x] AIP-002 · Model registry
   Model family, task (tumor map, detector, typer, interactive encoder, decoder), version, licence of weights and data, allowed tenant types, input microns per pixel, calibration temperature, evaluation report link, status (candidate, validated, retired).
   Done when API tests cover registration and the licence fields are recorded for every model. While STACK-031 (licence policy) is on hold the registry blocks nothing, as the owner chose on 2026-11-04 ([ADR 0202](adr/0202-v1-model-line-up-per-tier.md)), and the block of a non-commercial model in a commercial tenant comes back with STACK-031.
   Each model is either a Parfocal model, always listed unless a researcher with admin rights hides it (JOBS-006), or a lab model behind the lab's own endpoint (JOBS-005), and records what it makes (regions, cells, heatmap).
@@ -3458,6 +3470,12 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Depends on AIP-000.
   Size: S.
 
+- [ ] AIP-020 · Runtime model registration and model parts in the registry
+  AIP-002 (model registry) keeps the registry in code. A migration moves it into a table so an admin can register a model while the app runs, adds licence fields for lab models connected through their own endpoint (JOBS-005), and adds rows with versions for the separate model parts in ADR 0202's line-up, such as the PathoSAM encoder and decoder.
+  Done when an API test registers a model at run time and reads it back with its licence fields, a lab model row carries its licence, and every part in ADR 0202's line-up has a registry row with a version.
+  Depends on AIP-002.
+  Size: M.
+
 ---
 
 ## 22 AISEG · Interactive segmentation
@@ -3515,7 +3533,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Refs doc 20 §2.10.
   Size: M.
 
-- [ ] AISEG-009 · Embedding window crop for decoder speed
+- [x] AISEG-009 · Embedding window crop for decoder speed
   Crop the embedding around the prompt before decoding.
   Done when the decoder time drops below the POC's 40 ms floor in the browser test, or an ADR records why not.
   Refs doc 20 §2.10.
@@ -3645,7 +3663,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Done when tests produce stable areas on a fixture.
   Size: M.
 
-- [ ] AINUC-010 · Whole-slide nuclei job UI
+- [x] AINUC-010 · Whole-slide nuclei job UI
   Scope view, selection or slide. Defaults fixed for doctors, options for annotators. Find nuclei, cancel, load last run. The minimap shades finished tiles. Cancel stops within one window and keeps finished tiles.
   Done when E2E starts, cancels and reloads a job.
   Depends on AINUC-001, AINUC-002, AINUC-013, JOBS-004.
@@ -3664,7 +3682,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
 
 ---
 
-- [ ] AINUC-013 · Stream a whole-slide run onto the open slide
+- [x] AINUC-013 · Stream a whole-slide run onto the open slide
   While a run on the open slide is going, each new chunk is appended to the result layer without rebuilding earlier ones, keyed by run lineage, with a full rebuild at most every 3 s. Finished tiles are marked on the slide, with progress and an estimate, and cancel keeps what is finished. This follows the POC's streamed whole-slide job.
   Done when a test proves a streamed scene equals one built from scratch, a perf test streams 250,000 nuclei with no frame over 33 ms, and E2E starts a run, sees objects appear before it ends, cancels it and keeps them.
   Depends on AIP-011, AINUC-005, PROTO-020. Refs docs 19, 31, [ADR 0237](adr/0237-annotate-tasks-on-one-shared-layer.md).
@@ -3731,13 +3749,13 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Refs doc 25.
   Size: S.
 
-- [ ] AILEARN-002 · Browser per-slide learner
+- [x] AILEARN-002 · Browser per-slide learner
   Softmax regression on pooled embedding features plus the typer's log-probabilities, retrained in a worker in milliseconds per correction, saved with the slide's annotation document.
   Done when a test on the doc 22 protocol improves same-image typing accuracy by at least 10 points after 200 corrections.
   Refs doc 22, [`poc/src/segment/type-learner.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/segment/type-learner.ts).
   Size: M.
 
-- [ ] AILEARN-003 · Learner UI
+- [x] AILEARN-003 · Learner UI
   After a few corrections on a slide (10 by default) the learner re-checks the slide. The cells it changed form a zone in findings, "Changed after your corrections", reviewed with the same type bar and keys, with Undo all that restores the typer's first calls and keeps the doctor's own corrections. Learning applies to that slide only. A collapsed row shows how many examples the learner has, with forget.
   Done when component tests cover the zone, undo and forget, and an E2E sees the zone appear after the set number of corrections.
   Refs mock 6 "After learning", [ADR 0013](adr/0013-cell-findings-shortcuts-and-ai-on-upload.md).
@@ -3759,6 +3777,12 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
 - [ ] AILEARN-007 · Measure corrections per hundred nuclei
   The product metric for the loop, reported per tenant over time.
   Done when the metric appears on the lab dashboard with seeded data.
+  Size: M.
+
+- [ ] AILEARN-008 · The review viewer gives the learner real embeddings
+  AILEARN-003 (learner UI) feeds the learner pooled SAM embeddings through `LearnerEmbeddingsContext`, but only the annotate screens hold SAM services, a patch reader and cell outlines, so on a real slide in the review viewer the learner stays off. The review viewer provides that context from the same SAM services and the slide's cell outlines, lazily and only once the reviewer starts correcting types.
+  Done when an E2E on a paged slide with stubbed SAM sees the learner zone appear after 10 retypes, and a test proves no SAM work starts before the first correction.
+  Depends on AILEARN-003.
   Size: M.
 
 ---
@@ -4415,7 +4439,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when both tests pass locally with no retries and neither appears in a `flaky-*` artifact of the next three ci runs on main.
   Size: S.
 
-- [ ] TEST-030 · Find why the table Tab order test fails on its first ci attempt
+- [x] TEST-030 · Find why the table Tab order test fails on its first ci attempt
   "Tab reaches every row's checkbox and action, and Space picks a row" in `packages/ui/e2e/table.spec.ts` failed its first attempt and passed its retry in three ci runs on 2026-11-09. It did not fail on the Mac in 10 plain runs, with the CPU slowed 6 and 20 times, or with the story script delayed 400 ms, so the cause is unknown. The test now reports every Tab stop it reached instead of one `false`, so the next failure names the element that took focus.
   Done when a ci failure has shown which stop was wrong, the cause is fixed in the table or the spec, and the test stays out of the `flaky-*` artifacts for a week of main.
   Size: S.
@@ -4440,7 +4464,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when the spec passes locally with no retries and the test stays out of the `flaky-*` artifacts of the next three ci runs on main.
   Size: S.
 
-- [ ] TEST-035 · Find why two axe scans fail on a first attempt
+- [x] TEST-035 · Find why two axe scans fail on a first attempt
   Two tests failed once and passed their retry on 2026-11-10. "the open modal passes axe in light" in `packages/ui/e2e/small-modal.spec.ts` threw "Axe is already running" (ci run on commit 1f61523d), so something else on the story page runs axe while the spec does. "an email that already has an account says so" in `apps/web/e2e/sign-up.spec.ts` got a `color-contrast` violation on the primary button of `/sign-up` (ci run on commit fc1723ce), right after the click that submits the form.
   Done when each has a named cause, a fix in the spec, the fixture or the component, and neither test sits in a `flaky-*` artifact for a week of main.
   Size: S.
@@ -4457,7 +4481,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Depends on TEST-020.
   Size: M.
 
-- [ ] TEST-038 · Draft call ratchet
+- [x] TEST-038 · Draft call ratchet
   Screens built on draft calls work in every test and are empty in production, because only the fake API answers them (`docs/knowledge/draft-calls.md`). While the UI is built on fakes the count may grow ([ADR 0295](adr/0295-ui-first-on-fakes-then-switch-each-area-to-the-real-api.md), UI first on fakes, then each area switches), so add a script that counts the operations in `packages/api-client/src/draft` per area and prints the count in `pnpm verify` without failing it. OPS-017 (switch each area to the real API) uses the count of an area to show it is fully switched.
   Done when `pnpm verify` prints the draft count per area and the total, a test checks the count against a fixture folder, and `knowledge/draft-calls.md` points to the script.
   Size: S.
@@ -4466,6 +4490,11 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   The CI `e2e` job signs in at the production Zitadel instance with a test user, which touches production on every run and gets worse once sign-up specs create users. `infra/tofu/idp-scratch` already boots Zitadel in Docker and applies the production `zitadel-identity` module with no credential. Turn it into a compose profile that stays up, point `apps/e2e` and the CI job at it, and seed the test user there. Start with a short spike, because sign-in through the app's own screens on the Zitadel session API ([ADR 0294](adr/0294-native-sign-up-and-sign-in-through-zitadel-session-api.md), native sign-up and sign-in) is untried on the container.
   Done when the `e2e` job passes with no `ZITADEL_*` secret and no request to `zitadel.cloud`, and a sign-up spec creates and removes a user on the local instance.
   Size: M.
+
+- [x] TEST-042 · Real-slide tests survive a dropped download
+  `packages/viewer-engine/test/pixel-source/ndpi-real.test.ts` and `reader-check.test.ts` fetch public test slides over HTTP, and on the night of 2026-11-14 three merge checks failed on `read ECONNRESET` for Hamamatsu-1.ndpi and CMU-1.ndpi, each passing on rerun. The shared fetch helper retries a reset or a dropped range read a few times with a short backoff and names the slide and range when it finally gives up.
+  Done when a unit test makes the helper's first two reads reset and the third succeed, and the real-slide tests pass with that helper.
+  Size: S.
 
 - [ ] TEST-040 · API container under the end-to-end suite
   The 6 real-API specs in `apps/e2e` run the API with `uv run uvicorn`, so the deploy image, migrations on start and production-like settings never run under a browser before a deploy. Run `apps/e2e` against the API container from FOUND-015 (container images) and the local Zitadel from TEST-039 (local Zitadel for the end-to-end suite), behind one `pnpm stack:up`, with the web app still on vite dev. Seed with the showcase seed and the small fixtures copied into MinIO. Confirm how an upload starts ingest, since `upload-into-project.spec.ts` now starts it by hand. Nothing in the stack reaches a cloud service. The edge Worker stays out until a tile, realtime or header bug escapes to production because it was missing, and then a new task adds it with a local S3 adapter for its `SLIDES` binding.
@@ -4649,7 +4678,7 @@ Importing AI results made elsewhere is first class. A result set is one import o
   Depends on RSET-003, RSET-004, PROJ-004. Refs mock: upload/check, mock: upload/unmatched, mock: project/importfail, doc 44.
   Size: L.
 
-- [ ] RSET-006 · Add a result set from the viewer
+- [x] RSET-006 · Add a result set from the viewer
   On an open slide a file is previewed as an overlay before it is saved, with alignment and scale fixes, and shown next to the existing sets once added.
   Done when E2E adds a GeoJSON from the slide view, fixes its offset and sees it in Layers.
   Depends on RSET-005, VIZ-001. Refs mock: upload/viewer.
@@ -4688,10 +4717,16 @@ Importing AI results made elsewhere is first class. A result set is one import o
   Depends on RSET-011. Split from RSET-011 by [ADR 0127](adr/0127-imported-cells-keep-numbers-by-centre-and-take-the-innermost-region.md) (imported cells keep their numbers by centre distance and take the innermost region).
   Decided in [ADR 0128](adr/0128-result-files-stream-through-a-byte-scanner-into-cell-columns.md) (result files stream through a byte scanner into cell columns): JSON arrays are read in batches by a byte scanner and msgspec, cells are kept as numpy columns spilled to the work folder, and the worker writes chunks from those columns. The [bounded cell import result](results/2026-11-01-bounded-cell-import.md) measured 824 to 1,025 MiB and 42 to 45 s per import, claimed once.
 
-- [ ] RSET-013 · Heatmap storage and the import check leftovers
+- [x] RSET-013 · Heatmap storage and the import check leftovers
   An imported heatmap is stored and shown after the uploader accepts the level and scale guess, instead of ending with `result-heatmap-not-stored`. Each scale guess carries its share on tissue, an unreadable `.png` or `.tif` heatmap is refused with a named problem, and uploads left waiting on the uploader's choices in quarantine are swept after a set time.
   Done when the RSET-005 test of a heatmap at level 2 scaled by 4 ends in a ready set, a test refuses a corrupt `.png` with its named problem, a test checks the share on tissue of each guess, and a test sweeps a waiting upload past its time.
   Depends on RSET-005. Split from RSET-005 on 2026-11-14.
+  Size: M.
+
+- [x] RSET-014 · Imported heatmaps on the slide, and a choice of scale guess
+  RSET-013 stores an accepted heatmap as a byte grid beside its result set, but the viewer does not draw it yet, and the uploader can accept only the first level and scale guess. The viewer fetches the stored grid and draws it as a heatmap layer in Layers with the VIZ colour maps, and the import choices take a `heatmap_level` so the uploader can pick any guess, each shown with its share on tissue.
+  Done when a component test picks the second guess and the import ends ready at that level, and an E2E imports a heatmap, opens the slide and sees it in Layers over the right tissue.
+  Depends on RSET-013, VIZ-001.
   Size: M.
 
 ---

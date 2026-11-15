@@ -1,4 +1,7 @@
 import asyncio
+import gzip
+import io
+import json
 import re
 import shutil
 import uuid
@@ -13,8 +16,9 @@ import msgspec
 import numpy as np
 import shapely
 from numpy.typing import NDArray
+from PIL import Image
 from shapely.geometry.base import BaseGeometry
-from sqlalchemy import select, update
+from sqlalchemy import func, select, update
 
 from parfocal_api.numbering import reserve
 from parfocal_api.result_imports import (
@@ -36,10 +40,12 @@ from parfocal_api.tables import (
 )
 from parfocal_common.cell_chunks import UNCLASSIFIED, ChunkError
 from parfocal_common.chunk_store import ChunkEntry, read_summary
-from parfocal_common.ingest import Failure
+from parfocal_common.ingest import Failure, slide_prefix
 from parfocal_common.jobs import Step, StepFailedError, StepRun, Workflow
 from parfocal_common.object_ids import Letter
 from parfocal_common.result_imports import (
+    HEATMAP_FACTS,
+    HEATMAP_GRID,
     KIND,
     LEASE_SECONDS,
     STEP_NAMES,
@@ -65,12 +71,16 @@ from parfocal_ingest.cell_import import (
 from parfocal_ingest.chunk_builder import CellTable, plan_chunks, write_table
 from parfocal_ingest.import_checks import (
     Choices,
+    Guess,
     KnownClasses,
     SlideFrame,
     Tally,
+    TissueCells,
+    accepted_guess,
     heatmap_problems,
+    heatmap_values,
     problems_of,
-    raster_shape,
+    stored_values,
 )
 from parfocal_ingest.json_stream import JsonArray
 from parfocal_ingest.matching import Known, Matching, cell_distance, match_regions, pair_centres
@@ -93,6 +103,8 @@ PARFOCAL_FORMAT = re.compile(rb'"format"\s*:\s*"parfocal-results"')
 SNIFF_BYTES = 64 * 1024
 VERSION_LENGTH = 60
 FILE_NAME_LENGTH = 255
+HEATMAP_NAME = "Heatmap import"
+TISSUE_CELL = 64
 DEFAULT_NAMES: Mapping[ResultFormat, str] = {
     ResultFormat.GEOJSON: "GeoJSON import",
     ResultFormat.PARFOCAL_JSON: "Parfocal JSON import",
@@ -226,7 +238,7 @@ def read_format(path: Path, chosen: ResultFormat, reading: Reading) -> Parsed:
                 reading.take(stream_table(text, mapping, dialect))
             return reading.parsed(chosen)
         case ResultFormat.HEATMAP:
-            raise StepFailedError(ImportFailure.HEATMAP_NOT_STORED)
+            raise StepFailedError(ImportFailure.UNREADABLE)
 
 
 def class_list(parsed: Parsed) -> list[str]:
@@ -571,16 +583,79 @@ async def ask_for_choices(context: Context, problems: list[dict[str, Any]], read
         await connection.execute(
             update(uploads)
             .where(uploads.c.id == context.upload.id)
-            .values(import_problems={"readable": readable, "problems": problems})
+            .values(
+                import_problems={"readable": readable, "problems": problems},
+                last_activity_at=func.now(),
+            )
         )
     shutil.rmtree(context.folder, ignore_errors=True)
 
 
+async def tissue_of(context: Context, slide_id: uuid.UUID | None) -> TissueCells | None:
+    if slide_id is None:
+        return None
+    prefix = slide_prefix(context.upload.tenant_id, slide_id)
+    results = ObjectResultStore(context.store)
+    try:
+        mask = await results.get(f"{prefix}tissue.png")
+        facts = json.loads(await results.get(f"{prefix}tissue.json"))
+    except MissingObjectError:
+        return None
+    with Image.open(io.BytesIO(mask)) as image:
+        cells = np.asarray(image.convert("L")) > 0
+    return TissueCells(int(facts.get("cell") or TISSUE_CELL), cells)
+
+
+def heatmap_facts(values: NDArray[Any], guess: Guess, grid_key: str) -> dict[str, Any]:
+    height, width = values.shape
+    return {
+        "width": width,
+        "height": height,
+        "dtype": "uint8",
+        "object_key": grid_key,
+        **guess.as_dict(),
+    }
+
+
+async def store_heatmap(context: Context, values: NDArray[Any], guess: Guess) -> Mapping[str, Any]:
+    upload = context.upload.row
+    set_id = result_set_id_for(upload.id)
+    grid = await asyncio.to_thread(stored_values, values)
+    packed = await asyncio.to_thread(gzip.compress, grid.tobytes(), 6, mtime=0)
+    results = ObjectResultStore(context.store)
+    async with context.step.transaction() as connection:
+        locked = await locked_result_upload(connection, upload.id)
+        if locked is None or locked.slide_id is None:
+            raise StepFailedError(ImportFailure.SLIDE_MISSING)
+        slide = await import_target(connection, locked.slide_id)
+        if slide is None:
+            raise StepFailedError(ImportFailure.SLIDE_MISSING)
+        prefix = result_set_prefix(locked.tenant_id, slide.id, set_id)
+        facts = heatmap_facts(grid, guess, f"{prefix}{HEATMAP_GRID}")
+        await results.put(facts["object_key"], packed)
+        await context.store.put_object(
+            f"{prefix}{HEATMAP_FACTS}", json.dumps(facts).encode(), "application/json"
+        )
+        await keep_source(context, source_key(locked.tenant_id, slide.id, set_id, locked.file_name))
+        draft = ResultSetDraft(
+            name=HEATMAP_NAME, source_file=locked.file_name[:FILE_NAME_LENGTH], classes=[]
+        )
+        await store_result_set(connection, locked, slide, set_id, draft, [], context.step.job_id)
+    await context.store.delete_object(upload.object_key)
+    shutil.rmtree(context.folder, ignore_errors=True)
+    return {"result_set_id": str(set_id), "heatmap": facts, "notices": []}
+
+
 async def check_heatmap(context: Context, path: Path, setting: Setting) -> Mapping[str, Any]:
-    if context.upload.row.import_choices is not None:
-        raise StepFailedError(ImportFailure.HEATMAP_NOT_STORED)
-    shape = await asyncio.to_thread(raster_shape, path)
-    await ask_for_choices(context, heatmap_problems(shape, setting.frame), 1)
+    upload = context.upload.row
+    values = await asyncio.to_thread(heatmap_values, path, upload.file_name)
+    if upload.import_choices is not None:
+        level = cast("dict[str, Any]", upload.import_choices).get("heatmap_level")
+        guess = accepted_guess(upload.import_problems, level)
+        return await store_heatmap(context, values, guess)
+    tissue = await tissue_of(context, upload.slide_id)
+    found = await asyncio.to_thread(heatmap_problems, values, setting.frame, tissue)
+    await ask_for_choices(context, found, 1)
     return {"needs_choices": True, "notices": []}
 
 

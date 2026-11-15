@@ -11,7 +11,7 @@ import {
   samGraphs,
   startSamWorker,
 } from "../../src/index.ts";
-import { FakeModelCache, FakeRuntime, tick } from "./sam-fakes.ts";
+import { FakeModelCache, FakeRuntime, FakeTensor, tick } from "./sam-fakes.ts";
 
 type Listener = (event: { data: never }) => void;
 
@@ -132,6 +132,26 @@ describe("inference worker client", () => {
     decoder.gates[1]?.resolve();
     const answer = await second;
     assert.equal(answer.status, "answer");
+  });
+
+  it("pools an outline's feature from the held embedding across the message boundary", async () => {
+    const runtime = new FakeRuntime();
+    const { worker } = linkedWorker(runtime);
+    const client = createSamClient({ modelsUrl: "/models", spawn: () => worker });
+    await client.ready;
+    const plane = 4 * 4;
+    const data = new Float32Array(2 * plane);
+    data.fill(1, 0, plane);
+    data.fill(3, plane);
+    runtime.session(samGraphs.encoderQ4).respond = () => ({
+      image_embeddings: new FakeTensor([1, 2, 4, 4], data),
+    });
+    await client.encode("view-a", new Float32Array(3 * 1024 * 1024));
+    const square = Float32Array.of(0, 0, 256, 0, 256, 256, 0, 256);
+    const [feature] = await client.pool("view-a", [square]);
+    assert.deepEqual(Array.from(feature ?? []), [1, 3, 1, 3]);
+    await assert.rejects(client.pool("missing", [square]), SamWorkerError);
+    client.close();
   });
 
   it("rejects a request for an unknown embedding with the worker message", async () => {

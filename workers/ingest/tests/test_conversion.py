@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
+import openslide
 import pytest
 import tifffile
 from fixture_support import SYNTHETIC, fixture_path
@@ -19,25 +20,31 @@ from parfocal_ingest.conversion import (
     NotTriggeredError,
     Trigger,
     convert,
+    level_plan,
     trigger_for,
     write_store,
 )
 from parfocal_ingest.identify import Format, identify
-from parfocal_ingest.pyramid import Pyramid, Stored, ladder, main_series, read_pyramid
+from parfocal_ingest.pyramid import Pyramid, Reader, Stored, ladder, main_series, read_pyramid
 from parfocal_ingest.reference_tiles import Window, read_window
+from parfocal_ingest.source_levels import jpeg2000_tile, planar, ycbcr_to_rgb
+from parfocal_ingest.thumbnail import background_of, flattened
 from parfocal_ingest.zarr_index import zarr_tile_index
 
 SMALL_CHUNK = 256
 TOLERANCE = 1.0
-LOSSLESS_LEVEL_ERROR = 0.5
 FULL_CHROMA = 0
 CANDIDATE_CORNERS = 24
 SHIFT = 2
 MARGIN = 2
-LOSSY_PSNR = 30.0
 TRIGGER_FIXTURE = "JP2K-33003-1.svs"
-BRIGHTFIELD = [TRIGGER_FIXTURE, "synthetic-jpeg.tiff", "synthetic-zlib.ome.tiff"]
+FORCED_LOSSLESS = "#lossless"
+JPEG_BRIGHTFIELD = ["synthetic-jpeg.tiff", "synthetic-zlib.ome.tiff"]
+BRIGHTFIELD = [TRIGGER_FIXTURE, *JPEG_BRIGHTFIELD]
+LOSSLESS_BRIGHTFIELD = [TRIGGER_FIXTURE] + [name + FORCED_LOSSLESS for name in JPEG_BRIGHTFIELD]
 LOSSLESS = ["synthetic-channels-uint16.ome.tiff", "synthetic-mxif-uint16-be.ome.tiff"]
+COMPARE_ROWS = 512
+OPENSLIDE_UNSPLIT = 4096
 FIRED = {Trigger.JPEG2000_DECODE_BUDGET}
 COMMITTED = {
     "synthetic-jpeg.tiff": "synthetic-jpeg-converted.ome.zarr",
@@ -63,15 +70,19 @@ def stores(tmp_path_factory: pytest.TempPathFactory) -> Convert:
 
     def make(name: str) -> Converted:
         if name not in made:
-            path = fixture_path(name)
+            slide = name.removesuffix(FORCED_LOSSLESS)
+            path = fixture_path(slide)
             folder = tmp_path_factory.mktemp("converted")
-            store = folder / f"{name}.ome.zarr"
-            if name == TRIGGER_FIXTURE:
+            store = folder / f"{slide}.ome.zarr"
+            if slide == TRIGGER_FIXTURE:
                 made[name] = convert(
                     path, store, folder / "work", Trigger.JPEG2000_DECODE_BUDGET, FIRED
                 )
             else:
-                made[name] = write_store(path, store, folder / "work", chunk=SMALL_CHUNK)
+                chunks = Chunks.ZSTD if name.endswith(FORCED_LOSSLESS) else None
+                made[name] = write_store(
+                    path, store, folder / "work", chunk=SMALL_CHUNK, chunks=chunks
+                )
         return made[name]
 
     return make
@@ -125,11 +136,6 @@ def mean_error(a: np.ndarray, b: np.ndarray) -> float:
 
 def shifted(around: np.ndarray, dx: int, dy: int, side: int) -> np.ndarray:
     return around[:, SHIFT + dy : SHIFT + dy + side, SHIFT + dx : SHIFT + dx + side]
-
-
-def psnr(a: np.ndarray, b: np.ndarray) -> float:
-    squared = float(((a.astype(np.float64) - b.astype(np.float64)) ** 2).mean())
-    return 10 * float(np.log10(255**2 / squared))
 
 
 def textured_corner(store: Path, level: int) -> tuple[int, int, int]:
@@ -188,11 +194,64 @@ def test_the_jpeg2000_trigger_picks_only_jpeg2000_slides() -> None:
 def test_a_fired_trigger_converts_the_trigger_fixture(stores: Convert) -> None:
     done = stores(TRIGGER_FIXTURE)
     assert done.trigger is Trigger.JPEG2000_DECODE_BUDGET
-    assert done.chunks is Chunks.JPEG
+    assert done.chunks is Chunks.ZSTD
+    assert done.from_source == (True, False, True, True, False, False, False)
     assert chunk_shape(done.store) == [3, CHUNK, CHUNK]
     assert (done.store / "zarr.json").exists()
     assert not (done.store.parent / "work").exists()
     assert not done.store.with_name(done.store.name + ".partial").exists()
+
+
+def test_the_level_plan_takes_each_level_the_source_has() -> None:
+    plan = level_plan({1, 4, 8}, 15374, 17497, CHUNK)
+    assert [step.downsample for step in plan] == [1, 2, 4, 8, 16, 32, 64]
+    assert [step.from_source for step in plan] == [True, False, True, True, False, False, False]
+    assert [step.downsample for step in level_plan({1}, 512, 300, CHUNK)] == [1]
+
+
+def test_ycbcr_follows_the_openslide_tables() -> None:
+    luma, cb, cr = np.meshgrid(np.arange(0, 256, 15), np.arange(0, 256, 15), np.arange(0, 256, 15))
+    pixels = np.stack([luma, cb, cr], axis=-1).astype(np.uint8)
+    rgb = ycbcr_to_rgb(pixels).astype(np.float64)
+    y, u, v = (pixels[..., k].astype(np.float64) for k in range(3))
+    exact = np.clip(
+        np.stack(
+            [
+                y + 1.402 * (v - 128),
+                y - 0.344136 * (u - 128) - 0.714136 * (v - 128),
+                y + 1.772 * (u - 128),
+            ],
+            axis=-1,
+        ),
+        0,
+        255,
+    )
+    assert np.abs(rgb - exact).max() <= 1
+    grey = np.full((2, 2, 3), 128, dtype=np.uint8)
+    grey[..., 0] = 77
+    assert (ycbcr_to_rgb(grey) == 77).all()
+    measured = np.array([[[148, 144, 170], [145, 144, 170]]], dtype=np.uint8)
+    assert ycbcr_to_rgb(measured).tolist() == [[[207, 112, 176], [204, 109, 173]]]
+
+
+def test_a_jpeg2000_codestream_decodes_unchanged_through_the_wrapper() -> None:
+    pixels = np.random.default_rng(15).integers(0, 256, (48, 64, 3), dtype=np.uint8)
+    output = io.BytesIO()
+    Image.fromarray(pixels, "RGB").save(output, "JPEG2000", no_jp2=True)
+    assert np.array_equal(jpeg2000_tile(output.getvalue(), ycbcr=False), pixels)
+
+
+@pytest.mark.parametrize("name", LOSSLESS_BRIGHTFIELD)
+def test_lossless_brightfield_is_rgb_zstd(name: str, stores: Convert) -> None:
+    store = stores(name).store
+    meta = array_meta(store, 0)
+    assert meta["data_type"] == "uint8"
+    assert meta["fill_value"] == 255
+    assert meta["codecs"][1]["name"] == "zstd"
+    group = json.loads((store / "zarr.json").read_text())["attributes"]["ome"]
+    channels = group["omero"]["channels"]
+    assert [channel["color"] for channel in channels] == ["FF0000", "00FF00", "0000FF"]
+    assert all(channel["window"]["end"] == 255 for channel in channels)
 
 
 @pytest.mark.parametrize("name", BRIGHTFIELD + LOSSLESS)
@@ -222,7 +281,7 @@ def test_the_store_passes_the_level_validation(name: str, stores: Convert) -> No
         assert scale == pytest.approx([1, mpp * 2**k, mpp * 2**k])
 
 
-@pytest.mark.parametrize("name", BRIGHTFIELD)
+@pytest.mark.parametrize("name", JPEG_BRIGHTFIELD)
 def test_brightfield_is_one_jpeg_chunk_of_three_channels(name: str, stores: Convert) -> None:
     store = stores(name).store
     meta = array_meta(store, 0)
@@ -248,15 +307,13 @@ def test_high_bit_depth_is_lossless_zstd(name: str, stores: Convert) -> None:
         source = series.levels[0].asarray()
     channels, height, width = source.shape
     assert np.array_equal(store_window(store, 0, 0, 0, width, height), source)
-    coarser = store_window(store, 1, 0, 0, width // 2, height // 2)
-    assert mean_error(coarser, averaged(source, 2)) <= LOSSLESS_LEVEL_ERROR
     group = json.loads((store / "zarr.json").read_text())["attributes"]["ome"]
     windows = [channel["window"] for channel in group["omero"]["channels"]]
     assert len(windows) == channels
     assert all(window["start"] < window["end"] <= 65535 for window in windows)
 
 
-@pytest.mark.parametrize("name", BRIGHTFIELD)
+@pytest.mark.parametrize("name", JPEG_BRIGHTFIELD)
 def test_the_store_draws_the_source_across_chunk_corners(name: str, stores: Convert) -> None:
     path, found, pyramid = opened(name)
     store = stores(name).store
@@ -285,10 +342,66 @@ def test_the_store_draws_the_source_across_chunk_corners(name: str, stores: Conv
         ]
         assert error * MARGIN < min(offsets), (level, error, min(offsets))
         assert error * MARGIN < mean_error(drawn[::-1], placed), (level, error)
-        if name == TRIGGER_FIXTURE:
-            assert psnr(drawn, placed) >= LOSSY_PSNR, (level, psnr(drawn, placed))
-        else:
-            assert error <= TOLERANCE, (level, error)
+        assert error <= TOLERANCE, (level, error)
+
+
+def source_rows(
+    path: Path, found: Format, pyramid: Pyramid, downsample: int
+) -> Callable[[int, int], np.ndarray]:
+    level = next(level for level in pyramid.levels if level.downsample == downsample)
+    if pyramid.reader is Reader.TIFFFILE:
+        with tifffile.TiffFile(path) as tiff:
+            series = main_series(tiff)
+            assert series is not None
+            pixels = planar(series.levels[level.index].asarray(), series.levels[level.index].axes)
+        return lambda top, bottom: pixels[:, top:bottom]
+    with openslide.OpenSlide(path) as slide:
+        index = min(
+            range(slide.level_count), key=lambda k: abs(slide.level_downsamples[k] - downsample)
+        )
+        ds = slide.level_downsamples[index]
+        width, height = slide.level_dimensions[index]
+        background = background_of(slide)
+        if ds != downsample:
+            span = (min(width, OPENSLIDE_UNSPLIT), min(height, OPENSLIDE_UNSPLIT))
+            region = slide.read_region((0, 0), index, span)
+            whole = np.asarray(flattened(region, background)).transpose(2, 0, 1)
+            return lambda top, bottom: whole[:, top:bottom]
+
+    def rows(top: int, bottom: int) -> np.ndarray:
+        with openslide.OpenSlide(path) as slide:
+            region = slide.read_region((0, top * downsample), index, (width, bottom - top))
+            return np.asarray(flattened(region, background)).transpose(2, 0, 1)
+
+    return rows
+
+
+def halved_exactly(finer: np.ndarray, height: int, width: int) -> np.ndarray:
+    sums = finer[:, : height * 2, : width * 2].astype(np.uint16)
+    sums = sums[:, 0::2, 0::2] + sums[:, 1::2, 0::2] + sums[:, 0::2, 1::2] + sums[:, 1::2, 1::2]
+    return np.rint(sums.astype(np.float32) / 4).astype(finer.dtype)
+
+
+@pytest.mark.parametrize("name", LOSSLESS_BRIGHTFIELD + LOSSLESS)
+def test_a_lossless_store_equals_the_source_at_every_level(name: str, stores: Convert) -> None:
+    path, found, pyramid = opened(name.removesuffix(FORCED_LOSSLESS))
+    done = stores(name)
+    for index, from_source in enumerate(done.from_source):
+        width, height = done.levels[index]
+        downsample = 2**index
+        reference = source_rows(path, found, pyramid, downsample) if from_source else None
+        for top in range(0, height, COMPARE_ROWS):
+            bottom = min(height, top + COMPARE_ROWS)
+            drawn = store_window(done.store, index, 0, top, width, bottom - top)
+            if reference is not None:
+                expected = reference(top, bottom)
+                drawn = drawn[:, : expected.shape[1], : expected.shape[2]]
+            else:
+                finer = store_window(
+                    done.store, index - 1, 0, top * 2, width * 2, (bottom - top) * 2
+                )
+                expected = halved_exactly(finer, bottom - top, width)
+            assert np.array_equal(drawn, expected), (index, top)
 
 
 @pytest.mark.parametrize(("name", "committed"), COMMITTED.items())

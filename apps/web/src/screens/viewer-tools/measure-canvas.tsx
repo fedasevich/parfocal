@@ -1,3 +1,4 @@
+import { useLingui } from "@lingui/react/macro";
 import { MagnificationBar } from "@parfocal/ui/components/magnification-bar";
 import { RulerLine } from "@parfocal/ui/components/viewer-tools";
 import { useState } from "react";
@@ -25,6 +26,7 @@ export function MeasureCanvas({
   measurement: Measurement;
   regionSize: number;
 }) {
+  const { t } = useLingui();
   const [camera, setCamera] = useState<Camera | null>(null);
   const [from, to] = rulerEnds(measurement.across);
   return (
@@ -49,7 +51,7 @@ export function MeasureCanvas({
               dashed
               from={toScreen(shown, size, from)}
               to={toScreen(shown, size, to)}
-              label={`${measurement.mm.toFixed(2)} mm`}
+              label={t`${measurement.mm.toFixed(2)} mm`}
             />
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
               <MagnificationBar

@@ -1,3 +1,4 @@
+import { Trans, useLingui } from "@lingui/react/macro";
 import { useListProjectResultSets } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
 import { DecisionButtons } from "@parfocal/ui/components/decision-buttons";
@@ -35,9 +36,10 @@ type CellsOnSlideProps = {
 };
 
 export function CellsOnSlide(props: CellsOnSlideProps) {
+  const { t } = useLingui();
   const session = useReviewSession(props.taskId, props.slideId);
   if (!session.ready) {
-    return <Loader label="Loading the slide" size="page" />;
+    return <Loader label={t`Loading the slide`} size="page" />;
   }
   return <CellsBody key={props.scene ?? "grid"} session={session} scene={props.scene} />;
 }
@@ -60,6 +62,7 @@ function CellsBody({
   session: ReviewSession;
   scene: GalleryScene | undefined;
 }) {
+  const { t } = useLingui();
   const style = scene === "blind" ? { ...session.style, kind: "blind" as const } : session.style;
   const objects = session.objects;
   const cells = objects.filter((item) => item.kind === "cell");
@@ -119,8 +122,10 @@ function CellsBody({
     <div className="grid gap-2.5">
       <div className="flex items-center gap-2">
         <ObjectIdTag>{object.object}</ObjectIdTag>
-        <span className="flex-1 text-body-sm text-fg-dim">Cell in your sample</span>
-        <Button variant="ghost" size="icon-sm" aria-label="Close" onClick={() => setShut(true)}>
+        <span className="flex-1 text-body-sm text-fg-dim">
+          <Trans>Cell in your sample</Trans>
+        </span>
+        <Button variant="ghost" size="icon-sm" aria-label={t`Close`} onClick={() => setShut(true)}>
           <Icon name="close" />
         </Button>
       </div>
@@ -132,7 +137,7 @@ function CellsBody({
       ) : null}
       <b className="text-body font-semibold">
         {style.kind === "agree"
-          ? `The AI says this is a ${object.class_name.toLowerCase()} cell, ${Math.round(object.score * 100)}% sure.`
+          ? t`The AI says this is a ${object.class_name.toLowerCase()} cell, ${Math.round(object.score * 100)}% sure.`
           : text?.question}
       </b>
       <DecisionButtons
@@ -143,7 +148,7 @@ function CellsBody({
         onValueChange={decide}
         classes={session.classes}
         aiClass={object.class_name}
-        label={`Your answer on ${object.object}`}
+        label={t`Your answer on ${object.object}`}
       />
       <NoteBlock
         object={object}
@@ -228,8 +233,10 @@ function CellsBody({
           label: "Opinion",
           body: (
             <p className="m-0 text-body-sm text-fg-dim">
-              The Slide done card with the opinion questions. It opens from Submit once every object
-              is decided.
+              <Trans>
+                The Slide done card with the opinion questions. It opens from Submit once every
+                object is decided.
+              </Trans>
             </p>
           ),
         },
@@ -303,7 +310,7 @@ function CellsBody({
             )}
             <Button size="lg" className="absolute bottom-4 left-4" onClick={() => setShut(false)}>
               <Icon name="expand" />
-              Whole slide
+              <Trans>Whole slide</Trans>
             </Button>
             <MagnificationBar
               className="absolute bottom-4 left-1/2 -translate-x-1/2"
