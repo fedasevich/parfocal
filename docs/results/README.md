@@ -109,4 +109,5 @@ One file per measured run, named `YYYY-MM-DD-short-topic.md`. Copy [_template.md
 | 2026-11-14 | [Converted OME-Zarr stores pass the level checks and open in Viv, and JPEG q90 on JPEG 2000 tissue is 5 to 6 grey levels from the source](2026-11-14-conversion-to-ome-zarr.md) | INGEST-015 | baseline |
 | 2026-11-14 | [A lossless converted JPEG 2000 slide equals its source at every level and is 11.6 times the source size](2026-11-14-lossless-jpeg-2000-conversion.md) | INGEST-015 | baseline |
 | 2026-11-14 | [The tile delivery choice of STACK-025 holds against Cloudflare documentation, and the same-region numbers still belong to TILES-002](2026-11-14-tile-delivery-research-check.md) | TILES-000 | spike |
+| 2026-11-15 | [The per-slide type learner raises same-image balanced typing accuracy from 50.6% to 64.7% after 200 corrections](2026-11-15-per-slide-type-learner-same-images.md) | AILEARN-002 | benchmark |
 | 2026-11-15 | [The window decoder cuts a click decode to 14 to 17 ms in Chrome and agrees with the full decoder at a mean IoU of 0.99](2026-11-15-embedding-window-decoder.md) | AISEG-009 | benchmark |
