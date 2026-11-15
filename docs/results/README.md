@@ -107,3 +107,4 @@ One file per measured run, named `YYYY-MM-DD-short-topic.md`. Copy [_template.md
 | 2026-11-14 | [A stitched BIF shows the overlap tissue once, and the Viv goldens fail when the frames are drawn as a grid](2026-11-14-bif-no-duplicated-tissue.md) | VIEW-014 | check |
 | 2026-11-14 | [Converted OME-Zarr stores pass the level checks and open in Viv, and JPEG q90 on JPEG 2000 tissue is 5 to 6 grey levels from the source](2026-11-14-conversion-to-ome-zarr.md) | INGEST-015 | baseline |
 | 2026-11-14 | [The tile delivery choice of STACK-025 holds against Cloudflare documentation, and the same-region numbers still belong to TILES-002](2026-11-14-tile-delivery-research-check.md) | TILES-000 | spike |
+| 2026-11-15 | [The deck.gl WebGPU route matches the three Viv goldens with zero uncaptured GPU errors, and 15 switches between Viv and it grow the heap 3.5% to 3.9%](2026-11-15-deck-webgpu-route-goldens-and-switch-memory.md) | VIEW-037 | baseline |
