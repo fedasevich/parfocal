@@ -995,7 +995,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Depends on SEC-012, STACK-025. Split from SEC-012 by [ADR 0088](adr/0088-rate-limits-in-postgres-and-at-the-edge.md).
   Size: M.
 
-- [ ] SEC-031 · Hard stops for destructive agent actions
+- [x] SEC-031 · Hard stops for destructive agent actions
   The production rules in `AGENTS.md` are prose. The owner's sessions run with permissions bypassed and no deny list, the connected MCP servers give every session and subagent tools that delete a Neon project or branch and an R2 bucket, and `.env` holds a Cloudflare token that writes R2 and DNS ([project review](results/2026-11-09-project-review.md)). Add deny rules or a `PreToolUse` guard in `.claude/settings.json` for destructive MCP tools and for commands that destroy, delete, purge, rotate or reset cloud resources, remove the two deprecated Cloudflare MCP servers (bindings and observability) from `.mcp.json`, and keep a token limited to dev and staging in `.env`, which the owner creates. Additive production writes under ADR 0151 (standing approval within $30 a month) stay allowed.
   Done when a guard test proves the listed tools and commands are refused for agents, the deprecated servers are gone, [knowledge/agent-tooling.md](knowledge/agent-tooling.md) lists what is refused and how the owner runs such an action, and `.env.example` names the limited token.
   Size: M.
