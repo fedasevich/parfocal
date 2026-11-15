@@ -53,7 +53,7 @@ Building the polygon batch took 32 ms and 431 ms on the main thread. A run at sm
 
 ## Interpretation
 
-ID labels now match Viv to a channel delta of 1, so all eight overlay kinds pass on this route. The Viv golden for translucent outlines shows the first edge of every closed ring blended twice, which is how deck.gl's path layer draws a loop, and the route has to repeat that edge to match. With that, the remaining 0.063% is close to the sum of the opaque differences of the two kinds (0.049% and 0.008%), which are single pixels on line edges.
+ID labels now match Viv to a channel delta of 1, so all eight overlay kinds pass on this route. The Viv golden for translucent outlines shows the first edge of every closed ring blended twice, which is consistent with deck.gl's path layer drawing that edge twice to close a loop (its source was not read to confirm this), and the route has to repeat that edge to match. With that, the remaining 0.063% is close to the sum of the opaque differences of the two kinds (0.049% and 0.008%), which are single pixels on line edges.
 
 The loss test destroys the device on purpose. A loss that the browser causes was not produced, and neither was the fourth loss within 30 seconds, after which the route fails as before.
 
