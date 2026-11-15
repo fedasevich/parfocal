@@ -64,15 +64,6 @@ def project_requirements(project: Path) -> list[str]:
     ]
 
 
-def requirements(repository: Path = REPOSITORY) -> list[str]:
-    found = {
-        requirement
-        for project in PROJECTS
-        for requirement in project_requirements(repository / project)
-    }
-    return sorted(found)
-
-
 def app_image() -> modal.Image:
     base = modal.Image.debian_slim(python_version=PYTHON_VERSION)
     if not modal.is_local():

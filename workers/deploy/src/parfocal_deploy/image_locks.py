@@ -1,3 +1,4 @@
+import re
 import subprocess
 import sys
 from dataclasses import dataclass
@@ -55,9 +56,16 @@ def committed(lock: ImageLock, repository: Path = REPOSITORY) -> str:
     return (repository / lock.path).read_text()
 
 
+def canonical(text: str) -> list[str]:
+    blocks = re.split(r"\n(?=\S)", text.strip())
+    return sorted(" ".join(block.replace("\\", " ").split()) for block in blocks if block)
+
+
 def stale(repository: Path = REPOSITORY) -> list[str]:
     return [
-        lock.path for lock in LOCKS if committed(lock, repository) != exported(lock, repository)
+        lock.path
+        for lock in LOCKS
+        if canonical(committed(lock, repository)) != canonical(exported(lock, repository))
     ]
 
 

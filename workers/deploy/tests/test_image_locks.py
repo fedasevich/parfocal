@@ -13,6 +13,7 @@ from parfocal_deploy.image_locks import (
     ML_LOCK,
     REPOSITORY,
     UV_VERSION,
+    canonical,
     committed,
     exported,
     pinned,
@@ -81,4 +82,11 @@ def test_the_export_names_each_package_and_extra() -> None:
     assert command[:3] == ["uv", "export", "--frozen"]
     assert command[-6:-4] == ["--package", "parfocal-api"]
     assert command[-2:] == ["--extra", "pdf"]
-    assert exported(ML_LOCK) == committed(ML_LOCK)
+    assert canonical(exported(ML_LOCK)) == canonical(committed(ML_LOCK))
+
+
+def test_a_layout_change_in_the_export_is_not_drift() -> None:
+    text = committed(APP_LOCK)
+    reflowed = "\n".join(reversed(re.split(r"\n(?=\S)", text.strip()))).replace(" \\\n    ", " ")
+    assert canonical(reflowed) == canonical(text)
+    assert canonical(text.replace("--hash=sha256:", "--hash=sha256:0", 1)) != canonical(text)

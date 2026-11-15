@@ -21,7 +21,7 @@ The alternatives were `pnpm audit` plus `pip-audit`, one tool per ecosystem with
 
 ## Waiting
 
-- The container scan waits on FOUND-015 (container images). When the API image exists, its build job adds a Trivy image scan. Trivy is not added now because there is nothing to scan.
+- The container scan waits on FOUND-015 (container images). When the API image exists, its build job adds a Trivy image scan. Trivy is not added now because there is nothing to scan. Update 2026-11-15: done in [ADR 0339](0339-container-images-install-from-uv-lock.md) (images install from uv.lock).
 - The DAST scan against preview environments waits on a preview environment. When one exists, `dast-baseline` points at its URL instead of `vite preview`, and the five header rules move from IGNORE to FAIL.
 
 ## Consequences
