@@ -79,4 +79,4 @@ All of this is SwiftShader on one Mac. No real GPU was measured, so the switch t
 
 ## Follow-ups
 
-[ADR XXXX](../adr/XXXX-deck-webgpu-route-mirrors-the-viv-tile-pipeline.md) (the deck.gl WebGPU route mirrors the Viv tile pipeline and owns its tile textures). TODO: dashed outlines on this route need either a WGSL dash in deck.gl's `PathStyleExtension` or dashes built as geometry. TODO: a run on a real GPU, headed. TODO: check translucent outlines on this route, since the third closing vertex draws one edge of each ring more than once.
+[ADR 0314](../adr/0314-deck-webgpu-route-mirrors-the-viv-tile-pipeline.md) (the deck.gl WebGPU route mirrors the Viv tile pipeline and owns its tile textures). TODO: dashed outlines on this route need either a WGSL dash in deck.gl's `PathStyleExtension` or dashes built as geometry. TODO: a run on a real GPU, headed. TODO: check translucent outlines on this route, since the third closing vertex draws one edge of each ring more than once.

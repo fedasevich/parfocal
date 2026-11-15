@@ -1,7 +1,7 @@
-# XXXX. The deck.gl WebGPU route mirrors the Viv tile pipeline and owns its tile textures
+# 0314. The deck.gl WebGPU route mirrors the Viv tile pipeline and owns its tile textures
 
 - Date: 2026-11-15
-- Status: Proposed
+- Status: Accepted
 - Deciders: Yurii Fedas
 - Backlog: VIEW-037 (deck.gl 9.4 WebGPU route). Touches VIEW-036 (renderer interface and route switching) and VIEW-038 (custom WebGPU engine route).
 
