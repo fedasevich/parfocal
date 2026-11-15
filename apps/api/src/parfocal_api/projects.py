@@ -11,7 +11,8 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 from parfocal_api.analysis_templates import ViewerPart, viewer_parts
 from parfocal_api.audit import AuditAction, AuditTarget, actor_of, record
 from parfocal_api.class_templates import TaxonomyTemplate, insert_template
-from parfocal_api.context import CurrentPrincipal, TenantConnection
+from parfocal_api.context import CurrentPrincipal, Store, TenantConnection
+from parfocal_api.deidentified import strip_restricted_images
 from parfocal_api.opinion_questions import DEFAULT_QUESTIONS, publish
 from parfocal_api.permissions import Permission, require, sign_out_right
 from parfocal_api.principals import MemberPrincipal, Principal, database_scope
@@ -459,6 +460,7 @@ async def change_project_privacy(
     change: PrivacyChange,
     principal: CurrentPrincipal,
     connection: TenantConnection,
+    store: Store,
 ) -> Project:
     row = await owned(connection, principal, project_id)
     before = PrivacyMode(row.privacy_mode)
@@ -477,13 +479,16 @@ async def change_project_privacy(
     await connection.execute(
         update(projects).where(projects.c.id == project_id).values(privacy_mode=change.privacy_mode)
     )
-    await audit(
-        connection,
-        principal,
-        AuditAction.PROJECT_PRIVACY_CHANGED,
-        project_id,
-        {"from": before.value, "to": change.privacy_mode.value, "reason": change.reason},
-    )
+    details: dict[str, Any] = {
+        "from": before.value,
+        "to": change.privacy_mode.value,
+        "reason": change.reason,
+    }
+    if change.privacy_mode is PrivacyMode.DE_IDENTIFIED:
+        details["restricted_images_deleted"] = await strip_restricted_images(
+            connection, store, row.tenant_id, project_id
+        )
+    await audit(connection, principal, AuditAction.PROJECT_PRIVACY_CHANGED, project_id, details)
     return await project_of(connection, principal, project_id)
 
 

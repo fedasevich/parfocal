@@ -75,6 +75,7 @@ const auditLabels: Record<string, string> = {
   "slide.opened": "Opened a slide",
   "slide.read-in-place": "Read a slide in place",
   "slide.restricted-image-viewed": "Viewed a restricted image",
+  "slide.copied": "Copied a slide",
   "task.created": "Created a task",
   "task.review-submitted": "Submitted a review",
   "task.signed-off": "Signed off a task",

@@ -31,6 +31,7 @@ async def seed_project(
     connection: AsyncConnection,
     tenant_id: uuid.UUID,
     privacy_mode: PrivacyMode = PrivacyMode.CLINICAL,
+    project_id: uuid.UUID | None = None,
 ) -> uuid.UUID:
     number = select(func.coalesce(func.max(projects.c.number), 0) + 1).where(
         projects.c.tenant_id == tenant_id
@@ -38,6 +39,7 @@ async def seed_project(
     project_id = await connection.scalar(
         insert(projects)
         .values(
+            id=project_id or uuid.uuid4(),
             tenant_id=tenant_id,
             number=number.scalar_subquery(),
             name=f"Project {uuid.uuid4().hex[:8]}",

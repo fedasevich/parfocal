@@ -41,6 +41,7 @@ from parfocal_api.slide_tissue import TISSUE_FILE
 from parfocal_api.study_templates import seed_built_ins
 from parfocal_api.tables import (
     BuiltInTemplate,
+    PrivacyMode,
     Role,
     adjudication_objects,
     adjudications,
@@ -524,6 +525,26 @@ async def seed_case_reports(
             project_id=project_id,
             case_id=case_id,
             label="Matrix move slide",
+        )
+    )
+    copy_target = await seed_project(
+        connection, tenant_id, PrivacyMode.DE_IDENTIFIED, named("copy-target")
+    )
+    await connection.execute(
+        insert(project_members).values(
+            tenant_id=tenant_id, project_id=copy_target, user_id=lead, role="owner"
+        )
+    )
+    await connection.execute(
+        insert(slides).values(
+            id=named("copy-slide"),
+            tenant_id=tenant_id,
+            project_id=project_id,
+            case_id=case_id,
+            label="Matrix copy slide",
+            original_key=f"t/{tenant_id}/s/{named('copy-slide')}/original.svs",
+            file_bytes=10,
+            published_at=func.now(),
         )
     )
     await connection.execute(
@@ -1207,6 +1228,11 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
             "case_id": str(seeded(w, "report-fresh")),
             "reason": "Barcode read against the wrong case",
         },
+    ),
+    "copySlides": lambda w: Call(
+        "POST",
+        f"/api/projects/{seeded(w, 'copy-target')}/slide-copies",
+        {"slide_ids": [str(seeded(w, "copy-slide"))]},
     ),
     "reorderCaseSlides": lambda w: Call(
         "PUT", f"/api/cases/{w.case}/slide-order", {"slide_ids": []}
