@@ -268,7 +268,7 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0302](0302-renderer-routes-switch-inside-the-engine-behind-lazy-loaders.md) | Renderer routes switch inside the engine, and a registry loads each route lazily | Accepted | 2026-11-14 |
 | [0303](0303-a-new-workspace-saves-no-mail-domain.md) | A new workspace saves no mail domain, and only an admin turns joining by domain on in the join settings | Accepted | 2026-11-14 |
 | [0304](0304-a-shared-cursor-is-a-second-capped-frame-in-shares-of-the-slide.md) | A shared cursor is a second capped client frame, sent as shares of the slide, with its own rate cap | Accepted | 2026-11-14 |
-| [XXXX](0305-jpeg-chunks-in-ome-zarr-and-absent-inner-chunks.md) | OME-Zarr JPEG chunks are a zarrita codec named `imagecodecs_jpeg`, and absent inner chunks of a shard come from the slide index | Proposed | 2026-11-14 |
+| [0305](0305-jpeg-chunks-in-ome-zarr-and-absent-inner-chunks.md) | OME-Zarr JPEG chunks are a zarrita codec named `imagecodecs_jpeg`, and absent inner chunks of a shard come from the slide index | Proposed | 2026-11-14 |
 | [0305](0305-jpeg-chunks-in-ome-zarr-and-absent-inner-chunks.md) | OME-Zarr JPEG chunks are a zarrita codec named `imagecodecs_jpeg`, and absent inner chunks of a shard come from the slide index | Accepted | 2026-11-14 |
 | [0306](0306-conversion-triggers-and-the-ome-zarr-target.md) | Conversion runs only on a fired trigger, and writes unsharded OME-Zarr 0.5 with JPEG or zstd chunks | Accepted | 2026-11-14 |
 | [0307](0307-a-bif-is-refused-only-when-its-frame-overlap-is-unknown.md) | A BIF is refused only when its frame overlap is unknown, and a declared zero overlap opens as an exact grid | Accepted | 2026-11-14 |
@@ -281,3 +281,5 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0314](0314-deck-webgpu-route-mirrors-the-viv-tile-pipeline.md) | The deck.gl WebGPU route mirrors the Viv tile pipeline and owns its tile textures | Accepted | 2026-11-15 |
 | [0315](0315-a-round-is-recalibrated-on-held-out-slides-before-promotion.md) | A training round is recalibrated on held-out slides before it can be promoted | Accepted | 2026-11-15 |
 | [0316](0316-jpeg-2000-slides-stay-native.md) | JPEG 2000 slides stay native, and the decode budget trigger has not fired | Accepted | 2026-11-15 |
+| [0317](0317-viewer-performance-budgets.md) | Viewer performance budgets per format, CPU-side in CI and frame and GPU time by hand | Accepted | 2026-11-15 |
+| [0318](0318-aperio-coarse-levels-match-the-stored-tiles.md) | Aperio coarse levels match the stored tiles, not OpenSlide's resampled read | Accepted | 2026-11-15 |

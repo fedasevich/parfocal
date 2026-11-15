@@ -1432,7 +1432,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Refs doc 24.
   Size: M.
 
-- [ ] VIEW-017 · OME-Zarr v0.4 and v0.5 sharded with JPEG and lossless codecs
+- [x] VIEW-017 · OME-Zarr v0.4 and v0.5 sharded with JPEG and lossless codecs
   zarrita store, the `imagecodecs_jpeg` codec registered in workers, NGFF 0.5 `ome` nesting, absent chunks from INGEST-008.
   Done when the converted fixtures from INGEST-015 and public IDR samples pass.
   Refs [`poc/src/slide/omezarr.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/slide/omezarr.ts), [`poc/src/slide/codecs/jpeg-chunk.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/slide/codecs/jpeg-chunk.ts).
@@ -1675,7 +1675,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Depends on VIEW-011. Refs [ADR 0111](adr/0111-jpeg-2000-in-the-decode-workers-and-ome-channel-pages.md).
   The owner chose on 2026-10-31 to add both slides, about 510 MB for the whole group.
   Size: S.
-- [ ] VIEW-055 · JPEG 2000 coarse level differences from OpenSlide
+- [x] VIEW-055 · JPEG 2000 coarse level differences from OpenSlide
   On JP2K-33003-1.svs and JP2K-33003-2.svs one tile at each of levels 1 and 2 differs from OpenSlide by up to 47 while level 0 is within 0.5. Find out whether the cause is the reference, the level table or the decoder.
   Done when a result file names the cause and a test pins it.
   Depends on VIEW-011. Refs [result](results/2026-10-26-jpeg-2000-in-the-decode-workers.md).
@@ -1686,13 +1686,13 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Refs [`poc/src/app/renderer.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/app/renderer.ts).
   Size: L.
 
-- [ ] VIEW-037 · deck.gl 9.4 WebGPU route
+- [x] VIEW-037 · deck.gl 9.4 WebGPU route
   TileLayer over BitmapLayer from the same PixelSources, SolidPolygonLayer for outlines, with known gotchas handled (redraw with a reason, minZoom, adapter limits for buffer size).
   Done when the route plugs into the VIEW-036 renderer interface, the same golden tests that Viv passes pass on this route, perf tests pass, and uncaptured errors are counted and zero. The error helpers are in `src/viv/webgpu-errors.ts` ([ADR 0112](adr/0112-finest-level-sampling-and-webgl-context-recovery.md)).
   Refs [`poc/src/deck94/*`](https://github.com/fedasevich/pathlogy-poc/tree/master/src/deck94), doc 23.
   Size: L.
 
-- [ ] VIEW-070 · Dashed AI proposals on the deck.gl WebGPU route
+- [x] VIEW-070 · Dashed AI proposals on the deck.gl WebGPU route
   On the VIEW-037 route AI proposals draw solid, 0.625% of pixels off the Viv golden, because deck.gl's `PathStyleExtension` injects GLSL only. Draw the dash in WGSL through a small layer extension, or as screen-space dash geometry rebuilt per zoom step with the extension's phase and caps.
   Done when the AI proposals golden passes on the route at Viv's 0.1% tolerance and `routes-cmu1.spec.ts` drops its 2% bound.
   Depends on VIEW-037.
@@ -1703,6 +1703,12 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Done when the developer setting switches the route on an open slide, a result file records the real-GPU golden and perf numbers, and a translucent outline golden passes on both routes.
   Depends on VIEW-037.
   Size: M.
+
+- [ ] VIEW-072 · Draw the first edge of a dashed ring once on Viv
+  The shared overlay builder draws the first edge of each dashed AI proposal ring twice at two dash phases on Viv, which is the whole 0.085% left between the WebGPU route and the Viv golden (VIEW-070).
+  Done when each dashed ring edge is drawn once, the AI proposals golden is regenerated and the WebGPU route's difference from it falls below 0.02%.
+  Depends on VIEW-070.
+  Size: S.
 
 - [ ] VIEW-038 · Custom WebGPU engine route
   Render worker with OffscreenCanvas, tile atlas, compute culling, instanced polygons with instance-step attributes, 8-bit only.
@@ -1716,7 +1722,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Refs doc 23.
   Size: M.
 
-- [ ] VIEW-040 · Viewer performance budgets
+- [x] VIEW-040 · Viewer performance budgets
   Budgets per format and RTT: time to first fitted image, time to sharp viewport after a jump, frame p95 while panning, heap ceiling.
   Done when CI enforces the CPU-side budgets on hosted runners, the frame and GPU-time budgets are checked by a manual run recorded as a result file ([ADR 0011](adr/0011-hosted-ci-only.md)), and an ADR records the numbers derived from the POC.
   Depends on TEST-006.

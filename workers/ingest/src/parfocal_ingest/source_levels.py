@@ -16,6 +16,10 @@ from parfocal_ingest.thumbnail import background_of, flattened
 READ_BLOCK = 2048
 APERIO_JPEG2000_YCBCR = 33003
 APERIO_JPEG2000_RGB = 33005
+APERIO_JPEG2000 = (APERIO_JPEG2000_YCBCR, APERIO_JPEG2000_RGB)
+JPEG = 7
+STORED_TILE_COMPRESSIONS = (*APERIO_JPEG2000, JPEG)
+PHOTOMETRIC_RGB = 2
 SIZ_MARKER = b"\xff\x51"
 SRGB_COLOURSPACE = 16
 EIGHT_BITS = 7
@@ -138,34 +142,86 @@ def jpeg2000_tile(codestream: bytes, ycbcr: bool) -> np.ndarray:
     return ycbcr_to_rgb(components) if ycbcr else components
 
 
+def jpeg_tile(data: bytes, tables: bytes | None, photometric: int) -> np.ndarray:
+    joined = tables[:-2] + data[2:] if tables else data
+    with Image.open(io.BytesIO(joined)) as image:
+        if photometric == PHOTOMETRIC_RGB:
+            image.tile = [tile._replace(args=("RGB", "RGB")) for tile in image.tile]
+        return np.asarray(image.convert("RGB"))
+
+
+def stored_tile(page: tifffile.TiffPage, data: bytes) -> np.ndarray:
+    compression = int(page.compression)
+    if compression == JPEG:
+        return jpeg_tile(data, page.jpegtables, int(page.photometric))
+    return jpeg2000_tile(data, compression == APERIO_JPEG2000_YCBCR)
+
+
+def aperio_page(
+    tiff: tifffile.TiffFile, index: int, compressions: tuple[int, ...] = STORED_TILE_COMPRESSIONS
+) -> tifffile.TiffPage | None:
+    series = main_series(tiff)
+    if series is None or index >= len(series.levels):
+        return None
+    page = series.levels[index].keyframe
+    if not isinstance(page, tifffile.TiffPage):
+        return None
+    if int(page.compression) not in compressions or page.samplesperpixel != 3:
+        return None
+    return page if page.is_tiled else None
+
+
+def decode_aperio_tiles(
+    tiff: tifffile.TiffFile, page: tifffile.TiffPage, out: np.ndarray, left: int, top: int
+) -> bool:
+    height, width = out.shape[:2]
+    tile_width, tile_height = page.tilewidth, page.tilelength
+    across = -(-page.imagewidth // tile_width)
+    for row in range(top // tile_height, -(-(top + height) // tile_height)):
+        for column in range(left // tile_width, -(-(left + width) // tile_width)):
+            tile = row * across + column
+            count = page.databytecounts[tile]
+            if count == 0:
+                return False
+            tiff.filehandle.seek(page.dataoffsets[tile])
+            try:
+                decoded = stored_tile(page, tiff.filehandle.read(count))
+            except ValueError, OSError, struct.error:
+                return False
+            x0, y0 = column * tile_width, row * tile_height
+            x1, y1 = max(x0, left), max(y0, top)
+            x2 = min(x0 + decoded.shape[1], left + width)
+            y2 = min(y0 + decoded.shape[0], top + height)
+            out[y1 - top : y2 - top, x1 - left : x2 - left] = decoded[
+                y1 - y0 : y2 - y0, x1 - x0 : x2 - x0
+            ]
+    return True
+
+
+def aperio_window(
+    path: Path, index: int, left: int, top: int, width: int, height: int
+) -> np.ndarray | None:
+    with tifffile.TiffFile(path) as tiff:
+        page = aperio_page(tiff, index)
+        if page is None:
+            return None
+        if left < 0 or top < 0:
+            return None
+        if left + width > page.imagewidth or top + height > page.imagelength:
+            return None
+        pixels = np.zeros((height, width, 3), dtype=np.uint8)
+        return pixels if decode_aperio_tiles(tiff, page, pixels, left, top) else None
+
+
 def aperio_jpeg2000_level(path: Path, index: int, into: Path) -> np.ndarray | None:
     with tifffile.TiffFile(path) as tiff:
-        series = main_series(tiff)
-        if series is None:
+        page = aperio_page(tiff, index, APERIO_JPEG2000)
+        if page is None:
             return None
-        page = series.levels[index].keyframe
-        compression = int(page.compression)
-        if compression not in (APERIO_JPEG2000_YCBCR, APERIO_JPEG2000_RGB) or not page.is_tiled:
+        shape = (page.imagelength, page.imagewidth, 3)
+        pixels = open_memmap(into, mode="w+", dtype=np.uint8, shape=shape)
+        if not decode_aperio_tiles(tiff, page, pixels, 0, 0):
             return None
-        width, height = page.imagewidth, page.imagelength
-        across = -(-width // page.tilewidth)
-        pixels = open_memmap(into, mode="w+", dtype=np.uint8, shape=(height, width, 3))
-        for tile, (offset, count) in enumerate(
-            zip(page.dataoffsets, page.databytecounts, strict=True)
-        ):
-            row, column = divmod(tile, across)
-            top, left = row * page.tilelength, column * page.tilewidth
-            if count == 0:
-                return None
-            tiff.filehandle.seek(offset)
-            try:
-                decoded = jpeg2000_tile(
-                    tiff.filehandle.read(count), compression == APERIO_JPEG2000_YCBCR
-                )
-            except ValueError, OSError, struct.error:
-                return None
-            part = decoded[: height - top, : width - left]
-            pixels[top : top + part.shape[0], left : left + part.shape[1]] = part
         pixels.flush()
     return pixels.transpose(2, 0, 1)
 
