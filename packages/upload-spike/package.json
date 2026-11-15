@@ -21,7 +21,7 @@
     "@aws-sdk/s3-request-presigner": "3.1160.0",
     "@parfocal/latency-proxy": "workspace:*",
     "@parfocal/typescript-config": "workspace:*",
-    "@playwright/test": "1.64.0",
+    "@playwright/test": "1.65.1",
     "uppy": "6.0.5"
   }
 }

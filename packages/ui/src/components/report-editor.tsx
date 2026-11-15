@@ -1,4 +1,3 @@
-import { Button } from "@parfocal/ui/components/button";
 import { Checkbox } from "@parfocal/ui/components/checkbox";
 import { Icon } from "@parfocal/ui/components/icon";
 import { dragType, ReportPages } from "@parfocal/ui/components/report-editor-pages";
@@ -22,18 +21,11 @@ import {
   blockFields,
   blockKinds,
   downloadOptions,
-  duplicateBlock,
   type EditorBlock,
   type FieldOption,
   type FormatSettings,
   fieldValueText,
   insertionIndex,
-  moveBlock,
-  moveBlockTo,
-  paginate,
-  paperSize,
-  removeBlock,
-  sampleValue,
   selectedValue,
   setBlockField,
   toggleIn,

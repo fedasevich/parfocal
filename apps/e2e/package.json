@@ -10,6 +10,6 @@
   "devDependencies": {
     "@parfocal/test-fixtures": "workspace:*",
     "@parfocal/typescript-config": "workspace:*",
-    "@playwright/test": "1.64.0"
+    "@playwright/test": "1.65.1"
   }
 }

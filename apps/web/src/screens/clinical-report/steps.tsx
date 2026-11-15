@@ -142,7 +142,7 @@ export function FindingsStep({
   );
 }
 
-function CategoryField({ data, report, errors, setValues, update }: StepProps) {
+function CategoryField({ report, errors, setValues, update }: StepProps) {
   const values = report.values;
   const size = largestMm(values.deposits);
   const suggested = size === null ? null : categoryOf(size);

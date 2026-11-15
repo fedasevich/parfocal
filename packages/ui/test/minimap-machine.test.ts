@@ -5,7 +5,6 @@ import {
   fadeDistance,
   type MinimapEvent,
   type MinimapMode,
-  type MinimapValue,
   mapExtent,
   minimapMachine,
   type PeekState,
