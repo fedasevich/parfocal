@@ -3766,7 +3766,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Done when tests run a round on seeded data, promote it through MLEVAL and roll back.
   Size: L.
 
-- [ ] AILEARN-005 · Recalibration after each round
+- [x] AILEARN-005 · Recalibration after each round
   Done when each promoted round has a fitted temperature and bands.
   Size: M.
 
