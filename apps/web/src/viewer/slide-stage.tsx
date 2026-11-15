@@ -56,6 +56,7 @@ import { createCameraInput } from "../devices/camera-input.ts";
 import { legendDeviceOf } from "../devices/device-legend.ts";
 import { DeviceLegend } from "../devices/device-legend.tsx";
 import { bindGamepadWhenConnected, deviceIntentEvent } from "../devices/gamepad-source.ts";
+import { dispatchIntentKey, steppedPreset } from "../devices/intent-keys.ts";
 import { engineWheelMode, navigationEvent, readNavigation } from "../devices/navigation.ts";
 import { applyMainCalibration, mainCalibration } from "../devices/stage-calibration.ts";
 import { bindTrackpadListeners } from "../devices/trackpad-listeners.ts";
@@ -669,6 +670,18 @@ function OpenedSlide({
       calibration: mainCalibration,
       camera: session.engine,
       onIntent: (intent) => {
+        if (intent.kind === "presetStep") {
+          const spacing = session.engine.getSlide()?.micronsPerPixel ?? null;
+          const current = session.module.effectiveMagnification(
+            session.engine.getCamera().zoom,
+            spacing,
+          );
+          if (current !== null) {
+            session.engine.zoomToMagnification(steppedPreset(current, intent.step));
+          }
+          return;
+        }
+        if (dispatchIntentKey(intent, window)) return;
         window.dispatchEvent(new CustomEvent(deviceIntentEvent, { detail: intent }));
       },
     });
