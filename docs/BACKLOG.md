@@ -1187,7 +1187,7 @@ Conversion policy: the original is never altered. A conversion to OME-Zarr is pr
   Refs doc 03.
   Size: M.
 
-- [ ] INGEST-014 · JPEG 2000 performance decision
+- [x] INGEST-014 · JPEG 2000 performance decision
   Measure decode cost of J2K SVS in the browser (OpenJPEG WASM) against the VIEW-040 budgets. If it fails, the conversion trigger fires for J2K. Otherwise it stays native. HTJ2K is considered for the conversion target.
   Done when an ADR records the numbers and the decision.
   Refs [`poc/src/slide/codecs/openjpeg.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/slide/codecs/openjpeg.ts), doc 03.
