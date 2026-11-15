@@ -17,7 +17,7 @@ import {
 const runStreamOverlayPrefix = "run-stream:";
 const watchMs = 5000;
 const watchedStatuses = ["queued", "running"] as const;
-const finishedStatuses = ["done", "cancelled"] as const;
+const finishedStatuses = ["done", "cancelled", "cancelling"] as const;
 const tilesOverlayId = `${runStreamOverlayPrefix}finished-tiles`;
 const tileMarkColor: Rgba = [64, 160, 220, 48];
 const classColors: readonly Rgba[] = [
@@ -148,7 +148,7 @@ export function useRunStream(options: {
 
   const find = useCallback(
     async (statuses: readonly string[]): Promise<string | null> => {
-      const query = new URLSearchParams({ slide_id: slideId, limit: "1" });
+      const query = new URLSearchParams({ slide_id: slideId, limit: "20" });
       for (const status of statuses) query.append("status", status);
       const response = await fetch(`/api/projects/${projectId}/model-runs?${query}`, {
         credentials: "same-origin",

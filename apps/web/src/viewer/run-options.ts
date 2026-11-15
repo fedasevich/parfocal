@@ -1,4 +1,4 @@
-import type { ModelRunDraft, Ordering, RunScope } from "@parfocal/api-client";
+import type { ModelRunDraft, Ordering, PolygonGeometry, RunScope } from "@parfocal/api-client";
 
 export type RunScopeChoice = "slide" | "view" | "selection";
 
@@ -34,7 +34,7 @@ export function viewScopeOf(
   return { x, y, width, height };
 }
 
-export function boxGeometry(box: ViewRect) {
+export function boxGeometry(box: ViewRect): PolygonGeometry {
   const left = box.x;
   const top = box.y;
   const right = box.x + box.width;
@@ -50,7 +50,7 @@ export function boxGeometry(box: ViewRect) {
         [left, top],
       ],
     ],
-  } as const;
+  };
 }
 
 function scopeOf(options: RunOptions, view: ViewRect | null, selection: ViewRect | null) {
