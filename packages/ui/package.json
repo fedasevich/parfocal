@@ -45,6 +45,7 @@
     "@lingui/format-po": "6.11.0",
     "@lingui/vite-plugin": "6.11.0",
     "@parfocal/api-client": "workspace:*",
+    "@parfocal/golden-images": "workspace:*",
     "@parfocal/typescript-config": "workspace:*",
     "@playwright/test": "1.65.1",
     "@rolldown/plugin-babel": "0.2.4",

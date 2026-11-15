@@ -44,3 +44,21 @@ export {
   type SlideFormat,
   toleranceFor,
 } from "#tolerances.ts";
+export {
+  baselineFor,
+  isBootstrapping,
+  judgeVisual,
+  staleBaselines,
+  UI_DENSITIES,
+  UI_THEMES,
+  UI_TOLERANCE,
+  type UiDensity,
+  type UiTheme,
+  VISUAL_APPROVE_COMMAND,
+  type VisualCase,
+  type VisualInput,
+  type VisualJudgement,
+  visualCase,
+  visualCases,
+  visualName,
+} from "#visual.ts";

@@ -335,6 +335,22 @@ jobs:
           path: flaky/flaky.json
           retention-days: 14
           if-no-files-found: ignore
+      - if: ${{ failure() && github.event_name != 'workflow_dispatch' && matrix.package == 'ui' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: ui-visual-diff
+          path: packages/ui/test-results/visual/*.png
+          retention-days: 14
+          if-no-files-found: ignore
+      - if: ${{ github.event_name == 'workflow_dispatch' && inputs.update_goldens && matrix.package == 'ui' }}
+        run: pnpm turbo run test:browser --filter=@parfocal/ui -- e2e/visual.spec.ts
+        env:
+          GOLDEN_UPDATE: "1"
+      - if: ${{ github.event_name == 'workflow_dispatch' && inputs.update_goldens && matrix.package == 'ui' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: ui-visual-baselines
+          path: packages/ui/visual/*.png
       - if: ${{ github.event_name == 'workflow_dispatch' && inputs.update_goldens && matrix.package == 'golden-images' }}
         run: pnpm turbo run test:browser --filter=@parfocal/golden-images
         env:

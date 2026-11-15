@@ -1,4 +1,4 @@
-# 0337. Layout experiments split only production users who have not chosen, and pinned means bottom right
+# 0338. Layout experiments split only production users who have not chosen, and pinned means bottom right
 
 - Date: 2026-11-15
 - Status: Accepted
