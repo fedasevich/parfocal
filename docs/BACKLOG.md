@@ -3774,7 +3774,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Done when tests confirm the split excludes training examples and is stable across rounds.
   Size: S.
 
-- [ ] AILEARN-007 · Measure corrections per hundred nuclei
+- [x] AILEARN-007 · Measure corrections per hundred nuclei
   The product metric for the loop, reported per tenant over time.
   Done when the metric appears on the lab dashboard with seeded data.
   Size: M.
