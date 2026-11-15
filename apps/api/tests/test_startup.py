@@ -53,8 +53,19 @@ def test_prod_refuses_to_start_without_production_clients(
     environment: pytest.MonkeyPatch,
 ) -> None:
     environment.setenv("APP_ENV", "prod")
+    environment.setenv("STORAGE_SECRET_ACCESS_KEY", "storage-secret-from-the-store")
     with pytest.raises(MissingProductionClientError):
         create_app(production=ProductionFactories())
+
+
+def test_prod_refuses_to_start_on_the_local_storage_secret(
+    environment: pytest.MonkeyPatch,
+) -> None:
+    environment.setenv("APP_ENV", "prod")
+    with pytest.raises(ValidationError, match="STORAGE_SECRET_ACCESS_KEY is the local"):
+        create_app(production=ProductionFactories())
+    environment.setenv("APP_ENV", "dev")
+    assert create_app().settings.storage().secret_access_key == "parfocal-local-secret"
 
 
 def test_settings_can_be_passed_directly() -> None:

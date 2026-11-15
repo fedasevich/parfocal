@@ -24,7 +24,7 @@ It needs `NEON_API_KEY`, `NEON_PROJECT_ID`, `CLOUDFLARE_ACCOUNT_ID`, `R2_ACCESS_
 2. When the Modal secret `parfocal-api-keys` is missing, it generates the session, master, tile token and room token keys, creates the role `parfocal_app` (it can log in and cannot bypass row-level security, like `infra/local/postgres-init.sql`), writes the two token keys to the Worker and writes the keys with the pooled `DATABASE_URL` to Modal. This secret is never overwritten.
 3. It always rewrites the Modal secret `parfocal-api-config` with the origin, the login app, the bucket and the storage credentials.
 
-A second run writes only the config secret. If the role exists but the keys secret does not, the password is lost and the script stops. `--reset-app-role-password` sets a new one, which the owner agrees to first, because it is a rotation. No secret value is passed as a command argument. Set `EMAIL_BACKEND`, `ERROR_BACKEND`, `TELEMETRY_EXPORT`, `ANALYTICS_BACKEND` or `FLAG_BACKEND` in the shell to pass them into the config.
+A second run writes only the config secret. If the role exists but the keys secret does not, the password is lost and the script stops. `--reset-app-role-password` sets a new one, which the owner agrees to first, because it is a rotation. Never delete the keys secret to get there, because the new run also makes a new master keyring and every tenant's encrypted fields become unreadable. Rotation steps for every secret are in [secrets.md](secrets.md). No secret value is passed as a command argument. Set `EMAIL_BACKEND`, `ERROR_BACKEND`, `TELEMETRY_EXPORT`, `ANALYTICS_BACKEND` or `FLAG_BACKEND` in the shell to pass them into the config.
 
 ## Deploy, every time
 

@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any, Literal
 
-from pydantic import AnyHttpUrl, PositiveFloat, SecretStr
+from pydantic import AnyHttpUrl, PositiveFloat, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from parfocal_common.object_store import StorageLocation
@@ -77,15 +77,30 @@ class ServiceSettings(BaseSettings):
         )
 
 
+LOCAL_STORAGE_SECRET = "parfocal-local-secret"
+
+
+class LocalSecretInProductionError(ValueError):
+    def __init__(self, name: str) -> None:
+        super().__init__(f"{name} is the local development value, set it from the secret store")
+
+
 class StorageSettings(ServiceSettings):
     storage_endpoint: AnyHttpUrl = AnyHttpUrl("http://127.0.0.1:9000")
     storage_region: str = "auto"
     storage_bucket: str = "parfocal-local"
     storage_access_key_id: str = "parfocal"
-    storage_secret_access_key: SecretStr = SecretStr("parfocal-local-secret")
+    storage_secret_access_key: SecretStr = SecretStr(LOCAL_STORAGE_SECRET)
     link_trusted_origins: list[str] = []
     link_read_seconds: PositiveFloat = 30.0
     link_fetch_seconds: PositiveFloat = 3600.0
+
+    @model_validator(mode="after")
+    def no_local_secret_in_production(self) -> StorageSettings:
+        local = self.storage_secret_access_key.get_secret_value() == LOCAL_STORAGE_SECRET
+        if self.app_env is AppEnv.PROD and local:
+            raise LocalSecretInProductionError("STORAGE_SECRET_ACCESS_KEY")
+        return self
 
     def storage(self) -> StorageLocation:
         return StorageLocation(
