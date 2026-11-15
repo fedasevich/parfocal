@@ -40,7 +40,7 @@ Controls that every part relies on, and that are done:
 | X2 | I, E | Cross-site scripting in the SPA steals actions, not the cookie, which is HttpOnly | High | React escaping, no `dangerouslySetInnerHTML` on user text, strict CSP with nonces | SEC-011 (security headers and CSP) |
 | X3 | D | One user or tenant floods the API, uploads or jobs | Medium | Per user and per tenant limits with 429 | SEC-012 (rate limiting) |
 | X4 | I | Patient data in logs, traces or error reports | High | One scrubbing rule set, ids instead of names in URLs, a scan of an E2E run's telemetry | SEC-010 (PHI-safe telemetry), [ADR 0040](../adr/0040-observability-and-phi-scrubbing.md) |
-| X5 | E | A leaked deploy or storage secret | High | Secret scanner in CI (done), runtime secrets from the store, rotation tested | SEC-013 (secrets management), STACK-037 (key management) |
+| X5 | E | A leaked deploy or storage secret | High | Secret scanner in CI (done), runtime secrets from the store with an inventory test and a production guard against the local storage secret (done), master key rotation drilled locally ([knowledge/secrets.md](../knowledge/secrets.md)), rotation commands and key overlap still open | SEC-013 (secrets management), SEC-046 (rotation commands for the keys secret), SEC-047 (an overlap window for session and token keys), STACK-037 (key management) |
 | X6 | T, E | A vulnerable native library (OpenSlide, libtiff, OpenJPEG, libjpeg, OpenCV) or dependency | High | Advisory triage and update cadence | SEC-015 (vulnerability management) |
 
 ## Upload

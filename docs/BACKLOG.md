@@ -1001,6 +1001,18 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Depends on SEC-026.
   Size: L.
 
+- [ ] SEC-046 · Rotation commands for the keys secret
+  Bootstrap writes the Modal secret `parfocal-api-keys` only when it is missing and then generates every key in it, so deleting it to rotate one value makes every tenant's encrypted fields unreadable ([knowledge/secrets.md](knowledge/secrets.md)). Add a deploy command that changes one value and keeps the rest: prepend a master key, retire one after `key_rotation check-retire` passes, replace the session or a token key in the secret and the Worker together, and reset the `parfocal_app` password with the new `DATABASE_URL`.
+  Done when tests against fakes show each command keeps every other value, refuses to drop a master key that still wraps tenant keys, and never passes a secret as a command argument.
+  Depends on SEC-013.
+  Size: M.
+
+- [ ] SEC-047 · An overlap window for session and token keys
+  `SESSION_KEY`, `TILE_TOKEN_KEY` and `ROOM_TOKEN_KEY` each hold one key, so rotating the first signs everyone out and rotating the others breaks open viewers for up to 10 minutes. Accept a list, newest first, sign with the first and verify with any, in the API and in the Worker.
+  Done when API and Worker tests show a token or session sealed with the previous key still opens while it is listed and stops once it is removed.
+  Depends on SEC-013.
+  Size: M.
+
 - [ ] SEC-027 · Edge limits per IP
   The edge Worker limits login, upload and tile requests per client address with Cloudflare's rate limiting binding, and adds bot protection to login ([threat model](security/threat-model.md) X3 and T4).
   Done when a test against a preview shows a login flood from one address answered with 429 while another address signs in.
