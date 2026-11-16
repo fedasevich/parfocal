@@ -2,6 +2,7 @@
 
 - Date: 2026-11-09
 - Status: Accepted
+- Amended by [ADR XXXX](XXXX-load-tests-run-against-production-under-a-tiny-cap.md) (load tests against production under a tiny cap), which lets production through the guard at 2 users for 60 seconds, drops the staging pass and adds the `load` workflow
 - Deciders: Parfocal agents, owner to review
 - Backlog: TEST-010 (load test tooling), used later by OPS-012 (load and soak testing)
 

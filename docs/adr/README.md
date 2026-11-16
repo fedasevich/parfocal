@@ -314,3 +314,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0347](0347-per-workspace-saml-sso-through-zitadel.md) | Per-workspace SAML sign-in through the workspace's Zitadel organisation | Accepted | 2026-11-16 |
 | [0348](0348-a-modal-environment-and-a-tenant-key-prefix-per-preview.md) | A Modal environment and a tenant key prefix per preview | Accepted | 2026-11-16 |
 | [0349](0349-nucleus-detector-and-typer-per-tier.md) | PathoSAM AIS stays the nucleus detector and HoVer-NeXt the typer in every server tier, because no newer model has a held-out number here | Proposed | 2026-11-16 |
+| [XXXX](XXXX-load-tests-run-against-production-under-a-tiny-cap.md) | Load tests run against production under a tiny cap, on demand from a workflow or one command | Accepted | 2026-11-16 |

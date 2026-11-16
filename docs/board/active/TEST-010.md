@@ -1,4 +1,4 @@
 status: review
 by: claude parallel run
 since: 2026-11-09
-note: Waits for staging (SKEL-001) to run the scenarios there, and for a running edge to prove the realtime scenario.
+note: Runs against production on demand at the tiny cap, but only /api/health was measured there. Tiles and room wait for decision 124 (production token and session for the load workflow), and the load workflow has not run yet
