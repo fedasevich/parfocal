@@ -1,7 +1,7 @@
-# XXXX. The MONAI CAMELYON ResNet18 stays the v1 tumor model, and a foundation-model probe replaces it only after it passes the same test-slide evaluation
+# 0351. The MONAI CAMELYON ResNet18 stays the v1 tumor model, and a foundation-model probe replaces it only after it passes the same test-slide evaluation
 
 - Date: 2026-11-16
-- Status: Proposed
+- Status: Accepted
 - Deciders: Yurii Fedas, proposed by the agent doing AITUM-000 (tumor map research check)
 - Backlog: AITUM-000. Confirms the tumor rows of [ADR 0202](0202-v1-model-line-up-per-tier.md) (v1 model line-up per tier). Feeds MLEVAL-005 (tumor map evaluation), AITUM-001 (tumor map job), AITUM-003 (areas from the tumor map) and STACK-031 (model licensing policy, on hold)
 
