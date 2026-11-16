@@ -20,8 +20,9 @@ from parfocal_common.tumor_maps import KIND, STEPS
 from parfocal_ml.gpu_pool import POOLS, cpu_stand_in
 from parfocal_ml.modal_pool import pool_entry
 from parfocal_ml.priority_gate import Kind
+from parfocal_ml.tumor_map import Scorer
 from parfocal_ml.tumor_map_job import POOL_FAMILY, tumor_map_workflow
-from parfocal_ml.tumor_map_worker import drained_from_storage
+from parfocal_ml.tumor_map_worker import OnnxTumorScorer, drained_from_storage, local_weights
 
 pytestmark = [pytest.mark.db, pytest.mark.usefixtures("storage")]
 
@@ -109,7 +110,18 @@ def test_a_reviewer_reads_a_tumor_map_job_only_on_a_slide_they_review(api: ApiAs
     assert reader.get(f"{jobs}/{off_task['job_id']}").status_code == 404
 
 
-def stand_in_pool_call(database: str, tenant: uuid.UUID) -> dict[str, object]:
+def chosen_scorer(name: str) -> Scorer:
+    if name == "centre":
+        return CentreScorer()
+    weights = local_weights()
+    if weights is None:
+        pytest.skip(
+            "camelyon-tumor.onnx is not exported, run workers/ml/spike/export_tumor_onnx.py"
+        )
+    return OnnxTumorScorer(weights)
+
+
+def stand_in_pool_call(database: str, tenant: uuid.UUID, scorer: Scorer) -> dict[str, object]:
     pool = next(pool for pool in POOLS if pool.family is POOL_FAMILY)
 
     def runner(call: Any) -> dict[str, object]:
@@ -118,7 +130,7 @@ def stand_in_pool_call(database: str, tenant: uuid.UUID) -> dict[str, object]:
             try:
                 async with httpx2.AsyncClient(timeout=60) as http:
                     storage = ObjectStore(TEST_STORAGE, http)
-                    return await drained_from_storage(engine, storage, CentreScorer(), call)
+                    return await drained_from_storage(engine, storage, scorer, call)
             finally:
                 await engine.dispose()
 
@@ -134,8 +146,14 @@ def stand_in_pool_call(database: str, tenant: uuid.UUID) -> dict[str, object]:
     return entry(call)
 
 
-def test_one_pool_call_maps_a_stored_slide_on_a_cpu_stand_in(api: ApiAs, database: str, lab: Lab):
+@pytest.mark.parametrize(
+    "scorer_name", ["centre", pytest.param("resnet18", marks=pytest.mark.weights)]
+)
+def test_one_pool_call_maps_a_stored_slide_on_a_cpu_stand_in(
+    api: ApiAs, database: str, lab: Lab, scorer_name: str
+):
     pytest.importorskip("openslide")
+    scorer = chosen_scorer(scorer_name)
     path = fixture_path(STORED_SLIDE)
     prefix = slide_prefix(lab.tenant, lab.slides[0])
 
@@ -150,7 +168,7 @@ def test_one_pool_call_maps_a_stored_slide_on_a_cpu_stand_in(api: ApiAs, databas
     with_store(put)
     try:
         started = ok(start(api, lab))
-        reply = stand_in_pool_call(database, lab.tenant)
+        reply = stand_in_pool_call(database, lab.tenant, scorer)
         assert reply == {"family": POOL_FAMILY.value, "kind": KIND, "finished": 1}
         reader = api(lab.people["owner"])
         job = ok(reader.get(f"/api/projects/{lab.project}/jobs/{started['job_id']}"))

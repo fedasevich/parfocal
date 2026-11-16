@@ -1,5 +1,6 @@
 import asyncio
 import json
+import os
 import uuid
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
@@ -14,7 +15,7 @@ from numpy.typing import NDArray
 from test_tumor_map_job import MemoryProgress
 from tumor_map_support import STORED_SLIDE, CentreScorer, levels_json
 
-from parfocal_common.ingest import slide_prefix
+from parfocal_common.ingest import original_key, slide_prefix
 from parfocal_common.jobs import JobStoppedError, StepFailedError
 from parfocal_common.object_store import ObjectStore, StorageLocation
 from parfocal_common.result_imports import HEATMAP_FACTS, HEATMAP_GRID
@@ -30,7 +31,7 @@ openslide = pytest.importorskip("openslide")
 SLIDE = STORED_SLIDE
 JOB = uuid.UUID(int=7)
 LOCAL_STORAGE = StorageLocation(
-    endpoint="http://127.0.0.1:9000",
+    endpoint=os.environ.get("PARFOCAL_TEST_STORAGE_URL", "http://127.0.0.1:9000"),
     region="auto",
     bucket="parfocal-test",
     access_key_id="parfocal",
@@ -40,26 +41,33 @@ LOCAL_STORAGE = StorageLocation(
 type Work[T] = Callable[[ObjectStore, StoredSlides, uuid.UUID, uuid.UUID], Awaitable[T]]
 
 
-async def stored(storage: ObjectStore, tenant: uuid.UUID, slide: uuid.UUID, name: str) -> None:
+async def stored(
+    storage: ObjectStore, tenant: uuid.UUID, slide: uuid.UUID, name: str, levels: bytes | None
+) -> None:
     path = fixture_path(SLIDE)
-    prefix = slide_prefix(tenant, slide)
-    await storage.put_object(f"{prefix}{name}", path.read_bytes(), "application/octet-stream")
-    await storage.put_object(f"{prefix}{LEVELS_NAME}", levels_json(path), "application/json")
+    table = levels_json(path) if levels is None else levels
+    key = original_key(tenant, slide, name)
+    await storage.put_object(key, path.read_bytes(), "application/octet-stream")
+    if table:
+        prefix = slide_prefix(tenant, slide)
+        await storage.put_object(f"{prefix}{LEVELS_NAME}", table, "application/json")
 
 
-def in_minio[T](work: Work[T], tmp_path: Path, name: str | None = "original.svs") -> T:
+def in_minio[T](
+    work: Work[T], tmp_path: Path, name: str | None = SLIDE, levels: bytes | None = None
+) -> T:
     async def go() -> T:
         async with httpx2.AsyncClient(timeout=httpx2.Timeout(60.0)) as http:
             storage = ObjectStore(LOCAL_STORAGE, http)
             try:
                 await storage.create_bucket()
-            except httpx2.ConnectError:
-                pytest.skip("MinIO is not running on 127.0.0.1:9000, run pnpm dev:services")
+            except httpx2.TransportError:
+                pytest.skip(f"MinIO is not running at {LOCAL_STORAGE.endpoint}")
             tenant, slide = uuid.uuid4(), uuid.uuid4()
             slides = StoredSlides(storage, tmp_path)
             try:
                 if name is not None:
-                    await stored(storage, tenant, slide, name)
+                    await stored(storage, tenant, slide, name, levels)
                 return await work(storage, slides, tenant, slide)
             finally:
                 slides.close()
@@ -117,8 +125,8 @@ def test_the_opener_reads_level_0_regions_of_the_stored_slide(tmp_path: Path):
     assert again is slide
     assert (slide.width, slide.height, slide.level_count) == (2220, 2967, 1)
     assert slide.mpp == pytest.approx(0.499)
-    assert slide.thumbnail.shape == (93, 70, 3)
-    assert slide.downsample == 32.0
+    assert slide.thumbnail.shape == (47, 35, 3)
+    assert slide.downsample == 64.0
     np.testing.assert_array_equal(edge, local_region(-96, 1200, 200, 100))
     np.testing.assert_array_equal(region, local_region(1000, 1200, 600, 400))
     assert set(np.unique(edge[:, :96])) == {255}
@@ -167,7 +175,28 @@ def test_an_original_openslide_cannot_read_alone_fails_as_unreadable(tmp_path: P
             await slides.open(tenant, slide_id)
         return raised.value.code
 
-    assert in_minio(work, tmp_path, name="original.zip") == UNREADABLE
+    assert in_minio(work, tmp_path, name="slide.zip") == UNREADABLE
+
+
+def refused(tmp_path: Path, levels: bytes) -> str:
+    async def work(storage, slides, tenant, slide_id):
+        with pytest.raises(StepFailedError) as raised:
+            await slides.open(tenant, slide_id)
+        return raised.value.code
+
+    return in_minio(work, tmp_path, levels=levels)
+
+
+def test_a_slide_without_a_level_table_fails_as_missing(tmp_path: Path):
+    assert refused(tmp_path, b"") == MISSING
+
+
+def test_a_level_table_that_disagrees_with_openslide_fails_and_leaves_no_download(
+    tmp_path: Path,
+):
+    table = json.dumps({"levels": [{"width": 2000, "height": 2967}], "scale": {}}).encode()
+    assert refused(tmp_path, table) == UNREADABLE
+    assert not any(path.is_file() for path in tmp_path.rglob("*"))
 
 
 @pytest.mark.weights

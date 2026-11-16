@@ -20,7 +20,7 @@ AITUM-008 (the tumor map runs as a job and the API serves it) left two seams, a 
 
 The ONNX graph has a fixed input of 1 by 3 by 2,240 by 2,240, one tile, and returns the 64 by 64 logits. Exported from bundle 0.6.4 it is 44.7 MB and matches torch within 1.9e-7 on a tile of `CMU-1-Small-Region.svs` ([result](../results/2026-11-16-tumor-resnet18-onnx-parity.md)). It is published as the model artifact `camelyon-tumor` `v1.0` `model.onnx`, which the worker fetches with its checksum. onnxruntime picks CUDA when present and CPU otherwise, so the same scorer runs in the CPU stand-in.
 
-`parfocal_ml.stored_slides.StoredSlides` finds `original.*` under the slide's prefix, reads `levels.json` for the size, microns per pixel and level count the viewer uses, streams the original to a temporary folder, and opens it with OpenSlide. Regions are read from disk one tile at a time and the thumbnail is built from the level nearest downsample 32 in strips of 512 rows, so no whole slide is ever in memory. The download is kept for both steps of a job and removed when the job's slide changes or the claim loop ends. A slide without an original fails with `tumor-map-slide-missing`. A zip, a DICOM set, an OME-TIFF that OpenSlide cannot open and a slide whose OpenSlide size differs from `levels.json` fail with `tumor-map-unreadable-slide`.
+`parfocal_ml.stored_slides.StoredSlides` finds `original.*` under the slide's prefix, reads `levels.json` for the size, microns per pixel and level count the viewer uses, streams the original to a temporary folder, and opens it with OpenSlide. Regions are read from disk one tile at a time and the thumbnail is built at downsample 64, the level the evaluated spike used for the tissue mask, in strips of 512 rows, so no whole slide is ever in memory. The download is kept for both steps of a job and removed when the job's slide changes or the claim loop ends. A slide without an original fails with `tumor-map-slide-missing`. A zip, a DICOM set, an OME-TIFF that OpenSlide cannot open and a slide whose OpenSlide size differs from `levels.json` fail with `tumor-map-unreadable-slide`.
 
 ## Why
 
@@ -31,5 +31,5 @@ The ONNX graph has a fixed input of 1 by 3 by 2,240 by 2,240, one tile, and retu
 ## Consequences
 
 - The deployed pool still needs `onnxruntime-gpu`, `openslide-bin` and a cuDNN base image in `workers/deploy/locks/ml.txt`, the `camelyon-tumor` artifact in R2, and the database and storage secrets on the pool function. That wiring is the next step and is not done here.
-- MIRAX, DICOM and OME-TIFF originals get no tumor map until a reader for them is added.
+- MIRAX, DICOM and OME-TIFF originals get no tumor map until a reader for them is added. Leica SCN is refused too, because OpenSlide's level 0 of `Leica-1.scn` is 53130 by 153470 against the 36832 by 38432 main image that ingest and the viewer use. `CMU-1-Small-Region.svs`, `CMU-1.ndpi`, `Argos-1.avs`, `OS-1.bif`, `tumor_009.tif` and `test_001.tif` agree.
 - The ML worker parses an original that ingest already parsed inside its sandbox. OpenSlide runs in the pool container without that sandbox.

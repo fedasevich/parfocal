@@ -10,16 +10,15 @@ import numpy as np
 
 from parfocal_common.ingest import slide_prefix
 from parfocal_common.jobs import StepFailedError
-from parfocal_common.object_store import ObjectStore
+from parfocal_common.object_store import ObjectStore, StorageError
 from parfocal_ml.tumor_map import Rgb
 from parfocal_ml.tumor_map_job import SlideImage
 
 LEVELS_NAME = "levels.json"
 ORIGINAL_STEM = "original"
-OPENSLIDE_SUFFIXES = frozenset(
-    {".svs", ".tif", ".tiff", ".ndpi", ".scn", ".bif", ".vms", ".svslide"}
-)
-THUMBNAIL_DOWNSAMPLE = 32
+OPENSLIDE_SUFFIXES = frozenset({".svs", ".tif", ".tiff", ".ndpi", ".bif", ".avs"})
+THUMBNAIL_DOWNSAMPLE = 64
+NOT_FOUND = 404
 STRIP_ROWS = 512
 WHITE = 255
 MISSING = "tumor-map-slide-missing"
@@ -87,9 +86,13 @@ def opened(path: Path, table: LevelTable) -> SlideImage:
         slide = openslide.OpenSlide(str(path))
     except openslide.OpenSlideError as error:
         raise StepFailedError(UNREADABLE) from error
-    if tuple(slide.dimensions) != (table.width, table.height):
-        raise StepFailedError(UNREADABLE)
-    thumbnail, downsample = thumbnail_of(slide)
+    try:
+        if tuple(slide.dimensions) != (table.width, table.height):
+            raise StepFailedError(UNREADABLE)
+        thumbnail, downsample = thumbnail_of(slide)
+    except BaseException:
+        slide.close()
+        raise
     return SlideImage(
         reader=OpenSlideRegions(slide),
         thumbnail=thumbnail,
@@ -112,20 +115,39 @@ class StoredSlides:
             return self.held[2]
         self.close()
         prefix = slide_prefix(tenant_id, slide_id)
-        name = original_name(await self.storage.list_keys(prefix), prefix)
+        keys = await self.storage.list_keys(f"{prefix}{ORIGINAL_STEM}")
+        name = original_name(keys, prefix)
         if name is None:
             raise StepFailedError(MISSING)
         if PurePosixPath(name).suffix.lower() not in OPENSLIDE_SUFFIXES:
             raise StepFailedError(UNREADABLE)
-        table = level_table(await self.storage.get_object(f"{prefix}{LEVELS_NAME}"))
-        target = self.folder / str(tenant_id) / str(slide_id) / name
-        await asyncio.to_thread(target.parent.mkdir, parents=True, exist_ok=True)
-        partial = target.with_name(target.name + PART_SUFFIX)
-        await self.storage.download(f"{prefix}{name}", partial)
-        await asyncio.to_thread(partial.replace, target)
-        slide = await asyncio.to_thread(opened, target, table)
+        table = await self.level_table_of(prefix)
+        folder = self.slide_folder(tenant_id, slide_id)
+        try:
+            slide = await self.downloaded(f"{prefix}{name}", folder / name, table)
+        except BaseException:
+            await asyncio.to_thread(shutil.rmtree, folder, ignore_errors=True)
+            raise
         self.held = (tenant_id, slide_id, slide)
         return slide
+
+    async def level_table_of(self, prefix: str) -> LevelTable:
+        try:
+            return level_table(await self.storage.get_object(f"{prefix}{LEVELS_NAME}"))
+        except StorageError as error:
+            if error.status == NOT_FOUND:
+                raise StepFailedError(MISSING) from error
+            raise
+
+    async def downloaded(self, key: str, target: Path, table: LevelTable) -> SlideImage:
+        await asyncio.to_thread(target.parent.mkdir, parents=True, exist_ok=True)
+        partial = target.with_name(target.name + PART_SUFFIX)
+        await self.storage.download(key, partial)
+        await asyncio.to_thread(partial.replace, target)
+        return await asyncio.to_thread(opened, target, table)
+
+    def slide_folder(self, tenant_id: uuid.UUID, slide_id: uuid.UUID) -> Path:
+        return self.folder / str(tenant_id) / str(slide_id)
 
     def close(self) -> None:
         if self.held is None:
@@ -134,5 +156,5 @@ class StoredSlides:
         reader = slide.reader
         if isinstance(reader, OpenSlideRegions):
             reader.slide.close()
-        shutil.rmtree(self.folder / str(tenant_id) / str(slide_id), ignore_errors=True)
+        shutil.rmtree(self.slide_folder(tenant_id, slide_id), ignore_errors=True)
         self.held = None
