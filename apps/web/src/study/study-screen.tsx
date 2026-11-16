@@ -1,14 +1,20 @@
 import { Trans, useLingui } from "@lingui/react/macro";
-import { useEffect, useState } from "react";
+import { useGetMyHome, useListMySlides } from "@parfocal/api-client";
+import { useEffect, useRef, useState } from "react";
 import { now } from "../clock.ts";
+import { okData } from "../screens/placeholder.tsx";
 import {
+  checkMet,
   currentRound,
   durationSeconds,
   editTasks,
   isFrozen,
   nextTask,
   type Outcome,
+  type PageProbe,
   recordResult,
+  resolveStartPath,
+  type StudyContext,
   startNextRound,
   startSession,
   summariseRound,
@@ -19,6 +25,42 @@ const stamp = () => now().getTime();
 
 const timerText = (seconds: number, target: number | undefined): string =>
   target === undefined ? `${seconds}s` : `${seconds}s / ${target}s`;
+
+const taskWindowName = "parfocal-study-task";
+
+const documentOf = (target: Window | null): Document | undefined => {
+  try {
+    return target?.document;
+  } catch {
+    return undefined;
+  }
+};
+
+const probeOf = (target: Window | null): PageProbe | undefined => {
+  try {
+    if (target === null || target.closed) return undefined;
+    const { document: page, location } = target;
+    return {
+      url: `${location.pathname}${location.search}`,
+      count: (selector) => page.querySelectorAll(selector).length,
+      text: () => page.body?.innerText ?? "",
+    };
+  } catch {
+    return undefined;
+  }
+};
+
+function useStudyContext(): StudyContext {
+  const slides = okData(useListMySlides().data)?.slides ?? [];
+  const resume = okData(useGetMyHome().data)?.resume ?? null;
+  return {
+    slides,
+    resume:
+      resume === null
+        ? null
+        : { projectId: resume.project.id, slideId: resume.slide_id, taskId: resume.task_id },
+  };
+}
 
 export function StudyScreen() {
   const { t } = useLingui();
@@ -31,6 +73,9 @@ export function StudyScreen() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [taskStart, setTaskStart] = useState<number | null>(null);
   const [tick, setTick] = useState(0);
+  const context = useStudyContext();
+  const taskWindow = useRef<Window | null>(null);
+  const staleDocument = useRef<Document | undefined>(undefined);
 
   useEffect(() => {
     if (taskStart === null) return;
@@ -46,7 +91,7 @@ export function StudyScreen() {
   const active = state.sessions.find((session) => session.id === activeId);
   const current = active === undefined ? undefined : nextTask(round, active);
   const elapsed = taskStart === null ? 0 : Math.max(0, Math.round((stamp() - taskStart) / 1000));
-  void tick;
+  const startPath = current === undefined ? undefined : resolveStartPath(current, context);
 
   const begin = () => {
     const name = participant.trim();
@@ -58,7 +103,7 @@ export function StudyScreen() {
     setParticipant("");
   };
 
-  const finish = (outcome: Outcome) => {
+  const finish = (outcome: Outcome, auto = false) => {
     if (active === undefined || current === undefined || taskStart === null) return;
     commit(
       recordResult(state, active.id, {
@@ -66,10 +111,26 @@ export function StudyScreen() {
         startedAt: taskStart,
         endedAt: stamp(),
         outcome,
+        ...(auto ? { auto } : {}),
       }),
     );
     setTaskStart(null);
   };
+
+  const startTask = () => {
+    setTaskStart(stamp());
+    if (startPath === undefined) return;
+    taskWindow.current = window.open(startPath, taskWindowName);
+    staleDocument.current = documentOf(taskWindow.current);
+  };
+
+  useEffect(() => {
+    if (taskStart === null || current?.check === undefined) return;
+    if (documentOf(taskWindow.current) === staleDocument.current) return;
+    const page = probeOf(taskWindow.current);
+    if (page !== undefined && checkMet(current, context, page)) finish("done", true);
+  });
+  void tick;
 
   const saveTasks = () => {
     const result = editTasks(state, round.number, draft);
@@ -152,7 +213,7 @@ export function StudyScreen() {
                   <button
                     type="button"
                     className="rounded border border-line px-3 py-1 text-fg"
-                    onClick={() => setTaskStart(stamp())}
+                    onClick={startTask}
                   >
                     <Trans>Start task</Trans>
                   </button>
@@ -191,17 +252,25 @@ export function StudyScreen() {
                   </button>
                 </>
               )}
-              {current.startPath === undefined ? null : (
+              {startPath === undefined ? null : (
                 <a
                   className="rounded border border-line px-3 py-1 text-fg"
-                  href={current.startPath}
-                  target="_blank"
-                  rel="noreferrer"
+                  href={startPath}
+                  target={taskWindowName}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    taskWindow.current = window.open(startPath, taskWindowName);
+                  }}
                 >
                   <Trans>Open start screen</Trans>
                 </a>
               )}
             </div>
+            {current.check === undefined ? null : (
+              <p className="text-body-sm text-fg-dim" data-testid="study-auto-check">
+                <Trans>Ends by itself when the task screen shows the goal.</Trans>
+              </p>
+            )}
           </div>
         )}
       </section>
@@ -250,7 +319,10 @@ export function StudyScreen() {
                 {session.participant}
                 {": "}
                 {session.results
-                  .map((result) => `${result.taskId} ${durationSeconds(result)}s ${result.outcome}`)
+                  .map(
+                    (result) =>
+                      `${result.taskId} ${durationSeconds(result)}s ${result.outcome}${result.auto ? " (auto)" : ""}`,
+                  )
                   .join(", ")}
               </li>
             ))}

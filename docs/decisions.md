@@ -254,6 +254,8 @@ Your choice:
 
 The temporary review checklist of 2026-11-14 is handled and deleted. What still waits is below.
 
+- EXP-008 (moderated test support) runs ten stand-in pilot tasks, because the kit's usability test plan is not in this repository. The local kit copy in `docs/design/ux-kit/` has no test plan, and the POC's `study/README.md` describes an unmoderated round on POC screens, so its tasks were not copied. TODO: paste the kit's ten pilot tasks into `docs/design/` or edit them into the study page's task set JSON, which needs no deploy.
+
 A few minutes of you on the Mac, when convenient:
 
 - DEV-008 (tablet layout). Look at the app once at 1024×1366, for example with the Chrome device toolbar on an iPad Pro portrait. There is no tablet mock, so your eye is the check. The spec is `apps/web/e2e/tablet-layout.spec.ts`.

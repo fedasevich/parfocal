@@ -1,16 +1,22 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
+  checkMet,
   currentRound,
   defaultTasks,
   editTasks,
   initialState,
   isFrozen,
   nextTask,
+  type PageProbe,
   parseState,
   recordResult,
+  resolveStartPath,
+  type StudyContext,
+  type StudyTask,
   startNextRound,
   startSession,
+  studySlide,
   summariseRound,
 } from "../src/study/study-model.ts";
 
@@ -84,6 +90,94 @@ test("a task already answered is not recorded twice", () => {
   state = recordResult(state, "s1", result);
   state = recordResult(state, "s1", result);
   assert.equal(state.sessions[0]?.results.length, 1);
+});
+
+const context: StudyContext = {
+  slides: [{ id: "s-44", label: "tumor_044", project: { id: "p-7" } }],
+  resume: { projectId: "p-7", slideId: "s-a1", taskId: "rt-14" },
+};
+
+const page = (url: string, counts: Record<string, number> = {}, text = ""): PageProbe => ({
+  url,
+  count: (selector) => counts[selector] ?? 0,
+  text: () => text,
+});
+
+test("every default task opens a start screen and slide tasks open the CAMELYON16 slide", () => {
+  for (const task of defaultTasks) {
+    const path = resolveStartPath(task, context);
+    assert.ok(path !== undefined && !path.includes("{"), task.id);
+    if (task.slide !== undefined) assert.equal(task.slide, studySlide);
+  }
+  const live = defaultTasks.find((task) => task.id === "t2");
+  assert.ok(live);
+  assert.equal(resolveStartPath(live, context), "/projects/p-7/slides/s-44/live?task=rt-14&as=DH");
+});
+
+test("a start screen whose slide is not listed is not offered", () => {
+  const task: StudyTask = {
+    id: "x",
+    title: "X",
+    instruction: "X",
+    slide: "tumor_999",
+    startPath: "/projects/{project}",
+  };
+  assert.equal(resolveStartPath(task, context), undefined);
+});
+
+test("a check needs its path, selector count and text all at once", () => {
+  const task: StudyTask = {
+    id: "x",
+    title: "X",
+    instruction: "X",
+    slide: "tumor_044",
+    check: { path: "/slides/{slide}/live", selector: ".ready", text: "agree", minCount: 2 },
+  };
+  const live = "/projects/p-7/slides/s-44/live?task=rt-14";
+  assert.equal(checkMet(task, context, page(live, { ".ready": 2 }, "agree, agree")), true);
+  assert.equal(checkMet(task, context, page(live, { ".ready": 1 }, "agree, agree")), false);
+  assert.equal(checkMet(task, context, page(live, { ".ready": 2 }, "agree")), false);
+  assert.equal(checkMet(task, context, page("/", { ".ready": 2 }, "agree, agree")), false);
+  assert.equal(checkMet({ ...task, check: undefined }, context, page(live)), false);
+});
+
+test("a selector the page cannot parse fails the check instead of throwing", () => {
+  const task: StudyTask = { id: "x", title: "X", instruction: "X", check: { selector: "[" } };
+  const broken: PageProbe = {
+    url: "/",
+    count: () => {
+      throw new SyntaxError("bad selector");
+    },
+    text: () => "",
+  };
+  assert.equal(checkMet(task, context, broken), false);
+});
+
+test("task sets with an empty or broken check are refused", () => {
+  const empty = JSON.stringify([{ id: "a", title: "A", instruction: "x", check: {} }]);
+  const broken = JSON.stringify([{ id: "a", title: "A", instruction: "x", check: { text: "(" } }]);
+  assert.equal(editTasks(initialState(), 1, empty).ok, false);
+  assert.equal(editTasks(initialState(), 1, broken).ok, false);
+});
+
+test("a state saved before checks existed still loads with its sessions", () => {
+  const old = JSON.stringify({
+    rounds: [
+      { number: 1, tasks: [{ id: "t1", title: "Open", instruction: "Open it", startPath: "/" }] },
+    ],
+    sessions: [
+      {
+        id: "s1",
+        round: 1,
+        participant: "P1",
+        startedAt: 0,
+        results: [{ taskId: "t1", startedAt: 0, endedAt: 1000, outcome: "done" }],
+      },
+    ],
+  });
+  const state = parseState(old);
+  assert.equal(state.sessions.length, 1);
+  assert.equal(state.rounds[0]?.tasks[0]?.title, "Open");
 });
 
 test("broken stored state falls back to the default", () => {
