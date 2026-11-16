@@ -270,7 +270,7 @@ const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "
 
 function state() {
   const p = new URLSearchParams(location.hash.slice(1));
-  return { view: p.get("view") || "board", task: p.get("task"), doc: p.get("doc"), q: p.get("q") || "", epic: p.get("epic") || "", ms: p.get("ms") || "", size: p.get("size") || "", done: p.get("done") === "1", tree: p.get("tree") || "" };
+  return { view: p.get("view") || "board", task: p.get("task"), doc: p.get("doc"), q: p.get("q") || "", epic: p.get("epic") || "", ms: p.get("ms") || "", size: p.get("size") || "", done: p.get("done") === "1", ideas: p.get("ideas") === "1", tree: p.get("tree") || "" };
 }
 function setState(patch, replace) {
   const p = new URLSearchParams(location.hash.slice(1));
@@ -339,7 +339,12 @@ function milestoneOf(t) {
   return epics.get(t.epic)?.milestone || "";
 }
 
+function isIdea(t) {
+  return t.title.startsWith("Idea:") || /\((moved|dropped)\)$/.test(t.title);
+}
+
 function matches(t, s) {
+  if (!s.ideas && isIdea(t)) return false;
   if (s.epic && t.epic !== s.epic) return false;
   if (s.ms && !milestoneOf(t).includes(s.ms)) return false;
   if (s.size && t.size !== s.size) return false;
@@ -399,6 +404,7 @@ function filterBar(s) {
     <label>Epic <select data-filter="epic"><option value="">All</option>${ep}</select></label>
     <label>Size <select data-filter="size"><option value="">All</option>${["S", "M", "L"].map((z) => `<option value="${z}" ${s.size === z ? "selected" : ""}>${z}</option>`).join("")}</select></label>
     <label><input type="checkbox" data-filter="done" ${s.done ? "checked" : ""}> Show done</label>
+    <label><input type="checkbox" data-filter="ideas" ${s.ideas ? "checked" : ""}> Show ideas</label>
     ${s.q || s.epic || s.ms || s.size ? `<button type="button" class="chipbtn" data-clear>Clear filters</button>` : ""}
   </div>`;
 }
@@ -697,8 +703,9 @@ function render(fromPoll) {
   const s = state();
   for (const b of document.querySelectorAll("nav.tabs button")) b.setAttribute("aria-current", b.dataset.view === s.view ? "page" : "false");
   if (document.activeElement !== $("#search")) $("#search").value = s.q;
-  const c = counts(data.tasks);
-  $("#summary").textContent = `${c.done || 0}/${c.total} done · ${c["in-progress"] || 0} in progress`;
+  const c = counts(data.tasks.filter((t) => !isIdea(t)));
+  const ideas = data.tasks.filter((t) => !t.done && isIdea(t)).length;
+  $("#summary").textContent = `${c.done || 0}/${c.total} done · ${c.total - (c.done || 0)} left · ${c["in-progress"] || 0} in progress · ${ideas} ideas`;
   const main = $("#main");
   const scroll = [window.scrollY, main.querySelector(".columns")?.scrollLeft || 0];
   main.innerHTML = s.view === "epics" ? renderEpics(s) : s.view === "overview" ? renderOverview() : s.view === "docs" ? renderDocs(s) : renderBoard(s);
