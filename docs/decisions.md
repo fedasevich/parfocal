@@ -387,7 +387,7 @@ AISEG-014 (find more like these, exemplar prompting) found the gesture is a no-g
 
 Your choice:
 
-### XXX. How CryoNuSeg and Lizard reach the dataset cache
+### 131. How CryoNuSeg and Lizard reach the dataset cache
 
 MLEVAL-010 (loaders for datasets behind a sign-in) loads PanNuke and MoNuSeg from their real archives. The CryoNuSeg and Lizard loaders pass only on small synthetic archives with the published layout, because both official copies sit behind a sign-in ([result](results/2026-11-16-signed-in-dataset-loaders.md)). A public Zenodo record of the VitaminP project (record 21224234, CC BY 4.0 on the repackage) holds both with published MD5s, CryoNuSeg at 22 MB (the POC's cached copy matches) and Lizard at 937 MB. It is a reformatted copy in zarr, needs a new blosc decoder dependency, and the POC had to repair its CryoNuSeg masks.
 
@@ -419,7 +419,7 @@ Waiting on something else, nothing for you now:
 - FOUND-030 (bundle analyzer report), TEST-017 (flaky test management), TEST-036 (display panel Undo tests) and TEST-039 (local Zitadel for the end-to-end suite) wait for a green CI run on `main`, which agents are fixing.
 - SEC-002 (encryption in transit and at rest) waits for one `tofu apply` of the global root, which only adds zone HSTS and the pending http3 setting, then a rescan of `parfocal.eu`.
 - IAM-021 (lock screen) and SHELL-012 (account menu) wait for the expired sign-in to return to the object and for the manual lock item.
-- MLEVAL-010 (loaders for datasets behind a sign-in) waits for decision XXX (how CryoNuSeg and Lizard reach the dataset cache). PanNuke and MoNuSeg already pass on their real archives.
+- MLEVAL-010 (loaders for datasets behind a sign-in) waits for decision 131 (how CryoNuSeg and Lizard reach the dataset cache). PanNuke and MoNuSeg already pass on their real archives.
 - VIEW-017 (OME-Zarr reader) waits for converted real fixtures from INGEST-015 (conversion fallback worker), which an agent now finishes with lossless chunks after decision 104.
 
 ## Notes, no decision needed

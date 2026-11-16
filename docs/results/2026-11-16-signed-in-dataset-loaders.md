@@ -42,9 +42,9 @@ PanNuke nuclei per class, fold 3: neoplastic 28,471, inflammatory 10,825, connec
 
 - The three folds hold 189,744 nuclei, which fits the "~200,000 nuclei" of the PanNuke extension paper's abstract (arXiv 2003.10778). The MoNuSeg test set gives the 14 images and 6,697 nuclei of POC doc 26 (held-out benchmarks), which read the Hugging Face copy. Both loaders reproduce their sources.
 - The ETag match makes the PanNuke pins verifiable rather than trust on first use. The MoNuSeg pins rest on the first download only.
-- CryoNuSeg and Lizard are not checked on real data, so MLEVAL-010's "done when" line is only partly met. Decision XXX (how CryoNuSeg and Lizard reach the dataset cache) asks the owner how to get them. A public Zenodo record of the VitaminP project has both repackaged with published MD5s, and the POC's cached CryoNuSeg copy matches it.
+- CryoNuSeg and Lizard are not checked on real data, so MLEVAL-010's "done when" line is only partly met. Decision 131 (how CryoNuSeg and Lizard reach the dataset cache) asks the owner how to get them. A public Zenodo record of the VitaminP project has both repackaged with published MD5s, and the POC's cached CryoNuSeg copy matches it.
 
 ## Follow-ups
 
-- TODO for the owner: decision XXX. Once the zips are cached, run `fetch` to get their MD5s, pin them, and add count tests like the PanNuke ones.
+- TODO for the owner: decision 131. Once the zips are cached, run `fetch` to get their MD5s, pin them, and add count tests like the PanNuke ones.
 - TODO: move the POC's cached HoVer-NeXt outputs on PanNuke onto the `pannuke-fold1` and `pannuke-fold3` entries, as the [typing calibration reproduction](2026-10-18-typing-calibration-reproduction.md) asked.
