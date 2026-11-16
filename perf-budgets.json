@@ -672,7 +672,7 @@
       "unit": "ms",
       "baseline": 135,
       "limit": 250,
-      "headroom": 1.85,
+      "headroom": 1.86,
       "headroomReason": "The limit is the ADR 0003 target of 250 ms at p95. The baseline is the median p95 of seven local runs with the API in its own uvicorn process, 126 to 146 ms at a load average of 4 to 5 on ten cores. Six readers alone with no writers already reach 126 ms, so most of the p95 is the readers queueing on one server loop, and the target leaves room for a slower runner.",
       "rttMs": 0,
       "environment": "Apple M4 with ten cores shared with other agents, Postgres 17 with PostGIS and PgBouncer from compose.yaml, the API in its own uvicorn process on 127.0.0.1, so loopback only",
@@ -705,7 +705,7 @@
       "rttMs": 50,
       "environment": "Chrome headless, 1280 x 720, latency proxy at 50 ms RTT, Apple M4 shared with other agents",
       "check": "packages/viewer-engine/browser/budgets.spec.ts",
-      "adr": "docs/adr/XXXX-main-path-budgets-are-a-p95-after-a-warm-up.md",
+      "adr": "docs/adr/0353-main-path-budgets-are-a-p95-after-a-warm-up.md",
       "result": "docs/results/2026-11-16-application-main-paths.md"
     },
     {
@@ -718,7 +718,7 @@
       "rttMs": 50,
       "environment": "Chrome headless, 1280 x 720, latency proxy at 50 ms RTT, Apple M4 shared with other agents",
       "check": "packages/viewer-engine/browser/budgets.spec.ts",
-      "adr": "docs/adr/XXXX-main-path-budgets-are-a-p95-after-a-warm-up.md",
+      "adr": "docs/adr/0353-main-path-budgets-are-a-p95-after-a-warm-up.md",
       "result": "docs/results/2026-11-16-application-main-paths.md"
     },
     {
@@ -730,7 +730,7 @@
       "limit": 5000,
       "environment": "Local Postgres and MinIO in Docker, API in process, worker as its own process, Apple M4 shared with other agents",
       "check": "apps/api/tests/test_large_result_imports.py",
-      "adr": "docs/adr/XXXX-main-path-budgets-are-a-p95-after-a-warm-up.md",
+      "adr": "docs/adr/0353-main-path-budgets-are-a-p95-after-a-warm-up.md",
       "result": "docs/results/2026-11-16-application-main-paths.md"
     },
     {
@@ -742,7 +742,7 @@
       "limit": 60000,
       "environment": "Local Postgres and MinIO in Docker, API in process, worker as its own process, Apple M4 shared with other agents",
       "check": "apps/api/tests/test_large_result_imports.py",
-      "adr": "docs/adr/XXXX-main-path-budgets-are-a-p95-after-a-warm-up.md",
+      "adr": "docs/adr/0353-main-path-budgets-are-a-p95-after-a-warm-up.md",
       "result": "docs/results/2026-11-16-application-main-paths.md"
     },
     {
@@ -754,7 +754,7 @@
       "limit": 2.0,
       "environment": "Python worker code in process, synthetic slide at 0.25 um/px, local MinIO in Docker, Apple M4 shared with other agents",
       "check": "workers/ml/tests/test_whole_slide_main_path.py",
-      "adr": "docs/adr/XXXX-main-path-budgets-are-a-p95-after-a-warm-up.md",
+      "adr": "docs/adr/0353-main-path-budgets-are-a-p95-after-a-warm-up.md",
       "result": "docs/results/2026-11-16-application-main-paths.md",
       "todo": "Over budget: the run took 6.1 to 18.2 s/mm2 on a shared Apple M4, and the stand-in's own maps were only 15 percent of a tile. Profile the worker code around the model, then measure again on a quiet machine and with PathoSAM on a GPU before changing the budget."
     },
@@ -767,7 +767,7 @@
       "limit": 100,
       "environment": "Chrome headless, production build of apps/web with the in-browser fake API, 1440 x 900, Apple M4 shared with other agents",
       "check": "apps/web/e2e/decision-next-object.spec.ts",
-      "adr": "docs/adr/XXXX-main-path-budgets-are-a-p95-after-a-warm-up.md",
+      "adr": "docs/adr/0353-main-path-budgets-are-a-p95-after-a-warm-up.md",
       "result": "docs/results/2026-11-16-application-main-paths.md"
     },
     {
@@ -782,7 +782,7 @@
       "rttMs": 0,
       "environment": "Postgres and MinIO containers, FastAPI test client in process, the worker as its own process",
       "check": "apps/api/tests/test_large_result_imports.py",
-      "adr": "docs/adr/XXXX-main-path-budgets-are-a-p95-after-a-warm-up.md",
+      "adr": "docs/adr/0353-main-path-budgets-are-a-p95-after-a-warm-up.md",
       "result": "docs/results/2026-11-16-application-main-paths.md",
       "todo": "Record the hosted-runner number from the first CI run and tighten the headroom."
     },
@@ -798,7 +798,7 @@
       "rttMs": 0,
       "environment": "Python worker code in process, no network",
       "check": "workers/ml/tests/test_whole_slide_main_path.py",
-      "adr": "docs/adr/XXXX-main-path-budgets-are-a-p95-after-a-warm-up.md",
+      "adr": "docs/adr/0353-main-path-budgets-are-a-p95-after-a-warm-up.md",
       "result": "docs/results/2026-11-16-application-main-paths.md",
       "todo": "Record the hosted-runner number from the first CI run and tighten the headroom."
     },
@@ -814,7 +814,7 @@
       "rttMs": 0,
       "environment": "Chrome headless, production build of apps/web with the in-browser fake API, 1440 x 900",
       "check": "apps/web/e2e/decision-next-object.spec.ts",
-      "adr": "docs/adr/XXXX-main-path-budgets-are-a-p95-after-a-warm-up.md",
+      "adr": "docs/adr/0353-main-path-budgets-are-a-p95-after-a-warm-up.md",
       "result": "docs/results/2026-11-16-application-main-paths.md",
       "todo": "Record the hosted-runner number from the first CI run and tighten the headroom."
     }
