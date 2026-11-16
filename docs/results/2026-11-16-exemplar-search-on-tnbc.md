@@ -59,5 +59,5 @@ Median encode 3,251 ms, median decode 25.2 ms, whole run 656 s.
 
 ## Follow-ups
 
-- ADR XXXX (find more like these) records the no-go.
+- ADR 0359 (find more like these) records the no-go.
 - TODO: a typed fixture such as PanNuke would let a later run measure cell-kind selectivity.
