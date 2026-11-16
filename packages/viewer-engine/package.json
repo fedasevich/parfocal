@@ -22,6 +22,7 @@
     "bench:frames": "playwright test -c playwright.frame.config.ts frame-budgets",
     "bench:routes": "playwright test -c playwright.frame.config.ts route-head-to-head",
     "bench:sam": "playwright test -c playwright.sam.config.ts sam-variants",
+    "bench:instanseg": "playwright test -c playwright.sam.config.ts instanseg-wasm",
     "bench:type-learner": "node sam-bench/type-learner-same-images.ts",
     "parity:sam": "playwright test -c playwright.sam.config.ts sam-parity",
     "smoke:smart-select": "playwright test -c playwright.sam.config.ts smart-select-accuracy",

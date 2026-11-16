@@ -410,6 +410,16 @@ AISEG-000 (interactive segmentation research check) put PathoSAM ViT-B on every 
 
 Your choice:
 
+### XXX. Whether InstanSeg is accurate enough to be the auto tool on devices without WebGPU
+
+AISEG-013 (fast tier in the browser without a GPU) measured InstanSeg's 15 MB brightfield nuclei model ([ADR XXXX](adr/XXXX-fast-tier-auto-tool-without-webgpu-is-deferred.md), Fast tier auto tool without WebGPU is deferred). Its network runs one 512 px tile in 226 to 689 ms on WebAssembly on the M4, where the PathoSAM encode alone takes 5.3 to 5.9 s. It finds nuclei less well: PQ 0.712 on TNBC, which it trained on, against 0.828 for the WebGPU auto tool, and 0.663 on MoNuSeg test, which it did not train on ([result](results/2026-11-16-instanseg-on-tnbc-and-wasm.md)).
+
+- **A. Yes. Once AISEG-021 (InstanSeg post-processing in the browser) passes, InstanSeg becomes the auto tool without WebGPU, labelled as the faster, less accurate option, and PathoSAM on WebAssembly stays available as the accurate option (recommended).**
+- B. No. Without WebGPU the auto tool stays PathoSAM on WebAssembly, slow but accurate, and AISEG-021 is dropped.
+- C. Wait until a candidate scores PQ 0.70 or better on a set it did not train on.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 INGEST-029 (shared test slides bucket) declares the read-only R2 key as the account token `parfocal-fixtures-read` in `infra/tofu/dev/fixtures.tf`, limited to object reads in `parfocal-dev`. The plan stops at a 403 because the agent token `parfocal-agent-dev-staging` may not read or create API tokens. All 33 public fixtures are already in R2 and `pnpm fixtures` reads them with any key that can read the bucket. The `dev` plan also shows two changes waiting from other tasks, the tiering lifecycle rule and the 7-day bucket lock on `t/`, so the token would need a targeted apply until those are applied.
