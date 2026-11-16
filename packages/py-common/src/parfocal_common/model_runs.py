@@ -34,6 +34,7 @@ from parfocal_common.jobs import (
     run_job,
     timestamp,
 )
+from parfocal_common.residency import UNPINNED, Placement
 from parfocal_common.stage_throughput import RunLabels, this_machine
 
 KIND = "model-run"
@@ -289,8 +290,10 @@ async def claim_model_run(
     worker: str,
     plan: Workflow = PLAN,
     tenant_id: uuid.UUID | None = None,
+    *,
+    placement: Placement = UNPINNED,
 ) -> ClaimedRun | None:
-    claimed = await claim(engine, worker, {KIND: plan}, tenant_id)
+    claimed = await claim(engine, worker, {KIND: plan}, tenant_id, placement=placement)
     if claimed is None:
         return None
     job, chosen = claimed

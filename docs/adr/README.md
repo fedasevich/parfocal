@@ -309,3 +309,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0342](0342-make-dev-signs-in-through-the-local-zitadel.md) | make dev signs in through the local Zitadel by default | Accepted | 2026-11-15 |
 | [0343](0343-sli-counts-in-the-slide-bucket-and-otlp-logs-over-http.md) | SLI counts and alert state live in the slide bucket, and telemetry leaves as OTLP logs over plain HTTP | Accepted | 2026-11-15 |
 | [0344](0344-workers-and-realtime-write-their-own-sli-counts.md) | Workers and realtime write their own SLI counts, and only automatic whole-slide runs are pre-reads | Accepted | 2026-11-15 |
+| [XXXX](XXXX-job-claims-respect-the-tenant-region.md) | Job claims respect the tenant region behind one switch | Proposed | 2026-11-16 |

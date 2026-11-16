@@ -11,6 +11,7 @@ from parfocal_api.worklist_events import job_announcer
 from parfocal_common.db import create_engine
 from parfocal_common.job_sli import job_sli, worker_sli
 from parfocal_common.jobs import load_workflow, work
+from parfocal_common.residency import placement_from
 from parfocal_common.settings import load_settings
 from parfocal_common.structured_logging import configure_logging
 from parfocal_ingest.settings import IngestSettings
@@ -53,6 +54,7 @@ async def main() -> None:
             arguments.workspace,
             None if isinstance(live, NoRealtime) else job_announcer(engine, live),
             job_sli(engine, sli),
+            placement=placement_from(os.environ),
         )
     finally:
         await sli.flush()
