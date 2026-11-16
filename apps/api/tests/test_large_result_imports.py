@@ -112,7 +112,7 @@ def worker(
         str(tenant_id),
         *(["--workflow", workflow] if workflow else []),
     ]
-    if timed is not None:
+    if timed is not None and sys.platform == "darwin":
         command = ["/usr/bin/time", "-l", *command]
     return subprocess.Popen(
         command,
@@ -173,7 +173,7 @@ def watched(
         "SELECT extract(epoch FROM finished_at - started_at), result FROM job_steps "
         f"WHERE job_id = '{final[0]}' AND ordinal = 0",
     )
-    rss = MAX_RSS.search(timed.read_text()) if timed is not None else None
+    rss = MAX_RSS.search(timed.read_text()) if timed is not None and timed.exists() else None
     seconds: Any = step[0][0] if step else None
     result: Any = step[0][1] if step else None
     return WorkerRun(
@@ -266,7 +266,7 @@ def benchmark_import(
         **asdict(run),
         "result_status": state["status"],
         "cells": detail["cell_count"],
-        "time_output": timed.read_text(),
+        "time_output": timed.read_text() if timed.exists() else "",
     }
 
 
