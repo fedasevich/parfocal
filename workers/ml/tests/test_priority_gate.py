@@ -6,7 +6,7 @@ import pytest
 from numpy.typing import NDArray
 
 from parfocal_common.embedding_cache import EMBEDDING_BYTES, EMBEDDING_DIMS, tile_key
-from parfocal_ml.gate_load import ContainerSpec, LocalPools, first_call
+from parfocal_ml.gate_load import ContainerSpec, LocalPools, first_call, number
 from parfocal_ml.gpu_pool import POOLS, Family, validate_pools
 from parfocal_ml.modal_pool import pool_entry
 from parfocal_ml.priority_gate import (
@@ -135,7 +135,7 @@ def test_an_interactive_embed_writes_the_tile_and_replies_with_its_key_only() ->
 
     reply = embed_tile(
         EmbedTile(tenant, slide, 3, 4, 1536, 2048, 512),
-        lambda x, y, w, h: np.zeros((h, w, 3), dtype=np.uint8),
+        lambda x, y, width, height: np.zeros((height, width, 3), dtype=np.uint8),
         encode,
         write,
     )
@@ -152,7 +152,7 @@ def test_an_interactive_embed_writes_the_tile_and_replies_with_its_key_only() ->
 def test_local_pools_serve_a_pre_warmed_embed_through_the_gate() -> None:
     reply = first_call(multiprocessing.get_context("spawn"), 1, warm=True, rounds=1)
     assert reply["pre_warmed"] is True
-    assert float(reply["max"]) < 5.0
+    assert number(reply["max"]) < 5.0
 
 
 def test_local_pools_start_a_container_on_first_use_and_stop_it() -> None:

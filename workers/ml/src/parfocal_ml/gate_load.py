@@ -29,6 +29,16 @@ TENANT = uuid.UUID(int=7)
 SLIDE = uuid.UUID(int=8)
 
 
+def number(value: object) -> float:
+    if not isinstance(value, int | float):
+        raise TypeError(f"expected a number, got {value!r}")
+    return float(value)
+
+
+def whole(value: object) -> int:
+    return int(number(value))
+
+
 @dataclass(frozen=True)
 class ContainerSpec:
     name: str
@@ -115,11 +125,11 @@ def container_main(spec: ContainerSpec, inbox, outbox) -> None:
         if kind == "warm":
             return {"warm": True}
         if kind == "embed":
-            request = EmbedTile(TENANT, SLIDE, int(call["column"]), int(call["row"]), 0, 0, 512)
+            request = EmbedTile(TENANT, SLIDE, whole(call["column"]), whole(call["row"]), 0, 0, 512)
             reply = embed_tile(request, fake_reader, encode, write)
             return {**reply, "served_at": time.time(), "began": begun}
         if kind == "detect":
-            seconds = float(call.get("seconds", 0.0))
+            seconds = number(call.get("seconds", 0.0))
             if seconds > 0:
                 return run_job(seconds)
             encode(pixel_values(fake_reader(0, 0, 512, 512)))
@@ -330,8 +340,8 @@ def gated_arm(
         arm = Arm(f"gated, {clients} clients", clients)
         arm.samples = drive(clients, calls, gate.request)
         reply = job.result(timeout=REPLY_TIMEOUT_SECONDS + job_seconds)
-        arm.window = (float(reply["window_start"]), float(reply["window_end"]))
-        arm.job_tiles = int(reply["tiles"])
+        arm.window = (number(reply["window_start"]), number(reply["window_end"]))
+        arm.job_tiles = whole(reply["tiles"])
         info = {
             "warm": warmed.value,
             "embedder": pools.containers[embedder.function_name].info,
@@ -434,8 +444,8 @@ def first_call(context: SpawnContext, depth: int, warm: bool, rounds: int) -> di
 
 def passes(arm: dict[str, object], target: float) -> bool:
     return (
-        float(arm["p95"]) < target
-        and float(arm["max"]) < target
+        number(arm["p95"]) < target
+        and number(arm["max"]) < target
         and arm["inside_job_window"] == arm["calls"]
     )
 
@@ -484,7 +494,7 @@ def run(
     ]
     report["load_average_after"] = os.getloadavg()
     report["meets_target"] = all(
-        arm["passes"] for arm in gated if int(arm["clients"]) <= max_inputs
+        arm["passes"] for arm in gated if whole(arm["clients"]) <= max_inputs
     )
     return report
 
