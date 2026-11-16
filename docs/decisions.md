@@ -387,6 +387,16 @@ AISEG-014 (find more like these, exemplar prompting) found the gesture is a no-g
 
 Your choice:
 
+### XXX. Whether to measure PathoSAM ViT-L and fine-tune a small SAM for the interactive tiers
+
+AISEG-000 (interactive segmentation research check) put PathoSAM ViT-B on every interactive tier in ADR XXXX (interactive encoder and decoder per tier), because PathoSAM ViT-L has no number here and its checkpoint is 1.25 GB, over the 500 MB cap for a local download. Generic MobileSAM scores 0.573 on a TNBC click against 0.852 for PathoSAM, and no small SAM fine-tuned on pathology is published, so Fast stays empty ([result](results/2026-11-16-mobilesam-on-tnbc.md)).
+
+- **A. Allow the 1.25 GB ViT-L download for one Mac run of the same TNBC harness, no cloud cost, so Best gets a measured model (recommended).**
+- B. A, and also a task that fine-tunes MobileSAM or EdgeSAM on PathoSAM's public training sets on a Modal GPU, cost `TODO` and counted against the $30 month.
+- C. Neither. ViT-B stays on every tier and Fast stays empty until a pathology small SAM is published.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 The temporary review checklist of 2026-11-14 is handled and deleted. What still waits is below.
