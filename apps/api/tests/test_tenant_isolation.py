@@ -61,6 +61,7 @@ from parfocal_api.tables import (
     lab_model_projects,
     lab_models,
     legal_holds,
+    linked_subjects,
     memberships,
     model_tiers,
     notification_mutes,
@@ -95,6 +96,7 @@ from parfocal_api.tables import (
     slide_counters,
     slide_coverage,
     slides,
+    sso_connections,
     stage_throughput,
     study_template_versions,
     study_templates,
@@ -262,7 +264,13 @@ CASE_TABLES = {
     "case_requests",
     "emergency_grants",
 }
-AUTH_TABLES = {"platform_operators", "auth_logins", "sessions", "rate_counters"}
+AUTH_TABLES = {
+    "platform_operators",
+    "auth_logins",
+    "sessions",
+    "rate_counters",
+    "linked_subjects",
+}
 
 
 async def seed_audit_people(connection: AsyncConnection, seeded: Seeded) -> None:
@@ -358,6 +366,29 @@ async def seed_session_policies(connection: AsyncConnection, seeded: Seeded) -> 
     await connection.execute(
         insert(session_policies).values(
             tenant_id=seeded.tenant_id, idle_lock_minutes=20, session_hours=10
+        )
+    )
+
+
+async def seed_sso_connections(connection: AsyncConnection, seeded: Seeded) -> None:
+    organisation = f"idp-org-{uuid.uuid4().hex[:12]}"
+    await connection.execute(
+        insert(sso_connections).values(
+            tenant_id=seeded.tenant_id,
+            idp_organisation_id=organisation,
+            idp_id=f"idp-{uuid.uuid4().hex[:12]}",
+            email_domains=[f"sso-{uuid.uuid4().hex[:10]}.example.test"],
+        )
+    )
+    seeded.markers.add(organisation)
+
+
+async def seed_linked_subjects(connection: AsyncConnection, seeded: Seeded) -> None:
+    await connection.execute(
+        insert(linked_subjects).values(
+            subject=f"sso-subject-{uuid.uuid4().hex[:12]}",
+            user_id=seeded.ids["user"],
+            sso_tenant_id=seeded.tenant_id,
         )
     )
 
@@ -1531,6 +1562,8 @@ SEEDERS: dict[str, Seeder] = {
     "legal_holds": seed_legal_holds,
     "cases": seed_cases,
     "session_policies": seed_session_policies,
+    "sso_connections": seed_sso_connections,
+    "linked_subjects": seed_linked_subjects,
     "audit_people": seed_audit_people,
     "audit_events": seed_audit_events,
     "service_accounts": seed_service_accounts,
