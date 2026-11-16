@@ -10,6 +10,7 @@ export interface PromptMask {
   readonly mask: Uint8Array | null;
   readonly score: number;
   readonly stability: number;
+  readonly logits?: Float32Array;
 }
 
 export type BatchDecoder = (seeds: readonly Seed[]) => Promise<readonly PromptMask[]>;
@@ -27,6 +28,7 @@ export interface PromptPassOptions {
   readonly batch: number;
   readonly residual: boolean;
   readonly residualBias: number;
+  readonly ensemble: number;
 }
 
 export const promptTileOverlapPixels = 96;
@@ -42,7 +44,10 @@ export const promptPassDefaults: PromptPassOptions = {
   batch: 16,
   residual: false,
   residualBias: -12,
+  ensemble: 0,
 };
+
+export const promptEnsemblePoints = 4;
 
 export function promptPassOptionsFor(
   micronsPerPixel: number | null,
@@ -55,6 +60,7 @@ export function promptPassOptionsFor(
     minArea: Math.max(8, Math.round(Math.PI * (1.2 / mpp) ** 2)),
     maxArea: Math.round(Math.PI * (12 / mpp) ** 2),
     residual: quality === "best",
+    ensemble: quality === "best" ? promptEnsemblePoints : 0,
   };
 }
 
@@ -274,6 +280,86 @@ export interface PromptNucleus {
   readonly seed: Seed;
   readonly score: number;
   readonly stability: number;
+  readonly bounds: Bounds;
+}
+
+export type Bounds = readonly [number, number, number, number];
+
+export function maskBounds(mask: Uint8Array, width: number): Bounds {
+  let x0 = Infinity;
+  let y0 = Infinity;
+  let x1 = -Infinity;
+  let y1 = -Infinity;
+  for (let p = 0; p < mask.length; p++) {
+    if (!mask[p]) continue;
+    const x = p % width;
+    const y = (p - x) / width;
+    x0 = Math.min(x0, x);
+    y0 = Math.min(y0, y);
+    x1 = Math.max(x1, x);
+    y1 = Math.max(y1, y);
+  }
+  return [x0, y0, x1, y1];
+}
+
+function boundsMeet(a: Bounds, b: Bounds): boolean {
+  return a[0] <= b[2] && b[0] <= a[2] && a[1] <= b[3] && b[1] <= a[3];
+}
+
+export function maskIoU(a: PromptNucleus, b: PromptNucleus, width: number): number {
+  if (!boundsMeet(a.bounds, b.bounds)) return 0;
+  const x0 = Math.max(a.bounds[0], b.bounds[0]);
+  const y0 = Math.max(a.bounds[1], b.bounds[1]);
+  const x1 = Math.min(a.bounds[2], b.bounds[2]);
+  const y1 = Math.min(a.bounds[3], b.bounds[3]);
+  let both = 0;
+  for (let y = y0; y <= y1; y++) {
+    for (let x = x0; x <= x1; x++) {
+      const p = y * width + x;
+      if (a.mask[p] && b.mask[p]) both++;
+    }
+  }
+  return both / (a.area + b.area - both);
+}
+
+export function ensemblePoints(nucleus: PromptNucleus, width: number, count: number): Seed[] {
+  let sumX = 0;
+  let sumY = 0;
+  for (let p = 0; p < nucleus.mask.length; p++) {
+    if (!nucleus.mask[p]) continue;
+    sumX += p % width;
+    sumY += Math.floor(p / width);
+  }
+  const cx = sumX / nucleus.area;
+  const cy = sumY / nucleus.area;
+  const radius = Math.sqrt(nucleus.area / Math.PI) * 0.45;
+  const height = nucleus.mask.length / width;
+  const points: Seed[] = [];
+  for (let i = 0; i < count; i++) {
+    const angle = (i / count) * Math.PI * 2 + Math.PI / 4;
+    const x = Math.round(cx + Math.cos(angle) * radius);
+    const y = Math.round(cy + Math.sin(angle) * radius);
+    if (x >= 0 && y >= 0 && x < width && y < height && nucleus.mask[y * width + x]) {
+      points.push([x, y]);
+    }
+  }
+  const [sx, sy] = nucleus.seed;
+  if (!points.some(([x, y]) => x === sx && y === sy)) points.push(nucleus.seed);
+  return points;
+}
+
+function confidence(nucleus: PromptNucleus): number {
+  return nucleus.score * nucleus.stability;
+}
+
+export function dropDuplicates(nuclei: readonly PromptNucleus[], width: number): PromptNucleus[] {
+  const ordered = [...nuclei].sort((a, b) => confidence(b) - confidence(a));
+  const kept: PromptNucleus[] = [];
+  for (const nucleus of ordered) {
+    if (kept.some((other) => maskIoU(other, nucleus, width) > 0.5)) continue;
+    kept.push(nucleus);
+  }
+  return kept;
 }
 
 export interface PromptPassOutcome {
@@ -325,8 +411,68 @@ export async function promptPass(
           seed,
           score: decoded.score,
           stability: decoded.stability,
+          bounds: maskBounds(component.mask, width),
         });
       });
+    }
+  };
+
+  const refine = async () => {
+    const perNucleus = nuclei.map((nucleus) => ensemblePoints(nucleus, width, options.ensemble));
+    let cursor = 0;
+    while (cursor < nuclei.length) {
+      if (signal?.aborted) return;
+      const owners: number[] = [];
+      const prompts: Seed[] = [];
+      while (
+        cursor < nuclei.length &&
+        (prompts.length === 0 || prompts.length + (perNucleus[cursor]?.length ?? 0) <= chunk)
+      ) {
+        for (const point of perNucleus[cursor] ?? []) {
+          prompts.push(point);
+          owners.push(cursor);
+        }
+        cursor++;
+      }
+      decodes += prompts.length;
+      const results = await decode(prompts);
+      const sums = new Map<number, { logits: Float32Array; count: number; score: number }>();
+      results.forEach((result, index) => {
+        const owner = owners[index];
+        if (result.logits === undefined || owner === undefined) return;
+        let entry = sums.get(owner);
+        if (entry === undefined) {
+          entry = { logits: new Float32Array(result.logits.length), count: 0, score: 0 };
+          sums.set(owner, entry);
+        }
+        for (let p = 0; p < result.logits.length; p++) {
+          entry.logits[p] = (entry.logits[p] ?? 0) + (result.logits[p] ?? 0);
+        }
+        entry.count++;
+        entry.score += result.score;
+      });
+      for (const [owner, entry] of sums) {
+        const first = nuclei[owner];
+        if (first === undefined) continue;
+        const mask = new Uint8Array(entry.logits.length);
+        for (let p = 0; p < mask.length; p++) {
+          entry.logits[p] = (entry.logits[p] ?? 0) / entry.count;
+          if ((entry.logits[p] ?? 0) > 0) mask[p] = 1;
+        }
+        const component = seedComponent(mask, width, height, first.seed);
+        if (component === null) continue;
+        if (component.area < options.minArea || component.area > options.maxArea) continue;
+        const averaged: PromptNucleus = {
+          mask: component.mask,
+          area: component.area,
+          seed: first.seed,
+          score: entry.score / entry.count,
+          stability: stabilityScore(entry.logits),
+          bounds: maskBounds(component.mask, width),
+        };
+        if (maskIoU(first, averaged, width) < 0.5) continue;
+        nuclei[owner] = averaged;
+      }
     }
   };
 
@@ -334,5 +480,6 @@ export async function promptPass(
   if (options.residual && signal?.aborted !== true) {
     await consider(stainSeeds(image, options, covered, options.residualBias));
   }
-  return { nuclei, seeds: seedCount, decodes };
+  if (options.ensemble > 0 && signal?.aborted !== true) await refine();
+  return { nuclei: dropDuplicates(nuclei, width), seeds: seedCount, decodes };
 }
