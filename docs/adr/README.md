@@ -318,3 +318,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0351](0351-the-v1-tumor-model-stays-the-monai-camelyon-resnet18.md) | The MONAI CAMELYON ResNet18 stays the v1 tumor model, and a foundation-model probe replaces it only after it passes the same test-slide evaluation | Accepted | 2026-11-16 |
 | [0352](0352-sso-links-an-existing-account-by-verified-email.md) | SSO links an existing account by verified email | Accepted | 2026-11-16 |
 | [0353](0353-main-path-budgets-are-a-p95-after-a-warm-up.md) | Main path budgets for the thesis are a 95th percentile after a warm-up, CI keeps the fastest of several | Accepted | 2026-11-16 |
+| [0354](0354-the-api-warms-the-embedder-with-the-modal-sdk.md) | The API warms the embedder with the Modal SDK | Accepted | 2026-11-16 |

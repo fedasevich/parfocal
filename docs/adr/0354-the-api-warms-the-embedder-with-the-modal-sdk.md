@@ -1,4 +1,4 @@
-# XXXX. The API warms the embedder with the Modal SDK
+# 0354. The API warms the embedder with the Modal SDK
 
 - Date: 2026-11-16
 - Status: Accepted
