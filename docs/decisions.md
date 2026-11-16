@@ -296,6 +296,15 @@ IAM-012 (per-organisation SSO) maps a customer IdP's groups to our two roles ([A
 
 Your choice:
 
+### 122. Whether to turn on previews per pull request
+
+OPS-003 (environments) built a preview per pull request: its own Worker, Modal environment `pr-<n>`, Neon branch and `previews/pr-<n>/` prefix, deleted on close, at most 5 at once, off until the repository variable `PREVIEWS` is `true`. Published rates put one preview at about $0.10 to $0.30 a month, under $1.50 at the cap, but the budgets already total $30 and the Modal credit and the Workers Free request quota are shared with production. Turning it on also needs a separate preview Neon project, a preview Zitadel login app, the GitHub `preview` environment and an OpenTofu change adding bucket CORS for preview origins and the `previews/` cleanup rule, all listed in `docs/knowledge/platform.md`.
+
+- **A. Keep previews off until the first real user, and test pull requests locally (recommended).**
+- B. Turn them on now. An agent prepares the setup and the tofu plan, and you approve the spend.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 The temporary review checklist of 2026-11-14 is handled and deleted. What still waits is below.
