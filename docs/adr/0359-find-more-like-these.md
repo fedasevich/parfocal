@@ -1,7 +1,7 @@
-# XXXX. Find more like these is a no-go on PathoSAM tokens, and waits for a typed fixture or a concept model
+# 0359. Find more like these is a no-go on PathoSAM tokens, and waits for a typed fixture or a concept model
 
 - Date: 2026-11-16
-- Status: Proposed
+- Status: Accepted
 - Deciders: Parfocal agents, owner to review
 - Backlog: AISEG-014 (find more like these, exemplar prompting). Refs POC doc 20 section 2.9 (text and exemplar prompts). Builds on [ADR 0346](0346-server-embeddings-are-float16-tiles-in-the-slide-bucket.md) (server embeddings are float16 tiles) and [ADR 0261](0261-auto-region-pass.md) (the auto region pass)
 
