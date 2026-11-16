@@ -3802,7 +3802,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Depends on AITUM-008.
   Size: M.
 
-- [ ] AITUM-003 · Areas from the tumor map
+- [x] AITUM-003 · Areas from the tumor map
   Cells at or above 0.5 form areas by 8-connectivity, an area is listed only if its peak reaches 0.97, its size is the widest distance across the convex hull of its cells in mm, and it carries a category, a likely size range and flags for "near a line" and "too small for the map". Areas are ordered largest first. The range comes from the MLEVAL evaluation, not a constant.
   Done when unit tests cover connectivity, the peak filter, the hull diameter and the category lines, and an evaluation on CAMELYON16 test slides records per-deposit size error and stray areas as a result file. The POC reached 7 areas for 6 deposits and 8.1 mm against 8.1 mm on tumor_009, a training slide.
   Refs doc 36, [`poc/src/segment/tumor-areas.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/segment/tumor-areas.ts), [`poc/scripts/tumor-areas.mjs`](https://github.com/fedasevich/pathlogy-poc/blob/master/scripts/tumor-areas.mjs), [ADR 0012](adr/0012-ux-round-2-prototype-revisions.md).

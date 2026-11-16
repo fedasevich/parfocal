@@ -49,6 +49,7 @@ class TumorArea:
     category: Category
     near_line: bool
     too_small_for_map: bool
+    label: int = 0
 
 
 @cache
@@ -106,6 +107,16 @@ def cell_corners(
     return list(zip(xs.tolist(), ys.tolist(), strict=True))
 
 
+def area_labels(grid: Grid, outline_at: float = OUTLINE_AT) -> tuple[NDArray[np.int32], int]:
+    values = np.asarray(grid, dtype=np.float64)
+    labels = np.zeros(values.shape, dtype=np.int32)
+    count = cast(
+        int,
+        ndimage.label(values >= outline_at, structure=np.ones((3, 3), dtype=bool), output=labels),
+    )
+    return labels, count
+
+
 def find_tumor_areas(
     grid: Grid,
     extent: Extent,
@@ -121,11 +132,7 @@ def find_tumor_areas(
     cell_w = (extent[2] - extent[0]) / width
     cell_h = (extent[3] - extent[1]) / height
     cell_um = max(cell_w, cell_h) * um_per_px
-    labels = np.zeros(values.shape, dtype=np.int32)
-    count = cast(
-        int,
-        ndimage.label(values >= outline_at, structure=np.ones((3, 3), dtype=bool), output=labels),
-    )
+    labels, count = area_labels(values, outline_at)
     if count == 0:
         return []
     peaks = ndimage.maximum(values, labels, index=np.arange(1, count + 1))
@@ -161,6 +168,7 @@ def find_tumor_areas(
                 category=category_of(longest_mm),
                 near_line=crosses_a_line(likely),
                 too_small_for_map=longest_mm * 1000 < SIZABLE_CELLS * cell_um,
+                label=label,
             )
         )
     return sorted(areas, key=lambda area: (-area.longest_mm, -area.peak))

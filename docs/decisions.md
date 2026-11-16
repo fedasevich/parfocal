@@ -357,6 +357,16 @@ MLEVAL-005 (tumor map evaluation) has now run three annotated test slides and on
 
 Your choice:
 
+### 128. Whether the likely size range of tumor areas stays a measured percentage
+
+AITUM-003 (areas from the tumor map) shows each area with a likely size range, which now comes from the measured size error on three CAMELYON16 test slides ([result](results/2026-11-16-tumor-area-sizes-on-three-test-slides.md)). All 8 matched deposits were within 0.05 mm of their true size, and true size over listed size ran from 0.905 to 1.144, so the range is now 0.90 to 1.15 times the listed size. Both ends come from deposits under 0.13 mm whose errors are under one 15.6 µm grid cell. Micro and macro deposits alone stay within 0.98 to 1.07. A percentage is widest where the grid is coarsest, so near the 0.2 mm line it shows about 0.18 to 0.23 mm.
+
+- **A. Keep the measured 0.90 to 1.15 and update it after a wider run with a centre 0 macro slide (recommended).**
+- B. Use about 0.98 to 1.07 from micro and macro deposits, plus a fixed margin of one grid cell, so small areas get an honest absolute range.
+- C. Go back to the old ±10% until the wider run.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 The temporary review checklist of 2026-11-14 is handled and deleted. What still waits is below.

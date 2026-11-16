@@ -3,19 +3,22 @@ import json
 from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
 from numpy.typing import NDArray
+from skimage import measure
 
-from parfocal_ml.tumor_areas import evaluate_areas, find_tumor_areas
+from parfocal_ml.tumor_areas import Point, TumorArea, area_labels, find_tumor_areas, outline_mm
 from parfocal_ml.tumor_froc import (
     BUNDLE_SPACING_UM,
     FALSE_POSITIVE_RATES,
     TUMOR_GROUPS,
+    Lesions,
     SlideHits,
     annotation_polygons,
     detections,
+    filled,
     froc,
     lesions_of,
     slide_hits,
@@ -54,9 +57,20 @@ class SlideEvaluation:
     lesions_isolated: int
     detections: int
     cells: CellCounts
-    size_errors_mm: tuple[float, ...]
-    deposits_missed: int
+    deposits: tuple[LesionSize, ...]
     stray_areas: int
+
+    @property
+    def size_errors_mm(self) -> tuple[float, ...]:
+        return tuple(d.error_mm for d in self.deposits if d.error_mm is not None)
+
+    @property
+    def deposits_missed(self) -> int:
+        return sum(1 for d in self.deposits if d.found_mm is None and not d.merged)
+
+    @property
+    def deposits_merged(self) -> int:
+        return sum(1 for d in self.deposits if d.merged)
 
     def as_json(self) -> dict[str, Any]:
         single = froc([self.hits]) if self.hits.lesions else None
@@ -76,19 +90,103 @@ class SlideEvaluation:
             "sensitivity": self.cells.sensitivity,
             "called_cells": self.cells.called,
             "tumor_cells": self.cells.truth,
+            "deposits": [
+                {
+                    "truth_mm": d.truth_mm,
+                    "found_mm": d.found_mm,
+                    "areas": d.areas,
+                    "isolated": d.isolated,
+                    "merged": d.merged,
+                }
+                for d in self.deposits
+            ],
             "size_errors_mm": list(self.size_errors_mm),
             "deposits_missed": self.deposits_missed,
+            "deposits_merged": self.deposits_merged,
             "stray_areas": self.stray_areas,
         }
 
 
-def tumor_outlines(groups: dict[str, list[NDArray[np.float64]]]) -> list[list[tuple[float, float]]]:
-    return [
-        [(float(x), float(y)) for x, y in points]
-        for name, found in groups.items()
-        if name in TUMOR_GROUPS
-        for points in found
-    ]
+@dataclass(frozen=True)
+class LesionSize:
+    truth_mm: float
+    found_mm: float | None
+    areas: int
+    isolated: bool
+    merged: bool = False
+
+    @property
+    def error_mm(self) -> float | None:
+        return None if self.found_mm is None else self.found_mm - self.truth_mm
+
+    @property
+    def truth_over_found(self) -> float | None:
+        return self.truth_mm / self.found_mm if self.found_mm else None
+
+
+@dataclass(frozen=True)
+class LesionMatch:
+    deposits: tuple[LesionSize, ...]
+    stray: tuple[TumorArea, ...]
+
+
+def deposit_labels(mask: Mask) -> NDArray[np.int32]:
+    return cast("NDArray[np.int32]", measure.label(mask, connectivity=2)).astype(np.int32)
+
+
+def deposit_outlines(
+    groups: dict[str, list[NDArray[np.float64]]], deposits: NDArray[np.int32], cell: float
+) -> dict[int, list[Point]]:
+    merged: dict[int, list[Point]] = {}
+    for name, found in groups.items():
+        if name not in TUMOR_GROUPS:
+            continue
+        for points in found:
+            inside = deposits[filled([points], deposits.shape, cell)]
+            inside = inside[inside > 0]
+            if inside.size:
+                label = int(np.bincount(inside).argmax())
+                merged.setdefault(label, []).extend((float(x), float(y)) for x, y in points)
+    return merged
+
+
+def match_deposits(
+    areas: Sequence[TumorArea],
+    area_cells: NDArray[np.int32],
+    deposits: NDArray[np.int32],
+    lesions: Lesions,
+    outlines: dict[int, list[Point]],
+    um_per_px: float,
+) -> LesionMatch:
+    credited: dict[int, list[TumorArea]] = {}
+    touched: set[int] = set()
+    for area in areas:
+        under = deposits[area_cells == area.label]
+        under = under[under > 0]
+        if under.size:
+            credited.setdefault(int(np.bincount(under).argmax()), []).append(area)
+            touched.update(np.unique(under).tolist())
+    used = {area.label for found in credited.values() for area in found}
+    sizes: list[LesionSize] = []
+    for label in sorted(outlines, key=lambda key: -outline_mm(outlines[key], um_per_px)):
+        own = credited.get(label, [])
+        lesion = int(lesions.labels[deposits == label].max())
+        sizes.append(
+            LesionSize(
+                outline_mm(outlines[label], um_per_px),
+                max((area.longest_mm for area in own), default=None),
+                len(own),
+                lesion in lesions.isolated,
+                merged=not own and label in touched,
+            )
+        )
+    lesion_cells = lesions.labels > 0
+    stray = tuple(
+        area
+        for area in areas
+        if area.label not in used and not (lesion_cells & (area_cells == area.label)).any()
+    )
+    return LesionMatch(tuple(sizes), stray)
 
 
 def evaluate_slide(
@@ -105,8 +203,11 @@ def evaluate_slide(
     height, width = probability.shape
     um_per_px = cell_um / CELL
     areas = find_tumor_areas(probability, (0, 0, width * CELL, height * CELL), um_per_px)
-    matched = evaluate_areas(areas, tumor_outlines(groups), um_per_px, CELL)
-    errors = tuple(d.error_mm for d in matched.deposits if d.error_mm is not None)
+    area_cells, _ = area_labels(probability)
+    deposits = deposit_labels(mask)
+    matched = match_deposits(
+        areas, area_cells, deposits, lesions, deposit_outlines(groups, deposits, CELL), um_per_px
+    )
     return SlideEvaluation(
         name=name,
         annotated=bool(mask.any()),
@@ -115,8 +216,7 @@ def evaluate_slide(
         lesions_isolated=len(lesions.isolated),
         detections=len(found),
         cells=CellCounts(int(called.sum()), int(mask.sum()), int((called & mask).sum())),
-        size_errors_mm=errors,
-        deposits_missed=sum(1 for d in matched.deposits if d.found_mm is None),
+        deposits=matched.deposits,
         stray_areas=len(matched.stray),
     )
 
@@ -147,7 +247,16 @@ def summary(slides: Sequence[SlideEvaluation]) -> dict[str, Any]:
         "dice": counts.dice,
         "mean_slide_dice": float(np.mean(per_slide)) if per_slide else None,
         "mean_abs_size_error_mm": float(np.mean(np.abs(errors))) if errors else None,
+        "median_abs_size_error_mm": float(np.median(np.abs(errors))) if errors else None,
         "deposits_measured": len(errors),
+        "deposits_missed": sum(s.deposits_missed for s in annotated),
+        "deposits_merged": sum(s.deposits_merged for s in annotated),
+        "truth_over_found": (
+            [float(min(ratios)), float(max(ratios))]
+            if (ratios := [r for s in annotated for d in s.deposits if (r := d.truth_over_found)])
+            else None
+        ),
+        "stray_areas_on_annotated": sum(s.stray_areas for s in annotated),
         "false_positives_on_normal": sum(len(s.hits.false_positives) for s in normal),
         "stray_areas_on_normal": sum(s.stray_areas for s in normal),
     }

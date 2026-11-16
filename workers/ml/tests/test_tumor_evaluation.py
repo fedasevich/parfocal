@@ -11,7 +11,7 @@ from parfocal_ml.tumor_evaluation import (
     main,
     summary,
 )
-from parfocal_ml.tumor_froc import annotation_polygons, froc, tumor_mask
+from parfocal_ml.tumor_froc import BUNDLE_SPACING_UM, annotation_polygons, froc, tumor_mask
 from parfocal_ml.tumor_map import CELL
 
 
@@ -133,3 +133,62 @@ def test_the_command_reads_cached_maps_and_their_outlines(tmp_path, capsys):
     assert report["summary"]["false_positives_on_annotated"] == 1
     assert report["summary"]["false_positives_on_normal"] == 2
     assert json.loads(capsys.readouterr().out) == report
+
+
+def test_many_outlines_of_one_deposit_count_as_one_deposit(tmp_path):
+    xml = outline_xml(tmp_path / "many.xml", [(40, 40, 50, 60), (51, 40, 60, 60), (45, 61, 55, 62)])
+    probability = np.zeros((200, 200), np.float32)
+    probability[40:62, 40:60] = 0.99
+    result = evaluate_slide("many", probability, xml)
+    assert len(result.deposits) == 1
+    deposit = result.deposits[0]
+    assert deposit.areas == 1
+    mm_per_cell = CELL * BUNDLE_SPACING_UM / 1000
+    assert deposit.truth_mm == pytest.approx(np.hypot(20, 20) * mm_per_cell)
+    assert deposit.found_mm == pytest.approx(np.hypot(20, 22) * mm_per_cell)
+    assert result.stray_areas == 0
+
+
+def test_an_area_is_credited_only_to_the_deposit_its_cells_touch(tmp_path):
+    xml = outline_xml(tmp_path / "near.xml", [(10, 10, 100, 12), (80, 80, 84, 84)])
+    probability = np.zeros((200, 200), np.float32)
+    probability[10:12, 10:100] = 0.99
+    probability[10:100, 10:12] = 0.99
+    probability[80:84, 80:84] = 0.99
+    probability[150:153, 150:153] = 0.99
+    result = evaluate_slide("near", probability, xml)
+    bar, small = result.deposits
+    assert bar.areas == 1
+    assert bar.found_mm is not None
+    assert bar.found_mm > bar.truth_mm
+    assert small.areas == 1
+    assert small.truth_over_found == pytest.approx(1.0)
+    assert result.stray_areas == 1
+
+
+def test_the_summary_keeps_the_spread_of_true_over_found_size(tmp_path):
+    xml = outline_xml(tmp_path / "spread.xml", [(40, 40, 60, 60), (140, 140, 160, 160)])
+    probability = np.zeros((200, 200), np.float32)
+    probability[40:60, 40:60] = 0.99
+    probability[140:150, 140:150] = 0.99
+    report = summary([evaluate_slide("spread", probability, xml)])
+    low, high = report["truth_over_found"]
+    assert low == pytest.approx(1.0)
+    assert high == pytest.approx(2.0)
+    assert report["deposits_missed"] == 0
+    assert report["stray_areas_on_annotated"] == 0
+
+
+def test_an_area_over_two_deposits_is_credited_to_the_one_it_covers_most(tmp_path):
+    xml = outline_xml(tmp_path / "merged.xml", [(40, 40, 70, 60), (73, 40, 76, 43)])
+    probability = np.zeros((200, 200), np.float32)
+    probability[40:61, 40:77] = 0.99
+    result = evaluate_slide("merged", probability, xml)
+    large, small = result.deposits
+    assert large.areas == 1
+    assert not large.merged
+    assert small.found_mm is None
+    assert small.merged
+    assert result.deposits_missed == 0
+    assert result.deposits_merged == 1
+    assert result.stray_areas == 0

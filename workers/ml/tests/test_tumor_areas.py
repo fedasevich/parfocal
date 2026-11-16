@@ -149,9 +149,9 @@ def test_areas_come_largest_first_then_by_peak():
 
 def test_the_range_comes_from_the_packaged_config():
     size = likely_size()
-    assert (size.below, size.above) == (0.1, 0.1)
-    assert size.source.startswith("TODO")
-    assert size.around(1.0) == pytest.approx((0.9, 1.1))
+    assert (size.below, size.above) == (0.1, 0.15)
+    assert size.source.startswith("docs/results/")
+    assert size.around(1.0) == pytest.approx((0.9, 1.15))
 
 
 def test_evaluation_matches_deposits_and_counts_stray_areas():
