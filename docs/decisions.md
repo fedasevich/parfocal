@@ -171,7 +171,7 @@ Your answer to decision 133 says nothing is trained or fine-tuned in the thesis.
 - B. No probe. Drop AITUM-014 and keep the pretrained MONAI ResNet18 as the only tumor map.
 - Other.
 
-Your choice: left empty, so the recommended A applies
+Your choice: a
 
 ## The review column, what each task waits for
 
