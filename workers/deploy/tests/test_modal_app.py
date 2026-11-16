@@ -1,3 +1,4 @@
+import importlib
 import inspect
 from pathlib import Path
 
@@ -9,11 +10,13 @@ from parfocal_deploy import modal_app
 from parfocal_deploy.image_locks import APP_LOCK, committed, pinned
 from parfocal_deploy.modal_app import (
     APP_NAME,
+    FUNCTION_SECRETS,
     FUNCTIONS,
     INGEST_FUNCTION,
     INGEST_OPTIONS,
     MAX_DEPLOYED_CRONS,
     PARSE_SANDBOX_OPTIONS,
+    SECRETS,
     WEB_ENDPOINT,
     WEB_FUNCTION,
     WEB_OPTIONS,
@@ -55,6 +58,28 @@ def test_the_parse_sandbox_blocks_the_network_and_carries_no_secret() -> None:
     assert PARSE_SANDBOX_OPTIONS["memory"] == (PARSE_MEMORY_MIB, PARSE_MEMORY_MIB)
     assert PARSE_SANDBOX_OPTIONS["timeout"] == PARSE_SECONDS
     assert "block_network" in inspect.signature(modal.App.function).parameters
+
+
+def test_secrets_are_attached_per_function_and_not_to_the_app(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    built: list[dict[str, object]] = []
+    real_app = modal.App
+
+    def recording_app(*_arguments: object, **options: object) -> modal.App:
+        built.append(options)
+        return real_app(APP_NAME)
+
+    assert sorted(FUNCTION_SECRETS) == sorted(FUNCTIONS)
+    assert all(FUNCTION_SECRETS[name] == SECRETS for name in FUNCTIONS)
+    monkeypatch.setattr(modal, "App", recording_app)
+    try:
+        importlib.reload(modal_app)
+    finally:
+        monkeypatch.undo()
+        importlib.reload(modal_app)
+    assert built
+    assert all("secrets" not in options for options in built)
 
 
 def test_the_app_deploys_no_cron() -> None:

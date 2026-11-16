@@ -167,6 +167,13 @@ def required_output(folder: Path, name: str) -> bytes:
     return data
 
 
+def hand_over(work_dir: Path, user: str) -> None:
+    shutil.chown(work_dir, user)
+    for folder, names, _files in work_dir.walk():
+        for name in names:
+            shutil.chown(folder / name, user)
+
+
 def proc_resident_bytes(statm: Path) -> int | None:
     try:
         return int(statm.read_text().split()[1]) * os.sysconf("SC_PAGE_SIZE")
@@ -302,6 +309,8 @@ async def parse_isolated(
     chosen = limits or ParseLimits()
     issuer = tokens or JobTokens()
     await asyncio.to_thread(work_dir.mkdir, parents=True, exist_ok=True)
+    if chosen.user is not None:
+        await asyncio.to_thread(hand_over, work_dir, chosen.user)
     process = await asyncio.create_subprocess_exec(
         sys.executable,
         "-I",
