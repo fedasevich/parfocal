@@ -266,6 +266,9 @@ AISEG-016 (prompt-pass fallback) added the five-prompt ensemble for best quality
 
 - **A. Leave the auto layer on fast. The gain is small and the cost is almost four times the decoding (recommended).**
 - B. Let the outline tier setting choose best quality.
+
+Your choice:
+
 ### 119. Whether parfocal.eu joins the browsers' HSTS preload list
 
 SEC-002 (encryption in transit and at rest) turns on zone HSTS for a year with subdomains, with preload off, in `infra/tofu/global/zone.tf`. Preload makes browsers refuse plain HTTP on every `parfocal.eu` name before the first visit, and leaving the list takes months.
