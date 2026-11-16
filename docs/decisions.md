@@ -312,6 +312,9 @@ AINUC-000 (nuclei detector and typer research check) kept PathoSAM AIS and HoVer
 - **A. Allow a follow-up task to download InstanSeg and the PathoSAM ViT-L decoder and score them on TNBC, CryoNuSeg and NuInsSeg on the Mac (recommended).**
 - B. Also allow CellViT++ and NuLite, which can only be typed on PanNuke, a set they report results on.
 - C. No downloads. Keep the line-up as it is.
+
+Your choice:
+
 ### 124. Whether to give the load workflow a production token and a session
 
 TEST-010 (load test tooling) added the `load` workflow, which runs the Locust scenarios against `https://app.parfocal.eu` under a cap of 2 users for 60 seconds ([ADR XXXX](adr/XXXX-load-tests-run-against-production-under-a-tiny-cap.md), load tests against production under a tiny cap). Without secrets it measures only `/api/health`. The API scenario also lists projects and searches, the tile scenario reads slide ranges through the Worker and the room scenario joins a room and times pings, and those need a read-only service token with `see-slides`, a few slide ids from your test workspace and a member session cookie, stored as the `production` environment secrets `PARFOCAL_LOAD_TOKEN` and `PARFOCAL_LOAD_SESSION` and the variables `PARFOCAL_LOAD_SLIDES` and `PARFOCAL_LOAD_ROOM`. One capped run cost about $0.002 of Modal time.
