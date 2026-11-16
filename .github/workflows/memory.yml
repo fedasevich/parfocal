@@ -44,7 +44,7 @@ jobs:
           MEMORY_LONG_VISITS: ${{ inputs.long_visits || '100' }}
       - name: Renderer switches over CMU-1.svs
         if: always()
-        run: pnpm --filter @parfocal/viewer-engine exec playwright test route-switch
+        run: pnpm --filter @parfocal/viewer-engine exec playwright test route-switch --output=test-results/route-switch
         env:
           PARFOCAL_REQUIRE_FIXTURES: small,viewer
           ROUTE_SWITCHES: "40"
