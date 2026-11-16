@@ -420,6 +420,16 @@ AISEG-013 (fast tier in the browser without a GPU) measured InstanSeg's 15 MB br
 
 Your choice:
 
+### 135. How the nucleus job gets under one hour on an L4
+
+AINUC-011 (throughput target) needs test_001 in under an hour. Today each 1,656 px tile runs 16 encoder windows, 18,372 for the slide at 0.356 s each. Skipping windows without tissue keeps every cell in tissue and leaves 11,448, still about 4,075 s of GPU ([result](results/2026-11-16-nucleus-window-skip-and-layout.md)). Three windows a side would need 7,020 windows, but moving a window seam by even 1 px fails the AINUC-001 (detector runner) reference, which matches nuclei within 1 slide px. A 1,414 px tile core keeps the detector exactly as the reference pins it and needs 8,068 windows (about 2,872 s of GPU). [ADR 0240](adr/0240-one-working-chunk-per-tile.md) (one working chunk per tile) fixes the core at the POC's 1,536 px.
+
+- **A. Shrink the nucleus tile core to 1,414 px for the nucleus job only, with a new ADR that amends ADR 0240, then measure on one L4 (recommended).**
+- B. Keep the tiles and loosen the reference to tolerate window position (count within 3%, area ratio within 0.95 to 1.05, matching within 2 slide px), then use three windows a side.
+- C. Keep both and try half precision or TensorRT on the L4 first, which needs a GPU run to time.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 INGEST-029 (shared test slides bucket) declares the read-only R2 key as the account token `parfocal-fixtures-read` in `infra/tofu/dev/fixtures.tf`, limited to object reads in `parfocal-dev`. The plan stops at a 403 because the agent token `parfocal-agent-dev-staging` may not read or create API tokens. All 33 public fixtures are already in R2 and `pnpm fixtures` reads them with any key that can read the bucket. The `dev` plan also shows two changes waiting from other tasks, the tiering lifecycle rule and the 7-day bucket lock on `t/`, so the token would need a targeted apply until those are applied.

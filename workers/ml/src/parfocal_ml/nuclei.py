@@ -1,7 +1,8 @@
 import asyncio
 import math
-from collections.abc import Sequence
-from dataclasses import dataclass
+import threading
+from collections.abc import Callable, Sequence
+from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
 from typing import Any, Protocol
@@ -15,12 +16,13 @@ from skimage.segmentation import watershed
 from parfocal_common.cell_chunks import UNCLASSIFIED
 from parfocal_common.chunk_store import Cell
 from parfocal_ml.sam_contract import GRAPHS, IMAGE_SIZE, onnx_dir, pixel_values, resized_shape
-from parfocal_ml.whole_slide import Window
+from parfocal_ml.whole_slide import TISSUE_CELL, Window, has_tissue
 
 WINDOW_PX = 512
 WINDOW_HALO_PX = 64
 
 type Maps = NDArray[np.float32]
+type Mask = NDArray[np.bool_]
 type Rgb = NDArray[np.uint8]
 type Labels = NDArray[np.int32]
 
@@ -70,22 +72,37 @@ class Outline:
         return float(self.ring[:, 0].mean()), float(self.ring[:, 1].mean())
 
 
+type Span = tuple[int, int]
+type Layout = Callable[[int, int, int], list[Span]]
+type WindowFilter = Callable[[int, int, int, int], bool]
+
+
 def window_starts(length: int, core: int) -> range:
     return range(0, length, core)
 
 
+def grid_spans(length: int, core: int, halo: int) -> list[Span]:
+    return [(start, min(length, start + core)) for start in window_starts(length, core)]
+
+
 def stitched_maps(
-    rgb: Rgb, model: MapModel, core: int = WINDOW_PX, halo: int = WINDOW_HALO_PX
+    rgb: Rgb,
+    model: MapModel,
+    core: int = WINDOW_PX,
+    halo: int = WINDOW_HALO_PX,
+    layout: Layout = grid_spans,
+    wanted: WindowFilter | None = None,
 ) -> Maps:
     height, width = rgb.shape[:2]
-    if height <= core + 2 * halo and width <= core + 2 * halo:
-        return model.maps(rgb)
     out = np.zeros((3, height, width), np.float32)
-    for y0 in window_starts(height, core):
-        for x0 in window_starts(width, core):
-            y1, x1 = min(height, y0 + core), min(width, x0 + core)
+    if height <= core + 2 * halo and width <= core + 2 * halo:
+        return model.maps(rgb) if wanted is None or wanted(0, 0, height, width) else out
+    for y0, y1 in layout(height, core, halo):
+        for x0, x1 in layout(width, core, halo):
             top, left = max(0, y0 - halo), max(0, x0 - halo)
             bottom, right = min(height, y1 + halo), min(width, x1 + halo)
+            if wanted is not None and not wanted(top, left, bottom, right):
+                continue
             part = model.maps(rgb[top:bottom, left:right])
             out[:, y0:y1, x0:x1] = part[:, y0 - top : y1 - top, x0 - left : x1 - left]
     return out
@@ -141,11 +158,15 @@ def traced(
     return outlines
 
 
+def outlines_of(maps: Maps, options: AisOptions = DEFAULT_OPTIONS) -> list[Outline]:
+    labels, foreground = instances(maps, options)
+    return traced(labels, foreground, options)
+
+
 def detect_outlines(
     rgb: Rgb, model: MapModel, options: AisOptions = DEFAULT_OPTIONS
 ) -> list[Outline]:
-    labels, foreground = instances(stitched_maps(rgb, model), options)
-    return traced(labels, foreground, options)
+    return outlines_of(stitched_maps(rgb, model), options)
 
 
 def model_size(window: Window, scale: float) -> tuple[int, int]:
@@ -163,6 +184,17 @@ def as_cell(outline: Outline, window: Window, scale_x: float, scale_y: float) ->
     return Cell(0, to_slide(outline, window, scale_x, scale_y), UNCLASSIFIED, score)
 
 
+def tissue_filter(
+    tissue: Mask, window: Window, scale_x: float, scale_y: float, cell: int = TISSUE_CELL
+) -> WindowFilter:
+    def wanted(top: int, left: int, bottom: int, right: int) -> bool:
+        x0, y0 = window.x + math.floor(left / scale_x), window.y + math.floor(top / scale_y)
+        x1, y1 = window.x + math.ceil(right / scale_x), window.y + math.ceil(bottom / scale_y)
+        return has_tissue(tissue, Window(x0, y0, x1 - x0, y1 - y0), cell)
+
+    return wanted
+
+
 @dataclass
 class PathoSamDetector:
     reader: RegionReader
@@ -170,12 +202,23 @@ class PathoSamDetector:
     quality: Quality = Quality.BEST
     options: AisOptions = DEFAULT_OPTIONS
     classes: int = 1
+    tissue: Mask | None = None
+    layout: Layout = grid_spans
+    gpu: threading.Lock = field(default_factory=threading.Lock, repr=False, compare=False)
+
+    def window_maps(self, rgb: Rgb, wanted: WindowFilter | None) -> Maps:
+        with self.gpu:
+            return stitched_maps(rgb, self.model, layout=self.layout, wanted=wanted)
 
     async def detect(self, window: Window) -> Sequence[Cell]:
         width, height = model_size(window, self.reader.mpp / self.quality.mpp)
         rgb = await self.reader.read(window, width, height)
-        outlines = await asyncio.to_thread(detect_outlines, rgb, self.model, self.options)
         scale_x, scale_y = width / window.width, height / window.height
+        wanted = None
+        if self.tissue is not None:
+            wanted = tissue_filter(self.tissue, window, scale_x, scale_y)
+        maps = await asyncio.to_thread(self.window_maps, rgb, wanted)
+        outlines = await asyncio.to_thread(outlines_of, maps, self.options)
         return [as_cell(outline, window, scale_x, scale_y) for outline in outlines]
 
 

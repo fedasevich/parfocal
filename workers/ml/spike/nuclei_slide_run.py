@@ -19,7 +19,9 @@ TIMEOUT_SECONDS = 70 * 60
 DEADLINE_SECONDS = 66 * 60
 TARGET_SECONDS = 60 * 60
 CLEARLY_OVER = 1.15
-RATE_TILES = 8
+RATE_TILES = 40
+CPU_CORES = 4.0
+AHEAD = 1
 PRINT_EVERY = 25
 REMOTE_ONNX = "/models/onnx"
 SLIDE_FOLDER = "/tmp/slides"
@@ -114,6 +116,7 @@ async def measure(full: bool) -> dict[str, object]:
     from PIL import Image
 
     from parfocal_common.jobs import JobStoppedError
+    from parfocal_ml import nuclei
     from parfocal_ml.nuclei import OnnxPathoSam, PathoSamDetector, Quality
     from parfocal_ml.stored_slides import LevelTable, opened
     from parfocal_ml.whole_slide import Tile, Window, plan_tiles, run_tiles, tile_sizes
@@ -165,16 +168,23 @@ async def measure(full: bool) -> dict[str, object]:
             TimedModel.windows += 1
             return result
 
-    detector = PathoSamDetector(TimedReader(), TimedModel(), Quality.BEST)
+    plain_outlines = nuclei.outlines_of
+
+    def timed_outlines(maps, options):
+        began = time.perf_counter()
+        result = plain_outlines(maps, options)
+        clock.add("post", time.perf_counter() - began)
+        return result
+
+    nuclei.outlines_of = timed_outlines
+    detector = PathoSamDetector(TimedReader(), TimedModel(), Quality.BEST, tissue=tissue)
 
     class TimedDetector:
         classes = detector.classes
         cells = 0
 
         async def detect(self, window: Window):
-            began = time.perf_counter()
             found = await detector.detect(window)
-            clock.add("detect", time.perf_counter() - began)
             TimedDetector.cells += len(found)
             return found
 
@@ -185,6 +195,7 @@ async def measure(full: bool) -> dict[str, object]:
     warm_seconds = time.perf_counter() - started
     clock.parts.pop("read", None)
     clock.parts.pop("maps", None)
+    clock.parts.pop("post", None)
     warm_windows = TimedModel.windows - warm_windows
     TimedModel.windows = 0
 
@@ -208,6 +219,7 @@ async def measure(full: bool) -> dict[str, object]:
         objects: int = 0
         tiles_started: float = 0.0
         rate_seconds: float | None = None
+        windows_at_rate: int = 0
         projected: float | None = None
         stopped: str | None = None
 
@@ -222,9 +234,11 @@ async def measure(full: bool) -> dict[str, object]:
             self.objects += objects
             if self.marked == RATE_TILES:
                 self.rate_seconds = (time.perf_counter() - self.tiles_started) / RATE_TILES
+                self.windows_at_rate = TimedModel.windows
                 self.projected = clock.elapsed() + self.rate_seconds * (len(order) - RATE_TILES)
                 print(
-                    f"rate {self.rate_seconds:.2f} s per tile, projected {self.projected:.0f} s",
+                    f"rate {self.rate_seconds:.2f} s per tile over {TimedModel.windows} windows, "
+                    f"projected {self.projected:.0f} s",
                     flush=True,
                 )
             if self.marked % PRINT_EVERY == 0:
@@ -243,7 +257,7 @@ async def measure(full: bool) -> dict[str, object]:
     store = Store()
     progress = Progress()
     with contextlib.suppress(JobStoppedError):
-        await run_tiles(plan, order, TimedDetector(), store, "spike/", progress)
+        await run_tiles(plan, order, TimedDetector(), store, "spike/", progress, ahead=AHEAD)
     tiles_seconds = time.perf_counter() - progress.tiles_started
     return {
         "fixture": FIXTURE,
@@ -259,6 +273,10 @@ async def measure(full: bool) -> dict[str, object]:
         "chunk_bytes": store.bytes,
         "stopped": progress.stopped,
         "rate_seconds_per_tile": progress.rate_seconds,
+        "rate_tiles": RATE_TILES,
+        "windows_at_rate": progress.windows_at_rate,
+        "ahead": AHEAD,
+        "cpu_request": CPU_CORES,
         "projected_seconds": progress.projected,
         "warm_up": {"seconds": warm_seconds, "windows": warm_windows},
         "tiles_seconds": tiles_seconds,
@@ -275,6 +293,7 @@ async def measure(full: bool) -> dict[str, object]:
 measure_remote = app.function(
     gpu=POOL.gpu.value if POOL.gpu is not None else None,
     memory=(POOL.memory_request_mib, POOL.memory_limit_mib),
+    cpu=CPU_CORES,
     timeout=TIMEOUT_SECONDS,
     secrets=secrets,
 )(measure_sync)

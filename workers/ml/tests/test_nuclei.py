@@ -18,10 +18,11 @@ from parfocal_ml.nuclei import (
     encoder_input,
     half_pixel_resize,
     stitched_maps,
+    tissue_filter,
     traced,
 )
 from parfocal_ml.sam_contract import IMAGE_SIZE
-from parfocal_ml.whole_slide import Window, plan_tiles, run_prefix, run_tiles, tile_key
+from parfocal_ml.whole_slide import TISSUE_CELL, Window, plan_tiles, run_prefix, run_tiles, tile_key
 
 RADIUS = 9.0
 
@@ -178,3 +179,43 @@ def test_whole_slide_run_keeps_each_nucleus_once():
     assert len(found) == len(centres)
     for x, y in centres:
         assert min(math.dist((x, y), centre) for centre in found) < 0.5
+
+
+def test_windows_without_tissue_are_skipped_and_left_empty():
+    rgb = np.full((1300, 1100, 3), 255, np.uint8)
+    model = Pointwise()
+    stitched = stitched_maps(rgb, model, wanted=lambda top, left, bottom, right: left == 0)
+    assert len(model.shapes) == 3
+    assert stitched[:, :, :WINDOW_PX].min() == 1
+    assert stitched[:, :, WINDOW_PX:].max() == 0
+
+
+def test_tissue_filter_keeps_only_windows_reaching_a_tissue_cell():
+    tissue = np.zeros((10, 10), bool)
+    tissue[0, 0] = True
+    wanted = tissue_filter(tissue, Window(0, 0, 640, 640), 2.0, 2.0)
+    assert wanted(0, 0, 128, 128)
+    assert wanted(100, 100, 400, 400)
+    assert not wanted(130, 130, 400, 400)
+
+
+def test_detector_skips_tissue_free_windows_and_keeps_cells_in_tissue():
+    slide_mpp = 0.25
+    width, height = 1400, 1000
+    centres = grid_centres(width, height, 47, 0.0)
+    slide = disks(height, width, centres, RADIUS)
+    tissue = np.zeros((-(-height // TISSUE_CELL), -(-width // TISSUE_CELL)), bool)
+    tissue[:, :4] = True
+    full, skipping = StainMaps(RADIUS), StainMaps(RADIUS)
+    reader = ArrayReader(slide, slide_mpp)
+    window = Window(0, 0, width, height)
+    every = asyncio.run(PathoSamDetector(reader, full).detect(window))
+    some = asyncio.run(PathoSamDetector(reader, skipping, tissue=tissue).detect(window))
+    assert len(skipping.shapes) < len(full.shapes)
+
+    def in_tissue(cells):
+        return sorted(
+            tuple(cell.ring) for cell in cells if np.mean(cell.ring[0::2]) < 4 * TISSUE_CELL
+        )
+
+    assert in_tissue(some) == in_tissue(every)
