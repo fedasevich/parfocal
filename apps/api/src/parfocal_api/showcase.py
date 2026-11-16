@@ -62,7 +62,7 @@ from parfocal_api.tables import (
 from parfocal_common.db import DatabaseScope, create_engine, scoped_transaction
 from parfocal_common.ingest import RESTRICTED_RANGES_NAME, sample_folder, sample_original_key
 from parfocal_common.jobs import JobStatus, jobs
-from parfocal_common.object_store import ObjectStore
+from parfocal_common.object_store import ObjectStore, StorageError
 from parfocal_common.repository import repository_root
 from parfocal_common.result_store import ObjectResultStore, ResultStore
 from parfocal_common.settings import AppEnv, StorageSettings
@@ -172,6 +172,7 @@ VIEWER_SAMPLE_RANGES = {
     "barcode": [[309578626, 309578638]],
 }
 GALLERY_TOUR = "Format gallery tour"
+ALREADY_STORED = 412
 
 
 @dataclass
@@ -717,11 +718,15 @@ async def seed_gallery_tour(
     gallery: str,
 ) -> None:
     assert seeded.owner is not None
-    await store.put_object(
-        f"{sample_folder(VIEWER_SAMPLE)}{RESTRICTED_RANGES_NAME}",
-        json.dumps(VIEWER_SAMPLE_RANGES).encode(),
-        "application/json",
-    )
+    try:
+        await store.put_new_object(
+            f"{sample_folder(VIEWER_SAMPLE)}{RESTRICTED_RANGES_NAME}",
+            json.dumps(VIEWER_SAMPLE_RANGES).encode(),
+            "application/json",
+        )
+    except StorageError as error:
+        if error.status != ALREADY_STORED:
+            raise
     project_id = await connection.scalar(
         select(projects.c.id).where(
             projects.c.tenant_id == seeded.tenant_id, projects.c.name == gallery

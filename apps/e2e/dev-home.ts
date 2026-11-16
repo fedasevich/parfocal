@@ -33,7 +33,8 @@ async function drawThroughWorker(page: Page): Promise<string> {
   page.on("response", (response) => {
     if (response.url().includes(`/tiles/${tour.slide}/original`)) served.push(response.status());
   });
-  await page.goto(`/projects/${tour.project}/slides/${tour.slide}/live?task=${tour.task}`);
+  const path = `/projects/${tour.project}/slides/${tour.slide}/live?task=${tour.task}`;
+  await page.goto(path);
   const stage = page.getByTestId("slide-stage");
   await stage.waitFor({ timeout: 60_000 });
   await page
@@ -46,7 +47,7 @@ async function drawThroughWorker(page: Page): Promise<string> {
     );
   }
   const fitted = await stage.getAttribute("data-fitted-ms");
-  return `The viewer drew ${sampleSlide} from the parfocal-dev bucket in ${fitted} ms after ${ranged} ranged reads through the edge Worker`;
+  return `The viewer drew ${sampleSlide} from the parfocal-dev bucket in ${fitted} ms after ${ranged} ranged reads through the edge Worker at ${page.url()}`;
 }
 
 const root = fileURLToPath(new URL("../..", import.meta.url));

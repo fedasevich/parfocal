@@ -63,7 +63,9 @@ class EmptyStore:
     async def get_object(self, key: str) -> bytes:
         raise StorageError(404, "NoSuchKey")
 
-    async def put_object(self, key: str, body: bytes, content_type: str) -> None:
+    async def put_new_object(self, key: str, body: bytes, content_type: str) -> None:
+        if key in self.written:
+            raise StorageError(412, "PreconditionFailed")
         self.written[key] = body
 
 
@@ -210,9 +212,9 @@ async def test_the_owner_reviews_a_gallery_tour_that_opens_on_the_camelyon_sampl
     assert [str(email) for (email,) in assigned] == ["owner@example.test"]
 
 
-async def test_the_sample_restricted_ranges_reach_the_store(seeded: str) -> None:
-    await run_seed(seeded)
+async def test_the_sample_restricted_ranges_are_stored_once_and_kept(seeded: str) -> None:
     store = EmptyStore()
+    await run_seed(seeded, store=store)
     await run_seed(seeded, store=store)
     ranges = json.loads(store.written[f"samples/camelyon16/{VIEWER_SAMPLE}/restricted-ranges.json"])
     assert ranges["ranges"] == []
