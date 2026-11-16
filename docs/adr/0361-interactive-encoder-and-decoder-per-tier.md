@@ -1,7 +1,7 @@
-# XXXX. PathoSAM ViT-B stays the interactive encoder in every tier, with the window decoder for clicks and the int8 AIS decoder for regions, because no smaller or newer SAM has a better held-out number here
+# 0361. PathoSAM ViT-B stays the interactive encoder in every tier, with the window decoder for clicks and the int8 AIS decoder for regions, because no smaller or newer SAM has a better held-out number here
 
 - Date: 2026-11-16
-- Status: Proposed
+- Status: Accepted
 - Deciders: Yurii Fedas, proposed by the agent doing AISEG-000 (interactive segmentation research check)
 - Backlog: AISEG-000. Revises the interactive rows of [ADR 0202](0202-v1-model-line-up-per-tier.md) (v1 model line-up per tier). Builds on [ADR 0246](0246-pathosam-onnx-export-contract.md) (PathoSAM ONNX export contract), [ADR 0250](0250-sam-graph-per-execution-provider.md) (SAM graph per execution provider), [ADR 0349](0349-nucleus-detector-and-typer-per-tier.md) (nucleus detector and typer per tier) and [ADR 0359](0359-find-more-like-these.md) (find more like these is a no-go on PathoSAM tokens). Touches AISEG-013 (fast tier in the browser without a GPU)
 

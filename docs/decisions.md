@@ -403,7 +403,7 @@ Your choice:
 
 ### 133. Whether to fine-tune a small SAM on pathology for a fast interactive tier
 
-AISEG-000 (interactive segmentation research check) put PathoSAM ViT-B on every interactive tier and left Fast empty in [ADR XXXX](adr/XXXX-interactive-encoder-and-decoder-per-tier.md) (interactive encoder and decoder per tier). Generic MobileSAM encodes six times faster on the CPU but scores 0.573 on a TNBC click against 0.852 for PathoSAM, and no small SAM fine-tuned on pathology was found ([result](results/2026-11-16-mobilesam-on-tnbc.md)). The ViT-L download is already asked in decisions 117 and 123.
+AISEG-000 (interactive segmentation research check) put PathoSAM ViT-B on every interactive tier and left Fast empty in [ADR 0361](adr/0361-interactive-encoder-and-decoder-per-tier.md) (interactive encoder and decoder per tier). Generic MobileSAM encodes six times faster on the CPU but scores 0.573 on a TNBC click against 0.852 for PathoSAM, and no small SAM fine-tuned on pathology was found ([result](results/2026-11-16-mobilesam-on-tnbc.md)). The ViT-L download is already asked in decisions 117 and 123.
 
 - **A. No fine-tune for now. Devices without WebGPU use a server embedding once decision 117 is taken, and Fast stays empty (recommended).**
 - B. Add a task that fine-tunes MobileSAM or EdgeSAM on PathoSAM's public training sets on a Modal GPU, cost `TODO` and counted against the $30 month.

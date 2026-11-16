@@ -325,3 +325,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0358](0358-the-tumor-map-pool-runs-cuda-13-and-reuses-the-api-secrets.md) | The tumor map pool runs onnxruntime-gpu on a CUDA 13 cuDNN base and reuses the API's database and storage secrets | Accepted | 2026-11-16 |
 | [0359](0359-find-more-like-these.md) | Find more like these is a no-go on PathoSAM tokens, and waits for a typed fixture or a concept model | Accepted | 2026-11-16 |
 | [0360](0360-a-durable-object-counts-logins-per-address-strictly.md) | A Durable Object counts logins per client address strictly, behind the approximate binding | Accepted | 2026-11-16 |
+| [0361](0361-interactive-encoder-and-decoder-per-tier.md) | PathoSAM ViT-B stays the interactive encoder in every tier, with the window decoder for clicks and the int8 AIS decoder for regions, because no smaller or newer SAM has a better held-out number here | Accepted | 2026-11-16 |
