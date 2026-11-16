@@ -7,6 +7,7 @@ import {
   type RemoteFixture,
   selectFixtures,
 } from "./manifest.ts";
+import { fixtureMirror, mirrorUrl } from "./r2.ts";
 
 const concurrency = 3;
 const megabytes = (bytes: number) => `${(bytes / 1048576).toFixed(1)} MB`;
@@ -31,6 +32,8 @@ if (args.includes(keyFlag)) {
 }
 const dir = fixturesDir();
 const localDirs = localFixtureDirs();
+const mirror = fixtureMirror();
+const mirrorUrlFor = mirror && ((fixture: RemoteFixture) => mirrorUrl(mirror, fixture.file));
 const queue = [...selected];
 const failed: string[] = [];
 
@@ -43,7 +46,7 @@ async function worker() {
 async function fetchOne(fixture: RemoteFixture) {
   const started = performance.now();
   try {
-    const result = await downloadFixture(fixture, dir, { localDirs });
+    const result = await downloadFixture(fixture, dir, { localDirs, mirrorUrl: mirrorUrlFor });
     const seconds = ((performance.now() - started) / 1000).toFixed(0);
     const detail = result === "downloaded" ? ` in ${seconds} s` : "";
     console.log(`${result.padEnd(10)} ${fixture.file} (${megabytes(fixture.bytes)}${detail})`);
@@ -56,7 +59,7 @@ async function fetchOne(fixture: RemoteFixture) {
 }
 
 console.log(
-  `${selected.length} fixtures, ${megabytes(selected.reduce((sum, f) => sum + f.bytes, 0))}, into ${dir}`,
+  `${selected.length} fixtures, ${megabytes(selected.reduce((sum, f) => sum + f.bytes, 0))}, into ${dir}${mirror ? ", R2 first" : ""}`,
 );
 await Promise.all(Array.from({ length: concurrency }, worker));
 if (failed.length > 0) {

@@ -28,6 +28,8 @@ Deployed code reads secrets only from its environment, which Modal fills from th
 | `NEON_API_KEY` | GitHub environment `production` and the owner's shell | the owner by hand | Make a new key in the Neon console, replace the GitHub secret, then revoke the old key |
 | `R2_ACCESS_KEY_ID` | GitHub environment `production` and the owner's shell | the owner by hand | Rotates with `STORAGE_SECRET_ACCESS_KEY` |
 | `R2_SECRET_ACCESS_KEY` | GitHub environment `production` and the owner's shell | the owner by hand | Rotates with `STORAGE_SECRET_ACCESS_KEY` |
+| `PARFOCAL_FIXTURES_R2_ACCESS_KEY_ID` | the `fixtures_access_key_id` output of the `dev` OpenTofu root, not created yet because the deploy token cannot manage API tokens, later CI | OpenTofu, the account token `parfocal-fixtures-read` in `infra/tofu/dev/fixtures.tf` | Taint the token, apply, copy both outputs to every store. It reads every key of `parfocal-dev`, including `t/`, and writes nothing |
+| `PARFOCAL_FIXTURES_R2_SECRET_ACCESS_KEY` | the `fixtures_secret_access_key` output of the `dev` root, later CI | OpenTofu, the SHA-256 of the token value | Rotates with `PARFOCAL_FIXTURES_R2_ACCESS_KEY_ID` |
 | `CLOUDFLARE_API_TOKEN` | GitHub environment `production` | the owner by hand | Roll the token in the Cloudflare dashboard and replace the GitHub secret |
 | `MODAL_TOKEN_ID` | GitHub environment `production` | the owner by hand | Make a new Modal token, replace both GitHub secrets, then revoke the old token |
 | `MODAL_TOKEN_SECRET` | GitHub environment `production` | the owner by hand | Rotates with `MODAL_TOKEN_ID` |
