@@ -311,3 +311,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0344](0344-workers-and-realtime-write-their-own-sli-counts.md) | Workers and realtime write their own SLI counts, and only automatic whole-slide runs are pre-reads | Accepted | 2026-11-15 |
 | [0345](0345-job-claims-respect-the-tenant-region.md) | Job claims respect the tenant region behind one switch | Accepted | 2026-11-16 |
 | [0346](0346-server-embeddings-are-float16-tiles-in-the-slide-bucket.md) | Server embeddings are float16 tiles on a fixed grid in the slide bucket, and smart select snaps to a cached tile | Accepted | 2026-11-16 |
+| [0347](0347-nucleus-detector-and-typer-per-tier.md) | PathoSAM AIS stays the nucleus detector and HoVer-NeXt the typer in every server tier, because no newer model has a held-out number here | Proposed | 2026-11-16 |
