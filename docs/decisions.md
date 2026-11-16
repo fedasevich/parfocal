@@ -335,6 +335,16 @@ AITUM-000 (tumor map research check) kept the MONAI CAMELYON ResNet18 as the tum
 
 Your choice:
 
+### XXX. What FROC counts as the expected range for the tumor map job
+
+AITUM-001 (tumor map job) is done when a CAMELYON16 test slide scores within the expected FROC range, but no range is written anywhere. The bundle reports 0.72 over 48 slides, and the best 2016 entry 0.807 (0.732 to 0.889). The new job scored 1.0 on `test_001`, the only test slide on the Mac, with all three counted lesions found and 28 false positives below them ([result](results/2026-11-16-tumor-map-job-on-test-001.md)). One slide moves in steps of a third, so it is a smoke check, not a measure.
+
+- **A. Tick AITUM-001 now on "at or above the bundle's 0.72 on `test_001`", and let MLEVAL-005 (tumor map evaluation) set the real gate over at least three test slides, one without metastases (recommended).**
+- B. Keep AITUM-001 in review until MLEVAL-005 runs at least three test slides, which first needs two more test slides downloaded (about 1 to 3 GB each).
+- C. Set a per-slide floor now, such as 0.6, and tick on that.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 The temporary review checklist of 2026-11-14 is handled and deleted. What still waits is below.
