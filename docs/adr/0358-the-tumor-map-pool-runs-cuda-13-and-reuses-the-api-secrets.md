@@ -1,4 +1,4 @@
-# XXXX. The tumor map pool runs onnxruntime-gpu on a CUDA 13 cuDNN base and reuses the API's database and storage secrets
+# 0358. The tumor map pool runs onnxruntime-gpu on a CUDA 13 cuDNN base and reuses the API's database and storage secrets
 
 - Date: 2026-11-16
 - Status: Accepted
