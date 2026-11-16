@@ -4,6 +4,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 
 ## 2026-11-16
 
+- LAB-004 (pan sweep benchmark and export) was already built in feat commit 5d8b953d: pan-sweep.ts, the drawer Benchmark section and 16-column CSV, tested in apps/web/test/pan-sweep.test.ts. Re-verified green with verify-changed.
 - SEC-011 SEC-011 (security headers and CSP) is rescoped to production after ADR 0331 (no staging environment). The deploy smoke step gains security_header_problems, which checks CORP, Referrer-Policy, nosniff, X-Frame-Options, the Permissions-Policy features, the strict CSP parts and a fresh script nonce per request on the app page. Production already serves every header: the smoke command and apps/edge/test/deployed-headers.test.ts both passed against app.parfocal.eu, read only, cost $0, result docs/results/2026-11-16-security-headers-on-production.md. Test helper workers/deploy/tests/smoke_site.py is on the root pytest pythonpath. verify-changed failed only on the ml typecheck, which cannot resolve onnxruntime in this venv and is unrelated.
 - TEST-045 the inspector dock sits above the sliding minimap, so axe no longer sees the Hide while panning checkbox as obscured, full-viewer and inspector-panel specs passed three runs in a row.
 - TEST-045 The minimap slid over the Hide while panning checkbox mid-transition, which axe read as an obscured target. The inspector dock now sits above the minimap (z-4). The inspector panel spec checks the 24 pixel hit area and that nothing covers it.

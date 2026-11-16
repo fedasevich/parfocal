@@ -1826,7 +1826,7 @@ The viewer lives in `packages/viewer-engine`, a framework-free package that owns
   Refs doc 25.
   Size: M.
 
-- [ ] LAB-004 · Pan sweep benchmark and export
+- [x] LAB-004 · Pan sweep benchmark and export
   Done when the sweep runs from the drawer and exports CSV with the 16 columns the drawer lists.
   Refs [`poc/src/app/benchmark.ts`](https://github.com/fedasevich/pathlogy-poc/blob/master/src/app/benchmark.ts).
   Size: S.
