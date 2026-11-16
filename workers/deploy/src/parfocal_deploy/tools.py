@@ -119,5 +119,7 @@ def write_modal_secret(
         )
 
 
-def write_worker_secrets(tools: Tools, wrangler_env: str, values: Mapping[str, str]) -> None:
-    tools.run([*WRANGLER, "secret", "bulk", "--env", wrangler_env], json.dumps(dict(values)), None)
+def write_worker_secrets(
+    tools: Tools, wrangler_target: Sequence[str], values: Mapping[str, str]
+) -> None:
+    tools.run([*WRANGLER, "secret", "bulk", *wrangler_target], json.dumps(dict(values)), None)

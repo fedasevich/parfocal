@@ -1,0 +1,73 @@
+name: preview
+
+run-name: preview of #${{ github.event.pull_request.number }}
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+    paths:
+      - apps/web/**
+      - apps/edge/**
+      - apps/api/**
+      - workers/**
+      - packages/**
+      - pnpm-lock.yaml
+      - uv.lock
+
+permissions:
+  contents: read
+
+concurrency:
+  group: preview-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+env:
+  TURBO_TELEMETRY_DISABLED: "1"
+
+jobs:
+  preview:
+    if: >-
+      vars.PREVIEWS == 'true' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-24.04
+    environment: preview
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      pull-requests: write
+    env:
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+      WORKERS_SUBDOMAIN: ${{ vars.WORKERS_SUBDOMAIN }}
+      MODAL_TOKEN_ID: ${{ secrets.MODAL_TOKEN_ID }}
+      MODAL_TOKEN_SECRET: ${{ secrets.MODAL_TOKEN_SECRET }}
+      MODAL_PROXY_TOKEN_ID: ${{ secrets.MODAL_PROXY_TOKEN_ID }}
+      MODAL_PROXY_TOKEN_SECRET: ${{ secrets.MODAL_PROXY_TOKEN_SECRET }}
+      NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+      NEON_PROJECT_ID: ${{ vars.PREVIEW_NEON_PROJECT_ID }}
+      PREVIEW_NEON_PARENT: ${{ vars.PREVIEW_NEON_PARENT }}
+      R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      PREVIEW_ZITADEL_ISSUER: ${{ vars.PREVIEW_ZITADEL_ISSUER }}
+      PREVIEW_ZITADEL_CLIENT_ID: ${{ vars.PREVIEW_ZITADEL_CLIENT_ID }}
+      PREVIEW_ZITADEL_CLIENT_SECRET: ${{ secrets.PREVIEW_ZITADEL_CLIENT_SECRET }}
+      PREVIEW_ZITADEL_LOGIN_TOKEN: ${{ secrets.PREVIEW_ZITADEL_LOGIN_TOKEN }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: ./.github/actions/setup-workspace
+        with:
+          cache-key: preview
+      - id: create
+        run: |
+          url="$(pnpm --silent --filter @parfocal/deploy run preview create --pr "${PR_NUMBER}" | tail -n 1)"
+          echo "url=${url}" >> "${GITHUB_OUTPUT}"
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          PREVIEW_URL: ${{ steps.create.outputs.url }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          body="Preview of ${HEAD_SHA}: ${PREVIEW_URL}. Modal environment pr-${PR_NUMBER}, Neon branch pr-${PR_NUMBER}, uploads under previews/pr-${PR_NUMBER}/. Fake data only, removed when this pull request closes."
+          gh pr comment "${PR_NUMBER}" --repo "${GITHUB_REPOSITORY}" --edit-last --create-if-none --body "${body}"

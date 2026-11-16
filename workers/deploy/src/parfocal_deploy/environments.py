@@ -12,10 +12,17 @@ class Environment:
     neon_branch: str
     tofu_root: str
     slide_bucket: str
+    storage_prefix: str = ""
 
     @property
     def origin(self) -> str:
         return f"https://{self.hostname}"
+
+    @property
+    def wrangler_target(self) -> tuple[str, ...]:
+        if self.wrangler_env:
+            return ("--env", self.wrangler_env)
+        return ("--name", self.worker)
 
 
 ENVIRONMENTS = {
