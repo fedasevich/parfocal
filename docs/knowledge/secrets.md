@@ -33,6 +33,8 @@ Deployed code reads secrets only from its environment, which Modal fills from th
 | `MODAL_TOKEN_SECRET` | GitHub environment `production` | the owner by hand | Rotates with `MODAL_TOKEN_ID` |
 | `PARFOCAL_SMOKE_PASSWORD` | GitHub environment `production` | the owner by hand | Change the smoke account's password in Zitadel and replace the GitHub secret |
 | `SEED_OWNER_EMAIL` | GitHub environment `production` | the owner by hand | Not a credential, kept secret because it is personal data. Replace it when the owner's address changes |
+| `PREVIEW_ZITADEL_CLIENT_SECRET` | GitHub environment `preview`, then Modal `parfocal-api-config` of each `pr-<n>` environment | the owner by hand from the development-mode preview login app, then the preview workflow | Regenerate the preview app's client secret in Zitadel, replace the GitHub secret, then push to each open pull request |
+| `PREVIEW_ZITADEL_LOGIN_TOKEN` | GitHub environment `preview`, then Modal `parfocal-api-login` of each `pr-<n>` environment | the owner by hand, then the preview workflow | Make a new personal access token for the preview login service user, replace the GitHub secret, push to each open pull request, then delete the old token |
 
 Every rotation of a production secret is asked in chat first, as [ADR 0151](../adr/0151-standing-approval-for-production-within-30-dollars.md) (standing approval within $30 a month) says.
 

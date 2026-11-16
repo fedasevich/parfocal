@@ -10,7 +10,18 @@ import {
 export type TileEnv = {
   readonly SLIDES: R2Bucket;
   readonly TILE_TOKEN_KEY: string;
+  readonly STORAGE_PREFIX?: string;
 };
+
+const TENANT_ROOT = "t/";
+const PREVIEW_PREFIX = /^previews\/pr-[1-9][0-9]{0,6}\/$/;
+
+export function storedKey(prefix: string | undefined, key: string): string {
+  if (!prefix || !key.startsWith(TENANT_ROOT)) return key;
+  if (!PREVIEW_PREFIX.test(prefix))
+    throw new Error("STORAGE_PREFIX must look like previews/pr-12/");
+  return `${prefix}${key}`;
+}
 
 export type Clock = () => number;
 
@@ -100,9 +111,9 @@ function bounds(span: Span | null, size: number): readonly [number, number] | nu
   return [span.offset, Math.min(size, span.offset + (span.length ?? size))];
 }
 
-function slideKey(capability: Capability, name: string): string {
+function slideKey(capability: Capability, name: string, prefix: string | undefined): string {
   const folder = capability.folder ?? `t/${capability.tenant}/s/${capability.slide}/`;
-  return `${folder}${name}`;
+  return storedKey(prefix, `${folder}${name}`);
 }
 
 function objectHeaders(object: R2Object): Headers {
@@ -302,7 +313,7 @@ export async function handleTiles(
   if (span === "invalid") {
     return problem(416, "range-not-satisfiable", "Only one byte range is served per request");
   }
-  const key = slideKey(capability, name);
+  const key = slideKey(capability, name, env.STORAGE_PREFIX);
   if (request.method !== "GET" || name !== capability.original) {
     return serve(request, env, key, span, null, cache);
   }

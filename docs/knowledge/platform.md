@@ -64,6 +64,22 @@ Sentry, PostHog and Grafana have no accounts yet. Set a cap or an alert at the l
 
 Budgets per environment and the cost dashboard live in `workers/deploy/src/parfocal_deploy/costs.py` ([ADR 0341](../adr/0341-old-tenant-objects-tier-to-infrequent-access-and-budgets-live-in-a-cost-report.md), old tenant objects tier and budgets live in a cost report). `pnpm --filter @parfocal/deploy costs --out <file>` needs a Modal login, `R2_ACCOUNT_ID` and a `CLOUDFLARE_API_TOKEN` that can read account analytics, prints spend against budget for production, dev and the drill environment, and exits 1 when a line is over. Slide buckets move objects under `t/` to Infrequent Access after 90 days, which bills every read and at least 30 days, so never widen that prefix to `fixtures/`.
 
+## What one preview costs a month
+
+Estimated on 2026-11-16 for OPS-003 (environments) from rates already in the repository, not measured. A preview is a Worker, a Modal environment `pr-<n>`, a Neon branch and objects under `previews/pr-<n>/` in `parfocal-dev` ([ADR XXXX](../adr/XXXX-a-modal-environment-and-a-tenant-key-prefix-per-preview.md), a Modal environment and a tenant key prefix per preview).
+
+| Part | Assumption | Per month |
+|---|---|---|
+| Modal web container | 0.125 core and 0.5 GiB at $0.0000131 per core-second and $0.00000222 per GiB-second ([ADR 0147](../adr/0147-cloud-provider-regions-and-pilot-cost.md), cloud provider, regions and pilot cost), about $0.01 per warm hour, 10 warm hours of review | $0.10 |
+| Modal image builds and ingest | One build per push and a few slide uploads. TODO: measure on the first real preview | TODO, assumed under $0.20 |
+| Neon | Free plan, its own 100 CU-hours when the preview project is separate | $0.00 |
+| Cloudflare Workers | Workers Free. Previews share the account's 100,000 requests a day with production, so a tile-heavy preview can use up production's day | $0.00 |
+| R2 | Under 1 GB of uploads at $0.015 per GB, removed at close | under $0.02 |
+
+One preview costs about $0.10 to $0.30 a month, and the cap of 5 at once about $1.50, which is the `preview` budget in `costs.py`. The budgets now add up to exactly $30, so a busy preview month leaves no room in the Modal credit. Modal stops at its hard cap instead of billing, which would stop production too.
+
+Previews stay off until the owner creates the GitHub environment `preview` and sets the repository variable `PREVIEWS` to `true`. The environment holds the secrets `CLOUDFLARE_API_TOKEN`, `MODAL_TOKEN_ID`, `MODAL_TOKEN_SECRET`, `MODAL_PROXY_TOKEN_ID`, `MODAL_PROXY_TOKEN_SECRET`, `NEON_API_KEY`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `PREVIEW_ZITADEL_CLIENT_SECRET` and `PREVIEW_ZITADEL_LOGIN_TOKEN`, and the variables `CLOUDFLARE_ACCOUNT_ID`, `WORKERS_SUBDOMAIN`, `PREVIEW_NEON_PROJECT_ID`, `PREVIEW_ZITADEL_ISSUER`, `PREVIEW_ZITADEL_CLIENT_ID` and optionally `PREVIEW_NEON_PARENT`. TODO: the preview Neon project and the development-mode Zitadel app `parfocal-api-preview` of ADR 0050 do not exist yet.
+
 How to check spend quickly: Modal at `modal.com/settings/fedasevich/usage`, Cloudflare at Manage account, Billing, Billable usage, Neon through the Vercel MCP tool `list_integration_configurations` (its `billingData`), Vercel at the team's Settings, Billing, and GitHub at Settings, Billing and licensing.
 
 ## Modal stops deploys at the workspace spend limit

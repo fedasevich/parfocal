@@ -1,3 +1,4 @@
+import re
 from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any, Literal
@@ -96,10 +97,22 @@ class LocalSecretInProductionError(ValueError):
         super().__init__(f"{name} is the local development value, set it from the secret store")
 
 
+class StorageKeyPrefixError(ValueError):
+    def __init__(self, prefix: str) -> None:
+        super().__init__(
+            f"STORAGE_KEY_PREFIX {prefix!r} is not a preview prefix such as previews/pr-12/, "
+            "and production never takes one"
+        )
+
+
+PREVIEW_KEY_PREFIX = re.compile(r"previews/pr-[1-9][0-9]{0,6}/")
+
+
 class StorageSettings(ServiceSettings):
     storage_endpoint: AnyHttpUrl = AnyHttpUrl("http://127.0.0.1:9000")
     storage_region: str = "auto"
     storage_bucket: str = "parfocal-local"
+    storage_key_prefix: str = ""
     storage_access_key_id: str = "parfocal"
     storage_secret_access_key: SecretStr = SecretStr(LOCAL_STORAGE_SECRET)
     link_trusted_origins: list[str] = []
@@ -111,6 +124,13 @@ class StorageSettings(ServiceSettings):
         local = self.storage_secret_access_key.get_secret_value() == LOCAL_STORAGE_SECRET
         if self.app_env is AppEnv.PROD and local:
             raise LocalSecretInProductionError("STORAGE_SECRET_ACCESS_KEY")
+        return self
+
+    @model_validator(mode="after")
+    def only_previews_take_a_key_prefix(self) -> StorageSettings:
+        prefix = self.storage_key_prefix
+        if prefix and (self.app_env is AppEnv.PROD or PREVIEW_KEY_PREFIX.fullmatch(prefix) is None):
+            raise StorageKeyPrefixError(prefix)
         return self
 
     @model_validator(mode="after")
@@ -126,6 +146,7 @@ class StorageSettings(ServiceSettings):
             bucket=self.storage_bucket,
             access_key_id=self.storage_access_key_id,
             secret_access_key=self.storage_secret_access_key.get_secret_value(),
+            key_prefix=self.storage_key_prefix,
         )
 
 

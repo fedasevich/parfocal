@@ -51,12 +51,14 @@ def test_modal_spend_groups_by_environment_and_flags_unknown_ones():
             ModalCost("main", Decimal("1.25")),
             ModalCost("main", Decimal("0.75")),
             ModalCost("drill-2026-11-15", Decimal("0.10")),
+            ModalCost("pr-12", Decimal("0.20")),
             ModalCost("staging", Decimal("0.05")),
         ]
     )
     assert spend == {
         "production": Decimal(2),
         "drill": Decimal("0.10"),
+        "preview": Decimal("0.20"),
         UNBUDGETED: Decimal("0.05"),
     }
 
@@ -109,7 +111,7 @@ def test_render_shows_each_line_and_the_cap():
     text = render(lines, date(2026, 11, 15))
     assert "# Cost dashboard for 2026-11" in text
     assert "| production | Modal | $4.57 | $20.00 | ok |" in text
-    assert "| all | all | $4.57 | $28.50 | ok against the $30.00 cap |" in text
+    assert "| all | all | $4.57 | $30.00 | ok against the $30.00 cap |" in text
 
 
 def test_latest_bucket_sizes_keep_the_newest_sample_per_bucket():
