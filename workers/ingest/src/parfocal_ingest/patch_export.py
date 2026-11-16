@@ -528,6 +528,7 @@ async def isolated_slide(
             folder,
             resources.parse_limits,
             resources.parse_tokens,
+            inputs=(source,),
         )
         part = await asyncio.to_thread(read_output, out, PART) or b""
     except StepFailedError:

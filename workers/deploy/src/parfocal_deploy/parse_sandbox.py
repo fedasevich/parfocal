@@ -1,5 +1,6 @@
 import asyncio
 import contextlib
+import os
 from collections.abc import AsyncIterator, Awaitable, Callable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
@@ -97,13 +98,22 @@ class SandboxChild:
         self.delivered: set[Path] = set()
 
     async def write(self, data: bytes) -> None:
-        await self.process.write(data)
+        try:
+            await self.process.write(data)
+        except Exception as error:
+            raise ConnectionError(type(error).__name__) from error
+
+    async def next_chunk(self) -> bytes:
+        try:
+            return await anext(self.chunks, b"")
+        except Exception:
+            return b""
 
     async def readline(self) -> bytes:
         while b"\n" not in self.pending:
             if len(self.pending) > MAX_MESSAGE_BYTES:
                 return b""
-            chunk = await anext(self.chunks, b"")
+            chunk = await self.next_chunk()
             if not chunk:
                 return b""
             self.pending += chunk
@@ -116,7 +126,7 @@ class SandboxChild:
     async def killed_for_memory(self) -> bool:
         try:
             code = await asyncio.wait_for(self.process.wait(), EXIT_WAIT_SECONDS)
-        except TimeoutError:
+        except Exception:
             return False
         return code in KILLED_EXIT_CODES
 
@@ -128,8 +138,13 @@ class SandboxChild:
 
     async def collect(self) -> None:
         for folder in output_folders(self.work_dir):
+            total = 0
             for entry in checked(await self.sandbox.entries(folder), self.output_limit):
-                await self.sandbox.copy_out(folder / entry.name, folder / entry.name)
+                local = folder / entry.name
+                await self.sandbox.copy_out(local, local)
+                total += await asyncio.to_thread(os.path.getsize, local)
+                if total > self.output_limit:
+                    raise StepFailedError(Failure.PARSE_TOO_LARGE)
 
     async def stop(self) -> None:
         with contextlib.suppress(Exception):
@@ -222,9 +237,11 @@ def hydrated_image(image: modal.Image) -> modal.Image:
     return modal.Image.from_id(image.object_id)
 
 
-def modal_launcher(app: modal.App, image: modal.Image) -> SandboxLauncher:
+def modal_launcher(
+    app: modal.App, image: modal.Image, options: Mapping[str, Any] = PARSE_SANDBOX_OPTIONS
+) -> SandboxLauncher:
     async def create() -> Sandbox:
-        return await ModalSandbox.create(app, hydrated_image(image))
+        return await ModalSandbox.create(app, hydrated_image(image), options)
 
     return SandboxLauncher(create)
 

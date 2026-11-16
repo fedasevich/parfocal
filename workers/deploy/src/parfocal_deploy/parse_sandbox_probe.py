@@ -18,6 +18,7 @@ FIXTURE_SOURCE = REPOSITORY / "packages/test-fixtures/synthetic" / FIXTURE
 FIXTURE_REMOTE = f"/fixtures/{FIXTURE}"
 BLOB_MIB = 100
 OOM_LIMIT_MIB = 256
+DRAWN_KIND = "region"
 TENANT = uuid.UUID("00000000-0000-4000-8000-000000000001")
 SLIDE = uuid.UUID("00000000-0000-4000-8000-00000000000a")
 UPLOAD_KEY = f"t/{TENANT}/q/probe/original.tiff"
@@ -72,18 +73,59 @@ async def boundary(sandbox: ModalSandbox) -> dict[str, Any]:
     return json.loads(output)
 
 
-async def parse_through_sandbox(timings: dict[str, float]) -> dict[str, Any]:
+def probe_launcher() -> Any:
     from parfocal_deploy.parse_sandbox import modal_launcher
+    from parfocal_deploy.parse_sandbox_probe import IMAGE, app
+
+    return modal_launcher(app, IMAGE)
+
+
+def small_launcher() -> Any:
+    from parfocal_deploy.parse_sandbox import modal_launcher
+    from parfocal_deploy.parse_sandbox_probe import IMAGE, app
+
+    options = {**PARSE_SANDBOX_OPTIONS, "memory": (OOM_LIMIT_MIB, OOM_LIMIT_MIB)}
+    return modal_launcher(app, IMAGE, options)
+
+
+def written_geojson(folder: Path) -> Path:
+    folder.mkdir(parents=True, exist_ok=True)
+    source = folder / "annotations.geojson"
+    polygon = [[0, 0], [64, 0], [64, 64], [0, 64], [0, 0]]
+    feature = {
+        "type": "Feature",
+        "geometry": {"type": "Polygon", "coordinates": [polygon]},
+        "properties": {"parfocal": {"kind": DRAWN_KIND, "class_key": 1}},
+    }
+    source.write_text(json.dumps({"type": "FeatureCollection", "features": [feature]}))
+    return source
+
+
+async def outcome(work: Callable[[], Awaitable[dict[str, Any]]]) -> Any:
+    try:
+        return await work()
+    except Exception as error:
+        return {
+            "raised": type(error).__name__,
+            "code": getattr(error, "code", None),
+            "message": str(error)[:300],
+        }
+
+
+async def parse_through_sandbox(timings: dict[str, float]) -> dict[str, Any]:
     from parfocal_ingest.isolation import (
         JobScope,
         ParseLimits,
+        launcher_of,
         output_folder,
         parse_isolated,
+        read_output,
         required_output,
     )
-    from parfocal_ingest.parse_jobs import LEVELS_OUTPUT
+    from parfocal_ingest.parse_jobs import LEVELS_OUTPUT, THUMBNAIL_OUTPUT
 
-    limits = ParseLimits(launcher=modal_launcher(app, IMAGE))
+    launcher = launcher_of(f"{__name__}:probe_launcher")
+    limits = ParseLimits(launcher=launcher)
     work = Path("/tmp/parse-probe/job")
     scope = JobScope(TENANT, SLIDE, (UPLOAD_KEY,))
 
@@ -91,28 +133,95 @@ async def parse_through_sandbox(timings: dict[str, float]) -> dict[str, Any]:
         assert key == UPLOAD_KEY
         return Path(FIXTURE_REMOTE)
 
-    async def parse(parser: str, arguments: dict[str, Any]) -> dict[str, Any]:
+    async def parse(
+        target: str,
+        arguments: dict[str, Any],
+        chosen: ParseLimits = limits,
+        inputs: tuple[Path, ...] = (),
+    ) -> dict[str, Any]:
         return await parse_isolated(
-            f"parfocal_ingest.parse_jobs:{parser}",
+            target if ":" in target else f"parfocal_ingest.parse_jobs:{target}",
             {"key": UPLOAD_KEY, **arguments},
             scope,
             fetcher,
             work,
-            limits,
+            chosen,
+            inputs=inputs,
         )
 
+    found: dict[str, Any] = {}
     identified = await timed(
         timings, "identify_seconds", lambda: parse("identify_upload", {"name": FIXTURE})
     )
-    out = output_folder(work, "index")
-    indexed = await timed(
-        timings, "index_seconds", lambda: parse("index_upload", {**identified, "out": str(out)})
+    found["format"] = identified.get("format")
+    found["scan"] = await timed(timings, "scan_seconds", lambda: parse("scan_upload", identified))
+    validated = await timed(
+        timings, "validate_seconds", lambda: parse("validate_upload", identified)
     )
-    return {
-        "format": identified.get("format"),
-        "levels": indexed["levels"],
-        "levels_output_bytes": len(required_output(out, LEVELS_OUTPUT)),
-    }
+    found["validate_levels"] = validated.get("levels")
+    index_out = output_folder(work, "index")
+    indexed = await timed(
+        timings,
+        "index_seconds",
+        lambda: parse("index_upload", {**identified, "out": str(index_out)}),
+    )
+    found["index_levels"] = indexed["levels"]
+    found["levels_output_bytes"] = len(required_output(index_out, LEVELS_OUTPUT))
+    derive_out = output_folder(work, "derive")
+    wanted = {"previews": True, "tissue": True, "restricted": False}
+    await timed(
+        timings,
+        "derive_seconds",
+        lambda: parse("derive_upload", {**identified, **wanted, "out": str(derive_out)}),
+    )
+    found["thumbnail_bytes"] = len(required_output(derive_out, THUMBNAIL_OUTPUT))
+    geojson = await asyncio.to_thread(written_geojson, work)
+    patch_out = output_folder(work, "patches")
+    patched = await timed(
+        timings,
+        "patch_seconds",
+        lambda: outcome(
+            lambda: parse(
+                "parfocal_ingest.patch_export:patch_slide",
+                {
+                    "slide_id": str(SLIDE),
+                    "geojson": str(geojson),
+                    "level": 0,
+                    "tile_size": 64,
+                    "out": str(patch_out),
+                },
+                inputs=(geojson,),
+            )
+        ),
+    )
+    found["patch"] = {key: patched[key] for key in patched if key != "slide"}
+    found["patch_zip_bytes"] = len(read_output(patch_out, "patches.zip") or b"")
+    found["too_large"] = await timed(
+        timings,
+        "too_large_seconds",
+        lambda: outcome(
+            lambda: parse(
+                "parfocal_deploy.parse_probe_jobs:allocate",
+                {},
+                ParseLimits(launcher=launcher_of(f"{__name__}:small_launcher")),
+            )
+        ),
+    )
+    found["too_slow"] = await timed(
+        timings,
+        "too_slow_seconds",
+        lambda: outcome(
+            lambda: parse(
+                "parfocal_deploy.parse_probe_jobs:linger",
+                {"seconds": 120},
+                ParseLimits(seconds=10, launcher=launcher),
+            )
+        ),
+    )
+    found["not_started"] = await outcome(
+        lambda: parse("parfocal_deploy.parse_probe_jobs:missing", {})
+    )
+    return found
 
 
 def written_blob() -> Path:
@@ -190,6 +299,10 @@ async def probe() -> dict[str, Any]:
         await sandbox.terminate()
     report["parse"] = await parse_through_sandbox(timings)
     report["oom_exit_code"] = await timed(timings, "oom_seconds", out_of_memory)
+    report["sandboxes_left"] = [
+        {"id": sandbox.object_id, "exit": await sandbox.poll.aio()}
+        async for sandbox in modal.Sandbox.list.aio(app_id=app.app_id)
+    ]
     return report
 
 

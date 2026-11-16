@@ -397,6 +397,7 @@ async def parse_isolated(
     limits: ParseLimits | None = None,
     tokens: JobTokens | None = None,
     paths: Sequence[str] = (),
+    inputs: Sequence[Path] = (),
 ) -> dict[str, Any]:
     chosen = limits or ParseLimits()
     issuer = tokens or JobTokens()
@@ -407,6 +408,12 @@ async def parse_isolated(
         child_environment(issuer.issue(scope), work_dir),
         work_dir,
     )
+    try:
+        for path in inputs:
+            await child.deliver(path)
+    except BaseException:
+        await child.stop()
+        raise
     conversation = Conversation(child, issuer, fetcher)
     request = {
         "target": target,

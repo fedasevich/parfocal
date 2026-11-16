@@ -215,3 +215,31 @@ async def test_a_child_killed_by_the_memory_limit_counts_as_too_large(tmp_path: 
 
 def test_the_ingest_function_parses_in_the_sandbox() -> None:
     assert isinstance(launcher_of(modal_app.PARSE_LAUNCHER), SandboxLauncher)
+
+
+def written_extra(folder: Path) -> Path:
+    extra = folder / "annotations.geojson"
+    extra.write_text("{}")
+    return extra
+
+
+async def test_declared_inputs_are_passed_into_the_sandbox_before_the_parse(
+    tmp_path: Path,
+) -> None:
+    slide = modal_app.REPOSITORY / "packages/test-fixtures/synthetic/synthetic-jpeg.tiff"
+    extra = await asyncio.to_thread(written_extra, tmp_path)
+    sandbox = FakeSandbox()
+
+    async def fetcher(_key: str) -> Path:
+        return slide
+
+    await parse_isolated(
+        "parfocal_ingest.parse_jobs:identify_upload",
+        {"key": UPLOAD_KEY, "name": slide.name},
+        SCOPE,
+        fetcher,
+        tmp_path / "work",
+        ParseLimits(launcher=launcher_with(sandbox)),
+        inputs=(extra,),
+    )
+    assert sandbox.copied_in == [extra, slide]
