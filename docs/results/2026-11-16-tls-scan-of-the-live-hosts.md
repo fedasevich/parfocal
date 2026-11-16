@@ -32,4 +32,4 @@ Both live hosts meet the A bar and refuse TLS 1.0 and 1.1, so the zone minimum o
 ## Follow-ups
 
 - Apply the global root to turn on zone HSTS, then scan the apex again. The plan adds `cloudflare_zone_setting.hsts` and the pending `http3` setting, with nothing changed or destroyed.
-- Decision 117 in `docs/decisions.md` asks about HSTS preload.
+- Decision 119 in `docs/decisions.md` asks about HSTS preload.

@@ -250,7 +250,7 @@ OPS-019 (Zitadel adapter and tenant command) provisions and deprovisions a tenan
 
 Your choice:
 
-### 117. Whether parfocal.eu joins the browsers' HSTS preload list
+### 119. Whether parfocal.eu joins the browsers' HSTS preload list
 
 SEC-002 (encryption in transit and at rest) turns on zone HSTS for a year with subdomains, with preload off, in `infra/tofu/global/zone.tf`. Preload makes browsers refuse plain HTTP on every `parfocal.eu` name before the first visit, and leaving the list takes months.
 
