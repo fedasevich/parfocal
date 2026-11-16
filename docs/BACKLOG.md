@@ -3802,6 +3802,12 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Depends on AITUM-008.
   Size: M.
 
+- [ ] AITUM-011 · The tumor map pool is ready to deploy
+  AITUM-010 (stored slides and the tumor model in the pool) runs the tumor map locally, but the pool image lacks `onnxruntime-gpu`, OpenSlide and a cuDNN base, the `camelyon-tumor` ONNX artifact is only in a local cache, the pool has no secrets for the object store, and nothing spawns the pool call when a map is queued. Lock the pool image, publish the artifact with its SHA-256 where the other model artifacts live, wire the secrets, and spawn the call on enqueue. ADR 0356 (the tumor map worker runs the ResNet18 as ONNX) records the runtime.
+  Done when the image lock and a spawn-on-enqueue test pass, the published artifact's SHA-256 matches the local export, and the runbook says what the first deploy after the train merges will start. Publishing the artifact is an additive production write under ADR 0151 (standing approval within $30 a month), and the deploy itself waits for the merge.
+  Depends on AITUM-010.
+  Size: M.
+
 - [x] AITUM-003 · Areas from the tumor map
   Cells at or above 0.5 form areas by 8-connectivity, an area is listed only if its peak reaches 0.97, its size is the widest distance across the convex hull of its cells in mm, and it carries a category, a likely size range and flags for "near a line" and "too small for the map". Areas are ordered largest first. The range comes from the MLEVAL evaluation, not a constant.
   Done when unit tests cover connectivity, the peak filter, the hull diameter and the category lines, and an evaluation on CAMELYON16 test slides records per-deposit size error and stray areas as a result file. The POC reached 7 areas for 6 deposits and 8.1 mm against 8.1 mm on tumor_009, a training slide.
