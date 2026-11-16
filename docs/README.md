@@ -6,7 +6,7 @@ Last consolidated: 2026-11-15
 
 ## In progress
 
-A cloud run on 2026-11-15 on the branch `claude/quirky-pascal-htseil` handed back 20 tasks without browser runs and touched no production, and the owner dropped staging for good ([ADR 0331](adr/0331-no-staging-environment.md), no staging environment). The branch is not merged to `main` yet. Two things come first now: SKEL-001 (production environment exists), which waits for the owner's readiness signal, and TEST-044 (web specs green on the built app), where `font-preload.spec.ts` still fails on the built app. Most of the run's tasks sit in review until a green ci run confirms the specs they wrote. `python3 scripts/board.py brief` lists the claimed tasks and the review column.
+A cloud run on 2026-11-15 on the branch `claude/quirky-pascal-htseil` handed back 20 tasks without browser runs and touched no production, and the owner dropped staging for good ([ADR 0331](adr/0331-no-staging-environment.md), no staging environment). The branch is not merged to `main` yet. Two things come first now: SKEL-001 (production environment exists), which is in review with its production smoke check passing and one tenant still unverified, and TEST-044 (web specs green on the built app), where `font-preload.spec.ts` still fails on the built app. Most of the run's tasks sit in review until a green ci run confirms the specs they wrote. `python3 scripts/board.py brief` lists the claimed tasks and the review column.
 
 The owner's open questions are decisions 105 to 110 and the Mac checks in [decisions.md](decisions.md), which starts with what to do next in order.
 
@@ -30,7 +30,7 @@ Tasks in the review column wait for an owner look, a cloud step or another task,
 ## Next up
 
 1. TEST-044 (web specs green on the built app) and TEST-043 (the sidecar open check does not depend on machine load).
-2. SKEL-001 (production environment exists) once the owner gives the readiness signal, then SKEL-009 (CI deploys main to production).
+2. SKEL-001 (production environment exists) is in review after its production smoke check, and SKEL-009 (CI deploys main to production) follows it.
 3. VIEW-073 (finish the custom WebGPU route): compute culling and detail tiers.
 4. SEC-045 (isolate the remaining parse steps and run them in a Modal sandbox).
 5. FOUND-035 (squash the migrations into one baseline) before any shared database.

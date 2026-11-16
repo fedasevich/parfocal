@@ -399,28 +399,81 @@ Your choice:
 
 ## The review column, what each task waits for
 
-The temporary review checklist of 2026-11-14 is handled and deleted. What still waits is below.
-
-- EXP-008 (moderated test support) runs ten stand-in pilot tasks, because the kit's usability test plan is not in this repository. The local kit copy in `docs/design/ux-kit/` has no test plan, and the POC's `study/README.md` describes an unmoderated round on POC screens, so its tasks were not copied. TODO: paste the kit's ten pilot tasks into `docs/design/` or edit them into the study page's task set JSON, which needs no deploy.
+Last checked 2026-11-16 against `python3 scripts/board.py brief`. The branch `claude/quirky-pascal-htseil` (PR 9, the cloud run of 2026-11-15) and the branch `claude/train-2026-11-15` (PR 10, the train after it) are not merged to `main` yet. Each task is in review for one reason, listed once below.
 
 A few minutes of you on the Mac, when convenient:
 
 - DEV-008 (tablet layout). Look at the app once at 1024×1366, for example with the Chrome device toolbar on an iPad Pro portrait. There is no tablet mock, so your eye is the check. The spec is `apps/web/e2e/tablet-layout.spec.ts`.
 - VIEW-021 (wheel, trackpad and pinch) and DEV-013 (two-finger click and Safari pinch). Both wait for traces recorded on real hardware. The trace recorder page from VIEW-056 is built at `/spikes/input-traces` in the dev app (`pnpm dev`), so you spend about two minutes scrolling and pinching on the Mac trackpad in Safari and Chrome there, plus a mouse if you have one, and leave the downloaded files in `~/Downloads`.
 - VIEW-028 (overlay level of detail) and VIEW-029 (cull grid for overlays). Both need a GPU timing on your Mac: under 1 ms at overview with 81k nuclei, and under 6 ms at detail zoom with 1.6M nuclei. An agent prepares a one-command run for this.
-- VIEW-052 (hidden tab check in headed Chrome). A locked screen makes Chrome report every tab as hidden, so the night run could not do it. Keep the Mac unlocked and awake for about five minutes while an agent runs `pnpm --filter @parfocal/viewer-engine test:hidden-tab-hardware` three times; just say "Mac unlocked" in chat.
+- VIEW-052 (hidden tab check in headed Chrome). A locked screen makes Chrome report every tab as hidden, so the night run could not do it. Keep the Mac unlocked and awake for about five minutes while an agent runs `pnpm --filter @parfocal/viewer-engine test:hidden-tab-hardware` three times. Just say "Mac unlocked" in chat.
+- TEST-028 (model accuracy tests that cannot be skipped unseen). An agent runs `test:accuracy` once on your Mac and writes the result file with its numbers.
 
-Waiting on something else, nothing for you now:
+Waits for a deploy of the train after PR 9 and PR 10 merge:
 
-- IAM-027 (sign-up and sign-in from the app's own screens) waits for the deploy session in decision 95 (the Zitadel login service user), paused until the app is ready for production.
-- OPS-005 (continuous deployment) is paused by your answer to decision 96, and TEST-020 (showcase seed) and SEC-042 (the edge guards the real API path) wait for the next production deploy.
-- IAM-001 (identity provider as code) waited for staging, which is dropped for good (ADR 0331, no staging environment), so the next session rescopes it to local dev or a drill environment.
-- TEST-010 (load test tooling) now runs against production under a tiny cap, but only `/api/health` was measured there. Its tile and room scenarios wait for decision 124 (a production token and session for the load workflow), and the `load` workflow has not run yet.
-- FOUND-030 (bundle analyzer report), TEST-017 (flaky test management), TEST-036 (display panel Undo tests) and TEST-039 (local Zitadel for the end-to-end suite) wait for a green CI run on `main`, which agents are fixing.
-- SEC-002 (encryption in transit and at rest) waits for one `tofu apply` of the global root, which only adds zone HSTS and the pending http3 setting, then a rescan of `parfocal.eu`.
-- IAM-021 (lock screen) and SHELL-012 (account menu) wait for the expired sign-in to return to the object and for the manual lock item.
+- SKEL-001 (production environment exists). The live checks pass, and one tenant is still unverified.
+- SEC-027 (edge limits per IP). After the deploy, one login burst from one address to `app.parfocal.eu` should get a 429 at login 11.
+- SEC-042 (the edge limits and the bot check guard the real API path). Run `deployed-api-origin.test.ts` against the deployed edge and API origin.
+- TILES-002 (CDN in front of slide storage). It needs the deploy, the additive `tofu apply` of HTTP/3, and a warm p95 measurement over HTTP/2 and HTTP/3.
+- TILES-009 (a rewritten original never comes from a stale cache). Its checks are met, and it stays in review only because TILES-002 is not deployed.
+- SEC-002 (encryption in transit and at rest). One `tofu apply` of the global root, which only adds zone HSTS and the http3 setting, then a rescan of `parfocal.eu`.
+- SEC-045 (isolating the remaining parse steps in a Modal sandbox). It deploys with the merge, and then a real slide of 1 to 3 GiB needs measuring.
+- SEC-048 (rotation commands for the keys secret). Tested against fakes only, so the real Modal merge and the `parfocal-key-rotation` app are untried.
+- AIP-021 (pre-warm trigger from a slow device through the API). It needs a warm call against the deployed GPU pool with the real PathoSAM weights.
+- AITUM-010 (the tumor map job reads stored slides and runs the tumor model in its pool) and AITUM-011 (the tumor map pool is ready to deploy). The pool is ready and the artifact is published, so the deploy comes with the train merge.
+- AITUM-012 (the interactive pool answers view map calls). The T4 time of one view tile is measured after the pool deploy.
+- OPS-009 (storage lifecycle and cost controls). A `policy.sh` plan and an additive apply for dev and prod, then the R2 lifecycle drill and a first live cost report.
+- TEST-020 (showcase seed over every feature and the real fixture slides). It waits for the next production deploy.
+
+Waits for a decision:
+
+- MLEVAL-007 (browser parity tests) waits for decision 107 (how CI gets the model files for the browser parity test). The parity test already passes on the Mac.
 - MLEVAL-010 (loaders for datasets behind a sign-in) waits for decision 131 (how CryoNuSeg and Lizard reach the dataset cache). PanNuke and MoNuSeg already pass on their real archives.
-- VIEW-017 (OME-Zarr reader) waits for converted real fixtures from INGEST-015 (conversion fallback worker), which an agent now finishes with lossless chunks after decision 104.
+- OPS-016 (a real browser checks the deployed app after every deploy) waits for decision 110 (a smoke account for the browser check after each deploy) and for deploys to resume.
+- OPS-003 (environments) waits for decision 122 (whether to turn on previews per pull request).
+- TEST-010 (load test tooling) waits for decision 124 (whether to give the load workflow a production token and a session). Only `/api/health` was measured on production, and the `load` workflow has not run yet.
+- AITUM-000 (tumor map research check) waits for decision 125 (whether to sign in for gated foundation models to test a better tumor map).
+- AITUM-001 (tumor map job) waits for decision 127 (what FROC counts as the expected range for the tumor map job).
+- AIP-007 (interactive priority gate) waits for decision 126 (whether one interactive embedder container is enough).
+- SEC-014 (backups and restore testing) waits for decision 114 (where the monthly restore check puts the production dump) and decision 115 (how long the slide bucket lock keeps tenant objects). It also needs the `tofu apply` of the bucket lock and a Neon point-in-time recovery test.
+- OPS-006 (observability stack) and OPS-007 (alerting and on-call) wait for decision 113 (how often the alert cycle runs in production). OPS-006 also owes the Grafana Cloud dashboard import and the production error drill, and OPS-007 follows OPS-006.
+- OPS-005 (continuous deployment) is paused by your answer to decision 96. You turn on the repository variable `DEPLOY_ON_MAIN` and run the rollback drill on production when you resume it.
+- IAM-027 (sign-up and sign-in from the app's own screens) waits for the deploy session of decision 95 (the Zitadel login service user), paused until the app is ready for production.
+
+Waits for a green CI run:
+
+- FOUND-015 (container images). The images job and the Modal builds need a GitHub run.
+- FOUND-027 (refresh the tooling pins). It needs a green golden-image run on the hosted runner after the Playwright 1.65 bump.
+- FOUND-028 (CI runner image for Ubuntu 26.04). A trial run on `ubuntu-26.04` is still owed.
+- FOUND-030 (bundle analyzer report). The first pull request run must show the bundle report attached.
+- IAM-001 (identity provider as code, now rescoped to the local Zitadel). It needs the first green `idp` workflow run.
+- IAM-012 (per-organisation SSO) and IAM-028 (SSO from the sign-in screen). Both wait for the SSO end-to-end spec to pass in CI.
+- IAM-029 (prove the SSO email domain by DNS). The changed SSO spec still needs a run on the local Zitadel stack.
+- AITUM-009 (Map this view asks the server for its tiles). Its checks are met, and it waits for the train merge and CI.
+- TEST-001 (unit test setup for TS and Python). Raise the 13 placeholder minimums after the first CI run and check the test job time.
+- TEST-007 (memory and leak suite). Set the three budgets from the first nightly memory run on `main`.
+- TEST-008 (visual regression for UI). Run CI with `update_goldens`, commit the baselines and confirm `ci-ok` is a required check on `main`.
+- TEST-015 (cross-browser matrix). Four checks pass locally on all three browsers, and the first nightly run on GitHub is owed.
+- TEST-017 (flaky test management). It needs a green CI run at the same runtime and one manual run of the flaky-report workflow.
+- TEST-033 (the axe scan of a route does not depend on test order). It needs a green full web browser run, since the scan now covers states the old one skipped.
+- TEST-036 (display panel Undo tests repeat the key gesture when the Undo window is missed). It needs three CI runs on `main`.
+- TEST-039 (local Zitadel for the end-to-end suite). It needs the first green end-to-end job on `main`.
+
+Waits for something else, nothing for you now:
+
+- IAM-021 (lock screen) and SHELL-012 (account menu). The expired sign-in still returns to the slide rather than the object, and SHELL-014 (lock the screen from the account menu) builds the manual lock item.
+- AIP-000 (AI model research check). Decision 47 was answered on 2026-11-04 and ADR 0202 (v1 model line-up) is accepted, so only the lead's tick is left.
+- FOUND-009 (local development environment). A cold run on a new machine is owed, and FOUND-040 (the edge Worker and dev bucket under `make dev`) covers the viewer part.
+- SEC-005 (data residency enforcement). Job scheduling is enforced, and pinning storage, the database and Modal functions moved to OPS-020 (region pinning).
+- SEC-008 (de-identified projects). No webhook receiver exists to test that path, and file-name slide labels go to SEC-028 (labels in de-identified projects).
+- SEC-013 (secrets management in all environments). Rerun the master key rotation in a drill environment under ADR 0331 (no staging environment).
+- VIEW-038 (custom WebGPU engine route) waits for VIEW-073 (ID labels and compute culling on that route), and the ID labels golden is skipped there.
+- AITUM-008 (the tumor map runs as a job and the API serves it). The job, route and tables are done, and the real opener and runner are AITUM-010.
+- OPS-010 (tenant provisioning automation). The real Zitadel adapter, the command line entry point and a drill environment run are left.
+- OPS-018 (SLI events from the workers, a realtime SLI and traces). Spans are still not exported.
+- PILOT-004 (pilot data onboarding). It needs the real pilot sample and a drill environment for the dry run.
+- TEST-019 (application performance on main paths). Open p95 of 3037 ms and decision p95 of 242 ms are over budget, and CMU-1 through the edge and a production build are still TODO.
+- EXP-008 (moderated test support) runs ten stand-in pilot tasks, because the kit's usability test plan is not in this repository. TODO: paste the kit's ten pilot tasks into `docs/design/` or edit them into the study page's task set JSON, which needs no deploy.
 
 ## Notes, no decision needed
 
