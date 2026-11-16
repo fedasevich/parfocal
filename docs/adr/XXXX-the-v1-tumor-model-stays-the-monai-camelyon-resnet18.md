@@ -65,7 +65,7 @@ The Hugging Face rows supersede the "not re-read" cells of ADR 0202 for these mo
 
 Option A. The MONAI `pathology_tumor_detection` ResNet18 0.6.4 stays the v1 Best tumor model, Good and Fast stay empty, as in ADR 0202. No published number shows a foundation-model probe beating it on the lesion-level metric this product uses, and nothing else has been measured here.
 
-A challenger, starting with an H-optimus-0 probe once decision XXX (whether to sign in for gated foundation models) allows it, replaces the ResNet18 only after passing this evaluation:
+A challenger, starting with an H-optimus-0 probe once decision 125 (whether to sign in for gated foundation models) allows it, replaces the ResNet18 only after passing this evaluation:
 
 1. Training data. A linear probe (logistic regression) on frozen embeddings of CAMELYON16 training patches only, at the same patch centres as the bundle's `training.csv` and `validation.csv`, which list level 0 positions. The probe reads its 224 px patches at 0.5 µm/px, as the H-optimus-0 card asks, so the patches cover about twice the width of the bundle's. No test slide is used for training or tuning. Only `tumor_009` of the training slides is on the Mac, so the training slides must be fetched first (size `TODO`, the disk is short), and the H-optimus-0 weights too (size not stated on the card, about 1.1B parameters).
 2. Test data. The CAMELYON16 test slides, at least three on demand for every change, as MLEVAL-005 (tumor map evaluation) says. The test set has 49 slides with metastases and 80 without (JAMA 2017), and the bundle's FROC uses the 48 annotated ones. `test_001` is the first and the only one on the Mac, and its patch check above is the baseline. The three slides should include one without metastases, so false alarms are counted.
@@ -79,7 +79,7 @@ A challenger, starting with an H-optimus-0 probe once decision XXX (whether to s
 - The catalogue, AITUM-001 and AITUM-003 keep building on the ResNet18. Nothing changes in code.
 - MLEVAL-005 is the next task for the tumor map and should start with `test_001`, which is already cached.
 - The licence cells for H-optimus-0, UNI2-h, Virchow2 and Prov-GigaPath are now read on Hugging Face. When STACK-031 reopens, H-optimus-0 is the only large candidate with a licence that allows deployed use.
-- The probe and its memory stay `TODO` until the owner answers decision XXX.
+- The probe and its memory stay `TODO` until the owner answers decision 125.
 
 ## References
 

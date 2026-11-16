@@ -315,7 +315,7 @@ AINUC-000 (nuclei detector and typer research check) kept PathoSAM AIS and HoVer
 
 Your choice:
 
-### XXX. Whether to sign in for gated foundation models to test a better tumor map
+### 125. Whether to sign in for gated foundation models to test a better tumor map
 
 AITUM-000 (tumor map research check) kept the MONAI CAMELYON ResNet18 as the tumor model in ADR XXXX (the v1 tumor model and its evaluation), because no foundation-model probe could be measured. H-optimus-0, UNI2-h, Virchow2 and Prov-GigaPath all sit behind a Hugging Face access form, which needs your account, and UNI2-h and Virchow2 also need an institutional email and allow only non-commercial research.
 
