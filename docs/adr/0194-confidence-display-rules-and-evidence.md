@@ -48,7 +48,7 @@ A typer without these numbers measured on held-out data gets the percent wording
 ## Consequences
 
 - AINUC-006 and AINUC-007 store, per typer and view count, the temperature, the four band shares and accuracies, the test-set accuracy and the confident and unsure shares. REVIEW-011, REVIEW-013 and REVIEW-014 read them and never hard-code HoVer-NeXt's.
-- AINUC-000 must replay this table for the typer it picks, since ADR 0042 probably rules out HoVer-NeXt. Until then the evidence is HoVer-NeXt's, on PanNuke regions of 300 to 700 nuclei with a reviewer who is always right, and no doctor has used any of it. AINUC-000 kept HoVer-NeXt and replayed the table for one view and 8 views in [ADR 0347](0347-nucleus-detector-and-typer-per-tier.md) (nucleus detector and typer per tier), and every typer-dependent rule held.
+- AINUC-000 must replay this table for the typer it picks, since ADR 0042 probably rules out HoVer-NeXt. Until then the evidence is HoVer-NeXt's, on PanNuke regions of 300 to 700 nuclei with a reviewer who is always right, and no doctor has used any of it. AINUC-000 kept HoVer-NeXt and replayed the table for one view and 8 views in [ADR 0349](0349-nucleus-detector-and-typer-per-tier.md) (nucleus detector and typer per tier), and every typer-dependent rule held.
 - REVIEW-011 now cites these band cutoffs instead of doc 28's.
 - The pathologist check that ADR 0013 (cell findings) attached to this task is done, see the wording review below. No pathologist will review the product, so the owner asked on 2026-11-04 that an agent do it with standard histopathology terms (decision 44).
 

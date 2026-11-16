@@ -1,4 +1,4 @@
-# 0347. PathoSAM AIS stays the nucleus detector and HoVer-NeXt the typer in every server tier, because no newer model has a held-out number here
+# 0349. PathoSAM AIS stays the nucleus detector and HoVer-NeXt the typer in every server tier, because no newer model has a held-out number here
 
 - Date: 2026-11-16
 - Status: Proposed
@@ -79,6 +79,6 @@ The confidence display table of ADR 0194 was replayed for both typer rows by the
 - ADR 0194's rows are now evidenced for the chosen typer at both view counts. Its vector scaling, CMU-1 warning and "may not be a nucleus" rows were not rerun, because they rest on the CoNSeP classifier, a POC whole-slide run and PathoSAM outlines.
 - The replay ran on the POC's cached outputs on true outlines. When AINUC-002 writes outputs from the Parfocal typer runner on PathoSAM outlines, rerun the calibration command and `python -m parfocal_ml.confidence_display` on them.
 - The tier defaults of ADR 0159 (tier mapping per workspace) and the catalogue must name ViT-B for the Best detector. The follow-up task ADR 0202 already asked for, bringing the catalogue and defaults in line, picks this up.
-- Whether agents may download the unmeasured models is decision 121 in [decisions.md](../decisions.md).
+- Whether agents may download the unmeasured models is decision 123 in [decisions.md](../decisions.md).
 - Follow-ups worth a task each, none needed for v1: score a PathoSAM ViT-L AIS export on TNBC, CryoNuSeg and NuInsSeg; score InstanSeg on the same sets as a no-WebGPU detector for AISEG-013 once its weights are fetched with the owner's yes; score HoVer-NeXt's own instances as a detector.
 - When STACK-031 reopens, every row above is blocked, and the commercial path stays the one ADR 0202 names: a typer trained on permitted data.
