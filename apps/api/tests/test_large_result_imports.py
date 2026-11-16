@@ -1,6 +1,8 @@
 import json
+import math
 import os
 import re
+import statistics
 import subprocess
 import sys
 import time
@@ -29,6 +31,11 @@ pytestmark = [pytest.mark.db, pytest.mark.usefixtures("storage")]
 TESTS = Path(__file__).resolve().parent
 BENCH_FILE = os.environ.get("PARFOCAL_BENCH_RESULT_FILE")
 BENCH_OUT = os.environ.get("PARFOCAL_BENCH_OUT")
+MAIN_PATH_CELLS = os.environ.get("PARFOCAL_MAIN_PATH_CELLS")
+MAIN_PATH_RUNS = int(os.environ.get("PARFOCAL_MAIN_PATH_RUNS", "5"))
+BUDGETS_FILE = Path(__file__).resolve().parents[3] / "perf-budgets.json"
+CI_IMPORT_CELLS = 10_000
+CI_IMPORT_SAMPLES = 3
 GIB = 1024**3
 BENCH_PART_BYTES = 64 * 1024 * 1024
 SAMPLE_SECONDS = 0.25
@@ -261,6 +268,68 @@ def benchmark_import(
         "cells": detail["cell_count"],
         "time_output": timed.read_text(),
     }
+
+
+def budget_limit(budget_id: str) -> float:
+    budgets = json.loads(BUDGETS_FILE.read_text(encoding="utf-8"))["budgets"]
+    return float(next(entry["limit"] for entry in budgets if entry["id"] == budget_id))
+
+
+def nearest_rank(values: list[float], share: float) -> float:
+    ordered = sorted(values)
+    return ordered[max(0, math.ceil(len(ordered) * share) - 1)]
+
+
+def import_once(
+    api: ApiAs, database: str, lab: Lab, data: bytes, folder: Path, label: str
+) -> dict[str, Any]:
+    folder.mkdir()
+    slide_id = make_slide(database, lab.tenant_id, lab.project, label)
+    run = benchmark_import(api, database, lab, slide_id, data, folder)
+    assert (run["status"], run["result_status"]) == ("done", "ready"), run
+    return run
+
+
+def test_a_10k_cell_import_through_the_real_worker_stays_within_budget(
+    api: ApiAs, database: str, lab: Lab, tmp_path: Path
+) -> None:
+    data = generated_cells(CI_IMPORT_CELLS)
+    seconds = [
+        import_once(api, database, lab, data, tmp_path / f"run-{n}", f"Ci {n}")["step_seconds"]
+        for n in range(CI_IMPORT_SAMPLES)
+    ]
+    remove_tenant_objects(lab.tenant_id)
+    fastest_ms = min(seconds) * 1000
+    print(f"10,000 cell import, fastest of {CI_IMPORT_SAMPLES}: {fastest_ms:.0f} ms")
+    assert fastest_ms <= budget_limit("app.import-10k-cells-ms")
+
+
+@pytest.mark.skipif(MAIN_PATH_CELLS is None, reason="set PARFOCAL_MAIN_PATH_CELLS to a count")
+def test_main_path_import_after_a_warm_up(database: str, lab: Lab, tmp_path: Path) -> None:
+    assert MAIN_PATH_CELLS is not None
+    cells = int(MAIN_PATH_CELLS)
+    data = generated_cells(cells)
+    runs: list[dict[str, Any]] = []
+    with large_upload_api(database) as api:
+        import_once(api, database, lab, data, tmp_path / "warm-up", "Warm up")
+        for n in range(MAIN_PATH_RUNS):
+            runs.append(import_once(api, database, lab, data, tmp_path / f"run-{n}", f"Run {n}"))
+    del data
+    removed = remove_tenant_objects(lab.tenant_id)
+    seconds = [run["step_seconds"] for run in runs]
+    summary = {
+        "cells": cells,
+        "runs": len(runs),
+        "step_seconds": seconds,
+        "median_seconds": statistics.median(seconds),
+        "p95_seconds": nearest_rank(seconds, 0.95),
+        "worker_max_rss_bytes": [run["worker_max_rss_bytes"] for run in runs],
+        "objects_removed": removed,
+    }
+    print(json.dumps(summary))
+    if BENCH_OUT:
+        Path(BENCH_OUT).write_text(json.dumps(summary, indent=2))
+    assert all(run["cells"] == cells for run in runs)
 
 
 @pytest.mark.skipif(BENCH_FILE is None, reason="set PARFOCAL_BENCH_RESULT_FILE to a GeoJSON")
