@@ -33,8 +33,9 @@ The metrics do not line up. The bundle reports lesion-level FROC. Foundation-mod
 | MONAI ResNet18 0.6.4 | FROC 0.72 on the 48 annotated test slides, patch accuracy 0.90 on validation | Bundle's own claim | bundle `docs/README.md` and `configs/metadata.json` |
 | Best CAMELYON16 entry, 2016 | Slide AUC 0.994 (0.983 to 0.999), FROC 0.807 (0.732 to 0.889) | Challenge test set, 129 slides | [Ehteshami Bejnordi et al., JAMA 2017](https://jamanetwork.com/journals/jama/fullarticle/2665774) |
 | Pathologist without time limit | Slide AUC 0.966, lesion true positive fraction 72.4% at 0.0125 false positives per normal slide | Same | Same |
-| UNI | Balanced accuracy 95.7% on CAMELYON16. The margins over ImageNet ResNet-50, CTransPath and REMEDIS are 23.1, 6.0 and 2.7 points | ABMIL on frozen features, slide level | [Chen et al., UNI](https://arxiv.org/html/2308.15474) |
-| Virchow2, UNI, Prov-GigaPath, H-optimus-0 | PCam weighted F1 93.5, 93.5, 94.1 and 93.7 | Linear probe on frozen tile embeddings | [Virchow2 paper](https://arxiv.org/html/2408.00738), table 2 |
+| UNI (version 1, not UNI2-h) | Balanced accuracy 95.7% on CAMELYON16. The margins over ImageNet ResNet-50, CTransPath and REMEDIS are 23.1, 6.0 and 2.7 points, and the last two are not significant (p 0.102 and 0.247) | ABMIL on frozen features, slide level | [Chen et al., UNI](https://arxiv.org/html/2308.15474) |
+| Virchow2, UNI, Prov-GigaPath, H-optimus-0, natural-image baseline | PCam weighted F1 ×100 of 93.5, 93.5, 94.1, 93.7 and 88.7 (CLS and mean tokens, CLS only for the baseline) | Linear probe on frozen tile embeddings | [Virchow2 paper](https://arxiv.org/html/2408.00738), table 2 |
+| UNI2-h, H-optimus-1 | No CAMELYON16 or PCam number read | | |
 | PLUTO-4, LiteFM | No CAMELYON16 or PCam figure in the abstract, and no weight release stated | | [PLUTO-4](https://arxiv.org/abs/2511.02826), [LiteFM](https://arxiv.org/abs/2602.14010) |
 
 A vendor table reported by search for H-optimus-1, UNI2-h, Virchow2 and H-optimus-0 on CAMELYON16 slide AUC could not be opened (404), so it gives no number here.
@@ -48,6 +49,7 @@ A vendor table reported by search for H-optimus-1, UNI2-h, Virchow2 and H-optimu
 | UNI2-h | ViT-H/14, about 681M parameters | CC BY-NC-ND 4.0, non-commercial academic research | Form, institutional email required | `TODO` |
 | Virchow2 | ViT-H/14, 632M parameters | CC BY-NC-ND 4.0, academic research, no diagnosis or clinical support | Form, institutional email required | `TODO` |
 | Prov-GigaPath | Tile encoder size not stated on the card | Apache-2.0, but "any deployed use case" is out of scope | Form | `TODO` |
+| H-optimus-1 | Not re-read | CC BY-NC-ND 4.0 per ADR 0202, not re-read | Not re-read | `TODO` |
 
 The Hugging Face rows supersede the "not re-read" cells of ADR 0202 for these models.
 
@@ -65,10 +67,10 @@ Option A. The MONAI `pathology_tumor_detection` ResNet18 0.6.4 stays the v1 Best
 
 A challenger, starting with an H-optimus-0 probe once decision XXX (whether to sign in for gated foundation models) allows it, replaces the ResNet18 only after passing this evaluation:
 
-1. Training data. A linear probe (logistic regression) on frozen embeddings of CAMELYON16 training patches only, with the same patch lists as the bundle's `training.csv` and `validation.csv`. No test slide is used for training or tuning.
-2. Test data. The CAMELYON16 test slides with reference annotations, at least three on demand for every change and all 48 before promotion. `test_001` is the first, and its patch check above is the baseline.
-3. Metrics, through MLEVAL-005 (tumor map evaluation). Lesion-level FROC as the challenge defines it, slide-level AUC, Dice at 0.5 on 64 px cells, and per-deposit size error with stray areas from AITUM-003's `evaluate_areas`.
-4. The gate. The challenger must beat the ResNet18 on FROC and not lose on Dice on the same slides, through the promotion gate of [ADR 0322](0322-the-promotion-gate-compares-with-a-reference-within-a-tolerance.md) (reference within a tolerance).
+1. Training data. A linear probe (logistic regression) on frozen embeddings of CAMELYON16 training patches only, at the same patch centres as the bundle's `training.csv` and `validation.csv`, which list level 0 positions. The probe reads its 224 px patches at 0.5 µm/px, as the H-optimus-0 card asks, so the patches cover about twice the width of the bundle's. No test slide is used for training or tuning. Only `tumor_009` of the training slides is on the Mac, so the training slides must be fetched first (size `TODO`, the disk is short), and the H-optimus-0 weights too (size not stated on the card, about 1.1B parameters).
+2. Test data. The CAMELYON16 test slides, at least three on demand for every change, as MLEVAL-005 (tumor map evaluation) says. The test set has 49 slides with metastases and 80 without (JAMA 2017), and the bundle's FROC uses the 48 annotated ones. `test_001` is the first and the only one on the Mac, and its patch check above is the baseline. The three slides should include one without metastases, so false alarms are counted.
+3. Metrics, through MLEVAL-005. Lesion-level FROC as the bundle computes it on the annotated slides, Dice at 0.5 on 64 px cells, per-deposit size error with stray areas from AITUM-003's `evaluate_areas`, and false-alarm areas on the slides without metastases. Slide-level AUC needs both kinds of slide and is reported only when the run covers both.
+4. The gate. [ADR 0322](0322-the-promotion-gate-compares-with-a-reference-within-a-tolerance.md) (the promotion gate compares with a reference within a tolerance) refuses any tumor map until MLEVAL-005 sets its threshold. Until then the rule here is that the challenger may not drop below the ResNet18 by more than that gate's 0.01 tolerance on FROC or Dice on the same slides, and replaces it only if it is higher on FROC. MLEVAL-005 writes the threshold into the gate.
 5. Cost. Peak GPU memory on an L4 at the shipped batch size within ADR 0150, and seconds per whole slide and per 8,192 px view, against the ResNet18's on the same card. Mapping at ingest must stay within the $30 a month budget.
 6. Every number goes into a result file with the model, its weights checksum and its licence row.
 
