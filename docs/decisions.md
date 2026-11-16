@@ -410,7 +410,7 @@ AISEG-000 (interactive segmentation research check) put PathoSAM ViT-B on every 
 
 Your choice:
 
-### XXX. Whether InstanSeg is accurate enough to be the auto tool on devices without WebGPU
+### 134. Whether InstanSeg is accurate enough to be the auto tool on devices without WebGPU
 
 AISEG-013 (fast tier in the browser without a GPU) measured InstanSeg's 15 MB brightfield nuclei model ([ADR XXXX](adr/XXXX-fast-tier-auto-tool-without-webgpu-is-deferred.md), Fast tier auto tool without WebGPU is deferred). Its network runs one 512 px tile in 226 to 689 ms on WebAssembly on the M4, where the PathoSAM encode alone takes 5.3 to 5.9 s. It finds nuclei less well: PQ 0.712 on TNBC, a version of which is listed among its training sets, against 0.828 for the WebGPU auto tool, and 0.663 on MoNuSeg test, which it did not train on ([result](results/2026-11-16-instanseg-on-tnbc-and-wasm.md)).
 

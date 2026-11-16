@@ -38,7 +38,7 @@ Option 2. The Fast region row of ADR 0361 stays empty, and InstanSeg `brightfiel
 
 1. Its post-processing runs in the browser, as TypeScript or a second small graph, and the exported path scores within 0.01 PQ of the TorchScript 0.712 on the same 50 TNBC images.
 2. The whole path, network and post-processing, segments a 512 px tile in under 1 s on WebAssembly on the CI CPU runner at the thread count the app sets (`navigator.hardwareConcurrency` in `createOrtRuntime`).
-3. The owner answers decision XXX (whether InstanSeg's accuracy is enough for a default without WebGPU), or a later model passes PQ 0.70 on a set it did not train on.
+3. The owner answers decision 134 (whether InstanSeg's accuracy is enough for a default without WebGPU), or a later model passes PQ 0.70 on a set it did not train on.
 
 ## Consequences
 

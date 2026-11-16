@@ -3683,7 +3683,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Size: S.
 
 - [ ] AISEG-021 · InstanSeg post-processing in the browser
-  Port InstanSeg's seed peaks, per-seed pixel classifier and overlap merging to TypeScript or a second small graph, on top of the network graph from `parfocal_ml.instanseg`, and add a CI job that fetches the 15 MB `brightfield_nuclei.zip` by checksum and runs `bench:instanseg`. Wire it as the auto tool without WebGPU only if decision XXX allows. Rules in ADR XXXX (Fast tier auto tool without WebGPU is deferred).
+  Port InstanSeg's seed peaks, per-seed pixel classifier and overlap merging to TypeScript or a second small graph, on top of the network graph from `parfocal_ml.instanseg`, and add a CI job that fetches the 15 MB `brightfield_nuclei.zip` by checksum and runs `bench:instanseg`. Wire it as the auto tool without WebGPU only if decision 134 allows. Rules in ADR XXXX (Fast tier auto tool without WebGPU is deferred).
   Done when the exported path scores within 0.01 PQ of the TorchScript 0.712 on the 50 TNBC images, and a CI run shows the whole path segmenting a 512 px tile in under 1 s on WebAssembly at the app's thread count.
   Depends on AISEG-013.
   Size: L.
