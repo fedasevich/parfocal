@@ -244,6 +244,8 @@ Your choice:
 
 The temporary review checklist of 2026-11-14 is handled and deleted. What still waits is below.
 
+- EXP-008 (moderated test support) runs ten stand-in pilot tasks, because the kit's usability test plan is not in this repository. The local kit copy in `docs/design/ux-kit/` has no test plan, and the POC's `study/README.md` describes an unmoderated round on POC screens, so its tasks were not copied. TODO: paste the kit's ten pilot tasks into `docs/design/` or edit them into the study page's task set JSON, which needs no deploy.
+
 A few minutes of you on the Mac, when convenient:
 
 - DEV-008 (tablet layout). Look at the app once at 1024×1366, for example with the Chrome device toolbar on an iPad Pro portrait. There is no tablet mock, so your eye is the check. The spec is `apps/web/e2e/tablet-layout.spec.ts`.
@@ -266,5 +268,4 @@ Waiting on something else, nothing for you now:
 - The local stack now has a MinIO `storage` service on port 9000. Run `pnpm db:up` once after pulling. Nothing creates the local bucket `parfocal-local` yet, so `pnpm api:dev` fails its first upload until it exists. The command is in `docs/knowledge/uploads.md`.
 - The migration chain on `main` is `0039` (admin rights), `0040` (review order), `0041` (inbox mutes), `0042` (first reads), `0043` (muted notifications), `0044` (study templates), `0045` (uploads), `0046` (model runs), `0047` (slide ingest) from INGEST-017 (publish step and slide status), and `0048` (result uploads) from RSET-004 (pairing results with slides), and `0049` (job tries) from AIP-018 (claim cap for failing jobs).
 - Migration `0044` (study templates) imports the built-in template content from `parfocal_api.study_templates`, so replaying it later seeds whatever the content is then. TODO: freeze the seed data inside the migration before the first production database.
-- EXP-008 (moderated test support) runs ten stand-in pilot tasks, because the kit's usability test plan is not in this repository. The local kit copy in `docs/design/ux-kit/` has no test plan, and the POC's `study/README.md` describes an unmoderated round on POC screens, so its tasks were not copied. TODO: paste the kit's ten pilot tasks into `docs/design/` or edit them into the study page's task set JSON, which needs no deploy.
 - The upload spike broke one browser test on `main` because the latency proxy gained an upload byte counter. It was fixed the same hour.
