@@ -828,6 +828,9 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "getSlideTissue": lambda w: Call("GET", f"/api/slides/{w.slide}/tissue"),
     "getSlideEmbeddings": lambda w: Call("GET", f"/api/slides/{w.slide}/embeddings"),
     "getSlideEmbeddingTile": lambda w: Call("GET", f"/api/slides/{w.slide}/embeddings/0/0"),
+    "warmSlideEmbedder": lambda w: Call(
+        "POST", f"/api/slides/{w.slide}/embeddings/warm", {"device": "fast"}
+    ),
     "recordSlideCoverage": lambda w: Call(
         "POST",
         f"/api/slides/{w.slide}/coverage",

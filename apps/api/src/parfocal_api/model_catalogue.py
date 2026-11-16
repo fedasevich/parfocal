@@ -222,9 +222,13 @@ class QueuedRun:
 
 
 def queue_minutes(
-    ahead: Iterable[QueuedRun], minutes_by_model: Mapping[str, int], fallback: int, now: datetime
+    ahead: Iterable[QueuedRun],
+    minutes_by_model: Mapping[str, int],
+    fallback: int,
+    now: datetime,
+    shared: float = 0.0,
 ) -> int:
-    total = 0.0
+    total = max(0.0, shared)
     for run in ahead:
         minutes = float(minutes_by_model.get(run.detector, fallback))
         if run.running_since is not None:

@@ -24486,6 +24486,25 @@ export const getGetSlideEmbeddingTileMockHandler = (
   );
 };
 
+export const getWarmSlideEmbedderMockHandler = (
+  overrideResponse?:
+    | void
+    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<void> | void),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/slides/:slideId/embeddings/warm",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info);
+      }
+
+      return new HttpResponse(null, { status: 204 });
+    },
+    options,
+  );
+};
+
 export const getListSlideAreasMockHandler = (
   overrideResponse?:
     | SlideArea[]
@@ -24854,5 +24873,6 @@ export const getParfocalAPIMock = () => [
   getGetSlideTissueMockHandler(),
   getGetSlideEmbeddingsMockHandler(),
   getGetSlideEmbeddingTileMockHandler(),
+  getWarmSlideEmbedderMockHandler(),
   getListSlideAreasMockHandler(),
 ];

@@ -1,6 +1,7 @@
 import type { SamClient } from "@parfocal/viewer-engine";
 import { readBuildConfig } from "../config.ts";
 import { loadViewerEngine } from "../viewer/load-engine.ts";
+import { type EmbedderWarmOptions, warmEmbedderIfSlow } from "./embedder-warm.ts";
 import { createPresetPatchReader } from "./patch-reader.ts";
 import type { RegionSam } from "./region-pass.ts";
 import { type PresetPatchPlan, planPresetPatch, type ScalePresetId } from "./scale-presets.ts";
@@ -76,11 +77,23 @@ async function loadRealServices(context: SmartServicesContext): Promise<SmartSer
   };
 }
 
+export function withEmbedderWarm(
+  loader: SmartServicesLoader,
+  options: EmbedderWarmOptions = {},
+): SmartServicesLoader {
+  return (context) => {
+    if (context.slideId !== undefined) void warmEmbedderIfSlow(context.slideId, options);
+    return loader(context);
+  };
+}
+
+const loadWarmedRealServices = withEmbedderWarm(loadRealServices);
+
 export const loadSmartServices: SmartServicesLoader = (context) => {
   const config = readBuildConfig();
   if (import.meta.env.PARFOCAL_PUBLIC_DEV_TOOLS === "on" && config.fakeApi !== "off")
     return loadFakeServices(context);
-  return loadRealServices(context);
+  return loadWarmedRealServices(context);
 };
 
 export function shareServices(loader: SmartServicesLoader): SmartServicesLoader {

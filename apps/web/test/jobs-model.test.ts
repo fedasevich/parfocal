@@ -197,6 +197,11 @@ test("the estimate adds the queue on the Parfocal GPU and none on the lab server
   );
   assert.equal(lab.doneAround, "14:42");
   assert.equal(lab.perSlide, "About 6 min a slide on ml.cuailab.cz, which answers now in 210 ms.");
+  const shared = runEstimate(model({ runs_ahead: 0, queue_minutes: 13 }), 1, today);
+  assert.equal(
+    shared.perSlide,
+    "About 17 min a slide on the Parfocal GPU. Runs from other workspaces are ahead of yours, about 13 min.",
+  );
 });
 
 test("a paused slide holds at the model step with tile 448 of 1,180", () => {

@@ -125,3 +125,20 @@ def test_no_deployed_module_climbs_a_fixed_number_of_folders_at_import() -> None
         if ".parents[" in path.read_text()
     ]
     assert offenders == []
+
+
+def test_the_served_api_warms_the_deployed_embedder_through_modal(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from fastapi import FastAPI
+
+    import parfocal_api.app
+    from parfocal_common.warm_gate import EMBEDDER_FUNCTION, GPU_POOL_APP, ModalPools, WarmGate
+
+    monkeypatch.setattr(parfocal_api.app, "create_app", FastAPI)
+    served = modal_app.serve()
+    gate = served.state.warm_gate
+    assert isinstance(gate, WarmGate)
+    assert isinstance(gate.pools, ModalPools)
+    assert (gate.pools.app_name, gate.function_name) == (GPU_POOL_APP, EMBEDDER_FUNCTION)
+    assert gate.pools.environment is None

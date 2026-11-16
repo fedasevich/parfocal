@@ -6,10 +6,12 @@ from typing import Any
 
 import pytest
 from db_support import APP_URL, ApiAs, with_database
+from sqlalchemy.exc import DBAPIError
 from test_annotations import make_class
 from test_blinding import make_result_set
 from workspace_support import join_project, make_project, make_slide, make_workspace, owner
 
+from parfocal_api.model_runs import SHARED_QUEUE_MINUTES
 from parfocal_api.principals import MemberPrincipal
 from parfocal_api.tables import Role
 from parfocal_common.db import create_engine
@@ -701,6 +703,14 @@ def finish_run(database: str, run: Mapping[str, Any], minutes: int) -> None:
     )
 
 
+def quiet_shared_gpu(database: str, lab: Lab) -> None:
+    owner(
+        database,
+        "UPDATE jobs SET status = 'cancelled', finished_at = now() "
+        f"WHERE tenant_id <> '{lab.tenant}' AND status IN ('queued', 'running')",
+    )
+
+
 def models_of(api: ApiAs, lab: Lab, who: str = "owner") -> dict[str, dict[str, Any]]:
     listed = ok(api(lab.people[who]).get(f"/api/projects/{lab.project}/models"))
     return {model["name"]: model for model in listed}
@@ -709,6 +719,7 @@ def models_of(api: ApiAs, lab: Lab, who: str = "owner") -> dict[str, dict[str, A
 def test_the_estimate_is_nominal_until_runs_are_measured(
     api: ApiAs, database: str, lab: Lab
 ) -> None:
+    quiet_shared_gpu(database, lab)
     empty = models_of(api, lab)
     assert {name: model["measured"] for name, model in empty.items()} == {
         "camelyon-tumor": False,
@@ -735,6 +746,7 @@ def test_the_estimate_is_nominal_until_runs_are_measured(
 
 
 def test_the_estimate_adds_the_runs_queued_ahead(api: ApiAs, database: str, lab: Lab) -> None:
+    quiet_shared_gpu(database, lab)
     started(api, lab, lab.slides[:2], parameters={"detector": {"name": "pathosam-hovernext"}})
     running = started(api, lab, lab.slides[2:], parameters={"detector": {"name": "hovernet"}})[0]
     owner(
@@ -753,3 +765,36 @@ def test_the_estimate_adds_the_runs_queued_ahead(api: ApiAs, database: str, lab:
     control(api, lab, running, "cancel")
     owner(database, f"UPDATE jobs SET status = 'cancelled' WHERE id = '{running['id']}'")
     assert models_of(api, lab)["hovernet"]["runs_ahead"] == 2
+
+
+def test_the_estimate_counts_other_tenants_runs_on_the_shared_gpu_as_one_number(
+    api: ApiAs, database: str, lab: Lab
+) -> None:
+    quiet_shared_gpu(database, lab)
+    other = make_lab(api, database)
+    queued = started(api, other, other.slides[:2], parameters={"detector": {"name": "hovernet"}})
+    running = started(api, other, other.slides[2:], parameters={"detector": {"name": "hovernet"}})
+    owner(database, f"UPDATE jobs SET status = 'running' WHERE id = '{running[0]['id']}'")
+    owner(
+        database,
+        "UPDATE job_steps SET status = 'running', started_at = now() - interval '5 minutes' "
+        f"WHERE job_id = '{running[0]['id']}' AND ordinal = 0",
+    )
+    response = api(lab.people["owner"]).get(f"/api/projects/{lab.project}/models")
+    models = {model["name"]: model for model in ok(response)}
+    assert {model["runs_ahead"] for model in models.values()} == {0}
+    assert {model["queue_minutes"] for model in models.values()} == {9 + 9 + (9 - 5)}
+    for leaked in (other.tenant, other.project, *other.slides, *(run["id"] for run in queued)):
+        assert str(leaked) not in response.text
+    theirs = models_of(api, other)
+    assert theirs["hovernet"]["runs_ahead"] == 3
+    assert theirs["hovernet"]["queue_minutes"] == 9 + 9 + (9 - 5)
+
+
+def test_the_shared_queue_needs_a_tenant_scope(database: str) -> None:
+    async def go(engine: Any) -> None:
+        async with engine.connect() as connection:
+            await connection.execute(SHARED_QUEUE_MINUTES, {"minutes": "{}"})
+
+    with pytest.raises(DBAPIError, match="needs a tenant scope"):
+        run_async(database, go)

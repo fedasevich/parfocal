@@ -69,8 +69,11 @@ def app_image() -> modal.Image:
 
 def serve() -> Any:
     from parfocal_api.app import create_app
+    from parfocal_common.warm_gate import ModalPools, WarmGate
 
-    return create_app()
+    app = create_app()
+    app.state.warm_gate = WarmGate(ModalPools())
+    return app
 
 
 def run_ingest() -> None:

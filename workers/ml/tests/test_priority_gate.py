@@ -167,3 +167,14 @@ def test_local_pools_start_a_container_on_first_use_and_stop_it() -> None:
     finally:
         pools.stop()
     assert not process.is_alive()
+
+
+def test_the_api_warm_gate_names_the_deployed_embedder() -> None:
+    from parfocal_common.warm_gate import EMBEDDER_FUNCTION, GPU_POOL_APP, WARM_KIND
+    from parfocal_ml.gpu_pool import INTERACTIVE_SCALEDOWN_SECONDS
+    from parfocal_ml.modal_pool import APP_NAME
+
+    assert GPU_POOL_APP == APP_NAME
+    assert interactive_pool().function_name == EMBEDDER_FUNCTION
+    assert Kind.WARM.value == WARM_KIND
+    assert WARM_EVERY_SECONDS == INTERACTIVE_SCALEDOWN_SECONDS - 60

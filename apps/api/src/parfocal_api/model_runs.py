@@ -1,6 +1,6 @@
 import json
 import uuid
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from datetime import UTC, datetime
 from types import SimpleNamespace
 from typing import Annotated, Any, Literal, Self
@@ -16,7 +16,7 @@ from pydantic import (
     TypeAdapter,
     model_validator,
 )
-from sqlalchemy import ColumnElement, func, select
+from sqlalchemy import ColumnElement, func, select, text
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from parfocal_api.annotations import MultiPolygonGeometry, PolygonGeometry, checked
@@ -835,6 +835,14 @@ async def runs_ahead(connection: AsyncConnection) -> list[QueuedRun]:
     ]
 
 
+SHARED_QUEUE_MINUTES = text("SELECT parfocal_shared_queue_minutes(CAST(:minutes AS jsonb))")
+
+
+async def shared_queue_minutes(connection: AsyncConnection, minutes: Mapping[str, int]) -> float:
+    value = await connection.scalar(SHARED_QUEUE_MINUTES, {"minutes": json.dumps(dict(minutes))})
+    return float(value or 0.0)
+
+
 @router.get(
     "/{project_id}/models",
     operation_id="listProjectModels",
@@ -853,6 +861,7 @@ async def list_project_models(
     }
     minutes = {name: rate.minutes_per_slide for name, rate in rates.items()}
     ahead = await runs_ahead(connection)
+    shared = await shared_queue_minutes(connection, minutes)
     hidden = await hidden_names(connection)
     now = datetime.now(UTC)
     return [
@@ -868,7 +877,7 @@ async def list_project_models(
             host=ModelHost.PARFOCAL,
             server=PARFOCAL_SERVER,
             runs_ahead=len(ahead),
-            queue_minutes=queue_minutes(ahead, minutes, minutes[model.name], now),
+            queue_minutes=queue_minutes(ahead, minutes, minutes[model.name], now, shared),
             latency_ms=None,
             serving=serving_of(probe, model.name),
         )
