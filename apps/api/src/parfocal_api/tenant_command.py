@@ -4,7 +4,7 @@ import sys
 import uuid
 
 import httpx2
-from pydantic import HttpUrl, PostgresDsn, SecretStr
+from pydantic import HttpUrl, PostgresDsn, SecretStr, model_validator
 
 from parfocal_api.tables import Plan, Region, TenantKind
 from parfocal_api.tenant_provisioning import TenantRequest, deprovision, provision
@@ -13,6 +13,7 @@ from parfocal_common.db import create_engine
 from parfocal_common.envelope import MasterKeyring
 from parfocal_common.object_store import ObjectStore
 from parfocal_common.settings import StorageSettings, load_settings
+from parfocal_common.transport import require_https, require_tls_database
 
 
 class ProvisioningSettings(StorageSettings):
@@ -20,6 +21,13 @@ class ProvisioningSettings(StorageSettings):
     master_keys: SecretStr
     zitadel_issuer: HttpUrl
     zitadel_admin_token: SecretStr
+
+    @model_validator(mode="after")
+    def services_over_tls(self) -> ProvisioningSettings:
+        if self.encrypted_transport():
+            require_tls_database("DATABASE_URL", self.database_url)
+            require_https("ZITADEL_ISSUER", self.zitadel_issuer)
+        return self
 
 
 def parser() -> argparse.ArgumentParser:

@@ -49,19 +49,50 @@ def test_startup_reads_settings_and_serves_health(environment: pytest.MonkeyPatc
     assert TestClient(app).get("/api/health").json() == {"status": "ok"}
 
 
-def test_prod_refuses_to_start_without_production_clients(
-    environment: pytest.MonkeyPatch,
-) -> None:
+CLOUD = {
+    "DATABASE_URL": "postgresql+asyncpg://app@ep-x.eu-central-1.aws.neon.tech/db?ssl=require",
+    "PUBLIC_ORIGIN": "https://app.parfocal.eu",
+    "REALTIME_INTERNAL_URL": "https://app.parfocal.eu",
+    "STORAGE_ENDPOINT": "https://account.r2.cloudflarestorage.com",
+}
+
+
+@pytest.fixture
+def cloud(environment: pytest.MonkeyPatch) -> pytest.MonkeyPatch:
     environment.setenv("APP_ENV", "prod")
-    environment.setenv("STORAGE_SECRET_ACCESS_KEY", "storage-secret-from-the-store")
+    for name, value in CLOUD.items():
+        environment.setenv(name, value)
+    return environment
+
+
+def test_prod_refuses_to_start_without_production_clients(cloud: pytest.MonkeyPatch) -> None:
+    cloud.setenv("STORAGE_SECRET_ACCESS_KEY", "storage-secret-from-the-store")
     with pytest.raises(MissingProductionClientError):
         create_app(production=ProductionFactories())
 
 
-def test_prod_refuses_to_start_on_the_local_storage_secret(
-    environment: pytest.MonkeyPatch,
+@pytest.mark.parametrize(
+    ("name", "plain", "wanted"),
+    [
+        ("DATABASE_URL", "postgresql://app@ep-x.eu-central-1.aws.neon.tech/db", "ssl"),
+        ("PUBLIC_ORIGIN", "http://app.parfocal.eu", "https"),
+        ("REALTIME_INTERNAL_URL", "http://app.parfocal.eu", "https"),
+        ("STORAGE_ENDPOINT", "http://account.r2.cloudflarestorage.com", "https"),
+    ],
+)
+@pytest.mark.parametrize("app_env", ["staging", "prod"])
+def test_cloud_environments_refuse_plain_transport(
+    cloud: pytest.MonkeyPatch, app_env: str, name: str, plain: str, wanted: str
 ) -> None:
-    environment.setenv("APP_ENV", "prod")
+    cloud.setenv("APP_ENV", app_env)
+    cloud.setenv("STORAGE_SECRET_ACCESS_KEY", "storage-secret-from-the-store")
+    cloud.setenv(name, plain)
+    with pytest.raises(ValidationError, match=f"{name} must use {wanted}"):
+        create_app(production=ProductionFactories())
+
+
+def test_prod_refuses_to_start_on_the_local_storage_secret(cloud: pytest.MonkeyPatch) -> None:
+    environment = cloud
     with pytest.raises(ValidationError, match="STORAGE_SECRET_ACCESS_KEY is the local"):
         create_app(production=ProductionFactories())
     environment.setenv("APP_ENV", "dev")

@@ -250,6 +250,15 @@ OPS-019 (Zitadel adapter and tenant command) provisions and deprovisions a tenan
 
 Your choice:
 
+### 117. Whether parfocal.eu joins the browsers' HSTS preload list
+
+SEC-002 (encryption in transit and at rest) turns on zone HSTS for a year with subdomains, with preload off, in `infra/tofu/global/zone.tf`. Preload makes browsers refuse plain HTTP on every `parfocal.eu` name before the first visit, and leaving the list takes months.
+
+- **A. Keep preload off until the first real user, then decide again (recommended).**
+- B. Turn preload on now and submit the domain at hstspreload.org.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 The temporary review checklist of 2026-11-14 is handled and deleted. What still waits is below.
@@ -269,6 +278,7 @@ Waiting on something else, nothing for you now:
 - OPS-005 (continuous deployment) is paused by your answer to decision 96, and TEST-020 (showcase seed) and SEC-042 (the edge guards the real API path) wait for the next production deploy.
 - IAM-001 (identity provider as code) and TEST-010 (load test tooling) waited for staging, which is dropped for good (ADR 0331, no staging environment), so the next session rescopes them to local dev or a drill environment.
 - FOUND-030 (bundle analyzer report), TEST-017 (flaky test management), TEST-036 (display panel Undo tests) and TEST-039 (local Zitadel for the end-to-end suite) wait for a green CI run on `main`, which agents are fixing.
+- SEC-002 (encryption in transit and at rest) waits for one `tofu apply` of the global root, which only adds zone HSTS and the pending http3 setting, then a rescan of `parfocal.eu`.
 - IAM-021 (lock screen) and SHELL-012 (account menu) wait for the expired sign-in to return to the object and for the manual lock item.
 - VIEW-017 (OME-Zarr reader) waits for converted real fixtures from INGEST-015 (conversion fallback worker), which an agent now finishes with lossless chunks after decision 104.
 

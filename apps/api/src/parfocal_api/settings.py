@@ -1,6 +1,15 @@
 from typing import Annotated
 
-from pydantic import AfterValidator, AnyHttpUrl, Field, HttpUrl, PositiveInt, PostgresDsn, SecretStr
+from pydantic import (
+    AfterValidator,
+    AnyHttpUrl,
+    Field,
+    HttpUrl,
+    PositiveInt,
+    PostgresDsn,
+    SecretStr,
+    model_validator,
+)
 
 from parfocal_common.object_store import LIST_PAGE_LIMIT, MAX_PRESIGN_SECONDS
 from parfocal_common.part_plan import (
@@ -11,6 +20,7 @@ from parfocal_common.part_plan import (
     MIN_PART_BYTES,
 )
 from parfocal_common.settings import StorageSettings
+from parfocal_common.transport import require_https, require_tls_database
 
 GIB = 1024 * MIB
 DEFAULT_UPLOAD_MAX_BYTES = 100 * GIB
@@ -47,3 +57,12 @@ class ApiSettings(StorageSettings):
     ] = DEFAULT_PART_BYTES
     upload_part_url_seconds: Annotated[int, Field(ge=1, le=MAX_PRESIGN_SECONDS)] = 15 * 60
     upload_list_page_size: Annotated[int, Field(ge=1, le=LIST_PAGE_LIMIT)] = LIST_PAGE_LIMIT
+
+    @model_validator(mode="after")
+    def services_over_tls(self) -> ApiSettings:
+        if self.encrypted_transport():
+            require_tls_database("DATABASE_URL", self.database_url)
+            require_https("PUBLIC_ORIGIN", self.public_origin)
+            require_https("ZITADEL_ISSUER", self.zitadel_issuer)
+            require_https("REALTIME_INTERNAL_URL", self.realtime_internal_url)
+        return self
