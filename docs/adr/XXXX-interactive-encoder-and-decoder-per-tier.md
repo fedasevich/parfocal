@@ -38,16 +38,16 @@ Graph agreement and speed for PathoSAM ViT-B.
 |---|---|---|---|---|---|
 | PathoSAM ViT-B, contour outlines | 0.674 | 0.805 | 0.740 | 0.775 | 53.3% |
 | SAM 2 Hiera-L | 0.447 | 0.797 | 0.756 | 0.654 | 35.9% |
-| SlimSAM-77 (generic small SAM) | 0.537 | not run | not run | 0.579 | 39.1% |
+| SlimSAM-77 (generic small SAM) | 0.537 | not in doc 26 | not in doc 26 | 0.579 | 39.1% |
 
 SAM 2 matches PathoSAM on boxes and loses 0.23 on a click. The generic small SAM loses 0.14 on a click.
 
 ### Published, not comparable
 
-- SAM 3. The weights on [Hugging Face](https://huggingface.co/facebook/sam3) are gated behind a sign-in and the acceptance of terms, so SAM 3 is unmeasured here. [Is SAM3 ready for pathology segmentation?](https://arxiv.org/html/2604.18225v3) (Kong et al., v3 of 2026-05-19) scores image-level mIoU, not IoU per prompted nucleus. Its few-shot box prompts give SAM 3 45.06 on NuInsSeg against 45.26 for SAM 1, its point prompts are often below SAM 1, and only with a box on every nucleus does it lead (81.19 against 77.08 on NuInsSeg). Nothing in it suggests SAM 3 beats a pathology fine-tune.
+- SAM 3. The weights on [Hugging Face](https://huggingface.co/facebook/sam3) are gated behind a sign-in and the acceptance of terms, so SAM 3 is unmeasured here. [Is SAM3 ready for pathology segmentation?](https://arxiv.org/html/2604.18225v3) (Kong et al., v3 of 2026-05-19) scores image-level mIoU, not IoU per prompted nucleus. Its text prompts reach 6.22 mIoU on PanNuke with the best wording. Its few-shot box prompts give SAM 3 45.06 on NuInsSeg against 45.26 for SAM 1. On zero-shot points it is below SAM 1 on NuInsSeg in three of four settings and equal in the fourth, and it leads on boxes, most with a box on every nucleus (81.19 against 77.08 on NuInsSeg). The paper compares no pathology fine-tune such as PathoSAM.
 - EdgeSAM. Its [repository](https://github.com/chongzhou96/EdgeSAM) reports COCO mask AP 42.2 against 39.4 for MobileSAM and 46.1 for SAM, and 38.7 against 4.9 frames per second on an iPhone 14. NTU S-Lab License 1.0. No pathology numbers.
 - EfficientViT-SAM. Its [README](https://github.com/mit-han-lab/efficientvit/blob/master/applications/efficientvit_sam/README.md) reports COCO mAP 45.7 (L0) to 47.8 (XL1) with detector boxes as prompts, and states no licence on that page. No pathology numbers.
-- No small SAM fine-tuned on pathology is published. The micro-sam model registry ([`util.py`](https://github.com/computational-cell-analytics/micro-sam/blob/master/micro_sam/util.py)) has histopathology checkpoints for ViT-B, ViT-L and ViT-H only. Its ViT-Tiny checkpoints are generic MobileSAM, light microscopy and electron microscopy.
+- No small SAM fine-tuned on pathology was found. The micro-sam model registry ([`util.py`](https://github.com/computational-cell-analytics/micro-sam/blob/master/micro_sam/util.py)) has histopathology checkpoints for ViT-B, ViT-L and ViT-H only. Its ViT-Tiny checkpoints are generic MobileSAM, light microscopy and electron microscopy. One web search on 2026-11-16 found pathology adaptations of the larger ViT-B only, such as a LoRA on a frozen SAM ViT-B ([arXiv 2603.20326](https://arxiv.org/pdf/2603.20326), seen as a search snippet only, no numbers taken), and nothing for MobileSAM, EdgeSAM or EfficientViT-SAM.
 - PathoSAM ViT-L, the size its authors recommend, is a 1,249,494,242 byte download per the registry server, over the local cap of 500 MB, so it is unmeasured here.
 
 ## Options considered
@@ -64,7 +64,7 @@ Option 2, the same shape as ADR 0349 gave the detector.
 | Work | Tier | Encoder | Decoder | Runs on | Evidence |
 |---|---|---|---|---|---|
 | Click and box | Best | PathoSAM ViT-B fp32 | 32 token window decoder, the full decoder at the window edge | Encoder on the server T4, decoder in the browser | fp32 matches PyTorch at mean IoU 0.9999. TNBC click 0.852 and exact box 0.863 with uint8. The fp32 encoder has not run the TNBC harness, `TODO` |
-| Click and box | Good | PathoSAM ViT-B, 4-bit on WebGPU, uint8 on WebAssembly or the server T4 without WebGPU | As Best | Browser, or server T4 | TNBC click 0.852 and box 0.863 with uint8. 4-bit agrees with PyTorch at 0.961 |
+| Click and box | Good | PathoSAM ViT-B, 4-bit on WebGPU and uint8 on WebAssembly, as ADR 0250 loads them | As Best | Browser | TNBC click 0.852 and box 0.863 with uint8. 4-bit agrees with PyTorch at 0.961 |
 | Click and box | Fast | None | | | Generic MobileSAM scores 0.573 on a TNBC click, 0.279 below PathoSAM, though its CPU encode is 370 ms against 2,165 ms |
 | Region (auto tool) | Best and Good | The tier's encoder above | int8 weight-only AIS decoder, prompt pass as fallback | As above | TNBC PQ 0.8284 with uint8 and 0.8243 with 4-bit. Fallback 0.7959 |
 | Region (auto tool) | Fast | None. AISEG-013 still decides the CPU-only path | | | |
@@ -81,8 +81,9 @@ Rules that follow.
 
 - The Best interactive row of ADR 0202 changes from ViT-L to ViT-B fp32 on the server. The model registry in `parfocal_api.model_registry` already keeps the three ViT-L rows at status `candidate`, which matches rule 1, so this ADR changes no code. A follow-up points the Best interactive default at the ViT-B encoder where it still names ViT-L.
 - The held-out mean over three sets still comes only from the POC. Running CryoNuSeg and NuInsSeg in this harness is the follow-up the interactive protocol result already names, `TODO`.
-- Measuring ViT-L locally or fine-tuning a small SAM needs the owner's choice, recorded as decision XXX in `docs/decisions.md`.
-- Licence status is unchanged from ADR 0202: PathoSAM weights `TODO` and trained on non-commercial data. MobileSAM code is Apache-2.0 per its repository, not re-read here.
+- The Best row is the server encoder that decision 117 (which encoder the server embedding service runs) recommends, the fp32 ViT-B on a T4 writing the float16 tiles of ADR 0346. The `embedder` pool is still a stub per ADR 0346, so Best runs only once that decision is taken and the pool gets real weights.
+- Measuring the ViT-L encoder and AIS decoder needs a 1.25 GB download, which decision 117 and decision 123 (whether agents may download newer nucleus models) already ask about. Fine-tuning a small SAM needs a GPU run, decision XXX in `docs/decisions.md`.
+- Licence status is unchanged from ADR 0202: PathoSAM weights `TODO` and trained on non-commercial data. MobileSAM code is Apache-2.0 and its checkpoint licence `TODO`, per ADR 0042, not re-read here.
 
 ## References
 

@@ -44,6 +44,6 @@ The fp32 graphs agree with PyTorch. The one click below 1.0 differs by one pixel
 
 ## Follow-ups
 
-- ADR XXXX (PathoSAM ONNX export contract) records the exporter, the square trace and the gate.
+- [ADR 0246](../adr/0246-pathosam-onnx-export-contract.md) (PathoSAM ONNX export contract) records the exporter, the square trace and the gate.
 - AISEG-002 (quantised variants per execution provider) owns the browser timings and could try a q4 block size of 16 or an accuracy level other than 4 to widen the margin.
 - TODO: pin a public download for the two checkpoints. Today they are linked from `PARFOCAL_MODELS_LOCAL`.

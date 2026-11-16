@@ -387,13 +387,12 @@ AISEG-014 (find more like these, exemplar prompting) found the gesture is a no-g
 
 Your choice:
 
-### XXX. Whether to measure PathoSAM ViT-L and fine-tune a small SAM for the interactive tiers
+### XXX. Whether to fine-tune a small SAM on pathology for a fast interactive tier
 
-AISEG-000 (interactive segmentation research check) put PathoSAM ViT-B on every interactive tier in ADR XXXX (interactive encoder and decoder per tier), because PathoSAM ViT-L has no number here and its checkpoint is 1.25 GB, over the 500 MB cap for a local download. Generic MobileSAM scores 0.573 on a TNBC click against 0.852 for PathoSAM, and no small SAM fine-tuned on pathology is published, so Fast stays empty ([result](results/2026-11-16-mobilesam-on-tnbc.md)).
+AISEG-000 (interactive segmentation research check) put PathoSAM ViT-B on every interactive tier and left Fast empty in [ADR XXXX](adr/XXXX-interactive-encoder-and-decoder-per-tier.md) (interactive encoder and decoder per tier). Generic MobileSAM encodes six times faster on the CPU but scores 0.573 on a TNBC click against 0.852 for PathoSAM, and no small SAM fine-tuned on pathology was found ([result](results/2026-11-16-mobilesam-on-tnbc.md)). The ViT-L download is already asked in decisions 117 and 123.
 
-- **A. Allow the 1.25 GB ViT-L download for one Mac run of the same TNBC harness, no cloud cost, so Best gets a measured model (recommended).**
-- B. A, and also a task that fine-tunes MobileSAM or EdgeSAM on PathoSAM's public training sets on a Modal GPU, cost `TODO` and counted against the $30 month.
-- C. Neither. ViT-B stays on every tier and Fast stays empty until a pathology small SAM is published.
+- **A. No fine-tune for now. Devices without WebGPU use a server embedding once decision 117 is taken, and Fast stays empty (recommended).**
+- B. Add a task that fine-tunes MobileSAM or EdgeSAM on PathoSAM's public training sets on a Modal GPU, cost `TODO` and counted against the $30 month.
 
 Your choice:
 
