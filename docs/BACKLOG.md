@@ -3784,6 +3784,12 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
   Done when golden tests cover colormaps and threshold.
   Size: S.
 
+- [ ] AITUM-008 · The tumor map runs as a job and the API serves it
+  AITUM-001 (tumor map job) built `parfocal_ml.tumor_map`, which maps a slide over the tissue mask and writes the heatmap format the API already serves plus three pyramid levels, but nothing starts it. Add it as a job kind in the job system with its GPU pool and cost cap, start it from the API under a member's rights, store the map with the slide, and give the "Map this view" panel of AITUM-004 (view-scoped map on demand) the server scorer it waits for.
+  Done when an API test starts a tumor map job and reads the stored map back through the heatmap route, a worker test runs the job end to end with a stand-in model on a small fixture, and the routes are in the permission and tenant isolation tables.
+  Depends on AITUM-001.
+  Size: M.
+
 - [ ] AITUM-003 · Areas from the tumor map
   Cells at or above 0.5 form areas by 8-connectivity, an area is listed only if its peak reaches 0.97, its size is the widest distance across the convex hull of its cells in mm, and it carries a category, a likely size range and flags for "near a line" and "too small for the map". Areas are ordered largest first. The range comes from the MLEVAL evaluation, not a constant.
   Done when unit tests cover connectivity, the peak filter, the hull diameter and the category lines, and an evaluation on CAMELYON16 test slides records per-deposit size error and stray areas as a result file. The POC reached 7 areas for 6 deposits and 8.1 mm against 8.1 mm on tumor_009, a training slide.
