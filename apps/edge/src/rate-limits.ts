@@ -1,6 +1,7 @@
+import { countLogin, type LoginCounterEnv } from "#login-counter.ts";
 import { problem } from "#tiles.ts";
 
-export type LimitEnv = {
+export type LimitEnv = LoginCounterEnv & {
   readonly LOGIN_LIMIT?: RateLimit;
   readonly UPLOAD_LIMIT?: RateLimit;
   readonly TILE_LIMIT?: RateLimit;
@@ -85,9 +86,9 @@ function isLocalRun(env: LimitEnv): boolean {
   return env.LOCAL_RUN === "true";
 }
 
-function tooMany(kind: LimitClass): Response {
+function tooMany(kind: LimitClass, retryAfterSeconds = PERIOD_SECONDS[kind]): Response {
   const response = problem(429, "rate-limited", "Too many requests from this address");
-  response.headers.set("Retry-After", String(PERIOD_SECONDS[kind]));
+  response.headers.set("Retry-After", String(retryAfterSeconds));
   return response;
 }
 
@@ -132,6 +133,10 @@ export async function guard(
   } else {
     const { success } = await limiter.limit({ key: `${kind}:${address}` });
     if (!success) return tooMany(kind);
+  }
+  if (kind === "login" && env.LOGIN_COUNTER !== undefined) {
+    const { allowed, retryAfterSeconds } = await countLogin(env.LOGIN_COUNTER, address);
+    if (!allowed) return tooMany(kind, retryAfterSeconds);
   }
   const secret = env.TURNSTILE_SECRET_KEY;
   if (pathname === LOGIN_START && secret) {
