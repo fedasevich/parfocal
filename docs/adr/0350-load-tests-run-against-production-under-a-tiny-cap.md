@@ -1,4 +1,4 @@
-# XXXX. Load tests run against production under a tiny cap, on demand from a workflow or one command
+# 0350. Load tests run against production under a tiny cap, on demand from a workflow or one command
 
 - Date: 2026-11-16
 - Status: Accepted

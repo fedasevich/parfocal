@@ -1,6 +1,6 @@
 # Load tests
 
-Locust scenarios for the API, tiles and realtime, run on demand ([ADR 0286](../adr/0286-load-tests-run-on-locust.md), load tests on Locust with a target guard, as amended by [ADR XXXX](../adr/XXXX-load-tests-run-against-production-under-a-tiny-cap.md), load tests against production under a tiny cap). They are level 7 of the test pyramid in [ADR 0273](../adr/0273-test-pyramid-and-ownership.md) and never run on a pull request.
+Locust scenarios for the API, tiles and realtime, run on demand ([ADR 0286](../adr/0286-load-tests-run-on-locust.md), load tests on Locust with a target guard, as amended by [ADR 0350](../adr/0350-load-tests-run-against-production-under-a-tiny-cap.md), load tests against production under a tiny cap). They are level 7 of the test pyramid in [ADR 0273](../adr/0273-test-pyramid-and-ownership.md) and never run on a pull request.
 
 ## Files
 
