@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from smoke_site import secured_page_headers
 
 from parfocal_deploy import neon, preview
 from parfocal_deploy.modal_app import CONFIG_SECRET, KEYS_SECRET, LOGIN_SECRET
@@ -136,7 +137,7 @@ class Cloud:
     def fetch(self, url: str) -> tuple[int, Mapping[str, str]]:
         if url.endswith("/api/health"):
             return 200, {**ISOLATION_HEADERS, "content-type": "application/json"}
-        return 200, {**ISOLATION_HEADERS, "strict-transport-security": "max-age=31536000"}
+        return 200, secured_page_headers()
 
     def cloudflare(self, method: str, path: str) -> tuple[int, dict[str, Any]]:
         if method == "GET":

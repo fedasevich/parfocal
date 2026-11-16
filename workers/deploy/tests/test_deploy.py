@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from smoke_site import secured_page_headers
 
 from parfocal_deploy import migrations, neon
 from parfocal_deploy.bootstrap import (
@@ -116,7 +117,7 @@ class Cloud:
     def fetch(self, url: str) -> tuple[int, Mapping[str, str]]:
         if url.endswith("/api/health"):
             return self.health, {**self.headers, "content-type": "application/json"}
-        return 200, {**self.headers, "strict-transport-security": "max-age=31536000"}
+        return 200, secured_page_headers(self.headers)
 
     def tools(self) -> Tools:
         return Tools(run=self.run, read=self.read, sql=self.sql, neon=self.neon, fetch=self.fetch)

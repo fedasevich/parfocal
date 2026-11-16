@@ -926,9 +926,9 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when an automated scan of a full E2E run's telemetry finds no seeded patient names. The scan reads the console and file exporter output, because non-production environments do not export ([ADR 0005](adr/0005-external-sends-only-in-production.md)).
   Size: M.
 
-- [ ] SEC-011 · Security headers and CSP
+- [x] SEC-011 · Security headers and CSP
   Strict CSP with nonces, COOP same-origin, COEP credentialless, CORP, Referrer-Policy, Permissions-Policy allowing WebHID and gamepad only where needed.
-  Done when a header test runs against production and the ONNX WASM threads and module workers still work.
+  Done when a header test runs against production after each deploy, through the production smoke step `workers/deploy/src/parfocal_deploy/smoke.py` (there is no staging, [ADR 0331](adr/0331-no-staging-environment.md), no staging environment), and the ONNX WASM threads and module workers still work.
   Refs doc 14.
   Size: M.
 
