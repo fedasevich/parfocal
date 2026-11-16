@@ -5,6 +5,7 @@ Newest entries on top. One line per piece of work, naming the backlog ID where t
 ## 2026-11-16
 
 - OPS-019 Zitadel adapter and tenant command, provision and deprovision tested against the local Zitadel, drill run named in the runbook as TODO.
+- TILES-009 (a rewritten original never comes from a stale edge cache) in review on worktree-agent-a0c2a913da992a35e. The tile token carries an optional g claim with the original's unquoted S3 ETag, read at mint by the new ObjectStore.stat_object (head_object keeps returning the size, because seven ingest call sites compare it with != and would silently pass a dataclass). The Worker adds the ETag to the cache key and serves a token whose ETag no longer matches R2 without caching it. Tests: a same-size rewrite misses, an old-ETag token is never cached, a second cross-language vector. Production touch: one 5,243,904 byte two-part object at agent-tests/tiles-009-etag-check/multipart.bin in parfocal-dev, uploaded, read through a wrangler dev probe with a remote R2 binding (nothing deployed) and deleted, cost $0.00 inside the free tier. S3 ETag equals the binding's etag (result 2026-11-16-r2-multipart-etag-matches-the-worker). The tile-access call now adds one R2 HEAD per token mint, every 10 minutes per viewer.
 
 ## 2026-11-15
 

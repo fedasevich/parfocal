@@ -5,6 +5,7 @@ export type Capability = {
   readonly slide: string;
   readonly original: string;
   readonly size: number;
+  readonly etag?: string;
   readonly restricted: readonly ByteRange[];
   readonly blank?: readonly ByteRange[];
   readonly expires: number;
@@ -17,6 +18,7 @@ export type CapabilityCheck =
 
 const TOKEN_VERSION = 1;
 const SPACE = 0x20;
+const STORED_ETAG = /^[A-Za-z0-9-]{1,80}$/;
 const SHARED_FOLDER = /^samples\/camelyon16\/[A-Za-z0-9][A-Za-z0-9_-]{0,63}\/$/;
 const encoder = new TextEncoder();
 
@@ -117,7 +119,7 @@ function capabilityOf(claims: unknown): Capability | null {
   if (typeof claims !== "object" || claims === null) {
     return null;
   }
-  const { v, t, s, o, n, d, b, e, p } = claims as Record<string, unknown>;
+  const { v, t, s, o, n, g, d, b, e, p } = claims as Record<string, unknown>;
   if (
     v !== TOKEN_VERSION ||
     typeof t !== "string" ||
@@ -125,6 +127,7 @@ function capabilityOf(claims: unknown): Capability | null {
     typeof o !== "string" ||
     !Number.isSafeInteger(n) ||
     (n as number) < 0 ||
+    (g !== undefined && (typeof g !== "string" || !STORED_ETAG.test(g))) ||
     !Number.isSafeInteger(e) ||
     !Array.isArray(d) ||
     !d.every(isRange) ||
@@ -138,6 +141,7 @@ function capabilityOf(claims: unknown): Capability | null {
     slide: s,
     original: o,
     size: n as number,
+    ...(g === undefined ? {} : { etag: g }),
     restricted: d,
     ...(b === undefined ? {} : { blank: b }),
     expires: e as number,
@@ -186,6 +190,7 @@ export async function signCapability(capability: Capability, key: CryptoKey): Pr
       : { b: capability.blank }),
     d: capability.restricted,
     e: capability.expires,
+    ...(capability.etag === undefined ? {} : { g: capability.etag }),
     n: capability.size,
     o: capability.original,
     ...(capability.folder === undefined ? {} : { p: capability.folder }),

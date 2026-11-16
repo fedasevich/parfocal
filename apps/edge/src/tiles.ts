@@ -27,6 +27,8 @@ export const consoleTileLog: TileLog = ({ tenant, slide }) => {
   console.log(JSON.stringify({ tenant, slide }));
 };
 
+type Signed = { readonly size: number; readonly etag?: string };
+
 type Span = { readonly offset: number; readonly length?: number } | { readonly suffix: number };
 
 const TILES_PREFIX = "/tiles/";
@@ -115,10 +117,13 @@ function timing(entries: readonly (readonly [string, number])[]): string {
   return entries.map(([name, ms]) => `${name};dur=${ms}`).join(", ");
 }
 
-function cacheKey(key: string, span: Span | null, signedSize: number | null): Request | null {
+function cacheKey(key: string, span: Span | null, signed: Signed | null): Request | null {
   const query = new URLSearchParams();
-  if (signedSize !== null) {
-    query.set("size", String(signedSize));
+  if (signed !== null) {
+    query.set("size", String(signed.size));
+  }
+  if (signed?.etag !== undefined) {
+    query.set("etag", signed.etag);
   }
   if (span !== null) {
     if ("suffix" in span || span.length === undefined) {
@@ -155,29 +160,34 @@ async function serveCached(
   env: TileEnv,
   key: string,
   span: Span | null,
-  signedSize: number | null,
+  signed: Signed | null,
   cache: RangeCache,
 ) {
-  const lookup = cacheKey(key, span, signedSize);
+  const lookup = cacheKey(key, span, signed);
   if (lookup === null) {
-    return serveFromBucket(env, key, span, signedSize);
+    return serveFromBucket(env, key, span, signed?.size ?? null);
   }
   const started = Date.now();
   const hit = await cache.store.match(lookup);
   const looked = Date.now() - started;
   if (hit !== undefined) {
-    if (signedSize !== null && Number(hit.headers.get("X-Object-Size")) !== signedSize) {
+    if (signed !== null && Number(hit.headers.get("X-Object-Size")) !== signed.size) {
       await hit.body?.cancel();
       return sizeMismatch();
     }
     return answer(hit, span, "hit", looked);
   }
-  const fresh = await serveFromBucket(env, key, span, signedSize, [["cache", looked]]);
+  const fresh = await serveFromBucket(env, key, span, signed?.size ?? null, [["cache", looked]]);
   if (fresh.status !== 200 && fresh.status !== 206) {
     return fresh;
   }
+  if (signed?.etag !== undefined && fresh.headers.get("ETag") !== `"${signed.etag}"`) {
+    const headers = new Headers(fresh.headers);
+    headers.append("Server-Timing", "cache;desc=etag-mismatch");
+    return new Response(fresh.body, { status: fresh.status, headers });
+  }
   const [mine, theirs] = (fresh.body as ReadableStream).tee();
-  const maxAge = signedSize === null ? UNSIZED_CACHE_SECONDS : SIZED_CACHE_SECONDS;
+  const maxAge = signed === null ? UNSIZED_CACHE_SECONDS : SIZED_CACHE_SECONDS;
   const stored = new Headers({
     "Cache-Control": `public, max-age=${maxAge}`,
     "Content-Length": fresh.headers.get("Content-Length") ?? "0",
@@ -203,14 +213,14 @@ async function serve(
   env: TileEnv,
   key: string,
   span: Span | null,
-  signedSize: number | null,
+  signed: Signed | null,
   cache: RangeCache | undefined,
 ) {
   if (request.method === "GET" && cache !== undefined) {
-    return serveCached(env, key, span, signedSize, cache);
+    return serveCached(env, key, span, signed, cache);
   }
   if (request.method === "GET") {
-    return serveFromBucket(env, key, span, signedSize);
+    return serveFromBucket(env, key, span, signed?.size ?? null);
   }
   if (request.method === "HEAD") {
     const object = await env.SLIDES.head(key);
@@ -307,7 +317,11 @@ export async function handleTiles(
     return problem(403, "range-restricted", "These bytes hold a label or macro image");
   }
   const checked = span === null || end === start ? span : { offset: start, length: end - start };
-  const served = await serve(request, env, key, checked, capability.size, cache);
+  const signed = {
+    size: capability.size,
+    ...(capability.etag === undefined ? {} : { etag: capability.etag }),
+  };
+  const served = await serve(request, env, key, checked, signed, cache);
   return withBlanks(served, capability.blank ?? [], start, end);
 }
 

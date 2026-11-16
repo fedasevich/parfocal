@@ -39,6 +39,15 @@ def test_the_api_signs_the_token_the_edge_expects() -> None:
     assert sign_capability(SECRET, VECTOR["claims"]) == VECTOR["token"]
 
 
+def test_the_api_signs_a_stored_etag_the_way_the_edge_expects() -> None:
+    tagged = json.loads(
+        (
+            Path(__file__).resolve().parents[2] / "edge" / "test" / "capability-etag-vector.json"
+        ).read_text()
+    )
+    assert sign_capability(tagged["secret"], tagged["claims"]) == tagged["token"]
+
+
 def claims_of(token: str) -> dict[str, Any]:
     payload, signature = token.split(".")
     expected = hmac.new(base64.b64decode(SECRET), payload.encode(), hashlib.sha256).digest()
@@ -147,6 +156,21 @@ def test_a_reader_gets_a_short_lived_token_for_the_slide(lab: Lab) -> None:
         "d": RANGES,
     }
     assert started + TOKEN_SECONDS <= claims["e"] <= int(time.time()) + TOKEN_SECONDS
+
+
+@pytest.mark.db
+def test_the_token_carries_the_stored_etag_of_the_original(lab: Lab) -> None:
+    assert "g" not in claims_of(
+        lab.api(lab.people["owner"]).get(lab.path(lab.bare)).json()["token"]
+    )
+    key = original_key(lab.tenant_id, lab.bare, "upload.svs")
+    with_store(lambda store: store.put_object(key, b"x" * FILE_BYTES, "image/tiff"))
+    stored = with_store(lambda store: store.stat_object(key))
+    assert stored is not None
+    assert stored.size == FILE_BYTES
+    token = lab.api(lab.people["owner"]).get(lab.path(lab.bare)).json()["token"]
+    assert claims_of(token)["g"] == stored.etag
+    assert stored.etag == hashlib.md5(b"x" * FILE_BYTES, usedforsecurity=False).hexdigest()
 
 
 @pytest.mark.db

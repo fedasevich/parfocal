@@ -167,6 +167,37 @@ describe("capability tokens", () => {
     assert.equal(decision.capability.tenant, claims.t);
   });
 
+  test("the API and the edge sign a stored ETag to the same token", async () => {
+    const tagged = JSON.parse(
+      readFileSync(`${import.meta.dirname}/capability-etag-vector.json`, "utf8"),
+    ) as { token: string; claims: Vector["claims"] & { g: string } };
+    const { claims } = tagged;
+    const signed = await signCapability(
+      {
+        tenant: claims.t,
+        slide: claims.s,
+        original: claims.o,
+        size: claims.n,
+        etag: claims.g,
+        restricted: claims.d,
+        expires: claims.e,
+      },
+      await signingKey(SECRET),
+    );
+    assert.equal(signed, tagged.token);
+    const decision = await verifyCapability(tagged.token, await signingKey(SECRET), claims.e - 1);
+    assert.ok(decision.ok);
+    assert.equal(decision.capability.etag, claims.g);
+  });
+
+  test("a token whose ETag is not a stored ETag is malformed", async () => {
+    const token = await tokenFor({ etag: 'a"b' });
+    assert.deepEqual(await verifyCapability(token, await signingKey(SECRET), NOW), {
+      ok: false,
+      reason: "malformed",
+    });
+  });
+
   test("a token is refused once it expires", async () => {
     const key = await signingKey(SECRET);
     const token = await tokenFor();

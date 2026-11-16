@@ -37,4 +37,4 @@ Client wall time in milliseconds. Worker p50 is the `r2` duration on a miss and 
 
 - Owed for TILES-002 (CDN in front of slide storage): deploy, then measure warm p95 on `app.parfocal.eu` from a client in the colo's region over HTTP/2 and HTTP/3, including a hit from a second colo. This is a deploy under ADR 0151 (standing approval within $30 a month).
 - Owed: `tofu apply` of the `http3 = "on"` zone setting added to `infra/tofu/global/zone.tf`.
-- TODO: an original rewritten at the same size is served stale for up to a day, and other files for up to 10 minutes. A version or ETag in the capability token would close it.
+- Closed for originals by TILES-009 (a rewritten original never comes from a stale edge cache), which signs the original's ETag into the token and the cache key. Other files can still be served stale for up to 10 minutes.
