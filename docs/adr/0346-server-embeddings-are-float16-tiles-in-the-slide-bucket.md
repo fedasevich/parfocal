@@ -1,4 +1,4 @@
-# 0345. Server embeddings are float16 tiles on a fixed grid in the slide bucket, and smart select snaps to a cached tile
+# 0346. Server embeddings are float16 tiles on a fixed grid in the slide bucket, and smart select snaps to a cached tile
 
 - Date: 2026-11-16
 - Status: Accepted

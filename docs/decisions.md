@@ -252,7 +252,7 @@ Your choice:
 
 ### 117. Which encoder the server embedding service runs
 
-AISEG-008 (server embedding service) built the cache, the API and the browser side, and the browser adopts a server embedding only when its own decoder pairs with the encoder that made it ([ADR 0345](adr/0345-server-embeddings-are-float16-tiles-in-the-slide-bucket.md), server embeddings as float16 tiles in the slide bucket). The browser decoder is PathoSAM ViT-B, and a ViT-L or ViT-H embedding does not fit it.
+AISEG-008 (server embedding service) built the cache, the API and the browser side, and the browser adopts a server embedding only when its own decoder pairs with the encoder that made it ([ADR 0346](adr/0346-server-embeddings-are-float16-tiles-in-the-slide-bucket.md), server embeddings as float16 tiles in the slide bucket). The browser decoder is PathoSAM ViT-B, and a ViT-L or ViT-H embedding does not fit it.
 
 - **A. The full precision PathoSAM ViT-B on a T4. It pairs with today's decoder and needs no new browser graph, and only the quantisation loss goes away (recommended).**
 - B. PathoSAM ViT-L, with its decoder exported as a second browser graph. Possibly better masks, not measured here, but a second decoder to ship and test.
