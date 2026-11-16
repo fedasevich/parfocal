@@ -1,7 +1,7 @@
-# XXXX. A Modal environment and a tenant key prefix per preview
+# 0348. A Modal environment and a tenant key prefix per preview
 
 - Date: 2026-11-16
-- Status: Proposed
+- Status: Accepted
 - Deciders: Claude (OPS-003 agent), for the owner to confirm at merge
 - Backlog: OPS-003 (environments). Amends [ADR 0050](0050-deploy-pipeline-and-previews.md) (deploy pipeline and previews) after [ADR 0331](0331-no-staging-environment.md) (no staging environment).
 

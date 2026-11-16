@@ -66,7 +66,7 @@ Budgets per environment and the cost dashboard live in `workers/deploy/src/parfo
 
 ## What one preview costs a month
 
-Estimated on 2026-11-16 for OPS-003 (environments) from rates already in the repository, not measured. A preview is a Worker, a Modal environment `pr-<n>`, a Neon branch and objects under `previews/pr-<n>/` in `parfocal-dev` ([ADR XXXX](../adr/XXXX-a-modal-environment-and-a-tenant-key-prefix-per-preview.md), a Modal environment and a tenant key prefix per preview).
+Estimated on 2026-11-16 for OPS-003 (environments) from rates already in the repository, not measured. A preview is a Worker, a Modal environment `pr-<n>`, a Neon branch and objects under `previews/pr-<n>/` in `parfocal-dev` ([ADR 0348](../adr/0348-a-modal-environment-and-a-tenant-key-prefix-per-preview.md), a Modal environment and a tenant key prefix per preview).
 
 | Part | Assumption | Per month |
 |---|---|---|
