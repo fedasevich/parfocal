@@ -95,6 +95,7 @@ from parfocal_api.tables import (
     slide_counters,
     slide_coverage,
     slides,
+    sso_connections,
     stage_throughput,
     study_template_versions,
     study_templates,
@@ -360,6 +361,19 @@ async def seed_session_policies(connection: AsyncConnection, seeded: Seeded) -> 
             tenant_id=seeded.tenant_id, idle_lock_minutes=20, session_hours=10
         )
     )
+
+
+async def seed_sso_connections(connection: AsyncConnection, seeded: Seeded) -> None:
+    organisation = f"idp-org-{uuid.uuid4().hex[:12]}"
+    await connection.execute(
+        insert(sso_connections).values(
+            tenant_id=seeded.tenant_id,
+            idp_organisation_id=organisation,
+            idp_id=f"idp-{uuid.uuid4().hex[:12]}",
+            email_domains=[f"sso-{uuid.uuid4().hex[:10]}.example.test"],
+        )
+    )
+    seeded.markers.add(organisation)
 
 
 async def seed_notifications(connection: AsyncConnection, seeded: Seeded) -> None:
@@ -1531,6 +1545,7 @@ SEEDERS: dict[str, Seeder] = {
     "legal_holds": seed_legal_holds,
     "cases": seed_cases,
     "session_policies": seed_session_policies,
+    "sso_connections": seed_sso_connections,
     "audit_people": seed_audit_people,
     "audit_events": seed_audit_events,
     "service_accounts": seed_service_accounts,
