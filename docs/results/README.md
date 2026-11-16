@@ -128,5 +128,6 @@ One file per measured run, named `YYYY-MM-DD-short-topic.md`. Copy [_template.md
 | 2026-11-15 | [make dev takes a clean checkout to the logged-in home screen in 62 s with warm Docker, pnpm and uv caches](2026-11-15-make-dev-cold-start.md) | FOUND-009 | baseline |
 | 2026-11-15 | [The production Worker serves repeated tile ranges from the edge cache, measured locally behind the latency proxy](2026-11-15-tile-range-cache-local.md) | TILES-002 | baseline |
 | 2026-11-16 | [The S3 ETag of a multipart upload to R2 equals the Worker binding's etag](2026-11-16-r2-multipart-etag-matches-the-worker.md) | TILES-009 | check |
+| 2026-11-16 | [With the API in its own uvicorn process, annotation reads during bulk inserts reach 126 to 146 ms at p95 against the 250 ms target, and autovacuum fires at every naptime in a 150 s run](2026-11-16-annotation-load-own-server.md) | OPS-004 | load test |
 | 2026-11-15 | [Annotation reads while two writers bulk insert 20,000 cells sit on the 250 ms p95 target, 191 to 356 ms at a load average near 4, so the target is not met reliably yet](2026-11-15-annotation-load-test.md) | OPS-004 | load test |
 | 2026-11-16 | [The prompt-pass fallback scores PQ 0.796 on all 50 TNBC images, 0.033 above the POC's stain-seed row](2026-11-16-prompt-fallback-on-tnbc.md) | AISEG-016 | ML evaluation |
