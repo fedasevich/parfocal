@@ -1,4 +1,3 @@
-/// <reference lib="dom" />
 import { statSync } from "node:fs";
 import { expect, type Page, test } from "@playwright/test";
 import { call, field, idOf, researcherWorkspace, root, signIn, sql } from "./support.ts";
@@ -8,12 +7,26 @@ const slideLabels = ["tumor_001", "tumor_002", "tumor_003"];
 const rounds = Number(process.env["PARFOCAL_MAIN_PATH_ROUNDS"] ?? 0);
 const jumpTarget = { x: 512, y: 384, magnification: 10 };
 
-declare global {
-  interface Window {
-    stageReadyAt?: number;
-    decisionTimes: number[];
-    __parfocal?: { jumpTo?: (target: typeof jumpTarget) => Promise<number> };
-  }
+type PageNode = { getAttribute(name: string): string | null };
+type ObserveOptions = { attributes: boolean; subtree?: boolean; attributeFilter: string[] };
+type KeyEvent = { key: string; timeStamp: number };
+
+declare const window: {
+  stageReadyAt?: number;
+  decisionTimes: number[];
+  __parfocal?: { jumpTo?: (target: typeof jumpTarget) => Promise<number> };
+  addEventListener(
+    type: "keydown",
+    listener: (event: KeyEvent) => void,
+    options: { capture: boolean },
+  ): void;
+};
+declare const document: PageNode & { querySelector(selector: string): PageNode | null };
+declare const performance: { now(): number };
+declare function requestAnimationFrame(callback: () => void): number;
+declare class MutationObserver {
+  constructor(callback: () => void);
+  observe(target: PageNode, options: ObserveOptions): void;
 }
 
 test.use({ viewport: { width: 1440, height: 900 } });
