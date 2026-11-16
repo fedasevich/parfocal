@@ -1,7 +1,8 @@
 import uuid
 from types import SimpleNamespace
+from typing import Annotated
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncConnection
@@ -11,7 +12,12 @@ from parfocal_api.blinding import ai_hidden_on
 from parfocal_api.context import CurrentPrincipal, TenantConnection
 from parfocal_api.hidden_models import refuse_hidden
 from parfocal_api.model_catalogue import BY_NAME
-from parfocal_api.model_runs import SlideNotInProjectError, require_controlling, started_by
+from parfocal_api.model_runs import (
+    ModelOfflineError,
+    SlideNotInProjectError,
+    require_controlling,
+    started_by,
+)
 from parfocal_api.permissions import Permission, require
 from parfocal_api.principals import Principal
 from parfocal_api.problems import NotFoundError
@@ -19,6 +25,7 @@ from parfocal_api.project_access import require_slide_reading
 from parfocal_api.projects import visible
 from parfocal_api.result_sets import ResultSetDraft, insert_result_set
 from parfocal_api.tables import PrivacyMode, ResultSource, jobs, projects, slides
+from parfocal_api.worker_serving import Serving, WorkerProbe, probe_of, serving_of
 from parfocal_common.jobs import JobStatus
 from parfocal_common.tumor_maps import (
     MODEL,
@@ -71,11 +78,14 @@ async def start_tumor_map(
     slide_id: uuid.UUID,
     principal: CurrentPrincipal,
     connection: TenantConnection,
+    probe: Annotated[WorkerProbe, Depends(probe_of)],
 ) -> TumorMapJob:
     project = await visible(connection, principal, project_id)
     await require_controlling(connection, principal, project_id, project.archived_at is not None)
     await slide_in(connection, project_id, slide_id)
     await refuse_hidden(connection, {MODEL})
+    if serving_of(probe, MODEL) is Serving.OFFLINE:
+        raise ModelOfflineError(f"{MODEL} has no worker answering right now")
     set_id = uuid.uuid4()
     job_input = TumorMapInput(slide_id, set_id)
     job_id = await enqueue_tumor_map(connection, project.tenant_id, project_id, job_input)

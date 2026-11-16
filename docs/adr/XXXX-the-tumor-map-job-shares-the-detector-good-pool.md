@@ -17,9 +17,9 @@ The tumor map needs a job kind, a GPU pool and a cost cap. `parfocal_ml.gpu_pool
 
 ## Decision
 
-Option 3. `Kind.TUMOR_MAP` is a job lane kind, so every batch pool accepts it and the interactive embedder pool refuses it, and `parfocal_ml.tumor_map_job.POOL_FAMILY` names detector-good, a T4 that scales to zero. The ResNet18 needs far less than the pool's 12 GiB budget. The worst-case hourly spend stays 4.76 USD.
+Option 3. `Kind.TUMOR_MAP` is a job lane kind, so every batch pool accepts it and the interactive embedder pool refuses it, and `parfocal_ml.tumor_map_job.POOL_FAMILY` names detector-good, a T4 that scales to zero. The ResNet18's GPU memory on a T4 is not measured yet (TODO), but it is a 44.8 MB model against the pool's 12 GiB budget. The worst-case hourly spend stays 4.76 USD.
 
-The per-job cost cap is a tile cap. A job plans its tiles from the tissue mask and fails with `tumor-map-too-large` before scoring one when there are more than `MAX_TILES`, 4,000. A typical CAMELYON slide has about 1,160 tissue tiles, and at the POC's 0.34 s a tile, 4,000 tiles are about 23 minutes, or about 0.22 USD on a T4. Each job reports its seconds to `gpu_usage`.
+The per-job cost cap is a tile cap. A job plans its tiles from the tissue mask and fails with `tumor-map-too-large` before scoring one when there are more than `MAX_TILES`, 4,000. The POC's `tumor_009`, the one slide measured, has 1,160 tissue tiles and took 0.34 s a tile on a laptop GPU. At that rate 4,000 tiles are about 23 minutes, about 0.22 USD on a T4, but the T4 rate is not measured yet (TODO). Each job reports its seconds to `gpu_usage`.
 
 The job adds no table. Its input holds the slide and the result set it fills, and the result set row points back at the job, as a model run's does. Step `map-scored` stores each tile's bytes under `t/{tenant}/s/{slide}/maps/{job}/` and marks it as a unit, so a restarted job scores only the missing tiles. Step `map-stored` assembles the grid, writes the heatmap and its pyramid under the result set's prefix, where `getHeatmap` reads, and marks the set ready.
 
