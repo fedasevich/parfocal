@@ -275,6 +275,9 @@ SEC-002 (encryption in transit and at rest) turns on zone HSTS for a year with s
 
 - **A. Keep preload off until the first real user, then decide again (recommended).**
 - B. Turn preload on now and submit the domain at hstspreload.org.
+
+Your choice:
+
 ### 120. When to add a Neon read replica for reporting
 
 OPS-004 (database operations) planned a Neon read replica so reporting queries do not slow annotation work. No reporting load exists yet, and annotation reads already stay at 126 to 146 ms at p95 against the 250 ms target during bulk inserts. A replica is a second compute that bills while it runs, so it needs your yes under ADR 0151 (standing approval within $30 a month).
