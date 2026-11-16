@@ -1,4 +1,4 @@
-# XXXX. The Fast tier auto tool without WebGPU is deferred, with InstanSeg brightfield nuclei as the named candidate, because it misses its quality bar on the one set it did not train on and its post-processing is not yet in the browser
+# 0362. The Fast tier auto tool without WebGPU is deferred, with InstanSeg brightfield nuclei as the named candidate, because it misses its quality bar on the one set it did not train on and its post-processing is not yet in the browser
 
 - Date: 2026-11-16
 - Status: Accepted
