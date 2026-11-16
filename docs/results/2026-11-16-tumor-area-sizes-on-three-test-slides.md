@@ -85,6 +85,6 @@ FROC 0.722 and Dice 0.899 are unchanged from MLEVAL-005, since only the area mat
 
 ## Follow-ups
 
-- Decision XXX in `docs/decisions.md` asks whether the range should stay relative or become a fixed margin of about one cell for small areas.
+- Decision 128 in `docs/decisions.md` asks whether the range should stay relative or become a fixed margin of about one cell for small areas.
 - `cell_areas.py` reads the same `likely_size()`, so areas built from cells now also carry 0.90 to 1.15, which was measured on the tumor map only.
 - TODO: rerun on the wider set that MLEVAL-005 asks for, with a centre 0 macro slide, and update the range from it.
