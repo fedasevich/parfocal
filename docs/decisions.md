@@ -377,6 +377,16 @@ AITUM-009 (Map this view asks the server for its tiles) sends each view tile to 
 
 Your choice:
 
+### 130. Whether "find more like these" gets a typed fixture run
+
+AISEG-014 (find more like these, exemplar prompting) found the gesture is a no-go on PathoSAM tokens ([ADR XXXX](adr/XXXX-find-more-like-these.md), find more like these is a no-go on PathoSAM tokens). Three exemplars find nuclei at PQ 0.754 on 39 TNBC images against 0.841 for prompting every true centroid, and TNBC has no cell kinds, so whether exemplars can pick out one kind of cell is unmeasured ([result](results/2026-11-16-exemplar-search-on-tnbc.md)).
+
+- **A. Drop the gesture for now and revisit it only if a pathologist asks for it (recommended).**
+- B. Add a task that fetches PanNuke (CC BY-NC-SA, typed nuclei) and measures ranking the auto region tool's nuclei by exemplar similarity.
+- C. Add a task to try SAM 3 concept prompts on the server, which needs a sign-in for the gated weights.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 The temporary review checklist of 2026-11-14 is handled and deleted. What still waits is below.

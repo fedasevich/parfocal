@@ -323,3 +323,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0356](0356-the-tumor-map-worker-runs-the-resnet18-as-onnx-on-a-downloaded-original.md) | The tumor map worker runs the ResNet18 as ONNX and reads a downloaded original through OpenSlide | Accepted | 2026-11-16 |
 | [0357](0357-the-view-map-calls-the-interactive-lane.md) | The view map asks the interactive lane for one view tile at a time | Accepted | 2026-11-16 |
 | [0358](0358-the-tumor-map-pool-runs-cuda-13-and-reuses-the-api-secrets.md) | The tumor map pool runs onnxruntime-gpu on a CUDA 13 cuDNN base and reuses the API's database and storage secrets | Accepted | 2026-11-16 |
+| [XXXX](XXXX-find-more-like-these.md) | Find more like these is a no-go on PathoSAM tokens, and waits for a typed fixture or a concept model | Proposed | 2026-11-16 |

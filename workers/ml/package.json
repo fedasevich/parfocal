@@ -14,6 +14,7 @@
     "test:accuracy": "PARFOCAL_REQUIRE_WEIGHTS=1 uv run --package parfocal-ml --extra export pytest tests -m 'not db' -q --continue-on-collection-errors",
     "bench:ais-region": "uv run --package parfocal-ml --extra onnx python -m parfocal_ml.ais_region",
     "bench:prompt-region": "uv run --package parfocal-ml --extra onnx python -m parfocal_ml.prompt_region",
+    "bench:exemplar-search": "uv run --package parfocal-ml --extra onnx python -m parfocal_ml.exemplar_search",
     "dashboard": "cd ../.. && uv run --package parfocal-ml python -m parfocal_ml.dashboard",
     "bench:interactive": "uv run --package parfocal-ml --extra onnx python -m parfocal_ml.interactive"
   },
