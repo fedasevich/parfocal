@@ -377,7 +377,7 @@ AITUM-009 (Map this view asks the server for its tiles) sends each view tile to 
 
 Your choice:
 
-### XXX. Whether "find more like these" gets a typed fixture run
+### 130. Whether "find more like these" gets a typed fixture run
 
 AISEG-014 (find more like these, exemplar prompting) found the gesture is a no-go on PathoSAM tokens ([ADR XXXX](adr/XXXX-find-more-like-these.md), find more like these is a no-go on PathoSAM tokens). Three exemplars find nuclei at PQ 0.754 on 39 TNBC images against 0.841 for prompting every true centroid, and TNBC has no cell kinds, so whether exemplars can pick out one kind of cell is unmeasured ([result](results/2026-11-16-exemplar-search-on-tnbc.md)).
 
