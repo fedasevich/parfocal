@@ -1,0 +1,35 @@
+{
+  "recorded": "2026-11-16 against the local stack and the Vite dev server, rate_counters rows of the test user, full calendar minutes only",
+  "full_minutes": {
+    "session-requests.spec.ts, open, jump, pan and two decisions per slide": 643,
+    "main-paths.spec.ts, open, jump and two decisions per slide": 1474
+  },
+  "answered_routes_of_six_session_rounds": {
+    "GET /api/review-tasks/{id}/slides/{id}/check-status": 162,
+    "GET /api/review-tasks/{id}/slides/{id}/shared-layer": 72,
+    "GET /api/review-tasks/{id}": 54,
+    "GET /api/projects/{id}/classes": 36,
+    "GET /api/projects/{id}/model-runs": 36,
+    "GET /api/me": 18,
+    "GET /api/tenant/members": 18,
+    "GET /api/me/setting-layers": 18,
+    "GET /api/projects/{id}": 18,
+    "GET /api/me/slides": 18,
+    "GET /api/slides/{id}/result-sets": 18,
+    "GET /api/review-tasks/{id}/slides/{id}/decisions": 18,
+    "GET /api/tenant/session-policy": 18,
+    "GET /api/slides/{id}/tile-access": 18,
+    "GET /api/slides/{id}/areas": 18,
+    "GET /api/rooms/slide:{id}/access": 18,
+    "GET /api/review-tasks/{id}/slides/{id}/shared-layer/ai": 18,
+    "GET /api/rooms/task:{id}/access": 18,
+    "GET /api/slides/{id}/tissue": 18,
+    "GET /api/slides/{id}/coverage": 18,
+    "GET /api/review-tasks/{id}/slides/{id}/threads": 18,
+    "GET /api/projects/{id}/slides/{id}/threads": 18,
+    "POST /api/auth/activity": 18,
+    "GET /api/review-tasks/{id}/slides/{id}/order": 18,
+    "POST /api/review-tasks/{id}/slides/{id}/shared-layer/ai/T3/confirm": 18,
+    "POST /api/review-tasks/{id}/slides/{id}/shared-layer/ai/T2/confirm": 18
+  }
+}
