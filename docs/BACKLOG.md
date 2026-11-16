@@ -756,6 +756,12 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Depends on IAM-012.
   Size: M.
 
+- [ ] IAM-029 · Prove the SSO email domain by DNS
+  IAM-028 (SSO from the sign-in screen) links an existing account when the workspace's email domain matches, and ADR 0352 (SSO links an existing account by verified email) leaves proving that the workspace owns the domain as a TODO. A workspace admin adds a DNS TXT record with a token, and the API checks it before `connect-saml` routes or links anyone for that domain.
+  Done when tests show an unproven domain neither routes `/api/auth/sso` nor links an account, a proven one does, a lookup failure keeps the last proof, and the ADR's TODO is answered.
+  Depends on IAM-028.
+  Size: S.
+
 - [ ] IAM-013 · SCIM provisioning
   Done when a SCIM test client creates, updates and deactivates users.
   Depends on IAM-012.
