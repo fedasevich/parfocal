@@ -61,6 +61,7 @@ from parfocal_api.tables import (
     lab_model_projects,
     lab_models,
     legal_holds,
+    linked_subjects,
     memberships,
     model_tiers,
     notification_mutes,
@@ -263,7 +264,13 @@ CASE_TABLES = {
     "case_requests",
     "emergency_grants",
 }
-AUTH_TABLES = {"platform_operators", "auth_logins", "sessions", "rate_counters"}
+AUTH_TABLES = {
+    "platform_operators",
+    "auth_logins",
+    "sessions",
+    "rate_counters",
+    "linked_subjects",
+}
 
 
 async def seed_audit_people(connection: AsyncConnection, seeded: Seeded) -> None:
@@ -374,6 +381,16 @@ async def seed_sso_connections(connection: AsyncConnection, seeded: Seeded) -> N
         )
     )
     seeded.markers.add(organisation)
+
+
+async def seed_linked_subjects(connection: AsyncConnection, seeded: Seeded) -> None:
+    await connection.execute(
+        insert(linked_subjects).values(
+            subject=f"sso-subject-{uuid.uuid4().hex[:12]}",
+            user_id=seeded.ids["user"],
+            sso_tenant_id=seeded.tenant_id,
+        )
+    )
 
 
 async def seed_notifications(connection: AsyncConnection, seeded: Seeded) -> None:
@@ -1546,6 +1563,7 @@ SEEDERS: dict[str, Seeder] = {
     "cases": seed_cases,
     "session_policies": seed_session_policies,
     "sso_connections": seed_sso_connections,
+    "linked_subjects": seed_linked_subjects,
     "audit_people": seed_audit_people,
     "audit_events": seed_audit_events,
     "service_accounts": seed_service_accounts,
