@@ -20,6 +20,7 @@ KEYS_SECRET = "parfocal-api-keys"
 CONFIG_SECRET = "parfocal-api-config"
 LOGIN_SECRET = "parfocal-api-login"
 SECRETS = (KEYS_SECRET, CONFIG_SECRET, LOGIN_SECRET)
+FUNCTION_SECRETS: dict[str, tuple[str, ...]] = {WEB_FUNCTION: SECRETS, INGEST_FUNCTION: SECRETS}
 PYTHON_VERSION = "3.14"
 REPOSITORY = repository_root(__file__)
 PROJECTS = ("packages/py-common", "apps/api", "workers/ingest")
@@ -87,11 +88,13 @@ def run_ingest() -> None:
     asyncio.run(main())
 
 
-app = modal.App(
-    APP_NAME,
-    image=app_image(),
-    secrets=[modal.Secret.from_name(name) for name in SECRETS],
+def secrets_of(function: str) -> list[modal.Secret]:
+    return [modal.Secret.from_name(name) for name in FUNCTION_SECRETS[function]]
+
+
+app = modal.App(APP_NAME, image=app_image())
+web = app.function(**WEB_OPTIONS, secrets=secrets_of(WEB_FUNCTION))(
+    modal.asgi_app(**WEB_ENDPOINT)(serve)
 )
-web = app.function(**WEB_OPTIONS)(modal.asgi_app(**WEB_ENDPOINT)(serve))
-ingest = app.function(**INGEST_OPTIONS)(run_ingest)
+ingest = app.function(**INGEST_OPTIONS, secrets=secrets_of(INGEST_FUNCTION))(run_ingest)
 FUNCTIONS: dict[str, modal.Function] = {WEB_FUNCTION: web, INGEST_FUNCTION: ingest}

@@ -24,15 +24,17 @@ Option 3. It is testable on the Mac and on the Linux CI runner without a Modal a
 - The child installs an audit hook (`sys.addaudithook`, which cannot be removed) that raises on socket connect, bind, send and name lookups and on every way of starting a program. This is a tripwire against Python-level code, not a boundary: native code in a reader can call the system directly. The boundary is the Modal sandbox below.
 - The worker polls the child's resident memory (from `/proc` on Linux, from `ps` elsewhere) and kills the process group when it passes `ingest_parse_memory_mib` (3072 MiB by default). It kills it at `ingest_parse_seconds` (1800 s by default). These end the check as `parse-too-large` or `parse-too-slow`, permanent failures with their own message. A crash or an unreadable reply ends it as `unreadable`. Kernel address-space limits are not used, because macOS does not enforce them and memory-mapped slides can trip them on legitimate files.
 - `ingest_parse_user` names a user to run the child as. It defaults to none, because the Modal containers run as root and a privilege drop there is untested.
-- The `identify`, `scan` and `validate` steps parse in the child. `index` and `derive`, result file parsing in `result_import` and patch export still read files in the worker. Moving them is follow-up work, and they only run after `validate` has opened the same file in the child.
+- The `identify`, `scan` and `validate` steps parse in the child. Since SEC-045 (isolate the remaining parse steps) so do `index`, `derive`, result file and heatmap parsing in `result_import`, and the slide reads of patch export, one child per slide.
+- A child hands larger results back as files in an output folder the worker made for that call. The worker opens only names it chose, with `O_NOFOLLOW` on the folder and the file, refuses anything that is not a regular file, and caps each file at 1 GiB. Cell arrays come back as `.npy` files loaded with `allow_pickle=False` and checked for dtype, length and index ranges. Shapes and counts come back as typed msgpack. Patch tiles come back as a zip whose member names must match the rows exactly. Anything else ends as unreadable or, for patch export, as a skipped slide.
+- With `ingest_parse_user` set, the worker hands the job folder and its subfolders to that user before starting the child, so the child can write its outputs.
 
 ## Modal side
 
 `PARSE_SANDBOX_OPTIONS` in `parfocal_deploy.modal_app` holds the settings the sandbox will be created with: `block_network=True`, a hard memory limit of `(3072, 3072)` MiB and a 1800 s lifetime, with no secrets. A test checks every name against `modal.Sandbox.create` in the installed Modal 1.6.3, which also offers `outbound_cidr_allowlist` and `outbound_domain_allowlist`. They cannot be combined with `block_network`, and they are not needed while the worker fetches objects for the child. Nothing is deployed or started by this change.
 
-- TODO: how the fetched file reaches the sandbox (a per-job `modal.Volume` or writing it through the sandbox file API) is not measured, and it decides the cost per check.
-- TODO: `Sandbox.create` has no user parameter in Modal 1.6.3, so a non-root child needs the image to add a user and the child command to switch to it.
-- TODO: move the app-level secrets onto the functions that need them, so no function of this app inherits them by default.
+- TODO: how the fetched file reaches the sandbox (a per-job `modal.Volume` or writing it through the sandbox file API) is not measured, and it decides the cost per check. The sandbox runner is not written and nothing is deployed.
+- Partly answered: `Sandbox.create` has no user parameter in Modal 1.6.3, so a non-root child needs the image to add a user and the child to start as it. The worker side exists (`ingest_parse_user` and the folder hand-over). TODO: the test that the parse user cannot read `/proc/<worker pid>/environ` runs only as root on Linux and has not run yet, and the image does not add the user.
+- Answered: the three secrets now attach to the `web` and `ingest` functions, unchanged, and `modal.App` carries none, so a sandbox or any new function of this app inherits no secret by default.
 
 ## Consequences
 

@@ -1,4 +1,6 @@
+import os
 import socket
+import sys
 import time
 import uuid
 from collections.abc import Mapping
@@ -90,6 +92,30 @@ async def test_a_parser_reads_only_the_keys_of_its_own_tenant_and_slide(tmp_path
     found = await probe("read_keys", {"keys": [UPLOAD_KEY, OWN_KEY, FOREIGN_KEY]}, tmp_path, store)
     assert found == {UPLOAD_KEY: "upload", OWN_KEY: "own slide", FOREIGN_KEY: "refused"}
     assert store.fetched == [UPLOAD_KEY, OWN_KEY]
+
+
+def readable_by_all(folder: Path) -> None:
+    folder.chmod(0o755)
+
+
+@pytest.mark.skipif(
+    sys.platform != "linux" or os.geteuid() != 0, reason="switching users needs root on Linux"
+)
+async def test_the_parse_user_cannot_read_the_worker_environment(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    sentinel = "parse-user-sentinel"
+    monkeypatch.setenv("PARFOCAL_TEST_SENTINEL", sentinel)
+    readable_by_all(tmp_path)
+    same = await probe("worker_environment", {"sentinel": sentinel}, tmp_path)
+    other = await probe(
+        "worker_environment",
+        {"sentinel": sentinel},
+        tmp_path,
+        limits=ParseLimits(user=os.environ.get("PARFOCAL_TEST_PARSE_USER", "nobody")),
+    )
+    assert same == {"read": True}
+    assert other == {"read": "PermissionError"}
 
 
 def test_a_forged_or_widened_token_grants_nothing() -> None:

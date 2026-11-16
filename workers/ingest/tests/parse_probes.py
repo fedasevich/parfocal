@@ -3,6 +3,7 @@ import socket
 import subprocess
 import time
 from collections.abc import Mapping
+from pathlib import Path
 from typing import Any
 
 from parfocal_common.ingest import Refusal
@@ -62,3 +63,11 @@ def refuse(_arguments: Mapping[str, Any], _storage: ScopedStorage) -> dict[str, 
 
 def crash(_arguments: Mapping[str, Any], _storage: ScopedStorage) -> dict[str, Any]:
     os._exit(3)
+
+
+def worker_environment(arguments: Mapping[str, Any], _storage: ScopedStorage) -> dict[str, Any]:
+    try:
+        with Path(f"/proc/{os.getppid()}/environ").open("rb") as handle:
+            return {"read": arguments["sentinel"].encode() in handle.read()}
+    except OSError as error:
+        return {"read": type(error).__name__}
