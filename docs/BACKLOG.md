@@ -3666,7 +3666,7 @@ Models run on demand as model runs that create result sets (JOBS) and nothing ru
 
 ## 23 AINUC · Whole-slide nuclei, typing and confidence
 
-- [ ] AINUC-000 · Research check
+- [x] AINUC-000 · Research check
   Pick the detector and typer per tier from current models (PathoSAM AIS, HoVer-NeXt, CellViT++, NuLite, InstanSeg) under the STACK-031 licence policy.
   Done when an ADR names them with MLEVAL numbers and the confidence display table of [ADR 0194](adr/0194-confidence-display-rules-and-evidence.md) is rerun for the chosen typer.
   Size: M.

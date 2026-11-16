@@ -313,3 +313,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0346](0346-server-embeddings-are-float16-tiles-in-the-slide-bucket.md) | Server embeddings are float16 tiles on a fixed grid in the slide bucket, and smart select snaps to a cached tile | Accepted | 2026-11-16 |
 | [0347](0347-per-workspace-saml-sso-through-zitadel.md) | Per-workspace SAML sign-in through the workspace's Zitadel organisation | Accepted | 2026-11-16 |
 | [0348](0348-a-modal-environment-and-a-tenant-key-prefix-per-preview.md) | A Modal environment and a tenant key prefix per preview | Accepted | 2026-11-16 |
+| [0349](0349-nucleus-detector-and-typer-per-tier.md) | PathoSAM AIS stays the nucleus detector and HoVer-NeXt the typer in every server tier, because no newer model has a held-out number here | Proposed | 2026-11-16 |

@@ -302,6 +302,13 @@ OPS-003 (environments) built a preview per pull request: its own Worker, Modal e
 
 - **A. Keep previews off until the first real user, and test pull requests locally (recommended).**
 - B. Turn them on now. An agent prepares the setup and the tofu plan, and you approve the spend.
+### 123. Whether agents may download newer nucleus models to score them
+
+AINUC-000 (nuclei detector and typer research check) kept PathoSAM AIS and HoVer-NeXt in ADR 0349 (nucleus detector and typer per tier) because they are the only models with held-out numbers here. CellViT++, NuLite, InstanSeg and a PathoSAM ViT-L AIS decoder were left unmeasured, because scoring them means downloading their weights from GitHub, Zenodo or Hugging Face (sizes not checked), which no agent did without your yes.
+
+- **A. Allow a follow-up task to download InstanSeg and the PathoSAM ViT-L decoder and score them on TNBC, CryoNuSeg and NuInsSeg on the Mac (recommended).**
+- B. Also allow CellViT++ and NuLite, which can only be typed on PanNuke, a set they report results on.
+- C. No downloads. Keep the line-up as it is.
 
 Your choice:
 
