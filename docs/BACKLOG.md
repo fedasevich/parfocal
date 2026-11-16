@@ -596,7 +596,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Depends on FOUND-036.
   Size: M.
 
-- [ ] FOUND-040 · The edge Worker and the dev bucket under make dev
+- [x] FOUND-040 · The edge Worker and the dev bucket under make dev
   FOUND-009 made `make dev` start the stack and sign in through the local Zitadel, but the Vite dev server does not yet run the edge Worker and its Durable Objects through the Cloudflare Vite plugin, and there is no remote binding to the `parfocal-dev` R2 bucket, so no slide opens in the viewer under `make dev`.
   Done when `make dev` opens a slide in the viewer through the edge Worker, the README says how, and the dev check signs in and draws a tile.
   Depends on FOUND-009.
