@@ -13,6 +13,7 @@ from parfocal_ml.gpu_pool import (
     function_options,
     validate_pools,
 )
+from parfocal_ml.priority_gate import Kind, check_lane
 
 APP_NAME = "parfocal-gpu-pool"
 PYTHON_VERSION = "3.14"
@@ -50,8 +51,11 @@ def pool_entry(pool: PoolLimits) -> Callable[[dict[str, object]], dict[str, obje
     family = pool.family.value
 
     def run(call: dict[str, object]) -> dict[str, object]:
-        kind = call.get("kind")
-        if kind != "probe":
+        kind = str(call.get("kind"))
+        check_lane(pool, kind)
+        if kind == Kind.WARM:
+            return {"family": family, "warm": True, **probe(0.0)}
+        if kind != Kind.PROBE:
             raise ValueError(f"{family} has no runner for {kind!r} yet")
         seconds = call.get("seconds", 0.0)
         reply = probe(float(seconds) if isinstance(seconds, int | float) else 0.0)
