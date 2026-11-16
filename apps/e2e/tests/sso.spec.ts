@@ -225,7 +225,10 @@ test.describe("per-workspace SSO", () => {
     expect(session.email).toBe("user1@example.com");
     expect(roleOf(session.subject)).toBe("reviewer");
     expect(
-      sql(`SELECT active_tenant_id FROM sessions WHERE subject = '${session.subject}' LIMIT 1`),
+      sql(
+        `SELECT active_tenant_id FROM sessions WHERE subject = '${session.subject}' ` +
+          "ORDER BY created_at DESC LIMIT 1",
+      ),
     ).toBe(tenantId);
   });
 
