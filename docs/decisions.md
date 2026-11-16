@@ -367,6 +367,16 @@ AITUM-003 (areas from the tumor map) shows each area with a likely size range, w
 
 Your choice:
 
+### 129. Who may map a view of a slide on the server
+
+AITUM-009 (Map this view asks the server for its tiles) sends each view tile to the GPU, so the route needs the right to run models and a project the person owns, the same as starting a tumor map ([ADR XXXX](adr/XXXX-the-view-map-calls-the-interactive-lane.md), the view map asks the interactive lane for one view tile at a time). Reviewers never run models, so on the real API they no longer see the "Map this view" panel. The fake API still shows it in the review workspace, as AITUM-004 (view-scoped map on demand) built it.
+
+- **A. Only researchers who own the project map a view, as now (recommended).**
+- B. Anyone who can read the slide maps a view, and the route counts the GPU seconds per person instead.
+- C. Reviewers map a view only on slides of their own review task.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 The temporary review checklist of 2026-11-14 is handled and deleted. What still waits is below.

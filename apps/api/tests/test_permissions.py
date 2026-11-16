@@ -112,6 +112,9 @@ from parfocal_common.model_runs import (
 from parfocal_common.object_store import ObjectStore, StorageLocation
 from parfocal_common.result_imports import result_set_prefix
 from parfocal_common.result_store import ObjectResultStore
+from parfocal_common.view_maps import reply_of as view_tile_reply
+from parfocal_common.view_maps import tile_size as view_tile_size
+from parfocal_common.warm_gate import WarmGate
 from parfocal_ingest.tissue import TissueMask
 from parfocal_ingest.workflow import INGEST
 
@@ -420,6 +423,22 @@ def link_site_serving() -> threading.Thread:
     thread = threading.Thread(target=LINK_SITE.server.serve_forever, daemon=True)
     thread.start()
     return thread
+
+
+INTERACTIVE_OPERATIONS = frozenset({"scoreViewMapTile"})
+
+
+class BlankViewMap:
+    def spawn(self, function_name: str, call: dict[str, object]) -> None:
+        return None
+
+    def call(self, function_name: str, call: dict[str, object]) -> dict[str, object]:
+        width, height = view_tile_size(4096, 2048, 0, 0)
+        return view_tile_reply(bytes(width * height), width, height)
+
+
+def answer_view_maps(api: ApiAs, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(api.app.state, "warm_gate", WarmGate(BlankViewMap()), raising=False)
 
 
 def trust_link_site(api: ApiAs, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -834,6 +853,7 @@ GUARDED_CALLS: dict[str, Callable[[Workspace], Call]] = {
     "warmSlideEmbedder": lambda w: Call(
         "POST", f"/api/slides/{w.slide}/embeddings/warm", {"device": "fast"}
     ),
+    "scoreViewMapTile": lambda w: Call("POST", f"/api/slides/{w.slide}/view-map/0/0"),
     "recordSlideCoverage": lambda w: Call(
         "POST",
         f"/api/slides/{w.slide}/coverage",
@@ -2562,6 +2582,8 @@ def test_every_guarded_endpoint_follows_the_matrix_for_every_role(
 ) -> None:
     if operation in LINK_OPERATIONS:
         trust_link_site(api, monkeypatch)
+    if operation in INTERACTIVE_OPERATIONS:
+        answer_view_maps(api, monkeypatch)
     permission = guarded_operations()[operation]
     workspace = workspaces[seat]
     status = send(api, principal_for(workspace, seat), GUARDED_CALLS[operation](workspace))

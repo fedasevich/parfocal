@@ -2245,11 +2245,13 @@ def test_another_workspace_cannot_answer_an_ask(api: ApiAs, seeded: tuple[Seeded
 class CountingPools:
     def __init__(self) -> None:
         self.spawned = 0
+        self.called = 0
 
     def spawn(self, function_name: str, call: dict[str, object]) -> None:
         self.spawned += 1
 
     def call(self, function_name: str, call: dict[str, object]) -> dict[str, object]:
+        self.called += 1
         return {}
 
 
@@ -2267,6 +2269,21 @@ def test_another_workspace_cannot_warm_the_embedder_for_a_slide(
         warmed = api(a.member()).post(path, json={"device": "slow"})
         assert warmed.status_code == 204, warmed.text
         assert pools.spawned == 1
+    finally:
+        del api.app.state.warm_gate
+
+
+def test_another_workspace_cannot_map_a_view_of_a_slide(
+    api: ApiAs, seeded: tuple[Seeded, Seeded]
+) -> None:
+    a, b = seeded
+    pools = CountingPools()
+    api.app.state.warm_gate = WarmGate(pools)
+    path = f"/api/slides/{a.ids['slide']}/view-map/0/0"
+    try:
+        refused = api(b.member()).post(path)
+        assert refused.status_code == 404, refused.text
+        assert pools.called == 0
     finally:
         del api.app.state.warm_gate
 

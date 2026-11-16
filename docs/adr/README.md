@@ -321,3 +321,4 @@ Status is one of `Proposed`, `Accepted`, `Rejected` or `Superseded by NNNN`.
 | [0354](0354-the-api-warms-the-embedder-with-the-modal-sdk.md) | The API warms the embedder with the Modal SDK | Accepted | 2026-11-16 |
 | [0355](0355-the-tumor-map-job-shares-the-detector-good-pool.md) | The tumor map job shares the detector-good T4 pool and stops at 4,000 tiles | Accepted | 2026-11-16 |
 | [0356](0356-the-tumor-map-worker-runs-the-resnet18-as-onnx-on-a-downloaded-original.md) | The tumor map worker runs the ResNet18 as ONNX and reads a downloaded original through OpenSlide | Accepted | 2026-11-16 |
+| [XXXX](XXXX-the-view-map-calls-the-interactive-lane.md) | The view map asks the interactive lane for one view tile at a time | Accepted | 2026-11-16 |

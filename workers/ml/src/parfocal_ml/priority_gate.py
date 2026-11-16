@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 
 from parfocal_common.embedding_cache import EMBEDDING_CONTENT_TYPE, tile_key
+from parfocal_common.view_maps import KIND as VIEW_MAP_KIND
 from parfocal_common.warm_gate import WARM_EVERY_SECONDS, Device, ModalPools, Pools, Warm, WarmGate
 from parfocal_ml.embedding_service import Encoder, TileReader, Writer, pack_embedding
 from parfocal_ml.gpu_pool import POOLS, Family, PoolLimits
@@ -21,9 +22,10 @@ class Kind(StrEnum):
     TYPE = "type"
     EMBEDDING_CACHE = "embedding-cache"
     TUMOR_MAP = "tumor-map"
+    VIEW_MAP = VIEW_MAP_KIND
 
 
-INTERACTIVE_KINDS = frozenset({Kind.WARM, Kind.EMBED, Kind.REGION_PASS})
+INTERACTIVE_KINDS = frozenset({Kind.WARM, Kind.EMBED, Kind.REGION_PASS, Kind.VIEW_MAP})
 JOB_KINDS = frozenset({Kind.DETECT, Kind.TYPE, Kind.EMBEDDING_CACHE, Kind.TUMOR_MAP})
 
 
@@ -59,9 +61,7 @@ class InteractiveGate(WarmGate):
         check_lane(self.pool, str(call.get("kind")))
         if call.get("kind") == Kind.WARM:
             raise WrongLaneError("warm goes through activate, which throttles it")
-        reply = self.pools.call(self.pool.function_name, call)
-        self.touch()
-        return reply
+        return super().request(call)
 
 
 @dataclass(frozen=True)

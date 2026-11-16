@@ -68449,6 +68449,155 @@ export const useWarmSlideEmbedder = <TError = Problem, TContext = unknown>(
   return useMutation(getWarmSlideEmbedderMutationOptions(options), queryClient);
 };
 
+export type scoreViewMapTileResponse200 = {
+  data: Blob;
+  status: 200;
+};
+
+export type scoreViewMapTileResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type scoreViewMapTileResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type scoreViewMapTileResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type scoreViewMapTileResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type scoreViewMapTileResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type scoreViewMapTileResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type scoreViewMapTileResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type scoreViewMapTileResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type scoreViewMapTileResponseSuccess = scoreViewMapTileResponse200 & {
+  headers: Headers;
+};
+export type scoreViewMapTileResponseError = (
+  | scoreViewMapTileResponse400
+  | scoreViewMapTileResponse401
+  | scoreViewMapTileResponse403
+  | scoreViewMapTileResponse404
+  | scoreViewMapTileResponse409
+  | scoreViewMapTileResponse422
+  | scoreViewMapTileResponse429
+  | scoreViewMapTileResponse500
+) & {
+  headers: Headers;
+};
+
+export type scoreViewMapTileResponse =
+  | scoreViewMapTileResponseSuccess
+  | scoreViewMapTileResponseError;
+
+export const getScoreViewMapTileUrl = (slideId: string, column: number, row: number) => {
+  return `/api/slides/${slideId}/view-map/${column}/${row}`;
+};
+
+/**
+ * @summary Score View Map Tile
+ */
+export const scoreViewMapTile = async (
+  slideId: string,
+  column: number,
+  row: number,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<scoreViewMapTileResponse> => {
+  return apiFetch<scoreViewMapTileResponse>(getScoreViewMapTileUrl(slideId, column, row), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getScoreViewMapTileMutationKey = () => ["scoreViewMapTile"] as const;
+
+export const getScoreViewMapTileMutationOptions = <TError = Problem, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof scoreViewMapTile>>,
+    TError,
+    ScoreViewMapTileMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof apiFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof scoreViewMapTile>>,
+  TError,
+  ScoreViewMapTileMutationVariables,
+  TContext
+> => {
+  const mutationKey = getScoreViewMapTileMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof scoreViewMapTile>>,
+    ScoreViewMapTileMutationVariables
+  > = (props) => {
+    const { slideId, column, row } = props ?? {};
+
+    return scoreViewMapTile(slideId, column, row, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ScoreViewMapTileMutationResult = NonNullable<
+  Awaited<ReturnType<typeof scoreViewMapTile>>
+>;
+
+export type ScoreViewMapTileMutationError = Problem;
+export type ScoreViewMapTileMutationVariables = { slideId: string; column: number; row: number };
+
+/**
+ * @summary Score View Map Tile
+ */
+export const useScoreViewMapTile = <TError = Problem, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof scoreViewMapTile>>,
+      TError,
+      ScoreViewMapTileMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof scoreViewMapTile>>,
+  TError,
+  ScoreViewMapTileMutationVariables,
+  TContext
+> => {
+  return useMutation(getScoreViewMapTileMutationOptions(options), queryClient);
+};
+
 export type listSlideAreasResponse200 = {
   data: SlideArea[];
   status: 200;

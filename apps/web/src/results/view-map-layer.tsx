@@ -1,9 +1,10 @@
 import { Trans, useLingui } from "@lingui/react/macro";
-import { useListSlideResultSets } from "@parfocal/api-client";
+import { useGetMe, useGetProject, useListSlideResultSets } from "@parfocal/api-client";
 import { Button } from "@parfocal/ui/components/button";
 import { useMemo, useState, useSyncExternalStore } from "react";
 import { useStageRect } from "../annotations/stage-size.ts";
 import { okData } from "../screens/placeholder.tsx";
+import { canRunModels } from "../viewer/run-options.ts";
 import {
   colorizeHeatmap,
   defaultHeatmapLook,
@@ -14,7 +15,7 @@ import {
   viewArea,
 } from "../viewer/viewer-engine.ts";
 import { mayBeHeatmap } from "./heatmap-layer.tsx";
-import { viewMapScorerFor } from "./view-map-scorer.ts";
+import { buildViewMapSource, type ViewMapSource, viewMapScorerFor } from "./view-map-scorer.ts";
 import {
   createViewMapSession,
   type ViewMapPhase,
@@ -113,31 +114,52 @@ type ViewMapLayerProps = {
   engine: ViewerEngine;
   stage: HTMLElement;
   slideId: string;
+  projectId?: string | undefined;
 };
 
-type SlideViewMapProps = Omit<ViewMapLayerProps, "slideId"> & {
+type SlideViewMapProps = Omit<ViewMapLayerProps, "projectId"> & {
   slide: { readonly width: number; readonly height: number };
+  source: ViewMapSource;
 };
 
-function SlideViewMap({ engine, stage, slide }: SlideViewMapProps) {
+function SlideViewMap({ engine, stage, slide, slideId, source }: SlideViewMapProps) {
   const [session] = useState(() => {
-    const scorer = viewMapScorerFor(slide);
+    const scorer = viewMapScorerFor(source, slide, slideId);
     return scorer === null ? null : createViewMapSession({ slide, scorer });
   });
   if (session === null) return null;
   return <ViewMapPanel engine={engine} stage={stage} session={session} />;
 }
 
-export function ViewMapLayer({ engine, stage, slideId }: ViewMapLayerProps) {
+function useViewMapSource(projectId: string | undefined): ViewMapSource {
+  const source = buildViewMapSource();
+  const me = okData(useGetMe({ query: { enabled: source === "server" } }).data);
+  const project = okData(
+    useGetProject(projectId ?? "", { query: { enabled: source === "server" && !!projectId } }).data,
+  );
+  if (source !== "server") return source;
+  const runner = canRunModels({
+    tenantRole: me?.workspaces.find((item) => item.tenant_id === me.active_tenant_id)?.role,
+    projectRole: project?.my_role,
+  });
+  return runner ? "server" : null;
+}
+
+export function ViewMapLayer({ engine, stage, slideId, projectId }: ViewMapLayerProps) {
   const sets = okData(useListSlideResultSets(slideId).data);
   const slide = useSyncExternalStore(engine.subscribeCamera, engine.getSlide);
-  if (sets === undefined || sets.some(mayBeHeatmap) || slide === null) return null;
+  const source = useViewMapSource(projectId);
+  if (sets === undefined || sets.some(mayBeHeatmap) || slide === null || source === null) {
+    return null;
+  }
   return (
     <SlideViewMap
-      key={`${slideId}:${slide.width}x${slide.height}`}
+      key={`${slideId}:${slide.width}x${slide.height}:${source}`}
       engine={engine}
       stage={stage}
       slide={slide}
+      slideId={slideId}
+      source={source}
     />
   );
 }
