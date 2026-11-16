@@ -21,6 +21,6 @@
     "@playwright/test": "1.65.1"
   },
   "coverage": {
-    "lines": 40
+    "lines": 91
   }
 }

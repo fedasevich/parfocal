@@ -72,6 +72,6 @@
     "react-dom": "^19.3.0"
   },
   "coverage": {
-    "lines": 40
+    "lines": 95
   }
 }
