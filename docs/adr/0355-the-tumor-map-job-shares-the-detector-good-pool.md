@@ -1,4 +1,4 @@
-# XXXX. The tumor map job shares the detector-good T4 pool and stops at 4,000 tiles
+# 0355. The tumor map job shares the detector-good T4 pool and stops at 4,000 tiles
 
 - Date: 2026-11-16
 - Status: Accepted
