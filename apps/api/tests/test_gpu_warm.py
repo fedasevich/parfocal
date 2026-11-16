@@ -65,7 +65,7 @@ def test_a_slow_device_sends_one_warm_call_and_a_fast_device_sends_none(
 
 
 @pytest.mark.db
-def test_the_warm_needs_a_readable_slide_and_more_than_view_rights(
+def test_the_warm_needs_a_slide_the_person_can_read(
     api: ApiAs, database: str, lab: Lab, modal: FakeModal
 ) -> None:
     other = make_lab(api, database)
@@ -75,6 +75,8 @@ def test_the_warm_needs_a_readable_slide_and_more_than_view_rights(
     assert warm(api, lab, "slow", who="outsider") in {403, 404}
     assert warm(api, lab, "unknown") == 422
     assert modal.spawned == []
+    assert warm(api, lab, "slow", who="viewer") == 204
+    assert len(modal.spawned) == 1
 
 
 @pytest.mark.db

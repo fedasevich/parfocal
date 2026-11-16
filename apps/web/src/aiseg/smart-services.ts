@@ -87,12 +87,14 @@ export function withEmbedderWarm(
   };
 }
 
-export const loadSmartServices: SmartServicesLoader = withEmbedderWarm((context) => {
+const loadWarmedRealServices = withEmbedderWarm(loadRealServices);
+
+export const loadSmartServices: SmartServicesLoader = (context) => {
   const config = readBuildConfig();
   if (import.meta.env.PARFOCAL_PUBLIC_DEV_TOOLS === "on" && config.fakeApi !== "off")
     return loadFakeServices(context);
-  return loadRealServices(context);
-});
+  return loadWarmedRealServices(context);
+};
 
 export function shareServices(loader: SmartServicesLoader): SmartServicesLoader {
   let shared: Promise<SmartServices> | null = null;

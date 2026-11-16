@@ -45657,8 +45657,7 @@
             "description": "Something went wrong"
           }
         },
-        "x-permission": "see-slides",
-        "x-permission-write": true
+        "x-permission": "see-slides"
       }
     },
     "/api/slides/{slide_id}/areas": {

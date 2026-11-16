@@ -19,13 +19,15 @@ AIP-007 (interactive priority gate) built the throttle that sends at most one `w
 
 Option 1. The pure part of the gate, with `Device`, `Warm`, the `Pools` protocol, `WarmGate` and `ModalPools`, moved to `parfocal_common.warm_gate`. `parfocal_ml.priority_gate.InteractiveGate` extends it with the lane check. `ModalPools` imports `modal` lazily, so the API package needs no new dependency. `parfocal_deploy.modal_app.serve` puts one `WarmGate(ModalPools())` on `app.state.warm_gate`. Without it, as in local dev and tests, the API uses an idle gate whose pools do nothing. Tests inject a fake client the same way.
 
-`POST /api/slides/{slide_id}/embeddings/warm` (`warmSlideEmbedder`) takes `{"device": "slow" | "fast"}`, needs `see-slides` with write rights and a slide the person can read, and always answers 204, so a caller cannot learn whether another workspace warmed the shared GPU. A Modal error is logged by type only, and the route still answers 204. The throttle still counts that attempt, so a missing GPU app is retried at most once per 240 s.
+`POST /api/slides/{slide_id}/embeddings/warm` (`warmSlideEmbedder`) takes `{"device": "slow" | "fast"}`, needs `see-slides` and a slide the person can read, and always answers 204, so a caller cannot learn whether another workspace warmed the shared GPU. A Modal error is logged by type only, and the route still answers 204. The throttle still counts that attempt, so a missing GPU app is retried at most once per 240 s.
 
-The web calls the route when the segmentation tool loads its services for a slide and the browser has no WebGPU adapter. That is the same check that makes the SAM engine fall back to WebAssembly, which is the slow path ADR 0003 (pilot platform architecture) means. A device with an adapter sends nothing.
+The web calls the route when the segmentation tool loads its services for a slide and the browser has no WebGPU adapter. That is the same check that makes the SAM engine fall back to WebAssembly, which is the slow path ADR 0003 (pilot platform architecture) means. A device with an adapter sends nothing. The warm goes out when the tool loads its real services, about 350 ms after the tool is switched on, and never from the fake services of the dev build.
 
 ## Consequences
 
 - The throttle lives in each API container's memory. `web` allows 4 containers, so at worst 4 warm calls go out per 240 s. Each one only spawns a container that is already warm or starts one that scales down after 300 s.
 - The API's Modal client is the container's own identity. If the API ever leaves Modal, it needs a Modal token or option 2.
 - Nothing was deployed with this change. The call from a real `web` container to `parfocal-gpu-pool` in environment `main` is untested until the GPU pool app is deployed there. TODO: check one warm after the first deploy.
+- `queue_minutes` adds other tenants' runs on the shared GPU through the `SECURITY DEFINER` function `parfocal_shared_queue_minutes`, which reads past row-level security only because its owner, the migration role, may. Locally that is the superuser `parfocal`, and on Neon the default role is a member of `neon_superuser`, as `knowledge/database.md` says. An owner without that right would see no other tenant and add 0, which leaks nothing.
+- Once deployed, each slow device that opens the tool starts an embedder container for up to 300 s while the `embed` runner is still a stub.
 - The `embed` runner in `parfocal_ml.modal_pool` still has no PathoSAM weights. Loading them is a later task.

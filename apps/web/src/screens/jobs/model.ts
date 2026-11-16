@@ -233,6 +233,13 @@ export function startedText(job: MyJob, by: string, today: Date): string {
 
 export type RunEstimate = { total: number; doneAround: string; perSlide: string };
 
+function queueAhead(model: ProjectModel): string {
+  if (model.runs_ahead === 0 && model.queue_minutes > 0)
+    return `Runs from other workspaces are ahead of yours, about ${model.queue_minutes} min.`;
+  const runs = model.runs_ahead === 1 ? "One run is" : `${model.runs_ahead} runs are`;
+  return `${runs} ahead of yours, about ${model.queue_minutes} min.`;
+}
+
 export function runEstimate(model: ProjectModel, slides: number, now: Date): RunEstimate {
   const total = model.minutes_per_slide * slides;
   const wait = model.host === "lab" ? 0 : model.queue_minutes;
@@ -242,7 +249,7 @@ export function runEstimate(model: ProjectModel, slides: number, now: Date): Run
       ? `${model.server} is not answering right now, so this run cannot start.`
       : model.host === "lab"
         ? `About ${model.minutes_per_slide} min a slide on ${model.server}, which answers now in ${model.latency_ms ?? 0} ms.`
-        : `About ${model.minutes_per_slide} min a slide on the ${model.server}. ${model.runs_ahead === 1 ? "One run is" : `${model.runs_ahead} runs are`} ahead of yours, about ${model.queue_minutes} min.`;
+        : `About ${model.minutes_per_slide} min a slide on the ${model.server}. ${queueAhead(model)}`;
   return { total, doneAround, perSlide };
 }
 
