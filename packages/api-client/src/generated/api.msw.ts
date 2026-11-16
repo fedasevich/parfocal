@@ -163,6 +163,7 @@ import type {
   SlideCopies,
   SlideCoverage,
   SlideDetail,
+  SlideEmbeddings,
   SlideFigure,
   SlideMoved,
   SlidePage,
@@ -16558,6 +16559,30 @@ export const getGetSlideTissueResponseMock = (
   ...overrideResponse,
 });
 
+export const getGetSlideEmbeddingsResponseMock = (
+  overrideResponse: Partial<Extract<SlideEmbeddings, object>> = {},
+): SlideEmbeddings => ({
+  slide_id: faker.string.uuid(),
+  encoder: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  dtype: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  dims: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() =>
+    faker.number.int(),
+  ),
+  level: faker.number.int(),
+  downsample: faker.number.float({ fractionDigits: 2 }),
+  tile: faker.number.int(),
+  level_width: faker.number.int(),
+  level_height: faker.number.int(),
+  columns: faker.number.int(),
+  rows: faker.number.int(),
+  tiles: faker.string.alpha({ length: { min: 10, max: 20 } }),
+  tile_count: faker.number.int(),
+  ...overrideResponse,
+});
+
+export const getGetSlideEmbeddingTileResponseMock = (): Blob =>
+  new Blob([new Uint8Array(faker.number.int({ min: 1, max: 64 }))]);
+
 export const getListSlideAreasResponseMock = (): SlideArea[] =>
   Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
     object: faker.string.alpha({ length: { min: 10, max: 20 } }),
@@ -24413,6 +24438,54 @@ export const getGetSlideTissueMockHandler = (
   );
 };
 
+export const getGetSlideEmbeddingsMockHandler = (
+  overrideResponse?:
+    | SlideEmbeddings
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<SlideEmbeddings> | SlideEmbeddings),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/slides/:slideId/embeddings",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetSlideEmbeddingsResponseMock(),
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getGetSlideEmbeddingTileMockHandler = (
+  overrideResponse?:
+    | Blob
+    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<Blob> | Blob),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/slides/:slideId/embeddings/:column/:row",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      const binaryBody =
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getGetSlideEmbeddingTileResponseMock();
+      return new HttpResponse(binaryBody, {
+        status: 200,
+        headers: { "Content-Type": "application/octet-stream" },
+      });
+    },
+    options,
+  );
+};
+
 export const getListSlideAreasMockHandler = (
   overrideResponse?:
     | SlideArea[]
@@ -24779,5 +24852,7 @@ export const getParfocalAPIMock = () => [
   getGetSlideCoverageMockHandler(),
   getRecordSlideCoverageMockHandler(),
   getGetSlideTissueMockHandler(),
+  getGetSlideEmbeddingsMockHandler(),
+  getGetSlideEmbeddingTileMockHandler(),
   getListSlideAreasMockHandler(),
 ];

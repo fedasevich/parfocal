@@ -250,6 +250,16 @@ OPS-019 (Zitadel adapter and tenant command) provisions and deprovisions a tenan
 
 Your choice:
 
+### 117. Which encoder the server embedding service runs
+
+AISEG-008 (server embedding service) built the cache, the API and the browser side, and the browser adopts a server embedding only when its own decoder pairs with the encoder that made it ([ADR 0346](adr/0346-server-embeddings-are-float16-tiles-in-the-slide-bucket.md), server embeddings as float16 tiles in the slide bucket). The browser decoder is PathoSAM ViT-B, and a ViT-L or ViT-H embedding does not fit it.
+
+- **A. The full precision PathoSAM ViT-B on a T4. It pairs with today's decoder and needs no new browser graph, and only the quantisation loss goes away (recommended).**
+- B. PathoSAM ViT-L, with its decoder exported as a second browser graph. Possibly better masks, not measured here, but a second decoder to ship and test.
+- C. No server encoding until a slow device is measured to need it.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 The temporary review checklist of 2026-11-14 is handled and deleted. What still waits is below.

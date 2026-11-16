@@ -16,6 +16,12 @@ export type SamRequest =
       readonly pixels: Float32Array<ArrayBuffer>;
     }
   | {
+      readonly type: "adopt";
+      readonly requestId: number;
+      readonly id: string;
+      readonly embedding: Float32Array<ArrayBuffer>;
+    }
+  | {
       readonly type: "prompt";
       readonly requestId: number;
       readonly id: string;

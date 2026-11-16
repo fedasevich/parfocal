@@ -20,6 +20,7 @@ export interface SamClientOptions {
 export interface SamClient {
   readonly ready: Promise<SamReady>;
   encode(id: string, pixels: Float32Array<ArrayBuffer>): Promise<SamEncoded>;
+  adopt(id: string, embedding: Float32Array<ArrayBuffer>): Promise<SamEncoded>;
   prompt(id: string, prompt: SamPrompt): Promise<SamPromptOutcome>;
   segmentAll(id: string): Promise<SamOutputs>;
   pool(id: string, outlines: readonly Float32Array[]): Promise<Float32Array[]>;
@@ -132,6 +133,13 @@ export function createSamClient(options: SamClientOptions): SamClient {
       const reply = await request(
         (requestId) => ({ type: "encode", requestId, id, pixels }),
         [pixels.buffer],
+      );
+      return reply.type === "encoded" ? reply.encoded : unexpected(reply);
+    },
+    async adopt(id, embedding) {
+      const reply = await request(
+        (requestId) => ({ type: "adopt", requestId, id, embedding }),
+        [embedding.buffer],
       );
       return reply.type === "encoded" ? reply.encoded : unexpected(reply);
     },

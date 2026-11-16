@@ -5412,6 +5412,22 @@ export interface SlideDetailsChange {
   label?: string | null;
 }
 
+export interface SlideEmbeddings {
+  slide_id: string;
+  encoder: string;
+  dtype: string;
+  dims: number[];
+  level: number;
+  downsample: number;
+  tile: number;
+  level_width: number;
+  level_height: number;
+  columns: number;
+  rows: number;
+  tiles: string;
+  tile_count: number;
+}
+
 export interface SlideMove {
   case_id: string;
   /**
@@ -67676,6 +67692,421 @@ export function useGetSlideTissue<
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getGetSlideTissueQueryOptions(slideId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type getSlideEmbeddingsResponse200 = {
+  data: SlideEmbeddings;
+  status: 200;
+};
+
+export type getSlideEmbeddingsResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getSlideEmbeddingsResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getSlideEmbeddingsResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getSlideEmbeddingsResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getSlideEmbeddingsResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getSlideEmbeddingsResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getSlideEmbeddingsResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getSlideEmbeddingsResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getSlideEmbeddingsResponseSuccess = getSlideEmbeddingsResponse200 & {
+  headers: Headers;
+};
+export type getSlideEmbeddingsResponseError = (
+  | getSlideEmbeddingsResponse400
+  | getSlideEmbeddingsResponse401
+  | getSlideEmbeddingsResponse403
+  | getSlideEmbeddingsResponse404
+  | getSlideEmbeddingsResponse409
+  | getSlideEmbeddingsResponse422
+  | getSlideEmbeddingsResponse429
+  | getSlideEmbeddingsResponse500
+) & {
+  headers: Headers;
+};
+
+export type getSlideEmbeddingsResponse =
+  | getSlideEmbeddingsResponseSuccess
+  | getSlideEmbeddingsResponseError;
+
+export const getGetSlideEmbeddingsUrl = (slideId: string) => {
+  return `/api/slides/${slideId}/embeddings`;
+};
+
+/**
+ * @summary Get Slide Embeddings
+ */
+export const getSlideEmbeddings = async (
+  slideId: string,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getSlideEmbeddingsResponse> => {
+  return apiFetch<getSlideEmbeddingsResponse>(getGetSlideEmbeddingsUrl(slideId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetSlideEmbeddingsQueryKey = (slideId: string) => {
+  return [`/api/slides/${slideId}/embeddings`] as const;
+};
+
+export const getGetSlideEmbeddingsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getSlideEmbeddings>>,
+  TError = Problem,
+>(
+  slideId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSlideEmbeddings>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetSlideEmbeddingsQueryKey(slideId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getSlideEmbeddings>>> = ({ signal }) =>
+    getSlideEmbeddings(slideId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: slideId !== null && slideId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getSlideEmbeddings>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetSlideEmbeddingsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getSlideEmbeddings>>
+>;
+export type GetSlideEmbeddingsQueryError = Problem;
+
+export function useGetSlideEmbeddings<
+  TData = Awaited<ReturnType<typeof getSlideEmbeddings>>,
+  TError = Problem,
+>(
+  slideId: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSlideEmbeddings>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSlideEmbeddings>>,
+          TError,
+          Awaited<ReturnType<typeof getSlideEmbeddings>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetSlideEmbeddings<
+  TData = Awaited<ReturnType<typeof getSlideEmbeddings>>,
+  TError = Problem,
+>(
+  slideId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getSlideEmbeddings>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSlideEmbeddings>>,
+          TError,
+          Awaited<ReturnType<typeof getSlideEmbeddings>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetSlideEmbeddings<
+  TData = Awaited<ReturnType<typeof getSlideEmbeddings>>,
+  TError = Problem,
+>(
+  slideId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSlideEmbeddings>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Slide Embeddings
+ */
+
+export function useGetSlideEmbeddings<
+  TData = Awaited<ReturnType<typeof getSlideEmbeddings>>,
+  TError = Problem,
+>(
+  slideId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSlideEmbeddings>>, TError, TData>>;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetSlideEmbeddingsQueryOptions(slideId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export type getSlideEmbeddingTileResponse200 = {
+  data: Blob;
+  status: 200;
+};
+
+export type getSlideEmbeddingTileResponse400 = {
+  data: Problem;
+  status: 400;
+};
+
+export type getSlideEmbeddingTileResponse401 = {
+  data: Problem;
+  status: 401;
+};
+
+export type getSlideEmbeddingTileResponse403 = {
+  data: Problem;
+  status: 403;
+};
+
+export type getSlideEmbeddingTileResponse404 = {
+  data: Problem;
+  status: 404;
+};
+
+export type getSlideEmbeddingTileResponse409 = {
+  data: Problem;
+  status: 409;
+};
+
+export type getSlideEmbeddingTileResponse422 = {
+  data: Problem;
+  status: 422;
+};
+
+export type getSlideEmbeddingTileResponse429 = {
+  data: Problem;
+  status: 429;
+};
+
+export type getSlideEmbeddingTileResponse500 = {
+  data: Problem;
+  status: 500;
+};
+
+export type getSlideEmbeddingTileResponseSuccess = getSlideEmbeddingTileResponse200 & {
+  headers: Headers;
+};
+export type getSlideEmbeddingTileResponseError = (
+  | getSlideEmbeddingTileResponse400
+  | getSlideEmbeddingTileResponse401
+  | getSlideEmbeddingTileResponse403
+  | getSlideEmbeddingTileResponse404
+  | getSlideEmbeddingTileResponse409
+  | getSlideEmbeddingTileResponse422
+  | getSlideEmbeddingTileResponse429
+  | getSlideEmbeddingTileResponse500
+) & {
+  headers: Headers;
+};
+
+export type getSlideEmbeddingTileResponse =
+  | getSlideEmbeddingTileResponseSuccess
+  | getSlideEmbeddingTileResponseError;
+
+export const getGetSlideEmbeddingTileUrl = (slideId: string, column: number, row: number) => {
+  return `/api/slides/${slideId}/embeddings/${column}/${row}`;
+};
+
+/**
+ * @summary Get Slide Embedding Tile
+ */
+export const getSlideEmbeddingTile = async (
+  slideId: string,
+  column: number,
+  row: number,
+  options?: Parameters<typeof apiFetch>[1],
+): Promise<getSlideEmbeddingTileResponse> => {
+  return apiFetch<getSlideEmbeddingTileResponse>(
+    getGetSlideEmbeddingTileUrl(slideId, column, row),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getGetSlideEmbeddingTileQueryKey = (slideId: string, column: number, row: number) => {
+  return [`/api/slides/${slideId}/embeddings/${column}/${row}`] as const;
+};
+
+export const getGetSlideEmbeddingTileQueryOptions = <
+  TData = Awaited<ReturnType<typeof getSlideEmbeddingTile>>,
+  TError = Problem,
+>(
+  slideId: string,
+  column: number,
+  row: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getSlideEmbeddingTile>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetSlideEmbeddingTileQueryKey(slideId, column, row);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getSlideEmbeddingTile>>> = ({ signal }) =>
+    getSlideEmbeddingTile(slideId, column, row, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled:
+      slideId !== null &&
+      slideId !== undefined &&
+      column !== null &&
+      column !== undefined &&
+      row !== null &&
+      row !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getSlideEmbeddingTile>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetSlideEmbeddingTileQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getSlideEmbeddingTile>>
+>;
+export type GetSlideEmbeddingTileQueryError = Problem;
+
+export function useGetSlideEmbeddingTile<
+  TData = Awaited<ReturnType<typeof getSlideEmbeddingTile>>,
+  TError = Problem,
+>(
+  slideId: string,
+  column: number,
+  row: number,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getSlideEmbeddingTile>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSlideEmbeddingTile>>,
+          TError,
+          Awaited<ReturnType<typeof getSlideEmbeddingTile>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetSlideEmbeddingTile<
+  TData = Awaited<ReturnType<typeof getSlideEmbeddingTile>>,
+  TError = Problem,
+>(
+  slideId: string,
+  column: number,
+  row: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getSlideEmbeddingTile>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSlideEmbeddingTile>>,
+          TError,
+          Awaited<ReturnType<typeof getSlideEmbeddingTile>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetSlideEmbeddingTile<
+  TData = Awaited<ReturnType<typeof getSlideEmbeddingTile>>,
+  TError = Problem,
+>(
+  slideId: string,
+  column: number,
+  row: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getSlideEmbeddingTile>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get Slide Embedding Tile
+ */
+
+export function useGetSlideEmbeddingTile<
+  TData = Awaited<ReturnType<typeof getSlideEmbeddingTile>>,
+  TError = Problem,
+>(
+  slideId: string,
+  column: number,
+  row: number,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getSlideEmbeddingTile>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof apiFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetSlideEmbeddingTileQueryOptions(slideId, column, row, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;
