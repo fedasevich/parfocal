@@ -305,6 +305,16 @@ OPS-003 (environments) built a preview per pull request: its own Worker, Modal e
 
 Your choice:
 
+### 123. Whether to give the load workflow a production token and a session
+
+TEST-010 (load test tooling) added the `load` workflow, which runs the Locust scenarios against `https://app.parfocal.eu` under a cap of 2 users for 60 seconds ([ADR XXXX](adr/XXXX-load-tests-run-against-production-under-a-tiny-cap.md), load tests against production under a tiny cap). Without secrets it measures only `/api/health`. The API scenario also lists projects and searches, the tile scenario reads slide ranges through the Worker and the room scenario joins a room and times pings, and those need a read-only service token with `see-slides`, a few slide ids from your test workspace and a member session cookie, stored as the `production` environment secrets `PARFOCAL_LOAD_TOKEN` and `PARFOCAL_LOAD_SESSION` and the variables `PARFOCAL_LOAD_SLIDES` and `PARFOCAL_LOAD_ROOM`. A default run costs about a thousandth of a dollar.
+
+- **A. An agent mints a read-only service token in your test workspace and you add it with two slide ids, leaving rooms for later, because a session cookie expires (recommended).**
+- B. Add all four, including a session cookie you copy from the browser after signing in.
+- C. Keep the workflow health-only until OPS-012 (load and soak testing).
+
+Your choice:
+
 ## The review column, what each task waits for
 
 The temporary review checklist of 2026-11-14 is handled and deleted. What still waits is below.
