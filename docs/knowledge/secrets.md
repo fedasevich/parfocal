@@ -21,6 +21,7 @@ Deployed code reads secrets only from its environment, which Modal fills from th
 | `ZITADEL_CLIENT_SECRET` | Modal `parfocal-api-config` | bootstrap from the OpenTofu output | Regenerate the client secret through the identity module, rerun bootstrap, which always rewrites the config secret, then redeploy |
 | `STORAGE_SECRET_ACCESS_KEY` | Modal `parfocal-api-config` | bootstrap from `R2_SECRET_ACCESS_KEY` | Make a new R2 token, rerun bootstrap with it in the shell, redeploy, update the GitHub copies, then delete the old token |
 | `ZITADEL_LOGIN_TOKEN` | Modal `parfocal-api-login` | the owner by hand | Make a new personal access token for the login service user, replace it in the secret, redeploy, then delete the old token in Zitadel |
+| `ZITADEL_ADMIN_TOKEN` | the operator's shell for the tenant command only, not set for production yet | the owner by hand, for a drill or a provisioning run ([tenant-provisioning.md](tenant-provisioning.md)) | Make a new personal access token for the provisioning service user, then delete the old token in Zitadel |
 | `MODAL_PROXY_TOKEN_ID` | the Worker | bootstrap from the shell | Make a new proxy auth token in the Modal dashboard, write both halves to the Worker, then delete the old token |
 | `MODAL_PROXY_TOKEN_SECRET` | the Worker | bootstrap from the shell | Rotates with `MODAL_PROXY_TOKEN_ID` |
 | `TURNSTILE_SECRET_KEY` | the Worker | bootstrap when set in the shell | Rotate the widget secret in the Cloudflare dashboard and write it to the Worker |
