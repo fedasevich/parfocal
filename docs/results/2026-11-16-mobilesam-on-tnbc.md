@@ -105,5 +105,5 @@ The MobileSAM encoder graph is 28.0 MB. Its run took 2,258 s for 27,055 decodes,
 
 ## Follow-ups
 
-- A fine-tune of MobileSAM or EdgeSAM on PathoSAM's training sets, then this run again. That is a GPU training run, decision XXX in `docs/decisions.md`.
+- A fine-tune of MobileSAM or EdgeSAM on PathoSAM's training sets, then this run again. That is a GPU training run, decision 133 in `docs/decisions.md`.
 - WebAssembly and WebGPU timings of the MobileSAM encoder in Chrome were not taken, because the accuracy rules it out first.

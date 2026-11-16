@@ -83,7 +83,7 @@ Rules that follow.
 - The Best interactive row of ADR 0202 changes from ViT-L to ViT-B fp32 on the server. The model registry in `parfocal_api.model_registry` already keeps the three ViT-L rows at status `candidate`, which matches rule 1, so this ADR changes no code. A follow-up points the Best interactive default at the ViT-B encoder where it still names ViT-L.
 - The held-out mean over three sets still comes only from the POC. Running CryoNuSeg and NuInsSeg in this harness is the follow-up the interactive protocol result already names, `TODO`.
 - The Best row is the server encoder that decision 117 (which encoder the server embedding service runs) recommends, the fp32 ViT-B on a T4 writing the float16 tiles of ADR 0346. The `embedder` pool is still a stub per ADR 0346, so Best runs only once that decision is taken and the pool gets real weights.
-- Measuring the ViT-L encoder and AIS decoder needs a 1.25 GB download, which decision 117 and decision 123 (whether agents may download newer nucleus models) already ask about. Fine-tuning a small SAM needs a GPU run, decision XXX in `docs/decisions.md`.
+- Measuring the ViT-L encoder and AIS decoder needs a 1.25 GB download, which decision 117 and decision 123 (whether agents may download newer nucleus models) already ask about. Fine-tuning a small SAM needs a GPU run, decision 133 in `docs/decisions.md`.
 - Licence status is unchanged from ADR 0202: PathoSAM weights `TODO` and trained on non-commercial data. MobileSAM code is Apache-2.0 and its checkpoint licence `TODO`, per ADR 0042, not re-read here.
 
 ## References

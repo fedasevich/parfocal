@@ -387,7 +387,7 @@ AISEG-014 (find more like these, exemplar prompting) found the gesture is a no-g
 
 Your choice:
 
-### XXX. Whether to fine-tune a small SAM on pathology for a fast interactive tier
+### 133. Whether to fine-tune a small SAM on pathology for a fast interactive tier
 
 AISEG-000 (interactive segmentation research check) put PathoSAM ViT-B on every interactive tier and left Fast empty in [ADR XXXX](adr/XXXX-interactive-encoder-and-decoder-per-tier.md) (interactive encoder and decoder per tier). Generic MobileSAM encodes six times faster on the CPU but scores 0.573 on a TNBC click against 0.852 for PathoSAM, and no small SAM fine-tuned on pathology was found ([result](results/2026-11-16-mobilesam-on-tnbc.md)). The ViT-L download is already asked in decisions 117 and 123.
 
