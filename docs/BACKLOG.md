@@ -536,13 +536,13 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Depends on FOUND-025.
   Size: L.
 
-- [ ] FOUND-027 · Refresh the tooling pins
+- [x] FOUND-027 · Refresh the tooling pins
   [The tooling re-check](results/2026-11-03-tooling-recheck.md) found Ruff 0.17 and uv 0.13 outside the ranges in `pyproject.toml` and the exact JavaScript pins (pnpm, Turborepo, Biome, Oxlint, oxlint-tsgolint, Lefthook, commitlint, Playwright) behind by minor or patch releases. Raise them together, widen `uv_build` to 0.13, fix what new Biome and Ruff rules report, and keep TypeScript on 7.
   Done when the lockfiles carry the new versions and `pnpm verify` and the golden-image suite are green.
   Depends on FOUND-000.
   Size: S.
 
-- [ ] FOUND-028 · CI runner image for Ubuntu 26.04
+- [x] FOUND-028 · CI runner image for Ubuntu 26.04
   GitHub moves `ubuntu-latest` from Ubuntu 24.04 to 26.04 between 2026-10-19 and 2026-11-19, and every CI job uses `ubuntu-latest`. Run the workflows once on `ubuntu-26.04`, then either move to it explicitly or pin `ubuntu-24.04` until the golden-image suite passes on 26.04, so the image changes only on purpose.
   Done when every job names an explicit Ubuntu version and CI is green on it.
   Depends on FOUND-000.
@@ -553,7 +553,7 @@ Cross-cutting criteria for every slot: maturity and maintenance, typed APIs, tes
   Done when the budget check passes with at least 10,000 bytes spare and the E2E suite stays green.
   Size: S.
 
-- [ ] FOUND-030 · Bundle analyzer report
+- [x] FOUND-030 · Bundle analyzer report
   Nobody can see what each chunk of `apps/web` holds, so a heavy import into the first page shows up only when the budget in `perf-budgets.json` fails. Add a build mode that writes a treemap and a JSON summary of every chunk with its modules and gzip size, and upload both as a CI artifact on each pull request.
   Done when one command builds the report locally, CI attaches it to pull requests, and the summary names the largest modules of the first-page chunk.
   Size: S.
@@ -691,7 +691,7 @@ The thinnest end-to-end slice. Every piece is minimal and later epics deepen it.
   Done when STACK-023 and STACK-028 are confirmed or revised in an ADR.
   Both confirmed in [ADR 0041](adr/0041-identity-and-authorization-rechecked.md).
 
-- [ ] IAM-001 · IdP deployment and configuration
+- [x] IAM-001 · IdP deployment and configuration
   The Zitadel config as an OpenTofu module: the project, a confidential client for the API's BFF login ([ADR 0003](adr/0003-pilot-platform-architecture.md)), and the login policy with TOTP and WebAuthn. Staging is dropped ([ADR 0331](adr/0331-no-staging-environment.md), no staging environment), so the module is proved on the local Zitadel that `make dev` starts (FOUND-009, local development environment). Applying it to the production organisation is out of scope and belongs to OPS-001 (base infrastructure as code).
   Done when `infra/tofu/idp-scratch/run.sh` applies the module from scratch to that local container twice, with an empty second plan and `check.py` passing each time, and the `idp` CI job runs it by starting that container.
   Depends on STACK-028.
@@ -4471,7 +4471,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when STACK-012 is confirmed and the test pyramid with ownership per level is written as an ADR.
   Size: S.
 
-- [ ] TEST-001 · Unit test setup for TS and Python
+- [x] TEST-001 · Unit test setup for TS and Python
   Done when both run in CI with coverage reports and a minimum coverage gate per package.
   Size: M.
 
@@ -4502,7 +4502,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Depends on TILES-006.
   Size: M.
 
-- [ ] TEST-007 · Memory and leak suite
+- [x] TEST-007 · Memory and leak suite
   Slide switches, renderer switches, workspace switches and long review sessions with heap snapshots. Includes `CMU-1.svs` from the `formats` fixture group, which VIEW-030 left untested ([ADR 0169](adr/0169-walking-skeleton-retrospective.md)).
   Done when the 20-slide test runs nightly on hosted runners with software rendering and a pass threshold.
   Size: M.
@@ -4552,7 +4552,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   No real PHI in any fixture, generated patient names marked as synthetic.
   Done when a scanner flags non-synthetic names in fixtures.
 
-- [ ] TEST-017 · Flaky test management
+- [x] TEST-017 · Flaky test management
   Quarantine with an issue link and an expiry date.
   Done when quarantined tests are reported weekly.
   Size: S.
@@ -4637,7 +4637,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when the hidden panel test passes when run alone and asserts the accessible name of the tab.
   Size: S.
 
-- [ ] TEST-033 · The axe scan of a route does not depend on test order
+- [x] TEST-033 · The axe scan of a route does not depend on test order
   `apps/web/e2e/a11y.ts` scans each route once per worker, in the state the first test to finish there left it, and the web specs run fully parallel. A violation that shows only in another state of the route, such as the hidden side panel of TEST-032 (the floating side panel tab is named by what it shows), stays unseen until the order changes and then turns an unrelated run red.
   Done when the scan key holds enough of the page state that the hidden panel is scanned in a full run, or a spec scans the known states on purpose, and a full local run reports the same violations as each spec run alone.
   Size: M.
@@ -4669,7 +4669,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Done when `pnpm verify` prints the draft count per area and the total, a test checks the count against a fixture folder, and `knowledge/draft-calls.md` points to the script.
   Size: S.
 
-- [ ] TEST-039 · Local Zitadel for the end-to-end suite
+- [x] TEST-039 · Local Zitadel for the end-to-end suite
   The CI `e2e` job signs in at the production Zitadel instance with a test user, which touches production on every run and gets worse once sign-up specs create users. `infra/tofu/idp-scratch` already boots Zitadel in Docker and applies the production `zitadel-identity` module with no credential. Turn it into a compose profile that stays up, point `apps/e2e` and the CI job at it, and seed the test user there. Start with a short spike, because sign-in through the app's own screens on the Zitadel session API ([ADR 0294](adr/0294-native-sign-up-and-sign-in-through-zitadel-session-api.md), native sign-up and sign-in) is untried on the container.
   Done when the `e2e` job passes with no `ZITADEL_*` secret and no request to `zitadel.cloud`, and a sign-up spec creates and removes a user on the local instance.
   Size: M.
