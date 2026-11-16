@@ -1,7 +1,10 @@
 {
-  "recorded": "2026-11-16, apps/e2e/tests/session-requests.spec.ts, 6 rounds of 3 slides, Vite dev server",
-  "busiest_minutes": [635, 643, 612],
-  "answered_routes": {
+  "recorded": "2026-11-16 against the local stack and the Vite dev server, rate_counters rows of the test user, full calendar minutes only",
+  "full_minutes": {
+    "session-requests.spec.ts, open, jump, pan and two decisions per slide": 643,
+    "main-paths.spec.ts, open, jump and two decisions per slide": 1474
+  },
+  "answered_routes_of_six_session_rounds": {
     "GET /api/review-tasks/{id}/slides/{id}/check-status": 162,
     "GET /api/review-tasks/{id}/slides/{id}/shared-layer": 72,
     "GET /api/review-tasks/{id}": 54,
@@ -28,6 +31,5 @@
     "GET /api/review-tasks/{id}/slides/{id}/order": 18,
     "POST /api/review-tasks/{id}/slides/{id}/shared-layer/ai/T3/confirm": 18,
     "POST /api/review-tasks/{id}/slides/{id}/shared-layer/ai/T2/confirm": 18
-  },
-  "counted_by": "rate_counters rows of the test user, one per calendar minute"
+  }
 }

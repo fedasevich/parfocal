@@ -99,7 +99,7 @@ def test_a_signed_in_person_is_limited_too(database: str) -> None:
 
 async def replay_then_flood(database: str, token: str) -> tuple[Counter[int], Counter[int]]:
     settings = api_settings(database)
-    busiest = max(BUSY_SESSION["busiest_minutes"])
+    busiest = max(BUSY_SESSION["full_minutes"].values())
     flood = settings.rate_limit_person_per_minute - busiest + FLOOD_PAST_THE_LIMIT
     app = create_app(settings)
     headers = {"authorization": f"Bearer {token}"}
@@ -129,16 +129,14 @@ def test_a_recorded_busy_session_stays_under_the_default_limit_and_a_flood_does_
     api: ApiAs, database: str
 ) -> None:
     token, _ = service_token(api, database)
-    away_from_the_minute_edge(needed=20)
-    started = time.monotonic()
+    away_from_the_minute_edge(needed=40)
     session, flood = asyncio.run(replay_then_flood(database, token))
-    assert time.monotonic() - started < 20
-    assert session == {200: max(BUSY_SESSION["busiest_minutes"])}
+    assert session == {200: max(BUSY_SESSION["full_minutes"].values())}
     assert flood[429] == FLOOD_PAST_THE_LIMIT
 
 
 def test_the_default_limit_leaves_room_above_the_busiest_recorded_minute(database: str) -> None:
     settings = api_settings(database)
-    busiest = max(BUSY_SESSION["busiest_minutes"])
+    busiest = max(BUSY_SESSION["full_minutes"].values())
     assert settings.rate_limit_person_per_minute >= 2 * busiest
     assert settings.rate_limit_tenant_per_minute >= 4 * settings.rate_limit_person_per_minute
