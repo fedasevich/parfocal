@@ -128,7 +128,7 @@ async def get_slide_embedding_tile(
     "/warm",
     operation_id="warmSlideEmbedder",
     status_code=204,
-    **require(Permission.SEE_SLIDES),
+    **require(Permission.SEE_SLIDES, write=True),
 )
 async def warm_slide_embedder(
     slide_id: uuid.UUID,

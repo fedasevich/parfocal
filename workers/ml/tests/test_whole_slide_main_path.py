@@ -128,12 +128,15 @@ def a_prefix() -> str:
 
 def test_a_stand_in_whole_slide_run_stays_within_budget():
     slide = nuclei_slide(*CI_SLIDE)
+    load_before = os.getloadavg()
     runs = [
         asyncio.run(whole_slide_run(slide, MemoryStore(), a_prefix())) for _ in range(CI_SAMPLES)
     ]
     assert all(run.cells == runs[0].cells > 0 for run in runs)
     fastest_ms = min(run.seconds for run in runs) * 1000
     print(f"stand-in whole-slide run of {CI_SLIDE}, fastest of {CI_SAMPLES}: {fastest_ms:.0f} ms")
+    if load_before[0] > (os.cpu_count() or 1):
+        pytest.skip(f"Load average {load_before[0]:.1f} is above the core count")
     assert fastest_ms <= budget_limit("app.model-run-stand-in-ms")
 
 
