@@ -2,6 +2,10 @@
 
 Newest entries on top. One line per piece of work, naming the backlog ID where there is one and linking the result. This file is append-only.
 
+## 2026-11-16
+
+- OPS-019 Zitadel adapter and tenant command, provision and deprovision tested against the local Zitadel, drill run named in the runbook as TODO.
+
 ## 2026-11-15
 
 - After the weekly reset six more tasks merged into the train. SEC-014 (backups and restore) in review: restore_check dumps, restores into a scratch database and compares every table, 121 tables and 17386 rows matched locally, a monthly workflow is written and never run, and the slide buckets get a 7-day lock under t/ with MinIO version restore tests. Decisions 114 (where the monthly dump goes) and 115 (how long the lock keeps tenant objects) ask the owner. AISEG-016 (prompt-pass fallback) in progress: fallback and prompt pass built with 10 tests, the TNBC PQ test is not built, TODO which POC number is the TNBC stain-seed contour row (doc 26 gives 0.752 on TNBC, 0.514 is on dev). OPS-010 (tenant provisioning) in review: provision and deprovision against local Postgres, MinIO and a fake identity provider, OPS-019 covers the Zitadel adapter and command. TILES-002 (CDN) in review: Worker range cache on the tile route, warm p95 10.1 ms locally at 0 ms RTT and 33.0 ms at 20 ms RTT, HTTP/3 in tofu not applied, TILES-009 covers the stale same-size rewrite. OPS-018 (worker SLI events) in review: ingest and model-run jobs write SLI batches, only automatic pre-reads count, a realtime SLO, ADR 0344, traces still need an OpenTelemetry SDK ADR. OPS-004 (database operations) in progress: migration 0122 sets annotation autovacuum, load test read p95 191 to 356 ms at load 4 against a 250 ms target, guarded at 750 ms for now.

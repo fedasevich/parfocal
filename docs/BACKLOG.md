@@ -4323,7 +4323,7 @@ Scopes: personal (follows the user), this device (stays with the computer), set 
   Account-level caps and alerts were set on 2026-10-31 under [ADR 0115](adr/0115-production-access-and-spend-caps.md), with the table in [knowledge/platform.md](knowledge/platform.md). Budgets per environment, cost dashboards and lifecycle rules are still open.
   Size: M.
 
-- [ ] OPS-019 · A Zitadel adapter and a command for tenant provisioning
+- [x] OPS-019 · A Zitadel adapter and a command for tenant provisioning
   OPS-010 provisions and deprovisions a tenant against local Postgres, MinIO and a fake identity provider in `apps/api/src/parfocal_api/tenant_provisioning.py`. A real Zitadel adapter and a command-line entry point are still missing.
   Done when the command provisions and deprovisions a tenant against the local Zitadel from FOUND-009 (make dev) in a test, and its runbook names the drill environment run.
   Depends on OPS-010.
