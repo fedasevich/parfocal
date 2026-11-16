@@ -327,7 +327,7 @@ Your choice:
 
 ### 125. Whether to sign in for gated foundation models to test a better tumor map
 
-AITUM-000 (tumor map research check) kept the MONAI CAMELYON ResNet18 as the tumor model in ADR XXXX (the v1 tumor model and its evaluation), because no foundation-model probe could be measured. H-optimus-0, UNI2-h, Virchow2 and Prov-GigaPath all sit behind a Hugging Face access form, which needs your account, and UNI2-h and Virchow2 also need an institutional email and allow only non-commercial research.
+AITUM-000 (tumor map research check) kept the MONAI CAMELYON ResNet18 as the tumor model in ADR 0351 (the v1 tumor model and its evaluation), because no foundation-model probe could be measured. H-optimus-0, UNI2-h, Virchow2 and Prov-GigaPath all sit behind a Hugging Face access form, which needs your account, and UNI2-h and Virchow2 also need an institutional email and allow only non-commercial research.
 
 - **A. Accept the H-optimus-0 terms on your Hugging Face account and put a read token in `.env`, so a follow-up task downloads its weights (about 1.1B parameters, file size not stated) and the CAMELYON16 training slides it needs (size `TODO`, the disk is short), trains its probe and scores it on test slides on the Mac (recommended, Apache-2.0 and the only one that allows deployed use).**
 - B. Also request UNI2-h and Virchow2 with an institutional email, for a thesis comparison only.

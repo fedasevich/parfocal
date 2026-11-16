@@ -51,6 +51,8 @@ Bootstrap writes `parfocal-api-keys` only when it is missing, and it then genera
 | `replace-key TILE_TOKEN_KEY` or `ROOM_TOKEN_KEY` | The same list in the Worker through `wrangler secret bulk` on stdin, then in the secret |
 | `drop-old-keys NAME` | Keeps only the first key, in the Worker first for a token key, then in the secret |
 | `reset-app-password` | The `parfocal_app` password on the direct owner connection, then `DATABASE_URL` |
+| `PARFOCAL_LOAD_TOKEN` | GitHub repository secret, not set yet (decision 124) | the owner, by hand | Make a new token for the load test user and replace the secret, nothing else uses it |
+| `PARFOCAL_LOAD_SESSION` | GitHub repository secret, not set yet (decision 124) | the owner, by hand | Sign the load test user in again and replace the secret, nothing else uses it |
 
 Every command that changes the secret needs a redeploy afterwards. `add-master-key`, `rewrap` and `retire-master-key` read the stored keyring and the tenant key counts in a short-lived Modal app, `parfocal-key-rotation`, which mounts the three API secrets and returns only `MASTER_KEYS` and the counts. `replace-key` and `drop-old-keys` read the one key list they change through the same app.
 

@@ -55,5 +55,5 @@ The run, including the sanity check, took 8.9 s on MPS.
 
 ## Follow-ups
 
-- ADR XXXX (the v1 tumor model and its evaluation) uses this as the one measured number for the MONAI model on a test slide.
+- ADR 0351 (the v1 tumor model and its evaluation) uses this as the one measured number for the MONAI model on a test slide.
 - TODO: lesion-level FROC and Dice on at least three CAMELYON16 test slides, including border pixels, which is MLEVAL-005.
