@@ -94,6 +94,10 @@ async def test_a_parser_reads_only_the_keys_of_its_own_tenant_and_slide(tmp_path
     assert store.fetched == [UPLOAD_KEY, OWN_KEY]
 
 
+def first_environment_entry() -> str:
+    return Path("/proc/self/environ").read_bytes().split(b"\0")[0].decode()
+
+
 def readable_by_all(folder: Path) -> None:
     folder.chmod(0o755)
 
@@ -101,11 +105,8 @@ def readable_by_all(folder: Path) -> None:
 @pytest.mark.skipif(
     sys.platform != "linux" or os.geteuid() != 0, reason="switching users needs root on Linux"
 )
-async def test_the_parse_user_cannot_read_the_worker_environment(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    sentinel = "parse-user-sentinel"
-    monkeypatch.setenv("PARFOCAL_TEST_SENTINEL", sentinel)
+async def test_the_parse_user_cannot_read_the_worker_environment(tmp_path: Path) -> None:
+    sentinel = first_environment_entry()
     readable_by_all(tmp_path)
     same = await probe("worker_environment", {"sentinel": sentinel}, tmp_path)
     other = await probe(

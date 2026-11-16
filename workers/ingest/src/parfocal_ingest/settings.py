@@ -30,3 +30,4 @@ class IngestSettings(StorageSettings):
     )
     ingest_parse_seconds: Annotated[float, Field(gt=0)] = PARSE_SECONDS
     ingest_parse_user: str | None = None
+    ingest_parse_launcher: str | None = None
