@@ -1,4 +1,6 @@
+import json
 import uuid
+from pathlib import Path
 
 import numpy as np
 from test_tumor_map import ArraySlide, CentreScorer
@@ -8,8 +10,17 @@ from parfocal_ml.tumor_map_job import SlideImage
 
 DOWNSAMPLE = 16
 TISSUE_RED = 60
+STORED_SLIDE = "CMU-1-Small-Region.svs"
 
-__all__ = ["CentreScorer", "MemoryStore", "fixture_red", "fixture_slide", "opener"]
+__all__ = [
+    "STORED_SLIDE",
+    "CentreScorer",
+    "MemoryStore",
+    "fixture_red",
+    "fixture_slide",
+    "levels_json",
+    "opener",
+]
 
 
 class MemoryStore:
@@ -45,6 +56,18 @@ def fixture_slide(red: np.ndarray | None = None) -> SlideImage:
         mpp=0.25,
         level_count=8,
     )
+
+
+def levels_json(path: Path) -> bytes:
+    import openslide
+
+    slide = openslide.OpenSlide(str(path))
+    levels = [
+        {"index": index, "width": width, "height": height}
+        for index, (width, height) in enumerate(slide.level_dimensions)
+    ]
+    mpp = float(slide.properties["openslide.mpp-x"])
+    return json.dumps({"levels": levels, "scale": {"mpp_x": mpp}}).encode()
 
 
 def opener(slide: SlideImage):
