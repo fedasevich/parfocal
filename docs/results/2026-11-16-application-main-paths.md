@@ -2,7 +2,7 @@
 
 - Date: 2026-11-16
 - Backlog: TEST-019 (application performance on main paths)
-- ADR: [XXXX](../adr/XXXX-main-path-budgets-are-a-p95-after-a-warm-up.md) (main path budgets are a p95 after a warm-up)
+- ADR: [XXXX](../adr/0353-main-path-budgets-are-a-p95-after-a-warm-up.md) (main path budgets are a p95 after a warm-up)
 - Budgets fixed in commit `601bef49` before the first measured run, in `perf-budgets.json`.
 
 ## Question
