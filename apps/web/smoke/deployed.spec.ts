@@ -31,7 +31,7 @@ async function readJson<T>(page: Page, path: string): Promise<T> {
 
 async function signIn(page: Page, origin: string) {
   await page.goto("/sign-in");
-  await expect(appSignIn(page).or(hostedLoginName(page))).toBeVisible();
+  await expect(appSignIn(page).or(hostedLoginName(page)).first()).toBeVisible();
   if (await appSignIn(page).isVisible()) {
     await page.getByRole("textbox", { name: "Work email" }).fill(email);
     await page.getByLabel("Password", { exact: true }).fill(password);
@@ -55,7 +55,7 @@ test("a signed-out visitor gets the sign-in, not a broken screen", async ({
   const seen = await watch(context, origin);
   seen.step("signed-out");
   await page.goto("/");
-  await expect(appSignIn(page).or(hostedLoginName(page))).toBeVisible();
+  await expect(appSignIn(page).or(hostedLoginName(page)).first()).toBeVisible();
   await visit(page, seen, info, "signed-out", null);
   expect(seen.problems, report(seen.problems)).toEqual([]);
 });
