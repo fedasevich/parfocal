@@ -1,3 +1,4 @@
+import asyncio
 import base64
 import hashlib
 import hmac
@@ -207,9 +208,10 @@ async def get_tile_access(
         )
     folder = folder_of(row.original_key)
     labels = await sees_restricted(connection, principal, row.project_id, mode)
-    closed, blank = (await restricted_ranges(store, folder, row.file_bytes)).served(
-        row.file_bytes, mode is not PrivacyMode.CLINICAL, not labels
+    ranges, stored = await asyncio.gather(
+        restricted_ranges(store, folder, row.file_bytes), store.stat_object(row.original_key)
     )
+    closed, blank = ranges.served(row.file_bytes, mode is not PrivacyMode.CLINICAL, not labels)
     expires = now + TOKEN_SECONDS
     original = PurePosixPath(row.original_key).name
     claims = {
@@ -221,6 +223,8 @@ async def get_tile_access(
     }
     if blank:
         claims["b"] = [list(span) for span in blank]
+    if stored is not None and stored.etag:
+        claims["g"] = stored.etag
     if folder != slide_prefix(row.tenant_id, slide_id):
         claims["p"] = folder
     return TileAccess(

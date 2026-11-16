@@ -45,6 +45,12 @@ class CompletedObject:
     etag: str
 
 
+@dataclass(frozen=True)
+class StoredObject:
+    size: int
+    etag: str
+
+
 class StorageError(Exception):
     def __init__(self, status: int, code: str) -> None:
         super().__init__(f"{status} {code}")
@@ -346,13 +352,20 @@ class ObjectStore:
         )
 
     async def head_object(self, key: str) -> int | None:
+        stored = await self.stat_object(key)
+        return None if stored is None else stored.size
+
+    async def stat_object(self, key: str) -> StoredObject | None:
         url, headers = self.signed_request("HEAD", key, None, b"")
         response = await self.http.request("HEAD", url, headers=headers)
         if response.status_code == 404:
             return None
         if response.status_code >= 300:
             raise StorageError(response.status_code, "head-failed")
-        return int(response.headers.get("content-length", "0"))
+        return StoredObject(
+            size=int(response.headers.get("content-length", "0")),
+            etag=unquote_etag(response.headers.get("etag", "")),
+        )
 
     async def delete_object(self, key: str) -> None:
         await self.send("DELETE", key)
