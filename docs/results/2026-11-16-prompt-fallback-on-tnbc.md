@@ -17,10 +17,11 @@ Is the prompt-pass fallback, which runs when the AIS decoder cannot load, within
 pnpm --filter @parfocal/ml bench:prompt-region -- --threads 4
 pnpm --filter @parfocal/ml bench:prompt-region -- --images 5 --quality fast --threads 4
 pnpm --filter @parfocal/ml bench:prompt-region -- --images 5 --quality best --threads 4
-pnpm --filter @parfocal/ml test:weights
 ```
 
-`parfocal_ml.prompt_region` encodes each image at the 1024 px encoder input, then drives `apps/web/region-bench/prompt-rings.ts` under Node over a line protocol. The Node side runs `promptFallback`, the same function the region pass calls in the browser, with `promptPassOptionsFor(0.25, quality)`. Each `sam.prompt` call goes back to Python, which runs the single-prompt decoder with `orig_im_size` 1024 as the browser does and returns the best mask of all candidates. So stain seeding, acceptance, the ensemble, duplicate removal, `bestMask`, `fittedLogits`, contour tracing and simplification are all the shipped TypeScript. Each image is one 512 px tile. Rings are scored with `parfocal_ml.scoring`, pooled over nuclei.
+The `weights` test in `workers/ml/tests/test_prompt_region.py`, run by `pnpm --filter @parfocal/ml test:weights`, wraps the same `run` with the same graphs and gate. It was not run on its own for this result, because the bench above already covers it and the machine was shared.
+
+`parfocal_ml.prompt_region` encodes each image at the 1024 px encoder input, then drives `apps/web/region-bench/prompt-rings.ts` under Node over a line protocol. The Node side runs `promptFallback`, the same function the region pass calls in the browser, with `promptPassOptionsFor(0.25, quality)`. Each `sam.prompt` call goes back to Python, which runs the full single-prompt decoder with `orig_im_size` 1024 and returns the best mask of all candidates, as the browser's full decode path does. The browser may use the embedding-window decoder instead (ADR 0311, the click decoder runs on a window of the embedding), so this run covers the full-decoder path only. So stain seeding, acceptance, the ensemble, duplicate removal, `bestMask`, `fittedLogits`, contour tracing and simplification are all the shipped TypeScript. Each image is one 512 px tile. Rings are scored with `parfocal_ml.scoring`, pooled over nuclei.
 
 ## Results
 
@@ -48,5 +49,5 @@ First 5 TNBC images, 377 nuclei:
 
 ## Follow-ups
 
-- The auto layer still asks for fast quality. TODO: wire the outline tier setting to best quality if the owner wants the slower pass.
+- The auto layer still asks for fast quality, so best quality is not reachable from the screen yet.
 - Decodes still run one prompt at a time through `sam.prompt`. A batched decoder graph in the worker would cut the round trips.

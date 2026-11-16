@@ -107,10 +107,12 @@ describe("prompt-pass fallback", () => {
   });
 
   it("counts a stained nucleus on a tile seam once", async () => {
-    const spacing = 64;
+    const spacing = 80;
+    const offset = 20;
     const region = { x: 1000, y: 1000, width: 768, height: 768 };
-    const inside = (x: number, y: number) =>
-      Math.hypot(x - Math.round(x / spacing) * spacing, y - Math.round(y / spacing) * spacing) <= 9;
+    const nearest = (value: number) => Math.round((value - offset) / spacing) * spacing + offset;
+    const inside = (x: number, y: number) => Math.hypot(x - nearest(x), y - nearest(y)) <= 9;
+    assert.ok(Math.abs(nearest(region.x + 384) - (region.x + 384)) <= 4);
     const reader = {
       read(query: PresetPatchQuery) {
         const x0 = Math.round(query.x) - 256;
@@ -154,13 +156,11 @@ describe("prompt-pass fallback", () => {
       sam,
       fallback: promptFallback(sam, promptPassOptionsFor(0.25, "fast")),
     });
-    const expected = (region.width / spacing) * (region.height / spacing);
+    const perAxis = 9;
+    const expected = perAxis * perAxis;
     assert.equal(found.length, expected);
     const centres = new Set(
-      found.map(
-        (nucleus) =>
-          `${Math.round(nucleus.centroid.x / spacing)},${Math.round(nucleus.centroid.y / spacing)}`,
-      ),
+      found.map((nucleus) => `${nearest(nucleus.centroid.x)},${nearest(nucleus.centroid.y)}`),
     );
     assert.equal(centres.size, expected);
   });
