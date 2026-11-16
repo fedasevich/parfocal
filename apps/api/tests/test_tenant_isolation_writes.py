@@ -616,6 +616,8 @@ UNAIMED_WRITES: dict[str, str] = {
         ("startMaintenance", "endMaintenance"),
         "switches the one platform-wide maintenance row, for platform operators only",
     ),
+    "raiseSyntheticError": "raises a drill error for platform operators only and stores nothing",
+    "reportViewerFrames": "exports the caller's own frame timings and stores nothing",
     "endOtherSessions": "ends the caller's own other sessions",
     "sendFeedback": "files feedback under the caller's workspace",
     "acceptInvitation": "takes a secret token, which is the invitation itself",
