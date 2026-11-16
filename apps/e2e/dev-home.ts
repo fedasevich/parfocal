@@ -2,43 +2,52 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { chromium, type Page } from "@playwright/test";
 
-const gallerySlide = "CMU-1-Small-Region";
+const sampleSlide = "test_065";
+const galleryTour = "Format gallery tour";
 
 type Listed = { readonly id: string; readonly label: string; readonly project: { id: string } };
+type Tour = { readonly slide: string; readonly project: string; readonly task: string };
 
-async function slideToOpen(page: Page): Promise<{ project: string; slide: Listed }> {
-  return page.evaluate(async (wanted) => {
-    const response = await fetch(`/api/me/slides?q=${encodeURIComponent(wanted)}`);
-    if (!response.ok) throw new Error(`/api/me/slides answered ${response.status}`);
-    const { slides } = (await response.json()) as { slides: Listed[] };
-    const slide = slides.find((each) => each.label.includes(wanted));
-    if (slide === undefined) {
-      throw new Error(`The test user sees no gallery slide named ${wanted}`);
-    }
-    return { project: slide.project.id, slide };
-  }, gallerySlide);
+async function tourToOpen(page: Page): Promise<Tour> {
+  return page.evaluate(
+    async ({ wanted, tour }) => {
+      const found = await fetch(`/api/me/slides?q=${encodeURIComponent(wanted)}`);
+      if (!found.ok) throw new Error(`/api/me/slides answered ${found.status}`);
+      const { slides } = (await found.json()) as { slides: Listed[] };
+      const slide = slides.find((each) => each.label === wanted);
+      if (slide === undefined) throw new Error(`The test user sees no slide named ${wanted}`);
+      const listed = await fetch(`/api/projects/${slide.project.id}/review-tasks`);
+      if (!listed.ok) throw new Error(`review-tasks answered ${listed.status}`);
+      const tasks = (await listed.json()) as { id: string; name: string }[];
+      const task = tasks.find((each) => each.name === tour);
+      if (task === undefined) throw new Error(`The gallery has no task named ${tour}`);
+      return { slide: slide.id, project: slide.project.id, task: task.id };
+    },
+    { wanted: sampleSlide, tour: galleryTour },
+  );
 }
 
-async function readThroughWorker(page: Page): Promise<string> {
-  const { slide } = await slideToOpen(page);
-  const read = await page.evaluate(async (id) => {
-    const access = await fetch(`/api/slides/${id}/tile-access`);
-    if (!access.ok) throw new Error(`tile-access answered ${access.status}`);
-    const { token, base_path, original } = (await access.json()) as Record<string, string>;
-    const response = await fetch(`${base_path}${original}`, {
-      headers: { Authorization: `Bearer ${token}`, Range: "bytes=0-1023" },
-    });
-    return {
-      status: response.status,
-      cache: response.headers.get("Cache-Control") ?? "",
-      resource: response.headers.get("Cross-Origin-Resource-Policy") ?? "",
-      bytes: (await response.arrayBuffer()).byteLength,
-    };
-  }, slide.id);
-  if (read.status !== 206 || !read.cache.startsWith("private") || read.resource === "") {
-    throw new Error(`The edge Worker did not serve ${slide.label}: ${JSON.stringify(read)}`);
+async function drawThroughWorker(page: Page): Promise<string> {
+  const tour = await tourToOpen(page);
+  const served: number[] = [];
+  page.on("response", (response) => {
+    if (response.url().includes(`/tiles/${tour.slide}/original`)) served.push(response.status());
+  });
+  const path = `/projects/${tour.project}/slides/${tour.slide}/live?task=${tour.task}`;
+  await page.goto(path);
+  const stage = page.getByTestId("slide-stage");
+  await stage.waitFor({ timeout: 60_000 });
+  await page
+    .locator('[data-testid="slide-stage"][data-state="ready"]')
+    .waitFor({ timeout: 90_000 });
+  const ranged = served.filter((status) => status === 206).length;
+  if (ranged === 0) {
+    throw new Error(
+      `The viewer drew ${sampleSlide} without the edge Worker: ${JSON.stringify(served)}`,
+    );
   }
-  return `The edge Worker served ${read.bytes} bytes of ${slide.label} from the parfocal-dev bucket`;
+  const fitted = await stage.getAttribute("data-fitted-ms");
+  return `The viewer drew ${sampleSlide} from the parfocal-dev bucket in ${fitted} ms after ${ranged} ranged reads through the edge Worker at ${page.url()}`;
 }
 
 const root = fileURLToPath(new URL("../..", import.meta.url));
@@ -72,7 +81,7 @@ try {
     `Signed in as ${String(session.body["email"])} on ${page.url()}, heading "${heading}"`,
   );
   if (process.env["PARFOCAL_EDGE_DEV"] !== "off") {
-    console.log(await readThroughWorker(page));
+    console.log(await drawThroughWorker(page));
   }
 } finally {
   await browser.close();

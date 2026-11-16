@@ -49,6 +49,7 @@ from parfocal_api.tables import (
     memberships,
     organisations,
     project_members,
+    projects,
     review_assignments,
     review_decisions,
     review_task_slides,
@@ -59,8 +60,9 @@ from parfocal_api.tables import (
     workspace_settings,
 )
 from parfocal_common.db import DatabaseScope, create_engine, scoped_transaction
+from parfocal_common.ingest import RESTRICTED_RANGES_NAME, sample_folder, sample_original_key
 from parfocal_common.jobs import JobStatus, jobs
-from parfocal_common.object_store import ObjectStore
+from parfocal_common.object_store import ObjectStore, StorageError
 from parfocal_common.repository import repository_root
 from parfocal_common.result_store import ObjectResultStore, ResultStore
 from parfocal_common.settings import AppEnv, StorageSettings
@@ -162,6 +164,15 @@ STATE_SLIDES = (
     "uploaded",
 )
 RESULT_FILES = ("cells.geojson", "regions.parfocal.json", "cells.csv", "heatmap.png")
+VIEWER_SAMPLE = "test_065"
+VIEWER_SAMPLE_FILE = f"{VIEWER_SAMPLE}.tif"
+VIEWER_SAMPLE_RANGES = {
+    "ranges": [],
+    "identifying": [[309569679, 309569800]],
+    "barcode": [[309578626, 309578638]],
+}
+GALLERY_TOUR = "Format gallery tour"
+ALREADY_STORED = 412
 
 
 @dataclass
@@ -350,6 +361,26 @@ def gallery_facts(slide: GallerySlide, manifest: Mapping[str, Mapping[str, Any]]
         "file_bytes": int(entry["bytes"]),
         "sha256": str(entry["sha256"]),
         "original_key": f"{FIXTURE_PREFIX}{slide.file}",
+        "published_at": func.now(),
+    }
+
+
+def viewer_sample_facts(manifest: Mapping[str, Mapping[str, Any]]) -> dict[str, Any]:
+    entry = manifest[VIEWER_SAMPLE_FILE]
+    return {
+        "format": "philips-tiff",
+        "variant": "bigtiff",
+        "reader": "openslide",
+        "width": 77824,
+        "height": 53760,
+        "level_count": 9,
+        "mpp_x": 0.226321,
+        "mpp_y": 0.226316,
+        "objective_power": 40.0,
+        "notices": ["objective-estimated"],
+        "file_bytes": int(entry["bytes"]),
+        "sha256": str(entry["sha256"]),
+        "original_key": sample_original_key(VIEWER_SAMPLE, VIEWER_SAMPLE_FILE),
         "published_at": func.now(),
     }
 
@@ -674,19 +705,82 @@ async def seed_gallery(
         connection,
     )
     await join(connection, seeded, project.id, {"rhea": ProjectRole.VIEWER})
-    if seeded.owner is not None:
-        await connection.execute(
-            upsert(project_members)
-            .values(
-                tenant_id=seeded.tenant_id,
-                project_id=project.id,
-                user_id=seeded.owner,
-                role=ProjectRole.OWNER,
-            )
-            .on_conflict_do_nothing()
-        )
     for slide in FORMAT_GALLERY:
         await add_slide(connection, seeded, project.id, slide.file, gallery_facts(slide, manifest))
+
+
+async def seed_gallery_tour(
+    connection: AsyncConnection,
+    seeded: Seeded,
+    store: ObjectStore,
+    results: ResultStore,
+    manifest: Mapping[str, Mapping[str, Any]],
+    gallery: str,
+) -> None:
+    assert seeded.owner is not None
+    try:
+        await store.put_new_object(
+            f"{sample_folder(VIEWER_SAMPLE)}{RESTRICTED_RANGES_NAME}",
+            json.dumps(VIEWER_SAMPLE_RANGES).encode(),
+            "application/json",
+        )
+    except StorageError as error:
+        if error.status != ALREADY_STORED:
+            raise
+    project_id = await connection.scalar(
+        select(projects.c.id).where(
+            projects.c.tenant_id == seeded.tenant_id, projects.c.name == gallery
+        )
+    )
+    if project_id is None:
+        return
+    toured = await connection.scalar(
+        select(review_tasks.c.id).where(
+            review_tasks.c.project_id == project_id, review_tasks.c.name == GALLERY_TOUR
+        )
+    )
+    if toured is not None:
+        return
+    await connection.execute(
+        upsert(project_members)
+        .values(
+            tenant_id=seeded.tenant_id,
+            project_id=project_id,
+            user_id=seeded.owner,
+            role=ProjectRole.OWNER,
+        )
+        .on_conflict_do_nothing()
+    )
+    facts = viewer_sample_facts(manifest)
+    sample_id = await connection.scalar(
+        select(slides.c.id).where(
+            slides.c.project_id == project_id, slides.c.original_key == facts["original_key"]
+        )
+    )
+    if sample_id is None:
+        sample_id = (await add_slide(connection, seeded, project_id, VIEWER_SAMPLE, facts)).id
+    gallery_ids = await connection.scalars(
+        select(slides.c.id)
+        .where(slides.c.project_id == project_id, slides.c.id != sample_id)
+        .order_by(slides.c.label)
+    )
+    principal = principal_of(seeded, "ada", Role.RESEARCHER, True)
+    sets = {
+        slide_id: await ready_set(
+            connection, principal, await slide_row(connection, slide_id), "regions.parfocal.json"
+        )
+        for slide_id in [sample_id, *gallery_ids]
+    }
+    await review_task(
+        connection,
+        principal,
+        results,
+        project_id,
+        GALLERY_TOUR,
+        sets,
+        [seeded.owner],
+        DecisionStyle.AGREE,
+    )
 
 
 async def seed_workspace(
@@ -775,19 +869,30 @@ async def seed(
             if owner_email:
                 for tenant_id in reversed(tenant_ids):
                     owners[tenant_id] = await add_owner(connection, tenant_id, owner_email)
+        facts = manifest if manifest is not None else fixture_facts()
         for tenant_id, workspace in created:
             people = await people_of(engine, tenant_id)
-            ada = people["ada"]
             async with scoped_transaction(
-                engine, DatabaseScope(tenant_id=tenant_id, user_id=ada)
+                engine, DatabaseScope(tenant_id=tenant_id, user_id=people["ada"])
             ) as connection:
                 await seed_projects(
+                    connection, workspace, Seeded(tenant_id, people), store, results, facts
+                )
+        for tenant_id, workspace in zip(tenant_ids, WORKSPACES, strict=True):
+            owner = owners.get(tenant_id)
+            if owner is None:
+                continue
+            people = await people_of(engine, tenant_id)
+            async with scoped_transaction(
+                engine, DatabaseScope(tenant_id=tenant_id, user_id=people["ada"])
+            ) as connection:
+                await seed_gallery_tour(
                     connection,
-                    workspace,
-                    Seeded(tenant_id, people, owners.get(tenant_id)),
+                    Seeded(tenant_id, people, owner),
                     store,
                     results,
-                    manifest if manifest is not None else fixture_facts(),
+                    facts,
+                    workspace.gallery,
                 )
         return tenant_ids
     finally:
