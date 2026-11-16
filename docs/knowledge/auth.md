@@ -60,6 +60,7 @@ The API tests in `apps/api/tests/test_auth.py` use a fake identity provider behi
 - User names are unique across the instance unless the organisation's domain policy sets `userLoginMustBeDomain`, so without it a second organisation cannot auto-create a user name that exists elsewhere (`unique_constraints_pkey` in the Zitadel log). `connect-saml` sets that policy through `/admin/v1/orgs/<id>/policies/domain`, and [ADR 0352](../adr/0352-sso-links-an-existing-account-by-verified-email.md) (SSO links an existing account by verified email) joins the two Zitadel users in our database.
 - Organisation IdPs are listed by `/management/v1/idps/templates/_search`. The older `/management/v1/idps/_search` returns none of them.
 - The sign-in screen's "Sign in with your organisation" takes a domain or a work email and sends the browser to `/api/auth/sso`. An unknown domain comes back to `/sign-in?sso=none` with the return path kept.
+- A domain routes and links only once proven. `connect-saml` prints a `TXT _parfocal-sso.<domain>` record for the workspace to add, and `prove-sso-domains TENANT` checks it over DNS over HTTPS. A failed lookup keeps the last proof, and an answer without the token withdraws it (ADR 0352 amendment).
 - `apps/e2e/tests/sso.spec.ts` runs the test IdP on `PARFOCAL_SAML_IDP_PORT` (default 8091) and provisions and deprovisions its own workspace. CI pulls the amd64 image before the tests.
 
 ## Row-level security skips rows silently

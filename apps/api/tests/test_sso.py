@@ -16,6 +16,7 @@ def make_connection(
     browser: Browser,
     default_role: str | None = "researcher",
     group_roles: dict[str, str] | None = None,
+    proven: bool = True,
 ) -> tuple[str, str, str]:
     slug = f"sso-{uuid.uuid4().hex[:10]}"
     organisation = f"org-{slug}"
@@ -32,11 +33,14 @@ def make_connection(
     )
     role = f"'{default_role}'" if default_role else "NULL"
     roles = json.dumps(group_roles or {})
+    proofs = json.dumps(
+        {domain: {"token": "t", "proven_at": "2026-11-16T00:00:00+00:00" if proven else None}}
+    )
     browser.sql(
-        "INSERT INTO sso_connections "
-        "(tenant_id, idp_organisation_id, idp_id, email_domains, default_role, group_roles) "
+        "INSERT INTO sso_connections (tenant_id, idp_organisation_id, idp_id, email_domains, "
+        "default_role, group_roles, domain_proofs) "
         f"VALUES ('{tenant_id}', '{organisation}', 'idp-{slug}', ARRAY['{domain}'], {role}, "
-        f"'{roles}'::jsonb)"
+        f"'{roles}'::jsonb, '{proofs}'::jsonb)"
     )
     return tenant_id, organisation, domain
 

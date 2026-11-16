@@ -111,6 +111,10 @@ async function connectSaml(): Promise<{ organisation: string; idp: string }> {
     "--subject-attribute",
     "uid",
   );
+  sql(
+    "UPDATE sso_connections SET domain_proofs = jsonb_set(domain_proofs, " +
+      `'{${domain},proven_at}', to_jsonb(now()::text)) WHERE tenant_id = '${tenantId}'`,
+  );
   return {
     organisation: /idp_organisation_id=(\S+)/.exec(connected)?.[1] ?? "",
     idp: /idp_id=(\S+)/.exec(connected)?.[1] ?? "",

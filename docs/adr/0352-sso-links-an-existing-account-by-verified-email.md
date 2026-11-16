@@ -28,6 +28,18 @@ Option 2.
 
 ## Consequences
 
-- Trust grows: a workspace's IdP can now sign in as any existing Parfocal user whose email is in that workspace's domains, including memberships in other workspaces. That is the same reach the domain's mail server already has through password reset, and a domain belongs to one workspace only, set by an operator with `connect-saml`. Domain ownership is not proven by DNS yet (`TODO` before the first customer connection).
+- Trust grows: a workspace's IdP can now sign in as any existing Parfocal user whose email is in that workspace's domains, including memberships in other workspaces. That is the same reach the domain's mail server already has through password reset, and a domain belongs to one workspace only, set by an operator with `connect-saml`. The workspace must also prove it owns the domain by DNS, as the amendment below describes.
 - A password sign-in after linking still works and lands on the same Parfocal user.
 - `apps/api/tests/test_sso.py` covers the link, a second sign-in through it, an unverified account and an email outside the domains. `apps/e2e/tests/sso.spec.ts` links a real Zitadel password account on the local stack.
+
+## Amendment 2026-11-16: the domain is proven by DNS
+
+IAM-029 (prove the SSO email domain by DNS) answers the TODO this ADR left.
+
+- Migration 0125 adds `sso_connections.domain_proofs`, a JSONB map from each email domain to its token, `proven_at` and `checked_at`. It inherits the table's row-level security and is deleted with the connection. Existing rows start unproven.
+- `connect-saml` issues one random token per domain and prints the record to add, `TXT _parfocal-sso.<domain> parfocal-sso=<token>`. Running it again keeps every token and proof, and a domain removed from the connection loses its proof.
+- `tenant_command prove-sso-domains TENANT` looks the records up over DNS over HTTPS (Cloudflare's JSON resolver through `httpx2`, so no new dependency) and stores the result. The lookup never runs inside a sign-in request, which only reads the stored proof.
+- A record carrying the token proves the domain. An answer without it, including a name that does not exist, withdraws the proof. A failed lookup (timeout, HTTP error, SERVFAIL, an unreadable answer) changes nothing, so the last proof stands.
+- `/api/auth/sso` routes only proven domains, and `vouches_for` trusts only proven domains, so an unproven domain neither routes nor links nor stores the IdP's email. Membership from the organisation claim and groups is unchanged, because it does not depend on the email domain.
+- A withdrawn proof stops new links. Links already made stay, because the person already signed in through that IdP and removing a link would strand their work on a second account.
+- `apps/api/tests/test_sso_domains.py` covers routing and linking before and after a proof, a failed lookup, a removed record and the DNS answer parser.
