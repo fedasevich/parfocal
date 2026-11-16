@@ -287,6 +287,16 @@ OPS-004 (database operations) planned a Neon read replica so reporting queries d
 
 Your choice:
 
+### 121. Whether agents may download newer nucleus models to score them
+
+AINUC-000 (nuclei detector and typer research check) kept PathoSAM AIS and HoVer-NeXt in ADR 0347 (nucleus detector and typer per tier) because they are the only models with held-out numbers here. CellViT++, NuLite, InstanSeg and a PathoSAM ViT-L AIS decoder were left unmeasured, because scoring them means downloading their weights from GitHub, Zenodo or Hugging Face (sizes not checked), which no agent did without your yes.
+
+- **A. Allow a follow-up task to download InstanSeg and the PathoSAM ViT-L decoder and score them on TNBC, CryoNuSeg and NuInsSeg on the Mac (recommended).**
+- B. Also allow CellViT++ and NuLite, which can only be typed on PanNuke, a set they report results on.
+- C. No downloads. Keep the line-up as it is.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 The temporary review checklist of 2026-11-14 is handled and deleted. What still waits is below.
