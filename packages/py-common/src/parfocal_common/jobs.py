@@ -23,9 +23,11 @@ from sqlalchemy import (
     String,
     Table,
     Uuid,
+    column,
     func,
     insert,
     select,
+    table,
     text,
     update,
 )
@@ -41,6 +43,7 @@ from parfocal_common.db import (
     tenant_foreign_key,
     tenant_unique,
 )
+from parfocal_common.residency import UNPINNED, Placement
 from parfocal_common.stage_throughput import RunLabels, StageSample, record_throughput
 
 logger = logging.getLogger("parfocal.jobs")
@@ -170,6 +173,9 @@ job_units = Table(
     ),
     Index("ix_job_units_job_id_seq", "job_id", "seq"),
 )
+
+
+tenant_regions = table("tenants", column("id"), column("region"))
 
 
 async def holds(connection: AsyncConnection, job_id: uuid.UUID, worker: str) -> bool:
@@ -318,10 +324,18 @@ async def claim(
     worker: str,
     kinds: Mapping[str, Workflow],
     tenant_id: uuid.UUID | None = None,
+    *,
+    placement: Placement = UNPINNED,
 ) -> tuple[Claimed, Workflow] | None:
     mine = jobs.c.kind.in_(list(kinds))
     if tenant_id is not None:
         mine = mine & (jobs.c.tenant_id == tenant_id)
+    if placement.enforced:
+        mine = mine & jobs.c.tenant_id.in_(
+            select(tenant_regions.c.id).where(
+                tenant_regions.c.region.in_(sorted(placement.tenant_regions()))
+            )
+        )
     async with scoped_transaction(engine, PLATFORM) as connection:
         await connection.execute(
             update(jobs)
@@ -705,13 +719,15 @@ async def work(
     tenant_id: uuid.UUID | None = None,
     on_finished: JobFinished | None = None,
     on_settled: JobFinished | None = None,
+    *,
+    placement: Placement = UNPINNED,
 ) -> int:
     await require_row_security(engine)
     kinds = {workflow.kind: workflow for workflow in workflows}
     finished = 0
     idle = 0.0
     while idle_exit_seconds is None or idle < idle_exit_seconds:
-        claimed = await claim(engine, worker, kinds, tenant_id)
+        claimed = await claim(engine, worker, kinds, tenant_id, placement=placement)
         if claimed is None:
             await asyncio.sleep(poll_seconds)
             idle += poll_seconds

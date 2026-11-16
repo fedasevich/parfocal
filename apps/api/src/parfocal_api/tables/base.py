@@ -4,6 +4,7 @@ from enum import StrEnum
 from sqlalchemy import Boolean, CheckConstraint, Column, DateTime, func, text
 
 from parfocal_common.data_classes import OPERATIONAL
+from parfocal_common.residency import Region as Region
 
 SLUG_PATTERN = "^[a-z0-9][a-z0-9-]{1,38}[a-z0-9]$"
 DEFAULT_IDLE_LOCK_MINUTES = 15
@@ -15,11 +16,6 @@ class TenantKind(StrEnum):
     DIAGNOSTIC = "diagnostic"
     RESEARCH = "research"
     SECOND_OPINION = "second-opinion"
-
-
-class Region(StrEnum):
-    EU = "eu"
-    US = "us"
 
 
 class Plan(StrEnum):
