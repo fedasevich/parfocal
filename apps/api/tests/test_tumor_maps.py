@@ -5,17 +5,24 @@ from typing import Any
 import httpx2
 import pytest
 from db_support import APP_URL, ApiAs, with_database
-from storage_support import TEST_STORAGE
+from fixture_support import fixture_path
+from storage_support import TEST_STORAGE, with_store
 from test_model_runs import Lab, make_lab, ok, problem
 from test_tumor_map_job import mapped_in_one_pass
-from tumor_map_support import CentreScorer, fixture_slide, opener
+from tumor_map_support import STORED_SLIDE, CentreScorer, fixture_slide, levels_json, opener
 
 from parfocal_common.db import create_engine
+from parfocal_common.ingest import slide_prefix
 from parfocal_common.jobs import claim, run_job
 from parfocal_common.object_store import ObjectStore
 from parfocal_common.result_store import ObjectResultStore
 from parfocal_common.tumor_maps import KIND, STEPS
-from parfocal_ml.tumor_map_job import tumor_map_workflow
+from parfocal_ml.gpu_pool import POOLS, cpu_stand_in
+from parfocal_ml.modal_pool import pool_entry
+from parfocal_ml.priority_gate import Kind
+from parfocal_ml.tumor_map import Scorer
+from parfocal_ml.tumor_map_job import POOL_FAMILY, tumor_map_workflow
+from parfocal_ml.tumor_map_worker import OnnxTumorScorer, drained_from_storage, local_weights
 
 pytestmark = [pytest.mark.db, pytest.mark.usefixtures("storage")]
 
@@ -101,3 +108,76 @@ def test_a_reviewer_reads_a_tumor_map_job_only_on_a_slide_they_review(api: ApiAs
     jobs = f"/api/projects/{lab.project}/jobs"
     assert reader.get(f"{jobs}/{on_task['job_id']}").status_code == 200
     assert reader.get(f"{jobs}/{off_task['job_id']}").status_code == 404
+
+
+def chosen_scorer(name: str) -> Scorer:
+    if name == "centre":
+        return CentreScorer()
+    weights = local_weights()
+    if weights is None:
+        pytest.skip(
+            "camelyon-tumor.onnx is not exported, run workers/ml/spike/export_tumor_onnx.py"
+        )
+    return OnnxTumorScorer(weights)
+
+
+def stand_in_pool_call(database: str, tenant: uuid.UUID, scorer: Scorer) -> dict[str, object]:
+    pool = next(pool for pool in POOLS if pool.family is POOL_FAMILY)
+
+    def runner(call: Any) -> dict[str, object]:
+        async def go() -> int:
+            engine = create_engine(with_database(APP_URL, database))
+            try:
+                async with httpx2.AsyncClient(timeout=60) as http:
+                    storage = ObjectStore(TEST_STORAGE, http)
+                    return await drained_from_storage(engine, storage, scorer, call)
+            finally:
+                await engine.dispose()
+
+        return {"finished": asyncio.run(go())}
+
+    entry = pool_entry(cpu_stand_in(pool, max_containers=1), {Kind.TUMOR_MAP: runner})
+    call: dict[str, object] = {
+        "kind": KIND,
+        "idle_exit_seconds": 0.5,
+        "poll_seconds": 0.1,
+        "tenant_id": str(tenant),
+    }
+    return entry(call)
+
+
+@pytest.mark.parametrize(
+    "scorer_name", ["centre", pytest.param("resnet18", marks=pytest.mark.weights)]
+)
+def test_one_pool_call_maps_a_stored_slide_on_a_cpu_stand_in(
+    api: ApiAs, database: str, lab: Lab, scorer_name: str
+):
+    pytest.importorskip("openslide")
+    scorer = chosen_scorer(scorer_name)
+    path = fixture_path(STORED_SLIDE)
+    prefix = slide_prefix(lab.tenant, lab.slides[0])
+
+    async def put(storage: ObjectStore) -> None:
+        await storage.put_object(f"{prefix}original.svs", path.read_bytes(), "image/tiff")
+        await storage.put_object(f"{prefix}levels.json", levels_json(path), "application/json")
+
+    async def remove(storage: ObjectStore) -> None:
+        for key in await storage.list_keys(f"t/{lab.tenant}/"):
+            await storage.delete_object(key)
+
+    with_store(put)
+    try:
+        started = ok(start(api, lab))
+        reply = stand_in_pool_call(database, lab.tenant, scorer)
+        assert reply == {"family": POOL_FAMILY.value, "kind": KIND, "finished": 1}
+        reader = api(lab.people["owner"])
+        job = ok(reader.get(f"/api/projects/{lab.project}/jobs/{started['job_id']}"))
+        assert job["status"] == "done"
+        assert job["steps"][0]["units_done"] == job["steps"][0]["units_total"] == 2
+        facts = ok(reader.get(f"/api/result-sets/{started['result_set_id']}/heatmap"))
+        assert (facts["width"], facts["height"], facts["level"]) == (35, 47, None)
+        grid = reader.get(f"/api/result-sets/{started['result_set_id']}/heatmap/grid")
+        assert len(grid.content) == 35 * 47
+        assert max(grid.content) > 0
+    finally:
+        with_store(remove)

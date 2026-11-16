@@ -1,13 +1,14 @@
 import os
 import socket
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 
 import modal
 
 from parfocal_common.repository import repository_root
 from parfocal_ml.gpu_pool import (
     POOLS,
+    Family,
     PoolLimits,
     concurrency_options,
     function_options,
@@ -47,14 +48,40 @@ def pool_image() -> modal.Image:
     ).add_local_python_source("parfocal_common", "parfocal_ml", ignore=["**/__pycache__/**"])
 
 
-def pool_entry(pool: PoolLimits) -> Callable[[dict[str, object]], dict[str, object]]:
+type Runner = Callable[[Mapping[str, object]], Mapping[str, object]]
+TUMOR_MAP_FAMILY = Family.DETECTOR_GOOD
+
+
+def tumor_map_runner(pool: PoolLimits) -> Runner:
+    gpu = pool.gpu.value if pool.gpu is not None else None
+
+    def run(call: Mapping[str, object]) -> Mapping[str, object]:
+        from parfocal_ml.tumor_map_worker import run_tumor_maps
+
+        return run_tumor_maps(call, gpu)
+
+    return run
+
+
+def default_runners(pool: PoolLimits) -> dict[str, Runner]:
+    if pool.family is TUMOR_MAP_FAMILY:
+        return {Kind.TUMOR_MAP: tumor_map_runner(pool)}
+    return {}
+
+
+def pool_entry(
+    pool: PoolLimits, runners: Mapping[str, Runner] | None = None
+) -> Callable[[dict[str, object]], dict[str, object]]:
     family = pool.family.value
+    chosen = default_runners(pool) if runners is None else runners
 
     def run(call: dict[str, object]) -> dict[str, object]:
         kind = str(call.get("kind"))
         check_lane(pool, kind)
         if kind == Kind.WARM:
             return {"family": family, "warm": True, **probe(0.0)}
+        if kind in chosen:
+            return {"family": family, "kind": kind, **chosen[kind](call)}
         if kind != Kind.PROBE:
             raise ValueError(f"{family} has no runner for {kind!r} yet")
         seconds = call.get("seconds", 0.0)
