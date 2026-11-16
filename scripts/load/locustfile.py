@@ -7,10 +7,12 @@ from typing import Any
 from urllib.parse import urlsplit, urlunsplit
 
 from load.target import (
+    ALLOW_ENV,
     LIFT_ENV,
     LoadRefusedError,
     TargetRefusedError,
     check_cloud_load,
+    checked_target,
     is_cloud,
     target_from_env,
 )
@@ -46,8 +48,8 @@ def bearer() -> dict[str, str]:
 @events.init.add_listener
 def refuse_unsafe_targets(environment: Environment, **_: Any) -> None:
     try:
-        targets = [target_from_env("API_URL", environment.host)]
-        for name in ("TILES_URL", "REALTIME_URL"):
+        targets = [checked_target(environment.host, os.environ.get(ALLOW_ENV))]
+        for name in ("API_URL", "TILES_URL", "REALTIME_URL"):
             if setting(name):
                 targets.append(target_from_env(f"PARFOCAL_LOAD_{name}", None))
         options = environment.parsed_options

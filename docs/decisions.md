@@ -307,7 +307,7 @@ Your choice:
 
 ### 123. Whether to give the load workflow a production token and a session
 
-TEST-010 (load test tooling) added the `load` workflow, which runs the Locust scenarios against `https://app.parfocal.eu` under a cap of 2 users for 60 seconds ([ADR XXXX](adr/XXXX-load-tests-run-against-production-under-a-tiny-cap.md), load tests against production under a tiny cap). Without secrets it measures only `/api/health`. The API scenario also lists projects and searches, the tile scenario reads slide ranges through the Worker and the room scenario joins a room and times pings, and those need a read-only service token with `see-slides`, a few slide ids from your test workspace and a member session cookie, stored as the `production` environment secrets `PARFOCAL_LOAD_TOKEN` and `PARFOCAL_LOAD_SESSION` and the variables `PARFOCAL_LOAD_SLIDES` and `PARFOCAL_LOAD_ROOM`. A default run costs about a thousandth of a dollar.
+TEST-010 (load test tooling) added the `load` workflow, which runs the Locust scenarios against `https://app.parfocal.eu` under a cap of 2 users for 60 seconds ([ADR XXXX](adr/XXXX-load-tests-run-against-production-under-a-tiny-cap.md), load tests against production under a tiny cap). Without secrets it measures only `/api/health`. The API scenario also lists projects and searches, the tile scenario reads slide ranges through the Worker and the room scenario joins a room and times pings, and those need a read-only service token with `see-slides`, a few slide ids from your test workspace and a member session cookie, stored as the `production` environment secrets `PARFOCAL_LOAD_TOKEN` and `PARFOCAL_LOAD_SESSION` and the variables `PARFOCAL_LOAD_SLIDES` and `PARFOCAL_LOAD_ROOM`. One capped run cost about $0.002 of Modal time.
 
 - **A. An agent mints a read-only service token in your test workspace and you add it with two slide ids, leaving rooms for later, because a session cookie expires (recommended).**
 - B. Add all four, including a session cookie you copy from the browser after signing in.
@@ -332,7 +332,8 @@ Waiting on something else, nothing for you now:
 
 - IAM-027 (sign-up and sign-in from the app's own screens) waits for the deploy session in decision 95 (the Zitadel login service user), paused until the app is ready for production.
 - OPS-005 (continuous deployment) is paused by your answer to decision 96, and TEST-020 (showcase seed) and SEC-042 (the edge guards the real API path) wait for the next production deploy.
-- IAM-001 (identity provider as code) and TEST-010 (load test tooling) waited for staging, which is dropped for good (ADR 0331, no staging environment), so the next session rescopes them to local dev or a drill environment.
+- IAM-001 (identity provider as code) waited for staging, which is dropped for good (ADR 0331, no staging environment), so the next session rescopes it to local dev or a drill environment.
+- TEST-010 (load test tooling) now runs against production under a tiny cap, but only `/api/health` was measured there. Its tile and room scenarios wait for decision 123 (a production token and session for the load workflow), and the `load` workflow has not run yet.
 - FOUND-030 (bundle analyzer report), TEST-017 (flaky test management), TEST-036 (display panel Undo tests) and TEST-039 (local Zitadel for the end-to-end suite) wait for a green CI run on `main`, which agents are fixing.
 - SEC-002 (encryption in transit and at rest) waits for one `tofu apply` of the global root, which only adds zone HSTS and the pending http3 setting, then a rescan of `parfocal.eu`.
 - IAM-021 (lock screen) and SHELL-012 (account menu) wait for the expired sign-in to return to the object and for the manual lock item.

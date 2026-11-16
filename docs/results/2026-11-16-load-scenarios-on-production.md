@@ -4,7 +4,7 @@
 - Backlog: TEST-010 (load test tooling)
 - Kind: load test
 - Commit: the TEST-010 commit on top of `ec459246`
-- Environment: Locust 2.47 on Python 3.14 on the owner's Apple M4 Mac, shared with three other agents, over a home connection to `https://app.parfocal.eu` (the Cloudflare Worker in front of the Modal app `parfocal-api` in environment `main`). The local run used the compose Postgres and the API under uvicorn on port 8791
+- Environment: Locust 2.47 on Python 3.14 on the owner's Apple M4 Mac, shared with three other agents, over the Mac's own internet connection to `https://app.parfocal.eu` (the Cloudflare Worker in front of the Modal app `parfocal-api` in environment `main`). The local run used the compose Postgres and the API under uvicorn on port 8791
 - Data: production holds only the owner's test data. No slide, upload or GPU job was touched
 
 ## Question
@@ -13,7 +13,7 @@ Do the scenarios run end to end against production through `pnpm load:run`, and 
 
 ## Method
 
-A single `curl` of `/api/health` at 03:41 UTC woke the scaled-to-zero API first. Then, from 03:42:40 to 03:45:41 UTC:
+Shortly before 03:40:49 UTC three probe requests woke the scaled-to-zero API: two of `/api/health` and one of `/api/projects`, which answered 401. Then, from 03:42:40 to 03:45:41 UTC:
 
 ```
 pnpm load:run --origin https://app.parfocal.eu --users 2 --seconds 60
@@ -25,7 +25,7 @@ No service token, slide ids or session were set, because agents hold no producti
 PARFOCAL_LOAD_TOKEN=... pnpm load:run --origin http://localhost:8791 --scenarios api --users 2 --seconds 20
 ```
 
-Cost is the Modal hourly billing report (`uvx modal billing report --for today -r h --csv`) for `parfocal-api` in `main`, read before and after the run.
+Cost is the Modal hourly billing report (`uvx modal billing report --for today -r h --csv`) for `parfocal-api` in `main` and the hour starting 03:00 UTC, read after the probes and before the run, again seconds after the run and again at 03:51 UTC.
 
 ## Results
 
@@ -37,7 +37,7 @@ Production, 2 users for 60 seconds:
 | tiles | none, skipped without a token and slide ids | 0 | | | | | | |
 | room | none, skipped without a session or room key | 0 | | | | | | |
 
-The wake-up `curl` took 8.4 s, which is the cold start. The run itself started warm.
+The first probe took 8.4 s, which is the cold start. The run itself started warm.
 
 Local stack, API scenario with a token, 2 users for 20 seconds:
 
@@ -47,10 +47,12 @@ Local stack, API scenario with a token, 2 users for 20 seconds:
 | GET /api/projects | 9 | 0 | 18 | 230 | 228 |
 | GET /api/search | 9 | 0 | 26 | 240 | 241 |
 
-Cost: the Modal report for `parfocal-api` in `main` for the 03:00 UTC hour read $0.00146 before the wake-up and $0.00248 after the run, so the run and the cold start cost at most $0.0010, with any other traffic in that hour included. Cloudflare usage: TODO, because agents have no read of Worker request counts. 54 requests are far inside the Workers plan.
+Cost: the Modal report for that hour read $0.00146 after the probes, $0.00248 seconds after the run and $0.00307 at 03:51 UTC, as the warm container idled before scaling down. So the run cost about $0.0016 including that idle tail and any other traffic in the hour, and the probes' cold start is not separated out. Cloudflare usage: TODO, because agents have no read of Worker request counts. The 56 requests in all are far inside the Workers plan.
+
+The tile scenario did not run through `pnpm load:run` this time, on production or locally. The last local tile run is the 2026-11-09 one in `docs/knowledge/load-tests.md`, 460 requests with no failures.
 
 A run asking for 3 users against production stopped before any request with "A cloud target allows at most 2 users".
 
 ## Conclusion
 
-The tooling runs against production on demand, and a capped run costs about a thousandth of a dollar. Only `/api/health` was measured on production. The tile and room scenarios have not run against production, and the room scenario has never joined a real room, because no local edge runs. Both wait for the secrets in decision 123 (a production token and session for the load workflow). The `load` workflow has not run yet.
+The tooling runs against production on demand, and a capped run costs about $0.002 of Modal time. Only `/api/health` was measured on production. The tile and room scenarios have not run against production, and the room scenario has never joined a real room, because no local edge runs. Both wait for the secrets in decision 123 (a production token and session for the load workflow). The `load` workflow has not run yet.

@@ -15,7 +15,7 @@ ADR 0286 let load tests reach only localhost and staging hosts, and ADR 0273 sai
 |---|---|---|
 | Keep load tests local only | No production risk | TEST-010's "against production on demand" can never be met, and cold starts, the Worker and R2 are never measured |
 | Allow production with no cap | OPS-012 can soak without a flag | One typo runs up Modal compute or trips the Worker rate limits for the owner |
-| Allow production under a tiny cap, lifted only by a named variable | A default run costs a fraction of a cent, and OPS-012 can still lift it on purpose | One more variable to know |
+| Allow production under a tiny cap, lifted only by a named variable | A capped run costs a fraction of a cent, and OPS-012 can still lift it on purpose | One more variable to know |
 
 ## Decision
 
@@ -27,6 +27,6 @@ The `load` workflow (`.github/workflows/load.yml`) is `workflow_dispatch` only, 
 
 ## Consequences
 
-- A default run against production makes about 50 health reads and costs about a thousandth of a dollar of Modal time ([result](../results/2026-11-16-load-scenarios-on-production.md)). Log every production run and its cost as ADR 0151 (standing approval within $30 a month) asks.
+- A run at the cap against production made 53 health reads and cost about $0.002 of Modal time, the container's idle tail included ([result](../results/2026-11-16-load-scenarios-on-production.md)). Log every production run and its cost as ADR 0151 (standing approval within $30 a month) asks.
 - The tile and room scenarios need a read-only service token, a few slide ids and a member session in the repository secrets before they measure production. That is decision 123 (a production token and session for the load workflow) in `docs/decisions.md`.
 - OPS-012 sets `PARFOCAL_LOAD_LIFT_LIMITS` for its soak runs and must check the month's budget first. After OPS-014 production holds real data, and heavier runs move to the drill environment that ADR 0331 describes.
