@@ -397,6 +397,16 @@ MLEVAL-010 (loaders for datasets behind a sign-in) loads PanNuke and MoNuSeg fro
 
 Your choice:
 
+### 132. How the read-only fixtures key gets created
+
+INGEST-029 (shared test slides bucket) declares the read-only R2 key as the account token `parfocal-fixtures-read` in `infra/tofu/dev/fixtures.tf`, limited to object reads in `parfocal-dev`. The plan stops at a 403 because the agent token `parfocal-agent-dev-staging` may not read or create API tokens. All 33 public fixtures are already in R2 and `pnpm fixtures` reads them with any key that can read the bucket. The `dev` plan also shows two changes waiting from other tasks, the tiering lifecycle rule and the 7-day bucket lock on `t/`, so the token would need a targeted apply until those are applied.
+
+- **A. You add the account permission "API Tokens Write" to `parfocal-agent-dev-staging` in the Cloudflare dashboard, and an agent then applies only the token and proves it is refused a write (recommended).**
+- B. You create an R2 API token by hand in the dashboard, "Object Read only" on `parfocal-dev`, and put both halves in `.env`, and the tofu file is dropped.
+- C. CI keeps downloading from the upstream sites until a later task needs the shared copy.
+
+Your choice:
+
 ## The review column, what each task waits for
 
 The temporary review checklist of 2026-11-14 is handled and deleted. What still waits is below.
