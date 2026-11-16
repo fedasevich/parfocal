@@ -105,6 +105,7 @@ from parfocal_api import (
     tumor_maps,
     uploads,
     users,
+    view_maps,
     workspace_access,
 )
 from parfocal_api.observability import SliMiddleware, drill_router, rum_router, sli_emitter
@@ -338,6 +339,7 @@ def create_app(
     app.include_router(slide_coverage.router)
     app.include_router(slide_tissue.router)
     app.include_router(slide_embeddings.router)
+    app.include_router(view_maps.router)
     app.include_router(slide_areas.router)
 
     return app

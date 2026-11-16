@@ -1,5 +1,6 @@
+import { getScoreViewMapTileUrl } from "@parfocal/api-client";
 import type { ViewMapScorer, ViewMapTileRequest } from "@parfocal/viewer-engine";
-import { readBuildConfig } from "../config.ts";
+import { type FakeApiMode, readBuildConfig } from "../config.ts";
 
 export const fakeTumorSpots = [
   { x: 0.32, y: 0.4, radius: 0.08, peak: 0.99 },
@@ -42,11 +43,54 @@ export function createFakeViewMapScorer(slide: {
   return Object.assign(scorer, { asked });
 }
 
-export function viewMapScorerFor(slide: {
-  readonly width: number;
-  readonly height: number;
-}): ViewMapScorer | null {
-  if (import.meta.env.PARFOCAL_PUBLIC_DEV_TOOLS === "on" && readBuildConfig().fakeApi !== "off")
-    return createFakeViewMapScorer(slide);
+export type ViewTilePost = (slideId: string, column: number, row: number) => Promise<Uint8Array>;
+
+export const postViewTile: ViewTilePost = async (slideId, column, row) => {
+  const response = await fetch(getScoreViewMapTileUrl(slideId, column, row), {
+    method: "POST",
+    credentials: "same-origin",
+  });
+  if (!response.ok) throw new Error("The view tile could not be mapped");
+  return new Uint8Array(await response.arrayBuffer());
+};
+
+export function createServerViewMapScorer(
+  slideId: string,
+  post: ViewTilePost = postViewTile,
+): ViewMapScorer {
+  return async (request) => {
+    const values = await post(slideId, request.key.column, request.key.row);
+    if (values.length !== request.width * request.height) {
+      throw new Error("The view tile came back with the wrong number of cells");
+    }
+    return values;
+  };
+}
+
+export type ViewMapSource = "fake" | "server" | null;
+
+export function viewMapSourceOf(config: {
+  readonly fakeApi: FakeApiMode;
+  readonly devTools: boolean;
+}): ViewMapSource {
+  if (config.fakeApi === "off") return "server";
+  return config.devTools ? "fake" : null;
+}
+
+export function buildViewMapSource(): ViewMapSource {
+  return viewMapSourceOf({
+    fakeApi: readBuildConfig().fakeApi,
+    devTools: import.meta.env.PARFOCAL_PUBLIC_DEV_TOOLS === "on",
+  });
+}
+
+export function viewMapScorerFor(
+  source: ViewMapSource,
+  slide: { readonly width: number; readonly height: number },
+  slideId: string,
+  post?: ViewTilePost,
+): ViewMapScorer | null {
+  if (source === "fake") return createFakeViewMapScorer(slide);
+  if (source === "server") return createServerViewMapScorer(slideId, post);
   return null;
 }

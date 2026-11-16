@@ -16594,6 +16594,9 @@ export const getGetSlideEmbeddingsResponseMock = (
 export const getGetSlideEmbeddingTileResponseMock = (): Blob =>
   new Blob([new Uint8Array(faker.number.int({ min: 1, max: 64 }))]);
 
+export const getScoreViewMapTileResponseMock = (): Blob =>
+  new Blob([new Uint8Array(faker.number.int({ min: 1, max: 64 }))]);
+
 export const getListSlideAreasResponseMock = (): SlideArea[] =>
   Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
     object: faker.string.alpha({ length: { min: 10, max: 20 } }),
@@ -24540,6 +24543,30 @@ export const getWarmSlideEmbedderMockHandler = (
   );
 };
 
+export const getScoreViewMapTileMockHandler = (
+  overrideResponse?:
+    | Blob
+    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<Blob> | Blob),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/slides/:slideId/view-map/:column/:row",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      const binaryBody =
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : getScoreViewMapTileResponseMock();
+      return new HttpResponse(binaryBody, {
+        status: 200,
+        headers: { "Content-Type": "application/octet-stream" },
+      });
+    },
+    options,
+  );
+};
+
 export const getListSlideAreasMockHandler = (
   overrideResponse?:
     | SlideArea[]
@@ -24910,5 +24937,6 @@ export const getParfocalAPIMock = () => [
   getGetSlideEmbeddingsMockHandler(),
   getGetSlideEmbeddingTileMockHandler(),
   getWarmSlideEmbedderMockHandler(),
+  getScoreViewMapTileMockHandler(),
   getListSlideAreasMockHandler(),
 ];

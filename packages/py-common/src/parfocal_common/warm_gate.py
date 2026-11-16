@@ -56,6 +56,11 @@ class WarmGate:
         self.pools.spawn(self.function_name, {"kind": WARM_KIND})
         return Warm.FIRED
 
+    def request(self, call: dict[str, object]) -> dict[str, object]:
+        reply = self.pools.call(self.function_name, call)
+        self.touch()
+        return reply
+
 
 class ModalPools:
     def __init__(self, app_name: str = GPU_POOL_APP, environment: str | None = None) -> None:
